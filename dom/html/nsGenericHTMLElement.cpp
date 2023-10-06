@@ -652,45 +652,47 @@ constexpr PopoverAttributeState ToPopoverAttributeState(
 }  // namespace
 
 void nsGenericHTMLElement::AfterSetPopoverAttr() {
-  const nsAttrValue* newValue = GetParsedAttr(nsGkAtoms::popover);
-
-  const PopoverAttributeState newState = [&newValue]() {
-    if (newValue) {
-      MOZ_ASSERT(newValue->Type() == nsAttrValue::eEnum);
+  auto mapPopoverState = [](const nsAttrValue* value) -> PopoverAttributeState {
+    if (value) {
+      MOZ_ASSERT(value->Type() == nsAttrValue::eEnum);
       const auto popoverAttributeKeyword =
-          static_cast<PopoverAttributeKeyword>(newValue->GetEnumValue());
+          static_cast<PopoverAttributeKeyword>(value->GetEnumValue());
       return ToPopoverAttributeState(popoverAttributeKeyword);
     }
 
     // The missing value default is the no popover state, see
     // <https://html.spec.whatwg.org/multipage/popover.html#attr-popover>.
     return PopoverAttributeState::None;
-  }();
+  };
+
+  PopoverAttributeState newState =
+      mapPopoverState(GetParsedAttr(nsGkAtoms::popover));
 
   const PopoverAttributeState oldState = GetPopoverAttributeState();
 
   if (newState != oldState) {
-    EnsurePopoverData().SetPopoverAttributeState(newState);
+    PopoverPseudoStateUpdate(false, true);
 
-    HidePopoverInternal(/* aFocusPreviousElement = */ true,
-                        /* aFireEvents = */ true, IgnoreErrors());
+    if (IsPopoverOpen()) {
+      HidePopoverInternal(/* aFocusPreviousElement = */ true,
+                          /* aFireEvents = */ true, IgnoreErrors());
+      // Event handlers could have removed the popover attribute, or changed
+      // its value.
+      // https://github.com/whatwg/html/issues/9034
+      newState = mapPopoverState(GetParsedAttr(nsGkAtoms::popover));
+    }
 
-    // In case `HidePopoverInternal` changed the state, keep the corresponding
-    // changes and don't overwrite anything here.
-    if (newState == GetPopoverAttributeState()) {
-      if (newState == PopoverAttributeState::None) {
-        // `HidePopoverInternal` above didn't remove the element from the top
-        // layer, because in that call, the element's popover attribute state
-        // was already `None`. Revisit this, when the spec is corrected
-        // (bug 1835811).
+    if (newState == PopoverAttributeState::None) {
+      // HidePopoverInternal above could have removed the popover from the top
+      // layer.
+      if (GetPopoverData()) {
         OwnerDoc()->RemovePopoverFromTopLayer(*this);
-
-        ClearPopoverData();
-        RemoveStates(ElementState::POPOVER_OPEN);
-      } else {
-        // TODO: what if `HidePopoverInternal` called `ShowPopup()`?
-        PopoverPseudoStateUpdate(false, true);
       }
+      ClearPopoverData();
+      RemoveStates(ElementState::POPOVER_OPEN);
+    } else {
+      // TODO: what if `HidePopoverInternal` called `ShowPopup()`?
+      EnsurePopoverData().SetPopoverAttributeState(newState);
     }
   }
 }
@@ -3165,17 +3167,12 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 bool nsGenericHTMLElement::CheckPopoverValidity(
     PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
     ErrorResult& aRv) {
-  const PopoverData* data = GetPopoverData();
-  if (!data ||
-      data->GetPopoverAttributeState() == PopoverAttributeState::None) {
-    MOZ_ASSERT(!HasAttr(nsGkAtoms::popover));
+  if (GetPopoverAttributeState() == PopoverAttributeState::None) {
     aRv.ThrowNotSupportedError("Element is in the no popover state");
     return false;
   }
 
-  MOZ_ASSERT(HasAttr(nsGkAtoms::popover));
-
-  if (data->GetPopoverVisibilityState() != aExpectedState) {
+  if (GetPopoverData()->GetPopoverVisibilityState() != aExpectedState) {
     return false;
   }
 
