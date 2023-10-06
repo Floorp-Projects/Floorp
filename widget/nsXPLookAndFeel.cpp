@@ -755,6 +755,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozComboboxtext:
     case ColorID::MozButtonhovertext:
     case ColorID::MozButtonactivetext:
+    case ColorID::MozHeaderbartext:
+    case ColorID::MozHeaderbarinactivetext:
     case ColorID::Captiontext:
     case ColorID::Inactivecaptiontext:  // TODO(emilio): Maybe make
                                         // Inactivecaptiontext Graytext?
@@ -824,6 +826,8 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Inactiveborder:
       color = NS_RGB(57, 57, 57);
       break;
+    case ColorID::MozHeaderbar:
+    case ColorID::MozHeaderbarinactive:
     case ColorID::Activecaption:
     case ColorID::Inactivecaption:
       color = NS_RGB(28, 27, 34);

@@ -26,10 +26,10 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
-  --toolbox-non-lwt-bgcolor: -moz-dialog;
-  --toolbox-non-lwt-textcolor: -moz-dialogtext;
-  --toolbox-non-lwt-bgcolor-inactive: -moz-dialog;
-  --toolbox-non-lwt-textcolor-inactive: -moz-dialogtext;
+  --toolbox-non-lwt-bgcolor: -moz-headerbar;
+  --toolbox-non-lwt-textcolor: -moz-headerbartext;
+  --toolbox-non-lwt-bgcolor-inactive: -moz-headerbarinactive;
+  --toolbox-non-lwt-textcolor-inactive: -moz-headerbarinactivetext;
 
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);

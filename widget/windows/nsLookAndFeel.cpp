@@ -357,6 +357,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozComboboxtext:
       idx = COLOR_WINDOWTEXT;
       break;
+    case ColorID::MozHeaderbar:
+    case ColorID::MozHeaderbarinactive:
     case ColorID::MozDialog:
       idx = COLOR_3DFACE;
       break;
@@ -366,6 +368,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Accentcolortext:
       aColor = mColorAccentText;
       return NS_OK;
+    case ColorID::MozHeaderbartext:
+    case ColorID::MozHeaderbarinactivetext:
     case ColorID::MozDialogtext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
