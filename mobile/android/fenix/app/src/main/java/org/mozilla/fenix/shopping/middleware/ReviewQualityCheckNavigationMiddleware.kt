@@ -18,7 +18,7 @@ private const val PARAM_UTM_CAMPAIGN_VALUE = "fakespot-by-mozilla"
 private const val PARAM_UTM_TERM_KEY = "utm_term"
 private const val PARAM_UTM_TERM_VALUE = "core-sheet"
 private const val POWERED_BY_URL =
-    "https://www.fakespot.com/review-checker?utm_source=review-checker" +
+    "https://www.fakespot.com/our-mission?utm_source=review-checker" +
         "&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sheet"
 private const val PRIVACY_POLICY_URL = "https://www.fakespot.com/privacy-policy"
 private const val TERMS_OF_USE_URL = "https://www.fakespot.com/terms"
