@@ -25,7 +25,7 @@ static const double kLongIdlePeriodMS = 50.0;
 // or during page load
 //   now + idle_period.during_page_load.min + layout.idle_period.time_limit
 
-static const uint32_t kMaxTimerThreadBound = 5;  // milliseconds
+static const uint32_t kMaxTimerThreadBound = 25;  // Number of timers to check.
 
 namespace mozilla {
 
