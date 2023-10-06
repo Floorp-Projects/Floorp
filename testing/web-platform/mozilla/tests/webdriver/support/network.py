@@ -1,4 +1,3 @@
-import socket
 from http.client import HTTPConnection
 
 
@@ -45,26 +44,6 @@ def http_request(server_host, server_port, path="/status", host=None, origin=Non
     conn.endheaders()
 
     return conn.getresponse()
-
-
-def get_free_port():
-    """Get a random unbound port"""
-    max_attempts = 10
-    err = None
-    for _ in range(max_attempts):
-        s = socket.socket()
-        try:
-            s.bind(("127.0.0.1", 0))
-        except OSError as e:
-            err = e
-            continue
-        else:
-            return s.getsockname()[1]
-        finally:
-            s.close()
-    if err is None:
-        err = Exception("Failed to get a free port")
-    raise err
 
 
 def get_host(port_type, hostname, server_port):
