@@ -4,6 +4,11 @@
 
 include protocol PQuota;
 
+include "mozilla/dom/quota/SerializationHelpers.h";
+
+using mozilla::dom::quota::UsageInfo
+  from "mozilla/dom/quota/UsageInfo.h";
+
 namespace mozilla {
 namespace dom {
 namespace quota {
@@ -23,8 +28,7 @@ struct AllUsageResponse
 
 struct OriginUsageResponse
 {
-  uint64_t usage;
-  uint64_t fileUsage;
+  UsageInfo usageInfo;
 };
 
 union UsageRequestResponse

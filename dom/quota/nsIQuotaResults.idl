@@ -6,6 +6,15 @@
 
 #include "nsISupports.idl"
 
+%{C++
+namespace mozilla::dom::quota {
+class UsageInfo;
+}  // namespace mozilla::dom::quota
+%}
+
+[ref] native UsageInfoRef(mozilla::dom::quota::UsageInfo);
+
+
 [scriptable, function, uuid(4d8def75-014e-404d-bf30-e2f0Bfcf4d89)]
 interface nsIQuotaFullOriginMetadataResult : nsISupports
 {
@@ -36,12 +45,23 @@ interface nsIQuotaUsageResult : nsISupports
   readonly attribute unsigned long long lastAccessed;
 };
 
-[scriptable, function, uuid(96df03d2-116a-493f-bb0b-118c212a6b32)]
+[scriptable, builtinclass, function, uuid(96df03d2-116a-493f-bb0b-118c212a6b32)]
 interface nsIQuotaOriginUsageResult : nsISupports
 {
-  readonly attribute unsigned long long usage;
+  readonly attribute unsigned long long databaseUsage;
 
   readonly attribute unsigned long long fileUsage;
+
+  // TODO: Rename to totalUsage.
+  readonly attribute unsigned long long usage;
+
+  readonly attribute boolean databaseUsageIsExplicit;
+
+  readonly attribute boolean fileUsageIsExplicit;
+
+  readonly attribute boolean totalUsageIsExplicit;
+
+  [notxpcom, nostdcall] readonly attribute UsageInfoRef usageInfo;
 };
 
 [scriptable, function, uuid(9827fc69-7ea9-48ef-b30d-2e2ae0451ec0)]

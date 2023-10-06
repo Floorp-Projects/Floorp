@@ -105,16 +105,16 @@ UsageResult::GetLastAccessed(uint64_t* aLastAccessed) {
   return NS_OK;
 }
 
-OriginUsageResult::OriginUsageResult(uint64_t aUsage, uint64_t aFileUsage)
-    : mUsage(aUsage), mFileUsage(aFileUsage) {}
+OriginUsageResult::OriginUsageResult(UsageInfo aUsageInfo)
+    : mUsageInfo(aUsageInfo) {}
 
 NS_IMPL_ISUPPORTS(OriginUsageResult, nsIQuotaOriginUsageResult)
 
 NS_IMETHODIMP
-OriginUsageResult::GetUsage(uint64_t* aUsage) {
-  MOZ_ASSERT(aUsage);
+OriginUsageResult::GetDatabaseUsage(uint64_t* aDatabaseUsage) {
+  MOZ_ASSERT(aDatabaseUsage);
 
-  *aUsage = mUsage;
+  *aDatabaseUsage = mUsageInfo.DatabaseUsage().valueOr(0);
   return NS_OK;
 }
 
@@ -122,9 +122,43 @@ NS_IMETHODIMP
 OriginUsageResult::GetFileUsage(uint64_t* aFileUsage) {
   MOZ_ASSERT(aFileUsage);
 
-  *aFileUsage = mFileUsage;
+  *aFileUsage = mUsageInfo.FileUsage().valueOr(0);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+OriginUsageResult::GetUsage(uint64_t* aUsage) {
+  MOZ_ASSERT(aUsage);
+
+  *aUsage = mUsageInfo.TotalUsage().valueOr(0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+OriginUsageResult::GetDatabaseUsageIsExplicit(bool* aDatabaseUsageIsExplicit) {
+  MOZ_ASSERT(aDatabaseUsageIsExplicit);
+
+  *aDatabaseUsageIsExplicit = mUsageInfo.DatabaseUsage().isSome();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+OriginUsageResult::GetFileUsageIsExplicit(bool* aFileUsageIsExplicit) {
+  MOZ_ASSERT(aFileUsageIsExplicit);
+
+  *aFileUsageIsExplicit = mUsageInfo.FileUsage().isSome();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+OriginUsageResult::GetTotalUsageIsExplicit(bool* aTotalUsageIsExplicit) {
+  MOZ_ASSERT(aTotalUsageIsExplicit);
+
+  *aTotalUsageIsExplicit = mUsageInfo.TotalUsage().isSome();
+  return NS_OK;
+}
+
+UsageInfo& OriginUsageResult::GetUsageInfo() { return mUsageInfo; }
 
 EstimateResult::EstimateResult(uint64_t aUsage, uint64_t aLimit)
     : mUsage(aUsage), mLimit(aLimit) {}
