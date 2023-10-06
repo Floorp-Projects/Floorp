@@ -140,9 +140,8 @@ mochitest-plain:
         by-test-platform:
             android.*/debug: 10
             linux.*/debug: 16
-            linux.*64-asan/opt: 10
             linux.*64-tsan-qr/opt: 20
-            .*ccov.*: 10
+            .*(asan|ccov).*: 10
             default: 5
     instance-size:
         by-test-platform:
