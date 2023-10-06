@@ -318,6 +318,10 @@ export var AddonRepository = {
     return url != null ? url : "about:blank";
   },
 
+  get appIsShuttingDown() {
+    return Services.startup.shuttingDown;
+  },
+
   /**
    * Retrieves the url that can be visited to see search results for the given
    * terms. If the corresponding preference is not defined, defaults to
@@ -407,6 +411,14 @@ export var AddonRepository = {
     );
   },
 
+  /*
+   * Create a ServiceRequest instance.
+   * @return ServiceRequest returns a ServiceRequest instance.
+   */
+  _createServiceRequest() {
+    return new lazy.ServiceRequest({ mozAnon: true });
+  },
+
   /**
    * Fetch data from an API where the results may span multiple "pages".
    * This function will take care of issuing multiple requests until all
@@ -433,7 +445,18 @@ export var AddonRepository = {
     let results = [];
     const fetchNextPage = url => {
       return new Promise((resolve, reject) => {
-        let request = new lazy.ServiceRequest({ mozAnon: true });
+        if (this.appIsShuttingDown) {
+          logger.debug(
+            "Rejecting AddonRepository._fetchPaged call, shutdown already in progress"
+          );
+          reject(
+            new Error(
+              `Reject ServiceRequest for "${url}", shutdown already in progress`
+            )
+          );
+          return;
+        }
+        let request = this._createServiceRequest();
         request.mozBackgroundRequest = true;
         request.open("GET", url, true);
         request.responseType = "json";
@@ -607,13 +630,29 @@ export var AddonRepository = {
   },
 
   /**
+   * Get all installed addons from the AddonManager singleton.
+   *
+   * @return Promise{array<AddonWrapper>} Resolves to an array of AddonWrapper instances.
+   */
+  _getAllInstalledAddons() {
+    return lazy.AddonManager.getAllAddons();
+  },
+
+  /**
    * Performs the daily background update check.
    *
    * @return Promise{null} Resolves when the metadata update is complete.
    */
   async backgroundUpdateCheck() {
     let shutter = (async () => {
-      let allAddons = await lazy.AddonManager.getAllAddons();
+      if (this.appIsShuttingDown) {
+        logger.debug(
+          "Returning earlier from backgroundUpdateCheck, shutdown already in progress"
+        );
+        return;
+      }
+
+      let allAddons = await this._getAllInstalledAddons();
 
       // Completely remove cache if caching is not enabled
       if (!this.cacheEnabled) {
