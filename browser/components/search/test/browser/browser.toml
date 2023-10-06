@@ -49,12 +49,15 @@ support-files = [
 ["browser_google_behavior.js"]
 
 ["browser_hiddenOneOffs_diacritics.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked searchbar may not be labeled
 
 ["browser_ime_composition.js"]
 
 ["browser_oneOffContextMenu.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked searchbar may not be labeled
 
 ["browser_oneOffContextMenu_setDefault.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked searchbar may not be labeled
 
 ["browser_private_search_perwindowpb.js"]
 
@@ -70,6 +73,7 @@ support-files = ["trendingSuggestionEngine.sjs"]
 ["browser_search_nimbus_reload.js"]
 
 ["browser_searchbar_addEngine.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked searchbar may not be labeled; clicked htnl:body may not be focusable
 
 ["browser_searchbar_context.js"]
 
@@ -86,10 +90,12 @@ skip-if = [
 ]
 
 ["browser_searchbar_openpopup.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked htnl:body may not be focusable
 
 ["browser_searchbar_results.js"]
 
 ["browser_searchbar_smallpanel_keyboard_navigation.js"]
+fail-if = ["a11y_checks"] # Bug 1854660 clicked searchbar may not be labeled
 
 ["browser_searchbar_widths.js"]
 
