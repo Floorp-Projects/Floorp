@@ -13,11 +13,15 @@ namespace mozilla::dom::indexedDB {
 Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsACString& aKeyId) {
   auto lockedCipherKeys = mCipherKeys.Lock();
 
+  MOZ_ASSERT(!mInvalidated);
+
   return lockedCipherKeys->MaybeGet(aKeyId);
 }
 
 CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aKeyId) {
   auto lockedCipherKeys = mCipherKeys.Lock();
+
+  MOZ_ASSERT(!mInvalidated);
 
   return lockedCipherKeys->LookupOrInsertWith(aKeyId, [] {
     // Generate a new key if one corresponding to keyStoreId does not exist
@@ -30,6 +34,20 @@ CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aKeyId) {
       return CipherKey{};
     });
   });
+}
+
+bool IndexedDBCipherKeyManager::Invalidated() {
+  auto lockedCipherKeys = mCipherKeys.Lock();
+
+  return mInvalidated;
+}
+
+void IndexedDBCipherKeyManager::Invalidate() {
+  auto lockedCipherKeys = mCipherKeys.Lock();
+
+  mInvalidated.Flip();
+
+  lockedCipherKeys->Clear();
 }
 
 }  // namespace mozilla::dom::indexedDB
