@@ -1,0 +1,20 @@
+<style>
+*:read-only {
+  left: 35px;
+  border: 1px inset;
+}
+.a {
+  animation: kf 150ms 0.76 alternate, normal finished;
+  position: relative;
+}
+@keyframes kf {
+  100% {
+    border-left-width: thick
+  }
+  60% {
+    inset-inline-start: 72%
+  }
+}
+</style>
+<svg>
+<a class="a">
