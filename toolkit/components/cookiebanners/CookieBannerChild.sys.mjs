@@ -69,6 +69,7 @@ export class CookieBannerChild extends JSWindowActorChild {
   // Caches the enabled state to ensure we only compute it once for the lifetime
   // of the actor. Particularly the private browsing check can be expensive.
   #isEnabledCached = null;
+  #isTopLevel;
   #clickRules;
   #originalBannerDisplay = null;
   #observerCleanUp;
@@ -83,6 +84,8 @@ export class CookieBannerChild extends JSWindowActorChild {
     successStage: null,
     failReason: null,
     bannerVisibilityFail: false,
+    querySelectorCount: 0,
+    querySelectorTimeMS: 0,
   };
   // For measuring the cookie banner handling duration.
   #gleanBannerHandlingTimer = null;
@@ -178,6 +181,7 @@ export class CookieBannerChild extends JSWindowActorChild {
    */
   async #onDOMContentLoaded() {
     lazy.logConsole.debug("onDOMContentLoaded", { didLoad: this.#didLoad });
+    this.#isTopLevel = this.browsingContext == this.browsingContext?.top;
     this.#didLoad = false;
     this.#telemetryStatus.currentStage = "dom_content_loaded";
 
@@ -196,7 +200,7 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     lazy.logConsole.debug("Send message to get rule", {
       baseDomain: principal.baseDomain,
-      isTopLevel: this.browsingContext == this.browsingContext?.top,
+      isTopLevel: this.#isTopLevel,
     });
     let rules;
 
@@ -393,6 +397,34 @@ export class CookieBannerChild extends JSWindowActorChild {
       currentStage,
       failReason,
     });
+
+    let { querySelectorCount, querySelectorTimeMS } = this.#telemetryStatus;
+
+    // Glean needs an integer.
+    let querySelectorTimeUS = Math.round(querySelectorTimeMS * 1000);
+
+    if (this.#isTopLevel) {
+      Glean.cookieBannersClick.querySelectorRunCountPerWindowTopLevel.accumulateSamples(
+        [querySelectorCount]
+      );
+      Glean.cookieBannersClick.querySelectorRunDurationPerWindowTopLevel.accumulateSamples(
+        [querySelectorTimeUS]
+      );
+    } else {
+      Glean.cookieBannersClick.querySelectorRunCountPerWindowFrame.accumulateSamples(
+        [querySelectorCount]
+      );
+      Glean.cookieBannersClick.querySelectorRunDurationPerWindowFrame.accumulateSamples(
+        [querySelectorTimeUS]
+      );
+    }
+
+    lazy.logConsole.debug("Submitted querySelector telemetry", {
+      isTopLevel: this.#isTopLevel,
+      querySelectorCount,
+      querySelectorTimeUS,
+      querySelectorTimeMS,
+    });
   }
 
   /**
@@ -577,7 +609,7 @@ export class CookieBannerChild extends JSWindowActorChild {
       let matchingRules = this.#clickRules.filter(rule => {
         let { presence, skipPresenceVisibilityCheck } = rule;
 
-        let banner = this.document.querySelector(presence);
+        let banner = this.#querySelector(presence);
         lazy.logConsole.debug("Testing banner el presence", {
           result: banner,
           rule,
@@ -638,7 +670,7 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     let targetEl;
     for (let rule of rules) {
-      targetEl = this.document.querySelector(rule.target);
+      targetEl = this.#querySelector(rule.target);
       if (targetEl) {
         break;
       }
@@ -649,7 +681,7 @@ export class CookieBannerChild extends JSWindowActorChild {
     if (!targetEl) {
       targetEl = await this.#promiseObserve(() => {
         for (let rule of rules) {
-          let el = this.document.querySelector(rule.target);
+          let el = this.#querySelector(rule.target);
 
           lazy.logConsole.debug("Testing button el presence", {
             result: el,
@@ -700,7 +732,7 @@ export class CookieBannerChild extends JSWindowActorChild {
     let banner;
     let rule;
     for (let r of rules) {
-      banner = this.document.querySelector(r.hide);
+      banner = this.#querySelector(r.hide);
       if (banner) {
         rule = r;
         break;
@@ -735,7 +767,7 @@ export class CookieBannerChild extends JSWindowActorChild {
       // We've never hidden the banner.
       return;
     }
-    let banner = this.document.querySelector(hide);
+    let banner = this.#querySelector(hide);
 
     // Banner no longer present or destroyed or content window has been
     // destroyed.
@@ -751,6 +783,22 @@ export class CookieBannerChild extends JSWindowActorChild {
     banner.ownerGlobal.requestAnimationFrame(() => {
       banner.style.display = originalDisplay;
     });
+  }
+
+  /**
+   * Wrapper around document.querySelector calls which collects perf telemetry.
+   * @param {string} selectors - Selector list passed into document.querySelector.
+   * @returns document.querySelector result.
+   */
+  #querySelector(selectors) {
+    let start = Cu.now();
+
+    let result = this.document.querySelector(selectors);
+
+    this.#telemetryStatus.querySelectorTimeMS += Cu.now() - start;
+    this.#telemetryStatus.querySelectorCount += 1;
+
+    return result;
   }
 
   #maybeSendTestMessage() {
