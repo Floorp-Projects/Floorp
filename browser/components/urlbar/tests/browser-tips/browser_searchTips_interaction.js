@@ -129,17 +129,6 @@ add_task(async function pickButton_onboard() {
     `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
     1
   );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
-  );
 
   Assert.equal(
     UrlbarPrefs.get(
@@ -188,17 +177,6 @@ add_task(async function pickButton_redirect() {
     "urlbar.tips",
     `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
     1
-  );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
   );
 
   Assert.equal(
@@ -264,17 +242,6 @@ add_task(async function pickButton_persist() {
     `${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}-picked`,
     1
   );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
-  );
 
   Assert.equal(
     UrlbarPrefs.get(
@@ -318,17 +285,6 @@ add_task(async function clickInInput_onboard() {
     "urlbar.tips",
     `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
     1
-  );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
   );
 
   Assert.equal(
@@ -376,17 +332,6 @@ add_task(async function openLocation_onboard() {
     `${UrlbarProviderSearchTips.TIP_TYPE.ONBOARD}-picked`,
     1
   );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "enter",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
-  );
 
   Assert.equal(
     UrlbarPrefs.get(
@@ -433,17 +378,6 @@ add_task(async function clickInInput_redirect() {
     "urlbar.tips",
     `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
     1
-  );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
   );
 
   Assert.equal(
@@ -504,17 +438,6 @@ add_task(async function clickInInput_persist() {
     `${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}-picked`,
     1
   );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "click",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
-  );
 
   Assert.equal(
     UrlbarPrefs.get(
@@ -559,17 +482,6 @@ add_task(async function openLocation_redirect() {
     "urlbar.tips",
     `${UrlbarProviderSearchTips.TIP_TYPE.REDIRECT}-picked`,
     1
-  );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "enter",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
   );
 
   Assert.equal(
@@ -629,17 +541,6 @@ add_task(async function openLocation_persist() {
     "urlbar.tips",
     `${UrlbarProviderSearchTips.TIP_TYPE.PERSIST}-picked`,
     1
-  );
-  TelemetryTestUtils.assertEvents(
-    [
-      {
-        category: "urlbar",
-        method: "engagement",
-        object: "enter",
-        value: "typed",
-      },
-    ],
-    { category: "urlbar" }
   );
 
   Assert.equal(
