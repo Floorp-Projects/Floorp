@@ -8,12 +8,19 @@ const lazy = {};
 const TELEMETRY_PREF =
   "browser.search.serpEventTelemetryCategorization.enabled";
 
+ChromeUtils.defineESModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  TELEMETRY_CATEGORIZATION_KEY:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPDomainToCategoriesMap:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -23,48 +30,58 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-function testCategorizationLogic() {
-  const TEST_DOMAIN_TO_CATEGORIES_MAP = {
-    "byVQ4ej7T7s2xf/cPqgMyw==": [2, 90],
-    "1TEnSjgNCuobI6olZinMiQ==": [2, 95],
-    "/Bnju09b9iBPjg7K+5ENIw==": [2, 78, 4, 10],
-    "Ja6RJq5LQftdl7NQrX1avQ==": [2, 56, 4, 24],
-    "Jy26Qt99JrUderAcURtQ5A==": [2, 89],
-    "sZnJyyzY9QcN810Q6jfbvw==": [2, 43],
-    "QhmteGKeYk0okuB/bXzwRw==": [2, 65],
-    "CKQZZ1IJjzjjE4LUV8vUSg==": [2, 67],
-    "FK7mL5E1JaE6VzOiGMmlZg==": [2, 89],
-    "mzcR/nhDcrs0ed4kTf+ZFg==": [2, 99],
-  };
+// This is required to trigger and properly categorize a SERP.
+const TEST_PROVIDER_INFO = [
+  {
+    telemetryId: "example",
+    searchPageRegexp:
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetry/,
+    queryParamName: "s",
+    codeParamName: "abc",
+    taggedCodes: ["ff"],
+    adServerAttributes: ["mozAttr"],
+    nonAdsLinkRegexps: [/^https:\/\/example.com/],
+    extraAdServersRegexps: [/^https:\/\/example\.com\/ad/],
+    domainExtraction: {
+      ads: [
+        {
+          selectors: "[data-ad-domain]",
+          method: "data-attribute",
+          options: {
+            dataAttributeKey: "adDomain",
+          },
+        },
+        {
+          selectors: ".ad",
+          method: "href",
+          options: {
+            queryParamKey: "ad_domain",
+          },
+        },
+      ],
+      nonAds: [
+        {
+          selectors: "#results .organic a",
+          method: "href",
+        },
+      ],
+    },
+    components: [
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
+        default: true,
+      },
+    ],
+  },
+];
 
-  lazy.SearchSERPDomainToCategoriesMap.overrideMapForTests(
-    TEST_DOMAIN_TO_CATEGORIES_MAP
-  );
+const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+const db = client.db;
 
-  let domains = new Set([
-    "test1.com",
-    "test2.com",
-    "test3.com",
-    "test4.com",
-    "test5.com",
-    "test6.com",
-    "test7.com",
-    "test8.com",
-    "test9.com",
-    "test10.com",
-  ]);
-
-  let resultsToReport =
-    lazy.SearchSERPCategorization.applyCategorizationLogic(domains);
-
-  Assert.deepEqual(
-    resultsToReport,
-    { category: "2", num_domains: 10, num_inconclusive: 0, num_unknown: 0 },
-    "Should report the correct values for categorizing the SERP."
-  );
-}
-
+let stub;
 add_setup(async function () {
+  SearchSERPTelemetry.overrideSearchTelemetryForTests(TEST_PROVIDER_INFO);
+
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
@@ -73,10 +90,29 @@ add_setup(async function () {
     set: [["browser.search.log", true]],
   });
 
+  // Clear existing Remote Settings data.
+  await db.clear();
+  info("Create record with attachment.");
+  let { record, attachment } = await mockRecordWithAttachment({
+    id: Services.uuid.generateUUID().number.slice(1, -1),
+    version: 1,
+    filename: "domain_category_mappings.json",
+  });
+  client.attachments.cacheImpl.set(record.id, attachment);
+  await db.create(record);
+
+  info("Add data to Remote Settings DB.");
+  await db.importChanges({}, Date.now());
+
+  stub = lazy.sinon.stub(lazy.SearchSERPCategorization, "dummyLogger");
+
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await SpecialPowers.popPrefEnv();
     resetTelemetry();
+    await db.clear();
+    client.attachments.cacheImpl.delete(record.id);
+    stub.restore();
   });
 });
 
@@ -99,6 +135,11 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
 
   await lazy.ExperimentAPI.ready();
 
+  info("Enroll in experiment.");
+  let updateComplete = TestUtils.topicObserved(
+    "domain-to-categories-map-update-complete"
+  );
+
   let doExperimentCleanup = await lazy.ExperimentFakes.enrollWithFeatureConfig(
     {
       featureId: NimbusFeatures.search.featureId,
@@ -115,11 +156,29 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
     "serpEventsCategorizationEnabled should be true when enrolled in experiment."
   );
 
-  // To ensure Nimbus set
-  // "browser.search.serpEventCategorizationTelemetry.enabled" to
-  // true, we test that we're able to categorize a set of domains.
-  testCategorizationLogic();
+  await updateComplete;
 
+  let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
+  info("Load a sample SERP with organic results.");
+  let promise = waitForPageWithCategorizedDomains();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await promise;
+
+  Assert.deepEqual(
+    Array.from(stub.getCall(0).args[0]),
+    ["foobar.org"],
+    "Categorization of non-ads should match."
+  );
+
+  Assert.deepEqual(
+    Array.from(stub.getCall(1).args[0]),
+    ["abc.org", "def.org"],
+    "Categorization of ads should match."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+
+  info("End experiment.");
   await doExperimentCleanup();
 
   Assert.equal(
@@ -128,6 +187,23 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
     "serpEventsCategorizationEnabled should be false after experiment."
   );
 
+  Assert.ok(
+    lazy.SearchSERPDomainToCategoriesMap.empty,
+    "Domain to categories map should be empty."
+  );
+
+  info("Load a sample SERP with organic results.");
+  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  // Wait an arbitrary amount for a possible categorization.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  Assert.equal(
+    stub.getCall(2),
+    null,
+    "dummyLogger should not have been called if experiment in un-enrolled."
+  );
+
   // Clean up.
+  BrowserTestUtils.removeTab(tab);
   prefBranch.setBoolPref(TELEMETRY_PREF, originalPrefValue);
 });

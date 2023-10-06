@@ -3,6 +3,10 @@ tags = "search-telemetry"
 support-files = ["head.js"]
 
 ["browser_search_glean_serp_event_telemetry_categorization_enabled_by_nimbus_variable.js"]
+support-files = [
+  "domain_category_mappings.json",
+  "searchTelemetryDomainCategorizationReporting.html",
+]
 
 ["browser_search_glean_serp_event_telemetry_enabled_by_nimbus_variable.js"]
 support-files = ["searchTelemetryAd.html"]
@@ -116,10 +120,7 @@ fail-if = ["a11y_checks"] # Bug 1854660 clicked button.searchbar-engine-one-off-
 support-files = ["searchTelemetryAd_shopping.html"]
 
 ["browser_search_telemetry_sources.js"]
-support-files = [
-  "searchTelemetry.html",
-  "searchTelemetryAd.html",
-]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
 ["browser_search_telemetry_sources_ads.js"]
 support-files = [
@@ -150,7 +151,4 @@ support-files = [
 support-files = ["searchTelemetryAd_searchbox_with_content.html"]
 
 ["browser_search_telemetry_sources_navigation.js"]
-support-files = [
-  "searchTelemetry.html",
-  "searchTelemetryAd.html",
-]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]

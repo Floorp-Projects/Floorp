@@ -8,11 +8,14 @@
  */
 
 ChromeUtils.defineESModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchSERPCategorization: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPDomainToCategoriesMap:
     "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+  TELEMETRY_CATEGORIZATION_KEY:
+    "resource:///modules/SearchSERPTelemetry.sys.mjs",
 });
 
 const TEST_PROVIDER_INFO = [
@@ -60,14 +63,8 @@ const TEST_PROVIDER_INFO = [
   },
 ];
 
-const TEST_DOMAIN_TO_CATEGORIES_MAP = {
-  // foobar.org
-  "DqNorjpE3CBY9OZh0wf1uA==": [2, 90],
-  // abc.org
-  "kpuib0kvhtSp1moICEmGWg==": [2, 95],
-  // def.org
-  "+5WbbjV3Nmxp0mBZODcJWg==": [2, 78, 4, 10],
-};
+const client = RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+const db = client.db;
 
 let stub;
 add_setup(async function () {
@@ -75,14 +72,8 @@ add_setup(async function () {
   await waitForIdle();
 
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.search.log", true],
-      ["browser.search.serpEventTelemetry.enabled", true],
-      ["browser.search.serpEventTelemetryCategorization.enabled", true],
-    ],
+    set: [["browser.search.log", true]],
   });
-
-  await SearchSERPTelemetry.init();
 
   stub = sinon.stub(SearchSERPCategorization, "dummyLogger");
 
@@ -90,18 +81,35 @@ add_setup(async function () {
     stub.restore();
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
+    await db.clear();
   });
 });
 
 add_task(async function test_categorization_reporting() {
   resetTelemetry();
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(
-    TEST_DOMAIN_TO_CATEGORIES_MAP
+
+  await db.clear();
+  let { record, attachment } = await mockRecordWithAttachment({
+    id: "example_id",
+    version: 1,
+    filename: "domain_category_mappings.json",
+  });
+  await db.create(record);
+  await client.attachments.cacheImpl.set(record.id, attachment);
+  await db.importChanges({}, Date.now());
+
+  let promise = TestUtils.topicObserved(
+    "domain-to-categories-map-update-complete"
   );
+  // Enabling the preference will trigger filling the map.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.serpEventTelemetryCategorization.enabled", true]],
+  });
+  await promise;
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
   info("Load a sample SERP with organic results.");
-  let promise = waitForPageWithCategorizedDomains();
+  promise = waitForPageWithCategorizedDomains();
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   await promise;
 
@@ -120,11 +128,70 @@ add_task(async function test_categorization_reporting() {
   );
 
   BrowserTestUtils.removeTab(tab);
+  await client.attachments.cacheImpl.delete(record.id);
+});
+
+add_task(async function test_no_reporting_if_download_failure() {
+  await db.clear();
+  let { record } = await mockRecordWithAttachment({
+    id: "example_id",
+    version: 1,
+    filename: "domain_category_mappings.json",
+  });
+  await db.create(record);
+  await db.importChanges({}, Date.now());
+
+  const payload = {
+    current: [record],
+    created: [],
+    updated: [record],
+    deleted: [],
+  };
+
+  let observeDownloadError = TestUtils.consoleMessageObserved(msg => {
+    return (
+      typeof msg.wrappedJSObject.arguments?.[0] == "string" &&
+      msg.wrappedJSObject.arguments[0].includes("Could not download file:")
+    );
+  });
+  // Since the preference is already enabled, and the map is filled we trigger
+  // the map to be updated via an RS sync. The download failure should cause the
+  // map to remain empty.
+  await client.emit("sync", { data: payload });
+  await observeDownloadError;
+
+  let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
+  info("Load a sample SERP with organic results.");
+  let promise = waitForPageWithCategorizedDomains();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await promise;
+
+  Assert.equal(
+    stub.getCall(2),
+    null,
+    "dummyLogger should not have been called if attachments weren't downloaded."
+  );
+
+  BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_no_reporting_if_no_records() {
-  // Simulate a failure to download attachments from Remote Settings.
-  SearchSERPDomainToCategoriesMap.overrideMapForTests(null);
+  const payload = {
+    current: [],
+    created: [],
+    updated: [],
+    deleted: [],
+  };
+  let observeNoRecords = TestUtils.consoleMessageObserved(msg => {
+    return (
+      typeof msg.wrappedJSObject.arguments?.[0] == "string" &&
+      msg.wrappedJSObject.arguments[0].includes(
+        "No records found for domain-to-categories map."
+      )
+    );
+  });
+  await client.emit("sync", { data: payload });
+  await observeNoRecords;
 
   let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
   info("Load a sample SERP with organic results.");
