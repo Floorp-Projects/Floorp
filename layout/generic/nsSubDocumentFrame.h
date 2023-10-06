@@ -132,6 +132,11 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
   void ResetFrameLoader(RetainPaintData);
   void ClearRetainedPaintData();
 
+  void MaybeUpdateEmbedderColorScheme();
+
+  void MaybeUpdateRemoteStyle(ComputedStyle* aOldComputedStyle = nullptr);
+  void PropagateIsUnderHiddenEmbedderElement(bool aValue);
+
   void ClearDisplayItems();
 
   void SubdocumentIntrinsicSizeOrRatioChanged();
@@ -146,11 +151,6 @@ class nsSubDocumentFrame final : public nsAtomicContainerFrame,
 
  protected:
   friend class AsyncFrameInit;
-
-  void MaybeUpdateEmbedderColorScheme();
-  void MaybeUpdateRemoteStyle(ComputedStyle* aOldComputedStyle = nullptr);
-  void PropagateIsUnderHiddenEmbedderElement(bool aValue);
-  void UpdateEmbeddedBrowsingContextDependentData();
 
   bool IsInline() { return mIsInline; }
 
