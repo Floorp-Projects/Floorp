@@ -124,15 +124,6 @@ firefox-suggest-weather-command-inaccurate-location =
 
 ## These strings are used for add-on suggestions in the urlbar.
 
-# This string displays the number of reviews in the add-ons suggestion
-# Variables:
-#   $quantity (number) - The number of reviews for the add-on.
-firefox-suggest-addons-reviews =
-  { $quantity ->
-      [one] { $quantity } review
-     *[other] { $quantity } reviews
-  }
-
 # This string explaining that the add-on suggestion is a recommendation.
 firefox-suggest-addons-recommended = Recommended
 

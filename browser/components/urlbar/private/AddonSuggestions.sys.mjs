@@ -13,97 +13,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
-  UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
 });
 
 const UTM_PARAMS = {
   utm_medium: "firefox-desktop",
   utm_source: "firefox-suggest",
-};
-
-const VIEW_TEMPLATE = {
-  attributes: {
-    selectable: true,
-  },
-  children: [
-    {
-      name: "content",
-      tag: "span",
-      overflowable: true,
-      children: [
-        {
-          name: "icon",
-          tag: "img",
-        },
-        {
-          name: "header",
-          tag: "span",
-          children: [
-            {
-              name: "title",
-              tag: "span",
-              classList: ["urlbarView-title"],
-            },
-            {
-              name: "separator",
-              tag: "span",
-              classList: ["urlbarView-title-separator"],
-            },
-            {
-              name: "url",
-              tag: "span",
-              classList: ["urlbarView-url"],
-            },
-          ],
-        },
-        {
-          name: "description",
-          tag: "span",
-        },
-        {
-          name: "footer",
-          tag: "span",
-          children: [
-            {
-              name: "ratingContainer",
-              tag: "span",
-              children: [
-                {
-                  classList: ["urlbarView-dynamic-addons-rating"],
-                  name: "rating0",
-                  tag: "span",
-                },
-                {
-                  classList: ["urlbarView-dynamic-addons-rating"],
-                  name: "rating1",
-                  tag: "span",
-                },
-                {
-                  classList: ["urlbarView-dynamic-addons-rating"],
-                  name: "rating2",
-                  tag: "span",
-                },
-                {
-                  classList: ["urlbarView-dynamic-addons-rating"],
-                  name: "rating3",
-                  tag: "span",
-                },
-                {
-                  classList: ["urlbarView-dynamic-addons-rating"],
-                  name: "rating4",
-                  tag: "span",
-                },
-              ],
-            },
-            {
-              name: "reviews",
-              tag: "span",
-            },
-          ],
-        },
-      ],
-    },
-  ],
 };
 
 const RESULT_MENU_COMMAND = {
@@ -117,12 +31,6 @@ const RESULT_MENU_COMMAND = {
  * A feature that supports Addon suggestions.
  */
 export class AddonSuggestions extends BaseFeature {
-  constructor() {
-    super();
-    lazy.UrlbarResult.addDynamicResultType("addons");
-    lazy.UrlbarView.addDynamicViewTemplate("addons", VIEW_TEMPLATE);
-  }
-
   get shouldEnable() {
     return (
       lazy.UrlbarPrefs.get("addonsFeatureGate") &&
@@ -158,11 +66,8 @@ export class AddonSuggestions extends BaseFeature {
       url: suggestion.url,
       title: suggestion.title,
       description: suggestion.description,
-      rating: suggestion.rating,
-      number_of_ratings: suggestion.number_of_ratings,
       guid: suggestion.guid,
       score: suggestion.score,
-      is_top_pick: suggestion.is_top_pick,
     }));
   }
 
@@ -214,10 +119,7 @@ export class AddonSuggestions extends BaseFeature {
       }
     }
 
-    // If is_top_pick is not specified, handle it as top pick suggestion.
-    suggestion.is_top_pick = suggestion.is_top_pick ?? true;
-
-    const { guid, rating, number_of_ratings } =
+    const { guid } =
       suggestion.source === "remote-settings"
         ? suggestion
         : suggestion.custom_details.amo;
@@ -240,98 +142,33 @@ export class AddonSuggestions extends BaseFeature {
     const payload = {
       url: url.href,
       originalUrl: suggestion.url,
+      shouldShowUrl: true,
       title: suggestion.title,
       description: suggestion.description,
-      rating: Number(rating),
-      reviews: Number(number_of_ratings),
+      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
       helpUrl: lazy.QuickSuggest.HELP_URL,
-      shouldNavigate: true,
-      dynamicType: "addons",
     };
 
-    let result = Object.assign(
+    return Object.assign(
       new lazy.UrlbarResult(
-        lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+        lazy.UrlbarUtils.RESULT_TYPE.URL,
         lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(
           queryContext.tokens,
           payload
         )
       ),
-      { showFeedbackMenu: true }
+      {
+        // UrlbarProviderQuickSuggest will make the result a best match only if
+        // `bestMatch.enabled` is true. Addon suggestions should always be best
+        // matches, so override the provider by setting the related properties.
+        isBestMatch: true,
+        suggestedIndex: 1,
+        isRichSuggestion: true,
+        richSuggestionIconSize: 24,
+        showFeedbackMenu: true,
+      }
     );
-
-    // UrlbarProviderQuickSuggest will make the result a best match only if
-    // `browser.urlbar.bestMatch.enabled` is true. Addon suggestions should be
-    // best matches regardless (as long as `suggestion.is_top_pick` is true), so
-    // override the provider behavior by setting the related properties here.
-    if (suggestion.is_top_pick) {
-      result.isBestMatch = true;
-      result.suggestedIndex = 1;
-    }
-
-    return result;
-  }
-
-  getViewUpdate(result) {
-    const treatment = lazy.UrlbarPrefs.get("addonsUITreatment");
-    const rating = result.payload.rating;
-
-    return {
-      content: {
-        attributes: { treatment },
-      },
-      icon: {
-        attributes: {
-          src: result.payload.icon,
-        },
-      },
-      url: {
-        textContent: result.payload.url,
-      },
-      title: {
-        textContent: result.payload.title,
-      },
-      description: {
-        textContent: result.payload.description,
-      },
-      rating0: {
-        attributes: {
-          fill: this.#getRatingStar(0, rating),
-        },
-      },
-      rating1: {
-        attributes: {
-          fill: this.#getRatingStar(1, rating),
-        },
-      },
-      rating2: {
-        attributes: {
-          fill: this.#getRatingStar(2, rating),
-        },
-      },
-      rating3: {
-        attributes: {
-          fill: this.#getRatingStar(3, rating),
-        },
-      },
-      rating4: {
-        attributes: {
-          fill: this.#getRatingStar(4, rating),
-        },
-      },
-      reviews: {
-        l10n:
-          treatment === "b"
-            ? { id: "firefox-suggest-addons-recommended" }
-            : {
-                id: "firefox-suggest-addons-reviews",
-                args: {
-                  quantity: result.payload.reviews,
-                },
-              },
-      },
-    };
   }
 
   getResultCommands(result) {
@@ -407,21 +244,6 @@ export class AddonSuggestions extends BaseFeature {
         }
         break;
     }
-  }
-
-  #getRatingStar(nth, rating) {
-    // 0    <= x <  0.25 = empty
-    // 0.25 <= x <  0.75 = half
-    // 0.75 <= x <= 1    = full
-    // ... et cetera, until x <= 5.
-    const distanceToFull = rating - nth;
-    if (distanceToFull < 0.25) {
-      return "empty";
-    }
-    if (distanceToFull < 0.75) {
-      return "half";
-    }
-    return "full";
   }
 
   incrementShowLessFrequentlyCount() {
