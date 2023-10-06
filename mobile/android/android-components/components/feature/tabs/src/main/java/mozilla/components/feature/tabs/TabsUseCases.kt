@@ -499,6 +499,39 @@ class TabsUseCases(
         }
     }
 
+    /**
+     * Use case for reopening a private tab as a regular (ie, non-private) tab.
+     *
+     * To avoid complications with tab parenting etc (ie, to avoid the scenario where
+     * private tabs are parented by non-private tabs) this is not a "move" operation
+     * but instead more of a "close + open" operation.
+     */
+    class MigratePrivateTabUseCase(
+        private val store: BrowserStore,
+    ) {
+        /**
+         * @param tabId the ID of the session to move.
+         * @param alternativeUrl url to load. If not specified the URL from the tab will be used.
+         * @return the ID of the tab that was re-created as part of the move.
+         */
+        operator fun invoke(
+            tabId: String,
+            alternativeUrl: String? = null,
+        ): String {
+            val tab = store.state.findTab(tabId) ?: throw IllegalStateException("Tab does not exist.")
+
+            require(tab.content.private) { "The tab we are trying to move is not private." }
+
+            val url = alternativeUrl ?: tab.content.url
+            val newTab = createTab(url)
+
+            store.dispatch(TabListAction.RemoveTabAction(tabId, false))
+            store.dispatch(TabListAction.AddTabAction(newTab, true))
+
+            return newTab.id
+        }
+    }
+
     val selectTab: SelectTabUseCase by lazy { DefaultSelectTabUseCase(store) }
     val removeTab: RemoveTabUseCase by lazy { DefaultRemoveTabUseCase(store) }
     val addTab: AddNewTabUseCase by lazy { AddNewTabUseCase(store) }
@@ -511,4 +544,5 @@ class TabsUseCases(
     val selectOrAddTab: SelectOrAddUseCase by lazy { SelectOrAddUseCase(store) }
     val duplicateTab: DuplicateTabUseCase by lazy { DuplicateTabUseCase(store) }
     val moveTabs: MoveTabsUseCase by lazy { MoveTabsUseCase(store) }
+    val migratePrivateTabUseCase: MigratePrivateTabUseCase by lazy { MigratePrivateTabUseCase(store) }
 }

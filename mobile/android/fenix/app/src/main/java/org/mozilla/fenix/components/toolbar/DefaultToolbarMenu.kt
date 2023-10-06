@@ -35,12 +35,14 @@ import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
@@ -168,6 +170,19 @@ open class DefaultToolbarMenu(
         selectedSession != null && isPinningSupported &&
             context.components.useCases.webAppUseCases.isInstallable()
 
+    /**
+     * Should the "Open in regular tab" menu item be visible?
+     */
+    @VisibleForTesting(otherwise = PRIVATE)
+    fun shouldShowOpenInRegularTab(): Boolean = selectedSession?.let { session ->
+        // This feature is gated behind Nightly for the time being.
+        Config.channel.isNightlyOrDebug &&
+            // This feature is explicitly for users opening links in private tabs.
+            context.settings().openLinksInAPrivateTab &&
+            // and is only visible in private tabs.
+            session.content.private
+    } ?: false
+
     @VisibleForTesting(otherwise = PRIVATE)
     fun shouldShowOpenInApp(): Boolean = selectedSession?.let { session ->
         val appLink = context.components.useCases.appLinksUseCases.appLinkRedirect
@@ -241,6 +256,13 @@ open class DefaultToolbarMenu(
         },
     ) { checked ->
         onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked))
+    }
+
+    private val openInRegularTabItem = BrowserMenuImageText(
+        label = context.getString(R.string.browser_menu_open_in_regular_tab),
+        imageResource = R.drawable.ic_open_in_regular_tab,
+    ) {
+        onItemTapped.invoke(ToolbarMenu.Item.OpenInRegularTab)
     }
 
     private val customizeReaderView = BrowserMenuImageText(
@@ -384,6 +406,7 @@ open class DefaultToolbarMenu(
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,
+                openInRegularTabItem.apply { visible = ::shouldShowOpenInRegularTab },
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
                 openInApp.apply { visible = ::shouldShowOpenInApp },
                 reportSiteIssuePlaceholder,

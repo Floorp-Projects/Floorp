@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!--
+
+NOTE: This is a copy of ic_open_in_new.xml with the following changes:
+* All widths and heights on the <vector> element are 24 instead of 18.
+* A containing group with "translate" values so the image is centered vertically
+  and horizontally.
+
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:translateX="3"
+        android:translateY="3"
+    >
+        <path
+            android:fillColor="?attr/textPrimary"
+            android:fillType="evenOdd"
+            android:pathData="M9,0a1.005,1.005 0,1 1,0 2.012L4.557,2.012a2.55,2.55 0,0 0,-2.547 2.547v8.883a2.55,2.55 0,0 0,2.547 2.547h8.883a2.55,2.55 0,0 0,2.547 -2.547L15.987,8.97a1.006,1.006 0,1 1,2.011 0v4.472A4.564,4.564 0,0 1,13.441 18L4.558,18A4.564,4.564 0,0 1,0 13.442L0,4.559a4.564,4.564 0,0 1,4.56 -4.56zM17,0a1,1 0,0 1,1 1v4a1,1 0,1 1,-2 0L16,3.414l-5.293,5.293a0.999,0.999 0,1 1,-1.414 -1.414L14.586,2L13,2a1,1 0,1 1,0 -2z" />
+    </group>
+</vector>

@@ -94,6 +94,7 @@ class DefaultBrowserToolbarMenuController(
     override fun handleToolbarItemInteraction(item: ToolbarMenu.Item) {
         val sessionUseCases = activity.components.useCases.sessionUseCases
         val customTabUseCases = activity.components.useCases.customTabsUseCases
+        val tabsUseCases = activity.components.useCases.tabsUseCases
         trackToolbarItemInteraction(item)
 
         when (item) {
@@ -252,6 +253,13 @@ class DefaultBrowserToolbarMenuController(
                         item.isChecked,
                         it.id,
                     )
+                }
+            }
+            is ToolbarMenu.Item.OpenInRegularTab -> {
+                currentSession?.let { session ->
+                    getProperUrl(session)?.let { url ->
+                        tabsUseCases.migratePrivateTabUseCase.invoke(session.id, url)
+                    }
                 }
             }
             is ToolbarMenu.Item.AddToTopSites -> {
@@ -443,6 +451,8 @@ class DefaultBrowserToolbarMenuController(
                 } else {
                     Events.browserMenuAction.record(Events.BrowserMenuActionExtra("desktop_view_off"))
                 }
+            is ToolbarMenu.Item.OpenInRegularTab ->
+                Events.browserMenuAction.record(Events.BrowserMenuActionExtra("open_in_regular_tab"))
             is ToolbarMenu.Item.FindInPage ->
                 Events.browserMenuAction.record(Events.BrowserMenuActionExtra("find_in_page"))
             is ToolbarMenu.Item.SaveToCollection ->

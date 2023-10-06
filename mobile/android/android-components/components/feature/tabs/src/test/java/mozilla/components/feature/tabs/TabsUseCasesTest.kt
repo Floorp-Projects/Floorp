@@ -35,6 +35,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -579,5 +580,53 @@ class TabsUseCasesTest {
         store.waitUntilIdle()
         assertEquals("https://firefox.com", store.state.tabs[0].content.url)
         assertEquals("https://mozilla.org", store.state.tabs[1].content.url)
+    }
+
+    @Test
+    fun `MigratePrivateTabUseCase will migrate a private tab`() {
+        val tab = createTab("https://mozilla.org", private = true)
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        assertEquals(1, store.state.tabs.size)
+        assertEquals(true, store.state.tabs[0].content.private)
+
+        tabsUseCases.migratePrivateTabUseCase(tab.id)
+        store.waitUntilIdle()
+        // Still only 1 tab and that tab still has the same URL...
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://mozilla.org", store.state.tabs[0].content.url)
+        // But it's no longer private and has a different tabId.
+        assertEquals(false, store.state.tabs[0].content.private)
+        assertNotEquals(store.state.tabs[0].id, tab.id)
+    }
+
+    @Test
+    fun `MigratePrivateTabUseCase will respect alternativeUrl`() {
+        // This (obviously!) isn't a real reader-mode URL, but is fine for the purposes of this test.
+        val tab = createTab("https://mozilla.org/reader-mode", private = true)
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+
+        tabsUseCases.migratePrivateTabUseCase(store.state.tabs[0].id, "https://mozilla.org/not-reader-mode")
+        store.waitUntilIdle()
+        // Still only 1 tab with our alternative URL
+        assertEquals(1, store.state.tabs.size)
+        assertEquals("https://mozilla.org/not-reader-mode", store.state.tabs[0].content.url)
+        assertEquals(false, store.state.tabs[0].content.private)
+    }
+
+    @Test
+    fun `MigratePrivateTabUseCase will fail on a regular tab`() {
+        val tab = createTab("https://mozilla.org")
+        store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()
+        assertEquals(1, store.state.tabs.size)
+        assertThrows(IllegalArgumentException::class.java) {
+            tabsUseCases.migratePrivateTabUseCase(tab.id)
+        }
+    }
+
+    @Test
+    fun `MigratePrivateTabUseCase will fail if the tab can't be found`() {
+        assertThrows(IllegalStateException::class.java) {
+            tabsUseCases.migratePrivateTabUseCase("invalid-tab-id")
+        }
     }
 }
