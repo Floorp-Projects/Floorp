@@ -84,12 +84,8 @@ jobs:
                         - repackage/win64_signed.py
         package-formats:
             by-build-platform:
-                macosx64\b.*:
-                    by-build-type:
-                        # Debug builds can't be attributable
-                        debug: [dmg]
-                        default: [dmg-attrib]
                 linux.*: [mar]
+                macosx64\b.*: [mar, dmg, pkg]
                 win32\b.*: [mar, installer]
                 win64\b.*: [mar, installer]
         fetches:

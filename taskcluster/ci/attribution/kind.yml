@@ -5,7 +5,6 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.attribution:resolve_keyed_by_transforms
     - gecko_taskgraph.transforms.attribution:transforms
     - taskgraph.transforms.task_context
     - gecko_taskgraph.transforms.job:transforms
@@ -14,9 +13,6 @@ transforms:
 kind-dependencies:
     # Windows
     - repackage-signing
-    # Mac
-    - repackage
-    - toolchain
 
 job-defaults:
     description: Attribute release builds
@@ -25,22 +21,11 @@ job-defaults:
     run-on-projects: []
     worker-type: b-linux-gcp
     fetches:
-        by-build-platform:
-            win.*:
-                repackage-signing:
-                    - target.installer.exe
-            mac.*:
-                repackage:
-                    - target.dmg
-                toolchain:
-                    - linux64-libdmg
+        repackage-signing:
+            - target.installer.exe
     attributes:
         release_artifacts:
-            by-build-platform:
-                win.*:
-                    - public/build/target.installer.exe
-                mac.*:
-                    - public/build/target.dmg
+            - public/build/target.installer.exe
     treeherder:
         symbol: Attr
         kind: other
@@ -63,27 +48,17 @@ job-defaults:
         using: run-task
         cwd: "{checkout}"
         command:
-            by-build-platform:
-                win.*:
-                    - ./mach
-                    - python
-                    - python/mozrelease/mozrelease/attribute_builds.py
-                    - --attribution
-                    - dlsource={attribution_code[json][dlsource]}
-                    - --output
-                    - /builds/worker/artifacts
-                    # All jobs require attribution of target.installer.exe. Some may require
-                    # attribution of other files, which they can append themselves.
-                    - --input
-                    - /builds/worker/fetches/target.installer.exe
-                mac.*:
-                    - mkdir -p /builds/worker/artifacts &&
-                    - /builds/worker/fetches/dmg/dmg
-                    - attribute
-                    - /builds/worker/fetches/target.dmg
-                    - /builds/worker/artifacts/target.dmg
-                    - __MOZCUSTOM__
-                    - __MOZCUSTOM__dlsource%3D{attribution_code[json][dlsource]}
+            - ./mach
+            - python
+            - python/mozrelease/mozrelease/attribute_builds.py
+            - --attribution
+            - dlsource={attribution_code[json][dlsource]}
+            - --output
+            - /builds/worker/artifacts
+            # All jobs require attribution of target.installer.exe. Some may require
+            # attribution of other files, which they can append themselves.
+            - --input
+            - /builds/worker/fetches/target.installer.exe
 
 jobs:
     win32-devedition/opt:
@@ -151,25 +126,3 @@ jobs:
             platform: win64-aarch64-devedition/opt
         dependencies:
             repackage-signing: repackage-signing-win64-aarch64-devedition/opt
-
-    macosx64-devedition/opt:
-        label: attribution-macosx64-devedition/opt
-        shipping-product: devedition
-        attributes:
-            build_platform: macosx64-devedition
-            build_type: opt
-        treeherder:
-            platform: macosx64-devedition/opt
-        dependencies:
-            repackage: repackage-macosx64-devedition/opt
-
-    macosx64-shippable/opt:
-        label: attribution-macosx64-shippable/opt
-        shipping-product: firefox
-        attributes:
-            build_platform: macosx64-shippable
-            build_type: opt
-        treeherder:
-            platform: macosx64-shippable/opt
-        dependencies:
-            repackage: repackage-macosx64-shippable/opt
