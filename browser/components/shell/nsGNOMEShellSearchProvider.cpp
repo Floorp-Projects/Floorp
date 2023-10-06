@@ -68,7 +68,7 @@ class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
 
   AsyncFaviconDataReady(RefPtr<nsGNOMEShellHistorySearchResult> aSearchResult,
                         int aIconIndex, int aTimeStamp)
-      : mSearchResult(aSearchResult),
+      : mSearchResult(std::move(aSearchResult)),
         mIconIndex(aIconIndex),
         mTimeStamp(aTimeStamp){};
 
