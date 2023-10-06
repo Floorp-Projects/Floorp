@@ -309,14 +309,10 @@ class Nursery {
 
   size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  // The number of bytes from the start position to the end of the nursery.
-  // pass maxChunkCount(), allocatedChunkCount() or chunkCountLimit()
-  // to calculate the nursery size, current lazy-allocated size or nursery
-  // limit respectively.
-  size_t spaceToEnd(unsigned chunkCount) const;
-
   size_t capacity() const { return capacity_; }
-  size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
+  size_t committed() const {
+    return std::min(capacity_, allocatedChunkCount() * gc::ChunkSize);
+  }
 
   // Used and free space both include chunk headers for that part of the
   // nursery.
