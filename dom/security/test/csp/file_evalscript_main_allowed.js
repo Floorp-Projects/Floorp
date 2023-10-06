@@ -1,3 +1,4 @@
+/* eslint-disable no-eval */
 // some javascript for the CSP eval() tests
 // all of these evals should succeed, as the document loading this script
 // has script-src 'self' 'unsafe-eval'

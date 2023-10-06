@@ -25,6 +25,7 @@ or styles are specified.
     // try/catch is used because CSP causes eval to throw an exception when it
     // is blocked, which would derail the rest of the tests  in this file.
     try {
+      // eslint-disable-next-line no-eval
       eval('document.getElementById("unsafe-eval-script-allowed").style.color = "green";');
     } catch (e) {}
   </script>

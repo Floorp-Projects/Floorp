@@ -26,6 +26,7 @@ var x = [ 'Left','Top','Width','Height' ];
 function test(id,s,expected) {
   var el = document.getElementById(id);
   for(var i = 0; i < x.length; ++i) {
+    // eslint-disable-next-line no-eval
     var actual = eval('el.'+s+x[i]);
     if (expected[i] != -1 && s+x[i]!='scrollHeight')
       is(actual, expected[i], id+"."+s+x[i]);

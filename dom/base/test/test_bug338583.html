@@ -638,6 +638,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
     var f = function() {
       for (var j=0; j<f.i; ++j)
+        // eslint-disable-next-line no-eval
         eval("Math.log(Math.atan(Math.sqrt(Math.pow(3.1415, 13.1415))/0.0007))");
       if (f.i < 10) {
         f.i++;
