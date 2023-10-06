@@ -14298,6 +14298,26 @@
   value: false
   mirror: always
 
+- name: test.events.async.key.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: test.events.async.mouse.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: test.events.async.touch.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: test.events.async.wheel.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: test.mousescroll
   type: RelaxedAtomicBool
   value: false
