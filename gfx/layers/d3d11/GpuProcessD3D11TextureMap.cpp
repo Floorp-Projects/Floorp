@@ -234,7 +234,8 @@ bool GpuProcessD3D11TextureMap::WaitTextureReady(
 }
 
 void GpuProcessD3D11TextureMap::PostUpdateTextureDataTask(
-    const GpuProcessTextureId aTextureId, TextureHost* aWrappedTextureHost,
+    const GpuProcessTextureId aTextureId, TextureHost* aTextureHost,
+    TextureHost* aWrappedTextureHost,
     TextureWrapperD3D11Allocator* aAllocator) {
   {
     MonitorAutoLock lock(mMonitor);
@@ -246,7 +247,7 @@ void GpuProcessD3D11TextureMap::PostUpdateTextureDataTask(
     }
 
     auto updatingTexture = MakeUnique<UpdatingTextureHolder>(
-        aTextureId, aWrappedTextureHost, aAllocator);
+        aTextureId, aTextureHost, aWrappedTextureHost, aAllocator);
 
     mWaitingTextures.emplace(aTextureId);
     mWaitingTextureQueue.push_back(std::move(updatingTexture));
@@ -385,9 +386,10 @@ GpuProcessD3D11TextureMap::TextureHolder::TextureHolder(
       mIMFSampleUsageInfo(aUsageInfo) {}
 
 GpuProcessD3D11TextureMap::UpdatingTextureHolder::UpdatingTextureHolder(
-    const GpuProcessTextureId aTextureId, TextureHost* aWrappedTextureHost,
-    TextureWrapperD3D11Allocator* aAllocator)
+    const GpuProcessTextureId aTextureId, TextureHost* aTextureHost,
+    TextureHost* aWrappedTextureHost, TextureWrapperD3D11Allocator* aAllocator)
     : mTextureId(aTextureId),
+      mTextureHost(aTextureHost),
       mWrappedTextureHost(aWrappedTextureHost),
       mAllocator(aAllocator) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
