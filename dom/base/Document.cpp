@@ -16734,46 +16734,36 @@ BrowsingContext* Document::GetBrowsingContext() const {
 }
 
 void Document::NotifyUserGestureActivation() {
-  // https://html.spec.whatwg.org/multipage/interaction.html#activation-notification
-  // 1. "Assert: document is fully active."
-  RefPtr<BrowsingContext> currentBC = GetBrowsingContext();
-  if (!currentBC) {
-    return;
-  }
+  if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
+    bc->PreOrderWalk([&](BrowsingContext* aBC) {
+      WindowContext* windowContext = aBC->GetCurrentWindowContext();
+      if (!windowContext) {
+        return;
+      }
 
-  RefPtr<WindowContext> currentWC = GetWindowContext();
-  if (!currentWC) {
-    return;
-  }
+      nsIDocShell* docShell = aBC->GetDocShell();
+      if (!docShell) {
+        return;
+      }
 
-  // 2. "Let windows be « document's relevant global object"
-  // Instead of assembling a list, we just call notify for wanted windows as we
-  // find them
-  currentWC->NotifyUserGestureActivation();
+      Document* document = docShell->GetDocument();
+      if (!document) {
+        return;
+      }
 
-  // 3. "...windows with the active window of each of document's ancestor
-  // navigables."
-  for (WindowContext* wc = currentWC; wc; wc = wc->GetParentWindowContext()) {
-    wc->NotifyUserGestureActivation();
-  }
+      // XXXedgar we probably could just check `IsInProcess()` after fission
+      // enable.
+      if (NodePrincipal()->Equals(document->NodePrincipal())) {
+        windowContext->NotifyUserGestureActivation();
+      }
+    });
 
-  // 4. "windows with the active window of each of document's descendant
-  // navigables, filtered to include only those navigables whose active
-  // document's origin is same origin with document's origin"
-  currentBC->PreOrderWalk([&](BrowsingContext* bc) {
-    WindowContext* wc = bc->GetCurrentWindowContext();
-    if (!wc) {
-      return;
+    for (bc = bc->GetParent(); bc; bc = bc->GetParent()) {
+      if (WindowContext* windowContext = bc->GetCurrentWindowContext()) {
+        windowContext->NotifyUserGestureActivation();
+      }
     }
-
-    // Check same-origin as current document
-    WindowGlobalChild* wgc = wc->GetWindowGlobalChild();
-    if (!wgc || !wgc->IsSameOriginWith(currentWC)) {
-      return;
-    }
-
-    wc->NotifyUserGestureActivation();
-  });
+  }
 }
 
 bool Document::HasBeenUserGestureActivated() {
