@@ -180,8 +180,8 @@ macosx64-aarch64-asan-fuzzing/opt:
         # The gtest libxul contains libFuzzer targets
         skip-verify-test-packaging: true
     treeherder:
-        platform: osx-cross/asan
-        symbol: Bofaarch64
+        platform: osx-cross-aarch64/asan
+        symbol: Bof
     worker:
         max-run-time: 5400
         env:
@@ -215,8 +215,8 @@ macosx64-aarch64-fuzzing/debug:
         # The gtest libxul contains libFuzzer targets
         skip-verify-test-packaging: true
     treeherder:
-        platform: osx-cross/debug
-        symbol: Bfaarch64
+        platform: osx-cross-aarch64/debug
+        symbol: Bf
     worker:
         max-run-time: 5400
         env:
@@ -521,7 +521,7 @@ macosx64-x64-add-on-devel/opt:
         job-name: macosx64-x64-add-on-devel
     treeherder:
         platform: osx-cross-add-on-devel/opt
-        symbol: Bx64
+        symbol: Bx
         tier: 2
     worker:
         max-run-time: 3600
@@ -547,8 +547,8 @@ macosx64-aarch64-add-on-devel/opt:
     index:
         job-name: macosx64-aarch64-add-on-devel
     treeherder:
-        platform: osx-cross-add-on-devel/opt
-        symbol: Ba64
+        platform: osx-cross-aarch64-add-on-devel/opt
+        symbol: B
         tier: 2
     worker:
         max-run-time: 3600
