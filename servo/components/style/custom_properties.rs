@@ -1269,6 +1269,39 @@ fn substitute_all(
     }
 }
 
+// See https://drafts.csswg.org/css-variables-2/#invalid-at-computed-value-time
+fn handle_invalid_at_computed_value_time(
+    name: &Name,
+    custom_properties: &mut ComputedCustomProperties,
+    inherited: &ComputedCustomProperties,
+    stylist: &Stylist,
+    is_root_element: bool,
+) {
+    let custom_registration = stylist.get_custom_property_registration(&name);
+    if let Some(ref registration) = custom_registration {
+        if !registration.syntax.is_universal() {
+            // For the root element, inherited maps are empty. We should just
+            // use the initial value if any, rather than removing the name.
+            if registration.inherits && !is_root_element {
+                if let Some(value) = inherited.get(stylist, name) {
+                    custom_properties.insert(custom_registration, name.clone(), Arc::clone(value));
+                    return;
+                }
+            } else {
+                if let Some(ref initial_value) = registration.initial_value {
+                    custom_properties.insert(
+                        custom_registration,
+                        name.clone(),
+                        Arc::clone(initial_value),
+                    );
+                    return;
+                }
+            }
+        }
+    }
+    custom_properties.remove(custom_registration, name);
+}
+
 /// Replace `var()` and `env()` functions in a pre-existing variable value.
 fn substitute_references_in_value_and_apply(
     name: &Name,
@@ -1299,8 +1332,13 @@ fn substitute_references_in_value_and_apply(
         let last_token_type = match last_token_type {
             Ok(t) => t,
             Err(..) => {
-                // Invalid at computed value time.
-                custom_properties.remove(custom_registration, name);
+                handle_invalid_at_computed_value_time(
+                    name,
+                    custom_properties,
+                    inherited,
+                    stylist,
+                    is_root_element,
+                );
                 return;
             },
         };
@@ -1309,7 +1347,13 @@ fn substitute_references_in_value_and_apply(
             .push_from(&input, position, last_token_type)
             .is_err()
         {
-            custom_properties.remove(custom_registration, name);
+            handle_invalid_at_computed_value_time(
+                name,
+                custom_properties,
+                inherited,
+                stylist,
+                is_root_element,
+            );
             return;
         }
     }
@@ -1367,7 +1411,13 @@ fn substitute_references_in_value_and_apply(
         } else {
             if let Some(registration) = custom_registration {
                 if ComputedRegisteredValue::compute(&mut input, registration).is_err() {
-                    custom_properties.remove(custom_registration, name);
+                    handle_invalid_at_computed_value_time(
+                        name,
+                        custom_properties,
+                        inherited,
+                        stylist,
+                        is_root_element,
+                    );
                     return;
                 }
             }
