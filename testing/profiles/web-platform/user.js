@@ -92,3 +92,5 @@ user_pref("security.webauth.webauthn_enable_android_fido2", false);
 user_pref("security.webauth.webauthn_testing_allow_direct_attestation", true);
 // Disable captive portal service
 user_pref("network.captive-portal-service.enabled", false);
+// Ensure that any mouse wheel movement will trigger a new wheel transaction
+user_pref("mousewheel.transaction.timeout", 0);
