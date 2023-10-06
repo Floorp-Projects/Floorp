@@ -27,8 +27,8 @@ const PanelOffsetY = -8;
 // The max dimension for a canvas is defined https://searchfox.org/mozilla-central/rev/f40d29a11f2eb4685256b59934e637012ea6fb78/gfx/cairo/cairo/src/cairo-image-surface.c#62.
 // The max number of pixels for a canvas is 124925329 or 11177 x 11177.
 // We have to limit screenshots to these dimensions otherwise it will cause an error.
-const MAX_CAPTURE_DIMENSION = 32767;
-const MAX_CAPTURE_AREA = 124925329;
+export const MAX_CAPTURE_DIMENSION = 32766;
+export const MAX_CAPTURE_AREA = 124925329;
 
 export class ScreenshotsComponentParent extends JSWindowActorParent {
   async receiveMessage(message) {
@@ -517,8 +517,8 @@ export var ScreenshotsUtils = {
   },
 
   /**
-   * The max one dimesion for a canvas is 32767 and the max canvas area is
-   * 124925329. If the width or height is greater than 32767 we will crop the
+   * The max dimension of any side of a canvas is 32767 and the max canvas area is
+   * 124925329. If the width or height is greater or equal to 32766 we will crop the
    * screenshot to the max width. If the area is still too large for the canvas
    * we will adjust the height so we can successfully capture the screenshot.
    * @param {Object} rect The dimensions of the screenshot. The rect will be
