@@ -73,7 +73,8 @@ ThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent,
   }
 
   NS_ASSERTION(!gXPCOMThreadsShutDownNotified || mIsMainThread ||
-                   PR_GetCurrentThread() == mThread,
+                   PR_GetCurrentThread() == mThread ||
+                   (aFlags & NS_DISPATCH_IGNORE_BLOCK_DISPATCH),
                "Dispatch to non-main thread after xpcom-shutdown-threads");
 
   if (mBlockDispatch && !(aFlags & NS_DISPATCH_IGNORE_BLOCK_DISPATCH)) {
