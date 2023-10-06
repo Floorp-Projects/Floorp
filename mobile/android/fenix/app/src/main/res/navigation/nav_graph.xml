@@ -121,13 +121,7 @@
         app:destination="@id/bookmarkEditFragment" />
     <action
         android:id="@+id/action_global_addonsManagementFragment"
-        app:destination="@id/addons_management_graph">
-        <argument
-            android:name="installAddonId"
-            android:defaultValue="@null"
-            app:argType="string"
-            app:nullable="true" />
-    </action>
+        app:destination="@id/addons_management_graph" />
     <action
         android:id="@+id/action_global_trackingProtectionFragment"
         app:destination="@id/trackingProtectionFragment" />

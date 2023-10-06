@@ -19,7 +19,6 @@ import mozilla.components.concept.engine.webextension.WebExtension
  * @property id The unique ID of this add-on.
  * @property author Information about the add-on author.
  * @property categories List of categories the add-on belongs to.
- * @property downloadId The unique ID of the latest version of the add-on (xpi) file.
  * @property downloadUrl The (absolute) URL to download the latest version of the add-on file.
  * @property version The add-on version e.g "1.23.0".
  * @property permissions List of the add-on permissions for this File.
@@ -44,7 +43,6 @@ data class Addon(
     val id: String,
     val author: Author? = null,
     val categories: List<String> = emptyList(),
-    val downloadId: String = "",
     val downloadUrl: String = "",
     val version: String = "",
     val permissions: List<String> = emptyList(),

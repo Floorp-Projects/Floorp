@@ -422,7 +422,6 @@ internal fun JSONObject.toAddon(language: String? = null): Addon {
             categories = getCategories(),
             createdAt = getSafeString("created"),
             updatedAt = getCurrentVersionCreated(),
-            downloadId = getDownloadId(),
             downloadUrl = getDownloadUrl(),
             version = getCurrentVersion(),
             permissions = getPermissions(),
@@ -482,10 +481,6 @@ internal fun JSONObject.getFile(): JSONObject? {
     return getJSONObject("current_version")
         .getSafeJSONArray("files")
         .optJSONObject(0)
-}
-
-internal fun JSONObject.getDownloadId(): String {
-    return getFile()?.getSafeString("id").orEmpty()
 }
 
 internal fun JSONObject.getCurrentVersionCreated(): String {

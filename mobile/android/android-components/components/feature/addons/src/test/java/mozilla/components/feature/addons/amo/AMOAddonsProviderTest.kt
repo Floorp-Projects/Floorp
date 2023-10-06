@@ -66,7 +66,6 @@ class AMOAddonsProviderTest {
         assertEquals("", addon.iconUrl)
         assertEquals("", addon.siteUrl)
         assertEquals("", addon.version)
-        assertEquals("", addon.downloadId)
         assertEquals("", addon.downloadUrl)
         assertTrue(addon.permissions.isEmpty())
         assertTrue(addon.translatableName.isEmpty())
@@ -109,10 +108,6 @@ class AMOAddonsProviderTest {
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
             addon.siteUrl,
-        )
-        assertEquals(
-            "3719054",
-            addon.downloadId,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
@@ -671,10 +666,6 @@ class AMOAddonsProviderTest {
             addon.siteUrl,
         )
         assertEquals(
-            "4141256",
-            addon.downloadId,
-        )
-        assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/4141256/ublock_origin-1.51.0.xpi",
             addon.downloadUrl,
         )
@@ -746,10 +737,6 @@ class AMOAddonsProviderTest {
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/google-search-fixer/",
             addon.siteUrl,
-        )
-        assertEquals(
-            "3655036",
-            addon.downloadId,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3655036/google_search_fixer-1.6.xpi",
@@ -925,10 +912,6 @@ class AMOAddonsProviderTest {
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
             addon.siteUrl,
-        )
-        assertEquals(
-            "4141256",
-            addon.downloadId,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/4141256/ublock_origin-1.51.0.xpi",
