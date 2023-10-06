@@ -27,8 +27,8 @@ SimpleTest.waitForExplicitFinish();
 
 function runTest()
 {
-  var fm = Components.classes["@mozilla.org/focus-manager;1"].
-             getService(Components.interfaces.nsIFocusManager);
+  var fm = Cc["@mozilla.org/focus-manager;1"].
+             getService(Ci.nsIFocusManager);
   var div = document.getElementById('div');
   var a = document.getElementById('a');
   synthesizeMouse(a, 4, 4, { type: "mousedown" }, window);

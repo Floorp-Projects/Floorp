@@ -1,6 +1,6 @@
 // Test server for bug 1268962
 "use strict";
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 const HTTPStatus = new Map([
   [100, "Continue"],
   [101, "Switching Protocol"],

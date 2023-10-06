@@ -7,7 +7,7 @@ function handleRequest(request, response) {
   // Eg, http://localhost:8888/authenticate.sjs?user=foo&realm=bar
   // The extra ? allows the user/pass/realm checks to succeed if the name is
   // at the beginning of the query string.
-  Components.utils.importGlobalProperties(["URLSearchParams"]);
+  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let expected_user = query.get("user");

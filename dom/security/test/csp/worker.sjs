@@ -1,4 +1,4 @@
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 const SJS = "http://mochi.test:8888/tests/dom/security/test/csp/worker.sjs";
 

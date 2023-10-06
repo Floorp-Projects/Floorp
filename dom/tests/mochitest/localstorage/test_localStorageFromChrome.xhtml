@@ -12,12 +12,12 @@ async function startTest()
   await SpecialPowers.pushPrefEnv({"set": [["dom.storage.client_validation", false]]});
 
   var url = "http://example.com/tests/dom/tests/mochitest/localstorage/frameChromeSlave.html";
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-    .getService(Components.interfaces.nsIIOService);
-  var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-    .getService(Components.interfaces.nsIScriptSecurityManager);
-  var dsm = Components.classes["@mozilla.org/dom/localStorage-manager;1"]
-    .getService(Components.interfaces.nsIDOMStorageManager);
+  var ios = Cc["@mozilla.org/network/io-service;1"]
+    .getService(Ci.nsIIOService);
+  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+    .getService(Ci.nsIScriptSecurityManager);
+  var dsm = Cc["@mozilla.org/dom/localStorage-manager;1"]
+    .getService(Ci.nsIDOMStorageManager);
 
   var uri = ios.newURI(url);
   var principal = ssm.createContentPrincipal(uri, {});
@@ -41,7 +41,7 @@ async function startTest()
     localStorage;
   }
   catch (e) {
-    is(e.result, Components.results.NS_ERROR_NOT_AVAILABLE,
+    is(e.result, Cr.NS_ERROR_NOT_AVAILABLE,
        "Testing that we get the expected exception.");
     exceptionCaught = true;
   }

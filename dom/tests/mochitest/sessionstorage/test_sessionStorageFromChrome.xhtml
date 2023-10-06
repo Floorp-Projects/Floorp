@@ -16,7 +16,7 @@ function startTest()
     sessionStorage;
   }
   catch (e) {
-    is(e.result, Components.results.NS_ERROR_NOT_AVAILABLE,
+    is(e.result, Cr.NS_ERROR_NOT_AVAILABLE,
        "Testing that we get the expected exception.");
     exceptionCaught = true;
   }

@@ -2,7 +2,7 @@
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1529068
 
 "use strict";
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 const TEST_NAVIGATION_HEAD = `
   <!DOCTYPE HTML>

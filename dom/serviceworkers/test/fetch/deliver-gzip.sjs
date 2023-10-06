@@ -12,9 +12,9 @@ function handleRequest(request, response) {
   response.setHeader("Content-Length", "" + bytes.length, false);
   response.setHeader("Content-Type", "text/plain", false);
 
-  let bos = Components.classes[
-    "@mozilla.org/binaryoutputstream;1"
-  ].createInstance(Components.interfaces.nsIBinaryOutputStream);
+  let bos = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
+    Ci.nsIBinaryOutputStream
+  );
   bos.setOutputStream(response.bodyOutputStream);
 
   bos.writeByteArray(bytes);
