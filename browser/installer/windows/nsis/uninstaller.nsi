@@ -520,6 +520,8 @@ Section "Uninstall"
   DeleteRegKey HKCU "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID"
   DeleteRegValue HKCU "Software\RegisteredApplications" "${AppRegName}-$AppUserModelID"
 
+  ; Clean up "launch on login" registry key for this installation.
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "Mozilla-${AppName}-$AppUserModelID"
   ; Remove old protocol handler and StartMenuInternet keys without install path
   ; hashes, but only if they're for this installation.  We've never supported
   ; bare FirefoxPDF.

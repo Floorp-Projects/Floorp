@@ -158,6 +158,9 @@ const PRIVATE_BROWSING_BINARY = "private_browsing.exe";
 const PRIVATE_BROWSING_EXE_ICON_INDEX = 1;
 const PREF_PRIVATE_BROWSING_SHORTCUT_CREATED =
   "browser.privacySegmentation.createdShortcut";
+// Whether this launch was initiated by the OS.  A launch-on-login will contain
+// the "os-autostart" flag in the initial launch command line.
+let gThisInstanceIsLaunchOnLogin = false;
 
 /**
  * Fission-compatible JSProcess implementations.
@@ -1231,6 +1234,10 @@ BrowserGlue.prototype = {
         break;
       case "app-startup":
         this._earlyBlankFirstPaint(subject);
+        gThisInstanceIsLaunchOnLogin = subject.handleFlag(
+          "os-autostart",
+          false
+        );
         break;
     }
   },
@@ -2577,7 +2584,9 @@ BrowserGlue.prototype = {
           }
 
           if (!classification) {
-            if (shortcut) {
+            if (gThisInstanceIsLaunchOnLogin) {
+              classification = "Autostart";
+            } else if (shortcut) {
               classification = "OtherShortcut";
             } else {
               classification = "Other";

@@ -29,6 +29,20 @@
   <vbox id="startupPageBox">
     <checkbox id="browserRestoreSession"
               data-l10n-id="startup-restore-windows-and-tabs"/>
+#ifdef XP_WIN
+    <hbox id="windowsLaunchOnLoginBox" align="center">
+      <checkbox id="windowsLaunchOnLogin"
+                data-l10n-id="windows-launch-on-login"/>
+    </hbox>
+    <hbox id="windowsLaunchOnLoginDisabledBox" align="center" class="indent" hidden="true">
+      <hbox class="info-icon-container">
+        <html:img class="info-icon"/>
+      </hbox>
+      <html:div data-l10n-id="windows-launch-on-login-disabled">
+        <html:a id="windowsAutostartLink" class="text-link" data-l10n-name="startup-link" href="ms-settings:startupapps" target="_self" />
+      </html:div>
+    </hbox>
+#endif
   </vbox>
 
 #ifdef HAVE_SHELL_SERVICE
