@@ -71,7 +71,9 @@ class SettingsAdvancedTest {
             verifyExternalDownloadManagerButton()
             verifyExternalDownloadManagerToggle(false)
             verifyLeakCanaryButton()
-            verifyLeakCanaryToggle(true)
+            // LeakCanary is disabled in UI tests.
+            // See BuildConfig.LEAKCANARY.
+            verifyLeakCanaryToggle(false)
             verifyRemoteDebuggingButton()
             verifyRemoteDebuggingToggle(false)
         }

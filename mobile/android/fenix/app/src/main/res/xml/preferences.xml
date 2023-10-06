@@ -166,7 +166,6 @@
             android:title="@string/preferences_external_download_manager" />
 
         <androidx.preference.SwitchPreference
-            android:defaultValue="true"
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"
             app:iconSpaceReserved="false"

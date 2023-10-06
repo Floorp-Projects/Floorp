@@ -78,6 +78,8 @@ tasks:
             gradle-build-type: debug
             gradle-build-name: fenixDebug
             gradle-build: fenix
+            gradle-extra-options:
+                - -PdisableLeakCanary
             track-apk-size: true
         source-project-name: "fenix"
         treeherder:

@@ -23,7 +23,7 @@ class DebugFenixApplication : FenixApplication() {
 
         val isEnabled = components.strictMode.resetAfter(StrictMode.allowThreadDiskReads()) {
             PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean(getPreferenceKey(R.string.pref_key_leakcanary), true)
+                .getBoolean(getPreferenceKey(R.string.pref_key_leakcanary), BuildConfig.LEAKCANARY)
         }
 
         updateLeakCanaryState(isEnabled)
