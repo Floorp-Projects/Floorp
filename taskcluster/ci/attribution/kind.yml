@@ -11,6 +11,7 @@ transforms:
     - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
+    - toolchain
     # Windows
     - repackage-signing
 
@@ -59,6 +60,7 @@ job-defaults:
             # attribution of other files, which they can append themselves.
             - --input
             - /builds/worker/fetches/target.installer.exe
+    use-system-python: false
 
 jobs:
     win32-devedition/opt:
