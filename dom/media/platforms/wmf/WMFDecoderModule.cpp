@@ -248,8 +248,8 @@ HRESULT WMFDecoderModule::CreateMFTDecoder(const WMFStreamType& aType,
       if (!WMFDecoderModule::IsHEVCSupported() || !sDXVAEnabled) {
         return E_FAIL;
       }
-      return SUCCEEDED(aDecoder->Create(
-          MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_HEVC, MFVideoFormat_NV12));
+      return aDecoder->Create(MFT_CATEGORY_VIDEO_DECODER, MFVideoFormat_HEVC,
+                              MFVideoFormat_NV12);
     case WMFStreamType::MP3:
       return aDecoder->Create(CLSID_CMP3DecMediaObject);
     case WMFStreamType::AAC:
