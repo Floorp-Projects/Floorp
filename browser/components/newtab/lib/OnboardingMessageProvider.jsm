@@ -50,6 +50,7 @@ const L10N = new Localization([
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
+const FOURTEEN_DAYS_IN_MS = 14 * 24 * 60 * 60 * 1000;
 
 const BASE_MESSAGES = () => [
   {
@@ -1048,6 +1049,129 @@ const BASE_MESSAGES = () => [
       id: "cookieBannerDetected",
     },
     targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true`,
+  },
+  {
+    id: "INFOBAR_LAUNCH_ON_LOGIN",
+    groups: ["cfr"],
+    template: "infobar",
+    content: {
+      type: "global",
+      text: {
+        string_id: "launch-on-login-infobar-message",
+      },
+      buttons: [
+        {
+          label: {
+            string_id: "launch-on-login-learnmore",
+          },
+          supportPage: "make-firefox-automatically-open-when-you-start",
+          action: {
+            type: "CANCEL",
+          },
+        },
+        {
+          label: { string_id: "launch-on-login-infobar-reject-button" },
+          action: {
+            type: "CANCEL",
+          },
+        },
+        {
+          label: { string_id: "launch-on-login-infobar-confirm-button" },
+          primary: true,
+          action: {
+            type: "MULTI_ACTION",
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+                      value: true,
+                    },
+                  },
+                },
+                {
+                  type: "CONFIRM_LAUNCH_ON_LOGIN",
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    trigger: { id: "defaultBrowserCheck" },
+    targeting: `source == 'newtab' && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
+    && 'browser.startup.windowsLaunchOnLogin.enabled'|preferenceValue == true && isDefaultBrowser && !activeNotifications`,
+  },
+  {
+    id: "INFOBAR_LAUNCH_ON_LOGIN_FINAL",
+    groups: ["cfr"],
+    template: "infobar",
+    content: {
+      type: "global",
+      text: {
+        string_id: "launch-on-login-infobar-final-message",
+      },
+      buttons: [
+        {
+          label: {
+            string_id: "launch-on-login-learnmore",
+          },
+          supportPage: "make-firefox-automatically-open-when-you-start",
+          action: {
+            type: "CANCEL",
+          },
+        },
+        {
+          label: { string_id: "launch-on-login-infobar-final-reject-button" },
+          action: {
+            type: "SET_PREF",
+            data: {
+              pref: {
+                name: "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+                value: true,
+              },
+            },
+          },
+        },
+        {
+          label: { string_id: "launch-on-login-infobar-confirm-button" },
+          primary: true,
+          action: {
+            type: "MULTI_ACTION",
+            data: {
+              actions: [
+                {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
+                      value: true,
+                    },
+                  },
+                },
+                {
+                  type: "CONFIRM_LAUNCH_ON_LOGIN",
+                },
+              ],
+            },
+          },
+        },
+      ],
+    },
+    frequency: {
+      lifetime: 1,
+    },
+    trigger: { id: "defaultBrowserCheck" },
+    targeting: `source == 'newtab' && 'browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt'|preferenceValue == false
+    && 'browser.startup.windowsLaunchOnLogin.enabled'|preferenceValue == true && isDefaultBrowser && !activeNotifications
+    && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1]
+    && messageImpressions.INFOBAR_LAUNCH_ON_LOGIN[messageImpressions.INFOBAR_LAUNCH_ON_LOGIN | length - 1] <
+      currentDate|date - ${FOURTEEN_DAYS_IN_MS}`,
   },
 ];
 
