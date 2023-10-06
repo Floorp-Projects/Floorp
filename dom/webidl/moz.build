@@ -981,6 +981,7 @@ WEBIDL_FILES = [
     "UIEvent.webidl",
     "URL.webidl",
     "URLSearchParams.webidl",
+    "UserActivation.webidl",
     "ValidityState.webidl",
     "VideoColorSpace.webidl",
     "VideoDecoder.webidl",
