@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import multiprocessing
 import os
+import time
 import webbrowser
 from threading import Timer
 
@@ -69,10 +71,11 @@ def run(
         for task in excluded_tasks:
             tg.tasks.pop(task)
 
-    app = create_application(tg)
+    queue = multiprocessing.Queue()
 
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         # we are in the reloader process, don't open the browser or do any try stuff
+        app = create_application(tg, queue)
         app.run()
         return
 
@@ -80,9 +83,16 @@ def run(
     url = "http://127.0.0.1:5000"
     Timer(1, lambda: webbrowser.open(url)).start()
     print("Starting trychooser on {}".format(url))
-    app.run()
+    process = multiprocessing.Process(
+        target=create_and_run_application, args=(tg, queue)
+    )
+    process.start()
 
-    selected = app.tasks
+    selected = queue.get()
+
+    # Allow the close page to render before terminating the process.
+    time.sleep(1)
+    process.terminate()
     if not selected:
         print("no tasks selected")
         return
@@ -97,3 +107,11 @@ def run(
         closed_tree=closed_tree,
         push_to_lando=push_to_lando,
     )
+
+
+def create_and_run_application(tg, queue: multiprocessing.Queue):
+    from .app import create_application
+
+    app = create_application(tg, queue)
+
+    app.run()
