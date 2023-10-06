@@ -192,6 +192,7 @@ skip-if = [
 ]
 
 ["browser_webconsole_async_stack.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_batching.js"]
 
@@ -229,6 +230,7 @@ skip-if = [
 
 ["browser_webconsole_click_function_to_mapped_source.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "http3", # Bug 1829298
   "http2",
@@ -236,6 +238,7 @@ skip-if = [
 
 ["browser_webconsole_click_function_to_prettyprinted_source.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "http3", # Bug 1829298
   "http2",
@@ -243,6 +246,7 @@ skip-if = [
 
 ["browser_webconsole_click_function_to_source.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "http3", # Bug 1829298
   "http2",
@@ -271,6 +275,7 @@ skip-if = ["true"] # Bug 1405250
 ["browser_webconsole_console_dir_uninspectable.js"]
 
 ["browser_webconsole_console_error_expand_object.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_console_group.js"]
 
@@ -283,6 +288,7 @@ skip-if = ["tsan"] # Bug 1767724
 
 ["browser_webconsole_console_table.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "http3", # Bug 1829298
   "http2",
@@ -316,6 +322,7 @@ skip-if = [
 ["browser_webconsole_context_menu_copy_message_with_async_stacktrace.js"]
 
 ["browser_webconsole_context_menu_copy_message_with_framework_stacktrace.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_context_menu_copy_object.js"]
 skip-if = ["apple_catalina"] # Bug 1713158
@@ -362,12 +369,16 @@ skip-if = [
 ]
 
 ["browser_webconsole_css_error_impacted_elements.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_custom_formatters.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_custom_formatters_errors.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_deprecation_warning.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_document_focus.js"]
 
@@ -376,6 +387,7 @@ skip-if = [
 ["browser_webconsole_enable_network_monitoring.js"]
 
 ["browser_webconsole_error_with_grouped_stack.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_error_with_longstring_stack.js"]
 
@@ -386,6 +398,7 @@ skip-if = [
 ["browser_webconsole_errors_after_page_reload.js"]
 
 ["browser_webconsole_eval_error.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_eval_in_debugger_stackframe.js"]
 
@@ -396,7 +409,6 @@ skip-if = [
 ]
 
 ["browser_webconsole_eval_sources.js"]
-fail-if = ["a11y_checks"] # bug 1687728 frame-link-filename is not accessible
 
 ["browser_webconsole_execution_scope.js"]
 https_first_disabled = true
@@ -446,6 +458,7 @@ skip-if = [
 ["browser_webconsole_input_field_focus_on_panel_select.js"]
 
 ["browser_webconsole_input_focus.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_insecure_passwords_about_blank_web_console_warning.js"]
 skip-if = [
@@ -460,6 +473,7 @@ skip-if = [
 ]
 
 ["browser_webconsole_inspect_cross_domain_object.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_keyboard_accessibility.js"]
 
@@ -468,28 +482,28 @@ skip-if = [
 ["browser_webconsole_limit_multiline.js"]
 
 ["browser_webconsole_location_debugger_link.js"]
-fail-if = ["a11y_checks"] # bug 1687728 frame-link-filename is not accessible
 
 ["browser_webconsole_location_logpoint_debugger_link.js"]
 skip-if = ["ccov"] #Bug 1594897
-fail-if = ["a11y_checks"] # bug 1687728 frame-link-filename is not accessible
 
 ["browser_webconsole_location_styleeditor_link.js"]
-fail-if = ["a11y_checks"] # bug 1687728 frame-link-filename is not accessible
 
 ["browser_webconsole_logErrorInPage.js"]
 
 ["browser_webconsole_logWarningInPage.js"]
 
 ["browser_webconsole_logging_exceptions.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_loglimit.js"]
 
 ["browser_webconsole_logs_exceptions_order.js"]
 
 ["browser_webconsole_longstring.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_longstring_getter.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_message_categories.js"]
 
@@ -511,6 +525,7 @@ skip-if = ["win11_2009"] # Bug 1798331
 ["browser_webconsole_network_messages_after_target_switching.js"]
 
 ["browser_webconsole_network_messages_expand.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_messages_expand_before_updates.js"]
 skip-if = [
@@ -519,14 +534,17 @@ skip-if = [
 ]
 
 ["browser_webconsole_network_messages_html_preview.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_messages_openinnet.js"]
 
 ["browser_webconsole_network_messages_resend_request.js"]
 
 ["browser_webconsole_network_messages_stacktrace_console_initiated_request.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_messages_status_code.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_network_requests_from_chrome.js"]
 skip-if = [
@@ -541,6 +559,7 @@ skip-if = [
 ["browser_webconsole_nodes_highlight.js"]
 
 ["browser_webconsole_nodes_select.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_non_javascript_mime_warning.js"]
 
@@ -554,12 +573,16 @@ skip-if = ["apple_catalina"] # Bug 1713158
 ["browser_webconsole_object_in_sidebar_keyboard_nav.js"]
 
 ["browser_webconsole_object_inspector.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_object_inspector__proto__.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_object_inspector_array_getters.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_object_inspector_entries.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webconsole_object_inspector_getters.js"]
 
