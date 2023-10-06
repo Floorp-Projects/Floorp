@@ -28,7 +28,6 @@ using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;
 using mozilla::TimeDuration;
-using mozilla::TimeStamp;
 
 /*
  * We may start to collect a zone before its trigger threshold is reached if
