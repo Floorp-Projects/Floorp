@@ -10,6 +10,13 @@ ChromeUtils.defineESModuleGetters(this, {
   WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
 });
 
+add_setup(async function () {
+  // Ensure checkbox is enabled before running tests
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.startup.windowsLaunchOnLogin.enabled", true]],
+  });
+});
+
 add_task(async function test_check_checkbox() {
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     // Open preferences to general pane
@@ -104,6 +111,7 @@ add_task(async function delete_external_regkey() {
 });
 
 registerCleanupFunction(async function () {
+  await SpecialPowers.popPrefEnv();
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     let registryName = WindowsLaunchOnLogin.getLaunchOnLoginRegistryName();
     if (wrk.hasValue(registryName)) {
