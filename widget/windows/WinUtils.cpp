@@ -1433,6 +1433,42 @@ bool WinUtils::GetAutoRotationState(AR_STATE* aRotationState) {
   return false;
 }
 
+// static
+void WinUtils::GetClipboardFormatAsString(UINT aFormat, nsAString& aOutput) {
+  wchar_t buf[256] = {};
+  // Get registered format name and ensure the existence of a terminating '\0'
+  // if the registered name is more than 256 characters.
+  if (::GetClipboardFormatNameW(aFormat, buf, ARRAYSIZE(buf) - 1)) {
+    aOutput.Append(buf);
+    return;
+  }
+  // Standard clipboard formats
+  // https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats
+  switch (aFormat) {
+    case CF_TEXT:  // 1
+      aOutput.Append(u"CF_TEXT"_ns);
+      break;
+    case CF_BITMAP:  // 2
+      aOutput.Append(u"CF_BITMAP"_ns);
+      break;
+    case CF_DIB:  // 8
+      aOutput.Append(u"CF_DIB"_ns);
+      break;
+    case CF_UNICODETEXT:  // 13
+      aOutput.Append(u"CF_UNICODETEXT"_ns);
+      break;
+    case CF_HDROP:  // 15
+      aOutput.Append(u"CF_HDROP"_ns);
+      break;
+    case CF_DIBV5:  // 17
+      aOutput.Append(u"CF_DIBV5"_ns);
+      break;
+    default:
+      aOutput.AppendPrintf("%u", aFormat);
+      break;
+  }
+}
+
 static bool IsTabletDevice() {
   // Guarantees that:
   // - The device has a touch screen.
