@@ -15,12 +15,15 @@ skip-if = ["os == 'linux'"] # Bug 1329991 - test fails intermittently on Linux b
 ["browser_selectpopup_dir.js"]
 
 ["browser_selectpopup_large.js"]
+fail-if = ["a11y_checks"] # Bug 1854233 ContentSelectDropdown menulist may not be labeled
 
 ["browser_selectpopup_searchfocus.js"]
+fail-if = ["a11y_checks"] # Bug 1854233 input may not be labeled
 
 ["browser_selectpopup_text_transform.js"]
 
 ["browser_selectpopup_toplevel.js"]
+fail-if = ["a11y_checks"] # Bug 1854233 select may not be labeled
 
 ["browser_selectpopup_user_input.js"]
 

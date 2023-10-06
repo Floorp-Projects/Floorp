@@ -65,6 +65,7 @@ support-files = [
 ["browser_aboutNewTab_bookmarksToolbar.js"]
 
 ["browser_aboutNewTab_bookmarksToolbarEmpty.js"]
+fail-if = ["a11y_checks"] # Bug 1854233 text-link may not be focusable
 skip-if = ["tsan"] # Bug 1676326, highly frequent on TSan
 
 ["browser_aboutNewTab_bookmarksToolbarNewWindow.js"]
