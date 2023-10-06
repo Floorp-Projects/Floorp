@@ -505,11 +505,15 @@
     <string name="preferences_accessibility">Доступність</string>
 
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Власний сервер облікового запису Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Власний сервер облікового запису Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Власний сервер облікового запису Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Спеціальний сервер синхронізації</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Сервер Облікового запису/Синхронізації Firefox змінено. Вихід з програми для застосування змін…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Сервер Облікового запису/Синхронізації Firefox змінено. Вихід з програми для застосування змін…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Сервер облікового запису/синхронізації Mozilla змінено. Вихід з програми для застосування змін…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Обліковий запис</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -525,7 +529,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Увійдіть для синхронізації вкладок, закладок, паролів та інших даних.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Обліковий запис Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Обліковий запис Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Обліковий запис Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Повторно підключіться, щоб відновити синхронізацію</string>
     <!-- Preference for language -->
@@ -2218,15 +2224,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Кожному відгуку про товар ми присвоюємо <b>буквену оцінку</b> від A до F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Надійні – чесні, неупереджені відгуки, найімовірніше від справжніх замовників.</string>
+    <string name="review_quality_check_info_grade_info_AB">Надійні – чесні, неупереджені відгуки, найімовірніше від справжніх замовників.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">Ми вважаємо ці відгуки надійними.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Ми вважаємо ці відгуки надійними.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Ми вважаємо, що тут поєднано надійні та сумнівні відгуки.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Сумнівні – нечесні відгуки, найімовірніше від упереджених оглядачів.</string>
+    <string name="review_quality_check_info_grade_info_DF">Сумнівні – нечесні відгуки, найімовірніше від упереджених оглядачів.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">Ми вважаємо ці відгуки ненадійними.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Ми вважаємо ці відгуки ненадійними.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Скоригований рейтинг</b> на основі лише відгуків, які ми вважаємо надійними.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

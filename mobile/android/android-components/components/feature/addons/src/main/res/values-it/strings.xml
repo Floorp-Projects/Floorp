@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s è stato disattivato in quanto comporta rischi per la stabilità o la sicurezza.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s è stato disattivato in quanto non è può essere verificato come sicuro.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s non è compatibile con la tua versione di %2$s (versione %3$s).</string>
 </resources>

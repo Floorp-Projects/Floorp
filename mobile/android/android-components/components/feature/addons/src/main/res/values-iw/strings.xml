@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">התוספת %1$s נחסמה עקב בעיות אבטחה או יציבות.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">לא ניתן לאמת את %1$s כמאובטחת ולכן תוספת זו הושבתה.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">התוספת %1$s אינה תואמת לגרסה של ה־%2$s שלך (גרסה %3$s).</string>
 </resources>

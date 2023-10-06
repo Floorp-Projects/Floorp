@@ -54,7 +54,6 @@
     <string name="menu_remove_from_shortcuts">Chawelesaj pa ramb’al b’e</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Jas Kxajtajik</string>
     <string name="menu_settings">Taq wiqitajem</string>
     <string name="menu_about">Chi rij</string>
     <string name="menu_help">Tob\'anem</string>
@@ -182,6 +181,10 @@
 
     <!-- Title of "switch" preference that enables/disables search suggestions -->
     <string name="preference_show_search_suggestions">Chariqa’</string>
+
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s kutaq b‘ik jachike katz‘ib‘aj pa kemwiqb‘al pa le ch‘ich‘ rech tzukunem</string>
 
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Ya\'om chi uloq</string>
@@ -483,7 +486,10 @@
 
 
 
-  <string name="error_hostLookup_title">Man kriqitaj ta le kempatanel</string>
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ya‘om pa ramib‘al b‘e</string>
+
+    <string name="error_hostLookup_title">Man kriqitaj ta le kempatanel</string>
 
 
 
@@ -620,6 +626,12 @@
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
     <string name="your_rights_content4"><![CDATA[Utz‘aqatil uxe‘al retokib‘al chech %1$s k‘olik chi uxe‘ nik‘aj chi tzoqopitalil chi‘l jaqatal uxe‘al <a href="%2$s">taq uwujil</a>.]]></string>
 
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s xuquje kukoj taq q‘atetal ucholajil ruk‘ utoq‘ixik t‘iqonem, Inc. pacha‘ tastalik xuquje‘ utukelal chakunel chi uxe‘ le <a href="%2$s">GNU Wujil kech uk‘iyal v3</a>, xuquje‘ k‘o pa <a href="%3$s">waral</a>.]]></string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Ub\'i\' rajaw</string>
     <string name="gv_prompt_password_hint">Retokib\'al</string>
@@ -661,8 +673,23 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Tz\'onoj rech wokk\'olib\'al web\' rech ilwach chak</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Uk‘olib‘al ilwach</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">Elesam uwach URL</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Chakub‘al kech winaqirisanelab‘</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Ujaqik taq kemwiqb‘al pa taq kemkojchak</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Cholpaqalik</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Taq ya‘b‘al b‘e rech k‘olib‘al</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Ja\'i\'</string>

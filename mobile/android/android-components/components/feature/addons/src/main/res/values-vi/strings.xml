@@ -232,4 +232,8 @@
     <string name="mozac_feature_addons_status_learn_more">Tìm hiểu thêm</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s đã bị vô hiệu hóa do vấn đề bảo mật hoặc độ ổn định.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s không thể xác minh là an toàn và đã bị vô hiệu hóa.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s không tương thích với phiên bản %2$s của bạn (phiên bản %3$s).</string>
 </resources>

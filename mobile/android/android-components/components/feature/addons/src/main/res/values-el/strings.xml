@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">Το %1$s έχει απενεργοποιηθεί λόγω ζητημάτων ασφαλείας ή σταθερότητας.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">Το %1$s δεν ήταν δυνατό να επαληθευτεί ως ασφαλές και έχει απενεργοποιηθεί.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Το %1$s δεν είναι συμβατό με την έκδοση του %2$s σας (έκδοση %3$s).</string>
 </resources>

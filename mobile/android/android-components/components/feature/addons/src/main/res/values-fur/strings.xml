@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s al è stât disativât par vie di problemis di sigurece o di stabilitât.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s al è stât disativât parcè che nol è pussibil verificâlu come sigûr.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s nol è compatibil cu la tô version di %2$s (version %3$s).</string>
 </resources>

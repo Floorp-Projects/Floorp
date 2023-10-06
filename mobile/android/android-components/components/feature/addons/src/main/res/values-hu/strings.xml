@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">A(z) %1$s biztonsági vagy stabilitási problémák miatt le lett tiltva.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">A(z) %1$s biztonságossága nem ellenőrizhető programban, és le lett tiltva.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">A(z) %1$s nem kompatibilis a %2$s verziójával (verzió: %3$s).</string>
 </resources>

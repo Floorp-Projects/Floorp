@@ -232,4 +232,8 @@
     <string name="mozac_feature_addons_status_learn_more">Lue lisää</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s on poistettu käytöstä turvallisuus- tai vakausongelmian vuoksi.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">Lisäosaa %1$s ei voitu vahvistaa turvalliseksi, ja se on poistettu käytöstä.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Lisäosa %1$s ei ole yhteensopiva %2$sin version %3$s kanssa.</string>
 </resources>
