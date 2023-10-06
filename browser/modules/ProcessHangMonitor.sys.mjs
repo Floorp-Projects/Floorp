@@ -548,11 +548,10 @@ export var ProcessHangMonitor = {
       return;
     }
 
-    // Show the "debug script" button unconditionally if we are in Developer or Nightly
-    // editions, or if DevTools are opened on the slow tab.
+    // Show the "debug script" button unconditionally if we are in Developer edition,
+    // or, if DevTools are opened on the slow tab.
     if (
       AppConstants.MOZ_DEV_EDITION ||
-      AppConstants.NIGHTLY_BUILD ||
       report.scriptBrowser.browsingContext.watchedByDevTools
     ) {
       buttons.push({
