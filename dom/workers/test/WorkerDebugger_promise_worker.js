@@ -18,6 +18,7 @@ self.onmessage = function (event) {
       Promise.resolve().then(function () {
         postMessage("resumed");
       });
+      // eslint-disable-next-line no-debugger
       debugger;
     };
     postMessage("resolved");
