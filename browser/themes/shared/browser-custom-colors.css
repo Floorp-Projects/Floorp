@@ -10,9 +10,18 @@
     --button-primary-hover-bgcolor: light-dark(rgb(2, 80, 187), rgb(128, 235, 255));
     --button-primary-active-bgcolor: light-dark(rgb(5, 62, 148), rgb(170, 242, 255));
     --button-primary-color: light-dark(rgb(251, 251, 254), rgb(43, 42, 51));
-    --button-bgcolor: light-dark(rgba(207, 207, 216, .33), rgb(43, 42, 51));
-    --button-hover-bgcolor: light-dark(rgba(207, 207, 216, .66), rgb(82, 82, 94));
-    --button-active-bgcolor: light-dark(rgb(207, 207, 216), rgb(91, 91, 102));
+    --button-bgcolor: light-dark(
+      rgba(207, 207, 216, .33),
+      rgba(0, 0, 0, .33)
+    );
+    --button-hover-bgcolor: light-dark(
+      rgba(207, 207, 216, .66),
+      rgba(207, 207, 216, .20)
+    );
+    --button-active-bgcolor: light-dark(
+      rgb(207, 207, 216),
+      rgba(207, 207, 216, .40)
+    );
     --button-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
 
     --focus-outline-color: var(--button-primary-bgcolor);
@@ -40,14 +49,6 @@
       color-mix(in srgb, currentColor 14%, transparent)
     );
 
-    --panel-item-hover-bgcolor: light-dark(
-      rgba(207, 207, 216, .66),
-      color-mix(in srgb, currentColor 9%, transparent)
-    );
-    --panel-item-active-bgcolor: light-dark(
-      rgb(207, 207, 216),
-      color-mix(in srgb, currentColor 25%, transparent)
-    );
     --panel-shortcut-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
 
     --input-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
