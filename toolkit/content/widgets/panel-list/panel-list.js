@@ -200,7 +200,7 @@
 
       // Wait for a layout flush, then find the bounds.
       let {
-        anchorHeight,
+        anchorBottom, // distance from the bottom of the anchor el to top of viewport.
         anchorLeft,
         anchorTop,
         anchorWidth,
@@ -228,6 +228,7 @@
             let anchorBounds = getBounds(anchorElement);
             let panelBounds = getBounds(this);
             resolve({
+              anchorBottom: anchorBounds.bottom,
               anchorHeight: anchorBounds.height,
               anchorLeft: anchorBounds.left,
               anchorTop: anchorBounds.top,
@@ -260,14 +261,31 @@
         }
         leftOffset = align === "left" ? leftAlignX : rightAlignX;
 
-        let bottomAlignY = anchorTop + anchorHeight;
+        let bottomSpaceY = winHeight - anchorBottom;
+
         let valign;
         let topOffset;
-        if (bottomAlignY + panelHeight > winHeight) {
-          topOffset = anchorTop - panelHeight;
+        const VIEWPORT_PANEL_MIN_MARGIN = 10; // 10px ensures that the panel is not flush with the viewport.
+
+        // Only want to valign top when there's more space between the bottom of the anchor element and the top of the viewport.
+        // If there's more space between the bottom of the anchor element and the bottom of the viewport, we valign bottom.
+        if (
+          anchorBottom > bottomSpaceY &&
+          anchorBottom + panelHeight > winHeight
+        ) {
+          // Never want to have a negative value for topOffset, so ensure it's at least 10px.
+          topOffset = Math.max(
+            anchorTop - panelHeight,
+            VIEWPORT_PANEL_MIN_MARGIN
+          );
+          // Provide a max-height for larger elements which will provide scrolling as needed.
+          this.style.maxHeight = `${anchorTop + VIEWPORT_PANEL_MIN_MARGIN}px`;
           valign = "top";
         } else {
-          topOffset = bottomAlignY;
+          topOffset = anchorBottom;
+          this.style.maxHeight = `${
+            bottomSpaceY - VIEWPORT_PANEL_MIN_MARGIN
+          }px`;
           valign = "bottom";
         }
 
