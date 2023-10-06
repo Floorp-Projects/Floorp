@@ -11,6 +11,10 @@ transforms:
 
 kind-dependencies:
     - source-test
+    - toolchain
+
+job-defaults:
+    use-system-python: false
 
 jobs:
     issues:
