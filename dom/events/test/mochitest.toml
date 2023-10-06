@@ -483,12 +483,6 @@ support-files = ["window_empty_document.html"]
 
 ["test_passive_listeners.html"]
 
-["test_paste_image.html"]
-skip-if = [
-  "headless", # Bug 1405869
-  "os == 'android'", # Image type isn't supported
-]
-
 ["test_scroll_per_page.html"]
 support-files = ["window_empty_document.html"]
 skip-if = ["os == 'android'"] # fail
