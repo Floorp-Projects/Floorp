@@ -70,6 +70,9 @@ var gExceptionPaths = [
 
   // Localization file added programatically in FeatureCallout.sys.mjs
   "resource://app/localization/en-US/browser/featureCallout.ftl",
+
+  // CSS files are referenced inside JS in an html template
+  "chrome://browser/content/aboutlogins/components/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
