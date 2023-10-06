@@ -9,14 +9,12 @@ function handleRequest(request, response) {
     "document.write(\"<script charset='utf-8' src='script-2_bug597345.js'></script><!--\")"
   );
   response.processAsync();
-  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
-    Components.interfaces.nsITimer
-  );
+  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(
     function () {
       response.finish();
     },
     200,
-    Components.interfaces.nsITimer.TYPE_ONE_SHOT
+    Ci.nsITimer.TYPE_ONE_SHOT
   );
 }

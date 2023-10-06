@@ -1,9 +1,9 @@
 "use strict";
 
 function handleRequest(request, response) {
-  const file = Components.classes["@mozilla.org/file/directory_service;1"]
-    .getService(Components.interfaces.nsIProperties)
-    .get("CurWorkD", Components.interfaces.nsIFile);
+  const file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
 
   file.append("tests");
   file.append("image");
@@ -21,14 +21,14 @@ function handleRequest(request, response) {
 
   response.setHeader("Cache-Control", "max-age=3600", false);
 
-  const fileStream = Components.classes[
+  const fileStream = Cc[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Components.interfaces.nsIFileInputStream);
+  ].createInstance(Ci.nsIFileInputStream);
 
   fileStream.init(file, 1, 0, false);
-  const binaryStream = Components.classes[
-    "@mozilla.org/binaryinputstream;1"
-  ].createInstance(Components.interfaces.nsIBinaryInputStream);
+  const binaryStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
+    Ci.nsIBinaryInputStream
+  );
   binaryStream.setInputStream(fileStream);
 
   response.bodyOutputStream.writeFrom(binaryStream, binaryStream.available());

@@ -15,9 +15,9 @@ const TYPE_MAP = {
 
 // Writes an image to the response
 function WriteOutImage(response) {
-  var file = Components.classes["@mozilla.org/file/directory_service;1"]
-    .getService(Components.interfaces.nsIProperties)
-    .get("CurWorkD", Components.interfaces.nsIFile);
+  var file = Cc["@mozilla.org/file/directory_service;1"]
+    .getService(Ci.nsIProperties)
+    .get("CurWorkD", Ci.nsIFile);
 
   file.append("tests");
   file.append("image");
@@ -25,9 +25,9 @@ function WriteOutImage(response) {
   file.append("mochitest");
   file.append("blue.png");
 
-  var fileStream = Components.classes[
+  var fileStream = Cc[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Components.interfaces.nsIFileInputStream);
+  ].createInstance(Ci.nsIFileInputStream);
   fileStream.init(file, 1, 0, false);
   response.bodyOutputStream.writeFrom(fileStream, fileStream.available());
 }

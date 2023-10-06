@@ -1,4 +1,4 @@
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 
 function handleRequest(request, response) {
   const searchParams = new URLSearchParams(request.queryString);

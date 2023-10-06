@@ -26,8 +26,6 @@
 <script>
 'use strict';
 
-const {Cc, Ci, Cu} = SpecialPowers;
-
 function getWalker(node) {
   var walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].
     createInstance(Ci.inIDeepTreeWalker);

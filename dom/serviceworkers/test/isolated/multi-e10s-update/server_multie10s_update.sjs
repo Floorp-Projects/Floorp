@@ -80,7 +80,7 @@ function handleCountRequest(request, response) {
   response.write(JSON.stringify({ count }));
 }
 
-Components.utils.importGlobalProperties(["URLSearchParams"]);
+Cu.importGlobalProperties(["URLSearchParams"]);
 function handleRequest(request, response) {
   dump(
     "server_multie10s_update.sjs: processing request for " +

@@ -16,5 +16,5 @@ function handleRequest(request, response) {
     response.write(body);
   }
 
-  throw Components.Exception("", Components.results.NS_BINDING_ABORTED);
+  throw Components.Exception("", Cr.NS_BINDING_ABORTED);
 }
