@@ -433,8 +433,8 @@ class Nursery {
   // These fields refer to the beginning of the nursery. They're normally 0
   // and chunk(0).start() respectively. Except when a generational GC zeal
   // mode is active, then they may be arbitrary (see Nursery::clear()).
-  uint32_t currentStartChunk_;
-  uintptr_t currentStartPosition_;
+  uint32_t startChunk_;
+  uintptr_t startPosition_;
 
   // The current nursery capacity measured in bytes. It may grow up to this
   // value without a collection, allocating chunks on demand. This limit may be
@@ -616,8 +616,7 @@ class Nursery {
   void* tryAllocate(size_t size) {
     MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_,
-                  position() >= currentStartPosition_);
+    MOZ_ASSERT_IF(currentChunk_ == startChunk_, position() >= startPosition_);
     MOZ_ASSERT(size % gc::CellAlignBytes == 0);
     MOZ_ASSERT(position() % gc::CellAlignBytes == 0);
 

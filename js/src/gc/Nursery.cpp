@@ -216,8 +216,8 @@ js::Nursery::Nursery(GCRuntime* gc)
       currentEnd_(0),
       gc(gc),
       currentChunk_(0),
-      currentStartChunk_(0),
-      currentStartPosition_(0),
+      startChunk_(0),
+      startPosition_(0),
       capacity_(0),
       enableProfiling_(false),
       canAllocateStrings_(true),
@@ -467,10 +467,10 @@ bool js::Nursery::isEmpty() const {
   }
 
   if (!gc->hasZealMode(ZealMode::GenerationalGC)) {
-    MOZ_ASSERT(currentStartChunk_ == 0);
-    MOZ_ASSERT(currentStartPosition_ == chunk(0).start());
+    MOZ_ASSERT(startChunk_ == 0);
+    MOZ_ASSERT(startPosition_ == chunk(0).start());
   }
-  return position() == currentStartPosition_;
+  return position() == startPosition_;
 }
 
 #ifdef JS_GC_ZEAL
@@ -1684,11 +1684,11 @@ void js::Nursery::clear() {
     // Poison all the chunks used in this cycle. The new start chunk is
     // reposioned in Nursery::collect() but there's no point optimising that in
     // this case.
-    firstClearChunk = currentStartChunk_;
+    firstClearChunk = startChunk_;
   } else {
     // In normal mode we start at the second chunk, the first one will be used
     // in the next cycle and poisoned in Nusery::collect();
-    MOZ_ASSERT(currentStartChunk_ == 0);
+    MOZ_ASSERT(startChunk_ == 0);
     firstClearChunk = 1;
   }
   for (unsigned i = firstClearChunk; i < currentChunk_; ++i) {
@@ -1721,25 +1721,24 @@ size_t js::Nursery::spaceToEnd(unsigned chunkCount) const {
 
   unsigned lastChunk = chunkCount - 1;
 
-  MOZ_ASSERT(lastChunk >= currentStartChunk_);
-  MOZ_ASSERT(currentStartPosition_ - chunk(currentStartChunk_).start() <=
+  MOZ_ASSERT(lastChunk >= startChunk_);
+  MOZ_ASSERT(startPosition_ - chunk(startChunk_).start() <=
              NurseryChunkUsableSize);
 
   size_t bytes;
 
   if (chunkCount != 1) {
     // In the general case we have to add:
-    //  + the bytes used in the first
-    //    chunk which may be less than the total size of a chunk since in some
-    //    zeal modes we start the first chunk at some later position
-    //    (currentStartPosition_).
+    //  + the bytes used in the first chunk which may be less than the total
+    //    size of a chunk since in some zeal modes we start the first chunk at
+    //    some later position (startPosition_).
     //  + the size of all the other chunks.
-    bytes = (chunk(currentStartChunk_).end() - currentStartPosition_) +
-            ((lastChunk - currentStartChunk_) * ChunkSize);
+    bytes = (chunk(startChunk_).end() - startPosition_) +
+            ((lastChunk - startChunk_) * ChunkSize);
   } else {
     // In sub-chunk mode, but it also works whenever chunkCount == 1, we need to
     // use currentEnd_ since it may not refer to a full chunk.
-    bytes = currentEnd_ - currentStartPosition_;
+    bytes = currentEnd_ - startPosition_;
   }
 
   MOZ_ASSERT(bytes <= maxChunkCount() * ChunkSize);
@@ -1803,8 +1802,8 @@ bool js::Nursery::allocateNextChunk(const unsigned chunkno,
 }
 
 MOZ_ALWAYS_INLINE void js::Nursery::setStartPosition() {
-  currentStartChunk_ = currentChunk_;
-  currentStartPosition_ = position();
+  startChunk_ = currentChunk_;
+  startPosition_ = position();
 }
 
 void js::Nursery::maybeResizeNursery(JS::GCOptions options,
