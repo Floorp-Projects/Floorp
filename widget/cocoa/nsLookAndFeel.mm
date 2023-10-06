@@ -313,22 +313,22 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::Accentcolor:
       color = GetColorFromNSColor([NSColor controlAccentColor]);
       break;
-
+    case ColorID::MozHeaderbartext:
+    case ColorID::MozHeaderbarinactivetext:
+    case ColorID::Inactivecaptiontext:
+    case ColorID::Captiontext:
+      aColor = GetColorFromNSColor(NSColor.textColor);
+      return NS_OK;
+    case ColorID::MozHeaderbar:
+    case ColorID::MozHeaderbarinactive:
     case ColorID::Inactivecaption:
-    case ColorID::Activecaption: {
-      if (NSWorkspace.sharedWorkspace
-              .accessibilityDisplayShouldIncreaseContrast) {
-        // This has better contrast than the stand-in colors.
-        aColor = GetColorFromNSColor(NSColor.windowBackgroundColor);
-        return NS_OK;
-      }
-      [[fallthrough]];
-    }
+    case ColorID::Activecaption:
+      // This has better contrast than the stand-in colors.
+      aColor = GetColorFromNSColor(NSColor.windowBackgroundColor);
+      return NS_OK;
     case ColorID::Marktext:
     case ColorID::Mark:
     case ColorID::SpellCheckerUnderline:
-    case ColorID::Captiontext:
-    case ColorID::Inactivecaptiontext:
     case ColorID::Activeborder:
     case ColorID::Inactiveborder:
       aColor = GetStandinForNativeColor(aID, aScheme);
