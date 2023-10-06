@@ -897,11 +897,8 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
 
     fn compute_zoom(&mut self) {
         debug_assert!(matches!(self.cascade_mode, CascadeMode::Unvisited { .. }));
-        self.context.builder.effective_zoom = self
-            .context
-            .builder
-            .inherited_effective_zoom()
-            .compute_effective(self.context.builder.specified_zoom());
+        self.context.builder.effective_zoom =
+            self.context.builder.inherited_effective_zoom() * self.context.builder.specified_zoom();
     }
 
     fn compute_writing_mode(&mut self) {
