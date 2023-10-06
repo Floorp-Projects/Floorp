@@ -149,9 +149,9 @@ float DOMSVGLength::GetValue(ErrorResult& aRv) {
     Element()->FlushAnimations();  // May make HasOwner() == false
   }
 
-  // If the unit depends on style then we need to flush before converting
-  // to pixels.
-  FlushStyleIfNeeded();
+  // If the unit depends on style or layout then we need to flush before
+  // converting to pixels.
+  FlushIfNeeded();
 
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
     SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
@@ -184,9 +184,9 @@ void DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv) {
     return;
   }
 
-  // If the unit depends on style then we need to flush before converting
-  // from pixels.
-  FlushStyleIfNeeded();
+  // If the unit depends on style or layout then we need to flush before
+  // converting from pixels.
+  FlushIfNeeded();
 
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
     aRv = svg->GetAnimatedLength(mAttrEnum)->SetBaseValue(aUserUnitValue, svg,
@@ -446,13 +446,18 @@ SVGLength& DOMSVGLength::InternalItem() {
                                            : alist->mBaseVal[mListIndex];
 }
 
-void DOMSVGLength::FlushStyleIfNeeded() {
+void DOMSVGLength::FlushIfNeeded() {
   auto MaybeFlush = [](uint16_t aUnitType, SVGElement* aSVGElement) {
-    if (!SVGLength::IsFontRelativeUnit(aUnitType)) {
+    FlushType flushType;
+    if (SVGLength::IsPercentageUnit(aUnitType)) {
+      flushType = FlushType::Layout;
+    } else if (SVGLength::IsFontRelativeUnit(aUnitType)) {
+      flushType = FlushType::Style;
+    } else {
       return;
     }
     if (auto* currentDoc = aSVGElement->GetComposedDoc()) {
-      currentDoc->FlushPendingNotifications(FlushType::Style);
+      currentDoc->FlushPendingNotifications(flushType);
     }
   };
 

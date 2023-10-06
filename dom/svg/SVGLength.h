@@ -93,9 +93,7 @@ class SVGLength {
   float GetValueInSpecifiedUnit(uint8_t aUnit, const dom::SVGElement* aElement,
                                 uint8_t aAxis) const;
 
-  bool IsPercentage() const {
-    return mUnit == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
-  }
+  bool IsPercentage() const { return IsPercentageUnit(mUnit); }
 
   float GetPixelsPerUnit(const dom::UserSpaceMetrics& aMetrics,
                          uint8_t aAxis) const {
@@ -105,6 +103,10 @@ class SVGLength {
   static bool IsValidUnitType(uint16_t aUnitType) {
     return aUnitType > dom::SVGLength_Binding::SVG_LENGTHTYPE_UNKNOWN &&
            aUnitType <= dom::SVGLength_Binding::SVG_LENGTHTYPE_PC;
+  }
+
+  static bool IsPercentageUnit(uint8_t aUnit) {
+    return aUnit == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
 
   static bool IsAbsoluteUnit(uint8_t aUnit);
