@@ -1714,38 +1714,6 @@ void js::Nursery::clear() {
   setStartPosition();
 }
 
-size_t js::Nursery::spaceToEnd(unsigned chunkCount) const {
-  if (chunkCount == 0) {
-    return 0;
-  }
-
-  unsigned lastChunk = chunkCount - 1;
-
-  MOZ_ASSERT(lastChunk >= startChunk_);
-  MOZ_ASSERT(startPosition_ - chunk(startChunk_).start() <=
-             NurseryChunkUsableSize);
-
-  size_t bytes;
-
-  if (chunkCount != 1) {
-    // In the general case we have to add:
-    //  + the bytes used in the first chunk which may be less than the total
-    //    size of a chunk since in some zeal modes we start the first chunk at
-    //    some later position (startPosition_).
-    //  + the size of all the other chunks.
-    bytes = (chunk(startChunk_).end() - startPosition_) +
-            ((lastChunk - startChunk_) * ChunkSize);
-  } else {
-    // In sub-chunk mode, but it also works whenever chunkCount == 1, we need to
-    // use currentEnd_ since it may not refer to a full chunk.
-    bytes = currentEnd_ - startPosition_;
-  }
-
-  MOZ_ASSERT(bytes <= maxChunkCount() * ChunkSize);
-
-  return bytes;
-}
-
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
   MOZ_ASSERT(chunkno < allocatedChunkCount());
 
