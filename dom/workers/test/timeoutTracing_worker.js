@@ -10,6 +10,7 @@ onmessage = function (event) {
 setInterval(function () {
   postMessage("Still alive!");
 }, 20);
+// eslint-disable-next-line no-implied-eval
 setInterval(";", 20);
 
 postMessage("Begin!");

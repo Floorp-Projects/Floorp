@@ -414,7 +414,7 @@ function runTest() {
 
 function nextTest() {
   if (tests.length) {
-    setTimeout("runTest()", 0);
+    setTimeout(runTest, 0);
   } else {
     SimpleTest.finish();
   }

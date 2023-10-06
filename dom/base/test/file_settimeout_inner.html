@@ -1,1 +1,6 @@
-<script>window.onload = function runTest1() { document.open(); setTimeout('parent.test1Done();'); document.close(); }</script>
+<script>window.onload = function runTest1() {
+  document.open();
+  // eslint-disable-next-line no-implied-eval
+  setTimeout('parent.test1Done();');
+  document.close();
+}</script>
