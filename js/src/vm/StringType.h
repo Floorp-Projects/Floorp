@@ -990,8 +990,8 @@ class JSDependentString : public JSLinearString {
   }
 
  public:
-  // This may return an inline string if the chars fit rather than a dependent
-  // string.
+  // This will always return a dependent string, and will assert if the chars
+  // could fit into an inline string.
   static inline JSLinearString* new_(JSContext* cx, JSLinearString* base,
                                      size_t start, size_t length,
                                      js::gc::Heap heap);
@@ -1447,6 +1447,7 @@ extern JSLinearString* NewStringDontDeflate(
     JSContext* cx, UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::Heap heap = js::gc::Heap::Default);
 
+/* This may return a static string/atom or an inline string. */
 extern JSLinearString* NewDependentString(
     JSContext* cx, JSString* base, size_t start, size_t length,
     js::gc::Heap heap = js::gc::Heap::Default);
