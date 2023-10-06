@@ -26,7 +26,8 @@ use cstr::cstr;
 use moz_task::{get_main_thread, RunnableBuilder};
 use nserror::{
     nsresult, NS_ERROR_DOM_ABORT_ERR, NS_ERROR_DOM_INVALID_STATE_ERR, NS_ERROR_DOM_NOT_ALLOWED_ERR,
-    NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NULL_POINTER, NS_OK,
+    NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_AVAILABLE, NS_ERROR_NOT_IMPLEMENTED,
+    NS_ERROR_NULL_POINTER, NS_OK,
 };
 use nsstring::{nsACString, nsCString, nsString};
 use serde::Serialize;
@@ -38,9 +39,9 @@ use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::sync::{Arc, Mutex};
 use thin_vec::{thin_vec, ThinVec};
 use xpcom::interfaces::{
-    nsICredentialParameters, nsICtapRegisterArgs, nsICtapRegisterResult, nsICtapSignArgs,
-    nsICtapSignResult, nsIObserverService, nsIWebAuthnAttObj, nsIWebAuthnRegisterPromise,
-    nsIWebAuthnService, nsIWebAuthnSignPromise,
+    nsICredentialParameters, nsIObserverService, nsIWebAuthnAttObj, nsIWebAuthnRegisterArgs,
+    nsIWebAuthnRegisterPromise, nsIWebAuthnRegisterResult, nsIWebAuthnService, nsIWebAuthnSignArgs,
+    nsIWebAuthnSignPromise, nsIWebAuthnSignResult,
 };
 use xpcom::{xpcom_method, RefPtr};
 
@@ -135,12 +136,12 @@ fn cancel_prompts(tid: u64) -> Result<(), nsresult> {
     Ok(())
 }
 
-#[xpcom(implement(nsICtapRegisterResult), atomic)]
-pub struct CtapRegisterResult {
+#[xpcom(implement(nsIWebAuthnRegisterResult), atomic)]
+pub struct WebAuthnRegisterResult {
     result: RegisterResult,
 }
 
-impl CtapRegisterResult {
+impl WebAuthnRegisterResult {
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
@@ -171,6 +172,11 @@ impl CtapRegisterResult {
             return Err(NS_ERROR_NOT_AVAILABLE);
         };
         Ok(cred_props.rk)
+    }
+
+    xpcom_method!(set_cred_props_rk => SetCredPropsRk(aCredPropsRk: bool));
+    fn set_cred_props_rk(&self, _cred_props_rk: bool) -> Result<(), nsresult> {
+        Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 }
 
@@ -215,12 +221,12 @@ impl WebAuthnAttObj {
     }
 }
 
-#[xpcom(implement(nsICtapSignResult), atomic)]
-pub struct CtapSignResult {
+#[xpcom(implement(nsIWebAuthnSignResult), atomic)]
+pub struct WebAuthnSignResult {
     result: SignResult,
 }
 
-impl CtapSignResult {
+impl WebAuthnSignResult {
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
     fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
         let Some(cred) = &self.result.assertion.credentials else {
@@ -396,8 +402,8 @@ impl RegisterPromise {
         match result {
             Ok(result) => {
                 let wrapped_result =
-                    CtapRegisterResult::allocate(InitCtapRegisterResult { result })
-                        .query_interface::<nsICtapRegisterResult>()
+                    WebAuthnRegisterResult::allocate(InitWebAuthnRegisterResult { result })
+                        .query_interface::<nsIWebAuthnRegisterResult>()
                         .ok_or(NS_ERROR_FAILURE)?;
                 unsafe { self.0.Resolve(wrapped_result.coerce()) };
             }
@@ -416,9 +422,10 @@ impl SignPromise {
     fn resolve_or_reject(&self, result: Result<SignResult, nsresult>) -> Result<(), nsresult> {
         match result {
             Ok(result) => {
-                let wrapped_result = CtapSignResult::allocate(InitCtapSignResult { result })
-                    .query_interface::<nsICtapSignResult>()
-                    .ok_or(NS_ERROR_FAILURE)?;
+                let wrapped_result =
+                    WebAuthnSignResult::allocate(InitWebAuthnSignResult { result })
+                        .query_interface::<nsIWebAuthnSignResult>()
+                        .ok_or(NS_ERROR_FAILURE)?;
                 unsafe { self.0.Resolve(wrapped_result.coerce()) };
             }
             Err(result) => {
@@ -504,12 +511,12 @@ impl AuthrsService {
     //
     // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
     // most one WebAuthn transaction is active at any given time.
-    xpcom_method!(make_credential => MakeCredential(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsICtapRegisterArgs, aPromise: *const nsIWebAuthnRegisterPromise));
+    xpcom_method!(make_credential => MakeCredential(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnRegisterArgs, aPromise: *const nsIWebAuthnRegisterPromise));
     fn make_credential(
         &self,
         tid: u64,
         browsing_context_id: u64,
-        args: &nsICtapRegisterArgs,
+        args: &nsIWebAuthnRegisterArgs,
         promise: &nsIWebAuthnRegisterPromise,
     ) -> Result<(), nsresult> {
         self.reset()?;
@@ -762,12 +769,12 @@ impl AuthrsService {
     //
     // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
     // most one WebAuthn transaction is active at any given time.
-    xpcom_method!(get_assertion => GetAssertion(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsICtapSignArgs, aPromise: *const nsIWebAuthnSignPromise));
+    xpcom_method!(get_assertion => GetAssertion(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnSignArgs, aPromise: *const nsIWebAuthnSignPromise));
     fn get_assertion(
         &self,
         tid: u64,
         browsing_context_id: u64,
-        args: &nsICtapSignArgs,
+        args: &nsIWebAuthnSignArgs,
         promise: &nsIWebAuthnSignPromise,
     ) -> Result<(), nsresult> {
         self.reset()?;

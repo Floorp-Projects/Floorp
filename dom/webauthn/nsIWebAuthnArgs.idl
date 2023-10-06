@@ -7,15 +7,8 @@
 
 typedef long COSEAlgorithmIdentifier;
 
-// The nsICtapRegisterArgs interface encapsulates the arguments to the CTAP
-// authenticatorMakeCredential command as defined in
-//   https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticatorMakeCredential
-// It is essentially a shim that allows data to be copied from an IPDL-defined
-// WebAuthnMakeCredentialInfo C++ struct to an authenticator-rs defined
-// RegisterArgsCtap2 Rust struct.
-//
 [uuid(2fc8febe-a277-11ed-bda2-8f6495a5e75c)]
-interface nsICtapRegisterArgs : nsISupports {
+interface nsIWebAuthnRegisterArgs : nsISupports {
     // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
     readonly attribute AString origin;
 
@@ -48,8 +41,8 @@ interface nsICtapRegisterArgs : nsISupports {
     [must_use] readonly attribute bool minPinLength;
 
     // Options.
-    [must_use] readonly attribute AString residentKey;
-    [must_use] readonly attribute AString userVerification;
+    readonly attribute AString residentKey;
+    readonly attribute AString userVerification;
     [must_use] readonly attribute AString authenticatorAttachment;
 
     // This is the WebAuthn PublicKeyCredentialCreationOptions timeout.
@@ -63,15 +56,8 @@ interface nsICtapRegisterArgs : nsISupports {
     [must_use] readonly attribute AString attestationConveyancePreference;
 };
 
-// The nsICtapSignArgs interface encapsulates the arguments to the CTAP
-// authenticatorGetAssertion command as defined in
-//   https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#authenticatorGetAssertion
-// It is essentially a shim that allows data to be copied from an IPDL-defined
-// WebAuthnGetAssertionInfo C++ struct to an authenticator-rs defined
-// SignArgsCtap2 Rust struct.
-//
 [uuid(2e621cf4-a277-11ed-ae00-bf41a54ef553)]
-interface nsICtapSignArgs : nsISupports {
+interface nsIWebAuthnSignArgs : nsISupports {
     // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
     readonly attribute AString origin;
 

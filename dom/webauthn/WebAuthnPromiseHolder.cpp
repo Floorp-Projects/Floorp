@@ -15,14 +15,14 @@ WebAuthnRegisterPromiseHolder::Ensure() {
 }
 
 NS_IMETHODIMP
-WebAuthnRegisterPromiseHolder::Resolve(nsICtapRegisterResult* aResult) {
+WebAuthnRegisterPromiseHolder::Resolve(nsIWebAuthnRegisterResult* aResult) {
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   // Resolve the promise on its owning thread if Disconnect() has not been
   // called.
-  RefPtr<nsICtapRegisterResult> result(aResult);
+  RefPtr<nsIWebAuthnRegisterResult> result(aResult);
   mEventTarget->Dispatch(NS_NewRunnableFunction(
       "WebAuthnRegisterPromiseHolder::Resolve",
       [self = RefPtr{this}, result]() {
@@ -54,14 +54,14 @@ already_AddRefed<WebAuthnSignPromise> WebAuthnSignPromiseHolder::Ensure() {
 }
 
 NS_IMETHODIMP
-WebAuthnSignPromiseHolder::Resolve(nsICtapSignResult* aResult) {
+WebAuthnSignPromiseHolder::Resolve(nsIWebAuthnSignResult* aResult) {
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   // Resolve the promise on its owning thread if Disconnect() has not been
   // called.
-  RefPtr<nsICtapSignResult> result(aResult);
+  RefPtr<nsIWebAuthnSignResult> result(aResult);
   mEventTarget->Dispatch(NS_NewRunnableFunction(
       "WebAuthnSignPromiseHolder::Resolve", [self = RefPtr{this}, result]() {
         self->mSignPromise.ResolveIfExists(result, __func__);
