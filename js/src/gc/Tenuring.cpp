@@ -202,12 +202,15 @@ void TenuringTracer::traverse(wasm::AnyRef* thingp) {
 }
 
 template <typename T>
-void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
-  mozilla::ReentrancyGuard g(*owner_);
-  MOZ_ASSERT(owner_->isEnabled());
+void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover,
+                                                   StoreBuffer* owner) {
+  mozilla::ReentrancyGuard g(*owner);
+  MOZ_ASSERT(owner->isEnabled());
+
   if (last_) {
     last_.trace(mover);
   }
+
   for (typename StoreSet::Range r = stores_.all(); !r.empty(); r.popFront()) {
     r.front().trace(mover);
   }
@@ -215,11 +218,11 @@ void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover) {
 
 namespace js::gc {
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(
-    TenuringTracer&);
+    TenuringTracer&, StoreBuffer* owner);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(
-    TenuringTracer&);
+    TenuringTracer&, StoreBuffer* owner);
 template void StoreBuffer::MonoTypeBuffer<StoreBuffer::WasmAnyRefEdge>::trace(
-    TenuringTracer&);
+    TenuringTracer&, StoreBuffer* owner);
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::StringPtrEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::BigIntPtrEdge>;
 template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ObjectPtrEdge>;
@@ -392,14 +395,15 @@ void ArenaCellSet::trace(TenuringTracer& mover) {
   }
 }
 
-void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
-  MOZ_ASSERT(owner_->isEnabled());
+void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover,
+                                                 StoreBuffer* owner) {
+  MOZ_ASSERT(owner->isEnabled());
 
 #ifdef DEBUG
   // Verify that all string whole cells are traced first before any other
   // strings are visited for any reason.
-  MOZ_ASSERT(!owner_->markingNondeduplicatable);
-  owner_->markingNondeduplicatable = true;
+  MOZ_ASSERT(!owner->markingNondeduplicatable);
+  owner->markingNondeduplicatable = true;
 #endif
   // Trace all of the strings to mark the non-deduplicatable bits, then trace
   // all other whole cells.
@@ -407,7 +411,7 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover) {
     stringHead_->trace(mover);
   }
 #ifdef DEBUG
-  owner_->markingNondeduplicatable = false;
+  owner->markingNondeduplicatable = false;
 #endif
   if (nonStringHead_) {
     nonStringHead_->trace(mover);

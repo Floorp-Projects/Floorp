@@ -63,9 +63,9 @@ bool StoreBuffer::GenericBuffer::init() {
   return bool(storage_);
 }
 
-void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
-  mozilla::ReentrancyGuard g(*owner_);
-  MOZ_ASSERT(owner_->isEnabled());
+void StoreBuffer::GenericBuffer::trace(JSTracer* trc, StoreBuffer* owner) {
+  mozilla::ReentrancyGuard g(*owner);
+  MOZ_ASSERT(owner->isEnabled());
   if (!storage_) {
     return;
   }
@@ -79,14 +79,6 @@ void StoreBuffer::GenericBuffer::trace(JSTracer* trc) {
 
 StoreBuffer::StoreBuffer(JSRuntime* rt, Nursery& nursery)
     : lock_(mutexid::StoreBuffer),
-      bufferVal(this, JS::GCReason::FULL_VALUE_BUFFER),
-      bufStrCell(this, JS::GCReason::FULL_CELL_PTR_STR_BUFFER),
-      bufBigIntCell(this, JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER),
-      bufObjCell(this, JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER),
-      bufferSlot(this, JS::GCReason::FULL_SLOT_BUFFER),
-      bufferWasmAnyRef(this, JS::GCReason::FULL_WASM_ANYREF_BUFFER),
-      bufferWholeCell(this),
-      bufferGeneric(this),
       runtime_(rt),
       nursery_(nursery),
       aboutToOverflow_(false),
