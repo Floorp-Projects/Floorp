@@ -10160,7 +10160,11 @@
 # 2 : enable for media engine only
 -   name: media.wmf.hevc.enabled
     type: RelaxedAtomicUint32
-    value: 2
+#if defined(NIGHTLY_BUILD)
+    value: 1
+#else
+    value: 0
+#endif
     mirror: always
 
 #endif  # MOZ_WMF
