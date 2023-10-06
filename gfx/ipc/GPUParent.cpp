@@ -106,55 +106,61 @@ using namespace layers;
 static GPUParent* sGPUParent;
 
 static void ReportHardwareMediaCodecSupportIfNeeded() {
-  // Only report telemetry when hardware decoding is avaliable.
-  if (!gfx::gfxVars::CanUseHardwareVideoDecoding()) {
-    return;
-  }
   // We only need to report the result once.
   static bool sReported = false;
   if (sReported) {
     return;
   }
-  sReported = true;
 #if defined(XP_WIN)
-  // TODO : we can remove this after HEVC is enabled by default.
-  // HEVC is not enabled. We need to force to enable it in order to know
-  // its support as well, and it would be turn off later.
-  if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
-    WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
-  }
+  NS_GetCurrentThread()->Dispatch(NS_NewRunnableFunction(
+      "GPUParent:ReportHardwareMediaCodecSupportIfNeeded", []() {
+        // Only report telemetry when hardware decoding is avaliable.
+        if (!gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+          return;
+        }
+        sReported = true;
 
-  const auto support = PDMFactory::Supported(true /* force refresh */);
-  if (support.contains(
-          mozilla::media::MediaCodecsSupport::H264HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"h264"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::VP8HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp8"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::VP9HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"vp9"_ns,
-        true);
-  }
-  if (support.contains(mozilla::media::MediaCodecsSupport::AV1HardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"av1"_ns,
-        true);
-  }
-  if (support.contains(
-          mozilla::media::MediaCodecsSupport::HEVCHardwareDecode)) {
-    Telemetry::ScalarSet(
-        Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT, u"hevc"_ns,
-        true);
-  }
-  if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
-    WMFDecoderModule::Init();
-  }
+        // TODO : we can remove this after HEVC is enabled by default.
+        // HEVC is not enabled. We need to force to enable it in order to know
+        // its support as well, and it would be turn off later.
+        if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
+          WMFDecoderModule::Init(WMFDecoderModule::Config::ForceEnableHEVC);
+        }
+        const auto support = PDMFactory::Supported(true /* force refresh */);
+        if (support.contains(
+                mozilla::media::MediaCodecsSupport::H264HardwareDecode)) {
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT,
+              u"h264"_ns, true);
+        }
+        if (support.contains(
+                mozilla::media::MediaCodecsSupport::VP8HardwareDecode)) {
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT,
+              u"vp8"_ns, true);
+        }
+        if (support.contains(
+                mozilla::media::MediaCodecsSupport::VP9HardwareDecode)) {
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT,
+              u"vp9"_ns, true);
+        }
+        if (support.contains(
+                mozilla::media::MediaCodecsSupport::AV1HardwareDecode)) {
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT,
+              u"av1"_ns, true);
+        }
+        if (support.contains(
+                mozilla::media::MediaCodecsSupport::HEVCHardwareDecode)) {
+          Telemetry::ScalarSet(
+              Telemetry::ScalarID::MEDIA_DEVICE_HARDWARE_DECODING_SUPPORT,
+              u"hevc"_ns, true);
+        }
+        if (StaticPrefs::media_wmf_hevc_enabled() != 1) {
+          WMFDecoderModule::Init();
+        }
+      }));
 #endif
   // TODO : in the future, when we have GPU procss on MacOS, then we can report
   // HEVC usage as well.
