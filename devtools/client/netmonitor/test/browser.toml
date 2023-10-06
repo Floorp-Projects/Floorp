@@ -116,6 +116,7 @@ support-files = [
 ["browser_net_block-context.js"]
 
 ["browser_net_block-csp.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_block-draganddrop.js"]
 
@@ -134,6 +135,7 @@ skip-if = [
 ["browser_net_brotli.js"]
 
 ["browser_net_cache_details.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_cached-status.js"]
 skip-if = [
@@ -190,12 +192,14 @@ skip-if = [
 ]
 
 ["browser_net_content-type.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["!debug && os == 'mac'"]
 
 ["browser_net_cookies_sorted.js"]
 skip-if = ["verify && debug && os == 'win'"]
 
 ["browser_net_copy_as_curl.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_copy_as_fetch.js"]
 
@@ -232,6 +236,7 @@ skip-if = ["win10_2004"] # Bug 1723573
 ["browser_net_decode-url.js"]
 
 ["browser_net_details_copy.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_domain-not-found.js"]
 
@@ -265,6 +270,7 @@ skip-if = ["win10_2004"] # Bug 1723573
 skip-if = ["verify"] # Bug 1607678
 
 ["browser_net_fonts.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["win10_2004"] # Bug 1723573
 
 ["browser_net_footer-summary.js"]
@@ -273,6 +279,7 @@ skip-if = ["win10_2004"] # Bug 1723573
 skip-if = ["true"] # Bug 1479782
 
 ["browser_net_header-docs.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_header-ref-policy.js"]
 
@@ -281,16 +288,20 @@ skip-if = ["true"] # Bug 1479782
 ["browser_net_headers-alignment.js"]
 
 ["browser_net_headers-link_clickable.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_headers-proxy.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_headers-resize.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_headers_filter.js"]
 
 ["browser_net_headers_sorted.js"]
 
 ["browser_net_html-preview.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_image-tooltip.js"]
 
@@ -331,12 +342,14 @@ skip-if = ["true"] # Bug 1479782
 ["browser_net_new_request_panel_content-length.js"]
 
 ["browser_net_new_request_panel_context_menu.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_new_request_panel_persisted_content.js"]
 
 ["browser_net_new_request_panel_send_request.js"]
 
 ["browser_net_new_request_panel_sync_url_params.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_open_in_debugger.js"]
 
@@ -395,6 +408,7 @@ skip-if = ["os == 'win'"] # bug 1391264
 skip-if = ["a11y_checks && os == 'linux' && !debug"] # bug 1732635
 
 ["browser_net_response_node-expanded.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_search-results.js"]
 skip-if = ["os == 'linux' && a11y_checks"]  # Bug 1721160
@@ -404,6 +418,7 @@ skip-if = ["os == 'linux' && a11y_checks"]  # Bug 1721160
 ["browser_net_security-error.js"]
 
 ["browser_net_security-icon-click.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_security-redirect.js"]
 
@@ -420,6 +435,7 @@ skip-if = ["os == 'linux' && a11y_checks"]  # Bug 1721160
 ["browser_net_send-beacon.js"]
 
 ["browser_net_server_timings.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_service-worker-status.js"]
 skip-if = ["verify && !debug && os == 'linux'"]
@@ -442,6 +458,7 @@ skip-if = ["true"] #Bug 1667115
 ["browser_net_sse-basic.js"]
 
 ["browser_net_stacktraces-visibility.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_statistics-01.js"]
 skip-if = ["true"] # Bug 1373558
@@ -460,6 +477,7 @@ skip-if = ["win10_2004"] # Bug 1723573
 ["browser_net_streaming-response.js"]
 
 ["browser_net_tabbar_focus.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_telemetry_edit_resend.js"]
 
@@ -490,10 +508,12 @@ skip-if = ["socketprocess_networking"] # Bug 1772211
 ["browser_net_truncate.js"]
 
 ["browser_net_url-preview.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_use_as_fetch.js"]
 
 ["browser_net_view-source-debugger.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_net_waterfall-click.js"]
 

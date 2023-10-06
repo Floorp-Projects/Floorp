@@ -18,10 +18,13 @@ support-files = [
 ["browser_fontinspector.js"]
 
 ["browser_fontinspector_all-fonts.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_fontinspector_copy-URL.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_fontinspector_edit-previews.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_fontinspector_editor-font-size-conversion.js"]
 
@@ -32,6 +35,7 @@ support-files = [
 ["browser_fontinspector_editor-values.js"]
 
 ["browser_fontinspector_expand-css-code.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_fontinspector_font-type-telemetry.js"]
 
@@ -48,3 +52,4 @@ skip-if = [
 ["browser_fontinspector_text-node.js"]
 
 ["browser_fontinspector_theme-change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

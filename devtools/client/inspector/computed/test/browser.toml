@@ -28,19 +28,23 @@ support-files = [
 ["browser_computed_custom_properties.js"]
 
 ["browser_computed_cycle_color.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_computed_default_tab.js"]
 
 ["browser_computed_getNodeInfo.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["!debug && os == 'mac'"] #Bug 1559033
 
 ["browser_computed_keybindings_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_computed_keybindings_02.js"]
 
 ["browser_computed_matched-selectors-order.js"]
 
 ["browser_computed_matched-selectors-toggle.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_computed_matched-selectors_01.js"]
 
@@ -51,6 +55,7 @@ skip-if = ["!debug && os == 'mac'"] #Bug 1559033
 ["browser_computed_no-results-placeholder.js"]
 
 ["browser_computed_original-source-link.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_computed_pseudo-element_01.js"]
 
@@ -71,6 +76,7 @@ skip-if = ["!debug && os == 'mac'"] #Bug 1559033
 ["browser_computed_select-and-copy-styles-01.js"]
 
 ["browser_computed_select-and-copy-styles-02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_computed_shadow_host.js"]
 

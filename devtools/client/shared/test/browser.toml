@@ -121,6 +121,7 @@ skip-if = ["verify"]
 ["browser_filter-editor-06.js"]
 
 ["browser_filter-editor-07.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_filter-editor-08.js"]
 
@@ -312,5 +313,7 @@ skip-if = ["os == 'win'"] # Win: bug 1404197
 ["browser_treeWidget_basic.js"]
 
 ["browser_treeWidget_keyboard_interaction.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_treeWidget_mouse_interaction.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

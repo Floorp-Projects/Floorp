@@ -65,10 +65,12 @@ skip-if = [
 ["browser_rules_css-compatibility-learn-more-link.js"]
 
 ["browser_rules_css-compatibility-toggle-rules.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_css-compatibility-tooltip-telemetry.js"]
 
 ["browser_rules_filtereditor-appears-on-swatch-click.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_filtereditor-commit-on-ENTER.js"]
 
@@ -145,10 +147,13 @@ skip-if = [
 ]
 
 ["browser_rules_inactive_css_display-justify.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_flexbox.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_grid.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_inactive_css_inline.js"]
 
@@ -191,6 +196,7 @@ skip-if = [
 ["browser_rules_lineNumbers.js"]
 
 ["browser_rules_linear-easing-swatch.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_livepreview.js"]
 
@@ -239,6 +245,7 @@ skip-if = ["ccov && os == 'win'"] # Bug 1516686
 ["browser_rules_non_ascii.js"]
 
 ["browser_rules_original-source-link.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "ccov", #Bug 1432176
   "http3", # Bug 1829298
@@ -246,6 +253,7 @@ skip-if = [
 ]
 
 ["browser_rules_original-source-link2.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "ccov", # Bug 1432176
   "http3", # Bug 1829298
@@ -257,6 +265,7 @@ skip-if = [
 ["browser_rules_print_media_simulation.js"]
 
 ["browser_rules_pseudo-element_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeledv
 
 ["browser_rules_pseudo-element_02.js"]
 
@@ -275,6 +284,7 @@ skip-if = [
 ["browser_rules_refresh-on-style-change.js"]
 
 ["browser_rules_refresh-on-stylesheet-change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_search-filter-computed-list_01.js"]
 
@@ -317,20 +327,28 @@ skip-if = [
 ["browser_rules_select-and-copy-styles.js"]
 
 ["browser_rules_selector-highlighter-iframe-picker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter-nested-rules.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter-on-navigate.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_03.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_04.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_05.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_selector-highlighter_order.js"]
 
@@ -339,6 +357,7 @@ skip-if = [
 ["browser_rules_shadowdom_slot_rules.js"]
 
 ["browser_rules_shapes-toggle_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_shapes-toggle_02.js"]
 
@@ -354,6 +373,7 @@ skip-if = [
 fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
 
 ["browser_rules_shapes-toggle_basic-shapes-default.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_shorthand-overridden-lists.js"]
 
@@ -368,6 +388,7 @@ fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
 ["browser_rules_strict-search-filter_03.js"]
 
 ["browser_rules_style-editor-link.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_update_mask_image_cors.js"]
 
