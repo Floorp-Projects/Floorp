@@ -281,7 +281,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
                           ssl_kea_ecdh);
 }
 
-const std::string DtlsIdentity::DEFAULT_HASH_ALGORITHM = "sha-256";
+constexpr nsLiteralCString DtlsIdentity::DEFAULT_HASH_ALGORITHM;
 
 nsresult DtlsIdentity::ComputeFingerprint(DtlsDigest* digest) const {
   const UniqueCERTCertificate& c = cert();
