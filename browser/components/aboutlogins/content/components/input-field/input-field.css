@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  display: grid;
+  grid-template-areas: "label label" "input actions";
+  align-items: center;
+  font-family: monospace;
+}
+
+label {
+  grid-area: label;
+  display: block;
+  color: var(--in-content-page-color);
+  margin-bottom: 8px;
+}
+
+/** input.input-field needed to override margin in themes/osx/global/in-content/common.css */
+input.input-field {
+  grid-area: input;
+  margin: 0;
+}
+
+
+.input-field:read-only {
+  all: unset;
+  display: inline-block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.reveal-password-button {
+  grid-area: actions;
+  width: 32px;
+  height: 32px;
+  min-width: 0;
+  background: url("chrome://browser/content/aboutlogins/icons/password.svg") center no-repeat;
+  cursor: pointer;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.reveal-password-button.revealed {
+  background-image: url("chrome://browser/content/aboutlogins/icons/password-hide.svg");
+}
+
+/** button.reveal-password-button needed to override --in-content-button-background-hover in common-shared.css **/
+button.reveal-password-button:hover {
+  opacity: 0.6;
+  background-color: transparent;
+}
+
+/** button.reveal-password-button needed to override --in-content-button-background-active in common-shared.css **/
+button.reveal-password-button:hover:active {
+  opacity: 1;
+  background-color: transparent;
+}
