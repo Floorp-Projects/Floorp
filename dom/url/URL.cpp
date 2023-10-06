@@ -233,38 +233,14 @@ void URL::GetProtocol(nsAString& aProtocol) const {
 }
 
 void URL::SetProtocol(const nsAString& aProtocol) {
-  nsAString::const_iterator start;
-  aProtocol.BeginReading(start);
-
-  nsAString::const_iterator end;
-  aProtocol.EndReading(end);
-
-  nsAString::const_iterator iter(start);
-  FindCharInReadable(':', iter, end);
-
-  // Changing the protocol of a URL, changes the "nature" of the URI
-  // implementation. In order to do this properly, we have to serialize the
-  // existing URL and reparse it in a new object.
-  nsCOMPtr<nsIURI> clone;
-  nsresult rv = NS_MutateURI(URI())
-                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
-                    .Finalize(clone);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsCOMPtr<nsIURI> uri(URI());
+  if (!uri) {
     return;
   }
-
-  nsAutoCString href;
-  rv = clone->GetSpec(href);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  uri = net::TryChangeProtocol(uri, aProtocol);
+  if (!uri) {
     return;
   }
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), href);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
   mURI = std::move(uri);
 }
 
