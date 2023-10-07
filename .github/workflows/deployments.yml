@@ -27,6 +27,10 @@ on:
         type: string
         required: true
         default: 'https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/'
+      release-note-url-ja:
+        type: string
+        required: false
+        default: 'https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/'
 
 #----------------------------------------- JOBS -----------------------------------------#
 jobs:
@@ -98,6 +102,7 @@ jobs:
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
@@ -112,6 +117,7 @@ jobs:
       out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
 
 ################################################################ ↑ Windows x86 Build ####################################################################################
 
@@ -125,6 +131,7 @@ jobs:
       buildjet: ${{ inputs.buildjet }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
   Part1-linux-aarch64-build:
@@ -137,6 +144,7 @@ jobs:
       buildjet: ${{ inputs.buildjet }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
@@ -238,6 +246,7 @@ jobs:
       beta: false
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
+      release-note-url-ja: ${{ inputs.release-note-url-ja }}
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
 

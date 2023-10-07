@@ -698,9 +698,18 @@ nsBrowserContentHandler.prototype = {
             willRestoreSession =
               lazy.SessionStartup.isAutomaticRestoreEnabled();
 
+            // Floorp Injections
+            // If "Services.locale.requestedLocale" is start with "ja" We will show Japanese version of Release Notes
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
             );
+
+            if (Services.locale.requestedLocale.startsWith("ja")) {
+              overridePage = Services.urlFormatter.formatURLPref(
+                "floorp.startup.homepage_override_url.ja"
+              );
+            }
+
             let update = lazy.UpdateManager.readyUpdate;
             if (
               update &&
