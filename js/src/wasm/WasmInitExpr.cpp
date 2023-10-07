@@ -407,12 +407,10 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
 }
 
 bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
-                                    ValType expected,
-                                    uint32_t maxInitializedGlobalsIndexPlus1,
-                                    Maybe<LitVal>* literal) {
+                                    ValType expected, Maybe<LitVal>* literal) {
   ValidatingOpIter iter(*env, d, ValidatingOpIter::InitExpr);
 
-  if (!iter.startInitExpr(expected, maxInitializedGlobalsIndexPlus1)) {
+  if (!iter.startInitExpr(expected)) {
     return false;
   }
 
@@ -618,13 +616,10 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
 }
 
 bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
-                                 ValType expected,
-                                 uint32_t maxInitializedGlobalsIndexPlus1,
-                                 InitExpr* expr) {
+                                 ValType expected, InitExpr* expr) {
   Maybe<LitVal> literal = Nothing();
   const uint8_t* exprStart = d.currentPosition();
-  if (!DecodeConstantExpression(d, env, expected,
-                                maxInitializedGlobalsIndexPlus1, &literal)) {
+  if (!DecodeConstantExpression(d, env, expected, &literal)) {
     return false;
   }
   const uint8_t* exprEnd = d.currentPosition();

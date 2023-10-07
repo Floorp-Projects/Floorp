@@ -424,8 +424,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   UnsetLocalsState unsetLocals_;
   // The exclusive max index of a global that can be accessed by global.get in
   // this expression. When GC is enabled, this is any previously defined
-  // global. Otherwise this is always set to zero, and only imported immutable
-  // globals are allowed.
+  // immutable global. Otherwise this is always set to zero, and only imported
+  // immutable globals are allowed.
   uint32_t maxInitializedGlobalsIndexPlus1_;
 
 #ifdef DEBUG
@@ -598,8 +598,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    const ValTypeVector& locals);
   [[nodiscard]] bool endFunction(const uint8_t* bodyEnd);
 
-  [[nodiscard]] bool startInitExpr(ValType expected,
-                                   uint32_t maxInitializedGlobalsIndexPlus1);
+  [[nodiscard]] bool startInitExpr(ValType expected);
   [[nodiscard]] bool endInitExpr();
 
   // Value and reference types
@@ -1289,19 +1288,19 @@ inline bool OpIter<Policy>::endFunction(const uint8_t* bodyEnd) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::startInitExpr(
-    ValType expected, uint32_t maxInitializedGlobalsIndexPlus1) {
+inline bool OpIter<Policy>::startInitExpr(ValType expected) {
   MOZ_ASSERT(kind_ == OpIter::InitExpr);
   MOZ_ASSERT(elseParamStack_.empty());
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
-  MOZ_ASSERT(maxInitializedGlobalsIndexPlus1_ == 0);
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
 
   // GC allows accessing any previously defined global, not just those that are
   // imported and immutable.
   if (env_.features.gc) {
-    maxInitializedGlobalsIndexPlus1_ = maxInitializedGlobalsIndexPlus1;
+    maxInitializedGlobalsIndexPlus1_ = env_.globals.length();
+  } else {
+    maxInitializedGlobalsIndexPlus1_ = env_.numGlobalImports;
   }
 
   BlockType type = BlockType::VoidToSingle(expected);
@@ -2147,9 +2146,9 @@ inline bool OpIter<Policy>::readGetGlobal(uint32_t* id) {
   }
 
   // Initializer expressions can access immutable imported globals, or any
-  // previously defined global with GC enabled.
-  if (kind_ == OpIter::InitExpr && *id >= maxInitializedGlobalsIndexPlus1_ &&
-      (!env_.globals[*id].isImport() || env_.globals[*id].isMutable())) {
+  // previously defined immutable global with GC enabled.
+  if (kind_ == OpIter::InitExpr && (env_.globals[*id].isMutable() ||
+                                    *id >= maxInitializedGlobalsIndexPlus1_)) {
     return fail(
         "global.get in initializer expression must reference a global "
         "immutable import");

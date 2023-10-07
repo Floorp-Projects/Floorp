@@ -33,11 +33,9 @@ struct ModuleEnvironment;
 
 // Validates a constant expression. Returns an optional literal value if the
 // final value was from a simple instruction such as i32.const.
-[[nodiscard]] bool DecodeConstantExpression(
-    Decoder& d, ModuleEnvironment* env, ValType expected,
-    uint32_t
-        maxInitializedGlobalsIndexPlus1,  // typically env->globals.length()
-    Maybe<LitVal>* literal);
+[[nodiscard]] bool DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
+                                            ValType expected,
+                                            Maybe<LitVal>* literal);
 
 enum class InitExprKind {
   None,
@@ -76,9 +74,7 @@ class InitExpr {
   // position of the decoder. Upon failure, the decoder contains the failure
   // message or else the failure was an OOM.
   static bool decodeAndValidate(Decoder& d, ModuleEnvironment* env,
-                                ValType expected,
-                                uint32_t maxInitializedGlobalsIndexPlus1,
-                                InitExpr* expr);
+                                ValType expected, InitExpr* expr);
 
   // Decode and evaluate a constant expression at the current position of the
   // decoder. Does not validate the expression first, since all InitExprs are

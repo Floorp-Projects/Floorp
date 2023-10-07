@@ -2149,6 +2149,9 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
 
     moduleEnv_.numFuncImports = funcImportMap_.count();
 
+    // All globals (inits and imports) are imports from Wasm point of view.
+    moduleEnv_.numGlobalImports = moduleEnv_.globals.length();
+
     MOZ_ASSERT(asmJSMetadata_->asmJSFuncNames.empty());
     if (!asmJSMetadata_->asmJSFuncNames.resize(funcImportMap_.count())) {
       return nullptr;
