@@ -109,6 +109,7 @@ struct WebAuthnMakeCredentialResult {
   uint8_t[] KeyHandle;
   nsString[] Transports;
   WebAuthnExtensionResult[] Extensions;
+  nsString? AuthenticatorAttachment;
 };
 
 struct WebAuthnGetAssertionInfo {
@@ -130,6 +131,7 @@ struct WebAuthnGetAssertionResult {
   uint8_t[] AuthenticatorData;
   WebAuthnExtensionResult[] Extensions;
   uint8_t[] UserHandle;
+  nsString? AuthenticatorAttachment;
 };
 
 [ManualDealloc]

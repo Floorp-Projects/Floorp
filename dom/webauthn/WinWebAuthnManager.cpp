@@ -543,8 +543,20 @@ void WinWebAuthnManager::Register(
       }
     }
 
+    Maybe<nsString> authenticatorAttachment;
+    if (pWebAuthNCredentialAttestation->dwVersion >=
+        WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_3) {
+      if (pWebAuthNCredentialAttestation->dwUsedTransport &
+          WEBAUTHN_CTAP_TRANSPORT_INTERNAL) {
+        authenticatorAttachment = Some(u"platform"_ns);
+      } else {
+        authenticatorAttachment = Some(u"cross-platform"_ns);
+      }
+    }
+
     WebAuthnMakeCredentialResult result(aInfo.ClientDataJSON(), attObject,
-                                        credentialId, transports, extensions);
+                                        credentialId, transports, extensions,
+                                        authenticatorAttachment);
 
     Unused << mTransactionParent->SendConfirmRegister(aTransactionId, result);
     ClearTransaction();
@@ -735,9 +747,11 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
       extensions.AppendElement(WebAuthnExtensionResultAppId(true));
     }
 
+    Maybe<nsString> authenticatorAttachment = Nothing();  // not available
+
     WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                       signature, authenticatorData, extensions,
-                                      userHandle);
+                                      userHandle, authenticatorAttachment);
 
     Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
     ClearTransaction();

@@ -71,6 +71,16 @@ WebAuthnRegisterResult::SetCredPropsRk(bool aCredPropsRk) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebAuthnRegisterResult::GetAuthenticatorAttachment(
+    nsAString& aAuthenticatorAttachment) {
+  if (mAuthenticatorAttachment.isSome()) {
+    aAuthenticatorAttachment = mAuthenticatorAttachment.ref();
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 NS_IMPL_ISUPPORTS(WebAuthnSignResult, nsIWebAuthnSignResult)
 
 NS_IMETHODIMP
@@ -105,6 +115,16 @@ WebAuthnSignResult::GetUserName(nsACString& aUserName) {
 
 NS_IMETHODIMP
 WebAuthnSignResult::GetUsedAppId(bool* aUsedAppId) {
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+WebAuthnSignResult::GetAuthenticatorAttachment(
+    nsAString& aAuthenticatorAttachment) {
+  if (mAuthenticatorAttachment.isSome()) {
+    aAuthenticatorAttachment = mAuthenticatorAttachment.ref();
+    return NS_OK;
+  }
   return NS_ERROR_NOT_AVAILABLE;
 }
 

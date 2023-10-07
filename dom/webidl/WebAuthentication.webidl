@@ -14,6 +14,7 @@
 interface PublicKeyCredential : Credential {
     [SameObject, Throws] readonly attribute ArrayBuffer      rawId;
     [SameObject] readonly attribute AuthenticatorResponse    response;
+    readonly attribute DOMString?                            authenticatorAttachment;
     AuthenticationExtensionsClientOutputs getClientExtensionResults();
     [NewObject] static Promise<boolean> isConditionalMediationAvailable();
     [Throws] object toJSON();

@@ -252,7 +252,7 @@
       };
       let registrationResponse = await navigator.credentials.create({publicKey});
       let registrationResponseJSON = registrationResponse.toJSON();
-      is(Object.keys(registrationResponseJSON).length, 5, "registrationResponseJSON should have 5 properties");
+      is(Object.keys(registrationResponseJSON).length, 6, "registrationResponseJSON should have 6 properties");
       is(registrationResponseJSON.id, registrationResponseJSON.rawId, "registrationResponseJSON.id and rawId should be the same");
       ok(isUrlsafeBase64(registrationResponseJSON.id), "registrationResponseJSON.id should be urlsafe base64");
       is(Object.keys(registrationResponseJSON.response).length, 6, "registrationResponseJSON.response should have 6 properties");
@@ -262,7 +262,8 @@
       ok(isUrlsafeBase64(registrationResponseJSON.response.attestationObject), "registrationResponseJSON.response.attestationObject should be urlsafe base64");
       is(registrationResponseJSON.response.publicKeyAlgorithm, cose_alg_ECDSA_w_SHA256, "registrationResponseJSON.response.publicKeyAlgorithm should be ECDSA with SHA256 (COSE)");
       is(registrationResponseJSON.response.transports.length, 1, "registrationResponseJSON.response.transports.length should be 1");
-      is(registrationResponseJSON.response.transports[0], "usb", "registrationResponseJSON.response.transports[0] should be usb");
+      is(registrationResponseJSON.response.transports[0], "internal", "registrationResponseJSON.response.transports[0] should be internal");
+      is(registrationResponseJSON.authenticatorAttachment, "platform", "registrationResponseJSON.authenticatorAttachment should be platform");
       is(registrationResponseJSON.clientExtensionResults?.credProps?.rk, false, "registrationResponseJSON.clientExtensionResults.credProps.rk should be false");
       is(registrationResponseJSON.type, "public-key", "registrationResponseJSON.type should be public-key");
     });
@@ -286,13 +287,14 @@
       };
       let assertionResponse = await navigator.credentials.get(assertionRequest);
       let assertionResponseJSON = assertionResponse.toJSON();
-      is(Object.keys(assertionResponseJSON).length, 5, "assertionResponseJSON should have 5 properties");
+      is(Object.keys(assertionResponseJSON).length, 6, "assertionResponseJSON should have 6 properties");
       is(assertionResponseJSON.id, assertionResponseJSON.rawId, "assertionResponseJSON.id and rawId should be the same");
       ok(isUrlsafeBase64(assertionResponseJSON.id), "assertionResponseJSON.id should be urlsafe base64");
       is(Object.keys(assertionResponseJSON.response).length, 3, "assertionResponseJSON.response should have 3 properties");
       ok(isUrlsafeBase64(assertionResponseJSON.response.clientDataJSON), "assertionResponseJSON.response.clientDataJSON should be urlsafe base64");
       ok(isUrlsafeBase64(assertionResponseJSON.response.authenticatorData), "assertionResponseJSON.response.authenticatorData should be urlsafe base64");
       ok(isUrlsafeBase64(assertionResponseJSON.response.signature), "assertionResponseJSON.response.signature should be urlsafe base64");
+      is(assertionResponseJSON.authenticatorAttachment, "platform", "assertionResponseJSON.authenticatorAttachment should be platform");
       is(Object.keys(assertionResponseJSON.clientExtensionResults).length, 0, "assertionResponseJSON.clientExtensionResults should be an empty dictionary");
       is(assertionResponseJSON.type, "public-key", "assertionResponseJSON.type should be public-key");
     });

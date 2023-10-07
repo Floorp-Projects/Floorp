@@ -86,6 +86,22 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
               return;
             }
 
+            Maybe<nsString> authenticatorAttachment;
+            nsString maybeAuthenticatorAttachment;
+            rv = aValue->GetAuthenticatorAttachment(
+                maybeAuthenticatorAttachment);
+            if (rv != NS_ERROR_NOT_AVAILABLE) {
+              if (NS_WARN_IF(NS_FAILED(rv))) {
+                Telemetry::ScalarAdd(
+                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+                    u"CTAPRegisterAbort"_ns, 1);
+                Unused << parent->SendAbort(aTransactionId,
+                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                return;
+              }
+              authenticatorAttachment = Some(maybeAuthenticatorAttachment);
+            }
+
             nsTArray<WebAuthnExtensionResult> extensions;
             bool credPropsRk;
             rv = aValue->GetCredPropsRk(&credPropsRk);
@@ -103,7 +119,8 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             }
 
             WebAuthnMakeCredentialResult result(
-                clientData, attObj, credentialId, transports, extensions);
+                clientData, attObj, credentialId, transports, extensions,
+                authenticatorAttachment);
 
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"CTAPRegisterFinish"_ns, 1);
@@ -202,6 +219,22 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             nsTArray<uint8_t> userHandle;
             Unused << aValue->GetUserHandle(userHandle);  // optional
 
+            Maybe<nsString> authenticatorAttachment;
+            nsString maybeAuthenticatorAttachment;
+            rv = aValue->GetAuthenticatorAttachment(
+                maybeAuthenticatorAttachment);
+            if (rv != NS_ERROR_NOT_AVAILABLE) {
+              if (NS_WARN_IF(NS_FAILED(rv))) {
+                Telemetry::ScalarAdd(
+                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+                    u"CTAPSignAbort"_ns, 1);
+                Unused << parent->SendAbort(aTransactionId,
+                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
+                return;
+              }
+              authenticatorAttachment = Some(maybeAuthenticatorAttachment);
+            }
+
             nsTArray<WebAuthnExtensionResult> extensions;
             bool usedAppId;
             rv = aValue->GetUsedAppId(&usedAppId);
@@ -217,9 +250,9 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
               extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
             }
 
-            WebAuthnGetAssertionResult result(clientData, credentialId,
-                                              signature, authenticatorData,
-                                              extensions, userHandle);
+            WebAuthnGetAssertionResult result(
+                clientData, credentialId, signature, authenticatorData,
+                extensions, userHandle, authenticatorAttachment);
 
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"CTAPSignFinish"_ns, 1);
