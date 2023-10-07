@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">Mae %1$s wedi ei analluogi oherwydd problemau diogelwch neu sefydlogrwydd.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">Nid oedd modd gwirio %1$s yn ddiogel ac mae wedi ei analluogi.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Nid yw %1$s yn gydnaws â’ch fersiwn chi o %2$s (fersiwn %3$s).</string>
 </resources>

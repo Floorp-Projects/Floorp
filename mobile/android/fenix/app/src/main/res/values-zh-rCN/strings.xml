@@ -515,6 +515,8 @@
     <string name="preferences_accessibility">无障碍环境</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">自定义 Firefox 账户服务器</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">自定义 Mozilla 账户服务器</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">自定义同步服务器</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
@@ -2260,16 +2262,16 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[我们会以<b>字母等级</b>（从 A 到 F）给商品评价打分。]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">评价可信。分析认为这些评价大概率是由真实消费者作出的诚实公正的评价。</string>
+    <string name="review_quality_check_info_grade_info_AB">评价可信。分析认为这些评价大概率是由真实消费者作出的诚实公正的评价。</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">分析认为这些评价真实可信。</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">分析认为这些评价真实可信。</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">分析认为对此商品的评价鱼龙混杂。</string>
 
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">评价不可信。分析认为这些评价大概率不实，或是由“水军”所作出。</string>
+    <string name="review_quality_check_info_grade_info_DF">评价不可信。分析认为这些评价大概率不实，或是由“水军”所作出。</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">分析认为这些评价不可信。</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">分析认为这些评价不可信。</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>调整后的评分</b>仅基于我们认为可信的评价作出。]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

@@ -232,4 +232,8 @@
     <string name="mozac_feature_addons_status_learn_more">Իմանալ ավելին</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_blocklisted">%1$s-ը անջատվել է` անվտանգության կամ կայունության խնդիրների պատճառով:</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s-ը չէր կարող հաստատվել որպես անվտանգ և անջատվել է:</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s-ը անհամատեղելի է %2$s-ի ձեր տարբերակի հետ (տարբերակ՝ %3$s) :</string>
 </resources>

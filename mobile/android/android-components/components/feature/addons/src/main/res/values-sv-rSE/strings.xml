@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">%1$s har inaktiverats på grund av säkerhets- eller stabilitetsproblem.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s kunde inte verifieras som säker och har inaktiverats.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s är inte kompatibel med din version av %2$s (version %3$s).</string>
 </resources>

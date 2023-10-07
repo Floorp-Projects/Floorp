@@ -498,11 +498,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Մատչելիություն</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Ընտրովի Firefox հաշվի սերվեր</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Ընտրովի Firefox հաշվի սերվեր</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Mozilla հաշվի հարմարեցված սպասարկիչ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Ընտրովի համաժամեցման սերվեր</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox հաշիվը / համաժամեցման սերվերը փոփոխված է: Հայտը դադարեցվում է՝ փոփոխությունները գործադրելու համար…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox հաշիվը / համաժամեցման սերվերը փոփոխված է: Հայտը դադարեցվում է՝ փոփոխությունները գործադրելու համար…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla հաշիվը/Համաժամեցման սպասարկիչը փոփոխվել են: Դուրս եկեք հավելվածից՝ փոփոխությունները գորխադրելու համար...</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Հաշիվ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -518,7 +522,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Մուտք գործեք՝ ներդիրները, էջանիշերը, գաղտնաբառերը և ավելին համաժամեցնելու համար:</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox-ի հաշիվ</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-ի հաշիվ</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla հաշիվ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Կրկին կապակցվեք՝ համաժամեցումը վերսկսելու համար</string>
     <!-- Preference for language -->
@@ -2201,15 +2207,15 @@
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Մենք յուրաքանչյուր ապրանքի կարծիքներին տալիս ենք <b>տառային գնահատական</b>՝ A-ից մինչև F:]]></string>
 
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Հուսալի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, իրական հաճախորդներից են, ովքեր թողել են ազնիվ, անաչառ կարծիքներ:</string>
+    <string name="review_quality_check_info_grade_info_AB">Հուսալի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, իրական հաճախորդներից են, ովքեր թողել են ազնիվ, անաչառ կարծիքներ:</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">Մենք կարծում ենք, որ կարծիքներն վստահելի են:</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Մենք կարծում ենք, որ կարծիքներն վստահելի են:</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Մենք հավատում ենք, որ կա հուսալի և անվստահելի կարծիքների խառնուրդ:</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Անվստահելի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, կեղծ են կամ կողմնակալ գրախոսների կողմից:</string>
+    <string name="review_quality_check_info_grade_info_DF">Անվստահելի կարծիքներ: Մենք կարծում ենք, որ կարծիքները, հավանաբար, կեղծ են կամ կողմնակալ գրախոսների կողմից:</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">Մենք կարծում ենք, որ կարծիքներն անվստահելի են:</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Մենք կարծում ենք, որ կարծիքներն անվստահելի են:</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Ճշգրտված վարկանիշը</b> հիմնված է միայն այն կարծիքների վրա, որոնք մենք վստահելի ենք համարում:]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
