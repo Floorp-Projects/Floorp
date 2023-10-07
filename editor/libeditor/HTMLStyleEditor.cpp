@@ -1921,6 +1921,10 @@ HTMLEditor::AutoInlineStyleSetter::ExtendOrShrinkRangeToApplyTheStyle(
             *nextContentData.BRElementPtr()->GetParentElement())) {
       range.SetEnd(EditorDOMPoint::After(*nextContentData.BRElementPtr()));
       MOZ_ASSERT(range.EndRef().IsSet());
+      commonAncestor = range.GetClosestCommonInclusiveAncestor();
+      if (NS_WARN_IF(!commonAncestor)) {
+        return Err(NS_ERROR_FAILURE);
+      }
     }
   }
 
