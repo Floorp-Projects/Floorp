@@ -982,12 +982,14 @@ impl AuthrsService {
             "ctap2_1" => AuthenticatorVersion::FIDO_2_1,
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
-        match transport.to_string().as_str() {
+        let transport = transport.to_string();
+        match transport.as_str() {
             "usb" | "nfc" | "ble" | "smart-card" | "hybrid" | "internal" => (),
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
         self.test_token_manager.add_virtual_authenticator(
             protocol,
+            transport,
             has_resident_key,
             has_user_verification,
             is_user_consenting,

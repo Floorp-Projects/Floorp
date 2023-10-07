@@ -48,46 +48,25 @@ pub struct RelyingParty {
     pub name: Option<String>,
 }
 
-// Note: This enum is provided to make old CTAP1/U2F API work. This should be deprecated at some point
-#[derive(Debug, Clone)]
-pub enum RelyingPartyWrapper {
-    Data(RelyingParty),
-    // CTAP1 hash can be derived from full object, see RelyingParty::hash below,
-    // but very old backends might still provide application IDs.
-    Hash(RpIdHash),
-}
-
-impl From<&str> for RelyingPartyWrapper {
-    fn from(rp_id: &str) -> Self {
-        Self::Data(RelyingParty {
-            id: rp_id.to_string(),
+impl RelyingParty {
+    pub fn from<S>(id: S) -> Self
+    where
+        S: Into<String>,
+    {
+        Self {
+            id: id.into(),
             name: None,
-        })
+        }
     }
-}
 
-impl RelyingPartyWrapper {
     pub fn hash(&self) -> RpIdHash {
-        match *self {
-            RelyingPartyWrapper::Data(ref d) => {
-                let mut hasher = Sha256::new();
-                hasher.update(&d.id);
+        let mut hasher = Sha256::new();
+        hasher.update(&self.id);
 
-                let mut output = [0u8; 32];
-                output.copy_from_slice(hasher.finalize().as_slice());
+        let mut output = [0u8; 32];
+        output.copy_from_slice(hasher.finalize().as_slice());
 
-                RpIdHash(output)
-            }
-            RelyingPartyWrapper::Hash(ref d) => d.clone(),
-        }
-    }
-
-    pub fn id(&self) -> Option<&String> {
-        match self {
-            // CTAP1 case: We only have the hash, not the entire RpID
-            RelyingPartyWrapper::Hash(..) => None,
-            RelyingPartyWrapper::Data(r) => Some(&r.id),
-        }
+        RpIdHash(output)
     }
 }
 
@@ -398,6 +377,13 @@ pub struct AuthenticationExtensionsClientOutputs {
     pub app_id: Option<bool>,
     pub cred_props: Option<CredentialProperties>,
     pub hmac_create_secret: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AuthenticatorAttachment {
+    CrossPlatform,
+    Platform,
+    Unknown,
 }
 
 #[cfg(test)]

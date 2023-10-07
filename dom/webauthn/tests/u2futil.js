@@ -26,7 +26,7 @@ async function addVirtualAuthenticator() {
       Ci.nsIWebAuthnService
     );
     let id = webauthnService.addVirtualAuthenticator(
-      "ctap2",
+      "ctap2_1",
       "internal",
       true,
       true,

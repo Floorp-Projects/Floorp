@@ -35,8 +35,7 @@ use crate::ctap2::preflight::{
     silently_discover_credentials,
 };
 use crate::ctap2::server::{
-    CredentialProtectionPolicy, RelyingPartyWrapper, ResidentKeyRequirement,
-    UserVerificationRequirement,
+    CredentialProtectionPolicy, RelyingParty, ResidentKeyRequirement, UserVerificationRequirement,
 };
 use crate::errors::{AuthenticatorError, UnsupportedOption};
 use crate::statecallback::StateCallback;
@@ -470,7 +469,7 @@ pub fn register<Dev: FidoDevice>(
 
     let mut makecred = MakeCredentials::new(
         ClientDataHash(args.client_data_hash),
-        RelyingPartyWrapper::Data(args.relying_party),
+        args.relying_party,
         Some(args.user),
         args.pub_cred_params,
         args.exclude_list,
@@ -574,28 +573,25 @@ pub fn sign<Dev: FidoDevice>(
     }
 
     let mut allow_list = args.allow_list;
-    let mut rp_id = args.relying_party_id;
+    let mut rp_id = RelyingParty::from(args.relying_party_id);
     let client_data_hash = ClientDataHash(args.client_data_hash);
     if let Some(ref app_id) = args.extensions.app_id {
         if !allow_list.is_empty() {
             // Try to silently discover U2F credentials that require the FIDO App ID extension. If
             // any are found, we should use the alternate RP ID instead of the provided RP ID.
-            let silent_creds = silently_discover_credentials(
-                dev,
-                &allow_list,
-                &RelyingPartyWrapper::from(app_id.as_str()),
-                &client_data_hash,
-            );
+            let alt_rp_id = RelyingParty::from(app_id);
+            let silent_creds =
+                silently_discover_credentials(dev, &allow_list, &alt_rp_id, &client_data_hash);
             if !silent_creds.is_empty() {
                 allow_list = silent_creds;
-                rp_id = app_id.to_string();
+                rp_id = alt_rp_id;
             }
         }
     }
 
     let mut get_assertion = GetAssertion::new(
         client_data_hash,
-        RelyingPartyWrapper::from(rp_id.as_str()),
+        rp_id,
         allow_list,
         GetAssertionOptions {
             user_presence: Some(args.user_presence_req),
