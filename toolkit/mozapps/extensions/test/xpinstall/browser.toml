@@ -125,7 +125,6 @@ https_first_disabled = true # Bug 1737265
 skip-if = ["true"] # Bug 1449788
 
 ["browser_installchrome.js"]
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
 https_first_disabled = true # Bug 1737265
 
 ["browser_localfile.js"]

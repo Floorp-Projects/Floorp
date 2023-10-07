@@ -2,7 +2,6 @@
 
 ["browser_bug1701027-1.js"]
 support-files = ["helper_bug1701027-1.html"]
-fail-if = ["a11y_checks"] # Bug 1854521 clicked div#fd may not be accessible
 
 ["browser_bug1701027-2.js"]
 support-files = ["helper_bug1701027-2.html"]

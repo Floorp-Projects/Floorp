@@ -111,7 +111,6 @@ skip-if = ["os == 'mac'"] # Full keyboard navigation on OSX only works if Full K
 ["browser_markup_copy_image_data.js"]
 
 ["browser_markup_css_completion_style_attribute_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_css_completion_style_attribute_02.js"]
 
@@ -122,7 +121,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_markup_display_node_02.js"]
 
 ["browser_markup_dom_mutation_breakpoints.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_dragdrop_autoscroll_01.js"]
 
@@ -150,80 +148,56 @@ skip-if = ["true"] # Bug 1177550
 ["browser_markup_events-windowed-host.js"]
 
 ["browser_markup_events_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_02.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_03.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_04.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_chrome_blocked.js"]
 
 ["browser_markup_events_chrome_not_blocked.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_click_to_close.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.0.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.11.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.2.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.3.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.4.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.6.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_1.7.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_jquery_2.1.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_keyboard_navigation.js"]
 
 ["browser_markup_events_object_listener.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_development_15.4.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_development_15.4.1_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_production_15.3.1.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_production_15.3.1_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_production_16.2.0.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_react_production_16.2.0_jsx.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_source_map.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_events_toggle.js"]
-skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_markup_flex_display_badge.js"]
 
@@ -423,10 +397,8 @@ skip-if = ["true"] # Bug 1706833, times out waiting for context menu to open
 ["browser_markup_update-on-navigtion.js"]
 
 ["browser_markup_view-original-source.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_view-source.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_markup_void_elements_html.js"]
 

@@ -82,7 +82,6 @@ support-files = [
 ["browser_styleeditor_add_stylesheet.js"]
 
 ["browser_styleeditor_at_rules_sidebar.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_autocomplete-disabled.js"]
 
@@ -91,7 +90,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_styleeditor_bom.js"]
 
 ["browser_styleeditor_bug_1247083_inline_stylesheet_numbering.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_bug_1405342_serviceworker_iframes.js"]
 skip-if = [
@@ -102,14 +100,12 @@ skip-if = [
 ["browser_styleeditor_bug_740541_iframes.js"]
 
 ["browser_styleeditor_bug_851132_middle_click.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_bug_870339.js"]
 
 ["browser_styleeditor_copyurl.js"]
 
 ["browser_styleeditor_enabled.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_fetch-from-netmonitor.js"]
 skip-if = [
@@ -124,14 +120,12 @@ skip-if = [
 ]
 
 ["browser_styleeditor_filter.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_fission_switch_target.js"]
 
 ["browser_styleeditor_highlight-selector.js"]
 
 ["browser_styleeditor_import.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_import_rule.js"]
 
@@ -148,17 +142,14 @@ skip-if = [
 ["browser_styleeditor_loading_with_containers.js"]
 
 ["browser_styleeditor_media_sidebar_links.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_media_sidebar_sourcemaps.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_missing_stylesheet.js"]
 
 ["browser_styleeditor_navigate.js"]
 
 ["browser_styleeditor_new.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_nostyle.js"]
 
@@ -175,17 +166,14 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_styleeditor_resize_performance.js"]
 
 ["browser_styleeditor_scroll.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_selectstylesheet.js"]
 
 ["browser_styleeditor_sidebars.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sourcemap_chrome.js"]
 
 ["browser_styleeditor_sourcemap_large.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sourcemap_watching.js"]
 skip-if = [
@@ -194,13 +182,10 @@ skip-if = [
 ]
 
 ["browser_styleeditor_sourcemaps.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sourcemaps_inline.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sv_keynav.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sv_resize.js"]
 
@@ -211,14 +196,12 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_styleeditor_syncAddRule.js"]
 
 ["browser_styleeditor_syncAlreadyOpen.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_syncEditSelector.js"]
 
 ["browser_styleeditor_syncIntoRuleView.js"]
 
 ["browser_styleeditor_transition_rule.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_xul.js"]
 

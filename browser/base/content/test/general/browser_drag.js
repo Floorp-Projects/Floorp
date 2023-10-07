@@ -1,6 +1,12 @@
 async function test() {
   waitForExplicitFinish();
 
+  let EventUtils = {};
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+    EventUtils
+  );
+
   // ---- Test dragging the proxy icon ---
   var value = content.location.href;
   var urlString = value + "\n" + content.document.title;

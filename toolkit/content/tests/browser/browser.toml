@@ -25,17 +25,14 @@ support-files = [
 skip-if = ["tsan"] # Bug 1804081
 
 ["browser_about_networking.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked #category-dns may not be focusable
 skip-if = ["socketprocess_networking"]
 
 ["browser_autoscroll_disabled.js"]
 skip-if = ["true"] # Bug 1312652
 
 ["browser_autoscroll_disabled_on_editable_content.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked browser may not be focusable
 
 ["browser_autoscroll_disabled_on_links.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked browser may not be focusable
 
 ["browser_bug295977_autoscroll_overflow.js"]
 skip-if = [
@@ -62,14 +59,12 @@ support-files = ["file_document_open_audio.html"]
 ["browser_bug1693577.js"]
 
 ["browser_cancel_starting_autoscrolling_requested_by_background_tab.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked tabbrowser-tabpanels may not be accessible
 
 ["browser_charsetMenu_disable_on_ascii.js"]
 
 ["browser_charsetMenu_swapBrowsers.js"]
 
 ["browser_click_event_during_autoscrolling.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked browser may not be accessible
 
 ["browser_contentTitle.js"]
 
@@ -141,7 +136,6 @@ skip-if = ["os == 'linux' && bits == 64 && os_version == '18.04'"] # Bug 1614739
 ["browser_keyevents_during_autoscrolling.js"]
 
 ["browser_label_textlink.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked label#textlink-text may not be focusable
 https_first_disabled = true
 
 ["browser_license_links.js"]
@@ -192,7 +186,6 @@ support-files = [
 skip-if = ["true"] # Bug ?????? - test directly manipulates content (gBrowser.contentDocument.getElementById("postForm").submit();)
 
 ["browser_starting_autoscroll_in_about_content.js"]
-fail-if = ["a11y_checks"] # Bug 1854538 clicked body.wide-container may not be accessible
 
 ["browser_suspend_videos_outside_viewport.js"]
 support-files = [
