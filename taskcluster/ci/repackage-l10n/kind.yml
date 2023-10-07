@@ -74,8 +74,8 @@ jobs:
                 macosx64\b.*:
                     by-build-type:
                         # Debug builds can't be attributable
-                        debug: [dmg]
-                        default: [dmg-attrib]
+                        debug: [dmg, mar, pkg]
+                        default: [dmg-attrib, mar, pkg]
                 linux.*: [mar]
                 win32\b.*: [mar, installer]
                 win64\b.*: [mar, installer]
