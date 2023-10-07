@@ -9,13 +9,9 @@
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPrefs_security.h"
 
-#include "CtapArgs.h"
 #include "nsIWebAuthnService.h"
 #include "nsThreadUtils.h"
-
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/dom/U2FTokenManager.h"
-#endif
+#include "WebAuthnArgs.h"
 
 #ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
@@ -33,23 +29,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
       StaticPrefs::security_webauth_webauthn_enable_softtoken();
   if (!usingTestToken && WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
-    if (mgr) {
-      mgr->Register(this, aTransactionId, aTransactionInfo);
-    }
-    return IPC_OK();
-  }
-#endif
-
-// Bug 1819414 will reroute requests on Android through WebAuthnController and
-// allow us to remove this.
-#ifdef MOZ_WIDGET_ANDROID
-  bool usingTestToken =
-      StaticPrefs::security_webauth_webauthn_enable_softtoken();
-  bool androidFido2 =
-      StaticPrefs::security_webauth_webauthn_enable_android_fido2();
-
-  if (!usingTestToken && androidFido2) {
-    U2FTokenManager* mgr = U2FTokenManager::Get();
     if (mgr) {
       mgr->Register(this, aTransactionId, aTransactionInfo);
     }
@@ -142,11 +121,11 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
   nsCOMPtr<nsIWebAuthnService> webauthnService(
       do_GetService("@mozilla.org/webauthn/service;1"));
 
-  RefPtr<CtapRegisterArgs> args(new CtapRegisterArgs(aTransactionInfo));
+  uint64_t browsingContextId = aTransactionInfo.BrowsingContextId();
+  RefPtr<WebAuthnRegisterArgs> args(new WebAuthnRegisterArgs(aTransactionInfo));
 
   nsresult rv = webauthnService->MakeCredential(
-      aTransactionId, aTransactionInfo.BrowsingContextId(), args,
-      promiseHolder);
+      aTransactionId, browsingContextId, args, promiseHolder);
   if (NS_FAILED(rv)) {
     promiseHolder->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
   }
@@ -164,23 +143,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
       StaticPrefs::security_webauth_webauthn_enable_softtoken();
   if (!usingTestToken && WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
-    if (mgr) {
-      mgr->Sign(this, aTransactionId, aTransactionInfo);
-    }
-    return IPC_OK();
-  }
-#endif
-
-// Bug 1819414 will reroute requests on Android through WebAuthnController and
-// allow us to remove this.
-#ifdef MOZ_WIDGET_ANDROID
-  bool usingTestToken =
-      StaticPrefs::security_webauth_webauthn_enable_softtoken();
-  bool androidFido2 =
-      StaticPrefs::security_webauth_webauthn_enable_android_fido2();
-
-  if (!usingTestToken && androidFido2) {
-    U2FTokenManager* mgr = U2FTokenManager::Get();
     if (mgr) {
       mgr->Sign(this, aTransactionId, aTransactionInfo);
     }
@@ -272,7 +234,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
           })
       ->Track(mSignPromiseRequest);
 
-  RefPtr<CtapSignArgs> args(new CtapSignArgs(aTransactionInfo));
+  RefPtr<WebAuthnSignArgs> args(new WebAuthnSignArgs(aTransactionInfo));
 
   nsCOMPtr<nsIWebAuthnService> webauthnService(
       do_GetService("@mozilla.org/webauthn/service;1"));
@@ -296,16 +258,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
     if (mgr) {
       mgr->Cancel(this, aTransactionId);
     }
-  }
-  // fall through in case the virtual token was used.
-#endif
-
-// Bug 1819414 will reroute requests on Android through WebAuthnController and
-// allow us to remove this.
-#ifdef MOZ_WIDGET_ANDROID
-  U2FTokenManager* mgr = U2FTokenManager::Get();
-  if (mgr) {
-    mgr->Cancel(this, aTransactionId);
   }
   // fall through in case the virtual token was used.
 #endif
@@ -358,16 +310,6 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
     if (mgr) {
       mgr->MaybeClearTransaction(this);
     }
-  }
-  // fall through in case the virtual token was used.
-#endif
-
-// Bug 1819414 will reroute requests on Android through WebAuthnController and
-// allow us to remove this.
-#ifdef MOZ_WIDGET_ANDROID
-  U2FTokenManager* mgr = U2FTokenManager::Get();
-  if (mgr) {
-    mgr->MaybeClearTransaction(this);
   }
   // fall through in case the virtual token was used.
 #endif
