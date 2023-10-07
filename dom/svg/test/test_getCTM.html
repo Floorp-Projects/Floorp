@@ -40,8 +40,10 @@ function runTest() {
   is(transrect1.getCTM().d, 3, "transrect1.getCTM().d");
 
   var padsvg1 = document.getElementById("padsvg1");
-  is(padsvg1.getScreenCTM().e - padsvg1.getBoundingClientRect().x, 27, "padsvg1.getScreenCTM().e");
-  is(padsvg1.getScreenCTM().f - padsvg1.getBoundingClientRect().y, 43, "padsvg1.getScreenCTM().f");
+  var ctm = padsvg1.getScreenCTM();
+  var rect = padsvg1.getBoundingClientRect();
+  is(ctm.e - rect.x, 27, "padsvg1.getScreenCTM().e");
+  is(ctm.f - rect.y, 43, "padsvg1.getScreenCTM().f");
 
   var root = doc.documentElement;
   var inner = doc.getElementById("inner");
