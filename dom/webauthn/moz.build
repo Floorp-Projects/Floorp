@@ -28,6 +28,7 @@ EXPORTS.mozilla.dom += [
     "AuthenticatorAttestationResponse.h",
     "AuthenticatorResponse.h",
     "PublicKeyCredential.h",
+    "U2FTokenTransport.h",
     "WebAuthnManager.h",
     "WebAuthnManagerBase.h",
     "WebAuthnPromiseHolder.h",
@@ -41,13 +42,12 @@ UNIFIED_SOURCES += [
     "AuthenticatorAssertionResponse.cpp",
     "AuthenticatorAttestationResponse.cpp",
     "AuthenticatorResponse.cpp",
+    "AuthrsService.cpp",
+    "CtapArgs.cpp",
     "PublicKeyCredential.cpp",
-    "WebAuthnArgs.cpp",
     "WebAuthnManager.cpp",
     "WebAuthnManagerBase.cpp",
     "WebAuthnPromiseHolder.cpp",
-    "WebAuthnResult.cpp",
-    "WebAuthnService.cpp",
     "WebAuthnTransactionChild.cpp",
     "WebAuthnTransactionParent.cpp",
     "WebAuthnUtil.cpp",
@@ -62,11 +62,21 @@ LOCAL_INCLUDES += [
     "/dom/crypto",
     "/security/manager/ssl",
     "/third_party/rust",
+    "/toolkit/components/jsoncpp/include",
+]
+
+USE_LIBS += [
+    "jsoncpp",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
+    EXPORTS.mozilla.dom += [
+        "AndroidWebAuthnTokenManager.h",
+        "U2FTokenManager.h",
+    ]
     UNIFIED_SOURCES += [
-        "AndroidWebAuthnService.cpp",
+        "AndroidWebAuthnTokenManager.cpp",
+        "U2FTokenManager.cpp",
     ]
 
 if CONFIG["OS_ARCH"] == "WINNT":

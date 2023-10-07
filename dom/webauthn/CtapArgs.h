@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_WebAuthnArgs_H_
-#define mozilla_dom_WebAuthnArgs_H_
+#ifndef CtapArgs_h
+#define CtapArgs_h
 
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -13,16 +13,24 @@
 
 namespace mozilla::dom {
 
-class WebAuthnRegisterArgs final : public nsIWebAuthnRegisterArgs {
+// These classes provide an FFI between C++ and Rust for the getters of IPC
+// objects (WebAuthnMakeCredentialInfo and WebAuthnGetAssertionInfo).  They hold
+// non-owning references to IPC objects, and must only be used within the
+// lifetime of the IPC transaction that created them. There are runtime
+// assertions to ensure that these types are created and used on the IPC
+// background thread, but that alone does not guarantee safety.
+
+class CtapRegisterArgs final : public nsICtapRegisterArgs {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBAUTHNREGISTERARGS
+  NS_DECL_NSICTAPREGISTERARGS
 
-  explicit WebAuthnRegisterArgs(const WebAuthnMakeCredentialInfo& aInfo)
+  explicit CtapRegisterArgs(const WebAuthnMakeCredentialInfo& aInfo)
       : mInfo(aInfo),
         mCredProps(false),
         mHmacCreateSecret(false),
         mMinPinLength(false) {
+    mozilla::ipc::AssertIsOnBackgroundThread();
     for (const WebAuthnExtension& ext : mInfo.Extensions()) {
       switch (ext.type()) {
         case WebAuthnExtension::TWebAuthnExtensionCredProps:
@@ -45,9 +53,9 @@ class WebAuthnRegisterArgs final : public nsIWebAuthnRegisterArgs {
   }
 
  private:
-  ~WebAuthnRegisterArgs() = default;
+  ~CtapRegisterArgs() = default;
 
-  const WebAuthnMakeCredentialInfo mInfo;
+  const WebAuthnMakeCredentialInfo& mInfo;
 
   // Flags to indicate whether an extension is being requested.
   bool mCredProps;
@@ -55,20 +63,21 @@ class WebAuthnRegisterArgs final : public nsIWebAuthnRegisterArgs {
   bool mMinPinLength;
 };
 
-class WebAuthnSignArgs final : public nsIWebAuthnSignArgs {
+class CtapSignArgs final : public nsICtapSignArgs {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBAUTHNSIGNARGS
+  NS_DECL_NSICTAPSIGNARGS
 
-  explicit WebAuthnSignArgs(const WebAuthnGetAssertionInfo& aInfo)
-      : mInfo(aInfo) {}
+  explicit CtapSignArgs(const WebAuthnGetAssertionInfo& aInfo) : mInfo(aInfo) {
+    mozilla::ipc::AssertIsOnBackgroundThread();
+  }
 
  private:
-  ~WebAuthnSignArgs() = default;
+  ~CtapSignArgs() = default;
 
-  const WebAuthnGetAssertionInfo mInfo;
+  const WebAuthnGetAssertionInfo& mInfo;
 };
 
 }  // namespace mozilla::dom
 
-#endif  // mozilla_dom_WebAuthnArgs_H_
+#endif  // CtapArgs_h
