@@ -775,7 +775,7 @@ class SSLTunnel:
             self.log.error(
                 "INFO | runtests.py | expected to find ssltunnel at %s" % ssltunnel
             )
-            exit(1)
+            sys.exit(1)
 
         env = test_environment(xrePath=self.xrePath, log=self.log)
         env["LD_LIBRARY_PATH"] = self.xrePath
@@ -1830,7 +1830,8 @@ toolbar#nav-bar {
             ):
                 manifest_key = "{}:{}".format(test["ancestor_manifest"], manifest_key)
 
-            self.tests_by_manifest[manifest_key.replace("\\", "/")].append(tp)
+            manifest_key = manifest_key.replace("\\", "/")
+            self.tests_by_manifest[manifest_key].append(tp)
             self.args_by_manifest[manifest_key].add(test.get("args"))
             self.prefs_by_manifest[manifest_key].add(test.get("prefs"))
             self.env_vars_by_manifest[manifest_key].add(test.get("environment"))
@@ -3419,7 +3420,7 @@ toolbar#nav-bar {
             return result
 
         # code for --run-by-manifest
-        manifests = set(t["manifest"] for t in tests)
+        manifests = set(t["manifest"].replace("\\", "/") for t in tests)
         result = 0
 
         origPrefs = self.extraPrefs.copy()
@@ -3933,11 +3934,12 @@ toolbar#nav-bar {
 
             for message in messages:
                 # Passing the message to the handlers
+                msg = message
                 for handler in self.outputHandlers():
-                    message = handler(message)
+                    msg = handler(msg)
 
                 # Processing the message by the logger
-                self.harness.message_logger.process_message(message)
+                self.harness.message_logger.process_message(msg)
 
         __call__ = processOutputLine
 
@@ -3969,7 +3971,7 @@ toolbar#nav-bar {
                 numFailures, errorMessages = self.shutdownLeaks.process()
                 self.harness.countfail += numFailures
                 for message in errorMessages:
-                    message = {
+                    msg = {
                         "action": "test_end",
                         "status": "FAIL",
                         "expected": "PASS",
@@ -3980,7 +3982,7 @@ toolbar#nav-bar {
                         "test": message["test"],
                         "message": message["msg"],
                     }
-                    self.harness.message_logger.process_message(message)
+                    self.harness.message_logger.process_message(msg)
 
             if self.lsanLeaks:
                 self.harness.countfail += self.lsanLeaks.process()
