@@ -12,7 +12,7 @@ from mozbuild.bootstrap import bootstrap_toolchain
 from mozbuild.repackaging.application_ini import get_application_ini_value
 
 
-def repackage_dmg(infile, output):
+def repackage_dmg(infile, output, attribution_sentinel=None):
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
 
@@ -52,4 +52,5 @@ def repackage_dmg(infile, output):
             dmg_tool=Path(dmg_tool),
             hfs_tool=Path(hfs_tool),
             mkfshfs_tool=Path(mkfshfs_tool),
+            attribution_sentinel=attribution_sentinel,
         )
