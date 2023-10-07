@@ -85,6 +85,7 @@ class XRSystem;
 class StorageManager;
 class MediaCapabilities;
 class MediaSession;
+class UserActivation;
 struct ShareData;
 class WindowGlobalChild;
 
@@ -249,6 +250,8 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   AutoplayPolicy GetAutoplayPolicy(HTMLMediaElement& aElement);
   AutoplayPolicy GetAutoplayPolicy(AudioContext& aContext);
 
+  already_AddRefed<dom::UserActivation> UserActivation();
+
  private:
   void ValidateShareData(const ShareData& aData, ErrorResult& aRv);
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;
@@ -296,6 +299,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<webgpu::Instance> mWebGpu;
   RefPtr<Promise> mSharePromise;  // Web Share API related
   RefPtr<dom::LockManager> mLocks;
+  RefPtr<dom::UserActivation> mUserActivation;
 };
 
 }  // namespace mozilla::dom
