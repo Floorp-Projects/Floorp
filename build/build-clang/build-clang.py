@@ -268,7 +268,7 @@ def build_one_stage(
             cmake_args += ["-DLLVM_ENABLE_TERMINFO=OFF"]
         if is_windows(target):
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
-            cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
+            cmake_args.insert(-1, "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded")
             if is_cross_compile(target):
                 cmake_args += [
                     f"-DCMAKE_TOOLCHAIN_FILE={src_dir}/cmake/platforms/WinMsvc.cmake",
