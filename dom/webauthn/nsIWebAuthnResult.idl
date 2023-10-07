@@ -25,6 +25,8 @@ interface nsIWebAuthnRegisterResult : nsISupports {
     // readonly attribute bool hmacCreateSecret;
 
     [must_use] attribute bool credPropsRk;
+
+    [must_use] readonly attribute AString authenticatorAttachment;
 };
 
 // The nsIWebAuthnSignResult interface is used to construct IPDL-defined
@@ -52,4 +54,6 @@ interface nsIWebAuthnSignResult : nsISupports {
 
     // appId field of AuthenticationExtensionsClientOutputs (Optional)
     [must_use] readonly attribute bool usedAppId;
+
+    [must_use] readonly attribute AString authenticatorAttachment;
 };

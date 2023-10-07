@@ -21,8 +21,11 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   WebAuthnRegisterResult(const nsTArray<uint8_t>& aAttestationObject,
                          const nsCString& aClientDataJSON,
                          const nsTArray<uint8_t>& aCredentialId,
-                         const nsTArray<nsString>& aTransports)
-      : mClientDataJSON(aClientDataJSON), mCredPropsRk(Nothing()) {
+                         const nsTArray<nsString>& aTransports,
+                         const Maybe<nsString>& aAuthenticatorAttachment)
+      : mClientDataJSON(aClientDataJSON),
+        mCredPropsRk(Nothing()),
+        mAuthenticatorAttachment(aAuthenticatorAttachment) {
     mAttestationObject.AppendElements(aAttestationObject);
     mCredentialId.AppendElements(aCredentialId);
     mTransports.AppendElements(aTransports);
@@ -49,6 +52,8 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
       mTransports.AppendElement(
           jni::String::LocalRef(transports->GetElement(i))->ToString());
     }
+    // authenticator attachment is not available on Android
+    mAuthenticatorAttachment = Nothing();
   }
 #endif
 
@@ -60,6 +65,7 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   nsTArray<nsString> mTransports;
   nsCString mClientDataJSON;
   Maybe<bool> mCredPropsRk;
+  Maybe<nsString> mAuthenticatorAttachment;
 };
 
 class WebAuthnSignResult final : public nsIWebAuthnSignResult {
@@ -71,8 +77,10 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
                      const nsCString& aClientDataJSON,
                      const nsTArray<uint8_t>& aCredentialId,
                      const nsTArray<uint8_t>& aSignature,
-                     const nsTArray<uint8_t>& aUserHandle)
-      : mClientDataJSON(aClientDataJSON) {
+                     const nsTArray<uint8_t>& aUserHandle,
+                     const Maybe<nsString>& aAuthenticatorAttachment)
+      : mClientDataJSON(aClientDataJSON),
+        mAuthenticatorAttachment(aAuthenticatorAttachment) {
     mAuthenticatorData.AppendElements(aAuthenticatorData);
     mCredentialId.AppendElements(aCredentialId);
     mSignature.AppendElements(aSignature);
@@ -103,6 +111,8 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
         reinterpret_cast<uint8_t*>(
             aResponse->UserHandle()->GetElements().Elements()),
         aResponse->UserHandle()->Length());
+    // authenticator attachment is not available on Android
+    mAuthenticatorAttachment = Nothing();
   }
 #endif
 
@@ -114,6 +124,7 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
   nsTArray<uint8_t> mCredentialId;
   nsTArray<uint8_t> mSignature;
   nsTArray<uint8_t> mUserHandle;
+  Maybe<nsString> mAuthenticatorAttachment;
 };
 
 }  // namespace mozilla::dom
