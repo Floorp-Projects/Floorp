@@ -60,8 +60,9 @@ pub trait RequestCtap1: fmt::Debug {
     fn ctap1_format(&self) -> Result<(Vec<u8>, Self::AdditionalInfo), HIDError>;
 
     /// Deserializes a response from FIDO v1.x / CTAP1 / U2Fv2 format.
-    fn handle_response_ctap1(
+    fn handle_response_ctap1<Dev: FidoDevice>(
         &self,
+        dev: &mut Dev,
         status: Result<(), ApduErrorStatus>,
         input: &[u8],
         add_info: &Self::AdditionalInfo,

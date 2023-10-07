@@ -1,4 +1,4 @@
-use super::get_info::AuthenticatorInfo;
+use super::get_info::{AuthenticatorInfo, AuthenticatorVersion};
 use super::{
     Command, CommandError, PinUvAuthCommand, RequestCtap1, RequestCtap2, Retryable, StatusCode,
 };
@@ -14,8 +14,8 @@ use crate::ctap2::attestation::{
 use crate::ctap2::client_data::ClientDataHash;
 use crate::ctap2::server::{
     AuthenticationExtensionsClientInputs, AuthenticationExtensionsClientOutputs,
-    CredentialProtectionPolicy, PublicKeyCredentialDescriptor, PublicKeyCredentialParameters,
-    PublicKeyCredentialUserEntity, RelyingParty, RelyingPartyWrapper, RpIdHash,
+    AuthenticatorAttachment, CredentialProtectionPolicy, PublicKeyCredentialDescriptor,
+    PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty, RpIdHash,
     UserVerificationRequirement,
 };
 use crate::ctap2::utils::{read_byte, serde_parse_err};
@@ -25,7 +25,7 @@ use crate::transport::{FidoDevice, VirtualFidoDevice};
 use crate::u2ftypes::CTAP1RequestAPDU;
 use serde::{
     de::{Error as DesError, MapAccess, Unexpected, Visitor},
-    ser::{Error as SerError, SerializeMap},
+    ser::SerializeMap,
     Deserialize, Deserializer, Serialize, Serializer,
 };
 use serde_cbor::{self, de::from_slice, ser, Value};
@@ -35,6 +35,7 @@ use std::io::{Cursor, Read};
 #[derive(Debug, PartialEq, Eq)]
 pub struct MakeCredentialsResult {
     pub att_obj: AttestationObject,
+    pub attachment: AuthenticatorAttachment,
     pub extensions: AuthenticationExtensionsClientOutputs,
 }
 
@@ -103,6 +104,7 @@ impl MakeCredentialsResult {
 
         Ok(Self {
             att_obj,
+            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         })
     }
@@ -187,6 +189,7 @@ impl<'de> Deserialize<'de> for MakeCredentialsResult {
                         auth_data,
                         att_stmt,
                     },
+                    attachment: AuthenticatorAttachment::Unknown,
                     extensions: Default::default(),
                 })
             }
@@ -259,7 +262,7 @@ impl From<AuthenticationExtensionsClientInputs> for MakeCredentialsExtensions {
 #[derive(Debug, Clone)]
 pub struct MakeCredentials {
     pub client_data_hash: ClientDataHash,
-    pub rp: RelyingPartyWrapper,
+    pub rp: RelyingParty,
     // Note(baloo): If none -> ctap1
     pub user: Option<PublicKeyCredentialUserEntity>,
     pub pub_cred_params: Vec<PublicKeyCredentialParameters>,
@@ -281,7 +284,7 @@ impl MakeCredentials {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         client_data_hash: ClientDataHash,
-        rp: RelyingPartyWrapper,
+        rp: RelyingParty,
         user: Option<PublicKeyCredentialUserEntity>,
         pub_cred_params: Vec<PublicKeyCredentialParameters>,
         exclude_list: Vec<PublicKeyCredentialDescriptor>,
@@ -301,18 +304,37 @@ impl MakeCredentials {
         }
     }
 
-    pub fn finalize_result(&self, result: &mut MakeCredentialsResult) {
+    pub fn finalize_result<Dev: FidoDevice>(&self, dev: &Dev, result: &mut MakeCredentialsResult) {
+        let maybe_info = dev.get_authenticator_info();
+
+        result.attachment = match maybe_info {
+            Some(info) if info.options.platform_device => AuthenticatorAttachment::Platform,
+            Some(_) => AuthenticatorAttachment::CrossPlatform,
+            None => AuthenticatorAttachment::Unknown,
+        };
+
         // Handle extensions whose outputs are not encoded in the authenticator data.
         // 1. credProps
         //      "set clientExtensionResults["credProps"]["rk"] to the value of the
         //      requireResidentKey parameter that was used in the invocation of the
         //      authenticatorMakeCredential operation."
-        if self.extensions.cred_props == Some(true) {
+        //      Note: a CTAP 2.0 authenticator is allowed to create a discoverable credential even
+        //      if one was not requested, so there is a case in which we cannot confidently
+        //      return `rk=false` here. We omit the response entirely in this case.
+        let dev_supports_rk = maybe_info.map_or(false, |info| info.options.resident_key);
+        let requested_rk = self.options.resident_key.unwrap_or(false);
+        let max_supported_version = maybe_info.map_or(AuthenticatorVersion::U2F_V2, |info| {
+            info.max_supported_version()
+        });
+        let rk_uncertain = max_supported_version == AuthenticatorVersion::FIDO_2_0
+            && dev_supports_rk
+            && !requested_rk;
+        if self.extensions.cred_props == Some(true) && !rk_uncertain {
             result
                 .extensions
                 .cred_props
                 .get_or_insert(Default::default())
-                .rk = self.options.resident_key.unwrap_or(false);
+                .rk = requested_rk;
         }
 
         // 2. hmac-secret
@@ -350,11 +372,7 @@ impl PinUvAuthCommand for MakeCredentials {
     }
 
     fn get_rp_id(&self) -> Option<&String> {
-        match &self.rp {
-            // CTAP1 case: We only have the hash, not the entire RpID
-            RelyingPartyWrapper::Hash(..) => None,
-            RelyingPartyWrapper::Data(r) => Some(&r.id),
-        }
+        Some(&self.rp.id)
     }
 
     fn can_skip_user_verification(
@@ -417,16 +435,7 @@ impl Serialize for MakeCredentials {
 
         let mut map = serializer.serialize_map(Some(map_len))?;
         map.serialize_entry(&0x01, &self.client_data_hash)?;
-        match self.rp {
-            RelyingPartyWrapper::Data(ref d) => {
-                map.serialize_entry(&0x02, &d)?;
-            }
-            _ => {
-                return Err(S::Error::custom(
-                    "Can't serialize a RelyingParty::Hash for CTAP2",
-                ));
-            }
-        }
+        map.serialize_entry(&0x02, &self.rp)?;
         map.serialize_entry(&0x03, &self.user)?;
         map.serialize_entry(&0x04, &self.pub_cred_params)?;
         if !self.exclude_list.is_empty() {
@@ -465,8 +474,9 @@ impl RequestCtap1 for MakeCredentials {
         Ok((apdu, ()))
     }
 
-    fn handle_response_ctap1(
+    fn handle_response_ctap1<Dev: FidoDevice>(
         &self,
+        dev: &mut Dev,
         status: Result<(), ApduErrorStatus>,
         input: &[u8],
         _add_info: &(),
@@ -480,7 +490,7 @@ impl RequestCtap1 for MakeCredentials {
 
         let mut output = MakeCredentialsResult::from_ctap1(input, &self.rp.hash())
             .map_err(|e| Retryable::Error(HIDError::Command(e)))?;
-        self.finalize_result(&mut output);
+        self.finalize_result(dev, &mut output);
         Ok(output)
     }
 
@@ -489,7 +499,7 @@ impl RequestCtap1 for MakeCredentials {
         dev: &mut Dev,
     ) -> Result<Self::Output, HIDError> {
         let mut output = dev.make_credentials(self)?;
-        self.finalize_result(&mut output);
+        self.finalize_result(dev, &mut output);
         Ok(output)
     }
 }
@@ -507,7 +517,7 @@ impl RequestCtap2 for MakeCredentials {
 
     fn handle_response_ctap2<Dev: FidoDevice>(
         &self,
-        _dev: &mut Dev,
+        dev: &mut Dev,
         input: &[u8],
     ) -> Result<Self::Output, HIDError> {
         if input.is_empty() {
@@ -526,7 +536,7 @@ impl RequestCtap2 for MakeCredentials {
         if status.is_ok() {
             let mut output: MakeCredentialsResult =
                 from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
-            self.finalize_result(&mut output);
+            self.finalize_result(dev, &mut output);
             Ok(output)
         } else {
             let data: Value = from_slice(&input[1..]).map_err(CommandError::Deserializing)?;
@@ -542,7 +552,7 @@ impl RequestCtap2 for MakeCredentials {
         dev: &mut Dev,
     ) -> Result<Self::Output, HIDError> {
         let mut output = dev.make_credentials(self)?;
-        self.finalize_result(&mut output);
+        self.finalize_result(dev, &mut output);
         Ok(output)
     }
 }
@@ -561,10 +571,7 @@ pub(crate) fn dummy_make_credentials_cmd() -> MakeCredentials {
             208, 206, 230, 252, 125, 191, 89, 154, 145, 157, 184, 251, 149, 19, 17, 38, 159, 14,
             183, 129, 247, 132, 28, 108, 192, 84, 74, 217, 218, 52, 21, 75,
         ]),
-        RelyingPartyWrapper::Data(RelyingParty {
-            id: String::from("make.me.blink"),
-            ..Default::default()
-        }),
+        RelyingParty::from("make.me.blink"),
         Some(PublicKeyCredentialUserEntity {
             id: vec![0],
             name: Some(String::from("make.me.blink")),
@@ -598,8 +605,8 @@ pub mod test {
     use crate::ctap2::commands::{RequestCtap1, RequestCtap2};
     use crate::ctap2::server::RpIdHash;
     use crate::ctap2::server::{
-        PublicKeyCredentialParameters, PublicKeyCredentialUserEntity, RelyingParty,
-        RelyingPartyWrapper,
+        AuthenticatorAttachment, PublicKeyCredentialParameters, PublicKeyCredentialUserEntity,
+        RelyingParty,
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
@@ -618,10 +625,10 @@ pub mod test {
             }
             .hash()
             .expect("failed to serialize client data"),
-            RelyingPartyWrapper::Data(RelyingParty {
+            RelyingParty {
                 id: String::from("example.com"),
                 name: Some(String::from("Acme")),
-            }),
+            },
             Some(PublicKeyCredentialUserEntity {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
@@ -657,6 +664,7 @@ pub mod test {
 
         let expected = MakeCredentialsResult {
             att_obj: create_attestation_obj(),
+            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         };
 
@@ -675,10 +683,7 @@ pub mod test {
             }
             .hash()
             .expect("failed to serialize client data"),
-            RelyingPartyWrapper::Data(RelyingParty {
-                id: String::from("example.com"),
-                name: Some(String::from("Acme")),
-            }),
+            RelyingParty::from("example.com"),
             Some(PublicKeyCredentialUserEntity {
                 id: base64::engine::general_purpose::URL_SAFE
                     .decode("MIIBkzCCATigAwIBAjCCAZMwggE4oAMCAQIwggGTMII=")
@@ -709,8 +714,14 @@ pub mod test {
             req_serialized, MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1,
             "\nGot:      {req_serialized:X?}\nExpected: {MAKE_CREDENTIALS_SAMPLE_REQUEST_CTAP1:X?}"
         );
+        let mut device = Device::new("commands/make_credentials").unwrap(); // not really used
         let make_cred_result = req
-            .handle_response_ctap1(Ok(()), &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1, &())
+            .handle_response_ctap1(
+                &mut device,
+                Ok(()),
+                &MAKE_CREDENTIALS_SAMPLE_RESPONSE_CTAP1,
+                &(),
+            )
             .expect("Failed to handle CTAP1 response");
 
         let att_obj = AttestationObject {
@@ -814,6 +825,7 @@ pub mod test {
 
         let expected = MakeCredentialsResult {
             att_obj,
+            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         };
 

@@ -1,7 +1,7 @@
 use super::{CommandError, RequestCtap1, Retryable};
 use crate::consts::U2F_VERSION;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
-use crate::transport::VirtualFidoDevice;
+use crate::transport::{FidoDevice, VirtualFidoDevice};
 use crate::u2ftypes::CTAP1RequestAPDU;
 
 #[allow(non_camel_case_types)]
@@ -18,8 +18,9 @@ impl RequestCtap1 for GetVersion {
     type Output = U2FInfo;
     type AdditionalInfo = ();
 
-    fn handle_response_ctap1(
+    fn handle_response_ctap1<Dev: FidoDevice>(
         &self,
+        _dev: &mut Dev,
         _status: Result<(), ApduErrorStatus>,
         input: &[u8],
         _add_info: &(),
