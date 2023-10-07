@@ -179,14 +179,17 @@ jobs:
           run: |
             if [ ${{ inputs.lightning }} == 'true' ]; then
               export APP_NAME="Floorp Lightning"
+              export INSTALLER_NAME="Floorp-Lightning"
             elif [ ${{ inputs.beta }} == 'true' ]; then
               export APP_NAME="Floorp Daylight"
+              export INSTALLER_NAME="Floorp-Daylight"
             else
               export APP_NAME="Floorp"
+              export INSTALLER_NAME="Floorp"
             fi
 
             ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/floorp floorp-macOS-universal-temp.dmg
-            unzip ./.github/base.zip
+            unzip "./.github/dmg-${INSTALLER_NAME}-base.zip"
             hdiutil attach ./floorp-macOS-universal-temp.dmg
             hdiutil attach ./base.dmg
 
