@@ -23,6 +23,11 @@ from gecko_taskgraph.util.partners import get_partner_config_by_kind
 from gecko_taskgraph.util.platforms import archive_format, executable_extension
 from gecko_taskgraph.util.workertypes import worker_type_implementation
 
+
+def _by_platform(arg):
+    return optionally_keyed_by("build-platform", arg)
+
+
 # When repacking the stub installer we need to pass a zip file and package name to the
 # repackage task. This is not needed for vanilla stub but analogous to the full installer.
 PACKAGE_FORMATS = copy.deepcopy(PACKAGE_FORMATS_VANILLA)
@@ -40,13 +45,11 @@ packaging_description_schema = Schema(
         # Shipping product and phase
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
-        Required("package-formats"): optionally_keyed_by(
-            "build-platform", "build-type", [str]
-        ),
+        Required("package-formats"): _by_platform([str]),
         # All l10n jobs use mozharness
         Required("mozharness"): {
             # Config files passed to the mozharness script
-            Required("config"): optionally_keyed_by("build-platform", [str]),
+            Required("config"): _by_platform([str]),
             # Additional paths to look for mozharness configs in. These should be
             # relative to the base of the source checkout
             Optional("config-paths"): [str],

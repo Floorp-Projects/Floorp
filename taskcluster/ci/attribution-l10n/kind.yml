@@ -5,7 +5,6 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.attribution:resolve_keyed_by_transforms
     - gecko_taskgraph.transforms.split_by_locale:transforms
     - gecko_taskgraph.transforms.attribution:transforms
     - taskgraph.transforms.task_context
@@ -16,8 +15,6 @@ kind-dependencies:
     - toolchain
     # Windows
     - repackage-signing-l10n
-    # Mac
-    - repackage-l10n
 
 job-defaults:
     description: Attribute release builds
@@ -27,38 +24,21 @@ job-defaults:
     worker-type: b-linux-gcp
     locales-file: browser/locales/l10n-changesets.json
     properties-with-locale:
-        by-build-platform:
-            win.*:
-                - label
-                - dependencies.repackage-signing-l10n
-                - treeherder.symbol
-                - fetches.repackage-signing-l10n
-            mac.*:
-                - label
-                - dependencies.repackage-l10n
-                - treeherder.symbol
-                - fetches.repackage-l10n
+        - label
+        - dependencies.repackage-signing-l10n
+        - treeherder.symbol
+        - fetches.repackage-signing-l10n
     attributes:
+        build_type: opt
         release_artifacts:
-            by-build-platform:
-                win.*:
-                    - public/build/target.installer.exe
-                mac.*:
-                    - public/build/target.dmg
+            - public/build/target.installer.exe
     treeherder:
         symbol: Attr-L10n({locale})
         kind: other
         tier: 1
     fetches:
-        by-build-platform:
-            win.*:
-                repackage-signing-l10n:
-                    - "{locale}/target.installer.exe"
-            mac.*:
-                repackage-l10n:
-                    - "{locale}/target.dmg"
-                toolchain:
-                    - "linux64-libdmg"
+        repackage-signing-l10n:
+            - "{locale}/target.installer.exe"
     task-context:
         from-file: browser/installer/attribution.yml
         substitution-fields:
@@ -77,27 +57,17 @@ job-defaults:
         using: run-task
         cwd: "{checkout}"
         command:
-            by-build-platform:
-                win.*:
-                    - ./mach
-                    - python
-                    - python/mozrelease/mozrelease/attribute_builds.py
-                    - --attribution
-                    - dlsource={attribution_code[json][dlsource]}
-                    - --output
-                    - /builds/worker/artifacts
-                    # All jobs require attribution of target.installer.exe. Some may require
-                    # attribution of other files, which they can append themselves.
-                    - --input
-                    - /builds/worker/fetches/target.installer.exe
-                mac.*:
-                    - mkdir -p /builds/worker/artifacts &&
-                    - /builds/worker/fetches/dmg/dmg
-                    - attribute
-                    - /builds/worker/fetches/target.dmg
-                    - /builds/worker/artifacts/target.dmg
-                    - __MOZCUSTOM__
-                    - __MOZCUSTOM__dlsource%3D{attribution_code[json][dlsource]}
+            - ./mach
+            - python
+            - python/mozrelease/mozrelease/attribute_builds.py
+            - --attribution
+            - dlsource={attribution_code[json][dlsource]}
+            - --output
+            - /builds/worker/artifacts
+            # All jobs require attribution of target.installer.exe. Some may require
+            # attribution of other files, which they can append themselves.
+            - --input
+            - /builds/worker/fetches/target.installer.exe
     use-system-python: false
 
 jobs:
@@ -163,24 +133,3 @@ jobs:
             platform: win64-aarch64-devedition/opt
         dependencies:
             repackage-signing-l10n: repackage-signing-l10n-{locale}-win64-aarch64-devedition/opt
-
-    macosx64-devedition/opt:
-        label: attribution-macosx64-{locale}-devedition/opt
-        shipping-product: devedition
-        attributes:
-            build_platform: macosx64-devedition
-        treeherder:
-            platform: macosx64-devedition/opt
-        dependencies:
-            repackage-l10n: repackage-l10n-{locale}-macosx64-devedition/opt
-
-    macosx64-shippable/opt:
-        label: attribution-macosx64-{locale}-shippable/opt
-        locale-file-platform: macosx64
-        shipping-product: firefox
-        attributes:
-            build_platform: macosx64-shippable
-        treeherder:
-            platform: macosx64-shippable/opt
-        dependencies:
-            repackage-l10n: repackage-l10n-{locale}-macosx64-shippable/opt
