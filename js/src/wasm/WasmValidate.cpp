@@ -2040,8 +2040,7 @@ static bool DecodeTableTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   Maybe<InitExpr> initExpr;
   if (initExprPresent) {
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, tableElemType,
-                                     env->globals.length(), &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, tableElemType, &initializer)) {
       return false;
     }
     initExpr = Some(std::move(initializer));
@@ -2259,6 +2258,7 @@ static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   env->numFuncImports = env->funcs.length();
+  env->numGlobalImports = env->globals.length();
   return true;
 }
 
@@ -2380,7 +2380,7 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, type, i, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, type, &initializer)) {
       return false;
     }
 
@@ -2658,8 +2658,7 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
     seg.tableIndex = tableIndex;
 
     InitExpr offset;
-    if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
-                                     env->globals.length(), &offset)) {
+    if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &offset)) {
       return false;
     }
     seg.offsetIfActive.emplace(std::move(offset));
@@ -2754,8 +2753,7 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
       seg.elemExpressions.count = numElems;
       for (uint32_t i = 0; i < numElems; i++) {
         Maybe<LitVal> unusedLiteral;
-        if (!DecodeConstantExpression(d, env, elemType, env->globals.length(),
-                                      &unusedLiteral)) {
+        if (!DecodeConstantExpression(d, env, elemType, &unusedLiteral)) {
           return false;
         }
       }
@@ -3020,8 +3018,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
 
       InitExpr segOffset;
       ValType exprType = ToValType(env->memories[seg.memoryIndex].indexType());
-      if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
-                                       &segOffset)) {
+      if (!InitExpr::decodeAndValidate(d, env, exprType, &segOffset)) {
         return false;
       }
       seg.offsetIfActive.emplace(std::move(segOffset));
