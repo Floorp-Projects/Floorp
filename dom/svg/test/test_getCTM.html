@@ -42,7 +42,9 @@ function runTest() {
   var padsvg1 = document.getElementById("padsvg1");
   var ctm = padsvg1.getScreenCTM();
   var rect = padsvg1.getBoundingClientRect();
-  is(ctm.e - rect.x, 27, "padsvg1.getScreenCTM().e");
+  // Use isfuzzy to ignore some miniscule floating-point precision error on
+  // certain platforms:
+  isfuzzy(ctm.e - rect.x, 27, 0.0001, "padsvg1.getScreenCTM().e");
   is(ctm.f - rect.y, 43, "padsvg1.getScreenCTM().f");
 
   var root = doc.documentElement;
