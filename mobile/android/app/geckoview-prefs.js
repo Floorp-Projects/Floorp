@@ -23,9 +23,6 @@ pref("dom.ipc.keepProcessesAlive.extension", 1);
 
 pref("dom.ipc.processPrelaunch.enabled", false);
 
-// Don't create the hidden window during startup.
-pref("toolkit.lazyHiddenWindow", true);
-
 pref("geckoview.console.enabled", false);
 
 #ifdef RELEASE_OR_BETA

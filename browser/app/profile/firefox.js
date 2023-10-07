@@ -332,10 +332,6 @@ pref("browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt", false);
 // Show an upgrade dialog on major upgrades.
 pref("browser.startup.upgradeDialog.enabled", false);
 
-// Don't create the hidden window during startup on
-// platforms that don't always need it (Win/Linux).
-pref("toolkit.lazyHiddenWindow", true);
-
 pref("browser.chrome.site_icons", true);
 // browser.warnOnQuit == false will override all other possible prompts when quitting or restarting
 pref("browser.warnOnQuit", true);
