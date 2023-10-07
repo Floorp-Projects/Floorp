@@ -130,16 +130,24 @@ jobs:
             echo '*********************************'
 
             echo "****************************************************************************************************"
-            echo "floorp.app folder structure: x86_64-apple-darwin"
+            echo "folder structure: x86_64-apple-darwin"
             ls -l ./obj-x86_64-apple-darwin/dist/
             echo "****************************************************************************************************"
-            echo "floorp.app folder structure: aarch64-apple-darwin"
+            echo "folder structure: aarch64-apple-darwin"
             ls -l ./obj-aarch64-apple-darwin/dist/
             echo "****************************************************************************************************"
             
         - name: Integration 🗃
           run: |
-              ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+            if [ ${{ inputs.lightning }} == 'true' ]; then
+              export APP_NAME="Floorp Lightning"
+            elif [ ${{ inputs.beta }} == 'true' ]; then
+              export APP_NAME="Floorp Daylight"
+            else
+              export APP_NAME="Floorp"
+            fi
+
+            ./mach python "./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/floorp/${APP_NAME}.app" "./obj-aarch64-apple-darwin/dist/floorp/${APP_NAME}.app"
 
         - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
           uses: apple-actions/import-codesign-certs@v2
@@ -177,17 +185,13 @@ jobs:
               export APP_NAME="Floorp"
             fi
 
-            ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
+            ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/floorp floorp-macOS-universal-temp.dmg
             unzip ./.github/base.zip
             hdiutil attach ./floorp-macOS-universal-temp.dmg
             hdiutil attach ./base.dmg
 
-            echo "****************************************************************************************************"
-            ls -l /Volumes/Floorp/
-            echo "****************************************************************************************************"
-
-            cp -r "/Volumes/Floorp/${APP_NAME}.app" /Volumes/Floorp\ Installer/
-            hdiutil detach /Volumes/Floorp\ Installer/
+            cp -r "/Volumes/${APP_NAME}/${APP_NAME}.app" /Volumes/Floorp\ Installer/
+            hdiutil detach /Volumes/${APP_NAME}\ Installer/
             hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg 
           env: 
             GHA_beta: ${{ inputs.beta }}
