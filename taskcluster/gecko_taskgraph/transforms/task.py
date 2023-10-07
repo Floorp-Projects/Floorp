@@ -1850,10 +1850,16 @@ def set_task_and_artifact_expiry(config, jobs):
     These values are read from ci/config.yml
     """
     now = datetime.datetime.utcnow()
+    # We don't want any configuration leading to anything with an expiry longer
+    # than 28 days on try.
+    cap = "28 days" if is_try(config.params) else None
+    cap_from_now = fromNow(cap, now) if cap else None
     for job in jobs:
         expires = get_expiration(config, job.get("expiration-policy", "default"))
         job_expiry = job.setdefault("expires-after", expires)
-        job_expiry_from_now = fromNow(job_expiry)
+        job_expiry_from_now = fromNow(job_expiry, now)
+        if cap and job_expiry_from_now > cap_from_now:
+            job_expiry, job_expiry_from_now = cap, cap_from_now
 
         for artifact in job["worker"].get("artifacts", ()):
             artifact_expiry = artifact.setdefault("expires-after", expires)
