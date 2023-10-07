@@ -157,12 +157,13 @@ already_AddRefed<ChromiumCDMParent> GMPContentParent::GetChromiumCDM(
                 aKeySystem.get());
 
   RefPtr<ChromiumCDMParent> parent = new ChromiumCDMParent(this, GetPluginId());
-  if (!SendPChromiumCDMConstructor(parent, aKeySystem)) {
-    return nullptr;
-  }
-
   // TODO: Remove parent from mChromiumCDMs in ChromiumCDMParent::Destroy().
   mChromiumCDMs.AppendElement(parent);
+
+  if (!SendPChromiumCDMConstructor(parent, aKeySystem)) {
+    MOZ_ASSERT(!mChromiumCDMs.Contains(parent));
+    return nullptr;
+  }
 
   return parent.forget();
 }
