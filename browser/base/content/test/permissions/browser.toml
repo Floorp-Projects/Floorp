@@ -27,7 +27,6 @@ skip-if = [
 ["browser_permission_delegate_geo.js"]
 
 ["browser_permissions.js"]
-fail-if = ["a11y_checks"] # Bug 1854233 identity-permission-box may not be focusable
 
 ["browser_permissions_delegate_vibrate.js"]
 support-files = ["empty.html"]

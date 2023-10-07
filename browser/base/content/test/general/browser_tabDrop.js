@@ -163,6 +163,11 @@ async function drop(dragData, expectedURLs) {
   info(
     `Starting test for dragData:${dragDataString}; expectedURLs.length:${expectedURLs.length}`
   );
+  let EventUtils = {};
+  Services.scriptloader.loadSubScript(
+    "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
+    EventUtils
+  );
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
 

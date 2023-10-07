@@ -12,4 +12,3 @@ support-files = [
 ]
 
 ["browser_inspector_extension_sidebar.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

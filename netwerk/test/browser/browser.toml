@@ -131,7 +131,6 @@ skip-if = [
 ["browser_bug1535877.js"]
 
 ["browser_bug1629307.js"]
-fail-if = ["a11y_checks"] # Bug 1854523 clicked button may not be focusable
 
 ["browser_child_resource.js"]
 run-if = ["crashreporter"]

@@ -85,7 +85,6 @@ skip-if = [
 skip-if = ["true"] # Bug 1448484 - sameSite1 is "Unset" - Got undefined, expected Unset
 
 ["browser_storage_cookies_sort.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_cookies_tab_navigation.js"]
 
@@ -107,7 +106,6 @@ tags = "usercontextid"
 ["browser_storage_dynamic_updates_localStorage.js"]
 
 ["browser_storage_dynamic_updates_sessionStorage.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_empty_objectstores.js"]
 
@@ -149,7 +147,6 @@ skip-if = [
 ["browser_storage_indexeddb_overflow.js"]
 
 ["browser_storage_keys.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_localstorage_add.js"]
 
@@ -162,7 +159,6 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_storage_localstorage_rapid_add_remove.js"]
 
 ["browser_storage_overflow.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_search.js"]
 
@@ -175,22 +171,17 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_storage_sessionstorage_navigation.js"]
 
 ["browser_storage_sidebar.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_sidebar_filter.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_sidebar_parsetree.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_sidebar_toggle.js"]
 
 ["browser_storage_sidebar_update.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_type_descriptions.js"]
 
 ["browser_storage_values.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_storage_webext_storage_local.js"]

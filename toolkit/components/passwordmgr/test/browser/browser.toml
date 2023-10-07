@@ -75,7 +75,6 @@ skip-if = ["verify"]
 ["browser_autofill_track_filled_logins.js"]
 
 ["browser_basicAuth_multiTab.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked button may not be focusable
 skip-if = ["os == 'android'"]
 
 ["browser_basicAuth_rateLimit.js"]
@@ -99,7 +98,6 @@ support-files = ["form_cross_origin_secure_action.html"]
 skip-if = ["os == 'android'"]
 
 ["browser_doorhanger_autocomplete_values.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked password-notification-username-dropmaker may not be focusable and/or labeled
 
 ["browser_doorhanger_autofill_then_save_password.js"]
 
@@ -145,7 +143,6 @@ support-files = [
 ["browser_doorhanger_save_password.js"]
 
 ["browser_doorhanger_submit_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked image may not be focusable; clicked autocomplete-richlistitem may not be labeled
 skip-if = [
   "tsan", # Bug 1661305
   "os == 'linux' && debug", # Bug 1658056
@@ -216,7 +213,6 @@ skip-if = [
 ["browser_openPasswordManager.js"]
 
 ["browser_preselect_login.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked ac-settings-button may not be labeled
 skip-if = [
   "os == 'linux' && (asan || tsan || debug)", # Bug 1840479
   "os == 'win' && (asan || debug)", # Bug 1840479
