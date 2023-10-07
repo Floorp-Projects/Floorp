@@ -3684,6 +3684,10 @@ pref("toolkit.aboutProcesses.profileDuration", 5);
   pref("toolkit.crashreporter.include_context_heap", true);
 #endif
 
+// Don't create the hidden window during startup on
+// platforms that don't always need it.
+pref("toolkit.lazyHiddenWindow", true);
+
 // Support for legacy customizations that rely on checking the
 // user profile directory for these stylesheets:
 //  * userContent.css
