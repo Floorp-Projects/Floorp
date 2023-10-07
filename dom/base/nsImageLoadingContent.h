@@ -80,6 +80,7 @@ class nsImageLoadingContent : public nsIImageLoadingContent {
   void ForceReload(bool aNotify, mozilla::ErrorResult& aError);
 
   mozilla::dom::Element* FindImageMap();
+  static mozilla::dom::Element* FindImageMap(mozilla::dom::Element*);
 
   /**
    * Toggle whether or not to synchronously decode an image on draw.
