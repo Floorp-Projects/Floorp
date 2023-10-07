@@ -4,11 +4,49 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/UserActivationBinding.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 
 #include "mozilla/TextEvents.h"
 
 namespace mozilla::dom {
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(UserActivation, mWindow)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(UserActivation)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(UserActivation)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(UserActivation)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+UserActivation::UserActivation(nsPIDOMWindowInner* aWindow)
+    : mWindow(aWindow) {}
+
+JSObject* UserActivation::WrapObject(JSContext* aCx,
+                                     JS::Handle<JSObject*> aGivenProto) {
+  return UserActivation_Binding::Wrap(aCx, this, aGivenProto);
+};
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-useractivation-hasbeenactive
+bool UserActivation::HasBeenActive() const {
+  // The hasBeenActive getter steps are to return true if this's relevant global
+  // object has sticky activation, and false otherwise.
+
+  WindowContext* wc = mWindow->GetWindowContext();
+  return wc && wc->HasBeenUserGestureActivated();
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-useractivation-isactive
+bool UserActivation::IsActive() const {
+  // The isActive getter steps are to return true if this's relevant global
+  // object has transient activation, and false otherwise.
+
+  WindowContext* wc = mWindow->GetWindowContext();
+  return wc && wc->HasValidTransientUserGestureActivation();
+}
 
 namespace {
 
