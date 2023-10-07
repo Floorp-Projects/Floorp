@@ -42,7 +42,7 @@ packaging_description_schema = Schema(
         Optional("shipping-product"): job_description_schema["shipping-product"],
         Optional("shipping-phase"): job_description_schema["shipping-phase"],
         Required("package-formats"): optionally_keyed_by(
-            "build-platform", "release-type", "build-type", [str]
+            "build-platform", "release-type", [str]
         ),
         Optional("msix"): {
             Optional("channel"): optionally_keyed_by(
@@ -204,17 +204,6 @@ PACKAGE_FORMATS = {
         },
         "output": "target.dmg",
     },
-    "dmg-attrib": {
-        "args": [
-            "dmg",
-            "--attribution_sentinel",
-            "__MOZCUSTOM__",
-        ],
-        "inputs": {
-            "input": "target{archive_format}",
-        },
-        "output": "target.dmg",
-    },
     "pkg": {
         "args": ["pkg"],
         "inputs": {
@@ -321,7 +310,6 @@ def copy_in_useful_magic(config, jobs):
 
         job["build-platform"] = dep.attributes.get("build_platform")
         job["shipping-product"] = dep.attributes.get("shipping_product")
-        job["build-type"] = dep.attributes.get("build_type")
         yield job
 
 
