@@ -3,25 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import resolve_keyed_by
 
 transforms = TransformSequence()
-resolve_keyed_by_transforms = TransformSequence()
-
-
-@resolve_keyed_by_transforms.add
-def attribution_keyed_by(config, jobs):
-    keyed_by_fields = (
-        "fetches",
-        "attributes.release_artifacts",
-        "run.command",
-        "properties-with-locale",  # properties-with-locale only exists in the l10n task
-    )
-    for job in jobs:
-        build_platform = {"build-platform": job["attributes"]["build_platform"]}
-        for field in keyed_by_fields:
-            resolve_keyed_by(item=job, field=field, item_name=field, **build_platform)
-        yield job
 
 
 @transforms.add
@@ -46,21 +29,4 @@ def stub_installer(config, jobs):
             job["attributes"]["release_artifacts"].append(
                 "public/build/target.stub-installer.exe"
             )
-        yield job
-
-
-@transforms.add
-def mac_attribution(config, jobs):
-    """Adds \t padding to the mac attribution data. Implicitly assumes that the
-    attribution data is the last thing in job.run.command
-    """
-    for job in jobs:
-        if "macosx" in job["attributes"]["build_platform"]:
-            # Last argument of command should be the attribution data
-            command = job["run"]["command"]
-            attribution_arg = command[-1]
-            while len(attribution_arg) < 1024:
-                attribution_arg += "\t"
-            command[-1] = attribution_arg
-            job["run"]["command"] = " ".join(command)
         yield job
