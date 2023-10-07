@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_AndroidWebAuthnService_h_
-#define mozilla_dom_AndroidWebAuthnService_h_
+#ifndef mozilla_dom_AndroidWebAuthnTokenManager_h
+#define mozilla_dom_AndroidWebAuthnTokenManager_h
 
+#include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/java/WebAuthnTokenManagerNatives.h"
-#include "nsIWebAuthnService.h"
 
 namespace mozilla {
-
 namespace dom {
 
 // Collected from
@@ -28,13 +27,27 @@ constexpr auto kTimeoutError = u"TIMEOUT_ERR"_ns;
 constexpr auto kNetworkError = u"NETWORK_ERR"_ns;
 constexpr auto kUnknownError = u"UNKNOWN_ERR"_ns;
 
-class AndroidWebAuthnError {
+class AndroidWebAuthnResult {
  public:
-  explicit AndroidWebAuthnError(const nsAString& aErrorCode)
+  explicit AndroidWebAuthnResult(const nsAString& aErrorCode)
       : mErrorCode(aErrorCode) {}
 
+  explicit AndroidWebAuthnResult(
+      const java::WebAuthnTokenManager::MakeCredentialResponse::LocalRef&
+          aResponse);
+
+  explicit AndroidWebAuthnResult(
+      const java::WebAuthnTokenManager::GetAssertionResponse::LocalRef&
+          aResponse);
+
+  AndroidWebAuthnResult() = delete;
+
+  bool IsError() const { return NS_FAILED(GetError()); }
+
   nsresult GetError() const {
-    if (mErrorCode.Equals(kSecurityError)) {
+    if (mErrorCode.IsEmpty()) {
+      return NS_OK;
+    } else if (mErrorCode.Equals(kSecurityError)) {
       return NS_ERROR_DOM_SECURITY_ERR;
     } else if (mErrorCode.Equals(kConstraintError)) {
       // TODO: The message is right, but it's not about indexeddb.
@@ -66,19 +79,63 @@ class AndroidWebAuthnError {
     }
   }
 
+  AndroidWebAuthnResult(const AndroidWebAuthnResult&) = delete;
+  AndroidWebAuthnResult(AndroidWebAuthnResult&&) = default;
+
+  // Attestation-only
+  nsTArray<uint8_t> mAttObj;
+  nsTArray<nsString> mTransports;
+
+  // Attestations and assertions
+  nsTArray<uint8_t> mKeyHandle;
+  nsCString mClientDataJSON;
+
+  // Assertions-only
+  nsTArray<uint8_t> mAuthData;
+  nsTArray<uint8_t> mSignature;
+  nsTArray<uint8_t> mUserHandle;
+
  private:
   const nsString mErrorCode;
 };
 
-class AndroidWebAuthnService final : public nsIWebAuthnService {
+/*
+ * WebAuthnAndroidTokenManager is a token implementation communicating with
+ * Android Fido2 APIs.
+ */
+class AndroidWebAuthnTokenManager final : public U2FTokenTransport {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIWEBAUTHNSERVICE
+  explicit AndroidWebAuthnTokenManager();
+  ~AndroidWebAuthnTokenManager() {}
 
-  AndroidWebAuthnService() = default;
+  virtual RefPtr<U2FRegisterPromise> Register(
+      const WebAuthnMakeCredentialInfo& aInfo,
+      bool aForceNoneAttestation) override;
+
+  virtual RefPtr<U2FSignPromise> Sign(
+      const WebAuthnGetAssertionInfo& aInfo) override;
+
+  void Cancel() override;
+
+  void Drop() override;
+
+  static AndroidWebAuthnTokenManager* GetInstance();
 
  private:
-  ~AndroidWebAuthnService() = default;
+  void HandleRegisterResult(AndroidWebAuthnResult&& aResult);
+
+  void HandleSignResult(AndroidWebAuthnResult&& aResult);
+
+  void ClearPromises() {
+    mRegisterPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    mSignPromise.RejectIfExists(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
+    mRegisterCredPropsRk = Nothing();
+  }
+
+  void AssertIsOnOwningThread() const;
+
+  MozPromiseHolder<U2FRegisterPromise> mRegisterPromise;
+  MozPromiseHolder<U2FSignPromise> mSignPromise;
 
   // The Android FIDO2 API doesn't accept the credProps extension. However, the
   // appropriate value for CredentialPropertiesOutput.rk can be determined
@@ -90,4 +147,4 @@ class AndroidWebAuthnService final : public nsIWebAuthnService {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_AndroidWebAuthnService_h_
+#endif  // mozilla_dom_AndroidWebAuthnTokenManager_h

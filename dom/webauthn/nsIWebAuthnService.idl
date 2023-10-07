@@ -25,13 +25,13 @@ interface nsIWebAuthnService : nsISupports
     void makeCredential(
         in uint64_t aTransactionId,
         in uint64_t browsingContextId,
-        in nsIWebAuthnRegisterArgs args,
+        in nsICtapRegisterArgs args,
         in nsIWebAuthnRegisterPromise promise);
 
     void getAssertion(
         in uint64_t aTransactionId,
         in uint64_t browsingContextId,
-        in nsIWebAuthnSignArgs args,
+        in nsICtapSignArgs args,
         in nsIWebAuthnSignPromise promise);
 
     // Cancel the ongoing transaction and any prompts that are shown, but do not reject
