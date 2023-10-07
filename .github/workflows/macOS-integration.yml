@@ -167,11 +167,6 @@ jobs:
             GHA_beta: ${{ inputs.beta }}
             GHA_lightning: ${{ inputs.lightning }}
 
-        - name: Check Certificates 💳
-          run: |
-            echo "Sign Complete ! ****************************************" 
-            pkgutil --check-signature ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app
-
         - name: Create DMG 📦
           run: |
             if [ ${{ inputs.lightning }} == 'true' ]; then
