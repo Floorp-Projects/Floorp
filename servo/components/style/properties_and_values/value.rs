@@ -4,6 +4,8 @@
 
 //! Parsing for registered custom properties.
 
+use std::fmt::{self, Write};
+
 use super::{
     registry::PropertyRegistration,
     syntax::{
@@ -19,12 +21,12 @@ use selectors::matching::QuirksMode;
 use servo_arc::{Arc, ThinArc};
 use smallvec::SmallVec;
 use style_traits::{
-    owned_str::OwnedStr, ParseError as StyleParseError, ParsingMode, PropertySyntaxParseError,
-    StyleParseErrorKind,
+    owned_str::OwnedStr, CssWriter, ParseError as StyleParseError, ParsingMode,
+    PropertySyntaxParseError, StyleParseErrorKind, ToCss,
 };
 
-#[derive(Clone)]
 /// A single component of the computed value.
+#[derive(Clone, ToCss)]
 pub enum ValueComponent {
     /// A <length> value
     Length(specified::Length),
@@ -58,9 +60,35 @@ pub enum ValueComponent {
     String(OwnedStr),
 }
 
-#[derive(Clone)]
 /// A list of component values, including the list's multiplier.
+#[derive(Clone)]
 pub struct ValueComponentList(ThinArc<Multiplier, ValueComponent>);
+
+impl ToCss for ValueComponentList {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        let mut iter = self.0.slice().iter();
+        let Some(first) = iter.next() else {
+            return Ok(());
+        };
+        first.to_css(dest)?;
+
+        // The separator implied by the multiplier for this list.
+        let separator = match self.0.header {
+            // <https://drafts.csswg.org/cssom-1/#serialize-a-whitespace-separated-list>
+            Multiplier::Space => " ",
+            // <https://drafts.csswg.org/cssom-1/#serialize-a-comma-separated-list>
+            Multiplier::Comma => ", ",
+        };
+        for component in iter {
+            dest.write_str(separator)?;
+            component.to_css(dest)?;
+        }
+        Ok(())
+    }
+}
 
 impl ValueComponentList {
     fn new<I>(multiplier: Multiplier, values: I) -> Self
@@ -72,6 +100,7 @@ impl ValueComponentList {
 }
 
 /// A parsed property value.
+#[derive(ToCss)]
 pub enum ComputedValue {
     /// A single parsed component value whose matched syntax descriptor component did not have a
     /// multiplier.
