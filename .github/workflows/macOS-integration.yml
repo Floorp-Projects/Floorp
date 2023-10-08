@@ -194,7 +194,7 @@ jobs:
             hdiutil attach ./base.dmg
 
             cp -r "/Volumes/${APP_NAME}/${APP_NAME}.app" /Volumes/Floorp\ Installer/
-            hdiutil detach /Volumes/${APP_NAME}\ Installer/
+            hdiutil detach "/Volumes/${APP_NAME}\" Installer/
             hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg 
           env: 
             GHA_beta: ${{ inputs.beta }}
