@@ -1264,18 +1264,11 @@ void nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
 }
 
 nsTableRowFrame* nsTableRowFrame::GetNextRow() const {
-  nsIFrame* childFrame = GetNextSibling();
-  while (childFrame) {
-    nsTableRowFrame* rowFrame = do_QueryFrame(childFrame);
-    if (rowFrame) {
-      NS_ASSERTION(mozilla::StyleDisplay::TableRow ==
-                       childFrame->StyleDisplay()->mDisplay,
-                   "wrong display type on rowframe");
-      return rowFrame;
-    }
-    childFrame = childFrame->GetNextSibling();
-  }
-  return nullptr;
+  nsIFrame* nextSibling = GetNextSibling();
+  MOZ_ASSERT(
+      !nextSibling || static_cast<nsTableRowFrame*>(do_QueryFrame(nextSibling)),
+      "How do we have a non-row sibling?");
+  return static_cast<nsTableRowFrame*>(nextSibling);
 }
 
 // This property is only set on the first-in-flow of nsTableRowFrame.

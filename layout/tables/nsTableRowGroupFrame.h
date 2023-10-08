@@ -97,8 +97,8 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  nsTableRowFrame* GetFirstRow();
-  nsTableRowFrame* GetLastRow();
+  nsTableRowFrame* GetFirstRow() const;
+  nsTableRowFrame* GetLastRow() const;
 
   nsTableFrame* GetTableFrame() const {
     nsIFrame* parent = GetParent();
