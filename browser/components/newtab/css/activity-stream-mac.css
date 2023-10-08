@@ -523,6 +523,7 @@ main.has-snippet {
   text-decoration: underline;
 }
 
+/* stylelint-disable max-nesting-depth */
 .top-sites-list {
   list-style: none;
   margin: 0 -16px;
@@ -1489,6 +1490,7 @@ main.has-snippet {
   margin-inline-end: 15px;
 }
 
+/* stylelint-disable max-nesting-depth */
 .context-menu {
   background: var(--newtab-background-color-secondary);
   border-radius: 5px;
@@ -1813,6 +1815,7 @@ main.has-snippet {
   box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
 }
 
+/* stylelint-disable max-nesting-depth */
 .card-outer {
   background: var(--newtab-background-color-secondary);
   border-radius: 8px;
@@ -2100,6 +2103,7 @@ main.has-snippet {
   }
 }
 
+/* stylelint-disable max-nesting-depth */
 .collapsible-section {
   padding: 10px 25px;
 }
@@ -2185,6 +2189,7 @@ main.has-snippet {
   }
 }
 
+/* stylelint-disable max-nesting-depth */
 .asrouter-toggle {
   position: fixed;
   top: 50px;
@@ -2966,6 +2971,7 @@ main.has-snippet {
   line-height: 24px;
 }
 
+/* stylelint-disable max-nesting-depth */
 .ds-highlights .section .section-list {
   grid-gap: var(--gridRowGap);
   grid-template-columns: repeat(1, 1fr);
@@ -3012,6 +3018,7 @@ main.has-snippet {
   border-top: 1px solid #4A4A4F;
 }
 
+/* stylelint-disable max-nesting-depth */
 .ds-navigation {
   color: var(--newtab-text-primary-color);
   font-size: 11.5px;
@@ -3176,6 +3183,7 @@ main.has-snippet {
   margin-top: 4px;
 }
 
+/* stylelint-disable max-nesting-depth */
 .outer-wrapper .ds-top-sites .top-sites .top-site-outer .top-site-inner > a:is(.active, :focus) .tile {
   border: 0;
   outline: 0;
@@ -3965,6 +3973,7 @@ main.has-snippet {
   text-decoration: none;
 }
 
+/* stylelint-disable max-nesting-depth */
 .ds-topics-widget {
   display: flex;
   position: relative;
@@ -4281,6 +4290,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   transition: box-shadow 150ms;
 }
 
+/* stylelint-disable max-nesting-depth */
 .below-search-snippet {
   margin: 0 auto 16px;
 }
@@ -4556,6 +4566,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   width: 16px;
 }
 
+/* stylelint-disable max-nesting-depth */
 .SubmitFormSnippet {
   flex-direction: column;
   flex: 1 1 100%;
