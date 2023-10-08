@@ -791,7 +791,6 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       // it is a style change reflow or we are printing, then we must reflow the
       // cell. Otherwise we can skip the reflow.
       // XXXldb Why is this condition distinct from doReflowChild above?
-      WritingMode wm = aReflowInput.GetWritingMode();
       NS_ASSERTION(cellFrame->GetWritingMode() == wm,
                    "expected consistent writing-mode within table");
       LogicalSize cellDesiredSize = cellFrame->GetDesiredSize();
