@@ -316,7 +316,6 @@ static void CacheRowBSizesForPrinting(nsTableRowFrame* aFirstRow,
                                       WritingMode aWM) {
   for (nsTableRowFrame* row = aFirstRow; row; row = row->GetNextRow()) {
     if (!row->GetPrevInFlow()) {
-      row->SetHasUnpaginatedBSize(true);
       row->SetUnpaginatedBSize(row->BSize(aWM));
     }
   }
