@@ -291,20 +291,6 @@ pub type ZoomFixedPoint = FixedPoint<u16, ZOOM_FRACTION_BITS>;
 #[repr(C)]
 pub struct Zoom(ZoomFixedPoint);
 
-impl std::ops::Mul for Zoom {
-    type Output = Zoom;
-
-    fn mul(self, rhs: Self) -> Self {
-        if self == Self::ONE {
-            return rhs;
-        }
-        if rhs == Self::ONE {
-            return self;
-        }
-        Zoom(ZoomFixedPoint::from_float(self.value() * rhs.value()))
-    }
-}
-
 impl ToComputedValue for specified::Zoom {
     type ComputedValue = Zoom;
 
@@ -312,6 +298,7 @@ impl ToComputedValue for specified::Zoom {
     fn to_computed_value(&self, _: &Context) -> Self::ComputedValue {
         let n = match *self {
             Self::Normal => return Zoom::ONE,
+            Self::Document => return Zoom::DOCUMENT,
             Self::Value(ref n) => n.0.to_number().get(),
         };
         if n == 0.0 {
@@ -332,6 +319,10 @@ impl ToCss for Zoom {
     where
         W: fmt::Write,
     {
+        use std::fmt::Write;
+        if *self == Self::DOCUMENT {
+            return dest.write_str("document");
+        }
         self.value().to_css(dest)
     }
 }
@@ -356,6 +347,10 @@ impl Zoom {
         value: 1 << ZOOM_FRACTION_BITS,
     });
 
+    /// The `document` value. This can appear in the computed zoom property value, but not in the
+    /// `effective_zoom` field.
+    pub const DOCUMENT: Zoom = Zoom(ZoomFixedPoint { value: 0 });
+
     /// Returns whether we're the number 1.
     #[inline]
     pub fn is_one(self) -> bool {
@@ -366,6 +361,20 @@ impl Zoom {
     #[inline]
     pub fn value(&self) -> f32 {
         self.0.to_float()
+    }
+
+    /// Computes the effective zoom for a given new zoom value in rhs.
+    pub fn compute_effective(self, specified: Self) -> Self {
+        if specified == Self::DOCUMENT {
+            return Self::ONE;
+        }
+        if self == Self::ONE {
+            return specified;
+        }
+        if specified == Self::ONE {
+            return self;
+        }
+        Zoom(self.0 * specified.0)
     }
 
     /// Returns the zoomed value.
