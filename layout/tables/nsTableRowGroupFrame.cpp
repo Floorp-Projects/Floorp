@@ -312,13 +312,12 @@ void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext& aPresContext,
   aReflowInput.Init(&aPresContext, Nothing(), Some(border), Some(zeroPadding));
 }
 
-static void CacheRowBSizesForPrinting(nsPresContext* aPresContext,
-                                      nsTableRowFrame* aFirstRow,
+static void CacheRowBSizesForPrinting(nsTableRowFrame* aFirstRow,
                                       WritingMode aWM) {
   for (nsTableRowFrame* row = aFirstRow; row; row = row->GetNextRow()) {
     if (!row->GetPrevInFlow()) {
       row->SetHasUnpaginatedBSize(true);
-      row->SetUnpaginatedBSize(aPresContext, row->BSize(aWM));
+      row->SetUnpaginatedBSize(row->BSize(aWM));
     }
   }
 }
@@ -473,7 +472,7 @@ void nsTableRowGroupFrame::ReflowChildren(
   if (aReflowInput.reflowInput.mFlags.mSpecialBSizeReflow) {
     DidResizeRows(aDesiredSize);
     if (isPaginated) {
-      CacheRowBSizesForPrinting(aPresContext, GetFirstRow(), wm);
+      CacheRowBSizesForPrinting(GetFirstRow(), wm);
     }
   } else if (needToCalcRowBSizes) {
     CalculateRowBSizes(aPresContext, aDesiredSize, aReflowInput.reflowInput);
@@ -862,7 +861,7 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
   if (isPaginated && styleBSizeAllocation) {
     // since the row group has a style bsize, cache the row bsizes,
     // so next in flows can honor them
-    CacheRowBSizesForPrinting(aPresContext, GetFirstRow(), wm);
+    CacheRowBSizesForPrinting(GetFirstRow(), wm);
   }
 
   DidResizeRows(aDesiredSize);

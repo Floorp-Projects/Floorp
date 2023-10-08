@@ -203,7 +203,7 @@ class nsTableRowFrame : public nsContainerFrame {
   bool HasUnpaginatedBSize();
   void SetHasUnpaginatedBSize(bool aValue);
   nscoord GetUnpaginatedBSize();
-  void SetUnpaginatedBSize(nsPresContext* aPresContext, nscoord aValue);
+  void SetUnpaginatedBSize(nscoord aValue);
 
   BCPixelSize GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
   BCPixelSize GetBEndBCBorderWidth() const { return mBEndBorderWidth; }
