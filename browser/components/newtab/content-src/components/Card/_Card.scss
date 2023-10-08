@@ -1,5 +1,7 @@
 @use 'sass:math';
 
+/* stylelint-disable max-nesting-depth */
+
 .card-outer {
   @include context-menu-button;
 

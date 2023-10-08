@@ -1,5 +1,7 @@
 @use 'sass:math';
 
+/* stylelint-disable max-nesting-depth */
+
 .context-menu {
   background: var(--newtab-background-color-secondary);
   border-radius: $context-menu-border-radius;

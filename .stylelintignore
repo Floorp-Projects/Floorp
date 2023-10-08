@@ -83,6 +83,7 @@ python/mozbuild/mozbuild/test/backend/data/build/foo.css
 
 # This is third-party in a way:
 toolkit/components/pdfjs/content/web/debugger.css
+toolkit/components/pdfjs/content/web/viewer.css
 
 # Ignore web-platform tests as they are not necessarily under our control.
 testing/web-platform/tests/
