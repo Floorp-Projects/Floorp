@@ -200,9 +200,10 @@ class nsTableRowFrame : public nsContainerFrame {
 
   nsTableRowFrame* GetNextRow() const;
 
-  bool HasUnpaginatedBSize();
-  void SetHasUnpaginatedBSize(bool aValue);
-  nscoord GetUnpaginatedBSize();
+  bool HasUnpaginatedBSize() const {
+    return HasAnyStateBits(NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE);
+  }
+  nscoord GetUnpaginatedBSize() const;
   void SetUnpaginatedBSize(nscoord aValue);
 
   BCPixelSize GetBStartBCBorderWidth() const { return mBStartBorderWidth; }
@@ -394,18 +395,6 @@ inline float nsTableRowFrame::GetPctBSize() const {
     return (float)mStylePctBSize / 100.0f;
   }
   return 0.0f;
-}
-
-inline bool nsTableRowFrame::HasUnpaginatedBSize() {
-  return HasAnyStateBits(NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE);
-}
-
-inline void nsTableRowFrame::SetHasUnpaginatedBSize(bool aValue) {
-  if (aValue) {
-    AddStateBits(NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE);
-  } else {
-    RemoveStateBits(NS_TABLE_ROW_HAS_UNPAGINATED_BSIZE);
-  }
 }
 
 inline mozilla::LogicalMargin nsTableRowFrame::GetBCBorderWidth(
