@@ -554,14 +554,14 @@ export var PlacesTestUtils = Object.freeze({
    * on the given conditions.
    * @param {string} table - The name of the database table to query.
    * @param {string} field - The name of the field to retrieve a value from.
-   * @param {Object} conditions - An object containing the conditions to filter
-   * the query results. The keys represent the names of the columns to filter
-   * by, and the values represent the filter values.
+   * @param {Object} [conditions] - An object containing the conditions to
+   * filter the query results. The keys represent the names of the columns to
+   * filter by, and the values represent the filter values.
    * @return {Promise} A Promise that resolves to the value of the specified
    * field from the database table, or null if the query returns no results.
    * @throws If more than one result is found for the given conditions.
    */
-  async getDatabaseValue(table, field, conditions) {
+  async getDatabaseValue(table, field, conditions = {}) {
     let { fragment: where, params } = this._buildWhereClause(table, conditions);
     let query = `SELECT ${field} FROM ${table} ${where}`;
     let conn = await lazy.PlacesUtils.promiseDBConnection();
@@ -571,7 +571,7 @@ export var PlacesTestUtils = Object.freeze({
         "getDatabaseValue doesn't support returning multiple results"
       );
     }
-    return rows[0]?.getResultByName(field);
+    return rows[0]?.getResultByIndex(0);
   },
 
   /**
