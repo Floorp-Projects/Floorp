@@ -325,11 +325,7 @@
       stroke: transparent;
 
       &:is([pinned], [sharing]):hover {
-        background-color: var(--tab-icon-overlay-stroke, white);
-
-        #TabsToolbar[brighttext] & {
-          background-color: var(--tab-icon-overlay-stroke, black);
-        }
+        background-color: var(--tab-icon-overlay-stroke, light-dark(white, black));
       }
     }
 
