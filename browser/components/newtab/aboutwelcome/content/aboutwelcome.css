@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @import 'chrome://global/skin/design-system/tokens-brand.css';
+/* stylelint-disable max-nesting-depth */
 #feature-callout {
   --fc-background: var(--fc-background-light, #fff);
   --fc-color: var(--fc-color-light, rgb(21, 20, 26));
@@ -692,6 +693,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   outline: 2px solid var(--fc-accent-color);
 }
 
+/* stylelint-disable max-nesting-depth */
 .onboardingContainer.shopping {
   height: auto;
 }
@@ -846,6 +848,7 @@ panel#feature-callout[arrow-position=inline-start-bottom] {
   font: menu;
 }
 
+/* stylelint-disable max-nesting-depth */
 html {
   height: 100%;
 }
