@@ -114,7 +114,7 @@ class nsTableRowFrame : public nsContainerFrame {
                    nsTableFrame* aTableFrame = nullptr,
                    nsTableCellFrame* aCellFrame = nullptr);
 
-  void ResetBSize(nscoord aRowStyleBSize);
+  void ResetBSize();
 
   // calculate the bsize, considering content bsize of the
   // cells and the style bsize of the row and cells, excluding pct bsizes

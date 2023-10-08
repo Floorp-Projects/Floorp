@@ -131,7 +131,7 @@ nsTableRowFrame::nsTableRowFrame(ComputedStyle* aStyle,
   mBits.mHasFixedBSize = 0;
   mBits.mHasPctBSize = 0;
   mBits.mFirstInserted = 0;
-  ResetBSize(0);
+  ResetBSize();
 }
 
 nsTableRowFrame::~nsTableRowFrame() = default;
@@ -427,16 +427,12 @@ nscoord nsTableRowFrame::GetInitialBSize(nscoord aPctBasis) const {
   return std::max(bsize, GetContentBSize());
 }
 
-void nsTableRowFrame::ResetBSize(nscoord aFixedBSize) {
+void nsTableRowFrame::ResetBSize() {
   SetHasFixedBSize(false);
   SetHasPctBSize(false);
   SetFixedBSize(0);
   SetPctBSize(0);
   SetContentBSize(0);
-
-  if (aFixedBSize > 0) {
-    SetFixedBSize(aFixedBSize);
-  }
 
   mMaxCellAscent = 0;
   mMaxCellDescent = 0;
@@ -484,10 +480,12 @@ void nsTableRowFrame::UpdateBSize(nscoord aBSize, nscoord aAscent,
 
 nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
   nsTableFrame* tableFrame = GetTableFrame();
-  nscoord computedBSize = (NS_UNCONSTRAINEDSIZE == aReflowInput.ComputedBSize())
-                              ? 0
-                              : aReflowInput.ComputedBSize();
-  ResetBSize(computedBSize);
+
+  ResetBSize();
+  const nscoord computedBSize = aReflowInput.ComputedBSize();
+  if (computedBSize != NS_UNCONSTRAINEDSIZE && computedBSize > 0) {
+    SetFixedBSize(computedBSize);
+  }
 
   WritingMode wm = aReflowInput.GetWritingMode();
   const nsStylePosition* position = StylePosition();
