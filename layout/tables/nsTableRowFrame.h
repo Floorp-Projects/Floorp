@@ -172,9 +172,17 @@ class nsTableRowFrame : public nsContainerFrame {
    */
   void InsertCellFrame(nsTableCellFrame* aFrame, int32_t aColIndex);
 
-  nsresult CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
-                                    nscoord& aDesiredBSize,
-                                    mozilla::WritingMode aWM);
+  /**
+   * Calculate the cell frame's actual block-size given its desired block-size
+   * (the border-box block-size in the last reflow). This method takes into
+   * account the specified bsize (in the style).
+   *
+   * @return the specified block-size if it is larger than the desired
+   *         block-size. Otherwise, the desired block-size.
+   */
+  nscoord CalcCellActualBSize(nsTableCellFrame* aCellFrame,
+                              const nscoord& aDesiredBSize,
+                              mozilla::WritingMode aWM);
 
   bool IsFirstInserted() const;
   void SetFirstInserted(bool aValue);

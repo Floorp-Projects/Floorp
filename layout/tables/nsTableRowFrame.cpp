@@ -502,7 +502,7 @@ nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
     LogicalSize desSize = kidFrame->GetDesiredSize();
     if ((NS_UNCONSTRAINEDSIZE == aReflowInput.AvailableBSize()) &&
         !GetPrevInFlow()) {
-      CalculateCellActualBSize(kidFrame, desSize.BSize(wm), wm);
+      desSize.BSize(wm) = CalcCellActualBSize(kidFrame, desSize.BSize(wm), wm);
     }
     // bsize may have changed, adjust descent to absorb any excess difference
     nscoord ascent;
@@ -574,12 +574,9 @@ LogicalSides nsTableRowFrame::GetLogicalSkipSides() const {
   return skip;
 }
 
-// Calculate the cell's actual bsize given its pass2 bsize.
-// Takes into account the specified bsize (in the style).
-// Modifies the desired bsize that is passed in.
-nsresult nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
-                                                   nscoord& aDesiredBSize,
-                                                   WritingMode aWM) {
+nscoord nsTableRowFrame::CalcCellActualBSize(nsTableCellFrame* aCellFrame,
+                                             const nscoord& aDesiredBSize,
+                                             WritingMode aWM) {
   nscoord specifiedBSize = 0;
 
   // Get the bsize specified in the style information
@@ -612,11 +609,7 @@ nsresult nsTableRowFrame::CalculateCellActualBSize(nsTableCellFrame* aCellFrame,
 
   // If the specified bsize is greater than the desired bsize,
   // then use the specified bsize
-  if (specifiedBSize > aDesiredBSize) {
-    aDesiredBSize = specifiedBSize;
-  }
-
-  return NS_OK;
+  return std::max(specifiedBSize, aDesiredBSize);
 }
 
 // Calculates the available isize for the table cell based on the known
@@ -822,9 +815,8 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
 
       if (NS_UNCONSTRAINEDSIZE == aReflowInput.AvailableBSize()) {
         if (!GetPrevInFlow()) {
-          // Calculate the cell's actual bsize given its pass2 bsize. This
-          // function takes into account the specified bsize (in the style)
-          CalculateCellActualBSize(kidFrame, desiredSize.BSize(wm), wm);
+          desiredSize.BSize(wm) =
+              CalcCellActualBSize(kidFrame, desiredSize.BSize(wm), wm);
         }
         // bsize may have changed, adjust descent to absorb any excess
         // difference

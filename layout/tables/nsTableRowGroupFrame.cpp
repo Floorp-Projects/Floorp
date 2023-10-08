@@ -661,8 +661,8 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
             // get the bsize of the cell
             LogicalSize cellFrameSize = cellFrame->GetLogicalSize(wm);
             LogicalSize cellDesSize = cellFrame->GetDesiredSize();
-            rowFrame->CalculateCellActualBSize(cellFrame, cellDesSize.BSize(wm),
-                                               wm);
+            cellDesSize.BSize(wm) = rowFrame->CalcCellActualBSize(
+                cellFrame, cellDesSize.BSize(wm), wm);
             cellFrameSize.BSize(wm) = cellDesSize.BSize(wm);
             if (cellFrame->HasVerticalAlignBaseline()) {
               // to ensure that a spanning cell with a long descender doesn't
