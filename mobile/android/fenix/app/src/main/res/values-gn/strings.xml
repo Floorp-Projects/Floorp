@@ -486,7 +486,7 @@
     <string name="reduce_cookie_banner_dialog_change_setting_button">Moneĩ</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
-    <string name="preferences_https_only_summary">Eñeha’ã eike hag̃ua tendakuérape eipurúvo pe taperekoite HTTPS ipapapýva tekorosãverã.</string>
+    <string name="preferences_https_only_summary">Eñeha’ã eike hag̃ua tendakuérape eiporúvo pe taperekoite HTTPS ipapapýva tekorosãverã.</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Mboguepyre</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -1991,7 +1991,7 @@
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Jeheka juajuha URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Jehekaha juajuha eipurútava</string>
+    <string name="search_add_custom_engine_search_string_hint">Jehekaha juajuha eiporútava</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL eiporukuaáva eheka hag̃ua</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->

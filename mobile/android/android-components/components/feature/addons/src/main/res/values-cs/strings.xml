@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">Doplněk %1$s byl zakázán z bezpečnostních a výkonových důvodů.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">Doplněk %1$s se nepodařilo ověřit jako bezpečný a byl zakázán.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Doplněk %1$s není kompatibilní s vaší verzí aplikace %2$s (verze %3$s).</string>
 </resources>
