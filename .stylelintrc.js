@@ -54,7 +54,7 @@ module.exports = {
     ],
 
     "max-nesting-depth": [
-      8,
+      3,
       {
         ignore: ["blockless-at-rules", "pseudo-classes"],
       },
