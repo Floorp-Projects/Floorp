@@ -496,27 +496,26 @@ nscoord nsTableRowFrame::CalcBSize(const ReflowInput& aReflowInput) {
     SetPctBSize(bsizeStyleCoord.ToPercentage());
   }
 
-  for (nsIFrame* kidFrame : mFrames) {
-    nsTableCellFrame* cellFrame = do_QueryFrame(kidFrame);
-    if (cellFrame) {
-      MOZ_ASSERT(cellFrame->GetWritingMode() == wm);
-      LogicalSize desSize = cellFrame->GetDesiredSize();
-      if ((NS_UNCONSTRAINEDSIZE == aReflowInput.AvailableBSize()) &&
-          !GetPrevInFlow()) {
-        CalculateCellActualBSize(cellFrame, desSize.BSize(wm), wm);
-      }
-      // bsize may have changed, adjust descent to absorb any excess difference
-      nscoord ascent;
-      if (!kidFrame->PrincipalChildList()
-               .FirstChild()
-               ->PrincipalChildList()
-               .FirstChild())
-        ascent = desSize.BSize(wm);
-      else
-        ascent = cellFrame->GetCellBaseline();
-      nscoord descent = desSize.BSize(wm) - ascent;
-      UpdateBSize(desSize.BSize(wm), ascent, descent, tableFrame, cellFrame);
+  for (nsTableCellFrame* kidFrame = GetFirstCell(); kidFrame;
+       kidFrame = kidFrame->GetNextCell()) {
+    MOZ_ASSERT(kidFrame->GetWritingMode() == wm);
+    LogicalSize desSize = kidFrame->GetDesiredSize();
+    if ((NS_UNCONSTRAINEDSIZE == aReflowInput.AvailableBSize()) &&
+        !GetPrevInFlow()) {
+      CalculateCellActualBSize(kidFrame, desSize.BSize(wm), wm);
     }
+    // bsize may have changed, adjust descent to absorb any excess difference
+    nscoord ascent;
+    if (!kidFrame->PrincipalChildList()
+             .FirstChild()
+             ->PrincipalChildList()
+             .FirstChild()) {
+      ascent = desSize.BSize(wm);
+    } else {
+      ascent = kidFrame->GetCellBaseline();
+    }
+    nscoord descent = desSize.BSize(wm) - ascent;
+    UpdateBSize(desSize.BSize(wm), ascent, descent, tableFrame, kidFrame);
   }
   return GetInitialBSize();
 }
@@ -711,29 +710,8 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
   WritingMode wm = aReflowInput.GetWritingMode();
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
 
-  for (nsIFrame* kidFrame : mFrames) {
-    nsTableCellFrame* cellFrame = do_QueryFrame(kidFrame);
-    if (!cellFrame) {
-      // XXXldb nsCSSFrameConstructor needs to enforce this!
-      MOZ_ASSERT_UNREACHABLE("yikes, a non-row child");
-
-      // it's an unknown frame type, give it a generic reflow and ignore the
-      // results
-      TableCellReflowInput kidReflowInput(
-          aPresContext, aReflowInput, kidFrame,
-          LogicalSize(kidFrame->GetWritingMode(), 0, 0),
-          ReflowInput::InitFlag::CallerWillInit);
-      InitChildReflowInput(*aPresContext, LogicalSize(wm), false,
-                           kidReflowInput);
-      ReflowOutput desiredSize(aReflowInput);
-      nsReflowStatus status;
-      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowInput, 0, 0,
-                  ReflowChildFlags::Default, status);
-      kidFrame->DidReflow(aPresContext, nullptr);
-
-      continue;
-    }
-
+  for (nsTableCellFrame* kidFrame = GetFirstCell(); kidFrame;
+       kidFrame = kidFrame->GetNextCell()) {
     // See if we should only reflow the dirty child frames
     bool doReflowChild = true;
     if (!aReflowInput.ShouldReflowAllKids() && !aTableFrame.IsGeometryDirty() &&
@@ -742,19 +720,19 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     } else if ((NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableBSize())) {
       // We don't reflow a rowspan >1 cell here with a constrained bsize.
       // That happens in nsTableRowGroupFrame::SplitSpanningCells.
-      if (aTableFrame.GetEffectiveRowSpan(*cellFrame) > 1) {
+      if (aTableFrame.GetEffectiveRowSpan(*kidFrame) > 1) {
         doReflowChild = false;
       }
     }
     if (aReflowInput.mFlags.mSpecialBSizeReflow) {
       if (!isPaginated &&
-          !cellFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+          !kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
         continue;
       }
     }
 
-    uint32_t cellColIndex = cellFrame->ColIndex();
-    cellColSpan = aTableFrame.GetEffectiveColSpan(*cellFrame);
+    uint32_t cellColIndex = kidFrame->ColIndex();
+    cellColSpan = aTableFrame.GetEffectiveColSpan(*kidFrame);
 
     // If the adjacent cell is in a prior row (because of a rowspan) add in the
     // space NOTE: prevColIndex can be -1 here.
@@ -779,7 +757,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     if (doReflowChild) {
       // Calculate the available isize for the table cell using the known
       // column isizes
-      nscoord availCellISize = CalcAvailISize(aTableFrame, *cellFrame);
+      nscoord availCellISize = CalcAvailISize(aTableFrame, *kidFrame);
 
       Maybe<TableCellReflowInput> kidReflowInput;
       ReflowOutput desiredSize(aReflowInput);
@@ -789,16 +767,16 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       // it is a style change reflow or we are printing, then we must reflow the
       // cell. Otherwise we can skip the reflow.
       // XXXldb Why is this condition distinct from doReflowChild above?
-      NS_ASSERTION(cellFrame->GetWritingMode() == wm,
+      NS_ASSERTION(kidFrame->GetWritingMode() == wm,
                    "expected consistent writing-mode within table");
-      LogicalSize cellDesiredSize = cellFrame->GetDesiredSize();
-      if ((availCellISize != cellFrame->GetPriorAvailISize()) ||
-          (cellDesiredSize.ISize(wm) > cellFrame->GetPriorAvailISize()) ||
+      LogicalSize cellDesiredSize = kidFrame->GetDesiredSize();
+      if ((availCellISize != kidFrame->GetPriorAvailISize()) ||
+          (cellDesiredSize.ISize(wm) > kidFrame->GetPriorAvailISize()) ||
           HasAnyStateBits(NS_FRAME_IS_DIRTY) || isPaginated ||
-          cellFrame->IsSubtreeDirty() ||
+          kidFrame->IsSubtreeDirty() ||
           // See if it needs a special reflow, or if it had one that we need to
           // undo.
-          cellFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
+          kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE) ||
           HasPctBSize()) {
         // Reflow the cell to fit the available isize, bsize
         // XXX The old IR_ChildIsDirty code used availCellISize here.
@@ -829,7 +807,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
         }
 
         desiredSize.SetSize(wm, cellDesiredSize);
-        desiredSize.mOverflowAreas = cellFrame->GetOverflowAreas();
+        desiredSize.mOverflowAreas = kidFrame->GetOverflowAreas();
 
         // if we are in a floated table, our position is not yet established, so
         // we cannot reposition our views the containing block will do this for
@@ -846,7 +824,7 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
         if (!GetPrevInFlow()) {
           // Calculate the cell's actual bsize given its pass2 bsize. This
           // function takes into account the specified bsize (in the style)
-          CalculateCellActualBSize(cellFrame, desiredSize.BSize(wm), wm);
+          CalculateCellActualBSize(kidFrame, desiredSize.BSize(wm), wm);
         }
         // bsize may have changed, adjust descent to absorb any excess
         // difference
@@ -857,15 +835,14 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
                  .FirstChild()) {
           ascent = desiredSize.BSize(wm);
         } else {
-          ascent = ((nsTableCellFrame*)kidFrame)->GetCellBaseline();
+          ascent = kidFrame->GetCellBaseline();
         }
         nscoord descent = desiredSize.BSize(wm) - ascent;
         UpdateBSize(desiredSize.BSize(wm), ascent, descent, &aTableFrame,
-                    cellFrame);
+                    kidFrame);
       } else {
         cellMaxBSize = std::max(cellMaxBSize, desiredSize.BSize(wm));
-        int32_t rowSpan =
-            aTableFrame.GetEffectiveRowSpan((nsTableCellFrame&)*kidFrame);
+        int32_t rowSpan = aTableFrame.GetEffectiveRowSpan(*kidFrame);
         if (1 == rowSpan) {
           SetContentBSize(cellMaxBSize);
         }
@@ -969,10 +946,6 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     // aDesiredSize.BSize will have been misplaced earlier at the
     // FinishReflowChild stage. So fix them up now.
     for (nsIFrame* kidFrame : mFrames) {
-      nsTableCellFrame* cellFrame = do_QueryFrame(kidFrame);
-      if (!cellFrame) {
-        continue;
-      }
       if (kidFrame->BSize(wm) != aDesiredSize.BSize(wm)) {
         kidFrame->MovePositionBy(
             wm,
