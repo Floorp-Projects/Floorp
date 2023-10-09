@@ -9,7 +9,6 @@
 
 #include "AudioResampler.h"
 #include "DriftController.h"
-#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
@@ -23,11 +22,8 @@ extern LazyLogModule gMediaTrackGraphLog;
 static media::TimeUnit DesiredBuffering(media::TimeUnit aSourceLatency) {
   constexpr media::TimeUnit kMinBuffer(10, MSECS_PER_S);
   constexpr media::TimeUnit kMaxBuffer(2500, MSECS_PER_S);
-  const media::TimeUnit bufferingByPref(
-      StaticPrefs::media_clockdrift_buffering(), MSECS_PER_S);
 
-  const auto clamped = std::clamp(std::max(aSourceLatency, bufferingByPref),
-                                  kMinBuffer, kMaxBuffer);
+  const auto clamped = std::clamp(aSourceLatency, kMinBuffer, kMaxBuffer);
 
   // Ensure the base is the source's sampling rate.
   return clamped.ToBase(aSourceLatency);
@@ -51,7 +47,17 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   const media::TimeUnit outputDuration(aOutputFrames, mTargetRate);
 
   if (inputDuration.IsPositive()) {
-    if (mDesiredBuffering.IsZero() || inputDuration > mDesiredBuffering) {
+    if (mDesiredBuffering.IsZero()) {
+      // Start with the desired buffering at at least 50ms, since the drift is
+      // still unknown. It may be adjust downward later on, when we have adapted
+      // to the drift more.
+      const media::TimeUnit desiredBuffering = DesiredBuffering(std::max(
+          inputDuration * 11 / 10, media::TimeUnit::FromSeconds(0.05)));
+      LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
+                     "Initial desired buffering %.2fms",
+                     desiredBuffering.ToSeconds() * 1000.0);
+      SetDesiredBuffering(desiredBuffering);
+    } else if (inputDuration > mDesiredBuffering) {
       // Input latency is higher than the desired buffering. Increase the
       // desired buffering to try to avoid underruns.
       if (inputDuration > mSourceLatency) {
