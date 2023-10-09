@@ -64,6 +64,30 @@ class DriftController final {
   uint32_t NumCorrectionChanges() const { return mNumCorrectionChanges; }
 
   /**
+   * The amount of time the buffering level has been within the hysteresis
+   * threshold.
+   */
+  media::TimeUnit DurationWithinHysteresis() const {
+    return mDurationWithinHysteresis;
+  }
+
+  /**
+   * The amount of time that has passed since the last time SetDesiredBuffering
+   * was called.
+   */
+  media::TimeUnit DurationSinceDesiredBufferingChange() const {
+    return mTotalTargetClock - mLastDesiredBufferingChangeTime;
+  }
+
+  /**
+   * A rolling window average measurement of source latency by looking at the
+   * duration of the source buffer.
+   */
+  media::TimeUnit MeasuredSourceLatency() const {
+    return mMeasuredSourceLatency.mean();
+  }
+
+  /**
    * Update the available source frames, target frames, and the current
    * buffer, in every iteration. If the conditions are met a new correction is
    * calculated. A new correction is calculated every mAdjustmentInterval. In
@@ -132,6 +156,7 @@ class DriftController final {
 
   media::TimeUnit mTargetClock;
   media::TimeUnit mTotalTargetClock;
+  media::TimeUnit mLastDesiredBufferingChangeTime;
 };
 
 }  // namespace mozilla

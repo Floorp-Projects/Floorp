@@ -63,6 +63,8 @@ class AudioDriftCorrection final {
   void SetSourceLatency(media::TimeUnit aSourceLatency);
 
   const uint32_t mTargetRate;
+  const media::TimeUnit mLatencyReductionTimeLimit =
+      media::TimeUnit(15, 1).ToBase(mTargetRate);
 
  private:
   void SetDesiredBuffering(media::TimeUnit aDesiredBuffering);

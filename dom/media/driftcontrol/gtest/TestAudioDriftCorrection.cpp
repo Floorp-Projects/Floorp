@@ -368,12 +368,12 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   TrackTime totalFramesTransmitted = 0;
   TrackTime totalFramesReceived = 0;
 
-  // Produces 10s of data.
-  const auto produceSomeData = [&](uint32_t aTransmitterBlockSize) {
+  const auto produceSomeData = [&](uint32_t aTransmitterBlockSize,
+                                   uint32_t aDuration) {
     TrackTime transmittedFramesStart = totalFramesTransmitted;
     TrackTime receivedFramesStart = totalFramesReceived;
     uint32_t numBlocksTransmitted = 0;
-    for (uint32_t i = 0; i < 10 * sampleRate; i += receiverBlockSize) {
+    for (uint32_t i = 0; i < aDuration; i += receiverBlockSize) {
       AudioSegment inSegment;
       if (((receivedFramesStart - transmittedFramesStart + i) /
            aTransmitterBlockSize) > numBlocksTransmitted) {
@@ -392,7 +392,7 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
     }
   };
 
-  produceSomeData(transmitterBlockSize1);
+  produceSomeData(transmitterBlockSize1, 5 * sampleRate);
   EXPECT_EQ(ad.BufferSize(), 4800U);
   // Input is stable so no corrections should occur.
   EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
@@ -400,25 +400,25 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
 
   // Increase input latency. We expect this to underrun, but only once as the
   // drift correction adapts its buffer size and desired buffering level.
-  produceSomeData(transmitterBlockSize2);
+  produceSomeData(transmitterBlockSize2, 10 * sampleRate);
   auto numCorrectionChanges = ad.NumCorrectionChanges();
   EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Adapting to the new input block size should have stabilized.
   EXPECT_GT(ad.BufferSize(), 4800U);
-  produceSomeData(transmitterBlockSize2);
+  produceSomeData(transmitterBlockSize2, 10 * sampleRate);
   EXPECT_EQ(ad.NumCorrectionChanges(), numCorrectionChanges);
   EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Decrease input latency. We expect the drift correction to gradually
   // decrease its desired buffering level.
-  produceSomeData(transmitterBlockSize1);
+  produceSomeData(transmitterBlockSize1, 100 * sampleRate);
   numCorrectionChanges = ad.NumCorrectionChanges();
   EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Adapting to the new input block size should have stabilized.
   EXPECT_EQ(ad.BufferSize(), 9600U);
-  produceSomeData(transmitterBlockSize1);
+  produceSomeData(transmitterBlockSize1, 10 * sampleRate);
   EXPECT_EQ(ad.NumCorrectionChanges(), numCorrectionChanges);
   EXPECT_EQ(ad.NumUnderruns(), 1U);
 
