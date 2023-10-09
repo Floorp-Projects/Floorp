@@ -71,7 +71,11 @@ static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
   if (!acc) {
     return nullptr;
   }
-  TableAccessible* table = acc->AsTableCell()->Table();
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
+  TableAccessible* table = cell->Table();
   if (!table) {
     return nullptr;
   }
@@ -84,8 +88,12 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
   AutoTArray<Accessible*, 10> headers;
-  acc->AsTableCell()->ColHeaderCells(&headers);
+  cell->ColHeaderCells(&headers);
   if (headers.IsEmpty()) {
     return nullptr;
   }
@@ -105,8 +113,12 @@ static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
   AutoTArray<Accessible*, 10> headers;
-  acc->AsTableCell()->RowHeaderCells(&headers);
+  cell->RowHeaderCells(&headers);
   if (headers.IsEmpty()) {
     return nullptr;
   }
