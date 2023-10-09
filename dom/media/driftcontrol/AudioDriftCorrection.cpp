@@ -102,6 +102,42 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
       mDriftController->ResetAfterUnderrun();
     }
   }
+
+  if (mDriftController->DurationWithinHysteresis() >
+          mLatencyReductionTimeLimit &&
+      mDriftController->DurationSinceDesiredBufferingChange() >
+          mLatencyReductionTimeLimit) {
+    // We have been stable within hysteresis for a while. Let's reduce the
+    // desired buffering if we can.
+    const media::TimeUnit sourceLatency =
+        mDriftController->MeasuredSourceLatency();
+    // We target 30% over the measured source latency, a bit higher than how we
+    // adapt to high source latency.
+    const media::TimeUnit targetDesiredBuffering =
+        DesiredBuffering(sourceLatency * 13 / 10);
+    if (targetDesiredBuffering < mDesiredBuffering) {
+      // The new target is lower than the current desired buffering. Proceed by
+      // reducing the difference by 10%, but do it in 10ms-steps so there is a
+      // chance of reaching the target (by truncation).
+      const media::TimeUnit diff =
+          (mDesiredBuffering - targetDesiredBuffering) / 10;
+      // Apply the 10%-diff and 2ms-steps, but don't go lower than the
+      // already-decided desired target.
+      const media::TimeUnit target = std::max(
+          targetDesiredBuffering, (mDesiredBuffering - diff).ToBase(500));
+      if (target < mDesiredBuffering) {
+        LOG_CONTROLLER(
+            LogLevel::Info, mDriftController.get(),
+            "Reducing desired buffering because the buffering level is stable. "
+            "%.2fms->%.2fms. Measured source latency is %.2fms, ideal target "
+            "is %.2fms.",
+            mDesiredBuffering.ToSeconds() * 1000.0, target.ToSeconds() * 1000.0,
+            sourceLatency.ToSeconds() * 1000.0,
+            targetDesiredBuffering.ToSeconds() * 1000.0);
+        SetDesiredBuffering(target);
+      }
+    }
+  }
   return output;
 }
 

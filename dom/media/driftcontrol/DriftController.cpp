@@ -65,6 +65,7 @@ void DriftController::SetDesiredBuffering(media::TimeUnit aDesiredBuffering) {
   LOG_CONTROLLER(LogLevel::Debug, this, "SetDesiredBuffering %.2fms->%.2fms",
                  mDesiredBuffering.ToSeconds() * 1000.0,
                  aDesiredBuffering.ToSeconds() * 1000.0);
+  mLastDesiredBufferingChangeTime = mTotalTargetClock;
   mDesiredBuffering = aDesiredBuffering.ToBase(mSourceRate);
 }
 
