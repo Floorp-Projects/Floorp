@@ -45,6 +45,14 @@ void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
   mSourceClock += aSourceFrames;
   mTotalTargetClock += aTargetFrames;
 
+  if (aSourceFrames == 0) {
+    // Only update the clock after having received input, so input buffering
+    // estimates are somewhat recent. This helps stabilize the controller
+    // input (buffering measurements) when the input stream's callback
+    // interval is much larger than that of the output stream.
+    return;
+  }
+
   if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
     // Only update the correction if 100ms has passed since last update.
     if (aBufferedFrames < mDesiredBuffering * 4 / 10 /*40%*/ ||
