@@ -48,11 +48,6 @@ class AudioResampler final {
    * before it becomes empty.
    */
   uint32_t InputReadableFrames() const;
-  /**
-   * Get the number of frames that can be written to the internal input buffer
-   * before it becomes full.
-   */
-  uint32_t InputWritableFrames() const;
 
   /*
    * Reguest `aOutFrames` of audio in the output sample rate. The internal

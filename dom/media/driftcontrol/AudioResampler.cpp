@@ -96,8 +96,4 @@ uint32_t AudioResampler::InputReadableFrames() const {
   return mResampler.InFramesBuffered(0);
 }
 
-uint32_t AudioResampler::InputWritableFrames() const {
-  return mResampler.InFramesLeftToBuffer(0);
-}
-
 }  // namespace mozilla

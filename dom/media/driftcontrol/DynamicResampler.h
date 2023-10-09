@@ -73,10 +73,6 @@ class DynamicResampler final {
    * Return the number of frames stored in the internal input buffer.
    */
   uint32_t InFramesBuffered(uint32_t aChannelIndex) const;
-  /**
-   * Return the number of frames left to store in the internal input buffer.
-   */
-  uint32_t InFramesLeftToBuffer(uint32_t aChannelIndex) const;
 
   /**
    * Prepends existing input data with a silent pre-buffer if not already done.
