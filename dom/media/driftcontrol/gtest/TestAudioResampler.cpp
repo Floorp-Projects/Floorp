@@ -71,11 +71,11 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
   dr.AppendInput(inSegment);
 
   out_frames = 20u;
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 20);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s.IsNull());
-  EXPECT_TRUE(!s.IsEmpty());
 
   for (AudioSegment::ChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
@@ -97,11 +97,11 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
   // output
-  AudioSegment s1 = dr.Resample(out_frames);
+  hasUnderrun = false;
+  AudioSegment s1 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s1.GetDuration(), out_frames);
   EXPECT_EQ(s1.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s1.IsNull());
-  EXPECT_TRUE(!s1.IsEmpty());
   for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
   }
@@ -127,11 +127,11 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
   dr.AppendInput(inSegment);
 
   out_frames = 20u;
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 20);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s.IsNull());
-  EXPECT_TRUE(!s.IsEmpty());
 
   for (AudioSegment::ChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     AudioChunk& c = *ci;
@@ -153,17 +153,17 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
   // output
-  AudioSegment s1 = dr.Resample(out_frames);
+  hasUnderrun = false;
+  AudioSegment s1 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s1.GetDuration(), out_frames);
   EXPECT_EQ(s1.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s1.IsNull());
-  EXPECT_TRUE(!s1.IsEmpty());
   for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
   }
 }
 
-TEST(TestAudioResampler, OutAudioSegmentFail_Float)
+TEST(TestAudioResampler, OutAudioSegmentLargerThanResampledInput_Float)
 {
   const uint32_t in_frames = 130;
   const uint32_t out_frames = 300;
@@ -178,11 +178,11 @@ TEST(TestAudioResampler, OutAudioSegmentFail_Float)
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
   dr.AppendInput(inSegment);
 
-  AudioSegment s = dr.Resample(out_frames);
-  EXPECT_EQ(s.GetDuration(), 0);
-  EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(s.IsNull());
-  EXPECT_TRUE(s.IsEmpty());
+  bool hasUnderrun = false;
+  AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_TRUE(hasUnderrun);
+  EXPECT_EQ(s2.GetDuration(), 300);
+  EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
 }
 
 TEST(TestAudioResampler, InAudioSegment_Float)
@@ -191,7 +191,7 @@ TEST(TestAudioResampler, InAudioSegment_Float)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
   uint32_t in_frames = 10;
-  uint32_t out_frames = 40;
+  uint32_t out_frames = 20;
   uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
@@ -230,15 +230,19 @@ TEST(TestAudioResampler, InAudioSegment_Float)
   inSegment.AppendAndConsumeChunk(std::move(chunk2));
 
   dr.AppendInput(inSegment);
-  AudioSegment outSegment = dr.Resample(out_frames);
-  // Faild because the first chunk is ignored
-  EXPECT_EQ(outSegment.GetDuration(), 0u);
-  EXPECT_EQ(outSegment.MaxChannelCount(), 0u);
+  bool hasUnderrun = false;
+  AudioSegment outSegment = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
+  // inSegment contains 10 frames, 5 null, 5 non-null. They're part of the pre
+  // buffer which is 10, meaning there are no extra pre buffered silence frames.
+  EXPECT_EQ(outSegment.GetDuration(), out_frames);
+  EXPECT_EQ(outSegment.MaxChannelCount(), 2u);
 
-  // Add the 5 more frames that are missing
+  // Add another 5 null and 5 non-null frames.
   dr.AppendInput(inSegment);
-  AudioSegment outSegment2 = dr.Resample(out_frames);
-  EXPECT_EQ(outSegment2.GetDuration(), 40u);
+  AudioSegment outSegment2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
+  EXPECT_EQ(outSegment2.GetDuration(), out_frames);
   EXPECT_EQ(outSegment2.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(outSegment2); !ci.IsEnded();
        ci.Next()) {
@@ -252,7 +256,7 @@ TEST(TestAudioResampler, InAudioSegment_Short)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
   uint32_t in_frames = 10;
-  uint32_t out_frames = 40;
+  uint32_t out_frames = 20;
   uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
@@ -292,14 +296,19 @@ TEST(TestAudioResampler, InAudioSegment_Short)
   inSegment.AppendAndConsumeChunk(std::move(chunk2));
 
   dr.AppendInput(inSegment);
-  AudioSegment outSegment = dr.Resample(out_frames);
-  // Faild because the first chunk is ignored
-  EXPECT_EQ(outSegment.GetDuration(), 0u);
-  EXPECT_EQ(outSegment.MaxChannelCount(), 0u);
+  bool hasUnderrun = false;
+  AudioSegment outSegment = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
+  // inSegment contains 10 frames, 5 null, 5 non-null. They're part of the pre
+  // buffer which is 10, meaning there are no extra pre buffered silence frames.
+  EXPECT_EQ(outSegment.GetDuration(), out_frames);
+  EXPECT_EQ(outSegment.MaxChannelCount(), 2u);
 
+  // Add another 5 null and 5 non-null frames.
   dr.AppendInput(inSegment);
-  AudioSegment outSegment2 = dr.Resample(out_frames);
-  EXPECT_EQ(outSegment2.GetDuration(), 40u);
+  AudioSegment outSegment2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
+  EXPECT_EQ(outSegment2.GetDuration(), out_frames);
   EXPECT_EQ(outSegment2.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(outSegment2); !ci.IsEnded();
        ci.Next()) {
@@ -332,11 +341,11 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
   inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   dr.AppendInput(inSegment);
 
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 40);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s.IsNull());
-  EXPECT_TRUE(!s.IsEmpty());
   EXPECT_EQ(s.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
@@ -368,11 +377,11 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
   inSegment.AppendAndConsumeChunk(std::move(monoChunk));
   dr.AppendInput(inSegment);
 
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 40);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s.IsNull());
-  EXPECT_TRUE(!s.IsEmpty());
   EXPECT_EQ(s.MaxChannelCount(), 1u);
   for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
@@ -404,18 +413,17 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
   inSegment.AppendAndConsumeChunk(std::move(quadChunk));
   dr.AppendInput(inSegment);
 
-  AudioSegment s = dr.Resample(out_frames);
-  EXPECT_EQ(s.GetDuration(), 0);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_TRUE(hasUnderrun);
+  EXPECT_EQ(s.GetDuration(), 40u);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(s.IsNull());
-  EXPECT_TRUE(s.IsEmpty());
 
-  AudioSegment s2 = dr.Resample(out_frames / 2);
-  EXPECT_EQ(s2.GetDuration(), out_frames / 2);
+  AudioSegment s2 = dr.Resample(out_frames / 2, &hasUnderrun);
+  EXPECT_TRUE(hasUnderrun);
+  EXPECT_EQ(s2.GetDuration(), 20u);
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s2.IsNull());
-  EXPECT_TRUE(!s2.IsEmpty());
-  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+  for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
   }
 }
@@ -443,18 +451,17 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
   inSegment.AppendAndConsumeChunk(std::move(stereoChunk));
   dr.AppendInput(inSegment);
 
-  AudioSegment s = dr.Resample(out_frames);
-  EXPECT_EQ(s.GetDuration(), 0);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_TRUE(hasUnderrun);
+  EXPECT_EQ(s.GetDuration(), 40u);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(s.IsNull());
-  EXPECT_TRUE(s.IsEmpty());
 
-  AudioSegment s2 = dr.Resample(out_frames / 2);
-  EXPECT_EQ(s2.GetDuration(), out_frames / 2);
+  AudioSegment s2 = dr.Resample(out_frames / 2, &hasUnderrun);
+  EXPECT_TRUE(hasUnderrun);
+  EXPECT_EQ(s2.GetDuration(), 20u);
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s2.IsNull());
-  EXPECT_TRUE(!s2.IsEmpty());
-  for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
+  for (AudioSegment::ConstChunkIterator ci(s); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
   }
 }
@@ -502,7 +509,9 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s);
 
   AudioSegment inSegment2;
@@ -510,13 +519,12 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity)
   // The resampler here is updated due to the channel change and that creates
   // discontinuity.
   dr.AppendInput(inSegment2);
-  AudioSegment s2 = dr.Resample(out_frames);
+  AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s2);
 
   EXPECT_EQ(s2.GetDuration(), 480);
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s2.IsNull());
-  EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 1u);
   for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
@@ -565,13 +573,13 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);
-  AudioSegment s1 = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s1 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s1);
 
   EXPECT_EQ(s1.GetDuration(), 480);
   EXPECT_EQ(s1.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s1.IsNull());
-  EXPECT_TRUE(!s1.IsEmpty());
   EXPECT_EQ(s1.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(s1); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
@@ -580,13 +588,12 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity2)
   // The resampler here is updated due to the channel change and that creates
   // discontinuity.
   dr.AppendInput(inSegment);
-  AudioSegment s2 = dr.Resample(out_frames);
+  AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s2);
 
   EXPECT_EQ(s2.GetDuration(), 480);
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s2.IsNull());
-  EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
@@ -627,22 +634,27 @@ TEST(TestAudioResampler, ChannelChange_Discontinuity3)
   // printAudioSegment(inSegment);
 
   dr.AppendInput(inSegment);
-  AudioSegment s = dr.Resample(out_frames);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s);
 
+  EXPECT_EQ(s.GetDuration(), 480);
+  EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
+  EXPECT_EQ(s.MaxChannelCount(), 2u);
+
   // The resampler here is updated due to the rate change. This is because the
-  // in and out rate was the same so a pass through logice was used. By updating
+  // in and out rate was the same so a pass through logic was used. By updating
   // the out rate to something different than the in rate, the resampler will
-  // start being use dand discontinuity will exist.
-  dr.UpdateOutRate(out_rate + 100);
+  // start being used and discontinuity will exist.
+  dr.UpdateOutRate(out_rate + 400);
   dr.AppendInput(inSegment);
-  AudioSegment s2 = dr.Resample(out_frames);
+  AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   // printAudioSegment(s2);
 
   EXPECT_EQ(s2.GetDuration(), 480);
   EXPECT_EQ(s2.GetType(), MediaSegment::AUDIO);
-  EXPECT_TRUE(!s2.IsNull());
-  EXPECT_TRUE(!s2.IsEmpty());
   EXPECT_EQ(s2.MaxChannelCount(), 2u);
   for (AudioSegment::ConstChunkIterator ci(s2); !ci.IsEnded(); ci.Next()) {
     EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);

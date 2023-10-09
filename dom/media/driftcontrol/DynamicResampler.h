@@ -21,8 +21,9 @@ const uint32_t STEREO = 2;
  * number of channels. In addition to that, it maintains an internal buffer for
  * the input data and allows pre-buffering as well. The Resample() method
  * strives to provide the requested number of output frames by using the input
- * data including any pre-buffering. If this is not possible then it will not
- * attempt to resample and it will return failure.
+ * data including any pre-buffering. If there are fewer frames in the internal
+ * buffer than is requested, the internal buffer is padded with enough silence
+ * to allow the requested to be resampled and returned.
  *
  * Input data buffering makes use of the AudioRingBuffer. The capacity of the
  * buffer is 100ms of float audio and it is pre-allocated at the constructor.
@@ -77,14 +78,16 @@ class DynamicResampler final {
   uint32_t InFramesLeftToBuffer(uint32_t aChannelIndex) const;
 
   /*
-   * Resampler as much frame is needed from the internal input buffer to the
-   * `aOutBuffer` in order to provide all `aOutFrames` and return true. If there
-   * not enough input frames to provide the requested output frames no
-   * resampling is attempted and false is returned.
+   * Resample as much frames as needed from the internal input buffer to the
+   * `aOutBuffer` in order to provide all `aOutFrames`. If there are not enough
+   * input frames to provide the requested output frames, the input buffer is
+   * padded with enough silence to allow the requested frames to be resampled.
+   *
+   * Returns true if the internal input buffer underran and had to be padded
+   * with silence, otherwise false.
    */
-  bool Resample(float* aOutBuffer, uint32_t* aOutFrames,
-                uint32_t aChannelIndex);
-  bool Resample(int16_t* aOutBuffer, uint32_t* aOutFrames,
+  bool Resample(float* aOutBuffer, uint32_t aOutFrames, uint32_t aChannelIndex);
+  bool Resample(int16_t* aOutBuffer, uint32_t aOutFrames,
                 uint32_t aChannelIndex);
 
   /**
@@ -97,14 +100,6 @@ class DynamicResampler final {
    * sound is mono.
    */
   void UpdateResampler(uint32_t aOutRate, uint32_t aChannels);
-
-  /**
-   * Returns true if the resampler has enough input data to provide to the
-   * output of the `Resample()` method `aOutFrames` number of frames. This is a
-   * way to know in advance if the `Resampler` method will return true or false
-   * given that nothing changes in between.
-   */
-  bool CanResample(uint32_t aOutFrames) const;
 
  private:
   template <typename T>
@@ -124,7 +119,7 @@ class DynamicResampler final {
                         uint32_t aChannelIndex);
 
   template <typename T>
-  bool ResampleInternal(T* aOutBuffer, uint32_t* aOutFrames,
+  bool ResampleInternal(T* aOutBuffer, uint32_t aOutFrames,
                         uint32_t aChannelIndex) {
     MOZ_ASSERT(mInRate);
     MOZ_ASSERT(mOutRate);
@@ -132,51 +127,63 @@ class DynamicResampler final {
     MOZ_ASSERT(aChannelIndex <= mChannels);
     MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
     MOZ_ASSERT(aOutFrames);
-    MOZ_ASSERT(*aOutFrames);
-
-    // Not enough input, don't do anything
-    if (!EnoughInFrames(*aOutFrames, aChannelIndex)) {
-      *aOutFrames = 0;
-      return false;
-    }
 
     if (mInRate == mOutRate) {
-      mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, *aOutFrames));
+      bool underrun = false;
+      if (uint32_t buffered = mInternalInBuffer[aChannelIndex].AvailableRead();
+          buffered < aOutFrames) {
+        underrun = true;
+        mInternalInBuffer[aChannelIndex].WriteSilence(aOutFrames - buffered);
+      }
+      mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, aOutFrames));
       // Workaround to avoid discontinuity when the speex resampler operates
       // again. Feed it with the last 20 frames to warm up the internal memory
       // of the resampler and then skip memory equals to resampler's input
       // latency.
-      mInputTail[aChannelIndex].StoreTail<T>(aOutBuffer, *aOutFrames);
+      mInputTail[aChannelIndex].StoreTail<T>(aOutBuffer, aOutFrames);
       if (aChannelIndex == 0 && !mIsWarmingUp) {
-        mInputStreamFile.Write(aOutBuffer, *aOutFrames);
-        mOutputStreamFile.Write(aOutBuffer, *aOutFrames);
+        mInputStreamFile.Write(aOutBuffer, aOutFrames);
+        mOutputStreamFile.Write(aOutBuffer, aOutFrames);
       }
-      return true;
+      return underrun;
     }
 
-    uint32_t totalOutFramesNeeded = *aOutFrames;
+    uint32_t totalOutFramesNeeded = aOutFrames;
+    auto resample = [&] {
+      mInternalInBuffer[aChannelIndex].ReadNoCopy(
+          [&](const Span<const T>& aInBuffer) -> uint32_t {
+            if (!totalOutFramesNeeded) {
+              return 0;
+            }
+            uint32_t outFramesResampled = totalOutFramesNeeded;
+            uint32_t inFrames = aInBuffer.Length();
+            ResampleInternal(aInBuffer.data(), &inFrames, aOutBuffer,
+                             &outFramesResampled, aChannelIndex);
+            aOutBuffer += outFramesResampled;
+            totalOutFramesNeeded -= outFramesResampled;
+            mInputTail[aChannelIndex].StoreTail<T>(aInBuffer);
+            return inFrames;
+          });
+    };
 
-    mInternalInBuffer[aChannelIndex].ReadNoCopy(
-        [this, &aOutBuffer, &totalOutFramesNeeded,
-         aChannelIndex](const Span<const T>& aInBuffer) -> uint32_t {
-          if (!totalOutFramesNeeded) {
-            return 0;
-          }
-          uint32_t outFramesResampled = totalOutFramesNeeded;
-          uint32_t inFrames = aInBuffer.Length();
-          ResampleInternal(aInBuffer.data(), &inFrames, aOutBuffer,
-                           &outFramesResampled, aChannelIndex);
-          aOutBuffer += outFramesResampled;
-          totalOutFramesNeeded -= outFramesResampled;
-          mInputTail[aChannelIndex].StoreTail<T>(aInBuffer);
-          return inFrames;
-        });
+    resample();
 
-    MOZ_ASSERT(totalOutFramesNeeded == 0);
+    if (totalOutFramesNeeded == 0) {
+      return false;
+    }
+
+    while (totalOutFramesNeeded > 0) {
+      MOZ_ASSERT(mInternalInBuffer[aChannelIndex].AvailableRead() == 0);
+      // Round up.
+      uint32_t totalInFramesNeeded =
+          ((CheckedUint32(totalOutFramesNeeded) * mInRate + mOutRate - 1) /
+           mOutRate)
+              .value();
+      mInternalInBuffer[aChannelIndex].WriteSilence(totalInFramesNeeded);
+      resample();
+    }
     return true;
   }
-
-  bool EnoughInFrames(uint32_t aOutFrames, uint32_t aChannelIndex) const;
 
   template <typename T>
   void PushInFrames(const T* aInBuffer, const uint32_t aInFrames,
