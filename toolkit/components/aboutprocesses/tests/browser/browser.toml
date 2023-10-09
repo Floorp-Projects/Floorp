@@ -7,19 +7,24 @@ skip-if = [
 support-files = ["small-shot.mp3"]
 
 ["browser_aboutprocesses_default_options.js"]
+fail-if = ["a11y_checks"] # Bug 1854228 td.action-icon, td.close-icon may not be focusable
 https_first_disabled = true
 
 ["browser_aboutprocesses_selection.js"]
+fail-if = ["a11y_checks"] # Bug 1854228 tr.process, tr.window, tr.thread, tr.thread-summary may not be focusable
 
 ["browser_aboutprocesses_shortcut.js"]
 
 ["browser_aboutprocesses_show_all_frames.js"]
+fail-if = ["a11y_checks"] # Bug 1854228 td.action-icon, td.close-icon may not be focusable
 https_first_disabled = true
 
 ["browser_aboutprocesses_show_frames_without_threads.js"]
+fail-if = ["a11y_checks"] # Bug 1854228 td.action-icon, td.close-icon may not be focusable
 https_first_disabled = true
 
 ["browser_aboutprocesses_show_threads.js"]
+fail-if = ["a11y_checks"] # Bug 1854228 td.action-icon, td.close-icon may not be focusable
 https_first_disabled = true
 
 ["browser_aboutprocesses_twisty.js"]

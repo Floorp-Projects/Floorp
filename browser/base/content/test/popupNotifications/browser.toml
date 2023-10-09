@@ -34,6 +34,7 @@ skip-if = [
 ]
 
 ["browser_popupNotification_checkbox.js"]
+fail-if = ["a11y_checks"] # Bug 1854233 clicked checkbox-label may not be accessible
 skip-if = ["(os == 'linux' && (debug || asan))"]
 
 ["browser_popupNotification_hide_after_identity_panel.js"]
