@@ -166,6 +166,8 @@ function Tester(aTests, structuredLogger, aCallback) {
   );
   this.AccessibilityUtils = this.EventUtils.AccessibilityUtils;
 
+  this.AccessibilityUtils.init();
+
   // Make sure our SpecialPowers actor is instantiated, in case it was
   // registered after our DOMWindowCreated event was fired (which it
   // most likely was).
@@ -524,6 +526,8 @@ Tester.prototype = {
     TabDestroyObserver.destroy();
     Services.console.unregisterListener(this);
 
+    this.AccessibilityUtils.uninit();
+
     // It's important to terminate the module to avoid crashes on shutdown.
     this.PromiseTestUtils.uninit();
 
@@ -549,7 +553,6 @@ Tester.prototype = {
 
     // Tests complete, notify the callback and return
     this.callback(this.tests);
-    this.accService = null;
     this.callback = null;
     this.tests = null;
   },
