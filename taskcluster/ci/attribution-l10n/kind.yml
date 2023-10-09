@@ -39,6 +39,7 @@ job-defaults:
                 - treeherder.symbol
                 - fetches.repackage-l10n
     attributes:
+        build_type: opt
         release_artifacts:
             by-build-platform:
                 win.*:
