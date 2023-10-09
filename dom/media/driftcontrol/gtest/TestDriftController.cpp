@@ -23,16 +23,16 @@ TEST(TestDriftController, Basic)
   // The adjustment interval is 1s.
   const uint32_t oneSec = 48000;
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedLow);
+  c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48048u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
 }
 
@@ -48,19 +48,19 @@ TEST(TestDriftController, BasicResampler)
   // The adjustment interval is 1s.
   const uint32_t oneSec = 48000;
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // low
-  c.UpdateClock(oneSec, oneSec, bufferedLow);
+  c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48048u);
 
   // high
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // high
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47964u);
 }
 
@@ -77,20 +77,20 @@ TEST(TestDriftController, BufferedInput)
   // The adjustment interval is 1s.
   const uint32_t oneSec = 48000;
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // 0 buffered when updating correction
-  c.UpdateClock(oneSec, oneSec, 0);
+  c.UpdateClock(oneSec, oneSec, 0, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48048u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedLow);
+  c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47904u);
 }
 
@@ -107,20 +107,20 @@ TEST(TestDriftController, BufferedInputWithResampling)
   // The adjustment interval is 1s.
   const uint32_t oneSec = 48000;
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // 0 buffered when updating correction
-  c.UpdateClock(oneSec, oneSec, 0);
+  c.UpdateClock(oneSec, oneSec, 0, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48048u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedLow);
+  c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47916u);
 }
 
@@ -137,15 +137,15 @@ TEST(TestDriftController, SmallError)
   // The adjustment interval is 1s.
   const uint32_t oneSec = 48000;
 
-  c.UpdateClock(oneSec, oneSec, buffered);
+  c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedLow);
+  c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48009u);
 
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47985u);
-  c.UpdateClock(oneSec, oneSec, bufferedHigh);
+  c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 47996u);
 }
 
@@ -160,9 +160,9 @@ TEST(TestDriftController, SmallBufferedFrames)
 
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000U);
   for (uint32_t i = 0; i < 9; ++i) {
-    c.UpdateClock(hundredMillis, hundredMillis, bufferedLow);
+    c.UpdateClock(hundredMillis, hundredMillis, bufferedLow, 0);
   }
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000U);
-  c.UpdateClock(hundredMillis, hundredMillis, bufferedLow);
+  c.UpdateClock(hundredMillis, hundredMillis, bufferedLow, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48048U);
 }

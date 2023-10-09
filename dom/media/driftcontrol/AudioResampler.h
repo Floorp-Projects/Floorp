@@ -44,6 +44,10 @@ class AudioResampler final {
    */
   void AppendInput(const AudioSegment& aInSegment);
   /**
+   * Get the number of frames that the internal input buffer can hold.
+   */
+  uint32_t InputCapacityFrames() const;
+  /**
    * Get the number of frames that can be read from the internal input buffer
    * before it becomes empty.
    */
