@@ -170,7 +170,7 @@ skip-if = ["verify && debug"]
 fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
 
 ["browser_inspector_highlighter-cssshape_offset-path.js"]
-fail-if = ["a11y_checks"] # bug 1687723 ruleview-shapeswatch is not accessible
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_inspector_highlighter-cssshape_percent.js"]
 
@@ -411,6 +411,7 @@ skip-if = [
 ["browser_inspector_search-filter_context-menu.js"]
 
 ["browser_inspector_search-label.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_inspector_search-navigation.js"]
 
@@ -419,6 +420,7 @@ skip-if = [
 ["browser_inspector_search-selection.js"]
 
 ["browser_inspector_search-sidebar.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_inspector_search-suggests-ids-and-classes.js"]
 

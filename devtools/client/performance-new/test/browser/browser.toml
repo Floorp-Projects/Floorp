@@ -48,20 +48,25 @@ https_first_disabled = true
 ["browser_devtools-record-discard.js"]
 
 ["browser_interaction-between-interfaces.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_popup-profiler-states.js"]
 https_first_disabled = true
 
 ["browser_popup-record-capture-view.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_popup-record-capture.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_popup-record-discard.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_split-toolbar-button.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_webchannel-enable-menu-button-preset.js"]
 https_first_disabled = true

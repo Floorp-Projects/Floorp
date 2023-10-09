@@ -28,6 +28,7 @@ support-files = [
 ]
 
 ["browser_application_panel_debug-service-worker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "debug",  # Bug 1559591
   "asan",   # Bug 1575578
@@ -36,41 +37,53 @@ skip-if = [
 
 ["browser_application_panel_list-domain-workers.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_list-multiple-workers-same-registration.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_list-several-workers.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_list-single-worker.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_list-unicode.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_list-workers-empty.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_manifest-display.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_manifest-load.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_manifest-open-json.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_manifest-reload.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_open-links.js"]
 skip-if = ["true"] # Bug 1467256, 1559591
 
 ["browser_application_panel_sidebar.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_start-service-worker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "asan",   # Bug 1559487
   "debug",  # Bug 1559591
@@ -95,8 +108,10 @@ skip-if = [
 ]
 
 ["browser_application_panel_telemetry-select-page.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_application_panel_telemetry-start-worker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "ccov",
   "asan",   # Bug 1559487
@@ -106,6 +121,7 @@ skip-if = [
 ]
 
 ["browser_application_panel_telemetry-unregister-worker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "asan",   # Bug 1559487
   "debug",  # Bug 1559591
@@ -113,10 +129,12 @@ skip-if = [
 ]
 
 ["browser_application_panel_unregister-worker.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["debug"] # Bug 1559591
 
 ["browser_application_panel_viewsource-service-worker.js"]
 https_first_disabled = true
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "debug",  # Bug 1559591
   "asan",   # Bug 1575578
@@ -124,6 +142,7 @@ skip-if = [
 ]
 
 ["browser_application_panel_worker-states.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "asan",   # Bug 1559487
   "debug",  # Bug 1559591
