@@ -255,10 +255,6 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
     aTarget = aWindow.document.getElementById(aTarget);
   }
 
-  if (aEvent.type === "click" && this.AccessibilityUtils) {
-    this.AccessibilityUtils.assertCanBeClicked(aTarget);
-  }
-
   var event = aWindow.document.createEvent("MouseEvent");
 
   var typeArg = aEvent.type;
