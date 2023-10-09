@@ -4467,10 +4467,9 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
   // minimal display port for every scroll frame that could be active. (We only
   // do this when aSetBase is true because we only want to do this the first
   // time this function is called for the same scroll frame.)
-  if (ShouldActivateAllScrollFrames() && !hasDisplayPort &&
-      !DisplayPortUtils::HasDisplayPort(content) &&
-      nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll() &&
-      aBuilder->IsPaintingToWindow() && aSetBase) {
+  if (aSetBase && !hasDisplayPort && aBuilder->IsPaintingToWindow() &&
+      ShouldActivateAllScrollFrames() &&
+      nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll()) {
     // SetDisplayPortMargins calls TriggerDisplayPortExpiration which starts a
     // display port expiry timer for display ports that do expire. However
     // minimal display ports do not expire, so the display port has to be
