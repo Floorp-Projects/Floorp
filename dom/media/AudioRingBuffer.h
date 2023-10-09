@@ -48,6 +48,11 @@ class AudioRingBuffer final {
   uint32_t Write(const AudioRingBuffer& aBuffer, uint32_t aSamples);
 
   /**
+   * Write `aSamples` number of zeros before the beginning of the existing data.
+   */
+  uint32_t PrependSilence(uint32_t aSamples);
+
+  /**
    * Write `aSamples` number of zeros.
    */
   uint32_t WriteSilence(uint32_t aSamples);
