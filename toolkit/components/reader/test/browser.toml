@@ -14,6 +14,7 @@ support-files = [
 
 ["browser_drag_url_readerMode.js"]
 support-files = ["readerModeArticle.html"]
+fail-if = ["a11y_checks"] # Bug 1854532 clicked urlbar-input-container may not be focusable
 
 ["browser_localfile_readerMode.js"]
 support-files = ["readerModeArticle.html"]
