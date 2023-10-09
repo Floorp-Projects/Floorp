@@ -22,6 +22,8 @@ namespace JS {
 // https://tc39.es/ecma262/#sec-getiterator
 // GetIterator(obj [, hint [, method]])
 JSObject* GetIteratorObject(JSContext* cx, HandleValue obj, bool isAsync) {
+  cx->check(obj);
+
   FixedInvokeArgs<3> args(cx);
   args[0].set(obj);
   args[1].setBoolean(isAsync);
@@ -40,6 +42,8 @@ JSObject* GetIteratorObject(JSContext* cx, HandleValue obj, bool isAsync) {
 // https://tc39.es/ecma262/#sec-iteratornext
 bool IteratorNext(JSContext* cx, HandleObject iteratorRecord,
                   MutableHandleValue result) {
+  cx->check(iteratorRecord);
+
   FixedInvokeArgs<1> args(cx);
   args[0].setObject(*iteratorRecord);
   return CallSelfHostedFunction(cx, cx->names().IteratorNext,
@@ -48,6 +52,8 @@ bool IteratorNext(JSContext* cx, HandleObject iteratorRecord,
 
 // https://tc39.es/ecma262/#sec-iteratorcomplete
 bool IteratorComplete(JSContext* cx, HandleObject iterResult, bool* done) {
+  cx->check(iterResult);
+
   RootedValue doneV(cx);
   if (!GetProperty(cx, iterResult, iterResult, cx->names().done, &doneV)) {
     return false;
@@ -60,15 +66,18 @@ bool IteratorComplete(JSContext* cx, HandleObject iterResult, bool* done) {
 // https://tc39.es/ecma262/#sec-iteratorvalue
 bool IteratorValue(JSContext* cx, HandleObject iterResult,
                    MutableHandleValue value) {
+  cx->check(iterResult);
   return GetProperty(cx, iterResult, iterResult, cx->names().value, value);
 }
 
 bool GetIteratorRecordIterator(JSContext* cx, HandleObject iteratorRecord,
                                MutableHandleValue iterator) {
+  cx->check(iteratorRecord);
   return GetProperty(cx, iteratorRecord, iteratorRecord, cx->names().iterator,
                      iterator);
 }
 
+// https://tc39.es/ecma262/#sec-getmethod
 static bool GetMethod(JSContext* cx, HandleValue v, Handle<PropertyName*> name,
                       MutableHandleValue result) {
   // Step 1. Let func be ? GetV(V, P).
@@ -95,6 +104,7 @@ static bool GetMethod(JSContext* cx, HandleValue v, Handle<PropertyName*> name,
 
 bool GetReturnMethod(JSContext* cx, HandleValue iterator,
                      MutableHandleValue result) {
+  cx->check(iterator);
   // Step 2. Let returnMethod be GetMethod(iterator, "return").
   return GetMethod(cx, iterator, cx->names().return_, result);
 }
