@@ -45,8 +45,7 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
                                    CubebUtils::AudioDeviceID aDeviceId,
                                    uint32_t aChannelCount, bool aIsVoice,
                                    const PrincipalHandle& aPrincipalHandle,
-                                   TrackRate aSourceRate, TrackRate aTargetRate,
-                                   uint32_t aBufferMs)
+                                   TrackRate aSourceRate, TrackRate aTargetRate)
     : mId(aSourceId),
       mDeviceId(aDeviceId),
       mChannelCount(aChannelCount),
@@ -58,8 +57,7 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
       mEventListener(std::move(aListener)),
       mTaskThread(CUBEB_TASK_THREAD),
       mDriftCorrector(static_cast<uint32_t>(aSourceRate),
-                      static_cast<uint32_t>(aTargetRate), aBufferMs,
-                      aPrincipalHandle) {
+                      static_cast<uint32_t>(aTargetRate), aPrincipalHandle) {
   MOZ_ASSERT(mChannelCount > 0);
   MOZ_ASSERT(mEventListener);
 }

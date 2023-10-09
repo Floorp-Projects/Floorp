@@ -32,11 +32,8 @@ class DriftController;
  * audio thread.
  */
 class AudioDriftCorrection final {
-  const uint32_t kMinBufferMs = 5;
-
  public:
   AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate,
-                       uint32_t aBufferMs,
                        const PrincipalHandle& aPrincipalHandle);
 
   ~AudioDriftCorrection();
@@ -62,10 +59,12 @@ class AudioDriftCorrection final {
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t NumCorrectionChanges() const;
 
-  const uint32_t mDesiredBuffering;
   const uint32_t mTargetRate;
 
  private:
+  void SetDesiredBuffering(uint32_t aDesiredBufferingFrames);
+
+  uint32_t mDesiredBufferingFrames = 0;
   const UniquePtr<DriftController> mDriftController;
   const UniquePtr<AudioResampler> mResampler;
 };

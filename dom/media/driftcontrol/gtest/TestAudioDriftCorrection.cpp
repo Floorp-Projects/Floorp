@@ -36,10 +36,9 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
   const uint32_t frequency = 100;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver,
                           testPrincipal);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
@@ -85,7 +84,8 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   }
 
   const int32_t expectedBuffering =
-      ad.mDesiredBuffering - sampleRateTransmitter / 100 /* 10ms */;
+      StaticPrefs::media_clockdrift_buffering() * aSourceRate / 1000 -
+      sampleRateTransmitter / 100 /* 10ms */;
   EXPECT_NEAR(ad.CurrentBuffering(), expectedBuffering, 512);
 
   EXPECT_NEAR(inToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
@@ -116,10 +116,9 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   const uint32_t frequency = 100;
   const uint32_t sampleRateTransmitter = aSourceRate;
   const uint32_t sampleRateReceiver = aTargetRate;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver,
                           testPrincipal);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRateTransmitter, frequency);
@@ -187,10 +186,9 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
   const uint32_t frequency = 100;
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver,
                           testPrincipal);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
@@ -225,10 +223,9 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
 {
   const uint32_t sampleRateTransmitter = 48000;
   const uint32_t sampleRateReceiver = 48000;
-  const uint32_t buffering = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver, buffering,
+  AudioDriftCorrection ad(sampleRateTransmitter, sampleRateReceiver,
                           testPrincipal);
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
@@ -254,10 +251,9 @@ TEST(TestAudioDriftCorrection, HighLatencyProducerLowLatencyConsumer)
   constexpr uint32_t transmitterBlockSize = 2048;
   constexpr uint32_t receiverBlockSize = 128;
   constexpr uint32_t sampleRate = 48000;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(sampleRate, sampleRate, testPrincipal);
 
   uint32_t numBlocksProduced = 0;
   for (uint32_t i = 0; i < (sampleRate / 1000) * 500; i += receiverBlockSize) {
@@ -282,10 +278,9 @@ TEST(TestAudioDriftCorrection, LargerTransmitterBlockSizeThanDesiredBuffering)
   constexpr uint32_t transmitterBlockSize = 4096;
   constexpr uint32_t receiverBlockSize = 128;
   constexpr uint32_t sampleRate = 48000;
-  constexpr uint32_t bufferingMs = 50;  // 2400 frames
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(sampleRate, sampleRate, testPrincipal);
 
   uint32_t numBlocksTransmitted = 0;
   for (uint32_t i = 0; i < (sampleRate / 1000) * 500; i += receiverBlockSize) {
@@ -311,7 +306,7 @@ TEST(TestAudioDriftCorrection, LargerTransmitterBlockSizeThanDesiredBuffering)
   // The drift correction buffer size had to be larger than the desired (the
   // buffer size is twice the initial buffering level), to accomodate the large
   // input block size.
-  EXPECT_EQ(ad.BufferSize(), 4800U);
+  EXPECT_EQ(ad.BufferSize(), 9600U);
 }
 
 TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
@@ -319,10 +314,9 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
   constexpr uint32_t transmitterBlockSize = 128;
   constexpr uint32_t receiverBlockSize = 4096;
   constexpr uint32_t sampleRate = 48000;
-  constexpr uint32_t bufferingMs = 50;  // 2400 frames
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(sampleRate, sampleRate, testPrincipal);
 
   for (uint32_t i = 0; i < (sampleRate / 1000) * 500;
        i += transmitterBlockSize) {
@@ -357,10 +351,9 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   constexpr uint32_t receiverBlockSize = 128;
   constexpr uint32_t sampleRate = 48000;
   constexpr uint32_t frequencyHz = 100;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(sampleRate, sampleRate, testPrincipal);
 
   AudioGenerator<AudioDataValue> tone(1, sampleRate, frequencyHz);
   AudioVerifier<AudioDataValue> inToneVerifier(sampleRate, frequencyHz);
@@ -425,8 +418,10 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   EXPECT_NEAR(outToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
   // The expected pre-silence is equal to the desired buffering plus what's
   // needed to resample the first input segment.
-  EXPECT_EQ(outToneVerifier.PreSilenceSamples(),
-            sampleRate * bufferingMs / 1000U + receiverBlockSize);
+  EXPECT_EQ(outToneVerifier.PreSilenceSamples(), 2528U);
+  // One mid-stream period of silence from increasing the input buffer size,
+  // causing an underrun. Counts as two discontinuities.
+  EXPECT_EQ(outToneVerifier.CountDiscontinuities(), 2U);
 }
 
 /**
@@ -442,11 +437,10 @@ TEST(TestAudioDriftCorrection, DriftStepResponse)
   constexpr uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
   constexpr uint32_t inputInterval = inputRate;
   constexpr uint32_t iterations = 200;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
-  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(nominalRate, nominalRate, testPrincipal);
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
     tone.Generate(inSegment, inputInterval / 100);
@@ -466,14 +460,13 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrun)
   constexpr uint32_t nominalRate = 48000;
   constexpr uint32_t interval = nominalRate;
   constexpr uint32_t iterations = 200;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
   uint32_t inputInterval = inputRate;
   Preferences::SetUint("media.clockdrift.buffering", 10);
   AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
-  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(nominalRate, nominalRate, testPrincipal);
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
     tone.Generate(inSegment, inputInterval / 100);
@@ -502,14 +495,13 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
   constexpr uint32_t nominalRate = 48000;
   constexpr uint32_t interval = nominalRate;
   constexpr uint32_t iterations = 200;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
   uint32_t inputInterval = inputRate;
   Preferences::SetUint("media.clockdrift.buffering", 10);
   AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
-  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(nominalRate, nominalRate, testPrincipal);
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
     if (i > 0 && i % interval == 0) {
@@ -528,7 +520,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
     ad.RequestFrames(inSegment, interval / 100);
   }
 
-  EXPECT_EQ(ad.BufferSize(), 52800U);
+  EXPECT_EQ(ad.BufferSize(), 110400U);
   Preferences::ClearUser("media.clockdrift.buffering");
 }
 
@@ -546,12 +538,11 @@ TEST(TestAudioDriftCorrection, DriftStepResponseOverrun)
   constexpr uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
   constexpr uint32_t inputInterval = inputRate;
   constexpr uint32_t iterations = 200;
-  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
 
   AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
-  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  AudioDriftCorrection ad(nominalRate, nominalRate, testPrincipal);
 
   for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
     AudioSegment inSegment;
@@ -572,5 +563,5 @@ TEST(TestAudioDriftCorrection, DriftStepResponseOverrun)
     ad.RequestFrames(inSegment, interval / 100);
   }
 
-  EXPECT_EQ(ad.BufferSize(), 52800U);
+  EXPECT_EQ(ad.BufferSize(), 105600U);
 }

@@ -26,9 +26,10 @@ namespace mozilla {
  * target rate. It assumes that the resampler is initially configured to
  * resample from the nominal source rate to the nominal target rate.
  *
- * The pref `media.clock drift.buffering` can be used to configure the desired
- * internal buffering. Right now it is at 50ms. But it can be increased if there
- * are audio quality problems.
+ * The pref `media.clock drift.buffering` can be used to configure the minimum
+ * initial desired internal buffering. Right now it is at 50ms. A larger desired
+ * buffering level will be used if deemed necessary based on input device
+ * latency, reported or observed.
  */
 class DriftController final {
  public:
@@ -37,6 +38,11 @@ class DriftController final {
    */
   DriftController(uint32_t aSourceRate, uint32_t aTargetRate,
                   uint32_t aDesiredBuffering);
+
+  /**
+   * Set the buffering level that the controller should target.
+   */
+  void SetDesiredBuffering(uint32_t aDesiredBuffering);
 
   /**
    * Returns the drift-corrected target rate.
@@ -91,9 +97,9 @@ class DriftController final {
   const uint32_t mSourceRate;
   const uint32_t mTargetRate;
   const uint32_t mAdjustmentIntervalMs = 1000;
-  const uint32_t mDesiredBuffering;
 
  private:
+  uint32_t mDesiredBuffering;
   int32_t mPreviousError = 0;
   float mIntegral = 0.0;
   float mCorrectedTargetRate;

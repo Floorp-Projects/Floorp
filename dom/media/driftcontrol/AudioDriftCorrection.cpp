@@ -5,39 +5,72 @@
 
 #include "AudioDriftCorrection.h"
 
+#include <cmath>
+
 #include "AudioResampler.h"
 #include "DriftController.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 
-static constexpr uint32_t kMinBufferMs = 5;
+extern LazyLogModule gMediaTrackGraphLog;
+
+#define LOG_CONTROLLER(level, controller, format, ...)             \
+  MOZ_LOG(gMediaTrackGraphLog, level,                              \
+          ("DriftController %p: (plot-id %u) " format, controller, \
+           (controller)->mPlotId, ##__VA_ARGS__))
+
+static uint32_t DesiredBuffering(uint32_t aSourceLatencyFrames,
+                                 uint32_t aSourceRate) {
+  constexpr uint32_t kMinBufferMs = 10;
+  constexpr uint32_t kMaxBufferMs = 2500;
+  const uint32_t minBufferingFrames = kMinBufferMs * aSourceRate / 1000;
+  const uint32_t maxBufferingFrames = kMaxBufferMs * aSourceRate / 1000;
+  return std::clamp(
+      std::max(aSourceLatencyFrames,
+               StaticPrefs::media_clockdrift_buffering() * aSourceRate / 1000),
+      minBufferingFrames, maxBufferingFrames);
+}
 
 AudioDriftCorrection::AudioDriftCorrection(
-    uint32_t aSourceRate, uint32_t aTargetRate, uint32_t aBufferMs,
+    uint32_t aSourceRate, uint32_t aTargetRate,
     const PrincipalHandle& aPrincipalHandle)
-    : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate / 1000),
-      mTargetRate(aTargetRate),
+    : mTargetRate(aTargetRate),
       mDriftController(MakeUnique<DriftController>(aSourceRate, aTargetRate,
-                                                   mDesiredBuffering)),
-      mResampler(MakeUnique<AudioResampler>(
-          aSourceRate, aTargetRate, mDesiredBuffering, aPrincipalHandle)) {}
+                                                   mDesiredBufferingFrames)),
+      mResampler(MakeUnique<AudioResampler>(aSourceRate, aTargetRate,
+                                            mDesiredBufferingFrames,
+                                            aPrincipalHandle)) {}
 
 AudioDriftCorrection::~AudioDriftCorrection() = default;
 
 AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
                                                  uint32_t aOutputFrames) {
-  uint32_t inputFrames = aInput.GetDuration();
-  // Very important to go first since the Dynamic will get the sample format
-  // from the chunk.
-  if (aInput.GetDuration()) {
-    // Always go through the resampler because the clock might shift later.
+  TrackTime inputFrames = aInput.GetDuration();
+
+  if (inputFrames > 0) {
+    if (inputFrames > mDesiredBufferingFrames) {
+      // Input latency seems high. Increase the desired buffering to try to
+      // avoid underruns.
+      const uint32_t desiredBuffering = inputFrames * 11 / 10;
+      LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
+                     "High input latency (%" PRId64
+                     "). Increasing desired buffering %u->%u frames (%.2fms)",
+                     inputFrames, mDesiredBufferingFrames, desiredBuffering,
+                     static_cast<float>(desiredBuffering) * 1000 /
+                         mDriftController->mSourceRate);
+      SetDesiredBuffering(
+          DesiredBuffering(desiredBuffering, mDriftController->mSourceRate));
+    }
+
+    // Very important to go first since DynamicResampler will get the sample
+    // format from the chunk.
     mResampler->AppendInput(aInput);
   }
   bool hasUnderrun = false;
   AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
-  mDriftController->UpdateClock(inputFrames, aOutputFrames,
-                                mResampler->InputReadableFrames(),
-                                mResampler->InputCapacityFrames());
+  mDriftController->UpdateClock(inputFrames, aOutputFrames, CurrentBuffering(),
+                                BufferSize());
   // Update resampler's rate if there is a new correction.
   mResampler->UpdateOutRate(mDriftController->GetCorrectedTargetRate());
   if (hasUnderrun) {
@@ -57,4 +90,13 @@ uint32_t AudioDriftCorrection::BufferSize() const {
 uint32_t AudioDriftCorrection::NumCorrectionChanges() const {
   return mDriftController->NumCorrectionChanges();
 }
+
+void AudioDriftCorrection::SetDesiredBuffering(
+    uint32_t aDesiredBufferingFrames) {
+  mDesiredBufferingFrames = aDesiredBufferingFrames;
+  mDriftController->SetDesiredBuffering(mDesiredBufferingFrames);
+  mResampler->SetPreBufferFrames(mDesiredBufferingFrames);
+}
 }  // namespace mozilla
+
+#undef LOG_CONTROLLER

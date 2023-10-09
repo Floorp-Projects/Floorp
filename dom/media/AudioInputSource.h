@@ -48,8 +48,7 @@ class AudioInputSource : public CubebInputStream::Listener {
   AudioInputSource(RefPtr<EventListener>&& aListener, Id aSourceId,
                    CubebUtils::AudioDeviceID aDeviceId, uint32_t aChannelCount,
                    bool aIsVoice, const PrincipalHandle& aPrincipalHandle,
-                   TrackRate aSourceRate, TrackRate aTargetRate,
-                   uint32_t aBufferMs);
+                   TrackRate aSourceRate, TrackRate aTargetRate);
 
   // The following functions should always be called in the same thread: They
   // are always run on MediaTrackGraph's graph thread.
