@@ -4357,89 +4357,85 @@ static bool malloc_init_hard() {
   // Get runtime configuration.
   if ((opts = getenv("MALLOC_OPTIONS"))) {
     for (i = 0; opts[i] != '\0'; i++) {
-      unsigned j, nreps;
-      bool nseen;
-
       // Parse repetition count, if any.
-      for (nreps = 0, nseen = false;; i++, nseen = true) {
-        switch (opts[i]) {
-          case '0':
-          case '1':
-          case '2':
-          case '3':
-          case '4':
-          case '5':
-          case '6':
-          case '7':
-          case '8':
-          case '9':
-            nreps *= 10;
-            nreps += opts[i] - '0';
-            break;
-          default:
-            goto MALLOC_OUT;
-        }
+      unsigned nreps = 0;
+      while (opts[i] >= '0' && opts[i] <= '9') {
+        nreps *= 10;
+        nreps += opts[i] - '0';
+        i++;
       }
-    MALLOC_OUT:
-      if (nseen == false) {
+      // If there were no digits then set nreps = 0.  Note that if all the
+      // digits where 0s this will still force at least one repetition.
+      if (nreps == 0) {
         nreps = 1;
       }
 
-      for (j = 0; j < nreps; j++) {
-        switch (opts[i]) {
-          case 'f':
-            opt_dirty_max >>= 1;
-            break;
-          case 'F':
-            if (opt_dirty_max == 0) {
-              opt_dirty_max = 1;
-            } else if ((opt_dirty_max << 1) != 0) {
-              opt_dirty_max <<= 1;
-            }
-            break;
+      switch (opts[i]) {
+        case 'f':
+          opt_dirty_max >>= nreps;
+          break;
+        case 'F':
+          if (opt_dirty_max == 0) {
+            opt_dirty_max = 1;
+            nreps--;
+          }
+          opt_dirty_max <<= nreps;
+          if (opt_dirty_max == 0) {
+            // If the shift above overflowed all the bits then clamp the result
+            // instead.  If we started with DIRTY_MAX_DEFAULT then this will
+            // always be a power of two so choose the maximum power of two that
+            // fits in a size_t.
+            opt_dirty_max = size_t(1) << (sizeof(size_t) * CHAR_BIT - 1);
+          }
+          break;
 #ifdef MALLOC_RUNTIME_CONFIG
-          case 'j':
-            opt_junk = false;
-            break;
-          case 'J':
-            opt_junk = true;
-            break;
-          case 'q':
-            opt_poison = false;
-            break;
-          case 'Q':
-            opt_poison = true;
-            break;
-          case 'z':
-            opt_zero = false;
-            break;
-          case 'Z':
-            opt_zero = true;
-            break;
+        case 'j':
+          opt_junk = false;
+          break;
+        case 'J':
+          opt_junk = true;
+          break;
+        case 'q':
+          opt_poison = false;
+          break;
+        case 'Q':
+          opt_poison = true;
+          break;
+        case 'z':
+          opt_zero = false;
+          break;
+        case 'Z':
+          opt_zero = true;
+          break;
 #  ifndef MALLOC_STATIC_PAGESIZE
-          case 'P':
-            if (gPageSize < 64_KiB) {
-              gPageSize <<= 1;
-            }
-            break;
+        case 'P':
+          MOZ_ASSERT(gPageSize >= 4_KiB);
+          MOZ_ASSERT(gPageSize <= 64_KiB);
+          gPageSize <<= nreps;
+          // We know that if the shift causes gPageSize to be zero then it's
+          // because it shifted all the bits off.  We didn't start with zero.
+          // Therefore if gPageSize is out of bounds we set it to 64KiB.
+          if (gPageSize < 4_KiB || gPageSize > 64_KiB) {
+            gPageSize = 64_KiB;
+          }
+          break;
 #  endif
 #endif
-          case 'r':
-            opt_randomize_small = false;
-            break;
-          case 'R':
-            opt_randomize_small = true;
-            break;
-          default: {
-            char cbuf[2];
+        case 'r':
+          opt_randomize_small = false;
+          break;
+        case 'R':
+          opt_randomize_small = true;
+          break;
+        default: {
+          char cbuf[2];
 
-            cbuf[0] = opts[i];
-            cbuf[1] = '\0';
-            _malloc_message(_getprogname(),
-                            ": (malloc) Unsupported character "
-                            "in malloc options: '",
-                            cbuf, "'\n");
-          }
+          cbuf[0] = opts[i];
+          cbuf[1] = '\0';
+          _malloc_message(_getprogname(),
+                          ": (malloc) Unsupported character "
+                          "in malloc options: '",
+                          cbuf, "'\n");
         }
       }
     }
