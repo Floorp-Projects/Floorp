@@ -219,6 +219,69 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if an accessible is a keyboard focusable browser toolbar button.
+   * Browser toolbar buttons aren't keyboard focusable in the normal way.
+   * Instead, focus is managed by JS code which sets tabindex on a single
+   * button at a time. Thus, we need to special case the focusable check for
+   * these buttons.
+   */
+  function isKeyboardFocusableBrowserToolbarButton(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const toolbar = node.closest("toolbar");
+    if (!toolbar || toolbar.getAttribute("keyNav") != "true") {
+      return false;
+    }
+    return node.ownerGlobal.ToolbarKeyboardNavigator._isButton(node);
+  }
+
+  /**
+   * Determine if an accessible is a keyboard focusable PanelMultiView control.
+   * These controls aren't keyboard focusable in the normal way. Instead, focus
+   * is managed by JS code which sets tabindex dynamically. Thus, we need to
+   * special case the focusable check for these controls.
+   */
+  function isKeyboardFocusablePanelMultiViewControl(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const panelview = node.closest("panelview");
+    if (!panelview || panelview.hasAttribute("disablekeynav")) {
+      return false;
+    }
+    return (
+      node.ownerGlobal.PanelView.forNode(panelview)._tabNavigableWalker.filter(
+        node
+      ) == NodeFilter.FILTER_ACCEPT
+    );
+  }
+
+  /**
+   * Determine if an accessible is a keyboard focusable XUL tab.
+   * Only one tab is focusable at a time, but after focusing it, you can use
+   * the keyboard to focus other tabs.
+   */
+  function isKeyboardFocusableXULTab(accessible) {
+    const node = accessible.DOMNode;
+    return node && XULElement.isInstance(node) && node.tagName == "tab";
+  }
+
+  /**
+   * Determine if a node is a XUL element for which tabIndex should be ignored.
+   * Some XUL elements report -1 for the .tabIndex property, even though they
+   * are in fact keyboard focusable.
+   */
+  function shouldIgnoreTabIndex(node) {
+    if (!XULElement.isInstance(node)) {
+      return false;
+    }
+    return node.tagName == "label" && node.getAttribute("is") == "text-link";
+  }
+
+  /**
    * Determine if accessible is focusable with the keyboard.
    *
    * @param   {nsIAccessible} accessible
@@ -228,13 +291,31 @@ this.AccessibilityUtils = (function () {
    *          True if focusable with the keyboard.
    */
   function isKeyboardFocusable(accessible) {
+    if (
+      isKeyboardFocusableBrowserToolbarButton(accessible) ||
+      isKeyboardFocusablePanelMultiViewControl(accessible) ||
+      isKeyboardFocusableXULTab(accessible)
+    ) {
+      return true;
+    }
     // State will be focusable even if the tabindex is negative.
+    const node = accessible.DOMNode;
+    const role = accessible.role;
     return (
       matchState(accessible, STATE_FOCUSABLE) &&
       // Platform accessibility will still report STATE_FOCUSABLE even with the
       // tabindex="-1" so we need to check that it is >= 0 to be considered
       // keyboard focusable.
-      (!gEnv.nonNegativeTabIndexRule || accessible.DOMNode.tabIndex > -1)
+      (!gEnv.nonNegativeTabIndexRule ||
+        node.tabIndex > -1 ||
+        node.closest('[aria-activedescendant][tabindex="0"]') ||
+        // If an ARIA toolbar uses a roving tabindex, some controls on the
+        // toolbar might not currently be focusable even though they can be
+        // reached with arrow keys and become focusable at that point.
+        ((role == Ci.nsIAccessibleRole.ROLE_PUSHBUTTON ||
+          role == Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON) &&
+          node.closest('[role="toolbar"]')) ||
+        shouldIgnoreTabIndex(node))
     );
   }
 
