@@ -686,6 +686,7 @@ bool gfxUserFontEntry::LoadPlatformFont(uint32_t aSrcIndex,
   RefPtr<gfxUserFontSet> fontSet = GetUserFontSet();
   if (NS_WARN_IF(!fontSet)) {
     free((void*)aOriginalFontData);
+    free((void*)aSanitizedFontData);
     return false;
   }
 
