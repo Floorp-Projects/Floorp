@@ -15,8 +15,10 @@ support-files = [
 skip-if = ["!updater"]
 
 ["browser_application_xml_handle_internally.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_applications_selection.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#typeColumn and treecol#actionColumn may not be focusable
 
 ["browser_basic_rebuild_fonts_test.js"]
 
@@ -74,10 +76,12 @@ skip-if = ["socketprocess_networking"]
 ["browser_cookie_exceptions_addRemove.js"]
 
 ["browser_cookies_exceptions.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#siteCol may not be focusable
 
 ["browser_defaultbrowser_alwayscheck.js"]
 
 ["browser_engines.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treechildren#engineChildren may not be focusable
 
 ["browser_ensure_prefs_bindings_initted.js"]
 
@@ -102,6 +106,7 @@ skip-if = [
 ]
 
 ["browser_filetype_dialog.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_fluent.js"]
 
@@ -128,6 +133,7 @@ skip-if = ["os != 'mac'"]
 ["browser_layersacceleration.js"]
 
 ["browser_localSearchShortcuts.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treechildren#engineChildren may not be focusable
 
 ["browser_moreFromMozilla.js"]
 
@@ -145,6 +151,7 @@ support-files = ["empty_pdf_file.pdf"]
 ["browser_password_management.js"]
 
 ["browser_pdf_disabled.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist.actionsMenu may not be labeled
 
 ["browser_performance.js"]
 
@@ -158,6 +165,7 @@ skip-if = ["true"]
 ["browser_permissions_checkPermissionsWereAdded.js"]
 
 ["browser_permissions_dialog.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#statusCol, treecol#siteCol may not be focusable
 
 ["browser_permissions_dialog_default_perm.js"]
 
@@ -198,6 +206,7 @@ support-files = [
   "engine1/manifest.json",
   "engine2/manifest.json",
 ]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked menulist#defaultEngine, menulist#defaultPrivateEngine may not be labeled
 
 ["browser_searchFindMoreLink.js"]
 
@@ -263,6 +272,7 @@ support-files = [
   "subdialog.xhtml",
   "subdialog2.xhtml",
 ]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked label.dialogTitle, vbox#dialogTemplate.dialogOverlay may not be focusable
 
 ["browser_sync_chooseWhatToSync.js"]
 
