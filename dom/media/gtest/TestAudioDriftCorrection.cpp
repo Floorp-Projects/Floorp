@@ -462,3 +462,67 @@ TEST(TestAudioDriftCorrection, HighLatencyProducerLowLatencyConsumer)
   // Input is stable so no corrections should occur.
   EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
 }
+
+TEST(TestAudioDriftCorrection, LargerTransmitterBlockSizeThanDesiredBuffering)
+{
+  constexpr uint32_t transmitterBlockSize = 4096;
+  constexpr uint32_t receiverBlockSize = 128;
+  constexpr uint32_t sampleRate = 48000;
+  constexpr uint32_t bufferingMs = 50;  // 2400 frames
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+
+  uint32_t numBlocksTransmitted = 0;
+  for (uint32_t i = 0; i < (sampleRate / 1000) * 500; i += receiverBlockSize) {
+    AudioSegment inSegment;
+    if (uint32_t currentBlock = i / transmitterBlockSize;
+        currentBlock > numBlocksTransmitted) {
+      AudioChunk chunk = CreateAudioChunk<float>(transmitterBlockSize, 1,
+                                                 AUDIO_FORMAT_FLOAT32);
+      inSegment.AppendAndConsumeChunk(std::move(chunk));
+      numBlocksTransmitted = currentBlock;
+    }
+
+    AudioSegment outSegment = ad.RequestFrames(inSegment, receiverBlockSize);
+    EXPECT_EQ(outSegment.GetDuration(), receiverBlockSize);
+
+    if (numBlocksTransmitted > 0) {
+      EXPECT_GT(ad.CurrentBuffering(), 0U);
+    }
+  }
+
+  // Input is stable so no corrections should occur.
+  EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+}
+
+TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
+{
+  constexpr uint32_t transmitterBlockSize = 128;
+  constexpr uint32_t receiverBlockSize = 4096;
+  constexpr uint32_t sampleRate = 48000;
+  constexpr uint32_t bufferingMs = 50;  // 2400 frames
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+
+  for (uint32_t i = 0; i < (sampleRate / 1000) * 500;
+       i += transmitterBlockSize) {
+    AudioSegment inSegment;
+    AudioChunk chunk =
+        CreateAudioChunk<float>(transmitterBlockSize, 1, AUDIO_FORMAT_FLOAT32);
+    inSegment.AppendAndConsumeChunk(std::move(chunk));
+
+    if (i % receiverBlockSize == 0) {
+      AudioSegment outSegment = ad.RequestFrames(inSegment, receiverBlockSize);
+      EXPECT_EQ(outSegment.GetDuration(), receiverBlockSize);
+    }
+
+    if (i >= receiverBlockSize) {
+      EXPECT_GT(ad.CurrentBuffering(), 0U);
+    }
+  }
+
+  // Input is stable so no corrections should occur.
+  EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+}
