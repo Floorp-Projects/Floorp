@@ -13,10 +13,13 @@ TEST_DIRS += [
 
 EXPORTS += [
     "AudioDriftCorrection.h",
-    "DynamicResampler.h",
 ]
 
 UNIFIED_SOURCES += [
+    "AudioChunkList.cpp",
+    "AudioDriftCorrection.cpp",
+    "AudioResampler.cpp",
+    "ClockDrift.cpp",
     "DynamicResampler.cpp",
 ]
 

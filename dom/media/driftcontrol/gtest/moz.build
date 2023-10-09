@@ -5,7 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    "TestAudioChunkList.cpp",
     "TestAudioDriftCorrection.cpp",
+    "TestAudioResampler.cpp",
+    "TestClockDrift.cpp",
     "TestDynamicResampler.cpp",
 ]
 

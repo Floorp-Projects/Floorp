@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-*/
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "AudioDriftCorrection.h"
+
+#include "AudioResampler.h"
+#include "ClockDrift.h"
+
+namespace mozilla {
+
+static constexpr uint32_t kMinBufferMs = 5;
+
+AudioDriftCorrection::AudioDriftCorrection(
+    uint32_t aSourceRate, uint32_t aTargetRate, uint32_t aBufferMs,
+    const PrincipalHandle& aPrincipalHandle)
+    : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate / 1000),
+      mTargetRate(aTargetRate),
+      mClockDrift(
+          MakeUnique<ClockDrift>(aSourceRate, aTargetRate, mDesiredBuffering)),
+      mResampler(MakeUnique<AudioResampler>(
+          aSourceRate, aTargetRate, mDesiredBuffering, aPrincipalHandle)) {}
+
+AudioDriftCorrection::~AudioDriftCorrection() = default;
+
+AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
+                                                 uint32_t aOutputFrames) {
+  // Very important to go first since the Dynamic will get the sample format
+  // from the chunk.
+  if (aInput.GetDuration()) {
+    // Always go through the resampler because the clock might shift later.
+    mResampler->AppendInput(aInput);
+  }
+  mClockDrift->UpdateClock(aInput.GetDuration(), aOutputFrames,
+                           mResampler->InputReadableFrames(),
+                           mResampler->InputWritableFrames());
+  TrackRate receivingRate = mTargetRate * mClockDrift->GetCorrection();
+  // Update resampler's rate if there is a new correction.
+  mResampler->UpdateOutRate(receivingRate);
+  // If it does not have enough frames the result will be an empty segment.
+  AudioSegment output = mResampler->Resample(aOutputFrames);
+  if (output.IsEmpty()) {
+    NS_WARNING("Got nothing from the resampler");
+    output.AppendNullData(aOutputFrames);
+  }
+  return output;
+}
+
+uint32_t AudioDriftCorrection::CurrentBuffering() const {
+  return mResampler->InputReadableFrames();
+}
+
+uint32_t AudioDriftCorrection::NumCorrectionChanges() const {
+  return mClockDrift->NumCorrectionChanges();
+}
+}  // namespace mozilla

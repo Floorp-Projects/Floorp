@@ -3,146 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_AUDIO_DRIFT_CORRECTION_H_
-#define MOZILLA_AUDIO_DRIFT_CORRECTION_H_
+#ifndef DOM_MEDIA_DRIFTCONTROL_AUDIODRIFTCORRECTION_H_
+#define DOM_MEDIA_DRIFTCONTROL_AUDIODRIFTCORRECTION_H_
 
-#include "DynamicResampler.h"
+#include "AudioSegment.h"
 
 namespace mozilla {
 
-extern LazyLogModule gMediaTrackGraphLog;
-
-/**
- * ClockDrift calculates the diverge of the source clock from the nominal
- * (provided) rate compared to the target clock, which is considered the master
- * clock. In the case of different sampling rates, it is assumed that resampling
- * will take place so the returned correction is estimated after the resampling.
- * That means that resampling is taken into account in the calculations but it
- * does appear in the correction. The correction must be applied to the top of
- * the resampling.
- *
- * It works by measuring the incoming, the outgoing frames, and the amount of
- * buffered data and estimates the correction needed. The correction logic has
- * been created with two things in mind. First, not to run out of frames because
- * that means the audio will glitch. Second, not to change the correction very
- * often because this will result in a change in the resampling ratio. The
- * resampler recreates its internal memory when the ratio changes which has a
- * performance impact.
- *
- * The pref `media.clock drift.buffering` can be used to configure the desired
- * internal buffering. Right now it is at 50ms. But it can be increased if there
- * are audio quality problems.
- */
-class ClockDrift final {
- public:
-  /**
-   * Provide the nominal source and the target sample rate.
-   */
-  ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
-             uint32_t aDesiredBuffering)
-      : mSourceRate(aSourceRate),
-        mTargetRate(aTargetRate),
-        mDesiredBuffering(aDesiredBuffering) {}
-
-  /**
-   * The correction in the form of a ratio. A correction of 0.98 means that the
-   * target is 2% slower compared to the source or 1.03 which means that the
-   * target is 3% faster than the source.
-   */
-  float GetCorrection() { return mCorrection; }
-
-  /**
-   * The number of times mCorrection has been changed to adjust to drift.
-   */
-  uint32_t NumCorrectionChanges() const { return mNumCorrectionChanges; }
-
-  /**
-   * Update the available source frames, target frames, and the current
-   * buffer, in every iteration. If the conditions are met a new correction is
-   * calculated. A new correction is calculated in the following cases:
-   *   1. Every mAdjustmentIntervalMs milliseconds (1000ms).
-   *   2. Every time we run low on buffered frames (less than 20ms).
-   * In addition to that, the correction is clamped to 10% to avoid sound
-   * distortion so the result will be in [0.9, 1.1].
-   */
-  void UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
-                   uint32_t aBufferedFrames, uint32_t aRemainingFrames) {
-    if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
-      // Only update the correction if 100ms has passed since last update.
-      if (aBufferedFrames < mDesiredBuffering * 4 / 10 /*40%*/ ||
-          aRemainingFrames < mDesiredBuffering * 4 / 10 /*40%*/) {
-        // We are getting close to the lower or upper bound of the internal
-        // buffer. Steer clear.
-        CalculateCorrection(0.9, aBufferedFrames, aRemainingFrames);
-      } else if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs ||
-                 (mSourceClock * 1000 / mSourceRate) >= mAdjustmentIntervalMs) {
-        // The adjustment interval has passed on one side. Recalculate.
-        CalculateCorrection(0.6, aBufferedFrames, aRemainingFrames);
-      }
-    }
-    mTargetClock += aTargetFrames;
-    mSourceClock += aSourceFrames;
-  }
-
- private:
-  /**
-   * aCalculationWeight is a percentage [0, 1] with which the calculated
-   * correction will be weighted. The existing correction will be weighted with
-   * 1 - aCalculationWeight. This gives some inertia to the speed at which the
-   * correction changes, for smoother changes.
-   */
-  void CalculateCorrection(float aCalculationWeight, uint32_t aBufferedFrames,
-                           uint32_t aRemainingFrames) {
-    // We want to maintain the desired buffer
-    uint32_t bufferedFramesDiff = aBufferedFrames - mDesiredBuffering;
-    uint32_t resampledSourceClock =
-        std::max(1u, mSourceClock + bufferedFramesDiff);
-    if (mTargetRate != mSourceRate) {
-      resampledSourceClock *= static_cast<float>(mTargetRate) / mSourceRate;
-    }
-
-    MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
-            ("ClockDrift %p Calculated correction %.3f (with weight: %.1f -> "
-             "%.3f) (buffer: %u, desired: %u, remaining: %u)",
-             this, static_cast<float>(mTargetClock) / resampledSourceClock,
-             aCalculationWeight,
-             (1 - aCalculationWeight) * mCorrection +
-                 aCalculationWeight * mTargetClock / resampledSourceClock,
-             aBufferedFrames, mDesiredBuffering, aRemainingFrames));
-
-    auto oldCorrection = mCorrection;
-
-    mCorrection = (1 - aCalculationWeight) * mCorrection +
-                  aCalculationWeight * mTargetClock / resampledSourceClock;
-
-    if (oldCorrection != mCorrection) {
-      // Do the comparison pre-clamping as a low number of correction changes
-      // should indicate that we are close to the desired buffering (correction
-      // 1).
-      ++mNumCorrectionChanges;
-    }
-
-    // Clamp to range [0.9, 1.1] to avoid distortion
-    mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
-
-    // Reset the counters to prepare for the next period.
-    mTargetClock = 0;
-    mSourceClock = 0;
-  }
-
- public:
-  const uint32_t mSourceRate;
-  const uint32_t mTargetRate;
-  const uint32_t mAdjustmentIntervalMs = 1000;
-  const uint32_t mDesiredBuffering;
-
- private:
-  float mCorrection = 1.0;
-  uint32_t mNumCorrectionChanges = 0;
-
-  uint32_t mSourceClock = 0;
-  uint32_t mTargetClock = 0;
-};
+class AudioResampler;
+class ClockDrift;
 
 /**
  * Correct the drift between two independent clocks, the source, and the target
@@ -169,13 +38,9 @@ class AudioDriftCorrection final {
  public:
   AudioDriftCorrection(uint32_t aSourceRate, uint32_t aTargetRate,
                        uint32_t aBufferMs,
-                       const PrincipalHandle& aPrincipalHandle)
-      : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate /
-                          1000),
-        mTargetRate(aTargetRate),
-        mClockDrift(aSourceRate, aTargetRate, mDesiredBuffering),
-        mResampler(aSourceRate, aTargetRate, mDesiredBuffering,
-                   aPrincipalHandle) {}
+                       const PrincipalHandle& aPrincipalHandle);
+
+  ~AudioDriftCorrection();
 
   /**
    * The source audio frames and request the number of target audio frames must
@@ -187,43 +52,21 @@ class AudioDriftCorrection final {
    * AudioSegment will be returned. Not thread-safe.
    */
   AudioSegment RequestFrames(const AudioSegment& aInput,
-                             uint32_t aOutputFrames) {
-    // Very important to go first since the Dynamic will get the sample format
-    // from the chunk.
-    if (aInput.GetDuration()) {
-      // Always go through the resampler because the clock might shift later.
-      mResampler.AppendInput(aInput);
-    }
-    mClockDrift.UpdateClock(aInput.GetDuration(), aOutputFrames,
-                            mResampler.InputReadableFrames(),
-                            mResampler.InputWritableFrames());
-    TrackRate receivingRate = mTargetRate * mClockDrift.GetCorrection();
-    // Update resampler's rate if there is a new correction.
-    mResampler.UpdateOutRate(receivingRate);
-    // If it does not have enough frames the result will be an empty segment.
-    AudioSegment output = mResampler.Resample(aOutputFrames);
-    if (output.IsEmpty()) {
-      NS_WARNING("Got nothing from the resampler");
-      output.AppendNullData(aOutputFrames);
-    }
-    return output;
-  }
+                             uint32_t aOutputFrames);
 
   // Only accessible from the same thread that is driving RequestFrames().
-  uint32_t CurrentBuffering() const { return mResampler.InputReadableFrames(); }
+  uint32_t CurrentBuffering() const;
 
   // Only accessible from the same thread that is driving RequestFrames().
-  uint32_t NumCorrectionChanges() const {
-    return mClockDrift.NumCorrectionChanges();
-  }
+  uint32_t NumCorrectionChanges() const;
 
   const uint32_t mDesiredBuffering;
   const uint32_t mTargetRate;
 
  private:
-  ClockDrift mClockDrift;
-  AudioResampler mResampler;
+  const UniquePtr<ClockDrift> mClockDrift;
+  const UniquePtr<AudioResampler> mResampler;
 };
 
-};     // namespace mozilla
-#endif /* MOZILLA_AUDIO_DRIFT_CORRECTION_H_ */
+}  // namespace mozilla
+#endif  // DOM_MEDIA_DRIFTCONTROL_AUDIODRIFTCORRECTION_H_
