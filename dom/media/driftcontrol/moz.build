@@ -19,7 +19,7 @@ UNIFIED_SOURCES += [
     "AudioChunkList.cpp",
     "AudioDriftCorrection.cpp",
     "AudioResampler.cpp",
-    "ClockDrift.cpp",
+    "DriftController.cpp",
     "DynamicResampler.cpp",
 ]
 

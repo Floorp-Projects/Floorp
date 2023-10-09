@@ -8,7 +8,7 @@ UNIFIED_SOURCES += [
     "TestAudioChunkList.cpp",
     "TestAudioDriftCorrection.cpp",
     "TestAudioResampler.cpp",
-    "TestClockDrift.cpp",
+    "TestDriftController.cpp",
     "TestDynamicResampler.cpp",
 ]
 

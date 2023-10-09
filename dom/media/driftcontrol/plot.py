@@ -9,8 +9,8 @@
 # Install dependencies with:
 #   > pip install bokeh pandas
 #
-# Generate the csv data file with the ClockDriftGraphs log module:
-#   > MOZ_LOG=raw,sync,ClockDriftGraphs:5 \
+# Generate the csv data file with the DriftControllerGraphs log module:
+#   > MOZ_LOG=raw,sync,DriftControllerGraphs:5 \
 #   > MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
 #   > ./mach gtest '*AudioDrift*StepResponse'
 #
@@ -32,13 +32,13 @@ from bokeh.plotting import figure
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="plot.py for ClockDriftGraphs",
-        description="""Takes a csv file of ClockDriftGraphs data
-(from a single ClockDrift instance) and plots
+        prog="plot.py for DriftControllerGraphs",
+        description="""Takes a csv file of DriftControllerGraphs data
+(from a single DriftController instance) and plots
 them into plot.html in the current working directory.
 
 The easiest way to produce the data is with MOZ_LOG:
-MOZ_LOG=raw,sync,ClockDriftGraphs:5 \
+MOZ_LOG=raw,sync,DriftControllerGraphs:5 \
 MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
 ./mach gtest '*AudioDrift*StepResponse'""",
     )
@@ -60,6 +60,14 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         inrate = df["inrate"]
         outrate = df["outrate"]
         corrected = df["corrected"]
+        configured = df["configured"]
+        p = df["p"]
+        i = df["i"]
+        d = df["d"]
+        kpp = df["kpp"]
+        kii = df["kii"]
+        kdd = df["kdd"]
+        control = df["control"]
 
         output_file("plot.html")
 
@@ -75,14 +83,32 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         fig2.line(
             t, corrected, color="dodgerblue", legend_label="Corrected out sample rate"
         )
+        fig2.line(
+            t, configured, color="goldenrod", legend_label="Configured out sample rate"
+        )
+
+        fig3 = figure(x_range=fig1.x_range)
+        fig3.line(t, p, color="goldenrod", legend_label="P")
+        fig3.line(t, i, color="dodgerblue", legend_label="I")
+        fig3.line(t, d, color="seagreen", legend_label="D")
+
+        fig4 = figure(x_range=fig1.x_range)
+        fig4.line(t, kpp, color="goldenrod", legend_label="KpP")
+        fig4.line(t, kii, color="dodgerblue", legend_label="KiI")
+        fig4.line(t, kdd, color="seagreen", legend_label="KdD")
+        fig4.line(t, control, color="hotpink", legend_label="Control Signal")
 
         fig1.legend.location = "top_left"
         fig2.legend.location = "top_right"
-        for fig in (fig1, fig2):
+        fig3.legend.location = "bottom_left"
+        fig4.legend.location = "bottom_right"
+        for fig in (fig1, fig2, fig3, fig4):
             fig.legend.background_fill_alpha = 0.6
             fig.legend.click_policy = "hide"
 
-        tabs.append(TabPanel(child=gridplot([[fig1, fig2]]), title=str(id)))
+        tabs.append(
+            TabPanel(child=gridplot([[fig1, fig2], [fig3, fig4]]), title=str(id))
+        )
 
     show(Tabs(tabs=tabs))
 

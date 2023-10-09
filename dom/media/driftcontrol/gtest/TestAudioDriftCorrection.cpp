@@ -50,20 +50,20 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   uint32_t sourceFrames;
   const uint32_t targetFrames = sampleRateReceiver / 100;
 
-  // Run for some time: 3 * 1050 = 3150 iterations
+  // Run for some time: 3 * 5000 = 15000 iterations
   for (uint32_t j = 0; j < 3; ++j) {
     // apply some drift
     if (j % 2 == 0) {
       sourceFrames =
-          sampleRateTransmitter * /*1.02*/ 102 / 100 / /*1s->10ms*/ 100;
+          sampleRateTransmitter * /*1.002*/ 1002 / 1000 / /*1s->10ms*/ 100;
     } else {
       sourceFrames =
-          sampleRateTransmitter * /*0.98*/ 98 / 100 / /*1s->10ms*/ 100;
+          sampleRateTransmitter * /*0.998*/ 998 / 1000 / /*1s->10ms*/ 100;
     }
 
-    // 10.5 seconds, allows for at least 10 correction changes, to stabilize
-    // around the desired buffer.
-    for (uint32_t n = 0; n < 1050; ++n) {
+    // 50 seconds, allows for at least 50 correction changes, to stabilize
+    // on the current drift.
+    for (uint32_t n = 0; n < 5000; ++n) {
       // Create the input (sine tone)
       AudioSegment inSegment;
       tone.Generate(inSegment, sourceFrames);
@@ -409,7 +409,7 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
 
 /**
  * This is helpful to run together with
- *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ *   MOZ_LOG=raw,DriftControllerGraphs:5 MOZ_LOG_FILE=./plot_values.csv
  * to be able to plot the step response of a change in source clock rate (i.e.
  * drift). Useful for calculating and verifying PID coefficients.
  */
@@ -435,7 +435,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponse)
 /**
  * Similar to DriftStepResponse but will underrun to allow testing the underrun
  * handling. This is helpful to run together with
- *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ *   MOZ_LOG=raw,DriftControllerGraphs:5 MOZ_LOG_FILE=./plot_values.csv
  */
 TEST(TestAudioDriftCorrection, DriftStepResponseUnderrun)
 {
@@ -470,7 +470,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrun)
 /**
  * Similar to DriftStepResponse but with a high-latency input, and will underrun
  * to allow testing the underrun handling. This is helpful to run together with
- *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ *   MOZ_LOG=raw,DriftControllerGraphs:5 MOZ_LOG_FILE=./plot_values.csv
  */
 TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
 {
@@ -511,7 +511,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
  * (input callback buffer is larger than AudioDriftCorrection's ring buffer for
  * input data) to allow testing the overrun handling. This is helpful to run
  * together with
- *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ *   MOZ_LOG=raw,DriftControllerGraphs:5 MOZ_LOG_FILE=./plot_values.csv
  */
 TEST(TestAudioDriftCorrection, DriftStepResponseOverrun)
 {
