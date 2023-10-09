@@ -444,8 +444,8 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::BeginFinishing(
   if (mCloseHandler->SetClosing()) {
     Finish()
         ->Then(mTaskQueue, __func__,
-               [streamOwner = mStreamOwner]() mutable {
-                 streamOwner->Close();
+               [selfHolder = fs::TargetPtrHolder(this)]() mutable {
+                 selfHolder->mStreamOwner->Close();
 
                  return BoolPromise::CreateAndResolve(true, __func__);
                })
@@ -901,25 +901,27 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::Seek(uint64_t aPosition) {
 
   LOG_VERBOSE(("%p: Seeking to %" PRIu64, mStreamOwner.get(), aPosition));
 
-  return InvokeAsync(mTaskQueue, __func__,
-                     [aPosition, streamOwner = mStreamOwner]() mutable {
-                       QM_TRY(MOZ_TO_RESULT(streamOwner->Seek(aPosition)),
-                              CreateAndRejectBoolPromise);
+  return InvokeAsync(
+      mTaskQueue, __func__,
+      [selfHolder = fs::TargetPtrHolder(this), aPosition]() mutable {
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStreamOwner->Seek(aPosition)),
+               CreateAndRejectBoolPromise);
 
-                       return BoolPromise::CreateAndResolve(true, __func__);
-                     });
+        return BoolPromise::CreateAndResolve(true, __func__);
+      });
 }
 
 RefPtr<BoolPromise> FileSystemWritableFileStream::Truncate(uint64_t aSize) {
   MOZ_ASSERT(IsOpen());
 
-  return InvokeAsync(mTaskQueue, __func__,
-                     [aSize, streamOwner = mStreamOwner]() mutable {
-                       QM_TRY(MOZ_TO_RESULT(streamOwner->Truncate(aSize)),
-                              CreateAndRejectBoolPromise);
+  return InvokeAsync(
+      mTaskQueue, __func__,
+      [selfHolder = fs::TargetPtrHolder(this), aSize]() mutable {
+        QM_TRY(MOZ_TO_RESULT(selfHolder->mStreamOwner->Truncate(aSize)),
+               CreateAndRejectBoolPromise);
 
-                       return BoolPromise::CreateAndResolve(true, __func__);
-                     });
+        return BoolPromise::CreateAndResolve(true, __func__);
+      });
 }
 
 void FileSystemWritableFileStream::NoteFinishedCommand() {
