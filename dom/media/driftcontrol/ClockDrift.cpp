@@ -41,6 +41,10 @@ ClockDrift::ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
 void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
                              uint32_t aBufferedFrames,
                              uint32_t aRemainingFrames) {
+  mTargetClock += aTargetFrames;
+  mSourceClock += aSourceFrames;
+  mTotalTargetClock += aTargetFrames;
+
   if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
     // Only update the correction if 100ms has passed since last update.
     if (aBufferedFrames < mDesiredBuffering * 4 / 10 /*40%*/ ||
@@ -54,9 +58,6 @@ void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
       CalculateCorrection(0.6, aBufferedFrames, aRemainingFrames);
     }
   }
-  mTargetClock += aTargetFrames;
-  mSourceClock += aSourceFrames;
-  mTotalTargetClock += aTargetFrames;
 }
 
 void ClockDrift::CalculateCorrection(float aCalculationWeight,
