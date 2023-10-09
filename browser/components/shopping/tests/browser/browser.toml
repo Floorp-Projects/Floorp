@@ -12,6 +12,8 @@ prefs = [
 
 ["browser_adjusted_rating.js"]
 
+["browser_analysis_explainer.js"]
+
 ["browser_exposure_telemetry.js"]
 
 ["browser_inprogress_analysis.js"]
