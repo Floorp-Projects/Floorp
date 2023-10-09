@@ -33,6 +33,14 @@ class RingBuffer final {
   }
 
   /**
+   * Write `aSamples` number of zeros in the buffer, before any existing data.
+   */
+  uint32_t PrependSilence(uint32_t aSamples) {
+    MOZ_ASSERT(aSamples);
+    return Prepend(Span<T>(), aSamples);
+  }
+
+  /**
    * Write `aSamples` number of zeros in the buffer.
    */
   uint32_t WriteSilence(uint32_t aSamples) {
@@ -49,6 +57,42 @@ class RingBuffer final {
   }
 
  private:
+  /**
+   * Copy `aSamples` number of elements from `aBuffer` to the beginning of the
+   * RingBuffer. If `aBuffer` is empty prepend `aSamples` of zeros.
+   */
+  uint32_t Prepend(const Span<const T>& aBuffer, uint32_t aSamples) {
+    MOZ_ASSERT(aSamples > 0);
+    MOZ_ASSERT(aBuffer.IsEmpty() || aBuffer.Length() == aSamples);
+
+    if (IsFull()) {
+      return 0;
+    }
+
+    uint32_t toWrite = std::min(AvailableWrite(), aSamples);
+    uint32_t part2 = std::min(mReadIndex, toWrite);
+    uint32_t part1 = toWrite - part2;
+
+    Span<T> part2Buffer = mStorage.Subspan(mReadIndex - part2, part2);
+    Span<T> part1Buffer = mStorage.Subspan(Capacity() - part1, part1);
+
+    if (!aBuffer.IsEmpty()) {
+      Span<const T> fromPart1 = aBuffer.To(part1);
+      Span<const T> fromPart2 = aBuffer.Subspan(part1, part2);
+
+      CopySpan(part1Buffer, fromPart1);
+      CopySpan(part2Buffer, fromPart2);
+    } else {
+      // aBuffer is empty, prepend zeros.
+      PodZero(part1Buffer.Elements(), part1Buffer.Length());
+      PodZero(part2Buffer.Elements(), part2Buffer.Length());
+    }
+
+    mReadIndex = NextIndex(mReadIndex, Capacity() - toWrite);
+
+    return toWrite;
+  }
+
   /**
    * Copy `aSamples` number of elements from `aBuffer` to the RingBuffer. If
    * `aBuffer` is empty append `aSamples` of zeros.
@@ -350,6 +394,18 @@ uint32_t AudioRingBuffer::Write(const AudioRingBuffer& aBuffer,
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   return mPtr->mFloatRingBuffer->Write(aBuffer.mPtr->mFloatRingBuffer.ref(),
                                        aSamples);
+}
+
+uint32_t AudioRingBuffer::PrependSilence(uint32_t aSamples) {
+  MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
+             mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
+  MOZ_ASSERT(!mPtr->mBackingBuffer);
+  if (mPtr->mSampleFormat == AUDIO_FORMAT_S16) {
+    MOZ_ASSERT(!mPtr->mFloatRingBuffer);
+    return mPtr->mIntRingBuffer->PrependSilence(aSamples);
+  }
+  MOZ_ASSERT(!mPtr->mIntRingBuffer);
+  return mPtr->mFloatRingBuffer->PrependSilence(aSamples);
 }
 
 uint32_t AudioRingBuffer::WriteSilence(uint32_t aSamples) {

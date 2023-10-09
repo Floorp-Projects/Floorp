@@ -5,10 +5,12 @@
 
 #include "AudioRingBuffer.h"
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mozilla/PodOperations.h"
 
 using namespace mozilla;
+using testing::ElementsAre;
 
 TEST(TestAudioRingBuffer, BasicFloat)
 {
@@ -990,4 +992,104 @@ TEST(TestAudioRingBuffer, WriteFromRingFloat)
   for (uint32_t i = 0; i < rv; ++i) {
     EXPECT_FLOAT_EQ(out2[i], in[i]);
   }
+}
+
+TEST(TestAudioRingBuffer, PrependSilenceWrapsFloat)
+{
+  AudioRingBuffer rb(9 * sizeof(float));
+  rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
+
+  float in[6] = {.2, .3, .4, .5, .6, .7};
+  uint32_t rv = rb.Write(Span(in, 6));
+  EXPECT_EQ(rv, 6u);
+
+  float out[8] = {};
+  auto outSpan = Span(out, 8);
+  rv = rb.Read(outSpan.Subspan(0, 1));
+  EXPECT_EQ(rv, 1u);
+
+  // PrependSilence will have to wrap around the start and put the silent
+  // samples at indices 0 and 8 of the ring buffer.
+  rv = rb.PrependSilence(2);
+  EXPECT_EQ(rv, 2u);
+
+  rv = rb.Read(outSpan.Subspan(1, 7));
+  EXPECT_EQ(rv, 7u);
+
+  EXPECT_THAT(out, ElementsAre(.2, 0, 0, .3, .4, .5, .6, .7));
+}
+
+TEST(TestAudioRingBuffer, PrependSilenceWrapsShort)
+{
+  AudioRingBuffer rb(9 * sizeof(short));
+  rb.SetSampleFormat(AUDIO_FORMAT_S16);
+
+  short in[6] = {2, 3, 4, 5, 6, 7};
+  uint32_t rv = rb.Write(Span(in, 6));
+  EXPECT_EQ(rv, 6u);
+
+  short out[8] = {};
+  auto outSpan = Span(out, 8);
+  rv = rb.Read(outSpan.Subspan(0, 1));
+  EXPECT_EQ(rv, 1u);
+
+  // PrependSilence will have to wrap around the start and put the silent
+  // samples at indices 0 and 8 of the ring buffer.
+  rv = rb.PrependSilence(2);
+  EXPECT_EQ(rv, 2u);
+
+  rv = rb.Read(outSpan.Subspan(1, 7));
+  EXPECT_EQ(rv, 7u);
+
+  EXPECT_THAT(out, ElementsAre(2, 0, 0, 3, 4, 5, 6, 7));
+}
+
+TEST(TestAudioRingBuffer, PrependSilenceNoWrapFloat)
+{
+  AudioRingBuffer rb(9 * sizeof(float));
+  rb.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
+
+  float in[6] = {.2, .3, .4, .5, .6, .7};
+  uint32_t rv = rb.Write(Span(in, 6));
+  EXPECT_EQ(rv, 6u);
+
+  float out[8] = {};
+  auto outSpan = Span(out, 8);
+  rv = rb.Read(outSpan.To(4));
+  EXPECT_EQ(rv, 4u);
+
+  // PrependSilence will put the silent samples at indices 2 and 3 of the ring
+  // buffer.
+  rv = rb.PrependSilence(2);
+  EXPECT_EQ(rv, 2u);
+
+  rv = rb.Read(outSpan.Subspan(4, 4));
+  EXPECT_EQ(rv, 4u);
+
+  EXPECT_THAT(out, ElementsAre(.2, .3, .4, .5, 0, 0, .6, .7));
+}
+
+TEST(TestAudioRingBuffer, PrependSilenceNoWrapShort)
+{
+  AudioRingBuffer rb(9 * sizeof(short));
+  rb.SetSampleFormat(AUDIO_FORMAT_S16);
+
+  short in[6] = {2, 3, 4, 5, 6, 7};
+  uint32_t rv = rb.Write(Span(in, 6));
+  EXPECT_EQ(rv, 6u);
+
+  short out[8] = {};
+  auto outSpan = Span(out, 8);
+  rv = rb.Read(outSpan.To(4));
+  EXPECT_EQ(rv, 4u);
+
+  // PrependSilence will put the silent samples at indices 2 and 3 of the ring
+  // buffer.
+  rv = rb.PrependSilence(2);
+  EXPECT_EQ(rv, 2u);
+
+  rv = rb.Read(outSpan.Subspan(4, 4));
+  EXPECT_EQ(rv, 4u);
+
+  EXPECT_THAT(out, ElementsAre(2, 3, 4, 5, 0, 0, 6, 7));
 }
