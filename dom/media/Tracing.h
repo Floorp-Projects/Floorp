@@ -35,8 +35,8 @@ void StopAudioCallbackTracing();
 #  define TRACE_COMMENT(aName, aFmt, ...)              \
     AutoTracer trace(gAudioCallbackTraceLogger, aName, \
                      AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)          \
-    AutoTracer budget(gAudioCallbackTraceLogger, "Real-time budget", \
+#  define TRACE_AUDIO_CALLBACK_BUDGET(id, aFrames, aSampleRate) \
+    AutoTracer budget(gAudioCallbackTraceLogger, id,            \
                       AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
 #else
 #  define TRACE(aName)
