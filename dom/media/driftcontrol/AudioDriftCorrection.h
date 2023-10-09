@@ -7,6 +7,7 @@
 #define DOM_MEDIA_DRIFTCONTROL_AUDIODRIFTCORRECTION_H_
 
 #include "AudioSegment.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 
@@ -59,15 +60,15 @@ class AudioDriftCorrection final {
 
   uint32_t NumUnderruns() const { return mNumUnderruns; }
 
-  void SetSourceLatencyFrames(uint32_t aSourceLatencyFrames);
+  void SetSourceLatency(media::TimeUnit aSourceLatency);
 
   const uint32_t mTargetRate;
 
  private:
-  void SetDesiredBuffering(uint32_t aDesiredBufferingFrames);
+  void SetDesiredBuffering(media::TimeUnit aDesiredBuffering);
 
-  uint32_t mSourceLatencyFrames = 0;
-  uint32_t mDesiredBufferingFrames = 0;
+  media::TimeUnit mSourceLatency = media::TimeUnit::Zero();
+  media::TimeUnit mDesiredBuffering = media::TimeUnit::Zero();
   uint32_t mNumUnderruns = 0;
   bool mIsHandlingUnderrun = false;
   const UniquePtr<DriftController> mDriftController;

@@ -8,9 +8,9 @@
 namespace mozilla {
 
 AudioResampler::AudioResampler(uint32_t aInRate, uint32_t aOutRate,
-                               uint32_t aPreBufferFrames,
+                               media::TimeUnit aPreBufferDuration,
                                const PrincipalHandle& aPrincipalHandle)
-    : mResampler(aInRate, aOutRate, aPreBufferFrames),
+    : mResampler(aInRate, aOutRate, aPreBufferDuration),
       mOutputChunks(aOutRate / 10, STEREO, aPrincipalHandle) {}
 
 void AudioResampler::AppendInput(const AudioSegment& aInSegment) {
@@ -59,15 +59,20 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames, bool* aHasUnderrun) {
     return segment;
   }
 
-  mResampler.EnsurePreBuffer(aOutFrames);
+  media::TimeUnit outDuration(aOutFrames, mResampler.GetOutRate());
+  mResampler.EnsurePreBuffer(outDuration);
 
-  uint32_t totalFrames = aOutFrames;
-  while (totalFrames) {
-    MOZ_ASSERT(totalFrames > 0);
+  const media::TimeUnit chunkCapacity(mOutputChunks.ChunkCapacity(),
+                                      mResampler.GetOutRate());
+
+  while (!outDuration.IsZero()) {
+    MOZ_ASSERT(outDuration.IsPositive());
     AudioChunk& chunk = mOutputChunks.GetNext();
-    uint32_t outFrames = std::min(totalFrames, mOutputChunks.ChunkCapacity());
-    totalFrames -= outFrames;
+    const media::TimeUnit chunkDuration = std::min(outDuration, chunkCapacity);
+    outDuration -= chunkDuration;
 
+    const uint32_t outFrames =
+        chunkDuration.ToTicksAtRate(mResampler.GetOutRate());
     for (uint32_t i = 0; i < chunk.ChannelCount(); ++i) {
       if (chunk.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
         *aHasUnderrun |= mResampler.Resample(

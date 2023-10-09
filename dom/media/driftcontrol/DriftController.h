@@ -6,6 +6,7 @@
 #ifndef DOM_MEDIA_DRIFTCONTROL_DRIFTCONTROLLER_H_
 #define DOM_MEDIA_DRIFTCONTROL_DRIFTCONTROLLER_H_
 
+#include "TimeUnits.h"
 #include "mozilla/RollingMean.h"
 
 #include <algorithm>
@@ -38,12 +39,12 @@ class DriftController final {
    * Provide the nominal source and the target sample rate.
    */
   DriftController(uint32_t aSourceRate, uint32_t aTargetRate,
-                  uint32_t aDesiredBuffering);
+                  media::TimeUnit aDesiredBuffering);
 
   /**
    * Set the buffering level that the controller should target.
    */
-  void SetDesiredBuffering(uint32_t aDesiredBuffering);
+  void SetDesiredBuffering(media::TimeUnit aDesiredBuffering);
 
   /**
    * Reset internal PID-controller state in a way that is suitable for handling
@@ -65,13 +66,13 @@ class DriftController final {
   /**
    * Update the available source frames, target frames, and the current
    * buffer, in every iteration. If the conditions are met a new correction is
-   * calculated. A new correction is calculated every mAdjustmentIntervalMs
-   * milliseconds (1000ms). In addition to that, the correction is clamped so
-   * that the output sample rate changes by at most 0.1% of its nominal rate
-   * each correction.
+   * calculated. A new correction is calculated every mAdjustmentInterval. In
+   * addition to that, the correction is clamped so that the output sample rate
+   * changes by at most 0.1% of its nominal rate each correction.
    */
-  void UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
-                   uint32_t aBufferedFrames, uint32_t aBufferSize);
+  void UpdateClock(media::TimeUnit aSourceDuration,
+                   media::TimeUnit aTargetDuration, uint32_t aBufferedFrames,
+                   uint32_t aBufferSize);
 
  private:
   // This implements a simple PID controller with feedback.
@@ -110,26 +111,27 @@ class DriftController final {
   const uint8_t mPlotId;
   const uint32_t mSourceRate;
   const uint32_t mTargetRate;
-  const uint32_t mAdjustmentIntervalMs = 1000;
-  const TrackTime mIntegralCapFrameLimit = 10 * mTargetRate;
+  const media::TimeUnit mAdjustmentInterval = media::TimeUnit::FromSeconds(1);
+  const media::TimeUnit mIntegralCapTimeLimit =
+      media::TimeUnit(10, 1).ToBase(mTargetRate);
 
  private:
-  uint32_t mDesiredBuffering;
+  media::TimeUnit mDesiredBuffering;
   int32_t mPreviousError = 0;
   float mIntegral = 0.0;
   Maybe<float> mIntegralCenterForCap;
   float mCorrectedTargetRate;
   Maybe<int32_t> mLastHysteresisBoundaryCorrection;
-  uint32_t mTargetFramesWithinHysteresis = 0;
+  media::TimeUnit mDurationWithinHysteresis;
   uint32_t mNumCorrectionChanges = 0;
 
   // An estimate of the source's latency, i.e. callback buffer size, in frames.
-  RollingMean<TrackTime, TrackTime> mMeasuredSourceLatency;
+  RollingMean<media::TimeUnit, media::TimeUnit> mMeasuredSourceLatency;
   // An estimate of the target's latency, i.e. callback buffer size, in frames.
-  RollingMean<TrackTime, TrackTime> mMeasuredTargetLatency;
+  RollingMean<media::TimeUnit, media::TimeUnit> mMeasuredTargetLatency;
 
-  uint32_t mTargetClock = 0;
-  TrackTime mTotalTargetClock = 0;
+  media::TimeUnit mTargetClock;
+  media::TimeUnit mTotalTargetClock;
 };
 
 }  // namespace mozilla

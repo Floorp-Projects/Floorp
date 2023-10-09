@@ -7,6 +7,7 @@
 #define DOM_MEDIA_DRIFTCONTROL_AUDIOCHUNKLIST_H_
 
 #include "AudioSegment.h"
+#include "TimeUnits.h"
 
 namespace mozilla {
 

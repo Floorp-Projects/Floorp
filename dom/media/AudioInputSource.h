@@ -11,6 +11,7 @@
 #include "AudioSegment.h"
 #include "CubebInputStream.h"
 #include "CubebUtils.h"
+#include "TimeUnits.h"
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SPSCQueue.h"
@@ -120,7 +121,7 @@ class AudioInputSource : public CubebInputStream::Listener {
   struct Empty {};
 
   struct LatencyChangeData {
-    uint32_t mLatencyFrames;
+    media::TimeUnit mLatency;
   };
 
   struct Data : public Variant<AudioChunk, LatencyChangeData, Empty> {

@@ -17,11 +17,11 @@ TEST(TestDriftController, Basic)
   constexpr uint32_t bufferedLow = 3 * 480;
   constexpr uint32_t bufferedHigh = 7 * 480;
 
-  DriftController c(48000, 48000, buffered);
+  DriftController c(48000, 48000, media::TimeUnit::FromSeconds(0.05));
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000U);
 
   // The adjustment interval is 1s.
-  const uint32_t oneSec = 48000;
+  const auto oneSec = media::TimeUnit(48000, 48000);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
@@ -43,10 +43,10 @@ TEST(TestDriftController, BasicResampler)
   constexpr uint32_t bufferedLow = 3 * 240;
   constexpr uint32_t bufferedHigh = 7 * 240;
 
-  DriftController c(24000, 48000, buffered);
+  DriftController c(24000, 48000, media::TimeUnit::FromSeconds(0.05));
 
   // The adjustment interval is 1s.
-  const uint32_t oneSec = 48000;
+  const auto oneSec = media::TimeUnit(48000, 48000);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
@@ -71,11 +71,11 @@ TEST(TestDriftController, BufferedInput)
   constexpr uint32_t bufferedLow = 3 * 480;
   constexpr uint32_t bufferedHigh = 7 * 480;
 
-  DriftController c(48000, 48000, buffered);
+  DriftController c(48000, 48000, media::TimeUnit::FromSeconds(0.05));
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // The adjustment interval is 1s.
-  const uint32_t oneSec = 48000;
+  const auto oneSec = media::TimeUnit(48000, 48000);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
@@ -101,11 +101,11 @@ TEST(TestDriftController, BufferedInputWithResampling)
   constexpr uint32_t bufferedLow = 3 * 240;
   constexpr uint32_t bufferedHigh = 7 * 240;
 
-  DriftController c(24000, 48000, buffered);
+  DriftController c(24000, 48000, media::TimeUnit::FromSeconds(0.05));
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // The adjustment interval is 1s.
-  const uint32_t oneSec = 48000;
+  const auto oneSec = media::TimeUnit(24000, 24000);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
@@ -131,11 +131,11 @@ TEST(TestDriftController, SmallError)
   constexpr uint32_t bufferedLow = buffered - 48;
   constexpr uint32_t bufferedHigh = buffered + 48;
 
-  DriftController c(48000, 48000, buffered);
+  DriftController c(48000, 48000, media::TimeUnit::FromSeconds(0.05));
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   // The adjustment interval is 1s.
-  const uint32_t oneSec = 48000;
+  const auto oneSec = media::TimeUnit(48000, 48000);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
@@ -154,9 +154,9 @@ TEST(TestDriftController, SmallBufferedFrames)
   // The buffer level is the only input to the controller logic.
   constexpr uint32_t bufferedLow = 3 * 480;
 
-  DriftController c(48000, 48000, 5 * 480);
-  uint32_t oneSec = 48000;
-  uint32_t hundredMillis = oneSec / 10;
+  DriftController c(48000, 48000, media::TimeUnit::FromSeconds(0.05));
+  media::TimeUnit oneSec = media::TimeUnit::FromSeconds(1);
+  media::TimeUnit hundredMillis = oneSec / 10;
 
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000U);
   for (uint32_t i = 0; i < 9; ++i) {
