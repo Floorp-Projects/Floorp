@@ -29,6 +29,17 @@ void AudioResampler::AppendInput(const AudioSegment& aInSegment) {
       // continue the rest of the flow. We will not get in here again.
       mOutputChunks.SetSampleFormat(chunk.mBufferFormat);
       mResampler.SetSampleFormat(chunk.mBufferFormat);
+      if (mResampler.mPreBufferFrames) {
+        TrackTime formattedDuration = 0;
+        for (AudioSegment::ConstChunkIterator nestedIter(iter);
+             !nestedIter.IsEnded(); nestedIter.Next()) {
+          formattedDuration += nestedIter->GetDuration();
+        }
+        if (mResampler.mPreBufferFrames > formattedDuration) {
+          mResampler.AppendInputSilence(mResampler.mPreBufferFrames -
+                                        formattedDuration);
+        }
+      }
       mIsSampleFormatSet = true;
     }
     MOZ_ASSERT(mIsSampleFormatSet);

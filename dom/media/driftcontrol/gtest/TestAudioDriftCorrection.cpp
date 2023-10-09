@@ -93,8 +93,10 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
   EXPECT_EQ(inToneVerifier.CountDiscontinuities(), 0U);
 
   EXPECT_NEAR(outToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
-  // The expected pre-silence is 50ms plus the resampling.
-  EXPECT_GE(outToneVerifier.PreSilenceSamples(), aTargetRate * 50 / 1000U);
+  // The expected pre-silence is 50ms plus the resampling, minus the size of the
+  // first resampled segment.
+  EXPECT_GE(outToneVerifier.PreSilenceSamples(),
+            aTargetRate * 50 / 1000U - aTargetRate * 102 / 100 / 100);
   EXPECT_EQ(outToneVerifier.CountDiscontinuities(), 0U);
 }
 
