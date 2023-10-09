@@ -406,3 +406,143 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   EXPECT_GE(outToneVerifier.PreSilenceSamples(),
             sampleRate * bufferingMs / 1000U - transmitterBlockSize1);
 }
+
+/**
+ * This is helpful to run together with
+ *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ * to be able to plot the step response of a change in source clock rate (i.e.
+ * drift). Useful for calculating and verifying PID coefficients.
+ */
+TEST(TestAudioDriftCorrection, DriftStepResponse)
+{
+  constexpr uint32_t nominalRate = 48000;
+  constexpr uint32_t interval = nominalRate;
+  constexpr uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
+  constexpr uint32_t inputInterval = inputRate;
+  constexpr uint32_t iterations = 200;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
+  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    tone.Generate(inSegment, inputInterval / 100);
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+}
+
+/**
+ * Similar to DriftStepResponse but will underrun to allow testing the underrun
+ * handling. This is helpful to run together with
+ *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ */
+TEST(TestAudioDriftCorrection, DriftStepResponseUnderrun)
+{
+  constexpr uint32_t nominalRate = 48000;
+  constexpr uint32_t interval = nominalRate;
+  constexpr uint32_t iterations = 200;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
+  uint32_t inputInterval = inputRate;
+  Preferences::SetUint("media.clockdrift.buffering", 10);
+  AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
+  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    tone.Generate(inSegment, inputInterval / 100);
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+
+  inputRate = nominalRate * 998 / 1000;  // -0.2% drift
+  inputInterval = inputRate;
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    tone.Generate(inSegment, inputInterval / 100);
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+
+  Preferences::ClearUser("media.clockdrift.buffering");
+}
+
+/**
+ * Similar to DriftStepResponse but with a high-latency input, and will underrun
+ * to allow testing the underrun handling. This is helpful to run together with
+ *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ */
+TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
+{
+  constexpr uint32_t nominalRate = 48000;
+  constexpr uint32_t interval = nominalRate;
+  constexpr uint32_t iterations = 200;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
+  uint32_t inputInterval = inputRate;
+  Preferences::SetUint("media.clockdrift.buffering", 10);
+  AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
+  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    if (i > 0 && i % interval == 0) {
+      tone.Generate(inSegment, inputInterval);
+    }
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+
+  inputRate = nominalRate * 995 / 1000;  // -0.5% drift
+  inputInterval = inputRate;
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    if (i > 0 && i % interval == 0) {
+      tone.Generate(inSegment, inputInterval);
+    }
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+
+  Preferences::ClearUser("media.clockdrift.buffering");
+}
+
+/**
+ * Similar to DriftStepResponse but with a high-latency input, and will overrun
+ * (input callback buffer is larger than AudioDriftCorrection's ring buffer for
+ * input data) to allow testing the overrun handling. This is helpful to run
+ * together with
+ *   MOZ_LOG=raw,ClockDriftGraphs:5 MOZ_LOG_FILE=./plot_values.csv
+ */
+TEST(TestAudioDriftCorrection, DriftStepResponseOverrun)
+{
+  constexpr uint32_t nominalRate = 48000;
+  constexpr uint32_t interval = nominalRate;
+  constexpr uint32_t inputRate = nominalRate * 1005 / 1000;  // 0.5% drift
+  constexpr uint32_t inputInterval = inputRate;
+  constexpr uint32_t iterations = 200;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+
+  AudioGenerator<AudioDataValue> tone(1, nominalRate, 440);
+  AudioDriftCorrection ad(nominalRate, nominalRate, bufferingMs, testPrincipal);
+
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    tone.Generate(inSegment, inputInterval / 100);
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+
+  // Change input callbacks to 2000ms (+0.5% drift) = 48200 frames, which will
+  // overrun the ring buffer.
+  for (uint32_t i = 0; i < interval * iterations; i += interval / 100) {
+    AudioSegment inSegment;
+    if (i > 0 && i % interval == 0) {
+      // This simulates the input stream latency increasing externally. It's
+      // building up a second worth of data before the next callback. This also
+      // causes an underrun.
+      tone.Generate(inSegment, inputInterval);
+    }
+    ad.RequestFrames(inSegment, interval / 100);
+  }
+}
