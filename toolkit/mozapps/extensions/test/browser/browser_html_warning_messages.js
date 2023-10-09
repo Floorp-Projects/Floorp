@@ -204,7 +204,7 @@ add_task(async function testIncompatible() {
       id: "details-notification-incompatible",
       args: { name, version: appVersion },
     },
-    type: "warning",
+    type: "error",
   });
 });
 
