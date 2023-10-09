@@ -14,6 +14,10 @@ namespace mozilla {
 LazyLogModule gClockDriftGraphsLog("ClockDriftGraphs");
 extern LazyLogModule gMediaTrackGraphLog;
 
+#define LOG_CLOCKDRIFT(level, obj, format, ...)                        \
+  MOZ_LOG(gMediaTrackGraphLog, level,                                  \
+          ("ClockDrift %p: (plot-id %u) " format, obj, (obj)->mPlotId, \
+           ##__VA_ARGS__))
 #define LOG_PLOT_NAMES()                            \
   MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,  \
           ("id,t,buffering,desired,inrate,outrate," \
@@ -34,6 +38,10 @@ ClockDrift::ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
       mSourceRate(aSourceRate),
       mTargetRate(aTargetRate),
       mDesiredBuffering(aDesiredBuffering) {
+  LOG_CLOCKDRIFT(
+      LogLevel::Info, this,
+      "Created. Resampling %uHz->%uHz. Initial desired buffering: %u frames.",
+      mSourceRate, mTargetRate, mDesiredBuffering);
   static std::once_flag sOnceFlag;
   std::call_once(sOnceFlag, [] { LOG_PLOT_NAMES(); });
 }
@@ -79,15 +87,14 @@ void ClockDrift::CalculateCorrection(float aCalculationWeight,
     resampledSourceClock *= static_cast<float>(mTargetRate) / mSourceRate;
   }
 
-  MOZ_LOG(
-      gMediaTrackGraphLog, LogLevel::Verbose,
-      ("ClockDrift %p (plot-id %u) Calculated correction %.3f (with weight: "
-       "%.1f -> %.3f) (buffer: %u, desired: %u, remaining: %u)",
-       this, mPlotId, static_cast<float>(mTargetClock) / resampledSourceClock,
-       aCalculationWeight,
-       (1 - aCalculationWeight) * mCorrection +
-           aCalculationWeight * mTargetClock / resampledSourceClock,
-       aBufferedFrames, mDesiredBuffering, aRemainingFrames));
+  LOG_CLOCKDRIFT(LogLevel::Verbose, this,
+                 "Calculated correction %.3f (with weight: %.1f -> "
+                 "%.3f) (buffer: %u, desired: %u, remaining: %u)",
+                 static_cast<float>(mTargetClock) / resampledSourceClock,
+                 aCalculationWeight,
+                 (1 - aCalculationWeight) * mCorrection +
+                     aCalculationWeight * mTargetClock / resampledSourceClock,
+                 aBufferedFrames, mDesiredBuffering, aRemainingFrames);
 
   auto oldCorrection = mCorrection;
 
@@ -116,3 +123,4 @@ void ClockDrift::CalculateCorrection(float aCalculationWeight,
 
 #undef LOG_PLOT_VALUES
 #undef LOG_PLOT_NAMES
+#undef LOG_CLOCKDRIFT
