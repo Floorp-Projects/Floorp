@@ -31,6 +31,8 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
   for (AudioRingBuffer& b : mInternalInBuffer) {
     b.SetSampleFormat(mSampleFormat);
   }
+
+  EnsureInputBufferSize(CalculateInputBufferSizeInFrames());
 }
 
 void DynamicResampler::EnsurePreBuffer(uint32_t aOutFrames) {
@@ -40,9 +42,9 @@ void DynamicResampler::EnsurePreBuffer(uint32_t aOutFrames) {
 
   uint32_t buffered = mInternalInBuffer[0].AvailableRead();
   if (buffered == 0) {
-    // Wait for the first input segment before deciding how much to
-    // pre-buffer. If it is large it indicates high-latency, and the buffer
-    // would have to handle that.
+    // Wait for the first input segment before deciding how much to pre-buffer.
+    // If it is large it indicates high-latency, and the buffer would have to
+    // handle that.
     return;
   }
 
@@ -50,6 +52,8 @@ void DynamicResampler::EnsurePreBuffer(uint32_t aOutFrames) {
 
   uint32_t toRead = static_cast<int64_t>(aOutFrames) * mInRate / mOutRate;
   uint32_t needed = mPreBufferFrames + toRead;
+
+  EnsureInputBufferSize(needed);
 
   if (needed > buffered) {
     for (auto& b : mInternalInBuffer) {
@@ -175,14 +179,16 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
     // because allocates and this is executed in audio thread.
     mInternalInBuffer.Clear();
     for (uint32_t i = 0; i < mChannels; ++i) {
-      // Pre-allocate something big, twice the pre-buffer, or at least 100ms.
-      AudioRingBuffer* b = mInternalInBuffer.AppendElement(
-          sizeof(float) * std::max(2 * mPreBufferFrames, mInRate / 10));
+      AudioRingBuffer* b = mInternalInBuffer.AppendElement(0);
+
       if (mSampleFormat != AUDIO_FORMAT_SILENCE) {
         // In ctor this update is not needed
         b->SetSampleFormat(mSampleFormat);
       }
     }
+    uint32_t sz = mSetBufferSizeInFrames;
+    mSetBufferSizeInFrames = 0;
+    EnsureInputBufferSize(sz);
     mInputTail.SetLength(mChannels);
     return;
   }

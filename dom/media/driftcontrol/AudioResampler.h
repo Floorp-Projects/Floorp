@@ -15,11 +15,12 @@ namespace mozilla {
 /**
  * Audio Resampler is a resampler able to change the output rate and channels
  * count on the fly. The API is simple and it is based in AudioSegment in order
- * to be used MTG. All memory allocations, for input and output buffers, happen
- * in the constructor and when channel count changes. The memory is recycled in
- * order to avoid reallocations. It also supports prebuffering of silence. It
- * consists of DynamicResampler and AudioChunkList so please read their
- * documentation if you are interested in more details.
+ * to be used MTG. Memory allocations, for input and output buffers, will happen
+ * in the constructor, when channel count changes and if the amount of input
+ * data outgrows the input buffer. The memory is recycled in order to avoid
+ * reallocations. It also supports prebuffering of silence. It consists of
+ * DynamicResampler and AudioChunkList so please read their documentation if you
+ * are interested in more details.
  *
  * The output buffer is preallocated  and returned in the form of AudioSegment.
  * The intention is to be used directly in a MediaTrack. Since an AudioChunk
@@ -28,7 +29,8 @@ namespace mozilla {
  * that it consists of to be reused. For `MediaTrack::mSegment` this happens
  * every ~50ms (look at MediaTrack::AdvanceTimeVaryingValuesToCurrentTime). Thus
  * memory capacity of 100ms has been preallocated for internal input and output
- * buffering.
+ * buffering. Note that the amount of memory used for input buffering may
+ * increase if needed.
  */
 class AudioResampler final {
  public:

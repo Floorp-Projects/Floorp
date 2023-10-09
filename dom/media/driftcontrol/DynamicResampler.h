@@ -26,10 +26,11 @@ const uint32_t STEREO = 2;
  * to allow the requested to be resampled and returned.
  *
  * Input data buffering makes use of the AudioRingBuffer. The capacity of the
- * buffer is 100ms of float audio and it is pre-allocated at the constructor.
- * No extra allocations take place when the input is appended. In addition to
- * that, due to special feature of AudioRingBuffer, no extra copies take place
- * when the input data is fed to the resampler.
+ * buffer is initially 100ms of float audio and it is pre-allocated at the
+ * constructor. Should the input data grow beyond that, the input buffer is
+ * re-allocated on the fly. In addition to that, due to special feature of
+ * AudioRingBuffer, no extra copies take place when the input data is fed to the
+ * resampler.
  *
  * The sample format must be set before using any method. If the provided sample
  * format is of type short the pre-allocated capacity of the input buffer
@@ -201,10 +202,77 @@ class DynamicResampler final {
     MOZ_ASSERT(mChannels);
     MOZ_ASSERT(aChannelIndex <= mChannels);
     MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+    EnsureInputBufferSize(mInternalInBuffer[aChannelIndex].AvailableRead() +
+                          aInFrames);
     mInternalInBuffer[aChannelIndex].Write(Span(aInBuffer, aInFrames));
   }
 
   void WarmUpResampler(bool aSkipLatency);
+
+  uint32_t CalculateInputBufferSizeInFrames() const {
+    // Pre-allocate something big, twice the pre-buffer, or at least 100ms.
+    return std::max(2 * mPreBufferFrames, mInRate / 10);
+  }
+
+  bool EnsureInputBufferSize(uint32_t aSizeInFrames) {
+    if (aSizeInFrames <= mSetBufferSizeInFrames) {
+      // Buffer size is sufficient.
+      return true;
+    }
+
+    // 5 second cap.
+    const uint32_t maxFrames = mInRate * 5;
+    if (mSetBufferSizeInFrames == maxFrames) {
+      // Already at the cap.
+      return false;
+    }
+
+    uint32_t sampleSize = 0;
+    if (mSampleFormat == AUDIO_FORMAT_FLOAT32) {
+      sampleSize = sizeof(float);
+    } else if (mSampleFormat == AUDIO_FORMAT_S16) {
+      sampleSize = sizeof(short);
+    }
+
+    if (sampleSize == 0) {
+      // No sample format set, we wouldn't know how many bytes to allocate.
+      return true;
+    }
+
+    // As a backoff strategy, at least double the previous size.
+    uint32_t sizeInFrames = 2 * mSetBufferSizeInFrames;
+
+    if (aSizeInFrames > sizeInFrames) {
+      // A larger buffer than the normal backoff strategy provides is needed, or
+      // this is the first time setting the buffer size. Round up to the nearest
+      // 100ms, some jitter is expected.
+      const uint32_t hundredMillis = mInRate / 10;
+      sizeInFrames = ((aSizeInFrames - 1) / hundredMillis + 1) * hundredMillis;
+    }
+
+    sizeInFrames = std::min(maxFrames, sizeInFrames);
+
+    bool success = true;
+    for (auto& b : mInternalInBuffer) {
+      success = success && b.SetLengthBytes(sampleSize * sizeInFrames);
+    }
+
+    if (success) {
+      // All buffers have the new size.
+      mSetBufferSizeInFrames = sizeInFrames;
+      return true;
+    }
+
+    // Allocating an input buffer failed. We stick with the old buffer size.
+    NS_WARNING(nsPrintfCString("Failed to allocate a buffer of %u bytes (%u "
+                               "frames). Expect glitches.",
+                               sampleSize * sizeInFrames, sizeInFrames)
+                   .get());
+    for (auto& b : mInternalInBuffer) {
+      MOZ_ALWAYS_TRUE(b.SetLengthBytes(sampleSize * mSetBufferSizeInFrames));
+    }
+    return false;
+  }
 
  public:
   const uint32_t mInRate;
@@ -213,6 +281,7 @@ class DynamicResampler final {
  private:
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
+  uint32_t mSetBufferSizeInFrames = 0;
   uint32_t mChannels = 0;
   uint32_t mOutRate;
 
