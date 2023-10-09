@@ -103,6 +103,7 @@ skip-if = ["os == 'mac'"]
 ["browser_940013_registerToolbarNode_calls_registerArea.js"]
 
 ["browser_940307_panel_click_closure_handling.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked toolbarbutton may not be focusable
 skip-if = ["verify && debug && os == 'linux'"]
 
 ["browser_940946_removable_from_navbar_customizemode.js"]
@@ -180,6 +181,7 @@ skip-if = ["verify"]
 ["browser_981305_separator_insertion.js"]
 
 ["browser_981418-widget-onbeforecreated-handler.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked chromeclass-toolbar-additional toolbarbutton may not be labeled
 skip-if = ["verify"]
 
 ["browser_982656_restore_defaults_builtin_widgets.js"]
@@ -217,8 +219,10 @@ skip-if = ["verify"]
 # CustomizableUI, but are located here together with the module they're testing.
 
 ["browser_PanelMultiView_focus.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked toolbarbutton may not be labeled
 
 ["browser_PanelMultiView_keyboard.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked #moz-toggle-button may not be labeled
 
 ["browser_addons_area.js"]
 
@@ -237,6 +241,7 @@ skip-if = ["verify"]
 ["browser_check_tooltips_in_navbar.js"]
 
 ["browser_create_button_widget.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked chromeclass-toolbar-additional toolbarbutton may not be labeled
 
 ["browser_ctrl_click_panel_opening.js"]
 
@@ -306,6 +311,7 @@ tags = "fullscreen"
 ["browser_panelUINotifications_modals.js"]
 
 ["browser_panelUINotifications_multiWindow.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked popup-notification-primary-button may not be focusable
 
 ["browser_panel_keyboard_navigation.js"]
 
@@ -340,6 +346,7 @@ skip-if = ["verify"]
 ["browser_switch_to_customize_mode.js"]
 
 ["browser_synced_tabs_menu.js"]
+fail-if = ["a11y_checks"] # Bug 1854536 clicked #PanelUI-remotetabs-connect-device-button may not be focusable
 
 ["browser_tabbar_big_widgets.js"]
 
