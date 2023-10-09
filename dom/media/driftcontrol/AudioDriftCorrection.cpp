@@ -32,14 +32,14 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
     // Always go through the resampler because the clock might shift later.
     mResampler->AppendInput(aInput);
   }
+  bool hasUnderrun = false;
+  AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
   mClockDrift->UpdateClock(aInput.GetDuration(), aOutputFrames,
                            mResampler->InputReadableFrames(),
                            mResampler->InputWritableFrames());
   TrackRate receivingRate = mTargetRate * mClockDrift->GetCorrection();
   // Update resampler's rate if there is a new correction.
   mResampler->UpdateOutRate(receivingRate);
-  bool hasUnderrun = false;
-  AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
   if (hasUnderrun) {
     NS_WARNING("Drift-correction: Underrun");
   }
