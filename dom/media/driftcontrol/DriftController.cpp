@@ -57,6 +57,12 @@ DriftController::DriftController(uint32_t aSourceRate, uint32_t aTargetRate,
   std::call_once(sOnceFlag, [] { LOG_PLOT_NAMES(); });
 }
 
+void DriftController::SetDesiredBuffering(uint32_t aDesiredBuffering) {
+  LOG_CONTROLLER(LogLevel::Debug, this, "SetDesiredBuffering %u->%u",
+                 mDesiredBuffering, aDesiredBuffering);
+  mDesiredBuffering = aDesiredBuffering;
+}
+
 uint32_t DriftController::GetCorrectedTargetRate() const {
   return std::lround(mCorrectedTargetRate);
 }

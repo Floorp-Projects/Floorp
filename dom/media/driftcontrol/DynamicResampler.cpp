@@ -66,6 +66,10 @@ void DynamicResampler::EnsurePreBuffer(uint32_t aOutFrames) {
   }
 }
 
+void DynamicResampler::SetPreBufferFrames(uint32_t aPreBufferFrames) {
+  mPreBufferFrames = aPreBufferFrames;
+}
+
 bool DynamicResampler::Resample(float* aOutBuffer, uint32_t aOutFrames,
                                 uint32_t aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_FLOAT32);

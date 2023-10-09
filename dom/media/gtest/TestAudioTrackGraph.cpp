@@ -294,7 +294,6 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
     const AudioInputSource::Id sourceId = 1;
     const uint32_t channels = 2;
     const TrackRate rate = 48000;
-    const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
 
     // Start and stop the audio in NonNativeInputTrack.
     {
@@ -344,11 +343,10 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
 
       DispatchFunction([&] {
         track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
-            track.get(),
-            MakeRefPtr<AudioInputSource>(
-                MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
-                deviceId, channels, true /* voice */, PRINCIPAL_HANDLE_NONE,
-                rate, graph->GraphRate(), bufferingMs)));
+            track.get(), MakeRefPtr<AudioInputSource>(
+                             MakeRefPtr<AudioInputSourceListener>(track.get()),
+                             sourceId, deviceId, channels, true /* voice */,
+                             PRINCIPAL_HANDLE_NONE, rate, graph->GraphRate())));
       });
       RefPtr<SmartMockCubebStream> nonNativeStream =
           WaitFor(cubeb->StreamInitEvent());
@@ -406,11 +404,10 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackStartAndStop)
     {
       DispatchFunction([&] {
         track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
-            track.get(),
-            MakeRefPtr<AudioInputSource>(
-                MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
-                deviceId, channels, true, PRINCIPAL_HANDLE_NONE, rate,
-                graph->GraphRate(), bufferingMs)));
+            track.get(), MakeRefPtr<AudioInputSource>(
+                             MakeRefPtr<AudioInputSourceListener>(track.get()),
+                             sourceId, deviceId, channels, true,
+                             PRINCIPAL_HANDLE_NONE, rate, graph->GraphRate())));
       });
       RefPtr<SmartMockCubebStream> nonNativeStream =
           WaitFor(cubeb->StreamInitEvent());
@@ -474,16 +471,14 @@ TEST(TestAudioTrackGraph, NonNativeInputTrackErrorCallback)
     const AudioInputSource::Id sourceId = 1;
     const uint32_t channels = 2;
     const TrackRate rate = 48000;
-    const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
 
     // Launch and start the non-native audio stream.
     DispatchFunction([&] {
       track->GraphImpl()->AppendMessage(MakeUnique<StartNonNativeInput>(
-          track.get(),
-          MakeRefPtr<AudioInputSource>(
-              MakeRefPtr<AudioInputSourceListener>(track.get()), sourceId,
-              deviceId, channels, true, PRINCIPAL_HANDLE_NONE, rate,
-              graph->GraphRate(), bufferingMs)));
+          track.get(), MakeRefPtr<AudioInputSource>(
+                           MakeRefPtr<AudioInputSourceListener>(track.get()),
+                           sourceId, deviceId, channels, true,
+                           PRINCIPAL_HANDLE_NONE, rate, graph->GraphRate())));
     });
     RefPtr<SmartMockCubebStream> nonNativeStream =
         WaitFor(cubeb->StreamInitEvent());

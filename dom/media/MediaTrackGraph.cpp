@@ -775,8 +775,7 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(DeviceInputTrack* aTrack) {
         AudioInputChannelCount(nonNative->mDeviceId),
         AudioInputDevicePreference(nonNative->mDeviceId) ==
             AudioInputType::Voice,
-        nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate(),
-        StaticPrefs::media_clockdrift_buffering()));
+        nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate()));
   }
 }
 
@@ -1094,8 +1093,7 @@ void MediaTrackGraphImpl::ReevaluateInputDevice(CubebUtils::AudioDeviceID aID) {
           MakeRefPtr<AudioInputSourceListener>(nonNative),
           nonNative->GenerateSourceId(), aID, AudioInputChannelCount(aID),
           AudioInputDevicePreference(aID) == AudioInputType::Voice,
-          nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate(),
-          StaticPrefs::media_clockdrift_buffering()));
+          nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate()));
     }
 
     return;

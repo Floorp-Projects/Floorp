@@ -86,6 +86,11 @@ class DynamicResampler final {
    */
   void EnsurePreBuffer(uint32_t aOutFrames);
 
+  /**
+   * Set the number of frames that should be used for pre-buffering.
+   */
+  void SetPreBufferFrames(uint32_t aPreBufferFrames);
+
   /*
    * Resample as much frames as needed from the internal input buffer to the
    * `aOutBuffer` in order to provide all `aOutFrames`. If there are not enough
@@ -276,11 +281,11 @@ class DynamicResampler final {
 
  public:
   const uint32_t mInRate;
-  const uint32_t mPreBufferFrames;
 
  private:
   bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
+  uint32_t mPreBufferFrames;
   uint32_t mSetBufferSizeInFrames = 0;
   uint32_t mChannels = 0;
   uint32_t mOutRate;
