@@ -6,7 +6,7 @@
 #include "AudioDriftCorrection.h"
 
 #include "AudioResampler.h"
-#include "ClockDrift.h"
+#include "DriftController.h"
 
 namespace mozilla {
 
@@ -17,8 +17,8 @@ AudioDriftCorrection::AudioDriftCorrection(
     const PrincipalHandle& aPrincipalHandle)
     : mDesiredBuffering(std::max(kMinBufferMs, aBufferMs) * aSourceRate / 1000),
       mTargetRate(aTargetRate),
-      mClockDrift(
-          MakeUnique<ClockDrift>(aSourceRate, aTargetRate, mDesiredBuffering)),
+      mDriftController(MakeUnique<DriftController>(aSourceRate, aTargetRate,
+                                                   mDesiredBuffering)),
       mResampler(MakeUnique<AudioResampler>(
           aSourceRate, aTargetRate, mDesiredBuffering, aPrincipalHandle)) {}
 
@@ -26,6 +26,7 @@ AudioDriftCorrection::~AudioDriftCorrection() = default;
 
 AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
                                                  uint32_t aOutputFrames) {
+  uint32_t inputFrames = aInput.GetDuration();
   // Very important to go first since the Dynamic will get the sample format
   // from the chunk.
   if (aInput.GetDuration()) {
@@ -34,12 +35,11 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   }
   bool hasUnderrun = false;
   AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
-  mClockDrift->UpdateClock(aInput.GetDuration(), aOutputFrames,
-                           mResampler->InputReadableFrames(),
-                           mResampler->InputWritableFrames());
-  TrackRate receivingRate = mTargetRate * mClockDrift->GetCorrection();
+  mDriftController->UpdateClock(inputFrames, aOutputFrames,
+                                mResampler->InputReadableFrames(),
+                                mResampler->InputWritableFrames());
   // Update resampler's rate if there is a new correction.
-  mResampler->UpdateOutRate(receivingRate);
+  mResampler->UpdateOutRate(mDriftController->GetCorrectedTargetRate());
   if (hasUnderrun) {
     NS_WARNING("Drift-correction: Underrun");
   }
@@ -51,6 +51,6 @@ uint32_t AudioDriftCorrection::CurrentBuffering() const {
 }
 
 uint32_t AudioDriftCorrection::NumCorrectionChanges() const {
-  return mClockDrift->NumCorrectionChanges();
+  return mDriftController->NumCorrectionChanges();
 }
 }  // namespace mozilla
