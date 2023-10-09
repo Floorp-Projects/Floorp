@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "MediaSegment.h"
+
 namespace mozilla {
 
 /**
@@ -75,6 +77,7 @@ class ClockDrift final {
                            uint32_t aRemainingFrames);
 
  public:
+  const uint8_t mPlotId;
   const uint32_t mSourceRate;
   const uint32_t mTargetRate;
   const uint32_t mAdjustmentIntervalMs = 1000;
@@ -86,6 +89,7 @@ class ClockDrift final {
 
   uint32_t mSourceClock = 0;
   uint32_t mTargetClock = 0;
+  TrackTime mTotalTargetClock = 0;
 };
 
 }  // namespace mozilla
