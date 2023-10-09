@@ -17,13 +17,15 @@ template <class T>
 AudioChunk CreateAudioChunk(uint32_t aFrames, uint32_t aChannels,
                             AudioSampleFormat aSampleFormat);
 
-void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
+void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate,
+                         bool aTestMonoToStereoInput = false) {
   const uint32_t frequency = 100;
   const PrincipalHandle testPrincipal =
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   AudioDriftCorrection ad(aSourceRate, aTargetRate, testPrincipal);
 
-  AudioGenerator<AudioDataValue> tone(1, aSourceRate, frequency);
+  uint8_t numChannels = 1;
+  AudioGenerator<AudioDataValue> tone(numChannels, aSourceRate, frequency);
   AudioVerifier<AudioDataValue> inToneVerifier(aSourceRate, frequency);
   AudioVerifier<AudioDataValue> outToneVerifier(aTargetRate, frequency);
 
@@ -36,6 +38,13 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
     const int8_t additionalDriftFrames =
         ((j % 2 == 0) ? aSourceRate : -aSourceRate) * 2 / 1000;
 
+    // If the number of frames before changing channel count (and thereby
+    // resetting the resampler) is very low, the measured buffering level curve
+    // may look odd, as each resampler reset will reset the (possibly
+    // fractional) output frame counter.
+    const uint32_t numFramesBeforeChangingChannelCount = aSourceRate;
+    uint32_t numFramesAtCurrentChannelCount = 0;
+
     // 50 seconds, allows for at least 50 correction changes, to stabilize
     // on the current drift.
     for (uint32_t n = 0; n < 5000; ++n) {
@@ -44,9 +53,24 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
           sourceFramesIteration;
       const TrackTime targetFrames =
           (n + 1) * aTargetRate / 100 - targetFramesIteration;
-      // Create the input (sine tone)
       AudioSegment inSegment;
-      tone.Generate(inSegment, sourceFrames);
+      if (aTestMonoToStereoInput) {
+        // Create the input (sine tone) of two chunks.
+        const TrackTime sourceFramesPart1 = std::min<TrackTime>(
+            sourceFrames, numFramesBeforeChangingChannelCount -
+                              numFramesAtCurrentChannelCount);
+        tone.Generate(inSegment, sourceFramesPart1);
+        numFramesAtCurrentChannelCount += sourceFramesPart1;
+        if (numFramesBeforeChangingChannelCount ==
+            numFramesAtCurrentChannelCount) {
+          tone.SetChannelsCount(numChannels = (numChannels % 2) + 1);
+          numFramesAtCurrentChannelCount = sourceFrames - sourceFramesPart1;
+          tone.Generate(inSegment, numFramesAtCurrentChannelCount);
+        }
+      } else {
+        // Create the input (sine tone)
+        tone.Generate(inSegment, sourceFrames);
+      }
       inToneVerifier.AppendData(inSegment);
 
       // Get the output of the correction
@@ -93,93 +117,15 @@ TEST(TestAudioDriftCorrection, Basic)
   testAudioCorrection(23458, 25113);
 }
 
-void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
-  const uint32_t frequency = 100;
-  const PrincipalHandle testPrincipal =
-      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
-  AudioDriftCorrection ad(aSourceRate, aTargetRate, testPrincipal);
-
-  AudioGenerator<AudioDataValue> tone(1, aSourceRate, frequency);
-  AudioVerifier<AudioDataValue> inToneVerify(aSourceRate, frequency);
-  AudioVerifier<AudioDataValue> outToneVerify(aTargetRate, frequency);
-
-  // Run for some time: 3 * 5000 = 15000 iterations
-  for (uint32_t j = 0; j < 3; ++j) {
-    TrackTime sourceFramesIteration = 0;
-    TrackTime targetFramesIteration = 0;
-
-    // apply some drift
-    const int8_t additionalDriftFrames =
-        ((j % 2 == 0) ? aSourceRate : -aSourceRate) * 2 / 1000;
-
-    // If the number of frames before changing channel count (and thereby
-    // resetting the resampler) is very low, the measured buffering level curve
-    // may look odd, as each resampler reset will reset the (possibly
-    // fractional) output frame counter.
-    const uint32_t numFramesBeforeChangingChannelCount = aSourceRate;
-    uint32_t numFramesAtCurrentChannelCount = 0;
-    uint8_t numChannels = 1;
-    tone.SetChannelsCount(numChannels);
-
-    // 50 seconds, allows for at least 50 correction changes, to stabilize
-    // on the current drift.
-    for (uint32_t n = 0; n < 5000; ++n) {
-      const TrackTime sourceFrames =
-          (n + 1) * (aSourceRate + additionalDriftFrames) / 100 -
-          sourceFramesIteration;
-      const TrackTime sourceFramesPart1 = std::min<TrackTime>(
-          sourceFrames,
-          numFramesBeforeChangingChannelCount - numFramesAtCurrentChannelCount);
-      const TrackTime targetFrames =
-          (n + 1) * aTargetRate / 100 - targetFramesIteration;
-      // Create the input (sine tone) of two chunks.
-      AudioSegment inSegment;
-      tone.Generate(inSegment, sourceFramesPart1);
-      numFramesAtCurrentChannelCount += sourceFramesPart1;
-      if (numFramesBeforeChangingChannelCount ==
-          numFramesAtCurrentChannelCount) {
-        tone.SetChannelsCount(numChannels = (numChannels % 2) + 1);
-        numFramesAtCurrentChannelCount = sourceFrames - sourceFramesPart1;
-        tone.Generate(inSegment, numFramesAtCurrentChannelCount);
-      }
-      MOZ_ASSERT(inSegment.GetDuration() == sourceFrames);
-      inToneVerify.AppendData(inSegment);
-
-      // Get the output of the correction
-      AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
-      EXPECT_EQ(outSegment.GetDuration(), targetFrames);
-      for (AudioSegment::ConstChunkIterator ci(outSegment); !ci.IsEnded();
-           ci.Next()) {
-        EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
-      }
-      outToneVerify.AppendData(outSegment);
-      sourceFramesIteration += sourceFrames;
-      targetFramesIteration += targetFrames;
-    }
-  }
-
-  EXPECT_EQ(ad.NumUnderruns(), 0U);
-
-  EXPECT_FLOAT_EQ(inToneVerify.EstimatedFreq(), tone.mFrequency);
-  EXPECT_EQ(inToneVerify.PreSilenceSamples(), 0U);
-  EXPECT_EQ(inToneVerify.CountDiscontinuities(), 0U);
-
-  EXPECT_EQ(outToneVerify.CountDiscontinuities(), 0U);
-  EXPECT_NEAR(outToneVerify.EstimatedFreq(), tone.mFrequency, 1.0f);
-  // The expected pre-silence is 50ms plus the resampling, minus the size of the
-  // first resampled segment.
-  EXPECT_GE(outToneVerify.PreSilenceSamples(),
-            aTargetRate * 50 / 1000U - aTargetRate * 102 / 100 / 100);
-}
-
 TEST(TestAudioDriftCorrection, MonoToStereoInput)
 {
+  constexpr bool testMonoToStereoInput = true;
   printf("Testing MonoToStereoInput 48 -> 48\n");
-  testMonoToStereoInput(48000, 48000);
+  testAudioCorrection(48000, 48000, testMonoToStereoInput);
   printf("Testing MonoToStereoInput 48 -> 44.1\n");
-  testMonoToStereoInput(48000, 44100);
+  testAudioCorrection(48000, 44100, testMonoToStereoInput);
   printf("Testing MonoToStereoInput 44.1 -> 48\n");
-  testMonoToStereoInput(44100, 48000);
+  testAudioCorrection(44100, 48000, testMonoToStereoInput);
 }
 
 TEST(TestAudioDriftCorrection, NotEnoughFrames)
