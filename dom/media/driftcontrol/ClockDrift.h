@@ -5,6 +5,7 @@
 
 #ifndef DOM_MEDIA_DRIFTCONTROL_CLOCKDRIFT_H_
 #define DOM_MEDIA_DRIFTCONTROL_CLOCKDRIFT_H_
+#include "mozilla/RollingMean.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -88,6 +89,11 @@ class ClockDrift final {
  private:
   float mCorrection = 1.0;
   uint32_t mNumCorrectionChanges = 0;
+
+  // An estimate of the source's latency, i.e. callback buffer size, in frames.
+  RollingMean<TrackTime, TrackTime> mMeasuredSourceLatency;
+  // An estimate of the target's latency, i.e. callback buffer size, in frames.
+  RollingMean<TrackTime, TrackTime> mMeasuredTargetLatency;
 
   uint32_t mSourceClock = 0;
   uint32_t mTargetClock = 0;

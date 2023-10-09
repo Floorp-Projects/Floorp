@@ -18,14 +18,15 @@ extern LazyLogModule gMediaTrackGraphLog;
   MOZ_LOG(gMediaTrackGraphLog, level,                                  \
           ("ClockDrift %p: (plot-id %u) " format, obj, (obj)->mPlotId, \
            ##__VA_ARGS__))
-#define LOG_PLOT_NAMES()                            \
-  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,  \
-          ("id,t,buffering,desired,inrate,outrate," \
+#define LOG_PLOT_NAMES()                                                 \
+  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,                       \
+          ("id,t,buffering,desired,inlatency,outlatency,inrate,outrate," \
            "corrected"))
-#define LOG_PLOT_VALUES(id, t, buffering, desired, inrate, outrate, corrected) \
-  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,                             \
-          ("ClockDrift %u,%.3f,%u,%u,%u,%u,%.5f", id, t, buffering, desired,   \
-           inrate, outrate, corrected))
+#define LOG_PLOT_VALUES(id, t, buffering, desired, inlatency, outlatency, \
+                        inrate, outrate, corrected)                       \
+  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,                        \
+          ("ClockDrift %u,%.3f,%u,%u,%u,%u,%u,%u,%.5f", id, t, buffering, \
+           desired, inlatency, outlatency, inrate, outrate, corrected))
 
 static uint8_t GenerateId() {
   static std::atomic<uint8_t> id{0};
@@ -37,7 +38,9 @@ ClockDrift::ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
     : mPlotId(GenerateId()),
       mSourceRate(aSourceRate),
       mTargetRate(aTargetRate),
-      mDesiredBuffering(aDesiredBuffering) {
+      mDesiredBuffering(aDesiredBuffering),
+      mMeasuredSourceLatency(5),
+      mMeasuredTargetLatency(5) {
   LOG_CLOCKDRIFT(
       LogLevel::Info, this,
       "Created. Resampling %uHz->%uHz. Initial desired buffering: %u frames.",
@@ -53,6 +56,8 @@ void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
   mSourceClock += aSourceFrames;
   mTotalTargetClock += aTargetFrames;
 
+  mMeasuredTargetLatency.insert(aTargetFrames);
+
   if (aSourceFrames == 0) {
     // Only update the clock after having received input, so input buffering
     // estimates are somewhat recent. This helps stabilize the controller
@@ -60,6 +65,8 @@ void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
     // interval is much larger than that of the output stream.
     return;
   }
+
+  mMeasuredSourceLatency.insert(aSourceFrames);
 
   if (mSourceClock >= mSourceRate / 10 || mTargetClock >= mTargetRate / 10) {
     // Only update the correction if 100ms has passed since last update.
@@ -102,8 +109,10 @@ void ClockDrift::CalculateCorrection(float aCalculationWeight,
                 aCalculationWeight * mTargetClock / resampledSourceClock;
 
   LOG_PLOT_VALUES(mPlotId, static_cast<double>(mTotalTargetClock) / mTargetRate,
-                  aBufferedFrames, mDesiredBuffering, mSourceRate, mTargetRate,
-                  mCorrection * mTargetRate);
+                  aBufferedFrames, mDesiredBuffering,
+                  static_cast<uint32_t>(mMeasuredSourceLatency.mean()),
+                  static_cast<uint32_t>(mMeasuredTargetLatency.mean()),
+                  mSourceRate, mTargetRate, mCorrection * mTargetRate);
 
   if (oldCorrection != mCorrection) {
     // Do the comparison pre-clamping as a low number of correction changes

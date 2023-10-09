@@ -55,6 +55,8 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         t = df["t"]
         buffering = df["buffering"]
         desired = df["desired"]
+        inlatency = df["inlatency"]
+        outlatency = df["outlatency"]
         inrate = df["inrate"]
         outrate = df["outrate"]
         corrected = df["corrected"]
@@ -62,6 +64,8 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         output_file("plot.html")
 
         fig1 = figure()
+        fig1.line(t, inlatency, color="hotpink", legend_label="In latency")
+        fig1.line(t, outlatency, color="firebrick", legend_label="Out latency")
         fig1.line(t, buffering, color="dodgerblue", legend_label="Actual buffering")
         fig1.line(t, desired, color="goldenrod", legend_label="Desired buffering")
 
