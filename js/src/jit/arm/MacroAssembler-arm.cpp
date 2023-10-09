@@ -936,22 +936,25 @@ void MacroAssemblerARM::ma_dtr(LoadStore ls, Register rn, Imm32 offset,
   ma_dataTransferN(ls, 32, true, rn, offset, rt, scratch, mode, cc);
 }
 
-void MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt, const Address& addr,
-                               AutoRegisterScope& scratch, Index mode,
-                               Condition cc) {
-  ma_dataTransferN(ls, 32, true, addr.base, Imm32(addr.offset), rt, scratch,
-                   mode, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_dtr(LoadStore ls, Register rt,
+                                             const Address& addr,
+                                             AutoRegisterScope& scratch,
+                                             Index mode, Condition cc) {
+  BufferOffset offset = ma_dataTransferN(
+      ls, 32, true, addr.base, Imm32(addr.offset), rt, scratch, mode, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_str(Register rt, DTRAddr addr, Index mode,
-                               Condition cc) {
-  as_dtr(IsStore, 32, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_str(Register rt, DTRAddr addr,
+                                             Index mode, Condition cc) {
+  BufferOffset offset = as_dtr(IsStore, 32, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_str(Register rt, const Address& addr,
-                               AutoRegisterScope& scratch, Index mode,
-                               Condition cc) {
-  ma_dtr(IsStore, rt, addr, scratch, mode, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_str(Register rt, const Address& addr,
+                                             AutoRegisterScope& scratch,
+                                             Index mode, Condition cc) {
+  return ma_dtr(IsStore, rt, addr, scratch, mode, cc);
 }
 
 void MacroAssemblerARM::ma_strd(Register rt, DebugOnly<Register> rt2,
@@ -961,35 +964,40 @@ void MacroAssemblerARM::ma_strd(Register rt, DebugOnly<Register> rt2,
   as_extdtr(IsStore, 64, true, mode, rt, addr, cc);
 }
 
-void MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode,
-                               Condition cc) {
-  as_dtr(IsLoad, 32, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt,
+                                             Index mode, Condition cc) {
+  BufferOffset offset = as_dtr(IsLoad, 32, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_ldr(const Address& addr, Register rt,
-                               AutoRegisterScope& scratch, Index mode,
-                               Condition cc) {
-  ma_dtr(IsLoad, rt, addr, scratch, mode, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldr(const Address& addr, Register rt,
+                                             AutoRegisterScope& scratch,
+                                             Index mode, Condition cc) {
+  return ma_dtr(IsLoad, rt, addr, scratch, mode, cc);
 }
 
-void MacroAssemblerARM::ma_ldrb(DTRAddr addr, Register rt, Index mode,
-                                Condition cc) {
-  as_dtr(IsLoad, 8, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldrb(DTRAddr addr, Register rt,
+                                              Index mode, Condition cc) {
+  BufferOffset offset = as_dtr(IsLoad, 8, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_ldrsh(EDtrAddr addr, Register rt, Index mode,
-                                 Condition cc) {
-  as_extdtr(IsLoad, 16, true, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldrsh(EDtrAddr addr, Register rt,
+                                               Index mode, Condition cc) {
+  BufferOffset offset = as_extdtr(IsLoad, 16, true, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_ldrh(EDtrAddr addr, Register rt, Index mode,
-                                Condition cc) {
-  as_extdtr(IsLoad, 16, false, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldrh(EDtrAddr addr, Register rt,
+                                              Index mode, Condition cc) {
+  BufferOffset offset = as_extdtr(IsLoad, 16, false, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode,
-                                 Condition cc) {
-  as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt,
+                                               Index mode, Condition cc) {
+  BufferOffset offset = as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
 void MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt,
@@ -1003,14 +1011,16 @@ void MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt,
   as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
 
-void MacroAssemblerARM::ma_strh(Register rt, EDtrAddr addr, Index mode,
-                                Condition cc) {
-  as_extdtr(IsStore, 16, false, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_strh(Register rt, EDtrAddr addr,
+                                              Index mode, Condition cc) {
+  BufferOffset offset = as_extdtr(IsStore, 16, false, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
-void MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr, Index mode,
-                                Condition cc) {
-  as_dtr(IsStore, 8, mode, rt, addr, cc);
+FaultingCodeOffset MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr,
+                                              Index mode, Condition cc) {
+  BufferOffset offset = as_dtr(IsStore, 8, mode, rt, addr, cc);
+  return FaultingCodeOffset(offset.getOffset());
 }
 
 // Specialty for moving N bits of data, where n == 8,16,32,64.
@@ -1703,12 +1713,11 @@ FaultingCodeOffset MacroAssemblerARMCompat::load8ZeroExtend(
 
   FaultingCodeOffset fco;
   if (src.offset == 0) {
-    fco = FaultingCodeOffset(currentOffset());
-    ma_ldrb(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
+    fco = ma_ldrb(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
   } else {
     ma_add(base, Imm32(src.offset), scratch, scratch2);
-    fco = FaultingCodeOffset(currentOffset());
-    ma_ldrb(DTRAddr(scratch, DtrRegImmShift(src.index, LSL, scale)), dest);
+    fco =
+        ma_ldrb(DTRAddr(scratch, DtrRegImmShift(src.index, LSL, scale)), dest);
   }
   return fco;
 }
@@ -1741,9 +1750,7 @@ FaultingCodeOffset MacroAssemblerARMCompat::load8SignExtend(
     }
     ma_add(Imm32(src.offset), index, scratch2);
   }
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_ldrsb(EDtrAddr(src.base, EDtrOffReg(index)), dest);
-  return fco;
+  return ma_ldrsb(EDtrAddr(src.base, EDtrOffReg(index)), dest);
 }
 
 FaultingCodeOffset MacroAssemblerARMCompat::load16ZeroExtend(
@@ -1774,9 +1781,7 @@ FaultingCodeOffset MacroAssemblerARMCompat::load16ZeroExtend(
     }
     ma_add(Imm32(src.offset), index, scratch2);
   }
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_ldrh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
-  return fco;
+  return ma_ldrh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
 }
 
 FaultingCodeOffset MacroAssemblerARMCompat::load16SignExtend(
@@ -1807,9 +1812,7 @@ FaultingCodeOffset MacroAssemblerARMCompat::load16SignExtend(
     }
     ma_add(Imm32(src.offset), index, scratch2);
   }
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_ldrsh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
-  return fco;
+  return ma_ldrsh(EDtrAddr(src.base, EDtrOffReg(index)), dest);
 }
 
 FaultingCodeOffset MacroAssemblerARMCompat::load32(const Address& address,
@@ -1829,9 +1832,7 @@ void MacroAssemblerARMCompat::load32(AbsoluteAddress address, Register dest) {
 FaultingCodeOffset MacroAssemblerARMCompat::loadPtr(const Address& address,
                                                     Register dest) {
   ScratchRegisterScope scratch(asMasm());
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_ldr(address, dest, scratch);
-  return fco;
+  return ma_ldr(address, dest, scratch);
 }
 
 FaultingCodeOffset MacroAssemblerARMCompat::loadPtr(const BaseIndex& src,
@@ -1845,11 +1846,9 @@ FaultingCodeOffset MacroAssemblerARMCompat::loadPtr(const BaseIndex& src,
   FaultingCodeOffset fco;
   if (src.offset != 0) {
     ma_add(base, Imm32(src.offset), scratch, scratch2);
-    fco = FaultingCodeOffset(currentOffset());
-    ma_ldr(DTRAddr(scratch, DtrRegImmShift(src.index, LSL, scale)), dest);
+    fco = ma_ldr(DTRAddr(scratch, DtrRegImmShift(src.index, LSL, scale)), dest);
   } else {
-    fco = FaultingCodeOffset(currentOffset());
-    ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
+    fco = ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
   }
   return fco;
 }
@@ -1992,11 +1991,10 @@ FaultingCodeOffset MacroAssemblerARMCompat::store8(Register src,
   FaultingCodeOffset fco;
   if (dest.offset != 0) {
     ma_add(base, Imm32(dest.offset), scratch, scratch2);
-    fco = FaultingCodeOffset(currentOffset());
-    ma_strb(src, DTRAddr(scratch, DtrRegImmShift(dest.index, LSL, scale)));
+    fco =
+        ma_strb(src, DTRAddr(scratch, DtrRegImmShift(dest.index, LSL, scale)));
   } else {
-    fco = FaultingCodeOffset(currentOffset());
-    ma_strb(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
+    fco = ma_strb(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
   }
   return fco;
 }
@@ -2053,9 +2051,7 @@ FaultingCodeOffset MacroAssemblerARMCompat::store16(Register src,
     ma_add(index, Imm32(address.offset), scratch, scratch2);
     index = scratch;
   }
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_strh(src, EDtrAddr(address.base, EDtrOffReg(index)));
-  return fco;
+  return ma_strh(src, EDtrAddr(address.base, EDtrOffReg(index)));
 }
 
 void MacroAssemblerARMCompat::store32(Register src, AbsoluteAddress address) {
@@ -2102,11 +2098,9 @@ FaultingCodeOffset MacroAssemblerARMCompat::store32(Register src,
   FaultingCodeOffset fco;
   if (dest.offset != 0) {
     ma_add(base, Imm32(dest.offset), scratch, scratch2);
-    fco = FaultingCodeOffset(currentOffset());
-    ma_str(src, DTRAddr(scratch, DtrRegImmShift(dest.index, LSL, scale)));
+    fco = ma_str(src, DTRAddr(scratch, DtrRegImmShift(dest.index, LSL, scale)));
   } else {
-    fco = FaultingCodeOffset(currentOffset());
-    ma_str(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
+    fco = ma_str(src, DTRAddr(base, DtrRegImmShift(dest.index, LSL, scale)));
   }
   return fco;
 }
@@ -2155,9 +2149,7 @@ void MacroAssemblerARMCompat::storePtr(ImmGCPtr imm, const BaseIndex& address) {
 FaultingCodeOffset MacroAssemblerARMCompat::storePtr(Register src,
                                                      const Address& address) {
   SecondScratchRegisterScope scratch2(asMasm());
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
-  ma_str(src, address, scratch2);
-  return fco;
+  return ma_str(src, address, scratch2);
 }
 
 void MacroAssemblerARMCompat::storePtr(Register src, const BaseIndex& address) {
