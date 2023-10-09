@@ -38,6 +38,7 @@ skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1784548
 ["browser_aboutwelcome_glean.js"]
 
 ["browser_aboutwelcome_import.js"]
+fail-if = ["a11y_checks"] # Bug 1854514 clicked primary button may not be focusable
 
 ["browser_aboutwelcome_mobile_downloads.js"]
 
@@ -82,6 +83,7 @@ skip-if = [
 
 ["browser_asrouter_cfr.js"]
 https_first_disabled = true
+skip-if = ["a11y_checks"] # Bug 1857056 for causing crashes
 
 ["browser_asrouter_experimentsAPILoader.js"]
 
