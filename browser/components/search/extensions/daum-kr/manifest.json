@@ -2,7 +2,7 @@
   "name": "다음",
   "description": "다음 검색",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "daum-kr@search.mozilla.org"
@@ -19,8 +19,8 @@
       "search_url": "https://search.daum.net/search",
       "search_form": "https://search.daum.net",
       "search_url_get_params": "q={searchTerms}&w=tot&nil_ch=ffsr",
-      "suggest_url": "https://sug.search.daum.net/search_nsuggest",
-      "suggest_url_get_params": "mod=fxjson&code=utf_in_out&q={searchTerms}"
+      "suggest_url": "https://suggest.search.daum.net/sushi/opensearch/pc",
+      "suggest_url_get_params": "q={searchTerms}&DA=JU2"
     }
   }
 }
