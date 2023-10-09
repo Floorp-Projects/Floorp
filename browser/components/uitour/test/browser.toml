@@ -15,6 +15,7 @@ skip-if = [
 ["browser_UITour2.js"]
 
 ["browser_UITour3.js"]
+fail-if = ["a11y_checks"] # Bug 1854526 clicked UITourTooltipClose may not be focusable
 
 ["browser_UITour4.js"]
 
