@@ -526,3 +526,70 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
   // Input is stable so no corrections should occur.
   EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
 }
+
+TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
+{
+  constexpr uint32_t transmitterBlockSize1 = 2048;
+  constexpr uint32_t transmitterBlockSize2 = 4096;
+  constexpr uint32_t receiverBlockSize = 128;
+  constexpr uint32_t sampleRate = 48000;
+  constexpr uint32_t frequencyHz = 100;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+
+  AudioGenerator<AudioDataValue> tone(1, sampleRate, frequencyHz);
+  AudioVerifier<AudioDataValue> inToneVerifier(sampleRate, frequencyHz);
+  AudioVerifier<AudioDataValue> outToneVerifier(sampleRate, frequencyHz);
+
+  TrackTime totalFramesTransmitted = 0;
+  TrackTime totalFramesReceived = 0;
+
+  // Produces 10s of data.
+  const auto produceSomeData = [&](uint32_t aTransmitterBlockSize) {
+    TrackTime transmittedFramesStart = totalFramesTransmitted;
+    TrackTime receivedFramesStart = totalFramesReceived;
+    uint32_t numBlocksTransmitted = 0;
+    for (uint32_t i = 0; i < 10 * sampleRate; i += receiverBlockSize) {
+      AudioSegment inSegment;
+      if (((receivedFramesStart - transmittedFramesStart + i) /
+           aTransmitterBlockSize) > numBlocksTransmitted) {
+        tone.Generate(inSegment, aTransmitterBlockSize);
+        MOZ_ASSERT(!inSegment.IsNull());
+        inToneVerifier.AppendData(inSegment);
+        MOZ_ASSERT(!inSegment.IsNull());
+        ++numBlocksTransmitted;
+        totalFramesTransmitted += aTransmitterBlockSize;
+      }
+
+      AudioSegment outSegment = ad.RequestFrames(inSegment, receiverBlockSize);
+      EXPECT_EQ(outSegment.GetDuration(), receiverBlockSize);
+      outToneVerifier.AppendData(outSegment);
+      totalFramesReceived += receiverBlockSize;
+    }
+  };
+
+  produceSomeData(transmitterBlockSize1);
+
+  // Input is stable so no corrections should occur.
+  EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+
+  // Increase input latency. We expect this to underrun, but only once as the
+  // drift correction adapts its buffer size and desired buffering level.
+  produceSomeData(transmitterBlockSize2);
+
+  // Decrease input latency. We expect the drift correction to gradually
+  // decrease its desired buffering level.
+  produceSomeData(transmitterBlockSize1);
+
+  EXPECT_NEAR(inToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
+  EXPECT_EQ(inToneVerifier.PreSilenceSamples(), 0U);
+  EXPECT_EQ(inToneVerifier.CountDiscontinuities(), 0U);
+
+  EXPECT_NEAR(outToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
+  // The expected pre-silence is 50ms plus the resampling, minus the size of the
+  // first resampled segment.
+  EXPECT_GE(outToneVerifier.PreSilenceSamples(),
+            sampleRate * bufferingMs / 1000U - transmitterBlockSize1);
+}
