@@ -29,7 +29,8 @@ namespace mozilla {
  * The pref `media.clock drift.buffering` can be used to configure the minimum
  * initial desired internal buffering. Right now it is at 50ms. A larger desired
  * buffering level will be used if deemed necessary based on input device
- * latency, reported or observed.
+ * latency, reported or observed. It will also be increased as a response to an
+ * underrun, since that indicates the buffer was too small.
  */
 class DriftController final {
  public:
@@ -43,6 +44,12 @@ class DriftController final {
    * Set the buffering level that the controller should target.
    */
   void SetDesiredBuffering(uint32_t aDesiredBuffering);
+
+  /**
+   * Reset internal PID-controller state in a way that is suitable for handling
+   * an underrun.
+   */
+  void ResetAfterUnderrun();
 
   /**
    * Returns the drift-corrected target rate.

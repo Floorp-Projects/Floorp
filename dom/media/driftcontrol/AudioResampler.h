@@ -57,7 +57,8 @@ class AudioResampler final {
    * Reguest `aOutFrames` of audio in the output sample rate. The internal
    * buffered input is used. If the input buffer does not have enough data to
    * reach `aOutFrames` frames, the input buffer is padded with enough silence
-   * to allow the requested frames to be resampled and returned.
+   * to allow the requested frames to be resampled and returned, and the
+   * pre-buffer is reset so that the next call will be treated as the first.
    *
    * On first call, prepends the internal buffer with silence so that after
    * resampling aOutFrames frames of data, the internal buffer holds input

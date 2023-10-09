@@ -88,6 +88,8 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
       sampleRateTransmitter / 100 /* 10ms */;
   EXPECT_NEAR(ad.CurrentBuffering(), expectedBuffering, 512);
 
+  EXPECT_EQ(ad.NumUnderruns(), 0U);
+
   EXPECT_NEAR(inToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
   EXPECT_EQ(inToneVerifier.PreSilenceSamples(), 0U);
   EXPECT_EQ(inToneVerifier.CountDiscontinuities(), 0U);
@@ -160,6 +162,9 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
       outToneVerify.AppendData(outSegment);
     }
   }
+
+  EXPECT_EQ(ad.NumUnderruns(), 0U);
+
   EXPECT_EQ(inToneVerify.EstimatedFreq(), frequency);
   EXPECT_EQ(inToneVerify.PreSilenceSamples(), 0U);
   EXPECT_EQ(inToneVerify.CountDiscontinuities(), 0U);
@@ -216,6 +221,7 @@ TEST(TestAudioDriftCorrection, NotEnoughFrames)
     outToneVerifier.AppendData(outSegment);
   }
   EXPECT_EQ(ad.BufferSize(), 4800U);
+  EXPECT_EQ(ad.NumUnderruns(), 1u);
   EXPECT_EQ(outToneVerifier.CountDiscontinuities(), 1u);
 }
 
@@ -341,7 +347,7 @@ TEST(TestAudioDriftCorrection, LargerReceiverBlockSizeThanDesiredBuffering)
   // buffer size is twice the initial buffering level), to accomodate the large
   // input block size that gets buffered in the resampler only when processing
   // output.
-  EXPECT_EQ(ad.BufferSize(), 9600U);
+  EXPECT_EQ(ad.BufferSize(), 19200U);
 }
 
 TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
@@ -390,26 +396,31 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   EXPECT_EQ(ad.BufferSize(), 4800U);
   // Input is stable so no corrections should occur.
   EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+  EXPECT_EQ(ad.NumUnderruns(), 0U);
 
   // Increase input latency. We expect this to underrun, but only once as the
   // drift correction adapts its buffer size and desired buffering level.
   produceSomeData(transmitterBlockSize2);
   auto numCorrectionChanges = ad.NumCorrectionChanges();
+  EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Adapting to the new input block size should have stabilized.
   EXPECT_GT(ad.BufferSize(), 4800U);
   produceSomeData(transmitterBlockSize2);
   EXPECT_EQ(ad.NumCorrectionChanges(), numCorrectionChanges);
+  EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Decrease input latency. We expect the drift correction to gradually
   // decrease its desired buffering level.
   produceSomeData(transmitterBlockSize1);
   numCorrectionChanges = ad.NumCorrectionChanges();
+  EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   // Adapting to the new input block size should have stabilized.
-  EXPECT_GT(ad.BufferSize(), 4800U);
+  EXPECT_EQ(ad.BufferSize(), 9600U);
   produceSomeData(transmitterBlockSize1);
   EXPECT_EQ(ad.NumCorrectionChanges(), numCorrectionChanges);
+  EXPECT_EQ(ad.NumUnderruns(), 1U);
 
   EXPECT_NEAR(inToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
   EXPECT_EQ(inToneVerifier.PreSilenceSamples(), 0U);
@@ -448,6 +459,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponse)
   }
 
   EXPECT_EQ(ad.BufferSize(), 4800U);
+  EXPECT_EQ(ad.NumUnderruns(), 0u);
 }
 
 /**
@@ -482,6 +494,7 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrun)
   }
 
   EXPECT_EQ(ad.BufferSize(), 4800U);
+  EXPECT_EQ(ad.NumUnderruns(), 1u);
   Preferences::ClearUser("media.clockdrift.buffering");
 }
 
@@ -520,7 +533,8 @@ TEST(TestAudioDriftCorrection, DriftStepResponseUnderrunHighLatencyInput)
     ad.RequestFrames(inSegment, interval / 100);
   }
 
-  EXPECT_EQ(ad.BufferSize(), 110400U);
+  EXPECT_EQ(ad.BufferSize(), 220800U);
+  EXPECT_EQ(ad.NumUnderruns(), 1u);
   Preferences::ClearUser("media.clockdrift.buffering");
 }
 
@@ -564,4 +578,5 @@ TEST(TestAudioDriftCorrection, DriftStepResponseOverrun)
   }
 
   EXPECT_EQ(ad.BufferSize(), 105600U);
+  EXPECT_EQ(ad.NumUnderruns(), 1u);
 }
