@@ -694,7 +694,7 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
                                     bool aAudioThreadChanged) {
 #ifdef XP_MACOSX
   if (aAudioThreadChanged) {
-    mCallbackInfoQueue.ResetThreadIds();
+    mCallbackInfoQueue.ResetProducerThreadId();
   }
   // Flush the local items, if any, and then attempt to enqueue the current
   // item. This is only a fallback mechanism, under non-critical load this is

@@ -69,9 +69,6 @@ void AudioInputSource::Start() {
   // operations to the task thread.
   MOZ_ASSERT(mTaskThread);
 
-  // mSPSCQueue will have a new consumer.
-  mSPSCQueue.ResetConsumerThreadId();
-
   LOG("AudioInputSource %p, start", this);
   MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(
       NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() mutable {
