@@ -143,7 +143,7 @@ fun ReviewGradeExpanded(
         Text(
             text = stringResource(id = reviewGrade.stringResourceId),
             color = PhotonColors.DarkGrey90,
-            style = FirefoxTheme.typography.caption,
+            style = FirefoxTheme.typography.body2,
             modifier = Modifier.padding(horizontal = 8.dp),
         )
     }
