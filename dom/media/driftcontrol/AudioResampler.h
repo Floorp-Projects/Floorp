@@ -38,9 +38,7 @@ class AudioResampler final {
   /**
    * Append input data into the resampler internal buffer. Copy/move of the
    * memory is taking place. Also, the channel count will change according to
-   * the channel count of the chunks. On first call, prepends the internal
-   * buffer with silence so that silence + aInSegment is no more than the
-   * requested aPreBufferFrames we were created with.
+   * the channel count of the chunks.
    */
   void AppendInput(const AudioSegment& aInSegment);
   /**
@@ -59,6 +57,10 @@ class AudioResampler final {
    * buffered input is used. If the input buffer does not have enough data to
    * reach `aOutFrames` frames, the input buffer is padded with enough silence
    * to allow the requested frames to be resampled and returned.
+   *
+   * On first call, prepends the internal buffer with silence so that after
+   * resampling aOutFrames frames of data, the internal buffer holds input
+   * data as close as possible to the configured pre-buffer size.
    */
   AudioSegment Resample(uint32_t aOutFrames, bool* aHasUnderrun);
 

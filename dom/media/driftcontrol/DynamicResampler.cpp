@@ -33,6 +33,35 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
   }
 }
 
+void DynamicResampler::EnsurePreBuffer(uint32_t aOutFrames) {
+  if (mIsPreBufferSet) {
+    return;
+  }
+
+  uint32_t buffered = mInternalInBuffer[0].AvailableRead();
+  if (buffered == 0) {
+    // Wait for the first input segment before deciding how much to
+    // pre-buffer. If it is large it indicates high-latency, and the buffer
+    // would have to handle that.
+    return;
+  }
+
+  mIsPreBufferSet = true;
+
+  uint32_t toRead = static_cast<int64_t>(aOutFrames) * mInRate / mOutRate;
+  uint32_t needed = mPreBufferFrames + toRead;
+
+  if (needed > buffered) {
+    for (auto& b : mInternalInBuffer) {
+      b.PrependSilence(needed - buffered);
+    }
+  } else if (needed < buffered) {
+    for (auto& b : mInternalInBuffer) {
+      b.Discard(buffered - needed);
+    }
+  }
+}
+
 bool DynamicResampler::Resample(float* aOutBuffer, uint32_t aOutFrames,
                                 uint32_t aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_FLOAT32);
@@ -230,6 +259,9 @@ uint32_t DynamicResampler::InFramesBuffered(uint32_t aChannelIndex) const {
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(aChannelIndex <= mChannels);
   MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+  if (!mIsPreBufferSet) {
+    return mPreBufferFrames;
+  }
   return mInternalInBuffer[aChannelIndex].AvailableRead();
 }
 
@@ -237,6 +269,9 @@ uint32_t DynamicResampler::InFramesLeftToBuffer(uint32_t aChannelIndex) const {
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(aChannelIndex <= mChannels);
   MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+  if (!mIsPreBufferSet) {
+    return mPreBufferFrames;
+  }
   return mInternalInBuffer[aChannelIndex].AvailableWrite();
 }
 

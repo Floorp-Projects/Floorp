@@ -29,17 +29,6 @@ void AudioResampler::AppendInput(const AudioSegment& aInSegment) {
       // continue the rest of the flow. We will not get in here again.
       mOutputChunks.SetSampleFormat(chunk.mBufferFormat);
       mResampler.SetSampleFormat(chunk.mBufferFormat);
-      if (mResampler.mPreBufferFrames) {
-        TrackTime formattedDuration = 0;
-        for (AudioSegment::ConstChunkIterator nestedIter(iter);
-             !nestedIter.IsEnded(); nestedIter.Next()) {
-          formattedDuration += nestedIter->GetDuration();
-        }
-        if (mResampler.mPreBufferFrames > formattedDuration) {
-          mResampler.AppendInputSilence(mResampler.mPreBufferFrames -
-                                        formattedDuration);
-        }
-      }
       mIsSampleFormatSet = true;
     }
     MOZ_ASSERT(mIsSampleFormatSet);
@@ -69,6 +58,8 @@ AudioSegment AudioResampler::Resample(uint32_t aOutFrames, bool* aHasUnderrun) {
     segment.AppendNullData(aOutFrames);
     return segment;
   }
+
+  mResampler.EnsurePreBuffer(aOutFrames);
 
   uint32_t totalFrames = aOutFrames;
   while (totalFrames) {
@@ -102,16 +93,10 @@ void AudioResampler::Update(uint32_t aOutRate, uint32_t aChannels) {
 }
 
 uint32_t AudioResampler::InputReadableFrames() const {
-  if (!mIsSampleFormatSet) {
-    return mResampler.mPreBufferFrames;
-  }
   return mResampler.InFramesBuffered(0);
 }
 
 uint32_t AudioResampler::InputWritableFrames() const {
-  if (!mIsSampleFormatSet) {
-    return mResampler.mPreBufferFrames;
-  }
   return mResampler.InFramesLeftToBuffer(0);
 }
 

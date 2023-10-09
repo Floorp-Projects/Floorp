@@ -77,6 +77,14 @@ class DynamicResampler final {
    */
   uint32_t InFramesLeftToBuffer(uint32_t aChannelIndex) const;
 
+  /**
+   * Prepends existing input data with a silent pre-buffer if not already done.
+   * Data will be prepended so that after resampling aOutFrames worth of output
+   * data, the buffering level will be as close as possible to mPreBufferFrames,
+   * which is the desired buffering level.
+   */
+  void EnsurePreBuffer(uint32_t aOutFrames);
+
   /*
    * Resample as much frames as needed from the internal input buffer to the
    * `aOutBuffer` in order to provide all `aOutFrames`. If there are not enough
@@ -203,6 +211,7 @@ class DynamicResampler final {
   const uint32_t mPreBufferFrames;
 
  private:
+  bool mIsPreBufferSet = false;
   bool mIsWarmingUp = false;
   uint32_t mChannels = 0;
   uint32_t mOutRate;

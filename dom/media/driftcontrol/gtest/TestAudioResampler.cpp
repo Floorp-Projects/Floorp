@@ -176,9 +176,17 @@ TEST(TestAudioResampler, OutAudioSegmentLargerThanResampledInput_Float)
   AudioResampler dr(in_rate, out_rate, pre_buffer, PRINCIPAL_HANDLE_NONE);
   AudioSegment inSegment =
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
+
+  // Set the pre-buffer.
+  dr.AppendInput(inSegment);
+  bool hasUnderrun = false;
+  AudioSegment s = dr.Resample(300, &hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
+  EXPECT_EQ(s.GetDuration(), 300);
+  EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
+
   dr.AppendInput(inSegment);
 
-  bool hasUnderrun = false;
   AudioSegment s2 = dr.Resample(out_frames, &hasUnderrun);
   EXPECT_TRUE(hasUnderrun);
   EXPECT_EQ(s2.GetDuration(), 300);
@@ -415,7 +423,7 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 
   bool hasUnderrun = false;
   AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
-  EXPECT_TRUE(hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 40u);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
 
@@ -453,7 +461,7 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
 
   bool hasUnderrun = false;
   AudioSegment s = dr.Resample(out_frames, &hasUnderrun);
-  EXPECT_TRUE(hasUnderrun);
+  EXPECT_FALSE(hasUnderrun);
   EXPECT_EQ(s.GetDuration(), 40u);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
 
