@@ -249,7 +249,8 @@ FileSystemWritableFileStream::~FileSystemWritableFileStream() {
 // StartCallback here is no-op. Can we let the static check automatically detect
 // this situation?
 /* static */
-MOZ_CAN_RUN_SCRIPT_BOUNDARY RefPtr<FileSystemWritableFileStream::CreatePromise>
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
+Result<RefPtr<FileSystemWritableFileStream>, nsresult>
 FileSystemWritableFileStream::Create(
     const nsCOMPtr<nsIGlobalObject>& aGlobal,
     RefPtr<FileSystemManager>& aManager,
@@ -262,22 +263,15 @@ FileSystemWritableFileStream::Create(
   QM_TRY_UNWRAP(auto streamTransportService,
                 MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIEventTarget>,
                                         MOZ_SELECT_OVERLOAD(do_GetService),
-                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID),
-                [](const nsresult aRv) {
-                  return CreatePromise::CreateAndReject(aRv, __func__);
-                });
+                                        NS_STREAMTRANSPORTSERVICE_CONTRACTID));
 
   RefPtr<TaskQueue> taskQueue =
       TaskQueue::Create(streamTransportService.forget(), "WritableStreamQueue");
   MOZ_ASSERT(taskQueue);
 
-  auto rejectAndReturn = [](const nsresult aRv) {
-    return CreatePromise::CreateAndReject(aRv, __func__);
-  };
-
   AutoJSAPI jsapi;
   if (!jsapi.Init(aGlobal)) {
-    return rejectAndReturn(NS_ERROR_FAILURE);
+    return Err(NS_ERROR_FAILURE);
   }
   JSContext* cx = jsapi.cx();
 
@@ -303,7 +297,7 @@ FileSystemWritableFileStream::Create(
             Unused << stream->BeginAbort();
           }
         });
-    QM_TRY(MOZ_TO_RESULT(workerRef), rejectAndReturn);
+    QM_TRY(MOZ_TO_RESULT(workerRef));
   }
 
   // Step 3 - 5
@@ -323,7 +317,7 @@ FileSystemWritableFileStream::Create(
                       // WritableStream::Constructor for details)
                       nullptr, rv);
   if (rv.Failed()) {
-    return CreatePromise::CreateAndReject(rv.StealNSResult(), __func__);
+    return Err(rv.StealNSResult());
   }
 
   autoClose.release();
@@ -332,7 +326,7 @@ FileSystemWritableFileStream::Create(
   stream->mCloseHandler->Open();
 
   // Step 9: Return stream.
-  return CreatePromise::CreateAndResolve(stream.forget(), __func__);
+  return stream;
 }
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(FileSystemWritableFileStream,
