@@ -183,9 +183,10 @@ class AppLinksUseCases(
                     // no default app found but Android resolver shows there are multiple applications
                     // that can open this app link
                     ANDROID_RESOLVER_PACKAGE_NAME, null -> {
-                        findActivities(appIntent).firstOrNull {
-                            it.filter != null
-                        }
+                        findActivities(appIntent).filter {
+                            it.filter != null &&
+                                !(it.filter.countDataPaths() == 0 && it.filter.countDataAuthorities() == 0)
+                        }.getOrNull(0)
                     }
                     // use default app
                     else -> {
