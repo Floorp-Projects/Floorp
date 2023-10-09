@@ -164,14 +164,12 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
   EXPECT_EQ(inToneVerify.PreSilenceSamples(), 0U);
   EXPECT_EQ(inToneVerify.CountDiscontinuities(), 0U);
 
-  EXPECT_GT(outToneVerify.CountDiscontinuities(), 0U)
-      << "Expect discontinuities";
-  EXPECT_NE(outToneVerify.EstimatedFreq(), frequency)
-      << "Estimation is not accurate due to discontinuities";
-  // The expected pre-silence is 50ms plus the resampling. However, due to
-  // discontinuities pre-silence is expected only in the first iteration which
-  // is routhly a little more than 400 frames for the chosen sample rates.
-  EXPECT_GT(outToneVerify.PreSilenceSamples(), 400U);
+  EXPECT_EQ(outToneVerify.CountDiscontinuities(), 0U);
+  EXPECT_NEAR(outToneVerify.EstimatedFreq(), tone.mFrequency, 1.0f);
+  // The expected pre-silence is 50ms plus the resampling, minus the size of the
+  // first resampled segment.
+  EXPECT_GE(outToneVerify.PreSilenceSamples(),
+            aTargetRate * 50 / 1000U - aTargetRate * 102 / 100 / 100);
 }
 
 TEST(TestAudioDriftCorrection, MonoToStereoInput)
