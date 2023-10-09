@@ -123,6 +123,9 @@ class FileSystemWritableFileStream final : public WritableStream {
   template <typename T>
   RefPtr<Int64Promise> Write(const T& aData, const Maybe<uint64_t> aPosition);
 
+  RefPtr<Int64Promise> WriteImpl(nsCOMPtr<nsIInputStream> aInputStream,
+                                 const Maybe<uint64_t> aPosition);
+
   RefPtr<BoolPromise> Seek(uint64_t aPosition);
 
   RefPtr<BoolPromise> Truncate(uint64_t aSize);
