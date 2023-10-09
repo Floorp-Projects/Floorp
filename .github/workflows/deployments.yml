@@ -113,7 +113,7 @@ jobs:
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
   Part1-win-x86-build-with-profdata-and-jarlog:
-    if: !inputs.lightning-build
+    if: inputs.lightning-build == 'false'
     needs: [get-buildid]
     uses: ./.github/workflows/windows-build.yml
     with:
@@ -343,7 +343,7 @@ jobs:
         echo "****************************************************************************************************"
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
-      if: !inputs.lightning-build
+      if: inputs.lightning-build == 'false'
       id: create_release
       uses: "softprops/action-gh-release@v1"
       with:
@@ -504,7 +504,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
-      if: !inputs.lightning-build
+      if: inputs.lightning-build == 'false'
       run: |
         echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
         sleep 60
@@ -524,7 +524,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
-      if: !inputs.lightning-build
+      if: inputs.lightning-build == 'false'
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
@@ -539,7 +539,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
-      if: !inputs.lightning-build
+      if: inputs.lightning-build == 'false'
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
