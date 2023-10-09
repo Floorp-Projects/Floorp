@@ -58,8 +58,10 @@ class ClockDrift final {
    * Update the available source frames, target frames, and the current
    * buffer, in every iteration. If the conditions are met a new correction is
    * calculated. A new correction is calculated in the following cases:
-   *   1. Every mAdjustmentIntervalMs milliseconds (1000ms).
-   *   2. Every time we run low on buffered frames (less than 20ms).
+   *   1. There is source frames present, which if the source latency is high
+   *      means the comparison between source and target is fairly accurate, and
+   *   2.1. Every mAdjustmentIntervalMs milliseconds (1000ms), or
+   *   2.2. Every time we run low on buffered frames (less than 20ms).
    * In addition to that, the correction is clamped to 10% to avoid sound
    * distortion so the result will be in [0.9, 1.1].
    */
