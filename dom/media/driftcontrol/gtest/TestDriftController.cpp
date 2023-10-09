@@ -88,10 +88,10 @@ TEST(TestDriftController, BufferedInput)
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47904u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
 }
 
 TEST(TestDriftController, BufferedInputWithResampling)
@@ -118,10 +118,10 @@ TEST(TestDriftController, BufferedInputWithResampling)
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, buffered, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47916u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 47952u);
 }
 
 TEST(TestDriftController, SmallError)
@@ -141,12 +141,12 @@ TEST(TestDriftController, SmallError)
   EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, bufferedLow, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 48009u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 
   c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47985u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
   c.UpdateClock(oneSec, oneSec, bufferedHigh, 0);
-  EXPECT_EQ(c.GetCorrectedTargetRate(), 47996u);
+  EXPECT_EQ(c.GetCorrectedTargetRate(), 48000u);
 }
 
 TEST(TestDriftController, SmallBufferedFrames)

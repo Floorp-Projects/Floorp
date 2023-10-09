@@ -97,6 +97,13 @@ class DriftController final {
   //                 input data slower. We calculate the corrected target rate
   //                 by simply adding the control signal, u(t), to the nominal
   //                 target rate.
+  //
+  // Hysteresis: As long as the error is within a threshold of 20% of the set
+  //             point (desired buffering level) (up to 10ms for >50ms desired
+  //             buffering), we call this the hysteresis threshold, the control
+  //             signal does not influence the corrected target rate at all.
+  //             This is to reduce the frequency at which we need to reconfigure
+  //             the resampler, as it causes some allocations.
   void CalculateCorrection(uint32_t aBufferedFrames, uint32_t aBufferSize);
 
  public:
@@ -104,12 +111,16 @@ class DriftController final {
   const uint32_t mSourceRate;
   const uint32_t mTargetRate;
   const uint32_t mAdjustmentIntervalMs = 1000;
+  const TrackTime mIntegralCapFrameLimit = 10 * mTargetRate;
 
  private:
   uint32_t mDesiredBuffering;
   int32_t mPreviousError = 0;
   float mIntegral = 0.0;
+  Maybe<float> mIntegralCenterForCap;
   float mCorrectedTargetRate;
+  Maybe<int32_t> mLastHysteresisBoundaryCorrection;
+  uint32_t mTargetFramesWithinHysteresis = 0;
   uint32_t mNumCorrectionChanges = 0;
 
   // An estimate of the source's latency, i.e. callback buffer size, in frames.
