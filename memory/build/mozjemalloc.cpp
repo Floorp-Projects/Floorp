@@ -1485,6 +1485,8 @@ MALLOC_RUNTIME_VAR PoisonType opt_poison = ALL;
 MALLOC_RUNTIME_VAR PoisonType opt_poison = SOME;
 #endif
 
+MALLOC_RUNTIME_VAR size_t opt_poison_size = kCacheLineSize * 4;
+
 static bool opt_randomize_small = true;
 
 // ***************************************************************************
@@ -1567,7 +1569,7 @@ static inline void MaybePoison(void* aPtr, size_t aSize) {
     case NONE:
       return;
     case SOME:
-      size = std::min(aSize, kCacheLineSize);
+      size = std::min(aSize, opt_poison_size);
       break;
     case ALL:
       size = aSize;
@@ -4426,6 +4428,7 @@ static bool malloc_init_hard() {
             opt_poison = ALL;
           } else {
             opt_poison = SOME;
+            opt_poison_size = kCacheLineSize * prefix_arg;
           }
           break;
         case 'z':
