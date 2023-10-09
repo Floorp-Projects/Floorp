@@ -1050,3 +1050,5 @@ bool ChannelSuspendAgent::IsSuspended() {
 }
 
 }  // namespace mozilla
+
+#undef LOG
