@@ -78,10 +78,14 @@ pub fn retrieve_annotations(
 
     // TODO: we should clear the poison value here before getting the mutex
     // contents. Right now we have to fail if the mutex was poisoned.
-    let contents = mutex.get_mut().map_err(|_e| RetrievalError::InvalidData)?;
+    let annotation_table = mutex.get_mut().map_err(|_e| RetrievalError::InvalidData)?;
 
-    let vec_pointer = contents.as_ptr();
-    let length = contents.len();
+    if !annotation_table.verify() {
+        return Err(RetrievalError::InvalidAnnotationTable);
+    }
+
+    let vec_pointer = annotation_table.get_ptr();
+    let length = annotation_table.len();
     let mut annotations = ThinVec::<CAnnotation>::with_capacity(min(max_annotations, length));
 
     for i in 0..length {
