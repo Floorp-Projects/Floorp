@@ -63,6 +63,13 @@ void DriftController::SetDesiredBuffering(uint32_t aDesiredBuffering) {
   mDesiredBuffering = aDesiredBuffering;
 }
 
+void DriftController::ResetAfterUnderrun() {
+  mIntegral = 0.0;
+  mPreviousError = 0.0;
+  // Trigger a recalculation on the next clock update.
+  mTargetClock = (mAdjustmentIntervalMs + 1) * mTargetRate / 1000;
+}
+
 uint32_t DriftController::GetCorrectedTargetRate() const {
   return std::lround(mCorrectedTargetRate);
 }

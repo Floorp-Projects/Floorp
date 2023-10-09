@@ -93,9 +93,16 @@ class DynamicResampler final {
 
   /*
    * Resample as much frames as needed from the internal input buffer to the
-   * `aOutBuffer` in order to provide all `aOutFrames`. If there are not enough
-   * input frames to provide the requested output frames, the input buffer is
-   * padded with enough silence to allow the requested frames to be resampled.
+   * `aOutBuffer` in order to provide all `aOutFrames`.
+   *
+   * On first call, prepends the input buffer with silence so that after
+   * resampling aOutFrames frames of data, the input buffer holds data as close
+   * as possible to the configured pre-buffer size.
+   *
+   * If there are not enough input frames to provide the requested output
+   * frames, the input buffer is padded with enough silence to allow the
+   * requested frames to be resampled, and the pre-buffer is reset so that the
+   * next call will be treated as the first.
    *
    * Returns true if the internal input buffer underran and had to be padded
    * with silence, otherwise false.
@@ -147,6 +154,7 @@ class DynamicResampler final {
       if (uint32_t buffered = mInternalInBuffer[aChannelIndex].AvailableRead();
           buffered < aOutFrames) {
         underrun = true;
+        mIsPreBufferSet = false;
         mInternalInBuffer[aChannelIndex].WriteSilence(aOutFrames - buffered);
       }
       mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, aOutFrames));
@@ -196,6 +204,7 @@ class DynamicResampler final {
       mInternalInBuffer[aChannelIndex].WriteSilence(totalInFramesNeeded);
       resample();
     }
+    mIsPreBufferSet = false;
     return true;
   }
 

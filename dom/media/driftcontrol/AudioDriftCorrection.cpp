@@ -78,6 +78,7 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
       }
     }
 
+    mIsHandlingUnderrun = false;
     // Very important to go first since DynamicResampler will get the sample
     // format from the chunk.
     mResampler->AppendInput(aInput);
@@ -89,7 +90,20 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   // Update resampler's rate if there is a new correction.
   mResampler->UpdateOutRate(mDriftController->GetCorrectedTargetRate());
   if (hasUnderrun) {
-    NS_WARNING("Drift-correction: Underrun");
+    if (!mIsHandlingUnderrun) {
+      NS_WARNING("Drift-correction: Underrun");
+      LOG_CONTROLLER(
+          LogLevel::Info, mDriftController.get(),
+          "Underrun. Doubling the desired buffering %u->%u frames (%.2fms)",
+          mDesiredBufferingFrames, 2 * mDesiredBufferingFrames,
+          static_cast<float>(2 * mDesiredBufferingFrames) * 1000 /
+              mDriftController->mSourceRate);
+      mIsHandlingUnderrun = true;
+      ++mNumUnderruns;
+      SetDesiredBuffering(DesiredBuffering(2 * mDesiredBufferingFrames,
+                                           mDriftController->mSourceRate));
+      mDriftController->ResetAfterUnderrun();
+    }
   }
   return output;
 }

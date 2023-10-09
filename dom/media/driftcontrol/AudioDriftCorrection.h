@@ -59,6 +59,8 @@ class AudioDriftCorrection final {
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t NumCorrectionChanges() const;
 
+  uint32_t NumUnderruns() const { return mNumUnderruns; }
+
   void SetSourceLatencyFrames(uint32_t aSourceLatencyFrames);
 
   const uint32_t mTargetRate;
@@ -68,6 +70,8 @@ class AudioDriftCorrection final {
 
   uint32_t mSourceLatencyFrames = 0;
   uint32_t mDesiredBufferingFrames = 0;
+  uint32_t mNumUnderruns = 0;
+  bool mIsHandlingUnderrun = false;
   const UniquePtr<DriftController> mDriftController;
   const UniquePtr<AudioResampler> mResampler;
 };
