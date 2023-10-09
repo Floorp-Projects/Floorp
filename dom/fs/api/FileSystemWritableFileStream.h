@@ -52,7 +52,7 @@ class FileSystemWritableFileStream final : public WritableStream {
       RefPtr<FileSystemManager>& aManager,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
-      fs::FileSystemEntryMetadata&& aMetadata);
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
@@ -106,7 +106,7 @@ class FileSystemWritableFileStream final : public WritableStream {
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
       already_AddRefed<TaskQueue> aTaskQueue,
-      fs::FileSystemEntryMetadata&& aMetadata);
+      const fs::FileSystemEntryMetadata& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
 
