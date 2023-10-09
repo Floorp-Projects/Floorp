@@ -434,3 +434,31 @@ TEST(TestAudioDriftCorrection, CrashInAudioResampler)
     }
   }
 }
+
+TEST(TestAudioDriftCorrection, HighLatencyProducerLowLatencyConsumer)
+{
+  constexpr uint32_t transmitterBlockSize = 2048;
+  constexpr uint32_t receiverBlockSize = 128;
+  constexpr uint32_t sampleRate = 48000;
+  const uint32_t bufferingMs = StaticPrefs::media_clockdrift_buffering();
+  const PrincipalHandle testPrincipal =
+      MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
+  AudioDriftCorrection ad(sampleRate, sampleRate, bufferingMs, testPrincipal);
+
+  uint32_t numBlocksProduced = 0;
+  for (uint32_t i = 0; i < (sampleRate / 1000) * 500; i += receiverBlockSize) {
+    AudioSegment inSegment;
+    if ((i / transmitterBlockSize) > numBlocksProduced) {
+      AudioChunk chunk = CreateAudioChunk<float>(transmitterBlockSize, 1,
+                                                 AUDIO_FORMAT_FLOAT32);
+      inSegment.AppendAndConsumeChunk(std::move(chunk));
+      ++numBlocksProduced;
+    }
+
+    AudioSegment outSegment = ad.RequestFrames(inSegment, receiverBlockSize);
+    EXPECT_EQ(outSegment.GetDuration(), receiverBlockSize);
+  }
+
+  // Input is stable so no corrections should occur.
+  EXPECT_EQ(ad.NumCorrectionChanges(), 0U);
+}
