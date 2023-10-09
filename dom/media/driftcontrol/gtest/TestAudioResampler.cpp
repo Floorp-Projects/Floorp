@@ -337,7 +337,6 @@ TEST(TestAudioResampler, ChannelChange_MonoToStereo)
 
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
@@ -374,7 +373,6 @@ TEST(TestAudioResampler, ChannelChange_StereoToMono)
 
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
@@ -411,7 +409,6 @@ TEST(TestAudioResampler, ChannelChange_StereoToQuad)
 
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
@@ -452,7 +449,6 @@ TEST(TestAudioResampler, ChannelChange_QuadToStereo)
 
   uint32_t in_frames = 10;
   uint32_t out_frames = 40;
-  // uint32_t channels = 2;
   uint32_t in_rate = 24000;
   uint32_t out_rate = 48000;
 
