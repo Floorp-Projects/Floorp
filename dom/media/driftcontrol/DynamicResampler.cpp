@@ -271,14 +271,4 @@ uint32_t DynamicResampler::InFramesBuffered(uint32_t aChannelIndex) const {
   return mInternalInBuffer[aChannelIndex].AvailableRead();
 }
 
-uint32_t DynamicResampler::InFramesLeftToBuffer(uint32_t aChannelIndex) const {
-  MOZ_ASSERT(mChannels);
-  MOZ_ASSERT(aChannelIndex <= mChannels);
-  MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
-  if (!mIsPreBufferSet) {
-    return mPreBufferFrames;
-  }
-  return mInternalInBuffer[aChannelIndex].AvailableWrite();
-}
-
 }  // namespace mozilla

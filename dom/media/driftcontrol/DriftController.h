@@ -58,7 +58,7 @@ class DriftController final {
    * each correction.
    */
   void UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
-                   uint32_t aBufferedFrames, uint32_t aRemainingFrames);
+                   uint32_t aBufferedFrames);
 
  private:
   // This implements a simple PID controller with feedback.
@@ -84,7 +84,7 @@ class DriftController final {
   //                 input data slower. We calculate the corrected target rate
   //                 by simply adding the control signal, u(t), to the nominal
   //                 target rate.
-  void CalculateCorrection(uint32_t aBufferedFrames, uint32_t aRemainingFrames);
+  void CalculateCorrection(uint32_t aBufferedFrames);
 
  public:
   const uint8_t mPlotId;
@@ -99,7 +99,6 @@ class DriftController final {
   float mCorrectedTargetRate;
   uint32_t mNumCorrectionChanges = 0;
 
-  uint32_t mSourceClock = 0;
   // An estimate of the source's latency, i.e. callback buffer size, in frames.
   RollingMean<TrackTime, TrackTime> mMeasuredSourceLatency;
   // An estimate of the target's latency, i.e. callback buffer size, in frames.

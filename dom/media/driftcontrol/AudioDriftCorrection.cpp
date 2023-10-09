@@ -36,8 +36,7 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   bool hasUnderrun = false;
   AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
   mDriftController->UpdateClock(inputFrames, aOutputFrames,
-                                mResampler->InputReadableFrames(),
-                                mResampler->InputWritableFrames());
+                                mResampler->InputReadableFrames());
   // Update resampler's rate if there is a new correction.
   mResampler->UpdateOutRate(mDriftController->GetCorrectedTargetRate());
   if (hasUnderrun) {
