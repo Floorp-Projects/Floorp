@@ -401,6 +401,10 @@ MarkupView.prototype = {
     return this._contextMenu;
   },
 
+  hasEventDetailsTooltip() {
+    return !!this._eventDetailsTooltip;
+  },
+
   get eventDetailsTooltip() {
     if (!this._eventDetailsTooltip) {
       // This tooltip will be attached to the toolbox document.

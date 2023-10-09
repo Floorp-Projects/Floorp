@@ -2015,6 +2015,23 @@ Inspector.prototype = {
     await this.selection.setNodeFront(nodeFront, { reason });
     return true;
   },
+
+  /**
+   * Called by toolbox.js on `Esc` keydown.
+   *
+   * @param {AbortController} abortController
+   */
+  onToolboxChromeEventHandlerEscapeKeyDown(abortController) {
+    // If the event tooltip is displayed, hide it and prevent the Esc event listener
+    // of the toolbox to occur (e.g. don't toggle split console)
+    if (
+      this.markup.hasEventDetailsTooltip() &&
+      this.markup.eventDetailsTooltip.isVisible()
+    ) {
+      this.markup.eventDetailsTooltip.hide();
+      abortController.abort();
+    }
+  },
 };
 
 exports.Inspector = Inspector;

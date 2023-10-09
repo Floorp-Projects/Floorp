@@ -29,5 +29,14 @@ add_task(async function () {
   await onTooltipShown;
   ok(true, "The tooltip is shown");
 
-  // TODO: More keyboard interactions will be added as part of Bug 1843330
+  // TODO: More keyboard interactions will be added as part of Bug 1843331
+
+  const onTooltipHidden = tooltip.once("hidden");
+  EventUtils.sendKey("ESCAPE", inspector.toolbox.win);
+  await onTooltipHidden;
+  ok(true, "The tooltip is hidden");
+
+  // wait for a bit to check the split console wasn't opened
+  await wait(500);
+  ok(!inspector.toolbox.splitConsole, "Split console is now hidden.");
 });

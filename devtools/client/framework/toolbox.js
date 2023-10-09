@@ -1589,16 +1589,30 @@ Toolbox.prototype = {
   },
 
   _splitConsoleOnKeypress(e) {
-    if (e.keyCode === KeyCodes.DOM_VK_ESCAPE) {
-      this.toggleSplitConsole();
-      // If the debugger is paused, don't let the ESC key stop any pending navigation.
-      // If the host is page, don't let the ESC stop the load of the webconsole frame.
-      if (
-        this.threadFront.state == "paused" ||
-        this.hostType === Toolbox.HostType.PAGE
-      ) {
-        e.preventDefault();
+    if (e.keyCode !== KeyCodes.DOM_VK_ESCAPE) {
+      return;
+    }
+
+    const currentPanel = this.getCurrentPanel();
+    if (
+      typeof currentPanel.onToolboxChromeEventHandlerEscapeKeyDown ===
+      "function"
+    ) {
+      const ac = new this.win.AbortController();
+      currentPanel.onToolboxChromeEventHandlerEscapeKeyDown(ac);
+      if (ac.signal.aborted) {
+        return;
       }
+    }
+
+    this.toggleSplitConsole();
+    // If the debugger is paused, don't let the ESC key stop any pending navigation.
+    // If the host is page, don't let the ESC stop the load of the webconsole frame.
+    if (
+      this.threadFront.state == "paused" ||
+      this.hostType === Toolbox.HostType.PAGE
+    ) {
+      e.preventDefault();
     }
   },
 
