@@ -173,6 +173,13 @@ class TimeUnit final {
     }
   };
 
+  struct CeilingPolicy {
+    template <typename T>
+    static T policy(T& aValue) {
+      return std::ceil(aValue);
+    }
+  };
+
   template <class RoundingPolicy = TruncatePolicy>
   TimeUnit ToBase(int64_t aTargetBase) const {
     double dummy = 0.0;
