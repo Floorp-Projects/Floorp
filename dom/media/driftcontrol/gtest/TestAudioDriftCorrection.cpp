@@ -401,10 +401,10 @@ TEST(TestAudioDriftCorrection, DynamicInputBufferSizeChanges)
   EXPECT_EQ(inToneVerifier.CountDiscontinuities(), 0U);
 
   EXPECT_NEAR(outToneVerifier.EstimatedFreq(), tone.mFrequency, 1.0f);
-  // The expected pre-silence is 50ms plus the resampling, minus the size of the
-  // first resampled segment.
-  EXPECT_GE(outToneVerifier.PreSilenceSamples(),
-            sampleRate * bufferingMs / 1000U - transmitterBlockSize1);
+  // The expected pre-silence is equal to the desired buffering plus what's
+  // needed to resample the first input segment.
+  EXPECT_EQ(outToneVerifier.PreSilenceSamples(),
+            sampleRate * bufferingMs / 1000U + receiverBlockSize);
 }
 
 /**
