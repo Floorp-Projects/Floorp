@@ -4,6 +4,43 @@
 "use strict";
 
 /**
+ * Tests that the fakespot link has the expected url and utm parameters.
+ */
+add_task(async function test_shopping_settings_learn_more() {
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+
+          let href = shoppingContainer.settingsEl.shadowRoot.querySelector(
+            "a[data-l10n-name=fakespot-link]"
+          ).href;
+          let url = new URL(href);
+          is(url.pathname, "/review-checker");
+          is(url.origin, "https://www.fakespot.com");
+
+          let qs = url.searchParams;
+          is(qs.get("utm_source"), "review-checker");
+          is(qs.get("utm_campaign"), "fakespot-by-mozilla");
+          is(qs.get("utm_medium"), "inproduct");
+          is(qs.get("utm_term"), "core-sidebar");
+        }
+      );
+    }
+  );
+});
+
+/**
  * Tests that the settings component is rendered as expected when
  * `browser.shopping.experience2023.ads.enabled` is true.
  */

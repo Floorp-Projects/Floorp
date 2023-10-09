@@ -102,6 +102,8 @@ class AnalysisExplainer extends MozLitElement {
     }
   }
 
+  // Bug 1857620: rather than manually set the utm parameters on the SUMO link,
+  // we should instead update moz-support-link to allow arbitrary utm parameters.
   render() {
     return html`
       <link
@@ -132,9 +134,11 @@ class AnalysisExplainer extends MozLitElement {
               @click=${this.handleReviewQualityUrlClicked}
             >
               <a
-                is="moz-support-link"
-                support-page="review-checker-review-quality"
                 data-l10n-name="review-quality-url"
+                target="_blank"
+                href="${window.RPMGetFormatURLPref(
+                  "app.support.baseURL"
+                )}review-checker-review-quality?as=u&utm_source=inproduct&utm_campaign=learn-more&utm_term=core-sidebar"
               ></a>
             </p>
           </div>
