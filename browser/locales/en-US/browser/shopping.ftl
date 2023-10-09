@@ -6,7 +6,7 @@ shopping-page-title = { -brand-product-name } Shopping
 
 # Title for page showing where a user can check the
 # review quality of online shopping product reviews
-shopping-main-container-title = Review checker
+shopping-main-container-title = Review Checker
 shopping-beta-marker = Beta
 # This string is for ensuring that screen reader technology
 # can read out the "Beta" part of the shopping sidebar header.
