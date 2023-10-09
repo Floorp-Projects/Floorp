@@ -282,7 +282,10 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_webconsole_console_group_open_no_scroll.js"]
 
 ["browser_webconsole_console_logging_workers_api.js"]
-skip-if = ["tsan"] # Bug 1767724
+skip-if = [
+  "tsan", # Bug 1767724
+  "a11y_checks", # Bug 1849028 and 1849230 for causing crashes
+]
 
 ["browser_webconsole_console_profile_unavailable.js"]
 
@@ -525,7 +528,7 @@ skip-if = ["win11_2009"] # Bug 1798331
 ["browser_webconsole_network_messages_after_target_switching.js"]
 
 ["browser_webconsole_network_messages_expand.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_webconsole_network_messages_expand_before_updates.js"]
 skip-if = [
@@ -719,6 +722,7 @@ skip-if = [
 ["browser_webconsole_split_focus.js"]
 
 ["browser_webconsole_split_persist.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849230 for causing crashes
 
 ["browser_webconsole_stacktrace_location_debugger_link.js"]
 
