@@ -67,7 +67,7 @@ class ComposeCollectionTest {
 
     @SmokeTest
     @Test
-    fun createFirstCollectionTest() {
+    fun createFirstCollectionUsingHomeScreenButtonTest() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -149,7 +149,7 @@ class ComposeCollectionTest {
 
     @SmokeTest
     @Test
-    fun openAllTabsInCollectionTest() {
+    fun openAllTabsFromACollectionTest() {
         val firstTestPage = getGenericAsset(mockWebServer, 1)
         val secondTestPage = getGenericAsset(mockWebServer, 2)
 
@@ -183,7 +183,7 @@ class ComposeCollectionTest {
 
     @SmokeTest
     @Test
-    fun shareCollectionTest() {
+    fun shareAllTabsFromACollectionTest() {
         val firstWebsite = getGenericAsset(mockWebServer, 1)
         val secondWebsite = getGenericAsset(mockWebServer, 2)
         val sharingApp = "Gmail"
@@ -231,13 +231,26 @@ class ComposeCollectionTest {
 
         homeScreen {
             verifySnackBarText("Collection deleted")
+            clickSnackbarButton("UNDO")
+            verifyCollectionIsDisplayed(collectionName, true)
+        }
+
+        homeScreen {
+            verifyCollectionIsDisplayed(collectionName)
+        }.expandCollection(collectionName) {
+            clickCollectionThreeDotButton(composeTestRule)
+            selectDeleteCollection(composeTestRule)
+        }
+
+        homeScreen {
+            verifySnackBarText("Collection deleted")
             verifyNoCollectionsText()
         }
     }
 
     // open a webpage, and add currently opened tab to existing collection
     @Test
-    fun mainMenuSaveToExistingCollection() {
+    fun saveTabToExistingCollectionFromMainMenuTest() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -313,52 +326,29 @@ class ComposeCollectionTest {
     }
 
     @Test
-    fun createSecondCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
+    fun createCollectionUsingSelectTabsButtonTest() {
+        val firstWebPage = getGenericAsset(mockWebServer, 1)
+        val secondWebPage = getGenericAsset(mockWebServer, 2)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openComposeTabDrawer(composeTestRule) {
-            createCollection(webPage.title, collectionName = firstCollectionName)
-            verifySnackBarText("Collection saved!")
+        }.openNewTab {
+        }.submitQuery(secondWebPage.url.toString()) {
+        }.openComposeTabDrawer(composeTestRule) {
             createCollection(
-                webPage.title,
-                collectionName = secondCollectionName,
-                firstCollection = false,
+                tabTitles = arrayOf(firstWebPage.title, secondWebPage.title),
+                collectionName = firstCollectionName,
             )
             verifySnackBarText("Collection saved!")
         }.closeTabDrawer {
         }.goToHomescreen {
             verifyCollectionIsDisplayed(firstCollectionName)
-            verifyCollectionIsDisplayed(secondCollectionName)
         }
     }
 
     @Test
-    fun removeTabFromCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
-            createCollection(webPage.title, collectionName = collectionName)
-            closeTab()
-        }
-
-        homeScreen {
-            verifyCollectionIsDisplayed(collectionName)
-        }.expandCollection(collectionName) {
-            verifyTabSavedInCollection(webPage.title, true)
-            removeTabFromCollection(webPage.title)
-            verifyTabSavedInCollection(webPage.title, false)
-        }
-        homeScreen {
-            verifyCollectionIsDisplayed(collectionName, false)
-        }
-    }
-
-    @Test
-    fun undoTabRemovalFromCollectionTest() {
+    fun removeTabFromCollectionUsingTheCloseButtonTest() {
         val webPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -377,13 +367,19 @@ class ComposeCollectionTest {
         homeScreen {
             verifySnackBarText("Collection deleted")
             clickSnackbarButton("UNDO")
-            verifyCollectionIsDisplayed(collectionName, true)
-            verifyCollectionIsDisplayed(collectionName, true)
+            verifyCollectionIsDisplayed(collectionName)
+        }.expandCollection(collectionName) {
+            verifyTabSavedInCollection(webPage.title, true)
+            removeTabFromCollection(webPage.title)
+            verifyTabSavedInCollection(webPage.title, false)
+        }
+        homeScreen {
+            verifyCollectionIsDisplayed(collectionName, false)
         }
     }
 
     @Test
-    fun swipeLeftToRemoveTabFromCollectionTest() {
+    fun removeTabFromCollectionUsingSwipeLeftActionTest() {
         val testPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -405,13 +401,17 @@ class ComposeCollectionTest {
         }
         homeScreen {
             verifySnackBarText("Collection deleted")
-            verifySnackBarText("UNDO")
-            verifyCollectionIsDisplayed(collectionName, false)
+            clickSnackbarButton("UNDO")
+            verifyCollectionIsDisplayed(collectionName)
+        }.expandCollection(collectionName) {
+            verifyTabSavedInCollection(testPage.title, true)
+            swipeTabLeft(testPage.title, composeTestRule)
+            verifyTabSavedInCollection(testPage.title, false)
         }
     }
 
     @Test
-    fun swipeRightToRemoveTabFromCollectionTest() {
+    fun removeTabFromCollectionUsingSwipeRightActionTest() {
         val testPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -433,13 +433,17 @@ class ComposeCollectionTest {
         }
         homeScreen {
             verifySnackBarText("Collection deleted")
-            verifySnackBarText("UNDO")
-            verifyCollectionIsDisplayed(collectionName, false)
+            clickSnackbarButton("UNDO")
+            verifyCollectionIsDisplayed(collectionName)
+        }.expandCollection(collectionName) {
+            verifyTabSavedInCollection(testPage.title, true)
+            swipeTabRight(testPage.title, composeTestRule)
+            verifyTabSavedInCollection(testPage.title, false)
         }
     }
 
     @Test
-    fun selectTabOnLongTapTest() {
+    fun createCollectionByLongPressingOpenTabsTest() {
         val firstWebPage = getGenericAsset(mockWebServer, 1)
         val secondWebPage = getGenericAsset(mockWebServer, 2)
 
@@ -499,32 +503,6 @@ class ComposeCollectionTest {
         // verify the browser layout is visible
         browserScreen {
             verifyMenuButton()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun undoDeleteCollectionTest() {
-        val webPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(webPage.url) {
-        }.openComposeTabDrawer(composeTestRule) {
-            createCollection(webPage.title, collectionName = collectionName)
-            clickSnackbarButton("VIEW")
-        }
-
-        homeScreen {
-            verifyCollectionIsDisplayed(collectionName)
-        }.expandCollection(collectionName) {
-            clickCollectionThreeDotButton(composeTestRule)
-            selectDeleteCollection(composeTestRule)
-        }
-
-        homeScreen {
-            verifySnackBarText("Collection deleted")
-            clickSnackbarButton("UNDO")
-            verifyCollectionIsDisplayed(collectionName, true)
         }
     }
 }
