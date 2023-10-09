@@ -21,7 +21,6 @@ import java.util.UUID
  * @property mediaSessionState the [MediaSessionState] of this session.
  * @property contextId the session context ID of this custom tab.
  * @property source the [SessionState.Source] of this session.
- * @property isProductUrl has the product URL status of this tab.
  */
 data class CustomTabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -35,7 +34,6 @@ data class CustomTabSessionState(
     override val source: SessionState.Source = SessionState.Source.Internal.CustomTab,
     override val restored: Boolean = false,
     override val cookieBanner: CookieBannerHandlingStatus = CookieBannerHandlingStatus.NO_DETECTED,
-    override val isProductUrl: Boolean = false,
 ) : SessionState {
 
     override fun createCopy(
@@ -47,7 +45,6 @@ data class CustomTabSessionState(
         mediaSessionState: MediaSessionState?,
         contextId: String?,
         cookieBanner: CookieBannerHandlingStatus,
-        isProductUrl: Boolean,
     ) = copy(
         id = id,
         content = content,

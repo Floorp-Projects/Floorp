@@ -66,6 +66,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property previewImageUrl The preview image of the page (e.g. the hero image), if available.
  * @property isSearch Whether or not the last url load request is the result of a search.
  * @property hasFormData Whether or not the content has filled out form data.
+ * @property isProductUrl Indicates if the [url] is a supported product page.
  */
 data class ContentState(
     val url: String,
@@ -104,4 +105,5 @@ data class ContentState(
     val previewImageUrl: String? = null,
     val isSearch: Boolean = false,
     val hasFormData: Boolean = false,
+    val isProductUrl: Boolean = false,
 )

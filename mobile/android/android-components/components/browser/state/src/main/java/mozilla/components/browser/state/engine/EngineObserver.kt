@@ -13,7 +13,6 @@ import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.ReaderAction
-import mozilla.components.browser.state.action.ShoppingProductAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.AppIntentState
@@ -166,7 +165,7 @@ internal class EngineObserver(
     }
 
     override fun onProductUrlChange(isProductUrl: Boolean) {
-        store.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tabId, isProductUrl))
+        store.dispatch(ContentAction.UpdateProductUrlStateAction(tabId, isProductUrl))
     }
 
     override fun onLongPress(hitResult: HitResult) {

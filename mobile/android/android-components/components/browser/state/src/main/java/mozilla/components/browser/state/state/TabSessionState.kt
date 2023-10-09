@@ -31,7 +31,6 @@ import java.util.UUID
  * @property lastMediaAccessState - [LastMediaAccessState] detailing the tab state when media started playing.
  * Requires [LastMediaAccessMiddleware] to update the value when playback starts.
  * @property restored Indicates if this page was restored from a persisted state.
- * @property isProductUrl has the product URL status of this tab.
  */
 data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
@@ -44,7 +43,6 @@ data class TabSessionState(
     override val contextId: String? = null,
     override val source: SessionState.Source = SessionState.Source.Internal.None,
     override val restored: Boolean = false,
-    override val isProductUrl: Boolean = false,
     val parentId: String? = null,
     val lastAccess: Long = 0L,
     val createdAt: Long = System.currentTimeMillis(),
@@ -62,7 +60,6 @@ data class TabSessionState(
         mediaSessionState: MediaSessionState?,
         contextId: String?,
         cookieBanner: CookieBannerHandlingStatus,
-        isProductUrl: Boolean,
     ): SessionState = copy(
         id = id,
         content = content,
@@ -72,7 +69,6 @@ data class TabSessionState(
         mediaSessionState = mediaSessionState,
         contextId = contextId,
         cookieBanner = cookieBanner,
-        isProductUrl = isProductUrl,
     )
 }
 
@@ -118,6 +114,7 @@ fun createTab(
             searchTerms = searchTerms,
             previewImageUrl = previewImageUrl,
             hasFormData = hasFormData,
+            isProductUrl = isProductUrl,
         ),
         parentId = parentId ?: parent?.id,
         extensionState = extensions,
@@ -128,7 +125,6 @@ fun createTab(
         lastMediaAccessState = lastMediaAccessState,
         source = source,
         restored = restored,
-        isProductUrl = isProductUrl,
         engineState = EngineState(
             engineSession = engineSession,
             engineSessionState = engineSessionState,

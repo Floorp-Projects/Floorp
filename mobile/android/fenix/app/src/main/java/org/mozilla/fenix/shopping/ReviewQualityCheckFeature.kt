@@ -44,7 +44,7 @@ class ReviewQualityCheckFeature(
 
         scope = browserStore.flowScoped { flow ->
             flow.mapNotNull { it.selectedTab }
-                .map { it.isProductUrl }
+                .map { it.content.isProductUrl }
                 .distinctUntilChanged()
                 .collect(onAvailabilityChange)
         }

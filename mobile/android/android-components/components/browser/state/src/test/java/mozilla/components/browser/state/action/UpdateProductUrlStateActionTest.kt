@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.browser.state.reducer
+package mozilla.components.browser.state.action
 
-import mozilla.components.browser.state.action.ShoppingProductAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -17,7 +16,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class ShoppingProductStateReducerTest {
+class UpdateProductUrlStateActionTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
@@ -29,26 +28,26 @@ class ShoppingProductStateReducerTest {
             content = ContentState(
                 url = "https://mozilla.org",
                 private = false,
+                isProductUrl = false,
             ),
-            isProductUrl = false,
         )
         val tab2 = TabSessionState(
             id = "tab2",
             content = ContentState(
                 url = "https://www.amazon.com/product/123",
                 private = false,
+                isProductUrl = false,
             ),
-            isProductUrl = false,
         )
         val browserState = BrowserState(tabs = listOf(tab1, tab2))
 
         val browserStore = BrowserStore(initialState = browserState)
 
         browserStore.dispatch(
-            ShoppingProductAction.UpdateProductUrlStatusAction(tabId = "tab2", isProductUrl = true),
+            ContentAction.UpdateProductUrlStateAction(tabId = "tab2", isProductUrl = true),
         ).joinBlocking()
 
-        val actual = browserStore.state.findTab("tab2")!!.isProductUrl
+        val actual = browserStore.state.findTab("tab2")!!.content.isProductUrl
 
         assertTrue(actual)
     }
@@ -60,18 +59,18 @@ class ShoppingProductStateReducerTest {
             content = ContentState(
                 url = "https://www.amazon.com/product/123",
                 private = true,
+                isProductUrl = false,
             ),
-            isProductUrl = false,
         )
         val browserState = BrowserState(tabs = listOf(tab1))
 
         val browserStore = BrowserStore(initialState = browserState)
 
         browserStore.dispatch(
-            ShoppingProductAction.UpdateProductUrlStatusAction(tabId = "tab1", isProductUrl = true),
+            ContentAction.UpdateProductUrlStateAction(tabId = "tab1", isProductUrl = true),
         ).joinBlocking()
 
-        val actual = browserStore.state.findTab("tab1")!!.isProductUrl
+        val actual = browserStore.state.findTab("tab1")!!.content.isProductUrl
 
         assertFalse(actual)
     }

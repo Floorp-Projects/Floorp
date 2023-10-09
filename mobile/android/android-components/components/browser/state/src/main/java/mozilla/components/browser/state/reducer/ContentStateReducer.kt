@@ -307,6 +307,15 @@ internal object ContentStateReducer {
             -> {
                 throw IllegalStateException("You need to add SessionPrioritizationMiddleware. ($action)")
             }
+            is ContentAction.UpdateProductUrlStateAction -> {
+                updateContentState(state, action.tabId) {
+                    if (it.private) {
+                        it
+                    } else {
+                        it.copy(isProductUrl = action.isProductUrl)
+                    }
+                }
+            }
         }
     }
     private fun consumeDownload(state: BrowserState, sessionId: String, downloadId: String): BrowserState {

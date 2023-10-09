@@ -11,7 +11,8 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
 * **browser-state**
-  * `SessionState.isProductUrl` is not affected for private tabs as shopping mode is disabled in private tabs. [Bug 1847063](https://bugzilla.mozilla.org/show_bug.cgi?id=1847063)  
+  * `SessionState.isProductUrl` is not affected for private tabs as shopping mode is disabled in private tabs. [Bug 1847063](https://bugzilla.mozilla.org/show_bug.cgi?id=1847063)
+  * `SessionState.isProductUrl` has been moved to `ContentState.isProductUrl`. [Bug 1857287](https://bugzilla.mozilla.org/show_bug.cgi?id=1857287)
 
 # 119.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v118..releases_v119)

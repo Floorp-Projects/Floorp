@@ -114,7 +114,7 @@ class BrowserToolbarCFRPresenter(
             ToolbarCFR.SHOPPING, ToolbarCFR.SHOPPING_OPTED_IN -> {
                 scope = browserStore.flowScoped { flow ->
                     val shouldShowCfr: Boolean? = flow.mapNotNull { it.selectedTab }
-                        .filter { it.isProductUrl && it.content.progress == 100 && !it.content.loading }
+                        .filter { it.content.isProductUrl && it.content.progress == 100 && !it.content.loading }
                         .distinctUntilChanged()
                         .map { toolbar.findViewById<View>(R.id.mozac_browser_toolbar_page_actions).isVisible }
                         .filter { popup == null && it }

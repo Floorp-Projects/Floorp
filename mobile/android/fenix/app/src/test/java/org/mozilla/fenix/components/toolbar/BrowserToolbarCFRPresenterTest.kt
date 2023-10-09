@@ -15,7 +15,6 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.ShoppingProductAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -246,7 +245,7 @@ class BrowserToolbarCFRPresenterTest {
         browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
 
-        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProductUrlStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
@@ -280,7 +279,7 @@ class BrowserToolbarCFRPresenterTest {
 
         assertNotNull(presenter.scope)
 
-        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProductUrlStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(eq(false)) }
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
@@ -314,7 +313,7 @@ class BrowserToolbarCFRPresenterTest {
         browserStore.dispatch(ContentAction.UpdateLoadingStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(eq(true)) }
 
-        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProductUrlStateAction(tab.id, true)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(eq(true)) }
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab.id, 100)).joinBlocking()
@@ -351,7 +350,7 @@ class BrowserToolbarCFRPresenterTest {
 
         assertNotNull(presenter.scope)
 
-        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab1.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProductUrlStateAction(tab1.id, true)).joinBlocking()
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab1.id, 100)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(any()) }
 
@@ -413,7 +412,7 @@ class BrowserToolbarCFRPresenterTest {
 
         assertNotNull(presenter.scope)
 
-        browserStore.dispatch(ShoppingProductAction.UpdateProductUrlStatusAction(tab1.id, true)).joinBlocking()
+        browserStore.dispatch(ContentAction.UpdateProductUrlStateAction(tab1.id, true)).joinBlocking()
         browserStore.dispatch(ContentAction.UpdateProgressAction(tab1.id, 100)).joinBlocking()
         verify(exactly = 0) { presenter.showShoppingCFR(any()) }
 

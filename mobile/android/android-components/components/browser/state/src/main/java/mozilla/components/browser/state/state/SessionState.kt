@@ -24,7 +24,6 @@ import mozilla.components.support.utils.SafeIntent
  * contextual identity to use for the session's cookie store.
  * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Work_with_contextual_identities
  * @property restored Indicates if this session was restored from a hydrated state.
- * @property isProductUrl Indicates if this session is currently displaying a product URL.
  */
 interface SessionState {
     val id: String
@@ -37,7 +36,6 @@ interface SessionState {
     val contextId: String?
     val source: Source
     val restored: Boolean
-    val isProductUrl: Boolean
 
     /**
      * Copy the class and override some parameters.
@@ -52,14 +50,13 @@ interface SessionState {
         mediaSessionState: MediaSessionState? = this.mediaSessionState,
         contextId: String? = this.contextId,
         cookieBanner: CookieBannerHandlingStatus = this.cookieBanner,
-        isProductUrl: Boolean = this.isProductUrl,
     ): SessionState
 
     /**
      * Represents the origin of a session to describe how and why it was created.
      * @param id A unique identifier, exists for serialization purposes.
      */
-    @Suppress("UNUSED_PARAMETER", "MagicNumber")
+    @Suppress("MagicNumber")
     sealed class Source(val id: Int) {
         companion object {
             /**
