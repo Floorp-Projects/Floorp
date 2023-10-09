@@ -39,11 +39,13 @@ support-files = [
 ["browser_devtools-onboarding.js"]
 
 ["browser_devtools-presets.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_devtools-previously-started.js"]
 
 ["browser_devtools-record-capture.js"]
 https_first_disabled = true
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_devtools-record-discard.js"]
 
