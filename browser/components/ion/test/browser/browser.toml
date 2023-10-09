@@ -1,3 +1,4 @@
 [DEFAULT]
 
 ["browser_ion_ui.js"]
+fail-if = ["a11y_checks"] # Bug 1849063 clicked primary button is visually hidden and is not focusable
