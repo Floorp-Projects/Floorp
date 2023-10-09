@@ -159,7 +159,9 @@ class DynamicResampler final {
         mIsPreBufferSet = false;
         mInternalInBuffer[aChannelIndex].WriteSilence(aOutFrames - buffered);
       }
-      mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, aOutFrames));
+      DebugOnly<uint32_t> numFramesRead =
+          mInternalInBuffer[aChannelIndex].Read(Span(aOutBuffer, aOutFrames));
+      MOZ_ASSERT(numFramesRead == aOutFrames);
       // Workaround to avoid discontinuity when the speex resampler operates
       // again. Feed it with the last 20 frames to warm up the internal memory
       // of the resampler and then skip memory equals to resampler's input
@@ -185,7 +187,7 @@ class DynamicResampler final {
                              &outFramesResampled, aChannelIndex);
             aOutBuffer += outFramesResampled;
             totalOutFramesNeeded -= outFramesResampled;
-            mInputTail[aChannelIndex].StoreTail<T>(aInBuffer);
+            mInputTail[aChannelIndex].StoreTail<T>(aInBuffer.To(inFrames));
             return inFrames;
           });
     };
