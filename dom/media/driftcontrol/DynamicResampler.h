@@ -147,8 +147,8 @@ class DynamicResampler final {
     MOZ_ASSERT(mInRate);
     MOZ_ASSERT(mOutRate);
     MOZ_ASSERT(mChannels);
-    MOZ_ASSERT(aChannelIndex <= mChannels);
-    MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+    MOZ_ASSERT(aChannelIndex < mChannels);
+    MOZ_ASSERT(aChannelIndex < mInternalInBuffer.Length());
     MOZ_ASSERT(aOutFrames);
 
     if (mInRate == mOutRate) {
@@ -216,8 +216,8 @@ class DynamicResampler final {
     MOZ_ASSERT(aInBuffer);
     MOZ_ASSERT(aInFrames);
     MOZ_ASSERT(mChannels);
-    MOZ_ASSERT(aChannelIndex <= mChannels);
-    MOZ_ASSERT(aChannelIndex <= mInternalInBuffer.Length());
+    MOZ_ASSERT(aChannelIndex < mChannels);
+    MOZ_ASSERT(aChannelIndex < mInternalInBuffer.Length());
     EnsureInputBufferDuration(media::TimeUnit(
         CheckedInt64(mInternalInBuffer[aChannelIndex].AvailableRead()) +
             aInFrames,
