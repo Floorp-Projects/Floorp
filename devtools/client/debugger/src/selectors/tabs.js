@@ -23,9 +23,9 @@ export function tabExists(state, sourceId) {
   return !!getSourceTabs(state).find(tab => tab.source.id == sourceId);
 }
 
-export function hasPrettyTab(state, sourceUrl) {
-  const prettyUrl = getPrettySourceURL(sourceUrl);
-  return !!getSourceTabs(state).find(tab => tab.url === prettyUrl);
+export function hasPrettyTab(state, source) {
+  const prettyUrl = getPrettySourceURL(source.url);
+  return getTabs(state).some(tab => tab.url === prettyUrl);
 }
 
 /**
