@@ -981,6 +981,9 @@ nsresult ShutdownStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
 
   AUTO_PROFILER_LABEL("ShutdownStorageOp::DoDirectoryWork", OTHER);
 
+  aQuotaManager.MaybeRecordQuotaManagerShutdownStep(
+      "ShutdownStorageOp::DoDirectoryWork -> ShutdownStorageInternal."_ns);
+
   aQuotaManager.ShutdownStorageInternal();
 
   return NS_OK;
