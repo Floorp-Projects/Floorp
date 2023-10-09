@@ -70,8 +70,9 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
       CreateAudioSegment<float>(in_frames, channels, AUDIO_FORMAT_FLOAT32);
   dr.AppendInput(inSegment);
 
+  out_frames = 20u;
   AudioSegment s = dr.Resample(out_frames);
-  EXPECT_EQ(s.GetDuration(), 40);
+  EXPECT_EQ(s.GetDuration(), 20);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s.IsNull());
   EXPECT_TRUE(!s.IsEmpty());
@@ -81,7 +82,9 @@ TEST(TestAudioResampler, OutAudioSegment_Float)
     EXPECT_EQ(c.mPrincipalHandle, testPrincipal);
     EXPECT_EQ(c.ChannelCount(), 2u);
     for (uint32_t i = 0; i < out_frames; ++i) {
-      // Only pre buffered data reach output
+      // The first input segment is part of the pre buffer, so 21-10=11 of the
+      // input is silence. They make up 22 silent output frames after
+      // resampling.
       EXPECT_FLOAT_EQ(c.ChannelData<float>()[0][i], 0.0);
       EXPECT_FLOAT_EQ(c.ChannelData<float>()[1][i], 0.0);
     }
@@ -123,8 +126,9 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
       CreateAudioSegment<short>(in_frames, channels, AUDIO_FORMAT_S16);
   dr.AppendInput(inSegment);
 
+  out_frames = 20u;
   AudioSegment s = dr.Resample(out_frames);
-  EXPECT_EQ(s.GetDuration(), 40);
+  EXPECT_EQ(s.GetDuration(), 20);
   EXPECT_EQ(s.GetType(), MediaSegment::AUDIO);
   EXPECT_TRUE(!s.IsNull());
   EXPECT_TRUE(!s.IsEmpty());
@@ -134,7 +138,9 @@ TEST(TestAudioResampler, OutAudioSegment_Short)
     EXPECT_EQ(c.mPrincipalHandle, testPrincipal);
     EXPECT_EQ(c.ChannelCount(), 2u);
     for (uint32_t i = 0; i < out_frames; ++i) {
-      // Only pre buffered data reach output
+      // The first input segment is part of the pre buffer, so 21-10=11 of the
+      // input is silence. They make up 22 silent output frames after
+      // resampling.
       EXPECT_FLOAT_EQ(c.ChannelData<short>()[0][i], 0.0);
       EXPECT_FLOAT_EQ(c.ChannelData<short>()[1][i], 0.0);
     }

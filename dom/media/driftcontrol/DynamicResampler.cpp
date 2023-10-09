@@ -31,9 +31,6 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
   for (AudioRingBuffer& b : mInternalInBuffer) {
     b.SetSampleFormat(mSampleFormat);
   }
-  if (mPreBufferFrames) {
-    AppendInputSilence(mPreBufferFrames);
-  }
 }
 
 bool DynamicResampler::Resample(float* aOutBuffer, uint32_t* aOutFrames,

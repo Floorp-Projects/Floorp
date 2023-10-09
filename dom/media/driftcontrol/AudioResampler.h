@@ -38,7 +38,9 @@ class AudioResampler final {
   /**
    * Append input data into the resampler internal buffer. Copy/move of the
    * memory is taking place. Also, the channel count will change according to
-   * the channel count of the chunks.
+   * the channel count of the chunks. On first call, prepends the internal
+   * buffer with silence so that silence + aInSegment is no more than the
+   * requested aPreBufferFrames we were created with.
    */
   void AppendInput(const AudioSegment& aInSegment);
   /**

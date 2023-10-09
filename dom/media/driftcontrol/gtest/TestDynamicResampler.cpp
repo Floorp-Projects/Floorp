@@ -354,15 +354,17 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
   float out_ch1[40] = {};
   float out_ch2[40] = {};
 
+  dr.AppendInputSilence(pre_buffer - in_frames);
   dr.AppendInput(in_buffer, in_frames);
+  out_frames = 20u;
   bool rv = dr.Resample(out_ch1, &out_frames, 0);
   EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 40u);
+  EXPECT_EQ(out_frames, 20u);
   rv = dr.Resample(out_ch2, &out_frames, 1);
   EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 40u);
+  EXPECT_EQ(out_frames, 20u);
   for (uint32_t i = 0; i < out_frames; ++i) {
-    // Only pre buffered data reach output
+    // Half the input pre-buffer (10) is silence, and half the output (20).
     EXPECT_FLOAT_EQ(out_ch1[i], 0.0);
     EXPECT_FLOAT_EQ(out_ch2[i], 0.0);
   }
@@ -412,15 +414,17 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
   short out_ch1[40] = {};
   short out_ch2[40] = {};
 
+  dr.AppendInputSilence(pre_buffer - in_frames);
   dr.AppendInput(in_buffer, in_frames);
+  out_frames = 20u;
   bool rv = dr.Resample(out_ch1, &out_frames, 0);
   EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 40u);
+  EXPECT_EQ(out_frames, 20u);
   rv = dr.Resample(out_ch2, &out_frames, 1);
   EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 40u);
+  EXPECT_EQ(out_frames, 20u);
   for (uint32_t i = 0; i < out_frames; ++i) {
-    // Only pre buffered data reach output
+    // Half the input pre-buffer (10) is silence, and half the output (20).
     EXPECT_EQ(out_ch1[i], 0.0);
     EXPECT_EQ(out_ch2[i], 0.0);
   }
