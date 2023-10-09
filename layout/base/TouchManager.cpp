@@ -69,7 +69,8 @@ void TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
       if (presShell) {
         nsIFrame* frame = presShell->GetRootFrame();
         if (frame) {
-          nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget();
+          nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
+          nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
           if (widget) {
             WidgetTouchEvent event(true, eTouchEnd, widget);
             event.mTouches.AppendElement(aTouch);
