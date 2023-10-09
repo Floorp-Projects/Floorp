@@ -14,6 +14,7 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
+using testing::ContainerEq;
 
 namespace {
 #define DispatchFunction(f) \
@@ -156,20 +157,20 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
     AudioSegment expectedSegment = driftCorrector.RequestFrames(
         deinterleaved, static_cast<uint32_t>(requestFrames));
 
-    nsTArray<AudioDataValue> expected;
+    CopyableTArray<AudioDataValue> expected;
     size_t expectedSamples =
         expectedSegment.WriteToInterleavedBuffer(expected, channels);
 
     AudioSegment actualSegment =
         ais->GetAudioSegment(requestFrames, AudioInputSource::Consumer::Same);
     EXPECT_EQ(actualSegment.GetDuration(), requestFrames);
-    nsTArray<AudioDataValue> actual;
+    CopyableTArray<AudioDataValue> actual;
     size_t actualSamples =
         actualSegment.WriteToInterleavedBuffer(actual, channels);
 
     EXPECT_EQ(actualSamples, expectedSamples);
     EXPECT_EQ(actualSamples / channels, static_cast<size_t>(requestFrames));
-    EXPECT_EQ(actual, expected);
+    EXPECT_THAT(actual, ContainerEq(expected));
   }
 
   ais = nullptr;  // Drop the SharedThreadPool here.
