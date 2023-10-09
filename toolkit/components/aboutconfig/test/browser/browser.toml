@@ -11,8 +11,10 @@ support-files = ["head.js"]
 ["browser_basic.js"]
 
 ["browser_clipboard.js"]
+fail-if = ["a11y_checks"] # Bug 1854447 th, td.cell-value, #prefs may not be focusable; #show-all may be unlabeled
 
 ["browser_edit.js"]
+fail-if = ["a11y_checks"] # Bug 1854447 span, th, td.cell-value may not be focusable; #show-all, input, button-add/delete/reset ghost-buttons may not be labeled
 skip-if = ["os == 'linux' && ccov"]  # Bug 1613515, the test consistently times out on Linux coverage builds.
 
 ["browser_locked.js"]
