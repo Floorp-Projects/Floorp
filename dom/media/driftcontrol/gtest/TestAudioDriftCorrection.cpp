@@ -13,21 +13,6 @@
 
 using namespace mozilla;
 
-// Print the mono channel of a segment.
-void printAudioSegment(const AudioSegment& segment) {
-  for (AudioSegment::ConstChunkIterator iter(segment); !iter.IsEnded();
-       iter.Next()) {
-    const AudioChunk& c = *iter;
-    for (uint32_t i = 0; i < c.GetDuration(); ++i) {
-      if (c.mBufferFormat == AUDIO_FORMAT_FLOAT32) {
-        printf("%f\n", c.ChannelData<float>()[0][i]);
-      } else {
-        printf("%d\n", c.ChannelData<int16_t>()[0][i]);
-      }
-    }
-  }
-}
-
 template <class T>
 AudioChunk CreateAudioChunk(uint32_t aFrames, uint32_t aChannels,
                             AudioSampleFormat aSampleFormat);
@@ -67,8 +52,6 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
       AudioSegment inSegment;
       tone.Generate(inSegment, sourceFrames);
       inToneVerifier.AppendData(inSegment);
-      // Print the input for debugging
-      // printAudioSegment(inSegment);
 
       // Get the output of the correction
       AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
@@ -77,8 +60,6 @@ void testAudioCorrection(int32_t aSourceRate, int32_t aTargetRate) {
            ci.Next()) {
         EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
       }
-      // Print the output for debugging
-      // printAudioSegment(outSegment);
       outToneVerifier.AppendData(outSegment);
     }
   }
@@ -147,8 +128,6 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
       tone.Generate(inSegment, sourceFrames / 2);
       tone.SetChannelsCount(1);
       inToneVerify.AppendData(inSegment);
-      // Print the input for debugging
-      // printAudioSegment(inSegment);
 
       // Get the output of the correction
       AudioSegment outSegment = ad.RequestFrames(inSegment, targetFrames);
@@ -157,8 +136,6 @@ void testMonoToStereoInput(uint32_t aSourceRate, uint32_t aTargetRate) {
            ci.Next()) {
         EXPECT_EQ(ci->mPrincipalHandle, testPrincipal);
       }
-      // Print the output for debugging
-      // printAudioSegment(outSegment);
       outToneVerify.AppendData(outSegment);
     }
   }
