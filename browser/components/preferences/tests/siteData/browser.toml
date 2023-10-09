@@ -20,6 +20,8 @@ skip-if = [
 ]
 
 ["browser_siteData3.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#usageCol, treecol#hostCol, treecol#cookiesCol may not be focusable
 
 ["browser_siteData_multi_select.js"]
+fail-if = ["a11y_checks"] # Bug 1854636 clicked treecol#hostCol may not be focusable
 skip-if = ["tsan"] # Bug 1683730
