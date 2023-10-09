@@ -13,6 +13,8 @@ DynamicResampler::DynamicResampler(uint32_t aInRate, uint32_t aOutRate,
   MOZ_ASSERT(aInRate);
   MOZ_ASSERT(aOutRate);
   UpdateResampler(mOutRate, STEREO);
+  mInputStreamFile.Open("DynamicResamplerInFirstChannel", 1, mInRate);
+  mOutputStreamFile.Open("DynamicResamplerOutFirstChannel", 1, mOutRate);
 }
 
 DynamicResampler::~DynamicResampler() {
@@ -70,6 +72,11 @@ void DynamicResampler::ResampleInternal(const float* aInBuffer,
       speex_resampler_process_float(mResampler, aChannelIndex, aInBuffer,
                                     aInFrames, aOutBuffer, aOutFrames);
   MOZ_ASSERT(rv == RESAMPLER_ERR_SUCCESS);
+
+  if (aChannelIndex == 0 && !mIsWarmingUp) {
+    mInputStreamFile.Write(aInBuffer, *aInFrames);
+    mOutputStreamFile.Write(aOutBuffer, *aOutFrames);
+  }
 }
 
 void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
@@ -97,6 +104,11 @@ void DynamicResampler::ResampleInternal(const int16_t* aInBuffer,
       speex_resampler_process_int(mResampler, aChannelIndex, aInBuffer,
                                   aInFrames, aOutBuffer, aOutFrames);
   MOZ_ASSERT(rv == RESAMPLER_ERR_SUCCESS);
+
+  if (aChannelIndex == 0 && !mIsWarmingUp) {
+    mInputStreamFile.Write(aInBuffer, *aInFrames);
+    mOutputStreamFile.Write(aOutBuffer, *aOutFrames);
+  }
 }
 
 void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
@@ -166,6 +178,7 @@ void DynamicResampler::UpdateResampler(uint32_t aOutRate, uint32_t aChannels) {
 
 void DynamicResampler::WarmUpResampler(bool aSkipLatency) {
   MOZ_ASSERT(mInputTail.Length());
+  mIsWarmingUp = true;
   for (uint32_t i = 0; i < mChannels; ++i) {
     if (!mInputTail[i].Length()) {
       continue;
@@ -193,6 +206,7 @@ void DynamicResampler::WarmUpResampler(bool aSkipLatency) {
     // calculations are needed.
     speex_resampler_set_skip_frac_num(mResampler, inputLatency * ratioDen);
   }
+  mIsWarmingUp = false;
 }
 
 void DynamicResampler::AppendInput(const nsTArray<const float*>& aInBuffer,
