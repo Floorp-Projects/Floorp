@@ -1465,14 +1465,26 @@ const uint8_t kAllocJunk = 0xe4;
 const uint8_t kAllocPoison = 0xe5;
 
 #ifdef MALLOC_RUNTIME_CONFIG
-static bool opt_junk = true;
-static bool opt_poison = true;
-static bool opt_zero = false;
+#  define MALLOC_RUNTIME_VAR static
 #else
-static const bool opt_junk = false;
-static const bool opt_poison = true;
-static const bool opt_zero = false;
+#  define MALLOC_RUNTIME_VAR static const
 #endif
+
+enum PoisonType {
+  NONE,
+  SOME,
+  ALL,
+};
+
+MALLOC_RUNTIME_VAR bool opt_junk = false;
+MALLOC_RUNTIME_VAR bool opt_zero = false;
+
+#ifdef EARLY_BETA_OR_EARLIER
+MALLOC_RUNTIME_VAR PoisonType opt_poison = ALL;
+#else
+MALLOC_RUNTIME_VAR PoisonType opt_poison = SOME;
+#endif
+
 static bool opt_randomize_small = true;
 
 // ***************************************************************************
@@ -1550,9 +1562,19 @@ static inline size_t GetChunkOffsetForPtr(const void* aPtr) {
 static inline const char* _getprogname(void) { return "<jemalloc>"; }
 
 static inline void MaybePoison(void* aPtr, size_t aSize) {
-  if (opt_poison) {
-    memset(aPtr, kAllocPoison, aSize);
+  size_t size;
+  switch (opt_poison) {
+    case NONE:
+      return;
+    case SOME:
+      size = std::min(aSize, kCacheLineSize);
+      break;
+    case ALL:
+      size = aSize;
+      break;
   }
+  MOZ_ASSERT(size != 0 && size <= aSize);
+  memset(aPtr, kAllocPoison, size);
 }
 
 // Fill the given range of memory with zeroes or junk depending on opt_junk and
@@ -4357,29 +4379,27 @@ static bool malloc_init_hard() {
   // Get runtime configuration.
   if ((opts = getenv("MALLOC_OPTIONS"))) {
     for (i = 0; opts[i] != '\0'; i++) {
-      // Parse repetition count, if any.
-      unsigned nreps = 0;
+      // All options are single letters, some take a *prefix* numeric argument.
+
+      // Parse the argument.
+      unsigned prefix_arg = 0;
       while (opts[i] >= '0' && opts[i] <= '9') {
-        nreps *= 10;
-        nreps += opts[i] - '0';
+        prefix_arg *= 10;
+        prefix_arg += opts[i] - '0';
         i++;
-      }
-      // If there were no digits then set nreps = 0.  Note that if all the
-      // digits where 0s this will still force at least one repetition.
-      if (nreps == 0) {
-        nreps = 1;
       }
 
       switch (opts[i]) {
         case 'f':
-          opt_dirty_max >>= nreps;
+          opt_dirty_max >>= prefix_arg ? prefix_arg : 1;
           break;
         case 'F':
+          prefix_arg = prefix_arg ? prefix_arg : 1;
           if (opt_dirty_max == 0) {
             opt_dirty_max = 1;
-            nreps--;
+            prefix_arg--;
           }
-          opt_dirty_max <<= nreps;
+          opt_dirty_max <<= prefix_arg;
           if (opt_dirty_max == 0) {
             // If the shift above overflowed all the bits then clamp the result
             // instead.  If we started with DIRTY_MAX_DEFAULT then this will
@@ -4396,10 +4416,17 @@ static bool malloc_init_hard() {
           opt_junk = true;
           break;
         case 'q':
-          opt_poison = false;
+          // The argument selects how much poisoning to do.
+          opt_poison = NONE;
           break;
         case 'Q':
-          opt_poison = true;
+          if (opts[i + 1] == 'Q') {
+            // Maximum poisoning.
+            i++;
+            opt_poison = ALL;
+          } else {
+            opt_poison = SOME;
+          }
           break;
         case 'z':
           opt_zero = false;
@@ -4411,7 +4438,8 @@ static bool malloc_init_hard() {
         case 'P':
           MOZ_ASSERT(gPageSize >= 4_KiB);
           MOZ_ASSERT(gPageSize <= 64_KiB);
-          gPageSize <<= nreps;
+          prefix_arg = prefix_arg ? prefix_arg : 1;
+          gPageSize <<= prefix_arg;
           // We know that if the shift causes gPageSize to be zero then it's
           // because it shifted all the bits off.  We didn't start with zero.
           // Therefore if gPageSize is out of bounds we set it to 64KiB.
