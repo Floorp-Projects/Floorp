@@ -20,10 +20,11 @@ class DriftController;
  * target must be provided.
  *
  * It works with AudioSegment in order to be able to be used from the
- * MediaTrackGraph/MediaTrack. The audio buffers are pre-allocated so there is
- * no new allocation takes place during operation. The preallocation capacity is
- * 100ms for input and 100ms for output. The class consists of DriftController
- * and AudioResampler check there for more details.
+ * MediaTrackGraph/MediaTrack. The audio buffers are pre-allocated so the only
+ * new allocation taking place during operation happens if the input buffer
+ * outgrows the memory allocated. The preallocation capacity is 100ms for input
+ * and 100ms for output. The class consists of DriftController and
+ * AudioResampler check there for more details.
  *
  * The class is not thread-safe. The construction can happen in any thread but
  * the member method must be used in a single thread that can be different than
