@@ -31,6 +31,7 @@ support-files = [
   "search-engines/simple/manifest.json",
   "search-engines/engines.json",
 ]
+fail-if = ["a11y_checks"] # Bug 1854506 clicked searchbar-engine-one-off-item button may not be focusable
 
 ["browser_PermissionUI.js"]
 
@@ -76,6 +77,7 @@ https_first_disabled = true
 https_first_disabled = true
 
 ["browser_UsageTelemetry_interaction.js"]
+fail-if = ["a11y_checks"] # Bug 1854506 clicked reload-button and back-button may not be focusable; 12foo button may not be labeled
 https_first_disabled = true
 
 ["browser_UsageTelemetry_private_and_restore.js"]
