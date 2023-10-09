@@ -52,6 +52,11 @@ class ClockDrift final {
   float GetCorrection() { return mCorrection; }
 
   /**
+   * The number of times mCorrection has been changed to adjust to drift.
+   */
+  uint32_t NumCorrectionChanges() const { return mNumCorrectionChanges; }
+
+  /**
    * Update the available source frames, target frames, and the current
    * buffer, in every iteration. If the conditions are met a new correction is
    * calculated. A new correction is calculated in the following cases:
@@ -105,8 +110,17 @@ class ClockDrift final {
                  aCalculationWeight * mTargetClock / resampledSourceClock,
              aBufferedFrames, mDesiredBuffering, aRemainingFrames));
 
+    auto oldCorrection = mCorrection;
+
     mCorrection = (1 - aCalculationWeight) * mCorrection +
                   aCalculationWeight * mTargetClock / resampledSourceClock;
+
+    if (oldCorrection != mCorrection) {
+      // Do the comparison pre-clamping as a low number of correction changes
+      // should indicate that we are close to the desired buffering (correction
+      // 1).
+      ++mNumCorrectionChanges;
+    }
 
     // Clamp to range [0.9, 1.1] to avoid distortion
     mCorrection = std::min(std::max(mCorrection, 0.9f), 1.1f);
@@ -124,6 +138,7 @@ class ClockDrift final {
 
  private:
   float mCorrection = 1.0;
+  uint32_t mNumCorrectionChanges = 0;
 
   uint32_t mSourceClock = 0;
   uint32_t mTargetClock = 0;
@@ -196,6 +211,11 @@ class AudioDriftCorrection final {
 
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t CurrentBuffering() const { return mResampler.InputReadableFrames(); }
+
+  // Only accessible from the same thread that is driving RequestFrames().
+  uint32_t NumCorrectionChanges() const {
+    return mClockDrift.NumCorrectionChanges();
+  }
 
   const uint32_t mDesiredBuffering;
   const uint32_t mTargetRate;
