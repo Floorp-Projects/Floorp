@@ -66,6 +66,14 @@
        Gizli gezinti ile ilgili yaygın efsaneler
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Bu cihazda iz bırakmayın</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s, tüm gizli pencerelerinizi kapattığınızda çerezlerinizi, geçmişinizi ve site verilerinizi temizler. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -487,11 +495,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Erişilebilirlik</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Özel Firefox Hesabı sunucusu</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Özel Firefox Hesabı sunucusu</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Özel Mozilla hesabı sunucusu</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Özel Sync sunucusu</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox Hesabı/Sync sunucusu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Hesabı/Sync sunucusu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla hesabı/Sync sunucusu değiştirildi. Değişiklikleri uygulamak için uygulamadan çıkılıyor…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Hesap</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -507,7 +519,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Sekmeleri, yer imlerini, parolaları ve daha fazlasını eşitlemek için giriş yapın.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox Hesabı</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Hesabı</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla hesabı</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Eşitlemeye devam etmek için yeniden bağlayın</string>
     <!-- Preference for language -->
@@ -539,6 +553,11 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Adresleri otomatik tamamla</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Sponsorlardan öneriler</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s önerileri</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Bağlantıları uygulamalarda aç</string>
 
@@ -2177,7 +2196,17 @@
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">Değerlendirme kalitesini nasıl belirliyoruz?</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Her ürünün değerlendirmelerine A’dan F’ye kadar bir <b>harf notu</b> veriyoruz.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Her ürünün değerlendirmelerine A’dan F’ye kadar bir <b>harf notu</b> veriyoruz.]]></string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Güvenilir değerlendirmeler. Değerlendirmelerin büyük olasılıkla dürüst, tarafsız incelemeler yazan gerçek müşterilerden geldiğini düşünüyoruz.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Değerlendirmelerin güvenilir olduğunu düşünüyoruz.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Güvenilir ve güvenilmez değerlendirmelerin bir karışımı olduğunu düşünüyoruz.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Güvenilmez değerlendirmeler. Değerlendirmelerin büyük ihtimalle sahte olduğunu veya önyargılı kişilerden geldiğini düşünüyoruz.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Değerlendirmelerin güvenilmez olduğunu düşünüyoruz.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s hakkında daha fazla bilgi alın.</string>
     <!-- Text for title of settings section. -->

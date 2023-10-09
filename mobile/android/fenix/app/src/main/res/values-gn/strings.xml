@@ -509,10 +509,14 @@
     <string name="preferences_accessibility">Jeikekuaaha</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Mohendahavusu Firefox Account momba’etepyre</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Mohendahavusu Mozilla mba’ete mboavapyréva</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Mohendahavusu Sync momba’etepyre</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Account/Sync mba’ete moambuepyre. Esẽnguévo pe tembiporu’ígui emoambue hag̃ua…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla mba’ete/Sync mohendahavusu moambuepyre. Esẽ tembipuru’ígui iñambue hag̃ua…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Mba’ete</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -563,9 +567,14 @@
     <string name="preferences_enable_autocomplete_urls">Moĩmbajehegui URLs</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">Pytyvõhára ñemoñe’ẽ</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Eykeko %1$s ñemoñe’ẽ jehepyme’ẽrã sapy’apy’agua</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">%1$s ñemoñe’ẽ</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Emog̃uahẽ ñemoñe’ẽ ñandutígui jeheka rehegua</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Embojuruja juajuha tembiporu’ípe</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2257,6 +2266,10 @@
     <string name="review_quality_check_info_grade_info_C">Roikuaa oĩha marandu’i jeroviaha ha jerovia’ỹha.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">Marandu’i jerovia’iveha. Roikuaa marandu’i ikatuha japu térã ou hechajeyhára iñañávagui.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Roikuaa marandu’íre ejeroviakuaaha.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>ñeha’ã oikóva</b> oma’ẽ marandu’i rohecháva ojegueroviaha añoite.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Eikuaave ko’ãvare %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2286,8 +2299,12 @@
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Ehechajey ko’ág̃a</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
     <string name="review_quality_check_no_reviews_warning_title">Noĩri gueteri heta marandu’i</string>
+    <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
+    <string name="review_quality_check_no_reviews_warning_body">Ko apopyre ojehecha hetajey rire, rohesa’ỹijóta iporãngue.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Apopyre ndojeporukuaái</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Ehechárõ ko apopyre ojejoguakuaajeýma, oremomarandu ha romba’apóta hekopyahu hag̃ua ñehesa’ijo.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Emombe’u ko apopyre ojeporukuaajeymaha</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
@@ -2298,6 +2315,8 @@
     <string name="review_quality_check_analysis_in_progress_warning_body">Kóva ipukukuaa 60 aravo’ive rupi.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">¡Aguyje emomarandúre!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Oĩva’erã marandu ko apopyre jehechajey rehegua 24 aravo oútavape. Ehechajey uperire.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Ndorohechajeykuaái ko marandu’i.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
@@ -2312,6 +2331,8 @@
     <string name="review_quality_check_generic_error_body">Romba’apo opa hag̃ua apañuãi. Ikatúpiko, eha’ãjey ag̃ave.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">Ndaikatúi eike ñandutípe</string>
+    <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
+    <string name="review_quality_check_no_connection_body">Ehechajey nde jeikekatu ñandutípe ha emyanyhẽjey kuatiarogue.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Ndaipóri mba’eve ko’ã marandu’i rehegua</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
@@ -2320,6 +2341,8 @@
     <string name="review_quality_check_contextual_onboarding_title">Eiporu ore marandu’i jeguataha rechajey jeroviápe</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Eikuaave</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">Eiporavóvo “Héẽ, eipuru”, emoneĩ %1$s %2$s-gua ha %3$s Mozilla mba’e.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

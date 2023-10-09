@@ -329,16 +329,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">現在不要</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">將 %s 設為主力瀏覽器</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">將 Firefox 設為主力瀏覽器</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s 將人們看得比利潤更重要，並且透過封鎖跨網站追蹤器等機制來捍衛您的隱私。\n\n可到我們的%2$s了解更多資訊。</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox 將人們看得比利潤更重要，並且透過封鎖跨網站追蹤器等機制來捍衛您的隱私。\n\n可到我們的隱私權公告了解更多資訊。</string>
@@ -357,15 +350,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">登入</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">現在不要</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">透過通知，可幫助您使用 %s 做到更多事</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">透過通知，可幫助您使用 Firefox 做到更多事</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">在不同裝置間發送分頁標籤、管理下載項目並獲得能完整發揮 %s 威力的使用秘訣。</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">在不同裝置間發送分頁標籤、管理下載項目並獲得能完整發揮 Firefox 威力的使用秘訣。</string>
@@ -521,11 +508,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">輔助功能</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">自訂 Firefox 帳號伺服器</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">自訂 Firefox 帳號伺服器</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">自訂 Mozilla 帳號伺服器</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">自訂同步伺服器</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">已更改 Firefox 帳號 / 同步伺服器設定。將結束應用程式讓變更生效…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">已更改 Firefox 帳號 / 同步伺服器設定。將結束應用程式讓變更生效…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">已更改 Mozilla 帳號 / 同步伺服器設定。將結束應用程式讓變更生效…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">帳號</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -541,7 +532,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">登入後即可同步分頁、書籤、密碼與其他資料。</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox 帳號</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox 帳號</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla 帳號</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">重新連線，以恢復同步</string>
     <!-- Preference for language -->
@@ -574,6 +567,16 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">自動完成網址</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">來自贊助商的建議</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">允許贊助商偶爾顯示廣告，支持 %1$s 的發展</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">來自 %1$s 的建議</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">取得您搜尋內容的相關建議</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">用 App 開啟鏈結</string>
 
@@ -2241,17 +2244,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">我們使用來自 %s 的 AI 技術來分析商品評論的可靠程度。此分析僅協助您判斷商品評論品質，而非商品本身的品質。</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[我們會替每筆商品評論標上 A（優良）到 F（不佳）的<b>評分</b>。]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[我們會替每筆商品評論標上 A（優良）到 F（不佳）的<b>評分</b>。]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">評論可靠。我們相信此商品的評論內容很可能是來自實際客戶所留下真實而中立的評論。</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">我們認為評論可靠。</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">我們相信此商品評論混和了可靠與不可靠的評論。</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">評論不可靠。我們相信此商品的評論內容很可能是由虛假或偏頗的評論者所留下。</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">我們認為評論不可靠。</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[會依照我們認為可靠的評論，重新計算<b>調整後評分</b>。]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>重點資訊</b>是根據過去 80 天中，我們相信是可靠的 %s 評論所整理出的資訊。]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>重點資訊</b>是根據過去 80 天中，我們相信是可靠的 %s 評論所整理出的資訊。]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">了解 %s 的更多資訊。</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2353,7 +2360,7 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">開啟商品評論檢查器</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta 測試版</string>
+    <string name="review_quality_check_beta_flag">Beta 測試版</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">開啟商品評論檢查器</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->

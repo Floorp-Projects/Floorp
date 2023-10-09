@@ -99,7 +99,7 @@
     <string name="mozac_browser_errorpages_unknown_socket_type_title">서버에서 예기치 않은 응답</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
-	<p>네트워크 요청에 대해 사이트가 예기치 않은 방식으로 반응했기 때문에 브라우저가 계속 진행할 수 없습니다.</p>
+	<p>네트워크 요청에 대해 사이트가 예기치 않은 방식으로 반응했기 때문에 브라우저가 계속할 수 없습니다.</p>
 	]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
@@ -286,5 +286,5 @@
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
     <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[보안 강화를 위해 HTTPS 전용 모드를 사용하도록 설정했으며 <em>%1$s</em>의 HTTPS 버전을 사용할 수 없습니다.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
-    <string name="mozac_browser_errorpages_httpsonly_button">HTTP 사이트로 계속 진행</string>
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP 사이트로 계속</string>
 </resources>

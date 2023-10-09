@@ -144,9 +144,13 @@
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">選擇登入資訊服務提供者</string>
     <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">選擇帳號</string>
+    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">選擇帳號</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">使用 %1$s 帳號登入</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">使用 %1$s 登入</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[使用 %2$s 帳號登入 %1$s 須遵守該登入服務的<a href="%3$s">隱私權保護政策</a>及<a href="%4$s">服務條款</a>]]></string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">繼續</string>
 </resources>

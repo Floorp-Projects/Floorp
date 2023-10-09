@@ -228,4 +228,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">到選單開啟</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">好的，知道了</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">了解更多</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">因為安全性或穩定性因素，已停用 %1$s。</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">無法確認 %1$s 安全，已被停用。</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s 與您執行的 %2$s（版本 %3$s）不相容。</string>
 </resources>

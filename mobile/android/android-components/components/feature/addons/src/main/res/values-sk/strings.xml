@@ -234,4 +234,6 @@
     <string name="mozac_feature_addons_status_blocklisted">Doplnok %1$s bol zablokovaný kvôli problémom so stabilitou alebo bezpečnosťou.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">Doplnok %1$s nebolo možné overiť ako bezpečný a bol preto zakázaný.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">Doplnok %1$s nie je kompatibilný s vašou verziou prehliadača %2$s (verzia %3$s).</string>
 </resources>

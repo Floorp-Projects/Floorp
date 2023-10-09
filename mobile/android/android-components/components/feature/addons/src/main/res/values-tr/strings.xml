@@ -176,6 +176,14 @@
     <string name="mozac_feature_addons_failed_to_install_generic">Bu eklenti yüklenemedi.</string>
     <!-- Text shown when attempting to install an add-on and a network error happened. -->
     <string name="mozac_feature_addons_failed_to_install_network_error">Bağlantı hatası nedeniyle bu eklenti indirilemedi.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">Bu eklenti bozuk göründüğü için yüklenemedi.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Bu eklenti doğrulanmadığı için yüklenemiyor.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s eklentisi %2$s %3$s ile uyumsuz olduğu için yüklenemedi.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s yüklenemedi çünkü kararsızlık veya güvenlik sorunlarına yol açma riski yüksek.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s yüklenemedi çünkü kararsızlık veya güvenlik sorunlarına yol açma riski yüksek</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
@@ -220,4 +228,12 @@
     <string name="mozac_feature_addons_installed_dialog_description">Menüden açabilirsiniz</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Tamam</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">Daha fazla bilgi alın</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">%1$s güvenlik veya kararlılık gerekçesiyle devre dışı bırakıldı.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s eklentisinin güvenliği doğrulanamadığı için eklenti devre dışı bırakıldı.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s sizin %2$s sürümünüzle (sürüm %3$s) uyumlu değil.</string>
 </resources>

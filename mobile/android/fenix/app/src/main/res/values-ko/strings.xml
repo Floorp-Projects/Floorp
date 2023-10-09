@@ -508,7 +508,7 @@
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">웹 사이트가 HTTPS를 지원하지 않는 것 같습니다.</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
-    <string name="errorpage_httpsonly_message_summary">그러나, 공격자가 연루되었을 가능성도 있습니다. 웹 사이트를 방문하는 경우, 민감한 정보는 입력하지 않아야 합니다. 계속 진행하면, 사이트에 대해 HTTPS 전용 모드가 일시적으로 꺼집니다.</string>
+    <string name="errorpage_httpsonly_message_summary">그러나, 공격자가 연루되었을 가능성도 있습니다. 웹 사이트를 방문하는 경우, 민감한 정보는 입력하지 않아야 합니다. 계속하면, 사이트에 대해 HTTPS 전용 모드가 일시적으로 꺼집니다.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">접근성</string>
     <!-- Preference to override the Firefox Account server -->
@@ -2266,15 +2266,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[각 제품의 리뷰에는 A부터 F까지 <b>문자 등급</b>이 부여됩니다.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">신뢰할 수 있는 리뷰. 솔직하고 공정한 리뷰를 남긴 실제 고객의 리뷰일 가능성이 높다고 생각합니다.</string>
+    <string name="review_quality_check_info_grade_info_AB">신뢰할 수 있는 리뷰. 솔직하고 공정한 리뷰를 남긴 실제 고객의 리뷰일 가능성이 높다고 생각합니다.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">신뢰할 수 있는 리뷰라고 생각합니다.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">신뢰할 수 있는 리뷰라고 생각합니다.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">신뢰할 수 있는 리뷰와 신뢰할 수 없는 리뷰가 혼합되어 있다고 생각합니다.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">신뢰할 수 없는 리뷰. 리뷰가 가짜이거나 편향된 리뷰어의 리뷰일 가능성이 있다고 생각합니다.</string>
+    <string name="review_quality_check_info_grade_info_DF">신뢰할 수 없는 리뷰. 리뷰가 가짜이거나 편향된 리뷰어의 리뷰일 가능성이 있다고 생각합니다.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">신뢰할 수 없는 리뷰라고 생각합니다.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">신뢰할 수 없는 리뷰라고 생각합니다.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>조정된 평점</b>은 신뢰할 수 있다고 믿는 리뷰만을 기반으로 합니다.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

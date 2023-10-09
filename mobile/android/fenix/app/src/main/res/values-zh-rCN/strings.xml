@@ -2168,7 +2168,7 @@
     <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
     <string name="top_sites_menu_sponsor_privacy">我们的赞助商＆您的隐私</string>
     <!-- Label text displayed for a sponsored top site. -->
-    <string name="top_sites_sponsored_label">赞助项目</string>
+    <string name="top_sites_sponsored_label">赞助推广</string>
 
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
@@ -2231,7 +2231,7 @@
     <string name="pocket_stories_feature_learn_more">详细了解</string>
 
     <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
-    <string name="pocket_stories_sponsor_indication">赞助项目</string>
+    <string name="pocket_stories_sponsor_indication">赞助推广</string>
 
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">启用遥测以发送数据。</string>

@@ -329,16 +329,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">後で</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s をいつものブラウザーに</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox をいつものブラウザーに</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s はユーザーのことを第一に考え、クロスサイトトラッカーからあなたのプライバシーを守ります。\n\n%2$s もご覧ください。</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox はユーザーのことを第一に考え、クロスサイトトラッカーからあなたのプライバシーを守ります。\n\n詳細はプライバシー通知をご覧ください。</string>
@@ -358,15 +351,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ログイン</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">後で</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">通知をオンにして %s をさらに活用しましょう</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">通知をオンにして Firefox をさらに活用しましょう</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">通知を使って他の端末にタブを送信したり、ダウンロードを管理したり、%s を最大限に活用するためのヒントを受け取れます。</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">通知を使って他の端末にタブを送信したり、ダウンロードを管理したり、Firefox を最大限に活用するためのヒントを受け取れます。</string>
@@ -525,11 +512,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">アクセシビリティ</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">カスタム Firefox アカウントサーバー</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">カスタム Firefox アカウントサーバー</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">カスタム Mozilla アカウントサーバー</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">カスタム Sync サーバー</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox アカウント/Sync サーバーが変更されました。変更を適用するためにアプリケーションを終了しています…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox アカウント/Sync サーバーが変更されました。変更を適用するためにアプリケーションを終了しています…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla アカウント/Sync サーバーが変更されました。変更を適用するためにアプリケーションを終了しています…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">アカウント</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -545,7 +536,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ログインしてタブやブックマーク、パスワードなどを同期しましょう。</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox アカウント</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox アカウント</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla アカウント</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">再接続して同期を再開</string>
     <!-- Preference for language -->
@@ -577,6 +570,16 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">自動補完 URL</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">スポンサーからの提案</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">スポンサーからの提案を随時表示して %1$s を支援します</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s からの提案</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">検索語句に関連した提案をウェブから取得します</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">リンクを外部アプリで開く</string>
 
@@ -2237,7 +2240,7 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">私たちは、%s by Mozilla の AI 技術を用いて製品レビューの信頼性を解析します。これは製品そのものの品質ではなく、製品の信頼できるレビューへのアクセスを助けるものです。</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[私たちは、各製品のレビューを A から F までの <b>レターグレード</b> で評価します。]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[私たちは、各製品のレビューを A から F までの <b>レターグレード</b> で評価します。]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">信頼できるレビューです。これは正直で偏見を持たない本物の顧客によるレビューであると思われます。</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
@@ -2247,7 +2250,7 @@
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>調整されたレート</b> は私たちが信頼するに足ると評価したレビューのみを基にしています。]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>注目レビュー</b> は最近 80 日以内の %s からのレビューで私たちが信頼するに足ると評価したものです。]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>注目レビュー</b> は最近 80 日以内の %s からのレビューで私たちが信頼するに足ると評価したものです。]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s についての詳細。</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2353,7 +2356,7 @@
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">レビューチェッカーを開く</string>
 
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">レビューチェッカーを開く</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
