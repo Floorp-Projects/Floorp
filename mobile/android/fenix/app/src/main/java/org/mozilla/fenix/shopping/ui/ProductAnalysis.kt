@@ -211,10 +211,11 @@ private fun AdjustedProductRatingCard(
                 ),
             )
 
-            StarRating(value = rating)
+            StarRating(
+                value = rating,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = stringResource(R.string.review_quality_check_adjusted_rating_description),
