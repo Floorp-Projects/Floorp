@@ -458,14 +458,14 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                 if (GraphDriver* nextDriver = result.NextDriver()) {
                   LOG(LogLevel::Debug,
                       ("%p: Switching from fallback to other driver.",
-                       mGraph.get()));
+                       mOwner.get()));
                   result.Switched();
                   nextDriver->SetState(mIterationStart, mIterationEnd,
                                        mStateComputedTime);
                   nextDriver->Start();
                 } else if (result.IsStop()) {
                   LOG(LogLevel::Debug,
-                      ("%p: Stopping fallback driver.", mGraph.get()));
+                      ("%p: Stopping fallback driver.", mOwner.get()));
                   result.Stopped();
                 }
               }
