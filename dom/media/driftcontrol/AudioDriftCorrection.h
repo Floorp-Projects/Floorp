@@ -47,9 +47,10 @@ class AudioDriftCorrection final {
    * be provided. The duration of the source and the output is considered as the
    * source clock and the target clock. The input is buffered internally so some
    * latency exists. The returned AudioSegment must be cleaned up because the
-   * internal buffer will be reused after 100ms. If the drift correction (and
-   * possible resampling) is not possible due to lack of input data an empty
-   * AudioSegment will be returned. Not thread-safe.
+   * internal buffer will be reused after 100ms. If not enough data is available
+   * in the input buffer to produce the requested number of output frames, the
+   * input buffer is drained and a smaller segment than requested is returned.
+   * Not thread-safe.
    */
   AudioSegment RequestFrames(const AudioSegment& aInput,
                              uint32_t aOutputFrames);

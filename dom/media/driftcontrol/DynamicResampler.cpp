@@ -33,13 +33,13 @@ void DynamicResampler::SetSampleFormat(AudioSampleFormat aFormat) {
   }
 }
 
-bool DynamicResampler::Resample(float* aOutBuffer, uint32_t* aOutFrames,
+bool DynamicResampler::Resample(float* aOutBuffer, uint32_t aOutFrames,
                                 uint32_t aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_FLOAT32);
   return ResampleInternal(aOutBuffer, aOutFrames, aChannelIndex);
 }
 
-bool DynamicResampler::Resample(int16_t* aOutBuffer, uint32_t* aOutFrames,
+bool DynamicResampler::Resample(int16_t* aOutBuffer, uint32_t aOutFrames,
                                 uint32_t aChannelIndex) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_S16);
   return ResampleInternal(aOutBuffer, aOutFrames, aChannelIndex);
@@ -215,29 +215,6 @@ void DynamicResampler::AppendInput(const nsTArray<const int16_t*>& aInBuffer,
                                    uint32_t aInFrames) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_S16);
   AppendInputInternal(aInBuffer, aInFrames);
-}
-
-bool DynamicResampler::EnoughInFrames(uint32_t aOutFrames,
-                                      uint32_t aChannelIndex) const {
-  if (mInRate == mOutRate) {
-    return InFramesBuffered(aChannelIndex) >= aOutFrames;
-  }
-  if (!(mOutRate % mInRate) && !(aOutFrames % mOutRate / mInRate)) {
-    return InFramesBuffered(aChannelIndex) >= aOutFrames / (mOutRate / mInRate);
-  }
-  if (!(mInRate % mOutRate) && !(aOutFrames % mOutRate / mInRate)) {
-    return InFramesBuffered(aChannelIndex) >= aOutFrames * mInRate / mOutRate;
-  }
-  return InFramesBuffered(aChannelIndex) > aOutFrames * mInRate / mOutRate;
-}
-
-bool DynamicResampler::CanResample(uint32_t aOutFrames) const {
-  for (uint32_t i = 0; i < mChannels; ++i) {
-    if (!EnoughInFrames(aOutFrames, i)) {
-      return false;
-    }
-  }
-  return true;
 }
 
 void DynamicResampler::AppendInputSilence(const uint32_t aInFrames) {

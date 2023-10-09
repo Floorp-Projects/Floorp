@@ -36,13 +36,10 @@ TEST(TestDynamicResampler, SameRates_Float1)
 
   // Warm up with zeros
   dr.AppendInput(in_buffer, in_frames);
-  uint32_t out_frames_used = out_frames;
-  bool rv = dr.Resample(out_ch1, &out_frames_used, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames_used, out_frames);
-  rv = dr.Resample(out_ch2, &out_frames_used, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames_used, out_frames);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_FLOAT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_FLOAT_EQ(in_ch2[i], out_ch2[i]);
@@ -53,26 +50,20 @@ TEST(TestDynamicResampler, SameRates_Float1)
     in_ch1[i] = in_ch2[i] = 0.01f * i;
   }
   dr.AppendInput(in_buffer, in_frames);
-  out_frames_used = out_frames;
-  rv = dr.Resample(out_ch1, &out_frames_used, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames_used, out_frames);
-  rv = dr.Resample(out_ch2, &out_frames_used, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames_used, out_frames);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_FLOAT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_FLOAT_EQ(in_ch2[i], out_ch2[i]);
   }
 
   // No more frames in the input buffer
-  rv = dr.Resample(out_ch1, &out_frames_used, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames_used, 0u);
-  out_frames_used = 2;
-  rv = dr.Resample(out_ch2, &out_frames_used, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames_used, 0u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, SameRates_Short1)
@@ -99,25 +90,20 @@ TEST(TestDynamicResampler, SameRates_Short1)
   short out_ch2[3] = {};
 
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_EQ(in_ch2[i], out_ch2[i]);
   }
 
   // No more frames in the input buffer
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
-  out_frames = 2;
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, SameRates_Float2)
@@ -142,37 +128,30 @@ TEST(TestDynamicResampler, SameRates_Float2)
   float out_ch2[3] = {};
 
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_FLOAT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_FLOAT_EQ(in_ch2[i], out_ch2[i]);
   }
 
   out_frames = 1;
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 1u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 1u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_FLOAT_EQ(in_ch1[i + 2], out_ch1[i]);
     EXPECT_FLOAT_EQ(in_ch2[i + 2], out_ch2[i]);
   }
 
   // No more frames, the input buffer has drained
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
-  out_frames = 1;
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, SameRates_Short2)
@@ -197,37 +176,30 @@ TEST(TestDynamicResampler, SameRates_Short2)
   short out_ch2[3] = {};
 
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 2u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_EQ(in_ch2[i], out_ch2[i]);
   }
 
   out_frames = 1;
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 1u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 1u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     EXPECT_EQ(in_ch1[i + 2], out_ch1[i]);
     EXPECT_EQ(in_ch2[i + 2], out_ch2[i]);
   }
 
   // No more frames, the input buffer has drained
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
-  out_frames = 1;
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, SameRates_Float3)
@@ -253,26 +225,21 @@ TEST(TestDynamicResampler, SameRates_Float3)
 
   // Not enough frames in the input buffer
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
-  out_frames = 3;
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 
-  // Add one more frame
+  // Add one frame
   in_buffer[0] = in_ch1 + 2;
   in_buffer[1] = in_ch2 + 2;
   dr.AppendInput(in_buffer, 1);
-  out_frames = 3;
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 3u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 3u);
-  for (uint32_t i = 0; i < out_frames; ++i) {
+  out_frames = 1;
+  hasUnderrun = dr.Resample(out_ch1 + 2, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2 + 2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  for (uint32_t i = 0; i < 3; ++i) {
     EXPECT_FLOAT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_FLOAT_EQ(in_ch2[i], out_ch2[i]);
   }
@@ -301,26 +268,21 @@ TEST(TestDynamicResampler, SameRates_Short3)
 
   // Not enough frames in the input buffer
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
-  out_frames = 3;
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_FALSE(rv);
-  EXPECT_EQ(out_frames, 0u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
 
-  // Add one more frame
+  // Add one frame
   in_buffer[0] = in_ch1 + 2;
   in_buffer[1] = in_ch2 + 2;
   dr.AppendInput(in_buffer, 1);
-  out_frames = 3;
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 3u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 3u);
-  for (uint32_t i = 0; i < out_frames; ++i) {
+  out_frames = 1;
+  hasUnderrun = dr.Resample(out_ch1 + 2, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2 + 2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  for (uint32_t i = 0; i < 3; ++i) {
     EXPECT_EQ(in_ch1[i], out_ch1[i]);
     EXPECT_EQ(in_ch2[i], out_ch2[i]);
   }
@@ -357,12 +319,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
   dr.AppendInputSilence(pre_buffer - in_frames);
   dr.AppendInput(in_buffer, in_frames);
   out_frames = 20u;
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 20u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 20u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     // Half the input pre-buffer (10) is silence, and half the output (20).
     EXPECT_FLOAT_EQ(out_ch1[i], 0.0);
@@ -378,12 +338,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
   // output
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 18u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 18u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, UpdateOutRate_Short)
@@ -417,12 +375,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
   dr.AppendInputSilence(pre_buffer - in_frames);
   dr.AppendInput(in_buffer, in_frames);
   out_frames = 20u;
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 20u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 20u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
   for (uint32_t i = 0; i < out_frames; ++i) {
     // Half the input pre-buffer (10) is silence, and half the output (20).
     EXPECT_EQ(out_ch1[i], 0.0);
@@ -438,12 +394,10 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
   EXPECT_EQ(out_frames, 18u);
   // Even if we provide no input if we have enough buffered input, we can create
   // output
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 18u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 18u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, BigRangeOutRates_Float)
@@ -480,15 +434,12 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
     EXPECT_EQ(dr.GetChannels(), channels);
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
-    uint32_t expected_out_frames = out_frames;
     for (uint32_t y = 0; y < 2; ++y) {
       dr.AppendInput(in_buffer, in_frames);
-      bool rv = dr.Resample(out_ch1, &out_frames, 0);
-      EXPECT_TRUE(rv);
-      EXPECT_EQ(out_frames, expected_out_frames);
-      rv = dr.Resample(out_ch2, &out_frames, 1);
-      EXPECT_TRUE(rv);
-      EXPECT_EQ(out_frames, expected_out_frames);
+      bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+      EXPECT_FALSE(hasUnderrun);
+      hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+      EXPECT_FALSE(hasUnderrun);
     }
   }
 }
@@ -525,15 +476,12 @@ TEST(TestDynamicResampler, BigRangeOutRates_Short)
     dr.UpdateResampler(out_rate, channels);
     in_frames = 20;  // more than we need
     out_frames = in_frames * out_rate / in_rate;
-    uint32_t expected_out_frames = out_frames;
     for (uint32_t y = 0; y < 2; ++y) {
       dr.AppendInput(in_buffer, in_frames);
-      bool rv = dr.Resample(out_ch1, &out_frames, 0);
-      EXPECT_TRUE(rv);
-      EXPECT_EQ(out_frames, expected_out_frames);
-      rv = dr.Resample(out_ch2, &out_frames, 1);
-      EXPECT_TRUE(rv);
-      EXPECT_EQ(out_frames, expected_out_frames);
+      bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+      EXPECT_FALSE(hasUnderrun);
+      hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+      EXPECT_FALSE(hasUnderrun);
     }
   }
 }
@@ -563,12 +511,10 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
   float out_ch2[10] = {};
 
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
 
   // Add 3rd channel
   dr.UpdateResampler(out_rate, 3);
@@ -585,15 +531,12 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
 
   dr.AppendInput(in_buffer, in_frames);
 
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch3, &out_frames, 2);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch3, out_frames, 2);
+  EXPECT_FALSE(hasUnderrun);
 
   float in_ch4[10] = {};
   for (uint32_t i = 0; i < in_frames; ++i) {
@@ -608,18 +551,14 @@ TEST(TestDynamicResampler, UpdateChannels_Float)
   EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch3, &out_frames, 2);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch4, &out_frames, 3);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch3, out_frames, 2);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch4, out_frames, 3);
+  EXPECT_FALSE(hasUnderrun);
 }
 
 TEST(TestDynamicResampler, UpdateChannels_Short)
@@ -647,12 +586,10 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
   short out_ch2[10] = {};
 
   dr.AppendInput(in_buffer, in_frames);
-  bool rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
 
   // Add 3rd channel
   dr.UpdateResampler(out_rate, 3);
@@ -669,15 +606,12 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
 
   dr.AppendInput(in_buffer, in_frames);
 
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch3, &out_frames, 2);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch3, out_frames, 2);
+  EXPECT_FALSE(hasUnderrun);
 
   // Check update with AudioSegment
   short in_ch4[10] = {};
@@ -693,16 +627,96 @@ TEST(TestDynamicResampler, UpdateChannels_Short)
   EXPECT_EQ(dr.GetChannels(), 4u);
   dr.AppendInput(in_buffer, in_frames);
 
-  rv = dr.Resample(out_ch1, &out_frames, 0);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch2, &out_frames, 1);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch3, &out_frames, 2);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
-  rv = dr.Resample(out_ch4, &out_frames, 3);
-  EXPECT_TRUE(rv);
-  EXPECT_EQ(out_frames, 10u);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch3, out_frames, 2);
+  EXPECT_FALSE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch4, out_frames, 3);
+  EXPECT_FALSE(hasUnderrun);
+}
+
+TEST(TestDynamicResampler, Underrun)
+{
+  const uint32_t in_frames = 100;
+  const uint32_t out_frames = 200;
+  uint32_t channels = 2;
+  uint32_t in_rate = 48000;
+  uint32_t out_rate = 48000;
+
+  DynamicResampler dr(in_rate, out_rate);
+  dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
+  EXPECT_EQ(dr.GetOutRate(), out_rate);
+  EXPECT_EQ(dr.GetChannels(), channels);
+
+  float in_ch1[in_frames] = {};
+  float in_ch2[in_frames] = {};
+  AutoTArray<const float*, 2> in_buffer;
+  in_buffer.AppendElements(channels);
+  in_buffer[0] = in_ch1;
+  in_buffer[1] = in_ch2;
+
+  float out_ch1[out_frames] = {};
+  float out_ch2[out_frames] = {};
+
+  for (uint32_t i = 0; i < in_frames; ++i) {
+    in_ch1[i] = 0.01f * i;
+    in_ch2[i] = -0.01f * i;
+  }
+  dr.AppendInput(in_buffer, in_frames);
+  bool hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
+  for (uint32_t i = 0; i < in_frames; ++i) {
+    EXPECT_EQ(out_ch1[i], in_ch1[i]);
+    EXPECT_EQ(out_ch2[i], in_ch2[i]);
+  }
+  for (uint32_t i = in_frames; i < out_frames; ++i) {
+    EXPECT_EQ(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_EQ(out_ch2[i], 0.0f) << "for i=" << i;
+  }
+
+  // No more frames in the input buffer
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
+  for (uint32_t i = 0; i < out_frames; ++i) {
+    EXPECT_EQ(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_EQ(out_ch2[i], 0.0f) << "for i=" << i;
+  }
+
+  // Now try with resampling.
+  dr.UpdateResampler(out_rate / 2, channels);
+  dr.AppendInput(in_buffer, in_frames);
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
+  // There is some buffering in the resampler, which is why the below is not
+  // exact.
+  for (uint32_t i = 0; i < 50; ++i) {
+    EXPECT_GT(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_LT(out_ch2[i], 0.0f) << "for i=" << i;
+  }
+  for (uint32_t i = 50; i < 54; ++i) {
+    EXPECT_NE(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_NE(out_ch2[i], 0.0f) << "for i=" << i;
+  }
+  for (uint32_t i = 54; i < out_frames; ++i) {
+    EXPECT_EQ(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_EQ(out_ch2[i], 0.0f) << "for i=" << i;
+  }
+
+  // No more frames in the input buffer
+  hasUnderrun = dr.Resample(out_ch1, out_frames, 0);
+  EXPECT_TRUE(hasUnderrun);
+  hasUnderrun = dr.Resample(out_ch2, out_frames, 1);
+  EXPECT_TRUE(hasUnderrun);
+  for (uint32_t i = 0; i < out_frames; ++i) {
+    EXPECT_EQ(out_ch1[i], 0.0f) << "for i=" << i;
+    EXPECT_EQ(out_ch2[i], 0.0f) << "for i=" << i;
+  }
 }

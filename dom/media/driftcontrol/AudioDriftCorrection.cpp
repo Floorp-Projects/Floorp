@@ -38,11 +38,10 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   TrackRate receivingRate = mTargetRate * mClockDrift->GetCorrection();
   // Update resampler's rate if there is a new correction.
   mResampler->UpdateOutRate(receivingRate);
-  // If it does not have enough frames the result will be an empty segment.
-  AudioSegment output = mResampler->Resample(aOutputFrames);
-  if (output.IsEmpty()) {
-    NS_WARNING("Got nothing from the resampler");
-    output.AppendNullData(aOutputFrames);
+  bool hasUnderrun = false;
+  AudioSegment output = mResampler->Resample(aOutputFrames, &hasUnderrun);
+  if (hasUnderrun) {
+    NS_WARNING("Drift-correction: Underrun");
   }
   return output;
 }

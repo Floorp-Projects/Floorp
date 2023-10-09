@@ -56,10 +56,11 @@ class AudioResampler final {
 
   /*
    * Reguest `aOutFrames` of audio in the output sample rate. The internal
-   * buffered input is used. If there is no enough input for that amount of
-   * output and empty AudioSegment is returned
+   * buffered input is used. If the input buffer does not have enough data to
+   * reach `aOutFrames` frames, the input buffer is padded with enough silence
+   * to allow the requested frames to be resampled and returned.
    */
-  AudioSegment Resample(uint32_t aOutFrames);
+  AudioSegment Resample(uint32_t aOutFrames, bool* aHasUnderrun);
 
   /*
    * Updates the output rate that will be used by the resampler.
