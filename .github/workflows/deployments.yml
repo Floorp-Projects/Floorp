@@ -22,6 +22,11 @@ on:
         type: boolean
         required: true
         default: true
+      lightning-build:
+        description: 'Lightning Build'
+        type: boolean
+        required: true
+        default: false
       release-note-url:
         description: 'Release Note URL'
         type: string
@@ -97,6 +102,7 @@ jobs:
     with:
       aarch64: false
       beta: false
+      lightning-build: ${{ inputs.lightning-build }}
       buildjet: ${{ inputs.buildjet }}
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
@@ -107,12 +113,14 @@ jobs:
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
   Part1-win-x86-build-with-profdata-and-jarlog:
+    if: !inputs.lightning-build
     needs: [get-buildid]
     uses: ./.github/workflows/windows-build.yml
     with:
       aarch64: false
       build32bit: true
       beta: false
+      lightning-build: ${{ inputs.lightning-build }}
       buildjet: ${{ inputs.buildjet }}
       out_artifact_name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
@@ -129,6 +137,7 @@ jobs:
       beta: false
       mar: true
       buildjet: ${{ inputs.buildjet }}
+      lightning-build: ${{ inputs.lightning-build }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
@@ -142,6 +151,7 @@ jobs:
       beta: false
       mar: true
       buildjet: ${{ inputs.buildjet }}
+      lightning-build: ${{ inputs.lightning-build }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
@@ -244,6 +254,7 @@ jobs:
       buildjet: ${{ inputs.buildjet }}
       build-with-profdata-and-jarlog: true
       beta: false
+      lightning-build: ${{ inputs.lightning-build }}
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
@@ -331,8 +342,31 @@ jobs:
         find . -print | sed -e "s;[^/]*/;|____;g;s;____|; |;g"
         echo "****************************************************************************************************"
 
-    - name: Deploy to GitHub Releases 🚀
+    - name: Deploy to GitHub Releases for Stable Version 🚀
+      if: !inputs.lightning-build
       id: create_release
+      uses: "softprops/action-gh-release@v1"
+      with:
+        files: |
+          "/home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar"
+          "/home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64.mar"
+          "/home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar"
+          "/home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2"
+          "/home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2"
+          "/home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe"
+          "/home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe"
+          "/home/runner/downloads/artifacts/macOS-x64/floorp*macOS-universal.dmg"
+        tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
+        name: "v${{ needs.get-display-version.outputs.display-version }}"
+        draft: true
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+
+    - name: Deploy to GitHub Releases for Lightning Version 🚀
+      if: inputs.lightning-build
+      id: create_release_lightning
       uses: "softprops/action-gh-release@v1"
       with:
         files: |
@@ -342,11 +376,10 @@ jobs:
           /home/runner/downloads/artifacts/linux-x64/floorp-*.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe
-          /home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe
           /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
-        tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
-        name: "v${{ needs.get-display-version.outputs.display-version }}"
-        draft: false
+        tag_name: "v${{ needs.get-display-version.outputs.display-version }}-lightning"
+        name: "v${{ needs.get-display-version.outputs.display-version }}-lightning"
+        draft: true
         prerelease: true
         token: ${{ secrets.GITHUB_TOKEN }}
       env:
@@ -359,6 +392,18 @@ jobs:
       name: Deploy-to-updater-release
 
     steps:
+    - name: get build version 📦
+      run: |
+        if [[ ${{ inputs.lightning-build }} == 'true' ]]; then
+          export BUILD_VERSION=`echo "lightning"`
+          echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+        else
+          export BUILD_VERSION=`echo "normal"`
+          echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+        fi
+      env:
+        GHA_LIGHTNING_BUILD: ${{ inputs.lightning-build }}
+
     - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
         echo "Preparing to run GitHub Actions for Release x86_64 Windows MAR, waiting for 30 seconds"
@@ -372,7 +417,8 @@ jobs:
             "inputs": {
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64.mar",
               "os": "Linux",
-              "arch": "x86_64"
+              "arch": "x86_64",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
@@ -390,7 +436,8 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
               "os": "Linux",
               "arch": "aarch64",
-              "release-note-url": "${{ inputs.release-note-url }}"
+              "release-note-url": "${{ inputs.release-note-url }}",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
@@ -410,7 +457,8 @@ jobs:
               "arch": "x86_64",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
-              "release-note-url": "${{ inputs.release-note-url }}"
+              "release-note-url": "${{ inputs.release-note-url }}",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
@@ -431,7 +479,8 @@ jobs:
               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
-              "release-note-url": "${{ inputs.release-note-url }}"
+              "release-note-url": "${{ inputs.release-note-url }}",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
@@ -449,11 +498,13 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
               "os": "WINNT",
               "arch": "x86_64",
-              "release-note-url": "${{ inputs.release-note-url }}"
+              "release-note-url": "${{ inputs.release-note-url }}",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
     - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
+      if: !inputs.lightning-build
       run: |
         echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
         sleep 60
@@ -467,11 +518,13 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
               "os": "WINNT",
               "arch": "x86",
-              "release-note-url": "${{ inputs.release-note-url }}"
+              "release-note-url": "${{ inputs.release-note-url }}",
+              "buildVersion": "${{ env.BUILD_VERSION }}"
             }
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
+      if: !inputs.lightning-build
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
@@ -486,6 +539,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
+      if: !inputs.lightning-build
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
