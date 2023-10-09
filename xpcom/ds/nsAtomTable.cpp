@@ -9,20 +9,15 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MruCache.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/DebugOnly.h"
-#include "mozilla/Sprintf.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Unused.h"
+#include "nsThreadUtils.h"
 
 #include "nsAtom.h"
 #include "nsAtomTable.h"
-#include "nsCRT.h"
 #include "nsGkAtoms.h"
-#include "nsHashKeys.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
-#include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "PLDHashTable.h"
 #include "prenv.h"
@@ -188,20 +183,21 @@ static AtomCache sRecentlyUsedMainThreadAtoms;
 // ConcurrentHashTable.
 class nsAtomSubTable {
   friend class nsAtomTable;
-  Mutex mLock;
+  mozilla::RWLock mLock;
   PLDHashTable mTable;
   nsAtomSubTable();
   void GCLocked(GCKind aKind) MOZ_REQUIRES(mLock);
   void AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
-                                    AtomsSizes& aSizes) MOZ_REQUIRES(mLock);
+                                    AtomsSizes& aSizes)
+      MOZ_REQUIRES_SHARED(mLock);
 
-  AtomTableEntry* Search(AtomTableKey& aKey) const MOZ_REQUIRES(mLock) {
-    mLock.AssertCurrentThreadOwns();
+  AtomTableEntry* Search(AtomTableKey& aKey) const MOZ_REQUIRES_SHARED(mLock) {
+    // XXX There's no LockedForReadingByCurrentThread();
     return static_cast<AtomTableEntry*>(mTable.Search(&aKey));
   }
 
   AtomTableEntry* Add(AtomTableKey& aKey) MOZ_REQUIRES(mLock) {
-    mLock.AssertCurrentThreadOwns();
+    MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
     return static_cast<AtomTableEntry*>(mTable.Add(&aKey));  // Infallible
   }
 };
@@ -287,7 +283,7 @@ static bool AtomTableMatchKey(const PLDHashEntryHdr* aEntry, const void* aKey) {
 
 void nsAtomTable::AtomTableClearEntry(PLDHashTable* aTable,
                                       PLDHashEntryHdr* aEntry) {
-  auto entry = static_cast<AtomTableEntry*>(aEntry);
+  auto* entry = static_cast<AtomTableEntry*>(aEntry);
   entry->mAtom = nullptr;
 }
 
@@ -346,7 +342,7 @@ void nsAtomTable::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
   MOZ_ASSERT(NS_IsMainThread());
   aSizes.mTable += aMallocSizeOf(this);
   for (auto& table : mSubTables) {
-    MutexAutoLock lock(table.mLock);
+    AutoReadLock lock(table.mLock);
     table.AddSizeOfExcludingThisLocked(aMallocSizeOf, aSizes);
   }
 }
@@ -358,7 +354,7 @@ void nsAtomTable::GC(GCKind aKind) {
   // Note that this is effectively an incremental GC, since only one subtable
   // is locked at a time.
   for (auto& table : mSubTables) {
-    MutexAutoLock lock(table.mLock);
+    AutoWriteLock lock(table.mLock);
     table.GCLocked(aKind);
   }
 
@@ -391,7 +387,7 @@ size_t nsAtomTable::RacySlowCount() {
   GC(GCKind::RegularOperation);
   size_t count = 0;
   for (auto& table : mSubTables) {
-    MutexAutoLock lock(table.mLock);
+    AutoReadLock lock(table.mLock);
     count += table.mTable.EntryCount();
   }
 
@@ -404,13 +400,13 @@ nsAtomSubTable::nsAtomSubTable()
 
 void nsAtomSubTable::GCLocked(GCKind aKind) {
   MOZ_ASSERT(NS_IsMainThread());
-  mLock.AssertCurrentThreadOwns();
+  MOZ_ASSERT(mLock.LockedForWritingByCurrentThread());
 
   int32_t removedCount = 0;  // A non-atomic temporary for cheaper increments.
   nsAutoCString nonZeroRefcountAtoms;
   uint32_t nonZeroRefcountAtomsCount = 0;
   for (auto i = mTable.Iter(); !i.Done(); i.Next()) {
-    auto entry = static_cast<AtomTableEntry*>(i.Get());
+    auto* entry = static_cast<AtomTableEntry*>(i.Get());
     if (entry->mAtom->IsStatic()) {
       continue;
     }
@@ -493,10 +489,9 @@ void NS_AddSizeOfAtoms(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes) {
 
 void nsAtomSubTable::AddSizeOfExcludingThisLocked(MallocSizeOf aMallocSizeOf,
                                                   AtomsSizes& aSizes) {
-  mLock.AssertCurrentThreadOwns();
   aSizes.mTable += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
-    auto entry = static_cast<AtomTableEntry*>(iter.Get());
+    auto* entry = static_cast<AtomTableEntry*>(iter.Get());
     entry->mAtom->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
   }
 }
@@ -520,9 +515,8 @@ void nsAtomTable::RegisterStaticAtoms(const nsStaticAtom* aAtoms,
 
     AtomTableKey key(atom);
     nsAtomSubTable& table = SelectSubTable(key);
-    MutexAutoLock lock(table.mLock);
+    AutoWriteLock lock(table.mLock);
     AtomTableEntry* he = table.Add(key);
-
     if (he->mAtom) {
       // There are two ways we could get here.
       // - Register two static atoms with the same string.
@@ -555,12 +549,18 @@ already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsACString& aUTF8String) {
     return Atomize(str);
   }
   nsAtomSubTable& table = SelectSubTable(key);
-  MutexAutoLock lock(table.mLock);
+  {
+    AutoReadLock lock(table.mLock);
+    if (AtomTableEntry* he = table.Search(key)) {
+      return do_AddRef(he->mAtom);
+    }
+  }
+
+  AutoWriteLock lock(table.mLock);
   AtomTableEntry* he = table.Add(key);
 
   if (he->mAtom) {
-    RefPtr<nsAtom> atom = he->mAtom;
-    return atom.forget();
+    return do_AddRef(he->mAtom);
   }
 
   nsString str;
@@ -586,7 +586,13 @@ already_AddRefed<nsAtom> NS_Atomize(const char16_t* aUTF16String) {
 already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsAString& aUTF16String) {
   AtomTableKey key(aUTF16String.Data(), aUTF16String.Length());
   nsAtomSubTable& table = SelectSubTable(key);
-  MutexAutoLock lock(table.mLock);
+  {
+    AutoReadLock lock(table.mLock);
+    if (AtomTableEntry* he = table.Search(key)) {
+      return do_AddRef(he->mAtom);
+    }
+  }
+  AutoWriteLock lock(table.mLock);
   AtomTableEntry* he = table.Add(key);
 
   if (he->mAtom) {
@@ -618,9 +624,16 @@ already_AddRefed<nsAtom> nsAtomTable::AtomizeMainThread(
   }
 
   nsAtomSubTable& table = SelectSubTable(key);
-  MutexAutoLock lock(table.mLock);
-  AtomTableEntry* he = table.Add(key);
+  {
+    AutoReadLock lock(table.mLock);
+    if (AtomTableEntry* he = table.Search(key)) {
+      p.Set(he->mAtom);
+      return do_AddRef(he->mAtom);
+    }
+  }
 
+  AutoWriteLock lock(table.mLock);
+  AtomTableEntry* he = table.Add(key);
   if (he->mAtom) {
     retVal = he->mAtom;
   } else {
@@ -655,7 +668,7 @@ nsStaticAtom* NS_GetStaticAtom(const nsAString& aUTF16String) {
 nsStaticAtom* nsAtomTable::GetStaticAtom(const nsAString& aUTF16String) {
   AtomTableKey key(aUTF16String.Data(), aUTF16String.Length());
   nsAtomSubTable& table = SelectSubTable(key);
-  MutexAutoLock lock(table.mLock);
+  AutoReadLock lock(table.mLock);
   AtomTableEntry* he = table.Search(key);
   return he && he->mAtom->IsStatic() ? static_cast<nsStaticAtom*>(he->mAtom)
                                      : nullptr;
