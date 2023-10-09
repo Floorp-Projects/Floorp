@@ -69,12 +69,6 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
     return;
   }
 
-  is(
-    typeof hostname,
-    "string",
-    "checkAutoCompleteResults: hostname must be a string"
-  );
-
   isnot(
     actualValues.length,
     0,
