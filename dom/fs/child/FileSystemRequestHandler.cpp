@@ -268,29 +268,13 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
 
   FileSystemEntryMetadata metadata = aMetadata;
 
-  QM_TRY_UNWRAP(
-      RefPtr<StrongWorkerRef> buildWorkerRef,
-      ([]() -> Result<RefPtr<StrongWorkerRef>, nsresult> {
-        WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
-        if (!workerPrivate) {
-          return RefPtr<StrongWorkerRef>();
-        }
-
-        RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-            workerPrivate, "FileSystemWritableFileStream::Create");
-        QM_TRY(MOZ_TO_RESULT(workerRef), Err(NS_ERROR_ABORT));
-
-        return workerRef;
-      }()),
-      [aPromise](const nsresult rv) { HandleFailedStatus(rv, aPromise); });
-
   autoDelete.release();
 
   QM_TRY_UNWRAP(
       RefPtr<FileSystemWritableFileStream> stream,
-      FileSystemWritableFileStream::Create(
-          aPromise->GetParentObject(), aManager, std::move(params), actor,
-          std::move(metadata), std::move(buildWorkerRef)),
+      FileSystemWritableFileStream::Create(aPromise->GetParentObject(),
+                                           aManager, std::move(params), actor,
+                                           std::move(metadata)),
       [aPromise](const nsresult rv) { HandleFailedStatus(rv, aPromise); });
 
   aPromise->MaybeResolve(stream);
