@@ -10,6 +10,7 @@ DEFINES["ENABLE_SET_CUBEB_BACKEND"] = True
 DEFINES["VISIBLE_TIMEUNIT_INTERNALS"] = True
 
 LOCAL_INCLUDES += [
+    "/dom/media/driftcontrol",
     "/dom/media/mediasink",
     "/dom/media/systemservices",
     "/dom/media/webrtc",
