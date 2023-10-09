@@ -464,7 +464,7 @@ describe("breakpoints", () => {
     await dispatch(actions.loadGeneratedSourceText(sourceActor));
 
     await dispatch(actions.addBreakpoint(loc));
-    await dispatch(actions.togglePrettyPrint("a.js"));
+    await dispatch(actions.prettyPrintAndSelectSource("a.js"));
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];
 

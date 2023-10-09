@@ -17,7 +17,7 @@ import {
 import { toggleBlackBox } from "./blackbox";
 import { syncPendingBreakpoint } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
-import { togglePrettyPrint } from "./prettyPrint";
+import { prettyPrintAndSelectSource } from "./prettyPrint";
 import { toggleSourceMapIgnoreList } from "../ui";
 import { selectLocation, setBreakableLines } from "../sources";
 
@@ -136,7 +136,7 @@ function checkSelectedSource(sourceId) {
 
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
-        const prettySource = await dispatch(togglePrettyPrint(source.id));
+        const prettySource = await dispatch(prettyPrintAndSelectSource(source));
         dispatch(checkPendingBreakpoints(prettySource, null));
         return;
       }
