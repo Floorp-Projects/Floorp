@@ -14,9 +14,11 @@ support-files = ["simple_navigator_clipboard_keydown.html"]
 
 ["browser_navigator_clipboard_read.js"]
 support-files = ["simple_navigator_clipboard_read.html"]
+fail-if = ["a11y_checks"] # Bug 1854502 clicked browser may not be accessible
 
 ["browser_navigator_clipboard_readText.js"]
 support-files = ["simple_navigator_clipboard_readText.html"]
+fail-if = ["a11y_checks"] # Bug 1854502 clicked browser may not be accessible
 
 ["browser_navigator_clipboard_touch.js"]
 support-files = ["simple_navigator_clipboard_readText.html"]
