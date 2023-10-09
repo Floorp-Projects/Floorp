@@ -57,6 +57,8 @@ class AudioDriftCorrection final {
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t CurrentBuffering() const;
 
+  uint32_t BufferSize() const;
+
   // Only accessible from the same thread that is driving RequestFrames().
   uint32_t NumCorrectionChanges() const;
 

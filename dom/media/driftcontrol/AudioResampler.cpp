@@ -92,6 +92,10 @@ void AudioResampler::Update(uint32_t aOutRate, uint32_t aChannels) {
   mOutputChunks.Update(aChannels);
 }
 
+uint32_t AudioResampler::InputCapacityFrames() const {
+  return mResampler.InFramesBufferSize();
+}
+
 uint32_t AudioResampler::InputReadableFrames() const {
   return mResampler.InFramesBuffered(0);
 }

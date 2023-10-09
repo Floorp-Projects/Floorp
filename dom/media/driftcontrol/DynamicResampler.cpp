@@ -261,6 +261,10 @@ void DynamicResampler::AppendInputSilence(const uint32_t aInFrames) {
   }
 }
 
+uint32_t DynamicResampler::InFramesBufferSize() const {
+  return mSetBufferSizeInFrames;
+}
+
 uint32_t DynamicResampler::InFramesBuffered(uint32_t aChannelIndex) const {
   MOZ_ASSERT(mChannels);
   MOZ_ASSERT(aChannelIndex <= mChannels);

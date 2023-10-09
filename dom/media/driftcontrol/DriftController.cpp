@@ -21,19 +21,19 @@ extern LazyLogModule gMediaTrackGraphLog;
   MOZ_LOG(gMediaTrackGraphLog, level,                              \
           ("DriftController %p: (plot-id %u) " format, controller, \
            (controller)->mPlotId, ##__VA_ARGS__))
-#define LOG_PLOT_NAMES()                                                 \
-  MOZ_LOG(gDriftControllerGraphsLog, LogLevel::Verbose,                  \
-          ("id,t,buffering,desired,inlatency,outlatency,inrate,outrate," \
-           "corrected,configured,p,i,d,kpp,kii,kdd,control"))
-#define LOG_PLOT_VALUES(id, t, buffering, desired, inlatency, outlatency,      \
-                        inrate, outrate, corrected, configured, p, i, d, kpp,  \
-                        kii, kdd, control)                                     \
+#define LOG_PLOT_NAMES()                                                    \
+  MOZ_LOG(gDriftControllerGraphsLog, LogLevel::Verbose,                     \
+          ("id,t,buffering,desired,buffersize,inlatency,outlatency,inrate," \
+           "outrate,corrected,configured,p,i,d,kpp,kii,kdd,control"))
+#define LOG_PLOT_VALUES(id, t, buffering, desired, buffersize, inlatency,      \
+                        outlatency, inrate, outrate, corrected, configured, p, \
+                        i, d, kpp, kii, kdd, control)                          \
   MOZ_LOG(                                                                     \
       gDriftControllerGraphsLog, LogLevel::Verbose,                            \
-      ("DriftController %u,%.3f,%u,%u,%u,%u,%u,%u,%.5f,%ld,%d,%.5f,%.5f,%.5f," \
-       "%.5f,%.5f,%.5f",                                                       \
-       id, t, buffering, desired, inlatency, outlatency, inrate, outrate,      \
-       corrected, configured, p, i, d, kpp, kii, kdd, control))
+      ("DriftController %u,%.3f,%u,%u,%u,%u,%u,%u,%u,%.5f,%ld,%d,%.5f,%.5f,"   \
+       "%.5f,%.5f,%.5f,%.5f",                                                  \
+       id, t, buffering, desired, buffersize, inlatency, outlatency, inrate,   \
+       outrate, corrected, configured, p, i, d, kpp, kii, kdd, control))
 
 static uint8_t GenerateId() {
   static std::atomic<uint8_t> id{0};
@@ -63,7 +63,8 @@ uint32_t DriftController::GetCorrectedTargetRate() const {
 
 void DriftController::UpdateClock(uint32_t aSourceFrames,
                                   uint32_t aTargetFrames,
-                                  uint32_t aBufferedFrames) {
+                                  uint32_t aBufferedFrames,
+                                  uint32_t aBufferSize) {
   mTargetClock += aTargetFrames;
   mTotalTargetClock += aTargetFrames;
 
@@ -81,11 +82,12 @@ void DriftController::UpdateClock(uint32_t aSourceFrames,
 
   if ((mTargetClock * 1000 / mTargetRate) >= mAdjustmentIntervalMs) {
     // The adjustment interval has passed. Recalculate.
-    CalculateCorrection(aBufferedFrames);
+    CalculateCorrection(aBufferedFrames, aBufferSize);
   }
 }
 
-void DriftController::CalculateCorrection(uint32_t aBufferedFrames) {
+void DriftController::CalculateCorrection(uint32_t aBufferedFrames,
+                                          uint32_t aBufferSize) {
   static constexpr float kProportionalGain = 0.07;
   static constexpr float kIntegralGain = 0.006;
   static constexpr float kDerivativeGain = 0.12;
@@ -118,7 +120,7 @@ void DriftController::CalculateCorrection(uint32_t aBufferedFrames) {
       correctedRate - mCorrectedTargetRate, aBufferedFrames, mDesiredBuffering);
   LOG_PLOT_VALUES(
       mPlotId, static_cast<double>(mTotalTargetClock) / mTargetRate,
-      aBufferedFrames, mDesiredBuffering,
+      aBufferedFrames, mDesiredBuffering, aBufferSize,
       static_cast<uint32_t>(mMeasuredSourceLatency.mean()),
       static_cast<uint32_t>(mMeasuredTargetLatency.mean()), mSourceRate,
       mTargetRate, correctedRate, std::lround(correctedRate), proportional,

@@ -70,6 +70,10 @@ class DynamicResampler final {
    */
   void AppendInputSilence(const uint32_t aInFrames);
   /**
+   * Return the number of frames the internal input buffer can store.
+   */
+  uint32_t InFramesBufferSize() const;
+  /**
    * Return the number of frames stored in the internal input buffer.
    */
   uint32_t InFramesBuffered(uint32_t aChannelIndex) const;
