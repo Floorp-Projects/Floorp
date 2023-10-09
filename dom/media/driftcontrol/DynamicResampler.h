@@ -8,6 +8,7 @@
 
 #include "AudioRingBuffer.h"
 #include "AudioSegment.h"
+#include "WavDumper.h"
 
 #include <speex/speex_resampler.h>
 
@@ -146,6 +147,10 @@ class DynamicResampler final {
       // of the resampler and then skip memory equals to resampler's input
       // latency.
       mInputTail[aChannelIndex].StoreTail<T>(aOutBuffer, *aOutFrames);
+      if (aChannelIndex == 0 && !mIsWarmingUp) {
+        mInputStreamFile.Write(aOutBuffer, *aOutFrames);
+        mOutputStreamFile.Write(aOutBuffer, *aOutFrames);
+      }
       return true;
     }
 
@@ -191,6 +196,7 @@ class DynamicResampler final {
   const uint32_t mPreBufferFrames;
 
  private:
+  bool mIsWarmingUp = false;
   uint32_t mChannels = 0;
   uint32_t mOutRate;
 
@@ -228,6 +234,9 @@ class DynamicResampler final {
     uint32_t mSize = 0;
   };
   AutoTArray<TailBuffer, STEREO> mInputTail;
+
+  WavDumper mInputStreamFile;
+  WavDumper mOutputStreamFile;
 };
 
 }  // namespace mozilla
