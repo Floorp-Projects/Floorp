@@ -323,7 +323,7 @@ jobs:
         path: ~/downloads/artifacts/windows-x64
 
     - name: download Windows x86 build artifact📥
-      if : inputs.lightning-build != 'true'
+      if: ${{ inputs.lightning-build }} == 'false'
       uses: actions/download-artifact@v3
       with:
         name: please-use-this-floorp-windows-x86-package-build-with-profdata-and-jarlog
