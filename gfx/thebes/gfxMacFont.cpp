@@ -8,7 +8,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_gfx.h"
-#include "mozilla/gfx/ScaledFontMac.h"
 
 #include <algorithm>
 
@@ -435,6 +434,61 @@ gfxFloat gfxMacFont::GetCharWidth(CFDataRef aCmap, char16_t aUniChar,
   return 0;
 }
 
+/* static */
+CTFontRef gfxMacFont::CreateCTFontFromCGFontWithVariations(
+    CGFontRef aCGFont, CGFloat aSize, bool aInstalledFont,
+    CTFontDescriptorRef aFontDesc) {
+  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
+  // versions (see bug 1331683).
+  //
+  // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
+  // variation settings from the CGFont to CTFont, so we don't need to do
+  // the extra work here -- and this seems to avoid Core Text crashiness
+  // seen in bug 1454094.
+  //
+  // However, for installed fonts it seems we DO need to copy the variations
+  // explicitly even on 10.13, otherwise fonts fail to render (as in bug
+  // 1455494) when non-default values are used. Fortunately, the crash
+  // mentioned above occurs with data fonts, not (AFAICT) with system-
+  // installed fonts.
+  //
+  // So we only need to do this "the hard way" on Sierra, and on HighSierra
+  // for system-installed fonts; in other cases just let the standard CTFont
+  // function do its thing.
+  //
+  // NOTE in case this ever needs further adjustment: there is similar logic
+  // in four places in the tree (sadly):
+  //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
+  //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
+  //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
+  //    ctfont_create_exact_copy in SkFontHost_mac.cpp
+
+  CTFontRef ctFont;
+  if (aInstalledFont) {
+    AutoCFRelease<CFDictionaryRef> variations = ::CGFontCopyVariations(aCGFont);
+    if (variations) {
+      AutoCFRelease<CFDictionaryRef> varAttr = ::CFDictionaryCreate(
+          nullptr, (const void**)&kCTFontVariationAttribute,
+          (const void**)&variations, 1, &kCFTypeDictionaryKeyCallBacks,
+          &kCFTypeDictionaryValueCallBacks);
+
+      AutoCFRelease<CTFontDescriptorRef> varDesc =
+          aFontDesc
+              ? ::CTFontDescriptorCreateCopyWithAttributes(aFontDesc, varAttr)
+              : ::CTFontDescriptorCreateWithAttributes(varAttr);
+
+      ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
+    } else {
+      ctFont =
+          ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, aFontDesc);
+    }
+  } else {
+    ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, aFontDesc);
+  }
+
+  return ctFont;
+}
+
 int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   if (mVariationFont) {
     // Avoid a potential Core Text crash (bug 1450209) by using
@@ -447,7 +501,10 @@ int32_t gfxMacFont::GetGlyphWidth(uint16_t aGID) {
   }
 
   if (!mCTFont) {
-    mCTFont = CreateCTFontFromCGFontWithVariations(mCGFont, mAdjustedSize);
+    bool isInstalledFont =
+        !mFontEntry->IsUserFont() || mFontEntry->IsLocalUserFont();
+    mCTFont = CreateCTFontFromCGFontWithVariations(mCGFont, mAdjustedSize,
+                                                   isInstalledFont);
     if (!mCTFont) {  // shouldn't happen, but let's be safe
       NS_WARNING("failed to create CTFontRef to measure glyph width");
       return 0;
