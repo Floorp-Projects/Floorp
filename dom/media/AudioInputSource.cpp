@@ -8,6 +8,7 @@
 
 #include "CallbackThreadRegistry.h"
 #include "GraphDriver.h"
+#include "Tracing.h"
 
 namespace mozilla {
 
@@ -139,6 +140,10 @@ AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
 }
 
 long AudioInputSource::DataCallback(const void* aBuffer, long aFrames) {
+  TRACE_AUDIO_CALLBACK_BUDGET("AudioInputSource real-time budget", aFrames,
+                              mRate);
+  TRACE("AudioInputSource::DataCallback");
+
   const AudioDataValue* source =
       reinterpret_cast<const AudioDataValue*>(aBuffer);
 
