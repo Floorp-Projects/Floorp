@@ -2213,10 +2213,6 @@ void nsRefreshDriver::RunFullscreenSteps() {
 void nsRefreshDriver::UpdateIntersectionObservations(TimeStamp aNowTime) {
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Compute intersections", LAYOUT);
 
-  if (MOZ_UNLIKELY(!mPresContext)) {
-    return;
-  }
-
   AutoTArray<RefPtr<Document>, 32> documents;
 
   if (mPresContext->Document()->HasIntersectionObservers()) {
@@ -2749,9 +2745,14 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     pm->UpdatePopupPositions(this);
   }
 
-  // Notify resize obsrevers if any, see
+  // Notify resize observers if any, see
   // https://html.spec.whatwg.org/#update-the-rendering step 14.
   NotifyResizeObservers();
+  if (MOZ_UNLIKELY(!mPresContext || !mPresContext->GetPresShell())) {
+    // A resize observer callback apparently destroyed our PresContext.
+    StopTimer();
+    return;
+  }
 
   // Update the relevancy of the content of any `content-visibility: auto`
   // elements. The specification says: "Specifically, such changes will
