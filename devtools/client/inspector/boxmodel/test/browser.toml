@@ -15,27 +15,35 @@ support-files = [
 ["browser_boxmodel.js"]
 
 ["browser_boxmodel_edit-position-visible-position-change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_editablemodel.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_editablemodel_allproperties.js"]
 disabled = "too many intermittent failures (bug 1009322)"
 
 ["browser_boxmodel_editablemodel_bluronclick.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_editablemodel_border.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_editablemodel_pseudo.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_editablemodel_stylerules.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_guides.js"]
 
 ["browser_boxmodel_jump-to-rule-on-hover.js"]
 
 ["browser_boxmodel_layout-accordion-state.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_navigation.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_offsetparent.js"]
 
@@ -50,6 +58,7 @@ disabled = "too many intermittent failures (bug 1009322)"
 ["browser_boxmodel_show-tooltip-for-unassociated-rule.js"]
 
 ["browser_boxmodel_sync.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_boxmodel_tooltips.js"]
 skip-if = ["true"] # Bug 1336198

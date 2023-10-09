@@ -18,6 +18,7 @@ support-files = [
 ]
 
 ["browser_flexbox_accordion_state.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_flexbox_container_and_item.js"]
 
@@ -36,6 +37,7 @@ support-files = [
 ["browser_flexbox_highlighter_color_picker_on_ESC.js"]
 
 ["browser_flexbox_highlighter_color_picker_on_RETURN.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_flexbox_highlighter_opened_telemetry.js"]
 

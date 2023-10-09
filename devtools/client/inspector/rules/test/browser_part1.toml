@@ -46,6 +46,7 @@ skip-if = ["verify && debug && os == 'win'"]
 ["browser_rules_add-property_01.js"]
 
 ["browser_rules_add-property_02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_add-rule-and-property.js"]
 
@@ -151,10 +152,13 @@ skip-if = ["win10_2004"] # Bug 1723573
 skip-if = ["verify && !debug && os == 'win'"]
 
 ["browser_rules_completion-new-property_03.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_completion-new-property_04.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_completion-new-property_multiline.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_completion-on-empty.js"]
 
@@ -171,12 +175,14 @@ skip-if = ["verify && !debug && os == 'win'"]
 ["browser_rules_conditional_import.js"]
 
 ["browser_rules_container-queries.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_content_01.js"]
 
 ["browser_rules_content_02.js"]
 
 ["browser_rules_copy_styles.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_cssom.js"]
 
@@ -197,21 +203,25 @@ skip-if = ["verify && !debug && os == 'win'"]
 ["browser_rules_edit-property-cancel.js"]
 
 ["browser_rules_edit-property-click.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property-commit.js"]
 
 ["browser_rules_edit-property-computed.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property-increments.js"]
 
 ["browser_rules_edit-property-nested-rules.js"]
 
 ["browser_rules_edit-property-order.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property-remove_01.js"]
 skip-if = ["verify && debug && os == 'win'"]
 
 ["browser_rules_edit-property-remove_02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property-remove_03.js"]
 
@@ -220,20 +230,24 @@ skip-if = ["verify && debug && os == 'win'"]
 ["browser_rules_edit-property_01.js"]
 
 ["browser_rules_edit-property_02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_03.js"]
 
 ["browser_rules_edit-property_04.js"]
 
 ["browser_rules_edit-property_05.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_06.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_07.js"]
 
 ["browser_rules_edit-property_08.js"]
 
 ["browser_rules_edit-property_09.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-property_10.js"]
 
@@ -241,6 +255,7 @@ skip-if = ["verify && debug && os == 'win'"]
 skip-if = ["os == 'mac'"] # Bug 1245996 : click on scrollbar not working on OSX
 
 ["browser_rules_edit-selector-click.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-selector-commit.js"]
 
@@ -253,6 +268,7 @@ skip-if = ["os == 'mac'"] # Bug 1245996 : click on scrollbar not working on OSX
 ["browser_rules_edit-selector_03.js"]
 
 ["browser_rules_edit-selector_04.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-selector_05.js"]
 
@@ -271,6 +287,7 @@ skip-if = ["os == 'mac'"] # Bug 1245996 : click on scrollbar not working on OSX
 ["browser_rules_edit-selector_12.js"]
 
 ["browser_rules_edit-size-property-dragging.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_edit-value-after-name_01.js"]
 
@@ -287,6 +304,7 @@ skip-if = ["os == 'mac'"] # Bug 1245996 : click on scrollbar not working on OSX
 ["browser_rules_edit-variable.js"]
 
 ["browser_rules_editable-field-focus_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_editable-field-focus_02.js"]
 

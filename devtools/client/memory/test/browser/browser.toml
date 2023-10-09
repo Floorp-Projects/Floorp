@@ -19,13 +19,16 @@ skip-if = ["debug"] # bug 1219554
 ["browser_memory_clear_snapshots.js"]
 
 ["browser_memory_diff_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_memory_displays_01.js"]
 
 ["browser_memory_dominator_trees_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["ccov"] # bug 1347244
 
 ["browser_memory_dominator_trees_02.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = ["ccov"] # bug 1347244
 
 ["browser_memory_filter_01.js"]
@@ -34,10 +37,13 @@ skip-if = ["ccov"] # bug 1347244
 ["browser_memory_fission_switch_target.js"]
 
 ["browser_memory_individuals_01.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_memory_keyboard-snapshot-list.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_memory_keyboard.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_memory_no_allocation_stacks.js"]
 

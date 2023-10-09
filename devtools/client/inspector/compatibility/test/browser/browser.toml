@@ -19,12 +19,15 @@ support-files = [
 ["browser_compatibility_dynamic_markup-dom-change.js"]
 
 ["browser_compatibility_dynamic_ruleview-attribute-change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_compatibility_event_document-reload.js"]
 
 ["browser_compatibility_event_panel-select.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_compatibility_event_rule-change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_compatibility_event_selected-node-change.js"]
 

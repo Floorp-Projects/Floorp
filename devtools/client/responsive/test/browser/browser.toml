@@ -38,20 +38,26 @@ skip-if = ["os == 'linux'"] # Bug 1625501, bug 1629729
 ["browser_contextmenu_inspect.js"]
 
 ["browser_device_change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_custom.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_custom_edit.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_custom_remove.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_modal_exit.js"]
 
 ["browser_device_modal_items.js"]
 
 ["browser_device_modal_submit.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_pixel_ratio_change.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_device_selector_items.js"]
 
@@ -74,6 +80,7 @@ tags = "devtools webextensions"
 ["browser_menu_item_02.js"]
 
 ["browser_mouse_resize.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_navigation.js"]
 https_first_disabled = true
@@ -116,6 +123,7 @@ skip-if = [
 ["browser_tab_close.js"]
 
 ["browser_tab_not_selected.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_tab_remoteness_change.js"]
 
@@ -139,10 +147,12 @@ https_first_disabled = true
 ["browser_tooltip.js"]
 
 ["browser_touch_device.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_touch_does_not_trigger_hover_states.js"]
 
 ["browser_touch_event_iframes.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 skip-if = [
   "http3", # Bug 1829298
   "http2",
