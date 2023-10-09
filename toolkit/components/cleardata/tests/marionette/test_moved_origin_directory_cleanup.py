@@ -86,7 +86,8 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
         # Cleanup happens via Sanitizer.onStartup after restart
         self.marionette.restart(in_app=False)
 
-        Wait(self.marionette).until(
+        # Wait longer for 30 sec for the restart to finish, given bug 1814281.
+        Wait(self.marionette, timeout=30).until(
             lambda _: not self.moved_origin_directory.exists(),
             message="to-be-removed subdirectory must disappear",
         )
