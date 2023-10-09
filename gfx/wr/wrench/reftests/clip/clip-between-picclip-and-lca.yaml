@@ -1,0 +1,29 @@
+---
+root:
+  items:
+  - type: clip
+    id: 1
+    bounds: [0, 0, 40, 40]
+  - type: clip-chain
+    id: 2
+    clips: [1]
+  - type: stacking-context
+    filters: brightness(0.5)
+    clip-chain: 2
+    items:
+    - type: clip
+      id: 3
+      bounds: [0, 0, 40, 40]
+    - type: clip
+      id: 4
+      complex:
+      - rect: [0, 0, 40, 40]
+        radius: [20, 20, 20, 20]
+        clip-mode: clip
+    - type: clip-chain
+      id: 5
+      clips: [3, 4]
+    - type: rect
+      bounds: [0, 0, 40, 40]
+      color: [255, 0, 0, 1.0]
+      clip-chain: 5

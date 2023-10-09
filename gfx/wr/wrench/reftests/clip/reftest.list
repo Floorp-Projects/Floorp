@@ -21,3 +21,4 @@ fuzzy(128,707) == clip-filter-raster-root.yaml clip-filter-raster-root-ref.yaml
 platform(linux,mac) == inverted-ellipse.yaml inverted-ellipse.png
 platform(linux,mac) == clip-2d-z-rotations.yaml clip-2d-z-rotations.png
 platform(linux,mac) == sc-mask-with-blur.yaml sc-mask-with-blur.png
+platform(linux,mac) == clip-between-picclip-and-lca.yaml clip-between-picclip-and-lca.png
