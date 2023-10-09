@@ -283,7 +283,7 @@ async function getAddonMessageInfo(addon) {
     return {
       messageId: "details-notification-incompatible2",
       messageArgs: { name, version: Services.appinfo.version },
-      type: "warning",
+      type: "error",
     };
   } else if (!isCorrectlySigned(addon)) {
     return {
