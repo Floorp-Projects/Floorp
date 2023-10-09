@@ -134,7 +134,7 @@ class Perf(Section):
 @register_section
 class Analysis(Section):
     name = "analysis"
-    kind = "build,static-analysis-autotest"
+    kind = "build,static-analysis-autotest,hazard"
     title = "Analysis"
     attrs = ["build_platform"]
 
