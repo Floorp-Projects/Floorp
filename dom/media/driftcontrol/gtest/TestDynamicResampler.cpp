@@ -298,7 +298,7 @@ TEST(TestDynamicResampler, UpdateOutRate_Float)
 
   uint32_t pre_buffer = 20;
 
-  DynamicResampler dr(in_rate, out_rate, pre_buffer);
+  DynamicResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate));
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
@@ -354,7 +354,7 @@ TEST(TestDynamicResampler, UpdateOutRate_Short)
 
   uint32_t pre_buffer = 20;
 
-  DynamicResampler dr(in_rate, out_rate, pre_buffer);
+  DynamicResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate));
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
   EXPECT_EQ(dr.GetOutRate(), out_rate);
   EXPECT_EQ(dr.GetChannels(), channels);
@@ -409,7 +409,7 @@ TEST(TestDynamicResampler, BigRangeOutRates_Float)
   uint32_t out_rate = 44100;
   uint32_t pre_buffer = 20;
 
-  DynamicResampler dr(in_rate, out_rate, pre_buffer);
+  DynamicResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate));
   dr.SetSampleFormat(AUDIO_FORMAT_FLOAT32);
 
   const uint32_t in_capacity = 40;
@@ -453,7 +453,7 @@ TEST(TestDynamicResampler, BigRangeOutRates_Short)
   uint32_t out_rate = 44100;
   uint32_t pre_buffer = 20;
 
-  DynamicResampler dr(in_rate, out_rate, pre_buffer);
+  DynamicResampler dr(in_rate, out_rate, media::TimeUnit(pre_buffer, in_rate));
   dr.SetSampleFormat(AUDIO_FORMAT_S16);
 
   const uint32_t in_capacity = 40;

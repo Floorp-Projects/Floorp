@@ -83,7 +83,7 @@ void AudioInputSource::Start() {
 
         if (uint32_t latency = 0;
             self->mStream->Latency(&latency) == CUBEB_OK) {
-          Data data(LatencyChangeData{latency});
+          Data data(LatencyChangeData{media::TimeUnit(latency, self->mRate)});
           if (self->mSPSCQueue.Enqueue(data) == 0) {
             LOGE("AudioInputSource %p, failed to enqueue latency change",
                  self.get());
@@ -133,7 +133,7 @@ AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
   }
 
   AudioSegment raw;
-  Maybe<uint32_t> latencyFrames;
+  Maybe<media::TimeUnit> latency;
   while (mSPSCQueue.AvailableRead()) {
     Data data;
     DebugOnly<int> reads = mSPSCQueue.Dequeue(&data, 1);
@@ -142,12 +142,12 @@ AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
     if (data.is<AudioChunk>()) {
       raw.AppendAndConsumeChunk(std::move(data.as<AudioChunk>()));
     } else if (data.is<LatencyChangeData>()) {
-      latencyFrames = Some(data.as<LatencyChangeData>().mLatencyFrames);
+      latency = Some(data.as<LatencyChangeData>().mLatency);
     }
   }
 
-  if (latencyFrames) {
-    mDriftCorrector.SetSourceLatencyFrames(*latencyFrames);
+  if (latency) {
+    mDriftCorrector.SetSourceLatency(*latency);
   }
   return mDriftCorrector.RequestFrames(raw, static_cast<uint32_t>(aDuration));
 }
