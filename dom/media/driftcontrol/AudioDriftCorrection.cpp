@@ -49,18 +49,33 @@ AudioSegment AudioDriftCorrection::RequestFrames(const AudioSegment& aInput,
   TrackTime inputFrames = aInput.GetDuration();
 
   if (inputFrames > 0) {
-    if (inputFrames > mDesiredBufferingFrames) {
-      // Input latency seems high. Increase the desired buffering to try to
-      // avoid underruns.
-      const uint32_t desiredBuffering = inputFrames * 11 / 10;
-      LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
-                     "High input latency (%" PRId64
-                     "). Increasing desired buffering %u->%u frames (%.2fms)",
-                     inputFrames, mDesiredBufferingFrames, desiredBuffering,
-                     static_cast<float>(desiredBuffering) * 1000 /
-                         mDriftController->mSourceRate);
-      SetDesiredBuffering(
-          DesiredBuffering(desiredBuffering, mDriftController->mSourceRate));
+    if (mDesiredBufferingFrames == 0 || inputFrames > mDesiredBufferingFrames) {
+      // Input latency is higher than the desired buffering. Increase the
+      // desired buffering to try to avoid underruns.
+      if (inputFrames > mSourceLatencyFrames) {
+        const uint32_t desiredBuffering = DesiredBuffering(
+            inputFrames * 11 / 10, mDriftController->mSourceRate);
+        LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
+                       "High observed input latency (%" PRId64
+                       "). Increasing desired buffering %u->%u frames (%.2fms)",
+                       inputFrames, mDesiredBufferingFrames, desiredBuffering,
+                       static_cast<float>(desiredBuffering) * 1000 /
+                           mDriftController->mSourceRate);
+        SetDesiredBuffering(desiredBuffering);
+      } else {
+        const uint32_t desiredBuffering = DesiredBuffering(
+            mSourceLatencyFrames * 11 / 10, mDriftController->mSourceRate);
+        LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
+                       "Increasing desired buffering %u->%u frames (%.2fms), "
+                       "based on reported input-latency %u frames (%.2fms).",
+                       mDesiredBufferingFrames, desiredBuffering,
+                       static_cast<float>(desiredBuffering) * 1000 /
+                           mDriftController->mSourceRate,
+                       mSourceLatencyFrames,
+                       static_cast<float>(mSourceLatencyFrames) * 1000 /
+                           mDriftController->mSourceRate);
+        SetDesiredBuffering(desiredBuffering);
+      }
     }
 
     // Very important to go first since DynamicResampler will get the sample
@@ -89,6 +104,15 @@ uint32_t AudioDriftCorrection::BufferSize() const {
 
 uint32_t AudioDriftCorrection::NumCorrectionChanges() const {
   return mDriftController->NumCorrectionChanges();
+}
+
+void AudioDriftCorrection::SetSourceLatencyFrames(
+    uint32_t aSourceLatencyFrames) {
+  LOG_CONTROLLER(LogLevel::Info, mDriftController.get(),
+                 "SetSourceLatencyFrames %u->%u", mSourceLatencyFrames,
+                 aSourceLatencyFrames);
+
+  mSourceLatencyFrames = aSourceLatencyFrames;
 }
 
 void AudioDriftCorrection::SetDesiredBuffering(

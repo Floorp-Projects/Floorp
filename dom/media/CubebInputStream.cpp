@@ -136,6 +136,10 @@ int CubebInputStream::Start() { return InvokeCubebWithLog(cubeb_stream_start); }
 
 int CubebInputStream::Stop() { return InvokeCubebWithLog(cubeb_stream_stop); }
 
+int CubebInputStream::Latency(uint32_t* aLatencyFrames) {
+  return InvokeCubebWithLog(cubeb_stream_get_input_latency, aLatencyFrames);
+}
+
 template <typename Function, typename... Args>
 int CubebInputStream::InvokeCubeb(Function aFunction, Args&&... aArgs) {
   MOZ_ASSERT(mStream);

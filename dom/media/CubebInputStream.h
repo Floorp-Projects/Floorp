@@ -51,6 +51,9 @@ class CubebInputStream final {
   // Stop producing audio data.
   int Stop();
 
+  // Gets the approximate stream latency in frames.
+  int Latency(uint32_t* aLatencyFrames);
+
  private:
   struct CubebDestroyPolicy {
     void operator()(cubeb_stream* aStream) const;

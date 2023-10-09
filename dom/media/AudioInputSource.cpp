@@ -80,6 +80,15 @@ void AudioInputSource::Start() {
                self.get());
           return;
         }
+
+        if (uint32_t latency = 0;
+            self->mStream->Latency(&latency) == CUBEB_OK) {
+          Data data(LatencyChangeData{latency});
+          if (self->mSPSCQueue.Enqueue(data) == 0) {
+            LOGE("AudioInputSource %p, failed to enqueue latency change",
+                 self.get());
+          }
+        }
         if (int r = self->mStream->Start(); r != CUBEB_OK) {
           LOGE(
               "AudioInputSource %p, cannot start its audio input stream! The "
@@ -124,13 +133,22 @@ AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
   }
 
   AudioSegment raw;
+  Maybe<uint32_t> latencyFrames;
   while (mSPSCQueue.AvailableRead()) {
-    AudioChunk chunk;
-    DebugOnly<int> reads = mSPSCQueue.Dequeue(&chunk, 1);
+    Data data;
+    DebugOnly<int> reads = mSPSCQueue.Dequeue(&data, 1);
     MOZ_ASSERT(reads);
-    raw.AppendAndConsumeChunk(std::move(chunk));
+    MOZ_ASSERT(!data.is<Empty>());
+    if (data.is<AudioChunk>()) {
+      raw.AppendAndConsumeChunk(std::move(data.as<AudioChunk>()));
+    } else if (data.is<LatencyChangeData>()) {
+      latencyFrames = Some(data.as<LatencyChangeData>().mLatencyFrames);
+    }
   }
 
+  if (latencyFrames) {
+    mDriftCorrector.SetSourceLatencyFrames(*latencyFrames);
+  }
   return mDriftCorrector.RequestFrames(raw, static_cast<uint32_t>(aDuration));
 }
 
@@ -159,7 +177,8 @@ long AudioInputSource::DataCallback(const void* aBuffer, long aFrames) {
     }
   }
 
-  int writes = mSPSCQueue.Enqueue(c);
+  Data data(c);
+  int writes = mSPSCQueue.Enqueue(data);
   if (writes == 0) {
     LOGW("AudioInputSource %p, buffer is full. Dropping %ld frames", this,
          aFrames);
