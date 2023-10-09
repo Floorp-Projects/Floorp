@@ -5,16 +5,38 @@
 
 #include "ClockDrift.h"
 
+#include <atomic>
+#include <mutex>
+
 #include "mozilla/Logging.h"
 
 namespace mozilla {
+LazyLogModule gClockDriftGraphsLog("ClockDriftGraphs");
 extern LazyLogModule gMediaTrackGraphLog;
+
+#define LOG_PLOT_NAMES()                            \
+  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,  \
+          ("id,t,buffering,desired,inrate,outrate," \
+           "corrected"))
+#define LOG_PLOT_VALUES(id, t, buffering, desired, inrate, outrate, corrected) \
+  MOZ_LOG(gClockDriftGraphsLog, LogLevel::Verbose,                             \
+          ("ClockDrift %u,%.3f,%u,%u,%u,%u,%.5f", id, t, buffering, desired,   \
+           inrate, outrate, corrected))
+
+static uint8_t GenerateId() {
+  static std::atomic<uint8_t> id{0};
+  return ++id;
+}
 
 ClockDrift::ClockDrift(uint32_t aSourceRate, uint32_t aTargetRate,
                        uint32_t aDesiredBuffering)
-    : mSourceRate(aSourceRate),
+    : mPlotId(GenerateId()),
+      mSourceRate(aSourceRate),
       mTargetRate(aTargetRate),
-      mDesiredBuffering(aDesiredBuffering) {}
+      mDesiredBuffering(aDesiredBuffering) {
+  static std::once_flag sOnceFlag;
+  std::call_once(sOnceFlag, [] { LOG_PLOT_NAMES(); });
+}
 
 void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
                              uint32_t aBufferedFrames,
@@ -34,6 +56,7 @@ void ClockDrift::UpdateClock(uint32_t aSourceFrames, uint32_t aTargetFrames,
   }
   mTargetClock += aTargetFrames;
   mSourceClock += aSourceFrames;
+  mTotalTargetClock += aTargetFrames;
 }
 
 void ClockDrift::CalculateCorrection(float aCalculationWeight,
@@ -47,19 +70,24 @@ void ClockDrift::CalculateCorrection(float aCalculationWeight,
     resampledSourceClock *= static_cast<float>(mTargetRate) / mSourceRate;
   }
 
-  MOZ_LOG(gMediaTrackGraphLog, LogLevel::Verbose,
-          ("ClockDrift %p Calculated correction %.3f (with weight: %.1f -> "
-           "%.3f) (buffer: %u, desired: %u, remaining: %u)",
-           this, static_cast<float>(mTargetClock) / resampledSourceClock,
-           aCalculationWeight,
-           (1 - aCalculationWeight) * mCorrection +
-               aCalculationWeight * mTargetClock / resampledSourceClock,
-           aBufferedFrames, mDesiredBuffering, aRemainingFrames));
+  MOZ_LOG(
+      gMediaTrackGraphLog, LogLevel::Verbose,
+      ("ClockDrift %p (plot-id %u) Calculated correction %.3f (with weight: "
+       "%.1f -> %.3f) (buffer: %u, desired: %u, remaining: %u)",
+       this, mPlotId, static_cast<float>(mTargetClock) / resampledSourceClock,
+       aCalculationWeight,
+       (1 - aCalculationWeight) * mCorrection +
+           aCalculationWeight * mTargetClock / resampledSourceClock,
+       aBufferedFrames, mDesiredBuffering, aRemainingFrames));
 
   auto oldCorrection = mCorrection;
 
   mCorrection = (1 - aCalculationWeight) * mCorrection +
                 aCalculationWeight * mTargetClock / resampledSourceClock;
+
+  LOG_PLOT_VALUES(mPlotId, static_cast<double>(mTotalTargetClock) / mTargetRate,
+                  aBufferedFrames, mDesiredBuffering, mSourceRate, mTargetRate,
+                  mCorrection * mTargetRate);
 
   if (oldCorrection != mCorrection) {
     // Do the comparison pre-clamping as a low number of correction changes
@@ -76,3 +104,6 @@ void ClockDrift::CalculateCorrection(float aCalculationWeight,
   mSourceClock = 0;
 }
 }  // namespace mozilla
+
+#undef LOG_PLOT_VALUES
+#undef LOG_PLOT_NAMES
