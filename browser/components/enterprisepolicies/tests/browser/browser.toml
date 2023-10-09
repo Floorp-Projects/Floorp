@@ -106,6 +106,7 @@ https_first_disabled = true
 ["browser_policy_passwordmanager.js"]
 
 ["browser_policy_search_engine.js"]
+fail-if = ["a11y_checks"] # Bug 1854534 clicked searchbar may not be labeled
 
 ["browser_policy_searchbar.js"]
 
