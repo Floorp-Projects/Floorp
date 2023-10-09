@@ -104,7 +104,7 @@ class AudioCallbackBufferWrapper {
    */
   void BufferFilled() {
     MOZ_ASSERT(Available() == 0, "Frames should have been written");
-    MOZ_ASSERT(mSamples, "Buffer not set.");
+    MOZ_ASSERT(mBuffer, "Buffer not set.");
     mSamples = 0;
     mSampleWriteOffset = 0;
     mBuffer = nullptr;
