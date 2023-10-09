@@ -13,6 +13,21 @@ using mozilla::Some;
 namespace js {
 namespace wasm {
 
+// Sources of documentation of instruction-set encoding:
+//
+// Documentation for the ARM instruction sets can be found at
+// https://developer.arm.com/documentation/ddi0487/latest.  The documentation
+// is vast -- more than 10000 pages.  When looking up an instruction, be sure
+// to look in the correct section for the target word size -- AArch64 (arm64)
+// and AArch32 (arm32) instructions are listed in different sections.  And for
+// AArch32, be sure to look only at the "A<digit> variant/encoding" and not at
+// the "T<digit>" ones.  The latter are for Thumb encodings, which we don't
+// generate.
+//
+// The Intel documentation is similarly comprehensive: search for "Intel® 64
+// and IA-32 Architectures Software Developer’s Manual Combined Volumes: 1,
+// 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D, and 4".  It's easy to find.
+
 #if defined(DEBUG)
 
 // ===================================================== x86_32 and x86_64 ====
