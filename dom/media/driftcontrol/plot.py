@@ -60,7 +60,9 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         outlatency = df["outlatency"]
         inrate = df["inrate"]
         outrate = df["outrate"]
+        hysteresisthreshold = df["hysteresisthreshold"]
         corrected = df["corrected"]
+        hysteresiscorrected = df["hysteresiscorrected"]
         configured = df["configured"]
         p = df["p"]
         i = df["i"]
@@ -78,12 +80,26 @@ MOZ_LOG_FILE=/tmp/driftcontrol.csv       \
         fig1.line(t, buffering, color="dodgerblue", legend_label="Actual buffering")
         fig1.line(t, desired, color="goldenrod", legend_label="Desired buffering")
         fig1.line(t, buffersize, color="seagreen", legend_label="Buffer size")
+        fig1.varea(
+            t,
+            [d - h for (d, h) in zip(desired, hysteresisthreshold)],
+            [d + h for (d, h) in zip(desired, hysteresisthreshold)],
+            alpha=0.2,
+            color="goldenrod",
+            legend_label="Hysteresis Threshold (won't correct out rate within area)",
+        )
 
         fig2 = figure(x_range=fig1.x_range)
         fig2.line(t, inrate, color="hotpink", legend_label="Nominal in sample rate")
         fig2.line(t, outrate, color="firebrick", legend_label="Nominal out sample rate")
         fig2.line(
             t, corrected, color="dodgerblue", legend_label="Corrected out sample rate"
+        )
+        fig2.line(
+            t,
+            hysteresiscorrected,
+            color="seagreen",
+            legend_label="Hysteresis-corrected out sample rate",
         )
         fig2.line(
             t, configured, color="goldenrod", legend_label="Configured out sample rate"
