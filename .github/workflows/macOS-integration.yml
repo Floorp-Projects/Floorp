@@ -258,12 +258,12 @@ jobs:
         - name: make name of publish archive
           shell: node {0}
           run: |
-           const fs = require('fs');
-           let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
-           fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${  q}`);
+            const fs = require('fs');
+            let name = process.env.GHA_out_artifact_name ? process.env.GHA_out_artifact_name : process.env.GHA_default_name
+            fs.appendFileSync(process.env.GITHUB_ENV, `ARTIFACT_NAME=${name}`);
           env:
-            GHA_out_artifact_name: ${{inputs.out_artifact_name}}
-            GHA_default_name: Universal-Artifact
+             GHA_out_artifact_name : ${{inputs.out_artifact_name}}
+             GHA_default_name: Universal-Artifact
 
         - name: Publish 🎁
           uses: actions/upload-artifact@v3
