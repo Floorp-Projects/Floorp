@@ -114,9 +114,8 @@ void CrossGraphTransmitter::ProcessInput(GraphTime aFrom, GraphTime aTo,
   }
 
   LOG(LogLevel::Verbose,
-      ("Transmitter (%p) mSegment: duration: %" PRId64 ", from %" PRId64
-       ", to %" PRId64 ", ticks %" PRId64 "",
-       this, mSegment->GetDuration(), aFrom, aTo, aTo - aFrom));
+      ("Transmitter (%p) from %" PRId64 ", to %" PRId64 ", ticks %" PRId64 "",
+       this, aFrom, aTo, aTo - aFrom));
 
   AudioSegment audio;
   GraphTime next;
