@@ -4064,9 +4064,11 @@ constexpr IDBCursorType ToKeyOnlyType(const IDBCursorType aType) {
              aType == IDBCursorType::Index || aType == IDBCursorType::IndexKey);
   switch (aType) {
     case IDBCursorType::ObjectStore:
+      [[fallthrough]];
     case IDBCursorType::ObjectStoreKey:
       return IDBCursorType::ObjectStoreKey;
     case IDBCursorType::Index:
+      [[fallthrough]];
     case IDBCursorType::IndexKey:
       return IDBCursorType::IndexKey;
   }
