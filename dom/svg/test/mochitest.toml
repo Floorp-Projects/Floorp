@@ -85,6 +85,9 @@ support-files = [
 ["test_getBBox-method.html"]
 
 ["test_getCTM.html"]
+skip-if = [
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857035
+]
 
 ["test_getElementById.xhtml"]
 

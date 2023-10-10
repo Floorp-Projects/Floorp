@@ -134,7 +134,6 @@ mochitest-plain:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
-                    .*wayland.*: []
                     default: built-projects
     chunks:
         by-test-platform:

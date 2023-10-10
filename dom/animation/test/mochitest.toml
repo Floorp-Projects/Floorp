@@ -75,6 +75,7 @@ support-files = [
 skip-if = [
   "os == 'android' && debug", #Bug 1784931
   "os == 'linux' && tsan", #Bug 1784931
+  "display == 'wayland' && os_version == '22.04' && debug",  # Bug 1856969
   "http3",
   "http2",
 ]

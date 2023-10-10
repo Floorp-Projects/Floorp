@@ -679,7 +679,10 @@ skip-if = ["os == 'android'"] # Bug 1525959
 ["test_bug717819.html"]
 
 ["test_bug741266.html"]
-skip-if = ["os == 'android'"] # Android: needs control of popup window size
+skip-if = [
+  "os == 'android'",  # Android: needs control of popup window size
+  "display == 'wayland' && os_version == '22.04' && debug",  # Bug 1856975
+]
 
 ["test_bug742030.html"]
 

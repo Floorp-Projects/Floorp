@@ -59,6 +59,7 @@ support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js
 ["test_getCoalescedEvents.html"]
 skip-if = [
   "os == 'android'",  # Bug 1312791
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1856971
   "verify && os == 'win'", # Bug 1659744
 ]
 
@@ -79,6 +80,9 @@ support-files = [
   "file_pointercapture_xorigin_iframe.html",
   "file_pointercapture_xorigin_iframe_pointerlock.html",
   "file_pointercapture_xorigin_iframe_touch.html",
+]
+skip-if = [
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1856971
 ]
 
 ["test_pointermove_drag_scrollbar.html"]
