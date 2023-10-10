@@ -10,7 +10,6 @@
 #include "mozilla/dom/MIDIInputBinding.h"
 #include "mozilla/dom/MIDIMessageEvent.h"
 #include "mozilla/dom/MIDIMessageEventBinding.h"
-#include "nsDOMNavigationTiming.h"
 
 #include "MIDILog.h"
 

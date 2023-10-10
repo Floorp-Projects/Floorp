@@ -8,8 +8,6 @@
 #define mozilla_dom_MIDIOutput_h
 
 #include "mozilla/dom/MIDIPort.h"
-#include "mozilla/Attributes.h"
-#include "nsWrapperCache.h"
 
 struct JSContext;
 
