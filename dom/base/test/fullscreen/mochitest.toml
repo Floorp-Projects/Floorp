@@ -49,6 +49,7 @@ allow_xul_xbl = true  # XUL is used in file_fullscreen-api.html
 skip-if = [
   "os == 'android'",
   "os == 'mac'", # Bug 1579623, 1776996
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857240
   "http3",
   "http2",
 ]
@@ -57,6 +58,7 @@ skip-if = [
 
 ["test_fullscreen_modal.html"]
 skip-if = [
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857240
   "http3",
   "http2",
 ]
