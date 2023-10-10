@@ -53,6 +53,7 @@ class LicenseDetectorTest : LintDetectorTest() {
         lint()
             .files(TestFiles.kt(code))
             .allowMissingSdk(true)
+            .testModes(TestMode.UI_INJECTION_HOST)
             .run()
             .expect(expectedReport)
             .expectFixDiffs(expectedFixOutput)
