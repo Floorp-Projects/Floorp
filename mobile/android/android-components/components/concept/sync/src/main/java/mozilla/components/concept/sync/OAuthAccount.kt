@@ -162,7 +162,7 @@ interface OAuthAccount : AutoCloseable {
      * @param entryPoint A string which will be included as a query param in the URL for metrics.
      * @return The URL which should be opened in a browser tab.
      */
-    suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String
+    suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String?
 
     /**
      * Get the pairing URL to navigate to on the Authority side (typically a computer).

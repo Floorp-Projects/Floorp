@@ -490,7 +490,7 @@ class FxaAccountManagerTest {
             return ""
         }
 
-        override suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String {
+        override suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String? {
             return "https://firefox.com/settings"
         }
 
