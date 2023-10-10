@@ -109,11 +109,7 @@ toolbarpaletteitem > #downloads-button > .toolbarbutton-badge-stack > #downloads
 
 #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   background: url(chrome://browser/skin/notification-fill-12.svg) no-repeat center;
-  fill: rgb(226,40,80);
-}
-
-toolbar[brighttext] #downloads-button[attention="severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  fill: rgb(255,132,138);
+  fill: light-dark(rgb(226,40,80), rgb(255,132,138));
 }
 
 #downloads-button[animate] > .toolbarbutton-badge-stack > .toolbarbutton-badge {

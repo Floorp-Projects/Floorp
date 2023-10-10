@@ -334,13 +334,8 @@
       inset-inline-end: -6px;
       z-index: 1; /* Overlay tab title */
       padding: 2px;
-      stroke: var(--tab-icon-overlay-stroke, white);
-      color: var(--tab-icon-overlay-fill, black);
-
-      #TabsToolbar[brighttext] & {
-        stroke: var(--tab-icon-overlay-stroke, black);
-        color: var(--tab-icon-overlay-fill, white);
-      }
+      stroke: var(--tab-icon-overlay-stroke, light-dark(white, black));
+      color: var(--tab-icon-overlay-fill, light-dark(black, white));
     }
   }
 

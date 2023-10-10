@@ -37,11 +37,7 @@
   }
 
   #main-menubar > menu[_moz-menuactive="true"] {
-    background-color: hsla(0,0%,0%,.12);
-  }
-
-  #toolbar-menubar[brighttext] > #menubar-items > #main-menubar > menu[_moz-menuactive="true"] {
-    background-color: hsla(0,0%,100%,.22);
+    background-color: light-dark(hsla(0,0%,0%,.12), hsla(0,0%,100%,.22));
   }
 
   /* Use a different color in inactive windows. */
@@ -191,16 +187,10 @@
 
 @media not (prefers-contrast) {
   .titlebar-button:hover {
-    background-color: hsla(0,0%,0%,.12);
+    background-color: light-dark(hsla(0,0%,0%,.12), hsla(0,0%,100%,.22));
   }
   .titlebar-button:hover:active {
-    background-color: hsla(0,0%,0%,.22);
-  }
-  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover {
-    background-color: hsla(0,0%,100%,.22);
-  }
-  toolbar[brighttext] .titlebar-button:not(.titlebar-close):hover:active {
-    background-color: hsla(0,0%,100%,.32);
+    background-color: light-dark(hsla(0,0%,0%,.22), hsla(0,0%,100%,.32));
   }
 
   .titlebar-close:hover {

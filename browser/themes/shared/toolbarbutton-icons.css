@@ -398,11 +398,7 @@
 }
 
 #panic-button[open] {
-  fill: rgb(213, 32, 20);
-}
-
-toolbar[brighttext] #panic-button[open] {
-  fill: #ff848b;
+  fill: light-dark(rgb(213, 32, 20), #ff848b);
 }
 
 #library-button {
