@@ -34,10 +34,6 @@
     aDest.var = uval;            \
   }
 
-mozilla::LazyLogModule gH264("H264");
-
-#define LOG(msg, ...) MOZ_LOG(gH264, LogLevel::Debug, (msg, ##__VA_ARGS__))
-
 namespace mozilla {
 
 // Default scaling lists (per spec).
@@ -1294,12 +1290,7 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
   if (!aSample || aSample->Size() < 3) {
     return mozilla::Err(NS_ERROR_FAILURE);
   }
-  if (aSample->mTrackInfo &&
-      !aSample->mTrackInfo->mMimeType.EqualsLiteral("video/avc")) {
-    LOG("Only allow 'video/avc' (mimeType=%s)",
-        aSample->mTrackInfo->mMimeType.get());
-    return mozilla::Err(NS_ERROR_FAILURE);
-  }
+  // TODO : check video mime type to ensure the sample is AVC
   return AVCCConfig::Parse(aSample->mExtraData);
 }
 
@@ -1326,5 +1317,3 @@ void H264::WriteExtraData(MediaByteBuffer* aDestExtraData,
 #undef READSE
 
 }  // namespace mozilla
-
-#undef LOG
