@@ -203,11 +203,11 @@ jobs:
         - name: Sign to .dmg 🖋️
           run: |
             if [ ${{ inputs.lightning }} == true ]; then
-              export INSTALLER_NAME="Floorp-Lightning"
+              export INSTALLER_NAME="floorp-lightning"
             elif [ ${{ inputs.beta }} == true ]; then
-              export INSTALLER_NAME="Floorp-Daylight"
+              export INSTALLER_NAME="floorp-daylight"
             else
-              export INSTALLER_NAME="Floorp"
+              export INSTALLER_NAME="floorp"
             fi
 
             codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
