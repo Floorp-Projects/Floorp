@@ -54,7 +54,7 @@ elif CONFIG["NECKO_WIFI_DBUS"]:
     LOCAL_INCLUDES += [
         "dbus",
     ]
-    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
+    CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 TEST_DIRS += ["gtest"]
 
