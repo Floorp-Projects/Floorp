@@ -7,9 +7,6 @@
 #ifndef mozilla_dom_MIDIPort_h
 #define mozilla_dom_MIDIPort_h
 
-#include "nsWrapperCache.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/Observer.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MIDIAccess.h"
 #include "mozilla/dom/MIDIPortChild.h"
