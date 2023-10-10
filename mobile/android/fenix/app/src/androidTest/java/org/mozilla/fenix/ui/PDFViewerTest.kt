@@ -52,9 +52,10 @@ class PDFViewerTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2048140
     @SmokeTest
     @Test
-    fun openPDFInBrowserTest() {
+    fun verifyPDFFileIsOpenedInTheSameTabTest() {
         val genericURL =
             getGenericAsset(mockWebServer, 3)
 
@@ -62,11 +63,13 @@ class PDFViewerTest {
         }.enterURLAndEnterToBrowser(genericURL.url) {
             clickPageObject(itemContainingText("PDF form file"))
             verifyPageContent("Washington Crossing the Delaware")
+            verifyTabCounter("1")
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/edit/2159718/1
     @Test
-    fun pdfViewerOpenInAppTest() {
+    fun verifyPDFViewerOpenInAppButtonTest() {
         val genericURL = getGenericAsset(mockWebServer, 3)
 
         navigationToolbar {
@@ -78,9 +81,10 @@ class PDFViewerTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2145448
     // Download PDF file using the download toolbar button
     @Test
-    fun pdfViewerDownloadButtonTest() {
+    fun verifyPDFViewerDownloadButtonTest() {
         val genericURL = getGenericAsset(mockWebServer, 3)
         val downloadFile = "pdfForm.pdf"
 
