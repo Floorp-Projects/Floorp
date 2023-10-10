@@ -33,7 +33,7 @@ sudo rm -rf /usr/local/share/gecko_driver
 sudo rm -rf /usr/share/java
 sudo rm -rf /usr/share/miniconda
 sudo rm -rf /usr/local/share/vcpkg
-sudo fallocate -l 14G /home/runner/swapfile2
+sudo fallocate -l 13G /home/runner/swapfile2
 sudo chmod 600 /home/runner/swapfile2
 sudo mkswap /home/runner/swapfile2
 sudo swapon /home/runner/swapfile2
