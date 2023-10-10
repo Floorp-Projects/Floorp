@@ -84,9 +84,9 @@ class RoiMaskBackgroundSkip : public ::libvpx_test::EncoderTest,
                               public ::testing::Test {
  protected:
   RoiMaskBackgroundSkip() : EncoderTest(&::libvpx_test::kVP9) {}
-  virtual ~RoiMaskBackgroundSkip() { free(roi_.roi_map); }
+  ~RoiMaskBackgroundSkip() override { free(roi_.roi_map); }
 
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     SetRoi();
@@ -114,8 +114,8 @@ class RoiMaskBackgroundSkip : public ::libvpx_test::EncoderTest,
     }
   }
 
-  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
     if (video->frame() == 0) {
       encoder->Control(VP8E_SET_CPUUSED, 7);
       encoder->Control(VP9E_SET_AQ_MODE, 3);

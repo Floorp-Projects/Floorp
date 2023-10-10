@@ -86,28 +86,28 @@ struct rdcost_block_args {
 
 #if !CONFIG_REALTIME_ONLY
 static const MODE_DEFINITION vp9_mode_order[MAX_MODES] = {
-  { NEARESTMV, { LAST_FRAME, NONE } },
-  { NEARESTMV, { ALTREF_FRAME, NONE } },
-  { NEARESTMV, { GOLDEN_FRAME, NONE } },
+  { NEARESTMV, { LAST_FRAME, NO_REF_FRAME } },
+  { NEARESTMV, { ALTREF_FRAME, NO_REF_FRAME } },
+  { NEARESTMV, { GOLDEN_FRAME, NO_REF_FRAME } },
 
-  { DC_PRED, { INTRA_FRAME, NONE } },
+  { DC_PRED, { INTRA_FRAME, NO_REF_FRAME } },
 
-  { NEWMV, { LAST_FRAME, NONE } },
-  { NEWMV, { ALTREF_FRAME, NONE } },
-  { NEWMV, { GOLDEN_FRAME, NONE } },
+  { NEWMV, { LAST_FRAME, NO_REF_FRAME } },
+  { NEWMV, { ALTREF_FRAME, NO_REF_FRAME } },
+  { NEWMV, { GOLDEN_FRAME, NO_REF_FRAME } },
 
-  { NEARMV, { LAST_FRAME, NONE } },
-  { NEARMV, { ALTREF_FRAME, NONE } },
-  { NEARMV, { GOLDEN_FRAME, NONE } },
+  { NEARMV, { LAST_FRAME, NO_REF_FRAME } },
+  { NEARMV, { ALTREF_FRAME, NO_REF_FRAME } },
+  { NEARMV, { GOLDEN_FRAME, NO_REF_FRAME } },
 
-  { ZEROMV, { LAST_FRAME, NONE } },
-  { ZEROMV, { GOLDEN_FRAME, NONE } },
-  { ZEROMV, { ALTREF_FRAME, NONE } },
+  { ZEROMV, { LAST_FRAME, NO_REF_FRAME } },
+  { ZEROMV, { GOLDEN_FRAME, NO_REF_FRAME } },
+  { ZEROMV, { ALTREF_FRAME, NO_REF_FRAME } },
 
   { NEARESTMV, { LAST_FRAME, ALTREF_FRAME } },
   { NEARESTMV, { GOLDEN_FRAME, ALTREF_FRAME } },
 
-  { TM_PRED, { INTRA_FRAME, NONE } },
+  { TM_PRED, { INTRA_FRAME, NO_REF_FRAME } },
 
   { NEARMV, { LAST_FRAME, ALTREF_FRAME } },
   { NEWMV, { LAST_FRAME, ALTREF_FRAME } },
@@ -117,20 +117,20 @@ static const MODE_DEFINITION vp9_mode_order[MAX_MODES] = {
   { ZEROMV, { LAST_FRAME, ALTREF_FRAME } },
   { ZEROMV, { GOLDEN_FRAME, ALTREF_FRAME } },
 
-  { H_PRED, { INTRA_FRAME, NONE } },
-  { V_PRED, { INTRA_FRAME, NONE } },
-  { D135_PRED, { INTRA_FRAME, NONE } },
-  { D207_PRED, { INTRA_FRAME, NONE } },
-  { D153_PRED, { INTRA_FRAME, NONE } },
-  { D63_PRED, { INTRA_FRAME, NONE } },
-  { D117_PRED, { INTRA_FRAME, NONE } },
-  { D45_PRED, { INTRA_FRAME, NONE } },
+  { H_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { V_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D135_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D207_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D153_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D63_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D117_PRED, { INTRA_FRAME, NO_REF_FRAME } },
+  { D45_PRED, { INTRA_FRAME, NO_REF_FRAME } },
 };
 
 static const REF_DEFINITION vp9_ref_order[MAX_REFS] = {
-  { { LAST_FRAME, NONE } },           { { GOLDEN_FRAME, NONE } },
-  { { ALTREF_FRAME, NONE } },         { { LAST_FRAME, ALTREF_FRAME } },
-  { { GOLDEN_FRAME, ALTREF_FRAME } }, { { INTRA_FRAME, NONE } },
+  { { LAST_FRAME, NO_REF_FRAME } },   { { GOLDEN_FRAME, NO_REF_FRAME } },
+  { { ALTREF_FRAME, NO_REF_FRAME } }, { { LAST_FRAME, ALTREF_FRAME } },
+  { { GOLDEN_FRAME, ALTREF_FRAME } }, { { INTRA_FRAME, NO_REF_FRAME } },
 };
 #endif  // !CONFIG_REALTIME_ONLY
 
@@ -1132,9 +1132,8 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
             const int coeff_ctx =
                 combine_entropy_contexts(tempa[idx], templ[idy]);
             vp9_highbd_fwht4x4(src_diff, coeff, 8);
-            vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
-                                  p->quant_shift, qcoeff, dqcoeff, pd->dequant,
-                                  eob, so->scan, so->iscan);
+            vpx_highbd_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant,
+                                  eob, so);
             ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                  so->neighbors, cpi->sf.use_fast_coef_costing);
             tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0 ? 1 : 0);
@@ -1152,9 +1151,8 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
               vpx_highbd_fdct4x4(src_diff, coeff, 8);
             else
               vp9_highbd_fht4x4(src_diff, coeff, 8, tx_type);
-            vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
-                                  p->quant_shift, qcoeff, dqcoeff, pd->dequant,
-                                  eob, so->scan, so->iscan);
+            vpx_highbd_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant,
+                                  eob, so);
             ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                  so->neighbors, cpi->sf.use_fast_coef_costing);
             distortion += vp9_highbd_block_error_dispatch(
@@ -1239,9 +1237,8 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
           const int coeff_ctx =
               combine_entropy_contexts(tempa[idx], templ[idy]);
           vp9_fwht4x4(src_diff, coeff, 8);
-          vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
-                         p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                         so->scan, so->iscan);
+          vpx_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant, eob,
+                         so);
           ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                so->neighbors, cpi->sf.use_fast_coef_costing);
           tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0) ? 1 : 0;
@@ -1256,9 +1253,8 @@ static int64_t rd_pick_intra4x4block(VP9_COMP *cpi, MACROBLOCK *x, int row,
           const int coeff_ctx =
               combine_entropy_contexts(tempa[idx], templ[idy]);
           vp9_fht4x4(src_diff, coeff, 8, tx_type);
-          vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
-                         p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                         so->scan, so->iscan);
+          vpx_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant, eob,
+                         so);
           ratey += cost_coeffs(x, 0, block, TX_4X4, coeff_ctx, so->scan,
                                so->neighbors, cpi->sf.use_fast_coef_costing);
           tempa[idx] = templ[idy] = (x->plane[0].eobs[block] > 0) ? 1 : 0;
@@ -1710,14 +1706,12 @@ static int64_t encode_inter_mb_segment(VP9_COMP *cpi, MACROBLOCK *x,
       x->fwd_txfm4x4(vp9_raster_block_offset_int16(BLOCK_8X8, k, p->src_diff),
                      coeff, 8);
 #if CONFIG_VP9_HIGHBITDEPTH
-      vpx_highbd_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant,
-                            p->quant_shift, qcoeff, dqcoeff, pd->dequant, eob,
-                            so->scan, so->iscan);
+      vpx_highbd_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant, eob,
+                            so);
       thisdistortion += vp9_highbd_block_error_dispatch(
           coeff, BLOCK_OFFSET(pd->dqcoeff, k), 16, &ssz, bd);
 #else
-      vpx_quantize_b(coeff, 4 * 4, p->zbin, p->round, p->quant, p->quant_shift,
-                     qcoeff, dqcoeff, pd->dequant, eob, so->scan, so->iscan);
+      vpx_quantize_b(coeff, 4 * 4, p, qcoeff, dqcoeff, pd->dequant, eob, so);
       thisdistortion +=
           vp9_block_error(coeff, BLOCK_OFFSET(pd->dqcoeff, k), 16, &ssz);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
@@ -1811,7 +1805,7 @@ static int check_best_zero_mv(const VP9_COMP *cpi,
                               const MV_REFERENCE_FRAME ref_frames[2]) {
   if ((this_mode == NEARMV || this_mode == NEARESTMV || this_mode == ZEROMV) &&
       frame_mv[this_mode][ref_frames[0]].as_int == 0 &&
-      (ref_frames[1] == NONE ||
+      (ref_frames[1] == NO_REF_FRAME ||
        frame_mv[this_mode][ref_frames[1]].as_int == 0)) {
     int rfc = mode_context[ref_frames[0]];
     int c1 = cost_mv_ref(cpi, NEARMV, rfc);
@@ -1824,7 +1818,7 @@ static int check_best_zero_mv(const VP9_COMP *cpi,
       if (c2 > c3) return 0;
     } else {
       assert(this_mode == ZEROMV);
-      if (ref_frames[1] == NONE) {
+      if (ref_frames[1] == NO_REF_FRAME) {
         if ((c3 >= c2 && frame_mv[NEARESTMV][ref_frames[0]].as_int == 0) ||
             (c3 >= c1 && frame_mv[NEARMV][ref_frames[0]].as_int == 0))
           return 0;
@@ -1937,10 +1931,10 @@ static void joint_motion_search(VP9_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bsize,
 
 // Prediction buffer from second frame.
 #if CONFIG_VP9_HIGHBITDEPTH
-  DECLARE_ALIGNED(16, uint16_t, second_pred_alloc_16[64 * 64]);
+  DECLARE_ALIGNED(32, uint16_t, second_pred_alloc_16[64 * 64]);
   uint8_t *second_pred;
 #else
-  DECLARE_ALIGNED(16, uint8_t, second_pred[64 * 64]);
+  DECLARE_ALIGNED(32, uint8_t, second_pred[64 * 64]);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
   // Check number of iterations do not exceed the max
@@ -2183,7 +2177,7 @@ static int64_t rd_pick_best_sub8x8_mode(
           int cost_list[5];
           const MvLimits tmp_mv_limits = x->mv_limits;
 
-          /* Is the best so far sufficiently good that we cant justify doing
+          /* Is the best so far sufficiently good that we can't justify doing
            * and new motion search. */
           if (best_rd < label_mv_thresh) break;
 
@@ -2841,9 +2835,8 @@ static int64_t handle_inter_mode(
 #else
   DECLARE_ALIGNED(16, uint8_t, tmp_buf[MAX_MB_PLANE * 64 * 64]);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
-  int pred_exists = 0;
   int intpel_mv;
-  int64_t rd, tmp_rd, best_rd = INT64_MAX;
+  int64_t rd, tmp_rd = INT64_MAX, best_rd = INT64_MAX;
   int best_needs_copy = 0;
   uint8_t *orig_dst[MAX_MB_PLANE];
   int orig_dst_stride[MAX_MB_PLANE];
@@ -3003,7 +2996,6 @@ static int64_t handle_inter_mode(
       mi->mode != NEARESTMV)
     return INT64_MAX;
 
-  pred_exists = 0;
   // Are all MVs integer pel for Y and UV
   intpel_mv = !mv_has_subpel(&mi->mv[0].as_mv);
   if (is_comp_pred) intpel_mv &= !mv_has_subpel(&mi->mv[1].as_mv);
@@ -3111,7 +3103,6 @@ static int64_t handle_inter_mode(
         if ((cm->interp_filter == SWITCHABLE && newbest) ||
             (cm->interp_filter != SWITCHABLE &&
              cm->interp_filter == mi->interp_filter)) {
-          pred_exists = 1;
           tmp_rd = best_rd;
 
           skip_txfm_sb = tmp_skip_sb;
@@ -3131,7 +3122,7 @@ static int64_t handle_inter_mode(
       cm->interp_filter != SWITCHABLE ? cm->interp_filter : best_filter;
   rs = cm->interp_filter == SWITCHABLE ? vp9_get_switchable_rate(cpi, xd) : 0;
 
-  if (pred_exists) {
+  if (tmp_rd != INT64_MAX) {
     if (best_needs_copy) {
       // again temporarily set the buffers to local memory to prevent a memcpy
       for (i = 0; i < MAX_MB_PLANE; i++) {
@@ -3241,7 +3232,7 @@ void vp9_rd_pick_intra_mode_sb(VP9_COMP *cpi, MACROBLOCK *x, RD_COST *rd_cost,
   x->skip_encode = 0;
   ctx->skip = 0;
   xd->mi[0]->ref_frame[0] = INTRA_FRAME;
-  xd->mi[0]->ref_frame[1] = NONE;
+  xd->mi[0]->ref_frame[1] = NO_REF_FRAME;
   // Initialize interp_filter here so we do not have to check for inter block
   // modes in get_pred_context_switchable_interp()
   xd->mi[0]->interp_filter = SWITCHABLE_FILTERS;
@@ -3686,7 +3677,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
           ref_frame_skip_mask[0] |= GOLDEN_FRAME_MODE_MASK;
           break;
         case ALTREF_FRAME: ref_frame_skip_mask[0] |= ALT_REF_MODE_MASK; break;
-        case NONE:
+        case NO_REF_FRAME:
         case MAX_REF_FRAMES: assert(0 && "Invalid Reference frame"); break;
       }
     }
@@ -3719,7 +3710,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
       MODE_INFO *ref_mi;
       int const_motion = 1;
       int skip_ref_frame = !cb_partition_search_ctrl;
-      MV_REFERENCE_FRAME rf = NONE;
+      MV_REFERENCE_FRAME rf = NO_REF_FRAME;
       int_mv ref_mv;
       ref_mv.as_int = INVALID_MV;
 
@@ -3736,7 +3727,7 @@ void vp9_rd_pick_inter_mode_sb(VP9_COMP *cpi, TileDataEnc *tile_data,
 
       if ((mi_col - 1) >= tile_info->mi_col_start) {
         if (ref_mv.as_int == INVALID_MV) ref_mv = xd->mi[-1]->mv[0];
-        if (rf == NONE) rf = xd->mi[-1]->ref_frame[0];
+        if (rf == NO_REF_FRAME) rf = xd->mi[-1]->ref_frame[0];
         for (i = 0; i < mi_height; ++i) {
           ref_mi = xd->mi[i * xd->mi_stride - 1];
           const_motion &= (ref_mv.as_int == ref_mi->mv[0].as_int) &&
@@ -4230,7 +4221,7 @@ void vp9_rd_pick_inter_mode_sb_seg_skip(VP9_COMP *cpi, TileDataEnc *tile_data,
   mi->mode = ZEROMV;
   mi->uv_mode = DC_PRED;
   mi->ref_frame[0] = LAST_FRAME;
-  mi->ref_frame[1] = NONE;
+  mi->ref_frame[1] = NO_REF_FRAME;
   mi->mv[0].as_int = 0;
   x->skip = 1;
 
@@ -4412,7 +4403,7 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
           case ALTREF_FRAME:
             ref_frame_skip_mask[0] |= (1 << GOLDEN_FRAME) | (1 << LAST_FRAME);
             break;
-          case NONE:
+          case NO_REF_FRAME:
           case MAX_REF_FRAMES: assert(0 && "Invalid Reference frame"); break;
         }
       }
@@ -4671,7 +4662,7 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
 
       if (tmp_best_rdu > 0) {
         // If even the 'Y' rd value of split is higher than best so far
-        // then dont bother looking at UV
+        // then don't bother looking at UV
         vp9_build_inter_predictors_sbuv(&x->e_mbd, mi_row, mi_col, BLOCK_8X8);
         memset(x->skip_txfm, SKIP_TXFM_NONE, sizeof(x->skip_txfm));
         if (!super_block_uvrd(cpi, x, &rate_uv, &distortion_uv, &uv_skippable,
@@ -4899,7 +4890,7 @@ void vp9_rd_pick_inter_mode_sub8x8(VP9_COMP *cpi, TileDataEnc *tile_data,
     mi->mv[1].as_int = xd->mi[0]->bmi[3].as_mv[1].as_int;
   }
   // If the second reference does not exist, set the corresponding mv to zero.
-  if (mi->ref_frame[1] == NONE) {
+  if (mi->ref_frame[1] == NO_REF_FRAME) {
     mi->mv[1].as_int = 0;
     for (i = 0; i < 4; ++i) {
       mi->bmi[i].as_mv[1].as_int = 0;

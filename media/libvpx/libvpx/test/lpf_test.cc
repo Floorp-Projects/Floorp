@@ -129,15 +129,15 @@ uint8_t GetHevThresh(ACMRandom *rnd) {
 
 class Loop8Test6Param : public ::testing::TestWithParam<loop8_param_t> {
  public:
-  virtual ~Loop8Test6Param() {}
-  virtual void SetUp() {
+  ~Loop8Test6Param() override = default;
+  void SetUp() override {
     loopfilter_op_ = GET_PARAM(0);
     ref_loopfilter_op_ = GET_PARAM(1);
     bit_depth_ = GET_PARAM(2);
     mask_ = (1 << bit_depth_) - 1;
   }
 
-  virtual void TearDown() { libvpx_test::ClearSystemState(); }
+  void TearDown() override { libvpx_test::ClearSystemState(); }
 
  protected:
   int bit_depth_;
@@ -151,15 +151,15 @@ GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(Loop8Test6Param);
     (HAVE_DSPR2 || HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH)
 class Loop8Test9Param : public ::testing::TestWithParam<dualloop8_param_t> {
  public:
-  virtual ~Loop8Test9Param() {}
-  virtual void SetUp() {
+  ~Loop8Test9Param() override = default;
+  void SetUp() override {
     loopfilter_op_ = GET_PARAM(0);
     ref_loopfilter_op_ = GET_PARAM(1);
     bit_depth_ = GET_PARAM(2);
     mask_ = (1 << bit_depth_) - 1;
   }
 
-  virtual void TearDown() { libvpx_test::ClearSystemState(); }
+  void TearDown() override { libvpx_test::ClearSystemState(); }
 
  protected:
   int bit_depth_;

@@ -19,7 +19,7 @@
 #if CONFIG_VP8_ENCODER || CONFIG_VP9_ENCODER
 #include "vpx/vp8cx.h"
 #endif
-#include "vpx/vpx_encoder.h"
+#include "vpx/vpx_tpl.h"
 
 namespace libvpx_test {
 
@@ -264,7 +264,7 @@ class EncoderTest {
 
   const CodecFactory *codec_;
   // Hook to determine whether to decode frame after encoding
-  virtual bool DoDecode() const { return 1; }
+  virtual bool DoDecode() const { return true; }
 
   // Hook to handle encode/decode mismatch
   virtual void MismatchHook(const vpx_image_t *img1, const vpx_image_t *img2);

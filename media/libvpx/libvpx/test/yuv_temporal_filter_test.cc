@@ -290,7 +290,7 @@ void ApplyReferenceFilter(
 class YUVTemporalFilterTest
     : public ::testing::TestWithParam<TemporalFilterWithBd> {
  public:
-  virtual void SetUp() {
+  void SetUp() override {
     filter_func_ = GetParam().temporal_filter;
     bd_ = GetParam().bd;
     use_highbd_ = (bd_ != 8);

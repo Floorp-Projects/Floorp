@@ -17,17 +17,16 @@
 #include "vpx/vpx_integer.h"
 #include "vp9/encoder/vp9_block.h"
 
-static INLINE void load_b_values(const int16_t *zbin_ptr, __m128i *zbin,
-                                 const int16_t *round_ptr, __m128i *round,
-                                 const int16_t *quant_ptr, __m128i *quant,
+static INLINE void load_b_values(const struct macroblock_plane *const mb_plane,
+                                 __m128i *zbin, __m128i *round, __m128i *quant,
                                  const int16_t *dequant_ptr, __m128i *dequant,
-                                 const int16_t *shift_ptr, __m128i *shift) {
-  *zbin = _mm_load_si128((const __m128i *)zbin_ptr);
-  *round = _mm_load_si128((const __m128i *)round_ptr);
-  *quant = _mm_load_si128((const __m128i *)quant_ptr);
+                                 __m128i *shift) {
+  *zbin = _mm_load_si128((const __m128i *)mb_plane->zbin);
+  *round = _mm_load_si128((const __m128i *)mb_plane->round);
+  *quant = _mm_load_si128((const __m128i *)mb_plane->quant);
   *zbin = _mm_sub_epi16(*zbin, _mm_set1_epi16(1));
   *dequant = _mm_load_si128((const __m128i *)dequant_ptr);
-  *shift = _mm_load_si128((const __m128i *)shift_ptr);
+  *shift = _mm_load_si128((const __m128i *)mb_plane->quant_shift);
 }
 
 static INLINE void load_b_values32x32(
@@ -57,12 +56,12 @@ static INLINE void load_b_values32x32(
   *shift = _mm_slli_epi16(*shift, 1);
 }
 
-static INLINE void load_fp_values(const int16_t *round_ptr, __m128i *round,
-                                  const int16_t *quant_ptr, __m128i *quant,
+static INLINE void load_fp_values(const struct macroblock_plane *mb_plane,
+                                  __m128i *round, __m128i *quant,
                                   const int16_t *dequant_ptr,
                                   __m128i *dequant) {
-  *round = _mm_load_si128((const __m128i *)round_ptr);
-  *quant = _mm_load_si128((const __m128i *)quant_ptr);
+  *round = _mm_load_si128((const __m128i *)mb_plane->round_fp);
+  *quant = _mm_load_si128((const __m128i *)mb_plane->quant_fp);
   *dequant = _mm_load_si128((const __m128i *)dequant_ptr);
 }
 

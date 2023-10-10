@@ -319,7 +319,7 @@ static VP9_DENOISER_DECISION perform_motion_compensation(
   filter_mbd->plane[2].dst.stride =
       denoiser->mc_running_avg_y[denoise_layer_idx].uv_stride;
 
-  set_ref_ptrs(cm, filter_mbd, saved_frame, NONE);
+  set_ref_ptrs(cm, filter_mbd, saved_frame, NO_REF_FRAME);
   vp9_build_inter_predictors_sby(filter_mbd, mi_row, mi_col, bs);
 
   // Restore everything to its original state
@@ -387,7 +387,7 @@ void vp9_denoiser_denoise(VP9_COMP *cpi, MACROBLOCK *mb, int mi_row, int mi_col,
           consec_zeromv = VPXMIN(cpi->consec_zero_mv[bl_index], consec_zeromv);
           // No need to keep checking 8x8 blocks if any of the sub-blocks
           // has small consec_zeromv (since threshold for no_skin based on
-          // zero/small motion in skin detection is high, i.e, > 4).
+          // zero/small motion in skin detection is high, i.e., > 4).
           if (consec_zeromv < 4) {
             i = ymis;
             break;

@@ -316,7 +316,6 @@ static void parse_command_line(int argc, const char **argv_,
           break;
         default:
           die("Error: Invalid bit depth selected (%d)\n", enc_cfg->g_bit_depth);
-          break;
       }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
     } else if (arg_match(&arg, &dropframe_thresh_arg, argi)) {

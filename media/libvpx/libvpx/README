@@ -1,4 +1,4 @@
-v1.13.0 Ugly Duckling
+v1.13.1 Ugly Duckling
 
 Welcome to the WebM VP8/VP9 Codec SDK!
 
@@ -69,6 +69,10 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     arm64-linux-gcc
     arm64-win64-gcc
     arm64-win64-vs15
+    arm64-win64-vs16
+    arm64-win64-vs16-clangcl
+    arm64-win64-vs17
+    arm64-win64-vs17-clangcl
     armv7-android-gcc
     armv7-darwin-gcc
     armv7-linux-rvct

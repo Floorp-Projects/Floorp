@@ -786,22 +786,19 @@ static void block_yrd(VP9_COMP *cpi, MACROBLOCK *x, RD_COST *this_rdc,
         switch (tx_size) {
           case TX_16X16:
             vpx_hadamard_16x16(src_diff, diff_stride, coeff);
-            vp9_quantize_fp(coeff, 256, p->round_fp, p->quant_fp, qcoeff,
-                            dqcoeff, pd->dequant, eob, scan_order->scan,
-                            scan_order->iscan);
+            vp9_quantize_fp(coeff, 256, p, qcoeff, dqcoeff, pd->dequant, eob,
+                            scan_order);
             break;
           case TX_8X8:
             vpx_hadamard_8x8(src_diff, diff_stride, coeff);
-            vp9_quantize_fp(coeff, 64, p->round_fp, p->quant_fp, qcoeff,
-                            dqcoeff, pd->dequant, eob, scan_order->scan,
-                            scan_order->iscan);
+            vp9_quantize_fp(coeff, 64, p, qcoeff, dqcoeff, pd->dequant, eob,
+                            scan_order);
             break;
           default:
             assert(tx_size == TX_4X4);
             x->fwd_txfm4x4(src_diff, coeff, diff_stride);
-            vp9_quantize_fp(coeff, 16, p->round_fp, p->quant_fp, qcoeff,
-                            dqcoeff, pd->dequant, eob, scan_order->scan,
-                            scan_order->iscan);
+            vp9_quantize_fp(coeff, 16, p, qcoeff, dqcoeff, pd->dequant, eob,
+                            scan_order);
             break;
         }
         *skippable &= (*eob == 0);
@@ -1398,8 +1395,8 @@ static void recheck_zeromv_after_denoising(
     RD_COST this_rdc;
     mi->mode = ZEROMV;
     mi->ref_frame[0] = LAST_FRAME;
-    mi->ref_frame[1] = NONE;
-    set_ref_ptrs(cm, xd, mi->ref_frame[0], NONE);
+    mi->ref_frame[1] = NO_REF_FRAME;
+    set_ref_ptrs(cm, xd, mi->ref_frame[0], NO_REF_FRAME);
     mi->mv[0].as_int = 0;
     mi->interp_filter = EIGHTTAP;
     if (cpi->sf.default_interp_filter == BILINEAR) mi->interp_filter = BILINEAR;
@@ -1417,7 +1414,7 @@ static void recheck_zeromv_after_denoising(
       this_rdc = *best_rdc;
       mi->mode = ctx_den->best_mode;
       mi->ref_frame[0] = ctx_den->best_ref_frame;
-      set_ref_ptrs(cm, xd, mi->ref_frame[0], NONE);
+      set_ref_ptrs(cm, xd, mi->ref_frame[0], NO_REF_FRAME);
       mi->interp_filter = ctx_den->best_pred_filter;
       if (ctx_den->best_ref_frame == INTRA_FRAME) {
         mi->mv[0].as_int = INVALID_MV;
@@ -1681,7 +1678,7 @@ static INLINE void init_best_pickmode(BEST_PICKMODE *bp) {
   bp->best_intra_tx_size = TX_SIZES;
   bp->best_pred_filter = EIGHTTAP;
   bp->best_mode_skip_txfm = SKIP_TXFM_NONE;
-  bp->best_second_ref_frame = NONE;
+  bp->best_second_ref_frame = NO_REF_FRAME;
   bp->best_pred = NULL;
 }
 
@@ -1875,8 +1872,8 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
   vp9_rd_cost_reset(&best_rdc);
   vp9_rd_cost_reset(rd_cost);
   mi->sb_type = bsize;
-  mi->ref_frame[0] = NONE;
-  mi->ref_frame[1] = NONE;
+  mi->ref_frame[0] = NO_REF_FRAME;
+  mi->ref_frame[1] = NO_REF_FRAME;
 
   mi->tx_size =
       VPXMIN(max_txsize_lookup[bsize], tx_mode_to_biggest_tx_size[cm->tx_mode]);
@@ -2054,7 +2051,7 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
     int comp_pred = 0;
     int force_mv_inter_layer = 0;
     PREDICTION_MODE this_mode;
-    second_ref_frame = NONE;
+    second_ref_frame = NO_REF_FRAME;
 
     if (idx < num_inter_modes) {
       this_mode = ref_mode_set[idx].pred_mode;
@@ -2631,7 +2628,7 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
         best_pickmode.best_mode = this_mode;
         best_pickmode.best_intra_tx_size = mi->tx_size;
         best_pickmode.best_ref_frame = INTRA_FRAME;
-        best_pickmode.best_second_ref_frame = NONE;
+        best_pickmode.best_second_ref_frame = NO_REF_FRAME;
         mi->uv_mode = this_mode;
         mi->mv[0].as_int = INVALID_MV;
         mi->mv[1].as_int = INVALID_MV;
@@ -2753,8 +2750,8 @@ void vp9_pick_inter_mode_sub8x8(VP9_COMP *cpi, MACROBLOCK *x, int mi_row,
   MODE_INFO *const mi = xd->mi[0];
   MB_MODE_INFO_EXT *const mbmi_ext = x->mbmi_ext;
   const struct segmentation *const seg = &cm->seg;
-  MV_REFERENCE_FRAME ref_frame, second_ref_frame = NONE;
-  MV_REFERENCE_FRAME best_ref_frame = NONE;
+  MV_REFERENCE_FRAME ref_frame, second_ref_frame = NO_REF_FRAME;
+  MV_REFERENCE_FRAME best_ref_frame = NO_REF_FRAME;
   unsigned char segment_id = mi->segment_id;
   struct buf_2d yv12_mb[4][MAX_MB_PLANE];
   int64_t best_rd = INT64_MAX;
@@ -2793,7 +2790,7 @@ void vp9_pick_inter_mode_sub8x8(VP9_COMP *cpi, MACROBLOCK *x, int mi_row,
   mi->tx_size = TX_4X4;
   mi->uv_mode = DC_PRED;
   mi->ref_frame[0] = LAST_FRAME;
-  mi->ref_frame[1] = NONE;
+  mi->ref_frame[1] = NO_REF_FRAME;
   mi->interp_filter =
       cm->interp_filter == SWITCHABLE ? EIGHTTAP : cm->interp_filter;
 

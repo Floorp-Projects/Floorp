@@ -263,6 +263,16 @@ static INLINE void store_u8(uint8_t *buf, ptrdiff_t stride, const uint8x8_t a) {
   vst1_lane_u32((uint32_t *)buf, a_u32, 1);
 }
 
+static INLINE void store_u8_8x3(uint8_t *s, const ptrdiff_t p,
+                                const uint8x8_t s0, const uint8x8_t s1,
+                                const uint8x8_t s2) {
+  vst1_u8(s, s0);
+  s += p;
+  vst1_u8(s, s1);
+  s += p;
+  vst1_u8(s, s2);
+}
+
 static INLINE void load_u8_8x4(const uint8_t *s, const ptrdiff_t p,
                                uint8x8_t *const s0, uint8x8_t *const s1,
                                uint8x8_t *const s2, uint8x8_t *const s3) {
@@ -285,6 +295,16 @@ static INLINE void store_u8_8x4(uint8_t *s, const ptrdiff_t p,
   vst1_u8(s, s2);
   s += p;
   vst1_u8(s, s3);
+}
+
+static INLINE void load_u8_16x3(const uint8_t *s, const ptrdiff_t p,
+                                uint8x16_t *const s0, uint8x16_t *const s1,
+                                uint8x16_t *const s2) {
+  *s0 = vld1q_u8(s);
+  s += p;
+  *s1 = vld1q_u8(s);
+  s += p;
+  *s2 = vld1q_u8(s);
 }
 
 static INLINE void load_u8_16x4(const uint8_t *s, const ptrdiff_t p,

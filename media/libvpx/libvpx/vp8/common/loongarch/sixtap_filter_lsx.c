@@ -1706,21 +1706,22 @@ void vp8_sixtap_predict4x4_lsx(uint8_t *RESTRICT src, int32_t src_stride,
       switch (xoffset) {
         case 0: {
           __m128i tp0;
-          tp0 = __lsx_vinsgr2vr_w(tp0, src, 0);
-          src += src_stride;
-          tp0 = __lsx_vinsgr2vr_w(tp0, src, 0);
-          src += src_stride;
-          tp0 = __lsx_vinsgr2vr_w(tp0, src, 0);
-          src += src_stride;
-          tp0 = __lsx_vinsgr2vr_w(tp0, src, 0);
 
+          tp0 = __lsx_vldrepl_w(src, 0);
+          src += src_stride;
           __lsx_vstelm_w(tp0, dst, 0, 0);
           dst += dst_stride;
-          __lsx_vstelm_w(tp0, dst, 0, 1);
+          tp0 = __lsx_vldrepl_w(src, 0);
+          src += src_stride;
+          __lsx_vstelm_w(tp0, dst, 0, 0);
           dst += dst_stride;
-          __lsx_vstelm_w(tp0, dst, 0, 2);
+          tp0 = __lsx_vldrepl_w(src, 0);
+          src += src_stride;
+          __lsx_vstelm_w(tp0, dst, 0, 0);
           dst += dst_stride;
-          __lsx_vstelm_w(tp0, dst, 0, 3);
+          tp0 = __lsx_vldrepl_w(src, 0);
+          __lsx_vstelm_w(tp0, dst, 0, 0);
+
           break;
         }
         case 2:
@@ -1865,7 +1866,7 @@ void vp8_sixtap_predict16x16_lsx(uint8_t *RESTRICT src, int32_t src_stride,
 
               case 1:
                 Predict16x16Funcs1[3](src, src_stride, dst, dst_stride,
-                                      h_filter, v_filter + 1, 16);
+                                      h_filter + 1, v_filter + 1, 16);
                 break;
             }
             break;
