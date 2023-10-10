@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-06T16:56:18.186997'
+updated_at: '2023-10-10T13:48:04.964659'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -208,6 +208,10 @@ people:
     bmo_id: 625428
     name: Chris Martin
     nick: cmartin
+  - &cmkm
+    bmo_id: 693338
+    name: Cieara Meador
+    nick: cmkm
   - &cpeterson
     bmo_id: 430528
     name: Chris Peterson
@@ -288,6 +292,10 @@ people:
     bmo_id: 1689
     name: Daniel Veditz
     nick: dveditz
+  - &dwalker
+    bmo_id: 713270
+    name: DJ
+    nick: dwalker
   - &ed
     bmo_id: 629148
     name: Ed Lee
@@ -452,10 +460,6 @@ people:
     bmo_id: 8340
     name: Jan Varga
     nick: janv
-  - &jaws
-    bmo_id: 409754
-    name: Jared Wein
-    nick: jaws
   - &jchen
     bmo_id: 281508
     name: ''
@@ -3148,6 +3152,7 @@ modules:
         - Georg Fritzsche
         - Felipe Gomes
         - Tim Guan-tin Chien
+        - Johann Hofmann
         - KM Lee Rex
         - Fred Lin
         - Ray Lin
@@ -3156,13 +3161,14 @@ modules:
         - Mark Mentovai
         - Ted Mielczarek
         - Brian Nicholson
+        - Matthew Noorenberghe
         - Neil Rashbrook
         - Asaf Romano
         - Marina Samuel
         - J Ryan Stinnett
         - Gregory Szorc
         - Tim Taubert
-        - Johann Hofmann
+        - Jared Wein
       group: firefox-dev
       components:
         - Firefox
@@ -3172,9 +3178,9 @@ modules:
       - *Gijs
     peers:
       - *dao
-      - *jaws
       - *mak
-      - *MattN
+      - *mconley
+      - *mhowell
     submodules:
 
       - name: Add-ons Manager
@@ -3276,12 +3282,18 @@ modules:
         description: The main browser UI except where covered by more specific submodules.
         includes:
           - browser/base/content/**/*
-        meta: {}
+        meta:
+          owners_emeritus:
+            - Jared Wein
+          peers_emeritus:
+            - Florian Quèze
         owners:
-          - *jaws
-        peers:
           - *mconley
-          - *florian
+        peers:
+          - *jhirsch
+          - *sclements
+          - *dwalker
+          - *cmkm
         machine_name: desktop_ui
 
       - name: Download Manager
@@ -3440,6 +3452,7 @@ modules:
           peers_emeritus:
             - Bianca Danforth
             - Severin Rudie
+            - Jared Wein
           url: https://wiki.mozilla.org/Toolkit:Password_Manager
           components:
             - Toolkit::Password Manager
@@ -3449,7 +3462,6 @@ modules:
         owners:
           - *serg
         peers:
-          - *jaws
           - *tgiles
           - *dimi
           - *sfoster
@@ -3579,14 +3591,15 @@ modules:
           - browser/themes/*/preferences
           - toolkit/mozapps/preferences
         meta:
+          owners_emeritus:
+            - Jared Wein
           peers_emeritus:
             - Tim Nguyen
         owners:
-          - *jaws
+          - *mossop
         peers:
           - *mstriemer
           - *Gijs
-          - *mossop
           - *mconley
         machine_name: settings_ui
 
@@ -4075,13 +4088,17 @@ modules:
       components:
         - Firefox
         - Toolkit
+      peers_emeritus:
+        - Matthew Noorenberghe
+        - Jared Wein
     owners:
       - *mossop
       - *Gijs
     peers:
-      - *jaws
+      - *dao
       - *mak
-      - *MattN
+      - *mconley
+      - *mhowell
     submodules:
 
       - name: Application Startup
@@ -4182,5 +4199,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: f2394b6182e6748b4f054670caf4e4b35a112e1c
-  export: 3453aad6babd5a5d451fb588d5321161e22cfa58
+  config: 69aab662e5678f5918d5b2e3926f0893049493e0
+  export: f4fd921a19248510ba21ce224f02a549845db9a3
