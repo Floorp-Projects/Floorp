@@ -2848,7 +2848,7 @@ class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize {
   WritingMode GetWritingModeForType(Type aType) const override {
     switch (aType) {
       case Type::This:
-        return WritingMode(mCanvasStyle);
+        return mCanvasStyle ? WritingMode(mCanvasStyle) : WritingMode();
       case Type::Root:
         return GetWritingMode(mPresContext->Document()->GetRootElement());
       default:
