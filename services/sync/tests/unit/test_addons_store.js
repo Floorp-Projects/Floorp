@@ -40,8 +40,6 @@ AddonTestUtils.createAppInfo(
 );
 AddonTestUtils.overrideCertDB();
 
-Services.prefs.setCharPref("extensions.minCompatibleAppVersion", "0");
-Services.prefs.setCharPref("extensions.minCompatiblePlatformVersion", "0");
 Services.prefs.setBoolPref("extensions.experiments.enabled", true);
 
 const SYSTEM_ADDON_ID = "system1@tests.mozilla.org";
