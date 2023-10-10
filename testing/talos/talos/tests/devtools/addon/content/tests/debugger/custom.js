@@ -298,6 +298,12 @@ async function testPrettyPrint(dbg, toolbox) {
 
   reloadAndPauseInPrettyPrintedFileTest.done();
 
+  // The previous code waiting for state change isn't quite enough,
+  // we need to spin the event loop once before clearing the breakpoints as
+  // the processing of the new pretty printed source may still create late breakpoints
+  // when it tries to update the breakpoint location on the pretty printed source.
+  await new Promise(r => setTimeout(r, 0));
+
   await removeBreakpoints(dbg);
 
   // Clear the selection to avoid the source to be re-pretty printed on next load
