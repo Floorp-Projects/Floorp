@@ -312,13 +312,31 @@ Action for setting various browser prefs
 Prefs that can be changed with this action are:
 
 - `browser.dataFeatureRecommendations.enabled`
-- `browser.privateWindowSeparation.enabled`
+- `browser.migrate.content-modal.about-welcome-behavior`
+- `browser.migrate.content-modal.enabled`
+- `browser.migrate.content-modal.import-all.enabled`
+- `browser.migrate.preferences-entrypoint.enabled`
+- `browser.shopping.experience2023.active`
+- `browser.shopping.experience2023.optedIn`
+- `browser.shopping.experience2023.survey.optedInTime`
+- `browser.shopping.experience2023.survey.hasSeen`
+- `browser.shopping.experience2023.survey.pdpVisits`
 - `browser.startup.homepage`
+- `browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt`
+- `browser.privateWindowSeparation.enabled`
+- `browser.firefox-view.feature-tour`
+- `browser.pdfjs.feature-tour`
+- `browser.newtab.feature-tour`
 - `cookiebanners.service.mode`
 - `cookiebanners.service.mode.privateBrowsing`
+- `cookiebanners.service.detectOnly`
+- `messaging-system.askForFeedback`
 
-Alternatively, if a pref is set with this action and is not present in the list
-above, it will be created and prepended with `messaging-system-action.`.
+Any pref that begins with `messaging-system-action.` is also allowed.
+Alternatively, if the pref is not present in the list above and does not begin
+with `messaging-system-action.`, it will be created and prepended with
+`messaging-system-action.`. For example, `example.pref` will be created as
+`messaging-system-action.example.pref`.
 
 * args:
 ```ts
