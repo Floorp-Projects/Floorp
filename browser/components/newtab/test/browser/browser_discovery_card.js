@@ -13,7 +13,6 @@ test_newtab({
         api_key_pref: "extensions.pocket.oAuthConsumerKey",
         collapsible: true,
         enabled: true,
-        show_spocs: false,
         personalized: true,
       }),
     ]);

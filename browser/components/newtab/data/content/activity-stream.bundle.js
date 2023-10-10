@@ -1060,7 +1060,7 @@ class DiscoveryStreamAdmin extends (external_React_default()).PureComponent {
   }
 
   render() {
-    const prefToggles = "enabled show_spocs collapsible".split(" ");
+    const prefToggles = "enabled collapsible".split(" ");
     const {
       config,
       layout
@@ -14452,7 +14452,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       enabledSections: this.props.enabledSections,
       pocketRegion: this.props.pocketRegion,
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
-      mayHaveSponsoredStories: this.props.DiscoveryStream.config.show_spocs,
+      mayHaveSponsoredStories: this.props.mayHaveSponsoredStories,
       mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
       dispatch: this.props.dispatch
     }))));
@@ -14869,6 +14869,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       topSitesRowsCount: prefs.topSitesRows
     };
     const pocketRegion = prefs["feeds.system.topstories"];
+    const mayHaveSponsoredStories = prefs["system.showSponsored"];
     const {
       mayHaveSponsoredTopSites
     } = prefs;
@@ -14882,6 +14883,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       enabledSections: enabledSections,
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
+      mayHaveSponsoredStories: mayHaveSponsoredStories,
       showing: customizeMenuVisible
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: outerClassName,

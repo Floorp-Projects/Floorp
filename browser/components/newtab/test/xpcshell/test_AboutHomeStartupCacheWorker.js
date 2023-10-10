@@ -85,10 +85,6 @@ add_setup(async function () {
     })
   );
 
-  let newConfig = Object.assign(defaultDSConfig, {
-    show_spocs: false,
-  });
-
   const sandbox = sinon.createSandbox();
   sandbox
     .stub(DiscoveryStreamFeed.prototype, "generateFeedUrl")
@@ -98,7 +94,7 @@ add_setup(async function () {
   // at the local top stories feed.
   Services.prefs.setCharPref(
     "browser.newtabpage.activity-stream.discoverystream.config",
-    JSON.stringify(newConfig)
+    JSON.stringify(defaultDSConfig)
   );
 
   // We need to allow example.com as a place to get both the layout and the
