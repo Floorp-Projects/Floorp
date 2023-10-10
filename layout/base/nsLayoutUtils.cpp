@@ -9578,22 +9578,21 @@ bool nsLayoutUtils::IsInvisibleBreak(nsINode* aNode,
 }
 
 /* static */
-nsRect nsLayoutUtils::ComputeSVGViewBox(SVGViewportElement* aElement) {
+nsRect nsLayoutUtils::ComputeSVGOriginBox(SVGViewportElement* aElement) {
   if (!aElement) {
     return {};
   }
 
   if (aElement->HasViewBox()) {
-    // If a `viewBox` attribute is specified for the SVG viewport creating
-    // element:
-    // 1. The reference box is positioned at the origin of the coordinate
-    //    system established by the `viewBox` attribute.
-    // 2. The dimension of the reference box is set to the width and height
-    //    values of the `viewBox` attribute.
+    // Return the "origin box", which is defined as a rect positioned at the
+    // origin, but with the width and height given by the viewBox attribute
+    //
+    // https://drafts.csswg.org/css-box-3/#valdef-box-view-box
+    //
+    // For more discussion see
+    // https://github.com/web-platform-tests/interop/issues/509
     const SVGViewBox& value = aElement->GetAnimatedViewBox()->GetAnimValue();
-    return nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
-                  nsPresContext::CSSPixelsToAppUnits(value.y),
-                  nsPresContext::CSSPixelsToAppUnits(value.width),
+    return nsRect(0, 0, nsPresContext::CSSPixelsToAppUnits(value.width),
                   nsPresContext::CSSPixelsToAppUnits(value.height));
   }
 
@@ -9633,7 +9632,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
         // We should not render without a viewport so return an empty rect.
         break;
       }
-      r = nsLayoutUtils::ComputeSVGViewBox(viewportElement);
+      r = nsLayoutUtils::ComputeSVGOriginBox(viewportElement);
       break;
     }
     case StyleGeometryBox::ContentBox:
