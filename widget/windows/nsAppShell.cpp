@@ -31,6 +31,7 @@
 #include "HeadlessScreenHelper.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/NativeNt.h"
 #include "mozilla/WindowsProcessMitigations.h"
 
 #include <winternl.h>
@@ -416,6 +417,8 @@ struct WinErrorState {
   bool operator==(WinErrorState const& that) const {
     return this->error == that.error && this->ntStatus == that.ntStatus;
   }
+
+  bool operator!=(WinErrorState const& that) const { return !operator==(that); }
 };
 
 // Struct containing information about the user atom table. (See
@@ -483,6 +486,139 @@ MOZ_NEVER_INLINE static AtomTableInformation DiagnoseUserAtomTable() {
 
 }  // namespace
 
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && defined(_M_X64)
+MOZ_NEVER_INLINE __attribute__((naked)) void EnableTrapFlag() {
+  asm volatile(
+      "pushfq;"
+      "orw $0x100,(%rsp);"
+      "popfq;"
+      "retq;");
+}
+
+MOZ_NEVER_INLINE __attribute__((naked)) void DisableTrapFlag() {
+  asm volatile("retq;");
+}
+
+#  define SSD_MAX_USER32_STEPS 0x1800
+#  define SSD_MAX_ERROR_STATES 0x200
+struct SingleStepData {
+  uint32_t mUser32StepsLog[SSD_MAX_USER32_STEPS]{};
+  WinErrorState mErrorStatesLog[SSD_MAX_ERROR_STATES];
+  uint16_t mUser32StepsAtErrorState[SSD_MAX_ERROR_STATES]{};
+};
+
+struct SingleStepStaticState {
+  SingleStepData* mData{};
+  uintptr_t mUser32Start{};
+  uintptr_t mUser32End{};
+  uint32_t mUser32Steps{};
+  uint32_t mErrorStates{};
+  WinErrorState mLastRecordedErrorState;
+
+  constexpr void Reset() { *this = SingleStepStaticState{}; }
+};
+
+static SingleStepStaticState sSingleStepStaticState{};
+
+LONG SingleStepExceptionHandler(_EXCEPTION_POINTERS* aExceptionInfo) {
+  auto& state = sSingleStepStaticState;
+  if (state.mData &&
+      aExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP) {
+    auto instructionPointer = aExceptionInfo->ContextRecord->Rip;
+    if (instructionPointer == reinterpret_cast<uintptr_t>(&DisableTrapFlag)) {
+      // Stop handling any exception in this handler
+      state.mData = nullptr;
+    } else {
+      // Record data for the current step, if in user32
+      if (state.mUser32Start <= instructionPointer &&
+          instructionPointer < state.mUser32End) {
+        // We record the instruction pointer
+        if (state.mUser32Steps < SSD_MAX_USER32_STEPS) {
+          state.mData->mUser32StepsLog[state.mUser32Steps] =
+              static_cast<uint32_t>(instructionPointer - state.mUser32Start);
+        }
+
+        // We record changes in the error state
+        auto currentErrorState{WinErrorState::Get()};
+        if (currentErrorState != state.mLastRecordedErrorState) {
+          state.mLastRecordedErrorState = currentErrorState;
+
+          if (state.mErrorStates < SSD_MAX_ERROR_STATES) {
+            state.mData->mErrorStatesLog[state.mErrorStates] =
+                currentErrorState;
+            state.mData->mUser32StepsAtErrorState[state.mErrorStates] =
+                state.mUser32Steps;
+          }
+
+          ++state.mErrorStates;
+        }
+
+        ++state.mUser32Steps;
+      }
+
+      // Continue single-stepping
+      aExceptionInfo->ContextRecord->EFlags |= 0x100;
+    }
+    return EXCEPTION_CONTINUE_EXECUTION;
+  }
+  return EXCEPTION_CONTINUE_SEARCH;
+}
+
+enum CSSD_RESULT {
+  CSSD_SUCCESS = 0,
+  CSSD_ERROR_DEBUGGER_PRESENT = 1,
+  CSSD_ERROR_GET_MODULE_HANDLE = 2,
+  CSSD_ERROR_PARSING_USER32 = 3,
+  CSSD_ERROR_ADD_VECTORED_EXCEPTION_HANDLER = 4,
+};
+
+template <typename CallbackToRun, typename PostCollectionCallback>
+[[clang::optnone]] MOZ_NEVER_INLINE CSSD_RESULT
+CollectSingleStepData(CallbackToRun aCallbackToRun,
+                      PostCollectionCallback aPostCollectionCallback) {
+  if (::IsDebuggerPresent()) {
+    return CSSD_ERROR_DEBUGGER_PRESENT;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(!sSingleStepStaticState.mData,
+                        "Single-stepping is already active");
+  HANDLE user32 = ::GetModuleHandleW(L"user32.dll");
+  if (!user32) {
+    return CSSD_ERROR_GET_MODULE_HANDLE;
+  }
+
+  nt::PEHeaders user32Headers{user32};
+  auto bounds = user32Headers.GetBounds();
+  if (bounds.isNothing()) {
+    return CSSD_ERROR_PARSING_USER32;
+  }
+
+  SingleStepData singleStepData{};
+
+  sSingleStepStaticState.Reset();
+  sSingleStepStaticState.mUser32Start =
+      reinterpret_cast<uintptr_t>(bounds.ref().begin().get());
+  sSingleStepStaticState.mUser32End =
+      reinterpret_cast<uintptr_t>(bounds.ref().end().get());
+  sSingleStepStaticState.mData = &singleStepData;
+  auto veh = ::AddVectoredExceptionHandler(TRUE, SingleStepExceptionHandler);
+  if (!veh) {
+    sSingleStepStaticState.mData = nullptr;
+    return CSSD_ERROR_ADD_VECTORED_EXCEPTION_HANDLER;
+  }
+
+  EnableTrapFlag();
+  aCallbackToRun();
+  DisableTrapFlag();
+  ::RemoveVectoredExceptionHandler(veh);
+  sSingleStepStaticState.mData = nullptr;
+
+  aPostCollectionCallback();
+
+  return CSSD_SUCCESS;
+}
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED && _M_X64
+
 // Collect data for bug 1571516. We don't automatically send up `GetLastError`
 // or `GetLastNtStatus` data for beta/release builds, so extract the relevant
 // error values and store them on the stack, where they can be viewed in
@@ -546,6 +682,29 @@ MOZ_NEVER_INLINE static AtomTableInformation DiagnoseUserAtomTable() {
     _rcErr = WinErrorState::Get();
 
     if (!_windowClassAtom) _atomTableInfo = DiagnoseUserAtomTable();
+
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && defined(_M_X64)
+    if (!_windowClassAtom) {
+      // Retry with single-step data collection
+      auto cssdResult = CollectSingleStepData(
+          [&wc, &_windowClassAtom]() {
+            _windowClassAtom = ::RegisterClassW(&wc);
+          },
+          [&_windowClassAtom]() {
+            // Crashing here gives access to the single step data on stack
+            MOZ_DIAGNOSTIC_ASSERT(
+                _windowClassAtom,
+                "RegisterClassW for EventWindowClass failed twice");
+          });
+      auto const _cssdErr [[maybe_unused]] = WinErrorState::Get();
+      MOZ_DIAGNOSTIC_ASSERT(
+          cssdResult == CSSD_SUCCESS,
+          "Failed to collect single step data for RegisterClassW");
+      // If we reach this point then somehow the single-stepped call succeeded
+      // and we can proceed
+    }
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED && _M_X64
+
     MOZ_DIAGNOSTIC_ASSERT(_windowClassAtom,
                           "RegisterClassW for EventWindowClass failed");
     WinErrorState::Clear();
@@ -554,6 +713,32 @@ MOZ_NEVER_INLINE static AtomTableInformation DiagnoseUserAtomTable() {
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
                             10, 10, HWND_MESSAGE, nullptr, module, nullptr);
   auto const _cwErr [[maybe_unused]] = WinErrorState::Get();
+
+#if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED) && defined(_M_X64)
+  if (!mEventWnd) {
+    // Retry with single-step data collection
+    HWND eventWnd{};
+    auto cssdResult = CollectSingleStepData(
+        [module, &eventWnd]() {
+          eventWnd =
+              CreateWindowW(kWindowClass, L"nsAppShell:EventWindow", 0, 0, 0,
+                            10, 10, HWND_MESSAGE, nullptr, module, nullptr);
+        },
+        [&eventWnd]() {
+          // Crashing here gives access to the single step data on stack
+          MOZ_DIAGNOSTIC_ASSERT(eventWnd,
+                                "CreateWindowW for EventWindow failed twice");
+        });
+    auto const _cssdErr [[maybe_unused]] = WinErrorState::Get();
+    MOZ_DIAGNOSTIC_ASSERT(
+        cssdResult == CSSD_SUCCESS,
+        "Failed to collect single step data for CreateWindowW");
+    // If we reach this point then somehow the single-stepped call succeeded and
+    // we can proceed
+    mEventWnd = eventWnd;
+  }
+#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED && _M_X64
+
   MOZ_DIAGNOSTIC_ASSERT(mEventWnd, "CreateWindowW for EventWindow failed");
   NS_ENSURE_STATE(mEventWnd);
 
