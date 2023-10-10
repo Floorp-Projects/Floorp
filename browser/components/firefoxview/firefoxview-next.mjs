@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let pageList = [];
+const { topChromeWindow } = window.browsingContext;
 
 function onHashChange() {
   changePage(document.location.hash.substring(1));
@@ -105,6 +106,27 @@ window.addEventListener(
     // Clear out the document so the disconnectedCallback will trigger
     // properly and all of the custom elements can cleanup.
     document.body.textContent = "";
+    topChromeWindow.removeEventListener("command", onCommand);
   },
   { once: true }
 );
+
+topChromeWindow.addEventListener("command", onCommand);
+
+function onCommand(e) {
+  if (document.hidden || !e.target.closest("#contentAreaContextMenu")) {
+    return;
+  }
+  const item =
+    e.target.closest("#context-openlinkinusercontext-menu") || e.target;
+  Services.telemetry.recordEvent(
+    "firefoxview_next",
+    "browser_context_menu",
+    "tabs",
+    null,
+    {
+      menu_action: item.id,
+      page: location.hash.substring(1) || "recentbrowsing",
+    }
+  );
+}

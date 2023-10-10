@@ -4022,6 +4022,23 @@ firefoxview_next:
       - 1842616
     expiry_version: "never"
     release_channel_collection: opt-out
+  browser_context_menu:
+    objects: ["tabs"]
+    description: >
+      Recorded when a browser context menu selection is made in Firefox View
+    extra_keys:
+      menu_action: The menu action the user has selected for a given tab
+      page: The short page name used as the location hash when selecting the Firefox View tab
+    notification_emails:
+      - firefoxview@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1851197
+    expiry_version: "never"
+    release_channel_collection: opt-out
   entered:
     objects: ["firefoxview"]
     description: >

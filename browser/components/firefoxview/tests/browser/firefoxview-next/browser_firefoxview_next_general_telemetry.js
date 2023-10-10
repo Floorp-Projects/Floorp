@@ -244,3 +244,42 @@ add_task(async function firefox_view_entered_telemetry() {
     }
   });
 });
+
+add_task(async function test_browser_context_menu_telemetry() {
+  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
+  const menu = document.getElementById("contentAreaContextMenu");
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+    await clearAllParentTelemetryEvents();
+
+    // Test browser context menu options
+    const openTabsComponent = document.querySelector("view-opentabs");
+    const [openTabsRow] =
+      openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList
+        .rowEls;
+    const promisePopup = BrowserTestUtils.waitForEvent(menu, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(
+      openTabsRow,
+      { type: "contextmenu" },
+      content
+    );
+    await promisePopup;
+    const promiseNewWindow = BrowserTestUtils.waitForNewWindow();
+    menu.activateItem(menu.querySelector("#context-openlink"));
+    await telemetryEvent([
+      [
+        "firefoxview_next",
+        "browser_context_menu",
+        "tabs",
+        null,
+        { menu_action: "context-openlink", page: "recentbrowsing" },
+      ],
+    ]);
+
+    // Clean up extra window
+    const win = await promiseNewWindow;
+    await BrowserTestUtils.closeWindow(win);
+  });
+  await SpecialPowers.popPrefEnv();
+});
