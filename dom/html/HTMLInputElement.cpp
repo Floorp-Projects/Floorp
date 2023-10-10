@@ -2685,7 +2685,7 @@ nsresult HTMLInputElement::SetValueInternal(
         // https://html.spec.whatwg.org/#valid-floating-point-number
         // When it's set by a user, however, we need to be more permissive, so
         // we don't sanitize its value here. See bug 1839572.
-        SanitizeValue(value);
+        SanitizeValue(value, SanitizationKind::ForValueSetter);
       }
       // else DoneCreatingElement calls us again once mDoneCreating is true
 
@@ -4658,7 +4658,7 @@ void HTMLInputElement::MaybeSnapToTickMark(Decimal& aValue) {
 }
 
 void HTMLInputElement::SanitizeValue(nsAString& aValue,
-                                     SanitizationKind aKind) {
+                                     SanitizationKind aKind) const {
   NS_ASSERTION(mDoneCreating, "The element creation should be finished!");
 
   switch (mType) {
@@ -4692,11 +4692,16 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
           aValue);
     } break;
     case FormControlType::InputNumber: {
-      if (aKind == SanitizationKind::Other && !aValue.IsEmpty() &&
+      if (aKind == SanitizationKind::ForValueSetter && !aValue.IsEmpty() &&
           (aValue.First() == '+' || aValue.Last() == '.')) {
         // A value with a leading plus or trailing dot should fail to parse.
         // However, the localized parser accepts this, and when we convert it
         // back to a Decimal, it disappears. So, we need to check first.
+        //
+        // FIXME(emilio): Should we just use the unlocalized parser
+        // (StringToDecimal) for the value setter? Other browsers don't seem to
+        // allow setting localized strings there, and that way we don't need
+        // this special-case.
         aValue.Truncate();
         return;
       }
@@ -4707,39 +4712,41 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
         aValue.Truncate();
         return;
       }
-
-      if (aKind == SanitizationKind::ForValueGetter) {
-        // If the default non-localized algorithm parses the value, then we're
-        // done, don't un-localize it, to avoid precision loss, and to preserve
-        // scientific notation as well for example.
-        if (!result.mLocalized) {
-          return;
+      switch (aKind) {
+        case SanitizationKind::ForValueGetter: {
+          // If the default non-localized algorithm parses the value, then we're
+          // done, don't un-localize it, to avoid precision loss, and to
+          // preserve scientific notation as well for example.
+          if (!result.mLocalized) {
+            return;
+          }
+          // For the <input type=number> value getter, we return the unlocalized
+          // value if it doesn't parse as StringToDecimal, for compat with other
+          // browsers.
+          char buf[32];
+          DebugOnly<bool> ok = result.mResult.toString(buf, ArrayLength(buf));
+          aValue.AssignASCII(buf);
+          MOZ_ASSERT(ok, "buf not big enough");
+          break;
         }
-        // For the <input type=number> value getter, we return the unlocalized
-        // value if it doesn't parse as StringToDecimal, for compat with other
-        // browsers.
-        char buf[32];
-        DebugOnly<bool> ok = result.mResult.toString(buf, ArrayLength(buf));
-        aValue.AssignASCII(buf);
-        MOZ_ASSERT(ok, "buf not big enough");
-      } else if (aKind == SanitizationKind::ForDisplay) {
-        // If this SanitizeValue call is for display, we localize as needed, but
-        // if both the localized and unlocalized version parse with the generic
-        // parser, we just use the unlocalized one, to preserve the input as
-        // much as possible.
-        //
-        // FIXME(emilio, bug 1622808): Localization should ideally be more
-        // input-preserving.
-        nsString localizedValue;
-        mInputType->ConvertNumberToString(result.mResult, localizedValue);
-        if (StringToDecimal(localizedValue).isFinite()) {
-          return;
+        case SanitizationKind::ForDisplay:
+        case SanitizationKind::ForValueSetter: {
+          // We localize as needed, but if both the localized and unlocalized
+          // version parse with the generic parser, we just use the unlocalized
+          // one, to preserve the input as much as possible.
+          //
+          // FIXME(emilio, bug 1622808): Localization should ideally be more
+          // input-preserving.
+          nsString localizedValue;
+          mInputType->ConvertNumberToString(result.mResult, localizedValue);
+          if (!StringToDecimal(localizedValue).isFinite()) {
+            aValue = std::move(localizedValue);
+          }
+          break;
         }
-        aValue = std::move(localizedValue);
-      } else {
-        // Leave aValue untouched.
       }
-    } break;
+      break;
+    }
     case FormControlType::InputRange: {
       Decimal minimum = GetMinimum();
       Decimal maximum = GetMaximum();
@@ -6826,7 +6833,7 @@ void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue,
   // FIXME: Do we want to sanitize even when aForDisplay is false?
   if (mDoneCreating) {
     SanitizeValue(aValue, aForDisplay ? SanitizationKind::ForDisplay
-                                      : SanitizationKind::Other);
+                                      : SanitizationKind::ForValueGetter);
   }
 }
 

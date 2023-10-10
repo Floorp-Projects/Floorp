@@ -1076,8 +1076,6 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT
   void HandleTypeChange(FormControlType aNewType, bool aNotify);
 
-  enum class SanitizationKind { ForValueGetter, ForDisplay, Other };
-
   /**
    * If the input range has a list, this function will snap the given value to
    * the nearest tick mark, but only if the given value is close enough to that
@@ -1085,13 +1083,13 @@ class HTMLInputElement final : public TextControlElement,
    */
   void MaybeSnapToTickMark(Decimal& aValue);
 
+  enum class SanitizationKind { ForValueGetter, ForValueSetter, ForDisplay };
   /**
    * Sanitize the value of the element depending of its current type.
    * See:
    * http://www.whatwg.org/specs/web-apps/current-work/#value-sanitization-algorithm
    */
-  void SanitizeValue(nsAString& aValue,
-                     SanitizationKind = SanitizationKind::Other);
+  void SanitizeValue(nsAString& aValue, SanitizationKind) const;
 
   /**
    * Returns whether the placeholder attribute applies for the current type.
