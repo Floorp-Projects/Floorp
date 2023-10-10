@@ -82,7 +82,7 @@ class MediaSourceDemuxer : public MediaDataDemuxer,
   RefPtr<TrackBuffersManager> GetManager(TrackInfo::TrackType aType);
   TrackInfo* GetTrackInfo(TrackInfo::TrackType);
   void DoAttachSourceBuffer(RefPtr<TrackBuffersManager>&& aSourceBuffer);
-  void DoDetachSourceBuffer(RefPtr<TrackBuffersManager>&& aSourceBuffer);
+  void DoDetachSourceBuffer(const RefPtr<TrackBuffersManager>& aSourceBuffer);
   bool OnTaskQueue() {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }

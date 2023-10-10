@@ -177,16 +177,18 @@ void MediaSourceDemuxer::DoAttachSourceBuffer(
 
 void MediaSourceDemuxer::DetachSourceBuffer(
     RefPtr<TrackBuffersManager>& aSourceBuffer) {
-  nsCOMPtr<nsIRunnable> task = NewRunnableMethod<RefPtr<TrackBuffersManager>&&>(
-      "MediaSourceDemuxer::DoDetachSourceBuffer", this,
-      &MediaSourceDemuxer::DoDetachSourceBuffer, aSourceBuffer);
+  nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableFunction("MediaSourceDemuxer::DoDetachSourceBuffer",
+                             [self = RefPtr{this}, aSourceBuffer]() {
+                               self->DoDetachSourceBuffer(aSourceBuffer);
+                             });
   nsresult rv = GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
   Unused << rv;
 }
 
 void MediaSourceDemuxer::DoDetachSourceBuffer(
-    RefPtr<TrackBuffersManager>&& aSourceBuffer) {
+    const RefPtr<TrackBuffersManager>& aSourceBuffer) {
   MOZ_ASSERT(OnTaskQueue());
   mSourceBuffers.RemoveElementsBy(
       [&aSourceBuffer](const RefPtr<TrackBuffersManager> aLinkedSourceBuffer) {
