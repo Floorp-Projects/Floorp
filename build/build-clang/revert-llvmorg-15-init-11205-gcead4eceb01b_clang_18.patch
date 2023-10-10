@@ -402,7 +402,7 @@ index 74667fcb92bc..148711f0246f 100644
 -
 -  for (const DWARFLocationExpression &Location : *Locations) {
 -    uint8_t AddressSize = getAddressByteSize();
--    DataExtractor Data(Location.Expr, /*IsLittleEndian=*/true, AddressSize);
+-    DataExtractor Data(Location.Expr, isLittleEndian(), AddressSize);
 -    DWARFExpression Expr(Data, AddressSize);
 -    auto It = Expr.begin();
 -    if (It == Expr.end())
