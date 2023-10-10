@@ -45,11 +45,14 @@ class AutoRelease final {
     }
   }
 
-  void operator=(T aObject) {
-    if (mObject) {
-      CFRelease(mObject);
+  AutoRelease<T>& operator=(const T& aObject) {
+    if (aObject != mObject) {
+      if (mObject) {
+        CFRelease(mObject);
+      }
+      mObject = aObject;
     }
-    mObject = aObject;
+    return *this;
   }
 
   operator T() { return mObject; }
@@ -66,49 +69,24 @@ class AutoRelease final {
 
 // Helper to create a CTFont from a CGFont, copying any variations that were
 // set on the original CGFont.
-static CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
-                                                      CGFloat aSize,
-                                                      bool aInstalledFont) {
-  // Avoid calling potentially buggy variation APIs on pre-Sierra macOS
-  // versions (see bug 1331683).
-  //
-  // And on HighSierra, CTFontCreateWithGraphicsFont properly carries over
-  // variation settings from the CGFont to CTFont, so we don't need to do
-  // the extra work here -- and this seems to avoid Core Text crashiness
-  // seen in bug 1454094.
-  //
-  // However, for installed fonts it seems we DO need to copy the variations
-  // explicitly even on 10.13, otherwise fonts fail to render (as in bug
-  // 1455494) when non-default values are used. Fortunately, the crash
-  // mentioned above occurs with data fonts, not (AFAICT) with system-
-  // installed fonts.
-  //
-  // So we only need to do this "the hard way" on Sierra, and for installed
-  // fonts on HighSierra+; otherwise, just let the standard CTFont function
-  // do its thing.
-  //
-  // NOTE in case this ever needs further adjustment: there is similar logic
-  // in four places in the tree (sadly):
-  //    CreateCTFontFromCGFontWithVariations in gfxMacFont.cpp
-  //    CreateCTFontFromCGFontWithVariations in ScaledFontMac.cpp
-  //    CreateCTFontFromCGFontWithVariations in cairo-quartz-font.c
-  //    ctfont_create_exact_copy in SkFontHost_mac.cpp
+CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize,
+                                               bool aInstalledFont,
+                                               CTFontDescriptorRef aFontDesc) {
   CTFontRef ctFont;
   if (aInstalledFont) {
-    CFDictionaryRef vars = CGFontCopyVariations(aCGFont);
+    AutoRelease<CFDictionaryRef> vars(CGFontCopyVariations(aCGFont));
     if (vars) {
-      CFDictionaryRef varAttr = CFDictionaryCreate(
+      AutoRelease<CFDictionaryRef> varAttr(CFDictionaryCreate(
           nullptr, (const void**)&kCTFontVariationAttribute,
           (const void**)&vars, 1, &kCFTypeDictionaryKeyCallBacks,
-          &kCFTypeDictionaryValueCallBacks);
-      CFRelease(vars);
+          &kCFTypeDictionaryValueCallBacks));
 
-      CTFontDescriptorRef varDesc =
-          CTFontDescriptorCreateWithAttributes(varAttr);
-      CFRelease(varAttr);
+      AutoRelease<CTFontDescriptorRef> varDesc(
+          aFontDesc
+              ? ::CTFontDescriptorCreateCopyWithAttributes(aFontDesc, varAttr)
+              : ::CTFontDescriptorCreateWithAttributes(varAttr));
 
       ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
-      CFRelease(varDesc);
     } else {
       ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
     }
