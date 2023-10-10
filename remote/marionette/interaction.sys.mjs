@@ -174,23 +174,44 @@ async function webdriverClickElement(el, a11y) {
   if (el.localName == "option") {
     interaction.selectOption(el);
   } else {
-    // step 9
-    let clicked = interaction.flushEventLoop(containerEl);
-
     // Synthesize a pointerMove action.
     lazy.event.synthesizeMouseAtPoint(
       clickPoint.x,
       clickPoint.y,
       {
         type: "mousemove",
+        allowToHandleDragDrop: true,
       },
       win
     );
 
-    // Synthesize a pointerDown + pointerUp action.
-    lazy.event.synthesizeMouseAtPoint(clickPoint.x, clickPoint.y, {}, win);
+    if (lazy.event.dragService.getCurrentSession()) {
+      // Special handling is required if the mousemove started a drag session.
+      // In this case, mousedown event shouldn't be fired, and the mouseup should
+      // end the session.  Therefore, we should synthesize only mouseup.
+      lazy.event.synthesizeMouseAtPoint(
+        clickPoint.x,
+        clickPoint.y,
+        {
+          type: "mouseup",
+          allowToHandleDragDrop: true,
+        },
+        win
+      );
+    } else {
+      // step 9
+      let clicked = interaction.flushEventLoop(containerEl);
 
-    await clicked;
+      // Synthesize a pointerDown + pointerUp action.
+      lazy.event.synthesizeMouseAtPoint(
+        clickPoint.x,
+        clickPoint.y,
+        { allowToHandleDragDrop: true },
+        win
+      );
+
+      await clicked;
+    }
   }
 
   // step 10

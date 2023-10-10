@@ -16,6 +16,9 @@ export const event = {};
 ChromeUtils.defineLazyGetter(lazy, "dblclickTimer", () => {
   return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 });
+ChromeUtils.defineLazyGetter(event, "dragService", () => {
+  return Cc["@mozilla.org/widget/dragservice;1"].getService(Ci.nsIDragService);
+});
 
 const _eventUtils = new WeakMap();
 
