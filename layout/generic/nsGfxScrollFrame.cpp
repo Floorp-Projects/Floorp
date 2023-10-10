@@ -1766,17 +1766,19 @@ void nsHTMLScrollFrame::SetHasOutOfFlowContentInsideFilter() {
 
 bool nsHTMLScrollFrame::WantAsyncScroll() const {
   ScrollStyles styles = GetScrollStyles();
+
+  // First, as an optimization because getting the scrollrange is
+  // relatively slow, check overflow hidden and not a zoomed scroll frame.
+  if (styles.mHorizontal == StyleOverflow::Hidden &&
+      styles.mVertical == StyleOverflow::Hidden) {
+    if (!mIsRoot || GetVisualViewportSize() == mScrollPort.Size()) {
+      return false;
+    }
+  }
+
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
   nsRect scrollRange = GetLayoutScrollRange();
-
-  // If the page has a visual viewport size that's different from
-  // the layout viewport size at the current zoom level, we need to be
-  // able to scroll the visual viewport inside the layout viewport
-  // even if the page is not zoomable.
-  if (!GetVisualScrollRange().IsEqualInterior(scrollRange)) {
-    return true;
-  }
 
   bool isVScrollable = (scrollRange.height >= oneDevPixel) &&
                        (styles.mVertical != StyleOverflow::Hidden);
@@ -1797,7 +1799,16 @@ bool nsHTMLScrollFrame::WantAsyncScroll() const {
       isVScrollable && (mVScrollbarBox || canScrollWithoutScrollbars);
   bool isHAsyncScrollable =
       isHScrollable && (mHScrollbarBox || canScrollWithoutScrollbars);
-  return isVAsyncScrollable || isHAsyncScrollable;
+  if (isVAsyncScrollable || isHAsyncScrollable) {
+    return true;
+  }
+
+  // If the page has a visual viewport size that's different from
+  // the layout viewport size at the current zoom level, we need to be
+  // able to scroll the visual viewport inside the layout viewport
+  // even if the page is not zoomable.
+  return mIsRoot && GetVisualViewportSize() != mScrollPort.Size() &&
+         !GetVisualScrollRange().IsEqualInterior(scrollRange);
 }
 
 static nsRect GetOnePixelRangeAroundPoint(const nsPoint& aPoint,
