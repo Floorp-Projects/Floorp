@@ -1560,11 +1560,7 @@ bool EditorBase::CheckForClipboardCommandListener(
     return false;
   }
 
-  RefPtr<EventTarget> et = IsHTMLEditor()
-                               ? AsHTMLEditor()->ComputeEditingHost(
-                                     HTMLEditor::LimitInBodyElement::No)
-                               : GetDOMEventTarget();
-
+  RefPtr<EventTarget> et = GetDOMEventTarget();
   while (et) {
     EventListenerManager* elm = et->GetExistingListenerManager();
     if (elm && elm->HasListenersFor(aCommand)) {
