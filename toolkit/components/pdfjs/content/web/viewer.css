@@ -14,8 +14,8 @@
  */
 
 :root{
-  --highlight-bg-color:rgba(180, 0, 170, 1);
-  --highlight-selected-bg-color:rgba(0, 100, 0, 1);
+  --highlight-bg-color:rgb(180 0 170);
+  --highlight-selected-bg-color:rgb(0 100 0);
 }
 
 @media screen and (forced-colors: active){
@@ -200,12 +200,12 @@
   :is(.linkAnnotation, .buttonWidgetAnnotation.pushButton):not(.hasBorder)
   > a:hover{
   opacity:0.2;
-  background-color:rgba(255, 255, 0, 1);
-  box-shadow:0 2px 10px rgba(255, 255, 0, 1);
+  background-color:rgb(255 255 0);
+  box-shadow:0 2px 10px rgb(255 255 0);
 }
 
 .annotationLayer .linkAnnotation.hasBorder:hover{
-  background-color:rgba(255, 255, 0, 0.2);
+  background-color:rgb(255 255 0 / 0.2);
 }
 
 .annotationLayer .hasBorder{
@@ -362,10 +362,10 @@
 }
 
 .annotationLayer .popup{
-  background-color:rgba(255, 255, 153, 1);
-  box-shadow:0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgba(136, 136, 136, 1);
+  background-color:rgb(255 255 153);
+  box-shadow:0 calc(2px * var(--scale-factor)) calc(5px * var(--scale-factor)) rgb(136 136 136);
   border-radius:calc(2px * var(--scale-factor));
-  outline:1.5px solid rgb(255, 255, 74);
+  outline:1.5px solid rgb(255 255 74);
   padding:calc(6px * var(--scale-factor));
   cursor:pointer;
   font:message-box;
@@ -398,7 +398,7 @@
 }
 
 .annotationLayer .popupContent{
-  border-top:1px solid rgba(51, 51, 51, 1);
+  border-top:1px solid rgb(51 51 51);
   margin-top:calc(2px * var(--scale-factor));
   padding-top:calc(2px * var(--scale-factor));
 }
@@ -466,7 +466,7 @@
 .xfaLayer .highlight{
   margin:-1px;
   padding:1px;
-  background-color:rgba(239, 203, 237, 1);
+  background-color:rgb(239 203 237);
   border-radius:4px;
 }
 
@@ -487,7 +487,7 @@
 }
 
 .xfaLayer .highlight.selected{
-  background-color:rgba(203, 223, 203, 1);
+  background-color:rgb(203 223 203);
 }
 
 .xfaPage{
@@ -785,18 +785,18 @@
   --alt-text-opacity:0.8;
   --alt-text-add-image:url(images/altText_add.svg);
   --alt-text-done-image:url(images/altText_done.svg);
-  --alt-text-bg-color:rgba(43, 42, 51, var(--alt-text-opacity));
+  --alt-text-bg-color:rgb(43 42 51 / var(--alt-text-opacity));
   --alt-text-fg-color:#fbfbfe;
   --alt-text-border-color:var(--alt-text-bg-color);
-  --alt-text-hover-bg-color:rgba(82, 82, 94, var(--alt-text-opacity));
+  --alt-text-hover-bg-color:rgb(82 82 94 / var(--alt-text-opacity));
   --alt-text-hover-fg-color:var(--alt-text-fg-color);
   --alt-text-hover-border-color:var(--alt-text-hover-bg-color);
-  --alt-text-active-bg-color:rgba(91, 91, 102, var(--alt-text-opacity));
+  --alt-text-active-bg-color:rgb(91 91 102 / var(--alt-text-opacity));
   --alt-text-active-fg-color:var(--alt-text-fg-color);
   --alt-text-active-border-color:var(--alt-text-hover-bg-color);
   --alt-text-focus-outline-color:#0060df;
   --alt-text-focus-border-color:#f0f0f4;
-  --alt-text-shadow:0 2px 6px 0 rgba(28, 27, 34, 0.5);
+  --alt-text-shadow:0 2px 6px 0 rgb(28 27 34 / 0.5);
 }
 
 @media (min-resolution: 1.1dppx){
@@ -1278,7 +1278,7 @@
       --alt-text-tooltip-bg:#f0f0f4;
       --alt-text-tooltip-fg:#15141a;
       --alt-text-tooltip-border:#8f8f9d;
-      --alt-text-tooltip-shadow:0px 2px 6px 0px rgba(58, 57, 68, 0.2);
+      --alt-text-tooltip-shadow:0px 2px 6px 0px rgb(58 57 68 / 0.2);
 
       @media (prefers-color-scheme: dark){
         --alt-text-tooltip-bg:#1c1b22;
@@ -1320,7 +1320,7 @@
 #altTextDialog{
   --dialog-bg-color:white;
   --dialog-border-color:white;
-  --dialog-shadow:0 2px 14px 0 rgba(58, 57, 68, 0.2);
+  --dialog-shadow:0 2px 14px 0 rgb(58 57 68 / 0.2);
   --text-primary-color:#15141a;
   --text-secondary-color:#5b5b66;
   --hover-filter:brightness(0.9);
@@ -1355,17 +1355,17 @@
     --dialog-shadow:0 2px 14px 0 #15141a;
     --text-primary-color:#fbfbfe;
     --text-secondary-color:#cfcfd8;
-    --focus-ring-color:#00ddff;
+    --focus-ring-color:#0df;
     --hover-filter:brightness(1.4);
 
     --textarea-bg-color:#42414d;
 
     --radio-bg-color:#2b2a33;
     --radio-checked-bg-color:#15141a;
-    --radio-checked-border-color:#00ddff;
+    --radio-checked-border-color:#0df;
 
     --button-cancel-bg-color:#2b2a33;
-    --button-save-bg-color:#00ddff;
+    --button-save-bg-color:#0df;
     --button-save-fg-color:#15141a;
   }
 
@@ -1641,7 +1641,7 @@
   overflow:visible;
   border:var(--page-border);
   background-clip:content-box;
-  background-color:rgba(255, 255, 255, 1);
+  background-color:rgb(255 255 255);
 }
 
 .pdfViewer .dummyPage{
@@ -1745,50 +1745,50 @@
   --toolbar-icon-opacity:0.7;
   --doorhanger-icon-opacity:0.9;
 
-  --main-color:rgba(12, 12, 13, 1);
-  --body-bg-color:rgba(212, 212, 215, 1);
-  --progressBar-color:rgba(10, 132, 255, 1);
-  --progressBar-bg-color:rgba(221, 221, 222, 1);
-  --progressBar-blend-color:rgba(116, 177, 239, 1);
+  --main-color:rgb(12 12 13);
+  --body-bg-color:rgb(212 212 215);
+  --progressBar-color:rgb(10 132 255);
+  --progressBar-bg-color:rgb(221 221 222);
+  --progressBar-blend-color:rgb(116 177 239);
   --scrollbar-color:auto;
   --scrollbar-bg-color:auto;
-  --toolbar-icon-bg-color:rgba(0, 0, 0, 1);
-  --toolbar-icon-hover-bg-color:rgba(0, 0, 0, 1);
+  --toolbar-icon-bg-color:rgb(0 0 0);
+  --toolbar-icon-hover-bg-color:rgb(0 0 0);
 
-  --sidebar-narrow-bg-color:rgba(212, 212, 215, 0.9);
-  --sidebar-toolbar-bg-color:rgba(245, 246, 247, 1);
-  --toolbar-bg-color:rgba(249, 249, 250, 1);
-  --toolbar-border-color:rgba(184, 184, 184, 1);
+  --sidebar-narrow-bg-color:rgb(212 212 215 / 0.9);
+  --sidebar-toolbar-bg-color:rgb(245 246 247);
+  --toolbar-bg-color:rgb(249 249 250);
+  --toolbar-border-color:rgb(184 184 184);
   --toolbar-box-shadow:0 1px 0 var(--toolbar-border-color);
   --toolbar-border-bottom:none;
-  --toolbarSidebar-box-shadow:inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25), 0 1px 0 rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  --toolbarSidebar-box-shadow:inset calc(-1px * var(--dir-factor)) 0 0 rgb(0 0 0 / 0.25), 0 1px 0 rgb(0 0 0 / 0.15), 0 0 1px rgb(0 0 0 / 0.1);
   --toolbarSidebar-border-bottom:none;
-  --button-hover-color:rgba(221, 222, 223, 1);
-  --toggled-btn-color:rgba(0, 0, 0, 1);
-  --toggled-btn-bg-color:rgba(0, 0, 0, 0.3);
-  --toggled-hover-active-btn-color:rgba(0, 0, 0, 0.4);
+  --button-hover-color:rgb(221 222 223);
+  --toggled-btn-color:rgb(0 0 0);
+  --toggled-btn-bg-color:rgb(0 0 0 / 0.3);
+  --toggled-hover-active-btn-color:rgb(0 0 0 / 0.4);
   --toggled-hover-btn-outline:none;
-  --dropdown-btn-bg-color:rgba(215, 215, 219, 1);
+  --dropdown-btn-bg-color:rgb(215 215 219);
   --dropdown-btn-border:none;
-  --separator-color:rgba(0, 0, 0, 0.3);
-  --field-color:rgba(6, 6, 6, 1);
-  --field-bg-color:rgba(255, 255, 255, 1);
-  --field-border-color:rgba(187, 187, 188, 1);
-  --treeitem-color:rgba(0, 0, 0, 0.8);
-  --treeitem-bg-color:rgba(0, 0, 0, 0.15);
-  --treeitem-hover-color:rgba(0, 0, 0, 0.9);
-  --treeitem-selected-color:rgba(0, 0, 0, 0.9);
-  --treeitem-selected-bg-color:rgba(0, 0, 0, 0.25);
-  --thumbnail-hover-color:rgba(0, 0, 0, 0.1);
-  --thumbnail-selected-color:rgba(0, 0, 0, 0.2);
-  --doorhanger-bg-color:rgba(255, 255, 255, 1);
-  --doorhanger-border-color:rgba(12, 12, 13, 0.2);
-  --doorhanger-hover-color:rgba(12, 12, 13, 1);
-  --doorhanger-hover-bg-color:rgba(237, 237, 237, 1);
-  --doorhanger-separator-color:rgba(222, 222, 222, 1);
+  --separator-color:rgb(0 0 0 / 0.3);
+  --field-color:rgb(6 6 6);
+  --field-bg-color:rgb(255 255 255);
+  --field-border-color:rgb(187 187 188);
+  --treeitem-color:rgb(0 0 0 / 0.8);
+  --treeitem-bg-color:rgb(0 0 0 / 0.15);
+  --treeitem-hover-color:rgb(0 0 0 / 0.9);
+  --treeitem-selected-color:rgb(0 0 0 / 0.9);
+  --treeitem-selected-bg-color:rgb(0 0 0 / 0.25);
+  --thumbnail-hover-color:rgb(0 0 0 / 0.1);
+  --thumbnail-selected-color:rgb(0 0 0 / 0.2);
+  --doorhanger-bg-color:rgb(255 255 255);
+  --doorhanger-border-color:rgb(12 12 13 / 0.2);
+  --doorhanger-hover-color:rgb(12 12 13);
+  --doorhanger-hover-bg-color:rgb(237 237 237);
+  --doorhanger-separator-color:rgb(222 222 222);
   --dialog-button-border:none;
-  --dialog-button-bg-color:rgba(12, 12, 13, 0.1);
-  --dialog-button-hover-bg-color:rgba(12, 12, 13, 0.3);
+  --dialog-button-bg-color:rgb(12 12 13 / 0.1);
+  --dialog-button-hover-bg-color:rgb(12 12 13 / 0.3);
 
   --loading-icon:url(images/loading.svg);
   --treeitem-expanded-icon:url(images/treeitem-expanded.svg);
@@ -1838,43 +1838,43 @@
 
 @media (prefers-color-scheme: dark){
   :root{
-    --main-color:rgba(249, 249, 250, 1);
-    --body-bg-color:rgba(42, 42, 46, 1);
-    --progressBar-color:rgba(0, 96, 223, 1);
-    --progressBar-bg-color:rgba(40, 40, 43, 1);
-    --progressBar-blend-color:rgba(20, 68, 133, 1);
-    --scrollbar-color:rgba(121, 121, 123, 1);
-    --scrollbar-bg-color:rgba(35, 35, 39, 1);
-    --toolbar-icon-bg-color:rgba(255, 255, 255, 1);
-    --toolbar-icon-hover-bg-color:rgba(255, 255, 255, 1);
+    --main-color:rgb(249 249 250);
+    --body-bg-color:rgb(42 42 46);
+    --progressBar-color:rgb(0 96 223);
+    --progressBar-bg-color:rgb(40 40 43);
+    --progressBar-blend-color:rgb(20 68 133);
+    --scrollbar-color:rgb(121 121 123);
+    --scrollbar-bg-color:rgb(35 35 39);
+    --toolbar-icon-bg-color:rgb(255 255 255);
+    --toolbar-icon-hover-bg-color:rgb(255 255 255);
 
-    --sidebar-narrow-bg-color:rgba(42, 42, 46, 0.9);
-    --sidebar-toolbar-bg-color:rgba(50, 50, 52, 1);
-    --toolbar-bg-color:rgba(56, 56, 61, 1);
-    --toolbar-border-color:rgba(12, 12, 13, 1);
-    --button-hover-color:rgba(102, 102, 103, 1);
-    --toggled-btn-color:rgba(255, 255, 255, 1);
-    --toggled-btn-bg-color:rgba(0, 0, 0, 0.3);
-    --toggled-hover-active-btn-color:rgba(0, 0, 0, 0.4);
-    --dropdown-btn-bg-color:rgba(74, 74, 79, 1);
-    --separator-color:rgba(0, 0, 0, 0.3);
-    --field-color:rgba(250, 250, 250, 1);
-    --field-bg-color:rgba(64, 64, 68, 1);
-    --field-border-color:rgba(115, 115, 115, 1);
-    --treeitem-color:rgba(255, 255, 255, 0.8);
-    --treeitem-bg-color:rgba(255, 255, 255, 0.15);
-    --treeitem-hover-color:rgba(255, 255, 255, 0.9);
-    --treeitem-selected-color:rgba(255, 255, 255, 0.9);
-    --treeitem-selected-bg-color:rgba(255, 255, 255, 0.25);
-    --thumbnail-hover-color:rgba(255, 255, 255, 0.1);
-    --thumbnail-selected-color:rgba(255, 255, 255, 0.2);
-    --doorhanger-bg-color:rgba(74, 74, 79, 1);
-    --doorhanger-border-color:rgba(39, 39, 43, 1);
-    --doorhanger-hover-color:rgba(249, 249, 250, 1);
-    --doorhanger-hover-bg-color:rgba(93, 94, 98, 1);
-    --doorhanger-separator-color:rgba(92, 92, 97, 1);
-    --dialog-button-bg-color:rgba(92, 92, 97, 1);
-    --dialog-button-hover-bg-color:rgba(115, 115, 115, 1);
+    --sidebar-narrow-bg-color:rgb(42 42 46 / 0.9);
+    --sidebar-toolbar-bg-color:rgb(50 50 52);
+    --toolbar-bg-color:rgb(56 56 61);
+    --toolbar-border-color:rgb(12 12 13);
+    --button-hover-color:rgb(102 102 103);
+    --toggled-btn-color:rgb(255 255 255);
+    --toggled-btn-bg-color:rgb(0 0 0 / 0.3);
+    --toggled-hover-active-btn-color:rgb(0 0 0 / 0.4);
+    --dropdown-btn-bg-color:rgb(74 74 79);
+    --separator-color:rgb(0 0 0 / 0.3);
+    --field-color:rgb(250 250 250);
+    --field-bg-color:rgb(64 64 68);
+    --field-border-color:rgb(115 115 115);
+    --treeitem-color:rgb(255 255 255 / 0.8);
+    --treeitem-bg-color:rgb(255 255 255 / 0.15);
+    --treeitem-hover-color:rgb(255 255 255 / 0.9);
+    --treeitem-selected-color:rgb(255 255 255 / 0.9);
+    --treeitem-selected-bg-color:rgb(255 255 255 / 0.25);
+    --thumbnail-hover-color:rgb(255 255 255 / 0.1);
+    --thumbnail-selected-color:rgb(255 255 255 / 0.2);
+    --doorhanger-bg-color:rgb(74 74 79);
+    --doorhanger-border-color:rgb(39 39 43);
+    --doorhanger-hover-color:rgb(249 249 250);
+    --doorhanger-hover-bg-color:rgb(93 94 98);
+    --doorhanger-separator-color:rgb(92 92 97);
+    --dialog-button-bg-color:rgb(92 92 97);
+    --dialog-button-hover-bg-color:rgb(115 115 115);
     --loading-icon:url(images/loading-dark.svg);
   }
 }
@@ -1938,7 +1938,7 @@ body{
 
 #viewerContainer.pdfPresentationMode:fullscreen{
   top:0;
-  background-color:rgba(0, 0, 0, 1);
+  background-color:rgb(0 0 0);
   width:100%;
   height:100%;
   overflow:hidden;
@@ -1973,7 +1973,7 @@ body{
   visibility:hidden;
   z-index:100;
   font:message-box;
-  border-top:1px solid rgba(51, 51, 51, 1);
+  border-top:1px solid rgb(51 51 51);
   border-inline-end:var(--doorhanger-border-color-whcm);
   transition-property:inset-inline-start;
   transition-duration:var(--sidebar-transition-duration);
@@ -1999,7 +1999,7 @@ body{
   overflow:auto;
   position:absolute;
   width:100%;
-  box-shadow:inset calc(-1px * var(--dir-factor)) 0 0 rgba(0, 0, 0, 0.25);
+  box-shadow:inset calc(-1px * var(--dir-factor)) 0 0 rgb(0 0 0 / 0.25);
 }
 
 #viewerContainer{
@@ -2204,7 +2204,7 @@ body{
   background-position:calc(50% + 48% * var(--dir-factor));
 }
 #findInput[data-status="notFound"]{
-  background-color:rgba(255, 102, 102, 1);
+  background-color:rgb(255 102 102);
 }
 
 .secondaryToolbar,
@@ -2294,7 +2294,7 @@ body{
 :is(.doorHanger, .doorHangerRight)::after,
 :is(.doorHanger, .doorHangerRight)::before{
   bottom:100%;
-  border:8px solid rgba(0, 0, 0, 0);
+  border:8px solid rgb(0 0 0 / 0);
   content:" ";
   height:0;
   width:0;
@@ -2326,8 +2326,8 @@ body{
 }
 
 #findResultsCount{
-  background-color:rgba(217, 217, 217, 1);
-  color:rgba(82, 82, 82, 1);
+  background-color:rgb(217 217 217);
+  color:rgb(82 82 82);
   text-align:center;
   padding:4px 5px;
   margin:5px;
@@ -2657,7 +2657,7 @@ a:is(.toolbarButton, .secondaryToolbarButton)[href="#"]{
   top:2px;
   inset-inline-end:2px;
   content:"";
-  background-color:rgba(112, 219, 85, 1);
+  background-color:rgb(112 219 85);
   height:9px;
   width:9px;
   border-radius:50%;
@@ -2873,7 +2873,7 @@ a:focus > .thumbnail > .thumbnailImage,
 .thumbnail:not([data-loaded]) > .thumbnailImage{
   width:calc(var(--thumbnail-width) - 2px);
   height:calc(var(--thumbnail-height) - 2px);
-  border:1px dashed rgba(132, 132, 132, 1);
+  border:1px dashed rgb(132 132 132);
 }
 
 .treeWithDeepNesting > .treeItem,
@@ -2914,7 +2914,7 @@ a:focus > .thumbnail > .thumbnailImage,
   float:inline-start;
   height:0;
   width:0;
-  color:rgba(255, 255, 255, 0.5);
+  color:rgb(255 255 255 / 0.5);
 }
 .treeItemToggler::before{
   inset-inline-end:4px;
@@ -2961,12 +2961,12 @@ dialog{
   font-size:12px;
   line-height:14px;
   background-color:var(--doorhanger-bg-color);
-  border:1px solid rgba(0, 0, 0, 0.5);
+  border:1px solid rgb(0 0 0 / 0.5);
   border-radius:4px;
-  box-shadow:0 1px 4px rgba(0, 0, 0, 0.3);
+  box-shadow:0 1px 4px rgb(0 0 0 / 0.3);
 }
 dialog::backdrop{
-  background-color:rgba(0, 0, 0, 0.2);
+  background-color:rgb(0 0 0 / 0.2);
 }
 
 dialog > .row{
@@ -2995,7 +2995,7 @@ dialog .buttonRow{
 }
 
 dialog :link{
-  color:rgba(255, 255, 255, 1);
+  color:rgb(255 255 255);
 }
 
 #passwordDialog{
@@ -3037,7 +3037,7 @@ dialog :link{
 }
 .grab-to-pan-grabbing{
   position:fixed;
-  background:rgba(0, 0, 0, 0);
+  background:rgb(0 0 0 / 0);
   display:block;
   inset:0;
   overflow:hidden;
@@ -3054,7 +3054,7 @@ dialog :link{
 
 @media print{
   body{
-    background:rgba(0, 0, 0, 0) none;
+    background:rgb(0 0 0 / 0) none;
   }
   body[data-pdfjsprinting] #outerContainer{
     display:none;

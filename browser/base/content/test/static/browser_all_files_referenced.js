@@ -201,7 +201,7 @@ var allowlist = [
   },
 
   // Files from upstream library
-  { file: "resource://pdf.js/web/debugger.js" },
+  { file: "resource://pdf.js/web/debugger.mjs" },
   { file: "resource://pdf.js/web/debugger.css" },
 
   // Starting from here, files in the allowlist are bugs that need fixing.
