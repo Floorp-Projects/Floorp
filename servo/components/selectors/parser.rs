@@ -454,10 +454,9 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
                     selector = Ok(Selector::new_invalid(input.slice_from(start)));
                 }
                 selector
-            });
+            })?;
 
-            debug_assert!(!forgiving || selector.is_ok());
-            values.push(selector?);
+            values.push(selector);
 
             match input.next() {
                 Ok(&Token::Comma) => {},
