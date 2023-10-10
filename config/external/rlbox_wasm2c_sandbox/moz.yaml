@@ -24,10 +24,7 @@ vendoring:
     # dirs
     - test
     # files
-    - .clang-format
-    - .clang-tidy
-    - .gitignore
-    - .travis.yml
+    - ".*"
     - AppSandbox.md
     - CMakeLists.txt
     - LibrarySandbox.md

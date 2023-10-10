@@ -1,4 +1,6 @@
 ---
+---
+
 schema: 1
 
 bugzilla:
@@ -18,18 +20,16 @@ origin:
   revision: 76d07503f0c69f6632e6d8d4736e2a4cb4055a92
 
   license: Apache-2.0
-  license-file: LICENSE.txt
+  license-file: LICENSE.TXT
 
 vendoring:
   url: https://github.com/llvm/llvm-project
   source-hosting: github
 
   keep:
-    - LICENSE.txt
+    - LICENSE.TXT
 
   exclude:
-    - ".*"
-    - "*"
     - "**"
 
   include:
@@ -53,44 +53,3 @@ vendoring:
       path: '{yaml_dir}/FuzzerMain*'
     - action: delete-path
       path: '{yaml_dir}/FuzzerInterceptors*'
-    # The globbing from exclude skips all dot files, remove them here
-    - action: delete-path
-      path: clang/
-    - action: delete-path
-      path: clang-tools-extra/
-    - action: delete-path
-      path: compiler-rt/
-    - action: delete-path
-      path: debuginfo-tests/
-    - action: delete-path
-      path: flang/
-    - action: delete-path
-      path: libc/
-    - action: delete-path
-      path: libclc/
-    - action: delete-path
-      path: libcxx/
-    - action: delete-path
-      path: libcxxabi/
-    - action: delete-path
-      path: libunwind/
-    - action: delete-path
-      path: lld/
-    - action: delete-path
-      path: lldb/
-    - action: delete-path
-      path: llvm/
-    - action: delete-path
-      path: mlir/
-    - action: delete-path
-      path: openmp/
-    - action: delete-path
-      path: parallel-libs/
-    - action: delete-path
-      path: polly/
-    - action: delete-path
-      path: pstl/
-    - action: delete-path
-      path: test/
-    - action: delete-path
-      path: utils/

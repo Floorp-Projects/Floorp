@@ -21,7 +21,7 @@ vendoring:
   skip-vendoring-steps:
     - update-moz-build
   exclude:
-    - .clang-format
+    - ".*"
     - CMakeLists.txt
     - Config.cmake.in
     - INSTALL.md

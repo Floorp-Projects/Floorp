@@ -40,7 +40,6 @@ vendoring:
   skip-vendoring-steps: ['update-moz-build'] 
   exclude:
     - '**'
-    - '**/.*'
 
   include:
     - include/drm/drm.h

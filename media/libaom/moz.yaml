@@ -38,8 +38,7 @@ vendoring:
   vendor-directory: third_party/aom
 
   exclude:
-    - build/.gitattributes
-    - build/.gitignore
+    - "build/.git*"
 
   update-actions:
     - action: delete-path

@@ -22,10 +22,7 @@ vendoring:
   tracking: commit
 
   exclude:
-    - ".*"
-    - "*"
     - "**"
-    - "**/.gitignore"
 
   keep:
     - LICENSE

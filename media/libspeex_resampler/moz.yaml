@@ -22,8 +22,6 @@ vendoring:
   tracking: commit
 
   exclude:
-    - ".*"
-    - "*"
     - "**"
 
   keep:
@@ -41,10 +39,6 @@ vendoring:
     - COPYING
 
   update-actions:
-    - action: delete-path
-      path: '{vendor_dir}/doc'
-    - action: delete-path
-      path: '{vendor_dir}/libspeexdsp/.cvsignore'
     - action: move-file
       from: '{vendor_dir}/libspeexdsp/resample.c'
       to: '{vendor_dir}/src/resample.c'
