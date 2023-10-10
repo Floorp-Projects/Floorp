@@ -109,6 +109,8 @@
 }
 
 .urlbarView-quickaction-button {
+  font-size: var(--urlbarView-small-font-size);
+  font-weight: var(--font-weight-bold);
   box-shadow: 0 0 1px rgba(128, 128, 142, 0.9), 0 0 4px rgba(128, 128, 142, 0.5);
   border-radius: 4px;
   display: flex;
@@ -120,7 +122,7 @@
   min-width: 16px;
 
   &[disabled] {
-    opacity: .4;
+    opacity: var(--toolbarbutton-disabled-opacity);
   }
 
   &:hover:not([disabled]):not([selected]) {
@@ -135,14 +137,13 @@
   > .urlbarView-label {
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: .8em;
-    font-weight: 500;
   }
 
   > .urlbarView-favicon {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-inline: 0 .5em;
 
     > .urlbarView-favicon-img {
       width: 16px;
