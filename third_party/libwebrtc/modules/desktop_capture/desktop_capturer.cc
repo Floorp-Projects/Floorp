@@ -89,29 +89,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
 }
 
 // static
-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
-    const DesktopCaptureOptions& options) {
-  std::unique_ptr<DesktopCapturer> capturer = CreateRawGenericCapturer(options);
-  if (capturer && options.detect_updated_region()) {
-    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-  }
-
-  return capturer;
-}
-
-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
-    const DesktopCaptureOptions& options) {
-#if defined(WEBRTC_USE_PIPEWIRE)
-  if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
-    return std::make_unique<BaseCapturerPipeWire>(options,
-                                                  CaptureType::kAnyScreenContent);
-  }
-#endif  // defined(WEBRTC_USE_PIPEWIRE)
-
-  return nullptr;
-}
-
-// static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(RTC_ENABLE_WIN_WGC)
@@ -124,6 +101,25 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
   if (capturer && options.detect_updated_region()) {
     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
   }
+
+  return capturer;
+}
+
+// static
+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+    const DesktopCaptureOptions& options) {
+  std::unique_ptr<DesktopCapturer> capturer;
+
+#if defined(WEBRTC_USE_PIPEWIRE)
+  if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
+    capturer = std::make_unique<BaseCapturerPipeWire>(
+        options, CaptureType::kAnyScreenContent);
+  }
+
+  if (capturer && options.detect_updated_region()) {
+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+  }
+#endif  // defined(WEBRTC_USE_PIPEWIRE)
 
   return capturer;
 }

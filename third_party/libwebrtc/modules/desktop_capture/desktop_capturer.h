@@ -179,16 +179,17 @@ class RTC_EXPORT DesktopCapturer {
   // The return value if `pos` is out of the scope of the source is undefined.
   virtual bool IsOccluded(const DesktopVector& pos);
 
-  // Creates a DesktopCapturer instance which targets to capture windows and screens.
-  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
-      const DesktopCaptureOptions& options);
-
   // Creates a DesktopCapturer instance which targets to capture windows.
   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
       const DesktopCaptureOptions& options);
 
   // Creates a DesktopCapturer instance which targets to capture screens.
   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+      const DesktopCaptureOptions& options);
+
+  // Creates a DesktopCapturer instance which targets to capture windows and
+  // screens.
+  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
       const DesktopCaptureOptions& options);
 
 #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
@@ -206,11 +207,6 @@ class RTC_EXPORT DesktopCapturer {
  protected:
   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
   // the following two functions are protected.
-
-  // Creates a platform specific DesktopCapturer instance which targets to
-  // capture windows and screens.
-  static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
-      const DesktopCaptureOptions& options);
 
   // Creates a platform specific DesktopCapturer instance which targets to
   // capture windows.
