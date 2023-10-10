@@ -133,7 +133,7 @@
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Gestor de additivos</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
-    <string name="mozac_feature_addons_find_more_addons_button_text">Trova plus additivos</string>
+    <string name="mozac_feature_addons_find_more_addons_button_text">Trovar plus additivos</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">Permitter</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -179,7 +179,7 @@
     <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
     <string name="mozac_feature_addons_failed_to_install_corrupt_error">Iste additivo non ha potite esser installate perque pare corrumpite.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
-    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Iste additivo non ha potite esser installate perque non verificate.</string>
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">Iste additivo non ha potite esser installate perque illo non ha essite verificate.</string>
     <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
     <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s non ha potite esser installate perque non es compatibile con %2$s %3$s.</string>
     <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->

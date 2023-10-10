@@ -506,10 +506,14 @@
     <string name="preferences_accessibility">Tilgjenge</string>
     <!-- Preference to override the Firefox Account server -->
     <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Tilpassa server for Firefox-konto</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Tilpassa Mozilla-kontoserver</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Tilpassa synkroniseringsserver</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-konto/synkroniseringsserver endra. Avsluttar applikasjonen for å bruke endringar…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Mozilla-konto/synkroniseringsserver er endra. Avsluttar programmet for å kunne bruke endringane…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
 
@@ -562,9 +566,14 @@
     <string name="preferences_enable_autocomplete_urls">Autofullfør nettadresser</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">Forslag frå sponsorar</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Stø %1$s med enkelte sponsa forslag</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">Forslag frå %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Få forslag frå nettet relatert til søkinga di</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opne lenker i appar</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -2227,11 +2236,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Vi gir vurderingane til kvart produkt ein <b>bokstavkarakter</b> frå A til F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Pålitelege vurderingar. Vi meinar at vureringane truleg kjem frå ekte kundar som har lagt att ærlege, upartiske vurderingar.</string>
+    <string name="review_quality_check_info_grade_info_AB">Pålitelege vurderingar. Vi meinar at vureringane truleg kjem frå ekte kundar som har lagt att ærlege, upartiske vurderingar.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Vi meiner at vurderingane er til å stole på.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Vi meinar at det finst ei blanding av pålitelege og upålitelege vurderingar.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Upålitelege vurderingar. Vi meinar at vurderingane sannsynlegvis er falske, eller frå partiske kritikarar.</string>
+    <string name="review_quality_check_info_grade_info_DF">Upålitelege vurderingar. Vi meinar at vurderingane sannsynlegvis er falske, eller frå partiske kritikarar.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Vi meiner at vurderingane ikkje er til å stole på.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Den <b>justerte vurderinga</b> er berre basert på vurderingar vi meiner er pålitelege.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
@@ -2244,6 +2257,8 @@
     <string name="review_quality_check_settings_title">Innstillingar</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Vis annonsar i vurderingskontrolløren</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Du vil av og til sjå annonsar for relevante produkt. Alle annonsar må oppfylle kvalitetsstandardane våre for vurderingar. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Les meir</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2268,6 +2283,8 @@
     <string name="review_quality_check_no_reviews_warning_body">Når dette produktet har fleire vurderingar, kan vi sjekke kvaliteten.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Produktet er ikkje tilgjengeleg</string>
+    <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Om du ser at dette produktet er tilbake på lager, rapporter det, så jobbar vi med å kontrollere vurderingane.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Rapporter at dette produktet er tilbake på lager</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
@@ -2278,10 +2295,16 @@
     <string name="review_quality_check_analysis_in_progress_warning_body">Dette vil ta omlag 60 sekund.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Takk for at du rapporterer!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Vi bør ha informasjon om vurderingane til dette produktet innan 24 timar. Sjekk igjen litt seinare.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Vi klarer ikkje å kontrollere desse vurderingane</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Diverre kan vi ikkje kontrollere produktkvaliteten på enkelte produkttypar, som til dømes gåvekort, strøyme-video, musikk og spel.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Info kjem snart</string>
+    <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_other_user_info_body" tools:ignore="UnusedResources">Vi bør ha informasjon om vurderingane til dette produktet innan 24 timar. Sjekk igjen litt seinare.</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Analysen er oppdatert</string>
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
@@ -2296,10 +2319,16 @@
     <string name="review_quality_check_no_connection_body">Kontroller nettverkstilkoplinga di, og oppdater deretter sida.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
     <string name="review_quality_check_no_analysis_title">Ingen informasjon om desse vurderingane enno</string>
+    <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_body">For å vite om vurderingane av dette produktet er pålitelege, kontroller kvaliteten på vurderinga. Det tek berre omlag 60 sekund.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Kontroller kvaliteten på vurderinga</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Prøv den pålitelege guiden vår for produktvurderingar</string>
+    <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
+    <string name="review_quality_check_contextual_onboarding_description">Sjå kor påliteleg produktvurderingar er på %1$s før du kjøper. Vurderingskontrolløren, ein eksperimentell funksjon frå %2$s, er direkte inbyggd i nettlesaren. Han fungerer på %3$s og på %4$s.</string>
+    <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_learn_more">Med krafta i %1$s frå Mozilla hjelper vi deg med å unngå einsidige og ikkje-truverdige vurderingar. AI-modellen vår vert alltid forbetra for å beskytte deg når du handlar. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Les meir</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

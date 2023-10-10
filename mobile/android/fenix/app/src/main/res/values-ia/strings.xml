@@ -105,7 +105,7 @@
 
     <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
-    <string name="erase_action_cfr_message">Tocca ci pro initiar un fresc session in privato. Dele tu chronologia, cookies: omne cosa.</string>
+    <string name="erase_action_cfr_message">Tocca ci pro initiar un nove session de navigation private. Dele tu chronologia, cookies – toto.</string>
 
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
@@ -721,7 +721,7 @@
     <string name="sync_failed_summary">Synchronisar fallite, ultime successo: %s
 </string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">Synchronisar fallite. Ultime synchronisate: jammais</string>
+    <string name="sync_failed_never_synced_summary">Synchronisation fallite. Ultime synchronisation: jammais</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Ultime synchronisation: %s</string>
     <!-- Label summary showing never synced -->
@@ -1771,7 +1771,7 @@
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Demandar pro salvar</string>
     <!-- Preference option for never saving passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_never_save">Jammais salvar</string>
+    <string name="preferences_passwords_save_logins_never_save">Non salvar jammais</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Plenar %1$s</string>
@@ -2269,16 +2269,16 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Nos assigna a cata recensiones de producto un <b>littera de classification</b> ab A a F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensiones fidabile. Nos crede probabile que le recensiones es de clientes real qui lassava honeste, recensiones sin prejudicios.</string>
+    <string name="review_quality_check_info_grade_info_AB">Recensiones fidabile. Nos crede probabile que le recensiones es de clientes real qui lassava honeste, recensiones sin prejudicios.</string>
 
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">Nos crede que le revisiones es fidabile.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Nos crede que le revisiones es fidabile.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Nos crede que il ha un mixtura de recensiones fidabile e non fidabile.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Recensiones non fidabile. Nos crede probabile que le recensiones es false o de revisores prevenite.</string>
+    <string name="review_quality_check_info_grade_info_DF">Recensiones non fidabile. Nos crede probabile que le recensiones es false o de revisores prevenite.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">Nos crede que le revisiones non es fidabile.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Nos crede que le revisiones non es fidabile.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Le <b>classification adjustate</b> es basate solo sur recensiones que nos crede fidabile.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

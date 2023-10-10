@@ -235,5 +235,5 @@
     <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_status_unsigned">%1$s ndaikatúi ojehechajey tekorosãramo ha oñemboguéma.</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
-    <string name="mozac_feature_addons_status_incompatible">%1$s ndojokupytýi pe reipurúva %2$s ndive (peteĩchagua %3$s).</string>
+    <string name="mozac_feature_addons_status_incompatible">%1$s ndojokupytýi pe reiporúva %2$s ndive (peteĩchagua %3$s).</string>
 </resources>
