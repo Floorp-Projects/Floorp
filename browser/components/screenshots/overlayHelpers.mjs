@@ -341,28 +341,28 @@ export class WindowDimensions {
   #scrollMinY = null;
 
   set dimensions(dimensions) {
-    if (dimensions.clientHeight) {
+    if (dimensions.clientHeight != null) {
       this.#clientHeight = dimensions.clientHeight;
     }
-    if (dimensions.clientWidth) {
+    if (dimensions.clientWidth != null) {
       this.#clientWidth = dimensions.clientWidth;
     }
-    if (dimensions.scrollHeight) {
+    if (dimensions.scrollHeight != null) {
       this.#scrollHeight = dimensions.scrollHeight;
     }
-    if (dimensions.scrollWidth) {
+    if (dimensions.scrollWidth != null) {
       this.#scrollWidth = dimensions.scrollWidth;
     }
-    if (dimensions.scrollX) {
+    if (dimensions.scrollX != null) {
       this.#scrollX = dimensions.scrollX;
     }
-    if (dimensions.scrollY) {
+    if (dimensions.scrollY != null) {
       this.#scrollY = dimensions.scrollY;
     }
-    if (dimensions.scrollMinX) {
+    if (dimensions.scrollMinX != null) {
       this.#scrollMinX = dimensions.scrollMinX;
     }
-    if (dimensions.scrollMinY) {
+    if (dimensions.scrollMinY != null) {
       this.#scrollMinY = dimensions.scrollMinY;
     }
   }
