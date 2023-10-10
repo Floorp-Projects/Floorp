@@ -44,7 +44,10 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace fuzzing {
 
-IPCFuzzController::IPCFuzzController() : mMutex("IPCFuzzController") {
+const uint32_t ipcDefaultTriggerMsg = dom::PContent::Msg_SignalFuzzingReady__ID;
+
+IPCFuzzController::IPCFuzzController()
+    : mMutex("IPCFuzzController"), mIPCTriggerMsg(ipcDefaultTriggerMsg) {
   InitializeIPCTypes();
 
   // We use 6 bits for port index selection without wrapping, so we just
@@ -76,12 +79,21 @@ void IPCFuzzController::InitializeIPCTypes() {
   const char* cons = "Constructor";
   size_t cons_len = strlen(cons);
 
+  const char* targetName = getenv("MOZ_FUZZ_IPC_TRIGGER");
+
   for (uint32_t start = 0; start < LastMsgIndex; ++start) {
     uint32_t i;
     for (i = (start << 16) + 1; i < ((start + 1) << 16); ++i) {
       const char* name = IPC::StringFromIPCMessageType(i);
 
       if (name[0] == '<') break;
+
+      if (targetName && !strcmp(name, targetName)) {
+        MOZ_FUZZING_NYX_PRINTF(
+            "INFO: [InitializeIPCTypes] Located trigger message (%s, %d)\n",
+            targetName, i);
+        mIPCTriggerMsg = i;
+      }
 
       size_t len = strlen(name);
       if (len > cons_len && !memcmp(cons, name + len - cons_len, cons_len)) {
@@ -210,7 +222,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
       channel->mBlockSendRecv = true;
     }
     return true;
-  } else if (aMessage.type() == dom::PContent::Msg_SignalFuzzingReady__ID) {
+  } else if (aMessage.type() == mIPCTriggerMsg) {
     MOZ_FUZZING_NYX_PRINT("DEBUG: Ready message detected.\n");
 
     // TODO: This is specific to PContent fuzzing. If we later want to fuzz
@@ -221,7 +233,7 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
     // and we should only ever receive it once.
     if (haveTargetNodeName) {
       MOZ_FUZZING_NYX_PRINT("ERROR: Received ready signal twice?!\n");
-      MOZ_REALLY_CRASH(__LINE__);
+      return false;
     }
 
     targetNodeName = channel->GetName();
@@ -273,7 +285,10 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
       // Check if we have any entries in our port map that we haven't seen yet
       // though `OnActorConnected`. That method is called on a background
       // thread and this call will race with the I/O thread.
-      {
+      //
+      // However, with a custom MOZ_FUZZ_IPC_TRIGGER we assume we want to keep
+      // the port pinned so we don't have to wait at all.
+      if (mIPCTriggerMsg == ipcDefaultTriggerMsg) {
         MOZ_FUZZING_NYX_DEBUG(
             "DEBUG: IPCFuzzController::ObserveIPCMessage() Mutex try\n");
         // Called on the I/O thread and reads `portSeqNos`.
@@ -373,9 +388,11 @@ bool IPCFuzzController::MakeTargetDecision(
     // want to keep the pinning on the port itself. We use one of the
     // unused upper bits of portIndex for this purpose.
     if (!useLastActor && (portIndex & (1 << 7))) {
-      MOZ_FUZZING_NYX_PRINT(
-          "DEBUG: MakeTargetDecision: Released pinning on last port.\n");
-      useLastPortName = false;
+      if (mIPCTriggerMsg == ipcDefaultTriggerMsg) {
+        MOZ_FUZZING_NYX_PRINT(
+            "DEBUG: MakeTargetDecision: Released pinning on last port.\n");
+        useLastPortName = false;
+      }
     }
   } else if (useLastPortName) {
     *name = lastActorPortName;

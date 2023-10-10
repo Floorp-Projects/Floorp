@@ -183,6 +183,10 @@ class IPCFuzzController {
   // structures need to aquire this mutex first.
   Mutex mMutex;  // MOZ_UNANNOTATED;
 
+  // Can be used to specify a non-standard trigger message, e.h. to target
+  // a specific actor.
+  uint32_t mIPCTriggerMsg;
+
   IPCFuzzController();
   NYX_DISALLOW_COPY_AND_ASSIGN(IPCFuzzController);
 };
