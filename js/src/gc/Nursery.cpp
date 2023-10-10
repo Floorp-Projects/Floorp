@@ -119,7 +119,7 @@ inline void js::NurseryChunk::poisonRange(size_t start, size_t end,
                                           MemCheckKind checkKind) {
   MOZ_ASSERT((start % gc::CellAlignBytes) == 0);
   MOZ_ASSERT((end % gc::CellAlignBytes) == 0);
-  MOZ_ASSERT(end > start);
+  MOZ_ASSERT(end >= start);
   MOZ_ASSERT(end <= ChunkSize);
 
   auto* ptr = reinterpret_cast<uint8_t*>(this) + start;
