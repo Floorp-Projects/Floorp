@@ -59,14 +59,16 @@ parent:
                        bool                                supportsHttp3,
                        TRRMode trrMode,
                        TRRSkippedReason trrSkipReason,
-                       uint32_t caps);
+                       uint32_t caps,
+                       TimeStamp onStartRequestStart);
   async OnTransportStatus(nsresult status,
                           int64_t progress,
                           int64_t progressMax,
                           NetworkAddressArg? networkAddressArg);
   async OnDataAvailable(nsCString data,
                         uint64_t  offset,
-                        uint32_t  count);
+                        uint32_t  count,
+                        TimeStamp onDataAvailableStart);
   async OnStopRequest(nsresult status,
                       bool responseIsComplete,
                       int64_t transferSize,
@@ -74,7 +76,8 @@ parent:
                       nsHttpHeaderArray? responseTrailers,
                       TransactionObserverResult? transactionObserverResult,
                       TimeStamp lastActiveTabOptimization,
-                      HttpConnectionInfoCloneArgs connInfoArgs);
+                      HttpConnectionInfoCloneArgs connInfoArgs,
+                      TimeStamp onStopRequestStart);
   async OnInitFailed(nsresult status);
   async OnH2PushStream(uint32_t pushedStreamId,
                        nsCString resourceUrl,

@@ -20,7 +20,8 @@ class BackgroundDataBridgeParent final : public PBackgroundDataBridgeParent {
   void Destroy();
   void OnStopRequest(nsresult aStatus, const ResourceTimingStructArgs& aTiming,
                      const TimeStamp& aLastActiveTabOptHit,
-                     const nsHttpHeaderArray& aResponseTrailers);
+                     const nsHttpHeaderArray& aResponseTrailers,
+                     const TimeStamp& aOnStopRequestStart);
 
  private:
   virtual ~BackgroundDataBridgeParent() = default;

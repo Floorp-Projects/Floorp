@@ -26,7 +26,8 @@ child:
                        bool                useResponseHead,
                        nsHttpHeaderArray   requestHeaders,
                        HttpChannelOnStartRequestArgs args,
-                       HttpChannelAltDataStream altData);
+                       HttpChannelAltDataStream altData,
+                       TimeStamp onStartRequestStart);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message
@@ -35,7 +36,8 @@ child:
                            uint64_t  offset,
                            uint32_t  count,
                            nsCString data,
-                           bool dataFromSocketProcess);
+                           bool dataFromSocketProcess,
+                           TimeStamp onDataAvailableStart);
 
 
   async OnStopRequest(nsresult channelStatus,
@@ -43,7 +45,8 @@ child:
                       TimeStamp lastActiveTabOptimization,
                       nsHttpHeaderArray responseTrailers,
                       ConsoleReportCollected[] consoleReport,
-                      bool fromSocketProcess);
+                      bool fromSocketProcess,
+                      TimeStamp onStopRequestStart);
 
   async OnConsoleReport(ConsoleReportCollected[] consoleReport);
 
