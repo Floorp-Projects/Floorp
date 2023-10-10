@@ -2552,6 +2552,9 @@ var gProtectionsHandler = {
     body += `${Cryptomining.prefEnabled}: ${Services.prefs.getBoolPref(
       Cryptomining.prefEnabled
     )}\n`;
+    body += `privacy.globalprivacycontrol.enabled: ${Services.prefs.getBoolPref(
+      "privacy.globalprivacycontrol.enabled"
+    )}\n`;
     body += `\nhasException: ${this.hasException}\n`;
 
     body += "\n**Comments**\n" + commentsTextarea.value;
