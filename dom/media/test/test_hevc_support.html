@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test HEVC video support</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/**
+ * This test is used to check we can get correct HEVC support information from
+ * `canPlayType` and mediaCapabilities API on different platforms.
+ */
+add_task(async function testHEVCSupport() {
+  const os = SpecialPowers.Services.appinfo.OS;
+
+  const contentType = 'video/mp4; codecs="hev1.1.6.L93.B0"';
+  const canPlay = document.createElement('video').canPlayType(contentType);
+  if (os == "WINNT") {
+    ok(canPlay != "", `HEVC is supported`);
+  } else {
+    ok(canPlay == "", "HEVC is not supported on current platform");
+  }
+
+  const videoConfiguration = {
+    type: "file",
+    video: {
+      contentType,
+      width: 1920,
+      height: 1080,
+      bitrate: 1000000,
+      framerate: 30,
+    },
+  };
+  const capability = await navigator.mediaCapabilities.decodingInfo(videoConfiguration);
+  if (os == "WINNT") {
+    ok(capability.supported, `HEVC is supported`);
+    ok(capability.powerEfficient, `HEVC is powerEfficient`);
+  } else {
+    ok(!capability.supported, "HEVC is not supported on current platform");
+  }
+});
+
+</script>
+</head>
+<body>
+</body>
+</html>
