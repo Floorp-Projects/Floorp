@@ -119,6 +119,12 @@ add_task(async function basic() {
     Assert.equal(description.textContent, merinoSuggestion.description);
     const bottom = row.querySelector(".urlbarView-row-body-bottom");
     Assert.equal(bottom.textContent, "Recommended");
+    Assert.ok(
+      BrowserTestUtils.is_visible(
+        row.querySelector(".urlbarView-title-separator")
+      ),
+      "The title separator should be visible"
+    );
 
     Assert.equal(result.suggestedIndex, 1);
 
