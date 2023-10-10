@@ -16,18 +16,18 @@
 
 namespace mozilla::dom {
 
-MIDIInput::MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent)
-    : MIDIPort(aWindow, aMIDIAccessParent), mKeepAlive(false) {}
+MIDIInput::MIDIInput(nsPIDOMWindowInner* aWindow)
+    : MIDIPort(aWindow), mKeepAlive(false) {}
 
 // static
-MIDIInput* MIDIInput::Create(nsPIDOMWindowInner* aWindow,
-                             MIDIAccess* aMIDIAccessParent,
-                             const MIDIPortInfo& aPortInfo,
-                             const bool aSysexEnabled) {
+RefPtr<MIDIInput> MIDIInput::Create(nsPIDOMWindowInner* aWindow,
+                                    MIDIAccess* aMIDIAccessParent,
+                                    const MIDIPortInfo& aPortInfo,
+                                    const bool aSysexEnabled) {
   MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
              MIDIPortType::Input);
-  auto* port = new MIDIInput(aWindow, aMIDIAccessParent);
-  if (!port->Initialize(aPortInfo, aSysexEnabled)) {
+  RefPtr<MIDIInput> port = new MIDIInput(aWindow);
+  if (!port->Initialize(aPortInfo, aSysexEnabled, aMIDIAccessParent)) {
     return nullptr;
   }
   return port;
