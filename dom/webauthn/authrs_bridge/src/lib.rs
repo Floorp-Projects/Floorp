@@ -662,8 +662,8 @@ impl AuthrsService {
             user_verification_req,
             resident_key_req,
             extensions: AuthenticationExtensionsClientInputs {
-                cred_props: Some(cred_props),
-                min_pin_length: Some(min_pin_length),
+                cred_props: cred_props.then_some(true),
+                min_pin_length: min_pin_length.then_some(true),
                 ..Default::default()
             },
             pin: None,
