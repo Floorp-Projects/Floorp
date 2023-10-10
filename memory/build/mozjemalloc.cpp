@@ -1391,7 +1391,7 @@ class ArenaCollection {
   Tree mArenas;
   Tree mPrivateArenas;
   Tree mMainThreadArenas;
-  Atomic<int32_t> mDefaultMaxDirtyPageModifier;
+  Atomic<int32_t, MemoryOrdering::Relaxed> mDefaultMaxDirtyPageModifier;
   Maybe<ThreadId> mMainThreadId;
 };
 
