@@ -54,13 +54,6 @@ class gfxMacFont final : public gfxFont {
 
   bool UseNativeColrFontSupport() const override;
 
-  // Helper to create a CTFont from a CGFont, with optional font descriptor
-  // (for features), and copying any variations that were set on the CGFont.
-  // This is public so that gfxCoreTextShaper can also use it.
-  static CTFontRef CreateCTFontFromCGFontWithVariations(
-      CGFontRef aCGFont, CGFloat aSize, bool aInstalledFont,
-      CTFontDescriptorRef aFontDesc = nullptr);
-
  protected:
   ~gfxMacFont() override;
 
