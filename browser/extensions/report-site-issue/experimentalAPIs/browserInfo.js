@@ -97,6 +97,7 @@ function getAdditionalPrefs() {
     "gfx.canvas.accelerated.force-enabled": false,
     "gfx.webrender.compositor.force-enabled": false,
     "privacy.resistFingerprinting": false,
+    "privacy.globalprivacycontrol.enabled": false,
   })) {
     prefs[name] = Services.prefs.getBoolPref(name, dflt);
   }
