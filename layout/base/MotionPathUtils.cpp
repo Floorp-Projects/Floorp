@@ -58,7 +58,7 @@ const nsIFrame* MotionPathUtils::GetOffsetPathReferenceBox(
     MOZ_ASSERT(aFrame->GetContent()->IsSVGElement());
     auto* viewportElement =
         dom::SVGElement::FromNode(aFrame->GetContent())->GetCtx();
-    aOutputRect = nsLayoutUtils::ComputeSVGViewBox(viewportElement);
+    aOutputRect = nsLayoutUtils::ComputeSVGOriginBox(viewportElement);
     return viewportElement ? viewportElement->GetPrimaryFrame() : nullptr;
   }
 
