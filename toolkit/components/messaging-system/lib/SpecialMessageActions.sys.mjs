@@ -210,6 +210,7 @@ export const SpecialMessageActions = {
       "cookiebanners.service.mode",
       "cookiebanners.service.mode.privateBrowsing",
       "cookiebanners.service.detectOnly",
+      "messaging-system.askForFeedback",
     ];
 
     if (

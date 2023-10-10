@@ -1651,6 +1651,7 @@ pref("browser.newtabpage.activity-stream.asrouter.providers.messaging-experiment
 // ASRouter user prefs
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", true);
 pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features", true);
+pref("messaging-system.askForFeedback", true);
 
 // The pref that controls if ASRouter uses the remote fluent files.
 // It's enabled by default, but could be disabled to force ASRouter to use the local files.
