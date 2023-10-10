@@ -282,10 +282,7 @@ function nodeHasEntries(item) {
     className === "FormData" ||
     className === "MIDIInputMap" ||
     className === "MIDIOutputMap" ||
-    // @backward-compat { version 118 } Support for enumerate HighlightRegistry entries was
-    // added in 118. When connecting to older server, we don't want to show the <entries>
-    // node for them. The extra check can be removed once 118 hits release.
-    (className === "HighlightRegistry" && Array.isArray(value.preview?.entries))
+    className === "HighlightRegistry"
   );
 }
 
