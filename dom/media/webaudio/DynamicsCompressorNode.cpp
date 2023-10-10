@@ -147,7 +147,8 @@ class DynamicsCompressorNodeEngine final : public AudioNodeEngine {
       float mReduction;
     };
 
-    mAbstractMainThread->Dispatch(do_AddRef(new Command(aTrack, aReduction)));
+    AbstractThread::MainThread()->Dispatch(
+        do_AddRef(new Command(aTrack, aReduction)));
   }
 
  private:

@@ -2101,8 +2101,7 @@ void nsPrintJob::FirePrintCompletionEvent() {
   NS_ENSURE_TRUE_VOID(cv);
   nsCOMPtr<Document> doc = cv->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
-
-  NS_ENSURE_SUCCESS_VOID(doc->Dispatch(TaskCategory::Other, event.forget()));
+  NS_ENSURE_SUCCESS_VOID(doc->Dispatch(event.forget()));
 }
 
 void nsPrintJob::DisconnectPagePrintTimer() {

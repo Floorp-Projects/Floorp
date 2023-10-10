@@ -473,14 +473,6 @@ void MessagePort::Dispatch() {
   mMessages.RemoveElementAt(0);
 
   mPostMessageRunnable = new PostMessageRunnable(this, data);
-
-  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
-  if (NS_IsMainThread() && global) {
-    MOZ_ALWAYS_SUCCEEDS(
-        global->Dispatch(TaskCategory::Other, do_AddRef(mPostMessageRunnable)));
-    return;
-  }
-
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(mPostMessageRunnable));
 }
 

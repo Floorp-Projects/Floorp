@@ -324,8 +324,7 @@ void nsHangDetails::Submit() {
         }
       });
 
-  nsresult rv =
-      SchedulerGroup::Dispatch(TaskCategory::Other, notifyObservers.forget());
+  nsresult rv = SchedulerGroup::Dispatch(notifyObservers.forget());
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 }
 

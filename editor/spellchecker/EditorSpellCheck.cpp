@@ -432,7 +432,7 @@ EditorSpellCheck::InitSpellChecker(nsIEditor* aEditor,
     // discard the failure.  Do it asynchronously so that the caller is always
     // guaranteed async behavior.
     RefPtr<CallbackCaller> caller = new CallbackCaller(aCallback);
-    rv = doc->Dispatch(TaskCategory::Other, caller.forget());
+    rv = doc->Dispatch(caller.forget());
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

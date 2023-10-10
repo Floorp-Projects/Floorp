@@ -1282,7 +1282,7 @@ void nsXULPopupManager::HidePopup(Element* aPopup, HidePopupOptions aOptions,
     nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
                                   popupFrame->GetPopupType(), aOptions);
-    aPopup->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
+    aPopup->OwnerDoc()->Dispatch(event.forget());
   } else {
     RefPtr<nsPresContext> presContext = popupFrame->PresContext();
     FirePopupHidingEvent(popupToHide, nextPopup, lastPopup, presContext,
@@ -1429,8 +1429,7 @@ void nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup,
   KillMenuTimer();
 
   // Kick off the timer.
-  nsIEventTarget* target =
-      aPopup->PopupElement().OwnerDoc()->EventTargetFor(TaskCategory::Other);
+  nsIEventTarget* target = GetMainThreadSerialEventTarget();
   NS_NewTimerWithFuncCallback(
       getter_AddRefs(mCloseTimer),
       [](nsITimer* aTimer, void* aClosure) {
@@ -1556,7 +1555,7 @@ void nsXULPopupManager::ExecuteMenu(nsIContent* aMenu,
   HideOpenMenusBeforeExecutingMenu(cmm);
   aEvent->SetCloseMenuMode(cmm);
   nsCOMPtr<nsIRunnable> event = aEvent;
-  aMenu->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
+  aMenu->OwnerDoc()->Dispatch(event.forget());
 }
 
 bool nsXULPopupManager::ActivateNativeMenuItem(nsIContent* aItem,
@@ -2728,7 +2727,7 @@ bool nsXULPopupPositionedEvent::DispatchIfNeeded(Element* aPopup) {
   if (aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::arrow,
                           eCaseMatters)) {
     nsCOMPtr<nsIRunnable> event = new nsXULPopupPositionedEvent(aPopup);
-    aPopup->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
+    aPopup->OwnerDoc()->Dispatch(event.forget());
     return true;
   }
 

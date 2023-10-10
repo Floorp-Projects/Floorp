@@ -86,7 +86,6 @@
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -6413,8 +6412,7 @@ class DeserializeIndexValueHelper final : public Runnable {
     MonitorAutoLock lock(mMonitor);
 
     RefPtr<Runnable> self = this;
-    QM_TRY(MOZ_TO_RESULT(
-        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget())));
+    QM_TRY(MOZ_TO_RESULT(SchedulerGroup::Dispatch(self.forget())));
 
     lock.Wait();
     return mStatus;

@@ -87,13 +87,6 @@ class DocGroup final {
     return mDocuments.end();
   }
 
-  nsresult Dispatch(TaskCategory aCategory,
-                    already_AddRefed<nsIRunnable>&& aRunnable);
-
-  nsISerialEventTarget* EventTargetFor(TaskCategory aCategory) const;
-
-  AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
-
   // Return a pointer that can be continually checked to see if access to this
   // DocGroup is valid. This pointer should live at least as long as the
   // DocGroup.
@@ -135,7 +128,6 @@ class DocGroup final {
   RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
   nsTHashSet<uint64_t> mIframesUsedPostMessageQueue;
-  nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   // non-null if the JS execution for this docgroup is regulated with regards
   // to worker threads. This should only be used when we are forcing serialized

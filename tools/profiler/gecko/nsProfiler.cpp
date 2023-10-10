@@ -256,38 +256,34 @@ nsProfiler::WaitOnePeriodicSampling(JSContext* aCx, Promise** aPromise) {
                new nsMainThreadPtrHolder<Promise>(
                    "WaitOnePeriodicSampling promise for Sampler", promise))](
               SamplingState aSamplingState) mutable {
-            SchedulerGroup::Dispatch(
-                TaskCategory::Other,
-                NS_NewRunnableFunction(
-                    "nsProfiler::WaitOnePeriodicSampling result on main thread",
-                    [promiseHandleInMT = std::move(promiseHandleInSampler),
-                     aSamplingState]() mutable {
-                      switch (aSamplingState) {
-                        case SamplingState::JustStopped:
-                        case SamplingState::SamplingPaused:
-                          promiseHandleInMT->MaybeReject(NS_ERROR_FAILURE);
-                          break;
+            SchedulerGroup::Dispatch(NS_NewRunnableFunction(
+                "nsProfiler::WaitOnePeriodicSampling result on main thread",
+                [promiseHandleInMT = std::move(promiseHandleInSampler),
+                 aSamplingState]() mutable {
+                  switch (aSamplingState) {
+                    case SamplingState::JustStopped:
+                    case SamplingState::SamplingPaused:
+                      promiseHandleInMT->MaybeReject(NS_ERROR_FAILURE);
+                      break;
 
-                        case SamplingState::NoStackSamplingCompleted:
-                        case SamplingState::SamplingCompleted:
-                          // The parent process has succesfully done a sampling,
-                          // check the child processes (if any).
-                          ProfilerParent::WaitOnePeriodicSampling()->Then(
-                              GetMainThreadSerialEventTarget(), __func__,
-                              [promiseHandleInMT =
-                                   std::move(promiseHandleInMT)](
-                                  GenericPromise::ResolveOrRejectValue&&) {
-                                promiseHandleInMT->MaybeResolveWithUndefined();
-                              });
-                          break;
+                    case SamplingState::NoStackSamplingCompleted:
+                    case SamplingState::SamplingCompleted:
+                      // The parent process has succesfully done a sampling,
+                      // check the child processes (if any).
+                      ProfilerParent::WaitOnePeriodicSampling()->Then(
+                          GetMainThreadSerialEventTarget(), __func__,
+                          [promiseHandleInMT = std::move(promiseHandleInMT)](
+                              GenericPromise::ResolveOrRejectValue&&) {
+                            promiseHandleInMT->MaybeResolveWithUndefined();
+                          });
+                      break;
 
-                        default:
-                          MOZ_ASSERT(false, "Unexpected SamplingState value");
-                          promiseHandleInMT->MaybeReject(
-                              NS_ERROR_DOM_UNKNOWN_ERR);
-                          break;
-                      }
-                    }));
+                    default:
+                      MOZ_ASSERT(false, "Unexpected SamplingState value");
+                      promiseHandleInMT->MaybeReject(NS_ERROR_DOM_UNKNOWN_ERR);
+                      break;
+                  }
+                }));
           })) {
     // Callback was not added (e.g., profiler is not running) and will never be
     // invoked, so we need to resolve the promise here.

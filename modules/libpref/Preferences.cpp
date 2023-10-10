@@ -3335,15 +3335,13 @@ class PWRunnable : public Runnable {
         // ref counted pointer off main thread.
         nsresult rvCopy = rv;
         nsCOMPtr<nsIFile> fileCopy(mFile);
-        SchedulerGroup::Dispatch(
-            TaskCategory::Other,
-            NS_NewRunnableFunction("Preferences::WriterRunnable",
-                                   [fileCopy, rvCopy] {
-                                     MOZ_RELEASE_ASSERT(NS_IsMainThread());
-                                     if (NS_FAILED(rvCopy)) {
-                                       Preferences::HandleDirty();
-                                     }
-                                   }));
+        SchedulerGroup::Dispatch(NS_NewRunnableFunction(
+            "Preferences::WriterRunnable", [fileCopy, rvCopy] {
+              MOZ_RELEASE_ASSERT(NS_IsMainThread());
+              if (NS_FAILED(rvCopy)) {
+                Preferences::HandleDirty();
+              }
+            }));
       }
     }
     // We've completed the write to the best of our abilities, whether

@@ -514,10 +514,6 @@ class Loader final {
   void BlockOnload();
   void UnblockOnload(bool aFireSync);
 
-  // Helper to select the correct dispatch target for asynchronous events for
-  // this loader.
-  already_AddRefed<nsISerialEventTarget> DispatchTarget();
-
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
                               nsIURI* aTargetURI, nsINode* aRequestingNode,

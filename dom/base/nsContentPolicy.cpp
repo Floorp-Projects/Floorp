@@ -23,7 +23,6 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/nsMixedContentBlocker.h"
 #include "nsIContentSecurityPolicy.h"
-#include "mozilla/TaskCategory.h"
 
 class nsIDOMWindow;
 
@@ -97,19 +96,9 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
    */
   nsresult rv;
   const nsCOMArray<nsIContentPolicy>& entries = mPolicies.GetCachedEntries();
-
-  nsCOMPtr<nsPIDOMWindowOuter> window;
-  if (nsCOMPtr<nsINode> node = do_QueryInterface(requestingContext)) {
-    window = node->OwnerDoc()->GetWindow();
-  } else {
-    window = do_QueryInterface(requestingContext);
-  }
-
   if (doc) {
-    nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp();
-    if (csp && window) {
-      csp->EnsureEventTarget(
-          window->EventTargetFor(mozilla::TaskCategory::Other));
+    if (nsCOMPtr<nsIContentSecurityPolicy> csp = doc->GetCsp()) {
+      csp->EnsureEventTarget(mozilla::GetMainThreadSerialEventTarget());
     }
   }
 

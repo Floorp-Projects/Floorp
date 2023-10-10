@@ -86,8 +86,7 @@ void ServiceWorkerProxy::Init(ServiceWorkerParent* aActor) {
   // returns.
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
       "ServiceWorkerProxy::Init", this, &ServiceWorkerProxy::InitOnMainThread);
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 void ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor) {
@@ -98,8 +97,7 @@ void ServiceWorkerProxy::RevokeActor(ServiceWorkerParent* aActor) {
 
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
       __func__, this, &ServiceWorkerProxy::StopListeningOnMainThread);
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 void ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
@@ -115,8 +113,7 @@ void ServiceWorkerProxy::PostMessage(RefPtr<ServiceWorkerCloneData>&& aData,
         }
         self->mInfo->PostMessage(std::move(data), aClientInfo, aClientState);
       });
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 }  // namespace mozilla::dom

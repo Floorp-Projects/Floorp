@@ -818,8 +818,7 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
     return NS_OK;
   }
 
-  nsCOMPtr<nsISerialEventTarget> target =
-      mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
+  nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
   Maybe<uint64_t> mms = aMMSSet ? Some(aMaxMessageSize) : Nothing();
   if (auto res = DataChannelConnection::Create(this, target, mTransportHandler,
                                                aLocalPort, aNumstreams, mms)) {

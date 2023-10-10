@@ -3253,8 +3253,7 @@ void nsGenericHTMLElement::QueuePopoverEventTask(
   auto task =
       MakeRefPtr<PopoverToggleEventTask>(do_GetWeakReference(this), aOldState);
   data->SetToggleEventTask(task);
-
-  OwnerDoc()->Dispatch(TaskCategory::UI, task.forget());
+  OwnerDoc()->Dispatch(task.forget());
 }
 
 void nsGenericHTMLElement::RunPopoverToggleEventTask(

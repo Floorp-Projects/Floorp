@@ -296,7 +296,6 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
           // otherwise.
           static RefPtr<AllocPolicy> sVideoAllocPolicy = [&taskQueue]() {
             SchedulerGroup::Dispatch(
-                TaskCategory::Other,
                 NS_NewRunnableFunction(
                     "MediaCapabilities::AllocPolicy:Video", []() {
                       ClearOnShutdown(&sVideoAllocPolicy,
@@ -436,7 +435,7 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
   RefPtr<StrongWorkerRef> workerRef;
 
   if (NS_IsMainThread()) {
-    targetThread = mParent->AbstractMainThreadFor(TaskCategory::Other);
+    targetThread = GetMainThreadSerialEventTarget();
   } else {
     WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(wp, "Must be called from a worker thread");

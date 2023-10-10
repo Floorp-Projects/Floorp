@@ -5807,7 +5807,7 @@ static void TriggerPollJSSamplingOnMainThread() {
     nsCOMPtr<nsIRunnable> task =
         NS_NewRunnableFunction("TriggerPollJSSamplingOnMainThread",
                                []() { PollJSSamplingForCurrentThread(); });
-    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
+    SchedulerGroup::Dispatch(task.forget());
   }
 }
 

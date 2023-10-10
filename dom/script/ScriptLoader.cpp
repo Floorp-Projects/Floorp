@@ -1155,9 +1155,9 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
           NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
                             &nsIScriptElement::FireErrorEvent);
       if (mDocument) {
-        mDocument->Dispatch(TaskCategory::Other, runnable.forget());
+        mDocument->Dispatch(runnable.forget());
       } else {
-        NS_DispatchToCurrentThread(runnable);
+        NS_DispatchToCurrentThread(runnable.forget());
       }
       return false;
     }
@@ -3042,7 +3042,7 @@ void ScriptLoader::ProcessPendingRequestsAsync() {
         NewRunnableMethod("dom::ScriptLoader::ProcessPendingRequests", this,
                           &ScriptLoader::ProcessPendingRequests);
     if (mDocument) {
-      mDocument->Dispatch(TaskCategory::Other, task.forget());
+      mDocument->Dispatch(task.forget());
     } else {
       NS_DispatchToCurrentThread(task.forget());
     }

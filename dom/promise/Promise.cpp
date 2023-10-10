@@ -732,7 +732,7 @@ void Promise::ReportRejectedPromise(JSContext* aCx,
         event->SerializeStack(aCx, resolutionSite);
       }
     }
-    winForDispatch->Dispatch(mozilla::TaskCategory::Other, event.forget());
+    winForDispatch->Dispatch(event.forget());
   } else {
     NS_DispatchToMainThread(event);
   }

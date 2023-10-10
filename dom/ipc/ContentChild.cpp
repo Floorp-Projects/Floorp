@@ -802,7 +802,6 @@ void ContentChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   // NOTE: We have to register the annotator on the main thread, as annotators
   // only affect a single thread.
   SchedulerGroup::Dispatch(
-      TaskCategory::Other,
       NS_NewRunnableFunction("RegisterPendingInputEventHangAnnotator", [] {
         BackgroundHangMonitor::RegisterAnnotator(
             PendingInputEventHangAnnotator::sSingleton);

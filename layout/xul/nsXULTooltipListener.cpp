@@ -206,7 +206,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
           LookAndFeel::GetInt(LookAndFeel::IntID::TooltipDelay, 500),
           nsITimer::TYPE_ONE_SHOT, "sTooltipCallback",
-          sourceContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
+          GetMainThreadSerialEventTarget());
       if (NS_FAILED(rv)) {
         mTargetNode = nullptr;
         mSourceNode = nullptr;

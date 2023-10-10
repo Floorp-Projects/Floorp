@@ -185,8 +185,7 @@ CookieJarSettings::~CookieJarSettings() {
     RefPtr<Runnable> r =
         new ReleaseCookiePermissions(std::move(mCookiePermissions));
     MOZ_ASSERT(mCookiePermissions.IsEmpty());
-
-    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
+    SchedulerGroup::Dispatch(r.forget());
   }
 }
 

@@ -179,7 +179,7 @@ Result<RefPtr<IDBFactory>, nsresult> IDBFactory::CreateForWindow(
 
   factory->mBrowserChild = BrowserChild::GetFrom(aWindow);
   factory->mEventTarget =
-      nsGlobalWindowInner::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
+      nsGlobalWindowInner::Cast(aWindow)->SerialEventTarget();
   factory->mInnerWindowID = aWindow->WindowID();
   factory->mPrivateBrowsingMode =
       loadContext && loadContext->UsePrivateBrowsing();

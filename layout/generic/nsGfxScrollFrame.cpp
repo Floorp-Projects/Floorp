@@ -2899,8 +2899,7 @@ void nsHTMLScrollFrame::ScrollActivityCallback(nsITimer* aTimer,
 
 void nsHTMLScrollFrame::ScheduleSyntheticMouseMove() {
   if (!mScrollActivityTimer) {
-    mScrollActivityTimer = NS_NewTimer(
-        PresContext()->Document()->EventTargetFor(TaskCategory::Other));
+    mScrollActivityTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
     if (!mScrollActivityTimer) {
       return;
     }

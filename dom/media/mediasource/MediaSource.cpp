@@ -530,8 +530,7 @@ MediaSource::MediaSource(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
       mDecoder(nullptr),
       mPrincipal(nullptr),
-      mAbstractMainThread(
-          GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other)),
+      mAbstractMainThread(AbstractThread::MainThread()),
       mReadyState(MediaSourceReadyState::Closed) {
   MOZ_ASSERT(NS_IsMainThread());
   mSourceBuffers = new SourceBufferList(this);

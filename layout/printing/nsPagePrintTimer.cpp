@@ -55,9 +55,9 @@ nsresult nsPagePrintTimer::StartTimer(bool aUseDelay) {
       delay = mDelay;
     }
   }
-  return NS_NewTimerWithCallback(
-      getter_AddRefs(mTimer), this, delay, nsITimer::TYPE_ONE_SHOT,
-      mDocument->EventTargetFor(TaskCategory::Other));
+  return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, delay,
+                                 nsITimer::TYPE_ONE_SHOT,
+                                 GetMainThreadSerialEventTarget());
 }
 
 nsresult nsPagePrintTimer::StartWatchDogTimer() {
@@ -66,9 +66,9 @@ nsresult nsPagePrintTimer::StartWatchDogTimer() {
   }
   // Instead of just doing one timer for a long period do multiple so we
   // can check if the user cancelled the printing.
-  return NS_NewTimerWithCallback(
-      getter_AddRefs(mWatchDogTimer), this, WATCH_DOG_INTERVAL,
-      nsITimer::TYPE_ONE_SHOT, mDocument->EventTargetFor(TaskCategory::Other));
+  return NS_NewTimerWithCallback(getter_AddRefs(mWatchDogTimer), this,
+                                 WATCH_DOG_INTERVAL, nsITimer::TYPE_ONE_SHOT,
+                                 GetMainThreadSerialEventTarget());
 }
 
 void nsPagePrintTimer::StopWatchDogTimer() {
@@ -163,7 +163,7 @@ nsPagePrintTimer::Notify(nsITimer* timer) {
   if (donePrePrint && !mWaitingForRemotePrint) {
     StopWatchDogTimer();
     // Pass nullptr here since name already was set in constructor.
-    mDocument->Dispatch(TaskCategory::Other, do_AddRef(this));
+    mDocument->Dispatch(do_AddRef(this));
   } else {
     // Start the watch dog if we're waiting for preprint to ensure that if any
     // mozPrintCallbacks take to long we error out.
@@ -190,8 +190,7 @@ void nsPagePrintTimer::RemotePrintFinished() {
     mDone = mPrintJob->DonePrintingSheets(mPrintObj, NS_OK);
   }
 
-  mWaitingForRemotePrint->SetTarget(
-      mDocument->EventTargetFor(mozilla::TaskCategory::Other));
+  mWaitingForRemotePrint->SetTarget(GetMainThreadSerialEventTarget());
   mozilla::Unused << mWaitingForRemotePrint->InitWithCallback(
       this, 0, nsITimer::TYPE_ONE_SHOT);
 }

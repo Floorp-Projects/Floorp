@@ -29,10 +29,8 @@ class GMPTestMonitor {
 
  public:
   void SetFinished() {
-    mozilla::SchedulerGroup::Dispatch(mozilla::TaskCategory::Other,
-                                      mozilla::NewNonOwningRunnableMethod(
-                                          "GMPTestMonitor::MarkFinished", this,
-                                          &GMPTestMonitor::MarkFinished));
+    mozilla::SchedulerGroup::Dispatch(mozilla::NewNonOwningRunnableMethod(
+        "GMPTestMonitor::MarkFinished", this, &GMPTestMonitor::MarkFinished));
   }
 
  private:

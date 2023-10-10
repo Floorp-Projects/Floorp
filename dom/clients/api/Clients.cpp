@@ -73,9 +73,7 @@ already_AddRefed<Promise> Clients::Get(const nsAString& aClientID,
   }
 
   const PrincipalInfo& principalInfo = workerPrivate->GetPrincipalInfo();
-  nsCOMPtr<nsISerialEventTarget> target =
-      mGlobal->EventTargetFor(TaskCategory::Other);
-
+  nsCOMPtr<nsISerialEventTarget> target = mGlobal->SerialEventTarget();
   RefPtr<ClientOpPromise> innerPromise = ClientManager::GetInfoAndState(
       ClientGetInfoAndStateArgs(id, principalInfo), target);
 
@@ -103,7 +101,7 @@ already_AddRefed<Promise> Clients::Get(const nsAString& aClientID,
                       scope, "ServiceWorkerGetClientStorageError",
                       nsTArray<nsString>());
                 });
-            SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
+            SchedulerGroup::Dispatch(r.forget());
             outerPromise->MaybeResolveWithUndefined();
           },
           [outerPromise, holder](const CopyableErrorResult& aResult) {
@@ -188,7 +186,7 @@ already_AddRefed<Promise> Clients::MatchAll(const ClientQueryOptions& aOptions,
                     scope, "ServiceWorkerGetClientStorageError",
                     nsTArray<nsString>());
               });
-          SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
+          SchedulerGroup::Dispatch(r.forget());
         }
         clientList.Sort(MatchAllComparator());
         outerPromise->MaybeResolve(clientList);

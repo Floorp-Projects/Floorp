@@ -182,7 +182,7 @@ RefPtr<ClientOpPromise> ClientNavigateOpChild::DoNavigate(
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  mSerialEventTarget = window->EventTargetFor(TaskCategory::Other);
+  mSerialEventTarget = GetMainThreadSerialEventTarget();
 
   // In theory we could do the URL work before paying the IPC overhead
   // cost, but in practice its easier to do it here.  The ClientHandle

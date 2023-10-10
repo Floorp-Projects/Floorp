@@ -40,14 +40,12 @@
 #include "mozilla/Result.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/StorageAccessAPIHelper.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UseCounter.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/css/StylePreloadKind.h"
 #include "mozilla/dom/AnimationFrameProvider.h"
-#include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
@@ -533,7 +531,6 @@ class Document : public nsINode,
                  public DocumentOrShadowRoot,
                  public nsSupportsWeakReference,
                  public nsIScriptObjectPrincipal,
-                 public DispatcherTrait,
                  public SupportsWeakPtr {
   friend class DocumentOrShadowRoot;
 
@@ -3745,12 +3742,7 @@ class Document : public nsINode,
   void UnobserveForLastRememberedSize(Element&);
 
   // Dispatch a runnable related to the document.
-  nsresult Dispatch(TaskCategory aCategory,
-                    already_AddRefed<nsIRunnable>&& aRunnable) final;
-
-  nsISerialEventTarget* EventTargetFor(TaskCategory) const override;
-
-  AbstractThread* AbstractMainThreadFor(TaskCategory) override;
+  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const;
 
   // The URLs passed to this function should match what
   // JS::DescribeScriptedCaller() returns, since this API is used to

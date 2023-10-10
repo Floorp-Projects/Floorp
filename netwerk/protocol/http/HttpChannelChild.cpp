@@ -2121,19 +2121,8 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
 // Assigns an nsISerialEventTarget to our IPDL actor so that IPC messages are
 // sent to the correct DocGroup/TabGroup.
 void HttpChannelChild::SetEventTarget() {
-  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
-
-  nsCOMPtr<nsISerialEventTarget> target =
-      nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Network);
-
-  if (!target) {
-    return;
-  }
-
-  {
-    MutexAutoLock lock(mEventTargetMutex);
-    mNeckoTarget = target;
-  }
+  MutexAutoLock lock(mEventTargetMutex);
+  mNeckoTarget = GetMainThreadSerialEventTarget();
 }
 
 already_AddRefed<nsISerialEventTarget> HttpChannelChild::GetNeckoTarget() {

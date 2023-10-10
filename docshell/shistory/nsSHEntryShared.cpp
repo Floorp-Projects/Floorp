@@ -290,20 +290,17 @@ nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
   RefPtr<dom::Document> document = mDocument;
   RefPtr<nsSHEntryShared> self = this;
-  nsresult rv = mDocument->Dispatch(
-      mozilla::TaskCategory::Other,
-      NS_NewRunnableFunction(
-          "nsSHEntryShared::RemoveFromBFCacheAsync",
-          [self, viewer, document]() {
-            if (viewer) {
-              viewer->Destroy();
-            }
+  nsresult rv = mDocument->Dispatch(NS_NewRunnableFunction(
+      "nsSHEntryShared::RemoveFromBFCacheAsync", [self, viewer, document]() {
+        if (viewer) {
+          viewer->Destroy();
+        }
 
-            nsCOMPtr<nsISHistory> shistory = do_QueryReferent(self->mSHistory);
-            if (shistory) {
-              shistory->RemoveDynEntriesForBFCacheEntry(self);
-            }
-          }));
+        nsCOMPtr<nsISHistory> shistory = do_QueryReferent(self->mSHistory);
+        if (shistory) {
+          shistory->RemoveDynEntriesForBFCacheEntry(self);
+        }
+      }));
 
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch RemoveFromBFCacheAsync runnable.");

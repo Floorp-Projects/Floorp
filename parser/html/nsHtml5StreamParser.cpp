@@ -28,7 +28,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_intl.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TextUtils.h"
 
 #include "mozilla/UniquePtrExtensions.h"
@@ -165,8 +164,7 @@ class nsHtml5ExecutorFlusher : public Runnable {
         // Possible early paint pending, reuse the runnable and try to
         // call RunFlushLoop later.
         nsCOMPtr<nsIRunnable> flusher = this;
-        if (NS_SUCCEEDED(
-                doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
+        if (NS_SUCCEEDED(doc->Dispatch(flusher.forget()))) {
           PROFILER_MARKER_UNTYPED("HighPrio blocking parser flushing(1)", DOM);
           return NS_OK;
         }
@@ -1192,16 +1190,8 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
 
   rv = NS_OK;
 
-  mNetworkEventTarget =
-      mExecutor->GetDocument()->EventTargetFor(TaskCategory::Network);
-
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mRequest, &rv));
   if (NS_SUCCEEDED(rv)) {
-    // Non-HTTP channels are bogus enough that we let them work with unlabeled
-    // runnables for now. Asserting for HTTP channels only.
-    MOZ_ASSERT(mNetworkEventTarget || mMode == LOAD_AS_DATA,
-               "How come the network event target is still null?");
-
     nsAutoCString method;
     Unused << httpChannel->GetRequestMethod(method);
     // XXX does Necko have a way to renavigate POST, etc. without hitting
@@ -1226,8 +1216,7 @@ nsresult nsHtml5StreamParser::OnStartRequest(nsIRequest* aRequest) {
       // the request.
       nsCOMPtr<nsIRunnable> runnable =
           new MaybeRunCollector(mExecutor->GetDocument()->GetDocShell());
-      mozilla::SchedulerGroup::Dispatch(
-          mozilla::TaskCategory::GarbageCollection, runnable.forget());
+      mozilla::SchedulerGroup::Dispatch(runnable.forget());
     }
   }
 
@@ -2857,8 +2846,5 @@ void nsHtml5StreamParser::MarkAsBroken(nsresult aRv) {
 
 nsresult nsHtml5StreamParser::DispatchToMain(
     already_AddRefed<nsIRunnable>&& aRunnable) {
-  if (mNetworkEventTarget) {
-    return mNetworkEventTarget->Dispatch(std::move(aRunnable));
-  }
-  return SchedulerGroup::Dispatch(TaskCategory::Network, std::move(aRunnable));
+  return SchedulerGroup::Dispatch(std::move(aRunnable));
 }

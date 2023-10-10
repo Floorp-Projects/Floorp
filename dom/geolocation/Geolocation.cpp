@@ -82,7 +82,7 @@ class nsGeolocationRequest final : public ContentPermissionRequestBase,
   nsGeolocationRequest(Geolocation* aLocator, GeoPositionCallback aCallback,
                        GeoPositionErrorCallback aErrorCallback,
                        UniquePtr<PositionOptions>&& aOptions,
-                       nsIEventTarget* aMainThreadTarget,
+                       nsIEventTarget* aMainThreadSerialEventTarget,
                        bool aWatchPositionRequest = false,
                        int32_t aWatchId = 0);
 
@@ -145,7 +145,7 @@ class nsGeolocationRequest final : public ContentPermissionRequestBase,
 
   int32_t mWatchId;
   bool mShutdown;
-  nsCOMPtr<nsIEventTarget> mMainThreadTarget;
+  nsCOMPtr<nsIEventTarget> mMainThreadSerialEventTarget;
 };
 
 static UniquePtr<PositionOptions> CreatePositionOptionsCopy(
@@ -195,8 +195,9 @@ static nsPIDOMWindowInner* ConvertWeakReferenceToWindow(
 nsGeolocationRequest::nsGeolocationRequest(
     Geolocation* aLocator, GeoPositionCallback aCallback,
     GeoPositionErrorCallback aErrorCallback,
-    UniquePtr<PositionOptions>&& aOptions, nsIEventTarget* aMainThreadTarget,
-    bool aWatchPositionRequest, int32_t aWatchId)
+    UniquePtr<PositionOptions>&& aOptions,
+    nsIEventTarget* aMainThreadSerialEventTarget, bool aWatchPositionRequest,
+    int32_t aWatchId)
     : ContentPermissionRequestBase(
           aLocator->GetPrincipal(),
           ConvertWeakReferenceToWindow(aLocator->GetOwner()), "geo"_ns,
@@ -208,11 +209,7 @@ nsGeolocationRequest::nsGeolocationRequest(
       mLocator(aLocator),
       mWatchId(aWatchId),
       mShutdown(false),
-      mMainThreadTarget(aMainThreadTarget) {
-  if (nsCOMPtr<nsPIDOMWindowInner> win =
-          do_QueryReferent(mLocator->GetOwner())) {
-  }
-}
+      mMainThreadSerialEventTarget(aMainThreadSerialEventTarget) {}
 
 nsGeolocationRequest::~nsGeolocationRequest() { StopTimeoutTimer(); }
 
@@ -418,7 +415,7 @@ nsIPrincipal* nsGeolocationRequest::GetPrincipal() {
 NS_IMETHODIMP
 nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition) {
   nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(aPosition, this);
-  mMainThreadTarget->Dispatch(ev.forget());
+  mMainThreadSerialEventTarget->Dispatch(ev.forget());
   return NS_OK;
 }
 
@@ -1012,15 +1009,6 @@ void Geolocation::GetCurrentPosition(PositionCallback& aCallback,
   }
 }
 
-static nsIEventTarget* MainThreadTarget(Geolocation* geo) {
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryReferent(geo->GetOwner());
-  if (!window) {
-    return GetMainThreadSerialEventTarget();
-  }
-  return nsGlobalWindowInner::Cast(window)->EventTargetFor(
-      mozilla::TaskCategory::Other);
-}
-
 nsresult Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                                          GeoPositionErrorCallback errorCallback,
                                          UniquePtr<PositionOptions>&& options,
@@ -1039,7 +1027,7 @@ nsresult Geolocation::GetCurrentPosition(GeoPositionCallback callback,
 
   // After this we hand over ownership of options to our nsGeolocationRequest.
 
-  nsIEventTarget* target = MainThreadTarget(this);
+  nsIEventTarget* target = GetMainThreadSerialEventTarget();
   RefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(
       this, std::move(callback), std::move(errorCallback), std::move(options),
       target);
@@ -1115,7 +1103,7 @@ int32_t Geolocation::WatchPosition(GeoPositionCallback aCallback,
   // The watch ID:
   int32_t watchId = mLastWatchId++;
 
-  nsIEventTarget* target = MainThreadTarget(this);
+  nsIEventTarget* target = GetMainThreadSerialEventTarget();
   RefPtr<nsGeolocationRequest> request = new nsGeolocationRequest(
       this, std::move(aCallback), std::move(aErrorCallback),
       std::move(aOptions), target, true, watchId);
@@ -1209,7 +1197,7 @@ void Geolocation::NotifyAllowedRequest(nsGeolocationRequest* aRequest) {
 }
 
 bool Geolocation::RegisterRequestWithPrompt(nsGeolocationRequest* request) {
-  nsIEventTarget* target = MainThreadTarget(this);
+  nsIEventTarget* target = GetMainThreadSerialEventTarget();
   ContentPermissionRequestBase::PromptResult pr = request->CheckPromptPrefs();
   if (pr == ContentPermissionRequestBase::PromptResult::Granted) {
     request->RequestDelayedTask(target,

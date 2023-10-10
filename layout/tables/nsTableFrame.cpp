@@ -4507,8 +4507,7 @@ bool nsTableFrame::BCRecalcNeeded(ComputedStyle* aOldComputedStyle,
     // so it stores in the cellmap where a new border segment starts and this
     // introduces a unwanted cellmap data dependence on color
     nsCOMPtr<nsIRunnable> evt = new nsDelayedCalcBCBorders(this);
-    nsresult rv =
-        GetContent()->OwnerDoc()->Dispatch(TaskCategory::Other, evt.forget());
+    nsresult rv = GetContent()->OwnerDoc()->Dispatch(evt.forget());
     return NS_SUCCEEDED(rv);
   }
   return false;

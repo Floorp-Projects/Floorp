@@ -418,8 +418,7 @@ void InterceptedHttpChannel::MaybeCallStatusAndProgress() {
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
         "InterceptedHttpChannel::MaybeCallStatusAndProgress", this,
         &InterceptedHttpChannel::MaybeCallStatusAndProgress);
-    MOZ_ALWAYS_SUCCEEDS(
-        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
     return;
   }

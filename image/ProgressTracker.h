@@ -232,22 +232,6 @@ class ProgressTracker : public mozilla::SupportsWeakPtr {
   // scope.
   Image* mImage;
 
-  // mEventTarget is the current, best effort event target to dispatch
-  // notifications to from the decoder threads. It will change as observers are
-  // added and removed (see mObserversWithTargets).
-  NotNull<nsCOMPtr<nsIEventTarget>> mEventTarget;
-
-  // How many observers have been added that have an explicit event target.
-  // When the first observer is added with an explicit event target, we will
-  // default to that as long as all observers use the same target. If a new
-  // observer is added which has a different event target, we will switch to
-  // using the unlabeled main thread event target which is safe for all
-  // observers. If all observers with explicit event targets are removed, we
-  // will revert back to the initial event target (for SystemGroup). An
-  // observer without an explicit event target does not care what context it
-  // is dispatched in, and thus does not impact the state.
-  uint32_t mObserversWithTargets;
-
   // Hashtable of observers attached to the image. Each observer represents a
   // consumer using the image. Main thread only.
   CopyOnWrite<ObserverTable> mObservers;

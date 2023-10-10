@@ -449,12 +449,7 @@ void GIOChannelChild::SetupNeckoTarget() {
   if (mNeckoTarget) {
     return;
   }
-  nsCOMPtr<nsILoadInfo> loadInfo = LoadInfo();
-  mNeckoTarget =
-      nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Network);
-  if (!mNeckoTarget) {
-    return;
-  }
+  mNeckoTarget = GetMainThreadSerialEventTarget();
 }
 
 }  // namespace net

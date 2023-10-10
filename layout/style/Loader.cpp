@@ -1568,10 +1568,9 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
   // Note that load is already blocked from
   // IncrementOngoingLoadCountAndMaybeBlockOnload(), and will be unblocked from
   // SheetFinishedParsingAsync which will end up in NotifyObservers as needed.
-  nsCOMPtr<nsISerialEventTarget> target = DispatchTarget();
   sheet->ParseSheet(*this, aBytes, aLoadData)
       ->Then(
-          target, __func__,
+          GetMainThreadSerialEventTarget(), __func__,
           [loadData = RefPtr<SheetLoadData>(&aLoadData)](bool aDummy) {
             MOZ_ASSERT(NS_IsMainThread());
             loadData->SheetFinishedParsingAsync();
@@ -2286,20 +2285,6 @@ void Loader::UnblockOnload(bool aFireSync) {
   if (mDocument) {
     mDocument->UnblockOnload(aFireSync);
   }
-}
-
-already_AddRefed<nsISerialEventTarget> Loader::DispatchTarget() {
-  nsCOMPtr<nsISerialEventTarget> target;
-  if (mDocument) {
-    // If you change this, you may want to change StyleSheet::Replace
-    target = mDocument->EventTargetFor(TaskCategory::Other);
-  } else if (mDocGroup) {
-    target = mDocGroup->EventTargetFor(TaskCategory::Other);
-  } else {
-    target = GetMainThreadSerialEventTarget();
-  }
-
-  return target.forget();
 }
 
 }  // namespace css

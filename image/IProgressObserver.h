@@ -43,10 +43,6 @@ class IProgressObserver : public SupportsWeakPtr {
   virtual void MarkPendingNotify() = 0;
   virtual void ClearPendingNotify() = 0;
 
-  virtual already_AddRefed<nsIEventTarget> GetEventTarget() const {
-    return nullptr;
-  }
-
  protected:
   virtual ~IProgressObserver() = default;
 };

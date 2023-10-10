@@ -5,27 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/SchedulerGroup.h"
-
-#include <utility>
-
-#include "jsfriendapi.h"
-#include "mozilla/Atomics.h"
-#include "mozilla/Telemetry.h"
-#include "mozilla/Unused.h"
-#include "mozilla/dom/DocGroup.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "nsINamed.h"
-#include "nsQueryObject.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 /* static */
-nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
-                                  already_AddRefed<nsIRunnable>&& aRunnable) {
+nsresult SchedulerGroup::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
   if (NS_IsMainThread()) {
     return NS_DispatchToCurrentThread(std::move(aRunnable));
-  } else {
-    return NS_DispatchToMainThread(std::move(aRunnable));
   }
+  return NS_DispatchToMainThread(std::move(aRunnable));
 }
+
+}  // namespace mozilla

@@ -98,7 +98,7 @@ ThreadedDriver::~ThreadedDriver() {
   if (mThread) {
     nsCOMPtr<nsIRunnable> event =
         new MediaTrackGraphShutdownThreadRunnable(mThread.forget());
-    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+    SchedulerGroup::Dispatch(event.forget());
   }
 }
 

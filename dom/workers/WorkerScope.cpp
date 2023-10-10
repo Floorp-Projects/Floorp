@@ -36,7 +36,6 @@
 #include "mozilla/Result.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
@@ -338,13 +337,12 @@ void WorkerGlobalScopeBase::Control(
 }
 
 nsresult WorkerGlobalScopeBase::Dispatch(
-    TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
-  return EventTargetFor(aCategory)->Dispatch(std::move(aRunnable),
-                                             NS_DISPATCH_NORMAL);
+    already_AddRefed<nsIRunnable>&& aRunnable) const {
+  return SerialEventTarget()->Dispatch(std::move(aRunnable),
+                                       NS_DISPATCH_NORMAL);
 }
 
-nsISerialEventTarget* WorkerGlobalScopeBase::EventTargetFor(
-    TaskCategory) const {
+nsISerialEventTarget* WorkerGlobalScopeBase::SerialEventTarget() const {
   AssertIsOnWorkerThread();
   return mSerialEventTarget;
 }

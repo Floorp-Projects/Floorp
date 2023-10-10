@@ -1373,29 +1373,21 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
   }
 }
 
-nsresult nsDocShell::Dispatch(TaskCategory aCategory,
-                              already_AddRefed<nsIRunnable>&& aRunnable) {
+nsresult nsDocShell::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  nsCOMPtr<nsPIDOMWindowOuter> win = GetWindow();
-  if (NS_WARN_IF(!win)) {
+  if (NS_WARN_IF(!GetWindow())) {
     // Window should only be unavailable after destroyed.
     MOZ_ASSERT(mIsBeingDestroyed);
     return NS_ERROR_FAILURE;
   }
-
-  if (win->GetDocGroup()) {
-    return win->GetDocGroup()->Dispatch(aCategory, runnable.forget());
-  }
-
-  return SchedulerGroup::Dispatch(aCategory, runnable.forget());
+  return SchedulerGroup::Dispatch(runnable.forget());
 }
 
 NS_IMETHODIMP
 nsDocShell::DispatchLocationChangeEvent() {
-  return Dispatch(
-      TaskCategory::Other,
-      NewRunnableMethod("nsDocShell::FireDummyOnLocationChange", this,
-                        &nsDocShell::FireDummyOnLocationChange));
+  return Dispatch(NewRunnableMethod("nsDocShell::FireDummyOnLocationChange",
+                                    this,
+                                    &nsDocShell::FireDummyOnLocationChange));
 }
 
 NS_IMETHODIMP
@@ -2579,7 +2571,7 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
   }
 
   mInitialClientSource = ClientManager::CreateSource(
-      ClientType::Window, win->EventTargetFor(TaskCategory::Other), principal);
+      ClientType::Window, GetMainThreadSerialEventTarget(), principal);
   MOZ_DIAGNOSTIC_ASSERT(mInitialClientSource);
 
   // Mark the initial client as execution ready, but owned by the docshell.
@@ -7262,7 +7254,7 @@ nsresult nsDocShell::RestorePresentation(nsISHEntry* aSHEntry,
   mRestorePresentationEvent.Revoke();
 
   RefPtr<RestorePresentationEvent> evt = new RestorePresentationEvent(this);
-  nsresult rv = Dispatch(TaskCategory::Other, do_AddRef(evt));
+  nsresult rv = Dispatch(do_AddRef(evt));
   if (NS_SUCCEEDED(rv)) {
     mRestorePresentationEvent = evt.get();
     // The rest of the restore processing will happen on our event
@@ -9350,7 +9342,7 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
 
       // Do this asynchronously
       nsCOMPtr<nsIRunnable> ev = new InternalLoadEvent(this, aLoadState);
-      return Dispatch(TaskCategory::Other, ev.forget());
+      return Dispatch(ev.forget());
     }
 
     // Just ignore this load attempt
@@ -10756,13 +10748,13 @@ nsresult nsDocShell::OpenInitializedChannel(nsIChannel* aChannel,
     // When using DocumentChannel, all redirect handling is done in the parent,
     // so we just need the child variant to watch for the internal redirect
     // to the final channel.
-    rv = AddClientChannelHelperInChild(
-        aChannel, win->EventTargetFor(TaskCategory::Other));
+    rv = AddClientChannelHelperInChild(aChannel,
+                                       GetMainThreadSerialEventTarget());
     docChannel->SetInitialClientInfo(GetInitialClientInfo());
   } else {
     rv = AddClientChannelHelper(aChannel, std::move(noReservedClient),
                                 GetInitialClientInfo(),
-                                win->EventTargetFor(TaskCategory::Other));
+                                GetMainThreadSerialEventTarget());
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -10807,8 +10799,7 @@ nsresult nsDocShell::OpenRedirectedChannel(nsDocShellLoadState* aLoadState) {
 
   // If we did a process switch, then we should have an existing allocated
   // ClientInfo, so we just need to allocate a corresponding ClientSource.
-  CreateReservedSourceIfNeeded(channel,
-                               win->EventTargetFor(TaskCategory::Other));
+  CreateReservedSourceIfNeeded(channel, GetMainThreadSerialEventTarget());
 
   RefPtr<nsDocumentOpenInfo> loader =
       new nsDocumentOpenInfo(this, nsIURILoader::DONT_RETARGET, nullptr);
@@ -12913,7 +12904,7 @@ nsresult nsDocShell::OnLinkClick(
   nsCOMPtr<nsIRunnable> ev =
       new OnLinkClickEvent(this, aContent, loadState, noOpenerImplied,
                            aIsTrusted, aTriggeringPrincipal);
-  return Dispatch(TaskCategory::UI, ev.forget());
+  return Dispatch(ev.forget());
 }
 
 bool nsDocShell::ShouldOpenInBlankTarget(const nsAString& aOriginalTarget,

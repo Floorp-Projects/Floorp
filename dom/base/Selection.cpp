@@ -382,9 +382,7 @@ class AutoScroller final : public nsITimerCallback, public nsINamed {
     mContent = PresShell::GetCapturingContent();
 
     if (!mTimer) {
-      mTimer = NS_NewTimer(
-          mPresContext->Document()->EventTargetFor(TaskCategory::Other));
-
+      mTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
       if (!mTimer) {
         return NS_ERROR_OUT_OF_MEMORY;
       }

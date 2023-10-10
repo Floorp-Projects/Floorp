@@ -16,7 +16,6 @@
 #include "mozilla/SMILTimeContainer.h"
 #include "mozilla/SMILTimeValue.h"
 #include "mozilla/SMILTimeValueSpec.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsAttrValueInlines.h"
@@ -2125,7 +2124,7 @@ void SMILTimedElement::FireTimeEventAsync(EventMessage aMsg, int32_t aDetail) {
 
   nsCOMPtr<nsIRunnable> event =
       new AsyncTimeEventRunner(mAnimationElement, aMsg, aDetail);
-  mAnimationElement->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
+  mAnimationElement->OwnerDoc()->Dispatch(event.forget());
 }
 
 const SMILInstanceTime* SMILTimedElement::GetEffectiveBeginInstance() const {

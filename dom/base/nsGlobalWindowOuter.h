@@ -983,14 +983,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   // Dispatch a runnable related to the global.
-  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
-                            already_AddRefed<nsIRunnable>&& aRunnable) override;
-
-  virtual nsISerialEventTarget* EventTargetFor(
-      mozilla::TaskCategory aCategory) const override;
-
-  virtual mozilla::AbstractThread* AbstractMainThreadFor(
-      mozilla::TaskCategory aCategory) override;
+  nsresult Dispatch(already_AddRefed<nsIRunnable>&&) const final;
+  nsISerialEventTarget* SerialEventTarget() const final;
 
  protected:
   nsresult ProcessWidgetFullscreenRequest(FullscreenReason aReason,

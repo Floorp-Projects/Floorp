@@ -280,7 +280,7 @@ already_AddRefed<Promise> Blob::ConsumeBody(
     MOZ_ASSERT(workerPrivate);
     mainThreadEventTarget = workerPrivate->MainThreadEventTarget();
   } else {
-    mainThreadEventTarget = mGlobal->EventTargetFor(TaskCategory::Other);
+    mainThreadEventTarget = GetMainThreadSerialEventTarget();
   }
 
   MOZ_ASSERT(mainThreadEventTarget);

@@ -69,7 +69,7 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
         "dom::WebAudioUtils::LogToDeveloperConsole",
         [aWindowID, aKey] { LogToDeveloperConsole(aWindowID, aKey); });
-    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
+    SchedulerGroup::Dispatch(task.forget());
     return;
   }
 

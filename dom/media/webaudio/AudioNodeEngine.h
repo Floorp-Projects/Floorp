@@ -382,9 +382,6 @@ class AudioNodeEngine {
   const char* const mNodeType;
   const uint16_t mInputCount;
   const uint16_t mOutputCount;
-
- protected:
-  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 }  // namespace mozilla
