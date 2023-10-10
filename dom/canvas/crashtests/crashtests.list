@@ -66,3 +66,4 @@ pref(gfx.offscreencanvas.enabled,true) load 1769878.html
 pref(gfx.offscreencanvas.enabled,true) load 1771007-1.html
 pref(dom.webgpu.enabled,true) load 1816140.html
 load 1849704-1.html
+load 1857986.html
