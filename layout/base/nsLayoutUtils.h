@@ -2964,10 +2964,8 @@ class nsLayoutUtils {
 
   static nsRect ComputeGeometryBox(nsIFrame*, StyleGeometryBox);
 
-  static nsRect ComputeGeometryBox(nsIFrame*,
-                                   const mozilla::StyleShapeGeometryBox&);
-
-  static nsRect ComputeGeometryBox(nsIFrame*, const mozilla::StyleShapeBox&);
+  static nsRect ComputeClipPathGeometryBox(
+      nsIFrame*, const mozilla::StyleShapeGeometryBox&);
 
   static nsPoint ComputeOffsetToUserSpace(nsDisplayListBuilder* aBuilder,
                                           nsIFrame* aFrame);

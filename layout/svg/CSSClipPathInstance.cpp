@@ -93,13 +93,9 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
   nscoord appUnitsPerDevPixel =
       mTargetFrame->PresContext()->AppUnitsPerDevPixel();
 
-  nsRect r;
-  if (mClipPathStyle.IsBox()) {
-    r = nsLayoutUtils::ComputeGeometryBox(mTargetFrame, mClipPathStyle.AsBox());
-  } else {
-    r = nsLayoutUtils::ComputeGeometryBox(mTargetFrame,
-                                          mClipPathStyle.AsShape()._1);
-  }
+  nsRect r = nsLayoutUtils::ComputeClipPathGeometryBox(
+      mTargetFrame, mClipPathStyle.IsBox() ? mClipPathStyle.AsBox()
+                                           : mClipPathStyle.AsShape()._1);
 
   gfxRect rr(r.x, r.y, r.width, r.height);
   rr.Scale(1.0 / AppUnitsPerCSSPixel());
