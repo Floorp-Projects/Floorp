@@ -586,6 +586,7 @@ class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
 };
 
 bool PresShell::sDisableNonTestMouseEvents = false;
+int16_t PresShell::sMouseButtons = MouseButtonsFlag::eNoButtons;
 
 LazyLogModule PresShell::gLog("PresShell");
 
@@ -5847,6 +5848,7 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
                          WidgetMouseEvent::eSynthesized);
   event.mRefPoint =
       LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
+  event.mButtons = PresShell::sMouseButtons;
   // XXX set event.mModifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
@@ -8725,6 +8727,9 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
           eventTarget, presContext, browserParent, aEvent->AsCompositionEvent(),
           aEventStatus, eventCBPtr);
     } else {
+      if (aEvent->mClass == eMouseEventClass) {
+        PresShell::sMouseButtons = aEvent->AsMouseEvent()->mButtons;
+      }
       RefPtr<nsPresContext> presContext = GetPresContext();
       EventDispatcher::Dispatch(eventTarget, presContext, aEvent, nullptr,
                                 aEventStatus, eventCBPtr);

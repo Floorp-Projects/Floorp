@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/WritingModes.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "nsCommandParams.h"
 #include "nsContentUtils.h"
@@ -645,6 +646,25 @@ Modifier WidgetInputEvent::AccelModifier() {
     }
   }
   return sAccelModifier;
+}
+
+/******************************************************************************
+ * mozilla::WidgetMouseEventBase (MouseEvents.h)
+ ******************************************************************************/
+
+bool WidgetMouseEventBase::InputSourceSupportsHover() const {
+  switch (mInputSource) {
+    case dom::MouseEvent_Binding::MOZ_SOURCE_MOUSE:
+    case dom::MouseEvent_Binding::MOZ_SOURCE_PEN:
+    case dom::MouseEvent_Binding::MOZ_SOURCE_ERASER:
+      return true;
+    case dom::MouseEvent_Binding::MOZ_SOURCE_TOUCH:
+    case dom::MouseEvent_Binding::MOZ_SOURCE_UNKNOWN:
+    case dom::MouseEvent_Binding::MOZ_SOURCE_KEYBOARD:
+    case dom::MouseEvent_Binding::MOZ_SOURCE_CURSOR:
+    default:
+      return false;
+  }
 }
 
 /******************************************************************************
