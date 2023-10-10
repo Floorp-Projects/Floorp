@@ -1624,8 +1624,7 @@ UniquePtr<uint8_t[]> gfxUtils::GetImageBufferWithRandomNoise(
       GetImageBuffer(aSurface, aIsAlphaPremultiplied, outFormat);
 
   nsRFPService::RandomizePixels(
-      aCookieJarSettings, imageBuffer.get(), aSurface->GetSize().width,
-      aSurface->GetSize().height,
+      aCookieJarSettings, imageBuffer.get(),
       aSurface->GetSize().width * aSurface->GetSize().height * 4,
       SurfaceFormat::A8R8G8B8_UINT32);
 
@@ -1673,8 +1672,7 @@ nsresult gfxUtils::GetInputStreamWithRandomNoise(
   }
 
   nsRFPService::RandomizePixels(
-      aCookieJarSettings, imageBuffer.get(), aSurface->GetSize().width,
-      aSurface->GetSize().height,
+      aCookieJarSettings, imageBuffer.get(),
       aSurface->GetSize().width * aSurface->GetSize().height * 4,
       SurfaceFormat::A8R8G8B8_UINT32);
 
