@@ -155,7 +155,7 @@ class AddonsManagerAdapter(
         val summaryView = view.findViewById<TextView>(R.id.add_on_description)
         val ratingView = view.findViewById<RatingBar>(R.id.rating)
         val ratingAccessibleView = view.findViewById<TextView>(R.id.rating_accessibility)
-        val userCountView = view.findViewById<TextView>(R.id.users_count)
+        val reviewCountView = view.findViewById<TextView>(R.id.review_count)
         val addButton = view.findViewById<ImageView>(R.id.add_button)
         val allowedInPrivateBrowsingLabel = view.findViewById<ImageView>(R.id.allowed_in_private_browsing_label)
         val statusErrorView = view.findViewById<View>(R.id.add_on_status_error)
@@ -166,7 +166,7 @@ class AddonsManagerAdapter(
             summaryView,
             ratingView,
             ratingAccessibleView,
-            userCountView,
+            reviewCountView,
             addButton,
             allowedInPrivateBrowsingLabel,
             statusErrorView,
@@ -258,7 +258,7 @@ class AddonsManagerAdapter(
     ) {
         val context = holder.itemView.context
         addon.rating?.let {
-            val userCount = context.getString(R.string.mozac_feature_addons_user_rating_count_2)
+            val reviewCount = context.getString(R.string.mozac_feature_addons_user_rating_count_2)
             val ratingContentDescription =
                 String.format(
                     context.getString(R.string.mozac_feature_addons_rating_content_description),
@@ -269,7 +269,7 @@ class AddonsManagerAdapter(
             // for contentDescription for the TalkBack feature
             holder.ratingAccessibleView.text = ratingContentDescription
             holder.ratingView.rating = it.average
-            holder.userCountView.text = String.format(userCount, getFormattedAmount(it.reviews))
+            holder.reviewCountView.text = String.format(reviewCount, getFormattedAmount(it.reviews))
         }
 
         val addonName = if (addon.translatableName.isNotEmpty()) {

@@ -68,7 +68,22 @@ class AddonDetailsBindingDelegateTest {
         )
         assertEquals("4.30/5", binding.ratingView.contentDescription)
         assertEquals(4.5f, binding.ratingView.rating)
-        assertEquals("100", binding.usersCount.text)
+        assertEquals("100", binding.reviewCount.text)
+    }
+
+    @Test
+    fun `bind addons rating with review url`() {
+        detailsBindingDelegate.bind(
+            baseAddon.copy(
+                rating = Addon.Rating(average = 4.3f, reviews = 100),
+                ratingUrl = "https://example.org/",
+            ),
+        )
+        assertEquals("100", binding.reviewCount.text)
+
+        binding.reviewCount.performClick()
+
+        verify { interactor.openWebsite(Uri.parse("https://example.org/")) }
     }
 
     @Test

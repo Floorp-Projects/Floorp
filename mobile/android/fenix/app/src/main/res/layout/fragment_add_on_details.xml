@@ -173,14 +173,14 @@
                 android:isIndicator="true"
                 android:numStars="5"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/users_count"
+                app:layout_constraintEnd_toStartOf="@+id/review_count"
                 app:layout_constraintHorizontal_bias="1"
                 app:layout_constraintHorizontal_chainStyle="packed"
                 app:layout_constraintStart_toEndOf="@+id/rating_label"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/users_count"
+                android:id="@+id/review_count"
                 style="@style/AboutHeaderContentText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

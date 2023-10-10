@@ -267,7 +267,7 @@ class SettingsSubMenuAddonsManagerRobot {
                         hasDescendant(withText("uBlock Origin")),
                         hasDescendant(withText("Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.")),
                         hasDescendant(withId(R.id.rating)),
-                        hasDescendant(withId(R.id.users_count)),
+                        hasDescendant(withId(R.id.review_count)),
                     ),
                 ),
                 hasDescendant(withId(R.id.add_button)),

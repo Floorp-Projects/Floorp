@@ -430,6 +430,7 @@ internal fun JSONObject.toAddon(language: String? = null): Addon {
             iconUrl = getSafeString("icon_url"),
             siteUrl = getSafeString("url"),
             rating = getRating(),
+            ratingUrl = getSafeString("ratings_url"),
             defaultLocale = (
                 if (!safeLanguage.isNullOrEmpty() && isLanguageInTranslations) {
                     safeLanguage

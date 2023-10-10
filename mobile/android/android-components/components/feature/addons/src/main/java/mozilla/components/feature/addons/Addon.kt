@@ -44,7 +44,7 @@ val logger = Logger("Addon")
  * @property installedState Holds the state of the installed web extension for this add-on. Null, if
  * the [Addon] is not installed.
  * @property defaultLocale Indicates which locale will be always available to display translatable fields.
- * @property reviewUrl The link to the review page for this [Addon].
+ * @property ratingUrl The link to the ratings page (user reviews) for this [Addon].
  */
 @SuppressLint("ParcelCreator")
 @Parcelize
@@ -64,7 +64,7 @@ data class Addon(
     val updatedAt: String = "",
     val installedState: InstalledState? = null,
     val defaultLocale: String = DEFAULT_LOCALE,
-    val reviewUrl: String = "",
+    val ratingUrl: String = "",
 ) : Parcelable {
     /**
      * Represents an add-on author.
@@ -297,7 +297,7 @@ data class Addon(
             val averageRating = metadata?.averageRating ?: 0f
             val reviewCount = metadata?.reviewCount ?: 0
             val siteUrl = metadata?.homePageUrl.orEmpty()
-            val reviewUrl = metadata?.reviewUrl.orEmpty()
+            val ratingUrl = metadata?.reviewUrl.orEmpty()
             val developerName = metadata?.developerName.orEmpty()
             val author = if (developerName.isNotBlank()) {
                 Author(name = developerName, url = metadata?.developerUrl.orEmpty())
@@ -319,7 +319,7 @@ data class Addon(
                 // re-use description...
                 translatableSummary = mapOf(DEFAULT_LOCALE to description),
                 updatedAt = fromMetadataToAddonDate(metadata?.updateDate.orEmpty()),
-                reviewUrl = reviewUrl,
+                ratingUrl = ratingUrl,
                 installedState = installedState,
             )
         }

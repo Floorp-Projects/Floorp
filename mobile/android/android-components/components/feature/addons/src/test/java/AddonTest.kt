@@ -372,7 +372,7 @@ class AddonTest {
         whenever(metadata.homePageUrl).thenReturn("some-url")
         whenever(metadata.downloadUrl).thenReturn("some-download-url")
         whenever(metadata.updateDate).thenReturn("1970-01-01T00:00:00Z")
-        whenever(metadata.reviewUrl).thenReturn("reviewUrl")
+        whenever(metadata.reviewUrl).thenReturn("some-review-url")
         whenever(metadata.reviewCount).thenReturn(0)
         whenever(metadata.averageRating).thenReturn(0f)
         val addon = Addon.newFromWebExtension(extension)
@@ -388,7 +388,7 @@ class AddonTest {
         assertEquals("developer-name", addon.author?.name)
         assertEquals("developer-url", addon.author?.url)
         assertEquals("some-download-url", addon.downloadUrl)
-        assertEquals("reviewUrl", addon.reviewUrl)
+        assertEquals("some-review-url", addon.ratingUrl)
         assertEquals(0, addon.rating!!.reviews)
     }
 

@@ -205,7 +205,7 @@ class AddonsManagerAdapterTest {
         val titleView: TextView = mock()
         val summaryView: TextView = mock()
         val ratingAccessibleView: TextView = mock()
-        val userCountView: TextView = mock()
+        val reviewCountView: TextView = mock()
         val addButton = ImageView(testContext)
         val view = View(testContext)
         val allowedInPrivateBrowsingLabel = ImageView(testContext)
@@ -217,7 +217,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = ratingAccessibleView,
-            userCountView = userCountView,
+            reviewCountView = reviewCountView,
             addButton = addButton,
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
             statusErrorView = mock(),
@@ -389,7 +389,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = allowedInPrivateBrowsingLabel,
             statusErrorView = mock(),
@@ -641,7 +641,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,
@@ -685,7 +685,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,
@@ -722,7 +722,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,
@@ -766,7 +766,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,
@@ -803,7 +803,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,
@@ -842,7 +842,7 @@ class AddonsManagerAdapterTest {
             summaryView = summaryView,
             ratingView = mock(),
             ratingAccessibleView = mock(),
-            userCountView = mock(),
+            reviewCountView = mock(),
             addButton = mock(),
             allowedInPrivateBrowsingLabel = mock(),
             statusErrorView = statusErrorView,

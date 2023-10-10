@@ -64,7 +64,7 @@ class AddonDetailsActivity : AppCompatActivity() {
     private fun bindRating(addon: Addon) {
         addon.rating?.let {
             val ratingView = findViewById<RatingBar>(R.id.rating_view)
-            val userCountView = findViewById<TextView>(R.id.users_count)
+            val reviewCountView = findViewById<TextView>(R.id.users_count)
 
             val ratingContentDescription = getString(
                 addonsR.string.mozac_feature_addons_rating_content_description,
@@ -72,7 +72,7 @@ class AddonDetailsActivity : AppCompatActivity() {
             ratingView.contentDescription = String.format(ratingContentDescription, it.average)
             ratingView.rating = it.average
 
-            userCountView.text = getFormattedAmount(it.reviews)
+            reviewCountView.text = getFormattedAmount(it.reviews)
         }
     }
 
