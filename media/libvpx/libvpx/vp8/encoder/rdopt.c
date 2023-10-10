@@ -1021,7 +1021,7 @@ static void rd_check_segment(VP8_COMP *cpi, MACROBLOCK *x, BEST_SEG_INFO *bsi,
         BLOCK *c;
         BLOCKD *e;
 
-        /* Is the best so far sufficiently good that we cant justify
+        /* Is the best so far sufficiently good that we can't justify
          * doing a new motion search.
          */
         if (best_label_rd < label_mv_thresh) break;
@@ -1979,7 +1979,7 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
         rd.distortion2 += distortion;
 
         /* If even the 'Y' rd value of split is higher than best so far
-         * then dont bother looking at UV
+         * then don't bother looking at UV
          */
         if (tmp_rd < best_mode.yrd) {
           /* Now work out UV cost and add it in */

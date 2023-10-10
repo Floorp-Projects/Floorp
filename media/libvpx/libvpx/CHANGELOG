@@ -1,3 +1,13 @@
+2023-09-29 v1.13.1 "Ugly Duckling"
+  This release contains two security related fixes. One each for VP8 and VP9.
+
+  - Upgrading:
+    This release is ABI compatible with the previous release.
+
+  - Bug fixes:
+    https://crbug.com/1486441 (CVE-2023-5217)
+    Fix to a crash related to VP9 encoding (#1642)
+
 2023-01-31 v1.13.0 "Ugly Duckling"
   This release includes more Neon and AVX2 optimizations, adds a new codec
   control to set per frame QP, upgrades GoogleTest to v1.12.1, and includes

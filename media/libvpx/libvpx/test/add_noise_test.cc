@@ -32,8 +32,8 @@ typedef std::tuple<double, AddNoiseFunc> AddNoiseTestFPParam;
 class AddNoiseTest : public ::testing::Test,
                      public ::testing::WithParamInterface<AddNoiseTestFPParam> {
  public:
-  virtual void TearDown() { libvpx_test::ClearSystemState(); }
-  virtual ~AddNoiseTest() {}
+  void TearDown() override { libvpx_test::ClearSystemState(); }
+  ~AddNoiseTest() override = default;
 };
 
 double stddev6(char a, char b, char c, char d, char e, char f) {

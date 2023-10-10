@@ -28,17 +28,15 @@ static VPX_FORCE_INLINE void update_qp(__m256i *qp) {
   }
 }
 
-static VPX_FORCE_INLINE void init_qp(const int16_t *zbin_ptr,
-                                     const int16_t *round_ptr,
-                                     const int16_t *quant_ptr,
-                                     const int16_t *dequant_ptr,
-                                     const int16_t *quant_shift_ptr,
-                                     __m256i *qp, int log_scale) {
-  const __m128i zbin = _mm_loadu_si128((const __m128i *)zbin_ptr);
-  const __m128i round = _mm_loadu_si128((const __m128i *)round_ptr);
-  const __m128i quant = _mm_loadu_si128((const __m128i *)quant_ptr);
+static VPX_FORCE_INLINE void init_qp(
+    const struct macroblock_plane *const mb_plane, const int16_t *dequant_ptr,
+    __m256i *qp, int log_scale) {
+  const __m128i zbin = _mm_loadu_si128((const __m128i *)mb_plane->zbin);
+  const __m128i round = _mm_loadu_si128((const __m128i *)mb_plane->round);
+  const __m128i quant = _mm_loadu_si128((const __m128i *)mb_plane->quant);
   const __m128i dequant = _mm_loadu_si128((const __m128i *)dequant_ptr);
-  const __m128i quant_shift = _mm_loadu_si128((const __m128i *)quant_shift_ptr);
+  const __m128i quant_shift =
+      _mm_loadu_si128((const __m128i *)mb_plane->quant_shift);
   init_one_qp(&zbin, &qp[0]);
   init_one_qp(&round, &qp[1]);
   init_one_qp(&quant, &qp[2]);
@@ -136,19 +134,16 @@ static VPX_FORCE_INLINE void quantize(const __m256i *qp,
 }
 
 void vpx_highbd_quantize_b_avx2(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                                const int16_t *zbin_ptr,
-                                const int16_t *round_ptr,
-                                const int16_t *quant_ptr,
-                                const int16_t *quant_shift_ptr,
+                                const struct macroblock_plane *const mb_plane,
                                 tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                                 const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                                const int16_t *scan, const int16_t *iscan) {
+                                const struct ScanOrder *const scan_order) {
   const int step = 8;
   __m256i eob = _mm256_setzero_si256();
   __m256i qp[5];
-  (void)scan;
+  const int16_t *iscan = scan_order->iscan;
 
-  init_qp(zbin_ptr, round_ptr, quant_ptr, dequant_ptr, quant_shift_ptr, qp, 0);
+  init_qp(mb_plane, dequant_ptr, qp, 0);
 
   quantize(qp, coeff_ptr, iscan, qcoeff_ptr, dqcoeff_ptr, &eob);
 
@@ -233,8 +228,7 @@ void vpx_highbd_quantize_b_32x32_avx2(
   __m256i eob = _mm256_setzero_si256();
   __m256i qp[5];
 
-  init_qp(mb_plane->zbin, mb_plane->round, mb_plane->quant, dequant_ptr,
-          mb_plane->quant_shift, qp, 1);
+  init_qp(mb_plane, dequant_ptr, qp, 1);
 
   quantize_b_32x32(qp, coeff_ptr, iscan, qcoeff_ptr, dqcoeff_ptr, &eob);
 

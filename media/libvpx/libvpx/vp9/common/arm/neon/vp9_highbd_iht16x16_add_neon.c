@@ -18,7 +18,7 @@
 #include "vpx_dsp/arm/transpose_neon.h"
 #include "vpx_dsp/inv_txfm.h"
 
-// Use macros to make sure argument lane is passed in as an constant integer.
+// Use macros to make sure argument lane is passed in as a constant integer.
 
 #define vmull_lane_s32_dual(in, c, lane, out)                          \
   do {                                                                 \

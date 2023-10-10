@@ -42,7 +42,7 @@ static int frame_is_boosted(const VP9_COMP *cpi) {
 // Sets a partition size down to which the auto partition code will always
 // search (can go lower), based on the image dimensions. The logic here
 // is that the extent to which ringing artefacts are offensive, depends
-// partly on the screen area that over which they propogate. Propogation is
+// partly on the screen area that over which they propagate. Propagation is
 // limited by transform block size but the screen area take up by a given block
 // size will be larger for a small image format stretched to full screen.
 static BLOCK_SIZE set_partition_min_limit(VP9_COMMON *const cm) {

@@ -360,7 +360,7 @@ typedef struct VP8_COMP {
   /* GF interval chosen when we coded the last GF */
   int current_gf_interval;
 
-  /* Total bits overspent becasue of GF boost (cumulative) */
+  /* Total bits overspent because of GF boost (cumulative) */
   int gf_overspend_bits;
 
   /* Used in the few frames following a GF to recover the extra bits

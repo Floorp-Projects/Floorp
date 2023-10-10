@@ -45,19 +45,19 @@ class ScalePartitionOnePassCbrSvc
   }
 
  protected:
-  virtual ~ScalePartitionOnePassCbrSvc() {}
+  ~ScalePartitionOnePassCbrSvc() override = default;
 
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     speed_setting_ = 7;
   }
 
-  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
     PreEncodeFrameHookSetup(video, encoder);
   }
 
-  virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
+  void FramePktHook(const vpx_codec_cx_pkt_t *pkt) override {
     // Keep track of number of non-reference frames, needed for mismatch check.
     // Non-reference frames are top spatial and temporal layer frames,
     // for TL > 0.
@@ -67,12 +67,12 @@ class ScalePartitionOnePassCbrSvc
       num_nonref_frames_++;
   }
 
-  virtual void MismatchHook(const vpx_image_t * /*img1*/,
-                            const vpx_image_t * /*img2*/) {
+  void MismatchHook(const vpx_image_t * /*img1*/,
+                    const vpx_image_t * /*img2*/) override {
     ++mismatch_nframes_;
   }
 
-  virtual void SetConfig(const int /*num_temporal_layer*/) {}
+  void SetConfig(const int /*num_temporal_layer*/) override {}
 
   unsigned int GetMismatchFrames() const { return mismatch_nframes_; }
   unsigned int GetNonRefFrames() const { return num_nonref_frames_; }
@@ -129,14 +129,14 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
   }
 
  protected:
-  virtual ~SyncFrameOnePassCbrSvc() {}
+  ~SyncFrameOnePassCbrSvc() override = default;
 
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     speed_setting_ = 7;
   }
 
-  virtual bool DoDecode() const {
+  bool DoDecode() const override {
     return current_video_frame_ >= frame_to_start_decode_;
   }
 
@@ -225,8 +225,8 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
     }
   }
 
-  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
     current_video_frame_ = video->frame();
     PreEncodeFrameHookSetup(video, encoder);
     if (video->frame() == 0) {
@@ -265,8 +265,8 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
   }
 
 #if CONFIG_VP9_DECODER
-  virtual void PreDecodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Decoder *decoder) {
+  void PreDecodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Decoder *decoder) override {
     if (video->frame() < frame_to_sync_) {
       if (decode_to_layer_before_sync_ >= 0)
         decoder->Control(VP9_DECODE_SVC_SPATIAL_LAYER,
@@ -284,7 +284,7 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
   }
 #endif
 
-  virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
+  void FramePktHook(const vpx_codec_cx_pkt_t *pkt) override {
     // Keep track of number of non-reference frames, needed for mismatch check.
     // Non-reference frames are top spatial and temporal layer frames,
     // for TL > 0.
@@ -307,8 +307,8 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
     }
   }
 
-  virtual void MismatchHook(const vpx_image_t * /*img1*/,
-                            const vpx_image_t * /*img2*/) {
+  void MismatchHook(const vpx_image_t * /*img1*/,
+                    const vpx_image_t * /*img2*/) override {
     if (current_video_frame_ >= frame_to_sync_) ++mismatch_nframes_;
   }
 
@@ -331,7 +331,7 @@ class SyncFrameOnePassCbrSvc : public OnePassCbrSvc,
   vpx_svc_ref_frame_config_t ref_frame_config_;
 
  private:
-  virtual void SetConfig(const int num_temporal_layer) {
+  void SetConfig(const int num_temporal_layer) override {
     cfg_.rc_buf_initial_sz = 500;
     cfg_.rc_buf_optimal_sz = 500;
     cfg_.rc_buf_sz = 1000;
@@ -657,15 +657,15 @@ class LoopfilterOnePassCbrSvc : public OnePassCbrSvc,
   }
 
  protected:
-  virtual ~LoopfilterOnePassCbrSvc() {}
+  ~LoopfilterOnePassCbrSvc() override = default;
 
-  virtual void SetUp() {
+  void SetUp() override {
     InitializeConfig();
     speed_setting_ = 7;
   }
 
-  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
     PreEncodeFrameHookSetup(video, encoder);
     if (number_temporal_layers_ > 1 || number_spatial_layers_ > 1) {
       // Consider 3 cases:
@@ -694,7 +694,7 @@ class LoopfilterOnePassCbrSvc : public OnePassCbrSvc,
     }
   }
 
-  virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
+  void FramePktHook(const vpx_codec_cx_pkt_t *pkt) override {
     // Keep track of number of non-reference frames, needed for mismatch check.
     // Non-reference frames are top spatial and temporal layer frames,
     // for TL > 0.
@@ -704,12 +704,12 @@ class LoopfilterOnePassCbrSvc : public OnePassCbrSvc,
       num_nonref_frames_++;
   }
 
-  virtual void MismatchHook(const vpx_image_t * /*img1*/,
-                            const vpx_image_t * /*img2*/) {
+  void MismatchHook(const vpx_image_t * /*img1*/,
+                    const vpx_image_t * /*img2*/) override {
     ++mismatch_nframes_;
   }
 
-  virtual void SetConfig(const int /*num_temporal_layer*/) {}
+  void SetConfig(const int /*num_temporal_layer*/) override {}
 
   int GetMismatchFrames() const { return mismatch_nframes_; }
   int GetNonRefFrames() const { return num_nonref_frames_; }

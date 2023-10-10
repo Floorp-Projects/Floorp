@@ -49,7 +49,7 @@ using AvgPredFunc = void (*)(uint8_t *a, const uint8_t *b, int w, int h,
 template <int bitdepth, typename Pixel>
 class AvgPredTest : public ::testing::TestWithParam<AvgPredFunc> {
  public:
-  virtual void SetUp() {
+  void SetUp() override {
     avg_pred_func_ = GetParam();
     rnd_.Reset(ACMRandom::DeterministicSeed());
   }
@@ -81,11 +81,11 @@ void AvgPredTest<bitdepth, Pixel>::TestSizeCombinations() {
         // Only the reference buffer may have a stride not equal to width.
         Buffer<Pixel> ref = Buffer<Pixel>(width, height, ref_padding ? 8 : 0);
         ASSERT_TRUE(ref.Init());
-        Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 16);
+        Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 32);
         ASSERT_TRUE(pred.Init());
-        Buffer<Pixel> avg_ref = Buffer<Pixel>(width, height, 0, 16);
+        Buffer<Pixel> avg_ref = Buffer<Pixel>(width, height, 0, 32);
         ASSERT_TRUE(avg_ref.Init());
-        Buffer<Pixel> avg_chk = Buffer<Pixel>(width, height, 0, 16);
+        Buffer<Pixel> avg_chk = Buffer<Pixel>(width, height, 0, 32);
         ASSERT_TRUE(avg_chk.Init());
         const int bitdepth_mask = (1 << bitdepth) - 1;
         for (int h = 0; h < height; ++h) {
@@ -121,11 +121,11 @@ void AvgPredTest<bitdepth, Pixel>::TestCompareReferenceRandom() {
   const int height = 32;
   Buffer<Pixel> ref = Buffer<Pixel>(width, height, 8);
   ASSERT_TRUE(ref.Init());
-  Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 16);
+  Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 32);
   ASSERT_TRUE(pred.Init());
-  Buffer<Pixel> avg_ref = Buffer<Pixel>(width, height, 0, 16);
+  Buffer<Pixel> avg_ref = Buffer<Pixel>(width, height, 0, 32);
   ASSERT_TRUE(avg_ref.Init());
-  Buffer<Pixel> avg_chk = Buffer<Pixel>(width, height, 0, 16);
+  Buffer<Pixel> avg_chk = Buffer<Pixel>(width, height, 0, 32);
   ASSERT_TRUE(avg_chk.Init());
 
   for (int i = 0; i < 500; ++i) {
@@ -167,9 +167,9 @@ void AvgPredTest<bitdepth, Pixel>::TestSpeed() {
         const int height = 1 << height_pow;
         Buffer<Pixel> ref = Buffer<Pixel>(width, height, ref_padding ? 8 : 0);
         ASSERT_TRUE(ref.Init());
-        Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 16);
+        Buffer<Pixel> pred = Buffer<Pixel>(width, height, 0, 32);
         ASSERT_TRUE(pred.Init());
-        Buffer<Pixel> avg = Buffer<Pixel>(width, height, 0, 16);
+        Buffer<Pixel> avg = Buffer<Pixel>(width, height, 0, 32);
         ASSERT_TRUE(avg.Init());
         const int bitdepth_mask = (1 << bitdepth) - 1;
         for (int h = 0; h < height; ++h) {
@@ -216,6 +216,11 @@ INSTANTIATE_TEST_SUITE_P(C, AvgPredTestLBD,
 INSTANTIATE_TEST_SUITE_P(SSE2, AvgPredTestLBD,
                          ::testing::Values(&vpx_comp_avg_pred_sse2));
 #endif  // HAVE_SSE2
+
+#if HAVE_AVX2
+INSTANTIATE_TEST_SUITE_P(AVX2, AvgPredTestLBD,
+                         ::testing::Values(&vpx_comp_avg_pred_avx2));
+#endif  // HAVE_AVX2
 
 #if HAVE_NEON
 INSTANTIATE_TEST_SUITE_P(NEON, AvgPredTestLBD,

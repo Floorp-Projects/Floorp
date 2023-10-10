@@ -143,7 +143,6 @@ get_frame_type_from_update_type(FRAME_UPDATE_TYPE update_type) {
     default:
       fprintf(stderr, "Unsupported update_type %d\n", update_type);
       abort();
-      return kFrameTypeInter;
   }
 }
 
@@ -183,10 +182,11 @@ static void update_motion_vector_info(
     const MV_REFERENCE_FRAME *in_ref_frame =
         input_motion_vector_info[i].ref_frame;
     output_motion_vector_info[i].mv_count =
-        (in_ref_frame[0] == INTRA_FRAME) ? 0
-                                         : ((in_ref_frame[1] == NONE) ? 1 : 2);
-    if (in_ref_frame[0] == NONE) {
-      fprintf(stderr, "in_ref_frame[0] shouldn't be NONE\n");
+        (in_ref_frame[0] == INTRA_FRAME)
+            ? 0
+            : ((in_ref_frame[1] == NO_REF_FRAME) ? 1 : 2);
+    if (in_ref_frame[0] == NO_REF_FRAME) {
+      fprintf(stderr, "in_ref_frame[0] shouldn't be NO_REF_FRAME\n");
       abort();
     }
     output_motion_vector_info[i].ref_frame[0] =

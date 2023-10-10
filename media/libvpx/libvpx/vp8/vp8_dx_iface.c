@@ -162,7 +162,10 @@ static vpx_codec_err_t vp8_peek_si_internal(const uint8_t *data,
       si->h = (clear[8] | (clear[9] << 8)) & 0x3fff;
 
       /*printf("w=%d, h=%d\n", si->w, si->h);*/
-      if (!(si->h && si->w)) res = VPX_CODEC_CORRUPT_FRAME;
+      if (!(si->h && si->w)) {
+        si->w = si->h = 0;
+        res = VPX_CODEC_CORRUPT_FRAME;
+      }
     } else {
       res = VPX_CODEC_UNSUP_BITSTREAM;
     }
@@ -301,18 +304,26 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
   }
 
   if (!ctx->decoder_init && !ctx->si.is_kf) res = VPX_CODEC_UNSUP_BITSTREAM;
+  if (!res && ctx->decoder_init && w == 0 && h == 0 && ctx->si.h == 0 &&
+      ctx->si.w == 0) {
+    VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
+    assert(pbi != NULL);
+    assert(!pbi->common.error.setjmp);
+    res = VPX_CODEC_CORRUPT_FRAME;
+    vpx_internal_error(&pbi->common.error, res,
+                       "Keyframe / intra-only frame required to reset decoder"
+                       " state");
+  }
 
   if ((ctx->si.h != h) || (ctx->si.w != w)) resolution_change = 1;
 
 #if CONFIG_MULTITHREAD
   if (!res && ctx->restart_threads) {
-    struct frame_buffers *fb = &ctx->yv12_frame_buffers;
     VP8D_COMP *pbi = ctx->yv12_frame_buffers.pbi[0];
     VP8_COMMON *const pc = &pbi->common;
     if (setjmp(pbi->common.error.jmp)) {
       pbi->common.error.setjmp = 0;
-      vp8_remove_decoder_instances(fb);
-      vp8_zero(fb->pbi);
+      vp8_decoder_remove_threads(pbi);
       vpx_clear_system_state();
       return VPX_CODEC_ERROR;
     }
@@ -350,7 +361,14 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
     }
 
     res = vp8_create_decoder_instances(&ctx->yv12_frame_buffers, &oxcf);
-    if (res == VPX_CODEC_OK) ctx->decoder_init = 1;
+    if (res == VPX_CODEC_OK) {
+      ctx->decoder_init = 1;
+    } else {
+      /* on failure clear the cached resolution to ensure a full
+       * reallocation is attempted on resync. */
+      ctx->si.w = 0;
+      ctx->si.h = 0;
+    }
   }
 
   /* Set these even if already initialized.  The caller may have changed the

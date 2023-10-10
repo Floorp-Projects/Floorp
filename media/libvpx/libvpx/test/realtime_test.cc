@@ -26,7 +26,7 @@ class RealtimeTest
       public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   RealtimeTest() : EncoderTest(GET_PARAM(0)), frame_packets_(0) {}
-  ~RealtimeTest() override {}
+  ~RealtimeTest() override = default;
 
   void SetUp() override {
     InitializeConfig();

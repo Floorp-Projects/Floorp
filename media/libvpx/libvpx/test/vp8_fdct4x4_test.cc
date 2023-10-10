@@ -74,7 +74,7 @@ using libvpx_test::ACMRandom;
 
 class FdctTest : public ::testing::TestWithParam<FdctFunc> {
  public:
-  virtual void SetUp() {
+  void SetUp() override {
     fdct_func_ = GetParam();
     rnd_.Reset(ACMRandom::DeterministicSeed());
   }

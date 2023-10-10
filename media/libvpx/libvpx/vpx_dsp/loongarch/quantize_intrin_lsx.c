@@ -11,6 +11,8 @@
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_util/loongson_intrinsics.h"
+#include "vp9/common/vp9_scan.h"
+#include "vp9/encoder/vp9_block.h"
 
 static INLINE __m128i calculate_qcoeff(__m128i coeff, __m128i coeff_abs,
                                        __m128i round, __m128i quant,
@@ -88,15 +90,15 @@ static INLINE int16_t accumulate_eob(__m128i eob) {
 }
 
 #if !CONFIG_VP9_HIGHBITDEPTH
+
 void vpx_quantize_b_lsx(const int16_t *coeff_ptr, intptr_t n_coeffs,
-                        const int16_t *zbin_ptr, const int16_t *round_ptr,
-                        const int16_t *quant_ptr,
-                        const int16_t *quant_shift_ptr, int16_t *qcoeff_ptr,
-                        int16_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                        uint16_t *eob_ptr, const int16_t *scan,
-                        const int16_t *iscan) {
+                        const struct macroblock_plane *const mb_plane,
+                        tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
+                        const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                        const struct ScanOrder *const scan_order) {
   __m128i zero = __lsx_vldi(0);
   int index = 16;
+  const int16_t *iscan = scan_order->iscan;
 
   __m128i zbin, round, quant, dequant, quant_shift;
   __m128i coeff0, coeff1;
@@ -104,13 +106,11 @@ void vpx_quantize_b_lsx(const int16_t *coeff_ptr, intptr_t n_coeffs,
   __m128i cmp_mask0, cmp_mask1;
   __m128i eob, eob0;
 
-  (void)scan;
-
-  zbin = __lsx_vld(zbin_ptr, 0);
-  round = __lsx_vld(round_ptr, 0);
-  quant = __lsx_vld(quant_ptr, 0);
+  zbin = __lsx_vld(mb_plane->zbin, 0);
+  round = __lsx_vld(mb_plane->round, 0);
+  quant = __lsx_vld(mb_plane->quant, 0);
   dequant = __lsx_vld(dequant_ptr, 0);
-  quant_shift = __lsx_vld(quant_shift_ptr, 0);
+  quant_shift = __lsx_vld(mb_plane->quant_shift, 0);
   // Handle one DC and first 15 AC.
   DUP2_ARG2(__lsx_vld, coeff_ptr, 0, coeff_ptr, 16, coeff0, coeff1);
   qcoeff0 = __lsx_vabsd_h(coeff0, zero);
@@ -167,31 +167,27 @@ void vpx_quantize_b_lsx(const int16_t *coeff_ptr, intptr_t n_coeffs,
   *eob_ptr = accumulate_eob(eob);
 }
 
-void vpx_quantize_b_32x32_lsx(const int16_t *coeff_ptr, intptr_t n_coeffs,
-                              const int16_t *zbin_ptr, const int16_t *round_ptr,
-                              const int16_t *quant_ptr,
-                              const int16_t *quant_shift_ptr,
-                              int16_t *qcoeff_ptr, int16_t *dqcoeff_ptr,
+void vpx_quantize_b_32x32_lsx(const tran_low_t *coeff_ptr,
+                              const struct macroblock_plane *const mb_plane,
+                              tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                               const int16_t *dequant_ptr, uint16_t *eob_ptr,
-                              const int16_t *scan, const int16_t *iscan) {
+                              const struct ScanOrder *const scan_order) {
   __m128i zero = __lsx_vldi(0);
   int index;
+  const int16_t *iscan = scan_order->iscan;
 
   __m128i zbin, round, quant, dequant, quant_shift;
   __m128i coeff0, coeff1, qcoeff0, qcoeff1, cmp_mask0, cmp_mask1;
   __m128i eob = zero, eob0;
 
-  (void)scan;
-  (void)n_coeffs;
-
-  zbin = __lsx_vld(zbin_ptr, 0);
+  zbin = __lsx_vld(mb_plane->zbin, 0);
   zbin = __lsx_vsrari_h(zbin, 1);
-  round = __lsx_vld(round_ptr, 0);
+  round = __lsx_vld(mb_plane->round, 0);
   round = __lsx_vsrari_h(round, 1);
 
-  quant = __lsx_vld(quant_ptr, 0);
+  quant = __lsx_vld(mb_plane->quant, 0);
   dequant = __lsx_vld(dequant_ptr, 0);
-  quant_shift = __lsx_vld(quant_shift_ptr, 0);
+  quant_shift = __lsx_vld(mb_plane->quant_shift, 0);
   quant_shift = __lsx_vslli_h(quant_shift, 1);
   // Handle one DC and first 15 AC.
   DUP2_ARG2(__lsx_vld, coeff_ptr, 0, coeff_ptr, 16, coeff0, coeff1);

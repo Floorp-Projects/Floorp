@@ -8,10 +8,15 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <stddef.h>
+
 #include "vp9/encoder/vp9_ext_ratectrl.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/common/vp9_common.h"
 #include "vpx_dsp/psnr.h"
+#include "vpx/vpx_codec.h"
+#include "vpx/vpx_ext_ratectrl.h"
+#include "vpx/vpx_tpl.h"
 
 vpx_codec_err_t vp9_extrc_init(EXT_RATECTRL *ext_ratectrl) {
   if (ext_ratectrl == NULL) {
@@ -92,6 +97,7 @@ static void gen_rc_firstpass_stats(const FIRSTPASS_STATS *stats,
   rc_frame_stats->mv_in_out_count = stats->mv_in_out_count;
   rc_frame_stats->duration = stats->duration;
   rc_frame_stats->count = stats->count;
+  rc_frame_stats->new_mv_count = stats->new_mv_count;
 }
 
 vpx_codec_err_t vp9_extrc_send_firstpass_stats(
@@ -118,6 +124,21 @@ vpx_codec_err_t vp9_extrc_send_firstpass_stats(
   return VPX_CODEC_OK;
 }
 
+vpx_codec_err_t vp9_extrc_send_tpl_stats(EXT_RATECTRL *ext_ratectrl,
+                                         const VpxTplGopStats *tpl_gop_stats) {
+  if (ext_ratectrl == NULL) {
+    return VPX_CODEC_INVALID_PARAM;
+  }
+  if (ext_ratectrl->ready && ext_ratectrl->funcs.send_tpl_gop_stats != NULL) {
+    vpx_rc_status_t rc_status = ext_ratectrl->funcs.send_tpl_gop_stats(
+        ext_ratectrl->model, tpl_gop_stats);
+    if (rc_status == VPX_RC_ERROR) {
+      return VPX_CODEC_ERROR;
+    }
+  }
+  return VPX_CODEC_OK;
+}
+
 static int extrc_get_frame_type(FRAME_UPDATE_TYPE update_type) {
   // TODO(angiebird): Add unit test to make sure this function behaves like
   // get_frame_type_from_update_type()
@@ -131,7 +152,6 @@ static int extrc_get_frame_type(FRAME_UPDATE_TYPE update_type) {
     default:
       fprintf(stderr, "Unsupported update_type %d\n", update_type);
       abort();
-      return 1;
   }
 }
 

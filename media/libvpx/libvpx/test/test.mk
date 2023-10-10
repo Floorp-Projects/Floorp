@@ -7,6 +7,8 @@ LIBVPX_TEST_SRCS-yes += codec_factory.h
 LIBVPX_TEST_SRCS-yes += md5_helper.h
 LIBVPX_TEST_SRCS-yes += register_state_check.h
 LIBVPX_TEST_SRCS-yes += test.mk
+LIBVPX_TEST_SRCS-yes += init_vpx_test.cc
+LIBVPX_TEST_SRCS-yes += init_vpx_test.h
 LIBVPX_TEST_SRCS-yes += test_libvpx.cc
 LIBVPX_TEST_SRCS-yes += test_vectors.cc
 LIBVPX_TEST_SRCS-yes += test_vectors.h
@@ -85,6 +87,7 @@ LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += ../webmdec.cc
 LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += ../webmdec.h
 LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += webm_video_source.h
 LIBVPX_TEST_SRCS-$(CONFIG_VP9_DECODER) += vp9_skip_loopfilter_test.cc
+$(BUILD_PFX)third_party/libwebm/%.cc.o: CXXFLAGS += $(LIBWEBM_CXXFLAGS)
 endif
 
 LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += decode_api_test.cc
@@ -214,6 +217,8 @@ endif
 
 TEST_INTRA_PRED_SPEED_SRCS-yes := test_intra_pred_speed.cc
 TEST_INTRA_PRED_SPEED_SRCS-yes += ../md5_utils.h ../md5_utils.c
+TEST_INTRA_PRED_SPEED_SRCS-yes += init_vpx_test.cc
+TEST_INTRA_PRED_SPEED_SRCS-yes += init_vpx_test.h
 
 RC_INTERFACE_TEST_SRCS-yes := test_rc_interface.cc
 RC_INTERFACE_TEST_SRCS-$(CONFIG_VP9_ENCODER) += vp9_ratectrl_rtc_test.cc

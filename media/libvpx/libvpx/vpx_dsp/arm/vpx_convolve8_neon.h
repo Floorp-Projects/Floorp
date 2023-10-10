@@ -15,10 +15,18 @@
 
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
+#include "vpx_dsp/vpx_filter.h"
 
 #if VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_DOTPROD)
 
-static INLINE int32x4_t convolve8_4_sdot_partial(const int8x16_t samples_lo,
+void vpx_convolve8_2d_horiz_neon_dotprod(const uint8_t *src,
+                                         ptrdiff_t src_stride, uint8_t *dst,
+                                         ptrdiff_t dst_stride,
+                                         const InterpKernel *filter, int x0_q4,
+                                         int x_step_q4, int y0_q4,
+                                         int y_step_q4, int w, int h);
+
+static INLINE int16x4_t convolve8_4_sdot_partial(const int8x16_t samples_lo,
                                                  const int8x16_t samples_hi,
                                                  const int32x4_t correction,
                                                  const int8x8_t filters) {
@@ -29,11 +37,11 @@ static INLINE int32x4_t convolve8_4_sdot_partial(const int8x16_t samples_lo,
   sum = vdotq_lane_s32(correction, samples_lo, filters, 0);
   sum = vdotq_lane_s32(sum, samples_hi, filters, 1);
 
-  /* Narrowing and packing is performed by the caller. */
-  return sum;
+  /* Further narrowing and packing is performed by the caller. */
+  return vqmovn_s32(sum);
 }
 
-static INLINE int32x4_t convolve8_4_sdot(uint8x16_t samples,
+static INLINE int16x4_t convolve8_4_sdot(uint8x16_t samples,
                                          const int8x8_t filters,
                                          const int32x4_t correction,
                                          const uint8x16_t range_limit,
@@ -54,8 +62,8 @@ static INLINE int32x4_t convolve8_4_sdot(uint8x16_t samples,
   sum = vdotq_lane_s32(correction, permuted_samples[0], filters, 0);
   sum = vdotq_lane_s32(sum, permuted_samples[1], filters, 1);
 
-  /* Narrowing and packing is performed by the caller. */
-  return sum;
+  /* Further narrowing and packing is performed by the caller. */
+  return vqmovn_s32(sum);
 }
 
 static INLINE uint8x8_t convolve8_8_sdot_partial(const int8x16_t samples0_lo,
@@ -78,7 +86,7 @@ static INLINE uint8x8_t convolve8_8_sdot_partial(const int8x16_t samples0_lo,
 
   /* Narrow and re-pack. */
   sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
-  return vqrshrun_n_s16(sum, 7);
+  return vqrshrun_n_s16(sum, FILTER_BITS);
 }
 
 static INLINE uint8x8_t convolve8_8_sdot(uint8x16_t samples,
@@ -111,14 +119,20 @@ static INLINE uint8x8_t convolve8_8_sdot(uint8x16_t samples,
 
   /* Narrow and re-pack. */
   sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
-  return vqrshrun_n_s16(sum, 7);
+  return vqrshrun_n_s16(sum, FILTER_BITS);
 }
 
 #endif  // VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_DOTPROD)
 
 #if VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_MATMUL_INT8)
 
-static INLINE int32x4_t convolve8_4_usdot_partial(const uint8x16_t samples_lo,
+void vpx_convolve8_2d_horiz_neon_i8mm(const uint8_t *src, ptrdiff_t src_stride,
+                                      uint8_t *dst, ptrdiff_t dst_stride,
+                                      const InterpKernel *filter, int x0_q4,
+                                      int x_step_q4, int y0_q4, int y_step_q4,
+                                      int w, int h);
+
+static INLINE int16x4_t convolve8_4_usdot_partial(const uint8x16_t samples_lo,
                                                   const uint8x16_t samples_hi,
                                                   const int8x8_t filters) {
   /* Sample permutation is performed by the caller. */
@@ -127,11 +141,11 @@ static INLINE int32x4_t convolve8_4_usdot_partial(const uint8x16_t samples_lo,
   sum = vusdotq_lane_s32(vdupq_n_s32(0), samples_lo, filters, 0);
   sum = vusdotq_lane_s32(sum, samples_hi, filters, 1);
 
-  /* Narrowing and packing is performed by the caller. */
-  return sum;
+  /* Further narrowing and packing is performed by the caller. */
+  return vqmovn_s32(sum);
 }
 
-static INLINE int32x4_t convolve8_4_usdot(uint8x16_t samples,
+static INLINE int16x4_t convolve8_4_usdot(uint8x16_t samples,
                                           const int8x8_t filters,
                                           const uint8x16x2_t permute_tbl) {
   uint8x16_t permuted_samples[2];
@@ -147,8 +161,8 @@ static INLINE int32x4_t convolve8_4_usdot(uint8x16_t samples,
   sum = vusdotq_lane_s32(vdupq_n_s32(0), permuted_samples[0], filters, 0);
   sum = vusdotq_lane_s32(sum, permuted_samples[1], filters, 1);
 
-  /* Narrowing and packing is performed by the caller. */
-  return sum;
+  /* Further narrowing and packing is performed by the caller. */
+  return vqmovn_s32(sum);
 }
 
 static INLINE uint8x8_t convolve8_8_usdot_partial(const uint8x16_t samples0_lo,
@@ -169,7 +183,7 @@ static INLINE uint8x8_t convolve8_8_usdot_partial(const uint8x16_t samples0_lo,
 
   /* Narrow and re-pack. */
   sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
-  return vqrshrun_n_s16(sum, 7);
+  return vqrshrun_n_s16(sum, FILTER_BITS);
 }
 
 static INLINE uint8x8_t convolve8_8_usdot(uint8x16_t samples,
@@ -196,7 +210,7 @@ static INLINE uint8x8_t convolve8_8_usdot(uint8x16_t samples,
 
   /* Narrow and re-pack. */
   sum = vcombine_s16(vqmovn_s32(sum0), vqmovn_s32(sum1));
-  return vqrshrun_n_s16(sum, 7);
+  return vqrshrun_n_s16(sum, FILTER_BITS);
 }
 
 #endif  // VPX_ARCH_AARCH64 && defined(__ARM_FEATURE_MATMUL_INT8)
@@ -238,7 +252,7 @@ static INLINE uint8x8_t convolve8_8(const int16x8_t s0, const int16x8_t s1,
   sum = vmlaq_lane_s16(sum, s7, filters_hi, 3);
   sum = vqaddq_s16(sum, vmulq_lane_s16(s3, filters_lo, 3));
   sum = vqaddq_s16(sum, vmulq_lane_s16(s4, filters_hi, 0));
-  return vqrshrun_n_s16(sum, 7);
+  return vqrshrun_n_s16(sum, FILTER_BITS);
 }
 
 static INLINE uint8x8_t scale_filter_8(const uint8x8_t *const s,

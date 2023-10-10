@@ -1080,7 +1080,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest,
     if (xd->update_mb_segmentation_data) {
       signed char Data;
 
-      vp8_write_bit(bc, xd->mb_segement_abs_delta);
+      vp8_write_bit(bc, xd->mb_segment_abs_delta);
 
       /* For each segmentation feature (Quant and loop filter level) */
       for (i = 0; i < MB_LVL_MAX; ++i) {

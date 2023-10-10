@@ -45,15 +45,6 @@ void vp8_bilinear_predict8x8_sse2(unsigned char *src_ptr, int src_pixels_per_lin
 void vp8_bilinear_predict8x8_ssse3(unsigned char *src_ptr, int src_pixels_per_line, int xoffset, int yoffset, unsigned char *dst_ptr, int dst_pitch);
 RTCD_EXTERN void (*vp8_bilinear_predict8x8)(unsigned char *src_ptr, int src_pixels_per_line, int xoffset, int yoffset, unsigned char *dst_ptr, int dst_pitch);
 
-void vp8_blend_b_c(unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride);
-#define vp8_blend_b vp8_blend_b_c
-
-void vp8_blend_mb_inner_c(unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride);
-#define vp8_blend_mb_inner vp8_blend_mb_inner_c
-
-void vp8_blend_mb_outer_c(unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride);
-#define vp8_blend_mb_outer vp8_blend_mb_outer_c
-
 int vp8_block_error_c(short *coeff, short *dqcoeff);
 int vp8_block_error_sse2(short *coeff, short *dqcoeff);
 #define vp8_block_error vp8_block_error_sse2

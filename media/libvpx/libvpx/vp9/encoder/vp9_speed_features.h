@@ -643,7 +643,7 @@ typedef struct SPEED_FEATURES {
   // Use machine learning based partition search.
   int nonrd_use_ml_partition;
 
-  // Multiplier for base thresold for variance partitioning.
+  // Multiplier for base threshold for variance partitioning.
   int variance_part_thresh_mult;
 
   // Force subpel motion filter to always use SMOOTH_FILTER.

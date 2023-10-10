@@ -127,12 +127,6 @@ specialize qw/vp8_copy_mem8x4 mmx neon dspr2 msa mmi/;
 #
 if (vpx_config("CONFIG_POSTPROC") eq "yes") {
 
-    add_proto qw/void vp8_blend_mb_inner/, "unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride";
-
-    add_proto qw/void vp8_blend_mb_outer/, "unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride";
-
-    add_proto qw/void vp8_blend_b/, "unsigned char *y, unsigned char *u, unsigned char *v, int y_1, int u_1, int v_1, int alpha, int stride";
-
     add_proto qw/void vp8_filter_by_weight16x16/, "unsigned char *src, int src_stride, unsigned char *dst, int dst_stride, int src_weight";
     specialize qw/vp8_filter_by_weight16x16 sse2 msa/;
 
