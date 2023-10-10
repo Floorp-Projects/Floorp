@@ -567,9 +567,10 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsFormSubmission(), aLoadInfo->GetSendCSPViolationEvents(),
       aLoadInfo->GetOriginAttributes(), redirectChainIncludingInternalRedirects,
       redirectChain, aLoadInfo->GetHasInjectedCookieForCookieBannerHandling(),
-      ipcClientInfo, ipcReservedClientInfo, ipcInitialClientInfo, ipcController,
-      aLoadInfo->CorsUnsafeHeaders(), aLoadInfo->GetForcePreflight(),
-      aLoadInfo->GetIsPreflight(), aLoadInfo->GetLoadTriggeredFromExternal(),
+      aLoadInfo->GetWasSchemelessInput(), ipcClientInfo, ipcReservedClientInfo,
+      ipcInitialClientInfo, ipcController, aLoadInfo->CorsUnsafeHeaders(),
+      aLoadInfo->GetForcePreflight(), aLoadInfo->GetIsPreflight(),
+      aLoadInfo->GetLoadTriggeredFromExternal(),
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain(),
@@ -868,7 +869,8 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
       loadInfoArgs.loadingEmbedderPolicy(),
       loadInfoArgs.originTrialCoepCredentiallessEnabledForTopLevel(),
       loadInfoArgs.unstrippedURI(), interceptionInfo,
-      loadInfoArgs.hasInjectedCookieForCookieBannerHandling());
+      loadInfoArgs.hasInjectedCookieForCookieBannerHandling(),
+      loadInfoArgs.wasSchemelessInput());
 
   if (loadInfoArgs.isFromProcessingFrameAttributes()) {
     loadInfo->SetIsFromProcessingFrameAttributes();
