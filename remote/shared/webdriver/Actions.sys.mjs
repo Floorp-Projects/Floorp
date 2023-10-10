@@ -2172,6 +2172,12 @@ class MouseEventData extends PointerEventData {
 
     this.button = button;
     this.buttons = 0;
+
+    // Some WPTs try to synthesize DnD only with mouse events.  However,
+    // Gecko waits DnD events directly and non-WPT-tests use Gecko specific
+    // test API to synthesize DnD.  Therefore, we want new path only for
+    // synthesized events coming from the webdriver.
+    this.allowToHandleDragDrop = true;
   }
 
   update(state, inputSource) {
