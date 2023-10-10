@@ -21,6 +21,14 @@
 namespace mozilla {
 namespace gfx {
 
+// Utility to create a CTFont from a CGFont, copying any variations that were
+// set on the original CGFont, and applying additional attributes from aDesc
+// (which may be NULL).
+// Exposed here because it is also used by gfxMacFont and gfxCoreTextShaper.
+CTFontRef CreateCTFontFromCGFontWithVariations(
+    CGFontRef aCGFont, CGFloat aSize, bool aInstalledFont,
+    CTFontDescriptorRef aFontDesc = nullptr);
+
 class UnscaledFontMac;
 
 class ScaledFontMac : public ScaledFontBase {

@@ -9,6 +9,7 @@
 #include "gfxFontUtils.h"
 #include "gfxTextRun.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/ScaledFontMac.h"
 #include "mozilla/UniquePtrExtensions.h"
 
 #include <algorithm>
@@ -16,6 +17,7 @@
 #include <dlfcn.h>
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // standard font descriptors that we construct the first time they're needed
 CTFontDescriptorRef gfxCoreTextShaper::sFeaturesDescriptor[kMaxFontInstances];
@@ -634,8 +636,8 @@ CTFontRef gfxCoreTextShaper::CreateCTFontWithFeatures(
   const gfxFontEntry* fe = mFont->GetFontEntry();
   bool isInstalledFont = !fe->IsUserFont() || fe->IsLocalUserFont();
   CGFontRef cgFont = static_cast<gfxMacFont*>(mFont)->GetCGFontRef();
-  return gfxMacFont::CreateCTFontFromCGFontWithVariations(
-      cgFont, aSize, isInstalledFont, aDescriptor);
+  return CreateCTFontFromCGFontWithVariations(cgFont, aSize, isInstalledFont,
+                                              aDescriptor);
 }
 
 void gfxCoreTextShaper::Shutdown()  // [static]
