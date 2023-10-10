@@ -41,6 +41,8 @@ support-files = [
 ["browser_navigation.js"]
 support-files = ["file_navigation.html"]
 
+["browser_schemeless.js"]
+
 ["browser_slow_download.js"]
 support-files = [
   "file_slow_download.html",
