@@ -217,7 +217,6 @@ struct DocShellLoadStateInit
   bool HasValidUserGestureActivation;
   bool AllowFocusMove;
   bool IsFromProcessingFrameAttributes;
-  bool WasSchemelessInput;
 
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsIDocShell> mSourceDocShell;

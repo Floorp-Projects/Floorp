@@ -2590,7 +2590,6 @@
         insertTab = true,
         globalHistoryOptions,
         triggeringRemoteType,
-        wasSchemelessInput,
       } = {}
     ) {
       // all callers of addTab that pass a params object need to pass
@@ -2780,7 +2779,6 @@
           csp,
           globalHistoryOptions,
           triggeringRemoteType,
-          wasSchemelessInput,
         });
       }
 
@@ -3022,7 +3020,6 @@
         csp,
         globalHistoryOptions,
         triggeringRemoteType,
-        wasSchemelessInput,
       }
     ) {
       if (
@@ -3086,7 +3083,6 @@
             csp,
             globalHistoryOptions,
             triggeringRemoteType,
-            wasSchemelessInput,
           });
         } catch (ex) {
           console.error(ex);

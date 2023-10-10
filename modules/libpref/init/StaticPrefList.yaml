@@ -3704,14 +3704,6 @@
   value: true
   mirror: always
 
-# If true, top-level requests that are initiated from the address
-# bar and with an empty scheme get upgraded to HTTPS
-# with a fallback
-- name: dom.security.https_first_schemeless
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 - name: dom.security.unexpected_system_load_telemetry_enabled
   type: bool
   value: true
