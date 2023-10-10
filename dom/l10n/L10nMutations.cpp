@@ -329,10 +329,6 @@ void L10nMutations::StartRefreshObserver() {
 }
 
 void L10nMutations::StopRefreshObserver() {
-  if (!mDOMLocalization) {
-    return;
-  }
-
   if (mRefreshDriver) {
     mRefreshDriver->RemoveRefreshObserver(this, FlushType::Style);
     mRefreshDriver = nullptr;
