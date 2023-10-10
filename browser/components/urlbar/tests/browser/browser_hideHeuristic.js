@@ -21,6 +21,7 @@ add_setup(async function () {
     set: [
       ["browser.urlbar.experimental.hideHeuristic", true],
       ["browser.urlbar.suggest.quickactions", false],
+      ["dom.security.https_first_schemeless", false],
     ],
   });
   await PlacesUtils.bookmarks.eraseEverything();

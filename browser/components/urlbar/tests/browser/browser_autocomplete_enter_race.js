@@ -8,11 +8,16 @@
  */
 
 // The order of these tests matters!
+const IS_UPGRADING_SCHEMELESS = SpecialPowers.getBoolPref(
+  "dom.security.https_first_schemeless"
+);
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
+const DEFAULT_URL_SCHEME = IS_UPGRADING_SCHEMELESS ? "https://" : "http://";
 
 add_setup(async function () {
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-    url: "http://example.com/?q=%s",
+    url: DEFAULT_URL_SCHEME + "/example.com/?q=%s",
     title: "test",
   });
   registerCleanupFunction(async function () {
@@ -39,7 +44,7 @@ add_task(
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedTab.linkedBrowser,
       false,
-      "http://example.com/"
+      DEFAULT_URL_SCHEME + "example.com/"
     );
     await SpecialPowers.popPrefEnv();
   })
@@ -66,7 +71,7 @@ add_task(
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedTab.linkedBrowser,
       false,
-      "http://example.com/"
+      DEFAULT_URL_SCHEME + "example.com/"
     );
   })
 );
@@ -86,7 +91,7 @@ add_task(
     await BrowserTestUtils.browserLoaded(
       gBrowser.selectedTab.linkedBrowser,
       false,
-      "http://example.com/"
+      DEFAULT_URL_SCHEME + "example.com/"
     );
   })
 );
