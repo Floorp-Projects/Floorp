@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   SuggestIngestionConstraints: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
@@ -15,7 +15,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "timerManager",
+  "@mozilla.org/updates/timer-manager;1",
+  "nsIUpdateTimerManager"
+);
+
 const SUGGEST_STORE_BASENAME = "suggest.sqlite";
+
+// This ID is used to register our ingest timer with nsIUpdateTimerManager.
+const INGEST_TIMER_ID = "suggest-ingest";
+const INGEST_TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${INGEST_TIMER_ID}`;
 
 // Maps from `suggestion.constructor` to the corresponding name of the
 // suggestion type. See `getSuggestionType()` for details.
@@ -61,51 +72,29 @@ export class SuggestBackendRust extends BaseFeature {
     );
   }
 
-  async enable(enabled) {
-    // Create a new deferred. If one already exists, then this method is being
-    // re-entered. In that case, chain the old deferred's promise to the new one
-    // by resolving it when the new one is resolved. See `enablePromise`.
-    let oldDeferred = this.#enabledDeferred;
-    this.#enabledDeferred = lazy.PromiseUtils.defer();
-    this.#enabledDeferred.promise.then(() => oldDeferred?.resolve());
-
-    if (!enabled) {
-      this.#store = null;
-      this.#enabledDeferred.resolve();
-    } else {
-      let store = await this.#initStore(this.#storePath);
-      if (this.isEnabled) {
-        this.#store = store;
-        this.#enabledDeferred.resolve();
-        this.#enabledDeferred = null;
-      }
-    }
+  /**
+   * @returns {Promise}
+   *   If ingest is pending this will be resolved when it's done. Otherwise it
+   *   was resolved when the previous ingest finished.
+   */
+  get ingestPromise() {
+    return this.#ingestPromise;
   }
 
-  /**
-   * @returns {Promise|null}
-   *   If the feature is currently being enabled or disabled (see `enable()`),
-   *   this will be a promise that is resolved when the enable/disable is fully
-   *   complete. On enable, the feature initializes the backing `SuggestStore`
-   *   and performs ingestion, and the promise will be resolved once that's
-   *   done. If enable/disable is not currently happening, this will be null.
-   *
-   *   Since `enable()` is async, it can be re-entered. When that happens, any
-   *   promises returned by this getter will not be resolved until the final
-   *   call completes. (Currently only enable is actually async; disable is
-   *   sync. Consumers should not rely on that behavior.)
-   */
-  get enablePromise() {
-    return this.#enabledDeferred?.promise;
+  enable(enabled) {
+    if (enabled) {
+      this.#init();
+    } else {
+      this.#uninit();
+    }
   }
 
   async query(searchString) {
     this.logger.info("Handling query: " + JSON.stringify(searchString));
 
-    // Store initialization is async, so even when this feature is enabled,
-    // `#store` may still be null.
     if (!this.#store) {
-      this.logger.info("Store not yet initialized, returning");
+      // There must have been an error creating `#store`.
+      this.logger.info("#store is null, returning");
       return [];
     }
 
@@ -145,6 +134,14 @@ export class SuggestBackendRust extends BaseFeature {
     this.#store?.interrupt();
   }
 
+  /**
+   * nsITimerCallback
+   */
+  async notify() {
+    this.logger.info("Ingest timer fired");
+    this.#ingest();
+  }
+
   get #storePath() {
     return PathUtils.join(
       Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
@@ -152,43 +149,72 @@ export class SuggestBackendRust extends BaseFeature {
     );
   }
 
-  async #initStore(path) {
-    let store;
+  #init() {
+    // Create the store.
+    let path = this.#storePath;
     this.logger.info("Initializing SuggestStore: " + path);
     try {
-      store = lazy.SuggestStore.init(path);
+      this.#store = lazy.SuggestStore.init(path);
     } catch (error) {
       this.logger.error("Error initializing SuggestStore:");
       this.logger.error(error);
-      return null;
+      return;
     }
 
-    // TODO: (1) Don't ingest if the last ingest was recent enough, (2)
-    // periodically ingest. Basically, emulate the desktop remote settings
-    // client.
-    this.logger.info("Ingesting SuggestStore");
-    try {
-      await store.ingest(new lazy.SuggestIngestionConstraints());
-    } catch (error) {
-      this.logger.error("Error ingesting SuggestStore:");
-      this.logger.error(error);
-      return null;
+    // Before registering the ingest timer, check the last-update pref, which is
+    // created by the timer manager the first time we register it. If the pref
+    // doesn't exist, this is the first time the Rust backend has been enabled
+    // in this profile. In that case, perform ingestion immediately to make
+    // automated and manual testing easier. Otherwise we'd need to wait at least
+    // 30s (`app.update.timerFirstInterval`) for the timer manager to call us
+    // back (and we'd also need to pass false for `skipFirst` below).
+    let lastIngestSecs = Services.prefs.getIntPref(
+      INGEST_TIMER_LAST_UPDATE_PREF,
+      0
+    );
+    if (lastIngestSecs) {
+      this.logger.info(
+        `Last ingest: ${lastIngestSecs}s since epoch. Not ingesting now`
+      );
+    } else {
+      this.logger.info("Last ingest time not found. Ingesting now");
+      this.#ingest();
     }
 
-    return store;
+    // Register the ingest timer.
+    lazy.timerManager.registerTimer(
+      INGEST_TIMER_ID,
+      this,
+      lazy.UrlbarPrefs.get("quicksuggest.rustIngestIntervalSeconds"),
+      true // skipFirst
+    );
+  }
+
+  #uninit() {
+    this.#store = null;
+    lazy.timerManager.unregisterTimer(INGEST_TIMER_ID);
+  }
+
+  async #ingest() {
+    this.logger.info("Starting ingest");
+    this.#ingestPromise = this.#store.ingest(
+      new lazy.SuggestIngestionConstraints()
+    );
+    await this.#ingestPromise;
+    this.logger.info("Finished ingest");
   }
 
   // The `SuggestStore` instance.
   #store;
 
-  #enabledDeferred = null;
+  #ingestPromise;
 }
 
 /**
  * Returns the type of a suggestion.
  *
  * @param {Suggestion} suggestion
- *   An suggestion object, an instance of one of the `Suggestion` subclasses.
+ *   A suggestion object, an instance of one of the `Suggestion` subclasses.
  * @returns {string}
  *   The suggestion's type, e.g., "Amp", "Wikipedia", etc.
  */
