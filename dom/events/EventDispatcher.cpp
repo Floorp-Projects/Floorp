@@ -979,7 +979,7 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
 
   aEvent->mFlags.mIsBeingDispatched = true;
 
-  EventTargetChainItem* activationTarget = nullptr;
+  Maybe<uint32_t> activationTargetItemIndex;
 
   // Create visitor object and start event dispatching.
   // GetEventTargetParent for the original target.
@@ -993,8 +993,9 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   targetEtci->GetEventTargetParent(preVisitor);
 
   if (preVisitor.mWantsActivationBehavior) {
+    MOZ_ASSERT(&chain[0] == targetEtci);
+    activationTargetItemIndex.emplace(0);
     preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
-    activationTarget = targetEtci;
   }
 
   if (!preVisitor.mCanHandle) {
@@ -1060,10 +1061,11 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
 
       parentEtci->GetEventTargetParent(preVisitor);
 
-      if (preVisitor.mWantsActivationBehavior && !activationTarget &&
-          aEvent->mFlags.mBubbles) {
+      if (preVisitor.mWantsActivationBehavior &&
+          activationTargetItemIndex.isNothing() && aEvent->mFlags.mBubbles) {
+        MOZ_ASSERT(&chain.LastElement() == parentEtci);
+        activationTargetItemIndex.emplace(chain.Length() - 1);
         preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
-        activationTarget = parentEtci;
       }
 
       if (preVisitor.mCanHandle) {
@@ -1092,8 +1094,9 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
       }
     }
 
-    if (activationTarget) {
-      activationTarget->LegacyPreActivationBehavior(preVisitor);
+    if (activationTargetItemIndex) {
+      chain[activationTargetItemIndex.value()].LegacyPreActivationBehavior(
+          preVisitor);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -1285,12 +1288,13 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
     // XXXsmaug Check also all the touch objects.
   }
 
-  if (activationTarget) {
+  if (activationTargetItemIndex) {
     EventChainPostVisitor postVisitor(preVisitor);
     if (preVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
-      activationTarget->LegacyCanceledActivationBehavior(postVisitor);
+      chain[activationTargetItemIndex.value()].LegacyCanceledActivationBehavior(
+          postVisitor);
     } else {
-      activationTarget->ActivationBehavior(postVisitor);
+      chain[activationTargetItemIndex.value()].ActivationBehavior(postVisitor);
     }
     preVisitor.mEventStatus = postVisitor.mEventStatus;
     // If the DOM event was created during event flow.
