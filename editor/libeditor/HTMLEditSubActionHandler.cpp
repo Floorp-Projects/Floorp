@@ -1871,8 +1871,9 @@ HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
           return aDefaultParagraphSeparator == ParagraphSeparator::br ||
                  !HTMLEditUtils::CanElementContainParagraph(
                      *aEditableBlockElement) ||
-                 HTMLEditUtils::ShouldInsertLinefeedCharacter(
-                     aCandidatePointToSplit, aEditingHost);
+                 (HTMLEditUtils::ShouldInsertLinefeedCharacter(
+                      aCandidatePointToSplit, aEditingHost) &&
+                  HTMLEditUtils::IsDisplayOutsideInline(aEditingHost));
         }
 
         // If the nearest block parent is a single-line container declared in
