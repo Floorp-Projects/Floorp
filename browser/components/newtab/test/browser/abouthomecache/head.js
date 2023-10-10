@@ -30,15 +30,11 @@ const { DiscoveryStreamFeed } = ChromeUtils.import(
     })
   );
 
-  let newConfig = Object.assign(defaultDSConfig, {
-    show_spocs: false,
-  });
-
   // Configure Activity Stream to query for the layout JSON file that points
   // at the local top stories feed.
   Services.prefs.setCharPref(
     "browser.newtabpage.activity-stream.discoverystream.config",
-    JSON.stringify(newConfig)
+    JSON.stringify(defaultDSConfig)
   );
 }
 

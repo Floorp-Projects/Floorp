@@ -45,6 +45,7 @@ const PREF_USER_TOPSITES = "feeds.topsites";
 const PREF_SYSTEM_TOPSITES = "feeds.system.topsites";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
+const PREF_SYSTEM_SHOW_SPONSORED = "system.showSponsored";
 const PREF_SHOW_SPONSORED_TOPSITES = "showSponsoredTopSites";
 // Nimbus variable to enable the SOV feature for sponsored tiles.
 const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
@@ -146,7 +147,7 @@ class DiscoveryStreamFeed {
     // Combine user-set sponsored opt-out with Mozilla-set config
     return (
       this.store.getState().Prefs.values[PREF_SHOW_SPONSORED] &&
-      this.config.show_spocs
+      this.store.getState().Prefs.values[PREF_SYSTEM_SHOW_SPONSORED]
     );
   }
 

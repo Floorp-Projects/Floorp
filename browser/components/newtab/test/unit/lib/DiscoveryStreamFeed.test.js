@@ -80,7 +80,6 @@ describe("DiscoveryStreamFeed", () => {
         values: {
           [CONFIG_PREF_NAME]: JSON.stringify({
             enabled: false,
-            show_spocs: false,
           }),
           [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
           "discoverystream.enabled": true,
@@ -88,6 +87,7 @@ describe("DiscoveryStreamFeed", () => {
           "feeds.system.topstories": true,
           "discoverystream.spocs.personalized": true,
           "discoverystream.recs.personalized": true,
+          "system.showSponsored": false,
         },
       },
     });
@@ -329,11 +329,11 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
-              show_spocs: false,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": true,
+            "system.showSponsored": false,
           },
         },
       });
@@ -349,11 +349,11 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
-              show_spocs: false,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": false,
+            "system.showSponsored": false,
           },
         },
       });
@@ -379,11 +379,11 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
-              show_spocs: false,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.hardcoded-basic-layout": true,
+            "system.showSponsored": false,
           },
         },
       });
@@ -403,12 +403,12 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
-              show_spocs: false,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.spocs-endpoint":
               "https://spocs.getpocket.com/spocs2",
+            "system.showSponsored": false,
           },
         },
       });
@@ -525,10 +525,9 @@ describe("DiscoveryStreamFeed", () => {
     it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS", () => {
       sandbox.spy(feed.store, "dispatch");
       feed.store.getState = () => ({
-        Prefs: { values: { showSponsored: true } },
-      });
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: true }),
+        Prefs: {
+          values: { showSponsored: true, "system.showSponsored": true },
+        },
       });
       const fakeComponents = {
         components: [
@@ -550,10 +549,13 @@ describe("DiscoveryStreamFeed", () => {
     it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS with prefs array", () => {
       sandbox.spy(feed.store, "dispatch");
       feed.store.getState = () => ({
-        Prefs: { values: { showSponsored: true, withPref: true } },
-      });
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: true }),
+        Prefs: {
+          values: {
+            showSponsored: true,
+            withPref: true,
+            "system.showSponsored": true,
+          },
+        },
       });
       const fakeComponents = {
         components: [
@@ -1258,30 +1260,27 @@ describe("DiscoveryStreamFeed", () => {
   describe("#showSponsoredStories", () => {
     it("should return false from showSponsoredStories if user pref showSponsored is false", async () => {
       feed.store.getState = () => ({
-        Prefs: { values: { showSponsored: false } },
-      });
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: true }),
+        Prefs: {
+          values: { showSponsored: false, "system.showSponsored": true },
+        },
       });
 
       assert.isFalse(feed.showSponsoredStories);
     });
-    it("should return false from showSponsoredStories if DiscoveryStream pref show_spocs is false", async () => {
+    it("should return false from showSponsoredStories if DiscoveryStream pref system.showSponsored is false", async () => {
       feed.store.getState = () => ({
-        Prefs: { values: { showSponsored: true } },
-      });
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: false }),
+        Prefs: {
+          values: { showSponsored: true, "system.showSponsored": false },
+        },
       });
 
       assert.isFalse(feed.showSponsoredStories);
     });
     it("should return true from showSponsoredStories if both prefs are true", async () => {
       feed.store.getState = () => ({
-        Prefs: { values: { showSponsored: true } },
-      });
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: true }),
+        Prefs: {
+          values: { showSponsored: true, "system.showSponsored": true },
+        },
       });
 
       assert.isTrue(feed.showSponsoredStories);
@@ -1390,9 +1389,6 @@ describe("DiscoveryStreamFeed", () => {
     let DiscoveryStream;
     let Prefs;
     beforeEach(() => {
-      Object.defineProperty(feed, "config", {
-        get: () => ({ show_spocs: true }),
-      });
       DiscoveryStream = {
         layout: [],
         spocs: {
@@ -1407,6 +1403,7 @@ describe("DiscoveryStreamFeed", () => {
           "feeds.system.topsites": true,
           showSponsoredTopSites: true,
           showSponsored: true,
+          "system.showSponsored": true,
         },
       };
       defaultState = {
@@ -2542,13 +2539,11 @@ describe("DiscoveryStreamFeed", () => {
     it("should update state.DiscoveryStream.config when the pref changes", async () => {
       setPref(CONFIG_PREF_NAME, {
         enabled: true,
-        show_spocs: false,
         api_key_pref: "foo",
       });
 
       assert.deepEqual(feed.store.getState().DiscoveryStream.config, {
         enabled: true,
-        show_spocs: false,
         api_key_pref: "foo",
       });
     });

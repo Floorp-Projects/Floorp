@@ -340,7 +340,7 @@ export class DiscoveryStreamAdmin extends React.PureComponent {
   }
 
   render() {
-    const prefToggles = "enabled show_spocs collapsible".split(" ");
+    const prefToggles = "enabled collapsible".split(" ");
     const { config, layout } = this.props.state.DiscoveryStream;
     const personalized =
       this.props.otherPrefs["discoverystream.personalization.enabled"];

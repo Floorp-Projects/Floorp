@@ -69,9 +69,7 @@ export class _CustomizeMenu extends React.PureComponent {
               enabledSections={this.props.enabledSections}
               pocketRegion={this.props.pocketRegion}
               mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
-              mayHaveSponsoredStories={
-                this.props.DiscoveryStream.config.show_spocs
-              }
+              mayHaveSponsoredStories={this.props.mayHaveSponsoredStories}
               mayHaveRecentSaves={this.props.DiscoveryStream.recentSavesEnabled}
               dispatch={this.props.dispatch}
             />
