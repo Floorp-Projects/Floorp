@@ -17,6 +17,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/CSSAnimation.h"
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/ContentVisibilityAutoStateChangeEvent.h"
@@ -36,11 +37,13 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_print.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/SVGUtils.h"
+#include "mozilla/TextControlElement.h"
 #include "mozilla/ToString.h"
 #include "mozilla/Try.h"
 #include "mozilla/ViewportUtils.h"
@@ -4422,13 +4425,16 @@ nsresult nsIFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
+  // When secondary buttion is down, we need to move selection to make users
+  // possible to paste something at click point quickly.
   // When middle button is down, we need to just move selection and focus at
   // the clicked point.  Note that even if middle click paste is not enabled,
   // Chrome moves selection at middle mouse button down.  So, we should follow
   // the behavior for the compatibility.
   if (aEvent->mMessage == eMouseDown) {
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-    if (mouseEvent && mouseEvent->mButton == MouseButton::eMiddle) {
+    if (mouseEvent && (mouseEvent->mButton == MouseButton::eSecondary ||
+                       mouseEvent->mButton == MouseButton::eMiddle)) {
       if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
         return NS_OK;
       }
@@ -4641,8 +4647,6 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aMouseEvent);
   MOZ_ASSERT(aMouseEvent->mMessage == eMouseDown);
-  MOZ_ASSERT(aMouseEvent->mButton == MouseButton::ePrimary ||
-             aMouseEvent->mButton == MouseButton::eMiddle);
   MOZ_ASSERT(aEventStatus);
   MOZ_ASSERT(nsEventStatus_eConsumeNoDefault != *aEventStatus);
 
@@ -4751,6 +4755,12 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   if (!offsets.content) {
     return NS_ERROR_FAILURE;
+  }
+
+  if (aMouseEvent->mButton == MouseButton::eSecondary &&
+      !MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
+          *frameselection, *aMouseEvent, *offsets.content)) {
+    return NS_OK;
   }
 
   if (aMouseEvent->mMessage == eMouseDown &&
@@ -4882,6 +4892,51 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   }
 
   return NS_OK;
+}
+
+bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
+    const nsFrameSelection& aFrameSelection,
+    WidgetMouseEvent& aSecondaryButtonEvent,
+    const nsIContent& aContentAtEventPoint) const {
+  MOZ_ASSERT(aSecondaryButtonEvent.mButton == MouseButton::eSecondary);
+
+  if (StaticPrefs::
+          ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection()) {
+    if (Selection* selection =
+            aFrameSelection.GetSelection(SelectionType::eNormal)) {
+      if (selection->IsCollapsed()) {
+        // If selection is collapsed, it may be allowed to move caret, let's
+        // check other things.
+      } else if (nsIContent* ancestorLimiter =
+                     selection->GetAncestorLimiter()) {
+        // If currently selection is limited in an editing host, we should not
+        // collapse selection if the clicked point is in the ancestor limiter.
+        // Otherwise, this mouse click moves focus from the editing host to
+        // different one or blur the editing host.  In this case, we need to
+        // update selection because keeping current selection in the editing
+        // host looks like it's not blurred.
+        return !aContentAtEventPoint.IsInclusiveDescendantOf(ancestorLimiter);
+      }
+      // If currently selection is not limited in an editing host, we should
+      // collapse selection only when this click moves focus to an editing host
+      // because we need to update selection in this case.
+      else if (!aContentAtEventPoint.IsEditable()) {
+        return false;
+      }
+    }
+  }
+
+  return !StaticPrefs::
+             ui_mouse_right_click_collapse_selection_stop_if_non_editable_node() ||
+         // The user does not want to collapse selection into non-editable
+         // content by a right button click.
+         aContentAtEventPoint.IsEditable() ||
+         // Treat clicking in a text control as always clicked on editable
+         // content because we want a hack only for clicking in normal text
+         // nodes which is outside any editing hosts.
+         aContentAtEventPoint.IsTextControlElement() ||
+         TextControlElement::FromNodeOrNull(
+             aContentAtEventPoint.GetClosestNativeAnonymousSubtreeRoot());
 }
 
 nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,

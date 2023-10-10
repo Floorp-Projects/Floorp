@@ -350,11 +350,6 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
         aHTMLEditor.SelectElement(MOZ_KnownLive(eventTargetElement));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "HTMLEditor::SelectElement() failed, but ignored");
-  } else {
-    DebugOnly<nsresult> rvIgnored = selection->CollapseInLimiter(
-        parentContent, AssertedCast<uint32_t>(offset));
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Selection::CollapseInLimiter() failed, but ignored");
   }
 
   // HACK !!! Context click places the caret but the context menu consumes

@@ -14721,6 +14721,20 @@
   value: true
   mirror: always
 
+# When true, selection is not collapased at the right click point if there is a
+# non-collapsed selection.
+- name: ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection
+  type: bool
+  value: true
+  mirror: always
+
+# When true, selection is not collapsed at the right click point if the clicked
+# node is not editable.
+- name: ui.mouse.right_click.collapse_selection.stop_if_non_editable_node
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "urlclassifier."
 #---------------------------------------------------------------------------

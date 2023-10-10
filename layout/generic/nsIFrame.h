@@ -2127,6 +2127,22 @@ class nsIFrame : public nsQueryFrame {
       nsPresContext* aPresContext, mozilla::WidgetMouseEvent* aMouseEvent,
       nsEventStatus* aEventStatus);
 
+  /**
+   * Check whether aSecondaryButtonMouseEvent should or should not cause moving
+   * caret at event point.  This is designed only for the secondary mouse button
+   * event (i.e., right button event in general).
+   *
+   * @param aFrameSelection         The nsFrameSelection which should handle the
+   *                                caret move with.
+   * @param aSecondaryButtonEvent   Must be the button value is
+   *                                MouseButton::eSecondary.
+   * @param aContentAtEventPoint    The content node at the event point.
+   */
+  [[nodiscard]] bool MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
+      const nsFrameSelection& aFrameSelection,
+      mozilla::WidgetMouseEvent& aSecondaryButtonEvent,
+      const nsIContent& aContentAtEventPoint) const;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD HandleMultiplePress(
       nsPresContext* aPresContext, mozilla::WidgetGUIEvent* aEvent,
       nsEventStatus* aEventStatus, bool aControlHeld);
