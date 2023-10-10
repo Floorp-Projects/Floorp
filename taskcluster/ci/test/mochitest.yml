@@ -649,7 +649,7 @@ mochitest-media:
                     android.*: []
                     windows.*ccov.*: []
                     linux.*64(-shippable|-asan|-tsan)?-qr/opt: ['autoland', 'mozilla-central']
-                    macosx.*-64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    macosx.*64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows1.*(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows.*-asan-qr/opt: ['autoland', 'mozilla-central']
                     default: []
