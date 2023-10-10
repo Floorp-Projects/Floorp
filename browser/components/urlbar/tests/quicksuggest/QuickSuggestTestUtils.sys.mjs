@@ -235,7 +235,7 @@ class MockRemoteSettings {
  * @param {Array} options.data
  *   Mock remote settings records.
  */
-class MockRustSuggest {
+export class MockRustSuggest {
   constructor({ data = [] }) {
     this.#data = data;
 
@@ -262,6 +262,10 @@ class MockRustSuggest {
   // `RustSuggest` methods below.
 
   ingest() {
+    // Unlike the real Rust component, ingest isn't necessary here since our
+    // `query()` implementation has immediate access to the mock data. This
+    // makes it easier for tests because they don't need to wait for ingest
+    // every time they change the data.
     return Promise.resolve();
   }
 
@@ -411,17 +415,11 @@ class _QuickSuggestTestUtils {
     this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
     lazy.QuickSuggest.init();
 
-    // Set the Rust pref and wait for the backend to become enabled/disabled.
-    // This must happen after setting up `MockRustSuggest`. Otherwise the real
-    // Rust component will be used and the Rust remote settings client will try
-    // to access the real remote settings server on ingestion.
-    this.info?.(
-      "ensureQuickSuggestInit setting rustEnabled and awaiting enablePromise"
-    );
+    // Set the Rust pref. This must happen after setting up `MockRustSuggest`.
+    // Otherwise the real Rust component will be used and the Rust remote
+    // settings client will try to access the real remote settings server on
+    // ingestion.
     lazy.UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
-    await lazy.QuickSuggest.rustBackend.enablePromise;
-    this.info?.("ensureQuickSuggestInit done awaiting enablePromise");
-
     if (!rustEnabled) {
       // Sync with current data.
       this.info?.("ensureQuickSuggestInit syncing MockRemoteSettings");
@@ -453,20 +451,12 @@ class _QuickSuggestTestUtils {
   async #uninitQuickSuggest(clearDataCollectionEnabled) {
     this.info?.("uninitQuickSuggest started");
 
-    // We need to reset the Rust enabled status. If the status changes, it will
-    // either trigger the Rust backend to enable itself and ingest from remote
-    // settings (if Rust was disabled) or trigger the JS backend to enable
-    // itself and re-sync all features (if Rust was enabled). Wait for each to
-    // finish *before* cleaning up MockRustSuggest and MockRemoteSettings. This
-    // will ensure that all activity has stopped before this function returns.
+    // Reset the Rust enabled status. If the JS backend becomes enabled now, it
+    // will re-sync all features. Wait for that to finish *before* cleaning up
+    // MockRemoteSettings. This will ensure that all activity has stopped before
+    // this function returns.
     let rustEnabled = lazy.UrlbarPrefs.get("quicksuggest.rustEnabled");
     lazy.UrlbarPrefs.clear("quicksuggest.rustEnabled");
-    this.info?.(
-      "uninitQuickSuggest setting rustEnabled and awaiting enablePromise"
-    );
-    await lazy.QuickSuggest.rustBackend.enablePromise;
-    this.info?.("uninitQuickSuggest done awaiting enablePromise");
-
     if (rustEnabled && !lazy.UrlbarPrefs.get("quicksuggest.rustEnabled")) {
       this.info?.("uninitQuickSuggest syncing MockRemoteSettings");
       await this.#mockRemoteSettings.sync();

@@ -362,6 +362,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // original JS backend.
   ["quicksuggest.rustEnabled", false],
 
+  // The Suggest Rust backend will ingest remote settings every N seconds as
+  // defined by this pref. Ingestion uses nsIUpdateTimerManager so the interval
+  // will persist across app restarts. The default value is 24 hours, same as
+  // the interval used by the desktop remote settings client.
+  ["quicksuggest.rustIngestIntervalSeconds", 60 * 60 * 24],
+
   // The Firefox Suggest scenario in which the user is enrolled. This is set
   // when the scenario is updated (see `updateFirefoxSuggestScenario`) and is
   // not a pref the user should set. Once initialized, its value is one of:
