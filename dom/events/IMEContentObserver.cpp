@@ -1665,24 +1665,14 @@ bool IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
 void IMEContentObserver::IMENotificationSender::Dispatch(
     nsIDocShell* aDocShell) {
   if (XRE_IsContentProcess() && aDocShell) {
-    RefPtr<nsPresContext> presContext = aDocShell->GetPresContext();
-    if (presContext) {
-      nsRefreshDriver* refreshDriver = presContext->RefreshDriver();
-      if (refreshDriver) {
+    if (RefPtr<nsPresContext> presContext = aDocShell->GetPresContext()) {
+      if (nsRefreshDriver* refreshDriver = presContext->RefreshDriver()) {
         refreshDriver->AddEarlyRunner(this);
         return;
       }
     }
   }
-
-  nsIScriptGlobalObject* globalObject =
-      aDocShell ? aDocShell->GetScriptGlobalObject() : nullptr;
-  if (globalObject) {
-    RefPtr<IMENotificationSender> queuedSender = this;
-    globalObject->Dispatch(TaskCategory::Other, queuedSender.forget());
-  } else {
-    NS_DispatchToCurrentThread(this);
-  }
+  NS_DispatchToCurrentThread(this);
 }
 
 NS_IMETHODIMP

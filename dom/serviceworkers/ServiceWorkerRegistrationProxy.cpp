@@ -186,8 +186,7 @@ void ServiceWorkerRegistrationProxy::Init(
   nsCOMPtr<nsIRunnable> r =
       NewRunnableMethod("ServiceWorkerRegistrationProxy::Init", this,
                         &ServiceWorkerRegistrationProxy::InitOnMainThread);
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 void ServiceWorkerRegistrationProxy::RevokeActor(
@@ -200,8 +199,7 @@ void ServiceWorkerRegistrationProxy::RevokeActor(
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
       __func__, this,
       &ServiceWorkerRegistrationProxy::StopListeningOnMainThread);
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 RefPtr<GenericPromise> ServiceWorkerRegistrationProxy::Unregister() {
@@ -230,8 +228,7 @@ RefPtr<GenericPromise> ServiceWorkerRegistrationProxy::Unregister() {
         scopeExit.release();
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return promise;
 }
@@ -386,8 +383,7 @@ RefPtr<ServiceWorkerRegistrationPromise> ServiceWorkerRegistrationProxy::Update(
         scopeExit.release();
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return promise;
 }
@@ -421,8 +417,7 @@ ServiceWorkerRegistrationProxy::SetNavigationPreloadEnabled(
         promise->Resolve(true, __func__);
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return promise;
 }
@@ -456,8 +451,7 @@ ServiceWorkerRegistrationProxy::SetNavigationPreloadHeader(
         promise->Resolve(true, __func__);
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return promise;
 }
@@ -481,8 +475,7 @@ ServiceWorkerRegistrationProxy::GetNavigationPreloadState() {
         promise->Resolve(self->mReg->GetNavigationPreloadState(), __func__);
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return promise;
 }

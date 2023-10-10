@@ -15,6 +15,7 @@
 
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Services.h"
 
 using mozilla::WeakPtr;
@@ -67,9 +68,6 @@ static void CheckProgressConsistency(Progress aOldProgress,
 ProgressTracker::ProgressTracker()
     : mMutex("ProgressTracker::mMutex"),
       mImage(nullptr),
-      mEventTarget(WrapNotNull(
-          nsCOMPtr<nsIEventTarget>(GetMainThreadSerialEventTarget()))),
-      mObserversWithTargets(0),
       mObservers(new ObserverTable),
       mProgress(NoProgress),
       mIsMultipart(false) {}
@@ -203,7 +201,7 @@ void ProgressTracker::Notify(IProgressObserver* aObserver) {
     // Avoid dispatch if we are late in shutdown.
     RefPtr<AsyncNotifyRunnable> ev = new AsyncNotifyRunnable(this, aObserver);
     mRunnable = ProgressTracker::RenderBlockingRunnable::Create(ev.forget());
-    mEventTarget->Dispatch(mRunnable, NS_DISPATCH_NORMAL);
+    SchedulerGroup::Dispatch(do_AddRef(mRunnable));
   }
 }
 
@@ -259,7 +257,7 @@ void ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver) {
   if (!AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
     nsCOMPtr<nsIRunnable> ev =
         new AsyncNotifyCurrentStateRunnable(this, aObserver);
-    mEventTarget->Dispatch(ev.forget(), NS_DISPATCH_NORMAL);
+    SchedulerGroup::Dispatch(ev.forget());
   }
 }
 
@@ -411,33 +409,12 @@ void ProgressTracker::EmulateRequestFinished(IProgressObserver* aObserver) {
 }
 
 already_AddRefed<nsIEventTarget> ProgressTracker::GetEventTarget() const {
-  MutexAutoLock lock(mMutex);
-  nsCOMPtr<nsIEventTarget> target = mEventTarget;
-  return target.forget();
+  return do_AddRef(GetMainThreadSerialEventTarget());
 }
 
 void ProgressTracker::AddObserver(IProgressObserver* aObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<IProgressObserver> observer = aObserver;
-
-  nsCOMPtr<nsIEventTarget> target = observer->GetEventTarget();
-  if (target) {
-    if (mObserversWithTargets == 0) {
-      // On the first observer with a target (i.e. listener), always accept its
-      // event target; this may be for a specific DocGroup, or it may be the
-      // unlabelled main thread target.
-      MutexAutoLock lock(mMutex);
-      mEventTarget = WrapNotNull(target);
-    } else if (mEventTarget.get() != target.get()) {
-      // If a subsequent observer comes in with a different target, we need to
-      // switch to use the unlabelled main thread target, if we haven't already.
-      MutexAutoLock lock(mMutex);
-      nsCOMPtr<nsIEventTarget> mainTarget(do_GetMainThread());
-      mEventTarget = WrapNotNull(mainTarget);
-    }
-    ++mObserversWithTargets;
-  }
-
   mObservers.Write([=](ObserverTable* aTable) {
     MOZ_ASSERT(!aTable->Contains(observer),
                "Adding duplicate entry for image observer");
@@ -445,8 +422,6 @@ void ProgressTracker::AddObserver(IProgressObserver* aObserver) {
     WeakPtr<IProgressObserver> weakPtr = observer.get();
     aTable->InsertOrUpdate(observer, weakPtr);
   });
-
-  MOZ_ASSERT(mObserversWithTargets <= ObserverCount());
 }
 
 bool ProgressTracker::RemoveObserver(IProgressObserver* aObserver) {
@@ -456,31 +431,6 @@ bool ProgressTracker::RemoveObserver(IProgressObserver* aObserver) {
   // Remove the observer from the list.
   bool removed = mObservers.Write(
       [observer](ObserverTable* aTable) { return aTable->Remove(observer); });
-
-  // Sometimes once an image is decoded, and all of its observers removed, a new
-  // document may request the same image. Thus we need to clear our event target
-  // state when the last observer is removed, so that we select the most
-  // appropriate event target when a new observer is added. Since the event
-  // target may have changed (e.g. due to the scheduler group going away before
-  // we were removed), so we should be cautious comparing this target against
-  // anything at this stage.
-  if (removed) {
-    nsCOMPtr<nsIEventTarget> target = observer->GetEventTarget();
-    if (target) {
-      MOZ_ASSERT(mObserversWithTargets > 0);
-      --mObserversWithTargets;
-
-      // If we're shutting down there's no need to update event targets.
-      if ((mObserversWithTargets == 0) &&
-          !AppShutdown::IsInOrBeyond(ShutdownPhase::XPCOMShutdownThreads)) {
-        MutexAutoLock lock(mMutex);
-        nsCOMPtr<nsIEventTarget> target(do_GetMainThread());
-        mEventTarget = WrapNotNull(target);
-      }
-    }
-
-    MOZ_ASSERT(mObserversWithTargets <= ObserverCount());
-  }
 
   // Observers can get confused if they don't get all the proper teardown
   // notifications. Part ways on good terms.

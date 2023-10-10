@@ -809,10 +809,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   already_AddRefed<GMPCrashHelper> CreateGMPCrashHelper() override;
 
-  nsISerialEventTarget* MainThreadEventTarget() {
-    return mMainThreadEventTarget;
-  }
-
   // Set the sink id (of the output device) that the audio will play. If aSinkId
   // is empty the default device will be set.
   already_AddRefed<Promise> SetSinkId(const nsAString& aSinkId,
@@ -1415,13 +1411,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
-
-  // The DocGroup-specific nsISerialEventTarget of this HTML element on the main
-  // thread.
-  nsCOMPtr<nsISerialEventTarget> mMainThreadEventTarget;
-
-  // The DocGroup-specific AbstractThread::MainThread() of this HTML element.
-  RefPtr<AbstractThread> mAbstractMainThread;
 
   // A reference to the VideoFrameContainer which contains the current frame
   // of video to display.

@@ -379,9 +379,7 @@ bool ServiceWorkerOp::MaybeStart(RemoteWorkerChild* aOwner,
 
   mStarted = true;
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
-
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
   return true;
 }
 

@@ -747,13 +747,9 @@ nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
 
 void ServiceWorkerContainer::EnqueueReceivedMessageDispatch(
     RefPtr<ReceivedMessage> aMessage) {
-  if (nsPIDOMWindowInner* const window = GetOwner()) {
-    if (auto* const target = window->EventTargetFor(TaskCategory::Other)) {
-      target->Dispatch(NewRunnableMethod<RefPtr<ReceivedMessage>>(
-          "ServiceWorkerContainer::DispatchMessage", this,
-          &ServiceWorkerContainer::DispatchMessage, std::move(aMessage)));
-    }
-  }
+  NS_DispatchToMainThread(NewRunnableMethod<RefPtr<ReceivedMessage>>(
+      "ServiceWorkerContainer::DispatchMessage", this,
+      &ServiceWorkerContainer::DispatchMessage, std::move(aMessage)));
 }
 
 template <typename F>

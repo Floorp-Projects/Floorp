@@ -72,7 +72,6 @@ EXPORTS.mozilla += [
     "StateWatching.h",
     "SynchronizedEventQueue.h",
     "SyncRunnable.h",
-    "TaskCategory.h",
     "TaskController.h",
     "TaskDispatcher.h",
     "TaskQueue.h",

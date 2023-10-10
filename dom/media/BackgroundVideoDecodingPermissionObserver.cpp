@@ -51,12 +51,9 @@ void BackgroundVideoDecodingPermissionObserver::RegisterEvent() {
       // Events shall not be fired synchronously to prevent anything visible
       // from the scripts while we are in stable state.
       if (nsCOMPtr<dom::Document> doc = GetOwnerDoc()) {
-        doc->Dispatch(
-            TaskCategory::Other,
-            NewRunnableMethod(
-                "BackgroundVideoDecodingPermissionObserver::"
-                "EnableEvent",
-                this, &BackgroundVideoDecodingPermissionObserver::EnableEvent));
+        doc->Dispatch(NewRunnableMethod(
+            "BackgroundVideoDecodingPermissionObserver::EnableEvent", this,
+            &BackgroundVideoDecodingPermissionObserver::EnableEvent));
       }
     } else {
       EnableEvent();
@@ -75,13 +72,9 @@ void BackgroundVideoDecodingPermissionObserver::UnregisterEvent() {
       // Events shall not be fired synchronously to prevent anything visible
       // from the scripts while we are in stable state.
       if (nsCOMPtr<dom::Document> doc = GetOwnerDoc()) {
-        doc->Dispatch(
-            TaskCategory::Other,
-            NewRunnableMethod(
-                "BackgroundVideoDecodingPermissionObserver::"
-                "DisableEvent",
-                this,
-                &BackgroundVideoDecodingPermissionObserver::DisableEvent));
+        doc->Dispatch(NewRunnableMethod(
+            "BackgroundVideoDecodingPermissionObserver::DisableEvent", this,
+            &BackgroundVideoDecodingPermissionObserver::DisableEvent));
       }
     } else {
       DisableEvent();

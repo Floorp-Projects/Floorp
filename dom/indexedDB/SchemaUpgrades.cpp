@@ -42,7 +42,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/Span.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/indexedDB/IDBResult.h"
@@ -2755,8 +2754,7 @@ class DeserializeUpgradeValueHelper final : public Runnable {
     MonitorAutoLock lock(mMonitor);
 
     RefPtr<Runnable> self = this;
-    const nsresult rv =
-        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget());
+    const nsresult rv = SchedulerGroup::Dispatch(self.forget());
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

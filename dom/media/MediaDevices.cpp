@@ -766,14 +766,8 @@ void MediaDevices::SetupDeviceChangeListener() {
     return;
   }
 
-  nsISerialEventTarget* mainThread =
-      window->EventTargetFor(TaskCategory::Other);
-  if (!mainThread) {
-    return;
-  }
-
   mDeviceChangeListener = MediaManager::Get()->DeviceListChangeEvent().Connect(
-      mainThread, this, &MediaDevices::OnDeviceChange);
+      GetMainThreadSerialEventTarget(), this, &MediaDevices::OnDeviceChange);
   mIsDeviceChangeListenerSetUp = true;
 
   MediaManager::Get()->GetPhysicalDevices()->Then(

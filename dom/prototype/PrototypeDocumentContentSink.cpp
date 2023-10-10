@@ -175,8 +175,7 @@ void PrototypeDocumentContentSink::ContinueInterruptedParsingAsync() {
   nsCOMPtr<nsIRunnable> ev = NewRunnableMethod(
       "PrototypeDocumentContentSink::ContinueInterruptedParsingIfEnabled", this,
       &PrototypeDocumentContentSink::ContinueInterruptedParsingIfEnabled);
-
-  mDocument->Dispatch(mozilla::TaskCategory::Other, ev.forget());
+  mDocument->Dispatch(ev.forget());
 }
 
 //----------------------------------------------------------------------

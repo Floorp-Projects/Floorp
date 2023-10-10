@@ -75,8 +75,7 @@ class nsHtml5ExecutorReflusher : public Runnable {
       // Possible early paint pending, reuse the runnable and try to
       // call RunFlushLoop later.
       nsCOMPtr<nsIRunnable> flusher = this;
-      if (NS_SUCCEEDED(
-              doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
+      if (NS_SUCCEEDED(doc->Dispatch(flusher.forget()))) {
         PROFILER_MARKER_UNTYPED("HighPrio blocking parser flushing(2)", DOM);
         return NS_OK;
       }
@@ -468,8 +467,7 @@ nsresult nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason) {
   if (mParser && mDocument) {  // can mParser ever be null here?
     nsCOMPtr<nsIRunnable> terminator = NewRunnableMethod(
         "nsHtml5Parser::Terminate", GetParser(), &nsHtml5Parser::Terminate);
-    if (NS_FAILED(
-            mDocument->Dispatch(TaskCategory::Network, terminator.forget()))) {
+    if (NS_FAILED(mDocument->Dispatch(terminator.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
   }
@@ -494,8 +492,7 @@ static bool BackgroundFlushCallback(TimeStamp /*aDeadline*/) {
 void nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync() {
   if (mDocument && !mDocument->IsInBackgroundWindow()) {
     nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);
-    if (NS_FAILED(
-            mDocument->Dispatch(TaskCategory::Network, flusher.forget()))) {
+    if (NS_FAILED(mDocument->Dispatch(flusher.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
   } else {

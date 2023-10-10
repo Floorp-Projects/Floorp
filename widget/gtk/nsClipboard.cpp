@@ -241,7 +241,6 @@ nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
   // gtk_clipboard_store() can run an event loop, so call from a dedicated
   // runnable.
   return SchedulerGroup::Dispatch(
-      TaskCategory::Other,
       NS_NewRunnableFunction("gtk_clipboard_store()", []() {
         LOGCLIP("nsClipboard storing clipboard content\n");
         gtk_clipboard_store(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));

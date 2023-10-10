@@ -131,7 +131,7 @@ FileReader::FileReader(nsIGlobalObject* aGlobal, WeakWorkerRef* aWorkerRef)
   MOZ_ASSERT_IF(NS_IsMainThread(), !mWeakWorkerRef);
 
   if (NS_IsMainThread()) {
-    mTarget = aGlobal->EventTargetFor(TaskCategory::Other);
+    mTarget = aGlobal->SerialEventTarget();
   } else {
     mTarget = GetCurrentSerialEventTarget();
   }

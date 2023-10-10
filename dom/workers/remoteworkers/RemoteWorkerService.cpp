@@ -108,8 +108,7 @@ RemoteWorkerServiceKeepAlive::~RemoteWorkerServiceKeepAlive() {
       NS_NewRunnableFunction(__func__, [blocker = std::move(mBlocker)] {
         blocker->RemoteWorkersAllGoneAllowShutdown();
       });
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 /* static */

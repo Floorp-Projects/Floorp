@@ -25,10 +25,8 @@ VsyncIOThreadHolder::~VsyncIOThreadHolder() {
   if (NS_IsMainThread()) {
     mThread->AsyncShutdown();
   } else {
-    SchedulerGroup::Dispatch(
-        TaskCategory::Other,
-        NewRunnableMethod("nsIThread::AsyncShutdown", mThread,
-                          &nsIThread::AsyncShutdown));
+    SchedulerGroup::Dispatch(NewRunnableMethod(
+        "nsIThread::AsyncShutdown", mThread, &nsIThread::AsyncShutdown));
   }
 }
 

@@ -548,8 +548,8 @@ void ServiceWorkerRegistration::MaybeDispatchUpdateFoundRunnable() {
       "ServiceWorkerRegistration::MaybeDispatchUpdateFound", this,
       &ServiceWorkerRegistration::MaybeDispatchUpdateFound);
 
-  Unused << global->EventTargetFor(TaskCategory::Other)
-                ->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  Unused << global->SerialEventTarget()->Dispatch(r.forget(),
+                                                  NS_DISPATCH_NORMAL);
 }
 
 void ServiceWorkerRegistration::MaybeDispatchUpdateFound() {

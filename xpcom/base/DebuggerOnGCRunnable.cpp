@@ -25,12 +25,7 @@ nsresult DebuggerOnGCRunnable::Enqueue(JSContext* aCx,
 
   RefPtr<DebuggerOnGCRunnable> runOnGC =
       new DebuggerOnGCRunnable(std::move(gcEvent));
-  if (NS_IsMainThread()) {
-    return SchedulerGroup::Dispatch(TaskCategory::GarbageCollection,
-                                    runOnGC.forget());
-  } else {
-    return NS_DispatchToCurrentThread(runOnGC);
-  }
+  return NS_DispatchToCurrentThread(runOnGC);
 }
 
 NS_IMETHODIMP

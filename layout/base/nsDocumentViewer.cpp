@@ -2154,7 +2154,7 @@ nsDocumentViewer::Show() {
   // from the event loop after we actually draw the page.
   RefPtr<nsDocumentShownDispatcher> event =
       new nsDocumentShownDispatcher(document);
-  document->Dispatch(TaskCategory::Other, event.forget());
+  document->Dispatch(event.forget());
 
   return NS_OK;
 }

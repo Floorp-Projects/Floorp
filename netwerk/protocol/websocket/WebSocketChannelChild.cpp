@@ -444,8 +444,7 @@ void WebSocketChannelChild::OnServerClose(const uint16_t& aCode,
 }
 
 void WebSocketChannelChild::SetupNeckoTarget() {
-  mNeckoTarget = nsContentUtils::GetEventTargetByLoadInfo(
-      mLoadInfo, TaskCategory::Network);
+  mNeckoTarget = GetMainThreadSerialEventTarget();
 }
 
 NS_IMETHODIMP

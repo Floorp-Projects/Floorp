@@ -1795,10 +1795,8 @@ const WinUtils::WhitelistVec& WinUtils::GetWhitelistedPaths() {
     if (NS_IsMainThread()) {
       setClearFn();
     } else {
-      SchedulerGroup::Dispatch(
-          TaskCategory::Other,
-          NS_NewRunnableFunction("WinUtils::GetWhitelistedPaths",
-                                 std::move(setClearFn)));
+      SchedulerGroup::Dispatch(NS_NewRunnableFunction(
+          "WinUtils::GetWhitelistedPaths", std::move(setClearFn)));
     }
 
     return BuildWhitelist();

@@ -13,17 +13,18 @@
 #ifndef mozilla_dom_SimpleGlobalObject_h__
 #define mozilla_dom_SimpleGlobalObject_h__
 
+#include "nsThreadUtils.h"
 #include "nsContentUtils.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsIGlobalObject.h"
+#include "nsISupportsImpl.h"
 #include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 #include "js/Value.h"
-#include "nsISupportsImpl.h"
-#include "nsCycleCollectionParticipant.h"
 
 namespace mozilla::dom {
 
-class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
+class SimpleGlobalObject final : public nsIGlobalObject, public nsWrapperCache {
  public:
   enum class GlobalType {
     BindingDetail,  // Should only be used by DOM bindings code.
@@ -67,6 +68,13 @@ class SimpleGlobalObject : public nsIGlobalObject, public nsWrapperCache {
   }
 
   OriginTrials Trials() const override { return {}; }
+
+  nsISerialEventTarget* SerialEventTarget() const final {
+    return NS_GetCurrentThread();
+  }
+  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final {
+    return NS_DispatchToCurrentThread(std::move(aRunnable));
+  }
 
   JSObject* WrapObject(JSContext* cx,
                        JS::Handle<JSObject*> aGivenProto) override {

@@ -167,7 +167,7 @@ ZoomConstraintsClient::Observe(nsISupports* aSubject, const char* aTopic,
     RefPtr<nsRunnableMethod<ZoomConstraintsClient>> event =
         NewRunnableMethod("ZoomConstraintsClient::RefreshZoomConstraints", this,
                           &ZoomConstraintsClient::RefreshZoomConstraints);
-    mDocument->Dispatch(TaskCategory::Other, event.forget());
+    mDocument->Dispatch(event.forget());
   }
   return NS_OK;
 }

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WorkletGlobalScope.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/WorkletThread.h"
@@ -13,6 +14,7 @@
 #include "js/RealmOptions.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+#include "nsThreadUtils.h"
 #include "nsRFPService.h"
 
 using JS::loader::ModuleLoaderBase;
@@ -52,6 +54,17 @@ JSObject* WorkletGlobalScope::WrapObject(JSContext* aCx,
                                          JS::Handle<JSObject*> aGivenProto) {
   MOZ_CRASH("We should never get here!");
   return nullptr;
+}
+
+nsISerialEventTarget* WorkletGlobalScope::SerialEventTarget() const {
+  WorkletThread::AssertIsOnWorkletThread();
+  return NS_GetCurrentThread();
+}
+
+nsresult WorkletGlobalScope::Dispatch(
+    already_AddRefed<nsIRunnable>&& aRunnable) const {
+  WorkletThread::AssertIsOnWorkletThread();
+  return SerialEventTarget()->Dispatch(std::move(aRunnable));
 }
 
 already_AddRefed<Console> WorkletGlobalScope::GetConsole(JSContext* aCx,

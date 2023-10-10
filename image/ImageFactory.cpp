@@ -84,7 +84,7 @@ static void NotifyImageLoading(nsIURI* aURI) {
     nsCOMPtr<nsIURI> uri(aURI);
     nsCOMPtr<nsIRunnable> ev = NS_NewRunnableFunction(
         "NotifyImageLoading", [uri]() -> void { NotifyImageLoading(uri); });
-    SchedulerGroup::Dispatch(TaskCategory::Other, ev.forget());
+    NS_DispatchToMainThread(ev.forget());
     return;
   }
 

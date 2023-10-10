@@ -5128,8 +5128,7 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
   if (insertedInfo == data->mTimeouts.Elements() &&
       !data->mRunningExpiredTimeouts) {
     if (!data->mTimer) {
-      data->mTimer =
-          NS_NewTimer(GlobalScope()->EventTargetFor(TaskCategory::Timer));
+      data->mTimer = NS_NewTimer(GlobalScope()->SerialEventTarget());
       if (!data->mTimer) {
         aRv.Throw(NS_ERROR_UNEXPECTED);
         return 0;

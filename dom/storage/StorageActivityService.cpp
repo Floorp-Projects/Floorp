@@ -76,7 +76,7 @@ void StorageActivityService::SendActivity(
         }
       });
 
-  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
+  SchedulerGroup::Dispatch(r.forget());
 }
 
 /* static */
@@ -101,7 +101,7 @@ void StorageActivityService::SendActivity(const nsACString& aOrigin) {
   if (NS_IsMainThread()) {
     Unused << r->Run();
   } else {
-    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
+    NS_DispatchToMainThread(r.forget());
   }
 }
 

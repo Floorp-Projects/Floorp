@@ -278,11 +278,8 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
     if (!childEndpoint.Bind(child)) {
       return;
     }
-  } else {
-    if (!childEndpoint.Bind(child,
-                            mGlobal->EventTargetFor(TaskCategory::Other))) {
-      return;
-    }
+  } else if (!childEndpoint.Bind(child, mGlobal->SerialEventTarget())) {
+    return;
   }
 
   mState = WebTransportState::CONNECTING;

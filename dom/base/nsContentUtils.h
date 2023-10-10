@@ -35,7 +35,6 @@
 #include "mozilla/CallState.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -3178,9 +3177,6 @@ class nsContentUtils {
    */
   static uint32_t HtmlObjectContentTypeForMIMEType(const nsCString& aMIMEType,
                                                    bool aNoFakePlugin);
-
-  static already_AddRefed<nsISerialEventTarget> GetEventTargetByLoadInfo(
-      nsILoadInfo* aLoadInfo, mozilla::TaskCategory aCategory);
 
   /**
    * Detect whether a string is a local-url.

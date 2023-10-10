@@ -7,9 +7,10 @@
 #ifndef __SANDBOXPRIVATE_H__
 #define __SANDBOXPRIVATE_H__
 
-#include "mozilla/WeakPtr.h"
+#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "nsContentUtils.h"
 #include "nsIGlobalObject.h"
@@ -23,11 +24,11 @@
 #include "js/Object.h"  // JS::GetPrivate, JS::SetPrivate
 #include "js/RootingAPI.h"
 
-class SandboxPrivate : public nsIGlobalObject,
-                       public nsIScriptObjectPrincipal,
-                       public nsSupportsWeakReference,
-                       public mozilla::SupportsWeakPtr,
-                       public nsWrapperCache {
+class SandboxPrivate final : public nsIGlobalObject,
+                             public nsIScriptObjectPrincipal,
+                             public nsSupportsWeakReference,
+                             public mozilla::SupportsWeakPtr,
+                             public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS_AMBIGUOUS(SandboxPrivate,
@@ -80,6 +81,13 @@ class SandboxPrivate : public nsIGlobalObject,
   }
 
   void ForgetGlobalObject(JSObject* obj) { ClearWrapper(obj); }
+
+  nsISerialEventTarget* SerialEventTarget() const final {
+    return mozilla::GetMainThreadSerialEventTarget();
+  }
+  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final {
+    return mozilla::SchedulerGroup::Dispatch(std::move(aRunnable));
+  }
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override {

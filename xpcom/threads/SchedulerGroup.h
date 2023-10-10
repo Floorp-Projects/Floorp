@@ -7,15 +7,8 @@
 #ifndef mozilla_SchedulerGroup_h
 #define mozilla_SchedulerGroup_h
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/TaskCategory.h"
-#include "nsCOMPtr.h"
-#include "nsID.h"
-#include "nsIRunnable.h"
-#include "nsISupports.h"
-#include "nsStringFwd.h"
-#include "nsThreadUtils.h"
 #include "nscore.h"
+#include "mozilla/AlreadyAddRefed.h"
 
 class nsIEventTarget;
 class nsIRunnable;
@@ -25,8 +18,7 @@ namespace mozilla {
 
 class SchedulerGroup {
  public:
-  static nsresult Dispatch(TaskCategory aCategory,
-                           already_AddRefed<nsIRunnable>&& aRunnable);
+  static nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
 };
 
 }  // namespace mozilla

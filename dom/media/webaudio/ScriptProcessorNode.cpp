@@ -455,7 +455,7 @@ class ScriptProcessorNodeEngine final : public AudioNodeEngine {
 
     RefPtr<Command> command =
         new Command(aTrack, mInputBuffer.forget(), playbackTime);
-    mAbstractMainThread->Dispatch(command.forget());
+    AbstractThread::MainThread()->Dispatch(command.forget());
   }
 
   friend class ScriptProcessorNode;

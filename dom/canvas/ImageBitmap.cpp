@@ -1729,7 +1729,7 @@ static void AsyncCreateImageBitmapFromBlob(Promise* aPromise,
   // Let's identify the main-thread event target.
   nsCOMPtr<nsIEventTarget> mainThreadEventTarget;
   if (NS_IsMainThread()) {
-    mainThreadEventTarget = aGlobal->EventTargetFor(TaskCategory::Other);
+    mainThreadEventTarget = aGlobal->SerialEventTarget();
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);

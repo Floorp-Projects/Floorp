@@ -299,8 +299,7 @@ NS_IMETHODIMP nsTreeSelection::TimedSelect(int32_t aIndex, int32_t aMsec) {
       if (!mTree) {
         return NS_ERROR_UNEXPECTED;
       }
-      nsIEventTarget* target =
-          mTree->OwnerDoc()->EventTargetFor(TaskCategory::Other);
+      nsIEventTarget* target = GetMainThreadSerialEventTarget();
       NS_NewTimerWithFuncCallback(getter_AddRefs(mSelectTimer), SelectCallback,
                                   this, aMsec, nsITimer::TYPE_ONE_SHOT,
                                   "nsTreeSelection::SelectCallback", target);

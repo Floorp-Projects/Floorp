@@ -176,15 +176,8 @@ bool NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child) {
 
 PWebSocketEventListenerChild* NeckoChild::AllocPWebSocketEventListenerChild(
     const uint64_t& aInnerWindowID) {
-  nsCOMPtr<nsISerialEventTarget> target;
-  if (nsGlobalWindowInner* win =
-          nsGlobalWindowInner::GetInnerWindowWithId(aInnerWindowID)) {
-    target = win->EventTargetFor(TaskCategory::Other);
-  }
-
-  RefPtr<WebSocketEventListenerChild> c =
-      new WebSocketEventListenerChild(aInnerWindowID, target);
-
+  RefPtr<WebSocketEventListenerChild> c = new WebSocketEventListenerChild(
+      aInnerWindowID, GetMainThreadSerialEventTarget());
   return c.forget().take();
 }
 

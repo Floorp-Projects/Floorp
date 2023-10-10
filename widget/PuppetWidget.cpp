@@ -241,7 +241,7 @@ void PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect) {
   if (mBrowserChild && !aRect.IsEmpty() && !mWidgetPaintTask.IsPending()) {
     mWidgetPaintTask = new WidgetPaintTask(this);
     nsCOMPtr<nsIRunnable> event(mWidgetPaintTask.get());
-    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+    SchedulerGroup::Dispatch(event.forget());
   }
 }
 

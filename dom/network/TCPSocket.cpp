@@ -239,12 +239,12 @@ nsresult TCPSocket::Init(nsIProxyInfo* aProxyInfo) {
     obs->AddObserver(this, "profile-change-net-teardown", true);  // weak ref
   }
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  if (XRE_IsContentProcess()) {
     mReadyState = TCPReadyState::Connecting;
 
     nsCOMPtr<nsISerialEventTarget> target;
     if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
-      target = global->EventTargetFor(TaskCategory::Other);
+      target = global->SerialEventTarget();
     }
     mSocketBridgeChild = new TCPSocketChild(mHost, mPort, target);
     mSocketBridgeChild->SendOpen(this, mSsl, mUseArrayBuffers);

@@ -122,7 +122,6 @@
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
@@ -10456,27 +10455,6 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
   }
 
   return nsIObjectLoadingContent::TYPE_NULL;
-}
-
-/* static */
-already_AddRefed<nsISerialEventTarget> nsContentUtils::GetEventTargetByLoadInfo(
-    nsILoadInfo* aLoadInfo, TaskCategory aCategory) {
-  if (NS_WARN_IF(!aLoadInfo)) {
-    return nullptr;
-  }
-
-  RefPtr<Document> doc;
-  aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsISerialEventTarget> target;
-  if (doc) {
-    if (DocGroup* group = doc->GetDocGroup()) {
-      target = group->EventTargetFor(aCategory);
-    }
-  } else {
-    target = GetMainThreadSerialEventTarget();
-  }
-
-  return target.forget();
 }
 
 /* static */

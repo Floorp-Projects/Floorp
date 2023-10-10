@@ -122,12 +122,9 @@ class MediaStreamTrack::MTGListener : public MediaTrackListener {
       return;
     }
 
-    AbstractThread* mainThread =
-        nsGlobalWindowInner::Cast(mTrack->GetParentObject())
-            ->AbstractMainThreadFor(TaskCategory::Other);
-    mainThread->Dispatch(NewRunnableMethod("MediaStreamTrack::OverrideEnded",
-                                           mTrack.get(),
-                                           &MediaStreamTrack::OverrideEnded));
+    AbstractThread::MainThread()->Dispatch(
+        NewRunnableMethod("MediaStreamTrack::OverrideEnded", mTrack.get(),
+                          &MediaStreamTrack::OverrideEnded));
   }
 
   void NotifyEnded(MediaTrackGraph* aGraph) override {

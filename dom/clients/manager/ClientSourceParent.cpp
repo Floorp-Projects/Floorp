@@ -77,8 +77,7 @@ void ClientSourceParent::KillInvalidChild() {
   // there is a small window of time before we kill the process.  This is why
   // we start the actor destruction immediately above.
   nsCOMPtr<nsIRunnable> r = new KillContentParentRunnable(std::move(process));
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 }
 
 mozilla::ipc::IPCResult ClientSourceParent::RecvWorkerSyncPing() {
@@ -154,8 +153,7 @@ IPCResult ClientSourceParent::RecvInheritController(
         swm->NoteInheritedController(clientInfo, controller);
       });
 
-  MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
 
   return IPC_OK();
 }
@@ -172,8 +170,7 @@ IPCResult ClientSourceParent::RecvNoteDOMContentLoaded() {
                                  swm->MaybeCheckNavigationUpdate(clientInfo);
                                });
 
-    MOZ_ALWAYS_SUCCEEDS(
-        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
   }
   return IPC_OK();
 }

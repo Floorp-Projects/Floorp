@@ -191,7 +191,7 @@ void CaptureTask::PostTrackEndEvent() {
 
   IC_LOG("Got MediaTrack track removed or finished event.");
   nsCOMPtr<nsIRunnable> event = new TrackEndRunnable(this);
-  SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+  SchedulerGroup::Dispatch(event.forget());
 }
 
 }  // namespace mozilla

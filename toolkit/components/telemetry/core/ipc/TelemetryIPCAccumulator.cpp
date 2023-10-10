@@ -24,7 +24,6 @@
 using mozilla::StaticAutoPtr;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::TaskCategory;
 using mozilla::Telemetry::ChildEventData;
 using mozilla::Telemetry::DiscardedData;
 using mozilla::Telemetry::HistogramAccumulation;
@@ -348,5 +347,5 @@ void TelemetryIPCAccumulator::DeInitializeGlobalState() {
 
 void TelemetryIPCAccumulator::DispatchToMainThread(
     already_AddRefed<nsIRunnable>&& aEvent) {
-  SchedulerGroup::Dispatch(TaskCategory::Other, std::move(aEvent));
+  SchedulerGroup::Dispatch(std::move(aEvent));
 }

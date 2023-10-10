@@ -153,7 +153,7 @@ void nsFormFillController::AttributeChanged(mozilla::dom::Element* aElement,
         mozilla::NewRunnableMethod<RefPtr<HTMLInputElement>>(
             "nsFormFillController::MaybeStartControllingInput", this,
             &nsFormFillController::MaybeStartControllingInput, focusedInput);
-    aElement->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
+    aElement->OwnerDoc()->Dispatch(event.forget());
   }
 
   if (mListNode && mListNode->Contains(aElement)) {
