@@ -8512,10 +8512,12 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
+    "alert_emails": ["mak@mozilla.com"],
     "kind": "exponential",
     "low": 50,
     "high": 5000,
     "n_buckets": 10,
+    "bug_numbers": [723165],
     "description": "Firefox: Time to initialize the bookmarks toolbar view (ms)"
   },
   "FX_NEW_WINDOW_MS": {
