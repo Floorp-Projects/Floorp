@@ -166,6 +166,12 @@ public final class GeckoRuntime implements Parcelable {
         // Do not trigger the first onResume event because it breaks nsAppShell::sPauseCount counter
         // thresholds.
         GeckoThread.onResume();
+      } else {
+        // Notify Gecko when the application has been moved in the foreground for the first time
+        // after being created and started (used by the ExtensionProcessCrashObserver on the Gecko
+        // side to adjust the appIsForeground property when the application-foreground or
+        // application-background topics are not notified).
+        EventDispatcher.getInstance().dispatch("GeckoView:InitialForeground", null);
       }
       mPaused = false;
       // Can resume location services, checks if was in use before going to background
