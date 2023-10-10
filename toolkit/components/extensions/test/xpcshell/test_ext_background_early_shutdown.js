@@ -2,17 +2,9 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
 const { ExtensionTestCommon } = ChromeUtils.importESModule(
   "resource://testing-common/ExtensionTestCommon.sys.mjs"
 );
-
-ChromeUtils.defineESModuleGetters(this, {
-  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
-  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
-});
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -60,22 +52,6 @@ function registerSlowStyleSheet() {
   return { allowStylesheetToLoad, getRequestCount, firstLoadPromise };
 }
 
-// Crashes a <browser>'s remote process.
-// Based on BrowserTestUtils.crashFrame.
-function crashFrame(browser) {
-  if (!browser.isRemoteBrowser) {
-    // The browser should be remote, or the test runner would be killed.
-    throw new Error("<browser> must be remote");
-  }
-
-  // Trigger crash by sending a message to BrowserTestUtils actor.
-  BrowserTestUtils.sendAsyncMessage(
-    browser.browsingContext,
-    "BrowserTestUtils:CrashFrame",
-    {}
-  );
-}
-
 // We can only crash the extension process when they are running out-of-process.
 // Otherwise we would be killing the test runner itself...
 const CAN_CRASH_EXTENSIONS = WebExtensionPolicy.useRemoteWebExtensions;
@@ -94,105 +70,8 @@ add_setup(
   // Crash dumps are only generated when MOZ_CRASHREPORTER is set.
   // Crashes are only generated if tests can crash the extension process.
   { skip_if: () => !AppConstants.MOZ_CRASHREPORTER || !CAN_CRASH_EXTENSIONS },
-  function setup_crash_reporter_override_and_cleaner() {
-    const crashIds = [];
-    // Override CrashService.sys.mjs to intercept crash dumps, for two reasons:
-    //
-    // - The standard CrashService.sys.mjs implementation uses nsICrashReporter
-    //   through Services.appinfo. Because appinfo has been overridden with an
-    //   incomplete implementation, a promise rejection is triggered when a
-    //   missing method is called at https://searchfox.org/mozilla-central/rev/c615dc4db129ece5cce6c96eb8cab8c5a3e26ac3/toolkit/components/crashes/CrashService.sys.mjs#183
-    //
-    // - We want to intercept the generated crash dumps for expected crashes and
-    //   remove them, to prevent the xpcshell test runner from misinterpreting
-    //   them as "CRASH" failures.
-    let mockClassId = MockRegistrar.register("@mozilla.org/crashservice;1", {
-      addCrash(processType, crashType, id) {
-        // The files are ready to be removed now. We however postpone cleanup
-        // until the end of the test, to minimize noise during the test, and to
-        // ensure that the cleanup completes fully.
-        crashIds.push(id);
-      },
-      QueryInterface: ChromeUtils.generateQI(["nsICrashService"]),
-    });
-    registerCleanupFunction(async () => {
-      MockRegistrar.unregister(mockClassId);
-
-      // Cannot use Services.appinfo because createAppInfo overrides it.
-      // eslint-disable-next-line mozilla/use-services
-      const appinfo = Cc["@mozilla.org/toolkit/crash-reporter;1"].getService(
-        Ci.nsICrashReporter
-      );
-
-      info(`Observed ${crashIds.length} crash dump(s).`);
-      let deletedCount = 0;
-      for (let id of crashIds) {
-        info(`Checking whether dumpID ${id} should be removed`);
-        let minidumpFile = appinfo.getMinidumpForID(id);
-        let extraFile = appinfo.getExtraFileForID(id);
-        let extra;
-        try {
-          extra = await IOUtils.readJSON(extraFile.path);
-        } catch (e) {
-          info(`Cannot parse crash metadata from ${extraFile.path} :: ${e}\n`);
-          continue;
-        }
-        // The "BrowserTestUtils:CrashFrame" handler annotates the crash
-        // report before triggering a crash.
-        if (extra.TestKey !== "CrashFrame") {
-          info(`Keeping ${minidumpFile.path}; we did not trigger the crash`);
-          continue;
-        }
-        info(`Deleting minidump ${minidumpFile.path} and ${extraFile.path}`);
-        minidumpFile.remove(false);
-        extraFile.remove(false);
-        ++deletedCount;
-      }
-      info(`Removed ${deletedCount} crash dumps out of ${crashIds.length}`);
-    });
-  }
+  setup_crash_reporter_override_and_cleaner
 );
-
-/**
- * Crash background page of browser and wait for the crash to have been
- * detected and processed by ext-backgroundPage.js.
- *
- * @param {ExtensionWrapper} extension
- * @param {XULElement} [bgBrowser] - The background browser. Optional, but must
- *   be set if the background's ProxyContextParent has not been initialized yet.
- */
-async function crashExtensionBackground(extension, bgBrowser) {
-  bgBrowser ??= extension.extension.backgroundContext.xulBrowser;
-
-  let byeProm = promiseExtensionEvent(extension, "shutdown-background-script");
-  if (CAN_CRASH_EXTENSIONS) {
-    info("Killing background page through process crash.");
-    crashFrame(bgBrowser);
-  } else {
-    // If extensions are not running in out-of-process mode, then the
-    // non-remote process should not be killed (or the test runner dies).
-    // Remove <browser> instead, to simulate the immediate disconnection
-    // of the message manager (that would happen if the process crashed).
-    info("Closing background page by destroying <browser>.");
-
-    if (extension.extension.backgroundState === "running") {
-      // TODO bug 1844217: remove this whole if-block When close() is hooked up
-      // to setBgStateStopped. It currently is not, and browser destruction is
-      // currently not detected by the implementation.
-      let messageManager = bgBrowser.messageManager;
-      TestUtils.topicObserved(
-        "message-manager-close",
-        subject => subject === messageManager
-      ).then(() => {
-        Management.emit("extension-process-crash", { childID: 1337 });
-      });
-    }
-    bgBrowser.remove();
-  }
-
-  info("Waiting for crash to be detected by the internals");
-  await byeProm;
-}
 
 // Verifies that a delayed background page is not loaded when an extension is
 // shut down during startup.
