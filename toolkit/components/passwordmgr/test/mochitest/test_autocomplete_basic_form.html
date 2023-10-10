@@ -17,884 +17,888 @@ Test for Login Manager: login autocomplete, with secure connection. This tests a
 
 This tests the login manager in a secure setting using https. A similar test file exists for using an insecure connection: test_autocomplete_basic_form_insecure.html.
 
+<template id="form1-template">
+  <form id="form1" action="https://autocomplete:8888/formtest.js">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>
+</template>
+
 <script class="testbody" type="text/javascript">
-const formTemplate = `<form id="form1" action="https://autocomplete:8888/formtest.js">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`;
+  const formTemplate = document.getElementById("form1-template");
 
-// Restore the form to the default state.
-function restoreForm(form) {
-  form.uname.value = "";
-  form.pword.value = "";
-  form.uname.focus();
-}
+  // Restore the form to the default state.
+  function restoreForm(form) {
+    form.uname.value = "";
+    form.pword.value = "";
+    form.uname.focus();
+  }
 
-add_setup(async () => {
-  listenForUnexpectedPopupShown();
-});
-
-add_named_task("form is initially empty and popup closed", async () => {
-  const form = setContentForTask(formTemplate);
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  const popupState = await getPopupState();
-  is(popupState.open, false, "Check popup is closed");
-});
-
-add_named_task("menuitems, telemetry events, selection and escape", async () => {
-  await setStoredLoginsDuringTask(
-    // login 0 has no username, so should be filtered out from the autocomplete list.
-    [location.origin, "https://autocomplete:8888", null, "", "pass0", "", "pword"],
-
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  form.uname.focus();
-  const autocompleteItems = await popupByArrowDown();
-
-  const popupState = await getPopupState();
-  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
-
-  const expectedMenuItems = ["user-1",
-                           "user-2",
-                           "user-3"];
-  checkAutoCompleteResults(autocompleteItems, expectedMenuItems,
-                           window.location.host, "Check all menuitems are displayed correctly.");
-
-  const acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
-  is(acEvents.length, 1, "One autocomplete event");
-  checkACTelemetryEvent(acEvents[0], form.uname, {
-    "hadPrevious": "0",
-    "login": expectedMenuItems.length + "",
-    "loginsFooter": "1"
+  add_setup(async () => {
+    listenForUnexpectedPopupShown();
   });
 
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Escape");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-});
+  add_named_task("form is initially empty and popup closed", async () => {
+    const form = setContentForTask(formTemplate);
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    const popupState = await getPopupState();
+    is(popupState.open, false, "Check popup is closed");
+  });
 
-add_named_task("select first entry", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  const popupState = await getPopupState();
-  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
-  synthesizeKey("KEY_ArrowDown"); // first
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "pass-1", "password is set");
-});
+  add_named_task("menuitems, telemetry events, selection and escape", async () => {
+    await setStoredLoginsDuringTask(
+      // login 0 has no username, so should be filtered out from the autocomplete list.
+      [location.origin, "https://autocomplete:8888", null, "", "pass0", "", "pword"],
 
-add_named_task("select second entry", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    form.uname.focus();
+    const autocompleteItems = await popupByArrowDown();
 
-add_named_task("wrap around first entry", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_ArrowDown"); // footer
-  synthesizeKey("KEY_ArrowDown"); // deselects
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "pass-1", "password is set");
-});
+    const popupState = await getPopupState();
+    is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
 
-add_named_task("wrap around up last entry", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  synthesizeKey("KEY_ArrowUp"); // footer
-  synthesizeKey("KEY_ArrowUp"); // last (fourth)
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
+    const expectedMenuItems = ["user-1",
+                             "user-2",
+                             "user-3"];
+    checkAutoCompleteResults(autocompleteItems, expectedMenuItems,
+                             window.location.host, "Check all menuitems are displayed correctly.");
 
-add_named_task("wrap around up down up up", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  synthesizeKey("KEY_ArrowDown"); // select first entry
-  synthesizeKey("KEY_ArrowUp"); // selects nothing!
-  synthesizeKey("KEY_ArrowUp"); // footer
-  synthesizeKey("KEY_ArrowUp"); // select last entry
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
-
-add_named_task("wrap around up down up last", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_ArrowUp"); // deselects
-  synthesizeKey("KEY_ArrowUp"); // footer
-  synthesizeKey("KEY_ArrowUp"); // last entry
-  synthesizeKey("KEY_ArrowUp"); // first entry
-  synthesizeKey("KEY_ArrowUp"); // deselects
-  synthesizeKey("KEY_ArrowUp"); // footer
-  synthesizeKey("KEY_ArrowUp"); // last entry
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
-
-add_named_task("fill username without autofill right", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  // Set first entry w/o triggering autocomplete
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowRight");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "", "password is empty");
-});
-
-add_named_task("fill username without autofill left", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  // Set first entry w/o triggering autocomplete
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowLeft");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "", "password is empty");
-});
-
-add_named_task("page up first", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  // Check first entry (page up)
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_ArrowDown"); // second
-  synthesizeKey("KEY_PageUp"); // first
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "pass-1", "password is set");
-});
-
-add_named_task("page down last", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  // Check last entry (page down)
-  synthesizeKey("KEY_ArrowDown"); // first
-  synthesizeKey("KEY_PageDown"); // footer
-  synthesizeKey("KEY_ArrowUp"); // last
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
-
-add_named_task("untrusted event", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-  // Send a fake (untrusted) event.
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  form.uname.value = "user-2";
-  sendFakeAutocompleteEvent(form.uname);
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "", "password is empty");
-});
-
-add_named_task("delete", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-
-  // XXX tried sending character "t" before/during dropdown to test
-  // filtering, but had no luck. Seemed like the character was getting lost.
-  // Setting uname.value didn't seem to work either. This works with a human
-  // driver, so I'm not sure what's up.
-
-  // Delete the first entry (of 3), "user-1"
-  synthesizeKey("KEY_ArrowDown");
-  const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-  is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
-
-  const countChangedPromise = notifyMenuChanged(3);
-  const deletionPromise = promiseStorageChanged(["removeLogin"]);
-  // On OS X, shift-backspace and shift-delete work, just delete does not.
-  // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-  synthesizeKey("KEY_Delete", {shiftKey: true});
-  await deletionPromise;
-
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
-  await countChangedPromise;
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-2", "username is set");
-  is(form.pword.value, "pass-2", "password is set");
-});
-
-add_named_task("delete second", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-
-  // Delete the second entry (of 3), "user-2"
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Delete", {shiftKey: true});
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-3", "username is set");
-  is(form.pword.value, "pass-3", "password is set");
-});
-
-add_named_task("delete last", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  form.uname.focus();
-  await popupByArrowDown();
-
-  /* test 54 */
-  // Delete the last entry (of 3), "user-3"
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_ArrowDown");
-  const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-  is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
-  synthesizeKey("KEY_Delete", {shiftKey: true});
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
-  is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user-1", "username is set");
-  is(form.pword.value, "pass-1", "password is set");
-});
-
-// Tests for single-user forms for ignoring autocomplete=off */
-
-add_named_task("default", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("password autocomplete off", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
-  <input type="text" name="uname">
-  <input type="password" name="pword" autocomplete="off">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-
-  restoreForm(form);
-  await popupByArrowDown();
-
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  // value should not update just on selection
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("username autocomplete off", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
-  <input type="text" name="uname" autocomplete="off">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-
-  restoreForm(form);
-  await popupByArrowDown();
-
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  // value should not update just on selection
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("form autocomplete off", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2" autocomplete="off">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-  restoreForm(form);
-  await popupByArrowDown();
-
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  // value should not update just on selection
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("username and password autocomplete off", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
-  <input type="text" name="uname" autocomplete="off">
-  <input type="password" name="pword" autocomplete="off">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-  restoreForm(form);
-  await popupByArrowDown();
-
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("changing username does not touch password", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
-  <input type="text" name="uname" autocomplete="off">
-  <input type="password" name="pword" autocomplete="off">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-
-  // Test that the password field remains filled in after changing
-  // the username.
-  form.uname.focus();
-  synthesizeKey("KEY_ArrowRight");
-  synthesizeKey("X", {shiftKey: true});
-  // Trigger the 'blur' event on uname
-  form.pword.focus();
-  is(form.uname.value, "userX", "username is set");
-  is(form.pword.value, "pass", "password is set");
-});
-
-add_named_task("additional username field in between", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete3", null, "user-1", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete3", null, "user-2", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete3">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-
-  // Insert a new username field into the form. We'll then make sure
-  // that invoking the autocomplete doesn't try to fill the form.
-  const newField = document.createElement("input");
-  newField.setAttribute("type", "text");
-  newField.setAttribute("name", "uname2");
-  form.insertBefore(newField, form.pword);
-  is(newField.value, "", "Verifying empty uname2");
-});
-
-add_named_task("additional username field in between and form reset", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete3", null, "user", "pass", "uname", "pword"]
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete3">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-
-  // Insert a new username field into the form. We'll then make sure
-  // that invoking the autocomplete doesn't try to fill the form.
-  const newField = document.createElement("input");
-  newField.setAttribute("type", "text");
-  newField.setAttribute("name", "uname2");
-  form.insertBefore(newField, form.pword);
-
-  restoreForm(form);
-  const autocompleteItems = await popupByArrowDown();
-  checkAutoCompleteResults(autocompleteItems,
-                           ["user"],
-                           window.location.host,
-                           "Check dropdown is showing all logins while field is blank");
-
-
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  // The form changes, so we expect the old username field to get the
-  // selected autocomplete value, but neither the new username field nor
-  // the password field should have any values filled in.
-  await SimpleTest.promiseWaitForCondition(() => form.uname.value == "user",
-                                           "Wait for username to get filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "", "password is empty");
-  is(newField.value, "", "Verifying empty uname2");
-});
-
-add_named_task("two forms with different actions", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"]
-  );
-  const div = setContentForTask(`<div>
-    <form id="form1" action="https://autocomplete-other">
-      <input type="email" name="uname">
-      <input type="password" name="pword">
-    </form>
-    <form id="form2" action="https://autocomplete">
-      <input type="email" name="uname">
-      <input type="password" name="pword">
-    </form>
-  </div>`);
-  const form1 = div.querySelector("#form1");
-  const form2 = div.querySelector("#form2");
-  const autofillResult = await formAutofillResult(form1.id);
-  is(autofillResult, "no_saved_logins", "form has not been filled due to no saved logins");
-  const autofillResult2 = await formAutofillResult(form2.id);
-  is(autofillResult2, "filled", "form has been filled");
-
-  is(form2.uname.value, "user", "username is set");
-  is(form2.pword.value, "pass", "password is set");
-
-  restoreForm(form2);
-  is(form2.uname.value, "", "username is empty");
-  is(form2.pword.value, "", "password is empty");
-
-  form1.uname.focus();
-  is(form2.uname.value, "", "username is empty");
-  is(form2.pword.value, "", "password is empty");
-});
-
-add_named_task("filtering", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete", null, "form9userAB", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete", null, "form9userAAB", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-
-  const results = await popupBy(() => form.uname.focus());
-  checkAutoCompleteResults(results,
-                           ["form9userAAB", "form9userAB"],
-                           window.location.host,
-                           "Check dropdown is showing all logins while field is blank");
-  synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
-
-  const results2 = await popupBy(() => sendString("form9userAB"));
-  checkAutoCompleteResults(results2,
-                           ["form9userAB"],
-                           window.location.host,
-                           "Check dropdown is showing login with only one 'A'");
-
-  is(form.uname.value, "form9userAB", "username is set");
-  is(form.pword.value, "", "password is empty");
-  form.uname.focus();
-  synthesizeKey("KEY_ArrowLeft");
-  const results3 = await popupBy(() => synthesizeKey("A", {shiftKey: true}));
-
-  is(form.uname.value, "form9userAAB", "username is set");
-  is(form.pword.value, "", "password is empty");
-  checkAutoCompleteResults(results3, ["form9userAAB"],
-                           window.location.host, "Check dropdown is updated after inserting 'A'");
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "form9userAAB", "username is set");
-  is(form.pword.value, "pass-2", "password set");
-});
-
-add_named_task("autocomplete cache", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "form9userAB", "pass-1", "uname", "pword"],
-    [location.origin, "https://autocomplete:8888", null, "form9userAAB", "pass-2", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
-
-  await popupBy(() => form.uname.focus());
-
-  await addLoginsInParent(
-    [location.origin, "https://autocomplete", null, "form9userAABzz", "pass-3", "uname", "pword"]
-  );
-
-  const promise1 = notifyMenuChanged(1);
-  sendString("z");
-  const results1 = await promise1;
-  checkAutoCompleteResults(results1, [], window.location.host,
-                           "Check popup does not have any login items");
-
-  // check that empty results are cached - bug 496466
-  const promise2 = notifyMenuChanged(1);
-  sendString("z");
-  const results2 = await promise2;
-  checkAutoCompleteResults(results2, [], window.location.host,
-                           "Check popup only has the footer when it opens");
-});
-
-add_named_task("formless", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, location.origin, null, "user", "pass", "uname", "pword"]
-  );
-  const form = setContentForTask(`<form id="form1">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-
-  // Test form-less autocomplete
-  // Test form-less autocomplete
-  // TODO: wait - whats formless about this form?
-  restoreForm(form);
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  await popupByArrowDown();
-
-  synthesizeKey("KEY_ArrowDown");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
-
-add_named_task("open on trusted focus", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user", "pass", "uname", "pword"]
-  );
-  const form = setContentForTask(formTemplate);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-
-  form.uname.value = "";
-  form.pword.value = "";
-
-  // Move focus to the password field so we can test the first click on the
-  // username field.
-  form.pword.focus();
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  const firePrivEventPromise = new Promise((resolve) => {
-    form.uname.addEventListener("click", (e) => {
-      ok(e.isTrusted, "Ensure event is trusted");
-      resolve();
+    const acEvents = await getTelemetryEvents({ process: "parent", filterProps: TelemetryFilterPropsAC, clear: true });
+    is(acEvents.length, 1, "One autocomplete event");
+    checkACTelemetryEvent(acEvents[0], form.uname, {
+      "hadPrevious": "0",
+      "login": expectedMenuItems.length + "",
+      "loginsFooter": "1"
     });
-  });
-  await popupBy(async () => {
-    synthesizeMouseAtCenter(form.uname, {});
-    await firePrivEventPromise;
-  });
-  synthesizeKey("KEY_ArrowDown");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-});
 
-add_named_task("recipes", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "user", "pass", "uname", "pword"]
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete:8888">
-  <input type="text" name="uname">
-  <input type="text" name="pword">
-</form>`);
-
-  await loadRecipes({
-    siteRecipes: [{
-      "hosts": [window.location.host],
-      "usernameSelector": "input[name='1']",
-      "passwordSelector": "input[name='2']",
-    }],
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Escape");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
   });
 
-  // First test DOMAutocomplete
-  // Switch the password field to type=password so _fillForm marks the username
-  // field for autocomplete.
-  form.pword.type = "password";
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
-  restoreForm(form);
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  await popupByArrowDown();
+  add_named_task("select first entry", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    const popupState = await getPopupState();
+    is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+    synthesizeKey("KEY_ArrowDown"); // first
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "pass-1", "password is set");
+  });
 
-  synthesizeKey("KEY_ArrowDown");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  const autofillResult2 = await formAutofillResult(form.id);
-  is(autofillResult2, "filled", "form has been filled");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
+  add_named_task("select second entry", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_ArrowDown"); // second
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
 
-  // Now test recipes with blur on the username field.
-  restoreForm(form);
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  form.uname.value = "user";
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Tab");
-  const autofillResult3 = await formAutofillResult(form.id);
-  is(autofillResult3, "filled", "form has been filled");
-  is(form.uname.value, "user", "username is filled");
-  is(form.pword.value, "pass", "password is filled");
-  await resetRecipes();
-});
+  add_named_task("wrap around first entry", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_ArrowDown"); // second
+    synthesizeKey("KEY_ArrowDown"); // footer
+    synthesizeKey("KEY_ArrowDown"); // deselects
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "pass-1", "password is set");
+  });
 
-add_named_task("form stays open upon empty search", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete:8888", null, "", "pass", "", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete:8888">
-  <input type="text" name="uname" value="prefilled">
-  <input type="password" name="pword" value="prefilled">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "existing_password", "form has not been filled due to existing password");
+  add_named_task("wrap around up last entry", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowUp"); // footer
+    synthesizeKey("KEY_ArrowUp"); // last (fourth)
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
 
-  is(form.uname.value, "prefilled", "username is not changed");
-  is(form.pword.value, "prefilled", "password is not changed");
+  add_named_task("wrap around up down up up", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown"); // select first entry
+    synthesizeKey("KEY_ArrowUp"); // selects nothing!
+    synthesizeKey("KEY_ArrowUp"); // footer
+    synthesizeKey("KEY_ArrowUp"); // select last entry
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
 
-  form.uname.scrollIntoView();
-  await popupBy(() => synthesizeMouseAtCenter(form.uname, {}));
-  form.uname.select();
-  synthesizeKey("KEY_Delete");
+  add_named_task("wrap around up down up last", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowUp"); // deselects
+    synthesizeKey("KEY_ArrowUp"); // footer
+    synthesizeKey("KEY_ArrowUp"); // last entry
+    synthesizeKey("KEY_ArrowUp"); // first entry
+    synthesizeKey("KEY_ArrowUp"); // deselects
+    synthesizeKey("KEY_ArrowUp"); // footer
+    synthesizeKey("KEY_ArrowUp"); // last entry
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
 
-  const popupState = await getPopupState();
-  is(popupState.open, true, "Check popup is still open");
-  is(form.uname.value, "", "username is emoty");
-  is(form.pword.value, "prefilled", "password is not changed");
+  add_named_task("fill username without autofill right", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    // Set first entry w/o triggering autocomplete
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_ArrowRight");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "", "password is empty");
+  });
 
-  info("testing password field");
-  synthesizeMouseAtCenter(form.pword, {});
-  form.pword.select();
-  const popupState2 = await getPopupState();
-  is(popupState2.open, false, "Check popup closed since password field isn't empty");
-  await popupBy(() => synthesizeKey("KEY_Delete"));
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-});
+  add_named_task("fill username without autofill left", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    // Set first entry w/o triggering autocomplete
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_ArrowLeft");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "", "password is empty");
+  });
 
-add_named_task("username only", async () => {
-  await setStoredLoginsDuringTask(
-    [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"],
-  );
-  const form = setContentForTask(`<form id="form1" action="https://autocomplete" autocomplete="off">
-  <input type="email" name="uname" value="prefilled" autocomplete="username">
-  <input type="password" name="pword">
-</form>`);
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "existing_username", "form has not been filled due to existing username");
+  add_named_task("page up first", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    // Check first entry (page up)
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_ArrowDown"); // second
+    synthesizeKey("KEY_PageUp"); // first
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "pass-1", "password is set");
+  });
 
-  is(form.uname.value, "prefilled", "username is not changed");
-  is(form.pword.value, "", "password is empty");
-  restoreForm(form);
-  await popupByArrowDown();
+  add_named_task("page down last", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    // Check last entry (page down)
+    synthesizeKey("KEY_ArrowDown"); // first
+    synthesizeKey("KEY_PageDown"); // footer
+    synthesizeKey("KEY_ArrowUp"); // last
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
 
-  // Check first entry
-  synthesizeKey("KEY_ArrowDown");
-  is(form.uname.value, "", "username is empty");
-  is(form.pword.value, "", "password is empty");
-  synthesizeKey("KEY_Enter");
-  await untilAutocompletePopupClosed();
-  is(form.uname.value, "user", "username is set");
-  is(form.pword.value, "pass", "password is set");
-});
+  add_named_task("untrusted event", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+    // Send a fake (untrusted) event.
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    form.uname.value = "user-2";
+    sendFakeAutocompleteEvent(form.uname);
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "", "password is empty");
+  });
+
+  add_named_task("delete", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+
+    // XXX tried sending character "t" before/during dropdown to test
+    // filtering, but had no luck. Seemed like the character was getting lost.
+    // Setting uname.value didn't seem to work either. This works with a human
+    // driver, so I'm not sure what's up.
+
+    // Delete the first entry (of 3), "user-1"
+    synthesizeKey("KEY_ArrowDown");
+    const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
+
+    const countChangedPromise = notifyMenuChanged(3);
+    const deletionPromise = promiseStorageChanged(["removeLogin"]);
+    // On OS X, shift-backspace and shift-delete work, just delete does not.
+    // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+    synthesizeKey("KEY_Delete", {shiftKey: true});
+    await deletionPromise;
+
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
+    await countChangedPromise;
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-2", "username is set");
+    is(form.pword.value, "pass-2", "password is set");
+  });
+
+  add_named_task("delete second", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+
+    // Delete the second entry (of 3), "user-2"
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Delete", {shiftKey: true});
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-3", "username is set");
+    is(form.pword.value, "pass-3", "password is set");
+  });
+
+  add_named_task("delete last", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-2", "pass-2", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "user-3", "pass-3", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    form.uname.focus();
+    await popupByArrowDown();
+
+    /* test 54 */
+    // Delete the last entry (of 3), "user-3"
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_ArrowDown");
+    const numLoginsBeforeDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsBeforeDeletion, 3, "Correct number of logins before deleting one");
+    synthesizeKey("KEY_Delete", {shiftKey: true});
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "https://autocomplete:8888", null);
+    is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user-1", "username is set");
+    is(form.pword.value, "pass-1", "password is set");
+  });
+
+  // Tests for single-user forms for ignoring autocomplete=off */
+
+  add_named_task("default", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("password autocomplete off", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
+    <input type="text" name="uname">
+    <input type="password" name="pword" autocomplete="off">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+
+    restoreForm(form);
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    // value should not update just on selection
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("username autocomplete off", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
+    <input type="text" name="uname" autocomplete="off">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+
+    restoreForm(form);
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    // value should not update just on selection
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("form autocomplete off", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2" autocomplete="off">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+    restoreForm(form);
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    // value should not update just on selection
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("username and password autocomplete off", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
+    <input type="text" name="uname" autocomplete="off">
+    <input type="password" name="pword" autocomplete="off">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+    restoreForm(form);
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("changing username does not touch password", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete2", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete2">
+    <input type="text" name="uname" autocomplete="off">
+    <input type="password" name="pword" autocomplete="off">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+
+    // Test that the password field remains filled in after changing
+    // the username.
+    form.uname.focus();
+    synthesizeKey("KEY_ArrowRight");
+    synthesizeKey("X", {shiftKey: true});
+    // Trigger the 'blur' event on uname
+    form.pword.focus();
+    is(form.uname.value, "userX", "username is set");
+    is(form.pword.value, "pass", "password is set");
+  });
+
+  add_named_task("additional username field in between", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete3", null, "user-1", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete3", null, "user-2", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete3">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+
+    // Insert a new username field into the form. We'll then make sure
+    // that invoking the autocomplete doesn't try to fill the form.
+    const newField = document.createElement("input");
+    newField.setAttribute("type", "text");
+    newField.setAttribute("name", "uname2");
+    form.insertBefore(newField, form.pword);
+    is(newField.value, "", "Verifying empty uname2");
+  });
+
+  add_named_task("additional username field in between and form reset", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete3", null, "user", "pass", "uname", "pword"]
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete3">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+
+    // Insert a new username field into the form. We'll then make sure
+    // that invoking the autocomplete doesn't try to fill the form.
+    const newField = document.createElement("input");
+    newField.setAttribute("type", "text");
+    newField.setAttribute("name", "uname2");
+    form.insertBefore(newField, form.pword);
+
+    restoreForm(form);
+    const autocompleteItems = await popupByArrowDown();
+    checkAutoCompleteResults(autocompleteItems,
+                             ["user"],
+                             window.location.host,
+                             "Check dropdown is showing all logins while field is blank");
+
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    // The form changes, so we expect the old username field to get the
+    // selected autocomplete value, but neither the new username field nor
+    // the password field should have any values filled in.
+    await SimpleTest.promiseWaitForCondition(() => form.uname.value == "user",
+                                             "Wait for username to get filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "", "password is empty");
+    is(newField.value, "", "Verifying empty uname2");
+  });
+
+  add_named_task("two forms with different actions", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"]
+    );
+    const div = setContentForTask(`<div>
+      <form id="form1" action="https://autocomplete-other">
+        <input type="email" name="uname">
+        <input type="password" name="pword">
+      </form>
+      <form id="form2" action="https://autocomplete">
+        <input type="email" name="uname">
+        <input type="password" name="pword">
+      </form>
+    </div>`);
+    const form1 = div.querySelector("#form1");
+    const form2 = div.querySelector("#form2");
+    const autofillResult = await formAutofillResult(form1.id);
+    is(autofillResult, "no_saved_logins", "form has not been filled due to no saved logins");
+    const autofillResult2 = await formAutofillResult(form2.id);
+    is(autofillResult2, "filled", "form has been filled");
+
+    is(form2.uname.value, "user", "username is set");
+    is(form2.pword.value, "pass", "password is set");
+
+    restoreForm(form2);
+    is(form2.uname.value, "", "username is empty");
+    is(form2.pword.value, "", "password is empty");
+
+    form1.uname.focus();
+    is(form2.uname.value, "", "username is empty");
+    is(form2.pword.value, "", "password is empty");
+  });
+
+  add_named_task("filtering", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete", null, "form9userAB", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete", null, "form9userAAB", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+
+    const results = await popupBy(() => form.uname.focus());
+    checkAutoCompleteResults(results,
+                             ["form9userAAB", "form9userAB"],
+                             window.location.host,
+                             "Check dropdown is showing all logins while field is blank");
+    synthesizeKey("KEY_Escape"); // Need to close the popup so we can get another popupshown after sending the string below.
+
+    const results2 = await popupBy(() => sendString("form9userAB"));
+    checkAutoCompleteResults(results2,
+                             ["form9userAB"],
+                             window.location.host,
+                             "Check dropdown is showing login with only one 'A'");
+
+    is(form.uname.value, "form9userAB", "username is set");
+    is(form.pword.value, "", "password is empty");
+    form.uname.focus();
+    synthesizeKey("KEY_ArrowLeft");
+    const results3 = await popupBy(() => synthesizeKey("A", {shiftKey: true}));
+
+    is(form.uname.value, "form9userAAB", "username is set");
+    is(form.pword.value, "", "password is empty");
+    checkAutoCompleteResults(results3, ["form9userAAB"],
+                             window.location.host, "Check dropdown is updated after inserting 'A'");
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "form9userAAB", "username is set");
+    is(form.pword.value, "pass-2", "password set");
+  });
+
+  add_named_task("autocomplete cache", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "form9userAB", "pass-1", "uname", "pword"],
+      [location.origin, "https://autocomplete:8888", null, "form9userAAB", "pass-2", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "multiple_logins", "form has not been filled due to multiple logins");
+
+    await popupBy(() => form.uname.focus());
+
+    await addLoginsInParent(
+      [location.origin, "https://autocomplete", null, "form9userAABzz", "pass-3", "uname", "pword"]
+    );
+
+    const promise1 = notifyMenuChanged(1);
+    sendString("z");
+    const results1 = await promise1;
+    checkAutoCompleteResults(results1, [], window.location.host,
+                             "Check popup does not have any login items");
+
+    // check that empty results are cached - bug 496466
+    const promise2 = notifyMenuChanged(1);
+    sendString("z");
+    const results2 = await promise2;
+    checkAutoCompleteResults(results2, [], window.location.host,
+                             "Check popup only has the footer when it opens");
+  });
+
+  add_named_task("formless", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, location.origin, null, "user", "pass", "uname", "pword"]
+    );
+    const form = setContentForTask(`<form id="form1">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+
+    // Test form-less autocomplete
+    // Test form-less autocomplete
+    // TODO: wait - whats formless about this form?
+    restoreForm(form);
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    await popupByArrowDown();
+
+    synthesizeKey("KEY_ArrowDown");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("open on trusted focus", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user", "pass", "uname", "pword"]
+    );
+    const form = setContentForTask(formTemplate);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+
+    form.uname.value = "";
+    form.pword.value = "";
+
+    // Move focus to the password field so we can test the first click on the
+    // username field.
+    form.pword.focus();
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    const firePrivEventPromise = new Promise((resolve) => {
+      form.uname.addEventListener("click", (e) => {
+        ok(e.isTrusted, "Ensure event is trusted");
+        resolve();
+      });
+    });
+    await popupBy(async () => {
+      synthesizeMouseAtCenter(form.uname, {});
+      await firePrivEventPromise;
+    });
+    synthesizeKey("KEY_ArrowDown");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+  });
+
+  add_named_task("recipes", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "user", "pass", "uname", "pword"]
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete:8888">
+    <input type="text" name="uname">
+    <input type="text" name="pword">
+  </form>`);
+
+    await loadRecipes({
+      siteRecipes: [{
+        "hosts": [window.location.host],
+        "usernameSelector": "input[name='1']",
+        "passwordSelector": "input[name='2']",
+      }],
+    });
+
+    // First test DOMAutocomplete
+    // Switch the password field to type=password so _fillForm marks the username
+    // field for autocomplete.
+    form.pword.type = "password";
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
+    restoreForm(form);
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    await popupByArrowDown();
+
+    synthesizeKey("KEY_ArrowDown");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    const autofillResult2 = await formAutofillResult(form.id);
+    is(autofillResult2, "filled", "form has been filled");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+
+    // Now test recipes with blur on the username field.
+    restoreForm(form);
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    form.uname.value = "user";
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Tab");
+    const autofillResult3 = await formAutofillResult(form.id);
+    is(autofillResult3, "filled", "form has been filled");
+    is(form.uname.value, "user", "username is filled");
+    is(form.pword.value, "pass", "password is filled");
+    await resetRecipes();
+  });
+
+  add_named_task("form stays open upon empty search", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete:8888", null, "", "pass", "", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete:8888">
+    <input type="text" name="uname" value="prefilled">
+    <input type="password" name="pword" value="prefilled">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "existing_password", "form has not been filled due to existing password");
+
+    is(form.uname.value, "prefilled", "username is not changed");
+    is(form.pword.value, "prefilled", "password is not changed");
+
+    form.uname.scrollIntoView();
+    await popupBy(() => synthesizeMouseAtCenter(form.uname, {}));
+    form.uname.select();
+    synthesizeKey("KEY_Delete");
+
+    const popupState = await getPopupState();
+    is(popupState.open, true, "Check popup is still open");
+    is(form.uname.value, "", "username is emoty");
+    is(form.pword.value, "prefilled", "password is not changed");
+
+    info("testing password field");
+    synthesizeMouseAtCenter(form.pword, {});
+    form.pword.select();
+    const popupState2 = await getPopupState();
+    is(popupState2.open, false, "Check popup closed since password field isn't empty");
+    await popupBy(() => synthesizeKey("KEY_Delete"));
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+  });
+
+  add_named_task("username only", async () => {
+    await setStoredLoginsDuringTask(
+      [location.origin, "https://autocomplete", null, "user", "pass", "uname", "pword"],
+    );
+    const form = setContentForTask(`<form id="form1" action="https://autocomplete" autocomplete="off">
+    <input type="email" name="uname" value="prefilled" autocomplete="username">
+    <input type="password" name="pword">
+  </form>`);
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "existing_username", "form has not been filled due to existing username");
+
+    is(form.uname.value, "prefilled", "username is not changed");
+    is(form.pword.value, "", "password is empty");
+    restoreForm(form);
+    await popupByArrowDown();
+
+    // Check first entry
+    synthesizeKey("KEY_ArrowDown");
+    is(form.uname.value, "", "username is empty");
+    is(form.pword.value, "", "password is empty");
+    synthesizeKey("KEY_Enter");
+    await untilAutocompletePopupClosed();
+    is(form.uname.value, "user", "username is set");
+    is(form.pword.value, "pass", "password is set");
+  });
 </script>
 </pre>
 </body>
