@@ -11,8 +11,7 @@
 #include "mozilla/Queue.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
-
-class nsIRunnable;
+#include "nsIRunnable.h"
 
 namespace mozilla {
 
