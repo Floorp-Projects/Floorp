@@ -47,7 +47,9 @@ def filter_git_changes(github_path, commit_sha, diff_filter):
     # Convert the directory exclude list to a regex string and filter
     # out the excluded directory paths (note the lack of trailing '$'
     # in the regex).
-    regex_excludes = "|".join(["^.\t{}".format(i) for i in exclude_dir_list])
+    regex_excludes = "|".join(
+        ["^(M|A|D|R\d\d\d)\t{}".format(i) for i in exclude_dir_list]
+    )
     files_not_excluded = [
         path for path in changed_files if not re.findall(regex_excludes, path)
     ]
