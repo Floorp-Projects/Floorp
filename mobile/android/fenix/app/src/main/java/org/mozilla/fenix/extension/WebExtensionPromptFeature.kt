@@ -72,9 +72,6 @@ class WebExtensionPromptFeature(
     }
 
     private fun handleAfterInstallationRequest(promptRequest: WebExtensionPromptRequest.AfterInstallation) {
-        // The install flow in Fenix relies on an [Addon] object so let's convert the (GeckoView)
-        // extension into a minimal add-on. The missing metadata will be fetched when the user
-        // opens the add-ons manager.
         val addon = Addon.newFromWebExtension(promptRequest.extension)
         when (promptRequest) {
             is WebExtensionPromptRequest.AfterInstallation.Permissions.Required -> handleRequiredPermissionRequest(

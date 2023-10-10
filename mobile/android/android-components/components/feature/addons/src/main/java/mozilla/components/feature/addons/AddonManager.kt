@@ -74,50 +74,34 @@ class AddonManager(
                 pendingAddonActions.awaitAll()
             }
 
-            // Get all the featured addons from provider and add state if installed.
+            // Get all the featured add-ons not installed from provider.
             // NB: We're keeping translations only for the default locale.
-            val userLanguage = Locale.getDefault().language
-            val locales = listOf(userLanguage)
-            val featuredAddons = addonsProvider.getFeaturedAddons(allowCache, language = userLanguage)
-                .map { addon -> addon.filterTranslations(locales) }
-                .map { addon ->
-                    installedExtensions[addon.id]?.let {
-                        addon.copy(installedState = it.toInstalledState())
-                    } ?: addon
-                }
+            var featuredAddons = emptyList<Addon>()
+            try {
+                val userLanguage = Locale.getDefault().language
+                val locales = listOf(userLanguage)
+                featuredAddons =
+                    addonsProvider.getFeaturedAddons(allowCache, language = userLanguage)
+                        .filter { addon -> !installedExtensions.containsKey(addon.id) }
+                        .map { addon -> addon.filterTranslations(locales) }
+            } catch (throwable: Throwable) {
+                // Do not throw when we fail to fetch the featured add-ons since there can be installed add-ons.
+                logger.warn("Failed to get the featured add-ons", throwable)
+            }
 
-            // Build a list of installed extensions that are not built-in extensions AND not any of the featured
-            // extensions.
-            val featuredAddonIds = featuredAddons.map { it.id }
-            val otherInstalledExtensions = installedExtensions
-                .filterKeys { !featuredAddonIds.contains(it) }
+            // Build a list of installed extensions that are not built-in extensions.
+            val installedAddons = installedExtensions
                 .filterValues { !it.isBuiltIn() }
-
-            // We now want to build a list of add-on instances for these other installed extensions. We first retrieve
-            // the add-on GUIDs, and then we ask the add-ons provider to retrieve the metadata for these add-ons. After
-            // that, we add the installed state on each add-on instance.
-            //
-            // NB: We're keeping translations only for the default locale.
-            val installedAddonGUIDs = otherInstalledExtensions
-                .filterValues { it.getMetadata()?.temporary == false }
-                .map { extensionEntry -> extensionEntry.value.id }
-            val installedAddons = addonsProvider.getAddonsByGUIDs(installedAddonGUIDs, language = userLanguage)
-                .map { addon -> addon.filterTranslations(locales) }
-                .map { addon -> addon.copy(installedState = installedExtensions[addon.id]?.toInstalledState()) }
-            // Last but not least, we build the list of temporarily loaded extensions.
-            val temporarilyInstalledAddons = otherInstalledExtensions
-                .filterValues { it.getMetadata()?.temporary == true }
                 .map {
-                    val extension: WebExtension = it.value
+                    val extension = it.value
                     val icon = withContext(getIconDispatcher()) {
-                        extension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)
+                        extension.loadIcon(ADDON_ICON_SIZE)
                     }
                     val installedState = extension.toInstalledState().copy(icon = icon)
-
                     Addon.newFromWebExtension(extension, installedState)
                 }
 
-            return featuredAddons + installedAddons + temporarilyInstalledAddons
+            return featuredAddons + installedAddons
         } catch (throwable: Throwable) {
             throw AddonManagerException(throwable)
         }
@@ -356,8 +340,8 @@ class AddonManager(
         // granted to built-in extensions:
         val BLOCKED_PERMISSIONS = listOf("geckoViewAddons", "nativeMessaging")
 
-        // Size of the icon to load for temporary extensions
-        const val TEMPORARY_ADDON_ICON_SIZE = 48
+        // Size of the icon to load for extensions
+        const val ADDON_ICON_SIZE = 48
     }
 }
 

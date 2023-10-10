@@ -347,14 +347,22 @@ class GeckoWebExtension(
     /**
      * See [WebExtension.getMetadata].
      */
-    override fun getMetadata(): Metadata? {
+    override fun getMetadata(): Metadata {
         return nativeExtension.metaData.let {
             Metadata(
                 name = it.name,
+                fullDescription = it.fullDescription,
+                downloadUrl = it.downloadUrl,
+                updateDate = it.updateDate,
+                averageRating = it.averageRating.toFloat(),
+                reviewCount = it.reviewCount,
                 description = it.description,
                 developerName = it.creatorName,
                 developerUrl = it.creatorUrl,
                 homePageUrl = it.homepageUrl,
+                creatorName = it.creatorName,
+                creatorUrl = it.creatorUrl,
+                reviewUrl = it.reviewUrl,
                 version = it.version,
                 permissions = it.permissions.toList(),
                 // Origins is marked as @NonNull but may be null: https://bugzilla.mozilla.org/show_bug.cgi?id=1629957

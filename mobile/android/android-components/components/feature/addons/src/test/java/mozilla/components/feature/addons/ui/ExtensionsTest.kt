@@ -30,7 +30,6 @@ class ExtensionsTest {
     fun `add-on translateName`() {
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),

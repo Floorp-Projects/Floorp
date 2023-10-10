@@ -224,7 +224,7 @@ class SettingsSubMenuAddonsManagerRobot {
                 isDescendantOfA(withId(R.id.add_on_item)),
                 hasSibling(hasDescendant(withText(addonName))),
             ),
-        ).check(matches(withEffectiveVisibility(Visibility.GONE)))
+        ).check(matches(withEffectiveVisibility(Visibility.INVISIBLE)))
     }
 
     private fun cancelInstall() {

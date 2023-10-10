@@ -21,6 +21,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -290,7 +291,7 @@ class AddonsManagerAdapter(
             addonsManagerDelegate.onAddonItemClicked(addon)
         }
 
-        holder.addButton.isVisible = !addon.isInstalled()
+        holder.addButton.isInvisible = addon.isInstalled()
         holder.addButton.setOnClickListener {
             if (!addon.isInstalled()) {
                 addonsManagerDelegate.onInstallAddonButtonClicked(addon)

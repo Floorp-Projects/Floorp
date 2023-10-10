@@ -75,6 +75,7 @@ dependencies {
     implementation project(':support-utils')
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit
     testImplementation ComponentsDependencies.testing_robolectric

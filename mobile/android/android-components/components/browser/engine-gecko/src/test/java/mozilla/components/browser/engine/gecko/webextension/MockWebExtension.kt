@@ -49,6 +49,12 @@ fun mockNativeWebExtensionMetaData(
     allowedInPrivateBrowsing: Boolean = false,
     enabled: Boolean = false,
     temporary: Boolean = false,
+    fullDescription: String? = null,
+    downloadUrl: String? = null,
+    reviewUrl: String? = null,
+    updateDate: String? = null,
+    reviewCount: Int = 0,
+    averageRating: Double = 0.0,
 ): WebExtension.MetaData {
     val metadata: WebExtension.MetaData = mock()
     ReflectionUtils.setField(metadata, "icon", icon)
@@ -70,6 +76,12 @@ fun mockNativeWebExtensionMetaData(
     ReflectionUtils.setField(metadata, "allowedInPrivateBrowsing", allowedInPrivateBrowsing)
     ReflectionUtils.setField(metadata, "enabled", enabled)
     ReflectionUtils.setField(metadata, "temporary", temporary)
+    ReflectionUtils.setField(metadata, "fullDescription", fullDescription)
+    ReflectionUtils.setField(metadata, "downloadUrl", downloadUrl)
+    ReflectionUtils.setField(metadata, "reviewUrl", reviewUrl)
+    ReflectionUtils.setField(metadata, "updateDate", updateDate)
+    ReflectionUtils.setField(metadata, "reviewCount", reviewCount)
+    ReflectionUtils.setField(metadata, "averageRating", averageRating)
     return metadata
 }
 

@@ -24,6 +24,7 @@ import mozilla.components.feature.addons.ui.AddonsManagerAdapter.DifferCallback
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.NotYetSupportedSection
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter.Section
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -223,7 +224,6 @@ class AddonsManagerAdapterTest {
         )
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -396,7 +396,6 @@ class AddonsManagerAdapterTest {
         )
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -414,7 +413,6 @@ class AddonsManagerAdapterTest {
     fun updateAddon() {
         var addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -436,7 +434,6 @@ class AddonsManagerAdapterTest {
     fun updateAddons() {
         var addon1 = Addon(
             id = "addon1",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -446,7 +443,6 @@ class AddonsManagerAdapterTest {
 
         val addon2 = Addon(
             id = "addon2",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -472,7 +468,6 @@ class AddonsManagerAdapterTest {
     fun differCallback() {
         var addon1 = Addon(
             id = "addon1",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -482,7 +477,6 @@ class AddonsManagerAdapterTest {
 
         var addon2 = Addon(
             id = "addon1",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -567,9 +561,10 @@ class AddonsManagerAdapterTest {
     }
 
     @Test
-    fun bindHeaderButton() {
+    fun bindHeaderButton() = runTestOnMain {
         val store = BrowserStore(initialState = BrowserState(extensionsProcessDisabled = true))
-        val adapter = spy(AddonsManagerAdapter(mock(), mock(), emptyList(), mock(), emptyList(), store))
+        val adapter =
+            spy(AddonsManagerAdapter(mock(), mock(), emptyList(), mock(), emptyList(), store))
 
         val restartButton = TextView(testContext)
         val viewHolder = CustomViewHolder.HeaderViewHolder(View(testContext), restartButton)
@@ -578,6 +573,7 @@ class AddonsManagerAdapterTest {
 
         viewHolder.restartButton.performClick()
         dispatcher.scheduler.advanceUntilIdle()
+        store.waitUntilIdle()
 
         assertFalse(store.state.extensionsProcessDisabled)
         verify(adapter).submitList(emptyList())

@@ -27,7 +27,7 @@ import mozilla.components.concept.engine.webextension.DisabledFlags.Companion.US
 import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
-import mozilla.components.feature.addons.AddonManager.Companion.TEMPORARY_ADDON_ICON_SIZE
+import mozilla.components.feature.addons.AddonManager.Companion.ADDON_ICON_SIZE
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -49,7 +49,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
@@ -76,19 +75,11 @@ class AddonManagerTest {
     fun `getAddons - queries addons from provider and updates installation state`() = runTestOnMain {
         // Prepare addons provider
         // addon1 (ext1) is a featured extension that is already installed.
-        val addon1 = Addon(id = "ext1")
         // addon2 (ext2) is a featured extension that is not installed.
-        val addon2 = Addon(id = "ext2")
         // addon3 (ext3) is a featured extension that is marked as disabled.
-        val addon3 = Addon(id = "ext3")
         // addon4 (ext4) and addon5 (ext5) are not featured extensions but they are installed.
-        val addon4 = Addon(id = "ext4")
-        val addon5 = Addon(id = "ext5")
         val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon1, addon2, addon3))
-        // addon4 (ext4) and addon5 (ext5) should already be installed, which is why we expect a call
-        // to `getAddonsByGUIDs()` with a list of two GUIDs.
-        whenever(addonsProvider.getAddonsByGUIDs(eq(listOf("ext5", "ext4")), anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon4, addon5))
+        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(Addon(id = "ext1"), Addon(id = "ext2"), Addon(id = "ext3")))
 
         // Prepare engine
         val engine: Engine = mock()
@@ -153,7 +144,7 @@ class AddonManagerTest {
         whenever(ext6Metadata.temporary).thenReturn(true)
         whenever(ext6.getMetadata()).thenReturn(ext6Metadata)
         val ext6Icon: Bitmap = mock()
-        whenever(ext6.loadIcon(TEMPORARY_ADDON_ICON_SIZE)).thenReturn(ext6Icon)
+        whenever(ext6.loadIcon(ADDON_ICON_SIZE)).thenReturn(ext6Icon)
         WebExtensionSupport.installedExtensions["ext6"] = ext6
 
         val ext7: WebExtension = mock()
@@ -165,50 +156,63 @@ class AddonManagerTest {
         // Verify add-ons were updated with state provided by the engine/store.
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
         assertEquals(6, addons.size)
+
         // ext1 should be installed.
-        assertEquals("ext1", addons[0].id)
-        assertNotNull(addons[0].installedState)
-        assertEquals("ext1", addons[0].installedState!!.id)
-        assertTrue(addons[0].isEnabled())
-        assertFalse(addons[0].isDisabledAsUnsupported())
-        assertNull(addons[0].installedState!!.optionsPageUrl)
-        assertFalse(addons[0].installedState!!.openOptionsPageInTab)
+        val addon1 = addons.find { it.id == "ext1" }!!
+
+        assertEquals("ext1", addon1.id)
+        assertNotNull(addon1.installedState)
+        assertEquals("ext1", addon1.installedState!!.id)
+        assertTrue(addon1.isEnabled())
+        assertFalse(addon1.isDisabledAsUnsupported())
+        assertNull(addon1.installedState!!.optionsPageUrl)
+        assertFalse(addon1.installedState!!.openOptionsPageInTab)
+
         // ext2 should not be installed.
-        assertEquals("ext2", addons[1].id)
-        assertNull(addons[1].installedState)
+        val addon2 = addons.find { it.id == "ext2" }!!
+        assertEquals("ext2", addon2.id)
+        assertNull(addon2.installedState)
+
         // ext3 should now be marked as supported but still be disabled as unsupported.
-        assertEquals("ext3", addons[2].id)
-        assertNotNull(addons[2].installedState)
-        assertEquals("ext3", addons[2].installedState!!.id)
-        assertTrue(addons[2].isSupported())
-        assertFalse(addons[2].isEnabled())
-        assertTrue(addons[2].isDisabledAsUnsupported())
-        assertEquals("http://options-page.moz", addons[2].installedState!!.optionsPageUrl)
-        assertTrue(addons[2].installedState!!.openOptionsPageInTab)
+        val addon3 = addons.find { it.id == "ext3" }!!
+        assertEquals("ext3", addon3.id)
+        assertNotNull(addon3.installedState)
+        assertEquals("ext3", addon3.installedState!!.id)
+        assertTrue(addon3.isSupported())
+        assertFalse(addon3.isEnabled())
+        assertTrue(addon3.isDisabledAsUnsupported())
+        assertEquals("http://options-page.moz", addon3.installedState!!.optionsPageUrl)
+        assertTrue(addon3.installedState!!.openOptionsPageInTab)
+
         // ext4 should be installed.
-        assertEquals("ext4", addons[3].id)
-        assertNotNull(addons[3].installedState)
-        assertEquals("ext4", addons[3].installedState!!.id)
-        assertTrue(addons[3].isEnabled())
-        assertFalse(addons[3].isDisabledAsUnsupported())
-        assertNull(addons[3].installedState!!.optionsPageUrl)
-        assertFalse(addons[3].installedState!!.openOptionsPageInTab)
+        val addon4 = addons.find { it.id == "ext4" }!!
+        assertEquals("ext4", addon4.id)
+        assertNotNull(addon4.installedState)
+        assertEquals("ext4", addon4.installedState!!.id)
+        assertTrue(addon4.isEnabled())
+        assertFalse(addon4.isDisabledAsUnsupported())
+        assertNull(addon4.installedState!!.optionsPageUrl)
+        assertFalse(addon4.installedState!!.openOptionsPageInTab)
+
         // ext5 should be installed.
-        assertEquals("ext5", addons[4].id)
-        assertNotNull(addons[4].installedState)
-        assertEquals("ext5", addons[4].installedState!!.id)
-        assertTrue(addons[4].isEnabled())
-        assertFalse(addons[4].isDisabledAsUnsupported())
-        assertNull(addons[4].installedState!!.optionsPageUrl)
-        assertFalse(addons[4].installedState!!.openOptionsPageInTab)
+        val addon5 = addons.find { it.id == "ext5" }!!
+        assertEquals("ext5", addon5.id)
+        assertNotNull(addon5.installedState)
+        assertEquals("ext5", addon5.installedState!!.id)
+        assertTrue(addon5.isEnabled())
+        assertFalse(addon5.isDisabledAsUnsupported())
+        assertNull(addon5.installedState!!.optionsPageUrl)
+        assertFalse(addon5.installedState!!.openOptionsPageInTab)
+
         // ext6 should be installed.
-        assertEquals("ext6", addons[5].id)
-        assertNotNull(addons[5].installedState)
-        assertEquals("ext6", addons[5].installedState!!.id)
-        assertTrue(addons[5].isEnabled())
-        assertFalse(addons[5].isDisabledAsUnsupported())
-        assertNull(addons[5].installedState!!.optionsPageUrl)
-        assertFalse(addons[5].installedState!!.openOptionsPageInTab)
+        val addon6 = addons.find { it.id == "ext6" }!!
+        assertEquals("ext6", addon6.id)
+        assertNotNull(addon6.installedState)
+        assertEquals("ext6", addon6.installedState!!.id)
+        assertTrue(addon6.isEnabled())
+        assertFalse(addon6.isDisabledAsUnsupported())
+        assertNull(addon6.installedState!!.optionsPageUrl)
+        assertFalse(addon6.installedState!!.openOptionsPageInTab)
     }
 
     @Test
@@ -236,7 +240,7 @@ class AddonManagerTest {
         whenever(temporaryExtension.id).thenReturn("temp_ext")
         whenever(temporaryExtension.url).thenReturn("site_url")
         whenever(temporaryExtension.getMetadata()).thenReturn(temporaryExtensionMetadata)
-        whenever(temporaryExtension.loadIcon(TEMPORARY_ADDON_ICON_SIZE)).thenReturn(temporaryExtensionIcon)
+        whenever(temporaryExtension.loadIcon(ADDON_ICON_SIZE)).thenReturn(temporaryExtensionIcon)
         WebExtensionSupport.installedExtensions["temp_ext"] = temporaryExtension
 
         val addonManager = spy(AddonManager(store, mock(), addonsProvider, mock()))
@@ -253,24 +257,6 @@ class AddonManagerTest {
         assertNotNull(addons[0].installedState)
         assertTrue(addons[0].isSupported())
         assertEquals(temporaryExtensionIcon, addons[0].installedState!!.icon)
-    }
-
-    @Test(expected = AddonManagerException::class)
-    fun `getAddons - wraps exceptions and rethrows them`() = runTestOnMain {
-        val store = BrowserStore()
-
-        val engine: Engine = mock()
-        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
-        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
-            callbackCaptor.value.invoke(emptyList())
-        }
-
-        val addonsProvider: AddonsProvider = mock()
-        whenever(addonsProvider.getFeaturedAddons(anyBoolean(), anyLong(), language = anyString())).thenThrow(IllegalStateException("test"))
-        WebExtensionSupport.initialize(engine, store)
-
-        AddonManager(store, mock(), addonsProvider, mock()).getAddons()
-        Unit
     }
 
     @Test

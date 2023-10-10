@@ -24,7 +24,6 @@ class AddonTest {
     fun `translatePermissions - must return the expected string ids per permission category`() {
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = listOf(
@@ -93,7 +92,6 @@ class AddonTest {
     fun `isInstalled - true if installed state present and otherwise false`() {
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -110,7 +108,6 @@ class AddonTest {
     fun `isEnabled - true if installed state enabled and otherwise false`() {
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -130,7 +127,6 @@ class AddonTest {
     fun `filterTranslations - only keeps specified translations`() {
         val addon = Addon(
             id = "id",
-            categories = emptyList(),
             downloadUrl = "downloadUrl",
             version = "version",
             permissions = emptyList(),
@@ -372,19 +368,58 @@ class AddonTest {
         whenever(metadata.baseUrl).thenReturn("some-base-url")
         whenever(metadata.developerName).thenReturn("developer-name")
         whenever(metadata.developerUrl).thenReturn("developer-url")
-
+        whenever(metadata.fullDescription).thenReturn("fullDescription")
+        whenever(metadata.homePageUrl).thenReturn("some-url")
+        whenever(metadata.downloadUrl).thenReturn("some-download-url")
+        whenever(metadata.updateDate).thenReturn("1970-01-01T00:00:00Z")
+        whenever(metadata.reviewUrl).thenReturn("reviewUrl")
+        whenever(metadata.reviewCount).thenReturn(0)
+        whenever(metadata.averageRating).thenReturn(0f)
         val addon = Addon.newFromWebExtension(extension)
 
         assertEquals("some-id", addon.id)
         assertEquals("some-url", addon.siteUrl)
-        assertEquals("some-url", addon.downloadUrl)
+        assertEquals("some-download-url", addon.downloadUrl)
         assertEquals(permissions + hostPermissions, addon.permissions)
         assertEquals("", addon.updatedAt)
         assertEquals("some name", addon.translatableName[Addon.DEFAULT_LOCALE])
-        assertEquals("some description", addon.translatableDescription[Addon.DEFAULT_LOCALE])
+        assertEquals("fullDescription", addon.translatableDescription[Addon.DEFAULT_LOCALE])
         assertEquals("some description", addon.translatableSummary[Addon.DEFAULT_LOCALE])
         assertEquals("developer-name", addon.author?.name)
         assertEquals("developer-url", addon.author?.url)
+        assertEquals("some-download-url", addon.downloadUrl)
+        assertEquals("reviewUrl", addon.reviewUrl)
+        assertEquals(0, addon.rating!!.reviews)
+    }
+
+    @Test
+    fun `fromMetadataToAddonDate - must return an valid addon formatted date`() {
+        val expectedDate = "2023-09-28T00:37:43Z"
+        val inputDate = "2023-09-28T00:37:43.983Z"
+
+        val result = Addon.fromMetadataToAddonDate(inputDate)
+
+        assertEquals(expectedDate, result)
+    }
+
+    @Test
+    fun `fromMetadataToAddonDate - must return  handle invalid date formats`() {
+        val expectedDate = ""
+        val inputDate = "202xd3-09-28T00:37:43.98993Z"
+
+        val result = Addon.fromMetadataToAddonDate(inputDate)
+
+        assertEquals(expectedDate, result)
+    }
+
+    @Test
+    fun `fromMetadataToAddonDate - must return empty strings`() {
+        val expectedDate = ""
+        val inputDate = ""
+
+        val result = Addon.fromMetadataToAddonDate(inputDate)
+
+        assertEquals(expectedDate, result)
     }
 
     @Test

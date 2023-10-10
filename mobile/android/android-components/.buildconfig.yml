@@ -551,6 +551,7 @@ projects:
     - support-base
     - support-ktx
     - support-test
+    - support-test-libstate
     - support-utils
     - support-webextensions
     - tooling-lint

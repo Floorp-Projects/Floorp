@@ -373,7 +373,6 @@ class AMOAddonsProviderTest {
         val provider = AMOAddonsProvider(testContext, client = mockedClient)
         val addon = Addon(
             id = "id",
-            categories = mock(),
             downloadUrl = "https://example.com",
             version = "version",
             iconUrl = "https://example.com/image.png",
@@ -391,7 +390,6 @@ class AMOAddonsProviderTest {
         val provider = AMOAddonsProvider(testContext, client = mockedClient)
         val addon = Addon(
             id = "id",
-            categories = mock(),
             downloadUrl = "https://example.com",
             version = "version",
             iconUrl = "https://example.com/image.png",

@@ -414,11 +414,18 @@ class GeckoWebExtensionTest {
                 disabledFlags = DisabledFlags.USER,
                 temporary = true,
                 permissions = arrayOf("p1", "p2"),
+                fullDescription = "fullDescription",
+                downloadUrl = "downloadUrl",
+                reviewUrl = "reviewUrl",
+                updateDate = "updateDate",
+                reviewCount = 2,
+                averageRating = 2.2,
             ),
         )
         val extensionWithMetadata = GeckoWebExtension(nativeWebExtension, runtime)
         val metadata = extensionWithMetadata.getMetadata()
-        assertNotNull(metadata!!)
+        assertNotNull(metadata)
+
         assertEquals("1.0", metadata.version)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
         assertEquals(listOf("o1", "o2"), metadata.hostPermissions)
@@ -429,6 +436,12 @@ class GeckoWebExtensionTest {
         assertEquals("myextension", metadata.name)
         assertEquals("http://options-page.moz", metadata.optionsPageUrl)
         assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
+        assertEquals("fullDescription", metadata.fullDescription)
+        assertEquals("downloadUrl", metadata.downloadUrl)
+        assertEquals("reviewUrl", metadata.reviewUrl)
+        assertEquals("updateDate", metadata.updateDate)
+        assertEquals(2, metadata.reviewCount)
+        assertEquals(2.2f, metadata.averageRating)
         assertFalse(metadata.openOptionsPageInTab)
         assertTrue(metadata.temporary)
         assertTrue(metadata.disabledFlags.contains(DisabledFlags.USER))
@@ -454,8 +467,10 @@ class GeckoWebExtensionTest {
         )
         val extensionWithMetadata = GeckoWebExtension(nativeWebExtension, runtime)
         val metadata = extensionWithMetadata.getMetadata()
-        assertNotNull(metadata!!)
+        assertNotNull(metadata)
         assertEquals("1.0", metadata.version)
+        assertEquals(0.0f, metadata.averageRating)
+        assertEquals(0, metadata.reviewCount)
         assertEquals(listOf("p1", "p2"), metadata.permissions)
         assertEquals(emptyList<String>(), metadata.hostPermissions)
         assertEquals("moz-extension://123c5c5b-cd03-4bea-b23f-ac0b9ab40257/", metadata.baseUrl)
@@ -465,6 +480,10 @@ class GeckoWebExtensionTest {
         assertNull(metadata.homePageUrl)
         assertNull(metadata.name)
         assertNull(metadata.optionsPageUrl)
+        assertNull(metadata.fullDescription)
+        assertNull(metadata.reviewUrl)
+        assertNull(metadata.updateDate)
+        assertNull(metadata.downloadUrl)
     }
 
     @Test
