@@ -9603,18 +9603,13 @@ nsRect nsLayoutUtils::ComputeSVGOriginBox(SVGViewportElement* aElement) {
                 nsPresContext::CSSPixelsToAppUnits(viewportSize.height));
 }
 
-static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
-                                      StyleGeometryBox aGeometryBox) {
+/* static */
+nsRect nsLayoutUtils::ComputeSVGReferenceRect(nsIFrame* aFrame,
+                                              StyleGeometryBox aGeometryBox) {
   MOZ_ASSERT(aFrame->GetContent()->IsSVGElement());
   nsRect r;
 
-  // For SVG elements without associated CSS layout box, the used value for
-  // content-box and padding-box is fill-box and for
-  // border-box and margin-box is stroke-box.
   switch (aGeometryBox) {
-    case StyleGeometryBox::NoBox:
-    case StyleGeometryBox::BorderBox:
-    case StyleGeometryBox::MarginBox:
     case StyleGeometryBox::StrokeBox: {
       // XXX Bug 1299876
       // The size of stroke-box is not correct if this graphic element has
@@ -9635,8 +9630,6 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       r = nsLayoutUtils::ComputeSVGOriginBox(viewportElement);
       break;
     }
-    case StyleGeometryBox::ContentBox:
-    case StyleGeometryBox::PaddingBox:
     case StyleGeometryBox::FillBox: {
       gfxRect bbox =
           SVGUtils::GetBBox(aFrame, SVGUtils::eBBoxIncludeFillGeometry);
@@ -9644,10 +9637,7 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       break;
     }
     default: {
-      MOZ_ASSERT_UNREACHABLE("unknown StyleGeometryBox type");
-      gfxRect bbox =
-          SVGUtils::GetBBox(aFrame, SVGUtils::eBBoxIncludeFillGeometry);
-      r = nsLayoutUtils::RoundGfxRectToAppRect(bbox, AppUnitsPerCSSPixel());
+      MOZ_ASSERT_UNREACHABLE("unsupported SVG box");
       break;
     }
   }
@@ -9660,8 +9650,6 @@ nsRect nsLayoutUtils::ComputeHTMLReferenceRect(const nsIFrame* aFrame,
                                                StyleGeometryBox aGeometryBox) {
   nsRect r;
 
-  // For elements with associated CSS layout box, the used value for fill-box,
-  // stroke-box and view-box is border-box.
   switch (aGeometryBox) {
     case StyleGeometryBox::ContentBox:
       r = aFrame->GetContentRectRelativeToSelf();
@@ -9672,51 +9660,15 @@ nsRect nsLayoutUtils::ComputeHTMLReferenceRect(const nsIFrame* aFrame,
     case StyleGeometryBox::MarginBox:
       r = aFrame->GetMarginRectRelativeToSelf();
       break;
-    case StyleGeometryBox::NoBox:
     case StyleGeometryBox::BorderBox:
-    case StyleGeometryBox::FillBox:
-    case StyleGeometryBox::StrokeBox:
-    case StyleGeometryBox::ViewBox:
       r = aFrame->GetRectRelativeToSelf();
       break;
     default:
-      MOZ_ASSERT_UNREACHABLE("unknown StyleGeometryBox type");
-      r = aFrame->GetRectRelativeToSelf();
+      MOZ_ASSERT_UNREACHABLE("unsupported CSS box");
       break;
   }
 
   return r;
-}
-
-/* static */
-StyleGeometryBox nsLayoutUtils::CoordBoxToGeometryBox(StyleCoordBox aCoordBox) {
-  switch (aCoordBox) {
-    case StyleCoordBox::ContentBox:
-      return StyleGeometryBox::ContentBox;
-    case StyleCoordBox::PaddingBox:
-      return StyleGeometryBox::PaddingBox;
-    case StyleCoordBox::BorderBox:
-      return StyleGeometryBox::BorderBox;
-    case StyleCoordBox::FillBox:
-      return StyleGeometryBox::FillBox;
-    case StyleCoordBox::StrokeBox:
-      return StyleGeometryBox::StrokeBox;
-    case StyleCoordBox::ViewBox:
-      return StyleGeometryBox::ViewBox;
-  }
-  MOZ_ASSERT_UNREACHABLE("Unknown coord-box type");
-  return StyleGeometryBox::BorderBox;
-}
-
-/* static */
-nsRect nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
-                                         StyleGeometryBox aGeometryBox) {
-  // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
-  // element, which does have an associated CSS layout box. In this case we
-  // should still use ComputeHTMLReferenceRect for region computing.
-  return aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
-             ? ComputeSVGReferenceRect(aFrame, aGeometryBox)
-             : ComputeHTMLReferenceRect(aFrame, aGeometryBox);
 }
 
 static StyleGeometryBox ShapeBoxToGeometryBox(const StyleShapeBox& aBox) {

@@ -2029,23 +2029,59 @@ static bool IsHTMLStyleGeometryBox(StyleGeometryBox aBox) {
           aBox == StyleGeometryBox::MarginBox);
 }
 
-static StyleGeometryBox ComputeBoxValue(nsIFrame* aForFrame,
-                                        StyleGeometryBox aBox) {
+static StyleGeometryBox ComputeBoxValueForOrigin(nsIFrame* aForFrame,
+                                                 StyleGeometryBox aBox) {
+  // The mapping for mask-origin is from
+  // https://drafts.fxtf.org/css-masking/#the-mask-origin
   if (!aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // For elements with associated CSS layout box, the values fill-box,
-    // stroke-box and view-box compute to the initial value of mask-clip.
+    // stroke-box and view-box compute to the initial value of mask-origin.
     if (IsSVGStyleGeometryBox(aBox)) {
       return StyleGeometryBox::BorderBox;
     }
   } else {
     // For SVG elements without associated CSS layout box, the values
-    // content-box, padding-box, border-box and margin-box compute to fill-box.
+    // content-box, padding-box, border-box compute to fill-box.
     if (IsHTMLStyleGeometryBox(aBox)) {
       return StyleGeometryBox::FillBox;
     }
   }
 
   return aBox;
+}
+
+static StyleGeometryBox ComputeBoxValueForClip(const nsIFrame* aForFrame,
+                                               StyleGeometryBox aBox) {
+  // The mapping for mask-clip is from
+  // https://drafts.fxtf.org/css-masking/#the-mask-clip
+  if (aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    // For SVG elements without associated CSS layout box, the used values for
+    // content-box and padding-box compute to fill-box and for border-box and
+    // margin-box compute to stroke-box.
+    switch (aBox) {
+      case StyleGeometryBox::ContentBox:
+      case StyleGeometryBox::PaddingBox:
+        return StyleGeometryBox::FillBox;
+      case StyleGeometryBox::BorderBox:
+      case StyleGeometryBox::MarginBox:
+        return StyleGeometryBox::StrokeBox;
+      default:
+        return aBox;
+    }
+  }
+
+  // For elements with associated CSS layout box, the used values for fill-box
+  // compute to content-box and for stroke-box and view-box compute to
+  // border-box.
+  switch (aBox) {
+    case StyleGeometryBox::FillBox:
+      return StyleGeometryBox::ContentBox;
+    case StyleGeometryBox::StrokeBox:
+    case StyleGeometryBox::ViewBox:
+      return StyleGeometryBox::BorderBox;
+    default:
+      return aBox;
+  }
 }
 
 bool nsCSSRendering::ImageLayerClipState::IsValid() const {
@@ -2069,16 +2105,17 @@ void nsCSSRendering::GetImageLayerClip(
     const nsRect& aCallerDirtyRect, bool aWillPaintBorder,
     nscoord aAppUnitsPerPixel,
     /* out */ ImageLayerClipState* aClipState) {
-  StyleGeometryBox layerClip = ComputeBoxValue(aForFrame, aLayer.mClip);
+  StyleGeometryBox layerClip = ComputeBoxValueForClip(aForFrame, aLayer.mClip);
   if (IsSVGStyleGeometryBox(layerClip)) {
     MOZ_ASSERT(aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
 
     // The coordinate space of clipArea is svg user space.
-    nsRect clipArea = nsLayoutUtils::ComputeGeometryBox(aForFrame, layerClip);
+    nsRect clipArea =
+        nsLayoutUtils::ComputeSVGReferenceRect(aForFrame, layerClip);
 
     nsRect strokeBox = (layerClip == StyleGeometryBox::StrokeBox)
                            ? clipArea
-                           : nsLayoutUtils::ComputeGeometryBox(
+                           : nsLayoutUtils::ComputeSVGReferenceRect(
                                  aForFrame, StyleGeometryBox::StrokeBox);
     nsRect clipAreaRelativeToStrokeBox = clipArea - strokeBox.TopLeft();
 
@@ -2708,17 +2745,19 @@ nsRect nsCSSRendering::ComputeImageLayerPositioningArea(
   // may need  it to compute the effective image size for a CSS gradient.
   nsRect positionArea;
 
-  StyleGeometryBox layerOrigin = ComputeBoxValue(aForFrame, aLayer.mOrigin);
+  StyleGeometryBox layerOrigin =
+      ComputeBoxValueForOrigin(aForFrame, aLayer.mOrigin);
 
   if (IsSVGStyleGeometryBox(layerOrigin)) {
     MOZ_ASSERT(aForFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT));
     *aAttachedToFrame = aForFrame;
 
-    positionArea = nsLayoutUtils::ComputeGeometryBox(aForFrame, layerOrigin);
+    positionArea =
+        nsLayoutUtils::ComputeSVGReferenceRect(aForFrame, layerOrigin);
 
     nsPoint toStrokeBoxOffset = nsPoint(0, 0);
     if (layerOrigin != StyleGeometryBox::StrokeBox) {
-      nsRect strokeBox = nsLayoutUtils::ComputeGeometryBox(
+      nsRect strokeBox = nsLayoutUtils::ComputeSVGReferenceRect(
           aForFrame, StyleGeometryBox::StrokeBox);
       toStrokeBoxOffset = positionArea.TopLeft() - strokeBox.TopLeft();
     }
