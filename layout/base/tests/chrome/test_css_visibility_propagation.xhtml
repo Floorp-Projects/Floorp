@@ -35,14 +35,14 @@ add_task(async () => {
 
   await Promise.all([ loadWindow1, loadWindow2 ]);
 
-  checkHiddenEmbeddederState(window1, window2, true, true);
+  checkHiddenEmbeddederState(window1, window2, false, true);
 
   // Hide the parent of browser2.
   let parent = window2.document.getElementById("parent");
   parent.style.visibility = "hidden";
   parent.getBoundingClientRect();
 
-  checkHiddenEmbeddederState(window1, window2, true, false);
+  checkHiddenEmbeddederState(window1, window2, false, false);
 
   const browser2 = window2.document.querySelector("browser");
   let target = browser2.contentDocument.getElementById("button");
@@ -57,7 +57,7 @@ add_task(async () => {
   parent.style.visibility = "";
   parent.getBoundingClientRect();
 
-  checkHiddenEmbeddederState(window1, window2, true, true);
+  checkHiddenEmbeddederState(window1, window2, false, true);
 
   target.focus();
 
