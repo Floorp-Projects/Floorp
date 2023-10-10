@@ -9,26 +9,23 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include <algorithm>
-#include <initializer_list>
 #include "GeckoProfiler.h"
 #include "mozilla/EventQueue.h"
-#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/VsyncTaskManager.h"
 #include "mozilla/IOInterposer.h"
-#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Unused.h"
 #include "nsIThreadInternal.h"
-#include "nsQueryObject.h"
 #include "nsThread.h"
 #include "prenv.h"
 #include "prsystem.h"
 
 namespace mozilla {
 
-std::unique_ptr<TaskController> TaskController::sSingleton;
+StaticAutoPtr<TaskController> TaskController::sSingleton;
+
 thread_local size_t mThreadPoolIndex = -1;
 std::atomic<uint64_t> Task::sCurrentTaskSeqNo = 0;
 
@@ -190,14 +187,9 @@ Task* Task::GetHighestPriorityDependency() {
   return currentTask == this ? nullptr : currentTask;
 }
 
-TaskController* TaskController::Get() {
-  MOZ_ASSERT(sSingleton.get());
-  return sSingleton.get();
-}
-
 void TaskController::Initialize() {
   MOZ_ASSERT(!sSingleton);
-  sSingleton = std::make_unique<TaskController>();
+  sSingleton = new TaskController();
 }
 
 void ThreadFuncPoolThread(void* aIndex) {
@@ -273,16 +265,15 @@ void TaskController::Shutdown() {
   VsyncTaskManager::Cleanup();
   if (sSingleton) {
     sSingleton->ShutdownThreadPoolInternal();
-    sSingleton->ShutdownInternal();
+    sSingleton = nullptr;
   }
   MOZ_ASSERT(!sSingleton);
 }
 
 void TaskController::ShutdownThreadPoolInternal() {
   {
-    // Prevent racecondition on mShuttingDown and wait.
+    // Prevent race condition on mShuttingDown and wait.
     MutexAutoLock lock(mGraphMutex);
-
     mShuttingDown = true;
     mThreadPoolCV.NotifyAll();
   }
@@ -290,8 +281,6 @@ void TaskController::ShutdownThreadPoolInternal() {
     PR_JoinThread(thread.mThread);
   }
 }
-
-void TaskController::ShutdownInternal() { sSingleton = nullptr; }
 
 void TaskController::RunPoolThread() {
   IOInterposer::RegisterCurrentThread();
