@@ -30,78 +30,82 @@ This test proves that related logins show up in the autocomplete menu when
 the feature is enabled and that the related logins do not count as duplicates
 and therefore the form gets filled directly.
 
+<template id="form1-template">
+  <form id="form1" action="https://www.example.com">
+    <input type="text" name="uname">
+    <input type="password" name="pword">
+  </form>
+</template>
+
 <script class="testbody" type="text/javascript">
-const formTemplate = `<form id="form1" action="https://www.example.com">
-  <input type="text" name="uname">
-  <input type="password" name="pword">
-</form>`;
+  const formTemplate = document.getElementById("form1-template");
 
-add_setup(async () => {
-  await setStoredLoginsDuringTest(
-    ["https://example.com", "https://example.com", null, "example.com-user", "password", "uname", "pword"],
+  add_setup(async () => {
+    await setStoredLoginsDuringTest(
+      ["https://example.com", "https://example.com", null, "example.com-user", "password", "uname", "pword"],
 
-    // Related domain relationship where example.com and other-example.com are in the related domains list
-    ["https://other-example.com", "https://other-example.com", null, "other-example.com-user", "password", "uname", "pword"],
+      // Related domain relationship where example.com and other-example.com are in the related domains list
+      ["https://other-example.com", "https://other-example.com", null, "other-example.com-user", "password", "uname", "pword"],
 
-    // example.com and example.co.uk are related, so sub.example.co.uk is also related
-    ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "sub.example.co.uk-user", "password", "uname", "pword"],
+      // example.com and example.co.uk are related, so sub.example.co.uk is also related
+      ["https://sub.example.co.uk", "https://sub.example.co.uk", null, "sub.example.co.uk-user", "password", "uname", "pword"],
 
-    // www subdomain on same TLD
-    ["https://www.example.com", "https://www.example.com", null, "www.example.com-user", "password", "uname", "pword"],
+      // www subdomain on same TLD
+      ["https://www.example.com", "https://www.example.com", null, "www.example.com-user", "password", "uname", "pword"],
 
-    // other subdomain on same TLD
-    ["https://sub.example.com", "https://sub.example.com", null, "sub.example.com-user", "password", "uname", "pword"],
-  );
-});
+      // other subdomain on same TLD
+      ["https://sub.example.com", "https://sub.example.com", null, "sub.example.com-user", "password", "uname", "pword"],
+    );
+  });
 
-add_named_task("with relatedRealms disabled, related logins do not show up in autocomplete menu", async () => {
-  await setPreferencesForTask(["signon.relatedRealms.enabled", false]);
+  add_named_task("with relatedRealms disabled, related logins do not show up in autocomplete menu", async () => {
+    await setPreferencesForTask(["signon.relatedRealms.enabled", false]);
 
-  const form = setContentForTask(formTemplate);
+    const form = setContentForTask(formTemplate);
 
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
 
-  // reset the form and open autocomplete popup by focusing username input
-  form.reset();
-  const results = await popupBy(() => form.uname.focus());
-  checkAutoCompleteResults(results, [
-    "example.com-user",
-    "sub.example.com-user",
-    "www.example.com-user",
-  ], window.location.host, "all logins are present and in order");
-});
+    // reset the form and open autocomplete popup by focusing username input
+    form.reset();
+    const results = await popupBy(() => form.uname.focus());
+    checkAutoCompleteResults(results, [
+      "example.com-user",
+      "sub.example.com-user",
+      "www.example.com-user",
+    ], window.location.host, "all logins are present and in order");
+  });
 
-add_named_task("with relatedRealms enabled, related logins show up in autocomplete menu", async () => {
-  await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
+  add_named_task("with relatedRealms enabled, related logins show up in autocomplete menu", async () => {
+    await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
 
-  const form = setContentForTask(formTemplate);
+    const form = setContentForTask(formTemplate);
 
-  const result = await formAutofillResult(form.id);
-  is(result, "filled", "form has been filled");
+    const result = await formAutofillResult(form.id);
+    is(result, "filled", "form has been filled");
 
-  // reset the form and open autocomplete popup by focusing username input
-  form.reset();
-  const results = await popupBy(() => form.uname.focus());
-  checkAutoCompleteResults(results, [
-    "example.com-user",
-    "other-example.com-user",
-    "sub.example.co.uk-user",
-    "sub.example.com-user",
-    "www.example.com-user",
-  ], window.location.host, "all logins are present and in order");
-});
+    // reset the form and open autocomplete popup by focusing username input
+    form.reset();
+    const results = await popupBy(() => form.uname.focus());
+    checkAutoCompleteResults(results, [
+      "example.com-user",
+      "other-example.com-user",
+      "sub.example.co.uk-user",
+      "sub.example.com-user",
+      "www.example.com-user",
+    ], window.location.host, "all logins are present and in order");
+  });
 
-add_named_task("even with relatedRealms enabled, related logins are not considered duplicates, so form will be filled", async () => {
-  await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
+  add_named_task("even with relatedRealms enabled, related logins are not considered duplicates, so form will be filled", async () => {
+    await setPreferencesForTask(["signon.relatedRealms.enabled", true]);
 
-  const form = setContentForTask(formTemplate);
+    const form = setContentForTask(formTemplate);
 
-  const autofillResult = await formAutofillResult(form.id);
-  is(autofillResult, "filled", "form has been filled");
+    const autofillResult = await formAutofillResult(form.id);
+    is(autofillResult, "filled", "form has been filled");
 
-  is(form.uname.value, "example.com-user", "username from exact tld is filled in");
-});
+    is(form.uname.value, "example.com-user", "username from exact tld is filled in");
+  });
 </script>
 </pre>
 </body>
