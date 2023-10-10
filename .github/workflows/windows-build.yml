@@ -249,6 +249,12 @@ jobs:
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{github.repository}}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
 
+    - name: Change update url if lightning
+      if: inputs.lightning-build
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/lightning/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
       if: inputs.beta
@@ -261,7 +267,7 @@ jobs:
           done
       
     - name: Copy l10n files if lightning
-      if : inputs.lightning-build
+      if: inputs.lightning-build
       run: |
           for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
             mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning
