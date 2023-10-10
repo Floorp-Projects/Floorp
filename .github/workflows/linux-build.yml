@@ -195,7 +195,6 @@ jobs:
       if: inputs.lightning-build
       run: |
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/lightning/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml |g' ./build/application.ini.in
-        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
 
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
