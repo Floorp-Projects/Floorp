@@ -64,7 +64,7 @@ class ShoppingSettings extends MozLitElement {
           data-l10n-attrs="label"
           @toggle=${this.onToggleRecommendations}>
         </moz-toggle/>
-        <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more">
+        <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more2">
           <a
             is="moz-support-link"
             support-page="todo"
