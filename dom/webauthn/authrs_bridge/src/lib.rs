@@ -680,13 +680,6 @@ impl AuthrsService {
         if none_attestation
             || static_prefs::pref!("security.webauth.webauthn_testing_allow_direct_attestation")
         {
-            // TODO(Bug 1855290) Remove this presence prompt
-            send_prompt(
-                BrowserPromptType::Presence,
-                tid,
-                Some(&origin),
-                Some(browsing_context_id),
-            )?;
             self.resume_make_credential(tid, none_attestation)
         } else {
             send_prompt(
@@ -694,8 +687,7 @@ impl AuthrsService {
                 tid,
                 Some(&origin),
                 Some(browsing_context_id),
-            )?;
-            Ok(())
+            )
         }
     }
 
@@ -774,6 +766,13 @@ impl AuthrsService {
         // configurations, so we do not need the full generality of `AuthenticatorService` here.
         // We disable the USB transport in tests that use virtual devices.
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
+            // TODO(Bug 1855290) Remove this presence prompt
+            send_prompt(
+                BrowserPromptType::Presence,
+                tid,
+                Some(&info.origin),
+                Some(browsing_context_id),
+            )?;
             self.usb_token_manager.borrow_mut().register(
                 timeout_ms,
                 info,
