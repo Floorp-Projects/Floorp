@@ -384,6 +384,7 @@ URIFixup.prototype = {
       if (uriWithProtocol) {
         info.fixedURI = uriWithProtocol;
         info.fixupChangedProtocol = true;
+        info.wasSchemelessInput = true;
         maybeSetAlternateFixedURI(info, fixupFlags);
         info.preferredURI = info.fixedURI;
         // Check if it's a forced visit. The user can enforce a visit by
@@ -684,6 +685,13 @@ URIFixupInfo.prototype = {
   },
   get keywordAsSent() {
     return this._keywordAsSent || "";
+  },
+
+  set wasSchemelessInput(changed) {
+    this._wasSchemelessInput = changed;
+  },
+  get wasSchemelessInput() {
+    return !!this._wasSchemelessInput;
   },
 
   set fixupChangedProtocol(changed) {
