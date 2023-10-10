@@ -1414,13 +1414,14 @@ export class UrlbarView {
       console.error(`No viewTemplate found for ${result.providerName}`);
       return;
     }
-    let hasUrl = this.#buildViewForDynamicType(
+    let classes = this.#buildViewForDynamicType(
       dynamicType,
       item._content,
       item._elements,
       viewTemplate
     );
-    item.toggleAttribute("has-url", hasUrl);
+    item.toggleAttribute("has-url", classes.has("urlbarView-url"));
+    item.toggleAttribute("has-action", classes.has("urlbarView-action"));
     this.#setRowSelectable(item, item._content.hasAttribute("selectable"));
   }
 
@@ -1437,20 +1438,30 @@ export class UrlbarView {
    * @param {object} template
    *   The template object being recursed into. Pass the top-level template
    *   object to start with.
-   * @returns {boolean}
-   *   Whether the given template or any of its descendants contains a
-   *   `.urlbarView-url` element.
+   * @param {Set} classes
+   *   The CSS class names of all elements in the row's subtree are recursively
+   *   collected in this set. Don't pass anything to start with so that the
+   *   default argument, a new Set, is used.
+   * @returns {Set}
+   *   The `classes` set, which on return will contain the CSS class names of
+   *   all elements in the row's subtree.
    */
-  #buildViewForDynamicType(type, parentNode, elementsByName, template) {
-    let hasUrl = false;
-
+  #buildViewForDynamicType(
+    type,
+    parentNode,
+    elementsByName,
+    template,
+    classes = new Set()
+  ) {
     // Set attributes on parentNode.
     this.#setDynamicAttributes(parentNode, template.attributes);
 
     // Add classes to parentNode's classList.
     if (template.classList) {
       parentNode.classList.add(...template.classList);
-      hasUrl ||= template.classList.includes("urlbarView-url");
+      for (let c of template.classList) {
+        classes.add(c);
+      }
     }
     if (template.overflowable) {
       parentNode.classList.add("urlbarView-overflowable");
@@ -1465,16 +1476,16 @@ export class UrlbarView {
       let child = this.#createElement(childTemplate.tag);
       child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
-      let descendantHasUrl = this.#buildViewForDynamicType(
+      this.#buildViewForDynamicType(
         type,
         child,
         elementsByName,
-        childTemplate
+        childTemplate,
+        classes
       );
-      hasUrl ||= descendantHasUrl;
     }
 
-    return hasUrl;
+    return classes;
   }
 
   #createRowContentForRichSuggestion(item, result) {

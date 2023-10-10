@@ -23,6 +23,32 @@ add_setup(async function () {
   await MerinoTestUtils.initWeather();
 });
 
+// Basic checks of the row DOM.
+add_task(async function dom() {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: MerinoTestUtils.WEATHER_KEYWORD,
+  });
+
+  let resultIndex = 1;
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  Assert.equal(
+    details.result.providerName,
+    UrlbarProviderWeather.name,
+    "Weather row should be present at expected index"
+  );
+  let { row } = details.element;
+
+  Assert.ok(
+    BrowserTestUtils.is_visible(
+      row.querySelector(".urlbarView-title-separator")
+    ),
+    "The title separator should be visible"
+  );
+
+  await UrlbarTestUtils.promisePopupClose(window);
+});
+
 // This test ensures the browser navigates to the weather webpage after
 // the weather result is selected.
 add_task(async function test_weather_result_selection() {
