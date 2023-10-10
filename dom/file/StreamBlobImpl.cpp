@@ -16,6 +16,7 @@
 #include "nsICloneableInputStream.h"
 #include "nsIEventTarget.h"
 #include "nsIPipe.h"
+#include "js/GCAPI.h"
 
 namespace mozilla::dom {
 
@@ -206,6 +207,11 @@ StreamBlobImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
 }
 
 size_t StreamBlobImpl::GetAllocationSize() const {
+  // do_QueryInterface may run GC if the object is implemented in JS, but
+  // mInputStream is nsICloneableInputStream which doesn't have a JS
+  // implementation.
+  JS::AutoSuppressGCAnalysis nogc;
+
   nsCOMPtr<nsIStringInputStream> stringInputStream =
       do_QueryInterface(mInputStream);
   if (!stringInputStream) {
