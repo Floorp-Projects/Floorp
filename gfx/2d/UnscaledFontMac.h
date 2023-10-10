@@ -54,6 +54,8 @@ class UnscaledFontMac final : public UnscaledFont {
 
   bool GetFontFileData(FontFileDataOutput aDataCallback, void* aBaton) override;
 
+  bool IsDataFont() const { return mIsDataFont; }
+
   already_AddRefed<ScaledFont> CreateScaledFont(
       Float aGlyphSize, const uint8_t* aInstanceData,
       uint32_t aInstanceDataLength, const FontVariation* aVariations,
