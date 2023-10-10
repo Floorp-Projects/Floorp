@@ -2997,6 +2997,9 @@ class PresShell final : public nsStubDocumentObserver,
   // NS_UNCONSTRAINEDSIZE) if the mouse isn't over our window or there is no
   // last observed mouse location for some reason.
   nsPoint mMouseLocation;
+  // This is used for the synthetic mouse events too.  This is set when a mouse
+  // event is dispatched into the DOM.
+  static int16_t sMouseButtons;
   // The last observed pointer location relative to that root document in visual
   // coordinates.
   nsPoint mLastOverWindowPointerLocation;
