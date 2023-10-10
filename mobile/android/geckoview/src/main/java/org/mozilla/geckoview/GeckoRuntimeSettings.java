@@ -98,32 +98,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
-     * Set the crash threshold within the timeframe before spawning is disabled for the remote
-     * extensions process.
-     *
-     * @param crashThreshold The crash threshold within the timeframe before spawning is disabled.
-     * @return This Builder instance.
-     */
-    public @NonNull Builder extensionsProcessCrashThreshold(final @NonNull Integer crashThreshold) {
-      getSettings().mExtensionsProcessCrashThreshold.set(crashThreshold);
-      return this;
-    }
-
-    /**
-     * Set the crash threshold timeframe before spawning is disabled for the remote extensions
-     * process. Crashes that are older than the current time minus timeframeMs will not be counted
-     * towards meeting the threshold.
-     *
-     * @param timeframeMs The timeframe for the crash threshold in milliseconds. Any crashes older
-     *     than the current time minus the timeframeMs are not counted.
-     * @return This Builder instance.
-     */
-    public @NonNull Builder extensionsProcessCrashTimeframe(final @NonNull Long timeframeMs) {
-      getSettings().mExtensionsProcessCrashTimeframe.set(timeframeMs);
-      return this;
-    }
-
-    /**
      * Set whether JavaScript support should be enabled.
      *
      * @param flag A flag determining whether JavaScript should be enabled. Default is true.
@@ -568,10 +542,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new Pref<>("extensions.webapi.enabled", false);
   /* package */ final PrefWithoutDefault<Boolean> mExtensionsProcess =
       new PrefWithoutDefault<Boolean>("extensions.webextensions.remote");
-  /* package */ final PrefWithoutDefault<Long> mExtensionsProcessCrashTimeframe =
-      new PrefWithoutDefault<Long>("extensions.webextensions.crash.timeframe");
-  /* package */ final PrefWithoutDefault<Integer> mExtensionsProcessCrashThreshold =
-      new PrefWithoutDefault<Integer>("extensions.webextensions.crash.threshold");
 
   /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
@@ -718,50 +688,6 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    */
   public @NonNull GeckoRuntimeSettings setExtensionsProcessEnabled(final boolean flag) {
     mExtensionsProcess.commit(flag);
-    return this;
-  }
-
-  /**
-   * Get the crash threshold before spawning is disabled for the remote extensions process.
-   *
-   * @return the crash threshold
-   */
-  public @Nullable Integer getExtensionsProcessCrashThreshold() {
-    return mExtensionsProcessCrashThreshold.get();
-  }
-
-  /**
-   * Get the timeframe in milliseconds for the threshold before spawning is disabled for the remote
-   * extensions process.
-   *
-   * @return the timeframe in milliseconds for the crash threshold
-   */
-  public @Nullable Long getExtensionsProcessCrashTimeframe() {
-    return mExtensionsProcessCrashTimeframe.get();
-  }
-
-  /**
-   * Set the crash threshold before disabling spawning of the extensions remote process.
-   *
-   * @param crashThreshold max crashes allowed
-   * @return This GeckoRuntimeSettings instance.
-   */
-  public @NonNull GeckoRuntimeSettings setExtensionsProcessCrashThreshold(
-      final @NonNull Integer crashThreshold) {
-    mExtensionsProcessCrashThreshold.commit(crashThreshold);
-    return this;
-  }
-
-  /**
-   * Set the timeframe for the extensions process crash threshold. Any crashes older than the
-   * current time minus the timeframe are not included in the crash count.
-   *
-   * @param timeframeMs time in milliseconds
-   * @return This GeckoRuntimeSettings instance.
-   */
-  public @NonNull GeckoRuntimeSettings setExtensionsProcessCrashTimeframe(
-      final @NonNull Long timeframeMs) {
-    mExtensionsProcessCrashTimeframe.commit(timeframeMs);
     return this;
   }
 

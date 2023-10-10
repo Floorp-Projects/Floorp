@@ -837,8 +837,6 @@ package org.mozilla.geckoview {
     method public boolean getDoubleTapZoomingEnabled();
     method public boolean getEnterpriseRootsEnabled();
     method @AnyThread @Nullable public ExperimentDelegate getExperimentDelegate();
-    method @Nullable public Integer getExtensionsProcessCrashThreshold();
-    method @Nullable public Long getExtensionsProcessCrashTimeframe();
     method @Nullable public Boolean getExtensionsProcessEnabled();
     method public boolean getExtensionsWebAPIEnabled();
     method @NonNull public Bundle getExtras();
@@ -866,8 +864,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setConsoleOutputEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setDoubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setEnterpriseRootsEnabled(boolean);
-    method @NonNull public GeckoRuntimeSettings setExtensionsProcessCrashThreshold(@NonNull Integer);
-    method @NonNull public GeckoRuntimeSettings setExtensionsProcessCrashTimeframe(@NonNull Long);
     method @NonNull public GeckoRuntimeSettings setExtensionsProcessEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setExtensionsWebAPIEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setFontInflationEnabled(boolean);
@@ -908,8 +904,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder doubleTapZoomingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder enterpriseRootsEnabled(boolean);
     method @AnyThread @NonNull public GeckoRuntimeSettings.Builder experimentDelegate(@Nullable ExperimentDelegate);
-    method @NonNull public GeckoRuntimeSettings.Builder extensionsProcessCrashThreshold(@NonNull Integer);
-    method @NonNull public GeckoRuntimeSettings.Builder extensionsProcessCrashTimeframe(@NonNull Long);
     method @NonNull public GeckoRuntimeSettings.Builder extensionsProcessEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder extensionsWebAPIEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder extras(@NonNull Bundle);
