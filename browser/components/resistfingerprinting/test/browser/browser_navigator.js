@@ -117,11 +117,6 @@ const CONST_VENDORSUB = "";
 const CONST_LEGACY_BUILD_ID = "20181001000000";
 
 const appVersion = parseInt(Services.appinfo.version);
-const rvVersion =
-  parseInt(
-    Services.prefs.getIntPref("network.http.useragent.forceRVOnly", 0),
-    0
-  ) || appVersion;
 const spoofedVersion = AppConstants.platform == "android" ? "115" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
@@ -345,7 +340,7 @@ async function testWorkerNavigator() {
 add_task(async function setupDefaultUserAgent() {
   let defaultUserAgent = `Mozilla/5.0 (${
     DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${rvVersion}.0) Gecko/${
+  }; rv:${appVersion}.0) Gecko/${
     DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
   expectedResults = {
@@ -380,7 +375,7 @@ add_task(async function setupRFPExemptions() {
 
   let defaultUserAgent = `Mozilla/5.0 (${
     DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${rvVersion}.0) Gecko/${
+  }; rv:${appVersion}.0) Gecko/${
     DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
 
@@ -415,11 +410,11 @@ add_task(async function setupResistFingerprinting() {
 
   let spoofedUserAgentNavigator = `Mozilla/5.0 (${
     SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-  }; rv:${rvVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
+  }; rv:${appVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
 
   let spoofedUserAgentHeader = `Mozilla/5.0 (${
     SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-  }; rv:${rvVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
+  }; rv:${appVersion}.0) Gecko/${spoofedGeckoTrail} Firefox/${appVersion}.0`;
 
   expectedResults = {
     testDesc: "spoofed",
