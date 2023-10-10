@@ -252,7 +252,26 @@ class nsAtomTable {
   // pages loaded, but in those cases the actual atoms will dominate memory
   // usage and the overhead of extra tables will be negligible. We're mostly
   // interested in the fixed cost for nearly-empty content processes.
-  const static size_t kNumSubTables = 128;  // Must be power of two.
+  constexpr static size_t kNumSubTables = 128;  // Must be power of two.
+
+  // The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
+  // But choosing the best initial subtable length has some subtleties: we add
+  // ~2700 static atoms at start-up, and then we start adding and removing
+  // dynamic atoms. If we make the tables too big to start with, when the first
+  // dynamic atom gets removed from a given table the load factor will be < 25%
+  // and we will shrink it.
+  //
+  // So we first make the simplifying assumption that the atoms are more or less
+  // evenly-distributed across the subtables (which is the case empirically).
+  // Then, we take the total atom count when the first dynamic atom is removed
+  // (~2700), divide that across the N subtables, and the largest capacity that
+  // will allow each subtable to be > 25% full with that count.
+  //
+  // So want an initial subtable capacity less than (2700 / N) * 4 = 10800 / N.
+  // Rounding down to the nearest power of two gives us 8192 / N. Since the
+  // capacity is double the initial length, we end up with (4096 / N) per
+  // subtable.
+  constexpr static size_t kInitialSubTableSize = 4096 / kNumSubTables;
 
  private:
   nsAtomSubTable mSubTables[kNumSubTables];
@@ -294,25 +313,6 @@ static void AtomTableInitEntry(PLDHashEntryHdr* aEntry, const void* aKey) {
 static const PLDHashTableOps AtomTableOps = {
     AtomTableGetHash, AtomTableMatchKey, PLDHashTable::MoveEntryStub,
     nsAtomTable::AtomTableClearEntry, AtomTableInitEntry};
-
-// The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
-// But choosing the best initial subtable length has some subtleties: we add
-// ~2700 static atoms at start-up, and then we start adding and removing
-// dynamic atoms. If we make the tables too big to start with, when the first
-// dynamic atom gets removed from a given table the load factor will be < 25%
-// and we will shrink it.
-//
-// So we first make the simplifying assumption that the atoms are more or less
-// evenly-distributed across the subtables (which is the case empirically).
-// Then, we take the total atom count when the first dynamic atom is removed
-// (~2700), divide that across the N subtables, and the largest capacity that
-// will allow each subtable to be > 25% full with that count.
-//
-// So want an initial subtable capacity less than (2700 / N) * 4 = 10800 / N.
-// Rounding down to the nearest power of two gives us 8192 / N. Since the
-// capacity is double the initial length, we end up with (4096 / N) per
-// subtable.
-#define INITIAL_SUBTABLE_LENGTH (4096 / nsAtomTable::kNumSubTables)
 
 nsAtomSubTable& nsAtomTable::SelectSubTable(AtomTableKey& aKey) {
   // There are a few considerations around how we select subtables.
@@ -396,7 +396,8 @@ size_t nsAtomTable::RacySlowCount() {
 
 nsAtomSubTable::nsAtomSubTable()
     : mLock("Atom Sub-Table Lock"),
-      mTable(&AtomTableOps, sizeof(AtomTableEntry), INITIAL_SUBTABLE_LENGTH) {}
+      mTable(&AtomTableOps, sizeof(AtomTableEntry),
+             nsAtomTable::kInitialSubTableSize) {}
 
 void nsAtomSubTable::GCLocked(GCKind aKind) {
   MOZ_ASSERT(NS_IsMainThread());
