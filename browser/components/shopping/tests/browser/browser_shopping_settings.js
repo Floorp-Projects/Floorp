@@ -26,7 +26,7 @@ add_task(async function test_shopping_settings_learn_more() {
             "a[data-l10n-name=fakespot-link]"
           ).href;
           let url = new URL(href);
-          is(url.pathname, "/review-checker");
+          is(url.pathname, "/our-mission");
           is(url.origin, "https://www.fakespot.com");
 
           let qs = url.searchParams;
