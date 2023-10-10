@@ -487,6 +487,8 @@ support-files = ["window_empty_document.html"]
 support-files = ["window_empty_document.html"]
 skip-if = ["os == 'android'"] # fail
 
+["test_selection_after_right_click.html"]
+
 ["test_slotted_mouse_event.html"]
 skip-if = ["os == 'android'"] # timeout
 
