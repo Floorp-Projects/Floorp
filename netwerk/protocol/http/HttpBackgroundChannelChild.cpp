@@ -185,7 +185,8 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
     const HttpChannelOnStartRequestArgs& aArgs,
-    const HttpChannelAltDataStream& aAltData) {
+    const HttpChannelAltDataStream& aAltData,
+    const TimeStamp& aOnStartRequestStart) {
   LOG((
       "HttpBackgroundChannelChild::RecvOnStartRequest [this=%p, status=%" PRIx32
       "]\n",
@@ -200,7 +201,8 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
       aArgs.dataFromSocketProcess() ? ODA_FROM_SOCKET : ODA_FROM_PARENT;
 
   mChannelChild->ProcessOnStartRequest(aResponseHead, aUseResponseHead,
-                                       aRequestHeaders, aArgs, aAltData);
+                                       aRequestHeaders, aArgs, aAltData,
+                                       aOnStartRequestStart);
   // Allow to queue other runnable since OnStartRequest Event already hits the
   // child's mEventQ.
   OnStartRequestReceived(aArgs.multiPartID());
@@ -211,11 +213,13 @@ IPCResult HttpBackgroundChannelChild::RecvOnStartRequest(
 IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
     const uint64_t& aOffset, const uint32_t& aCount, const nsACString& aData,
-    const bool& aDataFromSocketProcess) {
+    const bool& aDataFromSocketProcess,
+    const TimeStamp& aOnDataAvailableStart) {
   RefPtr<HttpBackgroundChannelChild> self = this;
   std::function<void()> callProcessOnTransportAndData =
       [self, aChannelStatus, aTransportStatus, aOffset, aCount,
-       data = nsCString(aData), aDataFromSocketProcess]() {
+       data = nsCString(aData), aDataFromSocketProcess,
+       aOnDataAvailableStart]() {
         LOG(
             ("HttpBackgroundChannelChild::RecvOnTransportAndData [this=%p, "
              "aDataFromSocketProcess=%d, mFirstODASource=%d]\n",
@@ -243,7 +247,8 @@ IPCResult HttpBackgroundChannelChild::RecvOnTransportAndData(
         }
 
         self->mChannelChild->ProcessOnTransportAndData(
-            aChannelStatus, aTransportStatus, aOffset, aCount, data);
+            aChannelStatus, aTransportStatus, aOffset, aCount, data,
+            aOnDataAvailableStart);
       };
 
   // Bug 1641336: Race only happens if the data is from socket process.
@@ -267,7 +272,7 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
     const TimeStamp& aLastActiveTabOptHit,
     const nsHttpHeaderArray& aResponseTrailers,
     nsTArray<ConsoleReportCollected>&& aConsoleReports,
-    const bool& aFromSocketProcess) {
+    const bool& aFromSocketProcess, const TimeStamp& aOnStopRequestStart) {
   LOG(
       ("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p, "
        "aFromSocketProcess=%d, mFirstODASource=%d]\n",
@@ -295,10 +300,10 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
         "HttpBackgroundChannelChild::RecvOnStopRequest",
         [self, aChannelStatus, aTiming, aLastActiveTabOptHit, aResponseTrailers,
          consoleReports = CopyableTArray{std::move(aConsoleReports)},
-         aFromSocketProcess]() mutable {
+         aFromSocketProcess, aOnStopRequestStart]() mutable {
           self->RecvOnStopRequest(aChannelStatus, aTiming, aLastActiveTabOptHit,
                                   aResponseTrailers, std::move(consoleReports),
-                                  aFromSocketProcess);
+                                  aFromSocketProcess, aOnStopRequestStart);
         });
 
     mQueuedRunnables.AppendElement(task.forget());
@@ -308,9 +313,9 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
   if (mFirstODASource != ODA_FROM_SOCKET) {
     if (!aFromSocketProcess) {
       mOnStopRequestCalled = true;
-      mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
-                                          aResponseTrailers,
-                                          std::move(aConsoleReports), false);
+      mChannelChild->ProcessOnStopRequest(
+          aChannelStatus, aTiming, aResponseTrailers,
+          std::move(aConsoleReports), false, aOnStopRequestStart);
     }
     return IPC_OK();
   }
@@ -320,9 +325,9 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
   if (aFromSocketProcess) {
     MOZ_ASSERT(!mOnStopRequestCalled);
     mOnStopRequestCalled = true;
-    mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming,
-                                        aResponseTrailers,
-                                        std::move(aConsoleReports), true);
+    mChannelChild->ProcessOnStopRequest(
+        aChannelStatus, aTiming, aResponseTrailers, std::move(aConsoleReports),
+        true, aOnStopRequestStart);
     if (mConsoleReportTask) {
       mConsoleReportTask();
       mConsoleReportTask = nullptr;

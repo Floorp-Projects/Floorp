@@ -347,15 +347,18 @@ void HttpChannelChild::ProcessOnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
     const HttpChannelOnStartRequestArgs& aArgs,
-    const HttpChannelAltDataStream& aAltData) {
+    const HttpChannelAltDataStream& aAltData,
+    const TimeStamp& aOnStartRequestStartTime) {
   LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
   mAltDataInputStream = DeserializeIPCStream(aAltData.altDataInputStream());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
-             aUseResponseHead, aRequestHeaders, aArgs]() {
+      this,
+      [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
+       aUseResponseHead, aRequestHeaders, aArgs, aOnStartRequestStartTime]() {
+        self->mOnStartRequestStartTime = aOnStartRequestStartTime;
         self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
                              aArgs);
       }));
@@ -460,13 +463,18 @@ void HttpChannelChild::OnStartRequest(
         aArgs.timing().transactionPending() - mAsyncOpenTime);
   }
 
+  const TimeStamp now = TimeStamp::Now();
   if (!aArgs.timing().responseStart().IsNull()) {
     Telemetry::AccumulateTimeDelta(
         Telemetry::NETWORK_RESPONSE_START_PARENT_TO_CONTENT_EXP_MS, cosString,
-        aArgs.timing().responseStart(), TimeStamp::Now());
+        aArgs.timing().responseStart(), now);
     PerfStats::RecordMeasurement(
         PerfStats::Metric::HttpChannelResponseStartParentToContent,
-        TimeStamp::Now() - aArgs.timing().responseStart());
+        now - aArgs.timing().responseStart());
+  }
+  if (!mOnStartRequestStartTime.IsNull()) {
+    PerfStats::RecordMeasurement(PerfStats::Metric::OnStartRequestToContent,
+                                 now - mOnStartRequestStartTime);
   }
 
   StoreAllRedirectsSameOrigin(aArgs.allRedirectsSameOrigin());
@@ -601,7 +609,8 @@ void HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest) {
 
 void HttpChannelChild::ProcessOnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsACString& aData) {
+    const uint64_t& aOffset, const uint32_t& aCount, const nsACString& aData,
+    const TimeStamp& aOnDataAvailableStartTime) {
   LOG(("HttpChannelChild::ProcessOnTransportAndData [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
   mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
@@ -609,7 +618,9 @@ void HttpChannelChild::ProcessOnTransportAndData(
         return self->GetODATarget();
       },
       [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus,
-       aTransportStatus, aOffset, aCount, aData = nsCString(aData)]() {
+       aTransportStatus, aOffset, aCount, aData = nsCString(aData),
+       aOnDataAvailableStartTime]() {
+        self->mOnDataAvailableStartTime = aOnDataAvailableStartTime;
         self->OnTransportAndData(aChannelStatus, aTransportStatus, aOffset,
                                  aCount, aData);
       }));
@@ -628,6 +639,11 @@ void HttpChannelChild::OnTransportAndData(const nsresult& aChannelStatus,
 
   if (mCanceled || NS_FAILED(mStatus)) {
     return;
+  }
+
+  if (!mOnDataAvailableStartTime.IsNull()) {
+    PerfStats::RecordMeasurement(PerfStats::Metric::OnDataAvailableToContent,
+                                 TimeStamp::Now() - mOnDataAvailableStartTime);
   }
 
   // Hold queue lock throughout all three calls, else we might process a later
@@ -788,8 +804,8 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 void HttpChannelChild::ProcessOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers,
-    nsTArray<ConsoleReportCollected>&& aConsoleReports,
-    bool aFromSocketProcess) {
+    nsTArray<ConsoleReportCollected>&& aConsoleReports, bool aFromSocketProcess,
+    const TimeStamp& aOnStopRequestStartTime) {
   LOG(
       ("HttpChannelChild::ProcessOnStopRequest [this=%p, "
        "aFromSocketProcess=%d]\n",
@@ -800,7 +816,8 @@ void HttpChannelChild::ProcessOnStopRequest(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
              aResponseTrailers,
              consoleReports = CopyableTArray{aConsoleReports.Clone()},
-             aFromSocketProcess]() mutable {
+             aFromSocketProcess, aOnStopRequestStartTime]() mutable {
+        self->mOnStopRequestStartTime = aOnStopRequestStartTime;
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
         if (!aFromSocketProcess) {
           self->DoOnConsoleReport(std::move(consoleReports));
@@ -957,6 +974,11 @@ void HttpChannelChild::OnStopRequest(
     PerfStats::RecordMeasurement(
         PerfStats::Metric::HttpChannelResponseEndParentToContent,
         now - aTiming.responseEnd());
+  }
+
+  if (!mOnStopRequestStartTime.IsNull()) {
+    PerfStats::RecordMeasurement(PerfStats::Metric::OnStopRequestToContent,
+                                 now - mOnStopRequestStartTime);
   }
 
   mResponseTrailers = MakeUnique<nsHttpHeaderArray>(aResponseTrailers);

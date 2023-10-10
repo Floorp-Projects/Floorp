@@ -147,7 +147,8 @@ bool HttpBackgroundChannelParent::OnStartRequest(
     const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
     const nsHttpHeaderArray& aRequestHeaders,
     const HttpChannelOnStartRequestArgs& aArgs,
-    const nsCOMPtr<nsICacheEntry>& aAltDataSource) {
+    const nsCOMPtr<nsICacheEntry>& aAltDataSource,
+    TimeStamp aOnStartRequestStart) {
   LOG(("HttpBackgroundChannelParent::OnStartRequest [this=%p]\n", this));
   AssertIsInMainProcess();
 
@@ -158,12 +159,14 @@ bool HttpBackgroundChannelParent::OnStartRequest(
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<
-            const nsHttpResponseHead, const bool, const nsHttpHeaderArray,
-            const HttpChannelOnStartRequestArgs, const nsCOMPtr<nsICacheEntry>>(
+        NewRunnableMethod<const nsHttpResponseHead, const bool,
+                          const nsHttpHeaderArray,
+                          const HttpChannelOnStartRequestArgs,
+                          const nsCOMPtr<nsICacheEntry>, TimeStamp>(
             "net::HttpBackgroundChannelParent::OnStartRequest", this,
             &HttpBackgroundChannelParent::OnStartRequest, aResponseHead,
-            aUseResponseHead, aRequestHeaders, aArgs, aAltDataSource),
+            aUseResponseHead, aRequestHeaders, aArgs, aAltDataSource,
+            aOnStartRequestStart),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -189,12 +192,13 @@ bool HttpBackgroundChannelParent::OnStartRequest(
   }
 
   return SendOnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
-                            aArgs, altData);
+                            aArgs, altData, aOnStartRequestStart);
 }
 
 bool HttpBackgroundChannelParent::OnTransportAndData(
     const nsresult& aChannelStatus, const nsresult& aTransportStatus,
-    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData) {
+    const uint64_t& aOffset, const uint32_t& aCount, const nsCString& aData,
+    TimeStamp aOnDataAvailableStart) {
   LOG(("HttpBackgroundChannelParent::OnTransportAndData [this=%p]\n", this));
   AssertIsInMainProcess();
 
@@ -206,10 +210,10 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
         NewRunnableMethod<const nsresult, const nsresult, const uint64_t,
-                          const uint32_t, const nsCString>(
+                          const uint32_t, const nsCString, TimeStamp>(
             "net::HttpBackgroundChannelParent::OnTransportAndData", this,
             &HttpBackgroundChannelParent::OnTransportAndData, aChannelStatus,
-            aTransportStatus, aOffset, aCount, aData),
+            aTransportStatus, aOffset, aCount, aData, aOnDataAvailableStart),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -219,10 +223,12 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
 
   nsHttp::SendFunc<nsDependentCSubstring> sendFunc =
       [self = UnsafePtr<HttpBackgroundChannelParent>(this), aChannelStatus,
-       aTransportStatus](const nsDependentCSubstring& aData, uint64_t aOffset,
-                         uint32_t aCount) {
+       aTransportStatus,
+       aOnDataAvailableStart](const nsDependentCSubstring& aData,
+                              uint64_t aOffset, uint32_t aCount) {
         return self->SendOnTransportAndData(aChannelStatus, aTransportStatus,
-                                            aOffset, aCount, aData, false);
+                                            aOffset, aCount, aData, false,
+                                            aOnDataAvailableStart);
       };
 
   return nsHttp::SendDataInChunks(aData, aOffset, aCount, sendFunc);
@@ -231,7 +237,8 @@ bool HttpBackgroundChannelParent::OnTransportAndData(
 bool HttpBackgroundChannelParent::OnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers,
-    const nsTArray<ConsoleReportCollected>& aConsoleReports) {
+    const nsTArray<ConsoleReportCollected>& aConsoleReports,
+    TimeStamp aOnStopRequestStart) {
   LOG(
       ("HttpBackgroundChannelParent::OnStopRequest [this=%p "
        "status=%" PRIx32 "]\n",
@@ -247,10 +254,11 @@ bool HttpBackgroundChannelParent::OnStopRequest(
     nsresult rv = mBackgroundThread->Dispatch(
         NewRunnableMethod<const nsresult, const ResourceTimingStructArgs,
                           const nsHttpHeaderArray,
-                          const CopyableTArray<ConsoleReportCollected>>(
+                          const CopyableTArray<ConsoleReportCollected>,
+                          TimeStamp>(
             "net::HttpBackgroundChannelParent::OnStopRequest", this,
             &HttpBackgroundChannelParent::OnStopRequest, aChannelStatus,
-            aTiming, aResponseTrailers, aConsoleReports),
+            aTiming, aResponseTrailers, aConsoleReports, aOnStopRequestStart),
         NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -262,7 +270,8 @@ bool HttpBackgroundChannelParent::OnStopRequest(
   TimeStamp lastActTabOpt = nsHttp::GetLastActiveTabLoadOptimizationHit();
 
   return SendOnStopRequest(aChannelStatus, aTiming, lastActTabOpt,
-                           aResponseTrailers, aConsoleReports, false);
+                           aResponseTrailers, aConsoleReports, false,
+                           aOnStopRequestStart);
 }
 
 bool HttpBackgroundChannelParent::OnConsoleReport(

@@ -56,21 +56,22 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const bool& aDataToChildProcess, const bool& aRestarted,
       const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
       const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason,
-      const uint32_t& aCaps);
+      const uint32_t& aCaps, const TimeStamp& aOnStartRequestStartTime);
   mozilla::ipc::IPCResult RecvOnTransportStatus(
       const nsresult& aStatus, const int64_t& aProgress,
       const int64_t& aProgressMax,
       Maybe<NetworkAddressArg>&& aNetworkAddressArg);
-  mozilla::ipc::IPCResult RecvOnDataAvailable(const nsCString& aData,
-                                              const uint64_t& aOffset,
-                                              const uint32_t& aCount);
+  mozilla::ipc::IPCResult RecvOnDataAvailable(
+      const nsCString& aData, const uint64_t& aOffset, const uint32_t& aCount,
+      const TimeStamp& aOnDataAvailableStartTime);
   mozilla::ipc::IPCResult RecvOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
       const TimeStamp& aLastActiveTabOptHit,
-      const HttpConnectionInfoCloneArgs& aArgs);
+      const HttpConnectionInfoCloneArgs& aArgs,
+      const TimeStamp& aOnStopRequestStartTime);
   mozilla::ipc::IPCResult RecvOnInitFailed(const nsresult& aStatus);
 
   mozilla::ipc::IPCResult RecvOnH2PushStream(const uint32_t& aPushedStreamId,
@@ -93,6 +94,16 @@ class HttpTransactionParent final : public PHttpTransactionParent,
     mRedirectEnd = aRedirectEnd;
   }
 
+  virtual TimeStamp GetOnStartRequestStartTime() const override {
+    return mOnStartRequestStartTime;
+  }
+  virtual TimeStamp GetDataAvailableStartTime() const override {
+    return mOnDataAvailableStartTime;
+  }
+  virtual TimeStamp GetOnStopRequestStartTime() const override {
+    return mOnStopRequestStartTime;
+  }
+
  private:
   virtual ~HttpTransactionParent();
 
@@ -107,15 +118,17 @@ class HttpTransactionParent final : public PHttpTransactionParent,
       const bool& aDataToChildProcess, const bool& aRestarted,
       const uint32_t& aHTTPSSVCReceivedStage, const bool& aSupportsHttp3,
       const nsIRequest::TRRMode& aMode, const TRRSkippedReason& aSkipReason,
-      const uint32_t& aCaps);
+      const uint32_t& aCaps, const TimeStamp& aOnStartRequestStartTime);
   void DoOnDataAvailable(const nsCString& aData, const uint64_t& aOffset,
-                         const uint32_t& aCount);
+                         const uint32_t& aCount,
+                         const TimeStamp& aOnDataAvailableStartTime);
   void DoOnStopRequest(
       const nsresult& aStatus, const bool& aResponseIsComplete,
       const int64_t& aTransferSize, const TimingStructArgs& aTimings,
       const Maybe<nsHttpHeaderArray>& responseTrailers,
       Maybe<TransactionObserverResult>&& aTransactionObserverResult,
-      nsHttpConnectionInfo* aConnInfo);
+      nsHttpConnectionInfo* aConnInfo,
+      const TimeStamp& aOnStopRequestStartTime);
   void DoNotifyListener();
   void ContinueDoNotifyListener();
   // Get event target for ODA.
@@ -164,6 +177,9 @@ class HttpTransactionParent final : public PHttpTransactionParent,
   TimingStruct mTimings;
   TimeStamp mDomainLookupStart;
   TimeStamp mDomainLookupEnd;
+  TimeStamp mOnStartRequestStartTime;
+  TimeStamp mOnDataAvailableStartTime;
+  TimeStamp mOnStopRequestStartTime;
   TransactionObserverFunc mTransactionObserver;
   OnPushCallback mOnPushCallback;
   nsTArray<uint8_t> mDataForSniffer;

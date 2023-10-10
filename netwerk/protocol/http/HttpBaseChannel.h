@@ -572,6 +572,16 @@ class HttpBaseChannel : public nsHashPropertyBag,
     return mCachedOpaqueResponseBlockingPref;
   }
 
+  TimeStamp GetOnStartRequestStartTime() const {
+    return mOnStartRequestStartTime;
+  }
+  TimeStamp GetDataAvailableStartTime() const {
+    return mOnDataAvailableStartTime;
+  }
+  TimeStamp GetOnStopRequestStartTime() const {
+    return mOnStopRequestStartTime;
+  }
+
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
 
@@ -784,6 +794,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   TimeStamp mDispatchFetchEventEnd;
   TimeStamp mHandleFetchEventStart;
   TimeStamp mHandleFetchEventEnd;
+  TimeStamp mOnStartRequestStartTime;
+  TimeStamp mOnDataAvailableStartTime;
+  TimeStamp mOnStopRequestStartTime;
   // copied from the transaction before we null out mTransaction
   // so that the timing can still be queried from OnStopRequest
   TimingStruct mTransactionTimings;

@@ -802,6 +802,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   void SetHTTPSSVCRecord(already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord);
 
+  void RecordOnStartTelemetry(nsresult aStatus, bool aIsNavigation);
+
   // Timer used to delay the network request, or to trigger the network
   // request if retrieving the cache entry takes too long.
   nsCOMPtr<nsITimer> mNetworkTriggerTimer;

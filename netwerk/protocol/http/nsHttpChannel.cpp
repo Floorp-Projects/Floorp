@@ -62,6 +62,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Components.h"
@@ -7117,16 +7118,15 @@ nsHttpChannel::GetRequestMethod(nsACString& aMethod) {
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
 
-static void RecordOnStartTelemetry(nsresult aStatus,
-                                   HttpTransactionShell* aTransaction,
-                                   bool aIsNavigation) {
+void nsHttpChannel::RecordOnStartTelemetry(nsresult aStatus,
+                                           bool aIsNavigation) {
   Telemetry::Accumulate(Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS,
                         NS_SUCCEEDED(aStatus));
 
-  if (aTransaction) {
+  if (mTransaction) {
     Telemetry::Accumulate(
         Telemetry::HTTP3_CHANNEL_ONSTART_SUCCESS,
-        (aTransaction->IsHttp3Used()) ? "http3"_ns : "no_http3"_ns,
+        (mTransaction->IsHttp3Used()) ? "http3"_ns : "no_http3"_ns,
         NS_SUCCEEDED(aStatus));
   }
 
@@ -7156,6 +7156,24 @@ static void RecordOnStartTelemetry(nsresult aStatus,
                             TRRService::ProviderKey(),
                             static_cast<uint32_t>(state));
     }
+  }
+
+  if (nsIOService::UseSocketProcess() && mTransaction) {
+    const TimeStamp now = TimeStamp::Now();
+    TimeStamp responseEnd = mTransaction->GetResponseEnd();
+    if (!responseEnd.IsNull()) {
+      PerfStats::RecordMeasurement(PerfStats::Metric::ResponseEndSocketToParent,
+                                   now - responseEnd);
+    }
+
+    mOnStartRequestStartTime = mTransaction->GetOnStartRequestStartTime();
+    if (!mOnStartRequestStartTime.IsNull()) {
+      PerfStats::RecordMeasurement(
+          PerfStats::Metric::OnStartRequestSocketToParent,
+          now - mOnStartRequestStartTime);
+    }
+  } else {
+    mOnStartRequestStartTime = TimeStamp::Now();
   }
 }
 
@@ -7191,7 +7209,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
        "]\n",
        this, request, static_cast<uint32_t>(static_cast<nsresult>(mStatus))));
 
-  RecordOnStartTelemetry(mStatus, mTransaction, IsNavigation());
+  RecordOnStartTelemetry(mStatus, IsNavigation());
 
   if (mRaceCacheWithNetwork) {
     LOG(
@@ -7734,6 +7752,17 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
     mResponseTrailers = mTransaction->TakeResponseTrailers();
 
+    if (nsIOService::UseSocketProcess() && mTransaction) {
+      mOnStopRequestStartTime = mTransaction->GetOnStopRequestStartTime();
+      if (!mOnStopRequestStartTime.IsNull()) {
+        PerfStats::RecordMeasurement(
+            PerfStats::Metric::OnStopRequestSocketToParent,
+            TimeStamp::Now() - mOnStopRequestStartTime);
+      }
+    } else {
+      mOnStopRequestStartTime = TimeStamp::Now();
+    }
+
     // at this point, we're done with the transaction
     mTransactionTimings = mTransaction->Timings();
     mTransaction = nullptr;
@@ -8258,6 +8287,16 @@ nsHttpChannel::OnDataAvailable(nsIRequest* request, nsIInputStream* input,
       seekable = nullptr;
     }
 
+    if (nsIOService::UseSocketProcess() && mTransaction) {
+      mOnDataAvailableStartTime = mTransaction->GetDataAvailableStartTime();
+      if (!mOnDataAvailableStartTime.IsNull()) {
+        PerfStats::RecordMeasurement(
+            PerfStats::Metric::OnDataAvailableSocketToParent,
+            TimeStamp::Now() - mOnDataAvailableStartTime);
+      }
+    } else {
+      mOnDataAvailableStartTime = TimeStamp::Now();
+    }
     nsresult rv =
         mListener->OnDataAvailable(this, input, mLogicalOffset, count);
     if (NS_SUCCEEDED(rv)) {
