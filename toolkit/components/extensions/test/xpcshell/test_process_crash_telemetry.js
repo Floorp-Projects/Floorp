@@ -24,6 +24,30 @@ add_setup(() => {
   // the call to testGetValue.
   Services.fog.initializeFOG();
   Services.fog.testResetFOG();
+
+  Assert.equal(
+    ExtensionProcessCrashObserver.appInForeground,
+    AppConstants.platform !== "android",
+    "Expect appInForeground to be initially true on desktop and false on android builds"
+  );
+
+  // For Android build we mock the app moving in the foreground for the first time
+  // (which, in a real Fenix instance, happens when the application receives the first
+  // call to the onPause lifecycle callback and the geckoview-initial-foreground
+  // topic is being notified to Gecko as a side-effect of that).
+  //
+  // We have to mock the app moving in the foreground before any of the test extension
+  // startup, so that both Desktop and Mobile builds are in the same initial foreground
+  // state for the rest of the test file.
+  if (AppConstants.platform === "android") {
+    info("Mock geckoview-initial-foreground observer service topic");
+    ExtensionProcessCrashObserver.observe(null, "geckoview-initial-foreground");
+    Assert.equal(
+      ExtensionProcessCrashObserver.appInForeground,
+      true,
+      "Expect appInForeground to be true after geckoview-initial-foreground topic"
+    );
+  }
 });
 
 add_task(async function test_process_crash_telemetry() {

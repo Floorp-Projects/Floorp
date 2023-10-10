@@ -249,6 +249,7 @@ export class GeckoViewStartup {
           "GeckoView:ResetUserPrefs",
           "GeckoView:SetDefaultPrefs",
           "GeckoView:SetLocale",
+          "GeckoView:InitialForeground",
         ]);
 
         Services.obs.addObserver(this, "browser-idle-startup-tasks-finished");
@@ -287,6 +288,16 @@ export class GeckoViewStartup {
     debug`onEvent ${aEvent}`;
 
     switch (aEvent) {
+      case "GeckoView:InitialForeground": {
+        // ExtensionProcessCrashObserver observes this topic to determine when
+        // the app goes into the foreground for the first time. This could be useful
+        // when the app is initially created in the background because, in this case,
+        // the "application-foreground" topic isn't notified when the application is
+        // moved into the foreground later. That is because "application-foreground"
+        // is only going to be notified when the application was first paused.
+        Services.obs.notifyObservers(null, "geckoview-initial-foreground");
+        break;
+      }
       case "GeckoView:ResetUserPrefs": {
         for (const name of aData.names) {
           Services.prefs.clearUserPref(name);
