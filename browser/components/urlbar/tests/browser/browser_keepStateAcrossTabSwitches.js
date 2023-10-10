@@ -8,9 +8,6 @@
  * loads fail.
  */
 add_task(async function validURL() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first_schemeless", false]],
-  });
   let input = "i-definitely-dont-exist.example.com";
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,

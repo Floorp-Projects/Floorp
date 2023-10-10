@@ -741,9 +741,6 @@ export class UrlbarInput {
       isValidUrl = true;
     } catch (ex) {}
     if (isValidUrl) {
-      // Annotate if the untrimmed value contained a scheme, to later potentially
-      // be upgraded by schemeless HTTPS-First.
-      openParams.wasSchemelessInput = this.#isSchemeless(this.untrimmedValue);
       this._loadURL(url, event, where, openParams);
       return;
     }
@@ -791,24 +788,13 @@ export class UrlbarInput {
           if (this.isPrivate) {
             flags |= Ci.nsIURIFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
           }
-          let {
-            preferredURI: uri,
-            postData,
-            keywordAsSent,
-          } = Services.uriFixup.getFixupURIInfo(url, flags);
+          let { preferredURI: uri, postData } =
+            Services.uriFixup.getFixupURIInfo(url, flags);
           if (
             where != "current" ||
             browser.lastLocationChange == lastLocationChange
           ) {
             openParams.postData = postData;
-            if (!keywordAsSent) {
-              // `uri` is not a search engine url, so we annotate if the untrimmed
-              // value contained a scheme, to potentially be later upgraded by
-              // schemeless HTTPS-First.
-              openParams.wasSchemelessInput = this.#isSchemeless(
-                this.untrimmedValue
-              );
-            }
             this._loadURL(uri.spec, event, where, openParams, null, browser);
           }
         }
@@ -1006,36 +992,30 @@ export class UrlbarInput {
 
     switch (result.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.URL: {
-        if (result.heuristic) {
-          // Bug 1578856: both the provider and the docshell run heuristics to
-          // decide how to handle a non-url string, either fixing it to a url, or
-          // searching for it.
-          // Some preferences can control the docshell behavior, for example
-          // if dns_first_for_single_words is true, the docshell looks up the word
-          // against the dns server, and either loads it as an url or searches for
-          // it, depending on the lookup result. The provider instead will always
-          // return a fixed url in this case, because URIFixup is synchronous and
-          // can't do a synchronous dns lookup. A possible long term solution
-          // would involve sharing the docshell logic with the provider, along
-          // with the dns lookup.
-          // For now, in this specific case, we'll override the result's url
-          // with the input value, and let it pass through to _loadURL(), and
-          // finally to the docshell.
-          // This also means that in some cases the heuristic result will show a
-          // Visit entry, but the docshell will instead execute a search. It's a
-          // rare case anyway, most likely to happen for enterprises customizing
-          // the urifixup prefs.
-          if (
-            lazy.UrlbarPrefs.get("browser.fixup.dns_first_for_single_words") &&
-            lazy.UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
-          ) {
-            url = originalUntrimmedValue;
-          }
-          // Annotate if the untrimmed value contained a scheme, to later potentially
-          // be upgraded by schemeless HTTPS-First.
-          openParams.wasSchemelessInput = this.#isSchemeless(
-            originalUntrimmedValue
-          );
+        // Bug 1578856: both the provider and the docshell run heuristics to
+        // decide how to handle a non-url string, either fixing it to a url, or
+        // searching for it.
+        // Some preferences can control the docshell behavior, for example
+        // if dns_first_for_single_words is true, the docshell looks up the word
+        // against the dns server, and either loads it as an url or searches for
+        // it, depending on the lookup result. The provider instead will always
+        // return a fixed url in this case, because URIFixup is synchronous and
+        // can't do a synchronous dns lookup. A possible long term solution
+        // would involve sharing the docshell logic with the provider, along
+        // with the dns lookup.
+        // For now, in this specific case, we'll override the result's url
+        // with the input value, and let it pass through to _loadURL(), and
+        // finally to the docshell.
+        // This also means that in some cases the heuristic result will show a
+        // Visit entry, but the docshell will instead execute a search. It's a
+        // rare case anyway, most likely to happen for enterprises customizing
+        // the urifixup prefs.
+        if (
+          result.heuristic &&
+          lazy.UrlbarPrefs.get("browser.fixup.dns_first_for_single_words") &&
+          lazy.UrlbarUtils.looksLikeSingleWordHost(originalUntrimmedValue)
+        ) {
+          url = originalUntrimmedValue;
         }
         break;
       }
@@ -2738,8 +2718,6 @@ export class UrlbarInput {
    *   The POST data associated with a search submission.
    * @param {boolean} [params.allowInheritPrincipal]
    *   Whether the principal can be inherited.
-   * @param {boolean} [params.wasSchemelessInput]
-   *   Whether the search/URL term was without an explicit scheme.
    * @param {object} [resultDetails]
    *   Details of the selected result, if any.
    * @param {UrlbarUtils.RESULT_TYPE} [resultDetails.type]
@@ -3969,18 +3947,6 @@ export class UrlbarInput {
     this._initCopyCutController();
     this._initPasteAndGo();
     this._initStripOnShare();
-  }
-
-  /**
-   * @param {string} value A untrimmed address bar input.
-   * @returns {boolean}
-   *          `true` if the input doesn't start with a scheme relevant for
-   *          schemeless HTTPS-First (http://, https:// and file://).
-   */
-  #isSchemeless(value) {
-    return ["http://", "https://", "file://"].every(
-      scheme => !value.trim().startsWith(scheme)
-    );
   }
 }
 

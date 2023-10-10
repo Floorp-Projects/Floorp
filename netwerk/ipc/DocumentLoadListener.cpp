@@ -159,8 +159,6 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
     loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
   }
 
-  loadInfo->SetWasSchemelessInput(aLoadState->GetWasSchemelessInput());
-
   loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
   loadInfo->SetTriggeringWindowId(aLoadState->TriggeringWindowId());
   loadInfo->SetTriggeringStorageAccess(aLoadState->TriggeringStorageAccess());
@@ -2345,13 +2343,11 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   }
 
   nsCOMPtr<nsIInputStream> newPostData;
-  bool wasSchemelessInput = false;
   nsCOMPtr<nsIURI> newURI = nsDocShell::AttemptURIFixup(
       mChannel, aStatus, mOriginalUriString, mLoadStateLoadType, bc->IsTop(),
       mLoadStateInternalLoadFlags &
           nsDocShell::INTERNAL_LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP,
-      bc->UsePrivateBrowsing(), true, getter_AddRefs(newPostData),
-      &wasSchemelessInput);
+      bc->UsePrivateBrowsing(), true, getter_AddRefs(newPostData));
 
   // Since aStatus will be NS_OK for 4xx and 5xx error codes we
   // have to check each request which was upgraded by https-first.
@@ -2383,9 +2379,6 @@ bool DocumentLoadListener::MaybeHandleLoadErrorWithURIFixup(nsresult aStatus) {
   loadState->SetTriggeringPrincipal(triggeringPrincipal);
 
   loadState->SetPostDataStream(newPostData);
-
-  // Record whether the protocol was added through a fixup.
-  loadState->SetWasSchemelessInput(wasSchemelessInput);
 
   if (isHTTPSFirstFixup) {
     // We have to exempt the load from HTTPS-First to prevent a
