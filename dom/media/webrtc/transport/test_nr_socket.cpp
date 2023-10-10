@@ -445,10 +445,14 @@ bool TestNrSocket::allow_ingress(const nr_transport_addr& to,
   MOZ_ASSERT(!nat_->is_an_internal_tuple(from));
 
   // Find the port mapping (if any) that this packet landed on
+  *port_mapping_used = nullptr;
   for (PortMapping* port_mapping : port_mappings_) {
     if (!nr_transport_addr_cmp(&to, &port_mapping->external_socket_->my_addr(),
                                NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
       *port_mapping_used = port_mapping;
+      // TODO: Bug 1857149
+      // Adding a break here causes test failures, but we would not expect to
+      // find more than one matching mapping at a time.
     }
   }
 
