@@ -48,8 +48,7 @@ vendoring:
   skip-vendoring-steps: ['update-moz-build']
 
   exclude:
-    - .gitattributes
-    - .gitignore
+    - ".*"
 
   patches:
     - fix_build_errors.patch

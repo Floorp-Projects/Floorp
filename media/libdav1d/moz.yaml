@@ -48,8 +48,7 @@ vendoring:
   vendor-directory: third_party/dav1d
 
   exclude:
-    - build/.gitattributes
-    - build/.gitignore
+    - "build/.git*"
     - doc
     - examples
     - package

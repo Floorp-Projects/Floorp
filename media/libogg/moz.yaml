@@ -22,8 +22,6 @@ vendoring:
   tracking: tag
 
   exclude:
-    - ".*"
-    - "*"
     - "**"
 
   keep:
@@ -51,8 +49,6 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/src/framing.c'
       to: '{vendor_dir}/src/ogg_framing.c'
-    - action: delete-path
-      path: '{vendor_dir}/win32/.gitignore'
 
     # Manually reproduce configure step here
     - action: replace-in-file

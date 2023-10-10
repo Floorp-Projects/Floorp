@@ -26,10 +26,6 @@ vendoring:
 
   exclude:
     - "**"
-    - ".*"
-    - ".changeset"
-    - ".github"
-    - ".vscode"
 
   include:
     - LICENSE.md

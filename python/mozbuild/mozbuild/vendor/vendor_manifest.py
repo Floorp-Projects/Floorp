@@ -30,6 +30,16 @@ DEFAULT_KEEP_FILES = ["**/moz.build", "**/moz.yaml"]
 DEFAULT_INCLUDE_FILES = []
 
 
+def iglob_hidden(*args, **kwargs):
+    # glob._ishidden exists from 3.5 up to 3.12 (and beyond?)
+    old_ishidden = glob._ishidden
+    glob._ishidden = lambda x: False
+    try:
+        yield from glob.iglob(*args, **kwargs)
+    finally:
+        glob._ishidden = old_ishidden
+
+
 def throwe():
     raise Exception
 
@@ -366,11 +376,11 @@ class VendorManifest(MozbuildObject):
                 # Append double asterisk to the end to make glob.iglob recursively match
                 # contents of directory
                 paths.extend(
-                    glob.iglob(mozpath.join(pattern_full_path, "**"), recursive=True)
+                    iglob_hidden(mozpath.join(pattern_full_path, "**"), recursive=True)
                 )
             # Otherwise pattern is a file or wildcard expression so add it without altering it
             else:
-                paths.extend(glob.iglob(pattern_full_path, recursive=True))
+                paths.extend(iglob_hidden(pattern_full_path, recursive=True))
         # Remove folder names from list of paths in order to avoid prematurely
         # truncating directories elsewhere
         # Sort the final list to ensure we preserve 01_, 02_ ordering for e.g. *.patch globs

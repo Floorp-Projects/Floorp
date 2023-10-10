@@ -21,10 +21,7 @@ vendoring:
   tracking: commit
 
   exclude:
-    - "*"
     - "**"
-    - ".*"
-    - "**/.gitignore"
 
   keep:
     - glue
@@ -37,7 +34,7 @@ vendoring:
     - src/README.md
 
   include:
-    - "src/hunspell"
+    - src/hunspell
 
   patches:
     - patches/bug1410214.patch
@@ -61,5 +58,3 @@ vendoring:
       path: "src/hunzip.hxx"
     - action: delete-path
       path: "src/utf_info.hxx"
-    - action: delete-path
-      path: "tests/.gitattributes"

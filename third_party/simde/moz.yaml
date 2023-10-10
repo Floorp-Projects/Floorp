@@ -29,15 +29,7 @@ vendoring:
     - test
     - test/*
     - test/.gitignore
-    - .all-contributorsrc
-    - .appveyor.yml
-    - .azure-pipelines.yml
-    - .cirrus.yml
-    - .drone.star
-    - .editorconfig
-    - .gitignore
-    - .gitmodules
-    - .travis.yml
+    - ".*"
     - codecov.yml
     - meson.build
     - meson_options.txt
@@ -45,4 +37,3 @@ vendoring:
     - CONTRIBUTING.md
     - amalgamate.py
     - netlify-disable.toml
-    - .drone.star.disabled

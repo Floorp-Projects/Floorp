@@ -31,7 +31,6 @@ vendoring:
 
   exclude:
     - "**"
-    - ".*"
 
   include:
     - arm
