@@ -110,6 +110,10 @@ for f in SOURCES:
             SOURCES[f].flags += ['-mavx']
         if 'avx2.c' in f:
             SOURCES[f].flags += ['-mavx2']
+        if 'neon_dotprod.c' in f:
+            SOURCES[f].flags += ['-march=armv8.2-a+dotprod']
+        if 'neon_i8mm.c' in f:
+            SOURCES[f].flags += ['-march=armv8.2-a+dotprod+i8mm']
 
 # Suppress warnings in third-party code.
 CFLAGS += [
