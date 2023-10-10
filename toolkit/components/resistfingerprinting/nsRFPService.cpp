@@ -35,7 +35,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_javascript.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -828,16 +827,7 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
     userAgent.AppendLiteral(SPOOFED_UA_OS);
   }
 
-  userAgent.AppendLiteral("; rv:");
-
-  uint32_t forceRV = mozilla::StaticPrefs::network_http_useragent_forceRVOnly();
-  if (forceRV) {
-    userAgent.Append(nsPrintfCString("%u.0", forceRV));
-  } else {
-    userAgent.AppendLiteral(MOZILLA_UAVERSION);
-  }
-
-  userAgent.AppendLiteral(") Gecko/");
+  userAgent.AppendLiteral("; rv:" MOZILLA_UAVERSION ") Gecko/");
 
 #if defined(ANDROID)
   userAgent.AppendLiteral(MOZILLA_UAVERSION);
