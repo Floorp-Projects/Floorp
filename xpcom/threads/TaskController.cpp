@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include <algorithm>
 #include "GeckoProfiler.h"
+#include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/InputTaskManager.h"
 #include "mozilla/VsyncTaskManager.h"
