@@ -2569,7 +2569,15 @@ export var BrowserTestUtils = {
     if (uri == "chrome://global/content/commonDialog.xhtml") {
       [win] = await TestUtils.topicObserved("common-dialog-loaded");
     } else if (options.isSubDialog) {
-      [win] = await TestUtils.topicObserved("subdialog-loaded");
+      for (let attempts = 0; attempts < 3; attempts++) {
+        [win] = await TestUtils.topicObserved("subdialog-loaded");
+        if (uri === undefined || uri === null || uri === "") {
+          break;
+        }
+        if (win.document.documentURI === uri) {
+          break;
+        }
+      }
     } else {
       // The test listens for the "load" event which guarantees that the alert
       // class has already been added (it is added when "DOMContentLoaded" is
