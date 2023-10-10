@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 let gTimer;
 
 function handleRequest(req, resp) {

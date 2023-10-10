@@ -101,6 +101,7 @@ module.exports = {
         browser: false,
         "mozilla/privileged": false,
         "mozilla/sjs": true,
+        "mozilla/specific": false,
       },
       files: ["**/*.sjs"],
       rules: {
