@@ -96,6 +96,51 @@ const kExpectedRequestsOfPrefetch = [
     }
 ];
 
+const kPipeHeaderLinksToStylesheets =
+  "=header(Link,<dummy.css?1>; rel=stylesheet; fetchpriority=low,True)" +
+  "|header(Link,<dummy.css?2>; rel=stylesheet; fetchpriority=high,True)" +
+  "|header(Link,<dummy.css?3>; rel=stylesheet; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.css?4>; rel=stylesheet,True)"
+
+const kPipeHeaderPreloadLinks =
+  // as="fetch"
+  "=header(Link,<dummy.txt?1>; rel=preload; as=fetch; fetchpriority=low,True)" +
+  "|header(Link,<dummy.txt?2>; rel=preload; as=fetch; fetchpriority=high,True)" +
+  "|header(Link,<dummy.txt?3>; rel=preload; as=fetch; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.txt?4>; rel=preload; as=fetch,True)" +
+  // as="font"
+  "|header(Link,<dummy.font?1>; rel=preload; as=font; fetchpriority=low,True)" +
+  "|header(Link,<dummy.font?2>; rel=preload; as=font; fetchpriority=high,True)" +
+  "|header(Link,<dummy.font?3>; rel=preload; as=font; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.font?4>; rel=preload; as=font,True)" +
+  // as="image"
+  "|header(Link,<dummy.image?1>; rel=preload; as=image; fetchpriority=low,True)" +
+  "|header(Link,<dummy.image?2>; rel=preload; as=image; fetchpriority=high,True)" +
+  "|header(Link,<dummy.image?3>; rel=preload; as=image; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.image?4>; rel=preload; as=image,True)" +
+  // as="script"
+  "|header(Link,<dummy.script?1>; rel=preload; as=script; fetchpriority=low,True)" +
+  "|header(Link,<dummy.script?2>; rel=preload; as=script; fetchpriority=high,True)" +
+  "|header(Link,<dummy.script?3>; rel=preload; as=script; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.script?4>; rel=preload; as=script,True)" +
+  // as="style"
+  "|header(Link,<dummy.css?1>; rel=preload; as=style; fetchpriority=low,True)" +
+  "|header(Link,<dummy.css?2>; rel=preload; as=style; fetchpriority=high,True)" +
+  "|header(Link,<dummy.css?3>; rel=preload; as=style; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.css?4>; rel=preload; as=style,True)";
+
+const kPipeHeaderModulepreloadLinks =
+  "=header(Link,<dummy.js?1>; rel=modulepreload; fetchpriority=low,True)" +
+  "|header(Link,<dummy.js?2>; rel=modulepreload; fetchpriority=high,True)" +
+  "|header(Link,<dummy.js?3>; rel=modulepreload; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.js?4>; rel=modulepreload,True)";
+
+const kPipeHeaderPrefetchLinks =
+  "=header(Link,<dummy.txt?1>; rel=prefetch; fetchpriority=low,True)" +
+  "|header(Link,<dummy.txt?2>; rel=prefetch; fetchpriority=high,True)" +
+  "|header(Link,<dummy.txt?3>; rel=prefetch; fetchpriority=auto,True)" +
+  "|header(Link,<dummy.txt?4>; rel=prefetch,True)";
+
 // The expected internal priorites of the test data are specified as
 // implementation-defined. See step 11. of
 // <https://html.spec.whatwg.org/#create-a-link-request> and step 15. of
@@ -115,10 +160,16 @@ export const kTestData = [
     {   testFileName: "link-dynamic-load-stylesheet.h2.html",
         expectedRequests: kExpectedRequestsOfLoadStylesheet
     },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderLinksToStylesheets,
+        expectedRequests: kExpectedRequestsOfLoadStylesheet
+    },
     {   testFileName: "link-initial-preload.h2.html",
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
     {   testFileName: "link-dynamic-preload.h2.html",
+        expectedRequests: kExpectedRequestsOfLinkPreload
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPreloadLinks,
         expectedRequests: kExpectedRequestsOfLinkPreload
     },
     {   testFileName: "link-initial-modulepreload.h2.html",
@@ -127,10 +178,16 @@ export const kTestData = [
     {   testFileName: "link-dynamic-modulepreload.h2.html",
         expectedRequests: kExpectedRequestsOfModulepreload
     },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderModulepreloadLinks,
+        expectedRequests: kExpectedRequestsOfModulepreload
+    },
     {   testFileName: "link-initial-prefetch.h2.html",
         expectedRequests: kExpectedRequestsOfPrefetch
     },
     {   testFileName: "link-dynamic-prefetch.h2.html",
+        expectedRequests: kExpectedRequestsOfPrefetch
+    },
+    {   testFileName: "link-header.h2.html?pipe" + kPipeHeaderPrefetchLinks,
         expectedRequests: kExpectedRequestsOfPrefetch
     }
 ];
