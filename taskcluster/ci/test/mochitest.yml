@@ -561,7 +561,6 @@ mochitest-plain-gpu:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    .*-wayland/debug: []
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
