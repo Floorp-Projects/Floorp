@@ -845,5 +845,15 @@ TRRLoadInfo::SetHasInjectedCookieForCookieBannerHandling(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+TRRLoadInfo::GetWasSchemelessInput(bool* aWasSchemelessInput) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetWasSchemelessInput(bool aWasSchemelessInput) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla
