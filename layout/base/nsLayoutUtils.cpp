@@ -9708,6 +9708,17 @@ StyleGeometryBox nsLayoutUtils::CoordBoxToGeometryBox(StyleCoordBox aCoordBox) {
   return StyleGeometryBox::BorderBox;
 }
 
+/* static */
+nsRect nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
+                                         StyleGeometryBox aGeometryBox) {
+  // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
+  // element, which does have an associated CSS layout box. In this case we
+  // should still use ComputeHTMLReferenceRect for region computing.
+  return aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
+             ? ComputeSVGReferenceRect(aFrame, aGeometryBox)
+             : ComputeHTMLReferenceRect(aFrame, aGeometryBox);
+}
+
 static StyleGeometryBox ShapeBoxToGeometryBox(const StyleShapeBox& aBox) {
   switch (aBox) {
     case StyleShapeBox::BorderBox:
@@ -9742,25 +9753,56 @@ static StyleGeometryBox ClipPathBoxToGeometryBox(
   return StyleGeometryBox::NoBox;
 }
 
+// The mapping is from
+// https://drafts.fxtf.org/css-masking-1/#typedef-geometry-box
 /* static */
-nsRect nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
-                                         StyleGeometryBox aGeometryBox) {
-  // We use ComputeSVGReferenceRect for all SVG elements, except <svg>
-  // element, which does have an associated CSS layout box. In this case we
-  // should still use ComputeHTMLReferenceRect for region computing.
-  return aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)
-             ? ComputeSVGReferenceRect(aFrame, aGeometryBox)
-             : ComputeHTMLReferenceRect(aFrame, aGeometryBox);
-}
+nsRect nsLayoutUtils::ComputeClipPathGeometryBox(
+    nsIFrame* aFrame, const StyleShapeGeometryBox& aBox) {
+  StyleGeometryBox box = ClipPathBoxToGeometryBox(aBox);
 
-nsRect nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
-                                         const StyleShapeBox& aBox) {
-  return ComputeGeometryBox(aFrame, ShapeBoxToGeometryBox(aBox));
-}
+  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    // For SVG elements without associated CSS layout box, the used value for
+    // content-box and padding-box is fill-box and for border-box and margin-box
+    // is stroke-box.
+    switch (box) {
+      case StyleGeometryBox::ContentBox:
+      case StyleGeometryBox::PaddingBox:
+      case StyleGeometryBox::FillBox:
+        return ComputeSVGReferenceRect(aFrame, StyleGeometryBox::FillBox);
+      case StyleGeometryBox::NoBox:
+      case StyleGeometryBox::BorderBox:
+      case StyleGeometryBox::MarginBox:
+      case StyleGeometryBox::StrokeBox:
+        return ComputeSVGReferenceRect(aFrame, StyleGeometryBox::StrokeBox);
+      case StyleGeometryBox::ViewBox:
+        return ComputeSVGReferenceRect(aFrame, StyleGeometryBox::ViewBox);
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown clip-path geometry box");
+        // Use default, border-box (as stroke-box in SVG layout).
+        return ComputeSVGReferenceRect(aFrame, StyleGeometryBox::StrokeBox);
+    }
+  }
 
-nsRect nsLayoutUtils::ComputeGeometryBox(nsIFrame* aFrame,
-                                         const StyleShapeGeometryBox& aBox) {
-  return ComputeGeometryBox(aFrame, ClipPathBoxToGeometryBox(aBox));
+  // For elements with associated CSS layout box, the used value for fill-box is
+  // content-box and for stroke-box and view-box is border-box.
+  switch (box) {
+    case StyleGeometryBox::FillBox:
+    case StyleGeometryBox::ContentBox:
+      return ComputeHTMLReferenceRect(aFrame, StyleGeometryBox::ContentBox);
+    case StyleGeometryBox::NoBox:
+    case StyleGeometryBox::StrokeBox:
+    case StyleGeometryBox::ViewBox:
+    case StyleGeometryBox::BorderBox:
+      return ComputeHTMLReferenceRect(aFrame, StyleGeometryBox::BorderBox);
+    case StyleGeometryBox::PaddingBox:
+      return ComputeHTMLReferenceRect(aFrame, StyleGeometryBox::PaddingBox);
+    case StyleGeometryBox::MarginBox:
+      return ComputeHTMLReferenceRect(aFrame, StyleGeometryBox::MarginBox);
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown clip-path geometry box");
+      // Use default, border-box.
+      return ComputeHTMLReferenceRect(aFrame, StyleGeometryBox::BorderBox);
+  }
 }
 
 /* static */

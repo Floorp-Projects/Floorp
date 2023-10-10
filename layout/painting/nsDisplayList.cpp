@@ -8022,7 +8022,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
 
   auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
   const nsRect refBox =
-      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
+      nsLayoutUtils::ComputeClipPathGeometryBox(frame, clipPath.AsShape()._1);
 
   wr::WrClipId clipId{};
 
@@ -8103,7 +8103,7 @@ static void FillPolygonDataForDisplayItem(
   const auto& clipPath = style->mClipPath;
   const auto& shape = *clipPath.AsShape()._0;
   const nsRect refBox =
-      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
+      nsLayoutUtils::ComputeClipPathGeometryBox(frame, clipPath.AsShape()._1);
 
   // We only fill polygon data for polygons that are below a complexity
   // limit.
