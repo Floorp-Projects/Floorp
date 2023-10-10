@@ -12,17 +12,14 @@
 #include "mozilla/IdlePeriodState.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/EventQueue.h"
 #include "nsISupportsImpl.h"
-#include "nsIEventTarget.h"
 
 #include <atomic>
-#include <memory>
 #include <vector>
 #include <set>
-#include <list>
 #include <stack>
 
 class nsIRunnable;
@@ -293,7 +290,10 @@ class TaskController {
  public:
   TaskController();
 
-  static TaskController* Get();
+  static TaskController* Get() {
+    MOZ_ASSERT(sSingleton.get());
+    return sSingleton.get();
+  }
 
   static void Initialize();
 
@@ -358,6 +358,7 @@ class TaskController {
 
  private:
   friend void ThreadFuncPoolThread(void* aIndex);
+  static StaticAutoPtr<TaskController> sSingleton;
 
   void InitializeThreadPool();
 
@@ -380,12 +381,8 @@ class TaskController {
   void ProcessUpdatedPriorityModifier(TaskManager* aManager);
 
   void ShutdownThreadPoolInternal();
-  void ShutdownInternal();
 
   void RunPoolThread();
-
-  static std::unique_ptr<TaskController> sSingleton;
-  static StaticMutex sSingletonMutex MOZ_UNANNOTATED;
 
   // This protects access to the task graph.
   Mutex mGraphMutex MOZ_UNANNOTATED;
