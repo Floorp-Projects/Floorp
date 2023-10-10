@@ -799,18 +799,6 @@ uint32_t nsRFPService::GetSpoofedPresentedFrames(double aTime, uint32_t aWidth,
 // ============================================================================
 // User-Agent/Version Stuff
 
-static const char* GetSpoofedVersion() {
-#ifdef ANDROID
-  // Return Desktop's ESR version.
-  // When Android RFP returns an ESR version >= 120, we can remove the "rv:109"
-  // spoofing in GetSpoofedUserAgent() below and stop #including
-  // StaticPrefs_network.h.
-  return "115.0";
-#else
-  return MOZILLA_UAVERSION;
-#endif
-}
-
 /* static */
 void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
                                        bool isForHTTPHeader) {
@@ -831,8 +819,6 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
       2;
   userAgent.SetCapacity(preallocatedLength);
 
-  const char* spoofedVersion = GetSpoofedVersion();
-
   // "Mozilla/5.0 (%s; rv:%d.0) Gecko/%d Firefox/%d.0"
   userAgent.AssignLiteral("Mozilla/5.0 (");
 
@@ -844,26 +830,22 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
 
   userAgent.AppendLiteral("; rv:");
 
-  // Desktop Firefox (regular and RFP) won't need to spoof "rv:109" in versions
-  // >= 120 (bug 1806690), but Android RFP will need to continue spoofing 109
-  // as long as Android's GetSpoofedVersion() returns a version < 120 above.
   uint32_t forceRV = mozilla::StaticPrefs::network_http_useragent_forceRVOnly();
   if (forceRV) {
     userAgent.Append(nsPrintfCString("%u.0", forceRV));
   } else {
-    userAgent.Append(spoofedVersion);
+    userAgent.AppendLiteral(MOZILLA_UAVERSION);
   }
 
   userAgent.AppendLiteral(") Gecko/");
 
 #if defined(ANDROID)
-  userAgent.Append(spoofedVersion);
+  userAgent.AppendLiteral(MOZILLA_UAVERSION);
 #else
   userAgent.AppendLiteral(LEGACY_UA_GECKO_TRAIL);
 #endif
 
-  userAgent.AppendLiteral(" Firefox/");
-  userAgent.Append(spoofedVersion);
+  userAgent.AppendLiteral(" Firefox/" MOZILLA_UAVERSION);
 
   MOZ_ASSERT(userAgent.Length() <= preallocatedLength);
 }
