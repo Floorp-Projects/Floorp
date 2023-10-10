@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping
 
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -51,10 +52,17 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
                 val bottomSheet =
                     findViewById<View?>(com.google.android.material.R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
-                behavior = BottomSheetBehavior.from(bottomSheet)
+                behavior = BottomSheetBehavior.from(bottomSheet).apply {
+                    setPeekHeightToHalfScreenHeight()
+                }
                 store.dispatch(ReviewQualityCheckAction.BottomSheetDisplayed)
             }
         }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        behavior?.setPeekHeightToHalfScreenHeight()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -89,5 +97,9 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         requireComponents.appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = false))
+    }
+
+    private fun BottomSheetBehavior<View>.setPeekHeightToHalfScreenHeight() {
+        peekHeight = resources.displayMetrics.heightPixels / 2
     }
 }
