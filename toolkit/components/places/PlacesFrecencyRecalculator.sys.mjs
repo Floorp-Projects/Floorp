@@ -454,7 +454,7 @@ class AlternativeFrecencyHelper {
       // assume alternative frecency was disabled in the previous session.
       let storedVariables = await lazy.PlacesUtils.metadata.get(
         set.metadataKey,
-        Object.create(null)
+        null
       );
 
       // Check whether this is the first-run, that happens when the alternative
