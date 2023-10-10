@@ -15,6 +15,7 @@
 #include "ByteStreamsUtils.h"
 #include "ByteWriter.h"
 #include "MediaData.h"
+#include "MediaInfo.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ResultExtensions.h"
@@ -68,7 +69,12 @@ H265NALU::H265NALU(const uint8_t* aData, uint32_t aByteSize)
     LOG("Incorrect sample size %zu", aSample->Size());
     return mozilla::Err(NS_ERROR_FAILURE);
   }
-  // TODO : check video mime type to ensure the sample is for HEVC
+  if (aSample->mTrackInfo &&
+      !aSample->mTrackInfo->mMimeType.EqualsLiteral("video/hevc")) {
+    LOG("Only allow 'video/hevc' (mimeType=%s)",
+        aSample->mTrackInfo->mMimeType.get());
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
   return HVCCConfig::Parse(aSample->mExtraData);
 }
 
