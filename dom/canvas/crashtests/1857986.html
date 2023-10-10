@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<script>
+  window.addEventListener('load', async () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter')
+    filter.setAttribute('id', 'id_14')
+    const feColorMatrix = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
+    feColorMatrix.setAttribute('width', '-1938067758ch')
+    filter.appendChild(feColorMatrix)
+    svg.appendChild(filter)
+    document.documentElement.appendChild(svg)
+    const canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas')
+    const context = canvas.getContext('2d')
+    context.filter = 'url(#id_14) url(#id_14) contrast(1491560509%) saturate(859756593%) url(#id_14)'
+  })
+</script>
