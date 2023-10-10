@@ -403,7 +403,7 @@ AboutReader.prototype = {
 
         // Determine the direction of the delta (we don't care about its size);
         // This code is adapted from normalizeWheelEventDelta in
-        // toolkt/components/pdfjs/content/web/viewer.js
+        // toolkit/components/pdfjs/content/web/viewer.mjs
         let delta = Math.abs(aEvent.deltaX) + Math.abs(aEvent.deltaY);
         let angle = Math.atan2(aEvent.deltaY, aEvent.deltaX);
         if (-0.25 * Math.PI < angle && angle < 0.75 * Math.PI) {

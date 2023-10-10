@@ -2109,7 +2109,8 @@ function pdfjsHasLoadedPromise() {
     pdfjsHasLoaded = new Promise((resolve, reject) => {
       let doc = g.containingWindow.document;
       const script = doc.createElement("script");
-      script.src = "resource://pdf.js/build/pdf.js";
+      script.type = "module";
+      script.src = "resource://pdf.js/build/pdf.mjs";
       script.onload = resolve;
       script.onerror = () => reject(new Error("PDF.js script load failed."));
       doc.documentElement.appendChild(script);
@@ -2123,7 +2124,7 @@ function readPdf(path, callback) {
   IOUtils.read(path).then(
     function (data) {
       pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "resource://pdf.js/build/pdf.worker.js";
+        "resource://pdf.js/build/pdf.worker.mjs";
       pdfjsLib
         .getDocument({
           data,
