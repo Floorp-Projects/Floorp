@@ -1041,11 +1041,9 @@ bool HTMLEditUtils::ShouldInsertLinefeedCharacter(
           BlockInlineCheck::UseComputedDisplayOutsideStyle);
 
   // If and only if the nearest block is the editing host or its parent,
-  // and the outer display value of the editing host is inline, and new
-  // line character is preformatted, we should insert a linefeed.
+  // and new line character is preformatted, we should insert a linefeed.
   return (!closestEditableBlockElement ||
           closestEditableBlockElement == &aEditingHost) &&
-         HTMLEditUtils::IsDisplayOutsideInline(aEditingHost) &&
          EditorUtils::IsNewLinePreformatted(
              *aPointToInsert.ContainerAs<nsIContent>());
 }
