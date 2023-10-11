@@ -123,8 +123,6 @@ add_task(async function test_shopping_settings_ads_disabled() {
  * Tests that the shopping-settings ads toggle and ad render correctly, even with
  * multiple tabs. If `browser.shopping.experience2023.ads.userEnabled`
  * is false in one tab, it should be false for all other tabs with the shopping sidebar open.
- *
- * Temporarily disabled; see bug 1851891 for details.
  */
 add_task(async function test_settings_toggle_ad_and_multiple_tabs() {
   await SpecialPowers.pushPrefEnv({
@@ -241,4 +239,4 @@ add_task(async function test_settings_toggle_ad_and_multiple_tabs() {
 
   await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
-}).skip();
+});
