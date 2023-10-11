@@ -24,22 +24,19 @@
 #main-menubar > menu {
   appearance: none;
   color: inherit;
-}
 
-#main-menubar > menu[_moz-menuactive="true"] {
-  background-color: -moz-menuhover;
-  color: -moz-menuhovertext;
+  &[_moz-menuactive] {
+    background-color: light-dark(hsla(0,0%,0%,.12), hsla(0,0%,100%,.22));
+    color: inherit;
+
+    @media (prefers-contrast) {
+      background-color: -moz-menuhover;
+      color: -moz-menuhovertext;
+    }
+  }
 }
 
 @media not (prefers-contrast) {
-  #main-menubar > menu[_moz-menuactive="true"] {
-    color: inherit;
-  }
-
-  #main-menubar > menu[_moz-menuactive="true"] {
-    background-color: light-dark(hsla(0,0%,0%,.12), hsla(0,0%,100%,.22));
-  }
-
   /* Use a different color in inactive windows. */
   #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
     color: ThreeDShadow;
@@ -48,20 +45,16 @@
   @media (-moz-windows-accent-color-in-titlebar) {
     :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
       border-top: .5px solid ActiveBorder;
+
+      &:-moz-window-inactive {
+        border-top-color: InactiveBorder;
+      }
     }
   }
 
-  :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
-    border-top-color: InactiveBorder;
-  }
-
-  :root[tabsintitlebar] .tab-label:-moz-window-inactive {
+  :root[tabsintitlebar] .tab-label-container:-moz-window-inactive {
     /* Calculated to match the opacity change of Windows Explorer
        titlebar text change for inactive windows. */
-    opacity: .6;
-  }
-
-  :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
     opacity: .6;
   }
 }
@@ -69,9 +62,6 @@
 /* When temporarily showing the menu bar, make it at least as tall as the
  * tab bar such that the window controls don't appear to move up. */
 :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-  height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
-}
-:root[tabsintitlebar][sizemode="normal"] #toolbar-menubar[autohide="true"] {
   height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
 }
 
@@ -120,6 +110,12 @@
 
 .titlebar-buttonbox-container {
   align-items: stretch;
+
+  /* Prevent window controls from overlapping the nav bar's shadow on the tab
+   * bar. */
+  #TabsToolbar > & {
+    margin-bottom: var(--tabs-navbar-shadow-size);
+  }
 }
 
 /* Window control buttons */
@@ -131,6 +127,19 @@
   padding: 8px 17px;
   -moz-context-properties: stroke;
   stroke: currentColor;
+
+  :root[tabletmode] & {
+    display: none;
+  }
+
+  > .toolbarbutton-icon {
+    width: 12px;
+    height: 12px;
+
+    &:-moz-locale-dir(rtl) {
+      transform: scaleX(-1);
+    }
+  }
 }
 
 .titlebar-min {
@@ -156,50 +165,40 @@
   list-style-image: url(chrome://browser/skin/window-controls/close.svg);
 }
 
-:root[tabletmode] .titlebar-button {
-  display: none;
-}
-
-.titlebar-button > .toolbarbutton-icon {
-  width: 12px;
-  height: 12px;
-}
-
-.titlebar-restore > .toolbarbutton-icon:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-:root[lwtheme-image] .titlebar-button {
-  -moz-context-properties: unset;
-}
-:root[lwtheme-image] .titlebar-min {
-  list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
-}
-:root[lwtheme-image] .titlebar-max {
-  list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
-}
-:root[lwtheme-image] .titlebar-restore {
-  list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
-}
-:root[lwtheme-image] .titlebar-close {
-  list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
+:root[lwtheme-image] {
+  .titlebar-button {
+    -moz-context-properties: unset;
+  }
+  .titlebar-min {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize-themes.svg);
+  }
+  .titlebar-max {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize-themes.svg);
+  }
+  .titlebar-restore {
+    list-style-image: url(chrome://browser/skin/window-controls/restore-themes.svg);
+  }
+  .titlebar-close {
+    list-style-image: url(chrome://browser/skin/window-controls/close-themes.svg);
+  }
 }
 
 @media not (prefers-contrast) {
   .titlebar-button:hover {
     background-color: light-dark(hsla(0,0%,0%,.12), hsla(0,0%,100%,.22));
-  }
-  .titlebar-button:hover:active {
-    background-color: light-dark(hsla(0,0%,0%,.22), hsla(0,0%,100%,.32));
+
+    &:active {
+      background-color: light-dark(hsla(0,0%,0%,.22), hsla(0,0%,100%,.32));
+    }
   }
 
   .titlebar-close:hover {
     stroke: white;
     background-color: hsl(355,86%,49%);
-  }
 
-  .titlebar-close:hover:active {
-    background-color: hsl(355,82%,69%);
+    &:active {
+      background-color: hsl(355,82%,69%);
+    }
   }
 
   .titlebar-button:not(:hover) > .toolbarbutton-icon:-moz-window-inactive {
@@ -211,10 +210,11 @@
   .titlebar-button {
     background-color: -moz-field;
     stroke: ButtonText;
-  }
-  .titlebar-button:hover {
-    background-color: SelectedItem;
-    stroke: SelectedItemText;
+
+    &:hover {
+      background-color: SelectedItem;
+      stroke: SelectedItemText;
+    }
   }
 
   .titlebar-min {
@@ -247,11 +247,11 @@
 @media (1.70dppx <= resolution <= 1.95dppx) {
   .titlebar-button {
     padding-inline: 14.1px;
-  }
 
-  .titlebar-button > .toolbarbutton-icon {
-    width: 10.8px;
-    height: 10.8px;
+    > .toolbarbutton-icon {
+      width: 10.8px;
+      height: 10.8px;
+    }
   }
 }
 
@@ -259,11 +259,11 @@
 @media (2.20dppx <= resolution <= 2.45dppx) {
   .titlebar-button {
     padding-inline: 15.3333px;
-  }
 
-  .titlebar-button > .toolbarbutton-icon {
-    width: 10.8px;
-    height: 10.8px;
+    > .toolbarbutton-icon {
+      width: 10.8px;
+      height: 10.8px;
+    }
   }
 }
 
@@ -280,24 +280,42 @@
 
 /* Bookmark menus */
 
-menu.bookmark-item,
-menuitem.bookmark-item {
-  min-width: 0;
-  max-width: 32em;
+.bookmark-item {
+  &:is(menu, menuitem) {
+    min-width: 0;
+    max-width: 32em;
+  }
+
+  &:not(.subviewbutton) > .menu-iconic-left {
+    margin-block: 0;
+  }
+
+  &[cutting] {
+    > .toolbarbutton-icon,
+    > .menu-iconic-left > .menu-iconic-icon {
+      opacity: 0.5;
+    }
+
+    > .toolbarbutton-text,
+    > .menu-iconic-left > .menu-iconic-text {
+      opacity: 0.7;
+    }
+  }
+
+  &:is(toolbarbutton)[dragover="true"][open="true"] {
+    appearance: none;
+    background: SelectedItem !important;
+    color: SelectedItemText !important;
+    fill: SelectedItemText;
+  }
 }
 
-.bookmark-item:not(.subviewbutton) > .menu-iconic-left {
-  margin-block: 0;
-}
+/* Bookmarks roots menu-items */
 
-.bookmark-item[cutting] > .toolbarbutton-icon,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
-  opacity: 0.5;
-}
-
-.bookmark-item[cutting] > .toolbarbutton-text,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
-  opacity: 0.7;
+#bookmarksToolbarFolderMenu,
+#BMB_bookmarksToolbar,
+#panelMenu_bookmarksToolbar {
+  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
 }
 
 /* Address bar */
@@ -314,24 +332,24 @@ menuitem.bookmark-item {
 }
 
 @media (prefers-contrast) {
-  /* Windows HCM conventions use these colors for chiclets. We can't use them on
-     other platforms because AccentColor can be shown atop SelectedItem,
-     which has zero contrast. */
   :root {
+    /* Windows HCM conventions use these colors for chiclets. We can't use them on
+       other platforms because AccentColor can be shown atop SelectedItem,
+       which has zero contrast. */
     --urlbar-box-hover-bgcolor: SelectedItem;
     --urlbar-box-active-bgcolor: SelectedItem;
     --urlbar-box-hover-text-color: SelectedItemText;
+
+    /* Address bar results view */
+    &:not(:-moz-lwtheme) {
+      --urlbar-popup-action-color: LinkText;
+    }
   }
 
   #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
   #searchbar:not(:-moz-lwtheme, :focus-within),
   .findbar-textbox:not(:-moz-lwtheme, :focus) {
     border-color: ThreeDShadow;
-  }
-
-  /* Address bar results view */
-  :root:not(:-moz-lwtheme) {
-    --urlbar-popup-action-color: LinkText;
   }
 }
 
@@ -368,21 +386,6 @@ menuitem.bookmark-item {
   font-weight: bold;
 }
 
-toolbarbutton.bookmark-item[dragover="true"][open="true"] {
-  appearance: none;
-  background: SelectedItem !important;
-  color: SelectedItemText !important;
-  fill: SelectedItemText;
-}
-
-/* Bookmarks roots menu-items */
-
-#bookmarksToolbarFolderMenu,
-#BMB_bookmarksToolbar,
-#panelMenu_bookmarksToolbar {
-  list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
-}
-
 /* Status panel */
 
 #statuspanel-label {
@@ -393,45 +396,35 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   border-top-style: solid;
   color: -moz-dialogText;
   text-shadow: none;
-}
 
-@media not (prefers-contrast) {
-  #statuspanel-label {
+  @media not (prefers-contrast) {
     background-color: #f9f9fa;
     color: #444;
   }
-}
 
-@media (-moz-content-prefers-color-scheme: dark) {
-  #statuspanel-label {
+  @media (-moz-content-prefers-color-scheme: dark) {
     background-color: hsl(240, 1%, 20%);
     border-color: hsl(240, 1%, 40%);
     color: rgb(249, 249, 250);
   }
-}
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(ltr),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(rtl) {
-  border-right-style: solid;
-  /* disabled for triggering grayscale AA (bug 659213)
-  border-top-right-radius: .3em;
-  */
-  margin-right: 1em;
-}
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
+  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
+    border-right-style: solid;
+    /* disabled for triggering grayscale AA (bug 659213)
+    border-top-right-radius: .3em;
+    */
+    margin-right: 1em;
+  }
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(rtl),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(ltr) {
-  border-left-style: solid;
-  /* disabled for triggering grayscale AA (bug 659213)
-  border-top-left-radius: .3em;
-  */
-  margin-left: 1em;
-}
-
-/* Prevent window controls from overlapping the nav bar's shadow on the tab
- * bar. */
-#TabsToolbar > .titlebar-buttonbox-container {
-  margin-bottom: var(--tabs-navbar-shadow-size);
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
+  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
+    border-left-style: solid;
+    /* disabled for triggering grayscale AA (bug 659213)
+    border-top-left-radius: .3em;
+    */
+    margin-left: 1em;
+  }
 }
 
 #UITourTooltipButtons {
@@ -491,62 +484,63 @@ menupopup[touchmode] :is(menu, menuitem, menucaption) {
 
 #context-navigation > .menuitem-iconic {
   flex: 1 0 auto;
-}
 
-#context-navigation > .menuitem-iconic[_moz-menuactive="true"] {
-  /* We only show hover state on the icons. This ensures there is no
-   * dead space between icons, but the visible hover state is only
-   * around the icons, and all the icons' hover states match each other.
-   */
-  background-color: transparent;
-}
+  > .menu-iconic-left {
+    margin: 0;
+    padding: 0;
 
-#context-navigation > .menuitem-iconic > .menu-iconic-left {
-  margin: 0;
-  padding: 0;
-}
+    /* override styles from shared/contextmenu.inc.css */
+    > .menu-iconic-icon {
+      width: var(--menuitem-min-width);
+      height: 32px;
+      padding: 8px 1em;
+      margin: 0;
+    }
+  }
 
-/* override styles from shared/contextmenu.inc.css */
-#context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
-  width: var(--menuitem-min-width);
-  height: 32px;
-  padding: 8px 1em;
-  margin: 0;
-}
-#context-navigation > .menuitem-iconic[_moz-menuactive="true"] > .menu-iconic-left > .menu-iconic-icon {
-  background-color: -moz-menuhover;
-}
+  &[_moz-menuactive] {
+    /* We only show hover state on the icons. This ensures there is no
+     * dead space between icons, but the visible hover state is only
+     * around the icons, and all the icons' hover states match each other.
+     */
+    background-color: transparent;
 
-#context-navigation > .menuitem-iconic[_moz-menuactive="true"][disabled="true"] > .menu-iconic-left > .menu-iconic-icon {
-  background-color: -moz-menuhoverdisabled;
-}
+    > .menu-iconic-left > .menu-iconic-icon {
+      background-color: -moz-menuhover;
+    }
 
-/* If the menu is wider than the icons strictly need, the <menuitem> elements
- * will stretch to pick up the extra space. In that case, the outer icons
- * should align to the start/end of their containing <menuitem>: */
-#context-navigation > .menuitem-iconic:first-child {
-  justify-content: flex-start;
-}
+    &[disabled="true"] > .menu-iconic-left > .menu-iconic-icon {
+      background-color: -moz-menuhoverdisabled;
+    }
+  }
 
-#context-navigation > .menuitem-iconic:last-child {
-  justify-content: flex-end;
-}
+  /* If the menu is wider than the icons strictly need, the <menuitem> elements
+   * will stretch to pick up the extra space. In that case, the outer icons
+   * should align to the start/end of their containing <menuitem>: */
+  &:first-child {
+    justify-content: flex-start;
+  }
 
-#context-navigation > .menuitem-iconic:last-child,
-#context-navigation > .menuitem-iconic:first-child {
-  flex-grow: 0;
-  /* The first and last items start off as 16px + 2em, like the other ones.
-   * 100% is the width of the parent, which will be at least 4 * the width of
-   * an individual item (16px + 2em)
-   * So 100% - 4 item widths gets us the remaining available space if
-   * #context-navigation is wider than that.
-   * Then divide by 6 to get the 1/6 of that extra space, and add this space
-   * to the width of the first/last items.
-   * This ensures that the 3 visual gaps between the 4 icons are all the same
-   * size, with each 1/3 of the available space evenly distributed between
-   * the 2 items on either side of the gap.
-   */
-  width: calc(var(--menuitem-min-width) + calc(100% - 4 * var(--menuitem-min-width)) / 6);
+  &:last-child {
+    justify-content: flex-end;
+  }
+
+  &:last-child,
+  &:first-child {
+    flex-grow: 0;
+    /* The first and last items start off as 16px + 2em, like the other ones.
+     * 100% is the width of the parent, which will be at least 4 * the width of
+     * an individual item (16px + 2em)
+     * So 100% - 4 item widths gets us the remaining available space if
+     * #context-navigation is wider than that.
+     * Then divide by 6 to get the 1/6 of that extra space, and add this space
+     * to the width of the first/last items.
+     * This ensures that the 3 visual gaps between the 4 icons are all the same
+     * size, with each 1/3 of the available space evenly distributed between
+     * the 2 items on either side of the gap.
+     */
+    width: calc(var(--menuitem-min-width) + calc(100% - 4 * var(--menuitem-min-width)) / 6);
+  }
 }
 
 /* Other menu separators don't extend all the way to the menu edges, but the
