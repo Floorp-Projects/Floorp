@@ -551,7 +551,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
     }
     // Calculate fields (7-61)
     uint32_t i = 0;
-    for (int64_t j = refSet.num_positive_pics - 1; j >= 0; j--) {
+    for (int64_t j = static_cast<int64_t>(refSet.num_positive_pics) - 1; j >= 0;
+         j--) {
       MOZ_DIAGNOSTIC_ASSERT(j < kMaxShortTermRefPicSets);
       int64_t d_poc = refSet.deltaPocS1[j] + deltaRps;
       if (d_poc < 0 && use_delta_flag[refSet.num_negative_pics + j]) {
@@ -576,7 +577,8 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
     curStRefPicSet.num_negative_pics = i;
     // Calculate fields (7-62)
     i = 0;
-    for (int64_t j = refSet.num_negative_pics - 1; j >= 0; j--) {
+    for (int64_t j = static_cast<int64_t>(refSet.num_negative_pics) - 1; j >= 0;
+         j--) {
       MOZ_DIAGNOSTIC_ASSERT(j < kMaxShortTermRefPicSets);
       int64_t d_poc = refSet.deltaPocS0[j] + deltaRps;
       if (d_poc > 0 && use_delta_flag[j]) {
