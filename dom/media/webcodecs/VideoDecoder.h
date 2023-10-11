@@ -52,6 +52,7 @@ class VideoDecoderTraits {
  public:
   using ConfigType = VideoDecoderConfig;
   using ConfigTypeInternal = VideoDecoderConfigInternal;
+  using InputType = EncodedVideoChunk;
   using InputTypeInternal = EncodedVideoChunkData;
   using OutputType = VideoFrame;
   using OutputCallbackType = VideoFrameOutputCallback;
@@ -62,6 +63,9 @@ class VideoDecoderTraits {
   static bool Validate(const ConfigType& aConfig);
   static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
       const ConfigType& aConfig);
+  static bool IsKeyChunk(const InputType& aInput);
+  static UniquePtr<InputTypeInternal> CreateInputInternal(
+      const InputType& aInput);
 };
 
 class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
@@ -84,8 +88,6 @@ class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
   static already_AddRefed<VideoDecoder> Constructor(
       const GlobalObject& aGlobal, const VideoDecoderInit& aInit,
       ErrorResult& aRv);
-
-  void Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv);
 
   already_AddRefed<Promise> Flush(ErrorResult& aRv);
 
