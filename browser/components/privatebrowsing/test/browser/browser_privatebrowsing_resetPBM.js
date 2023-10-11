@@ -561,3 +561,70 @@ add_task(async function test_reset_action() {
   // We bypass telemetry by calling ResetPBMPanel._restartPBM directly.
   assertTelemetry([], [], "No glean events after the test.");
 });
+
+/**
+ * Ensure that we don't show the tab close warning when closing multiple tabs
+ * with the reset PBM action.
+ */
+add_task(async function test_tab_close_warning_suppressed() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.privatebrowsing.resetPBM.enabled", true],
+      ["browser.tabs.warnOnClose", true],
+      ["browser.tabs.warnOnCloseOtherTabs", true],
+    ],
+  });
+
+  info("Open a private browsing window.");
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  info("Open enough tabs so the tab close warning would show.");
+  let loadPromises = [];
+  // warnAboutClosingTabs uses this number to determine whether to show the tab
+  // close warning.
+  let maxTabsUndo = Services.prefs.getIntPref(
+    "browser.sessionstore.max_tabs_undo"
+  );
+  for (let i = 0; i < maxTabsUndo + 2; i++) {
+    let tab = BrowserTestUtils.addTab(win.gBrowser, "about:blank");
+    loadPromises.push(BrowserTestUtils.browserLoaded(tab.linkedBrowser));
+  }
+  await Promise.all(loadPromises);
+
+  // Create promises for tab close for all tabs in the triggering private browsing window.
+  let promisesTabsClosed = win.gBrowser.tabs.map(tab =>
+    BrowserTestUtils.waitForTabClosing(tab)
+  );
+
+  info("Trigger the restart PBM action");
+
+  let promiseDataClear = waitForPBMDataClear();
+  await ResetPBMPanel._restartPBM(win);
+
+  info("Wait for tabs in the trigger private window to close.");
+  await Promise.all(promisesTabsClosed);
+
+  info("Wait for data to be cleared.");
+  await promiseDataClear;
+
+  Assert.equal(
+    win.gBrowser.tabs.length,
+    1,
+    "Should only have 1 tab remaining."
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      win.gBrowser.selectedBrowser.currentURI.spec == "about:privatebrowsing"
+  );
+  Assert.equal(
+    win.gBrowser.selectedBrowser.currentURI.spec,
+    "about:privatebrowsing",
+    "The remaining tab should point to about:privatebrowsing."
+  );
+
+  // Close the private window that remained open.
+  await BrowserTestUtils.closeWindow(win);
+});
