@@ -481,6 +481,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Data Sanitization':
   description: The Bugzilla component which applies to this object.
+'Toolkit :: Default Browser Agent':
+  description: The Bugzilla component which applies to this object.
 'Toolkit :: Downloads API':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: FeatureGate':

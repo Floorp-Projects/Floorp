@@ -354,8 +354,7 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
         browserInfo, PromiseFlatString(aUniqueToken).get(), aForce);
   });
 
-  HRESULT hr =
-      SendDefaultBrowserPing(browserInfo, pdfInfo, activitiesPerformed);
+  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed);
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 

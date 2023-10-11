@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { EXIT_CODE as EXIT_CODE_BASE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const EXIT_CODE = {
   ...EXIT_CODE_BASE,
@@ -49,6 +50,11 @@ export const backgroundTaskTimeoutSec = 12 * 60 * 60 * 1000 + 10 * 1000;
 //   argument pairs: the first element is the file extension, the second element
 //   is the root of a ProgID, which will be suffixed with `-$AUMI`.
 export async function runBackgroundTask(commandLine) {
+  Services.fog.initializeFOG(
+    undefined,
+    "firefox.desktop.background.defaultagent"
+  );
+
   let defaultAgent = Cc["@mozilla.org/default-agent;1"].getService(
     Ci.nsIDefaultAgent
   );
@@ -94,6 +100,11 @@ export async function runBackgroundTask(commandLine) {
       let aumid = commandLine.getArgument(1);
       let force = commandLine.findFlag("force", true) != -1;
       defaultAgent.doTask(aumid, force);
+
+      // Bug 1857333: We wait for arbitrary time for Glean to submit telemetry.
+      console.error("Pinged glean, waiting for submission.");
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
       return EXIT_CODE.SUCCESS;
     }
   }
