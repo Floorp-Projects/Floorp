@@ -103,7 +103,7 @@ struct VideoColorSpaceInternal {
   Maybe<VideoTransferCharacteristics> mTransfer;
 };
 
-static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig);
+static bool Validate(const VideoDecoderConfig& aConfig);
 static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
@@ -111,9 +111,8 @@ class VideoDecoderConfigInternal {
  public:
   static UniquePtr<VideoDecoderConfigInternal> Create(
       const VideoDecoderConfig& aConfig) {
-    if (auto r = Validate(aConfig); r.isErr()) {
-      nsCString e = r.unwrapErr();
-      LOGE("Failed to create VideoDecoderConfigInternal: %s", e.get());
+    if (!Validate(aConfig)) {
+      LOGE("Failed to create VideoDecoderConfigInternal");
       return nullptr;
     }
 
@@ -181,34 +180,38 @@ class VideoDecoderConfigInternal {
  */
 
 // https://w3c.github.io/webcodecs/#valid-videodecoderconfig
-static Result<Ok, nsCString> Validate(const VideoDecoderConfig& aConfig) {
+static bool Validate(const VideoDecoderConfig& aConfig) {
   Maybe<nsString> codec = ParseCodecString(aConfig.mCodec);
   if (!codec || codec->IsEmpty()) {
-    return Err("invalid codec string"_ns);
+    LOGE("Invalid codec string");
+    return false;
   }
 
   if (aConfig.mCodedWidth.WasPassed() != aConfig.mCodedHeight.WasPassed()) {
-    return aConfig.mCodedWidth.WasPassed()
-               ? Err("Invalid VideoDecoderConfig: codedWidth passed without codedHeight"_ns)
-               : Err("Invalid VideoDecoderConfig: codedHeight passed without codedWidth"_ns);
+    LOGE("Missing coded %s",
+         aConfig.mCodedWidth.WasPassed() ? "height" : "width");
+    return false;
   }
   if (aConfig.mCodedWidth.WasPassed() &&
       (aConfig.mCodedWidth.Value() == 0 || aConfig.mCodedHeight.Value() == 0)) {
-    return Err("codedWidth and/or codedHeight can't be zero"_ns);
+    LOGE("codedWidth and/or codedHeight can't be zero");
+    return false;
   }
 
   if (aConfig.mDisplayAspectWidth.WasPassed() !=
       aConfig.mDisplayAspectHeight.WasPassed()) {
-    return Err(
-        "display aspect width or height cannot be set without the other"_ns);
+    LOGE("Missing display aspect %s",
+         aConfig.mDisplayAspectWidth.WasPassed() ? "height" : "width");
+    return false;
   }
   if (aConfig.mDisplayAspectWidth.WasPassed() &&
       (aConfig.mDisplayAspectWidth.Value() == 0 ||
        aConfig.mDisplayAspectHeight.Value() == 0)) {
-    return Err("display aspect width and height cannot be zero"_ns);
+    LOGE("display aspect width and height cannot be zero");
+    return false;
   }
 
-  return Ok();
+  return true;
 }
 
 struct MIMECreateParam {
@@ -322,7 +325,7 @@ static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<VideoDecoderConfig>& aDest, JSContext* aCx,
     const VideoDecoderConfig& aConfig) {
-  MOZ_ASSERT(Validate(aConfig).isOk());
+  MOZ_ASSERT(Validate(aConfig));
 
   aDest.mCodec = aConfig.mCodec;
   if (aConfig.mCodedHeight.WasPassed()) {
@@ -735,10 +738,8 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   LOG("VideoDecoder %p, Configure: codec %s", this,
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
 
-  if (auto r = Validate(aConfig); r.isErr()) {
-    nsCString e = r.unwrapErr();
-    LOGE("config is invalid: %s", e.get());
-    aRv.ThrowTypeError(e);
+  if (!Validate(aConfig)) {
+    aRv.ThrowTypeError("config is invalid");
     return;
   }
 
@@ -842,10 +843,8 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  if (auto r = Validate(aConfig); r.isErr()) {
-    nsCString e = r.unwrapErr();
-    LOGE("config is invalid: %s", e.get());
-    p->MaybeRejectWithTypeError(e);
+  if (!Validate(aConfig)) {
+    p->MaybeRejectWithTypeError("config is invalid");
     return p.forget();
   }
 
