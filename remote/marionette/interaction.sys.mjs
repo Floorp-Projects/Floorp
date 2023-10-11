@@ -23,6 +23,22 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.MARIONETTE)
 );
 
+// dragService may be null if it's in the headless mode (e.g., on Linux).
+// It depends on the platform, though.
+ChromeUtils.defineLazyGetter(lazy, "dragService", () => {
+  try {
+    return Cc["@mozilla.org/widget/dragservice;1"].getService(
+      Ci.nsIDragService
+    );
+  } catch (e) {
+    // If we're in the headless mode, the drag service may be never
+    // instantiated.  In this case, an exception is thrown.  Let's ignore
+    // any exceptions since without the drag service, nobody can create a
+    // drag session.
+    return null;
+  }
+});
+
 /** XUL elements that support disabled attribute. */
 const DISABLED_ATTRIBUTE_SUPPORTED_XUL = new Set([
   "ARROWSCROLLBOX",
@@ -185,7 +201,7 @@ async function webdriverClickElement(el, a11y) {
       win
     );
 
-    if (lazy.event.dragService.getCurrentSession()) {
+    if (lazy.dragService?.getCurrentSession()) {
       // Special handling is required if the mousemove started a drag session.
       // In this case, mousedown event shouldn't be fired, and the mouseup should
       // end the session.  Therefore, we should synthesize only mouseup.
