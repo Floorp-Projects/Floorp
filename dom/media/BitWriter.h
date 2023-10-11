@@ -29,6 +29,12 @@ class BitWriter {
   // Write RBSP trailing bits.
   void CloseWithRbspTrailing();
 
+  // Advance position forward without modifying buffer, which is usually used
+  // along with the case when directly appending a byte array to the
+  // MediaByteBuffer for the efficiency, instead of writing bits one by one.
+  // So this can only be called when the bit index is zero.
+  void AdvanceBytes(uint32_t aByteOffset);
+
   // Return the number of bits written so far;
   size_t BitCount() const { return mPosition * 8 + mBitIndex; }
 
