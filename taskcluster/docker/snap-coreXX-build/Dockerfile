@@ -14,6 +14,8 @@ RUN apt-get update && \
     apt-get install -y \
         build-essential \
         curl \
+        libavcodec58 \
+        libavutil56 \
         jq \
         patch \
         patchelf \
