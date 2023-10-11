@@ -15,7 +15,11 @@ fail-if = ["a11y_checks"] # Bug 1854625 clicked button, fxview-tab-row-secondary
 ["browser_opentabs_cards.js"]
 
 ["browser_opentabs_recency_next.js"]
-skip-if = ["os == 'mac' && verify"] # macos times out, see bug 1857293
+skip-if = [
+  "os == 'win'",
+  "os == 'mac' && verify"
+] # macos times out, see bug 1857293, skipped for windows, see bug 1858460
+
 
 ["browser_recentlyclosed_firefoxview_next.js"]
 fail-if = ["a11y_checks"] # Bug 1854625 clicked button, button.fxview-tab-row-secondary-button, and a.fxview-tab-row-main may not be focusable
