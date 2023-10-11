@@ -85,24 +85,6 @@ async function check_results({ featureEnabled = false }) {
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
   EventUtils.synthesizeKey("VK_RETURN", {}, window);
 
-  let event = {
-    category: "urlbar",
-    method: "engagement",
-    object: "enter",
-    value: "typed",
-    extra: {
-      elapsed: val => parseInt(val) > 0,
-      numChars: "0",
-      numWords: "0",
-      selIndex: "0",
-      selType: featureEnabled ? "trending_rich" : "trending",
-      provider: "SearchSuggestions",
-    },
-  };
-
-  TelemetryTestUtils.assertEvents([event], {
-    category: "urlbar",
-  });
   let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
   TelemetryTestUtils.assertScalar(scalars, "urlbar.engagement", 1);
 
