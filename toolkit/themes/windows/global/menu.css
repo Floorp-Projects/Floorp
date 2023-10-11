@@ -45,27 +45,6 @@ menuitem:is([type="checkbox"], [type="radio"]):not([checked="true"]) > .menu-ico
   display: none;
 }
 
-/* ..... menu arrow box ..... */
-
-/* Override the native menu arrow with a custom one for Win10. */
-.menu-right {
-  list-style-image: url("chrome://global/skin/icons/arrow-right.svg");
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: var(--menu-icon-opacity);
-  margin-inline-end: 1em;
-}
-
-.menu-right > image {
-  /* Do not make this smaller than the size of the svg, but upscale for
-   * people with large fonts. */
-  width: max(1em, 16px);
-}
-
-.menu-right:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
-}
-
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu[_moz-menuactive="true"]:not([disabled="true"]) {

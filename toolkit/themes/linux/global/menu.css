@@ -78,19 +78,6 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
   height: 16px;
 }
 
-.menu-right {
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-inline-start: 6px;
-  margin-inline-end: 0;
-  width: 2ex;
-  height: 2ex;
-  /* These next two rules are needed to prevent inheritance and thus ugliness */
-  list-style-image: none;
-  appearance: auto;
-  -moz-default-appearance: menuarrow;
-}
-
 .menubar-left {
   margin-top: 0;
   margin-bottom: 0;

@@ -40,20 +40,6 @@ menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
 }
 
-/* menu arrow box */
-
-.menu-right,
-.menu-accel-container {
-  margin-inline: 21px -9px;
-  justify-content: flex-end;
-}
-
-.menu-right {
-  list-style-image: none;
-  appearance: auto;
-  -moz-default-appearance: menuarrow;
-}
-
 /* menu/menuitems in menubar */
 
 menubar > menu {
