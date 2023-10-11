@@ -22,6 +22,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     "DecoderTemplate.h",
+    "DecoderTypes.h",
     "EncodedVideoChunk.h",
     "VideoColorSpace.h",
     "VideoDecoder.h",
