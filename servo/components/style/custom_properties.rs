@@ -868,10 +868,14 @@ impl<'a> CustomPropertiesBuilder<'a> {
                     if let Some(registration) = custom_registration {
                         let mut input = ParserInput::new(&unparsed_value.css);
                         let mut input = Parser::new(&mut input);
-                        if ComputedRegisteredValue::compute(&mut input, registration).is_err() {
+                        if let Ok(value) =
+                            ComputedRegisteredValue::compute(&mut input, registration)
+                        {
+                            map.insert(custom_registration, name.clone(), value);
+                        } else {
                             map.remove(custom_registration, name);
-                            return;
                         }
+                        return;
                     }
                 }
                 map.insert(
@@ -1410,7 +1414,9 @@ fn substitute_references_in_value_and_apply(
             false
         } else {
             if let Some(registration) = custom_registration {
-                if ComputedRegisteredValue::compute(&mut input, registration).is_err() {
+                if let Ok(value) = ComputedRegisteredValue::compute(&mut input, registration) {
+                    custom_properties.insert(custom_registration, name.clone(), value);
+                } else {
                     handle_invalid_at_computed_value_time(
                         name,
                         custom_properties,
@@ -1418,8 +1424,8 @@ fn substitute_references_in_value_and_apply(
                         stylist,
                         is_root_element,
                     );
-                    return;
                 }
+                return;
             }
             true
         }
@@ -1518,11 +1524,10 @@ fn substitute_block<'i>(
                                 )?;
                                 let mut fallback_input = ParserInput::new(&fallback.css);
                                 let mut fallback_input = Parser::new(&mut fallback_input);
-                                let compute_result = ComputedRegisteredValue::compute(
+                                if let Err(_) = ComputedRegisteredValue::compute(
                                     &mut fallback_input,
                                     registration,
-                                );
-                                if compute_result.is_err() {
+                                ) {
                                     return Err(input
                                         .new_custom_error(StyleParseErrorKind::UnspecifiedError));
                                 }
@@ -1543,15 +1548,18 @@ fn substitute_block<'i>(
                         if let Some(registration) = registration {
                             let mut fallback_input = ParserInput::new(&fallback.css);
                             let mut fallback_input = Parser::new(&mut fallback_input);
-                            let compute_result =
-                                ComputedRegisteredValue::compute(&mut fallback_input, registration);
-                            if compute_result.is_err() {
+                            if let Ok(fallback) =
+                                ComputedRegisteredValue::compute(&mut fallback_input, registration)
+                            {
+                                partial_computed_value.push_variable(input, &fallback)?;
+                            } else {
                                 return Err(
                                     input.new_custom_error(StyleParseErrorKind::UnspecifiedError)
                                 );
                             }
+                        } else {
+                            partial_computed_value.push_variable(&input, &fallback)?;
                         }
-                        partial_computed_value.push_variable(&input, &fallback)?;
                     }
                     Ok(())
                 })?;

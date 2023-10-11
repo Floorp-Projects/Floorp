@@ -16,7 +16,7 @@ use crate::custom_properties::ComputedValue as ComputedPropertyValue;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::values::{specified, CustomIdent};
-use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser};
+use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, ParserInput};
 use selectors::matching::QuirksMode;
 use servo_arc::{Arc, ThinArc};
 use smallvec::SmallVec;
@@ -113,22 +113,34 @@ pub enum ComputedValue {
 }
 
 impl ComputedValue {
-    /// Parse and validate a registered custom property, given a string and a property registration.
+    /// Convert a registered custom property to a VariableValue, given input and a property
+    /// registration.
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
-    ) -> Result<(), ()> {
-        let parse_result = Self::parse(
+    ) -> Result<Arc<ComputedPropertyValue>, ()> {
+        let Ok(value) = Self::parse(
             input,
             &registration.syntax,
             &registration.url_data,
             AllowComputationallyDependent::Yes,
-        );
-        if parse_result.is_err() {
+        ) else {
             return Err(());
+        };
+        // TODO(zrhoffman, bug 1846632): Use string of computed value
+        let value = value.to_css_string();
+
+        let result = {
+            let mut input = ParserInput::new(&value);
+            let mut input = CSSParser::new(&mut input);
+            // TODO(zrhoffman, bug 1858305): Get the variable without parsing
+            ComputedPropertyValue::parse(&mut input)
+        };
+        if let Ok(value) = result {
+            Ok(value)
+        } else {
+            Err(())
         }
-        // TODO(zrhoffman, 1846632): Return a CSS string for the computed value.
-        Ok(())
     }
 
     /// Parse and validate a registered custom property value according to its syntax descriptor,
