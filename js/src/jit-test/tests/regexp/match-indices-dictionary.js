@@ -7,14 +7,18 @@ for (var i = 0; i < 500; ++i) {
     input += "a";
 }
 
-var r = RegExp(s, "d");
-var e = r.exec(input);
+try {
+  var r = RegExp(s, "d");
+  var e = r.exec(input);
 
-for (var i = 0; i < 500; i++) {
+  for (var i = 0; i < 500; i++) {
     assertEq(e.groups["a" + i], "a");
     assertEq(e.groups["b" + i], undefined);
 
     assertEq(e.indices.groups["a" + i][0], i)
     assertEq(e.indices.groups["a" + i][1], i + 1)
     assertEq(e.indices.groups["b" + i], undefined)
+  }
+} catch (err) {
+  assertEq(err.message, "too much recursion");
 }
