@@ -15,15 +15,6 @@
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
-  /* Override some menu color variables for light browser themes. */
-  --menu-icon-opacity: 0.7;
-}
-
-/* Override the menu color variables for dark browser themes. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --menu-icon-opacity: 1;
-  }
 }
 
 @media (prefers-contrast) {
