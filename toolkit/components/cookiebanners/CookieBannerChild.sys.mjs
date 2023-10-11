@@ -41,9 +41,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "observeTimeout",
-  "cookiebanners.bannerClicking.timeout",
-  3000
+  "cleanupTimeoutAfterLoad",
+  "cookiebanners.bannerClicking.timeoutAfterLoad"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "cleanupTimeoutAfterDOMContentLoaded",
+  "cookiebanners.bannerClicking.timeoutAfterDOMContentLoaded"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -319,27 +323,54 @@ export class CookieBannerChild extends JSWindowActorChild {
       this.#telemetryStatus.currentStage = "mutation_post_load";
     }
 
-    this.#startObserverCleanupTimer();
+    // On load reset the timer for cleanup.
+    this.#startOrResetCleanupTimer();
   }
 
   /**
-   * If there is an active mutation observer, start a timeout to unregister it.
+   * We limit how long we observe cookie banner mutations for performance
+   * reasons. If not present initially on DOMContentLoaded, cookie banners are
+   * expected to show up during or shortly after page load.
+   * This method starts a cleanup timeout which duration depends on the current
+   * load stage (DOMContentLoaded, or load). When called, if a timeout is
+   * already running, it is cancelled and a new timeout is scheduled.
    */
-  #startObserverCleanupTimer() {
-    // We limit how long we observe cookie banner mutations for performance
-    // reasons. If not present initially on DOMContentLoaded, cookie banners are
-    // expected to show up during or shortly after page load.
-    if (!this.#observerCleanUp || this.#observerCleanUpTimer) {
-      return;
+  #startOrResetCleanupTimer() {
+    // Cancel any already running timeout so we can schedule a new one.
+    if (this.#observerCleanUpTimer) {
+      lazy.logConsole.debug(
+        "#startOrResetCleanupTimer: Cancelling existing cleanup timeout",
+        {
+          didLoad: this.#didLoad,
+        }
+      );
+      lazy.clearTimeout(this.#observerCleanUpTimer);
     }
-    lazy.logConsole.debug("Starting MutationObserver cleanup timeout");
+
+    let durationMS = this.#didLoad
+      ? lazy.cleanupTimeoutAfterLoad
+      : lazy.cleanupTimeoutAfterDOMContentLoaded;
+    lazy.logConsole.debug(
+      "#startOrResetCleanupTimer: Starting cleanup timeout",
+      {
+        durationMS,
+        didLoad: this.#didLoad,
+        hasObserverCleanup: !!this.#observerCleanUp,
+      }
+    );
+
     this.#observerCleanUpTimer = lazy.setTimeout(() => {
       lazy.logConsole.debug(
-        `MutationObserver timeout after ${lazy.observeTimeout}ms.`
+        "#startOrResetCleanupTimer: Cleanup timeout triggered",
+        {
+          durationMS,
+          didLoad: this.#didLoad,
+          hasObserverCleanup: !!this.#observerCleanUp,
+        }
       );
       this.#observerCleanUpTimer = null;
-      this.#observerCleanUp();
-    }, lazy.observeTimeout);
+      this.#observerCleanUp?.();
+    }, durationMS);
   }
 
   didDestroy() {
@@ -438,6 +469,9 @@ export class CookieBannerChild extends JSWindowActorChild {
    */
   async handleCookieBanner() {
     lazy.logConsole.debug("handleCookieBanner", this.document?.location.href);
+
+    // Start timer to clean up detection code (polling and mutation observers).
+    this.#startOrResetCleanupTimer();
 
     // First, we detect if the banner is shown on the page
     let rules = await this.#detectBanner();
@@ -580,18 +614,11 @@ export class CookieBannerChild extends JSWindowActorChild {
         resolve(result);
       };
 
-      // The clean up function to clean unfinished observer and timer when the
-      // actor destroys.
+      // The clean up function to clean unfinished observer and timer on timeout
+      // or when the actor destroys.
       this.#observerCleanUp = () => {
         cleanup(null);
       };
-
-      // If we already observed a load event we can start the cleanup timer
-      // straight away.
-      // Otherwise wait for the load event via the #onLoad method.
-      if (this.#didLoad) {
-        this.#startObserverCleanupTimer();
-      }
     });
   }
 
