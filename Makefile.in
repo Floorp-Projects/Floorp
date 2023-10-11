@@ -83,7 +83,7 @@ ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
 	@# same directory, because that would blow up
 	$(if $(wildcard _build_manifests/install/$(subst /,_,$*)),$(if $(wildcard faster/install_$(subst /,_,$*)*),$(error FasterMake and RecursiveMake ends of the hybrid build system want to handle $*)))
 endif
-	$(foreach manifest,$(wildcard _build_manifests/install/$(subst /,_,$*)),$(call py_action,process_install_manifest $*,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install_$(subst /,_,$*).track $* $(manifest)))
+	$(addprefix $(call py_action,process_install_manifest,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install_$(subst /,_,$*).track $*) ,$(wildcard _build_manifests/install/$(subst /,_,$*)))
 
 # Dummy wrapper rule to allow the faster backend to piggy back
 $(addprefix install-,$(subst /,_,$(filter dist/%,$(install_manifests)))): install-dist_%: install-dist/% ;
@@ -93,7 +93,7 @@ install-tests: install-test-files
 
 .PHONY: install-test-files
 install-test-files:
-	$(call py_action,process_install_manifest test/files,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install__test_files.track _tests _build_manifests/install/_test_files)
+	$(call py_action,process_install_manifest,$(if $(filter copy,$(NSDISTMODE)),--no-symlinks )--track install__test_files.track _tests _build_manifests/install/_test_files)
 
 include $(topsrcdir)/build/moz-automation.mk
 
@@ -168,14 +168,14 @@ endif
 .PHONY: symbolsfullarchive
 symbolsfullarchive: prepsymbolsarchive
 	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
-	$(call py_action,symbols_archive $(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst' \
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst' \
                                      $(abspath $(DIST)/crashreporter-symbols) \
                                      --full-archive)
 
 .PHONY: symbolsarchive
 symbolsarchive: prepsymbolsarchive
 	$(RM) '$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip'
-	$(call py_action,symbols_archive $(SYMBOL_ARCHIVE_BASENAME).zip,'$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' \
+	$(call py_action,symbols_archive,'$(DIST)/$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' \
                                      $(abspath $(DIST)/crashreporter-symbols))
 
 ifdef MOZ_CRASHREPORTER
