@@ -7,33 +7,14 @@
   font-family: var(--monospace-font-family);
   font-size: var(--theme-code-font-size);
   line-height: var(--console-output-line-height);
-  color: var(--theme-text-color-alt);
 }
 
 .theme-light .eager-evaluation-result {
   --log-icon-color: var(--grey-35);
-  /* Override Reps variables to turn eager eval output gray */
-  --object-color: var(--grey-50);
-  --number-color: var(--grey-50);
-  --string-color: var(--grey-50);
-  --node-color: var(--grey-50);
-  --reference-color: var(--grey-50);
-  --location-color: var(--grey-43);
-  --source-link-color: var(--grey-43);
-  --null-color: var(--grey-43);
 }
 
 .theme-dark .eager-evaluation-result {
   --log-icon-color: var(--grey-55);
-  /* Override Reps variables to turn eager eval output gray */
-  --object-color: var(--grey-43);
-  --number-color: var(--grey-43);
-  --string-color: var(--grey-43);
-  --node-color: var(--grey-43);
-  --reference-color: var(--grey-43);
-  --location-color: var(--grey-50);
-  --source-link-color: var(--grey-50);
-  --null-color: var(--grey-50);
 }
 
 .eager-evaluation-result__row {
@@ -58,6 +39,9 @@
 }
 
 .eager-evaluation-result__text {
+  /* Override Reps variables to turn eager eval output gray */
+  filter: saturate(0%);
+
   flex: 1 1 auto;
   height: 14px;
   overflow: hidden;
@@ -81,11 +65,6 @@
 
 .eager-evaluation-result__text .objectBox-function .param {
   color: var(--null-color);
-}
-
-/* Object property label */
-.eager-evaluation-result__text .nodeName {
-  color: var(--object-color);
 }
 
 /*
