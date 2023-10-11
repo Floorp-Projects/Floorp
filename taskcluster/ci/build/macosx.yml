@@ -66,6 +66,7 @@ macosx64-aarch64/debug:
     worker:
         max-run-time: 5400
         env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
             PERFHERDER_EXTRA_OPTIONS: aarch64
     run:
         config:
