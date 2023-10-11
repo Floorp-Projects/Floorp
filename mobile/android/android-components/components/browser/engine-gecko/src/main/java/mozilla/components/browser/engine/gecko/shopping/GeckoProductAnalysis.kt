@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.shopping.ProductAnalysis
  * @property grade Reliability grade for the product's reviews
  * @property adjustedRating Product rating adjusted to exclude untrusted reviews
  * @property needsAnalysis Boolean indicating if the analysis is stale
+ * @property pageNotSupported Boolean indicating true if the page is not supported and false if supported
  * @property lastAnalysisTime Time since the last analysis was performed
  * @property deletedProductReported Boolean indicating if reported that this product has been deleted
  * @property deletedProduct Boolean indicating if this product is now deleted
@@ -25,6 +26,7 @@ data class GeckoProductAnalysis(
     val grade: String?,
     val adjustedRating: Double?,
     val needsAnalysis: Boolean,
+    val pageNotSupported: Boolean,
     val lastAnalysisTime: Long,
     val deletedProductReported: Boolean,
     val deletedProduct: Boolean,

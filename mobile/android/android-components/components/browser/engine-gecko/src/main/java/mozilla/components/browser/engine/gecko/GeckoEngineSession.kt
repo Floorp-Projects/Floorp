@@ -750,6 +750,7 @@ class GeckoEngineSession(
                 response.grade,
                 response.adjustedRating,
                 response.needsAnalysis,
+                response.pageNotSupported,
                 response.lastAnalysisTime,
                 response.deletedProductReported,
                 response.deletedProduct,

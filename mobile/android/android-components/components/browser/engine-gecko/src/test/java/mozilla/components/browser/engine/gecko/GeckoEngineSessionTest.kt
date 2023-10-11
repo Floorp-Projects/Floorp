@@ -2588,6 +2588,7 @@ class GeckoEngineSessionTest {
             .adjustedRating(adjustedRating)
             .analysisUrl(analysisURL)
             .needsAnalysis(true)
+            .pageNotSupported(false)
             .highlights(null)
             .lastAnalysisTime(lastAnalysisTime)
             .deletedProductReported(true)
