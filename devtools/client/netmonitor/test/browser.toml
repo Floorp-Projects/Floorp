@@ -342,6 +342,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_net_new_request_panel_content-length.js"]
 
 ["browser_net_new_request_panel_context_menu.js"]
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results
 
 ["browser_net_new_request_panel_persisted_content.js"]
 

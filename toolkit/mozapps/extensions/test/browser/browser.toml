@@ -108,6 +108,7 @@ fail-if = ["a11y_checks"] # Bug 1854646 clicked button.category may not be focus
 fail-if = ["a11y_checks"] # Bug 1854646 clicked h1.header-name, panel-item, div.main-search may not be focusable
 
 ["browser_html_list_view_recommendations.js"]
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results
 
 ["browser_html_message_bar.js"]
 
