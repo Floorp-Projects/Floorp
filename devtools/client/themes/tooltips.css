@@ -608,6 +608,8 @@ strong {
   border-radius: var(--theme-arrowpanel-border-radius);
   height: 100%;
   overflow-y: auto;
+  margin: 0;
+  padding: 0;
 }
 
 @media (-moz-overlay-scrollbars) {
@@ -622,15 +624,14 @@ strong {
   box-sizing: content-box;
   height: 24px;
   padding: 0 4px;
-  border-top: 1px solid var(--theme-splitter-color);
   cursor: pointer;
   overflow: hidden;
   color: var(--theme-tooltip-color);
   background-color: var(--theme-tooltip-background);
 }
 
-.devtools-tooltip-events-container .event-header:first-child {
-  border-top-width: 0;
+.devtools-tooltip-events-container > li + li .event-header {
+  border-top: 1px solid var(--theme-splitter-color);
 }
 
 .event-header .theme-twisty {
@@ -639,9 +640,11 @@ strong {
   height: 12px;
   margin-inline-end: 4px;
   fill: currentColor;
+  border: none;
+  background-color: transparent;
 }
 
-.event-header.content-expanded .theme-twisty {
+.event-header .theme-twisty[aria-expanded="true"] {
   transform: none;
 }
 
@@ -655,6 +658,8 @@ strong {
   background-image: url("chrome://devtools/content/shared/components/reps/images/jump-definition.svg");
   background-repeat: no-repeat;
   background-position: center;
+  background-color: transparent;
+  border: none;
   width: 20px;
   height: 20px;
   border-radius: 2px;
