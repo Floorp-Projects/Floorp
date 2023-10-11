@@ -33,7 +33,6 @@ add_setup(async function () {
     set: [
       ["browser.urlbar.quicksuggest.enabled", true],
       ["browser.urlbar.suggest.quicksuggest.nonsponsored", true],
-      ["browser.urlbar.bestMatch.enabled", true],
       ["browser.urlbar.pocket.featureGate", true],
       // Disable search suggestions so we don't hit the network.
       ["browser.search.suggest.enabled", false],

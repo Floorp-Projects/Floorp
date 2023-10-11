@@ -33,7 +33,6 @@ const REMOTE_SETTINGS_DATA = [
 
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("pocket.featureGate", true);
 
@@ -177,26 +176,6 @@ add_task(async function topPick() {
       makeExpectedResult({ searchString: HIGH_KEYWORD, isTopPick: true }),
     ],
   });
-});
-
-// The suggestion should not be shown as a top pick when a best match pref is
-// disabled even when a high-confidence keyword is matched.
-add_task(async function topPickPrefsDisabled() {
-  let prefs = ["bestMatch.enabled", "suggest.bestmatch"];
-  for (let pref of prefs) {
-    info("Disabling pref: " + pref);
-    UrlbarPrefs.set(pref, false);
-    await check_results({
-      context: createContext(HIGH_KEYWORD, {
-        providers: [UrlbarProviderQuickSuggest.name],
-        isPrivate: false,
-      }),
-      matches: [
-        makeExpectedResult({ searchString: HIGH_KEYWORD, isTopPick: false }),
-      ],
-    });
-    UrlbarPrefs.set(pref, true);
-  }
 });
 
 // Low-confidence keywords should do prefix matching starting at the first word.

@@ -98,7 +98,7 @@ add_task(async function top_pick() {
         {
           groups: "heuristic,top_pick,search_suggest,search_suggest",
           results:
-            "search_engine,rs_adm_sponsored,search_suggest,search_suggest",
+            "search_engine,merino_top_picks,search_suggest,search_suggest",
           n_results: 4,
         },
       ]),

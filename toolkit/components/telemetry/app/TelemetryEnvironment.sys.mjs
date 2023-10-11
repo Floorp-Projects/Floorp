@@ -263,7 +263,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
     "browser.urlbar.suggest.quicksuggest.sponsored",
     { what: RECORD_DEFAULTPREF_VALUE },
   ],
-  ["browser.urlbar.suggest.bestmatch", { what: RECORD_DEFAULTPREF_VALUE }],
   ["browser.urlbar.suggest.searches", { what: RECORD_PREF_VALUE }],
   ["devtools.chrome.enabled", { what: RECORD_PREF_VALUE }],
   ["devtools.debugger.enabled", { what: RECORD_PREF_VALUE }],
