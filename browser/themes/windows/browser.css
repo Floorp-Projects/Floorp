@@ -6,16 +6,6 @@
 @import url("chrome://browser/skin/contextmenu.css");
 @import url("chrome://browser/skin/browser-custom-colors.css");
 
-:root {
-  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
-  --toolbar-non-lwt-textcolor: -moz-dialogtext;
-  --chrome-content-separator-color: ThreeDShadow;
-
-  &:-moz-lwtheme {
-    --chrome-content-separator-color: rgba(0,0,0,.3);
-  }
-}
-
 #menubar-items {
   flex-direction: column; /* for flex hack */
   justify-content: normal; /* align the menubar to the top also in customize mode */
