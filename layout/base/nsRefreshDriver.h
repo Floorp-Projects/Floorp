@@ -446,6 +446,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasScrollEvents = 1 << 5,
     eHasVisualViewportScrollEvents = 1 << 6,
     eHasPendingMediaQueryListeners = 1 << 7,
+    eRootNeedsMoreTicksForUserInput = 1 << 9,
   };
 
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
