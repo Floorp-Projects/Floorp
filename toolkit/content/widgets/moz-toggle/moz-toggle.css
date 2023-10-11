@@ -5,26 +5,29 @@
 @import url("chrome://global/skin/design-system/text-and-typography.css");
 
 :host {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  justify-content: space-between;
-  align-items: center;
 }
 
 :host([disabled]) {
   opacity: 0.4
 }
 
-.toggle-button,
-.label-wrapper {
-  grid-row: 1;
+::slotted(a[is="moz-support-link"]) {
+  display: inline-block;
+}
+
+#moz-toggle-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
 .description-wrapper,
 .description-wrapper ::slotted([slot="support-link"]) {
-  grid-row: 2;
   margin: 0;
-  grid-column: 1 / -1;
 }
 
 .toggle-button {
@@ -57,6 +60,7 @@
   border-radius: var(--toggle-border-radius);
   background: var(--toggle-background-color);
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .toggle-button:focus-visible {
