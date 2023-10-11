@@ -18,6 +18,4 @@ prefs = ["browser.bookmarks.testing.skipDefaultBookmarksImport=true"]
 ["browser_ext_urlbar_dynamicResult.js"]
 support-files = ["dynamicResult.css"]
 
-["browser_ext_urlbar_engagementTelemetry.js"]
-
 ["browser_ext_urlbar_extensionTimeout.js"]

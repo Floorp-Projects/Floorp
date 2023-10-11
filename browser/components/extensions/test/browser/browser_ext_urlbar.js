@@ -489,9 +489,6 @@ add_task(async function closeView() {
 add_task(async function onEngagement() {
   gURLBar.blur();
 
-  // Enable engagement telemetry.
-  Services.prefs.setBoolPref("browser.urlbar.eventTelemetry.enabled", true);
-
   let ext = ExtensionTestUtils.loadExtension({
     manifest: {
       permissions: ["urlbar"],
@@ -602,5 +599,4 @@ add_task(async function onEngagement() {
   Assert.equal(state, "engagement");
 
   await ext.unload();
-  Services.prefs.clearUserPref("browser.urlbar.eventTelemetry.enabled");
 });
