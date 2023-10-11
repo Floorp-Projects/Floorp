@@ -219,7 +219,6 @@ class AddonManagerTest {
     fun `getAddons - returns temporary add-ons as supported`() = runTestOnMain {
         val addonsProvider: AddonsProvider = mock()
         whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf())
-        whenever(addonsProvider.getAddonsByGUIDs(any(), anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
 
         // Prepare engine
         val engine: Engine = mock()
@@ -278,7 +277,6 @@ class AddonManagerTest {
 
         val addonsProvider: AddonsProvider = mock()
         whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
-        whenever(addonsProvider.getAddonsByGUIDs(any(), anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
         WebExtensionSupport.initialize(engine, store)
 
         val addons = AddonManager(store, mock(), addonsProvider, mock()).getAddons()
@@ -309,7 +307,6 @@ class AddonManagerTest {
 
         val addonsProvider: AddonsProvider = mock()
         whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
-        whenever(addonsProvider.getAddonsByGUIDs(eq(listOf("addon1")), anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
         WebExtensionSupport.initialize(engine, store)
         val extension: WebExtension = mock()
         whenever(extension.id).thenReturn(addon.id)
@@ -346,7 +343,6 @@ class AddonManagerTest {
         val addonsProvider: AddonsProvider = mock()
 
         whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(listOf(addon))
-        whenever(addonsProvider.getAddonsByGUIDs(any(), anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
         WebExtensionSupport.initialize(engine, store)
         WebExtensionSupport.installedExtensions[addon.id] = extension
 
@@ -389,7 +385,6 @@ class AddonManagerTest {
 
         val addonsProvider: AddonsProvider = mock()
         whenever(addonsProvider.getFeaturedAddons(anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
-        whenever(addonsProvider.getAddonsByGUIDs(any(), anyBoolean(), eq(null), language = anyString())).thenReturn(emptyList())
         val addonsManager = AddonManager(store, mock(), addonsProvider, mock())
 
         addonsManager.getAddons()
