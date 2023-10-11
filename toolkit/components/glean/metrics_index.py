@@ -73,6 +73,7 @@ background_tasks_metrics = [
     "browser/components/metrics.yaml",
     "toolkit/components/backgroundtasks/metrics.yaml",
     "toolkit/components/crashes/metrics.yaml",
+    "toolkit/mozapps/defaultagent/metrics.yaml",
 ]
 
 # Test metrics
@@ -123,6 +124,7 @@ background_update_pings = [
 background_tasks_pings = [
     "toolkit/components/backgroundtasks/pings.yaml",
     "toolkit/components/crashes/pings.yaml",
+    "toolkit/mozapps/defaultagent/pings.yaml",
 ]
 
 # Test pings

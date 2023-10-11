@@ -1,0 +1,125 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Toolkit :: Default Browser Agent'
+
+system_default:
+  browser:
+    type: string
+    description: >
+      Which browser is currently set as the system default web browser. This is
+      simply a string with the name of the browser binned to a fixed set of
+      known browsers.
+
+      Possible values currently include the following (from
+      [DefaultBrowser.cpp](https://searchfox.org/mozilla-central/source/toolkit/mozapps/defaultagent/DefaultBrowser.cpp)):
+      * "error"
+      * "" (unknown)
+      * "firefox"
+      * "chrome"
+      * "edge"
+      * "edge-chrome"
+      * "ie"
+      * "opera"
+      * "brave"
+      * "yandex"
+      * "qq-browser"
+      * "360-browser"
+      * "sogou"
+      * "duckduckgo"
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838755
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1621293
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - default-agent
+
+  previous_browser:
+    type: string
+    description: >
+      Which browser was set as the system default before it was changed to the
+      current setting. The possible values are the same as for
+      `system_default.browser`.
+
+      The OS does not keep track of previous default settings, so the agent
+      records this information itself. That means that it will be inaccurate
+      until the first time the default is changed after the agent task begins
+      running. Before then, the value of `previous_browser` will be the same
+      as `browser`.
+
+      This value is updated every time the Default Agent runs, so when the
+      default browser is first changed the values for `browser` and
+      `previous_browser` will be different. But on subsequent executions of
+      the Default Agent, the two values will be the same.
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838755
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1621293
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - default-agent
+
+notification:
+  show_success:
+    type: boolean
+    description: >
+      Whether a notification was shown or not. Possible value include "shown" and "error".
+    notification_emails:
+        - install-update@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838755
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1621293
+    expires: never
+    send_in_pings:
+      - default-agent
+
+  action:
+    type: string
+    description: >
+      The action that the user took in response to the notification. Possible
+      values currently include the following:
+      * “dismissed-by-timeout”
+      * “dismissed-to-action-center”
+      * “dismissed-by-button”
+      * “dismissed-by-application-hidden”
+      * “make-firefox-default-button”
+      * “toast-clicked”
+
+      Many of the values correspond to buttons on the notification and should be
+      pretty self explanatory, but a few are less so.
+      * “dismissed-to-action-center” will be used if the user clicks the arrow in
+        the top right corner of the notification to dismiss it to the
+        action center.
+      * “dismissed-by-application-hidden” is provided because that is a method of
+        dismissal that the notification API could give but, in practice, should
+        never be seen.
+      * “dismissed-by-timeout” indicates that the user did not interact with the
+        notification and it timed out.
+    notification_emails:
+        - install-update@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838755
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1621293
+    expires: never
+    send_in_pings:
+      - default-agent

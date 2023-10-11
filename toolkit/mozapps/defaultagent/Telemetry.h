@@ -15,9 +15,9 @@
 
 namespace mozilla::default_agent {
 
-HRESULT SendDefaultBrowserPing(
-    const DefaultBrowserInfo& browserInfo, const DefaultPdfInfo& pdfInfo,
-    const NotificationActivities& activitiesPerformed);
+HRESULT SendDefaultAgentPing(const DefaultBrowserInfo& browserInfo,
+                             const DefaultPdfInfo& pdfInfo,
+                             const NotificationActivities& activitiesPerformed);
 
 }  // namespace mozilla::default_agent
 

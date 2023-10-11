@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+default-agent:
+  description: >
+    This opt-out ping is sent from the Default Agent, which is a Windows-only
+    Firefox Background Task that is registered during Firefox installation with
+    the Windows scheduled tasks system so that it runs automatically every 24
+    hours, whether Firefox is running or not.
+
+    Opting out of telemetry is handled via the pref value being copied to the
+    registry so that the Default Agent can read it without needing to work with
+    profiles. Relevant policies are consulted as well. The agent also has its own
+    pref, `default-agent.enabled`, which if set to false disables all agent
+    functionality, including generating this ping.
+
+    Each installation of Firefox has its own copy of the agent and its own
+    scheduled task which shares a common `LastPingSentAt` user registry key with
+    other installations. Installations race to send a single ping per 24 hour
+    window per installing user. If multiple operating system-level users are all
+    using one copy of Firefox, only one scheduled task will have been created and
+    only one ping will be sent, even though the users might have different
+    default browser settings. If multiple users have installed Firefox then each
+    installing user will have a scheduled task and ping.
+
+    Additional information for the Default Agent can be found in the
+    [Default Browser Agent docs](https://firefox-source-docs.mozilla.org/toolkit/mozapps/defaultagent/default-browser-agent/index.html).
+  include_client_id: false
+  send_if_empty: false
+  reasons:
+    daily_ping: |
+      The ping was sent as part of the daily scheduled Default Agent run.
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1838755
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1621293
+  notification_emails:
+    - install-update@mozilla.com
