@@ -38,7 +38,7 @@ add_task(async function () {
 
   // Add a typed visit, so it will be autofilled.
   await PlacesTestUtils.addVisits({
-    uri: "http://example.com/",
+    uri: "https://example.com/",
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   });
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
@@ -47,8 +47,8 @@ add_task(async function () {
     desc: "ENTER on the autofilled part should use autofill",
     typed: "exam",
     autofilled: "example.com/",
-    modified: "example.com",
-    waitForUrl: "http://example.com/",
+    modified: "https://example.com",
+    waitForUrl: "https://example.com/",
     keys: [["KEY_Enter"]],
   });
 
