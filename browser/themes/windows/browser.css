@@ -339,11 +339,6 @@
     --urlbar-box-hover-bgcolor: SelectedItem;
     --urlbar-box-active-bgcolor: SelectedItem;
     --urlbar-box-hover-text-color: SelectedItemText;
-
-    /* Address bar results view */
-    &:not(:-moz-lwtheme) {
-      --urlbar-popup-action-color: LinkText;
-    }
   }
 
   #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
