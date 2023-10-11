@@ -83,9 +83,7 @@ async function openFirefoxViewTab(win) {
 }
 
 function closeFirefoxViewTab(win) {
-  if (win.FirefoxViewHandler.tab) {
-    win.gBrowser.removeTab(win.FirefoxViewHandler.tab);
-  }
+  win.gBrowser.removeTab(win.FirefoxViewHandler.tab);
   Assert.ok(
     !win.FirefoxViewHandler.tab,
     "Reference to Firefox View tab got removed when closing the tab"
