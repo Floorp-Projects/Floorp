@@ -274,10 +274,10 @@ class BuildMonitor(MozbuildObject):
                 self.resources.begin_marker("Object", args[0])
                 update_needed = False
             elif action.startswith("START_"):
-                self.resources.begin_marker(action[len("START_") :], args[0])
+                self.resources.begin_marker(action[len("START_") :], " ".join(args))
                 update_needed = False
             elif action.startswith("END_"):
-                self.resources.end_marker(action[len("END_") :], args[0])
+                self.resources.end_marker(action[len("END_") :], " ".join(args))
                 update_needed = False
             elif action == "BUILD_VERBOSE":
                 build_dir = args[0]
