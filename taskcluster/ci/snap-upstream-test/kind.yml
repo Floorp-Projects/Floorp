@@ -24,6 +24,10 @@ job-defaults:
         tier: 2
     worker:
         max-run-time: 900
+        artifacts:
+            - name: public/build
+              type: directory
+              path: /builds/worker/artifacts/
 
 jobs:
     basic:
@@ -35,7 +39,7 @@ jobs:
             using: run-task
             checkout: false
             command: >-
-              cd $MOZ_FETCHES_DIR/ && ./tests.sh
+              export TASKCLUSTER_ROOT_DIR=$PWD && cd $MOZ_FETCHES_DIR/ && ./tests.sh
         fetches:
             snap-upstream-build:
                 - firefox.snap
