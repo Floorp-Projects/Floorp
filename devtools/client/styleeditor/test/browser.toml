@@ -185,6 +185,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_styleeditor_sourcemap_chrome.js"]
 
 ["browser_styleeditor_sourcemap_large.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_styleeditor_sourcemap_watching.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
