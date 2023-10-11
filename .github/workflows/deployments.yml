@@ -356,7 +356,7 @@ jobs:
           "/home/runner/downloads/artifacts/linux-aarch64/floorp-*.linux-aarch64.tar.bz2"
           "/home/runner/downloads/artifacts/windows-x64/floorp-win64.installer.exe"
           "/home/runner/downloads/artifacts/windows-x86/floorp-win32.installer.exe"
-          "/home/runner/downloads/artifacts/macOS-x64/floorp*-macOS-universal.dmg"
+          "/home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg"
         tag_name: "v${{ needs.get-display-version.outputs.display-version }}"
         name: "v${{ needs.get-display-version.outputs.display-version }}"
         draft: true
