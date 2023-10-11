@@ -363,6 +363,9 @@ fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and
 
 ["browser_raceWithTabs.js"]
 
+["browser_recentsearches.js"]
+support-files = ["search-engines"]
+
 ["browser_redirect_error.js"]
 support-files = ["redirect_error.sjs"]
 

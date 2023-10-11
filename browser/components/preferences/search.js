@@ -22,6 +22,8 @@ Preferences.addAll([
   { id: "browser.search.separatePrivateDefault.ui.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.trending", type: "bool" },
   { id: "browser.urlbar.trending.featureGate", type: "bool" },
+  { id: "browser.urlbar.recentsearches.featureGate", type: "bool" },
+  { id: "browser.urlbar.suggest.recentsearches", type: "bool" },
 ]);
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
@@ -102,6 +104,7 @@ var gSearchPane = {
     this._initShowSearchTermsCheckbox();
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
+    this._initRecentSeachesCheckbox();
   },
 
   /**
@@ -229,6 +232,21 @@ var gSearchPane = {
       let addButton = document.getElementById("addEngineButton");
       addButton.hidden = false;
     }
+  },
+
+  _initRecentSeachesCheckbox() {
+    this._recentSearchesEnabledPref = Preferences.get(
+      "browser.urlbar.recentsearches.featureGate"
+    );
+    let recentSearchesCheckBox = document.getElementById(
+      "enableRecentSearches"
+    );
+    const listener = () => {
+      recentSearchesCheckBox.hidden = !this._recentSearchesEnabledPref.value;
+    };
+
+    this._recentSearchesEnabledPref.on("change", listener);
+    listener();
   },
 
   async _updateTrendingCheckbox(suggestDisabled) {

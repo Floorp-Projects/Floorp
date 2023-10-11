@@ -308,6 +308,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // trending suggestions are turned on.
   ["suggest.trending", true],
 
+  // If `browser.urlbar.recentsearches.featureGate` is true, this controls whether
+  // recentsearches are turned on.
+  ["suggest.recentsearches", true],
+
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 
@@ -468,6 +472,15 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Feature gate pref for clipboard suggestions in the urlbar.
   ["clipboard.featureGate", false],
+
+  // Feature gate pref for recent searches being shown in the urlbar.
+  ["recentsearches.featureGate", false],
+
+  // The maximum number of recent searches we will show.
+  ["recentsearches.maxResults", 5],
+
+  // We only show recent searches within the past 31 days by default.
+  ["recentsearches.expirationDays", 31],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
@@ -591,6 +604,11 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
                 flex: 2,
                 group: lazy.UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
               },
+              {
+                flex: 2,
+                group: lazy.UrlbarUtils.RESULT_GROUP.RECENT_SEARCH,
+              },
+
               {
                 flex: 4,
                 group: lazy.UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,

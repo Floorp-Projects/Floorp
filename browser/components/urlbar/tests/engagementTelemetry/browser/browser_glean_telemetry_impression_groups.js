@@ -61,6 +61,21 @@ add_task(async function search_history() {
   });
 });
 
+add_task(async function recent_search() {
+  await doRecentSearchTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([
+        {
+          reason: "pause",
+          groups: "recent_search,suggested_index",
+          results: "recent_search,action",
+          n_results: 2,
+        },
+      ]),
+  });
+});
+
 add_task(async function search_suggest() {
   await doSearchSuggestTest({
     trigger: () => waitForPauseImpression(),
