@@ -303,10 +303,6 @@ pub enum SystemColor {
     MozMacDefaultbuttontext,
     /// Ring color around text fields and lists.
     MozMacFocusring,
-    /// Color used to display text for disabled menu items.
-    MozMacMenutextdisable,
-    /// Color used to display text while mouse is over a menu item.
-    MozMacMenutextselect,
     /// Text color of disabled text on toolbars.
     MozMacDisabledtoolbartext,
 
