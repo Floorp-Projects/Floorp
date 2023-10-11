@@ -108,4 +108,9 @@ dictionary LoadURIOptions {
    * `remoteTypeOverride` and a `remoteTypeOverride` of `NOT_REMOTE_TYPE`.
    */
   UTF8String? remoteTypeOverride;
+
+  /**
+   * Whether the search/URL term was without an explicit scheme.
+   */
+  boolean wasSchemelessInput = false;
 };

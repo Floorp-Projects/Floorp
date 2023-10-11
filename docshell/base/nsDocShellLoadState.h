@@ -327,6 +327,12 @@ class nsDocShellLoadState final {
     mRemoteTypeOverride = mozilla::Some(aRemoteTypeOverride);
   }
 
+  void SetWasSchemelessInput(bool aWasSchemelessInput) {
+    mWasSchemelessInput = aWasSchemelessInput;
+  }
+
+  bool GetWasSchemelessInput() { return mWasSchemelessInput; }
+
   // Determine the remote type of the process which should be considered
   // responsible for this load for the purposes of security checks.
   //
@@ -594,6 +600,9 @@ class nsDocShellLoadState final {
 
   // Remote type of the process which originally requested the load.
   nsCString mTriggeringRemoteType;
+
+  // if the to-be-loaded address had it protocol added through a fixup
+  bool mWasSchemelessInput = false;
 };
 
 #endif /* nsDocShellLoadState_h__ */
