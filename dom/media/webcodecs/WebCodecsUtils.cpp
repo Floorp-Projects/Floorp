@@ -42,6 +42,18 @@ nsTArray<nsCString> GuessContainers(const nsAString& aCodec) {
   return {};
 }
 
+Maybe<nsString> ParseCodecString(const nsAString& aCodec) {
+  // Trim the spaces on each end.
+  nsString str(aCodec);
+  str.Trim(" ");
+  nsTArray<nsString> codecs;
+  if (!ParseCodecsString(str, codecs) || codecs.Length() != 1 ||
+      codecs[0] != str) {
+    return Nothing();
+  }
+  return Some(codecs[0]);
+}
+
 /*
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
