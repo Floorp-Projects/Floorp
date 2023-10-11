@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_VideoDecoder_h
 #define mozilla_dom_VideoDecoder_h
 
-#include "DecoderTemplate.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
@@ -15,6 +14,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/DecoderTemplate.h"
+#include "mozilla/dom/DecoderTypes.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "nsCycleCollectionParticipant.h"
@@ -23,9 +24,6 @@
 class nsIGlobalObject;
 
 namespace mozilla {
-
-class MediaData;
-class VideoInfo;
 
 namespace dom {
 
@@ -36,7 +34,6 @@ class GlobalObject;
 class Promise;
 class VideoFrameOutputCallback;
 class WebCodecsErrorCallback;
-enum class HardwareAcceleration : uint8_t;
 struct VideoDecoderConfig;
 struct VideoDecoderInit;
 
@@ -45,29 +42,6 @@ struct VideoDecoderInit;
 }  // namespace mozilla
 
 namespace mozilla::dom {
-
-class VideoDecoderConfigInternal;
-
-class VideoDecoderTraits {
- public:
-  static constexpr nsLiteralCString Name = "VideoDecoder"_ns;
-  using ConfigType = VideoDecoderConfig;
-  using ConfigTypeInternal = VideoDecoderConfigInternal;
-  using InputType = EncodedVideoChunk;
-  using InputTypeInternal = EncodedVideoChunkData;
-  using OutputType = VideoFrame;
-  using OutputCallbackType = VideoFrameOutputCallback;
-
-  static bool IsSupported(const ConfigTypeInternal& aConfig);
-  static Result<UniquePtr<TrackInfo>, nsresult> CreateTrackInfo(
-      const ConfigTypeInternal& aConfig);
-  static bool Validate(const ConfigType& aConfig);
-  static UniquePtr<ConfigTypeInternal> CreateConfigInternal(
-      const ConfigType& aConfig);
-  static bool IsKeyChunk(const InputType& aInput);
-  static UniquePtr<InputTypeInternal> CreateInputInternal(
-      const InputType& aInput);
-};
 
 class VideoDecoder final : public DecoderTemplate<VideoDecoderTraits> {
  public:

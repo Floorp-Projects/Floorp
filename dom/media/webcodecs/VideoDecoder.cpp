@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/VideoDecoder.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/VideoDecoderBinding.h"
 
 #include "DecoderTraits.h"
@@ -81,98 +80,77 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
  * Below are helper classes
  */
 
-struct VideoColorSpaceInternal {
-  explicit VideoColorSpaceInternal(const VideoColorSpaceInit& aColorSpaceInit)
-      : mFullRange(NullableToMaybe(aColorSpaceInit.mFullRange)),
-        mMatrix(NullableToMaybe(aColorSpaceInit.mMatrix)),
-        mPrimaries(NullableToMaybe(aColorSpaceInit.mPrimaries)),
-        mTransfer(NullableToMaybe(aColorSpaceInit.mTransfer)) {}
-  VideoColorSpaceInternal() = default;
-  VideoColorSpaceInit ToColorSpaceInit() const {
-    VideoColorSpaceInit init;
-    init.mFullRange = MaybeToNullable(mFullRange);
-    init.mMatrix = MaybeToNullable(mMatrix);
-    init.mPrimaries = MaybeToNullable(mPrimaries);
-    init.mTransfer = MaybeToNullable(mTransfer);
-    return init;
-  };
+VideoColorSpaceInternal::VideoColorSpaceInternal(
+    const VideoColorSpaceInit& aColorSpaceInit)
+    : mFullRange(NullableToMaybe(aColorSpaceInit.mFullRange)),
+      mMatrix(NullableToMaybe(aColorSpaceInit.mMatrix)),
+      mPrimaries(NullableToMaybe(aColorSpaceInit.mPrimaries)),
+      mTransfer(NullableToMaybe(aColorSpaceInit.mTransfer)) {}
 
-  Maybe<bool> mFullRange;
-  Maybe<VideoMatrixCoefficients> mMatrix;
-  Maybe<VideoColorPrimaries> mPrimaries;
-  Maybe<VideoTransferCharacteristics> mTransfer;
+VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
+  VideoColorSpaceInit init;
+  init.mFullRange = MaybeToNullable(mFullRange);
+  init.mMatrix = MaybeToNullable(mMatrix);
+  init.mPrimaries = MaybeToNullable(mPrimaries);
+  init.mTransfer = MaybeToNullable(mTransfer);
+  return init;
 };
 
 static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
-class VideoDecoderConfigInternal {
- public:
-  static UniquePtr<VideoDecoderConfigInternal> Create(
-      const VideoDecoderConfig& aConfig) {
-    if (!VideoDecoderTraits::Validate(aConfig)) {
-      LOGE("Failed to create VideoDecoderConfigInternal");
+VideoDecoderConfigInternal::VideoDecoderConfigInternal(
+    const nsAString& aCodec, Maybe<uint32_t>&& aCodedHeight,
+    Maybe<uint32_t>&& aCodedWidth, Maybe<VideoColorSpaceInternal>&& aColorSpace,
+    Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
+    Maybe<uint32_t>&& aDisplayAspectHeight,
+    Maybe<uint32_t>&& aDisplayAspectWidth,
+    const HardwareAcceleration& aHardwareAcceleration,
+    Maybe<bool>&& aOptimizeForLatency)
+    : mCodec(aCodec),
+      mCodedHeight(std::move(aCodedHeight)),
+      mCodedWidth(std::move(aCodedWidth)),
+      mColorSpace(std::move(aColorSpace)),
+      mDescription(std::move(aDescription)),
+      mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
+      mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
+      mHardwareAcceleration(aHardwareAcceleration),
+      mOptimizeForLatency(std::move(aOptimizeForLatency)){};
+
+/*static*/
+UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
+    const VideoDecoderConfig& aConfig) {
+  if (!VideoDecoderTraits::Validate(aConfig)) {
+    LOGE("Failed to create VideoDecoderConfigInternal");
+    return nullptr;
+  }
+
+  Maybe<RefPtr<MediaByteBuffer>> description;
+  if (aConfig.mDescription.WasPassed()) {
+    auto rv = GetExtraData(aConfig.mDescription.Value());
+    if (rv.isErr()) {  // Invalid description data.
+      LOGE(
+          "Failed to create VideoDecoderConfigInternal due to invalid "
+          "description data. Error: 0x%08" PRIx32,
+          static_cast<uint32_t>(rv.unwrapErr()));
       return nullptr;
     }
-
-    Maybe<RefPtr<MediaByteBuffer>> description;
-    if (aConfig.mDescription.WasPassed()) {
-      auto rv = GetExtraData(aConfig.mDescription.Value());
-      if (rv.isErr()) {  // Invalid description data.
-        LOGE(
-            "Failed to create VideoDecoderConfigInternal due to invalid "
-            "description data. Error: 0x%08" PRIx32,
-            static_cast<uint32_t>(rv.unwrapErr()));
-        return nullptr;
-      }
-      description.emplace(rv.unwrap());
-    }
-
-    Maybe<VideoColorSpaceInternal> colorSpace;
-    if (aConfig.mColorSpace.WasPassed()) {
-      colorSpace.emplace(VideoColorSpaceInternal(aConfig.mColorSpace.Value()));
-    }
-
-    return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
-        aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
-        OptionalToMaybe(aConfig.mCodedWidth), std::move(colorSpace),
-        std::move(description), OptionalToMaybe(aConfig.mDisplayAspectHeight),
-        OptionalToMaybe(aConfig.mDisplayAspectWidth),
-        aConfig.mHardwareAcceleration,
-        OptionalToMaybe(aConfig.mOptimizeForLatency)));
+    description.emplace(rv.unwrap());
   }
-  ~VideoDecoderConfigInternal() = default;
 
-  nsString mCodec;
-  Maybe<uint32_t> mCodedHeight;
-  Maybe<uint32_t> mCodedWidth;
-  Maybe<VideoColorSpaceInternal> mColorSpace;
-  Maybe<RefPtr<MediaByteBuffer>> mDescription;
-  Maybe<uint32_t> mDisplayAspectHeight;
-  Maybe<uint32_t> mDisplayAspectWidth;
-  HardwareAcceleration mHardwareAcceleration;
-  Maybe<bool> mOptimizeForLatency;
+  Maybe<VideoColorSpaceInternal> colorSpace;
+  if (aConfig.mColorSpace.WasPassed()) {
+    colorSpace.emplace(VideoColorSpaceInternal(aConfig.mColorSpace.Value()));
+  }
 
- private:
-  VideoDecoderConfigInternal(const nsAString& aCodec,
-                             Maybe<uint32_t>&& aCodedHeight,
-                             Maybe<uint32_t>&& aCodedWidth,
-                             Maybe<VideoColorSpaceInternal>&& aColorSpace,
-                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
-                             Maybe<uint32_t>&& aDisplayAspectHeight,
-                             Maybe<uint32_t>&& aDisplayAspectWidth,
-                             const HardwareAcceleration& aHardwareAcceleration,
-                             Maybe<bool>&& aOptimizeForLatency)
-      : mCodec(aCodec),
-        mCodedHeight(std::move(aCodedHeight)),
-        mCodedWidth(std::move(aCodedWidth)),
-        mColorSpace(std::move(aColorSpace)),
-        mDescription(std::move(aDescription)),
-        mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
-        mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
-        mHardwareAcceleration(aHardwareAcceleration),
-        mOptimizeForLatency(std::move(aOptimizeForLatency)){};
-};
+  return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
+      aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
+      OptionalToMaybe(aConfig.mCodedWidth), std::move(colorSpace),
+      std::move(description), OptionalToMaybe(aConfig.mDisplayAspectHeight),
+      OptionalToMaybe(aConfig.mDisplayAspectWidth),
+      aConfig.mHardwareAcceleration,
+      OptionalToMaybe(aConfig.mOptimizeForLatency)));
+}
 
 /*
  * The followings are helpers for VideoDecoder methods

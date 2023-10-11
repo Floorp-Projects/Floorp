@@ -153,15 +153,15 @@ class DecoderTemplate : public DOMEventTargetHelper {
   uint32_t DecodeQueueSize() const { return mDecodeQueueSize; };
 
   // TODO: Replace virtual with MOZ_EXPORT (visibility("default"))
-  virtual void Configure(const ConfigType& aConfig, ErrorResult& aRv);
+  void Configure(const ConfigType& aConfig, ErrorResult& aRv);
 
-  virtual void Decode(InputType& aInput, ErrorResult& aRv);
+  void Decode(InputType& aInput, ErrorResult& aRv);
 
-  virtual already_AddRefed<Promise> Flush(ErrorResult& aRv);
+  already_AddRefed<Promise> Flush(ErrorResult& aRv);
 
-  virtual void Reset(ErrorResult& aRv);
+  void Reset(ErrorResult& aRv);
 
-  virtual void Close(ErrorResult& aRv);
+  void Close(ErrorResult& aRv);
 
   /* Type conversion functions for the Decoder implementation */
  protected:
