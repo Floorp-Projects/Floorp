@@ -684,7 +684,7 @@ macro_rules! bool_pref_feature {
 /// to support new types in these entries and (2) ensuring that either
 /// nsPresContext::MediaFeatureValuesChanged is called when the value that
 /// would be returned by the evaluator function could change.
-pub static MEDIA_FEATURES: [QueryFeatureDescription; 61] = [
+pub static MEDIA_FEATURES: [QueryFeatureDescription; 62] = [
     feature!(
         atom!("width"),
         AllowsRanges::Yes,
@@ -1000,5 +1000,9 @@ pub static MEDIA_FEATURES: [QueryFeatureDescription; 61] = [
     bool_pref_feature!(
         atom!("-moz-mathml-core-mi"),
         "mathml.legacy_mathvariant_attribute.disabled"
+    ),
+    bool_pref_feature!(
+        atom!("-moz-always-underline-links"),
+        "layout.css.always_underline_links"
     ),
 ];
