@@ -64,7 +64,7 @@ async function clickTestSetup() {
       // Enable debug logging.
       ["cookiebanners.bannerClicking.logLevel", "Debug"],
       ["cookiebanners.bannerClicking.testing", true],
-      ["cookiebanners.bannerClicking.timeout", 500],
+      ["cookiebanners.bannerClicking.timeoutAfterLoad", 500],
       ["cookiebanners.bannerClicking.enabled", true],
       ["cookiebanners.cookieInjector.enabled", false],
     ],

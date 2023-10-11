@@ -125,6 +125,10 @@ add_task(async function test_clicking_global_rules() {
     false
   );
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["cookiebanners.bannerClicking.timeoutAfterLoad", 10000]],
+  });
+
   info("Test delayed banner handling with global rules.");
   let TEST_PAGE =
     TEST_ORIGIN_A + TEST_PATH + "file_delayed_banner.html?delay=100";
@@ -134,6 +138,8 @@ add_task(async function test_clicking_global_rules() {
     visible: false,
     expected: "OptOut",
   });
+
+  await SpecialPowers.popPrefEnv();
 
   await testClickResultTelemetry({
     success: 3,

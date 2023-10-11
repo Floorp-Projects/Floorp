@@ -163,6 +163,7 @@ add_task(async function test_clicking_with_delayed_banner() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+      ["cookiebanners.bannerClicking.timeoutAfterLoad", 10000],
     ],
   });
 
