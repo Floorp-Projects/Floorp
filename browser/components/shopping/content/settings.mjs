@@ -25,6 +25,8 @@ class ShoppingSettings extends MozLitElement {
       recommendationsToggleEl: "#shopping-settings-recommendations-toggle",
       optOutButtonEl: "#shopping-settings-opt-out-button",
       shoppingCardEl: "shopping-card",
+      adsLearnMoreLinkEl: "#shopping-ads-learn-more-link",
+      fakespotLearnMoreLinkEl: "#powered-by-fakespot-link",
     };
   }
 
@@ -66,8 +68,11 @@ class ShoppingSettings extends MozLitElement {
         </moz-toggle/>
         <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more2">
           <a
-            is="moz-support-link"
-            support-page="todo"
+            id="shopping-ads-learn-more-link"
+            target="_blank"
+            href="${window.RPMGetFormatURLPref(
+              "app.support.baseURL"
+            )}review-checker-review-quality?utm_campaign=learn-more&utm_medium=inproduct&utm_term=core-sidebar#w_ads_for_relevant_products"
             data-l10n-name="review-quality-url"
           ></a>
         </span>`
@@ -99,6 +104,7 @@ class ShoppingSettings extends MozLitElement {
         @click=${this.fakespotLinkClicked}
       >
         <a
+          id="powered-by-fakespot-link"
           data-l10n-name="fakespot-link"
           target="_blank"
           href="${FAKESPOT_BASE_URL}our-mission?utm_source=review-checker&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sidebar"
