@@ -470,6 +470,11 @@ void JSContext::requestInterrupt(InterruptReason reason) {
       fx.notify(FutexThread::NotifyForJSInterrupt);
     }
     fx.unlock();
+  }
+
+  if (reason == InterruptReason::CallbackUrgent ||
+      reason == InterruptReason::MajorGC ||
+      reason == InterruptReason::MinorGC) {
     wasm::InterruptRunningCode(this);
   }
 }
