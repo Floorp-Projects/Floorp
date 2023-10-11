@@ -138,6 +138,12 @@ struct H265ProfileTierLevel final {
     kProfileIdcHighThroughputScreenContentCoding = 11,
   };
 
+  // From Table A.8 - General tier and level limits.
+  uint32_t GetMaxLumaPs() const;
+
+  // From A.4.2 - Profile-specific level limits for the video profiles.
+  uint32_t GetDpbMaxPicBuf() const;
+
   // Syntax elements.
   uint8_t general_profile_space = {};
   bool general_tier_flag = {};
@@ -237,6 +243,7 @@ struct H265SPS final {
   uint32_t subHeightC = {};      // From Table 6-1.
   CheckedUint32 mDisplayWidth;   // Per (E-68) + (E-69)
   CheckedUint32 mDisplayHeight;  // Per (E-70) + (E-71)
+  uint32_t maxDpbSize = {};
 
   // Often used information
   uint32_t BitDepthLuma() const { return bit_depth_luma_minus8 + 8; }
@@ -312,10 +319,9 @@ class H265 final {
 
   //  Parse the profile level based on the H265 spec, 7.3.3. MUST use a bit
   //  reader which starts from the position of the first bit of the data.
-  static void ParseProfileTierLevel(BitReader& aReader,
-                                    bool aProfilePresentFlag,
-                                    uint8_t aMaxNumSubLayersMinus1,
-                                    H265ProfileTierLevel& aProfile);
+  static Result<Ok, nsresult> ParseProfileTierLevel(
+      BitReader& aReader, bool aProfilePresentFlag,
+      uint8_t aMaxNumSubLayersMinus1, H265ProfileTierLevel& aProfile);
 
   //  Parse the short-term reference picture set based on the H265 spec, 7.3.7.
   //  MUST use a bit reader which starts from the position of the first bit of

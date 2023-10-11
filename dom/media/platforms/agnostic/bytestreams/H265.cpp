@@ -26,6 +26,14 @@ mozilla::LazyLogModule gH265("H265");
 #define LOG(msg, ...) MOZ_LOG(gH265, LogLevel::Debug, (msg, ##__VA_ARGS__))
 #define LOGV(msg, ...) MOZ_LOG(gH265, LogLevel::Verbose, (msg, ##__VA_ARGS__))
 
+#define TRUE_OR_RETURN(condition)            \
+  do {                                       \
+    if (!(condition)) {                      \
+      LOG(#condition " should be true!");    \
+      return mozilla::Err(NS_ERROR_FAILURE); \
+    }                                        \
+  } while (0)
+
 #define IN_RANGE_OR_RETURN(val, min, max)                      \
   do {                                                         \
     int64_t temp = AssertedCast<int64_t>(val);                 \
@@ -192,8 +200,15 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
   sps.sps_max_sub_layers_minus1 = reader.ReadBits(3);
   IN_RANGE_OR_RETURN(sps.sps_max_sub_layers_minus1, 0, 6);
   sps.sps_temporal_id_nesting_flag = reader.ReadBit();
-  ParseProfileTierLevel(reader, true /* aProfilePresentFlag, true per spec*/,
-                        sps.sps_max_sub_layers_minus1, sps.profile_tier_level);
+
+  if (auto rv = ParseProfileTierLevel(
+          reader, true /* aProfilePresentFlag, true per spec*/,
+          sps.sps_max_sub_layers_minus1, sps.profile_tier_level);
+      rv.isErr()) {
+    LOG("Failed to parse the profile tier level.");
+    return Err(NS_ERROR_FAILURE);
+  }
+
   sps.sps_seq_parameter_set_id = reader.ReadUE();
   IN_RANGE_OR_RETURN(sps.sps_seq_parameter_set_id, 0, 15);
   sps.chroma_format_idc = reader.ReadUE();
@@ -215,6 +230,28 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
 
   NON_ZERO_OR_RETURN(sps.pic_width_in_luma_samples, reader.ReadUE());
   NON_ZERO_OR_RETURN(sps.pic_height_in_luma_samples, reader.ReadUE());
+  {
+    // (A-2) Calculate maxDpbSize
+    const auto maxLumaPs = sps.profile_tier_level.GetMaxLumaPs();
+    CheckedUint32 picSize = sps.pic_height_in_luma_samples;
+    picSize *= sps.pic_width_in_luma_samples;
+    if (!picSize.isValid()) {
+      LOG("Invalid picture size");
+      return Err(NS_ERROR_FAILURE);
+    }
+    const auto picSizeInSamplesY = picSize.value();
+    const auto maxDpbPicBuf = sps.profile_tier_level.GetDpbMaxPicBuf();
+    if (picSizeInSamplesY <= (maxLumaPs >> 2)) {
+      sps.maxDpbSize = std::min(4 * maxDpbPicBuf, 16u);
+    } else if (picSizeInSamplesY <= (maxLumaPs >> 1)) {
+      sps.maxDpbSize = std::min(2 * maxDpbPicBuf, 16u);
+    } else if (picSizeInSamplesY <= ((3 * maxLumaPs) >> 2)) {
+      sps.maxDpbSize = std::min((4 * maxDpbPicBuf) / 3, 16u);
+    } else {
+      sps.maxDpbSize = maxDpbPicBuf;
+    }
+  }
+
   sps.conformance_window_flag = reader.ReadBit();
   if (sps.conformance_window_flag) {
     sps.conf_win_left_offset = reader.ReadUE();
@@ -234,8 +271,21 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromSPSNALU(const H265NALU& aSPSNALU) {
                     : sps.sps_max_sub_layers_minus1;
        i <= sps.sps_max_sub_layers_minus1; i++) {
     sps.sps_max_dec_pic_buffering_minus1[i] = reader.ReadUE();
+    IN_RANGE_OR_RETURN(sps.sps_max_dec_pic_buffering_minus1[i], 0,
+                       sps.maxDpbSize - 1);
     sps.sps_max_num_reorder_pics[i] = reader.ReadUE();
+    IN_RANGE_OR_RETURN(sps.sps_max_num_reorder_pics[i], 0,
+                       sps.sps_max_dec_pic_buffering_minus1[i]);
+    // 7.4.3.2.1, see sps_max_dec_pic_buffering_minus1 and
+    // sps_max_num_reorder_pics, "When i is greater than 0, ....".
+    if (i > 0) {
+      TRUE_OR_RETURN(sps.sps_max_dec_pic_buffering_minus1[i] >=
+                     sps.sps_max_dec_pic_buffering_minus1[i - 1]);
+      TRUE_OR_RETURN(sps.sps_max_num_reorder_pics[i] >=
+                     sps.sps_max_num_reorder_pics[i - 1]);
+    }
     sps.sps_max_latency_increase_plus1[i] = reader.ReadUE();
+    IN_RANGE_OR_RETURN(sps.sps_max_latency_increase_plus1[i], 0, 0xFFFFFFFE);
   }
   sps.log2_min_luma_coding_block_size_minus3 = reader.ReadUE();
   sps.log2_diff_max_min_luma_coding_block_size = reader.ReadUE();
@@ -341,14 +391,15 @@ Result<H265SPS, nsresult> H265::DecodeSPSFromHVCCExtraData(
 }
 
 /* static */
-void H265::ParseProfileTierLevel(BitReader& aReader, bool aProfilePresentFlag,
-                                 uint8_t aMaxNumSubLayersMinus1,
-                                 H265ProfileTierLevel& aProfile) {
+Result<Ok, nsresult> H265::ParseProfileTierLevel(
+    BitReader& aReader, bool aProfilePresentFlag,
+    uint8_t aMaxNumSubLayersMinus1, H265ProfileTierLevel& aProfile) {
   // H265 spec, 7.3.3 Profile, tier and level syntax
   if (aProfilePresentFlag) {
     aProfile.general_profile_space = aReader.ReadBits(2);
     aProfile.general_tier_flag = aReader.ReadBit();
     aProfile.general_profile_idc = aReader.ReadBits(5);
+    IN_RANGE_OR_RETURN(aProfile.general_profile_idc, 0, 11);
     aProfile.general_profile_compatibility_flags = aReader.ReadU32();
     aProfile.general_progressive_source_flag = aReader.ReadBit();
     aProfile.general_interlaced_source_flag = aReader.ReadBit();
@@ -395,6 +446,49 @@ void H265::ParseProfileTierLevel(BitReader& aReader, bool aProfilePresentFlag,
       Unused << aReader.ReadBits(8);  // sub_layer_level_idc
     }
   }
+  return Ok();
+}
+
+uint32_t H265ProfileTierLevel::GetMaxLumaPs() const {
+  // From Table A.8 - General tier and level limits.
+  // "general_level_idc and sub_layer_level_idc[ i ] shall be set equal to a
+  // value of 30 times the level number specified in Table A.8".
+  if (general_level_idc <= 30) {  // level 1
+    return 36864;
+  }
+  if (general_level_idc <= 60) {  // level 2
+    return 122880;
+  }
+  if (general_level_idc <= 63) {  // level 2.1
+    return 245760;
+  }
+  if (general_level_idc <= 90) {  // level 3
+    return 552960;
+  }
+  if (general_level_idc <= 93) {  // level 3.1
+    return 983040;
+  }
+  if (general_level_idc <= 123) {  // level 4, 4.1
+    return 2228224;
+  }
+  if (general_level_idc <= 156) {  // level 5, 5.1, 5.2
+    return 8912896;
+  }
+  // level 6, 6.1, 6.2 - beyond that there's no actual limit.
+  return 35651584;
+}
+
+uint32_t H265ProfileTierLevel::GetDpbMaxPicBuf() const {
+  // From A.4.2 - Profile-specific level limits for the video profiles.
+  // "maxDpbPicBuf is equal to 6 for all profiles where the value of
+  // sps_curr_pic_ref_enabled_flag is required to be equal to 0 and 7 for all
+  // profiles where the value of sps_curr_pic_ref_enabled_flag is not required
+  // to be equal to 0." From A.3 Profile, the flag in the main, main still,
+  // range extensions and high throughput is required to be zero.
+  return (general_profile_idc >= H265ProfileIdc::kProfileIdcMain &&
+          general_profile_idc <= H265ProfileIdc::kProfileIdcHighThroughput)
+             ? 6
+             : 7;
 }
 
 /* static */
@@ -504,6 +598,14 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
   } else {
     curStRefPicSet.num_negative_pics = aReader.ReadUE();
     curStRefPicSet.num_positive_pics = aReader.ReadUE();
+    const uint32_t spsMaxDecPicBufferingMinus1 =
+        aSPS.sps_max_dec_pic_buffering_minus1[aSPS.sps_max_sub_layers_minus1];
+    IN_RANGE_OR_RETURN(curStRefPicSet.num_negative_pics, 0,
+                       spsMaxDecPicBufferingMinus1);
+    CheckedUint32 maxPositivePics{spsMaxDecPicBufferingMinus1};
+    maxPositivePics -= curStRefPicSet.num_negative_pics;
+    IN_RANGE_OR_RETURN(curStRefPicSet.num_positive_pics, 0,
+                       maxPositivePics.value());
     for (auto i = 0; i < curStRefPicSet.num_negative_pics; i++) {
       const uint32_t delta_poc_s0_minus1 = aReader.ReadUE();
       IN_RANGE_OR_RETURN(delta_poc_s0_minus1, 0, 0x7FFF);
@@ -531,14 +633,6 @@ Result<Ok, nsresult> H265::ParseStRefPicSet(BitReader& aReader,
       curStRefPicSet.usedByCurrPicS1[i] = aReader.ReadBit();
     }
   }
-  const uint32_t spsMaxDecPicBufferingMinus1 =
-      aSPS.sps_max_dec_pic_buffering_minus1[aSPS.sps_max_sub_layers_minus1];
-  IN_RANGE_OR_RETURN(curStRefPicSet.num_negative_pics, 0,
-                     spsMaxDecPicBufferingMinus1);
-  CheckedUint32 maxPositivePics{spsMaxDecPicBufferingMinus1};
-  maxPositivePics -= curStRefPicSet.num_negative_pics;
-  IN_RANGE_OR_RETURN(curStRefPicSet.num_positive_pics, 0,
-                     maxPositivePics.value());
   // (7-71)
   curStRefPicSet.numDeltaPocs =
       curStRefPicSet.num_negative_pics + curStRefPicSet.num_positive_pics;
