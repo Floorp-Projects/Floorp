@@ -156,15 +156,6 @@ void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
     }
   }
 
-  {
-    // These two are not color-scheme dependent, as we don't rebuild the
-    // preference sheet based on effective color scheme.
-    GetColor("browser.display.focus_text_color", ColorScheme::Light,
-             colors.mFocusText);
-    GetColor("browser.display.focus_background_color", ColorScheme::Light,
-             colors.mFocusBackground);
-  }
-
   // Wherever we got the default background color from, ensure it is opaque.
   colors.mDefaultBackground =
       NS_ComposeColors(NS_RGB(0xFF, 0xFF, 0xFF), colors.mDefaultBackground);
