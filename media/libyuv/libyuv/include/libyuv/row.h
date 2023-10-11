@@ -177,9 +177,8 @@ extern "C" {
 
 // The following functions fail on gcc/clang 32 bit with fpic and framepointer.
 // caveat: clangcl uses row_win.cc which works.
-#if !defined(MOZ_PROFILING) && \
-     (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
-      defined(_MSC_VER))
+#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+    defined(_MSC_VER)
 // TODO(fbarchard): fix build error on android_full_debug=1
 // https://code.google.com/p/libyuv/issues/detail?id=517
 #define HAS_I422ALPHATOARGBROW_SSSE3
@@ -248,9 +247,8 @@ extern "C" {
 #define HAS_ARGBATTENUATEROW_AVX2
 #endif
 
-#if !defined(MOZ_PROFILING) && \
-  (defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
-   defined(_MSC_VER))
+#if defined(__x86_64__) || !defined(__pic__) || defined(__clang__) || \
+    defined(_MSC_VER)
 // TODO(fbarchard): fix build error on android_full_debug=1
 // https://code.google.com/p/libyuv/issues/detail?id=517
 #define HAS_I422ALPHATOARGBROW_AVX2
@@ -404,9 +402,11 @@ extern "C" {
 // The following are available for AVX512 clang x86 platforms:
 // TODO(fbarchard): Port to GCC and Visual C
 // TODO(fbarchard): re-enable HAS_ARGBTORGB24ROW_AVX512VBMI. Issue libyuv:789
+// TODO(fbarchard): Port MERGEUV to assembly
 #if !defined(LIBYUV_DISABLE_X86) && \
-    (defined(__x86_64__) || defined(__i386__)) && (defined(CLANG_HAS_AVX512))
+    (defined(__x86_64__) || defined(__i386__)) && (defined(CLANG_HAS_AVX512) && !defined(_MSC_VER))
 #define HAS_ARGBTORGB24ROW_AVX512VBMI
+#define HAS_MERGEUVROW_AVX512BW
 #endif
 
 // The following are available for AVX512 clang x64 platforms:
@@ -2186,6 +2186,10 @@ void MergeUVRow_AVX2(const uint8_t* src_u,
                      const uint8_t* src_v,
                      uint8_t* dst_uv,
                      int width);
+void MergeUVRow_AVX512BW(const uint8_t* src_u,
+                         const uint8_t* src_v,
+                         uint8_t* dst_uv,
+                         int width);
 void MergeUVRow_NEON(const uint8_t* src_u,
                      const uint8_t* src_v,
                      uint8_t* dst_uv,
@@ -2206,6 +2210,10 @@ void MergeUVRow_Any_AVX2(const uint8_t* y_buf,
                          const uint8_t* uv_buf,
                          uint8_t* dst_ptr,
                          int width);
+void MergeUVRow_Any_AVX512BW(const uint8_t* y_buf,
+                             const uint8_t* uv_buf,
+                             uint8_t* dst_ptr,
+                             int width);
 void MergeUVRow_Any_NEON(const uint8_t* y_buf,
                          const uint8_t* uv_buf,
                          uint8_t* dst_ptr,

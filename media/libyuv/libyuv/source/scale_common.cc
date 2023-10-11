@@ -1633,7 +1633,7 @@ void ScalePlaneVertical(int src_height,
                         enum FilterMode filtering) {
   // TODO(fbarchard): Allow higher bpp.
   int dst_width_bytes = dst_width * bpp;
-  void (*InterpolateRow)(uint8_t * dst_argb, const uint8_t* src_argb,
+  void (*InterpolateRow)(uint8_t* dst_argb, const uint8_t* src_argb,
                          ptrdiff_t src_stride, int dst_width,
                          int source_y_fraction) = InterpolateRow_C;
   const int max_y = (src_height > 1) ? ((src_height - 1) << 16) - 1 : 0;
@@ -1712,7 +1712,7 @@ void ScalePlaneVertical_16(int src_height,
                            enum FilterMode filtering) {
   // TODO(fbarchard): Allow higher wpp.
   int dst_width_words = dst_width * wpp;
-  void (*InterpolateRow)(uint16_t * dst_argb, const uint16_t* src_argb,
+  void (*InterpolateRow)(uint16_t* dst_argb, const uint16_t* src_argb,
                          ptrdiff_t src_stride, int dst_width,
                          int source_y_fraction) = InterpolateRow_16_C;
   const int max_y = (src_height > 1) ? ((src_height - 1) << 16) - 1 : 0;
@@ -1791,7 +1791,7 @@ void ScalePlaneVertical_16To8(int src_height,
   // TODO(fbarchard): Allow higher wpp.
   int dst_width_words = dst_width * wpp;
   // TODO(https://crbug.com/libyuv/931): Add NEON 32 bit and AVX2 versions.
-  void (*InterpolateRow_16To8)(uint8_t * dst_argb, const uint16_t* src_argb,
+  void (*InterpolateRow_16To8)(uint8_t* dst_argb, const uint16_t* src_argb,
                                ptrdiff_t src_stride, int scale, int dst_width,
                                int source_y_fraction) = InterpolateRow_16To8_C;
   const int max_y = (src_height > 1) ? ((src_height - 1) << 16) - 1 : 0;

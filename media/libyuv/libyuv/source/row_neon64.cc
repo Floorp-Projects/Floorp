@@ -820,6 +820,28 @@ void MergeUVRow_NEON(const uint8_t* src_u,
       : "cc", "memory", "v0", "v1"  // Clobber List
   );
 }
+// Reads 16 U's and V's and writes out 16 pairs of UV.
+void MergeUVRow_NEON1(const uint8_t* src_u,
+                     const uint8_t* src_v,
+                     uint8_t* dst_uv,
+                     int width) {
+  asm volatile(
+      "1:                                        \n"
+      "ld1         {v0.16b,v2.16b}, [%0], #32    \n"  // load U
+      "ld1         {v1.16b,v3.16b}, [%1], #32    \n"  // load V
+      "subs        %w3, %w3, #32                 \n"  // 32 processed per loop
+      "prfm        pldl1keep, [%0, 448]          \n"
+      "prfm        pldl1keep, [%1, 448]          \n"
+      "st2         {v0.16b,v1.16b,v2.16b,v3.16b}, [%2], #64 \n"  // store 32 UV
+      "b.gt        1b                            \n"
+      : "+r"(src_u),                // %0
+        "+r"(src_v),                // %1
+        "+r"(dst_uv),               // %2
+        "+r"(width)                 // %3  // Output registers
+      :                             // Input registers
+      : "cc", "memory", "v0", "v1"  // Clobber List
+  );
+}
 
 void MergeUVRow_16_NEON(const uint16_t* src_u,
                         const uint16_t* src_v,

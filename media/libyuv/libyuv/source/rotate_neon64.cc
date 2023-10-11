@@ -435,6 +435,45 @@ void TransposeUVWx8_NEON(const uint8_t* src,
       : "memory", "cc", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v16",
         "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v30", "v31");
 }
+
+// Transpose 32 bit values (ARGB)
+void Transpose4x4_32_NEON(const uint8_t* src,
+                          int src_stride,
+                          uint8_t* dst,
+                          int dst_stride,
+                          int width) {
+  const uint8_t* src1 = src + src_stride;
+  const uint8_t* src2 = src1 + src_stride;
+  const uint8_t* src3 = src2 + src_stride;
+  uint8_t* dst1 = dst + dst_stride;
+  uint8_t* dst2 = dst1 + dst_stride;
+  uint8_t* dst3 = dst2 + dst_stride;
+  asm volatile(
+      // Main loop transpose 4x4.  Read a column, write a row.
+      "1:                                        \n"
+      "ld4         {v0.s, v1.s, v2.s, v3.s}[0], [%0], %9 \n"
+      "ld4         {v0.s, v1.s, v2.s, v3.s}[1], [%1], %9 \n"
+      "ld4         {v0.s, v1.s, v2.s, v3.s}[2], [%2], %9 \n"
+      "ld4         {v0.s, v1.s, v2.s, v3.s}[3], [%3], %9 \n"
+      "subs        %w8, %w8, #4                  \n"  // w -= 4
+      "st1         {v0.4s}, [%4], 16             \n"
+      "st1         {v1.4s}, [%5], 16             \n"
+      "st1         {v2.4s}, [%6], 16             \n"
+      "st1         {v3.4s}, [%7], 16             \n"
+      "b.gt        1b                            \n"
+      : "+r"(src),                        // %0
+        "+r"(src1),                       // %1
+        "+r"(src2),                       // %2
+        "+r"(src3),                       // %3
+        "+r"(dst),                        // %4
+        "+r"(dst1),                       // %5
+        "+r"(dst2),                       // %6
+        "+r"(dst3),                       // %7
+        "+r"(width)                       // %8
+      : "r"((ptrdiff_t)(src_stride * 4))  // %9
+      : "memory", "cc", "v0", "v1", "v2", "v3");
+}
+
 #endif  // !defined(LIBYUV_DISABLE_NEON) && defined(__aarch64__)
 
 #ifdef __cplusplus

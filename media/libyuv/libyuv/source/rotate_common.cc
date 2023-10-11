@@ -166,6 +166,63 @@ void TransposeWxH_16_C(const uint16_t* src,
   }
 }
 
+// Transpose 32 bit values (ARGB)
+void Transpose4x4_32_C(const uint8_t* src,
+                       int src_stride,
+                       uint8_t* dst,
+                       int dst_stride,
+                       int width) {
+  const uint8_t* src1 = src + src_stride;
+  const uint8_t* src2 = src1 + src_stride;
+  const uint8_t* src3 = src2 + src_stride;
+  uint8_t* dst1 = dst + dst_stride;
+  uint8_t* dst2 = dst1 + dst_stride;
+  uint8_t* dst3 = dst2 + dst_stride;
+  int i;
+  for (i = 0; i < width; i += 4) {
+    uint32_t p00 = ((uint32_t*)(src))[0];
+    uint32_t p10 = ((uint32_t*)(src))[1];
+    uint32_t p20 = ((uint32_t*)(src))[2];
+    uint32_t p30 = ((uint32_t*)(src))[3];
+    uint32_t p01 = ((uint32_t*)(src1))[0];
+    uint32_t p11 = ((uint32_t*)(src1))[1];
+    uint32_t p21 = ((uint32_t*)(src1))[2];
+    uint32_t p31 = ((uint32_t*)(src1))[3];
+    uint32_t p02 = ((uint32_t*)(src2))[0];
+    uint32_t p12 = ((uint32_t*)(src2))[1];
+    uint32_t p22 = ((uint32_t*)(src2))[2];
+    uint32_t p32 = ((uint32_t*)(src2))[3];
+    uint32_t p03 = ((uint32_t*)(src3))[0];
+    uint32_t p13 = ((uint32_t*)(src3))[1];
+    uint32_t p23 = ((uint32_t*)(src3))[2];
+    uint32_t p33 = ((uint32_t*)(src3))[3];
+    ((uint32_t*)(dst))[0] = p00;
+    ((uint32_t*)(dst))[1] = p01;
+    ((uint32_t*)(dst))[2] = p02;
+    ((uint32_t*)(dst))[3] = p03;
+    ((uint32_t*)(dst1))[0] = p10;
+    ((uint32_t*)(dst1))[1] = p11;
+    ((uint32_t*)(dst1))[2] = p12;
+    ((uint32_t*)(dst1))[3] = p13;
+    ((uint32_t*)(dst2))[0] = p20;
+    ((uint32_t*)(dst2))[1] = p21;
+    ((uint32_t*)(dst2))[2] = p22;
+    ((uint32_t*)(dst2))[3] = p23;
+    ((uint32_t*)(dst3))[0] = p30;
+    ((uint32_t*)(dst3))[1] = p31;
+    ((uint32_t*)(dst3))[2] = p32;
+    ((uint32_t*)(dst3))[3] = p33;
+    src += src_stride * 4;  // advance 4 rows
+    src1 += src_stride * 4;
+    src2 += src_stride * 4;
+    src3 += src_stride * 4;
+    dst += 4 * 4;  // advance 4 columns
+    dst1 += 4 * 4;
+    dst2 += 4 * 4;
+    dst3 += 4 * 4;
+  }
+}
+
 #ifdef __cplusplus
 }  // extern "C"
 }  // namespace libyuv

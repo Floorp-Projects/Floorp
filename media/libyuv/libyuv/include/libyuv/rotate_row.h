@@ -232,6 +232,27 @@ void TransposeWx1_16_C(const uint16_t* src,
                        uint16_t* dst,
                        int dst_stride,
                        int width);
+
+// Transpose 32 bit values (ARGB)
+void Transpose4x4_32_NEON(const uint8_t* src,
+                          int src_stride,
+                          uint8_t* dst,
+                          int dst_stride,
+                          int width);
+
+void Transpose4x4_32_C(const uint8_t* src,
+                       int src_stride,
+                       uint8_t* dst,
+                       int dst_stride,
+                       int width);
+
+// Transpose 32 bit values (ARGB)
+void Transpose8x8_32_NEON(const uint8_t* src,
+                          int src_stride,
+                          uint8_t* dst,
+                          int dst_stride,
+                          int width);
+
 #ifdef __cplusplus
 }  // extern "C"
 }  // namespace libyuv

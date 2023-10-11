@@ -14,6 +14,10 @@
 #include "libyuv/cpu_id.h"
 #include "libyuv/rotate.h"
 
+#ifdef ENABLE_ROW_TESTS
+#include "libyuv/rotate_row.h"
+#endif
+
 namespace libyuv {
 
 #define SUBSAMPLE(v, a) ((((v) + (a)-1)) / (a))
@@ -857,5 +861,48 @@ TEST_F(LibYUVRotateTest, I410Rotate270_Opt) {
                  benchmark_width_, kRotate270, benchmark_iterations_,
                  disable_cpu_flags_, benchmark_cpu_info_);
 }
+
+#if defined(ENABLE_ROW_TESTS)
+
+TEST_F(LibYUVRotateTest, Transpose4x4) {
+  // dst width and height
+  const int width = ((benchmark_width_ * benchmark_height_ + 3) / 4 + 3) & ~3;
+  const int height = 4;
+  align_buffer_page_end(src_pixels, height * width * 4);
+  align_buffer_page_end(dst_pixels_c, width * height * 4);
+  align_buffer_page_end(dst_pixels_opt, width * height * 4);
+
+  MemRandomize(src_pixels, height * width * 4);
+  memset(dst_pixels_c, 1, width * height * 4);
+  memset(dst_pixels_opt, 1, width * height * 4);
+
+  Transpose4x4_32_C((const uint8_t*)src_pixels, height * 4,
+                    (uint8_t*)dst_pixels_c, width * 4, width);
+
+  for (int i = 0; i < benchmark_iterations_; ++i) {
+#if defined(__aarch64__)
+    if (TestCpuFlag(kCpuHasNEON)) {
+      Transpose4x4_32_NEON((const uint8_t*)src_pixels, height * 4,
+                           (uint8_t*)dst_pixels_opt, width * 4, width);
+    } else {
+      Transpose4x4_32_C((const uint8_t*)src_pixels, height * 4,
+                        (uint8_t*)dst_pixels_opt, width * 4, width);
+    }
+#else
+    Transpose4x4_32_C((const uint8_t*)src_pixels, height * 4,
+                      (uint8_t*)dst_pixels_opt, width * 4, width);
+#endif
+  }
+
+  //  for (int i = 0; i < width * height; ++i) {
+  //    EXPECT_EQ(dst_pixels_c[i], dst_pixels_opt[i]);
+  //  }
+
+  free_aligned_buffer_page_end(src_pixels);
+  free_aligned_buffer_page_end(dst_pixels_c);
+  free_aligned_buffer_page_end(dst_pixels_opt);
+}
+
+#endif  // ENABLE_ROW_TESTS
 
 }  // namespace libyuv
