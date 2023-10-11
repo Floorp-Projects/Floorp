@@ -11,7 +11,7 @@
   @media (-moz-platform: windows) {
     --menu-arrow-width: max(1em, 16px);
 
-    @media(prefers-color-scheme: light) {
+    @media (prefers-color-scheme: light) {
       --menu-icon-opacity: 0.7;
     }
   }
