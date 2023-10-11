@@ -36,8 +36,7 @@ object Versions {
 
     const val sentry_latest = "6.27.0"
 
-    // zxing 3.4+ requires a minimum API of 24 or higher
-    const val zxing = "3.3.3"
+    const val zxing = "3.5.2"
 
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.12"
