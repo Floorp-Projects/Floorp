@@ -1508,12 +1508,6 @@ void ServoStyleSet::RegisterProperty(const PropertyDefinition& aDefinition,
                                             : nullptr);
   switch (result) {
     case Result::SuccessfullyRegistered:
-      if (Element* root = mDocument->GetRootElement()) {
-        if (nsPresContext* pc = GetPresContext()) {
-          pc->RestyleManager()->PostRestyleEvent(
-              root, RestyleHint::RecascadeSubtree(), nsChangeHint(0));
-        }
-      }
       break;
     case Result::InvalidName:
       return aRv.ThrowSyntaxError("Invalid name");
