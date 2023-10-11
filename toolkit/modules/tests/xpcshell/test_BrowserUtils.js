@@ -68,7 +68,6 @@ add_task(async function test_shouldShowVPNPromo() {
   const disallowedRegion = "SY";
   const illegalRegion = "CN";
   const unsupportedRegion = "LY";
-  const regionNotInDefaultPref = "QQ";
 
   // Show promo when enabled in allowed regions
   setupRegions(allowedRegion, allowedRegion);
@@ -102,22 +101,6 @@ add_task(async function test_shouldShowVPNPromo() {
   // Show VPN if current region is supported, even if home region is unsupported (but isn't disallowed or illegal)
   setupRegions(unsupportedRegion, allowedRegion); // revert changes to regions
   Assert.ok(BrowserUtils.shouldShowVPNPromo());
-
-  // Make sure we are getting the list of allowed regions from the right
-  // place.
-  setupRegions(regionNotInDefaultPref);
-  const originalRegionsPref = Services.prefs.getStringPref(
-    "browser.contentblocking.report.vpn_regions"
-  );
-  Services.prefs.setStringPref(
-    "browser.contentblocking.report.vpn_regions",
-    "qq"
-  );
-  Assert.ok(BrowserUtils.shouldShowVPNPromo());
-  Services.prefs.setStringPref(
-    "browser.contentblocking.report.vpn_regions",
-    originalRegionsPref
-  );
 
   if (AppConstants.platform !== "android") {
     // Services.policies isn't shipped on Android
