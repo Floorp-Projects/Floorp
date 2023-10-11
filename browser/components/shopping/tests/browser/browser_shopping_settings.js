@@ -6,7 +6,7 @@
 /**
  * Tests that the fakespot link has the expected url and utm parameters.
  */
-add_task(async function test_shopping_settings_learn_more() {
+add_task(async function test_shopping_settings_fakespot_learn_more() {
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -22,9 +22,7 @@ add_task(async function test_shopping_settings_learn_more() {
               "shopping-container"
             ).wrappedJSObject;
 
-          let href = shoppingContainer.settingsEl.shadowRoot.querySelector(
-            "a[data-l10n-name=fakespot-link]"
-          ).href;
+          let href = shoppingContainer.settingsEl.fakespotLearnMoreLinkEl.href;
           let url = new URL(href);
           is(url.pathname, "/our-mission");
           is(url.origin, "https://www.fakespot.com");
@@ -32,6 +30,41 @@ add_task(async function test_shopping_settings_learn_more() {
           let qs = url.searchParams;
           is(qs.get("utm_source"), "review-checker");
           is(qs.get("utm_campaign"), "fakespot-by-mozilla");
+          is(qs.get("utm_medium"), "inproduct");
+          is(qs.get("utm_term"), "core-sidebar");
+        }
+      );
+    }
+  );
+});
+
+/**
+ * Tests that the ads link has the expected utm parameters.
+ */
+add_task(async function test_shopping_settings_ads_learn_more() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.shopping.experience2023.ads.enabled", true]],
+  });
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [MOCK_ANALYZED_PRODUCT_RESPONSE],
+        async mockData => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+
+          let href = shoppingContainer.settingsEl.adsLearnMoreLinkEl.href;
+          let qs = new URL(href).searchParams;
+
+          is(qs.get("utm_campaign"), "learn-more");
           is(qs.get("utm_medium"), "inproduct");
           is(qs.get("utm_term"), "core-sidebar");
         }
