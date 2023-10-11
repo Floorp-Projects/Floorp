@@ -85,7 +85,7 @@ ifdef FUZZING_INTERFACES
   JSSHELL_BINS += fuzz-tests$(BIN_SUFFIX)
 endif
 
-MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
+MAKE_JSSHELL  = $(call py_action,zip $(JSSHELL_NAME),-C $(DIST)/bin --strip $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
 ifneq (,$(PGO_JARLOG_PATH))
   # The backslash subst is to work around an issue with our version of mozmake,

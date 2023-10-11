@@ -13,5 +13,5 @@ misc:: $(call mkdir_deps,$(testdir))
 	$(EXIT_ON_ERROR) \
 	for dir in $(addondir)/*; do \
 	  base=`basename $$dir`; \
-	  $(call py_action,zip,-C $$dir $(testdir)/$$base.xpi \*); \
+	  $(call py_action,zip $$base.xpi,-C $$dir $(testdir)/$$base.xpi \*); \
 	done
