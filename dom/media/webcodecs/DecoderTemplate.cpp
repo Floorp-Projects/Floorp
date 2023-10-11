@@ -150,6 +150,45 @@ DecoderTemplate<DecoderType>::DecoderTemplate(
       mFlushCounter(0) {}
 
 template <typename DecoderType>
+void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
+                                             ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Configure: codec %s", this,
+      NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
+
+  if (!DecoderType::Validate(aConfig)) {
+    aRv.ThrowTypeError("config is invalid");
+    return;
+  }
+
+  if (mState == CodecState::Closed) {
+    aRv.ThrowInvalidStateError("The codec is no longer usable");
+    return;
+  }
+
+  // Clone a ConfigType as the active decoder config.
+  UniquePtr<ConfigTypeInternal> config =
+      DecoderType::CreateConfigInternal(aConfig);
+  if (!config) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);  // Invalid description data.
+    return;
+  }
+
+  mState = CodecState::Configured;
+  mKeyChunkRequired = true;
+  mDecodeCounter = 0;
+  mFlushCounter = 0;
+
+  mControlMessageQueue.emplace(
+      UniquePtr<ControlMessage>(ConfigureMessage::Create(std::move(config))));
+  mLatestConfigureId = mControlMessageQueue.back()->AsConfigureMessage()->mId;
+  LOG("VideoDecoder %p enqueues %s", this,
+      mControlMessageQueue.back()->ToString().get());
+  ProcessControlMessageQueue();
+}
+
+template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Reset(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
