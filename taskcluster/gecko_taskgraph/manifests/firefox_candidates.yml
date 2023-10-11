@@ -313,6 +313,8 @@ mapping:
         <<: *default
         description: "Main package disk image for Mac OS X platforms"
         all_locales: true
+        # Attribution-l10n jobs don't have locale in the artifact path
+        source_path_modifier: ""
         from:
             - attribution
             - attribution-l10n
