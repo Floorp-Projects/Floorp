@@ -72,7 +72,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
   appearance: auto;
   -moz-default-appearance: menuitem;
   -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
-  color: -moz-mac-menutextselect;
+  color: -moz-menuhovertext;
 }
 
 /* Internal content  */
