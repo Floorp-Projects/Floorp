@@ -51,29 +51,6 @@ namespace mozilla::dom {
 #define LOGV(msg, ...) LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
 
 /*
- * Below are utility helpers
- */
-
-static nsresult FireEvent(DOMEventTargetHelper* aEventTarget,
-                          nsAtom* aTypeWithOn, const nsAString& aEventType) {
-  MOZ_ASSERT(aEventTarget);
-
-  if (aTypeWithOn && !aEventTarget->HasListenersFor(aTypeWithOn)) {
-    LOGV("EventTarget %p has no %s event listener", aEventTarget,
-         NS_ConvertUTF16toUTF8(aEventType).get());
-    return NS_ERROR_ABORT;
-  }
-
-  LOGV("Dispatch %s event to EventTarget %p",
-       NS_ConvertUTF16toUTF8(aEventType).get(), aEventTarget);
-  RefPtr<Event> event = new Event(aEventTarget, nullptr, nullptr);
-  event->InitEvent(aEventType, true, true);
-  event->SetTrusted(true);
-  aEventTarget->DispatchEvent(*event);
-  return NS_OK;
-}
-
-/*
  * Below are ControlMessage classes implementations
  */
 
@@ -466,7 +443,7 @@ void DecoderTemplate<DecoderType>::ScheduleDequeueEvent() {
   mDequeueEventScheduled = true;
 
   auto dispatcher = [self = RefPtr{this}] {
-    FireEvent(self.get(), nsGkAtoms::ondequeue, u"dequeue"_ns);
+    self->FireEvent(nsGkAtoms::ondequeue, u"dequeue"_ns);
     self->mDequeueEventScheduled = false;
   };
   nsISerialEventTarget* target = GetCurrentSerialEventTarget();
@@ -479,6 +456,24 @@ void DecoderTemplate<DecoderType>::ScheduleDequeueEvent() {
 
   MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
       "ScheduleDequeueEvent Runnable (worker)", dispatcher)));
+}
+
+template <typename DecoderType>
+nsresult DecoderTemplate<DecoderType>::FireEvent(nsAtom* aTypeWithOn,
+                                                 const nsAString& aEventType) {
+  if (aTypeWithOn && !HasListenersFor(aTypeWithOn)) {
+    LOGV("%s %p has no %s event listener", DecoderType::Name.get(), this,
+         NS_ConvertUTF16toUTF8(aEventType).get());
+    return NS_ERROR_ABORT;
+  }
+
+  LOGV("Dispatch %s event to %s %p", NS_ConvertUTF16toUTF8(aEventType).get(),
+       DecoderType::Name.get(), this);
+  RefPtr<Event> event = new Event(this, nullptr, nullptr);
+  event->InitEvent(aEventType, true, true);
+  event->SetTrusted(true);
+  this->DispatchEvent(*event);
+  return NS_OK;
 }
 
 template <typename DecoderType>
