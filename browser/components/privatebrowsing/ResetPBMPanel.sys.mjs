@@ -178,10 +178,14 @@ export const ResetPBMPanel = {
     }
 
     // 3. Close all other tabs.
-    triggeringWindow.gBrowser.removeAllTabsBut(newTab, {
-      skipPermitUnload: true,
-      animate: false,
-    });
+    triggeringWindow.gBrowser.removeAllTabsBut(
+      newTab,
+      {
+        skipPermitUnload: true,
+        animate: false,
+      },
+      true
+    );
 
     // 4. Clear private browsing data.
     //    TODO: this doesn't wait for data to be cleared. This is probably

@@ -3562,8 +3562,10 @@
      * @param   aParams
      *          An optional set of parameters that will be passed to the
      *          removeTabs function.
+     * @param   {boolean} [skipWarnAboutClosingTabs=false]
+     *          Whether to skip the tab close warning prompt.mach
      */
-    removeAllTabsBut(aTab, aParams) {
+    removeAllTabsBut(aTab, aParams, skipWarnAboutClosingTabs = false) {
       let tabsToRemove = [];
       if (aTab && aTab.multiselected) {
         tabsToRemove = this.visibleTabs.filter(
@@ -3576,6 +3578,7 @@
       }
 
       if (
+        !skipWarnAboutClosingTabs &&
         !this.warnAboutClosingTabs(
           tabsToRemove.length,
           this.closingTabsEnum.OTHER
