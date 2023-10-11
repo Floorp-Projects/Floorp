@@ -41,8 +41,6 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 
 ["browser_only_file_migrators.js"]
 
-["browser_permissions.js"]
-
 ["browser_safari_passwords.js"]
 run-if = ["os == 'mac'"]
 
