@@ -261,6 +261,11 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     return NS_OK;
   }
 
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override {
+    // We only support HEVC via hardware decoding.
+    return true;
+  }
+
  private:
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData) {
     if (auto rv = H265::DecodeSPSFromHVCCExtraData(aExtraData); rv.isOk()) {
@@ -807,7 +812,7 @@ bool MediaChangeMonitor::IsHardwareAccelerated(
   // Which will always be.
   return true;
 #else
-  return MediaDataDecoder::IsHardwareAccelerated(aFailureReason);
+  return mChangeMonitor->IsHardwareAccelerated(aFailureReason);
 #endif
 }
 

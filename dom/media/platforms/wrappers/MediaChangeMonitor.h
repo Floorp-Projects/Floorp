@@ -82,6 +82,9 @@ class MediaChangeMonitor final
     virtual MediaResult PrepareSample(
         MediaDataDecoder::ConversionRequired aConversion, MediaRawData* aSample,
         bool aNeedKeyFrame) = 0;
+    virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const {
+      return false;
+    }
     virtual ~CodecChangeMonitor() = default;
   };
 
