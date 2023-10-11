@@ -86,7 +86,7 @@ private fun Header() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(R.string.review_quality_check_feature_name),
+            text = stringResource(R.string.review_quality_check_feature_name_2),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline6,
         )
