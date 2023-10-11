@@ -150,6 +150,28 @@ DecoderTemplate<DecoderType>::DecoderTemplate(
       mFlushCounter(0) {}
 
 template <typename DecoderType>
+void DecoderTemplate<DecoderType>::Reset(ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Reset", this);
+
+  if (auto r = ResetInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
+    aRv.Throw(r.unwrapErr());
+  }
+}
+
+template <typename DecoderType>
+void DecoderTemplate<DecoderType>::Close(ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Close", this);
+
+  if (auto r = CloseInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
+    aRv.Throw(r.unwrapErr());
+  }
+}
+
+template <typename DecoderType>
 Result<Ok, nsresult> DecoderTemplate<DecoderType>::ResetInternal(
     const nsresult& aResult) {
   AssertIsOnOwningThread();

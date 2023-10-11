@@ -150,6 +150,11 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   uint32_t DecodeQueueSize() const { return mDecodeQueueSize; };
 
+  // TODO: Replace virtual with MOZ_EXPORT (visibility("default"))
+  virtual void Reset(ErrorResult& aRv);
+
+  virtual void Close(ErrorResult& aRv);
+
   /* Type conversion functions for the Decoder implementation */
  protected:
   virtual already_AddRefed<MediaRawData> InputDataToMediaRawData(
