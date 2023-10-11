@@ -144,9 +144,7 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ScriptLoadContext,
                                            JS::loader::LoadContextBase)
 
-  // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);
-  virtual void PrioritizeAsPreload() override;
 
   bool IsPreload() const;
 

@@ -21,8 +21,6 @@ namespace mozilla {
 FontPreloader::FontPreloader()
     : FetchPreloader(nsIContentPolicy::TYPE_INTERNAL_FONT_PRELOAD) {}
 
-void FontPreloader::PrioritizeAsPreload() { PrioritizeAsPreload(Channel()); }
-
 nsresult FontPreloader::CreateChannel(
     nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
     const dom::ReferrerPolicy& aReferrerPolicy, dom::Document* aDocument,

@@ -415,8 +415,6 @@ void SheetLoadData::PrioritizeAsPreload(nsIChannel* aChannel) {
   }
 }
 
-void SheetLoadData::PrioritizeAsPreload() { PrioritizeAsPreload(Channel()); }
-
 void SheetLoadData::StartPendingLoad() {
   mLoader->LoadSheet(*this, Loader::SheetState::NeedsParser, 0,
                      Loader::PendingLoad::Yes);

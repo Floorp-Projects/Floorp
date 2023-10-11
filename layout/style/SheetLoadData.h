@@ -51,9 +51,7 @@ class SheetLoadData final
   virtual ~SheetLoadData();
 
  public:
-  // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);
-  void PrioritizeAsPreload() final;
 
   // If this is a deferred load, start it now.
   void StartPendingLoad();
