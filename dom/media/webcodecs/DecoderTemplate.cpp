@@ -189,6 +189,35 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
 }
 
 template <typename DecoderType>
+void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Decode", this);
+
+  if (mState != CodecState::Configured) {
+    aRv.ThrowInvalidStateError("Decoder must be configured first");
+    return;
+  }
+
+  if (mKeyChunkRequired) {
+    // TODO: Verify input's data is truly a key chunk
+    if (!DecoderType::IsKeyChunk(aInput)) {
+      aRv.ThrowDataError("VideoDecoder needs a key chunk");
+      return;
+    }
+    mKeyChunkRequired = false;
+  }
+
+  mDecodeQueueSize += 1;
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
+      new DecodeMessage(++mDecodeCounter, mLatestConfigureId,
+                        DecoderType::CreateInputInternal(aInput))));
+  LOGV("VideoDecoder %p enqueues %s", this,
+       mControlMessageQueue.back()->ToString().get());
+  ProcessControlMessageQueue();
+}
+
+template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Reset(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
@@ -262,7 +291,7 @@ void DecoderTemplate<DecoderType>::ReportError(const nsresult& aResult) {
 }
 
 template <typename DecoderType>
-void DecoderTemplate<DecoderType>::OutputVideoFrames(
+void DecoderTemplate<DecoderType>::OutputDecodedData(
     nsTArray<RefPtr<MediaData>>&& aData) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
@@ -352,7 +381,7 @@ class DecoderTemplate<DecoderType>::OutputRunnable final
     LOGV("VideoDecoder %p, yields %s-result for DecoderAgent #%d",
          mVideoDecoder.get(), mLabel.get(), mAgentId);
     RefPtr<Self> d = std::move(mVideoDecoder);
-    d->OutputVideoFrames(std::move(mData));
+    d->OutputDecodedData(std::move(mData));
 
     return NS_OK;
   }
@@ -365,7 +394,7 @@ class DecoderTemplate<DecoderType>::OutputRunnable final
 };
 
 template <typename DecoderType>
-void DecoderTemplate<DecoderType>::ScheduleOutputVideoFrames(
+void DecoderTemplate<DecoderType>::ScheduleOutputDecodedData(
     nsTArray<RefPtr<MediaData>>&& aData, const nsACString& aLabel) {
   MOZ_ASSERT(mState == CodecState::Configured);
   MOZ_ASSERT(mAgent);
@@ -678,7 +707,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                      "VideoDecoder %p, schedule %zu decoded data output for "
                      "%s",
                      self.get(), data.Length(), msgStr.get());
-                 self->ScheduleOutputVideoFrames(std::move(data), msgStr);
+                 self->ScheduleOutputDecodedData(std::move(data), msgStr);
                }
 
                self->ProcessControlMessageQueue();
@@ -775,7 +804,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
                  LOG("VideoDecoder %p, schedule %zu decoded data output for "
                      "%s",
                      self.get(), data.Length(), msgStr.get());
-                 self->ScheduleOutputVideoFrames(std::move(data), msgStr);
+                 self->ScheduleOutputDecodedData(std::move(data), msgStr);
                }
 
                self->SchedulePromiseResolveOrReject(msg->TakePromise(), NS_OK);
