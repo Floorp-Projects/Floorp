@@ -897,9 +897,6 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
   // needed otherwise.
   EnsureStyleFlush();
 
-  // Add the preference style sheet.
-  UpdatePreferenceStyles();
-
   const bool accessibleCaretEnabled =
       AccessibleCaretEnabled(mDocument->GetDocShell());
   if (accessibleCaretEnabled) {
@@ -1268,11 +1265,6 @@ void PresShell::Destroy() {
     frameSelection->DisconnectFromPresShell();
   }
 
-  // release our pref style sheet, if we have one still
-  //
-  // TODO(emilio): Should we move the preference sheet tracking to the Document?
-  RemovePreferenceStyles();
-
   mIsDestroying = true;
 
   // We can't release all the event content in
@@ -1419,53 +1411,6 @@ void PresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
 
 bool PresShell::GetAuthorStyleDisabled() const {
   return StyleSet()->GetAuthorStyleDisabled();
-}
-
-void PresShell::UpdatePreferenceStyles() {
-  if (!mDocument) {
-    return;
-  }
-
-  // If the document doesn't have a window there's no need to notify
-  // its presshell about changes to preferences since the document is
-  // in a state where it doesn't matter any more (see
-  // nsDocumentViewer::Close()).
-  if (!mDocument->GetWindow()) {
-    return;
-  }
-
-  // Documents in chrome shells do not have any preference style rules applied.
-  if (mDocument->IsInChromeDocShell()) {
-    return;
-  }
-
-  PreferenceSheet::EnsureInitialized();
-  auto* cache = GlobalStyleSheetCache::Singleton();
-
-  RefPtr<StyleSheet> newPrefSheet =
-      PreferenceSheet::ShouldUseChromePrefs(*mDocument)
-          ? cache->ChromePreferenceSheet()
-          : cache->ContentPreferenceSheet();
-
-  if (mPrefStyleSheet == newPrefSheet) {
-    return;
-  }
-
-  RemovePreferenceStyles();
-
-  // NOTE(emilio): This sheet is added as an agent sheet, because we don't want
-  // it to be modifiable from devtools and similar, see bugs 1239336 and
-  // 1436782. I think it conceptually should be a user sheet, and could be
-  // without too much trouble I'd think.
-  StyleSet()->AppendStyleSheet(*newPrefSheet);
-  mPrefStyleSheet = newPrefSheet;
-}
-
-void PresShell::RemovePreferenceStyles() {
-  if (mPrefStyleSheet) {
-    StyleSet()->RemoveStyleSheet(*mPrefStyleSheet);
-    mPrefStyleSheet = nullptr;
-  }
 }
 
 void PresShell::AddUserSheet(StyleSheet* aSheet) {
@@ -4292,9 +4237,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     mDocument->FlushPendingNotifications(FlushType::ContentAndNotify);
 
     mDocument->UpdateSVGUseElementShadowTrees();
-
-    // Ensure our preference sheets are up-to-date.
-    UpdatePreferenceStyles();
 
     // Process pending restyles, since any flush of the presshell wants
     // up-to-date style data.
