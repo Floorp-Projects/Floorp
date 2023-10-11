@@ -95,7 +95,7 @@ class Repository(object):
     def __exit__(self, exc_type, exc_value, exc_tb):
         pass
 
-    def _run(self, *args, **runargs):
+    def _run(self, *args, encoding="utf-8", **runargs):
         return_codes = runargs.get("return_codes", [])
 
         cmd = (str(self._tool),) + args
@@ -108,7 +108,10 @@ class Repository(object):
         else:
             try:
                 return subprocess.check_output(
-                    cmd, cwd=self.path, env=self._env, universal_newlines=True
+                    cmd,
+                    cwd=self.path,
+                    env=self._env,
+                    encoding=encoding,
                 )
             except subprocess.CalledProcessError as e:
                 if e.returncode in return_codes:
