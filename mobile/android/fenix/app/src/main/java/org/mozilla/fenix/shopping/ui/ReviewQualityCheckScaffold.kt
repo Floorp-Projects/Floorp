@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,35 +48,40 @@ fun ReviewQualityCheckScaffold(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .background(
-                color = FirefoxTheme.colors.layer1,
-                shape = bottomSheetShape,
-            )
-            .verticalScroll(rememberScrollState())
-            .padding(
-                vertical = 8.dp,
-                horizontal = 16.dp,
-            ),
+    Surface(
+        color = FirefoxTheme.colors.layer1,
+        shape = bottomSheetShape,
     ) {
-        BottomSheetHandle(
-            onRequestDismiss = onRequestDismiss,
-            contentDescription = stringResource(R.string.review_quality_check_close_handle_content_description),
-            modifier = Modifier
-                .fillMaxWidth(BOTTOM_SHEET_HANDLE_WIDTH_PERCENT)
-                .align(Alignment.CenterHorizontally),
-        )
+        Column(
+            modifier = modifier
+                .background(
+                    color = FirefoxTheme.colors.layer1,
+                    shape = bottomSheetShape,
+                )
+                .verticalScroll(rememberScrollState())
+                .padding(
+                    vertical = 8.dp,
+                    horizontal = 16.dp,
+                ),
+        ) {
+            BottomSheetHandle(
+                onRequestDismiss = onRequestDismiss,
+                contentDescription = stringResource(R.string.review_quality_check_close_handle_content_description),
+                modifier = Modifier
+                    .fillMaxWidth(BOTTOM_SHEET_HANDLE_WIDTH_PERCENT)
+                    .align(Alignment.CenterHorizontally),
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Header()
+            Header()
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        content()
+            content()
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 
