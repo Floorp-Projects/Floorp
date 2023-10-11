@@ -1107,7 +1107,6 @@ module.exports = {
         "browser/components/urlbar/tests/ext/browser/browser_ext_urlbar_clearInput.js",
         "browser/components/urlbar/tests/quicksuggest/QuickSuggestTestUtils.jsm ",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest.js",
-        "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_bestMatch.js",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_block.js",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_configuration.js",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest_indexes.js",

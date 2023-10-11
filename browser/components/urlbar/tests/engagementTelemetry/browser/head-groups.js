@@ -114,23 +114,27 @@ async function doTailSearchSuggestTest({ trigger, assert }) {
 
 async function doTopPickTest({ trigger, assert }) {
   const cleanupQuickSuggest = await ensureQuickSuggestInit({
-    // eslint-disable-next-line mozilla/valid-lazy
-    config: lazy.QuickSuggestTestUtils.BEST_MATCH_CONFIG,
-  });
-
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", true]],
+    merinoSuggestions: [
+      {
+        title: "Navigational suggestion",
+        url: "https://example.com/navigational-suggestion",
+        provider: "top_picks",
+        is_sponsored: false,
+        score: 0.25,
+        block_id: 0,
+        is_top_pick: true,
+      },
+    ],
   });
 
   await doTest(async browser => {
-    await openPopup("sponsored");
-    await selectRowByURL("https://example.com/sponsored");
+    await openPopup("navigational");
+    await selectRowByURL("https://example.com/navigational-suggestion");
 
     await trigger();
     await assert();
   });
 
-  await SpecialPowers.popPrefEnv();
   await cleanupQuickSuggest();
 }
 

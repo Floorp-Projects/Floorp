@@ -214,15 +214,12 @@ add_task(async function sponsored() {
   }
 });
 
-// sponsored best match
+// higher-placement sponsored, a.k.a sponsored priority, sponsored best match
 add_task(async function sponsoredBestMatch() {
   let match_type = "best-match";
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", true]],
+    set: [["browser.urlbar.quicksuggest.sponsoredPriority", true]],
   });
-  await QuickSuggestTestUtils.setConfig(
-    QuickSuggestTestUtils.BEST_MATCH_CONFIG
-  );
   await doTelemetryTest({
     index,
     suggestion: REMOTE_SETTINGS_RESULT,
@@ -230,7 +227,6 @@ add_task(async function sponsoredBestMatch() {
     impressionOnly: {
       scalars: {
         [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: position,
       },
       event: {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -261,9 +257,7 @@ add_task(async function sponsoredBestMatch() {
       "urlbarView-row-inner": {
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: position,
           [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -307,9 +301,7 @@ add_task(async function sponsoredBestMatch() {
       "urlbarView-button-block": {
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: position,
           [TELEMETRY_SCALARS.BLOCK_SPONSORED]: position,
-          [TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -354,9 +346,7 @@ add_task(async function sponsoredBestMatch() {
       "urlbarView-button-help": {
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: position,
           [TELEMETRY_SCALARS.HELP_SPONSORED]: position,
-          [TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
@@ -386,6 +376,5 @@ add_task(async function sponsoredBestMatch() {
       },
     },
   });
-  await QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
   await SpecialPowers.popPrefEnv();
 });

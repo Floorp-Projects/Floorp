@@ -64,13 +64,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
-  // Whether best match results can be blocked. This pref is a fallback for the
-  // Nimbus variable `bestMatchBlockingEnabled`.
-  ["bestMatch.blockingEnabled", true],
-
-  // Whether the best match feature is enabled.
-  ["bestMatch.enabled", true],
-
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
   ["contextualSearch.enabled", false],
@@ -225,10 +218,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
-
-  // When `bestMatch.enabled` is true, this controls whether results will
-  // include best matches.
-  ["suggest.bestmatch", true],
 
   // Whether results will include the user's bookmarks.
   ["suggest.bookmark", true],
@@ -495,7 +484,6 @@ const PREF_OTHER_DEFAULTS = new Map([
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
   experimentType: "",
-  isBestMatchExperiment: false,
   pocketShowLessFrequentlyCap: 0,
   quickSuggestRemoteSettingsDataType: "data",
   quickSuggestScoreMap: null,

@@ -186,14 +186,6 @@ urlbar:
     autoFillAdaptiveHistoryUseCountThreshold:
       type: string
       description: This value assumes float expression like "0.47". Threshold for use count of input history that we handle as adaptive history autofill. If the use count is this value or more, it will be a candidate.
-    bestMatchBlockingEnabled:
-      type: boolean
-      fallbackPref: browser.urlbar.bestMatch.blockingEnabled
-      description: Whether best match Suggest suggestions can be blocked.
-    bestMatchEnabled:
-      type: boolean
-      fallbackPref: browser.urlbar.bestMatch.enabled
-      description: Gate for the best match feature. If false, the best match preferences UI and best match suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn best match suggestions on or off.
     experimentType:
       type: string
       description: The type of the experiment (or rollout). If "best-match", then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If "modal", the event will be recorded when the user first triggers to show the onbording dialog. If empty, the event will be recorded when the user first triggers any type of Suggest suggestion.
@@ -201,10 +193,6 @@ urlbar:
         - best-match
         - modal
         - ""
-    isBestMatchExperiment:
-      type: boolean
-      description: >-
-        Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). Deprecated, please use `experimentType: "best-match"` instead.
     mdnFeatureGate:
       type: boolean
       setPref: browser.urlbar.mdn.featureGate
@@ -265,7 +253,7 @@ urlbar:
     quickSuggestBlockingEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.blockingEnabled
-      description: Whether the usual non-best-match Suggest suggestions can be blocked.
+      description: Whether Suggest suggestions can be blocked.
     quickSuggestDataCollectionEnabled:
       type: boolean
       description: Whether data collection should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) data collection, if the user has already toggled that preference.

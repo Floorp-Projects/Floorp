@@ -26,7 +26,6 @@ add_setup(async function () {
       ["browser.urlbar.quicksuggest.enabled", true],
       ["browser.urlbar.quicksuggest.nonsponsored", true],
       ["browser.urlbar.quicksuggest.remoteSettings.enabled", true],
-      ["browser.urlbar.bestMatch.enabled", true],
       ["browser.urlbar.suggest.mdn", true],
     ],
   });
@@ -73,40 +72,23 @@ add_task(async function basic() {
   await SpecialPowers.popPrefEnv();
 });
 
+// Tests the row/group label.
 add_task(async function rowLabel() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.mdn.featureGate", true]],
   });
 
-  const testCases = [
-    {
-      bestMatch: true,
-      expected: "Recommended resource",
-    },
-    {
-      bestMatch: false,
-      expected: "Firefox Suggest",
-    },
-  ];
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0],
+  });
+  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
 
-  for (const { bestMatch, expected } of testCases) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["browser.urlbar.bestMatch.enabled", bestMatch]],
-    });
+  const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  const row = element.row;
+  Assert.equal(row.getAttribute("label"), "Recommended resource");
 
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0],
-    });
-    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
-
-    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-    const row = element.row;
-    Assert.equal(row.getAttribute("label"), expected);
-
-    await SpecialPowers.popPrefEnv();
-  }
-
+  await UrlbarTestUtils.promisePopupClose(window);
   await SpecialPowers.popPrefEnv();
 });
 

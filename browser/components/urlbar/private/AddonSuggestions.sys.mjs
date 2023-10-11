@@ -159,9 +159,6 @@ export class AddonSuggestions extends BaseFeature {
         )
       ),
       {
-        // UrlbarProviderQuickSuggest will make the result a best match only if
-        // `bestMatch.enabled` is true. Addon suggestions should always be best
-        // matches, so override the provider by setting the related properties.
         isBestMatch: true,
         suggestedIndex: 1,
         isRichSuggestion: true,

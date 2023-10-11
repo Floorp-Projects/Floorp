@@ -156,12 +156,6 @@ addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-nam
 # the address bar section in the preferences UI.
 addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
 
-# The best match checkbox label. This toggle controls best match suggestions
-# related to the user's search string.
-addressbar-firefox-suggest-best-match-option =
-  .label = Top pick
-addressbar-best-match-learn-more = Learn more
-
 # First Firefox Suggest toggle button main label and description. This toggle
 # controls non-sponsored suggestions related to the user's search string.
 # .description is transferred into a separate paragraph by the moz-toggle
