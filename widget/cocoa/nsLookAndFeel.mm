@@ -131,11 +131,15 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       aColor = NS_TRANSPARENT;
       break;
     case ColorID::MozMenuhover:
+      color = GetColorFromNSColor(NSColor.selectedMenuItemColor);
+      break;
+    case ColorID::MozMenuhovertext:
+      color = GetColorFromNSColor(NSColor.selectedMenuItemTextColor);
+      break;
     case ColorID::Selecteditem:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlColor);
       break;
     case ColorID::Accentcolortext:
-    case ColorID::MozMenuhovertext:
     case ColorID::Selecteditemtext:
       color = GetColorFromNSColor(NSColor.alternateSelectedControlTextColor);
       break;
@@ -263,12 +267,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::MozMacFocusring:
       color = GetColorFromNSColorWithCustomAlpha(
           NSColor.keyboardFocusIndicatorColor, 0.48);
-      break;
-    case ColorID::MozMacMenutextdisable:
-      color = NS_RGB(0x98, 0x98, 0x98);
-      break;
-    case ColorID::MozMacMenutextselect:
-      color = GetColorFromNSColor(NSColor.selectedMenuItemTextColor);
       break;
     case ColorID::MozMacDisabledtoolbartext:
     case ColorID::Graytext:

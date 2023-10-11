@@ -273,8 +273,6 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-headerbarinactivetext",
     "ui.-moz-mac-defaultbuttontext",
     "ui.-moz-mac-focusring",
-    "ui.-moz-mac-menutextdisable",
-    "ui.-moz-mac-menutextselect",
     "ui.-moz_mac_disabledtoolbartext",
     "ui.-moz-mac-menupopup",
     "ui.-moz-mac-menuitem",
@@ -692,8 +690,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozEventreerow, 0xFF, 0xFF, 0xFF)
       COLOR(MozOddtreerow, 0xFF, 0xFF, 0xFF)
       COLOR(MozMacFocusring, 0x60, 0x9D, 0xD7)
-      COLOR(MozMacMenutextdisable, 0x88, 0x88, 0x88)
-      COLOR(MozMacMenutextselect, 0xFF, 0xFF, 0xFF)
       COLOR(MozMacDisabledtoolbartext, 0x3F, 0x3F, 0x3F)
       COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
       COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)

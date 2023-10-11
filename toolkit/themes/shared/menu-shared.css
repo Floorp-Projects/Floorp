@@ -92,18 +92,13 @@ menuitem {
   &:where([disabled="true"]) {
     color: GrayText;
     text-shadow: none;
-
-    @media (-moz-platform: macos) {
-      /* TODO: -moz-mac-menutextdisable isn't color-scheme aware, maybe we can
-       * just use GrayText and remove this declaration */
-      color: -moz-mac-menutextdisable;
-      -moz-font-smoothing-background-color: -moz-mac-menuitem;
-    }
+    -moz-font-smoothing-background-color: -moz-mac-menuitem;
   }
 
   &:where([_moz-menuactive]:not([disabled="true"])) {
     color: -moz-menuhovertext;
     background-color: -moz-menuhover;
+    -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
   }
 
   &:where([_moz-menuactive="true"][disabled="true"]) {
