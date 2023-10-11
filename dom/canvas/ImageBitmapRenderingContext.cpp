@@ -173,7 +173,8 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
 
   if (ret && ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     nsRFPService::RandomizePixels(
-        GetCookieJarSettings(), ret.get(),
+        GetCookieJarSettings(), ret.get(), data->GetSize().width,
+        data->GetSize().height,
         data->GetSize().width * data->GetSize().height * 4,
         gfx::SurfaceFormat::A8R8G8B8_UINT32);
   }
