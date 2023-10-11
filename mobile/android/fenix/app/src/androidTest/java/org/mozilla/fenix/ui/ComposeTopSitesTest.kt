@@ -62,7 +62,7 @@ class ComposeTopSitesTest {
 
     @SmokeTest
     @Test
-    fun verifyAddToFirefoxHome() {
+    fun addAWebsiteAsATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -79,7 +79,7 @@ class ComposeTopSitesTest {
     }
 
     @Test
-    fun verifyOpenTopSiteNormalTab() {
+    fun openTopSiteInANewTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -106,7 +106,7 @@ class ComposeTopSitesTest {
     }
 
     @Test
-    fun verifyOpenTopSitePrivateTab() {
+    fun openTopSiteInANewPrivateTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -127,7 +127,7 @@ class ComposeTopSitesTest {
     }
 
     @Test
-    fun verifyRenameTopSite() {
+    fun renameATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
         val newPageTitle = generateRandomString(5)
 
@@ -151,28 +151,7 @@ class ComposeTopSitesTest {
     }
 
     @Test
-    fun verifyRemoveTopSite() {
-        val defaultWebPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-            expandMenu()
-            verifyAddToShortcutsButton(true)
-        }.addToFirefoxHome {
-            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
-        }.goToHomescreenWithComposeTopSites(composeTestRule) {
-            verifyExistingTopSitesList()
-            verifyExistingTopSiteItem(defaultWebPage.title)
-        }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
-            verifyTopSiteContextMenuItems()
-        }.removeTopSite {
-            verifyNotExistingTopSiteItem(defaultWebPage.title)
-        }
-    }
-
-    @Test
-    fun verifyUndoRemoveTopSite() {
+    fun removeTopSiteUsingMenuButtonTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -190,11 +169,15 @@ class ComposeTopSitesTest {
         }.removeTopSite {
             clickSnackbarButton("UNDO")
             verifyExistingTopSiteItem(defaultWebPage.title)
+        }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
+            verifyTopSiteContextMenuItems()
+        }.removeTopSite {
+            verifyNotExistingTopSiteItem(defaultWebPage.title)
         }
     }
 
     @Test
-    fun verifyRemoveTopSiteFromMainMenu() {
+    fun removeTopSiteFromMainMenuTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -218,7 +201,7 @@ class ComposeTopSitesTest {
 
     // Expected for en-us defaults
     @Test
-    fun verifyDefaultTopSitesList() {
+    fun verifyENLocalesDefaultTopSitesListTest() {
         homeScreenWithComposeTopSites(composeTestRule) {
             verifyExistingTopSitesList()
             val topSitesTitles = arrayListOf("Google", "Top Articles", "Wikipedia")

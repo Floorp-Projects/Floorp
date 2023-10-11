@@ -67,7 +67,7 @@ class PDFViewerTest {
         }
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/edit/2159718/1
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2159718
     @Test
     fun verifyPDFViewerOpenInAppButtonTest() {
         val genericURL = getGenericAsset(mockWebServer, 3)

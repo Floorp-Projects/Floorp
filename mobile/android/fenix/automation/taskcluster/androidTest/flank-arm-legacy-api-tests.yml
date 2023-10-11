@@ -31,7 +31,7 @@ gcloud:
     - class org.mozilla.fenix.ui.HistoryTest#noHistoryInPrivateBrowsingTest
     - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewTabTest
     - class org.mozilla.fenix.ui.TabbedBrowsingTest#openNewPrivateTabTest
-    - class org.mozilla.fenix.ui.TopSitesTest#verifyOpenTopSiteNormalTab
+    - class org.mozilla.fenix.ui.TopSitesTest#openTopSiteInANewTabTest
     - class org.mozilla.fenix.ui.BookmarksTest#addBookmarkTest
 
   device:

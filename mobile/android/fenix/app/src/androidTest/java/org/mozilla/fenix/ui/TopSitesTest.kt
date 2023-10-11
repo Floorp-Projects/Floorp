@@ -55,9 +55,10 @@ class TopSitesTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/532598
     @SmokeTest
     @Test
-    fun verifyAddToFirefoxHome() {
+    fun addAWebsiteAsATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -73,8 +74,9 @@ class TopSitesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/532599
     @Test
-    fun verifyOpenTopSiteNormalTab() {
+    fun openTopSiteInANewTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -100,8 +102,9 @@ class TopSitesTest {
         mDevice.pressBack()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/532600
     @Test
-    fun verifyOpenTopSitePrivateTab() {
+    fun openTopSiteInANewPrivateTabTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -121,8 +124,9 @@ class TopSitesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1110321
     @Test
-    fun verifyRenameTopSite() {
+    fun renameATopSiteTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
         val newPageTitle = generateRandomString(5)
 
@@ -145,29 +149,9 @@ class TopSitesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/532601
     @Test
-    fun verifyRemoveTopSite() {
-        val defaultWebPage = getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openThreeDotMenu {
-            expandMenu()
-            verifyAddToShortcutsButton(shouldExist = true)
-        }.addToFirefoxHome {
-            verifySnackBarText(getStringResource(R.string.snackbar_added_to_shortcuts))
-        }.goToHomescreen {
-            verifyExistingTopSitesList()
-            verifyExistingTopSitesTabs(defaultWebPage.title)
-        }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
-            verifyTopSiteContextMenuItems()
-        }.removeTopSite {
-            verifyNotExistingTopSitesList(defaultWebPage.title)
-        }
-    }
-
-    @Test
-    fun verifyUndoRemoveTopSite() {
+    fun removeTopSiteUsingMenuButtonTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -185,11 +169,16 @@ class TopSitesTest {
         }.removeTopSite {
             clickSnackbarButton("UNDO")
             verifyExistingTopSitesTabs(defaultWebPage.title)
+        }.openContextMenuOnTopSitesWithTitle(defaultWebPage.title) {
+            verifyTopSiteContextMenuItems()
+        }.removeTopSite {
+            verifyNotExistingTopSitesList(defaultWebPage.title)
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2323641
     @Test
-    fun verifyRemoveTopSiteFromMainMenu() {
+    fun removeTopSiteFromMainMenuTest() {
         val defaultWebPage = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -211,9 +200,10 @@ class TopSitesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561582
     // Expected for en-us defaults
     @Test
-    fun verifyDefaultTopSitesList() {
+    fun verifyENLocalesDefaultTopSitesListTest() {
         homeScreen {
             verifyExistingTopSitesList()
             defaultTopSitesList.values.forEach { value ->
@@ -222,6 +212,7 @@ class TopSitesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1050642
     @SmokeTest
     @Test
     fun addAndRemoveMostViewedTopSiteTest() {
