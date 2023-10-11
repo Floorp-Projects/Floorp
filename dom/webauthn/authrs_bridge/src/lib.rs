@@ -34,7 +34,6 @@ use nsstring::{nsACString, nsAString, nsCString, nsString};
 use serde::Serialize;
 use serde_cbor;
 use serde_json::json;
-use std::cell::RefCell;
 use std::fmt::Write;
 use std::sync::mpsc::{channel, Receiver, RecvError, Sender};
 use std::sync::{Arc, Mutex};
@@ -307,8 +306,7 @@ fn status_callback(
     tid: u64,
     origin: &String,
     browsing_context_id: u64,
-    pin_receiver: Arc<Mutex<PinReceiver>>, /* Shared with an AuthrsService */
-    selection_receiver: Arc<Mutex<SelectionReceiver>>, /* Shared with an AuthrsService */
+    transaction: Arc<Mutex<Option<TransactionState>>>, /* Shared with an AuthrsService */
 ) -> Result<(), nsresult> {
     let origin = Some(origin.as_str());
     let browsing_context_id = Some(browsing_context_id);
@@ -333,7 +331,12 @@ fn status_callback(
                 )?;
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::PinRequired(sender))) => {
-                pin_receiver.lock().unwrap().replace((tid, sender));
+                let mut guard = transaction.lock().unwrap();
+                let Some(transaction) = guard.as_mut() else {
+                    warn!("STATUS: received status update after end of transaction.");
+                    break;
+                };
+                transaction.pin_receiver.replace((tid, sender));
                 send_prompt(
                     BrowserPromptType::PinRequired,
                     tid,
@@ -342,7 +345,12 @@ fn status_callback(
                 )?;
             }
             Ok(StatusUpdate::PinUvError(StatusPinUv::InvalidPin(sender, retries))) => {
-                pin_receiver.lock().unwrap().replace((tid, sender));
+                let mut guard = transaction.lock().unwrap();
+                let Some(transaction) = guard.as_mut() else {
+                    warn!("STATUS: received status update after end of transaction.");
+                    break;
+                };
+                transaction.pin_receiver.replace((tid, sender));
                 send_prompt(
                     BrowserPromptType::PinInvalid { retries },
                     tid,
@@ -400,7 +408,12 @@ fn status_callback(
             }
             Ok(StatusUpdate::SelectResultNotice(sender, entities)) => {
                 debug!("STATUS: select result notice");
-                selection_receiver.lock().unwrap().replace((tid, sender));
+                let mut guard = transaction.lock().unwrap();
+                let Some(transaction) = guard.as_mut() else {
+                    warn!("STATUS: received status update after end of transaction.");
+                    break;
+                };
+                transaction.selection_receiver.replace((tid, sender));
                 send_prompt(
                     BrowserPromptType::SelectSignResult {
                         entities: &entities,
@@ -487,22 +500,27 @@ struct TransactionState {
     browsing_context_id: u64,
     pending_args: Option<TransactionArgs>,
     promise: TransactionPromise,
+    pin_receiver: PinReceiver,
+    selection_receiver: SelectionReceiver,
 }
 
 // AuthrsService provides an nsIWebAuthnService built on top of authenticator-rs.
 #[xpcom(implement(nsIWebAuthnService), atomic)]
 pub struct AuthrsService {
-    usb_token_manager: RefCell<StateMachine>, // interior mutable for use in XPCOM methods
+    usb_token_manager: Mutex<StateMachine>,
     test_token_manager: TestTokenManager,
-    pin_receiver: Arc<Mutex<PinReceiver>>,
-    selection_receiver: Arc<Mutex<SelectionReceiver>>,
     transaction: Arc<Mutex<Option<TransactionState>>>,
 }
 
 impl AuthrsService {
     xpcom_method!(pin_callback => PinCallback(aTransactionId: u64, aPin: *const nsACString));
     fn pin_callback(&self, transaction_id: u64, pin: &nsACString) -> Result<(), nsresult> {
-        let Some((tid, channel)) = self.pin_receiver.lock().unwrap().take() else {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(transaction) = guard.as_mut() else {
+            // No ongoing transaction
+            return Err(NS_ERROR_FAILURE);
+        };
+        let Some((tid, channel)) = transaction.pin_receiver.take() else {
             // We weren't expecting a pin.
             return Err(NS_ERROR_FAILURE);
         };
@@ -518,7 +536,12 @@ impl AuthrsService {
 
     xpcom_method!(selection_callback => SelectionCallback(aTransactionId: u64, aSelection: u64));
     fn selection_callback(&self, transaction_id: u64, selection: u64) -> Result<(), nsresult> {
-        let Some((tid, channel)) = self.selection_receiver.lock().unwrap().take() else {
+        let mut guard = self.transaction.lock().unwrap();
+        let Some(transaction) = guard.as_mut() else {
+            // No ongoing transaction
+            return Err(NS_ERROR_FAILURE);
+        };
+        let Some((tid, channel)) = transaction.selection_receiver.take() else {
             // We weren't expecting a selection.
             return Err(NS_ERROR_FAILURE);
         };
@@ -532,10 +555,6 @@ impl AuthrsService {
             .or(Err(NS_ERROR_FAILURE))
     }
 
-    // # Safety
-    //
-    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
-    // most one WebAuthn transaction is active at any given time.
     xpcom_method!(make_credential => MakeCredential(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnRegisterArgs, aPromise: *const nsIWebAuthnRegisterPromise));
     fn make_credential(
         &self,
@@ -675,6 +694,8 @@ impl AuthrsService {
             browsing_context_id,
             pending_args: Some(TransactionArgs::Register(timeout_ms as u64, info)),
             promise: TransactionPromise::Register(promise),
+            pin_receiver: None,
+            selection_receiver: None,
         });
 
         if none_attestation
@@ -710,8 +731,7 @@ impl AuthrsService {
         };
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
-        let pin_receiver = self.pin_receiver.clone();
-        let selection_receiver = self.selection_receiver.clone();
+        let status_transaction = self.transaction.clone();
         let status_origin = info.origin.clone();
         RunnableBuilder::new("AuthrsService::MakeCredential::StatusReceiver", move || {
             let _ = status_callback(
@@ -719,8 +739,7 @@ impl AuthrsService {
                 tid,
                 &status_origin,
                 browsing_context_id,
-                pin_receiver,
-                selection_receiver,
+                status_transaction,
             );
         })
         .may_block(true)
@@ -734,6 +753,9 @@ impl AuthrsService {
                 let Some(state) = guard.as_mut() else {
                     return;
                 };
+                if state.tid != tid {
+                    return;
+                }
                 let TransactionPromise::Register(ref promise) = state.promise else {
                     return;
                 };
@@ -789,10 +811,6 @@ impl AuthrsService {
         Ok(())
     }
 
-    // # Safety
-    //
-    // This will mutably borrow usb_token_manager through a RefCell. The caller must ensure that at
-    // most one WebAuthn transaction is active at any given time.
     xpcom_method!(get_assertion => GetAssertion(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnSignArgs, aPromise: *const nsIWebAuthnSignPromise));
     fn get_assertion(
         &self,
@@ -847,8 +865,7 @@ impl AuthrsService {
         }
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
-        let pin_receiver = self.pin_receiver.clone();
-        let selection_receiver = self.selection_receiver.clone();
+        let status_transaction = self.transaction.clone();
         let status_origin = origin.to_string();
         RunnableBuilder::new("AuthrsService::GetAssertion::StatusReceiver", move || {
             let _ = status_callback(
@@ -856,8 +873,7 @@ impl AuthrsService {
                 tid,
                 &status_origin,
                 browsing_context_id,
-                pin_receiver,
-                selection_receiver,
+                status_transaction,
             );
         })
         .may_block(true)
@@ -876,6 +892,9 @@ impl AuthrsService {
                 let Some(state) = guard.as_mut() else {
                     return;
                 };
+                if state.tid != tid {
+                    return;
+                }
                 let TransactionPromise::Sign(ref promise) = state.promise else {
                     return;
                 };
@@ -924,11 +943,13 @@ impl AuthrsService {
             browsing_context_id,
             pending_args: None,
             promise: TransactionPromise::Sign(promise),
+            pin_receiver: None,
+            selection_receiver: None,
         });
 
         // As in `register`, we are intentionally avoiding `AuthenticatorService` here.
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
-            self.usb_token_manager.borrow_mut().sign(
+            self.usb_token_manager.lock().unwrap().sign(
                 timeout_ms as u64,
                 info,
                 status_tx,
@@ -952,12 +973,17 @@ impl AuthrsService {
                 return Ok(());
             };
             if state.tid != tid {
+                // Ignore the cancellation request if the transaction
+                // ID does not match.
                 return Ok(());
             }
+            // It's possible that we haven't dispatched the request to the usb_token_manager yet,
+            // e.g. if we're waiting for resume_make_credential. So reject the promise and drop the
+            // state here rather than from the StateCallback
             state.promise.reject(NS_ERROR_DOM_NOT_ALLOWED_ERR)?;
             *guard = None;
-        }
-        self.reset_helper()?;
+        } // release the transaction lock so a StateCallback can take it
+        self.usb_token_manager.lock().unwrap().cancel();
         Ok(())
     }
 
@@ -968,17 +994,8 @@ impl AuthrsService {
                 cancel_prompts(state.tid)?;
                 state.promise.reject(NS_ERROR_DOM_ABORT_ERR)?;
             }
-        }
-        self.reset_helper()?;
-        Ok(())
-    }
-
-    fn reset_helper(&self) -> Result<(), nsresult> {
-        // NOTE: Caller must not hold the lock on self.transaction as
-        // the USB token manager may try to take it in cancel().
-        drop(self.pin_receiver.lock().unwrap().take());
-        drop(self.selection_receiver.lock().unwrap().take());
-        self.usb_token_manager.borrow_mut().cancel();
+        } // release the transaction lock so a StateCallback can take it
+        self.usb_token_manager.lock().unwrap().cancel();
         Ok(())
     }
 
@@ -1108,10 +1125,8 @@ impl AuthrsService {
 #[no_mangle]
 pub extern "C" fn authrs_service_constructor(result: *mut *const nsIWebAuthnService) -> nsresult {
     let wrapper = AuthrsService::allocate(InitAuthrsService {
-        usb_token_manager: RefCell::new(StateMachine::new()),
+        usb_token_manager: Mutex::new(StateMachine::new()),
         test_token_manager: TestTokenManager::new(),
-        pin_receiver: Arc::new(Mutex::new(None)),
-        selection_receiver: Arc::new(Mutex::new(None)),
         transaction: Arc::new(Mutex::new(None)),
     });
 
