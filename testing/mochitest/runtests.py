@@ -2861,6 +2861,7 @@ toolbar#nav-bar {
 
             # create mozrunner instance and start the system under test process
             self.lastTestSeen = self.test_name
+            self.lastManifest = currentManifest
             startTime = datetime.now()
 
             runner_cls = mozrunner.runners.get(
@@ -4081,7 +4082,10 @@ toolbar#nav-bar {
                     if message["action"] == "log"
                     else message["data"]
                 )
-                self.lsanLeaks.log(line)
+                if "(finished)" in self.harness.lastTestSeen:
+                    self.lsanLeaks.log(line, self.harness.lastManifest)
+                else:
+                    self.lsanLeaks.log(line, self.harness.lastTestSeen)
             return message
 
         def trackShutdownLeaks(self, message):

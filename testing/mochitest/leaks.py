@@ -342,7 +342,7 @@ class LSANLeaks(object):
             "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
         )
 
-    def log(self, line):
+    def log(self, line, path=""):
         if re.match(self.startRegExp, line):
             self.inReport = True
             return
@@ -359,13 +359,13 @@ class LSANLeaks(object):
             return
 
         if line.startswith("Direct leak") or line.startswith("Indirect leak"):
-            self._finishStack()
+            self._finishStack(path)
             self.recordMoreFrames = True
             self.currStack = []
             return
 
         if line.startswith("SUMMARY: AddressSanitizer"):
-            self._finishStack()
+            self._finishStack(path)
             self.inReport = False
             return
 
@@ -421,17 +421,20 @@ class LSANLeaks(object):
             )
 
         for f in self.foundFrames:
-            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at " + f)
+            if self.scope:
+                f = "%s | %s" % (f, self.scope)
+            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer leak at " + f)
             failures += 1
 
         return failures
 
-    def _finishStack(self):
+    def _finishStack(self, path=""):
         if self.recordMoreFrames and len(self.currStack) == 0:
             self.currStack = ["unknown stack"]
         if self.currStack:
             self.foundFrames.add(", ".join(self.currStack))
             self.currStack = None
+            self.scope = path
         self.recordMoreFrames = False
         self.numRecordedFrames = 0
 
