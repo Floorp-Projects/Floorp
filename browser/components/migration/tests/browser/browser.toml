@@ -37,6 +37,8 @@ support-files = ["dummy_file.csv"]
 
 ["browser_only_file_migrators.js"]
 
+["browser_permissions.js"]
+
 ["browser_safari_passwords.js"]
 run-if = ["os == 'mac'"]
 
