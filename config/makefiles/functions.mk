@@ -27,16 +27,4 @@ core_winabspath = $(error core_winabspath is unsupported)
 #
 #   libs::
 #       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
-#
-# The first argument can optionally contain the name of the file being created
-# or processed. e.g.
-#   libs::
-#       $(call py_action,purge_manifests foo.manifest,_build_manifests/purge/foo.manifest)
-# This optional name will be displayed in build profiles.
-#
-# Note: $(call BUILDSTATUS) can't be used here as that would expand to multiple
-# lines and some py_action callers expect a single line.
-py_action = \
-	echo BUILDSTATUS START_$(firstword $(1)) $(or $(word 2,$(1)),$(2)) ; \
-	$(PYTHON3) -m mozbuild.action.$(firstword $(1)) $(2) ; \
-	echo BUILDSTATUS END_$(firstword $(1)) $(or $(word 2,$(1)),$(2))
+py_action = $(PYTHON3) -m mozbuild.action.$(1) $(2)
