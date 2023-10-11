@@ -854,13 +854,14 @@ export var BrowserTestUtils = {
    *
    * @param {Object} aParams
    * @param {string} [aParams.url]
-   *        If set, we will wait until the initial browser in the new window
-   *        has loaded a particular page.
-   *        If unset, the initial browser may or may not have finished
-   *        loading its first page when the resulting Promise resolves.
+   *        The url to await being loaded. If unset this may or may not wait for
+   *        any page to be loaded, according to the waitForAnyURLLoaded param.
+   * @param {bool} [aParams.waitForAnyURLLoaded] When `url` is unset, this
+   *        controls whether to wait for any initial URL to be loaded.
+   *        Defaults to false, that means the initial browser may or may not
+   *        have finished loading its first page when this resolves.
+   *        When `url` is set, this is ignored, thus the load is always awaited for.
    * @param {bool} [aParams.anyWindow]
-   *        True to wait for the url to be loaded in any new
-   *        window, not just the next one opened.
    * @param {bool} [aParams.maybeErrorPage]
    *        See ``browserLoaded`` function.
    * @return {Promise}
@@ -868,7 +869,12 @@ export var BrowserTestUtils = {
    *         opens and the delayed startup observer notification fires.
    */
   waitForNewWindow(aParams = {}) {
-    let { url = null, anyWindow = false, maybeErrorPage = false } = aParams;
+    let {
+      url = null,
+      anyWindow = false,
+      maybeErrorPage = false,
+      waitForAnyURLLoaded = false,
+    } = aParams;
 
     if (anyWindow && !url) {
       throw new Error("url should be specified if anyWindow is true");
@@ -892,7 +898,7 @@ export var BrowserTestUtils = {
             this.waitForEvent(win, "activate"),
           ];
 
-          if (url) {
+          if (url || waitForAnyURLLoaded) {
             await this.waitForEvent(win, "DOMContentLoaded");
 
             if (win.document.documentURI != AppConstants.BROWSER_CHROME_URL) {
@@ -907,11 +913,11 @@ export var BrowserTestUtils = {
             )
           );
 
-          if (url) {
+          if (url || waitForAnyURLLoaded) {
             let loadPromise = this.browserLoaded(
               win.gBrowser.selectedBrowser,
               false,
-              url,
+              waitForAnyURLLoaded ? null : url,
               maybeErrorPage
             );
             promises.push(loadPromise);
