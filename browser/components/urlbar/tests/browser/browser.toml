@@ -612,8 +612,6 @@ https_first_disabled = true
 ["browser_urlbar_annotation.js"]
 support-files = ["redirect_to.sjs"]
 
-["browser_urlbar_event_telemetry_noEvent.js"]
-
 ["browser_urlbar_selection.js"]
 skip-if = ["(os == 'mac')"] # bug 1570474
 

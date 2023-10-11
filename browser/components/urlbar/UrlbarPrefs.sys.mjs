@@ -105,9 +105,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
   ["dnsResolveSingleWordsAfterSearch", 0],
 
-  // Whether telemetry events should be recorded.
-  ["eventTelemetry.enabled", false],
-
   // Whether we expand the font size when when the urlbar is
   // focused.
   ["experimental.expandTextOnFocus", false],
