@@ -25,102 +25,23 @@ function contains(location, range) {
   );
 }
 
-function groupBreakpoints(breakpoints, selectedSource) {
-  const breakpointsMap = {};
-  if (!breakpoints) {
-    return breakpointsMap;
-  }
-
-  for (const breakpoint of breakpoints) {
-    if (breakpoint.options.hidden) {
-      continue;
-    }
-    const location = getSelectedLocation(breakpoint, selectedSource);
-    const { line, column } = location;
-
-    if (!breakpointsMap[line]) {
-      breakpointsMap[line] = {};
-    }
-
-    if (!breakpointsMap[line][column]) {
-      breakpointsMap[line][column] = [];
-    }
-
-    breakpointsMap[line][column].push(breakpoint);
-  }
-
-  return breakpointsMap;
-}
-
-function findBreakpoint(location, breakpointMap) {
-  const { line, column } = location;
-  const breakpoints = breakpointMap[line]?.[column];
-
-  if (!breakpoints) {
-    return null;
-  }
-  return breakpoints[0];
-}
-
-function filterByLineCount(positions, selectedSource) {
-  const lineCount = {};
-
-  for (const breakpoint of positions) {
-    const { line } = getSelectedLocation(breakpoint, selectedSource);
-    if (!lineCount[line]) {
-      lineCount[line] = 0;
-    }
-    lineCount[line] = lineCount[line] + 1;
-  }
-
-  return positions.filter(
-    breakpoint =>
-      lineCount[getSelectedLocation(breakpoint, selectedSource).line] > 1
-  );
-}
-
-function filterVisible(positions, selectedSource, viewport) {
-  return positions.filter(columnBreakpoint => {
-    const location = getSelectedLocation(columnBreakpoint, selectedSource);
-    return viewport && contains(location, viewport);
-  });
-}
-
-function filterByBreakpoints(positions, selectedSource, breakpointMap) {
-  return positions.filter(position => {
-    const location = getSelectedLocation(position, selectedSource);
-    return breakpointMap[location.line];
-  });
-}
-
-// Filters out breakpoints to the right of the line. (bug 1552039)
-function filterInLine(positions, selectedSource, selectedContent) {
-  return positions.filter(position => {
-    const location = getSelectedLocation(position, selectedSource);
-    const lineText = getLineText(
-      selectedSource.id,
-      selectedContent,
-      location.line
-    );
-
-    return lineText.length >= (location.column || 0);
-  });
-}
-
-function formatPositions(positions, selectedSource, breakpointMap) {
-  return positions.map(position => {
-    const location = getSelectedLocation(position, selectedSource);
-    return {
-      location,
-      breakpoint: findBreakpoint(location, breakpointMap),
-    };
-  });
-}
-
 function convertToList(breakpointPositions) {
   return [].concat(...Object.values(breakpointPositions));
 }
 
+/**
+ * Retrieve the list of column breakpoints to be displayed.
+ * This ignores lines without any breakpoint, but also lines with a single possible breakpoint.
+ * So that we only return breakpoints where there is at least two possible breakpoint on a given line.
+ * Also, this only consider lines currently visible in CodeMirror editor.
+ *
+ * This method returns an array whose elements are objects having two attributes:
+ *  - breakpoint: A breakpoint object refering to a precise column location
+ *  - location: The location object in an active source where the breakpoint location matched.
+ *              This location may be the generated or original source based on the currently selected source type.
+ *
+ * See `visibleColumnBreakpoints()` for the definition of arguments.
+ */
 export function getColumnBreakpoints(
   positions,
   breakpoints,
@@ -128,40 +49,83 @@ export function getColumnBreakpoints(
   selectedSource,
   selectedSourceTextContent
 ) {
-  if (!positions || !selectedSource) {
+  if (!positions || !selectedSource || !breakpoints.length || !viewport) {
     return [];
   }
 
-  // We only want to show a column breakpoint if several conditions are matched
-  // - it is the first breakpoint to appear at an the original location
-  // - the position is in the current viewport
-  // - there is atleast one other breakpoint on that line
-  // - there is a breakpoint on that line
-  const breakpointMap = groupBreakpoints(breakpoints, selectedSource);
-  positions = filterByLineCount(positions, selectedSource);
-  positions = filterVisible(positions, selectedSource, viewport);
-  positions = filterInLine(
-    positions,
-    selectedSource,
-    selectedSourceTextContent
-  );
-  positions = filterByBreakpoints(positions, selectedSource, breakpointMap);
+  const breakpointsPerLine = new Map();
+  for (const breakpoint of breakpoints) {
+    if (breakpoint.options.hidden) {
+      continue;
+    }
+    const location = getSelectedLocation(breakpoint, selectedSource);
+    const { line } = location;
+    let breakpointsPerColumn = breakpointsPerLine.get(line);
+    if (!breakpointsPerColumn) {
+      breakpointsPerColumn = new Map();
+      breakpointsPerLine.set(line, breakpointsPerColumn);
+    }
+    breakpointsPerColumn.set(location.column, breakpoint);
+  }
 
-  return formatPositions(positions, selectedSource, breakpointMap);
+  const columnBreakpoints = [];
+  for (const keyLine in positions) {
+    const positionsPerLine = positions[keyLine];
+    // Only consider positions where there is more than one breakable position per line.
+    // When there is only one breakpoint, this isn't a column breakpoint.
+    if (positionsPerLine.length <= 1) {
+      continue;
+    }
+    for (const breakpointPosition of positionsPerLine) {
+      const location = getSelectedLocation(breakpointPosition, selectedSource);
+      const { line } = location;
+
+      // Ignore any further computation if there is no breakpoint on that line.
+      const breakpointsPerColumn = breakpointsPerLine.get(line);
+      if (!breakpointsPerColumn) {
+        continue;
+      }
+
+      // Only consider positions visible in the current CodeMirror viewport
+      if (!contains(location, viewport)) {
+        continue;
+      }
+
+      // Filters out breakpoints to the right of the line. (bug 1552039)
+      // XXX Not really clear why we get such positions??
+      const { column } = location;
+      if (column) {
+        const lineText = getLineText(
+          selectedSource.id,
+          selectedSourceTextContent,
+          line
+        );
+        if (column > lineText.length) {
+          continue;
+        }
+      }
+
+      // Finally, return the expected format output for this selector.
+      // Location of each column breakpoint + a reference to the breakpoint object (if one is set on that column, it can be null).
+      const breakpoint = breakpointsPerColumn.get(column);
+
+      columnBreakpoints.push({
+        location,
+        breakpoint,
+      });
+    }
+  }
+
+  return columnBreakpoints;
 }
 
-const getVisibleBreakpointPositions = createSelector(
-  state => {
-    const source = getSelectedSource(state);
-    if (!source) {
-      return null;
-    }
-    return getBreakpointPositionsForSource(state, source.id);
-  },
-  sourcePositions => {
-    return convertToList(sourcePositions || []);
+function getVisibleBreakpointPositions(state) {
+  const source = getSelectedSource(state);
+  if (!source) {
+    return null;
   }
-);
+  return getBreakpointPositionsForSource(state, source.id);
+}
 
 export const visibleColumnBreakpoints = createSelector(
   getVisibleBreakpointPositions,

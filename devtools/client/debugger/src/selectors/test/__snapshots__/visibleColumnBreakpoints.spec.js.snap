@@ -120,7 +120,7 @@ Array [
     },
   },
   Object {
-    "breakpoint": null,
+    "breakpoint": undefined,
     "location": Object {
       "column": 3,
       "line": 1,
@@ -189,7 +189,7 @@ Array [
     },
   },
   Object {
-    "breakpoint": null,
+    "breakpoint": undefined,
     "location": Object {
       "column": 3,
       "line": 1,
@@ -258,7 +258,7 @@ Array [
     },
   },
   Object {
-    "breakpoint": null,
+    "breakpoint": undefined,
     "location": Object {
       "column": 5,
       "line": 1,
