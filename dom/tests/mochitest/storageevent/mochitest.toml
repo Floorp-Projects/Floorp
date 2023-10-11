@@ -1,0 +1,38 @@
+[DEFAULT]
+support-files = [
+  "frameLocalStorageMaster.html",
+  "frameLocalStorageSlaveEqual.html",
+  "frameLocalStorageSlaveNotEqual.html",
+  "frameSessionStorageMasterEqual.html",
+  "frameSessionStorageMasterNotEqual.html",
+  "frameSessionStorageSlaveEqual.html",
+  "frameSessionStorageSlaveNotEqual.html",
+  "interOriginFrame.js",
+  "interOriginTest2.js",
+]
+
+["test_storageLocalStorageEventCheckNoPropagation.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_storageLocalStorageEventCheckPropagation.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_storageNotifications.html"]
+
+["test_storageSessionStorageEventCheckNoPropagation.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_storageSessionStorageEventCheckPropagation.html"]
+skip-if = [
+  "http3",
+  "http2",
+]

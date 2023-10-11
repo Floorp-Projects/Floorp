@@ -1,0 +1,122 @@
+[DEFAULT]
+support-files = [
+  "postMessage_chrome_helper.html",
+  "postMessage_closed_helper.html",
+  "postMessage_hash.html",
+  "postMessage_helper.html",
+  "postMessage_idn_helper.html",
+  "postMessage_joined_helper2.html",
+  "postMessage_joined_helper.html",
+  "postMessage_onOther.html",
+  "postMessage_origin_helper.xhtml",
+  "postMessage_override_helper.html",
+  "postMessage_structured_clone_helper.html",
+  "postMessage_structured_clone_helper.js",
+  "postMessage_throw_helper.html",
+  "postMessage_transfer_helper.html",
+  "postMessage_userpass_helper.html",
+]
+
+["test_MessageEvent.html"]
+
+["test_MessageEvent_dispatchToOther.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug477323.html"]
+
+["test_bug500328.html"]
+skip-if = ["true"] # bug 696306
+support-files = [
+  "file_bug500328_1.html",
+  "file_bug500328_2.html",
+]
+
+["test_document_scripts.html"]
+
+["test_postMessage.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_basehref.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_closed.html"]
+skip-if = [
+  "os == 'android'", #bug 894914 - wrong data - got FAIL, expected message
+  "http3",
+  "http2",
+]
+
+["test_postMessage_hash.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_idn.xhtml"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_joined.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_onOther.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_origin.xhtml"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_override.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_special.xhtml"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_structured_clone.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_throw.html"]
+
+["test_postMessage_transfer.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_postMessage_userpass.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_structuredCloneAndExposed.html"]
+scheme = "https"
+support-files = ["file_structuredCloneAndExposed.sjs"]

@@ -1,0 +1,6 @@
+[DEFAULT]
+prefs = ["dom.webshare.enabled=true"]
+scheme = "https"
+skip-if = ["os == 'win'"] # https://bugzilla.mozilla.org/show_bug.cgi?id=1641280
+
+["test_navigator_share_consume_user_activation.html"]
