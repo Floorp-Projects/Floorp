@@ -21,14 +21,14 @@ import mozilla.components.concept.engine.shopping.ProductRecommendation
  * @property currency Currency of recommended product.
  */
 data class GeckoProductRecommendation(
-    override val url: String?,
-    val analysisUrl: String?,
-    val adjustedRating: Double?,
-    val sponsored: Boolean?,
-    val imageUrl: String?,
-    val aid: String?,
-    val name: String?,
-    val grade: String?,
-    val price: String?,
-    val currency: String?,
+    override val url: String,
+    val analysisUrl: String,
+    val adjustedRating: Double,
+    val sponsored: Boolean,
+    val imageUrl: String,
+    val aid: String,
+    val name: String,
+    val grade: String,
+    val price: String,
+    val currency: String,
 ) : ProductRecommendation
