@@ -167,6 +167,11 @@ export class MigrationWizardParent extends JSWindowActorParent {
         this.#openAboutAddons(browser);
         break;
       }
+
+      case "GetPermissions": {
+        let migrator = await MigrationUtils.getMigrator(message.data.key);
+        return migrator.getPermissions(this.browsingContext.topChromeWindow);
+      }
     }
 
     return null;
@@ -579,6 +584,21 @@ export class MigrationWizardParent extends JSWindowActorParent {
         return null;
       }
 
+      if (!(await migrator.hasPermissions())) {
+        // If we're unable to get permissions for this migrator, then we
+        // just don't bother showing it.
+        let permissionsPath = await migrator.canGetPermissions();
+        if (!permissionsPath) {
+          return null;
+        }
+        return this.#serializeMigratorAndProfile(
+          migrator,
+          null,
+          false /* hasPermissions */,
+          permissionsPath
+        );
+      }
+
       let sourceProfiles = await migrator.getSourceProfiles();
       if (Array.isArray(sourceProfiles)) {
         if (!sourceProfiles.length) {
@@ -624,9 +644,23 @@ export class MigrationWizardParent extends JSWindowActorParent {
    *   The user profile object representing the profile to get information
    *   about. This object is usually gotten by calling getSourceProfiles on
    *   the migrator.
+   * @param {boolean} [hasPermissions=true]
+   *   Whether or not the migrator has permission to read the data for the
+   *   other browser. It is expected that the caller will have already
+   *   computed this by calling hasPermissions() on the migrator, and
+   *   passing the result into this method. This is true by default.
+   * @param {string} [permissionsPath=undefined]
+   *   The path that the selected migrator needs read access to in order to
+   *   do a migration, in the event that hasPermissions is false. This is
+   *   undefined if hasPermissions is true.
    * @returns {Promise<MigratorProfileInstance>}
    */
-  async #serializeMigratorAndProfile(migrator, profileObj) {
+  async #serializeMigratorAndProfile(
+    migrator,
+    profileObj,
+    hasPermissions = true,
+    permissionsPath
+  ) {
     let [profileMigrationData, lastModifiedDate] = await Promise.all([
       migrator.getMigrateData(profileObj),
       migrator.getLastUsedDate(),
@@ -634,25 +668,33 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     let availableResourceTypes = [];
 
-    for (let resourceType in MigrationUtils.resourceTypes) {
-      // Normally, we check each possible resourceType to see if we have one or
-      // more corresponding resourceTypes in profileMigrationData. The exception
-      // is for Safari, where the migrator does not expose a PASSWORDS resource
-      // type, but we allow the user to express that they'd like to import
-      // passwords from it anyways. This is because the Safari migration flow is
-      // special, and allows the user to import passwords from a file exported
-      // from Safari.
-      if (
-        profileMigrationData & MigrationUtils.resourceTypes[resourceType] ||
-        (migrator.constructor.key == lazy.SafariProfileMigrator?.key &&
-          MigrationUtils.resourceTypes[resourceType] ==
-            MigrationUtils.resourceTypes.PASSWORDS &&
-          Services.prefs.getBoolPref(
-            "signon.management.page.fileImport.enabled",
-            false
-          ))
-      ) {
-        availableResourceTypes.push(resourceType);
+    // Even if we don't have permissions, we'll show the resources available
+    // for Safari. For Safari, the workflow is to request permissions only
+    // after the resources have been selected.
+    if (
+      hasPermissions ||
+      migrator.constructor.key == lazy.SafariProfileMigrator?.key
+    ) {
+      for (let resourceType in MigrationUtils.resourceTypes) {
+        // Normally, we check each possible resourceType to see if we have one or
+        // more corresponding resourceTypes in profileMigrationData. The exception
+        // is for Safari, where the migrator does not expose a PASSWORDS resource
+        // type, but we allow the user to express that they'd like to import
+        // passwords from it anyways. This is because the Safari migration flow is
+        // special, and allows the user to import passwords from a file exported
+        // from Safari.
+        if (
+          profileMigrationData & MigrationUtils.resourceTypes[resourceType] ||
+          (migrator.constructor.key == lazy.SafariProfileMigrator?.key &&
+            MigrationUtils.resourceTypes[resourceType] ==
+              MigrationUtils.resourceTypes.PASSWORDS &&
+            Services.prefs.getBoolPref(
+              "signon.management.page.fileImport.enabled",
+              false
+            ))
+        ) {
+          availableResourceTypes.push(resourceType);
+        }
       }
     }
 
@@ -677,6 +719,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
       resourceTypes: availableResourceTypes,
       profile: profileObj,
       lastModifiedDate,
+      hasPermissions,
+      permissionsPath,
     };
   }
 
