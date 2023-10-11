@@ -761,19 +761,17 @@ export const URILoadingHelper = {
     for (let win of lazy.BrowserWindowTracker.orderedWindows) {
       for (let tab of win.gBrowser.visibleTabs) {
         let { userContextId } = tab;
-        if (userContextId) {
-          let currentURIHost = null;
-          try {
-            currentURIHost = tab.linkedBrowser.currentURI.host;
-          } catch (e) {}
+        let currentURIHost = null;
+        try {
+          currentURIHost = tab.linkedBrowser.currentURI.host;
+        } catch (e) {}
 
-          if (currentURIHost == host) {
-            let count = (containerScores.get(userContextId) ?? 0) + 1;
-            containerScores.set(userContextId, count);
-            if (count > maxCount) {
-              guessedUserContextId = userContextId;
-              maxCount = count;
-            }
+        if (currentURIHost == host) {
+          let count = (containerScores.get(userContextId) ?? 0) + 1;
+          containerScores.set(userContextId, count);
+          if (count > maxCount) {
+            guessedUserContextId = userContextId;
+            maxCount = count;
           }
         }
       }
