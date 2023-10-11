@@ -420,7 +420,9 @@ class LSANLeaks(object):
                 "in testing/mozbase/mozrunner/mozrunner/utils.py"
             )
 
-        for f in self.foundFrames:
+        frames = list(self.foundFrames)
+        frames.sort()
+        for f in frames:
             if self.scope:
                 f = "%s | %s" % (f, self.scope)
             self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer leak at " + f)
