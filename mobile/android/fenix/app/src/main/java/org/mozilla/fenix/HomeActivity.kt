@@ -108,6 +108,7 @@ import org.mozilla.fenix.ext.hasTopDestination
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.intent.AssistIntentProcessor
 import org.mozilla.fenix.home.intent.CrashReporterIntentProcessor
@@ -192,6 +193,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
     private val webExtensionPopupObserver by lazy {
         WebExtensionPopupObserver(components.core.store, ::openPopup)
+    }
+
+    val webExtensionPromptFeature by lazy {
+        WebExtensionPromptFeature(
+            store = components.core.store,
+            context = this@HomeActivity,
+            fragmentManager = supportFragmentManager,
+        )
     }
 
     private val extensionsProcessDisabledPromptObserver by lazy {
@@ -347,7 +356,12 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
         supportActionBar?.hide()
 
-        lifecycle.addObservers(webExtensionPopupObserver, extensionsProcessDisabledPromptObserver, serviceWorkerSupport)
+        lifecycle.addObservers(
+            webExtensionPopupObserver,
+            extensionsProcessDisabledPromptObserver,
+            serviceWorkerSupport,
+            webExtensionPromptFeature,
+        )
 
         if (shouldAddToRecentsScreen(intent)) {
             intent.removeExtra(START_IN_RECENTS_SCREEN)

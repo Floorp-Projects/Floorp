@@ -25,7 +25,6 @@ import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.AddonsManagerAdapter
 import mozilla.components.feature.addons.ui.AddonsManagerAdapterDelegate
-import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
@@ -38,7 +37,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
-import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -50,7 +48,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
 
     private var binding: FragmentAddOnsManagementBinding? = null
 
-    private val webExtensionPromptFeature = ViewBoundFeatureWrapper<WebExtensionPromptFeature>()
     private var addons: List<Addon> = emptyList()
 
     private var adapter: AddonsManagerAdapter? = null
@@ -59,20 +56,11 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentAddOnsManagementBinding.bind(view)
         bindRecyclerView()
-        webExtensionPromptFeature.set(
-            feature = WebExtensionPromptFeature(
-                store = requireComponents.core.store,
-                context = requireContext(),
-                fragmentManager = parentFragmentManager,
-                onAddonChanged = {
-                    runIfFragmentIsAttached {
-                        adapter?.updateAddon(it)
-                    }
-                },
-            ),
-            owner = this,
-            view = view,
-        )
+        (activity as HomeActivity).webExtensionPromptFeature.onAddonChanged = {
+            runIfFragmentIsAttached {
+                adapter?.updateAddon(it)
+            }
+        }
     }
 
     override fun onResume() {
@@ -85,6 +73,7 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
         // letting go of the resources to avoid memory leak.
         adapter = null
         binding = null
+        (activity as HomeActivity).webExtensionPromptFeature.onAddonChanged = {}
     }
 
     private fun bindRecyclerView() {

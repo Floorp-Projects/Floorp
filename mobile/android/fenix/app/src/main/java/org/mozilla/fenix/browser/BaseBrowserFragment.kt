@@ -148,7 +148,6 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.extension.WebExtensionPromptFeature
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.SharedViewModel
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
@@ -210,7 +209,6 @@ abstract class BaseBrowserFragment :
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
     private val webchannelIntegration = ViewBoundFeatureWrapper<FxaWebChannelFeature>()
-    private val webExtensionPromptFeature = ViewBoundFeatureWrapper<WebExtensionPromptFeature>()
     private val sitePermissionWifiIntegration =
         ViewBoundFeatureWrapper<SitePermissionsWifiIntegration>()
     private val secureWindowFeature = ViewBoundFeatureWrapper<SecureWindowFeature>()
@@ -918,16 +916,6 @@ abstract class BaseBrowserFragment :
                 requireComponents.backgroundServices.accountManager,
                 requireComponents.backgroundServices.serverConfig,
                 setOf(FxaCapability.CHOOSE_WHAT_TO_SYNC),
-            ),
-            owner = this,
-            view = view,
-        )
-
-        webExtensionPromptFeature.set(
-            feature = WebExtensionPromptFeature(
-                store = requireComponents.core.store,
-                context = requireContext(),
-                fragmentManager = parentFragmentManager,
             ),
             owner = this,
             view = view,
