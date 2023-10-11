@@ -196,6 +196,7 @@ class DecoderTemplate : public DOMEventTargetHelper {
   void ScheduleClose(const nsresult& aResult);
 
   void ScheduleDequeueEvent();
+  nsresult FireEvent(nsAtom* aTypeWithOn, const nsAString& aEventType);
 
   void SchedulePromiseResolveOrReject(already_AddRefed<Promise> aPromise,
                                       const nsresult& aResult);
