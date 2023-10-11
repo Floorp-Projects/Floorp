@@ -218,6 +218,34 @@ void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
 }
 
 template <typename DecoderType>
+already_AddRefed<Promise> DecoderTemplate<DecoderType>::Flush(
+    ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Flush", this);
+
+  if (mState != CodecState::Configured) {
+    LOG("VideoDecoder %p, wrong state!", this);
+    aRv.ThrowInvalidStateError("Decoder must be configured first");
+    return nullptr;
+  }
+
+  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return p.forget();
+  }
+
+  mKeyChunkRequired = true;
+
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
+      new FlushMessage(++mFlushCounter, mLatestConfigureId, p)));
+  LOG("VideoDecoder %p enqueues %s", this,
+      mControlMessageQueue.back()->ToString().get());
+  ProcessControlMessageQueue();
+  return p.forget();
+}
+
+template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Reset(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
