@@ -92,6 +92,11 @@ about-glean-adhoc-explanation =
   and using the <code>testGetValue()</code> API like
   <code>Glean.metricCategory.metricName.testGetValue()</code>.
 
+# Do not translate strings between <code> </code> tags.
+about-glean-adhoc-note =
+  Please note that you are using the Glean JS API by using the devtools console.
+  This means the metric category and metric name are formatted in
+  <code>camelCase</code> unlike in the Rust and C++ APIs.
 
 controls-button-label-verbose = Apply settings and submit ping
 
