@@ -50,6 +50,7 @@ export default class FxviewTabList extends MozLitElement {
     this.maxTabsLength = 25;
     this.tabItems = [];
     this.compactRows = false;
+    this.visible = false;
     this.#register();
   }
 
@@ -61,6 +62,7 @@ export default class FxviewTabList extends MozLitElement {
     hasPopup: { type: String },
     maxTabsLength: { type: Number },
     tabItems: { type: Array },
+    visible: { type: Boolean },
   };
 
   static queries = {
@@ -74,14 +76,30 @@ export default class FxviewTabList extends MozLitElement {
     );
 
     if (changes.has("dateTimeFormat")) {
-      if (this.dateTimeFormat == "relative" && !window.IS_STORYBOOK) {
-        this.intervalID = setInterval(
-          () => this.onIntervalUpdate(),
-          this.timeMsPref
-        );
-      } else {
-        clearInterval(this.intervalID);
+      this.clearIntervalTimer();
+      if (
+        this.visible &&
+        this.dateTimeFormat == "relative" &&
+        !window.IS_STORYBOOK
+      ) {
+        this.startIntervalTimer();
+        this.onIntervalUpdate();
       }
+    }
+  }
+
+  startIntervalTimer() {
+    this.clearIntervalTimer();
+    this.intervalID = setInterval(
+      () => this.onIntervalUpdate(),
+      this.timeMsPref
+    );
+  }
+
+  clearIntervalTimer() {
+    if (this.intervalID) {
+      clearInterval(this.intervalID);
+      delete this.intervalID;
     }
   }
 
@@ -93,13 +111,11 @@ export default class FxviewTabList extends MozLitElement {
         "browser.tabs.firefox-view.updateTimeMs",
         NOW_THRESHOLD_MS,
         (prefName, oldVal, newVal) => {
+          this.clearIntervalTimer();
           if (!this.isConnected) {
             return;
           }
-          clearInterval(this.intervalID);
-          this.intervalID = setInterval(() => {
-            this.onIntervalUpdate();
-          }, newVal);
+          this.startIntervalTimer();
           this.requestUpdate();
         }
       );
@@ -108,18 +124,32 @@ export default class FxviewTabList extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (this.dateTimeFormat === "relative" && !window.IS_STORYBOOK) {
-      this.intervalID = setInterval(
-        () => this.onIntervalUpdate(),
-        this.timeMsPref
-      );
+    this.ownerDocument.addEventListener("visibilitychange", this);
+    this.visible = this.ownerDocument.visibilityState == "visible";
+    if (
+      this.visible &&
+      this.dateTimeFormat === "relative" &&
+      !window.IS_STORYBOOK
+    ) {
+      this.startIntervalTimer();
     }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    if (this.intervalID) {
-      clearInterval(this.intervalID);
+    this.ownerDocument.removeEventListener("visibilitychange", this);
+    this.clearIntervalTimer();
+  }
+
+  handleEvent(event) {
+    if (event.type == "visibilitychange") {
+      this.visible = this.ownerDocument.visibilityState == "visible";
+      if (this.visible) {
+        this.startIntervalTimer();
+        this.onIntervalUpdate();
+      } else {
+        this.clearIntervalTimer();
+      }
     }
   }
 
@@ -186,6 +216,10 @@ export default class FxviewTabList extends MozLitElement {
       this.rowEls[nextIndex].focus();
       this.activeIndex = nextIndex;
     }
+  }
+
+  shouldUpdate() {
+    return this.visible;
   }
 
   render() {
