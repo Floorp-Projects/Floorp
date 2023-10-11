@@ -561,7 +561,7 @@ class AddonsManagerAdapterTest {
     }
 
     @Test
-    fun bindHeaderButton() = runTestOnMain {
+    fun bindHeaderButton() {
         val store = BrowserStore(initialState = BrowserState(extensionsProcessDisabled = true))
         val adapter =
             spy(AddonsManagerAdapter(mock(), mock(), emptyList(), mock(), emptyList(), store))
