@@ -32,7 +32,7 @@ https_first_disabled = true # Bug 1737265
 
 ["browser_amosigned_trigger_iframe.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_amosigned_url.js"]
 https_first_disabled = true # Bug 1737265
@@ -46,7 +46,7 @@ https_first_disabled = true # Bug 1737265
 
 ["browser_auth4.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_badargs.js"]
 https_first_disabled = true # Bug 1737265
@@ -64,7 +64,7 @@ skip-if = ["os == 'mac' && debug"] #Bug 1590136
 
 ["browser_bug540558.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_bug611242.js"]
 
@@ -98,8 +98,10 @@ https_first_disabled = true # Bug 1737265
 
 ["browser_doorhanger_installs.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
-skip-if = ["os == 'win' && os_version == '10.0' && bits == 64"] #Bug 1615449
+skip-if = [
+  "os == 'win' && os_version == '10.0' && bits == 64", #Bug 1615449
+  "a11y_checks", # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
+]
 
 ["browser_empty.js"]
 
@@ -107,6 +109,7 @@ skip-if = ["os == 'win' && os_version == '10.0' && bits == 64"] #Bug 1615449
 
 ["browser_hash.js"]
 https_first_disabled = true # Bug 1737265
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_hash2.js"]
 https_first_disabled = true # Bug 1737265
@@ -121,7 +124,7 @@ https_first_disabled = true # Bug 1737265
 
 ["browser_httphash4.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_httphash5.js"]
 https_first_disabled = true # Bug 1737265
@@ -175,5 +178,7 @@ https_first_disabled = true # Bug 1737265
 
 ["browser_unsigned_url.js"]
 https_first_disabled = true # Bug 1737265
-fail-if = ["a11y_checks"] # Bug 1854646 clicked primary-footer-button may not be focusable
-skip-if = ["require_signing"]
+skip-if = [
+  "require_signing",
+  "a11y_checks", # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
+]

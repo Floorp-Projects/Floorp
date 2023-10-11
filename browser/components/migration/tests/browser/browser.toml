@@ -25,13 +25,17 @@ support-files = ["../head-common.js"]
 skip-if = ["win11_2009"] # Bug 1840718
 
 ["browser_file_migration.js"]
-fail-if = ["a11y_checks"] # Bug 1855491 clicked panel-item may not be focusable
-skip-if = ["os == 'win' && debug"] # Bug 1827995
+skip-if = [
+  "os == 'win' && debug", # Bug 1827995
+  "a11y_checks", # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
+]
 support-files = ["dummy_file.csv"]
 
 ["browser_ie_edge_bookmarks_success_strings.js"]
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_misc_telemetry.js"]
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
 ["browser_no_browsers_state.js"]
 

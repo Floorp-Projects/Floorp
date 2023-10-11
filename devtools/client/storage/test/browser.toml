@@ -85,6 +85,7 @@ skip-if = [
 skip-if = ["true"] # Bug 1448484 - sameSite1 is "Unset" - Got undefined, expected Unset
 
 ["browser_storage_cookies_sort.js"]
+skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
 ["browser_storage_cookies_tab_navigation.js"]
 
