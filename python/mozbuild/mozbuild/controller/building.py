@@ -271,6 +271,13 @@ class BuildMonitor(MozbuildObject):
                 self.tiers.finish_tier(tier)
             elif action == "OBJECT_FILE":
                 self.build_objects.append(args[0])
+                self.resources.begin_marker("Object", args[0])
+                update_needed = False
+            elif action.startswith("START_"):
+                self.resources.begin_marker(action[len("START_") :], args[0])
+                update_needed = False
+            elif action.startswith("END_"):
+                self.resources.end_marker(action[len("END_") :], args[0])
                 update_needed = False
             elif action == "BUILD_VERBOSE":
                 build_dir = args[0]

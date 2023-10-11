@@ -41,6 +41,7 @@ code_gen_deps := $(topsrcdir)/xpcom/ds/tools/perfecthash.py
 # in the virtualenv.
 %.xpt:
 	$(REPORT_BUILD)
+	$(call BUILDSTATUS,START_xpt $@)
 	$(PYTHON3) $(process_py) --depsdir $(idl_deps_dir) \
 		--bindings-conf $(topsrcdir)/dom/bindings/Bindings.conf \
 		$(foreach dir,$(all_idl_dirs),-I $(dir)) \
@@ -54,6 +55,7 @@ code_gen_deps := $(topsrcdir)/xpcom/ds/tools/perfecthash.py
 # indicate whether IDLs were added or removed.
 # Note that removing previously built files is not covered.
 	@echo $(basename $(notdir $@))_deps_built = $($(basename $(notdir $@))_deps) >> $(idl_deps_dir)/$(basename $(notdir $@)).pp
+	$(call BUILDSTATUS,END_xpt $@)
 
 xpidl_modules := @xpidl_modules@
 xpt_files := $(addsuffix .xpt,$(xpidl_modules))
@@ -73,8 +75,10 @@ $(xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir
 
 $(stub_file) : $(xpt_files) $(code_gen_py) $(code_gen_deps)
 	$(REPORT_BUILD)
+	$(call BUILDSTATUS,START_xpt $(notdir $(generated_files)))
 	$(PYTHON3) $(code_gen_py) $(generated_files) $(xpt_files)
 	@touch $@
+	$(call BUILDSTATUS,END_xpt $(notdir $(generated_files)))
 
 -include $(depends_files)
 
