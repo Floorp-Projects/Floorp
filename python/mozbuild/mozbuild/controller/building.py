@@ -348,6 +348,9 @@ class BuildMonitor(MozbuildObject):
                 build_resources_path = os.path.join(
                     os.environ["UPLOAD_PATH"], "build_resources.json"
                 )
+                build_resources_profile_path = os.path.join(
+                    os.environ["UPLOAD_PATH"], "profile_build_resources.json"
+                )
                 shutil.copy(
                     os.path.join(
                         self.topsrcdir,
@@ -362,11 +365,21 @@ class BuildMonitor(MozbuildObject):
                 )
             else:
                 build_resources_path = self._get_state_filename("build_resources.json")
+                build_resources_profile_path = self._get_state_filename(
+                    "profile_build_resources.json"
+                )
             with io.open(
                 build_resources_path, "w", encoding="utf-8", newline="\n"
             ) as fh:
                 to_write = six.ensure_text(
                     json.dumps(self.resources.as_dict(), indent=2)
+                )
+                fh.write(to_write)
+            with io.open(
+                build_resources_profile_path, "w", encoding="utf-8", newline="\n"
+            ) as fh:
+                to_write = six.ensure_text(
+                    json.dumps(self.resources.as_profile(), separators=(",", ":"))
                 )
                 fh.write(to_write)
         except Exception as e:

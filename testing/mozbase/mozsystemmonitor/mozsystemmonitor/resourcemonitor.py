@@ -310,6 +310,7 @@ class SystemResourceMonitor(object):
         self._process = multiprocessing.Process(
             target=_collect, args=(child_pipe, poll_interval)
         )
+        self.poll_interval = poll_interval
 
     def __del__(self):
         if self._running:
@@ -743,3 +744,312 @@ class SystemResourceMonitor(object):
             )
 
         return o
+
+    def as_profile(self):
+        startTime = self.measurements[0].start
+        profile = {
+            "meta": {
+                "processType": 0,
+                "product": "mach",
+                "stackwalk": 0,
+                "version": 27,
+                "preprocessedProfileVersion": 47,
+                "symbolicationNotSupported": True,
+                "interval": self.poll_interval * 1000,
+                "startTime": startTime * 1000,
+                "logicalCPUs": psutil.cpu_count(logical=True),
+                "physicalCPUs": psutil.cpu_count(logical=False),
+                "mainMemory": psutil.virtual_memory()[0],
+                "markerSchema": [
+                    {
+                        "name": "Phase",
+                        "tooltipLabel": "{marker.data.phase}",
+                        "tableLabel": "{marker.name} — {marker.data.phase} — CPU time: {marker.data.cpuTime} ({marker.data.cpuPercent})",
+                        "chartLabel": "{marker.data.phase}",
+                        "display": ["marker-chart", "marker-table"],
+                        "data": [
+                            {
+                                "key": "cpuTime",
+                                "label": "CPU Time",
+                                "format": "duration",
+                            },
+                            {
+                                "key": "cpuPercent",
+                                "label": "CPU Percent",
+                                "format": "string",
+                            },
+                        ],
+                    },
+                    {
+                        "name": "Mem",
+                        "tooltipLabel": "{marker.name}",
+                        "display": [],
+                        "data": [
+                            {"key": "used", "label": "Memory Used", "format": "bytes"},
+                            {
+                                "key": "cached",
+                                "label": "Memory cached",
+                                "format": "bytes",
+                            },
+                            {
+                                "key": "buffers",
+                                "label": "Memory buffers",
+                                "format": "bytes",
+                            },
+                        ],
+                        "graphs": [
+                            {"key": "used", "color": "orange", "type": "line-filled"}
+                        ],
+                    },
+                    {
+                        "name": "IO",
+                        "tooltipLabel": "{marker.name}",
+                        "display": [],
+                        "data": [
+                            {
+                                "key": "write_bytes",
+                                "label": "Written",
+                                "format": "bytes",
+                            },
+                            {
+                                "key": "write_count",
+                                "label": "Write count",
+                                "format": "integer",
+                            },
+                            {"key": "read_bytes", "label": "Read", "format": "bytes"},
+                            {
+                                "key": "read_count",
+                                "label": "Read count",
+                                "format": "integer",
+                            },
+                        ],
+                        "graphs": [
+                            {"key": "read_bytes", "color": "green", "type": "bar"},
+                            {"key": "write_bytes", "color": "red", "type": "bar"},
+                        ],
+                    },
+                ],
+                "usesOnlyOneStackType": True,
+            },
+            "libs": [],
+            "threads": [
+                {
+                    "processType": "default",
+                    "processName": "mach",
+                    "processStartupTime": 0,
+                    "processShutdownTime": None,
+                    "registerTime": 0,
+                    "unregisterTime": None,
+                    "pausedRanges": [],
+                    "name": "",
+                    "isMainThread": False,
+                    "pid": "0",
+                    "tid": 0,
+                    "samples": {
+                        "weightType": "samples",
+                        "weight": None,
+                        "stack": [],
+                        "time": [],
+                        "length": 0,
+                    },
+                    "stringArray": ["(root)"],
+                    "markers": {
+                        "data": [],
+                        "name": [],
+                        "startTime": [],
+                        "endTime": [],
+                        "phase": [],
+                        "category": [],
+                        "length": 0,
+                    },
+                    "stackTable": {
+                        "frame": [0],
+                        "prefix": [None],
+                        "category": [0],
+                        "subcategory": [0],
+                        "length": 1,
+                    },
+                    "frameTable": {
+                        "address": [-1],
+                        "inlineDepth": [0],
+                        "category": [None],
+                        "subcategory": [0],
+                        "func": [0],
+                        "nativeSymbol": [None],
+                        "innerWindowID": [0],
+                        "implementation": [None],
+                        "line": [None],
+                        "column": [None],
+                        "length": 1,
+                    },
+                    "funcTable": {
+                        "isJS": [False],
+                        "relevantForJS": [False],
+                        "name": [0],
+                        "resource": [-1],
+                        "fileName": [None],
+                        "lineNumber": [None],
+                        "columnNumber": [None],
+                        "length": 1,
+                    },
+                    "resourceTable": {
+                        "lib": [],
+                        "name": [],
+                        "host": [],
+                        "type": [],
+                        "length": 0,
+                    },
+                    "nativeSymbols": {
+                        "libIndex": [],
+                        "address": [],
+                        "name": [],
+                        "functionSize": [],
+                        "length": 0,
+                    },
+                }
+            ],
+            "counters": [],
+        }
+
+        firstThread = profile["threads"][0]
+        markers = firstThread["markers"]
+
+        def get_string_index(string):
+            stringArray = firstThread["stringArray"]
+            try:
+                return stringArray.index(string)
+            except ValueError:
+                stringArray.append(string)
+                return len(stringArray) - 1
+
+        def add_marker(name_index, start, end, data):
+            markers["startTime"].append((start - startTime) * 1000)
+            markers["endTime"].append((end - startTime) * 1000)
+            markers["category"].append(0)
+            # 1 = marker with start and end times, 2 = start but no end.
+            markers["phase"].append(1)
+            markers["name"].append(name_index)
+            markers["data"].append(data)
+            markers["length"] = markers["length"] + 1
+
+        def format_percent(value):
+            return str(round(value, 1)) + "%"
+
+        samples = firstThread["samples"]
+        samples["stack"].append(0)
+        samples["time"].append(0)
+
+        cpu_string_index = get_string_index("CPU Use")
+        memory_string_index = get_string_index("Memory")
+        io_string_index = get_string_index("IO")
+        valid_cpu_fields = set()
+        for m in self.measurements:
+            # Ignore samples that are much too short.
+            if m.end - m.start < self.poll_interval / 10:
+                continue
+
+            # Sample times
+            samples["stack"].append(0)
+            samples["time"].append((m.end - startTime) * 1000)
+
+            # CPU
+            markerData = {
+                "type": "CPU",
+                "cpuPercent": format_percent(
+                    sum(list(m.cpu_percent)) / len(m.cpu_percent)
+                ),
+            }
+            total = 0
+            for field in ["nice", "user", "system", "iowait", "softirq"]:
+                if hasattr(m.cpu_times[0], field):
+                    total += sum(getattr(core, field) for core in m.cpu_times) / (
+                        m.end - m.start
+                    )
+                    if total > 0:
+                        valid_cpu_fields.add(field)
+                    markerData[field] = total
+            for field in ["nice", "user", "system", "iowait", "idle"]:
+                if hasattr(m.cpu_times[0], field):
+                    markerData[field + "_pct"] = format_percent(
+                        100
+                        * sum(getattr(core, field) for core in m.cpu_times)
+                        / (m.end - m.start)
+                        / len(m.cpu_times)
+                    )
+            add_marker(cpu_string_index, m.start, m.end, markerData)
+
+            # Memory
+            markerData = {"type": "Mem", "used": m.virt.used}
+            if hasattr(m.virt, "cached"):
+                markerData["cached"] = m.virt.cached
+            if hasattr(m.virt, "buffers"):
+                markerData["buffers"] = m.virt.buffers
+            add_marker(memory_string_index, m.start, m.end, markerData)
+
+            # IO
+            markerData = {
+                "type": "IO",
+                "read_count": m.io.read_count,
+                "read_bytes": m.io.read_bytes,
+                "write_count": m.io.write_count,
+                "write_bytes": m.io.write_bytes,
+            }
+            add_marker(io_string_index, m.start, m.end, markerData)
+        samples["length"] = len(samples["stack"])
+
+        # The marker schema for CPU markers should only contain graph
+        # definitions for fields we actually have, or the profiler front-end
+        # will detect missing data and skip drawing the track entirely.
+        cpuSchema = {
+            "name": "CPU",
+            "tooltipLabel": "{marker.name}",
+            "display": [],
+            "data": [{"key": "cpuPercent", "label": "CPU Percent", "format": "string"}],
+            "graphs": [],
+        }
+        cpuData = cpuSchema["data"]
+        for field, label in {
+            "user": "User %",
+            "iowait": "IO Wait %",
+            "system": "System %",
+            "nice": "Nice %",
+            "idle": "Idle %",
+        }.items():
+            if field in valid_cpu_fields or field == "idle":
+                cpuData.append(
+                    {"key": field + "_pct", "label": label, "format": "string"}
+                )
+        cpuGraphs = cpuSchema["graphs"]
+        for field, color in {
+            "softirq": "orange",
+            "iowait": "red",
+            "system": "grey",
+            "user": "yellow",
+            "nice": "blue",
+        }.items():
+            if field in valid_cpu_fields:
+                cpuGraphs.append({"key": field, "color": color, "type": "bar"})
+        profile["meta"]["markerSchema"].insert(0, cpuSchema)
+
+        # Create markers for phases
+        phase_string_index = get_string_index("Phase")
+        for phase, v in self.phases.items():
+            markerData = {"type": "Phase", "phase": phase}
+
+            cpu_percent_cores = self.aggregate_cpu_percent(phase=phase)
+            if cpu_percent_cores:
+                markerData["cpuPercent"] = format_percent(
+                    sum(cpu_percent_cores) / len(cpu_percent_cores)
+                )
+
+            cpu_times = [list(c) for c in self.aggregate_cpu_times(phase=phase)]
+            cpu_times_sum = [0.0] * self._cpu_times_len
+            for i in range(0, self._cpu_times_len):
+                cpu_times_sum[i] = sum(core[i] for core in cpu_times)
+            total_cpu_time_ms = sum(cpu_times_sum) * 1000
+            if total_cpu_time_ms > 0:
+                markerData["cpuTime"] = total_cpu_time_ms
+
+            add_marker(phase_string_index, v[0], v[1], markerData)
+
+        return profile
