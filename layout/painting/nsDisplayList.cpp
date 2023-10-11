@@ -3746,8 +3746,7 @@ bool nsDisplayThemedBackground::CreateWebRenderCommands(
 }
 
 bool nsDisplayThemedBackground::IsWindowActive() const {
-  DocumentState docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
-  return !docState.HasState(DocumentState::WINDOW_INACTIVE);
+  return !mFrame->PresContext()->Document()->IsTopLevelWindowInactive();
 }
 
 void nsDisplayThemedBackground::ComputeInvalidationRegion(

@@ -7659,14 +7659,6 @@ void Document::NotifyActivityChanged() {
   EnumerateActivityObservers(NotifyActivityChangedCallback);
 }
 
-bool Document::IsTopLevelWindowInactive() const {
-  if (BrowsingContext* bc = GetBrowsingContext()) {
-    return !bc->GetIsActiveBrowserWindow();
-  }
-
-  return false;
-}
-
 void Document::SetContainer(nsDocShell* aContainer) {
   if (aContainer) {
     mDocumentContainer = aContainer;
@@ -12506,34 +12498,35 @@ void Document::ForgetImagePreload(nsIURI* aURI) {
 
 void Document::UpdateDocumentStates(DocumentState aMaybeChangedStates,
                                     bool aNotify) {
-  const DocumentState oldStates = mDocumentState;
+  const DocumentState oldStates = mState;
   if (aMaybeChangedStates.HasAtLeastOneOfStates(
           DocumentState::ALL_LOCALEDIR_BITS)) {
-    mDocumentState &= ~DocumentState::ALL_LOCALEDIR_BITS;
+    mState &= ~DocumentState::ALL_LOCALEDIR_BITS;
     if (IsDocumentRightToLeft()) {
-      mDocumentState |= DocumentState::RTL_LOCALE;
+      mState |= DocumentState::RTL_LOCALE;
     } else {
-      mDocumentState |= DocumentState::LTR_LOCALE;
+      mState |= DocumentState::LTR_LOCALE;
     }
   }
 
   if (aMaybeChangedStates.HasAtLeastOneOfStates(DocumentState::LWTHEME)) {
     if (ComputeDocumentLWTheme()) {
-      mDocumentState |= DocumentState::LWTHEME;
+      mState |= DocumentState::LWTHEME;
     } else {
-      mDocumentState &= ~DocumentState::LWTHEME;
+      mState &= ~DocumentState::LWTHEME;
     }
   }
 
   if (aMaybeChangedStates.HasState(DocumentState::WINDOW_INACTIVE)) {
-    if (IsTopLevelWindowInactive()) {
-      mDocumentState |= DocumentState::WINDOW_INACTIVE;
+    BrowsingContext* bc = GetBrowsingContext();
+    if (!bc || !bc->GetIsActiveBrowserWindow()) {
+      mState |= DocumentState::WINDOW_INACTIVE;
     } else {
-      mDocumentState &= ~DocumentState::WINDOW_INACTIVE;
+      mState &= ~DocumentState::WINDOW_INACTIVE;
     }
   }
 
-  const DocumentState changedStates = oldStates ^ mDocumentState;
+  const DocumentState changedStates = oldStates ^ mState;
   if (aNotify && !changedStates.IsEmpty()) {
     if (PresShell* ps = GetObservingPresShell()) {
       ps->DocumentStatesChanged(changedStates);

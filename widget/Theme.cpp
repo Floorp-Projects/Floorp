@@ -1172,7 +1172,7 @@ bool Theme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
   const nscoord twipsPerPixel = pc->AppUnitsPerDevPixel();
   const auto devPxRect = ToSnappedRect(aRect, twipsPerPixel, aPaintData);
 
-  const DocumentState docState = pc->Document()->GetDocumentState();
+  const DocumentState docState = pc->Document()->State();
   ElementState elementState = GetContentState(aFrame, aAppearance);
   // Paint the outline iff we're asked to draw overflow and we have
   // outline-style: auto.

@@ -2485,9 +2485,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
   }
 
   bool IsWindowActive() const {
-    DocumentState docState =
-        mFrame->PresContext()->Document()->GetDocumentState();
-    return !docState.HasState(DocumentState::WINDOW_INACTIVE);
+    return !mFrame->PresContext()->Document()->IsTopLevelWindowInactive();
   }
 
   void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,

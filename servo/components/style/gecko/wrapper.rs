@@ -714,7 +714,7 @@ impl<'le> GeckoElement<'le> {
 
     #[inline]
     fn document_state(&self) -> DocumentState {
-        DocumentState::from_bits_retain(self.as_node().owner_doc().0.mDocumentState.bits)
+        DocumentState::from_bits_retain(self.as_node().owner_doc().0.mState.bits)
     }
 
     #[inline]
