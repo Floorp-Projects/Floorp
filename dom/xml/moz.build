@@ -9,7 +9,7 @@ with Files("**"):
 
 DIRS += ["resources"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
 EXPORTS += [
     "nsIXMLContentSink.h",
