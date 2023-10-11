@@ -14,8 +14,14 @@ use super::{
 };
 use crate::custom_properties::ComputedValue as ComputedPropertyValue;
 use crate::parser::{Parse, ParserContext};
-use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
-use crate::values::{specified, CustomIdent};
+use crate::properties::StyleBuilder;
+use crate::rule_cache::RuleCacheConditions;
+use crate::stylesheets::{container_rule::ContainerSizeQuery, CssRuleType, Origin, UrlExtraData};
+use crate::stylist::Stylist;
+use crate::values::{
+    computed::{self, ToComputedValue},
+    specified, CustomIdent,
+};
 use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, ParserInput};
 use selectors::matching::QuirksMode;
 use servo_arc::{Arc, ThinArc};
@@ -60,9 +66,92 @@ pub enum ValueComponent {
     String(OwnedStr),
 }
 
+impl ToComputedValue for ValueComponent {
+    // TODO(zrhoffman, bug 1857716): Use separate type for computed value
+    type ComputedValue = Self;
+
+    fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
+        match self {
+            ValueComponent::Length(length) => ValueComponent::Length(
+                // TODO(zrhoffman, bug 1856524): Compute <length>, which may contain font-relative
+                // units
+                length.clone(),
+            ),
+            ValueComponent::Number(number) => ValueComponent::Number(
+                ToComputedValue::from_computed_value(&number.to_computed_value(context)),
+            ),
+            ValueComponent::Percentage(percentage) => ValueComponent::Percentage(
+                ToComputedValue::from_computed_value(&percentage.to_computed_value(context)),
+            ),
+            ValueComponent::LengthPercentage(length_percentage) => {
+                // TODO(zrhoffman, bug 1856524): Compute <length-percentage>, which may contain
+                // font-relative units
+                ValueComponent::LengthPercentage(length_percentage.clone())
+            },
+            ValueComponent::Color(color) => ValueComponent::Color(
+                ToComputedValue::from_computed_value(&color.to_computed_value(context)),
+            ),
+            ValueComponent::Image(image) => ValueComponent::Image(
+                ToComputedValue::from_computed_value(&image.to_computed_value(context)),
+            ),
+            ValueComponent::Url(url) => ValueComponent::Url(ToComputedValue::from_computed_value(
+                // TODO(zrhoffman, bug 1846625): Compute <url>
+                &url.to_computed_value(context),
+            )),
+            ValueComponent::Integer(integer) => ValueComponent::Integer(
+                ToComputedValue::from_computed_value(&integer.to_computed_value(context)),
+            ),
+            ValueComponent::Angle(angle) => ValueComponent::Angle(
+                ToComputedValue::from_computed_value(&angle.to_computed_value(context)),
+            ),
+            ValueComponent::Time(time) => ValueComponent::Time(
+                ToComputedValue::from_computed_value(&time.to_computed_value(context)),
+            ),
+            ValueComponent::Resolution(resolution) => ValueComponent::Resolution(
+                ToComputedValue::from_computed_value(&resolution.to_computed_value(context)),
+            ),
+            ValueComponent::TransformFunction(transform_function) => {
+                ValueComponent::TransformFunction(ToComputedValue::from_computed_value(
+                    &transform_function.to_computed_value(context),
+                ))
+            },
+            ValueComponent::CustomIdent(custom_ident) => ValueComponent::CustomIdent(
+                ToComputedValue::from_computed_value(&custom_ident.to_computed_value(context)),
+            ),
+            ValueComponent::TransformList(transform_list) => ValueComponent::TransformList(
+                ToComputedValue::from_computed_value(&transform_list.to_computed_value(context)),
+            ),
+            ValueComponent::String(string) => ValueComponent::String(
+                ToComputedValue::from_computed_value(&string.to_computed_value(context)),
+            ),
+        }
+    }
+
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.clone()
+    }
+}
+
 /// A list of component values, including the list's multiplier.
 #[derive(Clone)]
 pub struct ValueComponentList(ThinArc<Multiplier, ValueComponent>);
+
+impl ToComputedValue for ValueComponentList {
+    type ComputedValue = Self;
+
+    fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
+        let iter = self
+            .0
+            .slice()
+            .iter()
+            .map(|item| item.to_computed_value(context));
+        Self::new(self.0.header, iter)
+    }
+
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.clone()
+    }
+}
 
 impl ToCss for ValueComponentList {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
@@ -100,7 +189,7 @@ impl ValueComponentList {
 }
 
 /// A parsed property value.
-#[derive(ToCss)]
+#[derive(Clone, ToCss)]
 pub enum ComputedValue {
     /// A single parsed component value whose matched syntax descriptor component did not have a
     /// multiplier.
@@ -112,12 +201,31 @@ pub enum ComputedValue {
     List(ValueComponentList),
 }
 
+impl ToComputedValue for ComputedValue {
+    type ComputedValue = Self;
+
+    fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
+        match self {
+            ComputedValue::Component(component) => {
+                ComputedValue::Component(component.to_computed_value(context))
+            },
+            ComputedValue::Universal(value) => ComputedValue::Universal(value.clone()),
+            ComputedValue::List(list) => ComputedValue::List(list.to_computed_value(context)),
+        }
+    }
+
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        computed.clone()
+    }
+}
+
 impl ComputedValue {
     /// Convert a registered custom property to a VariableValue, given input and a property
     /// registration.
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
+        stylist: &Stylist,
     ) -> Result<Arc<ComputedPropertyValue>, ()> {
         let Ok(value) = Self::parse(
             input,
@@ -127,8 +235,17 @@ impl ComputedValue {
         ) else {
             return Err(());
         };
-        // TODO(zrhoffman, bug 1846632): Use string of computed value
-        let value = value.to_css_string();
+
+        let mut rule_cache_conditions = RuleCacheConditions::default();
+        let context = computed::Context::new(
+            // TODO(zrhoffman, bug 1857674): Pass the existing StyleBuilder from the computed
+            // context.
+            StyleBuilder::new(stylist.device(), Some(stylist), None, None, None, false),
+            stylist.quirks_mode(),
+            &mut rule_cache_conditions,
+            ContainerSizeQuery::none(),
+        );
+        let value = value.to_computed_value(&context).to_css_string();
 
         let result = {
             let mut input = ParserInput::new(&value);

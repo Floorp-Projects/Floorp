@@ -869,7 +869,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
                         let mut input = ParserInput::new(&unparsed_value.css);
                         let mut input = Parser::new(&mut input);
                         if let Ok(value) =
-                            ComputedRegisteredValue::compute(&mut input, registration)
+                            ComputedRegisteredValue::compute(&mut input, registration, self.stylist)
                         {
                             map.insert(custom_registration, name.clone(), value);
                         } else {
@@ -1414,7 +1414,9 @@ fn substitute_references_in_value_and_apply(
             false
         } else {
             if let Some(registration) = custom_registration {
-                if let Ok(value) = ComputedRegisteredValue::compute(&mut input, registration) {
+                if let Ok(value) =
+                    ComputedRegisteredValue::compute(&mut input, registration, stylist)
+                {
                     custom_properties.insert(custom_registration, name.clone(), value);
                 } else {
                     handle_invalid_at_computed_value_time(
@@ -1527,6 +1529,7 @@ fn substitute_block<'i>(
                                 if let Err(_) = ComputedRegisteredValue::compute(
                                     &mut fallback_input,
                                     registration,
+                                    stylist,
                                 ) {
                                     return Err(input
                                         .new_custom_error(StyleParseErrorKind::UnspecifiedError));
@@ -1548,9 +1551,11 @@ fn substitute_block<'i>(
                         if let Some(registration) = registration {
                             let mut fallback_input = ParserInput::new(&fallback.css);
                             let mut fallback_input = Parser::new(&mut fallback_input);
-                            if let Ok(fallback) =
-                                ComputedRegisteredValue::compute(&mut fallback_input, registration)
-                            {
+                            if let Ok(fallback) = ComputedRegisteredValue::compute(
+                                &mut fallback_input,
+                                registration,
+                                stylist,
+                            ) {
                                 partial_computed_value.push_variable(input, &fallback)?;
                             } else {
                                 return Err(
