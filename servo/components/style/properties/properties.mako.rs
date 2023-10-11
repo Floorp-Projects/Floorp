@@ -3683,7 +3683,7 @@ pub struct StyleBuilder<'a> {
 
 impl<'a> StyleBuilder<'a> {
     /// Trivially construct a `StyleBuilder`.
-    pub(super) fn new(
+    pub fn new(
         device: &'a Device,
         stylist: Option<<&'a Stylist>,
         parent_style: Option<<&'a ComputedValues>,
