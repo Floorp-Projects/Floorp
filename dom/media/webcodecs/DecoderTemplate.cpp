@@ -112,40 +112,6 @@ DecoderTemplate<DecoderType>::DecodeMessage::DecodeMessage(
       mData(std::move(aData)) {}
 
 template <typename DecoderType>
-already_AddRefed<MediaRawData>
-DecoderTemplate<DecoderType>::DecodeMessage::TakeData(
-    const RefPtr<MediaByteBuffer>& aExtraData,
-    const ConfigTypeInternal& aConfig) {
-  if (!mData) {
-    LOGE("No data in DecodeMessage");
-    return nullptr;
-  }
-
-  RefPtr<MediaRawData> sample = mData->TakeData();
-  if (!sample) {
-    LOGE("Take no data in DecodeMessage");
-    return nullptr;
-  }
-
-  // aExtraData is either provided by Configure() or a default one created for
-  // the decoder creation. If it's created for decoder creation only, we don't
-  // set it to sample.
-  if (aConfig.mDescription && aExtraData) {
-    sample->mExtraData = aExtraData;
-  }
-
-  LOGV(
-      "EncodedVideoChunkData %p converted to %zu-byte MediaRawData - time: "
-      "%" PRIi64 "us, timecode: %" PRIi64 "us, duration: %" PRIi64
-      "us, key-frame: %s, has extra data: %s",
-      mData.get(), sample->Size(), sample->mTime.ToMicroseconds(),
-      sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
-      sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
-
-  return sample.forget();
-}
-
-template <typename DecoderType>
 DecoderTemplate<DecoderType>::FlushMessage::FlushMessage(Id aId,
                                                          ConfigId aConfigId,
                                                          Promise* aPromise)
@@ -601,8 +567,8 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   }
 
   MOZ_ASSERT(mActiveConfig);
-  RefPtr<MediaRawData> data = msg->TakeData(
-      mAgent->mInfo->GetAsVideoInfo()->mExtraData, *mActiveConfig);
+  RefPtr<MediaRawData> data = InputDataToMediaRawData(
+      std::move(msg->mData), *(mAgent->mInfo), *mActiveConfig);
   if (!data) {
     LOGE("VideoDecoder %p, data for %s is empty or invalid", this,
          msg->ToString().get());

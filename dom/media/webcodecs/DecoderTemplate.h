@@ -110,12 +110,8 @@ class DecoderTemplate : public DOMEventTargetHelper {
     virtual void Cancel() override { Disconnect(); }
     virtual bool IsProcessing() override { return Exists(); };
     virtual DecodeMessage* AsDecodeMessage() override { return this; }
-    already_AddRefed<MediaRawData> TakeData(
-        const RefPtr<MediaByteBuffer>& aExtraData,
-        const ConfigTypeInternal& aConfig);
     const Id mId;  // A unique id shown in log.
 
-   private:
     UniquePtr<InputTypeInternal> mData;
   };
 
@@ -148,6 +144,9 @@ class DecoderTemplate : public DOMEventTargetHelper {
 
   /* Type conversion functions for the Decoder implementation */
  protected:
+  virtual already_AddRefed<MediaRawData> InputDataToMediaRawData(
+      UniquePtr<InputTypeInternal>&& aData, TrackInfo& aInfo,
+      const ConfigTypeInternal& aConfig) = 0;
   virtual nsTArray<RefPtr<OutputType>> DecodedDataToOutputType(
       nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
       ConfigTypeInternal& aConfig) = 0;
