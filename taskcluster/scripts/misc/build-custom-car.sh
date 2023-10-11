@@ -32,7 +32,14 @@ PGO_SUBSTR="chrome-linux-main"
 if [[ $(uname -s) == "Darwin" ]]; then
   # modify the config with fetched sdk path
   export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX14.0.sdk"
-  pip3 install importlib-metadata --user
+
+  # Use the fetched toolchain python instead as it is a higher version
+  # than the system python
+  export PATH="$MOZ_FETCHES_DIR/python/bin/:$PATH"
+
+  # set the SDK path for build, which is technically a higher version
+  # than what is associated with the current OS version (10.15)
+  # this should work as long as MACOSX_DEPLOYMENT_TARGET is set correctly
   CONFIG=$(echo $CONFIG mac_sdk_path='"'$MACOS_SYSROOT'"')
 
   # ensure we don't use ARM64 profdata with this unique sub string

@@ -210,6 +210,7 @@ macosx64-custom-car:
     fetches:
         toolchain:
             - MacOSX14.0.sdk
+            - macosx64-python-3.8
 
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
