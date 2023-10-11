@@ -1,0 +1,365 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+/* import-globals-from ../head.js */
+
+const TEST_URL = "about:robots";
+const ROW_URL_ID = "fxview-tab-row-url";
+const ROW_DATE_ID = "fxview-tab-row-date";
+
+let gInitialTab;
+let gInitialTabURL;
+
+add_setup(function () {
+  // This test opens a lot of windows and tabs and might run long on slower configurations
+  requestLongerTimeout(2);
+  gInitialTab = gBrowser.selectedTab;
+  gInitialTabURL = gBrowser.selectedBrowser.currentURI.spec;
+});
+
+async function navigateToOpenTabs(browser) {
+  const document = browser.contentDocument;
+  if (document.querySelector("named-deck").selectedViewName != "opentabs") {
+    navigateToCategory(document, "opentabs");
+  }
+  await TestUtils.waitForTick();
+}
+
+function getOpenTabsComponent(browser) {
+  return browser.contentDocument.querySelector("named-deck > view-opentabs");
+}
+
+function getCards(browser) {
+  return getOpenTabsComponent(browser).shadowRoot.querySelectorAll(
+    "view-opentabs-card"
+  );
+}
+
+async function cleanup() {
+  await SimpleTest.promiseFocus(window);
+  await promiseAllButPrimaryWindowClosed();
+  await BrowserTestUtils.switchTab(gBrowser, gInitialTab);
+  await closeFirefoxViewTab(window);
+
+  // clean up extra tabs
+  while (gBrowser.tabs.length > 1) {
+    BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+  }
+
+  is(
+    BrowserWindowTracker.orderedWindows.length,
+    1,
+    "One window at the end of test cleanup"
+  );
+  Assert.deepEqual(
+    gBrowser.tabs.map(tab => tab.linkedBrowser.currentURI.spec),
+    [gInitialTabURL],
+    "One about:blank tab open at the end up test cleanup"
+  );
+}
+
+function getRowsForCard(card) {
+  return card.tabList.rowEls;
+}
+
+add_task(async function open_tab_same_window() {
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, 1, "There is one window.");
+    let tabItems = getRowsForCard(cards[0]);
+    is(tabItems.length, 1, "There is one items.");
+    is(
+      tabItems[0].url,
+      gBrowser.visibleTabs[0].linkedBrowser.currentURI.spec,
+      "The first item represents the first visible tab"
+    );
+  });
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+  const [originalTab, newTab] = gBrowser.visibleTabs;
+
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await TestUtils.waitForTick();
+    const cards = getCards(browser);
+    is(cards.length, 1, "There is one window.");
+    let tabItems = getRowsForCard(cards[0]);
+    is(tabItems.length, 2, "There are two items.");
+    is(tabItems[1].url, TEST_URL, "The newly opened tab appears last.");
+
+    tabItems[0].mainEl.click();
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => originalTab.selected,
+    "The original tab is selected."
+  );
+
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const cards = getCards(browser);
+    let tabItems = getRowsForCard(cards[0]);
+    tabItems[1].mainEl.click();
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => newTab.selected,
+    "The new tab is selected."
+  );
+
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const cards = getCards(browser);
+    let tabItems;
+
+    info("Bring the new tab to the front.");
+    gBrowser.moveTabTo(newTab, 0);
+
+    await BrowserTestUtils.waitForMutationCondition(
+      cards[0].shadowRoot,
+      { childList: true, subtree: true },
+      () => {
+        tabItems = getRowsForCard(cards[0]);
+        return tabItems[0].url === TEST_URL;
+      }
+    );
+  });
+
+  await BrowserTestUtils.removeTab(newTab);
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const [card] = getCards(browser);
+    await TestUtils.waitForCondition(
+      () => getRowsForCard(card).length === 1,
+      "There is one tab left after closing the new one."
+    );
+    const [row] = getRowsForCard(card);
+    ok(
+      !row.shadowRoot.getElementById("fxview-tab-row-url").hidden,
+      "The URL is displayed, since we have one window."
+    );
+    ok(
+      !row.shadowRoot.getElementById("fxview-tab-row-date").hidden,
+      "The date is displayed, since we have one window."
+    );
+  });
+
+  await cleanup();
+});
+
+add_task(async function open_tab_new_window() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  let winFocused;
+  await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
+
+  info("Open fxview in new window");
+  await openFirefoxViewTab(win).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, 2, "There are two windows.");
+    const [newWinRows, originalWinRows] = Array.from(cards).map(getRowsForCard);
+    is(
+      originalWinRows.length,
+      1,
+      "There is one tab item in the original window."
+    );
+    is(newWinRows.length, 2, "There are two tab items in the new window.");
+    is(newWinRows[1].url, TEST_URL, "The new tab item appears last.");
+    const [row] = originalWinRows;
+    ok(
+      row.shadowRoot.getElementById("fxview-tab-row-url").hidden,
+      "The URL is hidden, since we have two windows."
+    );
+    ok(
+      row.shadowRoot.getElementById("fxview-tab-row-date").hidden,
+      "The date is hidden, since we have two windows."
+    );
+    info("Select a tab from the original window.");
+    winFocused = BrowserTestUtils.waitForEvent(window, "focus", true);
+    originalWinRows[0].mainEl.click();
+  });
+
+  info("Wait for the original window to be focused");
+  await winFocused;
+
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, 2, "There are two windows.");
+    const newWinRows = getRowsForCard(cards[1]);
+
+    info("Select a tab from the new window.");
+    winFocused = BrowserTestUtils.waitForEvent(win, "focus", true);
+    newWinRows[0].mainEl.click();
+  });
+  info("Wait for the new window to be focused");
+  await winFocused;
+  await cleanup();
+});
+
+add_task(async function open_tab_new_private_window() {
+  await BrowserTestUtils.openNewBrowserWindow({ private: true });
+
+  await SimpleTest.promiseFocus(window);
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, 1, "The private window is not displayed.");
+  });
+  await cleanup();
+});
+
+add_task(async function styling_for_multiple_windows() {
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    ok(
+      openTabs.shadowRoot.querySelector("[card-count=one]"),
+      "The container shows one column when one window is open."
+    );
+  });
+  await BrowserTestUtils.openNewBrowserWindow();
+
+  info("switch to firefox view in the first window");
+  SimpleTest.promiseFocus(window);
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+    ok(
+      openTabs.shadowRoot.querySelector("[card-count=two]"),
+      "The container shows two columns when two windows are open."
+    );
+  });
+  await BrowserTestUtils.openNewBrowserWindow();
+
+  SimpleTest.promiseFocus(window);
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    ok(
+      openTabs.shadowRoot.querySelector("[card-count=three-or-more]"),
+      "The container shows three columns when three windows are open."
+    );
+  });
+  await cleanup();
+});
+
+add_task(async function toggle_show_more_link() {
+  const NUMBER_OF_WINDOWS = 4;
+  const NUMBER_OF_TABS = 42;
+  const windows = [];
+  for (let i = 0; i < NUMBER_OF_WINDOWS - 1; i++) {
+    windows.push(await BrowserTestUtils.openNewBrowserWindow());
+  }
+
+  const tab = (win = window) => {
+    info("Tab");
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+  };
+
+  const enter = (win = window) => {
+    info("Enter");
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  };
+
+  let lastWindow;
+  let lastCard;
+
+  SimpleTest.promiseFocus(window);
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    await navigateToOpenTabs(browser);
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+
+    const cards = getCards(browser);
+    is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
+    lastCard = cards[NUMBER_OF_WINDOWS - 1];
+    lastWindow = windows[NUMBER_OF_WINDOWS - 2];
+  });
+
+  for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
+    await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
+  }
+
+  await openFirefoxViewTab(window).then(async viewTab => {
+    const browser = viewTab.linkedBrowser;
+    const openTabs = getOpenTabsComponent(browser);
+    await openTabs.getUpdateComplete();
+    ok(
+      getRowsForCard(lastCard).length < NUMBER_OF_TABS,
+      "Not all tabs are shown yet."
+    );
+    info("Toggle the Show More link.");
+    lastCard.shadowRoot.querySelector("div[slot=footer]").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length === NUMBER_OF_TABS
+    );
+
+    info("Toggle the Show Less link.");
+    lastCard.shadowRoot.querySelector("div[slot=footer]").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length < NUMBER_OF_TABS
+    );
+
+    // Setting this pref allows the test to run as expected with a keyboard on MacOS
+    await SpecialPowers.pushPrefEnv({
+      set: [["accessibility.tabfocus", 7]],
+    });
+
+    info("Toggle the Show More link with keyboard.");
+    lastCard.shadowRoot.querySelector("card-container").summaryEl.focus();
+    // Tab to first item in the list
+    tab();
+    // Tab to the footer
+    tab();
+    enter();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length === NUMBER_OF_TABS
+    );
+
+    info("Toggle the Show Less link with keyboard.");
+    lastCard.shadowRoot.querySelector("card-container").summaryEl.focus();
+    // Tab to first item in the list
+    tab();
+    // Tab to the footer
+    tab();
+    enter();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length < NUMBER_OF_TABS
+    );
+
+    await SpecialPowers.popPrefEnv();
+  });
+  await cleanup();
+});
