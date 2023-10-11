@@ -52,8 +52,13 @@ class SnapTests:
             for m in object_methods:
                 if m.startswith("test_"):
                     print("Running: {}".format(m))
+                    self._driver.save_screenshot("screenshot_{}_pre.png".format(m))
                     getattr(self, m)(self._expectations[m])
+                    self._driver.save_screenshot("screenshot_{}_post.png".format(m))
+        except TimeoutException:
+            self._driver.save_screenshot("screenshot_timeout.png")
         finally:
+            self._driver.save_screenshot("screenshot_final.png")
             self._driver.quit()
 
     def get_timeout(self):
