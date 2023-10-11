@@ -111,15 +111,6 @@ function createSourceObject(filename, props = {}) {
   };
 }
 
-function createOriginalSourceObject(generated) {
-  const rv = {
-    ...generated,
-    id: `${generated.id}/originalSource`,
-  };
-
-  return rv;
-}
-
 function makeSourceURL(filename) {
   return `http://localhost:8000/examples/${filename}`;
 }
@@ -280,7 +271,6 @@ export {
   getTelemetryEvents,
   makeFrame,
   createSourceObject,
-  createOriginalSourceObject,
   createMakeSource,
   makeSourceURL,
   makeSource,
