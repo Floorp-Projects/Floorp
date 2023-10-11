@@ -374,7 +374,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
   // Make sure the document still has focus.
   auto* doc = tooltipNode->GetComposedDoc();
   if (!doc || !nsContentUtils::IsChromeDoc(doc) ||
-      doc->GetDocumentState().HasState(DocumentState::WINDOW_INACTIVE)) {
+      doc->IsTopLevelWindowInactive()) {
     return NS_OK;
   }
 

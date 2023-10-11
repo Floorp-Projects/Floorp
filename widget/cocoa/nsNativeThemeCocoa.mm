@@ -2406,8 +2406,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // default buttons in active windows have blue background and white
         // text, and default buttons in inactive windows have white background
         // and black text.)
-        DocumentState docState =
-            aFrame->GetContent()->OwnerDoc()->GetDocumentState();
+        DocumentState docState = aFrame->PresContext()->Document()->State();
         ControlParams params = ComputeControlParams(aFrame, elementState);
         params.insideActiveWindow =
             !docState.HasState(DocumentState::WINDOW_INACTIVE);
