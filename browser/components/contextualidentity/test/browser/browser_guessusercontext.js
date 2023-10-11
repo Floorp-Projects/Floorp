@@ -3,6 +3,7 @@
 
 "use strict";
 
+const DEFAULT = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID;
 const PERSONAL = 1;
 const WORK = 2;
 const HOST_MOCHI = makeURI(
@@ -43,6 +44,17 @@ add_task(async function test() {
   await openTabInUserContext(HOST_EXAMPLE.spec, PERSONAL);
   is(guessUserContextId(HOST_EXAMPLE), PERSONAL, "one tab - matches container");
   is(guessUserContextId(HOST_MOCHI), null, "one tab - doesn't match container");
+
+  await openTabInUserContext(HOST_MOCHI.spec, PERSONAL);
+  is(guessUserContextId(HOST_MOCHI), PERSONAL, "one tab - matches container");
+  await openTabInUserContext(HOST_MOCHI.spec);
+  await openTabInUserContext(HOST_MOCHI.spec);
+  is(
+    guessUserContextId(HOST_MOCHI),
+    DEFAULT,
+    "can guess guess default container"
+  );
+
   await openTabInUserContext(HOST_EXAMPLE.spec, WORK);
   is(guessUserContextId(HOST_EXAMPLE), PERSONAL, "same number - use first");
   await openTabInUserContext(HOST_EXAMPLE.spec, WORK);
@@ -76,5 +88,9 @@ add_task(async function test() {
     "opener flow"
   );
   is(guessUserContextId(HOST_EXAMPLE), WORK, "still the most common");
-  is(guessUserContextId(HOST_MOCHI), null, "still doesn't match container");
+  is(
+    guessUserContextId(HOST_MOCHI),
+    DEFAULT,
+    "still matches default container"
+  );
 });
