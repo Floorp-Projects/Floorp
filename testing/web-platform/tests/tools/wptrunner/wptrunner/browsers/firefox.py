@@ -723,17 +723,6 @@ class ProfileCreator:
         if self.test_type in ("reftest", "print-reftest"):
             profile.set_preferences({"layout.interruptible-reflow.enabled": False})
 
-        if self.test_type == "testharness":
-            # Allow only touch and wheel events for now to be routed via the
-            # parent process. This is a workaround for tests using testdriver.js
-            # until bug 1773393 is done.
-            #
-            # Note that we don't set it for wdspec tests since it isn't suitable
-            # to ship to WebDriver users.
-            profile.set_preferences({"test.events.async.enabled": True})
-            profile.set_preferences({"test.events.async.key.enabled": False})
-            profile.set_preferences({"test.events.async.mouse.enabled": False})
-
         if self.test_type == "print-reftest":
             profile.set_preferences({"print.always_print_silent": True})
 
