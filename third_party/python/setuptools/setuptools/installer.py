@@ -5,10 +5,11 @@ import sys
 import tempfile
 from distutils import log
 from distutils.errors import DistutilsError
+from functools import partial
 
-import pkg_resources
-from setuptools.command.easy_install import easy_install
-from setuptools.wheel import Wheel
+from . import _reqs
+from .wheel import Wheel
+from .warnings import SetuptoolsDeprecationWarning
 
 
 def _fixup_find_links(find_links):
@@ -19,58 +20,34 @@ def _fixup_find_links(find_links):
     return find_links
 
 
-def _legacy_fetch_build_egg(dist, req):
-    """Fetch an egg needed for building.
-
-    Legacy path using EasyInstall.
-    """
-    tmp_dist = dist.__class__({'script_args': ['easy_install']})
-    opts = tmp_dist.get_option_dict('easy_install')
-    opts.clear()
-    opts.update(
-        (k, v)
-        for k, v in dist.get_option_dict('easy_install').items()
-        if k in (
-            # don't use any other settings
-            'find_links', 'site_dirs', 'index_url',
-            'optimize', 'site_dirs', 'allow_hosts',
-        ))
-    if dist.dependency_links:
-        links = dist.dependency_links[:]
-        if 'find_links' in opts:
-            links = _fixup_find_links(opts['find_links'][1]) + links
-        opts['find_links'] = ('setup', links)
-    install_dir = dist.get_egg_cache_dir()
-    cmd = easy_install(
-        tmp_dist, args=["x"], install_dir=install_dir,
-        exclude_scripts=True,
-        always_copy=False, build_directory=None, editable=False,
-        upgrade=False, multi_version=True, no_report=True, user=False
-    )
-    cmd.ensure_finalized()
-    return cmd.easy_install(req)
-
-
 def fetch_build_egg(dist, req):
     """Fetch an egg needed for building.
 
     Use pip/wheel to fetch/build a wheel."""
-    # Check pip is available.
-    try:
-        pkg_resources.get_distribution('pip')
-    except pkg_resources.DistributionNotFound:
-        dist.announce(
-            'WARNING: The pip package is not available, falling back '
-            'to EasyInstall for handling setup_requires/test_requires; '
-            'this is deprecated and will be removed in a future version.',
-            log.WARN
-        )
-        return _legacy_fetch_build_egg(dist, req)
-    # Warn if wheel is not.
-    try:
-        pkg_resources.get_distribution('wheel')
-    except pkg_resources.DistributionNotFound:
-        dist.announce('WARNING: The wheel package is not available.', log.WARN)
+    _DeprecatedInstaller.emit()
+    _warn_wheel_not_available(dist)
+    return _fetch_build_egg_no_warn(dist, req)
+
+
+def _fetch_build_eggs(dist, requires):
+    import pkg_resources  # Delay import to avoid unnecessary side-effects
+
+    _DeprecatedInstaller.emit(stacklevel=3)
+    _warn_wheel_not_available(dist)
+
+    resolved_dists = pkg_resources.working_set.resolve(
+        _reqs.parse(requires, pkg_resources.Requirement),  # required for compatibility
+        installer=partial(_fetch_build_egg_no_warn, dist),  # avoid warning twice
+        replace_conflicting=True,
+    )
+    for dist in resolved_dists:
+        pkg_resources.working_set.add(dist, replace=True)
+    return resolved_dists
+
+
+def _fetch_build_egg_no_warn(dist, req):  # noqa: C901  # is too complex (16)  # FIXME
+    import pkg_resources  # Delay import to avoid unnecessary side-effects
+
     # Ignore environment markers; if supplied, it is required.
     req = strip_marker(req)
     # Take easy_install options into account, but do not override relevant
@@ -80,20 +57,17 @@ def fetch_build_egg(dist, req):
     if 'allow_hosts' in opts:
         raise DistutilsError('the `allow-hosts` option is not supported '
                              'when using pip to install requirements.')
-    if 'PIP_QUIET' in os.environ or 'PIP_VERBOSE' in os.environ:
-        quiet = False
-    else:
-        quiet = True
+    quiet = 'PIP_QUIET' not in os.environ and 'PIP_VERBOSE' not in os.environ
     if 'PIP_INDEX_URL' in os.environ:
         index_url = None
     elif 'index_url' in opts:
         index_url = opts['index_url'][1]
     else:
         index_url = None
-    if 'find_links' in opts:
-        find_links = _fixup_find_links(opts['find_links'][1])[:]
-    else:
-        find_links = []
+    find_links = (
+        _fixup_find_links(opts['find_links'][1])[:] if 'find_links' in opts
+        else []
+    )
     if dist.dependency_links:
         find_links.extend(dist.dependency_links)
     eggs_dir = os.path.realpath(dist.get_egg_cache_dir())
@@ -112,16 +86,12 @@ def fetch_build_egg(dist, req):
             cmd.append('--quiet')
         if index_url is not None:
             cmd.extend(('--index-url', index_url))
-        if find_links is not None:
-            for link in find_links:
-                cmd.extend(('--find-links', link))
+        for link in find_links or []:
+            cmd.extend(('--find-links', link))
         # If requirement is a PEP 508 direct URL, directly pass
         # the URL to pip, as `req @ url` does not work on the
         # command line.
-        if req.url:
-            cmd.append(req.url)
-        else:
-            cmd.append(str(req))
+        cmd.append(req.url or str(req))
         try:
             subprocess.check_call(cmd)
         except subprocess.CalledProcessError as e:
@@ -142,7 +112,27 @@ def strip_marker(req):
     calling pip with something like `babel; extra == "i18n"`, which
     would always be ignored.
     """
+    import pkg_resources  # Delay import to avoid unnecessary side-effects
+
     # create a copy to avoid mutating the input
     req = pkg_resources.Requirement.parse(str(req))
     req.marker = None
     return req
+
+
+def _warn_wheel_not_available(dist):
+    import pkg_resources  # Delay import to avoid unnecessary side-effects
+
+    try:
+        pkg_resources.get_distribution('wheel')
+    except pkg_resources.DistributionNotFound:
+        dist.announce('WARNING: The wheel package is not available.', log.WARN)
+
+
+class _DeprecatedInstaller(SetuptoolsDeprecationWarning):
+    _SUMMARY = "setuptools.installer and fetch_build_eggs are deprecated."
+    _DETAILS = """
+    Requirements should be satisfied by a PEP 517 installer.
+    If you are using pip, you can try `pip install --use-pep517`.
+    """
+    # _DUE_DATE not decided yet

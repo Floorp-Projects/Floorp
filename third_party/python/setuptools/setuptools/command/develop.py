@@ -1,12 +1,12 @@
 from distutils.util import convert_path
 from distutils import log
-from distutils.errors import DistutilsError, DistutilsOptionError
+from distutils.errors import DistutilsOptionError
 import os
 import glob
 import io
 
-import pkg_resources
 from setuptools.command.easy_install import easy_install
+from setuptools import _path
 from setuptools import namespaces
 import setuptools
 
@@ -42,11 +42,9 @@ class develop(namespaces.DevelopInstaller, easy_install):
         self.always_copy_from = '.'  # always copy eggs installed in curdir
 
     def finalize_options(self):
+        import pkg_resources
+
         ei = self.get_finalized_command("egg_info")
-        if ei.broken_egg_info:
-            template = "Please rename %r to %r before using 'develop'"
-            args = ei.egg_info, ei.broken_egg_info
-            raise DistutilsError(template % args)
         self.args = [ei.egg_name]
 
         easy_install.finalize_options(self)
@@ -61,9 +59,8 @@ class develop(namespaces.DevelopInstaller, easy_install):
         if self.egg_path is None:
             self.egg_path = os.path.abspath(ei.egg_base)
 
-        target = pkg_resources.normalize_path(self.egg_base)
-        egg_path = pkg_resources.normalize_path(
-            os.path.join(self.install_dir, self.egg_path))
+        target = _path.normpath(self.egg_base)
+        egg_path = _path.normpath(os.path.join(self.install_dir, self.egg_path))
         if egg_path != target:
             raise DistutilsOptionError(
                 "--egg-path must be a relative path from the install"
@@ -74,7 +71,7 @@ class develop(namespaces.DevelopInstaller, easy_install):
         self.dist = pkg_resources.Distribution(
             target,
             pkg_resources.PathMetadata(target, os.path.abspath(ei.egg_info)),
-            project_name=ei.egg_name
+            project_name=ei.egg_name,
         )
 
         self.setup_path = self._resolve_setup_path(
@@ -93,47 +90,25 @@ class develop(namespaces.DevelopInstaller, easy_install):
         path_to_setup = egg_base.replace(os.sep, '/').rstrip('/')
         if path_to_setup != os.curdir:
             path_to_setup = '../' * (path_to_setup.count('/') + 1)
-        resolved = pkg_resources.normalize_path(
+        resolved = _path.normpath(
             os.path.join(install_dir, egg_path, path_to_setup)
         )
-        if resolved != pkg_resources.normalize_path(os.curdir):
+        curdir = _path.normpath(os.curdir)
+        if resolved != curdir:
             raise DistutilsOptionError(
                 "Can't get a consistent path to setup script from"
-                " installation directory", resolved,
-                pkg_resources.normalize_path(os.curdir))
+                " installation directory",
+                resolved,
+                curdir,
+            )
         return path_to_setup
 
     def install_for_development(self):
-        if getattr(self.distribution, 'use_2to3', False):
-            # If we run 2to3 we can not do this inplace:
+        self.run_command('egg_info')
 
-            # Ensure metadata is up-to-date
-            self.reinitialize_command('build_py', inplace=0)
-            self.run_command('build_py')
-            bpy_cmd = self.get_finalized_command("build_py")
-            build_path = pkg_resources.normalize_path(bpy_cmd.build_lib)
-
-            # Build extensions
-            self.reinitialize_command('egg_info', egg_base=build_path)
-            self.run_command('egg_info')
-
-            self.reinitialize_command('build_ext', inplace=0)
-            self.run_command('build_ext')
-
-            # Fixup egg-link and easy-install.pth
-            ei_cmd = self.get_finalized_command("egg_info")
-            self.egg_path = build_path
-            self.dist.location = build_path
-            # XXX
-            self.dist._provider = pkg_resources.PathMetadata(
-                build_path, ei_cmd.egg_info)
-        else:
-            # Without 2to3 inplace works fine:
-            self.run_command('egg_info')
-
-            # Build extensions in-place
-            self.reinitialize_command('build_ext', inplace=1)
-            self.run_command('build_ext')
+        # Build extensions in-place
+        self.reinitialize_command('build_ext', inplace=1)
+        self.run_command('build_ext')
 
         if setuptools.bootstrap_install_from:
             self.easy_install(setuptools.bootstrap_install_from)
@@ -156,8 +131,7 @@ class develop(namespaces.DevelopInstaller, easy_install):
             egg_link_file = open(self.egg_link)
             contents = [line.rstrip() for line in egg_link_file]
             egg_link_file.close()
-            if contents not in ([self.egg_path],
-                                [self.egg_path, self.setup_path]):
+            if contents not in ([self.egg_path], [self.egg_path, self.setup_path]):
                 log.warn("Link points to %s: uninstall aborted", contents)
                 return
             if not self.dry_run:

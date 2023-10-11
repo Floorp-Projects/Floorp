@@ -7,7 +7,7 @@ import os
 import importlib.util
 import importlib.machinery
 
-from .py34compat import module_from_spec
+from importlib.util import module_from_spec
 
 
 PY_SOURCE = 1
@@ -41,12 +41,12 @@ def find_module(module, paths=None):
             spec.loader, importlib.machinery.FrozenImporter):
         kind = PY_FROZEN
         path = None  # imp compabilty
-        suffix = mode = ''  # imp compability
+        suffix = mode = ''  # imp compatibility
     elif spec.origin == 'built-in' or static and issubclass(
             spec.loader, importlib.machinery.BuiltinImporter):
         kind = C_BUILTIN
         path = None  # imp compabilty
-        suffix = mode = ''  # imp compability
+        suffix = mode = ''  # imp compatibility
     elif spec.has_location:
         path = spec.origin
         suffix = os.path.splitext(path)[1]
