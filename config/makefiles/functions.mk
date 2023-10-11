@@ -27,4 +27,7 @@ core_winabspath = $(error core_winabspath is unsupported)
 #
 #   libs::
 #       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
-py_action = $(PYTHON3) -m mozbuild.action.$(1) $(2)
+py_action = \
+	echo BUILDSTATUS START_$(1) $(2) ; \
+	$(PYTHON3) -m mozbuild.action.$(1) $(2) ; \
+	echo BUILDSTATUS END_$(1) $(2)
