@@ -31,10 +31,12 @@ enum class YUVColorSpace : uint8_t;
 namespace dom {
 
 /*
- * The followings are helpers for WebCodecs methods
+ * The followings are helpers for WebCodecs methods.
  */
 
 nsTArray<nsCString> GuessContainers(const nsAString& aCodec);
+
+Maybe<nsString> ParseCodecString(const nsAString& aCodec);
 
 /*
  * Below are helpers for conversion among Maybe, Optional, and Nullable.
