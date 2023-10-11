@@ -93,13 +93,6 @@ menupopup > menucaption {
   max-width: 42em;
 }
 
-menu[_moz-menuactive="true"],
-menuitem[_moz-menuactive="true"] {
-  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
-  color: -moz-mac-menutextselect;
-  background-color: SelectedItem;
-}
-
 menuitem[customoptionstyling="true"] {
   appearance: none;
 }
