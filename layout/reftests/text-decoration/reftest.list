@@ -119,3 +119,5 @@ fuzzy-if(Android,0-238,0-36) == vertical-mode-decorations-2.html vertical-mode-d
 fuzzy(0-94,0-4) == skip-ink-cjk-1.html skip-ink-cjk-1-ref.html
 == skip-ink-cjk-2.html skip-ink-cjk-2-ref.html
 == skip-ink-cjk-3.html skip-ink-cjk-3-ref.html
+!= always-underline-links.html always-underline-links-ref.html
+pref(layout.css.always_underline_links,true) == always-underline-links.html always-underline-links-ref.html

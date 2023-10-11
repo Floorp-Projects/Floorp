@@ -8078,6 +8078,13 @@
   value: -1
   mirror: always
 
+# Whether to always underline links.
+- name: layout.css.always_underline_links
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether Container Queries are enabled
 - name: layout.css.container-queries.enabled
   type: RelaxedAtomicBool
