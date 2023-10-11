@@ -1562,15 +1562,6 @@ migrationWizard:
       description: True if importing extensions is enabled.
       type: boolean
       setPref: browser.migrate.chrome.extensions.enabled
-    chromeCanRequestPermissions:
-      description: >-
-        True if Chrome-based browsers can request read permissions on
-        platforms where the browser is restricted from reading the contents
-        of a Chrome-based browser's user data directory. In practice, this
-        is only relevant to the Linux platform when the browser is installed
-        as a Snap package.
-      type: boolean
-      setPref: browser.migrate.chrome.get_permissions.enabled
 
 mixedContentUpgrading:
   description: Prefs to control whether we upgrade mixed passive content (images, audio, video) from http to https
