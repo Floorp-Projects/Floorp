@@ -510,6 +510,30 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `GIVEN already installed extension WHEN calling onInstalled THEN do not show the PostInstallation prompt`() {
+        val store = spy(BrowserStore())
+
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("extensionId")
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        // We simulate a first install...
+        delegateCaptor.value.onInstalled(ext)
+        // ... and then an update, which also calls `onInstalled()`.
+        delegateCaptor.value.onInstalled(ext)
+
+        verify(store, times(1)).dispatch(
+            WebExtensionAction.UpdatePromptRequestWebExtensionAction(
+                WebExtensionPromptRequest.AfterInstallation.PostInstallation(ext),
+            ),
+        )
+    }
+
+    @Test
     fun `GIVEN extension WHEN calling onInstallationFailedRequest THEN show the installation prompt error`() {
         val store = spy(BrowserStore())
         val engine: Engine = mock()

@@ -230,10 +230,13 @@ object WebExtensionSupport {
 
                 override fun onInstalled(extension: WebExtension) {
                     logger.debug("onInstalled ${extension.id}")
-                    registerInstalledExtension(store, extension)
                     // Built-in extensions are not installed by users, they are not aware of them
-                    // for this reason we don't show any UI related to built-in extensions.
-                    if (!extension.isBuiltIn()) {
+                    // for this reason we don't show any UI related to built-in extensions. Also,
+                    // when the add-on has already been installed, we don't need to show anything
+                    // either.
+                    val shouldDispatchAction = !installedExtensions.containsKey(extension.id) && !extension.isBuiltIn()
+                    registerInstalledExtension(store, extension)
+                    if (shouldDispatchAction) {
                         store.dispatch(
                             WebExtensionAction.UpdatePromptRequestWebExtensionAction(
                                 WebExtensionPromptRequest.AfterInstallation.PostInstallation(extension),
