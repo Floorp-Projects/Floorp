@@ -82,18 +82,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
     switch (event.type) {
       case "MigrationWizard:RequestState": {
         this.#sendTelemetryEvent("opened");
-
-        this.setComponentState({
-          page: MigrationWizardConstants.PAGES.LOADING,
-        });
-
-        await this.#populateMigrators(event.detail?.allowOnlyFileMigrators);
-
-        this.#wizardEl.dispatchEvent(
-          new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
-            bubbles: true,
-          })
-        );
+        await this.#requestState(event.detail?.allowOnlyFileMigrators);
         break;
       }
 
@@ -153,7 +142,31 @@ export class MigrationWizardChild extends JSWindowActorChild {
         this.sendAsyncMessage("OpenAboutAddons");
         break;
       }
+
+      case "MigrationWizard:GetPermissions": {
+        let success = await this.sendQuery("GetPermissions", {
+          key: event.detail.key,
+        });
+        if (success) {
+          await this.#requestState(true /* allowOnlyFileMigrators */);
+        }
+        break;
+      }
     }
+  }
+
+  async #requestState(allowOnlyFileMigrators) {
+    this.setComponentState({
+      page: MigrationWizardConstants.PAGES.LOADING,
+    });
+
+    await this.#populateMigrators(allowOnlyFileMigrators);
+
+    this.#wizardEl.dispatchEvent(
+      new this.contentWindow.CustomEvent("MigrationWizard:Ready", {
+        bubbles: true,
+      })
+    );
   }
 
   /**

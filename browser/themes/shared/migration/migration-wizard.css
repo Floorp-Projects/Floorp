@@ -157,11 +157,23 @@ div[name="page-selection"][show-import-all] #select-all  {
 }
 
 div[name="page-selection"][migrator-type="browser"] > .buttons > #import-from-file,
+div[name="page-selection"][migrator-type="browser"][no-permissions] > .buttons > #import,
+div[name="page-selection"][migrator-type="browser"]:not([no-permissions]) > .buttons > #get-permissions,
+div[name="page-selection"][migrator-type="file"] > .buttons > #get-permissions,
 div[name="page-selection"][migrator-type="file"] > .buttons > #import,
 div[name="page-selection"][migrator-type="file"] > .resource-selection-details,
 div[name="page-selection"][migrator-type="file"] > .resource-selection-preamble,
 div[name="page-selection"][show-import-all] .resource-selection-preamble {
   display: none;
+}
+
+/**
+ * We're using <code> to ease legibility for paths on
+ * the user's system, but intentionally reduce the font
+ * size to more closely match the surrounding text.
+ */
+.migration-no-permissions-instructions-step2 > code {
+  font-size: 0.94em;
 }
 
 .resource-selection-preamble {
@@ -345,7 +357,8 @@ summary {
 }
 
 div[name="page-selection"]:not([no-resources]) .no-resources-found,
-div[name="page-selection"][no-resources] .hide-on-no-resources-error,
+div[name="page-selection"]:not([no-permissions]) .no-permissions-message,
+div[name="page-selection"]:is([no-resources],[no-permissions]) .hide-on-error,
 div[name="page-selection"]:not([file-import-error]) .file-import-error {
   display: none;
 }

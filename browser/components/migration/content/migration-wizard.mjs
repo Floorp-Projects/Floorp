@@ -23,6 +23,7 @@ export class MigrationWizard extends HTMLElement {
   #importButton = null;
   #importFromFileButton = null;
   #chooseImportFromFile = null;
+  #getPermissionsButton = null;
   #safariPermissionButton = null;
   #safariPasswordImportSkipButton = null;
   #safariPasswordImportSelectButton = null;
@@ -63,8 +64,22 @@ export class MigrationWizard extends HTMLElement {
               <span class="error-icon" role="img"></span>
               <div data-l10n-id="migration-wizard-import-browser-no-resources"></div>
             </div>
-            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text hide-on-no-resources-error"></div>
-            <details class="resource-selection-details hide-on-no-resources-error">
+
+            <div class="no-permissions-message">
+              <p data-l10n-id="migration-no-permissions-message">
+              </p>
+              <p data-l10n-id="migration-no-permissions-instructions">
+              </p>
+              <ol>
+                <li data-l10n-id="migration-no-permissions-instructions-step1"></li>
+                <li class="migration-no-permissions-instructions-step2" data-l10n-id="migration-no-permissions-instructions-step2" data-l10n-args='{"permissionsPath": "" }'>
+                  <code></code>
+                </li>
+              </ol>
+            </div>
+
+            <div data-l10n-id="migration-wizard-selection-list" class="resource-selection-preamble deemphasized-text hide-on-error"></div>
+            <details class="resource-selection-details hide-on-error">
               <summary id="resource-selection-summary">
                 <div class="selected-data-header" data-l10n-id="migration-all-available-data-label"></div>
                 <div class="selected-data deemphasized-text">&nbsp;</div>
@@ -104,6 +119,7 @@ export class MigrationWizard extends HTMLElement {
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="import-from-file" class="primary" data-l10n-id="migration-import-from-file-button-label"></button>
               <button id="import" class="primary" data-l10n-id="migration-import-button-label"></button>
+              <button id="get-permissions" class="primary" data-l10n-id="migration-continue-button-label"></button>
             </moz-button-group>
           </div>
 
@@ -312,6 +328,8 @@ export class MigrationWizard extends HTMLElement {
       "#choose-import-from-file"
     );
     this.#chooseImportFromFile.addEventListener("click", this);
+    this.#getPermissionsButton = shadow.querySelector("#get-permissions");
+    this.#getPermissionsButton.addEventListener("click", this);
 
     this.#browserProfileSelector.addEventListener("click", this);
     this.#resourceTypeList = shadow.querySelector("#resource-type-list");
@@ -500,10 +518,33 @@ export class MigrationWizard extends HTMLElement {
       "div[name='page-selection']"
     );
     selectionPage.setAttribute("migrator-type", panelItem.getAttribute("type"));
+
+    // Safari currently has a special flow for requesting permissions that
+    // occurs _after_ resource selection, so we don't show this message
+    // for that migrator.
+    let showNoPermissionsMessage =
+      panelItem.getAttribute("type") ==
+        MigrationWizardConstants.MIGRATOR_TYPES.BROWSER &&
+      !panelItem.hasPermissions &&
+      panelItem.getAttribute("key") != "safari";
+
+    selectionPage.toggleAttribute("no-permissions", showNoPermissionsMessage);
+    if (showNoPermissionsMessage) {
+      let step2 = selectionPage.querySelector(
+        ".migration-no-permissions-instructions-step2"
+      );
+      step2.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ permissionsPath: panelItem.permissionsPath })
+      );
+    }
+
     selectionPage.toggleAttribute(
       "no-resources",
       panelItem.getAttribute("type") ==
-        MigrationWizardConstants.MIGRATOR_TYPES.BROWSER && !resourceTypes.length
+        MigrationWizardConstants.MIGRATOR_TYPES.BROWSER &&
+        !resourceTypes.length &&
+        panelItem.hasPermissions
     );
   }
 
@@ -554,6 +595,7 @@ export class MigrationWizard extends HTMLElement {
       opt.displayName = migrator.displayName;
       opt.resourceTypes = migrator.resourceTypes;
       opt.hasPermissions = migrator.hasPermissions;
+      opt.permissionsPath = migrator.permissionsPath;
       opt.brandImage = migrator.brandImage;
 
       let button = opt.shadowRoot.querySelector("button");
@@ -1094,6 +1136,20 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * Sends a request to get read permissions for the data associated
+   * with the selected browser.
+   */
+  #getPermissions() {
+    let migrationEventDetail = this.#gatherMigrationEventDetails();
+    this.dispatchEvent(
+      new CustomEvent("MigrationWizard:GetPermissions", {
+        bubbles: true,
+        detail: migrationEventDetail,
+      })
+    );
+  }
+
+  /**
    * Changes selected-data-header text and selected-data text based on
    * how many resources are checked
    */
@@ -1268,6 +1324,8 @@ export class MigrationWizard extends HTMLElement {
             })
           );
           event.preventDefault();
+        } else if (event.target == this.#getPermissionsButton) {
+          this.#getPermissions();
         }
         break;
       }
