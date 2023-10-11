@@ -31,9 +31,13 @@
   --toolbox-non-lwt-bgcolor-inactive: -moz-headerbarinactive;
   --toolbox-non-lwt-textcolor-inactive: -moz-headerbarinactivetext;
 
+  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
   --toolbarbutton-border-radius: 4px;
+
+  --chrome-content-separator-color: ThreeDShadow;
 
   --tabs-navbar-shadow-size: 1px;
 
@@ -104,6 +108,7 @@
 :root:-moz-lwtheme {
   --checkbox-border-color: color-mix(in srgb, currentColor 41%, transparent);
   --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
+  --chrome-content-separator-color: rgba(0,0,0,.3);
 }
 
 @media (prefers-contrast) {
