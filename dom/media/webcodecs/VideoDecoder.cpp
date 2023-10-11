@@ -739,11 +739,6 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
       RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
 }
 
-// https://w3c.github.io/webcodecs/#dom-videodecoder-state
-CodecState VideoDecoder::State() const { return mState; }
-
-uint32_t VideoDecoder::DecodeQueueSize() const { return mDecodeQueueSize; }
-
 // https://w3c.github.io/webcodecs/#dom-videodecoder-configure
 void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
                              ErrorResult& aRv) {
