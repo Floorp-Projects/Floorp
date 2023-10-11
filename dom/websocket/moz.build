@@ -24,9 +24,9 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "tests/mochitest.ini",
-    "tests/mochitest_http2.ini",
-    "tests/websocket_hybi/mochitest.ini",
+    "tests/mochitest.toml",
+    "tests/mochitest_http2.toml",
+    "tests/websocket_hybi/mochitest.toml",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

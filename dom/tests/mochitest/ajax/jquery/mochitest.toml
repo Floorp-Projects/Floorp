@@ -1,0 +1,38 @@
+[DEFAULT]
+support-files = [
+  "manifest.json",
+  "dist/jquery.js",
+  "test/index.html",
+  "test/offset.html",
+  "test/test.js",
+  "test/fix.html",
+  "test/data/cow.jpg",
+  "test/data/dashboard.xml",
+  "test/data/iframe.html",
+  "test/data/json_assigned_obj.js",
+  "test/data/json_obj.js",
+  "test/data/name.html",
+  "test/data/test.html",
+  "test/data/test.js",
+  "test/data/test2.html",
+  "test/data/test3.html",
+  "test/data/testrunner.js",
+  "test/data/testsuite.css",
+  "test/data/with_fries.xml",
+  "test/data/offset/absolute.html",
+  "test/data/offset/fixed.html",
+  "test/data/offset/relative.html",
+  "test/data/offset/scroll.html",
+  "test/data/offset/static.html",
+  "test/data/offset/table.html",
+  "test/unit/ajax.js",
+  "test/unit/core.js",
+  "test/unit/dimensions.js",
+  "test/unit/event.js",
+  "test/unit/fx.js",
+  "test/unit/offset.js",
+  "test/unit/selector.js",
+]
+
+["test_jQuery.html"]
+skip-if = ["os == 'android'"] # Bug 1780219

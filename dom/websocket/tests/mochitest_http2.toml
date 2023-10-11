@@ -1,0 +1,5 @@
+[DEFAULT]
+run-if = ["http2"]
+
+["test_websocket_http2.html"]
+scheme = "https"

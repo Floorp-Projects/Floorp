@@ -1,0 +1,12 @@
+[DEFAULT]
+# nsIWidget::SynthesizeNativeKeyEvent() required (Bug 1410525 for headless)
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'",
+  "headless",
+]
+
+["test_input.html"]
+
+["test_textarea.html"]
+skip-if = ["os == 'win' && asan"] # Bug 1658513

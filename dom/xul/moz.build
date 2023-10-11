@@ -11,7 +11,7 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
     DEFINES["MOZ_BREAK_XUL_OVERLAYS"] = True
 
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 
 EXPORTS += [
     "nsXULCommandDispatcher.h",
