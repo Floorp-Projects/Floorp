@@ -1679,7 +1679,7 @@ static void ARGBToYMatrixRow_LSX(const uint8_t* src_argb,
                                  uint8_t* dst_y,
                                  int width,
                                  const struct RgbConstants* rgbconstants) {
-    asm volatile(
+  asm volatile(
       "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
       "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
       "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
@@ -1688,31 +1688,32 @@ static void ARGBToYMatrixRow_LSX(const uint8_t* src_argb,
       "vld            $vr4,  %0,    0             \n\t"
       "vld            $vr5,  %0,    16            \n\t"
       "vld            $vr6,  %0,    32            \n\t"
-      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of ARGB
+      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of
+                                                         // ARGB
       "vor.v          $vr12, $vr3,  $vr3          \n\t"
       "vor.v          $vr13, $vr3,  $vr3          \n\t"
-      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
-      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  //BR
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per
+                                                         // loop.
+      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  // BR
       "vpickev.b      $vr10, $vr7,  $vr6          \n\t"
-      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  //GA
+      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  // GA
       "vpickod.b      $vr11, $vr7,  $vr6          \n\t"
-      "vmaddwev.h.bu  $vr12, $vr8,  $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr12, $vr8,  $vr0          \n\t"  // B
       "vmaddwev.h.bu  $vr13, $vr10, $vr0          \n\t"
-      "vmaddwev.h.bu  $vr12, $vr9,  $vr1          \n\t"  //G
+      "vmaddwev.h.bu  $vr12, $vr9,  $vr1          \n\t"  // G
       "vmaddwev.h.bu  $vr13, $vr11, $vr1          \n\t"
-      "vmaddwod.h.bu  $vr12, $vr8,  $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr12, $vr8,  $vr2          \n\t"  // R
       "vmaddwod.h.bu  $vr13, $vr10, $vr2          \n\t"
       "addi.d         %0,    %0,    64            \n\t"
       "vpickod.b      $vr10, $vr13, $vr12         \n\t"
       "vst            $vr10, %1,    0             \n\t"
       "addi.d         %1,    %1,    16            \n\t"
       "bnez           %2,    1b                   \n\t"
-      : "+&r"(src_argb),    // %0
-        "+&r"(dst_y),       // %1
-        "+&r"(width)        // %2
+      : "+&r"(src_argb),  // %0
+        "+&r"(dst_y),     // %1
+        "+&r"(width)      // %2
       : "r"(rgbconstants)
-      : "memory"
-    );
+      : "memory");
 }
 
 void ARGBToYRow_LSX(const uint8_t* src_argb, uint8_t* dst_y, int width) {
@@ -1737,7 +1738,7 @@ static void RGBAToYMatrixRow_LSX(const uint8_t* src_rgba,
                                  uint8_t* dst_y,
                                  int width,
                                  const struct RgbConstants* rgbconstants) {
-    asm volatile(
+  asm volatile(
       "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
       "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
       "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
@@ -1746,31 +1747,32 @@ static void RGBAToYMatrixRow_LSX(const uint8_t* src_rgba,
       "vld            $vr4,  %0,    0             \n\t"
       "vld            $vr5,  %0,    16            \n\t"
       "vld            $vr6,  %0,    32            \n\t"
-      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of RGBA
+      "vld            $vr7,  %0,    48            \n\t"  // load 16 pixels of
+                                                         // RGBA
       "vor.v          $vr12, $vr3,  $vr3          \n\t"
       "vor.v          $vr13, $vr3,  $vr3          \n\t"
-      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
-      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  //AG
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per
+                                                         // loop.
+      "vpickev.b      $vr8,  $vr5,  $vr4          \n\t"  // AG
       "vpickev.b      $vr10, $vr7,  $vr6          \n\t"
-      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  //BR
+      "vpickod.b      $vr9,  $vr5,  $vr4          \n\t"  // BR
       "vpickod.b      $vr11, $vr7,  $vr6          \n\t"
-      "vmaddwev.h.bu  $vr12, $vr9,  $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr12, $vr9,  $vr0          \n\t"  // B
       "vmaddwev.h.bu  $vr13, $vr11, $vr0          \n\t"
-      "vmaddwod.h.bu  $vr12, $vr8,  $vr1          \n\t"  //G
+      "vmaddwod.h.bu  $vr12, $vr8,  $vr1          \n\t"  // G
       "vmaddwod.h.bu  $vr13, $vr10, $vr1          \n\t"
-      "vmaddwod.h.bu  $vr12, $vr9,  $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr12, $vr9,  $vr2          \n\t"  // R
       "vmaddwod.h.bu  $vr13, $vr11, $vr2          \n\t"
       "addi.d         %0,    %0,    64            \n\t"
       "vpickod.b      $vr10, $vr13, $vr12         \n\t"
       "vst            $vr10, %1,    0             \n\t"
       "addi.d         %1,    %1,    16            \n\t"
       "bnez           %2,    1b                   \n\t"
-      : "+&r"(src_rgba),    // %0
-        "+&r"(dst_y),       // %1
-        "+&r"(width)        // %2
+      : "+&r"(src_rgba),  // %0
+        "+&r"(dst_y),     // %1
+        "+&r"(width)      // %2
       : "r"(rgbconstants)
-      : "memory"
-    );
+      : "memory");
 }
 
 void RGBAToYRow_LSX(const uint8_t* src_rgba, uint8_t* dst_y, int width) {
@@ -1789,11 +1791,12 @@ static void RGBToYMatrixRow_LSX(const uint8_t* src_rgba,
                                 uint8_t* dst_y,
                                 int width,
                                 const struct RgbConstants* rgbconstants) {
-    int8_t shuff[64] = {0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23,
-                        24, 26, 27, 29, 30, 0, 1, 3, 4, 6, 7, 9, 10, 12, 13, 15,
-                        1, 0, 4, 0, 7, 0, 10, 0, 13, 0, 16, 0, 19, 0, 22, 0,
-                        25, 0, 28, 0, 31, 0, 2, 0, 5, 0, 8, 0, 11, 0, 14, 0};
-    asm volatile(
+  int8_t shuff[64] = {0,  2,  3,  5,  6,  8,  9,  11, 12, 14, 15, 17, 18,
+                      20, 21, 23, 24, 26, 27, 29, 30, 0,  1,  3,  4,  6,
+                      7,  9,  10, 12, 13, 15, 1,  0,  4,  0,  7,  0,  10,
+                      0,  13, 0,  16, 0,  19, 0,  22, 0,  25, 0,  28, 0,
+                      31, 0,  2,  0,  5,  0,  8,  0,  11, 0,  14, 0};
+  asm volatile(
       "vldrepl.b      $vr0,  %3,    0             \n\t"  // load rgbconstants
       "vldrepl.b      $vr1,  %3,    1             \n\t"  // load rgbconstants
       "vldrepl.b      $vr2,  %3,    2             \n\t"  // load rgbconstants
@@ -1805,19 +1808,21 @@ static void RGBToYMatrixRow_LSX(const uint8_t* src_rgba,
       "1:                                         \n\t"
       "vld            $vr8,  %0,    0             \n\t"
       "vld            $vr9,  %0,    16            \n\t"
-      "vld            $vr10, %0,    32            \n\t"  // load 16 pixels of RGB
+      "vld            $vr10, %0,    32            \n\t"  // load 16 pixels of
+                                                         // RGB
       "vor.v          $vr12, $vr3,  $vr3          \n\t"
       "vor.v          $vr13, $vr3,  $vr3          \n\t"
-      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per loop.
+      "addi.d         %2,    %2,    -16           \n\t"  // 16 processed per
+                                                         // loop.
       "vshuf.b        $vr14, $vr9,  $vr8,  $vr4   \n\t"
       "vshuf.b        $vr15, $vr9,  $vr10, $vr5   \n\t"
       "vshuf.b        $vr16, $vr9,  $vr8,  $vr6   \n\t"
       "vshuf.b        $vr17, $vr9,  $vr10, $vr7   \n\t"
-      "vmaddwev.h.bu  $vr12, $vr16, $vr1          \n\t"  //G
+      "vmaddwev.h.bu  $vr12, $vr16, $vr1          \n\t"  // G
       "vmaddwev.h.bu  $vr13, $vr17, $vr1          \n\t"
-      "vmaddwev.h.bu  $vr12, $vr14, $vr0          \n\t"  //B
+      "vmaddwev.h.bu  $vr12, $vr14, $vr0          \n\t"  // B
       "vmaddwev.h.bu  $vr13, $vr15, $vr0          \n\t"
-      "vmaddwod.h.bu  $vr12, $vr14, $vr2          \n\t"  //R
+      "vmaddwod.h.bu  $vr12, $vr14, $vr2          \n\t"  // R
       "vmaddwod.h.bu  $vr13, $vr15, $vr2          \n\t"
       "addi.d         %0,    %0,    48            \n\t"
       "vpickod.b      $vr10, $vr13, $vr12         \n\t"
@@ -1829,8 +1834,7 @@ static void RGBToYMatrixRow_LSX(const uint8_t* src_rgba,
         "+&r"(width)        // %2
       : "r"(rgbconstants),  // %3
         "r"(shuff)          // %4
-      : "memory"
-    );
+      : "memory");
 }
 
 void RGB24ToYJRow_LSX(const uint8_t* src_rgb24, uint8_t* dst_yj, int width) {

@@ -52,7 +52,7 @@
         'optimize': 'max',  # enable O2 and ltcg.
       },
       # Allows libyuv.a redistributable library without external dependencies.
-      # 'standalone_static_library': 1,
+      'standalone_static_library': 1,
       'conditions': [
        # Disable -Wunused-parameter
         ['clang == 1', {
@@ -70,11 +70,6 @@
             '-mfpu=vfpv3-d16',
             # '-mthumb',  # arm32 not thumb
           ],
-          'cflags_mozilla!': [
-            '-mfpu=vfp',
-            '-mfpu=vfpv3',
-            '-mfpu=vfpv3-d16',
-          ],
           'conditions': [
             # Disable LTO in libyuv_neon target due to gcc 4.9 compiler bug.
             ['clang == 0 and use_lto == 1', {
@@ -89,9 +84,6 @@
                 '-mfpu=neon',
                 # '-marm',  # arm32 not thumb
               ],
-              'cflags_mozilla': [
-                '-mfpu=neon',
-              ],
             }],
           ],
         }],
@@ -100,15 +92,7 @@
             'LIBYUV_MSA',
           ],
         }],
-        ['build_with_mozilla == 1', {
-          'defines': [
-            'HAVE_JPEG'
-          ],
-          'cflags_mozilla': [
-            '$(MOZ_JPEG_CFLAGS)',
-          ],
-        }],
-        ['OS != "ios" and libyuv_disable_jpeg != 1 and build_with_mozilla != 1', {
+        ['OS != "ios" and libyuv_disable_jpeg != 1', {
           'defines': [
             'HAVE_JPEG'
           ],
