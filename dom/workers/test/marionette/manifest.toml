@@ -1,5 +1,0 @@
-[DEFAULT]
-
-["test_service_workers_at_startup.py"]
-
-["test_service_workers_disabled.py"]

@@ -100,13 +100,13 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = "xul"
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.toml",
+    "test/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
     "test/chrome.toml",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
