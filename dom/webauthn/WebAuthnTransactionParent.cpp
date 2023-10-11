@@ -55,6 +55,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
           [this, parent, aTransactionId,
            clientData = aTransactionInfo.ClientDataJSON()](
               const WebAuthnRegisterPromise::ResolveValueType& aValue) {
+            mTransactionId.reset();
             mRegisterPromiseRequest.Complete();
             nsTArray<uint8_t> attObj;
             nsresult rv = aValue->GetAttestationObject(attObj);
@@ -128,6 +129,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
           },
           [this, parent, aTransactionId](
               const WebAuthnRegisterPromise::RejectValueType aValue) {
+            mTransactionId.reset();
             mRegisterPromiseRequest.Complete();
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"CTAPRegisterAbort"_ns, 1);
@@ -185,6 +187,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
           [this, parent, aTransactionId,
            clientData = aTransactionInfo.ClientDataJSON()](
               const WebAuthnSignPromise::ResolveValueType& aValue) {
+            mTransactionId.reset();
             mSignPromiseRequest.Complete();
             nsTArray<uint8_t> credentialId;
             nsresult rv = aValue->GetCredentialId(credentialId);
@@ -260,6 +263,7 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
           },
           [this, parent,
            aTransactionId](const WebAuthnSignPromise::RejectValueType aValue) {
+            mTransactionId.reset();
             mSignPromiseRequest.Complete();
             Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                  u"CTAPSignAbort"_ns, 1);
@@ -347,9 +351,17 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
   // fall through in case the virtual token was used.
 #endif
 
-  mRegisterPromiseRequest.DisconnectIfExists();
-  mSignPromiseRequest.DisconnectIfExists();
-  mTransactionId.reset();
+  if (mTransactionId.isSome()) {
+    mRegisterPromiseRequest.DisconnectIfExists();
+    mSignPromiseRequest.DisconnectIfExists();
+    mTransactionId.reset();
+
+    nsCOMPtr<nsIWebAuthnService> webauthnService(
+        do_GetService("@mozilla.org/webauthn/service;1"));
+    if (webauthnService) {
+      webauthnService->Reset();
+    }
+  }
 }
 
 }  // namespace mozilla::dom
