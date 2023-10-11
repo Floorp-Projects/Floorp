@@ -1743,7 +1743,6 @@ bool imgLoader::ValidateRequestWithNewChannel(
 
       if (aLinkPreload) {
         MOZ_ASSERT(aLoadingDocument);
-        proxy->PrioritizeAsPreload();
         auto preloadKey = PreloadHashKey::CreateAsImage(
             aURI, aTriggeringPrincipal, aCORSMode);
         proxy->NotifyOpen(preloadKey, aLoadingDocument, true);
@@ -1811,7 +1810,6 @@ bool imgLoader::ValidateRequestWithNewChannel(
 
   if (aLinkPreload) {
     MOZ_ASSERT(aLoadingDocument);
-    req->PrioritizeAsPreload();
     auto preloadKey =
         PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal, aCORSMode);
     req->NotifyOpen(preloadKey, aLoadingDocument, true);
@@ -2553,7 +2551,6 @@ nsresult imgLoader::LoadImage(
 
     if (aLinkPreload) {
       MOZ_ASSERT(aLoadingDocument);
-      proxy->PrioritizeAsPreload();
       auto preloadKey =
           PreloadHashKey::CreateAsImage(aURI, aTriggeringPrincipal, corsmode);
       proxy->NotifyOpen(preloadKey, aLoadingDocument, true);

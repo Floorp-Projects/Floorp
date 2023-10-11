@@ -126,14 +126,6 @@ void ScriptLoadContext::PrioritizeAsPreload(nsIChannel* aChannel) {
   }
 }
 
-void ScriptLoadContext::PrioritizeAsPreload() {
-  if (!IsLinkPreloadScript()) {
-    // Do the prioritization only if this request has not already been created
-    // as a preload.
-    PrioritizeAsPreload(Channel());
-  }
-}
-
 bool ScriptLoadContext::IsPreload() const {
   if (mRequest->IsModuleRequest() && !mRequest->IsTopLevel()) {
     JS::loader::ModuleLoadRequest* root =

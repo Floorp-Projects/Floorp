@@ -92,11 +92,6 @@ class PreloaderBase : public SupportsWeakPtr, public nsISupports {
   // Accessor to the resource loading channel.
   nsIChannel* Channel() const { return mChannel; }
 
-  // May change priority of the resource loading channel so that it's treated as
-  // preload when this was initially representing a normal speculative load but
-  // later <link rel="preload"> was found for this resource.
-  virtual void PrioritizeAsPreload() = 0;
-
   // Helper function to set the LOAD_BACKGROUND flag on channel initiated by
   // <link rel=preload>.  This MUST be used before the channel is AsyncOpen'ed.
   static void AddLoadBackgroundFlag(nsIChannel* aChannel);

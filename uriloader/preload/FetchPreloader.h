@@ -38,8 +38,8 @@ class FetchPreloader : public PreloaderBase, public nsIStreamListener {
 
   // PreloaderBase
   nsresult AsyncConsume(nsIStreamListener* aListener) override;
+
   static void PrioritizeAsPreload(nsIChannel* aChannel);
-  void PrioritizeAsPreload() override;
 
  protected:
   explicit FetchPreloader(nsContentPolicyType aContentPolicyType);
