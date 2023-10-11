@@ -4,22 +4,22 @@
 
 package org.mozilla.fenix.shopping.middleware
 
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
 
-@RunWith(FenixRobolectricTestRunner::class)
 class ReviewQualityCheckNavigationMiddlewareTest {
 
+    private val sumoUrl = "https://support.mozilla.org/en-US/products/mobile"
     private lateinit var store: ReviewQualityCheckStore
     private lateinit var browserStore: BrowserStore
     private lateinit var addTabUseCase: TabsUseCases.SelectOrAddUseCase
@@ -28,10 +28,12 @@ class ReviewQualityCheckNavigationMiddlewareTest {
     @Before
     fun setup() {
         browserStore = BrowserStore()
-        addTabUseCase = TabsUseCases.SelectOrAddUseCase(browserStore)
+        addTabUseCase = mockk(relaxed = true)
         middleware = ReviewQualityCheckNavigationMiddleware(
             selectOrAddUseCase = addTabUseCase,
-            context = testContext,
+            getReviewQualityCheckSumoUrl = mockk {
+                every { this@mockk.invoke() } returns sumoUrl
+            },
         )
         store = ReviewQualityCheckStore(
             middleware = listOf(middleware),
@@ -40,13 +42,15 @@ class ReviewQualityCheckNavigationMiddlewareTest {
 
     @Test
     fun `WHEN opening an external link THEN the link should be opened in a new tab`() {
-        val action = ReviewQualityCheckAction.OpenPoweredByLink
+        val action = ReviewQualityCheckAction.OpenExplainerLearnMoreLink
         store.waitUntilIdle()
         assertEquals(0, browserStore.state.tabs.size)
 
         store.dispatch(action).joinBlocking()
         store.waitUntilIdle()
 
-        assertEquals(1, browserStore.state.tabs.size)
+        verify {
+            addTabUseCase.invoke(sumoUrl)
+        }
     }
 }

@@ -4,19 +4,12 @@
 
 package org.mozilla.fenix.shopping.middleware
 
-import android.content.Context
-import android.net.Uri
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.MiddlewareContext
-import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 
-private const val PARAM_UTM_CAMPAIGN_KEY = "utm_campaign"
-private const val PARAM_UTM_CAMPAIGN_VALUE = "fakespot-by-mozilla"
-private const val PARAM_UTM_TERM_KEY = "utm_term"
-private const val PARAM_UTM_TERM_VALUE = "core-sheet"
 private const val POWERED_BY_URL =
     "https://www.fakespot.com/our-mission?utm_source=review-checker" +
         "&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sheet"
@@ -27,11 +20,11 @@ private const val TERMS_OF_USE_URL = "https://www.fakespot.com/terms"
  * Middleware that handles navigation events for the review quality check feature.
  *
  * @property selectOrAddUseCase UseCase instance used to open new tabs.
- * @property context Context used to get SUMO urls.
+ * @property getReviewQualityCheckSumoUrl Instance used to retrieve the learn more SUMO link.
  */
 class ReviewQualityCheckNavigationMiddleware(
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
-    private val context: Context,
+    private val getReviewQualityCheckSumoUrl: GetReviewQualityCheckSumoUrl,
 ) : ReviewQualityCheckMiddleware {
 
     override fun invoke(
@@ -64,12 +57,7 @@ class ReviewQualityCheckNavigationMiddleware(
     ) = when (action) {
         is ReviewQualityCheckAction.OpenExplainerLearnMoreLink,
         ReviewQualityCheckAction.OpenOnboardingLearnMoreLink,
-        -> appendUTMParams(
-            SupportUtils.getSumoURLForTopic(
-                context,
-                SupportUtils.SumoTopic.REVIEW_QUALITY_CHECK,
-            ),
-        )
+        -> getReviewQualityCheckSumoUrl()
 
         is ReviewQualityCheckAction.OpenOnboardingTermsLink -> TERMS_OF_USE_URL
 
@@ -78,8 +66,3 @@ class ReviewQualityCheckNavigationMiddleware(
         is ReviewQualityCheckAction.OpenPoweredByLink -> POWERED_BY_URL
     }
 }
-
-private fun appendUTMParams(url: String): String = Uri.parse(url).buildUpon()
-    .appendQueryParameter(PARAM_UTM_CAMPAIGN_KEY, PARAM_UTM_CAMPAIGN_VALUE)
-    .appendQueryParameter(PARAM_UTM_TERM_KEY, PARAM_UTM_TERM_VALUE)
-    .build().toString()
