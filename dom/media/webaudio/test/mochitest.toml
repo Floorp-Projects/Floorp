@@ -36,6 +36,7 @@ support-files = [
   # See ./generate-test-files.py
   "half-a-second-1ch-44100-aac.aac",
   "half-a-second-1ch-44100-aac.mp4",
+  "half-a-second-1ch-44100-alaw.wav",
   "half-a-second-1ch-44100-flac.flac",
   "half-a-second-1ch-44100-libmp3lame.mp3",
   "half-a-second-1ch-44100-libopus.mp4",
@@ -43,6 +44,7 @@ support-files = [
   "half-a-second-1ch-44100-libopus.webm",
   "half-a-second-1ch-44100-libvorbis.ogg",
   "half-a-second-1ch-44100-libvorbis.webm",
+  "half-a-second-1ch-44100-mulaw.wav",
   "half-a-second-1ch-44100.wav",
   "half-a-second-1ch-48000-aac.aac",
   "half-a-second-1ch-48000-aac.mp4",

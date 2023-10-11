@@ -114,6 +114,10 @@
   // audio.  fuzzToleranceMobile is typically larger on mobile platforms since
   // we do fixed-point resampling as opposed to floating-point resampling on
   // those platforms.
+  // If fuzzMagnitude, is present, is the maximum magnitude difference, per
+  // sample, to consider two samples are identical. It is multiplied by the 
+  // maximum value a sample, in our case INT16_MAX. This allows checking files
+  // that should be identical except one has e.g. a higher quantization noise.
   var files = [
     // An ogg file, 44.1khz, mono
     {
@@ -213,6 +217,28 @@
       sampleRate: 48000,
       frames: 18600,
       duration: 0.3874,
+    },
+    {
+      url: "half-a-second-1ch-44100-mulaw.wav",
+      // It is expected that mulaw and linear are similar enough at 16-bits
+      expectedUrl: "half-a-second-1ch-44100.wav",
+      valid: true,
+      numberOfChannels: 1,
+      sampleRate: 44100,
+      frames: 22050,
+      duration: 0.5,
+      fuzzMagnitude: 0.04,
+    },
+    {
+      url: "half-a-second-1ch-44100-alaw.wav",
+      // It is expected that alaw and linear are similar enough at 16-bits
+      expectedUrl: "half-a-second-1ch-44100.wav",
+      valid: true,
+      numberOfChannels: 1,
+      sampleRate: 44100,
+      frames: 22050,
+      duration: 0.5,
+      fuzzMagnitude: 0.04,
     }
   ];
 
@@ -222,21 +248,25 @@
     var difference = 0;
     is(buf1.length, buf2.length, "same length");
     for (var i = 0; i < buf1.length; ++i) {
-      if (Math.abs(buf1[i] - buf2[i])) {
+      if (Math.abs(buf1[i] - buf2[i]) > fuzz.magnitude * (2 << 15)) {
         ++difference;
       }
     }
-    if (difference > fuzz) {
+    if (difference > fuzz.count) {
       ok(false, "Expected at most " + fuzz + " bytes difference, found " + difference + " bytes");
     }
-    return difference <= fuzz;
+    console.log(difference, fuzz.count);
+    return difference <= fuzz.count;
   }
 
   function getFuzzTolerance(test) {
     var kIsMobile =
       navigator.userAgent.includes("Mobile") || // b2g
       navigator.userAgent.includes("Android");  // android
-    return kIsMobile ? test.fuzzToleranceMobile : test.fuzzTolerance;
+    return {
+      magnitude: test.fuzzMagnitude ?? 0,
+      count: kIsMobile ? test.fuzzToleranceMobile ?? 0 : test.fuzzTolerance ?? 0
+    };
   }
 
   function bufferIsSilent(buffer) {
@@ -262,7 +292,7 @@
 
     var wave = createWaveFileData(buffer);
     if (test.expectedWaveData) {
-      ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data");
+      ok(fuzzyMemcmp(wave, test.expectedWaveData, getFuzzTolerance(test)), "Received expected decoded data for " + test.url);
     }
   }
 
