@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  --badge-active-background-color: var(--blue-50);
+  --badge-active-background-color: var(--blue-60);
   --badge-active-border-color: #FFFFFFB3;
   --badge-background-color: white;
   --badge-border-color: #CACAD1;
@@ -17,7 +17,6 @@
 }
 
 .theme-dark:root {
-  --badge-active-background-color: var(--blue-60);
   --badge-active-border-color: #FFF6;
   --badge-background-color: var(--grey-80);
   --badge-border-color: var(--grey-50);
@@ -26,7 +25,7 @@
   --badge-interactive-background-color: var(--grey-70);
   --badge-interactive-color: var(--grey-30);
   --badge-scrollable-color: #B98EFF;
-  --badge-scrollable-background-color: transparent;
+  --badge-scrollable-background-color: var(--badge-interactive-background-color);
 }
 
 /* Inspector badge */
