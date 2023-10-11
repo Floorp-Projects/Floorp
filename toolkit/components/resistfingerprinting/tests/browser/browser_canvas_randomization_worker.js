@@ -51,9 +51,10 @@ var TEST_CASES = [
 
       const context = offscreenCanvas.getContext("2d");
 
-      // Draw a red rectangle
-      context.fillStyle = "red";
+      context.fillStyle = "#EE2222";
       context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
       const imageData = context.getImageData(0, 0, 100, 100);
 
@@ -89,8 +90,10 @@ var TEST_CASES = [
       const context = offscreenCanvas.getContext("2d");
 
       // Draw a red rectangle
-      context.fillStyle = "red";
+      context.fillStyle = "#EE2222";
       context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
       let blob = await offscreenCanvas.convertToBlob();
 
@@ -125,16 +128,15 @@ var TEST_CASES = [
 
       const context = offscreenCanvas.getContext("webgl");
 
-      // Draw a blue rectangle
       context.enable(context.SCISSOR_TEST);
-      context.scissor(0, 150, 150, 150);
-      context.clearColor(1, 0, 0, 1);
+      context.scissor(0, 0, 100, 100);
+      context.clearColor(1, 0.2, 0.2, 1);
       context.clear(context.COLOR_BUFFER_BIT);
-      context.scissor(150, 150, 300, 150);
-      context.clearColor(0, 1, 0, 1);
+      context.scissor(15, 15, 30, 15);
+      context.clearColor(0.2, 1, 0.2, 1);
       context.clear(context.COLOR_BUFFER_BIT);
-      context.scissor(0, 0, 150, 150);
-      context.clearColor(0, 0, 1, 1);
+      context.scissor(50, 50, 15, 15);
+      context.clearColor(0.2, 0.2, 1, 1);
       context.clear(context.COLOR_BUFFER_BIT);
 
       let blob = await offscreenCanvas.convertToBlob();
@@ -171,8 +173,10 @@ var TEST_CASES = [
       const context = offscreenCanvas.getContext("2d");
 
       // Draw a red rectangle
-      context.fillStyle = "red";
+      context.fillStyle = "#EE2222";
       context.fillRect(0, 0, 100, 100);
+      context.fillStyle = "#2222EE";
+      context.fillRect(20, 20, 100, 100);
 
       const bitmapCanvas = new OffscreenCanvas(100, 100);
 
