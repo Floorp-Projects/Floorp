@@ -252,7 +252,7 @@ class nsAtomTable {
   // pages loaded, but in those cases the actual atoms will dominate memory
   // usage and the overhead of extra tables will be negligible. We're mostly
   // interested in the fixed cost for nearly-empty content processes.
-  constexpr static size_t kNumSubTables = 128;  // Must be power of two.
+  constexpr static size_t kNumSubTables = 512;  // Must be power of two.
 
   // The atom table very quickly gets 10,000+ entries in it (or even 100,000+).
   // But choosing the best initial subtable length has some subtleties: we add
