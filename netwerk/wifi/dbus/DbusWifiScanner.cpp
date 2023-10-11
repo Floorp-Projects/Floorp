@@ -2,354 +2,160 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <gio/gio.h>
 #include "DbusWifiScanner.h"
-#include "mozilla/DBusHelpers.h"
 #include "nsWifiAccessPoint.h"
+#include "mozilla/GUniquePtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/GRefPtr.h"
 
 namespace mozilla {
 
-WifiScannerImpl::WifiScannerImpl() {
-  mConnection =
-      already_AddRefed<DBusConnection>(dbus_bus_get(DBUS_BUS_SYSTEM, nullptr));
-
-  if (mConnection) {
-    dbus_connection_setup_with_g_main(mConnection, nullptr);
-    dbus_connection_set_exit_on_disconnect(mConnection, false);
-  }
-
-  MOZ_COUNT_CTOR(WifiScannerImpl);
-}
+WifiScannerImpl::WifiScannerImpl() { MOZ_COUNT_CTOR(WifiScannerImpl); }
 
 WifiScannerImpl::~WifiScannerImpl() { MOZ_COUNT_DTOR(WifiScannerImpl); }
 
 nsresult WifiScannerImpl::GetAccessPointsFromWLAN(
-    AccessPointArray& accessPoints) {
-  if (!mConnection) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  return SendGetDevices(accessPoints);
-}
-
-// http://dbus.freedesktop.org/doc/api/html/group__DBusConnection.html
-// Refer to function dbus_connection_send_with_reply_and_block.
-static const uint32_t DBUS_DEFAULT_TIMEOUT = -1;
-
-nsresult WifiScannerImpl::SendGetDevices(AccessPointArray& accessPoints) {
-  RefPtr<DBusMessage> msg =
-      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
-          "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager",
-          "org.freedesktop.NetworkManager", "GetDevices"));
-  if (!msg) {
+    AccessPointArray& aAccessPoints) {
+  RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+      "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager",
+      "org.freedesktop.NetworkManager", nullptr, nullptr));
+  if (!proxy) {
     return NS_ERROR_FAILURE;
   }
 
-  DBusError err;
-  dbus_error_init(&err);
-
-  RefPtr<DBusMessage> reply =
-      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
-          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
+  RefPtr<GVariant> result =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "Devices"));
+  if (!result ||
+      !g_variant_is_of_type(result, G_VARIANT_TYPE_OBJECT_PATH_ARRAY)) {
     return NS_ERROR_FAILURE;
   }
 
-  return IdentifyDevices(reply, accessPoints);
-}
-
-nsresult WifiScannerImpl::SendGetDeviceType(const char* aPath,
-                                            AccessPointArray& accessPoints) {
-  RefPtr<DBusMessage> msg = already_AddRefed<DBusMessage>(
-      dbus_message_new_method_call("org.freedesktop.NetworkManager", aPath,
-                                   "org.freedesktop.DBus.Properties", "Get"));
-  if (!msg) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DBusMessageIter argsIter;
-  dbus_message_iter_init_append(msg, &argsIter);
-
-  const char* paramInterface = "org.freedesktop.NetworkManager.Device";
-  if (!dbus_message_iter_append_basic(&argsIter, DBUS_TYPE_STRING,
-                                      &paramInterface)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  const char* paramDeviceType = "DeviceType";
-  if (!dbus_message_iter_append_basic(&argsIter, DBUS_TYPE_STRING,
-                                      &paramDeviceType)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DBusError err;
-  dbus_error_init(&err);
-
-  RefPtr<DBusMessage> reply =
-      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
-          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
-    return NS_ERROR_FAILURE;
-  }
-
-  return IdentifyDeviceType(reply, aPath, accessPoints);
-}
-
-nsresult WifiScannerImpl::SendGetAccessPoints(const char* aPath,
-                                              AccessPointArray& accessPoints) {
-  RefPtr<DBusMessage> msg =
-      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
-          "org.freedesktop.NetworkManager", aPath,
-          "org.freedesktop.NetworkManager.Device.Wireless", "GetAccessPoints"));
-  if (!msg) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DBusError err;
-  dbus_error_init(&err);
-
-  RefPtr<DBusMessage> reply =
-      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
-          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
-    // In the GetAccessPoints case, if there are no access points, error is set.
-    // We don't want to error out here.
-    return NS_OK;
-  }
-
-  return IdentifyAccessPoints(reply, accessPoints);
-}
-
-nsresult WifiScannerImpl::SendGetAPProperties(const char* aPath,
-                                              AccessPointArray& accessPoints) {
-  RefPtr<DBusMessage> msg =
-      already_AddRefed<DBusMessage>(dbus_message_new_method_call(
-          "org.freedesktop.NetworkManager", aPath,
-          "org.freedesktop.DBus.Properties", "GetAll"));
-  if (!msg) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DBusMessageIter argsIter;
-  dbus_message_iter_init_append(msg, &argsIter);
-
-  const char* param = "org.freedesktop.NetworkManager.AccessPoint";
-  if (!dbus_message_iter_append_basic(&argsIter, DBUS_TYPE_STRING, &param)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DBusError err;
-  dbus_error_init(&err);
-
-  RefPtr<DBusMessage> reply =
-      already_AddRefed<DBusMessage>(dbus_connection_send_with_reply_and_block(
-          mConnection, msg, DBUS_DEFAULT_TIMEOUT, &err));
-  if (dbus_error_is_set(&err)) {
-    dbus_error_free(&err);
-    return NS_ERROR_FAILURE;
-  }
-
-  return IdentifyAPProperties(reply, accessPoints);
-}
-
-nsresult WifiScannerImpl::IdentifyDevices(DBusMessage* aMsg,
-                                          AccessPointArray& accessPoints) {
-  DBusMessageIter iter;
-  nsresult rv = GetDBusIterator(aMsg, &iter);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const char* devicePath;
-  do {
-    if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_OBJECT_PATH) {
+  gsize num = g_variant_n_children(result);
+  for (gsize i = 0; i < num; i++) {
+    const char* devicePath =
+        g_variant_get_string(g_variant_get_child_value(result, i), nullptr);
+    if (!devicePath || !AddDevice(devicePath, aAccessPoints)) {
       return NS_ERROR_FAILURE;
     }
-
-    dbus_message_iter_get_basic(&iter, &devicePath);
-    if (!devicePath) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = SendGetDeviceType(devicePath, accessPoints);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } while (dbus_message_iter_next(&iter));
+  }
 
   return NS_OK;
 }
 
-nsresult WifiScannerImpl::IdentifyDeviceType(DBusMessage* aMsg,
-                                             const char* aDevicePath,
-                                             AccessPointArray& accessPoints) {
-  DBusMessageIter args;
-  if (!dbus_message_iter_init(aMsg, &args)) {
-    return NS_ERROR_FAILURE;
+bool WifiScannerImpl::AddDevice(const char* aDevicePath,
+                                AccessPointArray& aAccessPoints) {
+  RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+      "org.freedesktop.NetworkManager", aDevicePath,
+      "org.freedesktop.NetworkManager.Device", nullptr, nullptr));
+  if (!proxy) {
+    return false;
   }
 
-  if (dbus_message_iter_get_arg_type(&args) != DBUS_TYPE_VARIANT) {
-    return NS_ERROR_FAILURE;
+  RefPtr<GVariant> deviceType =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "DeviceType"));
+  if (!deviceType || !g_variant_is_of_type(deviceType, G_VARIANT_TYPE_UINT32)) {
+    return false;
   }
-
-  DBusMessageIter variantIter;
-  dbus_message_iter_recurse(&args, &variantIter);
-  if (dbus_message_iter_get_arg_type(&variantIter) != DBUS_TYPE_UINT32) {
-    return NS_ERROR_FAILURE;
-  }
-
-  uint32_t deviceType;
-  dbus_message_iter_get_basic(&variantIter, &deviceType);
 
   // http://projects.gnome.org/NetworkManager/developers/api/07/spec-07.html
   // Refer to NM_DEVICE_TYPE_WIFI under NM_DEVICE_TYPE.
   const uint32_t NM_DEVICE_TYPE_WIFI = 2;
-  nsresult rv = NS_OK;
-  if (deviceType == NM_DEVICE_TYPE_WIFI) {
-    rv = SendGetAccessPoints(aDevicePath, accessPoints);
+  if (g_variant_get_uint32(deviceType) != NM_DEVICE_TYPE_WIFI) {
+    // Don't probe non-wifi devices
+    return true;
   }
 
-  return rv;
+  proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+      "org.freedesktop.NetworkManager", aDevicePath,
+      "org.freedesktop.NetworkManager.Device.Wireless", nullptr, nullptr));
+  if (!proxy) {
+    return false;
+  }
+
+  RefPtr<GVariant> points =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "AccessPoints"));
+  if (!points ||
+      !g_variant_is_of_type(points, G_VARIANT_TYPE_OBJECT_PATH_ARRAY)) {
+    return false;
+  }
+
+  gsize num = g_variant_n_children(points);
+  for (gsize i = 0; i < num; i++) {
+    const char* ap =
+        g_variant_get_string(g_variant_get_child_value(points, i), nullptr);
+    if (!ap || !AddAPProperties(ap, aAccessPoints)) {
+      return false;
+    }
+  }
+  return true;
 }
 
-nsresult WifiScannerImpl::IdentifyAccessPoints(DBusMessage* aMsg,
-                                               AccessPointArray& accessPoints) {
-  DBusMessageIter iter;
-  nsresult rv = GetDBusIterator(aMsg, &iter);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const char* path;
-  do {
-    if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_OBJECT_PATH) {
-      return NS_ERROR_FAILURE;
-    }
-    dbus_message_iter_get_basic(&iter, &path);
-    if (!path) {
-      return NS_ERROR_FAILURE;
-    }
-
-    rv = SendGetAPProperties(path, accessPoints);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } while (dbus_message_iter_next(&iter));
-
-  return NS_OK;
-}
-
-nsresult WifiScannerImpl::IdentifyAPProperties(DBusMessage* aMsg,
-                                               AccessPointArray& accessPoints) {
-  DBusMessageIter arr;
-  nsresult rv = GetDBusIterator(aMsg, &arr);
-  NS_ENSURE_SUCCESS(rv, rv);
+bool WifiScannerImpl::AddAPProperties(const char* aApPath,
+                                      AccessPointArray& aAccessPoints) {
+  RefPtr<GDBusProxy> proxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+      G_BUS_TYPE_SYSTEM, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+      "org.freedesktop.NetworkManager", aApPath,
+      "org.freedesktop.NetworkManager.AccessPoint", nullptr, nullptr));
+  if (!proxy) {
+    return false;
+  }
 
   RefPtr<nsWifiAccessPoint> ap = new nsWifiAccessPoint();
-  do {
-    DBusMessageIter dict;
-    dbus_message_iter_recurse(&arr, &dict);
 
-    do {
-      const char* key;
-      dbus_message_iter_get_basic(&dict, &key);
-      if (!key) {
-        return NS_ERROR_FAILURE;
-      }
-      dbus_message_iter_next(&dict);
-
-      DBusMessageIter variant;
-      dbus_message_iter_recurse(&dict, &variant);
-
-      if (!strncmp(key, "Ssid", strlen("Ssid"))) {
-        nsresult rv = StoreSsid(&variant, ap);
-        NS_ENSURE_SUCCESS(rv, rv);
-        break;
-      }
-
-      if (!strncmp(key, "HwAddress", strlen("HwAddress"))) {
-        nsresult rv = SetMac(&variant, ap);
-        NS_ENSURE_SUCCESS(rv, rv);
-        break;
-      }
-
-      if (!strncmp(key, "Strength", strlen("Strength"))) {
-        if (dbus_message_iter_get_arg_type(&variant) != DBUS_TYPE_BYTE) {
-          return NS_ERROR_FAILURE;
-        }
-
-        uint8_t strength;  // in %
-        dbus_message_iter_get_basic(&variant, &strength);
-        int signal_strength = (strength / 2) - 100;  // strength to dB
-        ap->setSignal(signal_strength);
-      }
-    } while (dbus_message_iter_next(&dict));
-  } while (dbus_message_iter_next(&arr));
-
-  accessPoints.AppendElement(ap);
-  return NS_OK;
-}
-
-nsresult WifiScannerImpl::StoreSsid(DBusMessageIter* aVariant,
-                                    nsWifiAccessPoint* aAp) {
-  if (dbus_message_iter_get_arg_type(aVariant) != DBUS_TYPE_ARRAY) {
-    return NS_ERROR_FAILURE;
+  RefPtr<GVariant> ssid =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "Ssid"));
+  if (!ssid || !g_variant_is_of_type(ssid, G_VARIANT_TYPE_BYTESTRING)) {
+    return false;
   }
-
-  DBusMessageIter variantMember;
-  dbus_message_iter_recurse(aVariant, &variantMember);
-
   const uint32_t MAX_SSID_LEN = 32;
-  char ssid[MAX_SSID_LEN];
-  memset(ssid, '\0', ArrayLength(ssid));
-  uint32_t i = 0;
-  do {
-    if (dbus_message_iter_get_arg_type(&variantMember) != DBUS_TYPE_BYTE) {
-      return NS_ERROR_FAILURE;
-    }
+  gsize len = 0;
+  const char* ssidString = static_cast<const char*>(
+      g_variant_get_fixed_array(ssid, &len, sizeof(guint8)));
+  if (ssidString && len && len <= MAX_SSID_LEN) {
+    ap->setSSID(ssidString, len);
+  }
 
-    dbus_message_iter_get_basic(&variantMember, &ssid[i]);
-    i++;
-  } while (dbus_message_iter_next(&variantMember) && i < MAX_SSID_LEN);
+  RefPtr<GVariant> hwAddress =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "HwAddress"));
+  if (!hwAddress || !g_variant_is_of_type(hwAddress, G_VARIANT_TYPE_STRING)) {
+    return false;
+  }
+  GUniquePtr<gchar> address(g_variant_dup_string(hwAddress, nullptr));
+  SetMac(address.get(), ap);
 
-  aAp->setSSID(ssid, i);
-  return NS_OK;
+  RefPtr<GVariant> st =
+      dont_AddRef(g_dbus_proxy_get_cached_property(proxy, "Strength"));
+  if (!st || !g_variant_is_of_type(st, G_VARIANT_TYPE_BYTE)) {
+    return false;
+  }
+
+  uint8_t strength = g_variant_get_byte(st);   // in %
+  int signal_strength = (strength / 2) - 100;  // strength to dB
+  ap->setSignal(signal_strength);
+
+  aAccessPoints.AppendElement(ap);
+  return true;
 }
 
-nsresult WifiScannerImpl::SetMac(DBusMessageIter* aVariant,
-                                 nsWifiAccessPoint* aAp) {
-  if (dbus_message_iter_get_arg_type(aVariant) != DBUS_TYPE_STRING) {
-    return NS_ERROR_FAILURE;
-  }
-
+bool WifiScannerImpl::SetMac(char* aHwAddress, nsWifiAccessPoint* aAp) {
   // hwAddress format is XX:XX:XX:XX:XX:XX. Need to convert to XXXXXX format.
-  char* hwAddress;
-  dbus_message_iter_get_basic(aVariant, &hwAddress);
-  if (!hwAddress) {
-    return NS_ERROR_FAILURE;
-  }
-
   const uint32_t MAC_LEN = 6;
   uint8_t macAddress[MAC_LEN];
   char* savedPtr = nullptr;
-  char* token = strtok_r(hwAddress, ":", &savedPtr);
+  char* token = strtok_r(aHwAddress, ":", &savedPtr);
   for (unsigned char& macAddres : macAddress) {
     if (!token) {
-      return NS_ERROR_FAILURE;
+      return false;
     }
     macAddres = strtoul(token, nullptr, 16);
     token = strtok_r(nullptr, ":", &savedPtr);
   }
   aAp->setMac(macAddress);
-  return NS_OK;
-}
-
-nsresult WifiScannerImpl::GetDBusIterator(DBusMessage* aMsg,
-                                          DBusMessageIter* aIterArray) {
-  DBusMessageIter iter;
-  if (!dbus_message_iter_init(aMsg, &iter)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_ARRAY) {
-    return NS_ERROR_FAILURE;
-  }
-
-  dbus_message_iter_recurse(&iter, aIterArray);
-  return NS_OK;
+  return true;
 }
 
 }  // namespace mozilla
