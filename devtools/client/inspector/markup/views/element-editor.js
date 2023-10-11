@@ -362,7 +362,7 @@ ElementEditor.prototype = {
     this._eventBadge.dataset.event = "true";
     this._eventBadge.textContent = "event";
     this._eventBadge.title = INSPECTOR_L10N.getStr(
-      "markupView.event.tooltiptext"
+      "markupView.event.tooltiptext2"
     );
     this._eventBadge.setAttribute("aria-pressed", "false");
     // Badges order is [event][display][custom], insert event badge before others.

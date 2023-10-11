@@ -590,12 +590,11 @@ textbox :-moz-focusring {
   fill: var(--theme-selection-color);
 }
 
-.theme-twisty:-moz-focusring {
-  outline-style: none;
-}
-
-.theme-twisty[open],
-.theme-twisty.open {
+.theme-twisty:is(
+  .open,
+  [open],
+  [aria-expanded="true"]
+) {
   transform: none;
 }
 

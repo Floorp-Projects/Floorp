@@ -64,6 +64,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       return;
     }
 
+    event.target.setAttribute("aria-pressed", "true");
     this._buildEventTooltipContent(event.target);
   },
 
@@ -110,6 +111,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       this.markup.win.setTimeout(() => {
         if (this.editor._eventBadge) {
           this.editor._eventBadge.style.pointerEvents = "auto";
+          this.editor._eventBadge.setAttribute("aria-pressed", "false");
         }
       }, 0);
     });
@@ -119,6 +121,7 @@ MarkupElementContainer.prototype = extend(MarkupContainer.prototype, {
       this.editor._eventBadge.style.pointerEvents = "none";
     }
     tooltip.show(target);
+    tooltip.focus();
   },
 
   /**
