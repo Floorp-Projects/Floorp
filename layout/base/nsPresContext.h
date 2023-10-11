@@ -516,6 +516,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   void MaybeIncreaseMeasuredTicksSinceLoading();
 
+  bool NeedsMoreTicksForUserInput() const;
+
   void ResetUserInputEventsAllowed() {
     MOZ_ASSERT(IsRoot());
     mMeasuredTicksSinceLoading = 0;
