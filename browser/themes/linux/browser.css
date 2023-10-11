@@ -130,18 +130,6 @@ menuitem.bookmark-item {
   }
 }
 
-:root {
-  --toolbar-field-border-color: ThreeDShadow;
-}
-
-/* Address bar results view */
-
-:root:not(:-moz-lwtheme) {
-  --urlbar-popup-action-color: LinkText;
-  --autocomplete-popup-highlight-background: SelectedItem;
-  --autocomplete-popup-highlight-color: SelectedItemText;
-}
-
 /* AutoComplete */
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {

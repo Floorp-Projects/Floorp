@@ -9,6 +9,7 @@
 :root {
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
+  --urlbar-popup-action-color: LinkText;
 
   --urlbarView-secondary-text-color: color-mix(in srgb, currentColor 73%, transparent);
 
