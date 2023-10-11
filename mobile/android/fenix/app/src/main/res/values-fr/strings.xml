@@ -675,9 +675,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Ce module complémentaire n’est pas pris en charge</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Ce module complémentaire n’est pas pris en charge</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Ce module complémentaire est déjà installé</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Ce module complémentaire est déjà installé</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -2307,6 +2307,8 @@
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Nous devrions avoir des informations au sujet des avis sur ce produit d’ici 24 heures. Revenez plus tard.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Nous ne pouvons pas vérifier ces avis</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Malheureusement, nous ne pouvons pas vérifier la qualité des avis pour certains types de produits. Par exemple, les cartes-cadeau et le streaming vidéo, la musique et les jeux.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Plus d’informations prochainement</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2329,6 +2331,8 @@
     <string name="review_quality_check_no_analysis_body">Pour savoir si les avis sur ce produit sont dignes de confiance, vérifiez leur qualité. Cela ne prend que 60 secondes.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">Évaluer la qualité des avis</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">Essayez notre guide de confiance pour les avis de produits</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">Regardez quelle fiabilité accorder aux avis de produits sur %1$s avant d’acheter. Le vérificateur d’avis, une fonctionnalité expérimentale de %2$s, est intégré au navigateur. Il fonctionne aussi pour %3$s et %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2345,6 +2349,8 @@
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Oui, l’essayer</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Pas maintenant</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Vérifiez si vous pouvez vous fier aux avis sur ce produit, avant l’achat.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Essayer le vérificateur d’avis</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->

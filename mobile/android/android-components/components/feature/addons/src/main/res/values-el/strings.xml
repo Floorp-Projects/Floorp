@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">Επέκταση εργαλείων προγραμματιστή για πρόσβαση στα δεδομένα σας στις ανοιχτές καρτέλες</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Έκδοση</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">Δημιουργός</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">Δημιουργοί</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Δημιουργοί</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Τελευταία ενημέρωση</string>
     <!-- The developer website (Homepage) of the add-on. -->

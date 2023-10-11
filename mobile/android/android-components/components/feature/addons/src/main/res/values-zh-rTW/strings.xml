@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">讓開發者工具可存取您在開啟分頁中的資料</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">版本</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">作者</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">作者</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">作者</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">最近更新</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,10 +116,18 @@
     <string name="mozac_feature_addons_remove">移除</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">要安裝 %1$s 嗎？</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s 要求更多權限。</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">要求下列權限:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">它想要：</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">新增</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">允許</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">拒絕</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">取消</string>
     <!-- Accessibility content description to install add-on button. -->

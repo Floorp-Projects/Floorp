@@ -506,7 +506,7 @@
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox հաշիվը / համաժամեցման սերվերը փոփոխված է: Հայտը դադարեցվում է՝ փոփոխությունները գործադրելու համար…</string>
     <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
-    <string name="toast_override_account_sync_server_done">Mozilla հաշիվը/Համաժամեցման սպասարկիչը փոփոխվել են: Դուրս եկեք հավելվածից՝ փոփոխությունները գորխադրելու համար...</string>
+    <string name="toast_override_account_sync_server_done">Mozilla հաշիվը/Համաժամեցման սպասարկիչը փոփոխվել են: Դուրս եկեք հավելվածից՝ փոփոխությունները գորխադրելու համար…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Հաշիվ</string>
     <!-- Preference for changing where the toolbar is positioned -->

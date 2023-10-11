@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">열린 탭에서 데이터에 접근할 수 있도록 개발자 도구를 확장</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">버전</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">제작자</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">제작자</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">제작자</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">마지막 업데이트</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,10 +116,18 @@
     <string name="mozac_feature_addons_remove">제거</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s 부가 기능을 추가하시겠습니까?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s 부가 기능이 추가 권한을 요청합니다.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">다음의 권한 필요:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">요청 권한:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">추가</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">허용</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">거부</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">취소</string>
     <!-- Accessibility content description to install add-on button. -->

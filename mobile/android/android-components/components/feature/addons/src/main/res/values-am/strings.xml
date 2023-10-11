@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">በክፍት ትሮች ውስጥ ውሂብዎን ለመድረስ የገንቢ መሳሪያዎችን ዘርጋ</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ስሪት</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">ደራሲ</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">ደራሲያን</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">ደራሲያን</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">መጨረሻ የተሻሻለው</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,10 +116,18 @@
     <string name="mozac_feature_addons_remove">አስወግድ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s ይታከል?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s ተጨማሪ ፈቃዶችን ይጠይቃል።</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">የሚከተለውን ለማድረግ የእርስዎን ፈቃድ ይፈልጋል፦</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">ይፈልጋል፡-</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">አክል</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">ፍቀድ</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">ከልክል</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">ተወው</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -228,4 +238,10 @@
     <string name="mozac_feature_addons_installed_dialog_description">በምናሌው ውስጥ ይክፈቱት</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">እሺ ገባኝ</string>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">ተጨማሪ ይወቁ</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s ደህንነቱ የተጠበቀ እንደሆነ ሊረጋገጥ አልቻለም እና ተሰናክሏል።</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">%1$s ከእርስዎ የ%2$s (የ%3$s ስሪት) ጋር ተኳሃኝ አይደለም።</string>
 </resources>

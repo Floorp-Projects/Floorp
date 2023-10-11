@@ -316,16 +316,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">አሁን አይሆንም</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%sን ነባሪ አሳሽዎ ያድርጉ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">ፋየርፎክስን ነባሪ አሳሽዎ ያድርጉ</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s ሰዎችን ከትርፍ በላይ ያስቀምጣቸዋል እና ድረ-ገጽ ተሻጋሪ መከታተያዎችን በማገድ የእርስዎን ግላዊነት ይጠብቃል።\n\nበእኛ %2$s ውስጥ የበለጠ ይወቁ።</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">ፋየርፎክስ ሰዎችን ከትርፍ በላይ ያስቀድማል እና ድረ-ገጽ ተሻጋሪ መከታተያዎችን በማገድ የእርስዎን ግላዊነት ይጠብቃል።\n\nበግላዊነት ማስታወቂያችን ውስጥ የበለጠ ይረዱ።</string>
@@ -345,15 +338,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ይግቡ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">አሁን አይሆንም</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">ማሳወቂያዎች በ%s የበለጠ እንዲከውኑ ያግዝዎታል</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">ማሳወቂያዎች በፋየርፎክስ የበለጠ እንዲሰሩ ያግዝዎታል</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">በመሳሪያዎች መካከል ትሮችን ይላኩ፣ ውርዶችን ያስተዳድሩ እና %sን የበለጠ ለመጠቀም ምክሮችን ያግኙ።</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">በመሳሪያዎች መካከል ትሮችን ይላኩ፣ ውርዶችን ያስተዳድሩ እና ከፋየርፎክስ የበለጠ ለመጠቀም ምክሮችን ያግኙ።</string>
@@ -508,11 +495,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">ተደራሽነት</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">ብጁ የፋየርፎክስ መለያ አገልጋይ</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">ብጁ የፋየርፎክስ መለያ አገልጋይ</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">ብጁ የMozilla መለያ አገልጋይ</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">ብጁ የማመሳሰል አገልጋይ</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">የፋየርፎክስ መለያ/አመሳስል አገልጋይ ተቀይሯል። ለውጦችን ለማካተት መተግበሪያውን በማቆም ላይ…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">የፋየርፎክስ መለያ/አመሳስል አገልጋይ ተቀይሯል። ለውጦችን ለማካተት መተግበሪያውን በማቆም ላይ…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">የMozilla መለያ/አመሳስል አገልጋይ ተቀይሯል። ለውጦችን ለመተግበር መተግበሪያውን በማቆም ላይ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">መለያ</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -528,7 +519,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ትሮችን፣ እልባቶችን፣ የይለፍ ቃላትን እና ሌሎችን ለማመሳሰል ይግቡ።</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">የፋየርፎክስ መለያ</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">የፋየርፎክስ መለያ</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">የMozilla መለያ</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">ማመሳሰልን ለመቀጠል እንደገና ይገናኙ</string>
     <!-- Preference for language -->
@@ -559,6 +552,13 @@
     <string name="preferences_account_settings">የመለያ ቅንብሮች</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">ራስ-አጠናቅቅ</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">ከስፖንሰሮች የተሰጡ አስተያየቶች</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">ጥቆማዎች ከ%1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">ከድር ፍለጋዎ ጋር የተያያዙ ጥቆማዎችን ያግኙ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">አገናኞችን በመተግበሪያዎች ውስጥ ክፈት</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -660,9 +660,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">ተጨማሪ አይደገፍም</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">ተጨማሪ አይደገፍም</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">ተጨማሪ አስቀድሞ ተጭኗል</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">ተጨማሪ አስቀድሞ ተጭኗል</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -2175,17 +2175,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">የምርት ግምገማዎችን አስተማማኝነት ለማረጋገጥ AI ቴክኖሎጂን ከ%s በMozilla እንጠቀማለን። ይህ እርስዎ የግምገማ ጥራትን ብቻ እንጂ የምርት ጥራትን እንዲገመግሙ አይረዳወትም።</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[የእያንዳንዱን ምርት ግምገማዎች በ<b>ፊደል ደረጃ</b> ከሀ እስከ ረ እንመድባለን።]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[የእያንዳንዱን ምርት ግምገማዎች በ<b>ፊደል ደረጃ</b> ከሀ እስከ ረ እንመድባለን።]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">አስተማማኝ ግምገማዎች። ግምገማዎቹ ሐቀኛ፣ አድልዎ የለሽ ግምገማዎችን ትተው ከወጡ እውነተኛ ደንበኞች ሊሆኑ እንደሚችሉ እናምናለን።</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">ግምገማዎቹ አስተማማኝ ናቸው ብለን እናምናለን።</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">አስተማማኝ እና የማይታመኑ ግምገማዎች ድብልቅ እንዳለ እናምናለን።</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">የማይታመኑ ግምገማዎች። ግምገማዎቹ የሐሰት ወይም አድሏዊ ከሆኑ ገምጋሚዎች ናቸው ብለን እናምናለን።</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">ግምገማዎቹ የማይታመኑ ናቸው ብለን እናምናለን።</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[የ<b>የተስተካከለ ደረጃ</b> አስተማማኝ ናቸው ብለን ባመንባቸው ግምገማዎች ላይ ብቻ የተመሰረተ ነው።]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[<b>ዋና ዋናዎቹ</b> አስተማማኝ ናቸው ብለን የምናምንባቸው ባለፉት 80 ቀናት ውስጥ ከ%s ግምገማዎች የተገኙ ናቸው።]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>ዋና ዋናዎቹ</b> አስተማማኝ ናቸው ብለን የምናምንባቸው ባለፉት 80 ቀናት ውስጥ ከ%s ግምገማዎች የተገኙ ናቸው።]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">ስለ%s የበለጠ ይወቁ።</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2259,6 +2263,8 @@
     <string name="review_quality_check_contextual_onboarding_privacy_policy">የግላዊነት ፖሊሲ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">የአጠቃቀም መመሪያ</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">አዎ፣ ይሞክሩት</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">አሁን አይሆንም</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->
