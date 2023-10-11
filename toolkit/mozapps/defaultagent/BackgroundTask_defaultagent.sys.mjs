@@ -13,9 +13,9 @@ const EXIT_CODE = {
 };
 
 // Should be slightly longer than NOTIFICATION_WAIT_TIMEOUT_MS in
-// Notification.cpp to not cause race between timeouts.
-// 12 hours NOTIFICATION_WAIT_TIMEOUT_MS + 10 additional seconds.
-export const backgroundTaskTimeoutSec = 12 * 60 * 60 * 1000 + 10 * 1000;
+// Notification.cpp (divided by 1000 to convert millseconds to seconds) to not
+// cause race between timeouts. Currently 12 hours + 10 additional seconds.
+export const backgroundTaskTimeoutSec = 12 * 60 * 60 + 10;
 
 // We expect to be given a command string in argv[1], perhaps followed by other
 // arguments depending on the command. The valid commands are:
