@@ -20,7 +20,6 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
-// TODO: Replace "VideoDecoder" in logs.
 mozilla::LazyLogModule gWebCodecsLog("WebCodecs");
 
 namespace mozilla::dom {
@@ -154,7 +153,7 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
                                              ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  LOG("VideoDecoder %p, Configure: codec %s", this,
+  LOG("%s %p, Configure: codec %s", DecoderType::Name.get(), this,
       NS_ConvertUTF16toUTF8(aConfig.mCodec).get());
 
   if (!DecoderType::Validate(aConfig)) {
@@ -183,7 +182,7 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
   mControlMessageQueue.emplace(
       UniquePtr<ControlMessage>(ConfigureMessage::Create(std::move(config))));
   mLatestConfigureId = mControlMessageQueue.back()->AsConfigureMessage()->mId;
-  LOG("VideoDecoder %p enqueues %s", this,
+  LOG("%s %p enqueues %s", DecoderType::Name.get(), this,
       mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
 }
@@ -192,7 +191,7 @@ template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  LOG("VideoDecoder %p, Decode", this);
+  LOG("%s %p, Decode", DecoderType::Name.get(), this);
 
   if (mState != CodecState::Configured) {
     aRv.ThrowInvalidStateError("Decoder must be configured first");
@@ -202,7 +201,8 @@ void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
   if (mKeyChunkRequired) {
     // TODO: Verify input's data is truly a key chunk
     if (!DecoderType::IsKeyChunk(aInput)) {
-      aRv.ThrowDataError("VideoDecoder needs a key chunk");
+      aRv.ThrowDataError(
+          nsPrintfCString("%s needs a key chunk", DecoderType::Name.get()));
       return;
     }
     mKeyChunkRequired = false;
@@ -212,7 +212,7 @@ void DecoderTemplate<DecoderType>::Decode(InputType& aInput, ErrorResult& aRv) {
   mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
       new DecodeMessage(++mDecodeCounter, mLatestConfigureId,
                         DecoderType::CreateInputInternal(aInput))));
-  LOGV("VideoDecoder %p enqueues %s", this,
+  LOGV("%s %p enqueues %s", DecoderType::Name.get(), this,
        mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
 }
@@ -222,10 +222,10 @@ already_AddRefed<Promise> DecoderTemplate<DecoderType>::Flush(
     ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  LOG("VideoDecoder %p, Flush", this);
+  LOG("%s %p, Flush", DecoderType::Name.get(), this);
 
   if (mState != CodecState::Configured) {
-    LOG("VideoDecoder %p, wrong state!", this);
+    LOG("%s %p, wrong state!", DecoderType::Name.get(), this);
     aRv.ThrowInvalidStateError("Decoder must be configured first");
     return nullptr;
   }
@@ -239,7 +239,7 @@ already_AddRefed<Promise> DecoderTemplate<DecoderType>::Flush(
 
   mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
       new FlushMessage(++mFlushCounter, mLatestConfigureId, p)));
-  LOG("VideoDecoder %p enqueues %s", this,
+  LOG("%s %p enqueues %s", DecoderType::Name.get(), this,
       mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
   return p.forget();
@@ -249,7 +249,7 @@ template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Reset(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  LOG("VideoDecoder %p, Reset", this);
+  LOG("%s %p, Reset", DecoderType::Name.get(), this);
 
   if (auto r = ResetInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
     aRv.Throw(r.unwrapErr());
@@ -260,7 +260,7 @@ template <typename DecoderType>
 void DecoderTemplate<DecoderType>::Close(ErrorResult& aRv) {
   AssertIsOnOwningThread();
 
-  LOG("VideoDecoder %p, Close", this);
+  LOG("%s %p, Close", DecoderType::Name.get(), this);
 
   if (auto r = CloseInternal(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
     aRv.Throw(r.unwrapErr());
@@ -288,7 +288,8 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::ResetInternal(
     ScheduleDequeueEvent();
   }
 
-  LOG("VideoDecoder %p now has its message queue unblocked", this);
+  LOG("%s %p now has its message queue unblocked", DecoderType::Name.get(),
+      this);
   mMessageQueueBlocked = false;
 
   return Ok();
@@ -302,7 +303,7 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternal(
   MOZ_TRY(ResetInternal(aResult));
   mState = CodecState::Closed;
   if (aResult != NS_ERROR_DOM_ABORT_ERR) {
-    LOGE("VideoDecoder %p Close on error: 0x%08" PRIx32, this,
+    LOGE("%s %p Close on error: 0x%08" PRIx32, DecoderType::Name.get(), this,
          static_cast<uint32_t>(aResult));
     ScheduleReportError(aResult);
   }
@@ -340,7 +341,7 @@ class DecoderTemplate<DecoderType>::ErrorRunnable final
     : public DiscardableRunnable {
  public:
   ErrorRunnable(Self* aVideoDecoder, const nsresult& aError)
-      : DiscardableRunnable("VideoDecoder ErrorRunnable"),
+      : DiscardableRunnable("Decoder ErrorRunnable"),
         mVideoDecoder(aVideoDecoder),
         mError(aError) {
     MOZ_ASSERT(mVideoDecoder);
@@ -350,8 +351,8 @@ class DecoderTemplate<DecoderType>::ErrorRunnable final
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
   // See bug 1535398.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
-    LOGE("VideoDecoder %p report error: 0x%08" PRIx32, mVideoDecoder.get(),
-         static_cast<uint32_t>(mError));
+    LOGE("%s %p report error: 0x%08" PRIx32, DecoderType::Name.get(),
+         mVideoDecoder.get(), static_cast<uint32_t>(mError));
     RefPtr<Self> d = std::move(mVideoDecoder);
     d->ReportError(mError);
     return NS_OK;
@@ -365,8 +366,8 @@ class DecoderTemplate<DecoderType>::ErrorRunnable final
 template <typename DecoderType>
 void DecoderTemplate<DecoderType>::ScheduleReportError(
     const nsresult& aResult) {
-  LOGE("VideoDecoder %p, schedule to report error: 0x%08" PRIx32, this,
-       static_cast<uint32_t>(aResult));
+  LOGE("%s %p, schedule to report error: 0x%08" PRIx32, DecoderType::Name.get(),
+       this, static_cast<uint32_t>(aResult));
   MOZ_ALWAYS_SUCCEEDS(
       NS_DispatchToCurrentThread(MakeAndAddRef<ErrorRunnable>(this, aResult)));
 }
@@ -377,7 +378,7 @@ class DecoderTemplate<DecoderType>::OutputRunnable final
  public:
   OutputRunnable(Self* aVideoDecoder, DecoderAgent::Id aAgentId,
                  const nsACString& aLabel, nsTArray<RefPtr<MediaData>>&& aData)
-      : DiscardableRunnable("VideoDecoder OutputRunnable"),
+      : DiscardableRunnable("Decoder OutputRunnable"),
         mVideoDecoder(aVideoDecoder),
         mAgentId(aAgentId),
         mLabel(aLabel),
@@ -390,24 +391,23 @@ class DecoderTemplate<DecoderType>::OutputRunnable final
   // See bug 1535398.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (mVideoDecoder->mState != CodecState::Configured) {
-      LOGV(
-          "VideoDecoder %p has been %s. Discard %s-result for DecoderAgent #%d",
-          mVideoDecoder.get(),
-          mVideoDecoder->mState == CodecState::Closed ? "closed" : "reset",
-          mLabel.get(), mAgentId);
+      LOGV("%s %p has been %s. Discard %s-result for DecoderAgent #%d",
+           DecoderType::Name.get(), mVideoDecoder.get(),
+           mVideoDecoder->mState == CodecState::Closed ? "closed" : "reset",
+           mLabel.get(), mAgentId);
       return NS_OK;
     }
 
     MOZ_ASSERT(mVideoDecoder->mAgent);
     if (mAgentId != mVideoDecoder->mAgent->mId) {
       LOGW(
-          "VideoDecoder %p has been re-configured. Still yield %s-result for "
+          "%s %p has been re-configured. Still yield %s-result for "
           "DecoderAgent #%d",
-          mVideoDecoder.get(), mLabel.get(), mAgentId);
+          DecoderType::Name.get(), mVideoDecoder.get(), mLabel.get(), mAgentId);
     }
 
-    LOGV("VideoDecoder %p, yields %s-result for DecoderAgent #%d",
-         mVideoDecoder.get(), mLabel.get(), mAgentId);
+    LOGV("%s %p, yields %s-result for DecoderAgent #%d",
+         DecoderType::Name.get(), mVideoDecoder.get(), mLabel.get(), mAgentId);
     RefPtr<Self> d = std::move(mVideoDecoder);
     d->OutputDecodedData(std::move(mData));
 
@@ -438,8 +438,8 @@ void DecoderTemplate<DecoderType>::ScheduleClose(const nsresult& aResult) {
 
   auto task = [self = RefPtr{this}, result = aResult] {
     if (self->mState == CodecState::Closed) {
-      LOGW("VideoDecoder %p has been closed. Ignore close with 0x%08" PRIx32,
-           self.get(), static_cast<uint32_t>(result));
+      LOGW("%s %p has been closed. Ignore close with 0x%08" PRIx32,
+           DecoderType::Name.get(), self.get(), static_cast<uint32_t>(result));
       return;
     }
     DebugOnly<Result<Ok, nsresult>> r = self->CloseInternal(result);
@@ -539,7 +539,7 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessages(
 
   // Cancel the message that is being processed.
   if (mProcessingMessage) {
-    LOG("VideoDecoder %p cancels current %s", this,
+    LOG("%s %p cancels current %s", DecoderType::Name.get(), this,
         mProcessingMessage->ToString().get());
     mProcessingMessage->Cancel();
 
@@ -552,7 +552,7 @@ void DecoderTemplate<DecoderType>::CancelPendingControlMessages(
 
   // Clear the message queue.
   while (!mControlMessageQueue.empty()) {
-    LOG("VideoDecoder %p cancels pending %s", this,
+    LOG("%s %p cancels pending %s", DecoderType::Name.get(), this,
         mControlMessageQueue.front()->ToString().get());
 
     MOZ_ASSERT(!mControlMessageQueue.front()->IsProcessing());
@@ -572,7 +572,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
   MOZ_ASSERT(aMessage->AsConfigureMessage());
 
   if (mProcessingMessage) {
-    LOG("VideoDecoder %p is processing %s. Defer %s", this,
+    LOG("%s %p is processing %s. Defer %s", DecoderType::Name.get(), this,
         mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
@@ -581,7 +581,8 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
   mControlMessageQueue.pop();
 
   ConfigureMessage* msg = mProcessingMessage->AsConfigureMessage();
-  LOG("VideoDecoder %p starts processing %s", this, msg->ToString().get());
+  LOG("%s %p starts processing %s", DecoderType::Name.get(), this,
+      msg->ToString().get());
 
   DestroyDecoderAgentIfAny();
 
@@ -592,14 +593,15 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
     DebugOnly<Result<Ok, nsresult>> r =
         CloseInternal(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
     MOZ_ASSERT(r.value.isOk());
-    LOGE("VideoDecoder %p cannot be configured", this);
+    LOGE("%s %p cannot be configured", DecoderType::Name.get(), this);
     return MessageProcessedResult::Processed;
   }
 
   MOZ_ASSERT(mAgent);
   MOZ_ASSERT(mActiveConfig);
 
-  LOG("VideoDecoder %p now blocks message-queue-processing", this);
+  LOG("%s %p now blocks message-queue-processing", DecoderType::Name.get(),
+      this);
   mMessageQueueBlocked = true;
 
   bool preferSW = mActiveConfig->mHardwareAcceleration ==
@@ -620,9 +622,10 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
 
                ConfigureMessage* msg =
                    self->mProcessingMessage->AsConfigureMessage();
-               LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s. now "
-                   "unblocks message-queue-processing",
-                   self.get(), id, msg->ToString().get(),
+               LOG("%s %p, DecodeAgent #%d %s has been %s. now unblocks "
+                   "message-queue-processing",
+                   DecoderType::Name.get(), self.get(), id,
+                   msg->ToString().get(),
                    aResult.IsResolve() ? "resolved" : "rejected");
 
                msg->Complete();
@@ -632,9 +635,9 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
                  // The spec asks to close VideoDecoder with an
                  // NotSupportedError so we log the exact error here.
                  const MediaResult& error = aResult.RejectValue();
-                 LOGE(
-                     "VideoDecoder %p, DecodeAgent #%d failed to configure: %s",
-                     self.get(), id, error.Description().get());
+                 LOGE("%s %p, DecodeAgent #%d failed to configure: %s",
+                      DecoderType::Name.get(), self.get(), id,
+                      error.Description().get());
                  DebugOnly<Result<Ok, nsresult>> r =
                      self->CloseInternal(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
                  MOZ_ASSERT(r.value.isOk());
@@ -657,7 +660,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   MOZ_ASSERT(aMessage->AsDecodeMessage());
 
   if (mProcessingMessage) {
-    LOGV("VideoDecoder %p is processing %s. Defer %s", this,
+    LOGV("%s %p is processing %s. Defer %s", DecoderType::Name.get(), this,
          mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
@@ -666,7 +669,8 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   mControlMessageQueue.pop();
 
   DecodeMessage* msg = mProcessingMessage->AsDecodeMessage();
-  LOGV("VideoDecoder %p starts processing %s", this, msg->ToString().get());
+  LOGV("%s %p starts processing %s", DecoderType::Name.get(), this,
+       msg->ToString().get());
 
   mDecodeQueueSize -= 1;
   ScheduleDequeueEvent();
@@ -680,7 +684,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   };
 
   if (!mAgent) {
-    LOGE("VideoDecoder %p is not configured", this);
+    LOGE("%s %p is not configured", DecoderType::Name.get(), this);
     return closeOnError();
   }
 
@@ -688,8 +692,8 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
   RefPtr<MediaRawData> data = InputDataToMediaRawData(
       std::move(msg->mData), *(mAgent->mInfo), *mActiveConfig);
   if (!data) {
-    LOGE("VideoDecoder %p, data for %s is empty or invalid", this,
-         msg->ToString().get());
+    LOGE("%s %p, data for %s is empty or invalid", DecoderType::Name.get(),
+         this, msg->ToString().get());
     return closeOnError();
   }
 
@@ -705,8 +709,9 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                MOZ_ASSERT(self->mActiveConfig);
 
                DecodeMessage* msg = self->mProcessingMessage->AsDecodeMessage();
-               LOGV("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                    self.get(), id, msg->ToString().get(),
+               LOGV("%s %p, DecodeAgent #%d %s has been %s",
+                    DecoderType::Name.get(), self.get(), id,
+                    msg->ToString().get(),
                     aResult.IsResolve() ? "resolved" : "rejected");
 
                nsCString msgStr = msg->ToString();
@@ -718,8 +723,9 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                  // The spec asks to queue a task to run close-VideoDecoder
                  // with an EncodingError so we log the exact error here.
                  const MediaResult& error = aResult.RejectValue();
-                 LOGE("VideoDecoder %p, DecodeAgent #%d %s failed: %s",
-                      self.get(), id, msgStr.get(), error.Description().get());
+                 LOGE("%s %p, DecodeAgent #%d %s failed: %s",
+                      DecoderType::Name.get(), self.get(), id, msgStr.get(),
+                      error.Description().get());
                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                  return;  // No further process
                }
@@ -728,13 +734,12 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessDecodeMessage(
                nsTArray<RefPtr<MediaData>> data =
                    std::move(aResult.ResolveValue());
                if (data.IsEmpty()) {
-                 LOGV("VideoDecoder %p got no data for %s", self.get(),
-                      msgStr.get());
+                 LOGV("%s %p got no data for %s", DecoderType::Name.get(),
+                      self.get(), msgStr.get());
                } else {
-                 LOGV(
-                     "VideoDecoder %p, schedule %zu decoded data output for "
-                     "%s",
-                     self.get(), data.Length(), msgStr.get());
+                 LOGV("%s %p, schedule %zu decoded data output for %s",
+                      DecoderType::Name.get(), self.get(), data.Length(),
+                      msgStr.get());
                  self->ScheduleOutputDecodedData(std::move(data), msgStr);
                }
 
@@ -753,7 +758,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
   MOZ_ASSERT(aMessage->AsFlushMessage());
 
   if (mProcessingMessage) {
-    LOG("VideoDecoder %p is processing %s. Defer %s", this,
+    LOG("%s %p is processing %s. Defer %s", DecoderType::Name.get(), this,
         mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
@@ -762,11 +767,12 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
   mControlMessageQueue.pop();
 
   FlushMessage* msg = mProcessingMessage->AsFlushMessage();
-  LOG("VideoDecoder %p starts processing %s", this, msg->ToString().get());
+  LOG("%s %p starts processing %s", DecoderType::Name.get(), this,
+      msg->ToString().get());
 
   // Treat it like decode error if no DecoderAgent is available.
   if (!mAgent) {
-    LOGE("VideoDecoder %p is not configured", this);
+    LOGE("%s %p is not configured", DecoderType::Name.get(), this);
 
     SchedulePromiseResolveOrReject(msg->TakePromise(),
                                    NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
@@ -778,67 +784,68 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
   }
 
   mAgent->DrainAndFlush()
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr{this}, id = mAgent->mId](
-                 DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
-               MOZ_ASSERT(self->mProcessingMessage);
-               MOZ_ASSERT(self->mProcessingMessage->AsFlushMessage());
-               MOZ_ASSERT(self->mState == CodecState::Configured);
-               MOZ_ASSERT(self->mAgent);
-               MOZ_ASSERT(id == self->mAgent->mId);
-               MOZ_ASSERT(self->mActiveConfig);
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, id = mAgent->mId](
+              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
+            MOZ_ASSERT(self->mProcessingMessage);
+            MOZ_ASSERT(self->mProcessingMessage->AsFlushMessage());
+            MOZ_ASSERT(self->mState == CodecState::Configured);
+            MOZ_ASSERT(self->mAgent);
+            MOZ_ASSERT(id == self->mAgent->mId);
+            MOZ_ASSERT(self->mActiveConfig);
 
-               FlushMessage* msg = self->mProcessingMessage->AsFlushMessage();
-               LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                   self.get(), id, msg->ToString().get(),
-                   aResult.IsResolve() ? "resolved" : "rejected");
+            FlushMessage* msg = self->mProcessingMessage->AsFlushMessage();
+            LOG("%s %p, DecodeAgent #%d %s has been %s",
+                DecoderType::Name.get(), self.get(), id, msg->ToString().get(),
+                aResult.IsResolve() ? "resolved" : "rejected");
 
-               nsCString msgStr = msg->ToString();
+            nsCString msgStr = msg->ToString();
 
-               msg->Complete();
+            msg->Complete();
 
-               // If flush failed, it means decoder fails to decode the data
-               // sent before, so we treat it like decode error. We reject the
-               // promise first and then queue a task to close VideoDecoder with
-               // an EncodingError.
-               if (aResult.IsReject()) {
-                 const MediaResult& error = aResult.RejectValue();
-                 LOGE("VideoDecoder %p, DecodeAgent #%d failed to flush: %s",
-                      self.get(), id, error.Description().get());
+            // If flush failed, it means decoder fails to decode the data
+            // sent before, so we treat it like decode error. We reject the
+            // promise first and then queue a task to close VideoDecoder with
+            // an EncodingError.
+            if (aResult.IsReject()) {
+              const MediaResult& error = aResult.RejectValue();
+              LOGE("%s %p, DecodeAgent #%d failed to flush: %s",
+                   DecoderType::Name.get(), self.get(), id,
+                   error.Description().get());
 
-                 // Reject with an EncodingError instead of the error we got
-                 // above.
-                 self->SchedulePromiseResolveOrReject(
-                     msg->TakePromise(),
-                     NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+              // Reject with an EncodingError instead of the error we got
+              // above.
+              self->SchedulePromiseResolveOrReject(
+                  msg->TakePromise(), NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
 
-                 self->mProcessingMessage.reset();
+              self->mProcessingMessage.reset();
 
-                 self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                 return;  // No further process
-               }
+              self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+              return;  // No further process
+            }
 
-               // If flush succeeded, schedule to output decoded data first
-               // and then resolve the promise, then keep processing the
-               // control messages.
-               MOZ_ASSERT(aResult.IsResolve());
-               nsTArray<RefPtr<MediaData>> data =
-                   std::move(aResult.ResolveValue());
+            // If flush succeeded, schedule to output decoded data first
+            // and then resolve the promise, then keep processing the
+            // control messages.
+            MOZ_ASSERT(aResult.IsResolve());
+            nsTArray<RefPtr<MediaData>> data =
+                std::move(aResult.ResolveValue());
 
-               if (data.IsEmpty()) {
-                 LOG("VideoDecoder %p gets no data for %s", self.get(),
-                     msgStr.get());
-               } else {
-                 LOG("VideoDecoder %p, schedule %zu decoded data output for "
-                     "%s",
-                     self.get(), data.Length(), msgStr.get());
-                 self->ScheduleOutputDecodedData(std::move(data), msgStr);
-               }
+            if (data.IsEmpty()) {
+              LOG("%s %p gets no data for %s", DecoderType::Name.get(),
+                  self.get(), msgStr.get());
+            } else {
+              LOG("%s %p, schedule %zu decoded data output for %s",
+                  DecoderType::Name.get(), self.get(), data.Length(),
+                  msgStr.get());
+              self->ScheduleOutputDecodedData(std::move(data), msgStr);
+            }
 
-               self->SchedulePromiseResolveOrReject(msg->TakePromise(), NS_OK);
-               self->mProcessingMessage.reset();
-               self->ProcessControlMessageQueue();
-             })
+            self->SchedulePromiseResolveOrReject(msg->TakePromise(), NS_OK);
+            self->mProcessingMessage.reset();
+            self->ProcessControlMessageQueue();
+          })
       ->Track(msg->Request());
 
   return MessageProcessedResult::Processed;
@@ -885,8 +892,10 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
 
     // Clean up all the resources when worker is going away.
     RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-        workerPrivate, "VideoDecoder::SetupDecoder", [self = RefPtr{this}]() {
-          LOG("VideoDecoder %p, worker is going away", self.get());
+        workerPrivate, "DecoderTemplate::CreateDecoderAgent",
+        [self = RefPtr{this}]() {
+          LOG("%s %p, worker is going away", DecoderType::Name.get(),
+              self.get());
           Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
         });
     if (NS_WARN_IF(!workerRef)) {
@@ -910,7 +919,7 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
   mShutdownBlocker = media::ShutdownBlockingTicket::Create(
       uniqueName, NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__);
   if (!mShutdownBlocker) {
-    LOGE("VideoDecoder %p failed to create %s", this,
+    LOGE("%s %p failed to create %s", DecoderType::Name.get(), this,
          NS_ConvertUTF16toUTF8(uniqueName).get());
     return false;
   }
@@ -921,21 +930,20 @@ bool DecoderTemplate<DecoderType>::CreateDecoderAgent(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, id = mAgent->mId,
        ref = mWorkerRef](bool /* aUnUsed*/) {
-        LOG("VideoDecoder %p gets xpcom-will-shutdown notification for "
-            "DecodeAgent #%d",
-            self.get(), id);
+        LOG("%s %p gets xpcom-will-shutdown notification for DecodeAgent #%d",
+            DecoderType::Name.get(), self.get(), id);
         Unused << self->ResetInternal(NS_ERROR_DOM_ABORT_ERR);
       },
       [self = RefPtr{this}, id = mAgent->mId,
        ref = mWorkerRef](bool /* aUnUsed*/) {
-        LOG("VideoDecoder %p removes shutdown-blocker #%d before getting any "
+        LOG("%s %p removes shutdown-blocker #%d before getting any "
             "notification. DecodeAgent #%d should have been dropped",
-            self.get(), id, id);
+            DecoderType::Name.get(), self.get(), id, id);
         MOZ_ASSERT(!self->mAgent || self->mAgent->mId != id);
       });
 
-  LOG("VideoDecoder %p creates DecodeAgent #%d @ %p and its shutdown-blocker",
-      this, mAgent->mId, mAgent.get());
+  LOG("%s %p creates DecodeAgent #%d @ %p and its shutdown-blocker",
+      DecoderType::Name.get(), this, mAgent->mId, mAgent.get());
 
   resetOnFailure.release();
   return true;
@@ -946,7 +954,7 @@ void DecoderTemplate<DecoderType>::DestroyDecoderAgentIfAny() {
   AssertIsOnOwningThread();
 
   if (!mAgent) {
-    LOG("VideoDecoder %p has no DecodeAgent to destroy", this);
+    LOG("%s %p has no DecodeAgent to destroy", DecoderType::Name.get(), this);
     return;
   }
 
@@ -954,8 +962,8 @@ void DecoderTemplate<DecoderType>::DestroyDecoderAgentIfAny() {
   MOZ_ASSERT(mShutdownBlocker);
   MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerRef);
 
-  LOG("VideoDecoder %p destroys DecodeAgent #%d @ %p", this, mAgent->mId,
-      mAgent.get());
+  LOG("%s %p destroys DecodeAgent #%d @ %p", DecoderType::Name.get(), this,
+      mAgent->mId, mAgent.get());
   mActiveConfig = nullptr;
   RefPtr<DecoderAgent> agent = std::move(mAgent);
   // mShutdownBlocker should be kept alive until the shutdown is done.
@@ -965,9 +973,10 @@ void DecoderTemplate<DecoderType>::DestroyDecoderAgentIfAny() {
       [self = RefPtr{this}, id = agent->mId, ref = std::move(mWorkerRef),
        blocker = std::move(mShutdownBlocker)](
           const ShutdownPromise::ResolveOrRejectValue& aResult) {
-        LOG("VideoDecoder %p, DecoderAgent #%d's shutdown has been %s. "
-            "Drop its shutdown-blocker now",
-            self.get(), id, aResult.IsResolve() ? "resolved" : "rejected");
+        LOG("%s %p, DecoderAgent #%d's shutdown has been %s. Drop its "
+            "shutdown-blocker now",
+            DecoderType::Name.get(), self.get(), id,
+            aResult.IsResolve() ? "resolved" : "rejected");
       });
 }
 
