@@ -3086,7 +3086,8 @@ void gfxPlatform::InitWebGPUConfig() {
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
     if (StaticPrefs::gfx_webgpu_ignore_blocklist_AtStartup()) {
       feature.UserForceEnable(
-          "Ignoring blocklist entry because of gfx.webgpu.force-enabled:true.");
+          "Ignoring blocklist entry because gfx.webgpu.ignore-blocklist is "
+          "true.");
     }
 
     feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
