@@ -351,6 +351,14 @@ urlbar:
         * "Sponsored" label is shown as the group label.
         * Change the suggested index to 1.
         * Handle as top pick.
+    recentSearchesFeatureGate:
+      type: boolean
+      setPref: browser.urlbar.recentsearches.featureGate
+      description: Gate for the recent searches feature.
+    recentSearchesMaxResults:
+      type: int
+      setPref: browser.urlbar.recentsearches.maxResults
+      description: The maximum number of recent searches to show.
     recordNavigationalSuggestionTelemetry:
       type: boolean
       description: Whether to record navigational suggestion telemetry. Defaults to false.
@@ -1898,9 +1906,9 @@ feltPrivacy:
   variables:
     feltPrivacy:
       type: boolean
-      setPref: browser.privatebrowsing.felt-privacy-v1 
+      setPref: browser.privatebrowsing.felt-privacy-v1
       description: >-
-        When true, new styles and copy enabled on about:privatebrowsing. When true, 
+        When true, new styles and copy enabled on about:privatebrowsing. When true,
         a toggle for showing or hiding quick suggestions appears in about:preferences.
     resetPBMAction:
       type: boolean

@@ -59,6 +59,26 @@ async function doSearchHistoryTest({ trigger, assert }) {
   await SpecialPowers.popPrefEnv();
 }
 
+async function doRecentSearchTest({ trigger, assert }) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.recentsearches.featureGate", true]],
+  });
+
+  await doTest(async browser => {
+    await UrlbarTestUtils.formHistory.add([
+      { value: "foofoo", source: Services.search.defaultEngine.name },
+    ]);
+
+    await openPopup("");
+    await selectRowByURL("http://mochi.test:8888/?terms=foofoo");
+
+    await trigger();
+    await assert();
+  });
+
+  await SpecialPowers.popPrefEnv();
+}
+
 async function doSearchSuggestTest({ trigger, assert }) {
   await SpecialPowers.pushPrefEnv({
     set: [

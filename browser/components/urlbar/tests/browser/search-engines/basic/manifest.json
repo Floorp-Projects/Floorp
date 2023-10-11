@@ -1,0 +1,20 @@
+{
+  "name": "basic",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "basic",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "basic@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "basic",
+      "keyword": "@basic",
+      "search_url": "https://example.com/?search={searchTerms}&foo=1",
+      "suggest_url": "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true&query={searchTerms}"
+    }
+  }
+}
