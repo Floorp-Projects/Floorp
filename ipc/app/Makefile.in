@@ -30,15 +30,15 @@ libs::
 	# plugin-container
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app
 	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app 
-	$(call py_action,preprocessor,-Fsubstitution -DEXECUTABLE='$(MOZ_CHILD_PROCESS_NAME)' -DBUNDLEID='$(MOZ_CHILD_PROCESS_BUNDLEID)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Info.plist)
-	$(call py_action,preprocessor,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_CHILD_PROCESS_APPNAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings)
+	$(call py_action,preprocessor $(MOZ_CHILD_PROCESS_NAME).app/Contents/Info.plist,-Fsubstitution -DEXECUTABLE='$(MOZ_CHILD_PROCESS_NAME)' -DBUNDLEID='$(MOZ_CHILD_PROCESS_BUNDLEID)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Info.plist)
+	$(call py_action,preprocessor $(MOZ_CHILD_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_CHILD_PROCESS_APPNAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings)
 	$(NSINSTALL) -D $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME) $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS
 	# media-plugin-helper
 	$(NSINSTALL) -D $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app
 	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app
-	$(call py_action,preprocessor,-Fsubstitution -DEXECUTABLE='$(MOZ_EME_PROCESS_NAME_BRANDED)' -DBUNDLEID='$(MOZ_EME_PROCESS_BUNDLEID)' -DMOZ_EME_PROCESS_NAME_BRANDED='$(MOZ_EME_PROCESS_NAME_BRANDED)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/Info.plist)
-	$(call py_action,preprocessor,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_EME_PROCESS_BUNDLENAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings)
+	$(call py_action,preprocessor $(MOZ_EME_PROCESS_NAME).app/Contents/Info.plist,-Fsubstitution -DEXECUTABLE='$(MOZ_EME_PROCESS_NAME_BRANDED)' -DBUNDLEID='$(MOZ_EME_PROCESS_BUNDLEID)' -DMOZ_EME_PROCESS_NAME_BRANDED='$(MOZ_EME_PROCESS_NAME_BRANDED)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/Info.plist)
+	$(call py_action,preprocessor $(MOZ_EME_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_EME_PROCESS_BUNDLENAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings)
 	$(NSINSTALL) -D $(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/MacOS
 	cp $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME) "$(DIST)/bin/$(MOZ_EME_PROCESS_NAME).app/Contents/MacOS/$(MOZ_EME_PROCESS_NAME_BRANDED)"
 endif #}
