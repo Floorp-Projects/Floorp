@@ -31,6 +31,25 @@ use style_traits::{
     PropertySyntaxParseError, StyleParseErrorKind, ToCss,
 };
 
+/// A single component of the computed value.
+pub type ComputedValueComponent = GenericValueComponent<
+    // TODO(zrhoffman, bug 1856524): Use computed::Length
+    specified::Length,
+    computed::Number,
+    computed::Percentage,
+    // TODO(zrhoffman, bug 1856524): Use computed::LengthPercentage
+    specified::LengthPercentage,
+    computed::Color,
+    computed::Image,
+    computed::url::ComputedUrl,
+    computed::Integer,
+    computed::Angle,
+    computed::Time,
+    computed::Resolution,
+    computed::Transform,
+    ComputedValueComponentList,
+>;
+
 /// A single component of the specified value.
 pub type SpecifiedValueComponent = GenericValueComponent<
     specified::Length,
@@ -98,74 +117,122 @@ pub enum GenericValueComponent<
 }
 
 impl ToComputedValue for SpecifiedValueComponent {
-    // TODO(zrhoffman, bug 1857716): Use separate type for computed value
-    type ComputedValue = Self;
+    type ComputedValue = ComputedValueComponent;
 
     fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
         match self {
-            SpecifiedValueComponent::Length(length) => SpecifiedValueComponent::Length(
+            SpecifiedValueComponent::Length(length) => ComputedValueComponent::Length(
                 // TODO(zrhoffman, bug 1856524): Compute <length>, which may contain font-relative
                 // units
                 length.clone(),
             ),
-            SpecifiedValueComponent::Number(number) => SpecifiedValueComponent::Number(
-                ToComputedValue::from_computed_value(&number.to_computed_value(context)),
-            ),
-            SpecifiedValueComponent::Percentage(percentage) => SpecifiedValueComponent::Percentage(
-                ToComputedValue::from_computed_value(&percentage.to_computed_value(context)),
-            ),
+            SpecifiedValueComponent::Number(number) => {
+                ComputedValueComponent::Number(number.to_computed_value(context))
+            },
+            SpecifiedValueComponent::Percentage(percentage) => {
+                ComputedValueComponent::Percentage(percentage.to_computed_value(context))
+            },
             SpecifiedValueComponent::LengthPercentage(length_percentage) => {
                 // TODO(zrhoffman, bug 1856524): Compute <length-percentage>, which may contain
                 // font-relative units
-                SpecifiedValueComponent::LengthPercentage(length_percentage.clone())
+                ComputedValueComponent::LengthPercentage(length_percentage.clone())
             },
-            SpecifiedValueComponent::Color(color) => SpecifiedValueComponent::Color(
-                ToComputedValue::from_computed_value(&color.to_computed_value(context)),
-            ),
-            SpecifiedValueComponent::Image(image) => SpecifiedValueComponent::Image(
-                ToComputedValue::from_computed_value(&image.to_computed_value(context)),
-            ),
-            SpecifiedValueComponent::Url(url) => {
-                SpecifiedValueComponent::Url(ToComputedValue::from_computed_value(
-                    // TODO(zrhoffman, bug 1846625): Compute <url>
-                    &url.to_computed_value(context),
-                ))
+            SpecifiedValueComponent::Color(color) => {
+                ComputedValueComponent::Color(color.to_computed_value(context))
             },
-            SpecifiedValueComponent::Integer(integer) => SpecifiedValueComponent::Integer(
-                ToComputedValue::from_computed_value(&integer.to_computed_value(context)),
+            SpecifiedValueComponent::Image(image) => {
+                ComputedValueComponent::Image(image.to_computed_value(context))
+            },
+            SpecifiedValueComponent::Url(url) => ComputedValueComponent::Url(
+                // TODO(zrhoffman, bug 1846625): Compute <url>
+                url.to_computed_value(context),
             ),
-            SpecifiedValueComponent::Angle(angle) => SpecifiedValueComponent::Angle(
-                ToComputedValue::from_computed_value(&angle.to_computed_value(context)),
-            ),
-            SpecifiedValueComponent::Time(time) => SpecifiedValueComponent::Time(
-                ToComputedValue::from_computed_value(&time.to_computed_value(context)),
-            ),
-            SpecifiedValueComponent::Resolution(resolution) => SpecifiedValueComponent::Resolution(
-                ToComputedValue::from_computed_value(&resolution.to_computed_value(context)),
-            ),
+            SpecifiedValueComponent::Integer(integer) => {
+                ComputedValueComponent::Integer(integer.to_computed_value(context))
+            },
+            SpecifiedValueComponent::Angle(angle) => {
+                ComputedValueComponent::Angle(angle.to_computed_value(context))
+            },
+            SpecifiedValueComponent::Time(time) => {
+                ComputedValueComponent::Time(time.to_computed_value(context))
+            },
+            SpecifiedValueComponent::Resolution(resolution) => {
+                ComputedValueComponent::Resolution(resolution.to_computed_value(context))
+            },
             SpecifiedValueComponent::TransformFunction(transform_function) => {
-                SpecifiedValueComponent::TransformFunction(ToComputedValue::from_computed_value(
-                    &transform_function.to_computed_value(context),
-                ))
+                ComputedValueComponent::TransformFunction(
+                    transform_function.to_computed_value(context),
+                )
             },
             SpecifiedValueComponent::CustomIdent(custom_ident) => {
-                SpecifiedValueComponent::CustomIdent(ToComputedValue::from_computed_value(
-                    &custom_ident.to_computed_value(context),
-                ))
+                ComputedValueComponent::CustomIdent(custom_ident.to_computed_value(context))
             },
             SpecifiedValueComponent::TransformList(transform_list) => {
-                SpecifiedValueComponent::TransformList(ToComputedValue::from_computed_value(
-                    &transform_list.to_computed_value(context),
-                ))
+                ComputedValueComponent::TransformList(transform_list.to_computed_value(context))
             },
-            SpecifiedValueComponent::String(string) => SpecifiedValueComponent::String(
-                ToComputedValue::from_computed_value(&string.to_computed_value(context)),
-            ),
+            SpecifiedValueComponent::String(string) => {
+                ComputedValueComponent::String(string.to_computed_value(context))
+            },
         }
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        computed.clone()
+        match computed {
+            ComputedValueComponent::Length(length) => SpecifiedValueComponent::Length(
+                // TODO(zrhoffman, bug 1856524): Use computed <length>
+                length.clone(),
+            ),
+            ComputedValueComponent::Number(number) => {
+                SpecifiedValueComponent::Number(ToComputedValue::from_computed_value(number))
+            },
+            ComputedValueComponent::Percentage(percentage) => SpecifiedValueComponent::Percentage(
+                ToComputedValue::from_computed_value(percentage),
+            ),
+            ComputedValueComponent::LengthPercentage(length_percentage) => {
+                // TODO(zrhoffman, bug 1856524): Use computed <length-percentage>
+                SpecifiedValueComponent::LengthPercentage(length_percentage.clone())
+            },
+            ComputedValueComponent::Color(color) => {
+                SpecifiedValueComponent::Color(ToComputedValue::from_computed_value(color))
+            },
+            ComputedValueComponent::Image(image) => {
+                SpecifiedValueComponent::Image(ToComputedValue::from_computed_value(image))
+            },
+            ComputedValueComponent::Url(url) => SpecifiedValueComponent::Url(
+                // TODO(zrhoffman, bug 1846625): Compute <url>
+                ToComputedValue::from_computed_value(url),
+            ),
+            ComputedValueComponent::Integer(integer) => {
+                SpecifiedValueComponent::Integer(ToComputedValue::from_computed_value(integer))
+            },
+            ComputedValueComponent::Angle(angle) => {
+                SpecifiedValueComponent::Angle(ToComputedValue::from_computed_value(angle))
+            },
+            ComputedValueComponent::Time(time) => {
+                SpecifiedValueComponent::Time(ToComputedValue::from_computed_value(time))
+            },
+            ComputedValueComponent::Resolution(resolution) => SpecifiedValueComponent::Resolution(
+                ToComputedValue::from_computed_value(resolution),
+            ),
+            ComputedValueComponent::TransformFunction(transform_function) => {
+                SpecifiedValueComponent::TransformFunction(ToComputedValue::from_computed_value(
+                    transform_function,
+                ))
+            },
+            ComputedValueComponent::CustomIdent(custom_ident) => {
+                SpecifiedValueComponent::CustomIdent(ToComputedValue::from_computed_value(
+                    custom_ident,
+                ))
+            },
+            ComputedValueComponent::TransformList(transform_list) => {
+                SpecifiedValueComponent::TransformList(ToComputedValue::from_computed_value(
+                    transform_list,
+                ))
+            },
+            ComputedValueComponent::String(string) => {
+                SpecifiedValueComponent::String(ToComputedValue::from_computed_value(string))
+            },
+        }
     }
 }
 
@@ -174,7 +241,7 @@ impl ToComputedValue for SpecifiedValueComponent {
 pub struct SpecifiedValueComponentList(ThinArc<Multiplier, SpecifiedValueComponent>);
 
 impl ToComputedValue for SpecifiedValueComponentList {
-    type ComputedValue = Self;
+    type ComputedValue = ComputedValueComponentList;
 
     fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
         let iter = self
@@ -182,11 +249,16 @@ impl ToComputedValue for SpecifiedValueComponentList {
             .slice()
             .iter()
             .map(|item| item.to_computed_value(context));
-        Self::new(self.0.header, iter)
+        ComputedValueComponentList::new(self.0.header, iter)
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        computed.clone()
+        let iter = computed
+            .0
+            .slice()
+            .iter()
+            .map(SpecifiedValueComponent::from_computed_value);
+        Self::new(computed.0.header, iter)
     }
 }
 
@@ -225,8 +297,21 @@ impl SpecifiedValueComponentList {
     }
 }
 
+/// A list of computed component values, including the list's unchanged multiplier.
+#[derive(Clone)]
+pub struct ComputedValueComponentList(ThinArc<Multiplier, ComputedValueComponent>);
+
+impl ComputedValueComponentList {
+    fn new<I>(multiplier: Multiplier, values: I) -> Self
+    where
+        I: Iterator<Item = ComputedValueComponent> + ExactSizeIterator,
+    {
+        Self(ThinArc::from_header_and_iter(multiplier, values))
+    }
+}
+
 /// A specified registered custom property value.
-#[derive(Clone, ToCss)]
+#[derive(ToCss)]
 pub enum SpecifiedValue {
     /// A single specified component value whose syntax descriptor component did not have a
     /// multiplier.
@@ -238,20 +323,28 @@ pub enum SpecifiedValue {
 }
 
 impl ToComputedValue for SpecifiedValue {
-    type ComputedValue = Self;
+    type ComputedValue = ComputedValue;
 
     fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
         match self {
             SpecifiedValue::Component(component) => {
-                SpecifiedValue::Component(component.to_computed_value(context))
+                ComputedValue::Component(component.to_computed_value(context))
             },
-            SpecifiedValue::Universal(value) => SpecifiedValue::Universal(value.clone()),
-            SpecifiedValue::List(list) => SpecifiedValue::List(list.to_computed_value(context)),
+            SpecifiedValue::Universal(value) => ComputedValue::Universal(value.clone()),
+            SpecifiedValue::List(list) => ComputedValue::List(list.to_computed_value(context)),
         }
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        computed.clone()
+        match computed {
+            ComputedValue::Component(component) => {
+                SpecifiedValue::Component(SpecifiedValueComponent::from_computed_value(component))
+            },
+            ComputedValue::Universal(value) => SpecifiedValue::Universal(value.clone()),
+            ComputedValue::List(list) => {
+                SpecifiedValue::List(SpecifiedValueComponentList::from_computed_value(list))
+            },
+        }
     }
 }
 
@@ -281,7 +374,8 @@ impl SpecifiedValue {
             &mut rule_cache_conditions,
             ContainerSizeQuery::none(),
         );
-        let value = value.to_computed_value(&context).to_css_string();
+        let value = value.to_computed_value(&context);
+        let value = SpecifiedValue::from_computed_value(&value).to_css_string();
 
         let result = {
             let mut input = ParserInput::new(&value);
@@ -324,6 +418,17 @@ impl SpecifiedValue {
         };
         Ok(computed_value)
     }
+}
+
+/// A computed registered custom property value.
+pub enum ComputedValue {
+    /// A single computed component value whose syntax descriptor component did not have a
+    /// multiplier.
+    Component(ComputedValueComponent),
+    /// A computed value whose syntax descriptor was the universal syntax definition.
+    Universal(Arc<ComputedPropertyValue>),
+    /// A list of computed component values whose syntax descriptor component had a multiplier.
+    List(ComputedValueComponentList),
 }
 
 /// Whether the computed value parsing should allow computationaly dependent values like 3em or
