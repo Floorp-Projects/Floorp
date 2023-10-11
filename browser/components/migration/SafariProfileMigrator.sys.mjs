@@ -644,6 +644,16 @@ export class SafariProfileMigrator extends MigratorBase {
     return true;
   }
 
+  async canGetPermissions() {
+    if (await MigrationUtils.canGetPermissionsOnPlatform()) {
+      const profileDir = FileUtils.getDir("ULibDir", ["Safari"]);
+      if (await IOUtils.exists(profileDir.path)) {
+        return profileDir.path;
+      }
+    }
+    return false;
+  }
+
   get mainPreferencesPropertyList() {
     if (this._mainPreferencesPropertyList === undefined) {
       let file = FileUtils.getDir("UsrPrfs", []);

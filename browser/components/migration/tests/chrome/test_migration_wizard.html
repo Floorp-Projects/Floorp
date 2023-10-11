@@ -30,6 +30,7 @@
           displayName: "Some Browser 0",
           resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS", "EXTENSIONS"],
           profile: { id: "person-2", name: "Person 2" },
+          hasPermissions: true,
         },
         {
           key: "some-browser-1",
@@ -37,6 +38,7 @@
           displayName: "Some Browser 1",
           resourceTypes: ["HISTORY", "BOOKMARKS"],
           profile: null,
+          hasPermissions: true,
         },
       ];
 
@@ -216,6 +218,7 @@
             displayName: "Some Browser 0 with no resources",
             resourceTypes: [],
             profile: { id: "person-1", name: "Person 1" },
+            hasPermissions: true,
           }],
           showImportAll: false,
         });
@@ -380,12 +383,14 @@
             displayName: "Some Browser 0 with a single resource",
             resourceTypes: ["HISTORY"],
             profile: { id: "person-1", name: "Person 1" },
+            hasPermissions: true,
           }, {
             key: "some-browser-1",
             type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
             displayName: "Some Browser 1 with a two resources",
             resourceTypes: ["HISTORY", "BOOKMARKS"],
             profile: { id: "person-2", name: "Person 2" },
+            hasPermissions: true,
           }],
           showImportAll: true,
         });
@@ -1034,6 +1039,7 @@
               displayName: "Legacy Microsoft Browser",
               resourceTypes: ["BOOKMARKS"],
               profile: null,
+              hasPermissions: true,
             }],
             showImportAll: false,
           });
@@ -1057,6 +1063,7 @@
               displayName: "Legacy Microsoft Browser",
               resourceTypes: ["BOOKMARKS"],
               profile: null,
+              hasPermissions: true,
             }],
             showImportAll: true,
           });
@@ -1327,6 +1334,7 @@
             displayName: "Some Browser 0",
             resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
             profile: { id: "person-2", name: "Person 2" },
+            hasPermissions: true,
           },
           {
             key: "some-browser-1",
@@ -1334,6 +1342,7 @@
             displayName: "Some Browser 1",
             resourceTypes: ["HISTORY", "BOOKMARKS"],
             profile: null,
+            hasPermissions: true,
           },
           {
             key: FILE_MIGRATOR_KEY,
@@ -1423,6 +1432,94 @@
         ok(!details.open, "Details collapsed by default");
 
         gWiz.removeAttribute("force-show-import-all");
+      });
+
+      /**
+       * Tests that for non-Safari migrators without permissions, we show
+       * the appropriate message and the button for getting permissions.
+       */
+      add_task(async function no_permissions() {
+        const SOME_FAKE_PERMISSION_PATH = "/some/fake/path";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: [{
+            key: "some-browser-0",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
+            displayName: "Some Browser 0 with no permissions",
+            resourceTypes: [],
+            profile: null,
+            hasPermissions: false,
+            permissionsPath: SOME_FAKE_PERMISSION_PATH,
+          }],
+          showImportAll: false,
+        });
+
+        let selectionPage = gShadowRoot.querySelector("div[name='page-selection']");
+        ok(selectionPage.hasAttribute("no-permissions"), "no-permissions attribute set.");
+
+        let resourceList = gShadowRoot.querySelector(".resource-selection-details");
+        ok(isHidden(resourceList), "Resources list is hidden.");
+
+        let importButton = gShadowRoot.querySelector("#import");
+        ok(isHidden(importButton), "Import button hidden.");
+        let noPermissionsMessage = gShadowRoot.querySelector(".no-permissions-message");
+        ok(!isHidden(noPermissionsMessage), "No permissions message shown.");
+        let getPermissionButton = gShadowRoot.querySelector("#get-permissions");
+        ok(!isHidden(getPermissionButton), "Get permissions button shown.");
+
+        let step2 = gShadowRoot.querySelector(".migration-no-permissions-instructions-step2");
+        ok(step2.hasAttribute("data-l10n-args"));
+        is(JSON.parse(step2.getAttribute("data-l10n-args")).permissionsPath, SOME_FAKE_PERMISSION_PATH);
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: MIGRATOR_PROFILE_INSTANCES,
+          showImportAll: false,
+        });
+
+        ok(!selectionPage.hasAttribute("no-permissions"), "no-permissions attribute set to false.");
+        ok(!isHidden(resourceList), "Resources list is shown.");
+        ok(!isHidden(importButton), "Import button is shown.");
+        ok(isHidden(noPermissionsMessage), "No permissions message hidden.");
+        ok(isHidden(getPermissionButton), "Get permissions button hidden.");
+      });
+
+      /**
+       * Tests that for the Safari migrator without permissions, we show the
+       * normal resources list and impor tbutton instead of the no permissions
+       * message. Safari has a special flow where permissions are requested
+       * only after resource selection has occurred.
+       */
+      add_task(async function no_permissions_safari() {
+        const SOME_FAKE_PERMISSION_PATH = "/some/fake/safari/path";
+
+        gWiz.setState({
+          page: MigrationWizardConstants.PAGES.SELECTION,
+          migrators: [{
+            key: "safari",
+            type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
+            displayName: "Safari with no permissions",
+            resourceTypes: ["HISTORY", "BOOKMARKS"],
+            profile: null,
+            hasPermissions: false,
+            permissionsPath: SOME_FAKE_PERMISSION_PATH,
+          }],
+          showImportAll: false,
+        });
+
+        let selectionPage = gShadowRoot.querySelector("div[name='page-selection']");
+        ok(!selectionPage.hasAttribute("no-permissions"), "no-permissions attribute not set.");
+
+        let resourceList = gShadowRoot.querySelector(".resource-selection-details");
+        ok(!isHidden(resourceList), "Resources list is shown.");
+
+        let importButton = gShadowRoot.querySelector("#import");
+        ok(!isHidden(importButton), "Import button shown.");
+        let noPermissionsMessage = gShadowRoot.querySelector(".no-permissions-message");
+        ok(isHidden(noPermissionsMessage), "No permissions message hidden.");
+        let getPermissionButton = gShadowRoot.querySelector("#get-permissions");
+        ok(isHidden(getPermissionButton), "Get permissions button hiddne.");
       });
     </script>
   </head>

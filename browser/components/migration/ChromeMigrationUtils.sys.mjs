@@ -225,16 +225,21 @@ export var ChromeMigrationUtils = {
   /**
    * Get the local state file content.
    *
-   * @param {string} dataPath the type of Chrome data we're looking for (Chromium, Canary, etc.)
+   * @param {string} chromeProjectName
+   *   The type of Chrome data we're looking for (Chromium, Canary, etc.)
+   * @param {string} [dataPath=undefined]
+   *   The data path that should be used as the parent directory when getting
+   *   the local state. If not supplied, the data path is calculated using
+   *   getDataPath and the chromeProjectName.
    * @returns {object} The JSON-based content.
    */
-  async getLocalState(dataPath = "Chrome") {
+  async getLocalState(chromeProjectName = "Chrome", dataPath) {
     let localState = null;
     try {
-      let localStatePath = PathUtils.join(
-        await this.getDataPath(dataPath),
-        "Local State"
-      );
+      if (!dataPath) {
+        dataPath = await this.getDataPath(chromeProjectName);
+      }
+      let localStatePath = PathUtils.join(dataPath, "Local State");
       localState = JSON.parse(await IOUtils.readUTF8(localStatePath));
     } catch (ex) {
       // Don't report the error if it's just a file not existing.
@@ -264,6 +269,8 @@ export var ChromeMigrationUtils = {
    * @returns {string} The path of application data directory.
    */
   async getDataPath(chromeProjectName = "Chrome") {
+    const SNAP_REAL_HOME = "SNAP_REAL_HOME";
+
     const SUB_DIRECTORIES = {
       win: {
         Brave: [
@@ -304,7 +311,17 @@ export var ChromeMigrationUtils = {
         "Chrome Dev": [["Home", ".config", "google-chrome-unstable"]],
         Chromium: [
           ["Home", ".config", "chromium"],
+
+          // If we're installed normally, we can look for Chromium installed
+          // as a Snap on Ubuntu Linux by looking here.
           ["Home", "snap", "chromium", "common", "chromium"],
+
+          // If we're installed as a Snap, "Home" is a special place that
+          // the Snap environment has given us, and the Chromium data is
+          // not within it. We want to, instead, start at the path set
+          // on the environment variable "SNAP_REAL_HOME".
+          // See: https://snapcraft.io/docs/environment-variables#heading--snap-real-home
+          [SNAP_REAL_HOME, "snap", "chromium", "common", "chromium"],
         ],
         // Opera GX is not available on Linux.
         // Canary is not available on Linux.
@@ -321,7 +338,14 @@ export var ChromeMigrationUtils = {
     for (let subfolders of options) {
       let rootDir = subfolders[0];
       try {
-        let targetPath = Services.dirsvc.get(rootDir, Ci.nsIFile).path;
+        let targetPath;
+
+        if (rootDir == SNAP_REAL_HOME) {
+          targetPath = Services.env.get("SNAP_REAL_HOME");
+        } else {
+          targetPath = Services.dirsvc.get(rootDir, Ci.nsIFile).path;
+        }
+
         targetPath = PathUtils.join(targetPath, ...subfolders.slice(1));
         if (await IOUtils.exists(targetPath)) {
           return targetPath;
