@@ -161,7 +161,8 @@ class SheetLoadData final
   // loop round-trip in that case).
   bool mMustNotify : 1;
 
-  // mWasAlternate is true if the sheet was an alternate when the load data was
+  // mWasAlternate is true if the sheet was an alternate
+  // (https://html.spec.whatwg.org/#rel-alternate) when the load data was
   // created.
   const bool mWasAlternate : 1;
 
