@@ -1333,8 +1333,8 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
       *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 16),
       *reinterpret_cast<uint64_t*>(canvasKey.Elements() + 24));
 
-  // Ensure at least 16 random changes may occur.
-  uint8_t numNoises = std::clamp<uint8_t>(rnd3, 15, 255);
+  // Ensure at least 20 random changes may occur.
+  uint8_t numNoises = std::clamp<uint8_t>(rnd3, 20, 255);
 
 #ifdef __clang__
 #  pragma clang diagnostic push
@@ -1375,7 +1375,8 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     uint32_t idx = 4 * (rng1.next() % pixelCnt) + channel;
     uint8_t bit = rng2.next();
 
-    aData[idx] = aData[idx] ^ (bit & 0x1);
+    // 50% chance to XOR a 0x2 or 0x1 into the existing byte
+    aData[idx] = aData[idx] ^ (0x2 >> (bit & 0x1));
   }
 
   glean::fingerprinting_protection::canvas_noise_calculate_time
