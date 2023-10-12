@@ -13,6 +13,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIDragService"
 );
 
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
 /**
  * The SubDialog resize callback.
  * @callback SubDialog~resizeCallback
@@ -108,11 +110,29 @@ SubDialog.prototype = {
     this._titleElement.textContent = this._frame.contentDocument.title;
   },
 
-  injectXMLStylesheet(aStylesheetURL) {
+  injectStylesheet(aStylesheetURL) {
     const doc = this._frame.contentDocument;
     if ([...doc.styleSheets].find(s => s.href === aStylesheetURL)) {
       return;
     }
+
+    // Attempt to insert the stylesheet as a link element into the same place in
+    // the document as other link elements. It is almost certain that any
+    // document will already have a localization or other stylesheet link
+    // present.
+    let links = doc.getElementsByTagNameNS(HTML_NS, "link");
+    if (links.length) {
+      let stylesheetLink = doc.createElementNS(HTML_NS, "link");
+      stylesheetLink.setAttribute("rel", "stylesheet");
+      stylesheetLink.setAttribute("href", aStylesheetURL);
+
+      // Insert after the last found link element.
+      links[links.length - 1].after(stylesheetLink);
+
+      return;
+    }
+
+    // In the odd case just insert at the top as a processing instruction.
     let contentStylesheet = doc.createProcessingInstruction(
       "xml-stylesheet",
       'href="' + aStylesheetURL + '" type="text/css"'
@@ -365,7 +385,7 @@ SubDialog.prototype = {
     }
 
     for (let styleSheetURL of this._injectedStyleSheets) {
-      this.injectXMLStylesheet(styleSheetURL);
+      this.injectStylesheet(styleSheetURL);
     }
 
     let { contentDocument } = this._frame;
