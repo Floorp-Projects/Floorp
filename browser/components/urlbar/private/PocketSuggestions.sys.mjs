@@ -33,7 +33,6 @@ export class PocketSuggestions extends BaseFeature {
 
   get shouldEnable() {
     return (
-      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled") &&
       lazy.UrlbarPrefs.get("pocketFeatureGate") &&
       lazy.UrlbarPrefs.get("suggest.pocket") &&
       lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")

@@ -28,9 +28,8 @@ export class AdmWikipedia extends BaseFeature {
 
   get shouldEnable() {
     return (
-      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled") &&
-      (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-        lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+      lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")
     );
   }
 

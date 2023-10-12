@@ -281,10 +281,6 @@ urlbar:
     quickSuggestRemoteSettingsDataType:
       type: string
       description: The `type` of the suggestions data in remote settings. If not specified, "data" is used.
-    quickSuggestRemoteSettingsEnabled:
-      type: boolean
-      fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled
-      description: Whether Remote Settings is enabled as a quick suggest source
     quickSuggestRustEnabled:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.rustEnabled

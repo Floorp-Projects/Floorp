@@ -66,10 +66,7 @@ const gSuggestionTypesByCtor = new WeakMap();
  */
 export class SuggestBackendRust extends BaseFeature {
   get shouldEnable() {
-    return (
-      lazy.UrlbarPrefs.get("quickSuggestRustEnabled") &&
-      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")
-    );
+    return lazy.UrlbarPrefs.get("quickSuggestRustEnabled");
   }
 
   /**

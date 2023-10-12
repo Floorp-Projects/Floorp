@@ -13,7 +13,6 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.merino.enabled", true],
-      ["browser.urlbar.quicksuggest.remoteSettings.enabled", false],
       ["browser.urlbar.quicksuggest.dataCollection.enabled", true],
     ],
   });
