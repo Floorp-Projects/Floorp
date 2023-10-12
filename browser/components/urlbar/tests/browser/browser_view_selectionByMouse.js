@@ -505,7 +505,7 @@ add_task(async function buttons() {
         );
         Assert.equal(
           gURLBar.value,
-          UrlbarTestUtils.trimURL(initialTabUrl),
+          initialTabUrl,
           "Sanity check: input.value should be the initial URL initially"
         );
 
@@ -590,7 +590,7 @@ add_task(async function buttons() {
         );
         Assert.equal(
           gURLBar.value,
-          UrlbarTestUtils.trimURL(state.value),
+          state.value,
           "input.value should be as expected"
         );
       });
