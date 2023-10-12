@@ -1288,29 +1288,57 @@ ${RemoveDefaultBrowserAgentShortcut}
   Push $0
   Push $1
   Push $2
+  Push $3
 
   ${WinVerGetMajor} $0
   ${WinVerGetMinor} $1
   ${WinVerGetBuild} $2
 
+  ; Get the UBR; only documented way I could figure out how to get this reliably
+  ClearErrors
+  ReadRegDWORD $3 HKLM \
+    "Software\Microsoft\Windows NT\CurrentVersion" \
+    "UBR"
+
   ; It's not obvious how to use LogicLib itself within a LogicLib custom
-  ; operator, so we do everything by hand with `IntCmp`.  Success is when:
+  ; operator, so we do everything by hand with `IntCmp`.  The below lines
+  ; translate to:
+  ; StrCpy ${outvar} '0'  ; default to false
   ; ${If} $0 <= 10
-  ; ${AndIf} $1 <= 0
-  ; ${AndIf} $2 < 22621
-  ;   <success>
+  ;   ${If} $1 <= 0
+  ;     ${If} $2 < 22621
+  ;       StrCpy ${outvar} '1'
+  ;     ${ElseIf} $2 == 22621
+  ;       ${If} $3 < 2361
+  ;         StrCpy ${outvar} '1'
+  ;       ${Endif}
+  ;     ${EndIf}
+  ;  ${Endif}
   ; ${EndIf}
 
-  StrCpy ${outvar} '0'
+  StrCpy ${outvar} '0' ; default to false on pinning
+
+  ; If the major version is greater than 10, no pinning in setup
   IntCmp $0 10 "" "" ${pin_lbl}_bad
+
+  ; If the minor version is greater than 0, no pinning in setup
   IntCmp $1 0 "" "" ${pin_lbl}_bad
-  IntCmp $2 22621 ${pin_lbl}_bad "" ${pin_lbl}_bad
+
+  ; If the build number is less than 22621, jump to pinning; if greater than, no pinning
+  IntCmp $2 22621 "" ${pin_lbl}_good ${pin_lbl}_bad
+
+  ; Only if the version is 10.0.22621 do we fall through to here
+  ; If the UBR is greater than or equal to 2361, jump to no pinning
+  IntCmp $3 2361 ${pin_lbl}_bad "" ${pin_lbl}_bad
+
+  ${pin_lbl}_good:
 
   StrCpy ${outvar} '1'
 
   ${pin_lbl}_bad:
   !undef pin_lbl
 
+  Pop $3
   Pop $2
   Pop $1
   Pop $0
