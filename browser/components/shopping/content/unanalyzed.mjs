@@ -41,9 +41,9 @@ class UnanalyzedProductCard extends MozLitElement {
         <div id="unanalyzed-product-wrapper" slot="content">
           <img id="unanalyzed-product-icon" role="presentation" alt=""></img>
           <div id="unanalyzed-product-message-content">
-            <strong
+            <h2
               data-l10n-id="shopping-unanalyzed-product-header-2"
-            ></strong>
+            ></h2>
             <p data-l10n-id="shopping-unanalyzed-product-message-2"></p>
           </div>
           <button
