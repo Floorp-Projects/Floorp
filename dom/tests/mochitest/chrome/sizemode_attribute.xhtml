@@ -56,9 +56,9 @@ function nextStep() {
 
 function listen(event, fn) {
   window.addEventListener(event, function listener() {
-    window.removeEventListener(event, listener, false);
+    window.removeEventListener(event, listener);
     fn();
-  }, false);
+  });
 }
 
 function checkAndContinue(sizemode) {
