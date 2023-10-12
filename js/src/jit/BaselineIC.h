@@ -272,8 +272,10 @@ class ICCacheIRStub final : public ICStub {
 
  public:
   ICCacheIRStub(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICStub(stubCode->raw(), /* isFallback = */ false),
-        stubInfo_(stubInfo) {}
+      : ICStub(stubCode ? stubCode->raw() : nullptr, /* isFallback = */ false),
+        stubInfo_(stubInfo) {
+    MOZ_ASSERT_IF(!IsPortableBaselineInterpreterEnabled(), stubCode);
+  }
 
   ICStub* next() const { return next_; }
   void setNext(ICStub* stub) { next_ = stub; }

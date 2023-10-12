@@ -71,6 +71,7 @@
 #include "vm/JSObject.h"
 #include "vm/JSONPrinter.h"  // JSONPrinter
 #include "vm/Opcodes.h"
+#include "vm/PortableBaselineInterpret.h"
 #include "vm/Scope.h"  // Scope
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/StencilEnums.h"  // TryNote, TryNoteKind, ScopeNote
@@ -3169,6 +3170,12 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   return lazy;
 }
 
+// This is an arbitrary non-null pointer that we use as a placeholder
+// for scripts that can be run in PBL: the rest of the engine expects
+// a "non-null jitcode pointer" but we'll never actually call it. We
+// have to ensure alignment to keep GC happy.
+static uint8_t* const PBLJitCodePtr = reinterpret_cast<uint8_t*>(8);
+
 void JSScript::updateJitCodeRaw(JSRuntime* rt) {
   MOZ_ASSERT(rt);
   if (hasBaselineScript() && baselineScript()->hasPendingIonCompileTask()) {
@@ -3191,10 +3198,20 @@ void JSScript::updateJitCodeRaw(JSRuntime* rt) {
     if (!usingEntryTrampoline) {
       setJitCodeRaw(rt->jitRuntime()->baselineInterpreter().codeRaw());
     }
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+  } else if (hasJitScript() &&
+             js::jit::IsPortableBaselineInterpreterEnabled()) {
+    // The portable baseline interpreter does not dispatch on this
+    // pointer, but it needs to be non-null to trigger the appropriate
+    // code-paths, so we set it to a placeholder value here.
+    setJitCodeRaw(PBLJitCodePtr);
+#endif  // ENABLE_PORTABLE_BASELINE_INTERP
+  } else if (!js::jit::IsBaselineInterpreterEnabled()) {
+    setJitCodeRaw(nullptr);
   } else {
     setJitCodeRaw(rt->jitRuntime()->interpreterStub().value);
   }
-  MOZ_ASSERT(jitCodeRaw());
+  MOZ_ASSERT_IF(!js::jit::IsPortableBaselineInterpreterEnabled(), jitCodeRaw());
 }
 
 bool JSScript::hasLoops() {
