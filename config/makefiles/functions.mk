@@ -28,6 +28,8 @@ core_winabspath = $(error core_winabspath is unsupported)
 #   libs::
 #       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
 define py_action
+$(call BUILDSTATUS,START_$(1) $(subst ','\'',$(2)))
 $(if $(3),cd $(3) && )$(PYTHON3) -m mozbuild.action.$(1) $(2)
+$(call BUILDSTATUS,END_$(1) $(subst ','\'',$(2)))
 
 endef
