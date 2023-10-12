@@ -168,8 +168,6 @@ const TESTS = [
 ];
 
 add_setup(async function () {
-  await waitForIdle();
-
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.search.log", true],
@@ -181,7 +179,6 @@ add_setup(async function () {
   await SearchSERPTelemetry.init();
 
   registerCleanupFunction(async () => {
-    SearchSERPTelemetry.overrideSearchTelemetryForTests();
     resetTelemetry();
   });
 });
