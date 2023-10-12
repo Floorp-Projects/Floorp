@@ -23,6 +23,25 @@ add_setup(async function () {
   await listService.testWaitForInit();
 });
 
+// Menu item should be visible, the whole url is copied without a selection, url should be stripped.
+add_task(async function testQueryParamIsStripped() {
+  await testMenuItemEnabled(false);
+});
+
+// Menu item should be visible, selecting the whole url, url should be stripped.
+add_task(async function testQueryParamIsStrippedSelectURL() {
+  await testMenuItemEnabled(true);
+});
+
+// We cannot strip anything, menu item should be hidden
+add_task(async function testUnknownQueryParam() {
+  await testMenuItemDisabled(
+    "https://www.example.com/?noStripParam=1234",
+    true,
+    false
+  );
+});
+
 // Selection is not a valid URI, menu item should be hidden
 add_task(async function testInvalidURI() {
   await testMenuItemDisabled(
@@ -39,66 +58,6 @@ add_task(async function testPrefDisabled() {
     false,
     false
   );
-});
-
-// Menu item should be visible, the whole url is copied without a selection, url should be stripped.
-add_task(async function testQueryParamIsStripped() {
-  let originalUrl = "https://www.example.com/?stripParam=1234";
-  let shortenedUrl = "https://www.example.com/";
-  await testMenuItemEnabled({
-    selectWholeUrl: false,
-    validUrl: originalUrl,
-    strippedUrl: shortenedUrl,
-    useTestList: false,
-  });
-});
-
-// Menu item should be visible, selecting the whole url, url should be stripped.
-add_task(async function testQueryParamIsStrippedSelectURL() {
-  let originalUrl = "https://www.example.com/?stripParam=1234";
-  let shortenedUrl = "https://www.example.com/";
-  await testMenuItemEnabled({
-    selectWholeUrl: true,
-    validUrl: originalUrl,
-    strippedUrl: shortenedUrl,
-    useTestList: false,
-  });
-});
-
-// Menu item should be visible, selecting the whole url, url should be the same.
-add_task(async function testURLIsCopiedWithNoParams() {
-  let originalUrl = "https://www.example.com/";
-  let shortenedUrl = "https://www.example.com/";
-  await testMenuItemEnabled({
-    selectWholeUrl: true,
-    validUrl: originalUrl,
-    strippedUrl: shortenedUrl,
-    useTestList: false,
-  });
-});
-
-// Testing site specific parameter stripping
-add_task(async function testQueryParamIsStrippedForSiteSpecific() {
-  let originalUrl = "https://www.example.com/?test_2=1234";
-  let shortenedUrl = "https://www.example.com/";
-  await testMenuItemEnabled({
-    selectWholeUrl: true,
-    validUrl: originalUrl,
-    strippedUrl: shortenedUrl,
-    useTestList: true,
-  });
-});
-
-// Ensuring site specific parameters are not stripped for other sites
-add_task(async function testQueryParamIsNotStrippedForWrongSiteSpecific() {
-  let originalUrl = "https://www.example.com/?test_3=1234";
-  let shortenedUrl = "https://www.example.com/?test_3=1234";
-  await testMenuItemEnabled({
-    selectWholeUrl: true,
-    validUrl: originalUrl,
-    strippedUrl: shortenedUrl,
-    useTestList: true,
-  });
 });
 
 /**
@@ -137,47 +96,18 @@ async function testMenuItemDisabled(url, prefEnabled, selection) {
  * Opens a new tab, opens the url bar context menu and checks that the strip-on-share menu item is visible.
  * Checks that the stripped version of the url is copied to the clipboard.
  *
- * @param {object} arg - Object containing all of the following keys
- * @param {boolean} arg.selectWholeUrl - Whether the whole url should be explicitely selected
- * @param {string} arg.validUrl - The original url before the stripping occurs
- * @param {string} arg.strippedUrl - The expected url after stripping occurs
- * @param {boolean} arg.useTestList - Whether the StripOnShare or Test list should be used
+ * @param {boolean} selectWholeUrl - Whether the whole url should be explicitely selected
  */
-async function testMenuItemEnabled({
-  selectWholeUrl,
-  validUrl,
-  strippedUrl,
-  useTestList,
-}) {
+async function testMenuItemEnabled(selectWholeUrl) {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["privacy.query_stripping.strip_on_share.enabled", true],
-      ["privacy.query_stripping.strip_on_share.enableTestMode", useTestList],
-    ],
+    set: [["privacy.query_stripping.strip_on_share.enabled", true]],
   });
-
-  if (useTestList) {
-    let testJson = {
-      global: {
-        queryParams: ["utm_ad"],
-        topLevelSites: ["*"],
-      },
-      example: {
-        queryParams: ["test_2", "test_1"],
-        topLevelSites: ["www.example.com"],
-      },
-      exampleNet: {
-        queryParams: ["test_3", "test_4"],
-        topLevelSites: ["www.example.net"],
-      },
-    };
-
-    await listService.testSetList(testJson);
-  }
-
+  let validUrl = "https://www.example.com/?stripParam=1234";
+  let strippedUrl = "https://www.example.com/";
   await BrowserTestUtils.withNewTab(validUrl, async function (browser) {
     gURLBar.focus();
     if (selectWholeUrl) {
+      //select the whole url
       gURLBar.select();
     }
     let menuitem = await promiseContextualMenuitem("strip-on-share");
@@ -192,6 +122,4 @@ async function testMenuItemEnabled({
     });
     await hidePromise;
   });
-
-  await SpecialPowers.popPrefEnv();
 }
