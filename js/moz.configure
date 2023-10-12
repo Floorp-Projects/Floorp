@@ -174,46 +174,11 @@ set_config("ENABLE_DECORATORS", enable_decorators)
 set_define("ENABLE_DECORATORS", enable_decorators)
 
 
-# Portable Baseline Intepreter
-# =======================================================
-option(
-    "--enable-portable-baseline-interp",
-    default=False,
-    help="{Enable|Disable} the portable baseline interpreter.",
-)
-set_define(
-    "ENABLE_PORTABLE_BASELINE_INTERP",
-    depends_if("--enable-portable-baseline-interp")(lambda _: True),
-)
-set_config(
-    "ENABLE_PORTABLE_BASELINE_INTERP",
-    depends_if("--enable-portable-baseline-interp")(lambda _: True),
-)
-
-# Option to always force PBL tier.
-option(
-    "--enable-portable-baseline-interp-force",
-    default=False,
-    help="{Enable|Disable} forcing use of the portable baseline interpreter.",
-)
-
-set_define(
-    "ENABLE_PORTABLE_BASELINE_INTERP_FORCE",
-    depends_if("--enable-portable-baseline-interp-force")(lambda _: True),
-)
-set_config(
-    "ENABLE_PORTABLE_BASELINE_INTERP_FORCE",
-    depends_if("--enable-portable-baseline-interp-force")(lambda _: True),
-)
-
-
 # JIT support
 # =======================================================
-@depends(target, "--enable-record-tuple", "--enable-portable-baseline-interp")
-def jit_default(target, enable_record_tuple, enable_portable_baseline_interp):
+@depends(target, "--enable-record-tuple")
+def jit_default(target, enable_record_tuple):
     if enable_record_tuple:
-        return False
-    if enable_portable_baseline_interp:
         return False
     if target.cpu in (
         "x86",

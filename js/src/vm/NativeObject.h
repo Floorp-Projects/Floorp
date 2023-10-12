@@ -1148,8 +1148,6 @@ class NativeObject : public JSObject {
     return slots_ + (slot - fixed);
   }
 
-  HeapSlot* getSlotsUnchecked() { return slots_; }
-
   HeapSlot* getSlotAddress(uint32_t slot) {
     /*
      * This can be used to get the address of the end of the slots for the

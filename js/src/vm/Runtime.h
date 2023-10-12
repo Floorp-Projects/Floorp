@@ -306,18 +306,8 @@ struct JSRuntime {
   /* Space for interpreter frames. */
   js::MainThreadData<js::InterpreterStack> interpreterStack_;
 
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  /* Space for portable baseline interpreter frames. */
-  js::MainThreadData<js::PortableBaselineStack> portableBaselineStack_;
-#endif
-
  public:
   js::InterpreterStack& interpreterStack() { return interpreterStack_.ref(); }
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  js::PortableBaselineStack& portableBaselineStack() {
-    return portableBaselineStack_.ref();
-  }
-#endif
 
   /*
    * If non-null, another runtime guaranteed to outlive this one and whose

@@ -1,4 +1,4 @@
-// |jit-test| --disable-property-error-message-fix; skip-if: getBuildConfiguration('pbl')
+// |jit-test| --disable-property-error-message-fix
 
 function check(f, message) {
   let caught = false;
