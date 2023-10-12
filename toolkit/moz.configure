@@ -3181,7 +3181,6 @@ with only_when(toolkit_gtk):
 
     with only_when("--enable-dbus"):
         pkg_check_modules("MOZ_DBUS", "dbus-1 >= 0.60")
-        pkg_check_modules("MOZ_DBUS_GLIB", "dbus-glib-1 >= 0.60")
 
         set_config("MOZ_ENABLE_DBUS", True)
         set_define("MOZ_ENABLE_DBUS", True)

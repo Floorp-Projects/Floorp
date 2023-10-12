@@ -85,8 +85,5 @@ for var in (
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
-if CONFIG["MOZ_ENABLE_DBUS"]:
-    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
-
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Shell Integration")
