@@ -6,6 +6,7 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.shopping.ProductAnalysis
@@ -23,7 +24,7 @@ interface ReviewQualityCheckService {
      *
      * @return [ProductAnalysis] if the request succeeds, null otherwise.
      */
-    suspend fun fetchProductReview(): ProductAnalysis?
+    suspend fun fetchProductReview(): GeckoProductAnalysis?
 
     /**
      * Triggers a reanalysis of the product review for the current tab.
@@ -38,6 +39,11 @@ interface ReviewQualityCheckService {
      * @return [AnalysisStatusDto] if the request succeeds, null otherwise.
      */
     suspend fun analysisStatus(): AnalysisStatusDto?
+
+    /**
+     * Returns the selected tab url.
+     */
+    fun selectedTabUrl(): String?
 }
 
 /**
@@ -51,13 +57,16 @@ class DefaultReviewQualityCheckService(
 
     private val logger = Logger("DefaultReviewQualityCheckService")
 
-    override suspend fun fetchProductReview(): ProductAnalysis? = withContext(Dispatchers.Main) {
+    override suspend fun fetchProductReview(): GeckoProductAnalysis? = withContext(Dispatchers.Main) {
         suspendCoroutine { continuation ->
             browserStore.state.selectedTab?.let { tab ->
                 tab.engineState.engineSession?.requestProductAnalysis(
                     url = tab.content.url,
                     onResult = {
-                        continuation.resume(it)
+                        when (it) {
+                            is GeckoProductAnalysis -> continuation.resume(it)
+                            else -> continuation.resume(null)
+                        }
                     },
                     onException = {
                         logger.error("Error fetching product review", it)
@@ -101,6 +110,9 @@ class DefaultReviewQualityCheckService(
             }
         }
     }
+
+    override fun selectedTabUrl(): String? =
+        browserStore.state.selectedTab?.content?.url
 
     private inline fun <reified T : Enum<T>> String.asEnumOrDefault(defaultValue: T? = null): T? =
         enumValues<T>().firstOrNull { it.name.equals(this, ignoreCase = true) } ?: defaultValue

@@ -5,7 +5,6 @@
 package org.mozilla.fenix.shopping.middleware
 
 import mozilla.components.browser.engine.gecko.shopping.Highlight
-import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
@@ -145,18 +144,6 @@ class ProductAnalysisMapperTest {
                 highlights = null,
             ).toProductReviewState()
         val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun `WHEN ProductAnalysis is not GeckoProductAnalysis THEN it is mapped to Error`() {
-        val randomAnalysis = object : ProductAnalysis {
-            override val productId: String = "id1"
-        }
-
-        val actual = randomAnalysis.toProductReviewState()
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.GenericError
 
         assertEquals(expected, actual)
     }

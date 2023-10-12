@@ -6,8 +6,12 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.FetchProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction.RetryProductAnalysis
@@ -21,13 +25,17 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
  *
  * @property reviewQualityCheckService The service that handles the network requests.
  * @property networkChecker The [NetworkChecker] instance to check the network status.
+ * @property appStore The [AppStore] instance to access state and dispatch [ShoppingAction]s.
  * @property scope The [CoroutineScope] that will be used to launch coroutines.
  */
 class ReviewQualityCheckNetworkMiddleware(
     private val reviewQualityCheckService: ReviewQualityCheckService,
     private val networkChecker: NetworkChecker,
+    private val appStore: AppStore,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
+
+    private val logger = Logger("ReviewQualityCheckNetworkMiddleware")
 
     override fun invoke(
         context: MiddlewareContext<ReviewQualityCheckState, ReviewQualityCheckAction>,
@@ -55,8 +63,18 @@ class ReviewQualityCheckNetworkMiddleware(
         scope.launch {
             when (action) {
                 FetchProductAnalysis, RetryProductAnalysis -> {
-                    val productReviewState = fetchAnalysis()
+                    val productPageUrl = reviewQualityCheckService.selectedTabUrl()
+                    val productAnalysis = reviewQualityCheckService.fetchProductReview()
+                    val productReviewState = productAnalysis.toProductReviewState()
                     store.updateProductReviewState(productReviewState)
+
+                    productPageUrl?.let {
+                        store.restoreAnalysingStateIfRequired(
+                            productPageUrl = productPageUrl,
+                            productReviewState = productReviewState,
+                            productAnalysis = productAnalysis,
+                        )
+                    }
                 }
 
                 ReviewQualityCheckAction.ReanalyzeProduct, ReviewQualityCheckAction.AnalyzeProduct -> {
@@ -65,6 +83,12 @@ class ReviewQualityCheckNetworkMiddleware(
                     if (reanalysis == null) {
                         store.updateProductReviewState(ProductReviewState.Error.GenericError)
                         return@launch
+                    }
+
+                    // add product to the set of products that are being analysed
+                    val productPageUrl = reviewQualityCheckService.selectedTabUrl()
+                    productPageUrl?.let {
+                        appStore.dispatch(ShoppingAction.AddToProductAnalysed(it))
                     }
 
                     val status = pollForAnalysisStatus()
@@ -90,23 +114,30 @@ class ReviewQualityCheckNetworkMiddleware(
                         // poll succeeded, update state
                         store.updateProductReviewState(status.toProductReviewState())
                     }
+
+                    // remove product from the set of products that are being analysed
+                    productPageUrl?.let {
+                        appStore.dispatch(ShoppingAction.RemoveFromProductAnalysed(it))
+                    }
                 }
             }
         }
     }
 
-    private suspend fun fetchAnalysis(): ProductReviewState =
-        reviewQualityCheckService.fetchProductReview().toProductReviewState()
-
     private suspend fun pollForAnalysisStatus(): AnalysisStatusDto? =
         retry(
             predicate = { it == AnalysisStatusDto.PENDING || it == AnalysisStatusDto.IN_PROGRESS },
-            block = { reviewQualityCheckService.analysisStatus() },
+            block = {
+                logger.debug("Retrying")
+                reviewQualityCheckService.analysisStatus()
+            },
         )
 
     private suspend fun AnalysisStatusDto.toProductReviewState(): ProductReviewState =
         when (this) {
-            AnalysisStatusDto.COMPLETED -> fetchAnalysis()
+            AnalysisStatusDto.COMPLETED ->
+                reviewQualityCheckService.fetchProductReview().toProductReviewState()
+
             AnalysisStatusDto.NOT_ANALYZABLE -> ProductReviewState.Error.UnsupportedProductTypeError
             else -> ProductReviewState.Error.GenericError
         }
@@ -116,4 +147,21 @@ class ReviewQualityCheckNetworkMiddleware(
     ) {
         dispatch(ReviewQualityCheckAction.UpdateProductReview(productReviewState))
     }
+
+    private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.restoreAnalysingStateIfRequired(
+        productPageUrl: String,
+        productReviewState: ProductReviewState,
+        productAnalysis: GeckoProductAnalysis?,
+    ) {
+        if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
+            productAnalysis?.needsAnalysis == true &&
+            appStore.state.shoppingState.productsInAnalysis.contains(productPageUrl)
+        ) {
+            logger.debug("Found product in the set: $productPageUrl")
+            dispatch(ReviewQualityCheckAction.ReanalyzeProduct)
+        }
+    }
+
+    private fun ProductReviewState.isAnalysisPresentOrNoAnalysisPresent() =
+        this is ProductReviewState.AnalysisPresent || this is ProductReviewState.NoAnalysisPresent
 }

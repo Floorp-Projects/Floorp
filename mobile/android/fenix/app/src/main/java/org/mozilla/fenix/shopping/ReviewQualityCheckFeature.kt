@@ -50,7 +50,7 @@ class ReviewQualityCheckFeature(
         }
 
         appStoreScope = appStore.flowScoped { flow ->
-            flow.mapNotNull { it.shoppingSheetExpanded }
+            flow.mapNotNull { it.shoppingState.shoppingSheetExpanded }
                 .distinctUntilChanged()
                 .collect(onBottomSheetStateChange)
         }

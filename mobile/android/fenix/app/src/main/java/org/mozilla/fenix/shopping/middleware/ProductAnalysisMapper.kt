@@ -15,15 +15,8 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
  */
-fun ProductAnalysis?.toProductReviewState(): ProductReviewState =
-    if (this == null) {
-        ProductReviewState.Error.GenericError
-    } else {
-        when (this) {
-            is GeckoProductAnalysis -> toProductReview()
-            else -> ProductReviewState.Error.GenericError
-        }
-    }
+fun GeckoProductAnalysis?.toProductReviewState(): ProductReviewState =
+    this?.toProductReview() ?: ProductReviewState.Error.GenericError
 
 private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
     if (productId == null) {

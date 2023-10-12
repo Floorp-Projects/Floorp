@@ -13,6 +13,7 @@ import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.browser.StandardSnackbarError
+import org.mozilla.fenix.components.appstate.shopping.ShoppingState
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
@@ -53,7 +54,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  * Also serves as an in memory cache of all stories mapped by category allowing for quick stories filtering.
  * @property wallpaperState The [WallpaperState] to display in the [HomeFragment].
  * @property standardSnackbarError A snackbar error message to display.
- * @property shoppingSheetExpanded Boolean indicating if the shopping sheet is expanded and visible.
+ * @property shoppingState Holds state for shopping feature that's required to live the lifetime of a session.
  */
 data class AppState(
     val isForeground: Boolean = true,
@@ -77,5 +78,5 @@ data class AppState(
     val pendingDeletionHistoryItems: Set<PendingDeletionHistory> = emptySet(),
     val wallpaperState: WallpaperState = WallpaperState.default,
     val standardSnackbarError: StandardSnackbarError? = null,
-    val shoppingSheetExpanded: Boolean? = null,
+    val shoppingState: ShoppingState = ShoppingState(),
 ) : State

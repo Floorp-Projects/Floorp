@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.shopping.middleware.DefaultNetworkChecker
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.middleware.DefaultReviewQualityCheckService
@@ -30,18 +31,20 @@ object ReviewQualityCheckMiddlewareProvider {
      *
      * @param settings The [Settings] instance to use.
      * @param browserStore The [BrowserStore] instance to access state.
+     * @param appStore The [AppStore] instance to access state.
      * @param context The [Context] instance to use.
      * @param scope The [CoroutineScope] to use for launching coroutines.
      */
     fun provideMiddleware(
         settings: Settings,
         browserStore: BrowserStore,
+        appStore: AppStore,
         context: Context,
         scope: CoroutineScope,
     ): List<ReviewQualityCheckMiddleware> =
         listOf(
             providePreferencesMiddleware(settings, browserStore, scope),
-            provideNetworkMiddleware(browserStore, context, scope),
+            provideNetworkMiddleware(browserStore, appStore, context, scope),
             provideNavigationMiddleware(TabsUseCases.SelectOrAddUseCase(browserStore), context),
             provideTelemetryMiddleware(),
         )
@@ -58,11 +61,13 @@ object ReviewQualityCheckMiddlewareProvider {
 
     private fun provideNetworkMiddleware(
         browserStore: BrowserStore,
+        appStore: AppStore,
         context: Context,
         scope: CoroutineScope,
     ) = ReviewQualityCheckNetworkMiddleware(
         reviewQualityCheckService = DefaultReviewQualityCheckService(browserStore),
         networkChecker = DefaultNetworkChecker(context),
+        appStore = appStore,
         scope = scope,
     )
 

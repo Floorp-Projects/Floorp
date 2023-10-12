@@ -25,7 +25,7 @@ class DefaultReviewQualityCheckServiceTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `GIVEN fetch is called WHEN onResult is invoked THEN product analysis returns the same data`() =
+    fun `GIVEN fetch is called WHEN onResult is invoked with the expected type THEN product analysis returns the same data`() =
         runTest {
             val engineSession = mockk<EngineSession>()
             val expected = ProductAnalysisTestData.productAnalysis()
@@ -110,4 +110,33 @@ class DefaultReviewQualityCheckServiceTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `GIVEN fetch is called WHEN onResult is invoked with an unexpected type THEN product analysis returns null`() =
+        runTest {
+            val engineSession = mockk<EngineSession>()
+            val randomAnalysis = object : ProductAnalysis {
+                override val productId: String = "id1"
+            }
+
+            every {
+                engineSession.requestProductAnalysis(any(), any(), any())
+            }.answers {
+                secondArg<(ProductAnalysis) -> Unit>().invoke(randomAnalysis)
+            }
+
+            val tab = createTab(
+                url = "https://www.shopping.org/product",
+                id = "test-tab",
+                engineSession = engineSession,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+
+            val tested = DefaultReviewQualityCheckService(BrowserStore(browserState))
+
+            assertNull(tested.fetchProductReview())
+        }
 }

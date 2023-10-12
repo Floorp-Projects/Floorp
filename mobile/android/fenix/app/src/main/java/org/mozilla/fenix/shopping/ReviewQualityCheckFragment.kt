@@ -40,6 +40,7 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
             middleware = ReviewQualityCheckMiddlewareProvider.provideMiddleware(
                 settings = requireComponents.settings,
                 browserStore = requireComponents.core.store,
+                appStore = requireComponents.appStore,
                 context = requireContext().applicationContext,
                 scope = lifecycleScope,
             ),
@@ -96,7 +97,7 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-        requireComponents.appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = false))
+        requireComponents.appStore.dispatch(AppAction.ShoppingAction.ShoppingSheetStateUpdated(expanded = false))
     }
 
     private fun BottomSheetBehavior<View>.setPeekHeightToHalfScreenHeight() {

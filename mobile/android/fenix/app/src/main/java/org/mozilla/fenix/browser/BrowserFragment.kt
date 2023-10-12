@@ -268,7 +268,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 context.getString(R.string.review_quality_check_close_handle_content_description),
                 visible = { reviewQualityCheckAvailable },
                 listener = { _ ->
-                    requireComponents.appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = true))
+                    requireComponents.appStore.dispatch(
+                        AppAction.ShoppingAction.ShoppingSheetStateUpdated(expanded = true),
+                    )
 
                     findNavController().navigate(
                         BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment(),

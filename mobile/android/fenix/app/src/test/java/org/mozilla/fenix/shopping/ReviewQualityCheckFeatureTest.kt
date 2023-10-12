@@ -17,8 +17,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.shopping.ShoppingState
 import org.mozilla.fenix.shopping.fake.FakeShoppingExperienceFeature
 
 class ReviewQualityCheckFeatureTest {
@@ -226,7 +227,7 @@ class ReviewQualityCheckFeatureTest {
     fun `WHEN the shopping sheet is collapsed THEN the callback is called with false`() {
         val appStore = AppStore(
             initialState = AppState(
-                shoppingSheetExpanded = true,
+                shoppingState = ShoppingState(shoppingSheetExpanded = true),
             ),
         )
         var isExpanded: Boolean? = null
@@ -242,7 +243,7 @@ class ReviewQualityCheckFeatureTest {
 
         tested.start()
 
-        appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = false)).joinBlocking()
+        appStore.dispatch(ShoppingAction.ShoppingSheetStateUpdated(expanded = false)).joinBlocking()
 
         assertFalse(isExpanded!!)
     }
@@ -251,7 +252,7 @@ class ReviewQualityCheckFeatureTest {
     fun `WHEN the shopping sheet is expanded THEN the collapsed callback is called with true`() {
         val appStore = AppStore(
             initialState = AppState(
-                shoppingSheetExpanded = false,
+                shoppingState = ShoppingState(shoppingSheetExpanded = false),
             ),
         )
         var isExpanded: Boolean? = null
@@ -267,7 +268,7 @@ class ReviewQualityCheckFeatureTest {
 
         tested.start()
 
-        appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = true)).joinBlocking()
+        appStore.dispatch(ShoppingAction.ShoppingSheetStateUpdated(expanded = true)).joinBlocking()
 
         assertTrue(isExpanded!!)
     }
@@ -276,7 +277,7 @@ class ReviewQualityCheckFeatureTest {
     fun `WHEN the feature is restarted THEN first emission is collected to set the tint`() {
         val appStore = AppStore(
             initialState = AppState(
-                shoppingSheetExpanded = false,
+                shoppingState = ShoppingState(shoppingSheetExpanded = false),
             ),
         )
         var isExpanded: Boolean? = null
@@ -294,7 +295,7 @@ class ReviewQualityCheckFeatureTest {
         tested.stop()
 
         // emulate emission
-        appStore.dispatch(AppAction.ShoppingSheetStateUpdated(expanded = false)).joinBlocking()
+        appStore.dispatch(ShoppingAction.ShoppingSheetStateUpdated(expanded = false)).joinBlocking()
 
         tested.start()
         assertFalse(isExpanded!!)
