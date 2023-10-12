@@ -20,6 +20,12 @@ WebAuthnRegisterArgs::GetOrigin(nsAString& aOrigin) {
 }
 
 NS_IMETHODIMP
+WebAuthnRegisterArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
+  aChallenge.Assign(mInfo.Challenge());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebAuthnRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   nsresult rv = HashCString(mInfo.ClientDataJSON(), aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -148,6 +154,12 @@ WebAuthnSignArgs::GetOrigin(nsAString& aOrigin) {
 NS_IMETHODIMP
 WebAuthnSignArgs::GetRpId(nsAString& aRpId) {
   aRpId = mInfo.RpId();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebAuthnSignArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
+  aChallenge.Assign(mInfo.Challenge());
   return NS_OK;
 }
 

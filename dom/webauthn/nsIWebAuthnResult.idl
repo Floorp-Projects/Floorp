@@ -7,6 +7,8 @@
 
 [uuid(0567c384-a728-11ed-85f7-030324a370f0)]
 interface nsIWebAuthnRegisterResult : nsISupports {
+    readonly attribute ACString clientDataJSON;
+
     // The serialied attestation object as defined in
     // https://www.w3.org/TR/webauthn-2/#sctn-attestation
     // Includes the format, the attestation statement, and
@@ -34,6 +36,8 @@ interface nsIWebAuthnRegisterResult : nsISupports {
 //
 [uuid(05fff816-a728-11ed-b9ac-ff38cc2c8c28)]
 interface nsIWebAuthnSignResult : nsISupports {
+    readonly attribute ACString clientDataJSON;
+
     // The ID field of the PublicKeyCredentialDescriptor returned
     // from authenticatorGetAssertion.
     readonly attribute Array<octet> credentialId;

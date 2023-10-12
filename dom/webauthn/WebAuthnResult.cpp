@@ -38,6 +38,12 @@ namespace mozilla::dom {
 NS_IMPL_ISUPPORTS(WebAuthnRegisterResult, nsIWebAuthnRegisterResult)
 
 NS_IMETHODIMP
+WebAuthnRegisterResult::GetClientDataJSON(nsACString& aClientDataJSON) {
+  aClientDataJSON = mClientDataJSON;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebAuthnRegisterResult::GetAttestationObject(
     nsTArray<uint8_t>& aAttestationObject) {
   aAttestationObject.Assign(mAttestationObject);
@@ -82,6 +88,12 @@ WebAuthnRegisterResult::GetAuthenticatorAttachment(
 }
 
 NS_IMPL_ISUPPORTS(WebAuthnSignResult, nsIWebAuthnSignResult)
+
+NS_IMETHODIMP
+WebAuthnSignResult::GetClientDataJSON(nsACString& aClientDataJSON) {
+  aClientDataJSON = mClientDataJSON;
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 WebAuthnSignResult::GetAuthenticatorData(

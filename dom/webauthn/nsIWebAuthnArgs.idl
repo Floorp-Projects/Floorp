@@ -12,6 +12,8 @@ interface nsIWebAuthnRegisterArgs : nsISupports {
     // TODO(Bug 1820035) The origin is only used for prompt callbacks. Refactor and remove.
     readonly attribute AString origin;
 
+    readonly attribute Array<octet> challenge;
+
     readonly attribute Array<octet> clientDataHash;
 
     // A PublicKeyCredentialRpEntity
@@ -63,6 +65,8 @@ interface nsIWebAuthnSignArgs : nsISupports {
 
     // The spec only asks for the ID field of a PublicKeyCredentialRpEntity here
     readonly attribute AString rpId;
+
+    readonly attribute Array<octet> challenge;
 
     readonly attribute Array<octet> clientDataHash;
 
