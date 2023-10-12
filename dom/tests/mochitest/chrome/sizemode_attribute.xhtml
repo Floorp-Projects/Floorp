@@ -56,9 +56,8 @@ function nextStep() {
 
 function listen(event, fn) {
   window.addEventListener(event, function listener() {
-    window.removeEventListener(event, listener);
     fn();
-  });
+  }, { once: true });
 }
 
 function checkAndContinue(sizemode) {
