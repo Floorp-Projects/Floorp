@@ -27,7 +27,7 @@ job-defaults:
         artifacts:
             - name: public/build
               type: directory
-              path: /builds/worker/artifacts/
+              path: builds/worker/artifacts/
 
 jobs:
     basic:
