@@ -1,3 +1,4 @@
+// |jit-test| skip-if: getBuildConfiguration('pbl')
 // The decompiled expression used in the error messsage should not be confused
 // by unrelated value on the stack.
 

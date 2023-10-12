@@ -1,5 +1,4 @@
-// |jit-test| exitstatus: 6;
-
+// |jit-test| exitstatus: 6; skip-if: getBuildConfiguration('pbl')
 var global = 0;
 setInterruptCallback(function() {
     foo("A");
