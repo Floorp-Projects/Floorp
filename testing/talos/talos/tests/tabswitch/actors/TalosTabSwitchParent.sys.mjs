@@ -247,7 +247,10 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
       // Let's do an initial run to warm up any paint related caches
       // (like glyph caches for text). In the next loop we will start with
       // a GC before each switch so we don't need here.
+      dump(`${tab.linkedBrowser.currentURI.spec}: warm up begin\n`);
       await this.switchToTab(tab);
+      dump(`${tab.linkedBrowser.currentURI.spec}: warm up end\n`);
+
       await this.switchToTab(initialTab);
     }
 
