@@ -11883,6 +11883,10 @@ bool BytecodeEmitter::emitClass(
   }
 
 #if ENABLE_DECORATORS
+  if (!ce.prepareForDecorators()) {
+    //            [stack] CTOR
+    return false;
+  }
   if (classNode->decorators() != nullptr) {
     DecoratorEmitter de(this);
     NameNode* className =

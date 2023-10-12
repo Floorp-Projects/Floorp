@@ -837,10 +837,18 @@ class MOZ_STACK_CLASS ClassEmitter : public PropertyEmitter {
 
   [[nodiscard]] bool emitBinding();
 
+#ifdef ENABLE_DECORATORS
+  // TODO!: When we've enabled decorators, update the states and transition
+  //        diagram to reflect this new state.
+  [[nodiscard]] bool prepareForDecorators();
+#endif
+
   [[nodiscard]] bool emitEnd(Kind kind);
 
  private:
   [[nodiscard]] bool initProtoAndCtor();
+
+  [[nodiscard]] bool leaveBodyAndInnerScope();
 };
 
 } /* namespace frontend */
