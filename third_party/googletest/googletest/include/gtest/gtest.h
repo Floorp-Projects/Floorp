@@ -73,8 +73,6 @@
 #include "gtest/internal/gtest-internal.h"
 #include "gtest/internal/gtest-string.h"
 
-#include "mozilla/Attributes.h"
-
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
 /* class A needs to have dll-interface to be used by clients of class B */)
 
@@ -327,7 +325,7 @@ class GTEST_API_ Test {
   //
   // DO NOT OVERRIDE THIS FUNCTION DIRECTLY IN A USER PROGRAM.
   // Instead, use the TEST or TEST_F macro.
-  MOZ_CAN_RUN_SCRIPT virtual void TestBody() = 0;
+  virtual void TestBody() = 0;
 
   // Sets up, executes, and tears down the test.
   void Run();
