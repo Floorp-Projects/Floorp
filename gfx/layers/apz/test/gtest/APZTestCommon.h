@@ -268,7 +268,7 @@ class TestAPZCTreeManager : public APZCTreeManager {
   }
 
  protected:
-  AsyncPanZoomController* NewAPZCInstance(
+  already_AddRefed<AsyncPanZoomController> NewAPZCInstance(
       LayersId aLayersId, GeckoContentController* aController) override;
 
   SampleTime GetFrameTime() override { return mcc->GetSampleTime(); }
