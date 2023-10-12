@@ -112,7 +112,8 @@ already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
 
   // creating the CGFontRef via the CTFont avoids the data being held alive
   // in a cache.
-  CTFontRef ctFont = CTFontCreateWithFontDescriptor(ctFontDesc, 0, NULL);
+  CTFontRef ctFont = CTFontCreateWithFontDescriptorAndOptions(
+      ctFontDesc, 0, NULL, kCTFontOptionsPreferSystemFont);
 
   // Creating the CGFont from the CTFont prevents the font data from being
   // held in the TDescriptorSource cache. This appears to be true even

@@ -74,12 +74,21 @@ PRThread* gfxPlatformMac::sFontRegistrationThread = nullptr;
    our font list. */
 /* static */
 void gfxPlatformMac::RegisterSupplementalFonts() {
-  // On Catalina+, it appears to be sufficient to activate fonts in the parent
-  // process; they are then also usable in child processes.
-  if (XRE_IsParentProcess()) {
-    sFontRegistrationThread = PR_CreateThread(
-        PR_USER_THREAD, FontRegistrationCallback, nullptr, PR_PRIORITY_NORMAL,
-        PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+  switch (XRE_GetProcessType()) {
+    case GeckoProcessType_Default:
+    case GeckoProcessType_Content:
+      // TODO: figure out if this matters to any other processes (e.g. GPU?)
+      //
+      // We activate the fonts on a separate thread, to minimize the startup-
+      // time cost.
+      sFontRegistrationThread = PR_CreateThread(
+          PR_USER_THREAD, FontRegistrationCallback, nullptr, PR_PRIORITY_NORMAL,
+          PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+      break;
+
+    default:
+      // Assume other process types don't actually need the full font list.
+      break;
   }
 }
 
