@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.annotation.AnyThread
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
@@ -700,6 +701,7 @@ class ContentDelegateTest : BaseSessionTest() {
             .adjustedRating(adjustedRating)
             .analysisUrl(analysisURL)
             .needsAnalysis(true)
+            .pageNotSupported(false)
             .highlights(null)
             .lastAnalysisTime(lastAnalysisTime)
             .deletedProductReported(true)
@@ -711,7 +713,8 @@ class ContentDelegateTest : BaseSessionTest() {
         assertTrue("Product should not be reported that it was deleted", analysisObject.deletedProductReported)
         assertTrue("Not a deleted product", analysisObject.deletedProduct)
         assertThat("Analysis URL should match", analysisObject.analysisURL, equalTo(analysisURL))
-        assertTrue("NeedsAnalysis URL should match", analysisObject.needsAnalysis)
+        assertTrue("NeedsAnalysis should match", analysisObject.needsAnalysis)
+        assertFalse("PageNotSupported should match", analysisObject.pageNotSupported)
         assertNull("Highlights should match", analysisObject.highlights)
         assertThat("Last analysis time should match", analysisObject.lastAnalysisTime, equalTo(lastAnalysisTime))
 
@@ -734,6 +737,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Product id should match", it.productId, equalTo(null))
                 assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(null))
                 assertThat("Product highlights should match", it.highlights, equalTo(null))
+                assertThat("Product pageNotSupported should match", it.pageNotSupported, equalTo(false))
             }
 
             // verify product with integer adjusted rating
@@ -742,6 +746,13 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Product grade should match", it.grade, equalTo("A"))
                 assertThat("Product id should match", it.productId, equalTo("B084BZZW9J"))
                 assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(4.0))
+            }
+
+            // verify unsupported product page
+            val resultNotSupported = mainSession.requestAnalysis("https://www.amazon.com/dp/B07FYYKKQK")
+            sessionRule.waitForResult(resultNotSupported).let {
+                assertThat("Product id should match", it.productId, equalTo("B07FYYKKQK"))
+                assertThat("Product pageNotSupported should match", it.pageNotSupported, equalTo(true))
             }
 
             val result = mainSession.requestAnalysis("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
