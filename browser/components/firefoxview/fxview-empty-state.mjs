@@ -96,7 +96,7 @@ class FxviewEmptyState extends MozLitElement {
                  })}
                  data-l10n-id="${descLabel}"
                >
-                 ${this.linkTemplate(this.descriptionLink)} />
+                 ${this.linkTemplate(this.descriptionLink)}
                </p>`
              )}
              <slot name="primary-action"></slot>
