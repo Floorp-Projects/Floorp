@@ -24,11 +24,12 @@ ChromeUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
 const PanelPosition = "bottomright topright";
 const PanelOffsetX = -33;
 const PanelOffsetY = -8;
-// The max dimension for a canvas is defined https://searchfox.org/mozilla-central/rev/f40d29a11f2eb4685256b59934e637012ea6fb78/gfx/cairo/cairo/src/cairo-image-surface.c#62.
-// The max number of pixels for a canvas is 124925329 or 11177 x 11177.
+// The max dimension for a canvas is 32,767 https://searchfox.org/mozilla-central/rev/f40d29a11f2eb4685256b59934e637012ea6fb78/gfx/cairo/cairo/src/cairo-image-surface.c#62.
+// The max number of pixels for a canvas is 472,907,776 pixels (i.e., 22,528 x 20,992) https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas#maximum_canvas_size
 // We have to limit screenshots to these dimensions otherwise it will cause an error.
 export const MAX_CAPTURE_DIMENSION = 32766;
-export const MAX_CAPTURE_AREA = 124925329;
+export const MAX_CAPTURE_AREA = 472907776;
+export const MAX_SNAPSHOT_DIMENSION = 1024;
 
 export class ScreenshotsComponentParent extends JSWindowActorParent {
   async receiveMessage(message) {
@@ -544,6 +545,8 @@ export var ScreenshotsUtils = {
 
     rect.width = Math.floor(width / rect.devicePixelRatio);
     rect.height = Math.floor(height / rect.devicePixelRatio);
+    rect.right = rect.left + rect.width;
+    rect.bottom = rect.top + rect.height;
 
     if (cropped) {
       let [errorTitle, errorMessage] =
@@ -586,7 +589,7 @@ export var ScreenshotsUtils = {
    * @param rect DOMRect containing bounds of the screenshot.
    */
   async takeScreenshot(browser, dialog, rect) {
-    let { canvas, snapshot } = await this.createCanvas(rect, browser);
+    let canvas = await this.createCanvas(rect, browser);
 
     let newImg = dialog._frame.contentDocument.createElement("img");
     let url = canvas.toDataURL();
@@ -601,34 +604,20 @@ export var ScreenshotsUtils = {
     if (Cu.isInAutomation) {
       Services.obs.notifyObservers(null, "screenshots-preview-ready");
     }
-
-    snapshot.close();
   },
 
   /**
    * Creates a canvas and draws a snapshot of the screenshot on the canvas
    * @param region The bounds of screenshots
    * @param browser The current browser
-   * @returns The canvas and snapshot in an object
+   * @returns The canvas
    */
   async createCanvas(region, browser) {
     this.cropScreenshotRectIfNeeded(region);
 
-    let rect = new DOMRect(
-      region.left,
-      region.top,
-      region.width,
-      region.height
-    );
     let { devicePixelRatio } = region;
 
     let browsingContext = BrowsingContext.get(browser.browsingContext.id);
-
-    let snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
-      rect,
-      devicePixelRatio,
-      "rgb(255,255,255)"
-    );
 
     let canvas = browser.ownerDocument.createElementNS(
       "http://www.w3.org/1999/xhtml",
@@ -636,12 +625,48 @@ export var ScreenshotsUtils = {
     );
     let context = canvas.getContext("2d");
 
-    canvas.width = snapshot.width;
-    canvas.height = snapshot.height;
+    canvas.width = region.width * devicePixelRatio;
+    canvas.height = region.height * devicePixelRatio;
 
-    context.drawImage(snapshot, 0, 0);
+    for (
+      let startLeft = region.left;
+      startLeft < region.right;
+      startLeft += MAX_SNAPSHOT_DIMENSION
+    ) {
+      for (
+        let startTop = region.top;
+        startTop < region.bottom;
+        startTop += MAX_SNAPSHOT_DIMENSION
+      ) {
+        let height =
+          startTop + MAX_SNAPSHOT_DIMENSION > region.bottom
+            ? region.bottom - startTop
+            : MAX_SNAPSHOT_DIMENSION;
+        let width =
+          startLeft + MAX_SNAPSHOT_DIMENSION > region.right
+            ? region.right - startLeft
+            : MAX_SNAPSHOT_DIMENSION;
+        let rect = new DOMRect(startLeft, startTop, width, height);
 
-    return { canvas, snapshot };
+        let snapshot = await browsingContext.currentWindowGlobal.drawSnapshot(
+          rect,
+          devicePixelRatio,
+          "rgb(255,255,255)"
+        );
+
+        context.drawImage(
+          snapshot,
+          (startLeft - region.left) * devicePixelRatio,
+          (startTop - region.top) * devicePixelRatio,
+          width * devicePixelRatio,
+          height * devicePixelRatio
+        );
+
+        snapshot.close();
+      }
+    }
+
+    return canvas;
   },
 
   /**
@@ -650,11 +675,10 @@ export var ScreenshotsUtils = {
    * @param browser The current browser
    */
   async copyScreenshotFromRegion(region, browser) {
-    let { canvas, snapshot } = await this.createCanvas(region, browser);
+    let canvas = await this.createCanvas(region, browser);
     let url = canvas.toDataURL();
 
     this.copyScreenshot(url, browser);
-    snapshot.close();
 
     this.recordTelemetryEvent("copy", "overlay_copy", {});
   },
@@ -706,11 +730,10 @@ export var ScreenshotsUtils = {
    * @param browser The current browser
    */
   async downloadScreenshotFromRegion(title, region, browser) {
-    let { canvas, snapshot } = await this.createCanvas(region, browser);
+    let canvas = await this.createCanvas(region, browser);
     let dataUrl = canvas.toDataURL();
 
     await this.downloadScreenshot(title, dataUrl, browser);
-    snapshot.close();
 
     this.recordTelemetryEvent("download", "overlay_download", {});
   },

@@ -39,11 +39,15 @@ add_task(async function test_screenshot_too_large_cropped() {
 
   ScreenshotsUtils.cropScreenshotRectIfNeeded(rect);
 
-  is(rect.width, MAX_CAPTURE_DIMENSION, "The width is 32766");
+  is(
+    rect.width,
+    MAX_CAPTURE_DIMENSION,
+    `The width is ${MAX_CAPTURE_DIMENSION}`
+  );
   is(
     rect.height,
     Math.floor(MAX_CAPTURE_AREA / MAX_CAPTURE_DIMENSION),
-    "The height is 124925329 / 32766"
+    `The height is ${MAX_CAPTURE_AREA} / ${MAX_CAPTURE_DIMENSION}`
   );
 
   rect.width = 40000;
@@ -54,7 +58,7 @@ add_task(async function test_screenshot_too_large_cropped() {
   is(
     rect.width,
     MAX_CAPTURE_DIMENSION,
-    "The width was cropped to the max capture dimension (32766)."
+    `The width was cropped to the max capture dimension (${MAX_CAPTURE_DIMENSION}).`
   );
 
   rect.width = 1;
@@ -65,19 +69,19 @@ add_task(async function test_screenshot_too_large_cropped() {
   is(
     rect.height,
     MAX_CAPTURE_DIMENSION,
-    "The height was cropped to the max capture dimension (32766)."
+    `The height was cropped to the max capture dimension (${MAX_CAPTURE_DIMENSION}).`
   );
 
-  rect.width = 12345;
-  rect.height = 12345;
+  rect.width = 25000;
+  rect.height = 25000;
 
   ScreenshotsUtils.cropScreenshotRectIfNeeded(rect);
 
-  is(rect.width, 12345, "The width was not cropped");
+  is(rect.width, 25000, "The width was not cropped");
   is(
     rect.height,
-    Math.floor(MAX_CAPTURE_AREA / 12345),
-    "The height was cropped to 10119"
+    Math.floor(MAX_CAPTURE_AREA / 25000),
+    `The height was cropped to ${MAX_CAPTURE_AREA / 25000}`
   );
 
   showAlertMessageStub.restore();

@@ -256,6 +256,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     let rect = {
       left: scrollMinX,
       top: scrollMinY,
+      right: scrollWidth,
+      bottom: scrollHeight,
       width: scrollWidth,
       height: scrollHeight,
       devicePixelRatio: this.contentWindow.devicePixelRatio,
@@ -292,6 +294,8 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     let rect = {
       left: scrollX,
       top: scrollY,
+      right: scrollX + clientWidth,
+      bottom: scrollY + clientHeight,
       width: clientWidth,
       height: clientHeight,
       devicePixelRatio: this.contentWindow.devicePixelRatio,
