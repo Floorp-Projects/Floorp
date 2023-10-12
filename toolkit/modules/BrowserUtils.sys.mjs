@@ -502,7 +502,7 @@ let PromoInfo = {
     enabledPref: "browser.vpn_promo.enabled",
     lazyStringSetPrefs: {
       supportedRegions: {
-        name: "browser.contentblocking.report.vpn_region",
+        name: "browser.contentblocking.report.vpn_regions",
         default: "us,ca,nz,sg,my,gb,de,fr",
       },
       disallowedRegions: {
