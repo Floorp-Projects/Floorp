@@ -94,6 +94,7 @@ function eventOccured(event)
   gEvents += event.type + ": " + id;
 }
 
+// eslint-disable-next-line complexity
 function expectFocusShift(callback, expectedWindow, expectedElement, focusChanged, testid)
 {
   if (expectedWindow == null)
@@ -358,6 +359,7 @@ function getById(id)
   return element;
 }
 
+// eslint-disable-next-line complexity
 function startTest()
 {
   if (gTestStarted)
