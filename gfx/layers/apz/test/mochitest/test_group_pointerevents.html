@@ -16,10 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
   let isMac = getPlatform() == "mac";
   var touch_action_prefs = getPrefs("TOUCH_ACTION");
   var subtests = [
-    {"file": "helper_bug1285070.html"},
-    {"file": "helper_bug1299195.html", "prefs": [["dom.meta-viewport.enabled", isMac]]},
     {"file": "helper_bug1414336.html", "prefs": [["apz.test.fails_with_native_injection", isWindows]]},
-    {"file": "helper_bug1502010_unconsumed_pan.html"},
     {"file": "helper_bug1544966_zoom_on_touch_action_none.html", "prefs": touch_action_prefs},
     {"file": "helper_bug1648491_no_pointercancel_with_dtc.html", "prefs": touch_action_prefs},
     {"file": "helper_bug1663731_no_pointercancel_on_second_touchstart.html",
@@ -28,6 +25,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285070
      "prefs": touch_action_prefs},
     {"file": "helper_bug1719855_pointercancel_on_touchmove_after_contextmenu_prevented.html"},
   ];
+  if (getPlatform() != "android") {
+    // Bug 1858610: these subtests are flaky on Android.
+    subtests.push(
+      {"file": "helper_bug1285070.html"},
+      {"file": "helper_bug1299195.html", "prefs": [["dom.meta-viewport.enabled", isMac]]},
+      {"file": "helper_bug1502010_unconsumed_pan.html"}
+    )
+  }
 
   if (isApzEnabled()) {
     SimpleTest.waitForExplicitFinish();
