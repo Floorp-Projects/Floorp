@@ -25,7 +25,6 @@ add_setup(async function () {
     set: [
       ["browser.urlbar.quicksuggest.enabled", true],
       ["browser.urlbar.quicksuggest.nonsponsored", true],
-      ["browser.urlbar.quicksuggest.remoteSettings.enabled", true],
       ["browser.urlbar.suggest.mdn", true],
     ],
   });

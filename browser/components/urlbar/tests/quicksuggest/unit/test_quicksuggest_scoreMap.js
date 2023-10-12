@@ -472,7 +472,7 @@ add_task(async function sponsoredWith_addonWith_addonWins_both() {
 });
 
 add_task(async function merino_sponsored_addon_sponsoredWins() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -494,11 +494,11 @@ add_task(async function merino_sponsored_addon_sponsoredWins() {
     }),
   });
 
-  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
+  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_addon_addonWins() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -519,11 +519,11 @@ add_task(async function merino_sponsored_addon_addonWins() {
     }),
   });
 
-  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
+  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_unknown_sponsoredWins() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -545,11 +545,11 @@ add_task(async function merino_sponsored_unknown_sponsoredWins() {
     }),
   });
 
-  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
+  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_unknown_unknownWins() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -569,7 +569,7 @@ add_task(async function merino_sponsored_unknown_unknownWins() {
     }),
   });
 
-  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
+  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function stringValue() {

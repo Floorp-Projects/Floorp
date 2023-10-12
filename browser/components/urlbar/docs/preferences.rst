@@ -173,9 +173,6 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
-browser.urlbar.quicksuggest.remoteSettings.enabled (boolean, default: true)
-  Whether remote settings is enabled as a quick suggest source.
-
 browser.urlbar.quicksuggest.dataCollection.enabled (boolean, default: false)
   Whether data collection is enabled for quick suggest results.
 

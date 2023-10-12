@@ -341,9 +341,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //    `suggest.quicksuggest.sponsored` are true. Previously they were false.
   ["quicksuggest.migrationVersion", 0],
 
-  // Whether Remote Settings is enabled as a quick suggest source.
-  ["quicksuggest.remoteSettings.enabled", true],
-
   // Whether Firefox Suggest will use the new Rust backend instead of the
   // original JS backend.
   ["quicksuggest.rustEnabled", false],

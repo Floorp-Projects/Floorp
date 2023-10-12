@@ -128,7 +128,6 @@ add_setup(async function test_setup() {
 });
 
 add_task(async function testExposureCheck() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
   UrlbarPrefs.set("exposureResults", "rs_adm_sponsored");
   UrlbarPrefs.set("showExposureResults", true);
 
@@ -147,7 +146,6 @@ add_task(async function testExposureCheck() {
 });
 
 add_task(async function testExposureCheckMultiple() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
   UrlbarPrefs.set("exposureResults", "rs_adm_sponsored,rs_adm_nonsponsored");
   UrlbarPrefs.set("showExposureResults", true);
 
@@ -179,7 +177,6 @@ add_task(async function testExposureCheckMultiple() {
 });
 
 add_task(async function exposureDisplayFiltering() {
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
   UrlbarPrefs.set("exposureResults", "rs_adm_sponsored");
   UrlbarPrefs.set("showExposureResults", false);
 

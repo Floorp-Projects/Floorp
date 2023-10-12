@@ -125,7 +125,6 @@ function expectedHttpsResult() {
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
-  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
   UrlbarPrefs.set("merino.enabled", false);
 
   // Install a default test engine.
@@ -1304,8 +1303,8 @@ add_task(async function remoteSettingsDataType() {
     }
 
     // Re-enable to trigger sync from remote settings.
-    UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
-    UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", true);
+    UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+    UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 
     let context = createContext(SPONSORED_SEARCH_STRING, {
       providers: [UrlbarProviderQuickSuggest.name],

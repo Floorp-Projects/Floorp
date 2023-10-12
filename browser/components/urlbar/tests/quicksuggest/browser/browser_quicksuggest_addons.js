@@ -79,10 +79,7 @@ const TEST_MERINO_SUGGESTIONS = [
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
-      ["browser.urlbar.quicksuggest.remoteSettings.enabled", false],
-    ],
+    set: [["browser.urlbar.quicksuggest.enabled", true]],
   });
 
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });

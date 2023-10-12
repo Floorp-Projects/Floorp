@@ -150,13 +150,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let instance = this.queryInstance;
     let searchString = this._trimmedSearchString;
 
-    // There are two sources for quick suggest: remote settings and Merino.
+    // There are two sources for quick suggest: the current remote settings
+    // backend (either JS or Rust) and Merino.
     let promises = [];
-    if (lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
-      let { backend } = lazy.QuickSuggest;
-      if (backend?.isEnabled) {
-        promises.push(backend.query(searchString));
-      }
+    let { backend } = lazy.QuickSuggest;
+    if (backend?.isEnabled) {
+      promises.push(backend.query(searchString));
     }
     if (
       lazy.UrlbarPrefs.get("merinoEnabled") &&
