@@ -350,11 +350,31 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsurePersistentOriginIsInitialized(const OriginMetadata& aOriginMetadata);
 
+  bool IsTemporaryOriginInitialized(
+      const OriginMetadata& aOriginMetadata) const;
+
   // Returns a pair of an nsIFile object referring to the directory, and a bool
   // indicating whether the directory was newly created.
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsureTemporaryOriginIsInitialized(PersistenceType aPersistenceType,
                                      const OriginMetadata& aOriginMetadata);
+
+  RefPtr<BoolPromise> InitializePersistentClient(
+      const PrincipalInfo& aPrincipalInfo, Client::Type aClientType);
+
+  // Returns a pair of an nsIFile object referring to the directory, and a bool
+  // indicating whether the directory was newly created.
+  Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
+  EnsurePersistentClientIsInitialized(const ClientMetadata& aClientMetadata);
+
+  RefPtr<BoolPromise> InitializeTemporaryClient(
+      PersistenceType aPersistenceType, const PrincipalInfo& aPrincipalInfo,
+      Client::Type aClientType);
+
+  // Returns a pair of an nsIFile object referring to the directory, and a bool
+  // indicating whether the directory was newly created.
+  Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
+  EnsureTemporaryClientIsInitialized(const ClientMetadata& aClientMetadata);
 
   nsresult EnsureTemporaryStorageIsInitialized();
 
@@ -538,7 +558,8 @@ class QuotaManager final : public BackgroundThreadObject {
       const nsACString& aGroup);
 
   already_AddRefed<OriginInfo> LockedGetOriginInfo(
-      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata);
+      PersistenceType aPersistenceType,
+      const OriginMetadata& aOriginMetadata) const;
 
   nsresult UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
       nsIFile* aIndexedDBDir);

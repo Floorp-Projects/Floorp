@@ -154,6 +154,15 @@ parent:
   async InitializeStorage()
       returns(BoolResponse response);
 
+  async InitializePersistentClient(PrincipalInfo principalInfo,
+                                   Type clientType)
+      returns(BoolResponse response);
+
+  async InitializeTemporaryClient(PersistenceType persistenceType,
+                                  PrincipalInfo principalInfo,
+                                  Type clientType)
+      returns(BoolResponse response);
+
   async ClearStoragesForOrigin(PersistenceType? persistenceType,
                                PrincipalInfo principalInfo,
                                Type? clientType)

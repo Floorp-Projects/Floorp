@@ -455,6 +455,65 @@ mozilla::ipc::IPCResult Quota::RecvInitializeStorage(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult Quota::RecvInitializePersistentClient(
+    const PrincipalInfo& aPrincipalInfo, const Type& aClientType,
+    InitializeTemporaryClientResolver&& aResolve) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolve));
+
+  if (!TrustParams()) {
+    QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(aPrincipalInfo)),
+           QM_CUF_AND_IPC_FAIL(this));
+
+    QM_TRY(MOZ_TO_RESULT(Client::IsValidType(aClientType)),
+           QM_CUF_AND_IPC_FAIL(this));
+  }
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolve));
+
+  quotaManager->InitializePersistentClient(aPrincipalInfo, aClientType)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             BoolPromiseResolveOrRejectCallback(this, std::move(aResolve)));
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult Quota::RecvInitializeTemporaryClient(
+    const PersistenceType& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo, const Type& aClientType,
+    InitializeTemporaryClientResolver&& aResolve) {
+  AssertIsOnBackgroundThread();
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaManager::IsShuttingDown()),
+         ResolveBoolResponseAndReturn(aResolve));
+
+  if (!TrustParams()) {
+    QM_TRY(MOZ_TO_RESULT(IsValidPersistenceType(aPersistenceType)),
+           QM_CUF_AND_IPC_FAIL(this));
+
+    QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(aPrincipalInfo)),
+           QM_CUF_AND_IPC_FAIL(this));
+
+    QM_TRY(MOZ_TO_RESULT(Client::IsValidType(aClientType)),
+           QM_CUF_AND_IPC_FAIL(this));
+  }
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(),
+                ResolveBoolResponseAndReturn(aResolve));
+
+  quotaManager
+      ->InitializeTemporaryClient(aPersistenceType, aPrincipalInfo, aClientType)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             BoolPromiseResolveOrRejectCallback(this, std::move(aResolve)));
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult Quota::RecvClearStoragesForOrigin(
     const Maybe<PersistenceType>& aPersistenceType,
     const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,

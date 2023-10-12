@@ -172,6 +172,27 @@ function initTemporaryOrigin(persistence, principal, callback) {
   return request;
 }
 
+function initPersistentClient(principal, client, callback) {
+  let request = SpecialPowers._getQuotaManager().initializePersistentClient(
+    principal,
+    client
+  );
+  request.callback = callback;
+
+  return request;
+}
+
+function initTemporaryClient(persistence, principal, client, callback) {
+  let request = SpecialPowers._getQuotaManager().initializeTemporaryClient(
+    persistence,
+    principal,
+    client
+  );
+  request.callback = callback;
+
+  return request;
+}
+
 function getFullOriginMetadata(persistence, principal, callback) {
   const request = SpecialPowers._getQuotaManager().getFullOriginMetadata(
     persistence,

@@ -94,6 +94,44 @@ interface nsIQuotaManagerService : nsISupports
                             in nsIPrincipal aPrincipal);
 
   /**
+   * Initializes persistent client directory for the given origin and client.
+   * This can be used in tests to verify client initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   *
+   * @param aPrincipal
+   *        A principal for the origin whose client directory is to be
+   *        initialized.
+   * @param aClientType
+   *        A string that tells what client type will be initialized.
+   */
+  [must_use] nsIQuotaRequest
+  initializePersistentClient(in nsIPrincipal aPrincipal,
+                             in AString aClientType);
+
+  /**
+   * Initializes temporary client directory for the given origin and client.
+   * This can be used in tests to verify client initialization.
+   *
+   * If the dom.quotaManager.testing preference is not true the call will be
+   * a no-op.
+   *
+   * @param aPersistenceType
+   *        A string that tells what persistence type will be initialized
+   *        (either "temporary" or "default").
+   * @param aPrincipal
+   *        A principal for the origin whose client directory is to be
+   *        initialized.
+   * @param aClientType
+   *        A string that tells what client type will be initialized.
+   */
+  [must_use] nsIQuotaRequest
+  initializeTemporaryClient(in ACString aPersistenceType,
+                            in nsIPrincipal aPrincipal,
+                            in AString aClientType);
+
+  /**
    * Gets full origin metadata cached in memory for the given persistence type
    * and origin.
    *

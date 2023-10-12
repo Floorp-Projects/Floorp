@@ -78,7 +78,9 @@ struct FullOriginMetadata : OriginMetadata {
 };
 
 struct ClientMetadata : OriginMetadata {
-  const Client::Type mClientType;
+  Client::Type mClientType;
+
+  ClientMetadata() = default;
 
   ClientMetadata(OriginMetadata aOriginMetadata, Client::Type aClientType)
       : OriginMetadata(std::move(aOriginMetadata)), mClientType(aClientType) {}
