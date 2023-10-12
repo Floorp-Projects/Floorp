@@ -27,7 +27,7 @@ importlib-metadata==6.0.0
 # required for compatibility with Flask >= 2 in tools/tryselect/selectors/chooser
 jinja2==3.1.2
 jsmin==3.0.0
-json-e==2.7.0
+json-e==4.5.3
 jsonschema==4.17.3
 looseversion==1.0.1
 mozilla-repo-urls==0.1.1
