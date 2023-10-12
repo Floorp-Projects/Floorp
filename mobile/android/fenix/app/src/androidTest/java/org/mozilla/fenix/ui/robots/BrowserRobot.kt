@@ -1105,14 +1105,6 @@ class BrowserRobot {
             return ComposeTabDrawerRobot.Transition(composeTestRule)
         }
 
-        fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
-            mDevice.waitNotNull(Until.findObject(By.desc("Tabs")))
-            tabsCounter().click(LONG_CLICK_DURATION)
-
-            NavigationToolbarRobot().interact()
-            return NavigationToolbarRobot.Transition()
-        }
-
         fun openNotificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {
             mDevice.openNotification()
 

@@ -305,7 +305,15 @@ class NavigationToolbarRobot {
             return HomeScreenRobot.Transition()
         }
 
-        fun closeTabFromShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
+        fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): Transition {
+            mDevice.waitNotNull(Until.findObject(By.desc("Tabs")))
+            tabsCounter().click(LONG_CLICK_DURATION)
+
+            NavigationToolbarRobot().interact()
+            return Transition()
+        }
+
+        fun closeTabFromShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): Transition {
             mDevice.waitForIdle(waitingTime)
 
             onView(withId(R.id.mozac_browser_menu_recyclerView))
@@ -319,10 +327,10 @@ class NavigationToolbarRobot {
                 )
 
             NavigationToolbarRobot().interact()
-            return NavigationToolbarRobot.Transition()
+            return Transition()
         }
 
-        fun openTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+        fun openNewTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle(waitingTime)
 
             onView(withId(R.id.mozac_browser_menu_recyclerView))
@@ -413,6 +421,8 @@ private fun awesomeBar() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"))
 private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
 private fun tabTrayButton() = onView(withId(R.id.tab_button))
+private fun tabsCounter() =
+    mDevice.findObject(By.res("$packageName:id/counter_root"))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBarButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_clear_view")
 private fun goBackButton() = mDevice.pressBack()

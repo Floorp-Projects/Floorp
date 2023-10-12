@@ -86,7 +86,7 @@ class HomeScreenTest {
         homeScreen { }.togglePrivateBrowsingMode()
 
         homeScreen {
-            verifyPrivateBrowsingHomeScreen()
+            verifyPrivateBrowsingHomeScreenItems()
         }.openCommonMythsLink {
             verifyUrl("common-myths-about-private-browsing")
         }

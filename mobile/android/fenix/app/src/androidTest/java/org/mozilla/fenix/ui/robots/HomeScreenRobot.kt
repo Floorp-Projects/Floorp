@@ -87,11 +87,10 @@ class HomeScreenRobot {
 
     fun verifyHomeScreen() = assertItemWithResIdExists(homeScreen)
 
-    fun verifyPrivateBrowsingHomeScreen() {
+    fun verifyPrivateBrowsingHomeScreenItems() {
         verifyHomeScreenAppBarItems()
         assertItemContainingTextExists(itemContainingText(privateSessionMessage))
         verifyCommonMythsLink()
-        verifyNavigationToolbarItems()
     }
 
     fun verifyHomeScreenAppBarItems() =

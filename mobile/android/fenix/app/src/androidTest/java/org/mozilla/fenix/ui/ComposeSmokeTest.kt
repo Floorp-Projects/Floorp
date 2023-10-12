@@ -12,8 +12,6 @@ import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
-import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.mediasession.MediaSession
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -22,17 +20,13 @@ import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
-import org.mozilla.fenix.ui.robots.clickPageObject
-import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -46,8 +40,6 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
 class ComposeSmokeTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
-    private val customMenuItem = "TestMenuItem"
-    private lateinit var browserStore: BrowserStore
 
     @get:Rule(order = 0)
     val activityTestRule = AndroidComposeTestRule(
@@ -69,10 +61,6 @@ class ComposeSmokeTest {
 
     @Before
     fun setUp() {
-        // Initializing this as part of class construction, below the rule would throw a NPE
-        // So we are initializing this here instead of in all related tests.
-        browserStore = activityTestRule.activity.components.core.store
-
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
@@ -83,62 +71,6 @@ class ComposeSmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-    }
-
-    @Test
-    fun shareTabsFromTabsTrayTest() {
-        val firstWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebsite = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-        val firstWebsiteTitle = firstWebsite.title
-        val secondWebsiteTitle = secondWebsite.title
-        val sharingApp = "Gmail"
-        val sharedUrlsString = "${firstWebsite.url}\n\n${secondWebsite.url}"
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebsite.url) {
-            verifyPageContent(firstWebsite.content)
-        }.openComposeTabDrawer(activityTestRule) {
-        }.openNewTab {
-        }.submitQuery(secondWebsite.url.toString()) {
-            verifyPageContent(secondWebsite.content)
-        }.openComposeTabDrawer(activityTestRule) {
-            verifyExistingOpenTabs("Test_Page_1")
-            verifyExistingOpenTabs("Test_Page_2")
-        }.openThreeDotMenu {
-            verifyShareAllTabsButton()
-        }.clickShareAllTabsButton {
-            verifyShareTabsOverlay(firstWebsiteTitle, secondWebsiteTitle)
-            verifySharingWithSelectedApp(
-                sharingApp,
-                sharedUrlsString,
-                "$firstWebsiteTitle, $secondWebsiteTitle",
-            )
-        }
-    }
-
-    @Test
-    fun privateTabsTrayWithOpenedTabTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.togglePrivateBrowsingMode()
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-        }.openComposeTabDrawer(activityTestRule) {
-            verifyNormalBrowsingButtonIsSelected(false)
-            verifyPrivateBrowsingButtonIsSelected(true)
-            verifySyncedTabsButtonIsSelected(false)
-            verifyThreeDotButton()
-            verifyNormalTabCounter()
-            verifyPrivateTabsList()
-            verifyExistingOpenTabs(website.title)
-            verifyTabCloseButton()
-            verifyTabThumbnail()
-            verifyFab()
-        }
     }
 
     @Test
@@ -196,24 +128,6 @@ class ComposeSmokeTest {
             verifyAppearanceColorDark(true)
             verifyAppearanceColorLight(true)
             verifyAppearanceColorSepia(true)
-        }
-    }
-
-    @Test
-    fun tabMediaControlButtonTest() {
-        val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(audioTestPage.url) {
-            mDevice.waitForIdle()
-            clickPageObject(itemWithText("Play"))
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PLAYING)
-        }.openComposeTabDrawer(activityTestRule) {
-            verifyTabMediaControlButtonState("Pause")
-            clickTabMediaControlButton("Pause")
-            verifyTabMediaControlButtonState("Play")
-        }.openTab(audioTestPage.title) {
-            assertPlaybackState(browserStore, MediaSession.PlaybackState.PAUSED)
         }
     }
 }
