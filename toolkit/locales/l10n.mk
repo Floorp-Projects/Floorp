@@ -93,9 +93,7 @@ else
 	find $(UNPACKED_INSTALLER) -maxdepth 1 -print0 | xargs -0 $(RM) -r
 endif
 	$(NSINSTALL) -D $(UNPACKED_INSTALLER)
-	cd $(UNPACKED_INSTALLER) && \
-	  $(INNER_UNMAKE_PACKAGE)
-
+	$(call INNER_UNMAKE_PACKAGE,$(UNPACKED_INSTALLER))
 
 unpack: $(UNPACKED_INSTALLER)
 ifeq ($(OS_ARCH), WINNT)
@@ -136,8 +134,7 @@ ifeq (WINNT,$(OS_ARCH))
 endif
 
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
-	(cd $(DIST)/l10n-stage; \
-	  $(MAKE_PACKAGE))
+	$(call MAKE_PACKAGE,$(DIST)/l10n-stage)
 # packaging done, undo l10n stuff
 ifneq (en,$(LPROJ_ROOT))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

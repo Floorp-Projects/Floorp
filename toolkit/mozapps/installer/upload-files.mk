@@ -106,30 +106,30 @@ UNPACK_TAR       = tar -xf-
 
 ifeq ($(MOZ_PKG_FORMAT),TAR)
   PKG_SUFFIX	= .tar
-  INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) > $(PACKAGE)
-  INNER_UNMAKE_PACKAGE	= $(UNPACK_TAR) < $(UNPACKAGE)
+  INNER_MAKE_PACKAGE 	= cd $(1) && $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) > $(PACKAGE)
+  INNER_UNMAKE_PACKAGE	= cd $(1) && $(UNPACK_TAR) < $(UNPACKAGE)
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
   PKG_SUFFIX	= .tar.gz
-  INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | gzip -vf9 > $(PACKAGE)
-  INNER_UNMAKE_PACKAGE	= gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
+  INNER_MAKE_PACKAGE 	= cd $(1) && $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | gzip -vf9 > $(PACKAGE)
+  INNER_UNMAKE_PACKAGE	= cd $(1) && gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
   PKG_SUFFIX	= .tar.bz2
   ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-    INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - -C $(MOZ_PKG_DIR) $(_APPNAME) | bzip2 -vf > $(PACKAGE)
+    INNER_MAKE_PACKAGE 	= cd $(1) && $(CREATE_FINAL_TAR) - -C $(MOZ_PKG_DIR) $(_APPNAME) | bzip2 -vf > $(PACKAGE)
   else
-    INNER_MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | bzip2 -vf > $(PACKAGE)
+    INNER_MAKE_PACKAGE 	= cd $(1) && $(CREATE_FINAL_TAR) - $(MOZ_PKG_DIR) | bzip2 -vf > $(PACKAGE)
   endif
-  INNER_UNMAKE_PACKAGE	= bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
+  INNER_UNMAKE_PACKAGE	= cd $(1) && bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
 endif
 
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
   PKG_SUFFIX	= .zip
-  INNER_MAKE_PACKAGE = $(call py_action,zip,'$(PACKAGE)' '$(MOZ_PKG_DIR)' -x '**/.mkdir.done')
-  INNER_UNMAKE_PACKAGE = $(call py_action,make_unzip,$(UNPACKAGE))
+  INNER_MAKE_PACKAGE = $(call py_action,zip,'$(PACKAGE)' '$(MOZ_PKG_DIR)' -x '**/.mkdir.done',$(1))
+  INNER_UNMAKE_PACKAGE = $(call py_action,make_unzip,$(UNPACKAGE),$(1))
 endif
 
 #Create an RPM file
@@ -201,7 +201,7 @@ ifeq ($(MOZ_PKG_FORMAT),RPM)
     RPM_CMD += && mv $(TARGET_CPU)/$(TESTS_RPM) $(ABS_DIST)/
   endif
 
-  INNER_MAKE_PACKAGE = $(RPM_CMD)
+  INNER_MAKE_PACKAGE = cd $(1) && $(RPM_CMD)
   #Avoiding rpm repacks, going to try creating/uploading xpi in rpm files instead
   INNER_UNMAKE_PACKAGE = $(error Try using rpm2cpio and cpio)
 
@@ -224,15 +224,15 @@ ifeq ($(MOZ_PKG_FORMAT),DMG)
         $(if $(MOZ_PKG_MAC_BACKGROUND),--background '$(MOZ_PKG_MAC_BACKGROUND)') \
         $(if $(MOZ_PKG_MAC_ICON),--icon '$(MOZ_PKG_MAC_ICON)') \
         --volume-name '$(MOZ_APP_DISPLAYNAME)' \
-        '$(PKG_DMG_SOURCE)' '$(PACKAGE)' \
-        )
+        '$(PKG_DMG_SOURCE)' '$(PACKAGE)', \
+        $(1))
   INNER_UNMAKE_PACKAGE = \
     $(call py_action,unpack_dmg, \
         $(if $(MOZ_PKG_MAC_DSSTORE),--dsstore '$(MOZ_PKG_MAC_DSSTORE)') \
         $(if $(MOZ_PKG_MAC_BACKGROUND),--background '$(MOZ_PKG_MAC_BACKGROUND)') \
         $(if $(MOZ_PKG_MAC_ICON),--icon '$(MOZ_PKG_MAC_ICON)') \
-        $(UNPACKAGE) $(MOZ_PKG_DIR) \
-        )
+        $(UNPACKAGE) $(MOZ_PKG_DIR), \
+        $(1))
 endif
 
 MAKE_PACKAGE = $(INNER_MAKE_PACKAGE)
