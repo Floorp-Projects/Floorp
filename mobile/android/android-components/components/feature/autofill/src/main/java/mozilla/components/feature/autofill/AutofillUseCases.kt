@@ -12,6 +12,7 @@ import android.os.Build
 import android.provider.Settings
 import android.view.autofill.AutofillManager
 import androidx.annotation.VisibleForTesting
+import mozilla.components.support.base.log.logger.Logger
 
 /**
  * Use cases for common Android Autofill tasks.
@@ -21,6 +22,7 @@ class AutofillUseCases(
     @VisibleForTesting sdkVersion: Int = Build.VERSION.SDK_INT,
 ) {
     private val isAutofillAvailable = sdkVersion >= Build.VERSION_CODES.O
+    private val logger = Logger("AutofillUseCases")
 
     /**
      * Returns true if Autofill is supported by the current device.
@@ -37,13 +39,21 @@ class AutofillUseCases(
     /**
      * Returns true if this application is providing Autofill services for the current user.
      */
+    @Suppress("TooGenericExceptionCaught")
     fun isEnabled(context: Context): Boolean {
         if (!isAutofillAvailable) {
             return false
         }
 
-        return context.getSystemService(AutofillManager::class.java)
-            .hasEnabledAutofillServices()
+        return try {
+            context.getSystemService(AutofillManager::class.java)
+                .hasEnabledAutofillServices()
+        } catch (e: RuntimeException) {
+            // Without more detail about why the system service has timed out, it's easiest to assume
+            // that the failure will continue and so disable the service for now.
+            logger.error("System service lookup has timed out")
+            false
+        }
     }
 
     /**
