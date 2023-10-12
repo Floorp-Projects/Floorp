@@ -10,4 +10,4 @@ addondir = $(srcdir)/tests/addons
 testdir = $(topobjdir)/_tests/xpcshell/toolkit/components/telemetry/tests/unit
 
 misc:: $(call mkdir_deps,$(testdir))
-	$(foreach dir,$(wildcard $(addondir)/*),$(call py_action,zip,-C $(dir) $(testdir)/$(notdir $(dir)).xpi \*))
+	$(foreach dir,$(wildcard $(addondir)/*),$(call py_action,zip $(notdir $(dir)).xpi,-C $(dir) $(testdir)/$(notdir $(dir)).xpi \*))

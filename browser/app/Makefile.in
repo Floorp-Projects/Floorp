@@ -55,7 +55,7 @@ endif
 # steps. See bug 1431342.
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	$(call py_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
+	$(call py_action,preprocessor channel-prefs.js,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 
@@ -86,8 +86,8 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) $(objdir)/macbuild/Contents/MacOS-
 	$(MKDIR) -p '$(dist_dest)/$(LPROJ)'
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents '$(dist_dest)' --exclude English.lproj
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ '$(dist_dest)/$(LPROJ)'
-	$(call py_action,preprocessor,-Fsubstitution -DAPP_VERSION='$(MOZ_APP_VERSION)' -DMOZ_APP_NAME='$(MOZ_APP_NAME)' -DMAC_APP_NAME='$(MAC_APP_NAME)' -DMOZ_MACBUNDLE_ID='$(MOZ_MACBUNDLE_ID)' -DMAC_BUNDLE_VERSION='$(MAC_BUNDLE_VERSION)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o '$(dist_dest)/Contents/Info.plist')
-	$(call py_action,preprocessor,-Fsubstitution --output-encoding utf-16 -DMAC_APP_NAME='$(MAC_APP_NAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o '$(dist_dest)/$(LPROJ)/InfoPlist.strings')
+	$(call py_action,preprocessor Info.plist,-Fsubstitution -DAPP_VERSION='$(MOZ_APP_VERSION)' -DMOZ_APP_NAME='$(MOZ_APP_NAME)' -DMAC_APP_NAME='$(MAC_APP_NAME)' -DMOZ_MACBUNDLE_ID='$(MOZ_MACBUNDLE_ID)' -DMAC_BUNDLE_VERSION='$(MAC_BUNDLE_VERSION)' -DMOZ_DEVELOPER_REPO_PATH='$(topsrcdir)' -DMOZ_DEVELOPER_OBJ_PATH='$(topobjdir)' $(srcdir)/macbuild/Contents/Info.plist.in -o '$(dist_dest)/Contents/Info.plist')
+	$(call py_action,preprocessor InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DMAC_APP_NAME='$(MAC_APP_NAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o '$(dist_dest)/$(LPROJ)/InfoPlist.strings')
 	rsync -a --exclude-from='$(objdir)/macbuild/Contents/MacOS-files.txt' $(DIST)/bin/ '$(dist_dest)/Contents/Resources'
 	rsync -a --include-from='$(objdir)/macbuild/Contents/MacOS-files.txt' --exclude '*' $(DIST)/bin/ '$(dist_dest)/Contents/MacOS'
 	# MacOS-files-copy.in is a list of files that should be copies rather
