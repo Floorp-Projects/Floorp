@@ -11,7 +11,7 @@
 
 [package]
 name = "core-text"
-version = "20.0.0"
+version = "20.1.0"
 authors = ["The Servo Project Developers"]
 description = "Bindings to the Core Text framework."
 readme = "README.md"
@@ -19,6 +19,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/servo/core-foundation-rs"
 
 [package.metadata.docs.rs]
+all-features = true
 default-target = "x86_64-apple-darwin"
 
 [dependencies.core-foundation]

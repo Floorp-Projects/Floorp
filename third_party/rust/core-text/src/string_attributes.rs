@@ -1,6 +1,6 @@
 use core_foundation::string::CFStringRef;
 
-extern {
+extern "C" {
     pub static kCTCharacterShapeAttributeName: CFStringRef;
     pub static kCTFontAttributeName: CFStringRef;
     pub static kCTKernAttributeName: CFStringRef;
