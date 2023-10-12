@@ -423,7 +423,7 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(LINKER) -OUT:$@ -PDB:$(LINK_PDBFILE) -IMPLIB:$(basename $(@F)).lib $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
 else # !WINNT || GNU_CC
 	$(call EXPAND_CC_OR_CXX,$@) -o $@ $(COMPUTED_CXX_LDFLAGS) $($(notdir $@)_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
-	$(call py_action,check_binary,$@)
+	$(call py_action,check_binary $(@F),$@)
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
@@ -468,7 +468,7 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(LINKER) -out:$@ -pdb:$(LINK_PDBFILE) $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_PROGRAM_LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(OS_LIBS)
 else
 	$(call EXPAND_CC_OR_CXX,$@) $(COMPUTED_CXX_LDFLAGS) -o $@ $($@_OBJS) $(filter %.res,$^) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(MOZ_PROGRAM_LDFLAGS) $(SHARED_LIBS) $(OS_LIBS)
-	$(call py_action,check_binary,$@)
+	$(call py_action,check_binary $(@F),$@)
 endif # WINNT && !GNU_CC
 
 ifdef ENABLE_STRIP
@@ -624,7 +624,7 @@ define syms_template
 syms:: $(2)
 $(2): $(1)
 ifdef MOZ_CRASHREPORTER
-	$$(call py_action,dumpsymbols,$$(abspath $$<) $$(abspath $$@) $$(DUMP_SYMBOLS_FLAGS))
+	$$(call py_action,dumpsymbols $$@,$$(abspath $$<) $$(abspath $$@) $$(DUMP_SYMBOLS_FLAGS))
 ifeq ($(OS_ARCH),WINNT)
 ifdef WINCHECKSEC
 	$$(PYTHON3) $$(topsrcdir)/build/win32/autowinchecksec.py $$<
@@ -864,7 +864,7 @@ endif
 endif
 
 misc realchrome:: $(FINAL_TARGET)/chrome
-	$(call py_action,jar_maker,\
+	$(call py_action,jar_maker $(subst $(topsrcdir)/,,$(JAR_MANIFEST)),\
 	  $(QUIET) -d $(FINAL_TARGET) \
 	  $(MAKE_JARS_FLAGS) $(DEFINES) $(ACDEFINES) \
 	  $(JAR_MANIFEST))
@@ -882,7 +882,7 @@ endif
 ifneq ($(XPI_PKGNAME),)
 tools realchrome::
 	@echo 'Packaging $(XPI_PKGNAME).xpi...'
-	$(call py_action,zip,-C $(FINAL_TARGET) ../$(XPI_PKGNAME).xpi '*')
+	$(call py_action,zip $(XPI_PKGNAME).xpi,-C $(FINAL_TARGET) ../$(XPI_PKGNAME).xpi '*')
 endif
 
 #############################################################################
@@ -1049,7 +1049,7 @@ PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS
 $(PP_TARGETS_ALL_RESULTS):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
 	$(RM) '$@'
-	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) '$<' -o '$@')
+	$(call py_action,preprocessor $(@F),--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) '$<' -o '$@')
 
 $(filter %.css,$(PP_TARGETS_ALL_RESULTS)): PP_TARGET_FLAGS+=--marker %
 

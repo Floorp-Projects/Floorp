@@ -13,7 +13,7 @@ ifeq ($(OS_ARCH),Darwin)
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/crashreporter.app
 	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/crashreporter.app 
-	$(call py_action,preprocessor,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_APP_DISPLAYNAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/crashreporter.app/Contents/Resources/English.lproj/InfoPlist.strings)
+	$(call py_action,preprocessor crashreporter.app/Contents/Resources/English.lproj/InfoPlist.strings,-Fsubstitution --output-encoding utf-16 -DAPP_NAME='$(MOZ_APP_DISPLAYNAME)' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in -o $(DIST)/bin/crashreporter.app/Contents/Resources/English.lproj/InfoPlist.strings)
 	$(NSINSTALL) -D $(DIST)/bin/crashreporter.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/crashreporter $(DIST)/bin/crashreporter.app/Contents/MacOS
 endif
