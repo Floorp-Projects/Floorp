@@ -62,7 +62,7 @@ def make_task_worker(config, jobs):
         if job["worker"]["entries"]:
             yield job
         else:
-            logger.warn(
+            logger.warning(
                 'No bouncer entries defined in bouncer submission task for "{}". \
 Job deleted.'.format(
                     job["name"]
