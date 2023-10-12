@@ -137,6 +137,9 @@ class JitActivation : public Activation {
   }
   void setJSExitFP(uint8_t* fp) { packedExitFP_ = fp; }
 
+  uint8_t* packedExitFP() const { return packedExitFP_; }
+  void setPackedExitFP(uint8_t* fp) { packedExitFP_ = fp; }
+
 #ifdef CHECK_OSIPOINT_REGISTERS
   void setCheckRegs(bool check) { checkRegs_ = check; }
   static size_t offsetOfCheckRegs() {
