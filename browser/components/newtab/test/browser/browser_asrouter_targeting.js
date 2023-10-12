@@ -1673,3 +1673,23 @@ add_task(async function check_isDeviceMigration() {
 
   sandbox.restore();
 });
+
+add_task(async function check_primaryResolution() {
+  is(
+    typeof ASRouterTargeting.Environment.primaryResolution,
+    "object",
+    "Should return an object"
+  );
+
+  is(
+    typeof ASRouterTargeting.Environment.primaryResolution.width,
+    "number",
+    "Width property should return a number"
+  );
+
+  is(
+    typeof ASRouterTargeting.Environment.primaryResolution.height,
+    "number",
+    "Height property should return a number"
+  );
+});

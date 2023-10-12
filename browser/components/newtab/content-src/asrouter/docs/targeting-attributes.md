@@ -53,6 +53,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [pinnedSites](#pinnedsites)
 * [platformName](#platformname)
 * [previousSessionEnd](#previoussessionend)
+* [primaryResolution](#primaryresolution)
 * [profileAgeCreated](#profileagecreated)
 * [profileAgeReset](#profileagereset)
 * [profileRestartCount](#profilerestartcount)
@@ -360,6 +361,19 @@ Timestamp of the previously closed session.
 declare const previousSessionEnd: UnixEpochNumber;
 // UnixEpochNumber is UNIX Epoch timestamp, e.g. 1522843725924
 type UnixEpochNumber = number;
+```
+
+### `primaryResolution`
+
+An object containing the available width and available height of the primary monitor in pixel values. The values take into account the existence of docks and task bars.
+
+#### Definition
+
+```ts
+interface primaryResolution {
+  width: number;
+  height: number;
+}
 ```
 
 ### `profileAgeCreated`
