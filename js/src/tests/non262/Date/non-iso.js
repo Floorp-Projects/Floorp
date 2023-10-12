@@ -50,8 +50,8 @@ assertEq(new Date("1997-03-08 11:19:10-07").getTime(),
          new Date("1997-03-08 11:19:10-0700").getTime());
 assertEq(new Date("1997-03-08T11:19:10-07").getTime(),
          new Date(NaN).getTime());
-assertEq(new Date("1997-03-08T").getTime(),
-         new Date(NaN).getTime());
+assertEq(new Date("1997-3-8 ").getTime(),
+         new Date("1997-03-08T").getTime()); // Date(NaN)
 assertEq(new Date("1997-3-8T11:19:20").getTime(),
          new Date(NaN).getTime());
 assertEq(new Date("1997-03-8T11:19:20").getTime(),
@@ -60,8 +60,12 @@ assertEq(new Date("+001997-3-8T11:19:20").getTime(),
          new Date(NaN).getTime());
 assertEq(new Date("+001997-3-08T11:19:20").getTime(),
          new Date(NaN).getTime());
-assertEq(new Date("1997-03-08T1:19").getTime(),
+assertEq(new Date("1997-3-8 :00:01").getTime(),
          new Date(NaN).getTime());
+assertEq(new Date("1997-3-8 01::01").getTime(),
+         new Date(NaN).getTime());
+assertEq(new Date("1997-03-08T1:19").getTime(),
+         new Date(NaN).getTime());         
 assertEq(new Date("1997-03-08T1:1").getTime(),
          new Date(NaN).getTime());
 assertEq(new Date("1997-03-08T1:1:01").getTime(),
