@@ -12,7 +12,11 @@ function test() {
   );
 
   is(gBrowser.userTypedValue, URI, "userTypedValue matches test URI");
-  is(gURLBar.value, URI, "location bar value matches test URI");
+  is(
+    gURLBar.value,
+    UrlbarTestUtils.trimURL(URI),
+    "location bar value matches test URI"
+  );
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.removeCurrentTab({ skipPermitUnload: true });
@@ -23,7 +27,7 @@ function test() {
   );
   is(
     gURLBar.value,
-    URI,
+    UrlbarTestUtils.trimURL(URI),
     "location bar value matches test URI after switching tabs"
   );
 
@@ -36,7 +40,7 @@ function test() {
     );
     is(
       gURLBar.value,
-      URI,
+      UrlbarTestUtils.trimURL(URI),
       "location bar value matches test URI as the page has loaded"
     );
 

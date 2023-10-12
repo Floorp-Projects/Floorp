@@ -174,21 +174,28 @@ async function search({
   // autofill before the search completes.
   UrlbarTestUtils.fireInputEvent(window);
 
+  // Subtract the protocol length, when the searchString contains the https://
+  // protocol and trimHttps is enabled.
+  let trimmedProtocolWSlashes = UrlbarTestUtils.getTrimmedProtocolWithSlashes();
+  let selectionOffset = searchString.includes(trimmedProtocolWSlashes)
+    ? trimmedProtocolWSlashes.length
+    : 0;
+
   // Check the input value and selection immediately, before waiting on the
   // search to complete.
   Assert.equal(
     gURLBar.value,
-    valueBefore,
+    UrlbarTestUtils.trimURL(valueBefore),
     "gURLBar.value before the search completes"
   );
   Assert.equal(
     gURLBar.selectionStart,
-    searchString.length,
+    searchString.length - selectionOffset,
     "gURLBar.selectionStart before the search completes"
   );
   Assert.equal(
     gURLBar.selectionEnd,
-    valueBefore.length,
+    valueBefore.length - selectionOffset,
     "gURLBar.selectionEnd before the search completes"
   );
 
@@ -199,17 +206,17 @@ async function search({
   // Check the final value after the results arrived.
   Assert.equal(
     gURLBar.value,
-    valueAfter,
+    UrlbarTestUtils.trimURL(valueAfter),
     "gURLBar.value after the search completes"
   );
   Assert.equal(
     gURLBar.selectionStart,
-    searchString.length,
+    searchString.length - selectionOffset,
     "gURLBar.selectionStart after the search completes"
   );
   Assert.equal(
     gURLBar.selectionEnd,
-    valueAfter.length,
+    valueAfter.length - selectionOffset,
     "gURLBar.selectionEnd after the search completes"
   );
 
@@ -221,7 +228,7 @@ async function search({
     );
     Assert.strictEqual(
       gURLBar._autofillPlaceholder.value,
-      placeholderAfter,
+      UrlbarTestUtils.trimURL(placeholderAfter),
       "gURLBar._autofillPlaceholder.value after the search completes"
     );
   } else {

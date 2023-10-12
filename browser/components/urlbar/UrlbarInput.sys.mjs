@@ -995,7 +995,7 @@ export class UrlbarInput {
         selType: "canonized",
         searchString: this._lastSearchString,
       });
-      this._loadURL(this.value, event, where, openParams, browser);
+      this._loadURL(this._untrimmedValue, event, where, openParams, browser);
       return;
     }
 

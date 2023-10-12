@@ -7,17 +7,17 @@
 "use strict";
 
 add_setup(async function () {
-  const PREF_TRIMURL = "browser.urlbar.trimURLs";
-  const PREF_AUTOFILL = "browser.urlbar.autoFill";
-
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimURLs", true],
+      ["browser.urlbar.trimHttps", false],
+      ["browser.urlbar.autoFill", true],
+    ],
+  });
   registerCleanupFunction(async function () {
-    Services.prefs.clearUserPref(PREF_TRIMURL);
-    Services.prefs.clearUserPref(PREF_AUTOFILL);
     await PlacesUtils.history.clear();
     gURLBar.handleRevert();
   });
-  Services.prefs.setBoolPref(PREF_TRIMURL, true);
-  Services.prefs.setBoolPref(PREF_AUTOFILL, true);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
