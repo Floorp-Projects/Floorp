@@ -6170,7 +6170,9 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
       mRotate(aFrame->StyleDisplay()->mRotate),
       mScale(aFrame->StyleDisplay()->mScale),
       mTransform(aFrame->StyleDisplay()->mTransform),
-      mMotion(MotionPathUtils::ResolveMotionPath(aFrame, aRefBox)),
+      mMotion(aFrame->StyleDisplay()->mOffsetPath.IsNone()
+                  ? Nothing()
+                  : MotionPathUtils::ResolveMotionPath(aFrame, aRefBox)),
       mToTransformOrigin(
           GetDeltaToTransformOrigin(aFrame, aRefBox, aAppUnitsPerPixel)) {}
 
