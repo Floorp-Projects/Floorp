@@ -180,6 +180,8 @@ inline bool IsBaselineInterpreterEnabled() {
 inline bool IsPortableBaselineInterpreterEnabled() {
   return JitOptions.portableBaselineInterpreter;
 }
+#else
+inline bool IsPortableBaselineInterpreterEnabled() { return false; }
 #endif
 
 inline bool TooManyActualArguments(size_t nargs) {
