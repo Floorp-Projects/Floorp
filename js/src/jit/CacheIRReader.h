@@ -50,8 +50,8 @@ class MOZ_RAII CacheIRReader {
 
   bool more() const { return buffer_.more(); }
 
-  CacheOp readOp() { return CacheOp(buffer_.readUnsigned15Bit()); }
-  CacheOp peekOp() { return CacheOp(buffer_.peekUnsigned15Bit()); }
+  CacheOp readOp() { return CacheOp(buffer_.readFixedUint16_t()); }
+  CacheOp peekOp() { return CacheOp(buffer_.peekFixedUint16_t()); }
 
   // Skip data not currently used.
   void skip() { buffer_.readByte(); }
