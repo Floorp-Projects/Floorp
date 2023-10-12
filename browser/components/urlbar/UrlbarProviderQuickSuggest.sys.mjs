@@ -158,7 +158,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       promises.push(backend.query(searchString));
     }
     if (
-      lazy.UrlbarPrefs.get("merinoEnabled") &&
       lazy.UrlbarPrefs.get("quicksuggest.dataCollection.enabled") &&
       queryContext.allowRemoteResults()
     ) {

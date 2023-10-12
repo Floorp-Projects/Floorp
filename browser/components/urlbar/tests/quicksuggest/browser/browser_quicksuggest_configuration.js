@@ -101,13 +101,11 @@ add_task(async function test_indexes() {
 add_task(async function test_merino() {
   await QuickSuggestTestUtils.withExperiment({
     valueOverrides: {
-      merinoEnabled: true,
       merinoEndpointURL: "http://example.com/test_merino_config",
       merinoClientVariants: "test-client-variants",
       merinoProviders: "test-providers",
     },
     callback: () => {
-      Assert.equal(UrlbarPrefs.get("merinoEnabled"), true, "merinoEnabled");
       Assert.equal(
         UrlbarPrefs.get("merinoEndpointURL"),
         "http://example.com/test_merino_config",

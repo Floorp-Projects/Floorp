@@ -42,8 +42,7 @@ export class Weather extends BaseFeature {
     // set by Nimbus.
     return (
       lazy.UrlbarPrefs.get("weatherFeatureGate") &&
-      lazy.UrlbarPrefs.get("suggest.weather") &&
-      lazy.UrlbarPrefs.get("merinoEnabled")
+      lazy.UrlbarPrefs.get("suggest.weather")
     );
   }
 
