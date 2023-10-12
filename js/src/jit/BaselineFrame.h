@@ -139,7 +139,20 @@ class BaselineFrame {
 #endif
 
   Value* valueSlot(size_t slot) const {
+#ifndef ENABLE_PORTABLE_BASELINE_INTERP
+    // Assert that we're within the frame, but only if the "debug
+    // frame size" has been set. Ordinarily if we are in C++ code
+    // looking upward at a baseline frame, it will be, because it is
+    // set for the *previous* frame when we push an exit frame and
+    // call back into C++ from generated baseline code. However, the
+    // portable baseline interpreter uses accessors on BaselineFrame
+    // directly within the active frame and so the "debug frame size"
+    // hasn't been set (and it would be expensive to constantly update
+    // it). Because this is only used for assertions, and is not
+    // needed for correctness, we can disable this check below when
+    // PBL is enabled.
     MOZ_ASSERT(slot < debugNumValueSlots());
+#endif
     return (Value*)this - (slot + 1);
   }
 

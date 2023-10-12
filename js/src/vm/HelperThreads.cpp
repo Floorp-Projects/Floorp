@@ -15,6 +15,7 @@
 
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/GC.h"
+#include "jit/Ion.h"
 #include "jit/IonCompileTask.h"
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
@@ -348,6 +349,10 @@ static bool IonCompileTaskMatches(const CompilationSelector& selector,
 
 static void CancelOffThreadIonCompileLocked(const CompilationSelector& selector,
                                             AutoLockHelperThreadState& lock) {
+  if (jit::IsPortableBaselineInterpreterEnabled()) {
+    return;
+  }
+
   if (!HelperThreadState().isInitialized(lock)) {
     return;
   }
@@ -427,6 +432,10 @@ void js::CancelOffThreadIonCompile(const CompilationSelector& selector) {
 
 #ifdef DEBUG
 bool js::HasOffThreadIonCompile(Zone* zone) {
+  if (jit::IsPortableBaselineInterpreterEnabled()) {
+    return false;
+  }
+
   AutoLockHelperThreadState lock;
 
   if (!HelperThreadState().isInitialized(lock)) {

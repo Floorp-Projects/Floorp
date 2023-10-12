@@ -6756,6 +6756,9 @@ static bool HasOptimizableLastIndexSlot(RegExpObject* regexp, JSContext* cx) {
 // Returns the RegExp stub used by the optimized code path for this intrinsic.
 // We store a pointer to this in the IC stub to ensure GC doesn't discard it.
 static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+  return nullptr;
+#else
   // The stubs assume the global has non-null RegExpStatics and match result
   // shape.
   if (!GlobalObject::getRegExpStatics(cx, cx->global()) ||
@@ -6764,7 +6767,6 @@ static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
     cx->clearPendingException();
     return nullptr;
   }
-
   JitCode* code;
   switch (native) {
     case InlinableNative::IntrinsicRegExpBuiltinExecForTest:
@@ -6790,6 +6792,7 @@ static JitCode* GetOrCreateRegExpStub(JSContext* cx, InlinableNative native) {
     return nullptr;
   }
   return code;
+#endif
 }
 
 static void EmitGuardLastIndexIsNonNegativeInt32(CacheIRWriter& writer,
