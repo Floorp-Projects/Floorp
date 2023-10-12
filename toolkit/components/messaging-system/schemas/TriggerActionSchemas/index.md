@@ -50,6 +50,7 @@ let patterns: string[];
 * [nthTabClosed](#nthtabclosed)
 * [activityAfterIdle](#activityafteridle)
 * [cookieBannerDetected](#cookiebannerdetected)
+* [cookieBannerHandled](#cookiebannerhandled)
 * [messagesLoaded](#messagesloaded)
 
 ### `openArticleURL`
@@ -224,6 +225,15 @@ Happens when the `cookiebannerdetected` window event is dispatched. This event i
 1. The user is presented with a cookie consent banner on the webpage they're viewing,
 2. The domain has a valid ruleset for automatically engaging with the consent banner, and
 3. The user has not explicitly opted in or out of the Cookie Banner Handling feature.
+
+### `cookieBannerHandled`
+
+Happens when the `cookiebannerhandled` window event is dispatched. This event is dispatched when the following conditions are true:
+
+1. The user is presented with a cookie consent banner on the webpage they're viewing,
+2. The domain has a valid ruleset for automatically engaging with the consent banner, and
+3. The user is opted into the Cookie Banner Handling feature (this is by default in private windows), and
+4. Firefox succeeds in automatically engaging with the consent banner.
 
 ### `messagesLoaded`
 
