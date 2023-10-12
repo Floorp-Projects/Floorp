@@ -1044,30 +1044,6 @@ static GCPtr<T>* AsGCPtr(uintptr_t* ptr) {
   return reinterpret_cast<GCPtr<T>*>(ptr);
 }
 
-uintptr_t CacheIRStubInfo::getStubRawWord(const uint8_t* stubData,
-                                          uint32_t offset) const {
-  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
-  return *reinterpret_cast<const uintptr_t*>(stubData + offset);
-}
-
-uintptr_t CacheIRStubInfo::getStubRawWord(ICCacheIRStub* stub,
-                                          uint32_t offset) const {
-  uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
-  return getStubRawWord(stubData, offset);
-}
-
-int64_t CacheIRStubInfo::getStubRawInt64(const uint8_t* stubData,
-                                         uint32_t offset) const {
-  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(int64_t) == 0);
-  return *reinterpret_cast<const int64_t*>(stubData + offset);
-}
-
-int64_t CacheIRStubInfo::getStubRawInt64(ICCacheIRStub* stub,
-                                         uint32_t offset) const {
-  uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
-  return getStubRawInt64(stubData, offset);
-}
-
 void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
                                          uintptr_t oldWord,
                                          uintptr_t newWord) const {
