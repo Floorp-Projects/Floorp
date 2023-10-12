@@ -33,18 +33,13 @@ body.showBanner {
   padding: 40px 48px 0;
 }
 
-a:link,
-.text-link {
+a:link {
   color: inherit;
   text-decoration: underline;
+}
 
-  &:hover {
-    color: inherit;
-  }
-
-  :active {
-    text-decoration: none;
-  }
+a:link:hover {
+  color: inherit;
 }
 
 .container {
@@ -424,17 +419,15 @@ p {
 
 .promo-dismiss {
   padding: 10px;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 16px;
+  min-height: 16px;
   display: inline flow-root;
   background: url("chrome://global/skin/icons/close.svg") center no-repeat;
   cursor: pointer;
   -moz-context-properties: fill;
   fill: currentColor;
   position: relative;
-  align-self: start;
-  top: -11px;
-  inset-inline-end: -11px;
+  top: -90px;
 }
 
 @media not (prefers-contrast) {
@@ -539,20 +532,8 @@ p {
 }
 
 .promo.below-search {
-  padding: 22px;
+  padding: 25px 22px 10px;
   margin-top: 25px;
-
-  #promo-header {
-    margin-block: 0 1em;
-  }
-
-  #private-browsing-promo-text {
-    margin-block: 0;
-  }
-
-  #private-browsing-promo-link:not(.text-link) {
-    margin-block: 1.5em 0;
-  }
 }
 
 .promo.bottom {

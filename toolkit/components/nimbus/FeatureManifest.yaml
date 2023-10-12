@@ -1866,10 +1866,6 @@ cookieBannerHandling:
       type: boolean
       setPref: cookiebanners.ui.desktop.enabled
       description: Enables the cookie banner desktop UI.
-    enablePromo:
-      type: boolean
-      setPref: browser.promo.cookiebanners.enabled
-      description: Enables the cookie banner promo in about:privatebrowsing.
 
 backgroundThreads:
   description: Prefs to control MacOS thread priorities for power savings.
