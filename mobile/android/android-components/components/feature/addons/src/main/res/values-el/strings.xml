@@ -116,6 +116,8 @@
     <string name="mozac_feature_addons_remove">Αφαίρεση</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">Προσθήκη του %1$s;</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">Το %1$s απαιτεί επιπρόσθετα δικαιώματα.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Απαιτεί την άδειά σας για:</string>
     <!-- This is a button to add (install) an add-on . -->
@@ -134,6 +136,10 @@
     <string name="mozac_feature_addons_addons">Πρόσθετα</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Διαχείριση προσθέτων</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Τα πρόσθετα έχουν απενεργοποιηθεί προσωρινά</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Επανεκκίνηση προσθέτων</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">Εύρεση περισσότερων προσθέτων</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

@@ -292,7 +292,7 @@
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">ეკრანებს შორის გადართვა ჯერ არნახული სიმარტივით</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
-    <string name="onboarding_home_sync_description">განაგრძეთ, სადაც გაჩერდით სხვა მოწყობილობიდან ჩანართების წამოღებით ახლა უკვე საწყის გვერდზე.</string>
+    <string name="onboarding_home_sync_description">განაგრძეთ იქიდან, სადაც შეჩერდით, სხვა მოწყობილობიდან ჩანართების წამოღებით ახლა უკვე საწყის გვერდზე.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">დაიწყეთ</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
@@ -334,7 +334,7 @@
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">მოქნილად გადაერთეთ ტელეფონიდან ნოუთბუქზე და უკან</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">გამოიყოლეთ ჩანართები და სანიშნები სხვა მოწყობილობიდან, რომ განაგრძოთ იქიდანვე, სადაც გაჩერდით.</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">გამოიყოლეთ ჩანართები და სანიშნები სხვა მოწყობილობიდან, რომ განაგრძოთ იქიდანვე, სადაც შეჩერდით.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">შესვლა</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -665,9 +665,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">დამატება არაა მხარდაჭერილი</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">დამატება არაა მხარდაჭერილი</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">დამატება უკვე ჩადგმულია</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">დამატება უკვე ჩადგმულია</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -1471,7 +1471,7 @@
     <!-- Text for the onboarding welcome message. -->
     <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">ბრაუზერი შექმნილი ხალხისთვის, და არა მოგებისთვის</string>
     <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">განაგრძეთ იქიდან, სადაც გაჩერდით.</string>
+    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">განაგრძეთ იქიდან, სადაც შეჩერდით</string>
     <!-- Text for the button to learn more about signing in to your Firefox account. -->
     <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">დაასინქრონეთ ჩანართები და პაროლები მოწყობილობებს შორის შეუფერხებლად გადასვლისთვის.</string>
     <!-- Text for the button to manually sign into Firefox account. -->
@@ -2213,15 +2213,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[გასაყიდ ნაწარმზე თითოეულ მიმოხილვას ეწერება <b>ნიშნები</b> A-დან F-მდე.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">სანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ნამდვილი მომხმარებლებისგანაა დატოვებული პატიოსნად და მიუკერძოებლად.</string>
+    <string name="review_quality_check_info_grade_info_AB">სანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ნამდვილი მომხმარებლებისგანაა დატოვებული პატიოსნად და მიუკერძოებლად.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">მიგვაჩნია, რომ მიმოხილვები სანდო უნდა იყოს.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">მიგვაჩნია, რომ მიმოხილვები სანდო უნდა იყოს.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">მიგვაჩნია, რომ შერეულადაა სანდო და არასანდო მიმოხილვები.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">არასანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ყალბი ან მიკერძოებული მიმომხილველებისგანაა.</string>
+    <string name="review_quality_check_info_grade_info_DF">არასანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ყალბი ან მიკერძოებული მიმომხილველებისგანაა.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">მიგვაჩნია, რომ მიმოხილვები არაა სანდო.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">მიგვაჩნია, რომ მიმოხილვები არაა სანდო.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>შესწორებული შეფასება</b> ეყრდნობა მხოლოდ იმ მიმოხილვებს, რომლებიც სანდოდ მიგვაჩნია.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->

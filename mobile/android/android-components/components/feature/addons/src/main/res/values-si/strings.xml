@@ -70,8 +70,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">විවෘත පටිතිවල ඔබගේ දත්ත වෙත ප්‍රවේශයට සංවර්ධක මෙවලම් විස්තීරණය</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">අනුවාදය</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">කර්තෘ</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">කතුවරු</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">කතුවරු</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">අවසාන යාවත්කාලය</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -112,10 +114,18 @@
     <string name="mozac_feature_addons_remove">ඉවත් කරන්න</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s එක් කරන්නද?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s අතිරේක අවසර ඉල්ලා සිටියි.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">එයට ඔබගේ අවසරය අවශ්‍ය වන්නේ:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">වුවමනා වන්නේ:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">එකතු</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">ඉඩ දෙන්න</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">ප්‍රතික්‍ෂේප</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">අවලංගු</string>
     <!-- Accessibility content description to install add-on button. -->

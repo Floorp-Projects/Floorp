@@ -1518,7 +1518,7 @@
     <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
     <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s ojoko ijehegui umi atyguasúpe ani ohapykueho ñanduti rupive kañyhápe.</string>
     <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ñemo’ãmbaite kookie rovake omboyke tapykuehohápe oipurúvo kookie nde rapykueho hag̃ua ñandutípe.</string>
+    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources">Ñemo’ãmbaite kookie rovake omboyke tapykuehohápe oiporúvo kookie nde rapykueho hag̃ua ñandutípe.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">Ypyguaite (ijypygua)</string>
     <!-- text for standard blocking option button description -->

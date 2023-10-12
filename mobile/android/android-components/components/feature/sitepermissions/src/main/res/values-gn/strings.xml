@@ -3,13 +3,13 @@
     <!-- Title of a dialog for a notification permission request. -->
     <string name="mozac_feature_sitepermissions_notification_title">Emoneĩpa %1$s omondóvo marandu’i?</string>
     <!-- Title of a dialog for a camera permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_title">Emoneĩpa %1$s oipurúvo ta’ãnganohẽha?</string>
+    <string name="mozac_feature_sitepermissions_camera_title">Emoneĩpa %1$s oiporúvo ta’ãnganohẽha?</string>
     <!-- Title of a dialog for a microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_microfone_title">Emoneĩpa %1$s oipurúvo ñe’ẽatãha?</string>
+    <string name="mozac_feature_sitepermissions_microfone_title">Emoneĩpa %1$s oiporúvo ñe’ẽatãha?</string>
     <!-- Title of a dialog for a location permission request. -->
     <string name="mozac_feature_sitepermissions_location_title">Emoneĩpa %1$s oikévo nerendaitépe?</string>
     <!-- Title of a dialog for a camera and microphone permission request. -->
-    <string name="mozac_feature_sitepermissions_camera_and_microphone">Emoneĩpa %1$s oipurúvo ta’ãnganohẽha ha ñe’ẽatãha?</string>
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">Emoneĩpa %1$s oiporúvo ta’ãnganohẽha ha ñe’ẽatãha?</string>
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">Ñe’ẽatãha 1</string>
@@ -37,7 +37,7 @@
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">¿Emoneĩ %1$s-pe ombohetávo tetepy DRM ohechapyre?</string>
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
-    <string name="mozac_feature_sitepermissions_storage_access_title">¿Emoneĩse %1$s oipurúvo ikookie %2$s-pe?</string>
+    <string name="mozac_feature_sitepermissions_storage_access_title">¿Emoneĩse %1$s oiporúvo ikookie %2$s-pe?</string>
     <!-- Message of a dialog offering more context about the cross origin storage permission.
     %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
     <string name="mozac_feature_sitepermissions_storage_access_message">Ikatu rejokose jeike nahesakãirõ mba’ére %s oikotevẽ ko’ã mba’ekuaarã.</string>
