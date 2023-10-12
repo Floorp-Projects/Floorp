@@ -9,7 +9,6 @@ import json
 import logging
 import os
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -358,36 +357,13 @@ class BuildMonitor(MozbuildObject):
             # the upload path, alongside, for convenience, a copy of the HTML
             # viewer.
             if "MOZ_AUTOMATION" in os.environ and "UPLOAD_PATH" in os.environ:
-                build_resources_path = os.path.join(
-                    os.environ["UPLOAD_PATH"], "build_resources.json"
-                )
                 build_resources_profile_path = os.path.join(
                     os.environ["UPLOAD_PATH"], "profile_build_resources.json"
                 )
-                shutil.copy(
-                    os.path.join(
-                        self.topsrcdir,
-                        "python",
-                        "mozbuild",
-                        "mozbuild",
-                        "resources",
-                        "html-build-viewer",
-                        "build_resources.html",
-                    ),
-                    os.environ["UPLOAD_PATH"],
-                )
             else:
-                build_resources_path = self._get_state_filename("build_resources.json")
                 build_resources_profile_path = self._get_state_filename(
                     "profile_build_resources.json"
                 )
-            with io.open(
-                build_resources_path, "w", encoding="utf-8", newline="\n"
-            ) as fh:
-                to_write = six.ensure_text(
-                    json.dumps(self.resources.as_dict(), indent=2)
-                )
-                fh.write(to_write)
             with io.open(
                 build_resources_profile_path, "w", encoding="utf-8", newline="\n"
             ) as fh:
