@@ -164,7 +164,7 @@ def make_task_worker(config, jobs):
         if job["worker"]["entries"]:
             yield job
         else:
-            logger.warn(
+            logger.warning(
                 'No bouncer entries defined in bouncer submission task for "{}". \
 Job deleted.'.format(
                     job["name"]
@@ -186,7 +186,7 @@ def craft_bouncer_entries(config, job):
     if previous_versions_string:
         previous_versions = previous_versions_string.split(", ")
     else:
-        logger.warn(
+        logger.warning(
             'No partials defined! Bouncer submission task won\'t send any \
 partial-related entry for "{}"'.format(
                 job["name"]
