@@ -112,6 +112,14 @@ class CompactBufferReader {
     }
     return val;
   }
+  uint32_t peekUnsigned15Bit() {
+    uint8_t byte = buffer_[0];
+    uint32_t val = byte >> 1;
+    if (byte & 1) {
+      val |= uint32_t(buffer_[1]) << 7;
+    }
+    return val;
+  }
   void* readRawPointer() {
     uintptr_t ptrWord = 0;
     for (unsigned i = 0; i < sizeof(uintptr_t); i++) {
