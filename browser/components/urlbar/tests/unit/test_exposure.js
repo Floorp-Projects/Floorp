@@ -55,7 +55,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+    isBlockable: true,
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -90,7 +90,7 @@ const EXPECTED_NON_SPONSORED_REMOTE_SETTINGS_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+    isBlockable: true,
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"

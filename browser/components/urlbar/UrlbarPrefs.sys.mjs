@@ -301,10 +301,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
 
-  // Whether the usual non-best-match quick suggest results can be blocked. This
-  // pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
-  ["quicksuggest.blockingEnabled", true],
-
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.
   ["quicksuggest.enabled", false],

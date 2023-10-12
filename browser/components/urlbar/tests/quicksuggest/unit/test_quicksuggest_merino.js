@@ -50,7 +50,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+    isBlockable: true,
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -85,7 +85,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+    isBlockable: true,
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -502,7 +502,7 @@ add_task(async function multipleMerinoSuggestions() {
               ? "urlbar-result-menu-learn-more-about-firefox-suggest"
               : "firefox-suggest-urlbar-learn-more",
           },
-          isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+          isBlockable: true,
           blockL10n: {
             id: UrlbarPrefs.get("resultMenu")
               ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -690,7 +690,7 @@ add_task(async function bestMatch() {
               ? "urlbar-result-menu-learn-more-about-firefox-suggest"
               : "firefox-suggest-urlbar-learn-more",
           },
-          isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+          isBlockable: true,
           blockL10n: {
             id: UrlbarPrefs.get("resultMenu")
               ? "urlbar-result-menu-dismiss-firefox-suggest"

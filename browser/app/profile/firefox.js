@@ -504,10 +504,6 @@ pref("browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled", false);
 // caps.
 pref("browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled", false);
 
-// Whether the usual non-best-match quick suggest results can be blocked. This
-// pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
-pref("browser.urlbar.quicksuggest.blockingEnabled", true);
-
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);

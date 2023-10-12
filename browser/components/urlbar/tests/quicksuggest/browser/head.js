@@ -113,9 +113,6 @@ async function setUpTelemetryTest({
   }
   await SpecialPowers.pushPrefEnv({
     set: [
-      // Enable blocking on primary sponsored and nonsponsored suggestions so we
-      // can test the block button.
-      ["browser.urlbar.quicksuggest.blockingEnabled", true],
       // Switch-to-tab results can sometimes appear after the test clicks a help
       // button and closes the new tab, which interferes with the expected
       // indexes of quick suggest results, so disable them.
