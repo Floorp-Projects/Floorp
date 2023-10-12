@@ -24,7 +24,6 @@ def get_deps():
     # Any imported python module is added as a dep automatically,
     # so we only need the index and the templates.
     return {
-        "metrics_index.py",
         *[str(p) for p in (Path(os.path.dirname(__file__)) / "templates").iterdir()],
     }
 
