@@ -145,24 +145,6 @@ StyleSheet* GlobalStyleSheetCache::GetUserChromeSheet() {
   return mUserChromeSheet;
 }
 
-StyleSheet* GlobalStyleSheetCache::ChromePreferenceSheet() {
-  if (!mChromePreferenceSheet) {
-    BuildPreferenceSheet(&mChromePreferenceSheet,
-                         PreferenceSheet::ChromePrefs());
-  }
-
-  return mChromePreferenceSheet;
-}
-
-StyleSheet* GlobalStyleSheetCache::ContentPreferenceSheet() {
-  if (!mContentPreferenceSheet) {
-    BuildPreferenceSheet(&mContentPreferenceSheet,
-                         PreferenceSheet::ContentPrefs());
-  }
-
-  return mContentPreferenceSheet;
-}
-
 void GlobalStyleSheetCache::Shutdown() {
   gCSSLoader = nullptr;
   NS_WARNING_ASSERTION(!gStyleCache || !gUserContentSheetURL,
@@ -213,8 +195,6 @@ size_t GlobalStyleSheetCache::SizeOfIncludingThis(
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
-  MEASURE(mChromePreferenceSheet);
-  MEASURE(mContentPreferenceSheet);
   MEASURE(mUserChromeSheet);
   MEASURE(mUserContentSheet);
 
@@ -555,112 +535,6 @@ RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheet(
         aFailureAction);
   }
   return result.unwrapOr(nullptr);
-}
-
-/* static */
-void GlobalStyleSheetCache::InvalidatePreferenceSheets() {
-  if (gStyleCache) {
-    gStyleCache->mContentPreferenceSheet = nullptr;
-    gStyleCache->mChromePreferenceSheet = nullptr;
-  }
-}
-
-void GlobalStyleSheetCache::BuildPreferenceSheet(
-    RefPtr<StyleSheet>* aSheet, const PreferenceSheet::Prefs& aPrefs) {
-  *aSheet = new StyleSheet(eAgentSheetFeatures, CORS_NONE, dom::SRIMetadata());
-
-  StyleSheet* sheet = *aSheet;
-
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet");
-  MOZ_ASSERT(uri, "URI creation shouldn't fail");
-
-  sheet->SetURIs(uri, uri, uri);
-  sheet->SetComplete();
-
-  static const uint32_t kPreallocSize = 1024;
-
-  nsCString sheetText;
-  sheetText.SetCapacity(kPreallocSize);
-
-#define NS_GET_R_G_B(color_) \
-  NS_GET_R(color_), NS_GET_G(color_), NS_GET_B(color_)
-
-  sheetText.AppendLiteral(
-      "@namespace url(http://www.w3.org/1999/xhtml);\n"
-      "@namespace svg url(http://www.w3.org/2000/svg);\n");
-
-  // Rules for focus styling.
-
-  const bool focusRingOnAnything =
-      StaticPrefs::browser_display_focus_ring_on_anything();
-  uint8_t focusRingWidth = StaticPrefs::browser_display_focus_ring_width();
-  uint8_t focusRingStyle = StaticPrefs::browser_display_focus_ring_style();
-
-  if ((focusRingWidth != 1 && focusRingWidth <= 4) || focusRingOnAnything) {
-    if (focusRingWidth != 1) {
-      // If the focus ring width is different from the default, fix buttons
-      // with rings.
-      sheetText.AppendPrintf(
-          "button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner, "
-          "input[type=\"button\"]::-moz-focus-inner, "
-          "input[type=\"submit\"]::-moz-focus-inner { "
-          "border: %dpx %s transparent !important; }\n",
-          focusRingWidth, focusRingStyle == 0 ? "solid" : "dotted");
-
-      sheetText.AppendLiteral(
-          "button:focus::-moz-focus-inner, "
-          "input[type=\"reset\"]:focus::-moz-focus-inner, "
-          "input[type=\"button\"]:focus::-moz-focus-inner, "
-          "input[type=\"submit\"]:focus::-moz-focus-inner { "
-          "border-color: ButtonText !important; }\n");
-    }
-
-    sheetText.AppendPrintf(
-        "%s { outline: %dpx %s !important; }\n",
-        focusRingOnAnything ? ":focus" : "*|*:link:focus, *|*:visited:focus",
-        focusRingWidth,
-        focusRingStyle == 0 ? "solid -moz-mac-focusring" : "dotted WindowText");
-  }
-
-  if (StaticPrefs::browser_display_use_focus_colors()) {
-    const auto& colors = aPrefs.mLightColors;
-    nscolor focusText = colors.mFocusText;
-    nscolor focusBG = colors.mFocusBackground;
-    sheetText.AppendPrintf(
-        "*:focus, *:focus > font { color: #%02x%02x%02x !important; "
-        "background-color: #%02x%02x%02x !important; }\n",
-        NS_GET_R_G_B(focusText), NS_GET_R_G_B(focusBG));
-  }
-
-  NS_ASSERTION(sheetText.Length() <= kPreallocSize,
-               "kPreallocSize should be big enough to build preference style "
-               "sheet without reallocation");
-
-  // NB: The pref sheet never has @import rules, thus no loader.
-  sheet->ParseSheetSync(nullptr, sheetText,
-                        /* aLoadData = */ nullptr,
-                        /* aLineNumber = */ 0);
-
-#undef NS_GET_R_G_B
-}
-
-bool GlobalStyleSheetCache::AffectedByPref(const nsACString& aPref) {
-  const char* prefs[] = {
-      StaticPrefs::GetPrefName_browser_display_show_focus_rings(),
-      StaticPrefs::GetPrefName_browser_display_focus_ring_style(),
-      StaticPrefs::GetPrefName_browser_display_focus_ring_width(),
-      StaticPrefs::GetPrefName_browser_display_focus_ring_on_anything(),
-      StaticPrefs::GetPrefName_browser_display_use_focus_colors(),
-  };
-
-  for (const char* pref : prefs) {
-    if (aPref.Equals(pref)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /* static */ void GlobalStyleSheetCache::SetSharedMemory(

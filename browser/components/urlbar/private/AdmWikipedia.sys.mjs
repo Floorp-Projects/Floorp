@@ -147,6 +147,11 @@ export class AdmWikipedia extends BaseFeature {
     let payload = {
       originalUrl,
       url: suggestion.url,
+      title: suggestion.title,
+      qsSuggestion: [
+        suggestion.full_keyword,
+        lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      ],
       isSponsored: suggestion.is_sponsored,
       requestId: suggestion.request_id,
       urlTimestampIndex: suggestion.urlTimestampIndex,
@@ -159,48 +164,11 @@ export class AdmWikipedia extends BaseFeature {
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",
       },
+      isBlockable: lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
     };
-
-    // Determine if the suggestion itself is a best match.
-    let isSuggestionBestMatch = false;
-    if (lazy.QuickSuggest.jsBackend.config.best_match) {
-      let { best_match } = lazy.QuickSuggest.jsBackend.config;
-      isSuggestionBestMatch =
-        best_match.min_search_string_length <= searchString.length &&
-        !best_match.blocked_suggestion_ids.includes(suggestion.block_id);
-    }
-
-    // Determine if the urlbar result should be a best match.
-    let isResultBestMatch =
-      isSuggestionBestMatch &&
-      lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-      lazy.UrlbarPrefs.get("suggest.bestmatch");
-    if (isResultBestMatch) {
-      // Show the result as a best match. Best match titles don't include the
-      // `full_keyword`, and the user's search string is highlighted.
-      payload.title = [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED];
-    } else {
-      // Show the result as a usual quick suggest. Include the `full_keyword`
-      // and highlight the parts that aren't in the search string.
-      payload.title = suggestion.title;
-      payload.qsSuggestion = [
-        suggestion.full_keyword,
-        lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      ];
-    }
-
-    // Set `is_top_pick` on the suggestion to tell the provider to set
-    // best-match related properties on the result.
-    suggestion.is_top_pick = isResultBestMatch;
-
-    payload.isBlockable = lazy.UrlbarPrefs.get(
-      isResultBestMatch
-        ? "bestMatchBlockingEnabled"
-        : "quickSuggestBlockingEnabled"
-    );
 
     let result = new lazy.UrlbarResult(
       lazy.UrlbarUtils.RESULT_TYPE.URL,

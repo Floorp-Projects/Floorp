@@ -79,8 +79,12 @@ function makeWikipediaResult({
   blockId = 1,
   advertiser = "Wikipedia",
   iabCategory = "5 - Education",
+  suggestedIndex = -1,
+  isSuggestedIndexRelativeToGroup = true,
 }) {
   let result = {
+    suggestedIndex,
+    isSuggestedIndexRelativeToGroup,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
@@ -146,8 +150,12 @@ function makeAmpResult({
   blockId = 1,
   advertiser = "Amp",
   iabCategory = "22 - Shopping",
+  suggestedIndex = -1,
+  isSuggestedIndexRelativeToGroup = true,
 } = {}) {
   let result = {
+    suggestedIndex,
+    isSuggestedIndexRelativeToGroup,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,

@@ -646,43 +646,67 @@ add_task(async function block() {
   gClient.resetSession();
 });
 
-// Tests a Merino suggestion that is a best match.
+// Tests a Merino suggestion that is a top pick/best match.
 add_task(async function bestMatch() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
-  // Simply enabling the best match feature should make the mock suggestion a
-  // best match because the search string length is greater than the required
-  // best match length.
-  UrlbarPrefs.set("bestMatch.enabled", true);
-  UrlbarPrefs.set("suggest.bestmatch", true);
-
-  let expectedResult = { ...EXPECTED_MERINO_URLBAR_RESULT };
-  expectedResult.payload = { ...EXPECTED_MERINO_URLBAR_RESULT.payload };
-  expectedResult.isBestMatch = true;
-  delete expectedResult.payload.qsSuggestion;
-
-  await QuickSuggestTestUtils.withConfig({
-    config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
-    callback: async () => {
-      let context = createContext(SEARCH_STRING, {
-        providers: [UrlbarProviderQuickSuggest.name],
-        isPrivate: false,
-      });
-      await check_results({
-        context,
-        matches: [expectedResult],
-      });
-
-      // This isn't necessary since `check_results()` checks `isBestMatch`, but
-      // check it here explicitly for good measure.
-      Assert.ok(context.results[0].isBestMatch, "Result is a best match");
+  // Set up a suggestion with `is_top_pick` and an unknown provider so that
+  // UrlbarProviderQuickSuggest will make a default result for it.
+  MerinoTestUtils.server.response.body.suggestions = [
+    {
+      is_top_pick: true,
+      provider: "some_top_pick_provider",
+      full_keyword: "full_keyword",
+      title: "title",
+      url: "url",
+      icon: null,
+      score: 1,
     },
+  ];
+
+  let context = createContext(SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      {
+        isBestMatch: true,
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          telemetryType: "some_top_pick_provider",
+          title: "title",
+          url: "url",
+          icon: null,
+          qsSuggestion: "full_keyword",
+          helpUrl: QuickSuggest.HELP_URL,
+          helpL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+              : "firefox-suggest-urlbar-learn-more",
+          },
+          isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+          blockL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-dismiss-firefox-suggest"
+              : "firefox-suggest-urlbar-block",
+          },
+          displayUrl: "url",
+          source: "merino",
+          provider: "some_top_pick_provider",
+        },
+      },
+    ],
   });
 
-  UrlbarPrefs.clear("bestMatch.enabled");
-  UrlbarPrefs.clear("suggest.bestmatch");
+  // This isn't necessary since `check_results()` checks `isBestMatch`, but
+  // check it here explicitly for good measure.
+  Assert.ok(context.results[0].isBestMatch, "Result is a best match");
 
   MerinoTestUtils.server.reset();
   gClient.resetSession();

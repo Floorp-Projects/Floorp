@@ -2773,14 +2773,7 @@ export class UrlbarView {
 
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
-      if (
-        (lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-          lazy.UrlbarPrefs.get("suggest.bestmatch")) ||
-        (lazy.UrlbarPrefs.get("weatherFeatureGate") &&
-          lazy.UrlbarPrefs.get("suggest.weather"))
-      ) {
-        idArgs.push({ id: "urlbar-group-best-match" });
-      }
+      idArgs.push({ id: "urlbar-group-best-match" });
       if (
         lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
         lazy.UrlbarPrefs.get("addonsFeatureGate")

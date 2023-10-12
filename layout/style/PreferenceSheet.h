@@ -27,9 +27,6 @@ struct PreferenceSheet {
 
       nscolor mDefault = NS_RGB(0, 0, 0);
       nscolor mDefaultBackground = NS_RGB(0xFF, 0xFF, 0xFF);
-
-      nscolor mFocusText = mDefault;
-      nscolor mFocusBackground = mDefaultBackground;
     } mLightColors, mDarkColors;
 
     const Colors& ColorsFor(ColorScheme aScheme) const {

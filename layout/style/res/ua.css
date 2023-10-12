@@ -165,6 +165,12 @@
   color: VisitedText;
 }
 
+@media (-moz-always-underline-links) {
+  :any-link {
+    text-decoration: underline !important;
+  }
+}
+
 :focus-visible {
   outline: 1px auto;
 }

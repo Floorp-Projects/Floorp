@@ -2,44 +2,102 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Really const but needs to be overridable for tests.
-let ANALYSIS_API = "https://trustwerty.com/api/v1/fx/analysis";
+let { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const ANALYSIS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analysis_response.schema.json";
 const ANALYSIS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analysis_request.schema.json";
 
-let ANALYZE_API = "https://trustwerty.com/api/v1/fx/analyze";
 const ANALYZE_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analyze_response.schema.json";
 const ANALYZE_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analyze_request.schema.json";
 
-let ANALYSIS_STATUS_API = "https://trustwerty.com/api/v1/fx/analysis_status";
 const ANALYSIS_STATUS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/analysis_status_response.schema.json";
 const ANALYSIS_STATUS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/analysis_status_request.schema.json";
 
-// Really const but needs to be overridable for tests.
-let RECOMMENDATIONS_API = "https://a.fakespot.com/v1/fx/sp_search";
 const RECOMMENDATIONS_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/recommendations_response.schema.json";
 const RECOMMENDATIONS_REQUEST_SCHEMA =
   "chrome://global/content/shopping/recommendations_request.schema.json";
-let ATTRIBUTION_API = "https://pe.fakespot.com/api/v1/fx/events";
+
 const ATTRIBUTION_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/attribution_response.schema.json";
 const ATTRIBUTION_REQUEST_SCHEMA =
   "chrome://global/content/shopping/attribution_request.schema.json";
 
-let REPORTING_API = "https://trustwerty.com/api/v1/fx/report";
 const REPORTING_RESPONSE_SCHEMA =
   "chrome://global/content/shopping/reporting_response.schema.json";
 const REPORTING_REQUEST_SCHEMA =
   "chrome://global/content/shopping/reporting_request.schema.json";
 
-const FAKESPOT_BASE_URL = "https://www.fakespot.com/";
+// Allow switching to the stage or test environments by changing the
+// "toolkit.shopping.environment" pref from "prod" to "stage" or "test".
+const lazy = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "env",
+  "toolkit.shopping.environment",
+  "prod",
+  null,
+  // If the pref is set to an unexpected string value, "prod" will be used.
+  prefValue =>
+    ["prod", "stage", "test"].includes(prefValue) ? prefValue : "prod"
+);
+
+// prettier-ignore
+const Environments = {
+  prod: {
+    ANALYSIS_API:        "https://trustwerty.com/api/v1/fx/analysis",
+    ANALYSIS_STATUS_API: "https://trustwerty.com/api/v1/fx/analysis_status",
+    ANALYZE_API:         "https://trustwerty.com/api/v1/fx/analyze",
+    ATTRIBUTION_API:     "https://pe.fakespot.com/api/v1/fx/events",
+    RECOMMENDATIONS_API: "https://a.fakespot.com/v1/fx/sp_search",
+    REPORTING_API:       "https://trustwerty.com/api/v1/fx/report",
+  },
+  stage: {
+    ANALYSIS_API:        "https://staging.trustwerty.com/api/v1/fx/analysis",
+    ANALYSIS_STATUS_API: "https://staging.trustwerty.com/api/v1/fx/analysis_status",
+    ANALYZE_API:         "https://staging.trustwerty.com/api/v1/fx/analyze",
+    ATTRIBUTION_API:     "https://staging-partner-ads.fakespot.io/api/v1/fx/events",
+    RECOMMENDATIONS_API: "https://staging-affiliates.fakespot.io/v1/fx/sp_search",
+    REPORTING_API:       "https://staging.trustwerty.com/api/v1/fx/report",
+  },
+  test: {
+    ANALYSIS_API:        "https://example.com/browser/toolkit/components/shopping/test/browser/analysis.sjs",
+    ANALYSIS_STATUS_API: "https://example.com/browser/toolkit/components/shopping/test/browser/analysis_status.sjs",
+    ANALYZE_API:         "https://example.com/browser/toolkit/components/shopping/test/browser/analyze.sjs",
+    ATTRIBUTION_API:     "https://example.com/browser/toolkit/components/shopping/test/browser/attribution.sjs",
+    RECOMMENDATIONS_API: "https://example.com/browser/toolkit/components/shopping/test/browser/recommendations.sjs",
+    REPORTING_API:       "https://example.com/browser/toolkit/components/shopping/test/browser/reporting.sjs",
+  },
+};
+
+const ShoppingEnvironment = {
+  get ANALYSIS_API() {
+    return Environments[lazy.env].ANALYSIS_API;
+  },
+  get ANALYSIS_STATUS_API() {
+    return Environments[lazy.env].ANALYSIS_STATUS_API;
+  },
+  get ANALYZE_API() {
+    return Environments[lazy.env].ANALYZE_API;
+  },
+  get ATTRIBUTION_API() {
+    return Environments[lazy.env].ATTRIBUTION_API;
+  },
+  get RECOMMENDATIONS_API() {
+    return Environments[lazy.env].RECOMMENDATIONS_API;
+  },
+  get REPORTING_API() {
+    return Environments[lazy.env].REPORTING_API;
+  },
+};
 
 const ProductConfig = {
   amazon: {
@@ -58,47 +116,24 @@ const ProductConfig = {
   },
 };
 
-// Note (bug 1849401): the fakespot URLs are loaded by about page content,
-// where `Cu` is undefined--hence the check here. Would be good to find a
-// better approach.
-if (typeof Cu !== "undefined" && Cu.isInAutomation) {
+if (lazy.env == "test") {
   // Also allow example.com to allow for testing.
   ProductConfig.example = ProductConfig.amazon;
-  ANALYSIS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/analysis.sjs";
-  RECOMMENDATIONS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/recommendations.sjs";
-  ATTRIBUTION_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/attribution.sjs";
-  REPORTING_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/reporting.sjs";
-  ANALYZE_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/analyze.sjs";
-  ANALYSIS_STATUS_API =
-    "https://example.com/browser/toolkit/components/shopping/test/browser/analysis_status.sjs";
 }
 
-Object.freeze(ProductConfig);
-
 export {
-  ANALYSIS_API,
   ANALYSIS_RESPONSE_SCHEMA,
   ANALYSIS_REQUEST_SCHEMA,
-  ANALYZE_API,
   ANALYZE_RESPONSE_SCHEMA,
   ANALYZE_REQUEST_SCHEMA,
-  ANALYSIS_STATUS_API,
   ANALYSIS_STATUS_RESPONSE_SCHEMA,
   ANALYSIS_STATUS_REQUEST_SCHEMA,
-  RECOMMENDATIONS_API,
   RECOMMENDATIONS_RESPONSE_SCHEMA,
   RECOMMENDATIONS_REQUEST_SCHEMA,
-  ATTRIBUTION_API,
   ATTRIBUTION_RESPONSE_SCHEMA,
   ATTRIBUTION_REQUEST_SCHEMA,
-  REPORTING_API,
   REPORTING_RESPONSE_SCHEMA,
   REPORTING_REQUEST_SCHEMA,
-  FAKESPOT_BASE_URL,
   ProductConfig,
+  ShoppingEnvironment,
 };

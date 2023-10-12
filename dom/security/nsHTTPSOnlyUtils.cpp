@@ -76,8 +76,10 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
 
   // if neither HTTPS-Only nor HTTPS-First mode is enabled, then there is
   // nothing to do here.
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin) &&
-      !IsHttpsFirstModeEnabled(isPrivateWin)) {
+  if ((!IsHttpsOnlyModeEnabled(isPrivateWin) &&
+       !IsHttpsFirstModeEnabled(isPrivateWin)) &&
+      !(loadInfo->GetWasSchemelessInput() &&
+        mozilla::StaticPrefs::dom_security_https_first_schemeless())) {
     return;
   }
 
@@ -118,7 +120,9 @@ void nsHTTPSOnlyUtils::PotentiallyFireHttpRequestToShortenTimout(
   // all http connections to be https and overrules HTTPS-First. In case
   // HTTPS-First is enabled, but HTTPS-Only is not enabled, we might return
   // early if attempting to send a background request to a non standard port.
-  if (IsHttpsFirstModeEnabled(isPrivateWin) &&
+  if ((IsHttpsFirstModeEnabled(isPrivateWin) ||
+       (loadInfo->GetWasSchemelessInput() &&
+        mozilla::StaticPrefs::dom_security_https_first_schemeless())) &&
       !IsHttpsOnlyModeEnabled(isPrivateWin)) {
     int32_t port = 0;
     nsresult rv = channelURI->GetPort(&port);
@@ -368,7 +372,9 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
                                                       nsILoadInfo* aLoadInfo) {
   // 1. Check if HTTPS-First Mode is enabled
   bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsFirstModeEnabled(isPrivateWin)) {
+  if (!IsHttpsFirstModeEnabled(isPrivateWin) &&
+      !(aLoadInfo->GetWasSchemelessInput() &&
+        mozilla::StaticPrefs::dom_security_https_first_schemeless())) {
     return false;
   }
 
@@ -427,19 +433,31 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
 
   // We can upgrade the request - let's log to the console and set the status
   // so we know that we upgraded the request.
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-  scheme.AppendLiteral("s");
-  NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
-  NS_ConvertUTF8toUTF16 reportScheme(scheme);
+  if (aLoadInfo->GetWasSchemelessInput() &&
+      mozilla::StaticPrefs::dom_security_https_first_schemeless()) {
+    nsAutoCString urlCString;
+    aURI->GetSpec(urlCString);
+    NS_ConvertUTF8toUTF16 urlString(urlCString);
 
-  bool isSpeculative = contentType == ExtContentPolicy::TYPE_SPECULATIVE;
-  AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-  nsHTTPSOnlyUtils::LogLocalizedString(
-      isSpeculative ? "HTTPSOnlyUpgradeSpeculativeConnection"
-                    : "HTTPSOnlyUpgradeRequest",
-      params, nsIScriptError::warningFlag, aLoadInfo, aURI, true);
+    AutoTArray<nsString, 1> params = {urlString};
+    nsHTTPSOnlyUtils::LogLocalizedString("HTTPSFirstSchemeless", params,
+                                         nsIScriptError::warningFlag, aLoadInfo,
+                                         aURI, true);
+  } else {
+    nsAutoCString scheme;
 
+    aURI->GetScheme(scheme);
+    scheme.AppendLiteral("s");
+    NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
+    NS_ConvertUTF8toUTF16 reportScheme(scheme);
+
+    bool isSpeculative = contentType == ExtContentPolicy::TYPE_SPECULATIVE;
+    AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
+    nsHTTPSOnlyUtils::LogLocalizedString(
+        isSpeculative ? "HTTPSOnlyUpgradeSpeculativeConnection"
+                      : "HTTPSOnlyUpgradeRequest",
+        params, nsIScriptError::warningFlag, aLoadInfo, aURI, true);
+  }
   // Set flag so we know that we upgraded the request
   httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST;
   aLoadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
@@ -622,7 +640,10 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
   bool isHttpsOnly = IsHttpsOnlyModeEnabled(isPrivateWin);
   bool isHttpsFirst = IsHttpsFirstModeEnabled(isPrivateWin);
-  if (!isHttpsOnly && !isHttpsFirst) {
+  bool isSchemelessHttpsFirst =
+      (loadInfo->GetWasSchemelessInput() &&
+       mozilla::StaticPrefs::dom_security_https_first_schemeless());
+  if (!isHttpsOnly && !isHttpsFirst && !isSchemelessHttpsFirst) {
     return;
   }
 

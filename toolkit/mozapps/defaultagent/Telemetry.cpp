@@ -229,8 +229,9 @@ static mozilla::WindowsError SendDesktopTelemetryPing(
   si.dwFlags = STARTF_USESHOWWINDOW;
   si.wShowWindow = SW_HIDE;
   if (!::CreateProcessW(pingsenderPath.c_str(), pingsenderCmdLine.get(),
-                        nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si,
-                        &pi)) {
+                        nullptr, nullptr, FALSE,
+                        DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
+                        nullptr, &si, &pi)) {
     HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
     LOG_ERROR(hr);
     return mozilla::WindowsError::FromHResult(hr);

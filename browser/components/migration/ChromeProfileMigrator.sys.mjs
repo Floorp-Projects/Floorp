@@ -78,6 +78,23 @@ function convertBookmarks(items, bookmarkURLAccumulator, errorAccumulator) {
  * migrators for browsers that are variants of Chrome.
  */
 export class ChromeProfileMigrator extends MigratorBase {
+  /**
+   * On Ubuntu Linux, when the browser is installed as a Snap package,
+   * we must request permission to read data from other browsers. We
+   * make that request by opening up a native file picker in folder
+   * selection mode and instructing the user to navigate to the folder
+   * that the other browser's user data resides in.
+   *
+   * For Snap packages, this gives the browser read access - but it does
+   * so through a temporary symlink that does not match the original user
+   * data path. Effectively, the user data directory is remapped to a
+   * temporary location on the file system. We record these remaps here,
+   * keyed on the original data directory.
+   *
+   * @type {Map<string, string>}
+   */
+  #dataPathRemappings = new Map();
+
   static get key() {
     return "chrome";
   }
@@ -94,13 +111,102 @@ export class ChromeProfileMigrator extends MigratorBase {
     return "Chrome";
   }
 
+  async hasPermissions() {
+    let dataPath = await this._getChromeUserDataPathIfExists();
+    if (!dataPath) {
+      return true;
+    }
+
+    let localStatePath = PathUtils.join(dataPath, "Local State");
+    try {
+      // Read one byte since on snap we can check existence even without being able
+      // to read the file.
+      await IOUtils.read(localStatePath, { maxBytes: 1 });
+      return true;
+    } catch (ex) {
+      console.error("No permissions for local state folder.");
+    }
+    return false;
+  }
+
+  async getPermissions(win) {
+    // Get the original path to the user data and ignore any existing remapping.
+    // This allows us to set a new remapping if the user navigates the platforms
+    // filepicker to a different directory on a second permission request attempt.
+    let originalDataPath = await this._getChromeUserDataPathIfExists(
+      true /* noRemapping */
+    );
+    // Keep prompting the user until they pick something that grants us access
+    // to Chrome's local state directory.
+    while (!(await this.hasPermissions())) {
+      let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+      fp.init(win, "", Ci.nsIFilePicker.modeGetFolder);
+      fp.filterIndex = 1;
+      // Now wait for the filepicker to open and close. If the user picks
+      // the local state folder, the OS should grant us read access to everything
+      // inside, so we don't need to check or do anything else with what's
+      // returned by the filepicker.
+      let result = await new Promise(resolve => fp.open(resolve));
+      // Bail if the user cancels the dialog:
+      if (result == Ci.nsIFilePicker.returnCancel) {
+        return false;
+      }
+
+      let file = fp.file;
+      if (file && file.path != originalDataPath) {
+        this.#dataPathRemappings.set(originalDataPath, file.path);
+      }
+    }
+    return true;
+  }
+
+  async canGetPermissions() {
+    if (
+      !Services.prefs.getBoolPref(
+        "browser.migrate.chrome.get_permissions.enabled"
+      )
+    ) {
+      return false;
+    }
+
+    if (await MigrationUtils.canGetPermissionsOnPlatform()) {
+      let dataPath = await this._getChromeUserDataPathIfExists();
+      if (dataPath) {
+        let localStatePath = PathUtils.join(dataPath, "Local State");
+        if (await IOUtils.exists(localStatePath)) {
+          return dataPath;
+        }
+      }
+    }
+    return false;
+  }
+
   _keychainServiceName = "Chrome Safe Storage";
 
   _keychainAccountName = "Chrome";
 
-  async _getChromeUserDataPathIfExists() {
+  /**
+   * Returns a Promise that resolves to the data path containing the
+   * Local State and profile directories for this browser.
+   *
+   * @param {boolean} [noRemapping=false]
+   *   Set to true to bypass any remapping that might have occurred on
+   *   platforms where the data path changes once permission has been
+   *   granted.
+   * @returns {Promise<string>}
+   */
+  async _getChromeUserDataPathIfExists(noRemapping = false) {
     if (this._chromeUserDataPath) {
-      return this._chromeUserDataPath;
+      // Skip looking up any remapping if `noRemapping` was passed. This is
+      // helpful if the caller needs create a new remapping and overwrite
+      // an old remapping, as "real" user data path is used as a key for
+      // the remapping.
+      if (noRemapping) {
+        return this._chromeUserDataPath;
+      }
+
+      let remappedPath = this.#dataPathRemappings.get(this._chromeUserDataPath);
+      return remappedPath || this._chromeUserDataPath;
     }
     let path = await lazy.ChromeMigrationUtils.getDataPath(
       this._chromeUserDataPathSuffix
@@ -115,6 +221,10 @@ export class ChromeProfileMigrator extends MigratorBase {
   }
 
   async getResources(aProfile) {
+    if (!(await this.hasPermissions())) {
+      return [];
+    }
+
     let chromeUserDataPath = await this._getChromeUserDataPathIfExists();
     if (chromeUserDataPath) {
       let profileFolder = chromeUserDataPath;
@@ -192,7 +302,8 @@ export class ChromeProfileMigrator extends MigratorBase {
     let profiles = [];
     try {
       localState = await lazy.ChromeMigrationUtils.getLocalState(
-        this._chromeUserDataPathSuffix
+        this._chromeUserDataPathSuffix,
+        chromeUserDataPath
       );
       let info_cache = localState.profile.info_cache;
       for (let profileFolderName in info_cache) {
@@ -206,6 +317,14 @@ export class ChromeProfileMigrator extends MigratorBase {
       if (localState || e.name != "NotFoundError") {
         console.error("Error detecting Chrome profiles: ", e);
       }
+
+      // If we didn't have permission to read the local state, return the
+      // empty array. The user might have the opportunity to request
+      // permission using `hasPermission` and `getPermission`.
+      if (e.name == "NotAllowedError") {
+        return [];
+      }
+
       // If we weren't able to detect any profiles above, fallback to the Default profile.
       let defaultProfilePath = PathUtils.join(chromeUserDataPath, "Default");
       if (await IOUtils.exists(defaultProfilePath)) {
@@ -240,6 +359,16 @@ export class ChromeProfileMigrator extends MigratorBase {
       return null;
     }
 
+    let tempFilePath = null;
+    if (MigrationUtils.IS_LINUX_SNAP_PACKAGE) {
+      tempFilePath = await IOUtils.createUniqueFile(
+        PathUtils.tempDir,
+        "Login Data"
+      );
+      await IOUtils.copy(loginPath, tempFilePath);
+      loginPath = tempFilePath;
+    }
+
     let {
       _chromeUserDataPathSuffix,
       _keychainServiceName,
@@ -269,10 +398,15 @@ export class ChromeProfileMigrator extends MigratorBase {
           `SELECT origin_url, action_url, username_element, username_value,
           password_element, password_value, signon_realm, scheme, date_created,
           times_used FROM logins WHERE blacklisted_by_user = 0`
-        ).catch(ex => {
-          console.error(ex);
-          aCallback(false);
-        });
+        )
+          .catch(ex => {
+            console.error(ex);
+            aCallback(false);
+          })
+          .finally(() => {
+            return tempFilePath && IOUtils.remove(tempFilePath);
+          });
+
         // If the promise was rejected we will have already called aCallback,
         // so we can just return here.
         if (!rows) {
@@ -407,13 +541,27 @@ export class ChromeProfileMigrator extends MigratorBase {
       return null;
     }
 
+    let tempFilePath = null;
+    if (MigrationUtils.IS_LINUX_SNAP_PACKAGE) {
+      tempFilePath = await IOUtils.createUniqueFile(
+        PathUtils.tempDir,
+        "Web Data"
+      );
+      await IOUtils.copy(paymentMethodsPath, tempFilePath);
+      paymentMethodsPath = tempFilePath;
+    }
+
     let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
       paymentMethodsPath,
       "Chrome Credit Cards",
       "SELECT name_on_card, card_number_encrypted, expiration_month, expiration_year FROM credit_cards"
-    ).catch(ex => {
-      console.error(ex);
-    });
+    )
+      .catch(ex => {
+        console.error(ex);
+      })
+      .finally(() => {
+        return tempFilePath && IOUtils.remove(tempFilePath);
+      });
 
     if (!rows?.length) {
       return null;
@@ -507,6 +655,17 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
   if (!(await IOUtils.exists(bookmarksPath))) {
     return null;
   }
+
+  let tempFilePath = null;
+  if (MigrationUtils.IS_LINUX_SNAP_PACKAGE) {
+    tempFilePath = await IOUtils.createUniqueFile(
+      PathUtils.tempDir,
+      "Favicons"
+    );
+    await IOUtils.copy(faviconsPath, tempFilePath);
+    faviconsPath = tempFilePath;
+  }
+
   // check to read JSON bookmarks structure and see if any bookmarks exist else return null
   // Parse Chrome bookmark file that is JSON format
   let bookmarkJSON = await IOUtils.readJSON(bookmarksPath);
@@ -538,7 +697,12 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           );
         } catch (ex) {
           console.error(ex);
+        } finally {
+          if (tempFilePath) {
+            await IOUtils.remove(tempFilePath);
+          }
         }
+
         // Create Hashmap for favicons
         let faviconMap = new Map();
         for (let faviconRow of faviconRows) {
@@ -638,6 +802,14 @@ async function GetHistoryResource(aProfileFolder) {
   if (!(await IOUtils.exists(historyPath))) {
     return null;
   }
+
+  let tempFilePath = null;
+  if (MigrationUtils.IS_LINUX_SNAP_PACKAGE) {
+    tempFilePath = await IOUtils.createUniqueFile(PathUtils.tempDir, "History");
+    await IOUtils.copy(historyPath, tempFilePath);
+    historyPath = tempFilePath;
+  }
+
   let countQuery = "SELECT COUNT(*) FROM urls WHERE hidden = 0";
 
   let countRows = await MigrationUtils.getRowsFromDBWithoutLocks(
@@ -668,11 +840,19 @@ async function GetHistoryResource(aProfileFolder) {
           query += " ORDER BY last_visit_time DESC LIMIT " + LIMIT;
         }
 
-        let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
-          historyPath,
-          "Chrome history",
-          query
-        );
+        let rows;
+        try {
+          rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+            historyPath,
+            "Chrome history",
+            query
+          );
+        } finally {
+          if (tempFilePath) {
+            await IOUtils.remove(tempFilePath);
+          }
+        }
+
         let pageInfos = [];
         let fallbackVisitDate = new Date();
         for (let row of rows) {
@@ -724,6 +904,16 @@ async function GetFormdataResource(aProfileFolder) {
   }
   let countQuery = "SELECT COUNT(*) FROM autofill";
 
+  let tempFilePath = null;
+  if (MigrationUtils.IS_LINUX_SNAP_PACKAGE) {
+    tempFilePath = await IOUtils.createUniqueFile(
+      PathUtils.tempDir,
+      "Web Data"
+    );
+    await IOUtils.copy(formdataPath, tempFilePath);
+    formdataPath = tempFilePath;
+  }
+
   let countRows = await MigrationUtils.getRowsFromDBWithoutLocks(
     formdataPath,
     "Chrome formdata",
@@ -738,11 +928,20 @@ async function GetFormdataResource(aProfileFolder) {
     async migrate(aCallback) {
       let query =
         "SELECT name, value, count, date_created, date_last_used FROM autofill";
-      let rows = await MigrationUtils.getRowsFromDBWithoutLocks(
-        formdataPath,
-        "Chrome formdata",
-        query
-      );
+      let rows;
+
+      try {
+        rows = await MigrationUtils.getRowsFromDBWithoutLocks(
+          formdataPath,
+          "Chrome formdata",
+          query
+        );
+      } finally {
+        if (tempFilePath) {
+          await IOUtils.remove(tempFilePath);
+        }
+      }
+
       let addOps = [];
       for (let row of rows) {
         try {

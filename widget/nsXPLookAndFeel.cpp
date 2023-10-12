@@ -507,6 +507,7 @@ static constexpr struct {
     {"browser.theme.content-theme"_ns},
     {"dom.element.popover.enabled"_ns},
     {"mathml.legacy_mathvariant_attribute.disabled"_ns},
+    {"layout.css.always_underline_links"_ns},
 };
 
 // Read values from the user's preferences.

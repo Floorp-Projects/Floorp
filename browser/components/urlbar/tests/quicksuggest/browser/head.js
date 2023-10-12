@@ -116,7 +116,6 @@ async function setUpTelemetryTest({
       // Enable blocking on primary sponsored and nonsponsored suggestions so we
       // can test the block button.
       ["browser.urlbar.quicksuggest.blockingEnabled", true],
-      ["browser.urlbar.bestMatch.blockingEnabled", true],
       // Switch-to-tab results can sometimes appear after the test clicks a help
       // button and closes the new tab, which interferes with the expected
       // indexes of quick suggest results, so disable them.

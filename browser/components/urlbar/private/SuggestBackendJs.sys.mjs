@@ -62,10 +62,6 @@ export class SuggestBackendJs extends BaseFeature {
    *   config is an object that looks like this:
    *
    *   {
-   *     best_match: {
-   *       min_search_string_length,
-   *       blocked_suggestion_ids,
-   *     },
    *     impression_caps: {
    *       nonsponsored: {
    *         lifetime,

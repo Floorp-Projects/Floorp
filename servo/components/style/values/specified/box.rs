@@ -1491,9 +1491,6 @@ pub enum Appearance {
     /// Menu Popup background.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Menupopup,
-    /// Menu item arrow.
-    #[parse(condition = "ParserContext::chrome_rules_enabled")]
-    Menuarrow,
     /// The meter bar's meter indicator.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Meterchunk,

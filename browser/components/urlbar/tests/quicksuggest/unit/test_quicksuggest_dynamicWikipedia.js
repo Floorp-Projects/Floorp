@@ -25,7 +25,6 @@ const MERINO_SUGGESTIONS = [
 
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
 
   // Disable search suggestions so we don't hit the network.

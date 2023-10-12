@@ -50,6 +50,11 @@ interface nsIURIFixupInfo : nsISupports
   attribute AString keywordAsSent;
 
   /**
+   * Whether there was no protocol at all and we had to add one in the first place.
+   */
+  attribute boolean wasSchemelessInput;
+
+  /**
    * Whether we changed the protocol instead of using one from the input as-is.
    */
   attribute boolean fixupChangedProtocol;

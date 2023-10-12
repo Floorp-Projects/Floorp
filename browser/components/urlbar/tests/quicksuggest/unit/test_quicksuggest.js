@@ -85,6 +85,15 @@ function expectedSponsoredResult() {
   return makeAmpResult();
 }
 
+function expectedSponsoredPriorityResult() {
+  return {
+    ...expectedSponsoredResult(),
+    isBestMatch: true,
+    suggestedIndex: 1,
+    isSuggestedIndexRelativeToGroup: false,
+  };
+}
+
 function expectedHttpResult() {
   let suggestion = REMOTE_SETTINGS_RESULTS[2];
   return makeAmpResult({
@@ -183,6 +192,20 @@ add_tasks_with_rust(async function nonsponsoredOnly_match() {
     context,
     matches: [expectedNonSponsoredResult()],
   });
+
+  // The title should include the full keyword and em dash, and the part of the
+  // title that the search string does not match should be highlighted.
+  let result = context.results[0];
+  Assert.equal(
+    result.title,
+    `${NONSPONSORED_SEARCH_STRING} — Wikipedia Suggestion`,
+    "result.title should be correct"
+  );
+  Assert.deepEqual(
+    result.titleHighlights,
+    [],
+    "result.titleHighlights should be correct"
+  );
 });
 
 // Tests with only non-sponsored suggestions enabled with a non-matching search
@@ -211,6 +234,20 @@ add_tasks_with_rust(async function sponsoredOnly_sponsored() {
     context,
     matches: [expectedSponsoredResult()],
   });
+
+  // The title should include the full keyword and em dash, and the part of the
+  // title that the search string does not match should be highlighted.
+  let result = context.results[0];
+  Assert.equal(
+    result.title,
+    `${SPONSORED_SEARCH_STRING} — AMP Suggestion`,
+    "result.title should be correct"
+  );
+  Assert.deepEqual(
+    result.titleHighlights,
+    [],
+    "result.titleHighlights should be correct"
+  );
 });
 
 // Tests with only sponsored suggestions enabled with a non-matching search
@@ -1283,22 +1320,15 @@ add_task(async function remoteSettingsDataType() {
   }
 });
 
-// For priority sponsored suggestion,
-// always isBestMatch will be true and suggestIndex will be 1.
-const EXPECTED_SPONSORED_PRIORITY_RESULT = {
-  ...expectedSponsoredResult(),
-  isBestMatch: true,
-};
-
-add_task(async function sponsoredPriority_normal() {
+add_tasks_with_rust(async function sponsoredPriority_normal() {
   await doSponsoredPriorityTest({
     searchWord: SPONSORED_SEARCH_STRING,
     remoteSettingsData: [REMOTE_SETTINGS_RESULTS[0]],
-    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+    expectedMatches: [expectedSponsoredPriorityResult()],
   });
 });
 
-add_task(async function sponsoredPriority_nonsponsoredSuggestion() {
+add_tasks_with_rust(async function sponsoredPriority_nonsponsoredSuggestion() {
   // Not affect to except sponsored suggestion.
   await doSponsoredPriorityTest({
     searchWord: NONSPONSORED_SEARCH_STRING,
@@ -1307,23 +1337,23 @@ add_task(async function sponsoredPriority_nonsponsoredSuggestion() {
   });
 });
 
-add_task(async function sponsoredPriority_sponsoredIndex() {
+add_tasks_with_rust(async function sponsoredPriority_sponsoredIndex() {
   await doSponsoredPriorityTest({
     nimbusSettings: { quickSuggestSponsoredIndex: 2 },
     searchWord: SPONSORED_SEARCH_STRING,
     remoteSettingsData: [REMOTE_SETTINGS_RESULTS[0]],
-    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+    expectedMatches: [expectedSponsoredPriorityResult()],
   });
 });
 
-add_task(async function sponsoredPriority_position() {
+add_tasks_with_rust(async function sponsoredPriority_position() {
   await doSponsoredPriorityTest({
     nimbusSettings: { quickSuggestAllowPositionInSuggestions: true },
     searchWord: SPONSORED_SEARCH_STRING,
     remoteSettingsData: [
       Object.assign({}, REMOTE_SETTINGS_RESULTS[0], { position: 2 }),
     ],
-    expectedMatches: [EXPECTED_SPONSORED_PRIORITY_RESULT],
+    expectedMatches: [expectedSponsoredPriorityResult()],
   });
 });
 
@@ -1360,3 +1390,148 @@ async function doSponsoredPriorityTest({
 
   await cleanUpNimbusEnable();
 }
+
+// When a Suggest best match and a tab-to-search (TTS) are shown in the same
+// search, both will have a `suggestedIndex` value of 1. The TTS should appear
+// first.
+add_tasks_with_rust(async function tabToSearch() {
+  // We'll use a sponsored priority result as the best match result. Different
+  // types of Suggest results can appear as best matches, and they all should
+  // have the same behavior.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.sponsoredPriority",
+    true
+  );
+
+  // Disable tab-to-search onboarding results so we get a regular TTS result,
+  // which we can test a little more easily with `makeSearchResult()`.
+  UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 0);
+
+  // Disable search suggestions so we don't need to expect them below.
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+
+  // Install a test engine. The main part of its domain name needs to match the
+  // best match result too so we can trigger both its TTS and the best match.
+  let engineURL = `https://foo.${SPONSORED_SEARCH_STRING}.com/`;
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "Test",
+      search_url: engineURL,
+    },
+    { skipUnload: true }
+  );
+  let engine = Services.search.getEngineByName("Test");
+
+  // Also need to add a visit to trigger TTS.
+  await PlacesTestUtils.addVisits(engineURL);
+
+  let context = createContext(SPONSORED_SEARCH_STRING, {
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [
+      // search heuristic
+      makeSearchResult(context, {
+        engineName: Services.search.defaultEngine.name,
+        engineIconUri: Services.search.defaultEngine.iconURI?.spec,
+        heuristic: true,
+      }),
+      // tab to search
+      makeSearchResult(context, {
+        engineName: engine.name,
+        engineIconUri: UrlbarUtils.ICON.SEARCH_GLASS,
+        uri: UrlbarUtils.stripPublicSuffixFromHost(engine.searchUrlDomain),
+        providesSearchMode: true,
+        query: "",
+        providerName: "TabToSearch",
+        satisfiesAutofillThreshold: true,
+      }),
+      // Suggest best match
+      expectedSponsoredPriorityResult(),
+      // visit
+      makeVisitResult(context, {
+        uri: engineURL,
+        title: `test visit for ${engineURL}`,
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+  await extension.unload();
+
+  UrlbarPrefs.clear("tabToSearch.onboard.interactionsLeft");
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.sponsoredPriority");
+});
+
+// `suggestion.position` should be ignored when the suggestion is a best match.
+add_tasks_with_rust(async function position() {
+  // We'll use a sponsored priority result as the best match result. Different
+  // types of Suggest results can appear as best matches, and they all should
+  // have the same behavior.
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  Services.prefs.setBoolPref(
+    "browser.urlbar.quicksuggest.sponsoredPriority",
+    true
+  );
+
+  // Disable search suggestions so we don't hit the network.
+  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+
+  // Set the remote settings data with a suggestion containing a position.
+  UrlbarPrefs.set("quicksuggest.allowPositionInSuggestions", true);
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
+    {
+      type: "data",
+      attachment: [
+        {
+          ...REMOTE_SETTINGS_RESULTS[0],
+          position: 9,
+        },
+      ],
+    },
+  ]);
+
+  let context = createContext(SPONSORED_SEARCH_STRING, {
+    isPrivate: false,
+  });
+
+  // Add some visits to fill up the view.
+  let maxResultCount = UrlbarPrefs.get("maxRichResults");
+  let visitResults = [];
+  for (let i = 0; i < maxResultCount; i++) {
+    let url = `http://example.com/${SPONSORED_SEARCH_STRING}-${i}`;
+    await PlacesTestUtils.addVisits(url);
+    visitResults.unshift(
+      makeVisitResult(context, {
+        uri: url,
+        title: `test visit for ${url}`,
+      })
+    );
+  }
+
+  // Do a search.
+  await check_results({
+    context,
+    matches: [
+      // search heuristic
+      makeSearchResult(context, {
+        engineName: Services.search.defaultEngine.name,
+        engineIconUri: Services.search.defaultEngine.iconURI?.spec,
+        heuristic: true,
+      }),
+      // best match whose backing suggestion has a `position`
+      expectedSponsoredPriorityResult(),
+      // visits
+      ...visitResults.slice(0, maxResultCount - 2),
+    ],
+  });
+
+  await cleanupPlaces();
+  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RESULTS);
+  UrlbarPrefs.clear("quicksuggest.allowPositionInSuggestions");
+  Services.prefs.clearUserPref("browser.search.suggest.enabled");
+  Services.prefs.clearUserPref("browser.urlbar.quicksuggest.sponsoredPriority");
+});

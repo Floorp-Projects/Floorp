@@ -18,6 +18,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
+ChromeUtils.defineLazyGetter(
+  lazy,
+  "gCanGetPermissionsOnPlatformPromise",
+  () => {
+    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    return fp.isModeSupported(Ci.nsIFilePicker.modeGetFolder);
+  }
+);
+
 var gMigrators = null;
 var gFileMigrators = null;
 var gProfileStartup = null;
@@ -146,6 +155,7 @@ class MigrationUtils {
           "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
           "MigrationWizard:SelectSafariPasswordFile": { wantUntrusted: true },
           "MigrationWizard:OpenAboutAddons": { wantUntrusted: true },
+          "MigrationWizard:GetPermissions": { wantUntrusted: true },
         },
       },
 
@@ -159,6 +169,20 @@ class MigrationUtils {
         "chrome://browser/content/spotlight.html",
         "about:firefoxview-next",
       ],
+    });
+
+    XPCOMUtils.defineLazyGetter(this, "IS_LINUX_SNAP_PACKAGE", () => {
+      if (
+        AppConstants.platform != "linux" ||
+        !Cc["@mozilla.org/gio-service;1"]
+      ) {
+        return false;
+      }
+
+      let gIOSvc = Cc["@mozilla.org/gio-service;1"].getService(
+        Ci.nsIGIOService
+      );
+      return gIOSvc.isRunningUnderSnap;
     });
   }
 
@@ -401,18 +425,13 @@ class MigrationUtils {
 
   /**
    * Returns the migrator for the given source, if any data is available
-   * for this source, or null otherwise.
-   *
-   * If null is returned,  either no data can be imported for the given migrator,
-   * or aMigratorKey is invalid  (e.g. ie on mac, or mosaic everywhere).  This
-   * method should be used rather than direct getService for future compatibility
-   * (see bug 718280).
+   * for this source, or if permissions are required in order to read
+   * data from this source. Returns null otherwise.
    *
    * @param {string} aKey
    *   Internal name of the migration source. See `availableMigratorKeys`
    *   for supported values by OS.
-   *
-   * @returns {MigratorBase}
+   * @returns {Promise<MigratorBase|null>}
    *   A profile migrator implementing nsIBrowserProfileMigrator, if it can
    *   import any data, null otherwise.
    */
@@ -424,7 +443,18 @@ class MigrationUtils {
     }
 
     try {
-      return migrator && (await migrator.isSourceAvailable()) ? migrator : null;
+      if (!migrator) {
+        return null;
+      }
+
+      if (
+        (await migrator.isSourceAvailable()) ||
+        (!(await migrator.hasPermissions()) && migrator.canGetPermissions())
+      ) {
+        return migrator;
+      }
+
+      return null;
     } catch (ex) {
       console.error(ex);
       return null;
@@ -1211,6 +1241,18 @@ class MigrationUtils {
 
   get HISTORY_MAX_AGE_IN_MILLISECONDS() {
     return this.HISTORY_MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000;
+  }
+
+  /**
+   * Determines whether or not the underlying platform supports creating
+   * native file pickers that can do folder selection, which is a
+   * pre-requisite for getting read-access permissions for data from other
+   * browsers that we can import from.
+   *
+   * @returns {Promise<boolean>}
+   */
+  canGetPermissionsOnPlatform() {
+    return lazy.gCanGetPermissionsOnPlatformPromise;
   }
 }
 
