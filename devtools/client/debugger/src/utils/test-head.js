@@ -108,6 +108,7 @@ function createSourceObject(filename, props = {}) {
     isPrettyPrinted: false,
     isExtension: false,
     isOriginal: filename.includes("originalSource"),
+    displayURL: makeSourceURL(filename),
   };
 }
 

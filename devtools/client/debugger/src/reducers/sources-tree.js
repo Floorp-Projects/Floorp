@@ -22,7 +22,7 @@
 
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 const IGNORED_EXTENSIONS = ["css", "svg", "png"];
-import { isPretty } from "../utils/source";
+import { isPretty, getRawSourceURL } from "../utils/source";
 import { prefs } from "../utils/prefs";
 
 export function initialSourcesTreeState() {
@@ -176,6 +176,9 @@ export default function update(state = initialSourcesTreeState(), action) {
 
     case "SET_FOCUSED_SOURCE_ITEM":
       return { ...state, focusedItem: action.item };
+
+    case "SET_SELECTED_LOCATION":
+      return updateSelectedLocation(state, action.location);
 
     case "SET_PROJECT_DIRECTORY_ROOT":
       const { uniquePath, name } = action;
@@ -587,4 +590,92 @@ function createSourceTreeItem(source, sourceActor, parent) {
     source,
     sourceActor,
   };
+}
+
+/**
+ * Update `expanded` and `focusedItem` so that we show and focus
+ * the new selected source.
+ *
+ * @param {Object} state
+ * @param {Object} selectedLocation
+ *        The new location being selected.
+ */
+function updateSelectedLocation(state, selectedLocation) {
+  const sourceItem = getSourceItemForSelectedLocation(state, selectedLocation);
+  if (sourceItem) {
+    // Walk up the tree to expand all ancestor items up to the root of the tree.
+    const expanded = new Set(state.expanded);
+    let parentDirectory = sourceItem;
+    while (parentDirectory) {
+      expanded.add(parentDirectory.uniquePath);
+      parentDirectory = parentDirectory.parent;
+    }
+
+    return {
+      ...state,
+      expanded,
+      focusedItem: sourceItem,
+    };
+  }
+  return state;
+}
+
+/**
+ * Get the SourceItem displayed in the SourceTree for the currently selected location.
+ *
+ * @param {Object} state
+ * @param {Object} selectedLocation
+ * @return {SourceItem}
+ *        The directory source item where the given source is displayed.
+ */
+function getSourceItemForSelectedLocation(state, selectedLocation) {
+  const { source, sourceActor } = selectedLocation;
+
+  // Sources without URLs are not visible in the SourceTree
+  if (!source.url) {
+    return null;
+  }
+
+  // In the SourceTree, we never show the pretty printed sources and only
+  // the minified version, so if we are selecting a pretty file, fake selecting
+  // the minified version by looking up for the minified URL instead of the pretty one.
+  const sourceUrl = getRawSourceURL(source.url);
+
+  const { displayURL } = source;
+  function findSourceInItem(item, path) {
+    if (item.type == "source") {
+      if (item.source.url == sourceUrl) {
+        return item;
+      }
+      return null;
+    }
+    // Bail out if the current item doesn't match the source
+    if (item.type == "thread" && item.threadActorID != sourceActor?.thread) {
+      return null;
+    }
+    if (item.type == "group" && displayURL.group != item.groupName) {
+      return null;
+    }
+    if (item.type == "directory" && !path.startsWith(item.path)) {
+      return null;
+    }
+    // Otherwise, walk down the tree if this ancestor item seems to match
+    for (const child of item.children) {
+      const match = findSourceInItem(child, path);
+      if (match) {
+        return match;
+      }
+    }
+
+    return null;
+  }
+  for (const rootItem of state.threadItems) {
+    // Note that when we are setting a project root, rootItem
+    // may no longer be only Thread Item, but also be Group, Directory or Source Items.
+    const item = findSourceInItem(rootItem, displayURL.path);
+    if (item) {
+      return item;
+    }
+  }
+  return null;
 }
