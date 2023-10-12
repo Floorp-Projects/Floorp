@@ -205,14 +205,12 @@ urlbar:
       description: >-
         Comma separated list of client variants to report to the Merino server.
         May impact server behavior.
-    merinoEnabled:
-      type: boolean
-      fallbackPref: browser.urlbar.merino.enabled
-      description: Whether Merino is enabled as a quick suggest source
     merinoEndpointURL:
       type: string
       fallbackPref: browser.urlbar.merino.endpointURL
-      description: The Merino endpoint URL, not including parameters.
+      description: >-
+        The Merino endpoint URL, not including parameters. An empty string will
+        cause Firefox not to fetch from Merino.
     merinoProviders:
       type: string
       fallbackPref: browser.urlbar.merino.providers

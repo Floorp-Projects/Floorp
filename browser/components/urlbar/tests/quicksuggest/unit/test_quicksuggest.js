@@ -125,7 +125,6 @@ function expectedHttpsResult() {
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
-  UrlbarPrefs.set("merino.enabled", false);
 
   // Install a default test engine.
   let engine = await addTestSuggestionsEngine();

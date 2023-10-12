@@ -151,9 +151,6 @@ browser.urlbar.merino.clientVariants (string, default: "")
   for more details. This is intended to be used by experiments, not directly set
   by users.
 
-browser.urlbar.merino.enabled (boolean, default: false)
-  Whether Merino is enabled as a quick suggest source.
-
 browser.urlbar.merino.providers (string, default: "")
   Comma-separated list of providers to request from the Merino server. Merino
   will return suggestions only for these providers. See `Merino API docs`_ for

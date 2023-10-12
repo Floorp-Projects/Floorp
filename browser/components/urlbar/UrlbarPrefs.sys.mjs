@@ -163,9 +163,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Comma-separated list of client variants to send to Merino
   ["merino.clientVariants", ""],
 
-  // Whether Merino is enabled as a quick suggest source.
-  ["merino.enabled", false],
-
   // The Merino endpoint URL, not including parameters.
   ["merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest"],
 
