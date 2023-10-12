@@ -65,4 +65,3 @@
 relativesrcdir browser/locales:
 % locale pdf.js @AB_CD@ %locale/pdfviewer/
     locale/pdfviewer/viewer.properties             (%pdfviewer/viewer.properties)
-    locale/pdfviewer/chrome.properties             (%pdfviewer/chrome.properties)
