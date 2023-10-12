@@ -457,18 +457,18 @@
 
 <!-- Cookie Banner Handling -->
 <groupbox id="cookieBannerHandlingGroup" data-category="panePrivacy" data-subcategory="cookiebanner" hidden="true">
-  <label><html:h2 data-l10n-id="cookie-banner-handling-header" /></label>
+  <label><html:h2 data-l10n-id="cookie-banner-blocker-header" /></label>
   <vbox flex="1">
     <hbox>
       <description>
-        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-handling-description" ></html:span>
+        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-blocker-description" ></html:span>
         <html:a is="moz-support-link" id="cookieBannerHandlingLearnMore" class="learnMore"  data-l10n-id="cookie-banner-learn-more" support-page="cookie-banner-reduction"/>
       </description>
     </hbox>
     <hbox>
       <checkbox id="handleCookieBanners"
-                preference="cookiebanners.service.mode"
-                data-l10n-id="forms-handle-cookie-banners"
+                preference="cookiebanners.service.mode.privateBrowsing"
+                data-l10n-id="cookie-banner-blocker-checkbox-label"
                 flex="1" />
     </hbox>
   </vbox>
