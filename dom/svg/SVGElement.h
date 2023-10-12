@@ -175,7 +175,8 @@ class SVGElement : public SVGElementBase  // nsIContent
     return GetStringInfo().mInfos[aAttrEnum].mIsAnimatable;
   }
   bool NumberAttrAllowsPercentage(uint8_t aAttrEnum) {
-    return GetNumberInfo().mInfos[aAttrEnum].mPercentagesAllowed;
+    return IsSVGElement(nsGkAtoms::stop) &&
+           GetNumberInfo().mInfos[aAttrEnum].mName == nsGkAtoms::offset;
   }
   virtual bool HasValidDimensions() const { return true; }
   void SetLength(nsAtom* aName, const SVGAnimatedLength& aLength);
@@ -431,7 +432,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   struct NumberInfo {
     nsStaticAtom* const mName;
     const float mDefaultValue;
-    const bool mPercentagesAllowed;
   };
 
   using NumberAttributesInfo = AttributesInfo<SVGAnimatedNumber, NumberInfo>;

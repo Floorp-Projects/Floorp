@@ -22,7 +22,7 @@ JSObject* SVGFEOffsetElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFEOffsetElement::sNumberInfo[2] = {
-    {nsGkAtoms::dx, 0, false}, {nsGkAtoms::dy, 0, false}};
+    {nsGkAtoms::dx, 0}, {nsGkAtoms::dy, 0}};
 
 SVGElement::StringInfo SVGFEOffsetElement::sStringInfo[2] = {
     {nsGkAtoms::result, kNameSpaceID_None, true},

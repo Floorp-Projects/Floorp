@@ -21,7 +21,7 @@ JSObject* SVGFEDropShadowElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFEDropShadowElement::sNumberInfo[2] = {
-    {nsGkAtoms::dx, 2, false}, {nsGkAtoms::dy, 2, false}};
+    {nsGkAtoms::dx, 2}, {nsGkAtoms::dy, 2}};
 
 SVGElement::NumberPairInfo SVGFEDropShadowElement::sNumberPairInfo[1] = {
     {nsGkAtoms::stdDeviation, 2, 2}};
