@@ -301,8 +301,9 @@ jinxed==1.2.0 ; python_version >= "3.7" and python_version < "4.0" and platform_
     --hash=sha256:cfc2b2e4e3b4326954d546ba6d6b9a7a796ddcb0aef8d03161d005177eb0d48b
 jsmin==3.0.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:88fc1bd6033a47c5911dbcada7d279c7a8b7ad0841909590f6a742c20c4d2e08
-json-e==2.7.0 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a
+json-e==4.5.3 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:4d40ed481d19e475bb4b21807675a34b077a19197385007fed0ca4e867b5d9cd \
+    --hash=sha256:b150f590e4febd77589f6becb45a99dc503351c3927d2c41b7310ab7dfd547e2
 jsonschema==4.17.3 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:0f864437ab8b6076ba6707453ef8f98a6a0d512a80e93f8abdb676f737ecb60d \
     --hash=sha256:a870ad254da1a8ca84b6a2905cac29d265f805acc57af304784962a2aa6508f6
