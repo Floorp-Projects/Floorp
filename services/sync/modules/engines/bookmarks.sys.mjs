@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { Async } from "resource://services-common/async.sys.mjs";
-
 import { SCORE_INCREMENT_XLARGE } from "resource://services-sync/constants.sys.mjs";
 import {
   Changeset,
@@ -17,6 +15,7 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Async: "resource://services-common/async.sys.mjs",
   Observers: "resource://services-common/observers.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
@@ -411,7 +410,7 @@ BookmarksEngine.prototype = {
       }
     } catch (ex) {
       if (
-        Async.isShutdownException(ex) ||
+        lazy.Async.isShutdownException(ex) ||
         ex.status > 0 ||
         ex.name == "InterruptedError"
       ) {
