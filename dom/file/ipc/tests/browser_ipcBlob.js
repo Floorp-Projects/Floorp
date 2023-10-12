@@ -10,6 +10,7 @@ add_task(async function test_CtoPtoC_big() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blob = await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     let blob = new Blob([new Array(1024 * 1024).join("123456789ABCDEF")]);
     return blob;
   });
@@ -46,6 +47,7 @@ add_task(async function test_CtoPtoC_small() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blob = await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     let blob = new Blob(["hello world!"]);
     return blob;
   });
@@ -78,6 +80,7 @@ add_task(async function test_CtoPtoC_bc_big() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     var bc = new content.BroadcastChannel("test");
     bc.onmessage = function () {
       bc.postMessage(
@@ -116,6 +119,7 @@ add_task(async function test_CtoPtoC_bc_small() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     var bc = new content.BroadcastChannel("test");
     bc.onmessage = function () {
       bc.postMessage(new Blob(["hello world!"]));
@@ -152,6 +156,7 @@ add_task(async function test_CtoPtoC_bc_small() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blobURL = await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     return content.URL.createObjectURL(new content.Blob(["hello world!"]));
   });
 
@@ -186,6 +191,7 @@ add_task(async function test_CtoPtoC_multipart() {
   let browser1 = gBrowser.getBrowserForTab(tab1);
 
   let blob = await SpecialPowers.spawn(browser1, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
     return new Blob(["!"]);
   });
 
@@ -198,6 +204,7 @@ add_task(async function test_CtoPtoC_multipart() {
   let browser2 = gBrowser.getBrowserForTab(tab2);
 
   let status = await SpecialPowers.spawn(browser2, [newBlob], function (blob) {
+    Cu.importGlobalProperties(["Blob"]);
     return new Promise(resolve => {
       let fr = new content.FileReader();
       fr.readAsText(new Blob(["hello ", blob]));
@@ -219,6 +226,8 @@ add_task(async function test_CtoPsize_multipart() {
   let browser = gBrowser.getBrowserForTab(tab);
 
   let blob = await SpecialPowers.spawn(browser, [], function () {
+    Cu.importGlobalProperties(["Blob"]);
+
     let data = new Array(1024 * 512).join("A");
     let blob1 = new Blob([data]);
     let blob2 = new Blob([data]);
