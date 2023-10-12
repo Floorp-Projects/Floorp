@@ -21,6 +21,9 @@ describe("ASRouterTriggerListeners", () => {
   const cookieBannerDetectedListener = ASRouterTriggerListeners.get(
     "cookieBannerDetected"
   );
+  const cookieBannerHandledListener = ASRouterTriggerListeners.get(
+    "cookieBannerHandled"
+  );
   const hosts = ["www.mozilla.com", "www.mozilla.org"];
 
   const regionFake = {
@@ -768,6 +771,58 @@ describe("ASRouterTriggerListeners", () => {
       it("should do nothing if already uninitialised", () => {
         cookieBannerDetectedListener.uninit();
         assert.notOk(cookieBannerDetectedListener._initialized);
+      });
+
+      it("should remove event listeners from all existing browser windows", () => {
+        assert.called(existingWindow.removeEventListener);
+      });
+    });
+  });
+
+  describe("cookieBannerHandled", () => {
+    describe("#init", () => {
+      beforeEach(() => {
+        cookieBannerHandledListener.init(triggerHandler);
+      });
+      afterEach(() => {
+        cookieBannerHandledListener.uninit();
+      });
+
+      it("should set ._initialized to true and save the triggerHandler", () => {
+        assert.ok(cookieBannerHandledListener._initialized);
+        assert.equal(
+          cookieBannerHandledListener._triggerHandler,
+          triggerHandler
+        );
+      });
+
+      it("if already initialised, it should only update the trigger handler", () => {
+        const newTriggerHandler = () => {};
+        cookieBannerHandledListener.init(newTriggerHandler);
+        assert.ok(cookieBannerHandledListener._initialized);
+        assert.equal(
+          cookieBannerHandledListener._triggerHandler,
+          newTriggerHandler
+        );
+      });
+
+      it("should add an event listeners to all existing browser windows", () => {
+        assert.calledOnce(existingWindow.addEventListener);
+      });
+    });
+    describe("#uninit", () => {
+      beforeEach(async () => {
+        cookieBannerHandledListener.init(triggerHandler);
+        cookieBannerHandledListener.uninit();
+      });
+      it("should set ._initialized to false and clear the triggerHandler and timestamps", () => {
+        assert.notOk(cookieBannerHandledListener._initialized);
+        assert.equal(cookieBannerHandledListener._triggerHandler, null);
+      });
+
+      it("should do nothing if already uninitialised", () => {
+        cookieBannerHandledListener.uninit();
+        assert.notOk(cookieBannerHandledListener._initialized);
       });
 
       it("should remove event listeners from all existing browser windows", () => {
