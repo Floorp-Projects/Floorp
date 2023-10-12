@@ -142,12 +142,13 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   rv = result->SetOriginalURI(aURI);
   if (NS_FAILED(rv)) return rv;
 
-  // Get a system principal for content files and set the owner
-  // property of the result
-  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  // Use a system principal for /content and /skin files.
+  // See bug 1855225 for discussion about whether to extend it more generally
+  // to other chrome:// URIs.
   nsAutoCString path;
-  rv = url->GetPathQueryRef(path);
-  if (StringBeginsWith(path, "/content/"_ns)) {
+  aURI->GetPathQueryRef(path);
+  if (StringBeginsWith(path, "/content/"_ns) ||
+      StringBeginsWith(path, "/skin/"_ns)) {
     result->SetOwner(nsContentUtils::GetSystemPrincipal());
   }
 
@@ -158,8 +159,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   // See bug 531886, bug 533038.
   result->SetContentCharset("UTF-8"_ns);
 
-  *aResult = result;
-  NS_ADDREF(*aResult);
+  result.forget(aResult);
   return NS_OK;
 }
 
