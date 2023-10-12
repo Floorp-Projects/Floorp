@@ -124,9 +124,23 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             kwargs["certutil_binary"] = self.get_binary_path("certutil")
 
         if kwargs["webdriver_binary"] is None:
-            kwargs["webdriver_binary"] = self.get_binary_path(
-                "geckodriver", validate_exists=False
-            )
+            try_paths = [self.get_binary_path("geckodriver", validate_exists=False)]
+            ext = ".exe" if sys.platform in ["win32", "msys", "cygwin"] else ""
+            for build_type in ["release", "debug"]:
+                try_paths.append(
+                    os.path.join(
+                        self.topsrcdir, "target", build_type, f"geckodriver{ext}"
+                    )
+                )
+            found_paths = []
+            for path in try_paths:
+                if os.path.exists(path):
+                    found_paths.append(path)
+
+            if found_paths:
+                # Pick the most recently modified version
+                found_paths.sort(key=os.path.getmtime)
+                kwargs["webdriver_binary"] = found_paths[-1]
 
         if kwargs["install_fonts"] is None:
             kwargs["install_fonts"] = True
