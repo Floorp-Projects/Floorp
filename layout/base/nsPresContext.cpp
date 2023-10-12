@@ -1232,6 +1232,13 @@ bool nsPresContext::UserInputEventsAllowed() {
     return true;
   }
 
+  if (mRefreshDriver->IsThrottled()) {
+    MOZ_ASSERT(!mPresShell->IsVisible());
+    // This implies that the BC is not visibile and users can't
+    // interact with it, so we are okay with handling user inputs here.
+    return true;
+  }
+
   if (mMeasuredTicksSinceLoading <
       StaticPrefs::dom_input_events_security_minNumTicks()) {
     return false;
