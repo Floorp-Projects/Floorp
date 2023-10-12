@@ -268,9 +268,11 @@ class SystemResourceMonitor(object):
         self.end_time = None
 
         self.events = []
+        self.markers = []
         self.phases = OrderedDict()
 
         self._active_phases = {}
+        self._active_markers = {}
 
         self._running = False
         self._stopped = False
@@ -411,6 +413,26 @@ class SystemResourceMonitor(object):
         looking for an action that has a duration, see the phase API below.
         """
         self.events.append((time.time(), name))
+
+    def record_marker(self, name, start, end, text):
+        """Record a marker with a duration and an optional text
+
+        Markers are typically used to record when a single command happened.
+        For actions with a longer duration that justifies tracking resource use
+        see the phase API below.
+        """
+        self.markers.append((name, start, end, text))
+
+    def begin_marker(self, name, text):
+        self._active_markers[name + ":" + text] = time.time()
+
+    def end_marker(self, name, text):
+        end = time.time()
+        id = name + ":" + text
+        if not id in self._active_markers:
+            return
+        start = self._active_markers.pop(id)
+        self.record_marker(name, start, end, text)
 
     @contextmanager
     def phase(self, name):
@@ -781,6 +803,21 @@ class SystemResourceMonitor(object):
                         ],
                     },
                     {
+                        "name": "Text",
+                        "tooltipLabel": "{marker.name}",
+                        "tableLabel": "{marker.name} — {marker.data.text}",
+                        "chartLabel": "{marker.data.text}",
+                        "display": ["marker-chart", "marker-table"],
+                        "data": [
+                            {
+                                "key": "text",
+                                "label": "Description",
+                                "format": "string",
+                                "searchable": True,
+                            }
+                        ],
+                    },
+                    {
                         "name": "Mem",
                         "tooltipLabel": "{marker.name}",
                         "display": [],
@@ -1051,5 +1088,12 @@ class SystemResourceMonitor(object):
                 markerData["cpuTime"] = total_cpu_time_ms
 
             add_marker(phase_string_index, v[0], v[1], markerData)
+
+        # Add generic markers
+        for name, start, end, text in self.markers:
+            markerData = {"type": "Text"}
+            if text:
+                markerData["text"] = text
+            add_marker(get_string_index(name), start, end, markerData)
 
         return profile
