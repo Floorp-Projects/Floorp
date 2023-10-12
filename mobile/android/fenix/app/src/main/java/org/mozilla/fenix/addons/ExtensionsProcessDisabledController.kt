@@ -5,6 +5,8 @@
 package org.mozilla.fenix.addons
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.TextView
@@ -16,23 +18,39 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.webextensions.ExtensionsProcessDisabledPromptObserver
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.ext.components
+import kotlin.system.exitProcess
 
 /**
- * Controller for showing the user a dialog when the the extensions process spawning has been disabled.
+ * Controller for handling extensions process spawning disabled events. When the app is in
+ * foreground this will call for a dialog to decide on correct action to take (retry enabling
+ * process spawning or disable extensions). When in background, we kill the app to prevent
+ * extensions from being disabled and network requests continuing.
  *
  * @param context to show the AlertDialog
- * @param store The [BrowserStore] which holds the state for showing the dialog
+ * @param browserStore The [BrowserStore] which holds the state for showing the dialog
+ * @param appStore The [AppStore] containing the application state
  * @param builder to use for creating the dialog which can be styled as needed
  * @param appName to be added to the message. Optional and mainly relevant for testing
+ * @param onKillApp called when the app is backgrounded and extensions process is disabled
  */
 class ExtensionsProcessDisabledController(
     @UiContext context: Context,
-    store: BrowserStore,
+    browserStore: BrowserStore = context.components.core.store,
+    appStore: AppStore = context.components.appStore,
     builder: AlertDialog.Builder = AlertDialog.Builder(context),
     appName: String = context.appName,
+    onKillApp: () -> Unit = { killApp() },
 ) : ExtensionsProcessDisabledPromptObserver(
-    store,
-    { presentDialog(context, store, builder, appName) },
+    browserStore,
+    {
+        if (appStore.state.isForeground) {
+            presentDialog(context, browserStore, builder, appName)
+        } else {
+            onKillApp.invoke()
+        }
+    },
 ) {
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
@@ -42,6 +60,16 @@ class ExtensionsProcessDisabledController(
 
     companion object {
         private var shouldCreateDialog: Boolean = true
+
+        /**
+         * When a dialog can't be shown because the app is in the background, instead the app will
+         * be killed to prevent leaking network data without extensions enabled.
+         */
+        private fun killApp() {
+            Handler(Looper.getMainLooper()).post {
+                exitProcess(0)
+            }
+        }
 
         /**
          * Present a dialog to the user notifying of extensions process spawning disabled and also asking

@@ -204,7 +204,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     }
 
     private val extensionsProcessDisabledPromptObserver by lazy {
-        ExtensionsProcessDisabledController(this@HomeActivity, components.core.store)
+        ExtensionsProcessDisabledController(this@HomeActivity)
     }
 
     private val serviceWorkerSupport by lazy {
