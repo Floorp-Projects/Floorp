@@ -8025,9 +8025,9 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
   return true;
 }
 
-bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* call,
+bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* maybeCall,
                                         CallOrNewEmitter& cone) {
-  MOZ_ASSERT(call->callee() == callee);
+  MOZ_ASSERT_IF(maybeCall, maybeCall->callee() == callee);
 
   switch (callee->getKind()) {
     case ParseNodeKind::Name: {
@@ -8117,7 +8117,8 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* call,
       }
       break;
     case ParseNodeKind::SuperBase:
-      MOZ_ASSERT(call->isKind(ParseNodeKind::SuperCallExpr));
+      MOZ_ASSERT(maybeCall);
+      MOZ_ASSERT(maybeCall->isKind(ParseNodeKind::SuperCallExpr));
       MOZ_ASSERT(callee->isKind(ParseNodeKind::SuperBase));
       if (!cone.emitSuperCallee()) {
         //          [stack] CALLEE IsConstructing
@@ -8125,8 +8126,9 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* call,
       }
       break;
     case ParseNodeKind::OptionalChain: {
-      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(), call,
-                                               cone);
+      MOZ_ASSERT(maybeCall);
+      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(),
+                                               maybeCall, cone);
     }
     default:
       if (!cone.prepareForOtherCallee()) {
