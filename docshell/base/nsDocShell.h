@@ -719,9 +719,7 @@ class nsDocShell final : public nsDocLoader,
       nsDocShellLoadState* aLoadState);
 
  private:
-  // Returns true if would have called FireOnLocationChange,
-  // but did not because aFireOnLocationChange was false on entry.
-  // In this case it is the caller's responsibility to ensure
+  // Returns true if it is the caller's responsibility to ensure
   // FireOnLocationChange is called.
   // In all other cases false is returned.
   // Either aChannel or aTriggeringPrincipal must be null. If aChannel is
@@ -736,9 +734,9 @@ class nsDocShell final : public nsDocLoader,
   bool OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIPrincipal* aPrincipalToInherit,
-                nsIPrincipal* aPartitionedPrincipalToInehrit,
-                nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
-                bool aAddToGlobalHistory, bool aCloneSHChildren);
+                nsIPrincipal* aPartitionedPrincipalToInherit,
+                nsIContentSecurityPolicy* aCsp, bool aAddToGlobalHistory,
+                bool aCloneSHChildren);
 
  public:
   // If wireframe collection is enabled, will attempt to gather the
