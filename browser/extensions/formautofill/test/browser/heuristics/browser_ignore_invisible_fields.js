@@ -7,14 +7,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_heuristic_tests([
   {
-    description:
-      "All fields are visible (interactivityCheckMode is set to visibility).",
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
-      ],
-    ],
+    description: "all fields are visible",
     fixtureData: `
         <html>
         <body>
@@ -51,14 +44,7 @@ add_heuristic_tests([
     ],
   },
   {
-    description:
-      "Some fields are invisible due to css styling (interactivityCheckMode is set to visibility).",
-    prefs: [
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
-      ],
-    ],
+    description: "some fields are invisible because of css style",
     fixtureData: `
         <html>
         <body>
@@ -66,9 +52,9 @@ add_heuristic_tests([
             <input type="text" id="name" autocomplete="name" />
             <input type="text" id="tel" autocomplete="tel" />
             <input type="text" id="email" autocomplete="email" />
-            <input type="text" id="country" autocomplete="country" />
-            <input type="text" id="postal-code" autocomplete="postal-code" hidden />
-            <input type="text" id="address-line1" autocomplete="address-line1" style="display:none" />
+            <input type="text" id="country" autocomplete="country" hidden />
+            <input type="text" id="postal-code" autocomplete="postal-code" style="display:none" />
+            <input type="text" id="address-line1" autocomplete="address-line1" style="opacity:0" />
             <div style="visibility: hidden">
               <input type="text" id="address-line2" autocomplete="address-line2" />
             </div>
@@ -85,22 +71,15 @@ add_heuristic_tests([
           { fieldName: "name" },
           { fieldName: "tel" },
           { fieldName: "email" },
-          { fieldName: "country" },
         ],
       },
     ],
   },
   {
-    // hidden, style="display:none" are always considered (when mode visibility)
+    // hidden and style="display:none" are always considered regardless what visibility check we use
     description:
-      "Number of form elements exceeds the threshold (interactivityCheckMode is set to visibility).",
-    prefs: [
-      ["extensions.formautofill.heuristics.visibilityCheckThreshold", 1],
-      [
-        "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
-      ],
-    ],
+      "invisible fields are identified because number of elemenent in the form exceed the threshold",
+    prefs: [["extensions.formautofill.heuristics.visibilityCheckThreshold", 1]],
     fixtureData: `
         <html>
         <body>
@@ -108,9 +87,9 @@ add_heuristic_tests([
             <input type="text" id="name" autocomplete="name" />
             <input type="text" id="tel" autocomplete="tel" />
             <input type="text" id="email" autocomplete="email" />
-            <input type="text" id="country" autocomplete="country" disabled />
-            <input type="text" id="postal-code" autocomplete="postal-code" hidden />
-            <input type="text" id="address-line1" autocomplete="address-line1" style="display:none" />
+            <input type="text" id="country" autocomplete="country" hidden />
+            <input type="text" id="postal-code" autocomplete="postal-code" style="display:none" />
+            <input type="text" id="address-line1" autocomplete="address-line1" style="opacity:0" />
             <div style="visibility: hidden">
               <input type="text" id="address-line2" autocomplete="address-line2" />
             </div>
@@ -127,7 +106,7 @@ add_heuristic_tests([
           { fieldName: "name" },
           { fieldName: "tel" },
           { fieldName: "email" },
-          { fieldName: "country" },
+          { fieldName: "address-line1" },
           { fieldName: "address-line2" },
         ],
       },

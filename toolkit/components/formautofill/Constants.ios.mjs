@@ -27,10 +27,9 @@ const IOS_DEFAULT_PREFERENCES = {
   "extensions.formautofill.addresses.ignoreAutocompleteOff": true,
   "extensions.formautofill.heuristics.enabled": true,
   "extensions.formautofill.section.enabled": true,
-  // WebKit doesn't support the checkVisibility API, setting the threshold value to 0 to ensure
+  // WebKit doesn't support the checkVisibility API, setting the threshold value to 0 to esnure
   // `IsFieldVisible` function doesn't use it
   "extensions.formautofill.heuristics.visibilityCheckThreshold": 0,
-  "extensions.formautofill.heuristics.interactivityCheckMode": "focusability",
   "extensions.formautofill.focusOnAutofill": false,
 };
 
