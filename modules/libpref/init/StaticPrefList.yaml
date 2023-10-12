@@ -12143,6 +12143,11 @@
   value: true
   mirror: always
 
+- name: network.url.strict_protocol_setter
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Force remapping of remote port numbers to allow reaching local testing
 # servers or port forwarders listening on non-standard ports.  Note that
 # this is not changing the origin URL in the addressbar, only internally
