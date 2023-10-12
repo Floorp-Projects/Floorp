@@ -97,11 +97,11 @@ class AbstractFramePtr {
   uintptr_t ptr_;
 
   enum {
-    Tag_InterpreterFrame = 0x1,
-    Tag_BaselineFrame = 0x2,
-    Tag_RematerializedFrame = 0x3,
-    Tag_WasmDebugFrame = 0x4,
-    TagMask = 0x7
+    Tag_InterpreterFrame = 0x0,
+    Tag_BaselineFrame = 0x1,
+    Tag_RematerializedFrame = 0x2,
+    Tag_WasmDebugFrame = 0x3,
+    TagMask = 0x3
   };
 
  public:
