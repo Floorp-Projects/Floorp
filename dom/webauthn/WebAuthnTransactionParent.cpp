@@ -53,12 +53,24 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, parent, aTransactionId,
-           clientData = aTransactionInfo.ClientDataJSON()](
+           inputClientData = aTransactionInfo.ClientDataJSON()](
               const WebAuthnRegisterPromise::ResolveValueType& aValue) {
             mTransactionId.reset();
             mRegisterPromiseRequest.Complete();
+            nsCString clientData;
+            nsresult rv = aValue->GetClientDataJSON(clientData);
+            if (rv == NS_ERROR_NOT_AVAILABLE) {
+              clientData = inputClientData;
+            } else if (NS_FAILED(rv)) {
+              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+                                   u"CTAPRegisterAbort"_ns, 1);
+              Unused << parent->SendAbort(aTransactionId,
+                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
+              return;
+            }
+
             nsTArray<uint8_t> attObj;
-            nsresult rv = aValue->GetAttestationObject(attObj);
+            rv = aValue->GetAttestationObject(attObj);
             if (NS_WARN_IF(NS_FAILED(rv))) {
               Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                    u"CTAPRegisterAbort"_ns, 1);
@@ -185,12 +197,25 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [this, parent, aTransactionId,
-           clientData = aTransactionInfo.ClientDataJSON()](
+           inputClientData = aTransactionInfo.ClientDataJSON()](
               const WebAuthnSignPromise::ResolveValueType& aValue) {
             mTransactionId.reset();
             mSignPromiseRequest.Complete();
+
+            nsCString clientData;
+            nsresult rv = aValue->GetClientDataJSON(clientData);
+            if (rv == NS_ERROR_NOT_AVAILABLE) {
+              clientData = inputClientData;
+            } else if (NS_FAILED(rv)) {
+              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
+                                   u"CTAPRegisterAbort"_ns, 1);
+              Unused << parent->SendAbort(aTransactionId,
+                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
+              return;
+            }
+
             nsTArray<uint8_t> credentialId;
-            nsresult rv = aValue->GetCredentialId(credentialId);
+            rv = aValue->GetCredentialId(credentialId);
             if (NS_WARN_IF(NS_FAILED(rv))) {
               Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
                                    u"CTAPSignAbort"_ns, 1);

@@ -142,6 +142,11 @@ pub struct WebAuthnRegisterResult {
 }
 
 impl WebAuthnRegisterResult {
+    xpcom_method!(get_client_data_json => GetClientDataJSON() -> nsACString);
+    fn get_client_data_json(&self) -> Result<nsCString, nsresult> {
+        Err(NS_ERROR_NOT_AVAILABLE)
+    }
+
     xpcom_method!(get_attestation_object => GetAttestationObject() -> ThinVec<u8>);
     fn get_attestation_object(&self) -> Result<ThinVec<u8>, nsresult> {
         let mut out = ThinVec::new();
@@ -242,6 +247,11 @@ pub struct WebAuthnSignResult {
 }
 
 impl WebAuthnSignResult {
+    xpcom_method!(get_client_data_json => GetClientDataJSON() -> nsACString);
+    fn get_client_data_json(&self) -> Result<nsCString, nsresult> {
+        Err(NS_ERROR_NOT_AVAILABLE)
+    }
+
     xpcom_method!(get_credential_id => GetCredentialId() -> ThinVec<u8>);
     fn get_credential_id(&self) -> Result<ThinVec<u8>, nsresult> {
         let Some(cred) = &self.result.assertion.credentials else {
