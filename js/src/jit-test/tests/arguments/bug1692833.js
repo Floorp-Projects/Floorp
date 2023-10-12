@@ -1,3 +1,4 @@
+// |jit-test| skip-if: getBuildConfiguration('pbl')
 g13 = newGlobal({newCompartment: true})
 g13.parent = this;
 g13.eval("(" + function() {

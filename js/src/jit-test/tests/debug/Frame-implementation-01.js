@@ -1,3 +1,4 @@
+// |jit-test| skip-if: getBuildConfiguration('pbl')
 // Debugger.Frames of all implementations.
 
 load(libdir + "jitopts.js");

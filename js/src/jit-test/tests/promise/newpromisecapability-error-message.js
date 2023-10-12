@@ -1,3 +1,6 @@
+// |jit-test| skip-if: getBuildConfiguration('pbl')
+// (justification: PBL does not invoke the decompiler in the same way and so
+// will not have an error message referring to the specific value name)
 load(libdir + "asserts.js");
 
 let foo = {};
