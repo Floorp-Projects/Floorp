@@ -2,8 +2,6 @@ const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
 
-let { MODE_REJECT } = Ci.nsICookieBannerService;
-
 const promoImgSrc = "chrome://browser/content/assets/cookie-banners-begone.svg";
 
 async function resetState() {
@@ -20,8 +18,9 @@ add_task(async function test_cookie_banners_promo_user_set_prefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.promo.cookiebanners.enabled", true],
-      // The message's targeting is looking for the following pref being default
-      ["cookiebanners.service.mode", MODE_REJECT],
+      // The message's targeting is looking for the following prefs not being 0
+      ["cookiebanners.service.mode", 0],
+      ["cookiebanners.service.mode.privateBrowsing", 0],
     ],
   });
   await ASRouter.onPrefChange();
@@ -39,23 +38,38 @@ add_task(async function test_cookie_banners_promo_user_set_prefs() {
   });
 
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_cookie_banners_promo() {
   await resetState();
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.promo.cookiebanners.enabled", true]],
-    clear: [["cookiebanners.service.mode"]],
+    set: [
+      ["browser.promo.cookiebanners.enabled", true],
+      ["cookiebanners.service.mode.privateBrowsing", 1],
+    ],
   });
   await ASRouter.onPrefChange();
 
   const { win, tab } = await openTabAndWaitForRender();
 
-  let prefChanged = TestUtils.waitForPrefChange(
-    "cookiebanners.service.mode",
-    value => value === MODE_REJECT
+  const expectedUrl = Services.urlFormatter.formatURL(
+    "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cookie-banner-reduction"
   );
-  let pageReloaded = BrowserTestUtils.browserLoaded(tab);
+  let tabOpened = new Promise(resolve => {
+    win.gBrowser.tabContainer.addEventListener(
+      "TabOpen",
+      event => {
+        let newTab = event.target;
+        let newBrowser = newTab.linkedBrowser;
+        let result = newTab;
+        BrowserTestUtils.waitForDocLoadAndStopIt(expectedUrl, newBrowser).then(
+          () => resolve(result)
+        );
+      },
+      { once: true }
+    );
+  });
 
   await SpecialPowers.spawn(tab, [promoImgSrc], async function (imgSrc) {
     const promoImage = content.document.querySelector(
@@ -66,9 +80,13 @@ add_task(async function test_cookie_banners_promo() {
     EventUtils.synthesizeClick(linkEl);
   });
 
-  await Promise.all([prefChanged, pageReloaded]);
+  await tabOpened;
 
-  await SpecialPowers.spawn(tab, [promoImgSrc], async function (imgSrc) {
+  ok(true, "The link was clicked and the new tab opened");
+
+  let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab2, [promoImgSrc], async function (imgSrc) {
     const promoImage = content.document.querySelector(
       ".promo-image-large > img"
     );
@@ -78,5 +96,7 @@ add_task(async function test_cookie_banners_promo() {
     );
   });
 
+  await BrowserTestUtils.closeWindow(win2);
   await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
 });

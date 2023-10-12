@@ -897,14 +897,13 @@ const BASE_MESSAGES = () => [
       infoTitleEnabled: false,
       promoEnabled: true,
       promoType: "COOKIE_BANNERS",
-      promoHeader: "fluent:about-private-browsing-cookie-banners-promo-header",
+      promoHeader: "fluent:about-private-browsing-cookie-banners-promo-heading",
       promoImageLarge:
         "chrome://browser/content/assets/cookie-banners-begone.svg",
-      promoLinkText:
-        "fluent:about-private-browsing-cookie-banners-promo-button",
-      promoLinkType: "button",
+      promoLinkText: "fluent:about-private-browsing-learn-more-link",
+      promoLinkType: "link",
       promoSectionStyle: "below-search",
-      promoTitle: "fluent:about-private-browsing-cookie-banners-promo-message",
+      promoTitle: "fluent:about-private-browsing-cookie-banners-promo-body",
       promoTitleEnabled: true,
       promoButton: {
         action: {
@@ -912,32 +911,10 @@ const BASE_MESSAGES = () => [
           data: {
             actions: [
               {
-                type: "SET_PREF",
+                type: "OPEN_URL",
                 data: {
-                  pref: {
-                    name: "cookiebanners.service.mode",
-                    value: Ci.nsICookieBannerService.MODE_REJECT,
-                  },
-                },
-              },
-              {
-                // This pref may be removed (with the normal pref controlling
-                // both modes), at which time we should remove this action.
-                type: "SET_PREF",
-                data: {
-                  pref: {
-                    name: "cookiebanners.service.mode.privateBrowsing",
-                    value: Ci.nsICookieBannerService.MODE_REJECT,
-                  },
-                },
-              },
-              {
-                // Reset this pref to default
-                type: "SET_PREF",
-                data: {
-                  pref: {
-                    name: "cookiebanners.service.detectOnly",
-                  },
+                  args: "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cookie-banner-reduction",
+                  where: "tabshifted",
                 },
               },
               {
@@ -945,10 +922,6 @@ const BASE_MESSAGES = () => [
                 data: {
                   id: "PB_NEWTAB_COOKIE_BANNERS_PROMO",
                 },
-              },
-              {
-                type: "OPEN_ABOUT_PAGE",
-                data: { args: "privatebrowsing", where: "current" },
               },
             ],
           },
@@ -965,7 +938,7 @@ const BASE_MESSAGES = () => [
       ],
       lifetime: 12,
     },
-    targeting: `!'cookiebanners.service.mode'|preferenceIsUserSet`,
+    targeting: `'cookiebanners.service.mode.privateBrowsing'|preferenceValue != 0 || 'cookiebanners.service.mode'|preferenceValue != 0`,
   },
   {
     id: "CFR_COOKIEBANNER",
