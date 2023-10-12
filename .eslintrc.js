@@ -434,7 +434,6 @@ module.exports = {
         "mozilla/avoid-removeChild": "off",
         "mozilla/consistent-if-bracing": "off",
         "mozilla/no-compare-against-boolean-literals": "off",
-        "mozilla/reject-importGlobalProperties": "off",
         "mozilla/use-includes-instead-of-indexOf": "off",
         "mozilla/use-ownerGlobal": "off",
         "mozilla/use-services": "off",
