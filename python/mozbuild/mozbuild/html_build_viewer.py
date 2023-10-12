@@ -34,9 +34,13 @@ class HTTPHandler(http.server.BaseHTTPRequestHandler):
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header(
+                "Access-Control-Allow-Origin", "https://profiler.firefox.com"
+            )
             self.end_headers()
 
             self.wfile.write(s.json_files[key])
+            self.server.wrapper.do_shutdown = True
             return
 
         if p == "/":

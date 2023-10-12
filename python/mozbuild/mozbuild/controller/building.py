@@ -1563,7 +1563,7 @@ class BuildDriver(MozbuildObject):
             # if excessive:
             #    print(EXCESSIVE_SWAP_MESSAGE)
 
-            print("To view resource usage of the build, run |mach " "resource-usage|.")
+            print("To view a profile of the build, run |mach " "resource-usage|.")
 
         long_build = monitor.elapsed > 1200
 
