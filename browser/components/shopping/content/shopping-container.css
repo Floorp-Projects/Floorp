@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:host {
+  --shopping-close-button-size: var(--button-min-height);
+  --shopping-header-font-size: 1.3rem;
+}
+
 #shopping-container {
   display: flex;
   flex-direction: column;
@@ -30,7 +35,8 @@
 }
 
 #shopping-header-title {
-  font-weight: 600;
+  font-size: var(--shopping-header-font-size);
+  font-weight: var(--font-weight-bold);
   margin: 0;
 }
 
@@ -39,20 +45,21 @@
 }
 
 #beta-marker {
-  font-weight: 400;
-  padding: 0.09375rem 0.25rem;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-default);
+  padding: 2px 4px;
   margin: 0;
   line-height: 150%;
   text-transform: uppercase;
   color: var(--icon-color);
   border: 1px solid var(--icon-color);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
 }
 
 #close-button {
   color: var(--icon-color);
-  min-width: 32px;
-  min-height: 32px;
+  min-width: var(--shopping-close-button-size);
+  min-height: var(--shopping-close-button-size);
   -moz-context-properties: fill;
   fill: currentColor;
   background-image: url("chrome://global/skin/icons/close.svg");
