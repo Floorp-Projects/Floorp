@@ -202,6 +202,7 @@ onmessage = function () {
       base: undefined,
       error: false,
       protocol: "gopher:",
+      expectedChangedProtocol: "https:",
     },
     {
       url: "ws://ws.something.net",
@@ -220,6 +221,7 @@ onmessage = function () {
       base: undefined,
       error: false,
       protocol: "foo:",
+      expectedChangedProtocol: "https:",
     },
   ];
 
@@ -317,7 +319,9 @@ onmessage = function () {
     if ("origin" in test) {
       is(url.origin, test.origin, "origin");
     }
-    if ("protocol" in test) {
+    if ("expectedChangedProtocol" in test) {
+      is(url.protocol, test.expectedChangedProtocol, "protocol");
+    } else if ("protocol" in test) {
       is(url.protocol, test.protocol, "protocol");
     }
     if ("username" in test) {
