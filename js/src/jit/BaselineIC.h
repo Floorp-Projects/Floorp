@@ -193,6 +193,7 @@ class ICStub {
     MOZ_ASSERT(!usesTrampolineCode());
     return JitCode::FromExecutable(stubCode_);
   }
+  bool hasJitCode() { return !!stubCode_; }
 
   uint32_t enteredCount() const { return enteredCount_; }
   inline void incrementEnteredCount() { enteredCount_++; }
