@@ -10,14 +10,12 @@ import { connect } from "../../utils/connect";
 
 // Selectors
 import {
-  getSelectedLocation,
   getMainThreadHost,
   getExpandedState,
   getProjectDirectoryRoot,
   getProjectDirectoryRootName,
   getSourcesTreeSources,
   getFocusedSourceItem,
-  getGeneratedSourceByURL,
   getHideIgnoredSources,
 } from "../../selectors";
 
@@ -28,10 +26,6 @@ import actions from "../../actions";
 import SourcesTreeItem from "./SourcesTreeItem";
 import AccessibleImage from "../shared/AccessibleImage";
 
-// Utils
-import { getRawSourceURL } from "../../utils/source";
-import { createLocation } from "../../utils/location";
-
 const classnames = require("devtools/client/shared/classnames.js");
 const Tree = require("devtools/client/shared/components/Tree");
 
@@ -39,64 +33,6 @@ function shouldAutoExpand(item, mainThreadHost) {
   // There is only one case where we want to force auto expand,
   // when we are on the group of the page's domain.
   return item.type == "group" && item.groupName === mainThreadHost;
-}
-
-/**
- * Get the SourceItem displayed in the SourceTree for a given "tree location".
- *
- * @param {Object} treeLocation
- *        An object containing  the Source coming from the sources.js reducer and the source actor
- *        See getTreeLocation().
- * @param {object} rootItems
- *        Result of getSourcesTreeSources selector, containing all sources sorted in a tree structure.
- *        items to be displayed in the source tree.
- * @return {SourceItem}
- *        The directory source item where the given source is displayed.
- */
-function getSourceItemForTreeLocation(treeLocation, rootItems) {
-  // Sources without URLs are not visible in the SourceTree
-  const { source, sourceActor } = treeLocation;
-
-  if (!source.url) {
-    return null;
-  }
-  const { displayURL } = source;
-  function findSourceInItem(item, path) {
-    if (item.type == "source") {
-      if (item.source.url == source.url) {
-        return item;
-      }
-      return null;
-    }
-    // Bail out if we the current item doesn't match the source
-    if (item.type == "thread" && item.threadActorID != sourceActor?.thread) {
-      return null;
-    }
-    if (item.type == "group" && displayURL.group != item.groupName) {
-      return null;
-    }
-    if (item.type == "directory" && !path.startsWith(item.path)) {
-      return null;
-    }
-    // Otherwise, walk down the tree if this ancestor item seems to match
-    for (const child of item.children) {
-      const match = findSourceInItem(child, path);
-      if (match) {
-        return match;
-      }
-    }
-
-    return null;
-  }
-  for (const rootItem of rootItems) {
-    // Note that when we are setting a project root, rootItem
-    // may no longer be only Thread Item, but also be Group, Directory or Source Items.
-    const item = findSourceInItem(rootItem, displayURL.path);
-    if (item) {
-      return item;
-    }
-  }
-  return null;
 }
 
 class SourcesTree extends Component {
@@ -114,7 +50,6 @@ class SourcesTree extends Component {
       focused: PropTypes.object,
       projectRoot: PropTypes.string.isRequired,
       selectSource: PropTypes.func.isRequired,
-      selectedTreeLocation: PropTypes.object,
       setExpandedState: PropTypes.func.isRequired,
       rootItems: PropTypes.object.isRequired,
       clearProjectDirectoryRoot: PropTypes.func.isRequired,
@@ -122,39 +57,6 @@ class SourcesTree extends Component {
       setHideOrShowIgnoredSources: PropTypes.func.isRequired,
       hideIgnoredSources: PropTypes.bool.isRequired,
     };
-  }
-
-  // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=1774507
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { selectedTreeLocation } = this.props;
-
-    // We might fail to find the source if its thread is registered late,
-    // so that we should re-search the selected source if state.focused is null.
-    if (
-      nextProps.selectedTreeLocation?.source &&
-      (nextProps.selectedTreeLocation.source != selectedTreeLocation?.source ||
-        (nextProps.selectedTreeLocation.source ===
-          selectedTreeLocation?.source &&
-          nextProps.selectedTreeLocation.sourceActor !=
-            selectedTreeLocation?.sourceActor) ||
-        !this.props.focused)
-    ) {
-      const sourceItem = getSourceItemForTreeLocation(
-        nextProps.selectedTreeLocation,
-        this.props.rootItems
-      );
-      if (sourceItem) {
-        // Walk up the tree to expand all ancestor items up to the root of the tree.
-        const expanded = new Set(this.props.expanded);
-        let parentDirectory = sourceItem;
-        while (parentDirectory) {
-          expanded.add(this.getKey(parentDirectory));
-          parentDirectory = this.getParent(parentDirectory);
-        }
-        this.props.setExpandedState(expanded);
-        this.onFocus(sourceItem);
-      }
-    }
   }
 
   selectSourceItem = item => {
@@ -419,30 +321,8 @@ class SourcesTree extends Component {
   }
 }
 
-function getTreeLocation(state, location) {
-  // In the SourceTree, we never show the pretty printed sources and only
-  // the minified version, so if we are selecting a pretty file, fake selecting
-  // the minified version.
-  if (location?.source.isPrettyPrinted) {
-    const source = getGeneratedSourceByURL(
-      state,
-      getRawSourceURL(location.source.url)
-    );
-    if (source) {
-      return createLocation({
-        source,
-        // A source actor is required by getSourceItemForTreeLocation
-        // in order to know in which thread this source relates to.
-        sourceActor: location.sourceActor,
-      });
-    }
-  }
-  return location;
-}
-
 const mapStateToProps = state => {
   return {
-    selectedTreeLocation: getTreeLocation(state, getSelectedLocation(state)),
     mainThreadHost: getMainThreadHost(state),
     expanded: getExpandedState(state),
     focused: getFocusedSourceItem(state),
