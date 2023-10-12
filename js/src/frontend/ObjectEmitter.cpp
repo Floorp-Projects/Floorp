@@ -840,10 +840,11 @@ bool ClassEmitter::emitBinding() {
   return true;
 }
 
-bool ClassEmitter::emitEnd(Kind kind) {
-  MOZ_ASSERT(classState_ == ClassState::BoundName);
-  //                [stack] CTOR
+#ifdef ENABLE_DECORATORS
+bool ClassEmitter::prepareForDecorators() { return leaveBodyAndInnerScope(); }
+#endif
 
+bool ClassEmitter::leaveBodyAndInnerScope() {
   if (bodyScope_.isSome()) {
     MOZ_ASSERT(bodyTdzCache_.isSome());
 
@@ -863,9 +864,21 @@ bool ClassEmitter::emitEnd(Kind kind) {
     innerScope_.reset();
     tdzCache_.reset();
   } else {
-    MOZ_ASSERT(kind == Kind::Expression);
     MOZ_ASSERT(tdzCache_.isNothing());
   }
+
+  return true;
+}
+
+bool ClassEmitter::emitEnd(Kind kind) {
+  MOZ_ASSERT(classState_ == ClassState::BoundName);
+  //                [stack] CTOR
+
+#ifndef ENABLE_DECORATORS
+  if (!leaveBodyAndInnerScope()) {
+    return false;
+  }
+#endif
 
   if (kind == Kind::Declaration) {
     MOZ_ASSERT(name_);

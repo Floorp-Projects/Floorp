@@ -75,3 +75,12 @@ assertEq(f.x2, true);
 assertThrowsInstanceOf(() => {
   @(() => { return "hello!"; }) class G {}
 }, TypeError), "Returning a value other than undefined or a callable throws.";
+
+assertThrowsInstanceOf(() => {
+  class G {
+    static #dec1() {}
+    static {
+      @G.#dec1 class G {}
+    }
+  }
+}, ReferenceError), "can't access lexical declaration 'G' before initialization";
