@@ -552,10 +552,12 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
   type_ = FrameType::BaselineJS;
   if (frameScript()->hasBaselineScript()) {
     resumePCinCurrentFrame_ = frameScript()->baselineScript()->method()->raw();
-  } else {
+  } else if (!IsPortableBaselineInterpreterEnabled()) {
     MOZ_ASSERT(IsBaselineInterpreterEnabled());
     resumePCinCurrentFrame_ =
         cx->runtime()->jitRuntime()->baselineInterpreter().codeRaw();
+  } else {
+    resumePCinCurrentFrame_ = nullptr;
   }
 }
 
