@@ -391,6 +391,7 @@ void JSString::dumpRepresentationHeader(js::GenericPrinter& out,
     out.put(" (NON ATOM)");
   if (isPermanentAtom()) out.put(" PERMANENT");
   if (flags & LATIN1_CHARS_BIT) out.put(" LATIN1");
+  if (!isAtom() && inStringToAtomCache()) out.put(" IN_STRING_TO_ATOM_CACHE");
   if (flags & INDEX_VALUE_BIT) out.printf(" INDEX_VALUE(%u)", getIndexValue());
   if (!isTenured()) out.put(" NURSERY");
   out.putChar('\n');
