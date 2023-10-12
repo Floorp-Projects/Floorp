@@ -73,7 +73,7 @@ add_task(async function revert() {
 
   Assert.equal(
     gURLBar.value,
-    expectedSearchUrl,
+    UrlbarTestUtils.trimURL(expectedSearchUrl),
     `Urlbar should have the reverted URI ${expectedSearchUrl} as its value.`
   );
 
@@ -112,7 +112,7 @@ add_task(async function revert_and_change_tab() {
   );
   Assert.equal(
     gURLBar.value,
-    expectedSearchUrl,
+    UrlbarTestUtils.trimURL(expectedSearchUrl),
     `Urlbar should have ${expectedSearchUrl} as value.`
   );
 

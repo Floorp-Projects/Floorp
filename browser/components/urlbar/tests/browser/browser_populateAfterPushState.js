@@ -24,7 +24,7 @@ add_task(async function () {
       await locationChangePromise;
       is(
         gURLBar.value,
-        TEST_BASE_URL + "dummy_page2.html",
+        UrlbarTestUtils.trimURL(TEST_BASE_URL + "dummy_page2.html"),
         "Should have updated the URL bar."
       );
     }

@@ -1027,6 +1027,48 @@ export var UrlbarTestUtils = {
   },
 
   /**
+   * Removes the scheme from an url according to user prefs.
+   *
+   * @param {string} url
+   *  The url that is supposed to be sanitizied.
+   * @returns {string}
+   *  The sanitized URL.
+   */
+  trimURL(url) {
+    if (!lazy.UrlbarPrefs.get("trimURLs")) {
+      return url;
+    }
+
+    let sanitizedURL = url;
+
+    if (lazy.UrlbarPrefs.get("trimHttps")) {
+      sanitizedURL = url.replace("https://", "");
+    } else {
+      sanitizedURL = url.replace("http://", "");
+    }
+
+    // Remove empty emphasis markers in case the protocol was trimmed.
+    sanitizedURL = sanitizedURL.replace("<>", "");
+
+    return sanitizedURL;
+  },
+
+  /**
+   * Returns the trimmed protocol with slashes.
+   *
+   * @returns {string} The trimmed protocol including slashes. Returns an empty
+   *                   string, when the protocol trimming is disabled.
+   */
+  getTrimmedProtocolWithSlashes() {
+    if (Services.prefs.getBoolPref("browser.urlbar.trimURLs")) {
+      return Services.prefs.getBoolPref("browser.urlbar.trimHttps")
+        ? "https://"
+        : "http://"; // eslint-disable-this-line @microsoft/sdl/no-insecure-url
+    }
+    return "";
+  },
+
+  /**
    * Exits search mode. If neither `backspace` nor `clickClose` is given, we'll
    * default to backspacing. Can only be used if UrlbarTestUtils has been
    * initialized with init().

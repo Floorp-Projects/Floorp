@@ -45,12 +45,15 @@ add_task(async function detach() {
 
   let win = await detachTab(tabToDetach);
 
-  UrlbarTestUtils.checkFormatting(win, "<https://>example.com</detach>");
+  UrlbarTestUtils.checkFormatting(
+    win,
+    UrlbarTestUtils.trimURL("<https://>example.com</detach>")
+  );
   await BrowserTestUtils.closeWindow(win);
 
   UrlbarTestUtils.checkFormatting(
     window,
-    "<https://>example.com</original-tab>"
+    UrlbarTestUtils.trimURL("<https://>example.com</original-tab>")
   );
   gBrowser.removeTab(originalTab);
 });
@@ -83,7 +86,7 @@ add_task(async function detach_emptyTab() {
   ok(!gURLBar.focused, "urlbar is not focused");
   UrlbarTestUtils.checkFormatting(
     window,
-    "<https://>example.com</original-tab>"
+    UrlbarTestUtils.trimURL("<https://>example.com</original-tab>")
   );
   gBrowser.removeTab(originalTab);
 });

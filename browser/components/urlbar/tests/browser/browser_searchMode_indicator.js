@@ -219,7 +219,7 @@ add_task(async function escapeOnBrowsingPage() {
     Assert.ok(!UrlbarTestUtils.isPopupOpen(window, "UrlbarView is closed."));
     Assert.equal(
       gURLBar.value,
-      "example.com",
+      UrlbarTestUtils.trimURL("http://example.com"),
       "Urlbar value indicates the browsing page."
     );
     await UrlbarTestUtils.assertSearchMode(window, null);
