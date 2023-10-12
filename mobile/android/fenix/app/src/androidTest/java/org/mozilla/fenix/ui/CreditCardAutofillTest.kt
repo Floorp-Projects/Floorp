@@ -88,7 +88,7 @@ class CreditCardAutofillTest {
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
             clickPageObject(
                 itemWithResIdContainingText(
@@ -200,7 +200,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
         }.clickManageCreditCardsButton {
         }.goBackToBrowser {
@@ -231,7 +231,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             verifySelectCreditCardPromptExists(true)
         }.openThreeDotMenu {
         }.openSettings {
@@ -244,7 +244,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             verifySelectCreditCardPromptExists(false)
         }
     }
@@ -321,7 +321,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
             clickPageObject(
                 itemWithResIdContainingText(
@@ -408,7 +408,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
             verifyCreditCardSuggestion(
                 MockCreditCard1.MOCK_LAST_CARD_DIGITS,
@@ -498,7 +498,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
             clickPageObject(
                 itemWithResIdContainingText(
@@ -549,7 +549,7 @@ class CreditCardAutofillTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickPageObject(itemWithResId("cardNumber"))
+            clickCreditCardNumberTextBox()
             clickPageObject(itemWithResId("$packageName:id/select_credit_card_header"))
             clickPageObject(
                 itemWithResIdContainingText(
