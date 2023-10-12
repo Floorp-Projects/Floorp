@@ -213,8 +213,10 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   Offset fallbackStubsOffset() const { return fallbackStubsOffset_; }
   Offset endOffset() const { return endOffset_; }
 
+ public:
   ICEntry* icEntries() { return offsetToPointer<ICEntry>(icEntriesOffset()); }
 
+ private:
   ICFallbackStub* fallbackStubs() {
     return offsetToPointer<ICFallbackStub>(fallbackStubsOffset());
   }
