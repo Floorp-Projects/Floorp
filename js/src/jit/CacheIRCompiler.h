@@ -1372,11 +1372,35 @@ class CacheIRStubInfo {
     return getStubField<ICCacheIRStub, type>(stub, offset);
   }
 
-  uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const;
-  uintptr_t getStubRawWord(ICCacheIRStub* stub, uint32_t offset) const;
+  uintptr_t getStubRawWord(const uint8_t* stubData, uint32_t offset) const {
+    MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
+    return *reinterpret_cast<const uintptr_t*>(stubData + offset);
+  }
 
-  int64_t getStubRawInt64(const uint8_t* stubData, uint32_t offset) const;
-  int64_t getStubRawInt64(ICCacheIRStub* stub, uint32_t offset) const;
+  uintptr_t getStubRawWord(ICCacheIRStub* stub, uint32_t offset) const {
+    uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+    return getStubRawWord(stubData, offset);
+  }
+
+  int32_t getStubRawInt32(const uint8_t* stubData, uint32_t offset) const {
+    MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(int32_t) == 0);
+    return *reinterpret_cast<const int32_t*>(stubData + offset);
+  }
+
+  int32_t getStubRawInt32(ICCacheIRStub* stub, uint32_t offset) const {
+    uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+    return getStubRawInt32(stubData, offset);
+  }
+
+  int64_t getStubRawInt64(const uint8_t* stubData, uint32_t offset) const {
+    MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(int64_t) == 0);
+    return *reinterpret_cast<const int64_t*>(stubData + offset);
+  }
+
+  int64_t getStubRawInt64(ICCacheIRStub* stub, uint32_t offset) const {
+    uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
+    return getStubRawInt64(stubData, offset);
+  }
 
   void replaceStubRawWord(uint8_t* stubData, uint32_t offset, uintptr_t oldWord,
                           uintptr_t newWord) const;
