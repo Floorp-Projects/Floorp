@@ -350,7 +350,6 @@ class SourcesTree extends Component {
       getParent: this.getParent,
       getKey: this.getKey,
       getRoots: this.getRoots,
-      itemHeight: 21,
       key: this.isEmpty() ? "empty" : "full",
       onCollapse: this.onCollapse,
       onExpand: this.onExpand,

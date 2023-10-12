@@ -345,7 +345,6 @@ export class ProjectSearch extends Component {
       return React.createElement(Tree, {
         getRoots: () => results,
         getChildren: file => file.matches || [],
-        itemHeight: 24,
         autoExpandAll: true,
         autoExpandDepth: 1,
         autoExpandNodeChildrenLimit: 100,
