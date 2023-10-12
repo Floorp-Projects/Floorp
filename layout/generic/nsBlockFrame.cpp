@@ -1471,12 +1471,13 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
 
   // Helpers for text-wrap: balance implementation:
 
-  // Count the number of lines in the mLines list, but return -1 instead if the
-  // count is going to exceed aLimit.
+  // Count the number of lines in the mLines list, but return -1 (to suppress
+  // balancing) instead if the count is going to exceed aLimit, or if we
+  // encounter a block.
   auto countLinesUpTo = [&](int32_t aLimit) -> int32_t {
     int32_t n = 0;
     for (auto iter = mLines.begin(); iter != mLines.end(); ++iter) {
-      if (++n > aLimit) {
+      if (++n > aLimit || iter->IsBlock()) {
         return -1;
       }
     }
