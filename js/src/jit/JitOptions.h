@@ -63,6 +63,9 @@ struct DefaultJitOptions {
   bool disableRedundantShapeGuards;
   bool disableRedundantGCBarriers;
   bool disableBailoutLoopCheck;
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+  bool portableBaselineInterpreter;
+#endif
   bool baselineInterpreter;
   bool baselineJit;
   bool ion;
@@ -93,6 +96,9 @@ struct DefaultJitOptions {
   uint32_t trialInliningInitialWarmUpCount;
   uint32_t normalIonWarmUpThreshold;
   uint32_t regexpWarmUpThreshold;
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+  uint32_t portableBaselineInterpreterWarmUpThreshold;
+#endif
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
@@ -141,6 +147,9 @@ struct DefaultJitOptions {
 
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+  void setEagerPortableBaselineInterpreter();
+#endif
   void setEagerBaselineCompilation();
   void setEagerIonCompilation();
   void setNormalIonWarmUpThreshold(uint32_t warmUpThreshold);
@@ -166,6 +175,12 @@ inline bool HasJitBackend() {
 inline bool IsBaselineInterpreterEnabled() {
   return HasJitBackend() && JitOptions.baselineInterpreter;
 }
+
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+inline bool IsPortableBaselineInterpreterEnabled() {
+  return JitOptions.portableBaselineInterpreter;
+}
+#endif
 
 inline bool TooManyActualArguments(size_t nargs) {
   return nargs > JitOptions.maxStackArgs;
