@@ -142,6 +142,8 @@ skip-if = ["verify"]
 
 ["browser_user_input_handling_delay_bfcache.js"]
 
+["browser_user_input_handling_delay_invisible_iframe.js"]
+
 ["browser_user_input_handling_delay_reload_ticks.js"]
 
 ["browser_xml_toggle.js"]
