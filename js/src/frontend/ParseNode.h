@@ -2239,6 +2239,8 @@ class CallNode : public BinaryNode {
 };
 
 class ClassMethod : public BinaryNode {
+  using Base = BinaryNode;
+
   bool isStatic_;
   AccessorType accessorType_;
   FunctionNode* initializerIfPrivate_;
@@ -2293,10 +2295,17 @@ class ClassMethod : public BinaryNode {
 
 #ifdef ENABLE_DECORATORS
   ListNode* decorators() const { return decorators_; }
+
+#  ifdef DEBUG
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
+#  endif
 #endif
 };
 
 class ClassField : public BinaryNode {
+  using Base = BinaryNode;
+
   bool isStatic_;
 #ifdef ENABLE_DECORATORS
   // The accessorGetterNode_ and accessorSetterNode_ are used to store the
@@ -2357,6 +2366,11 @@ class ClassField : public BinaryNode {
   }
   ClassMethod* accessorGetterNode() { return accessorGetterNode_; }
   ClassMethod* accessorSetterNode() { return accessorSetterNode_; }
+
+#  ifdef DEBUG
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
+#  endif
 #endif
 };
 
@@ -2476,6 +2490,8 @@ class ClassNames : public BinaryNode {
 };
 
 class ClassNode : public TernaryNode {
+  using Base = TernaryNode;
+
  private:
   LexicalScopeNode* innerScope() const {
     return &kid3()->as<LexicalScopeNode>();
@@ -2531,6 +2547,11 @@ class ClassNode : public TernaryNode {
   }
 #ifdef ENABLE_DECORATORS
   ListNode* decorators() const { return decorators_; }
+
+#  ifdef DEBUG
+  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
+                int indent);
+#  endif
 #endif
 };
 

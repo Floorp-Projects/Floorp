@@ -395,6 +395,33 @@ void BaseScopeNode<Kind, ScopeType>::dumpImpl(
   ::DumpParseTree(parserAtoms, scopeBody(), out, indent);
   out.printf(")");
 }
+
+#  ifdef ENABLE_DECORATORS
+void ClassMethod::dumpImpl(const ParserAtomsTable* parserAtoms,
+                           GenericPrinter& out, int indent) {
+  if (decorators_) {
+    decorators_->dumpImpl(parserAtoms, out, indent);
+  }
+  Base::dumpImpl(parserAtoms, out, indent);
+}
+
+void ClassField::dumpImpl(const ParserAtomsTable* parserAtoms,
+                          GenericPrinter& out, int indent) {
+  if (decorators_) {
+    decorators_->dumpImpl(parserAtoms, out, indent);
+  }
+  Base::dumpImpl(parserAtoms, out, indent);
+}
+
+void ClassNode::dumpImpl(const ParserAtomsTable* parserAtoms,
+                         GenericPrinter& out, int indent) {
+  if (decorators_) {
+    decorators_->dumpImpl(parserAtoms, out, indent);
+  }
+  Base::dumpImpl(parserAtoms, out, indent);
+}
+#  endif
+
 #endif
 
 TaggedParserAtomIndex NumericLiteral::toAtom(
