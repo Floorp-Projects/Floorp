@@ -44,8 +44,7 @@ addLoadEvent(function() {
     window.addEventListener(
       event,
       makeHandler("window.addEventListener('%1', ..., false)",
-                  event, [2]),
-      false);
+                  event, [2]));
   }
 
   doTest();
