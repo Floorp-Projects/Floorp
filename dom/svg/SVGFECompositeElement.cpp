@@ -21,10 +21,10 @@ JSObject* SVGFECompositeElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
-    {nsGkAtoms::k1, 0, false},
-    {nsGkAtoms::k2, 0, false},
-    {nsGkAtoms::k3, 0, false},
-    {nsGkAtoms::k4, 0, false}};
+    {nsGkAtoms::k1, 0},
+    {nsGkAtoms::k2, 0},
+    {nsGkAtoms::k3, 0},
+    {nsGkAtoms::k4, 0}};
 
 SVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
     {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},

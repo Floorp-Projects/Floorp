@@ -26,7 +26,7 @@ JSObject* SVGFEConvolveMatrixElement::WrapNode(
 }
 
 SVGElement::NumberInfo SVGFEConvolveMatrixElement::sNumberInfo[2] = {
-    {nsGkAtoms::divisor, 1, false}, {nsGkAtoms::bias, 0, false}};
+    {nsGkAtoms::divisor, 1}, {nsGkAtoms::bias, 0}};
 
 SVGElement::NumberPairInfo SVGFEConvolveMatrixElement::sNumberPairInfo[1] = {
     {nsGkAtoms::kernelUnitLength, 0, 0}};
