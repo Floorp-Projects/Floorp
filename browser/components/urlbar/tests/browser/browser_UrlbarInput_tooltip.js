@@ -61,6 +61,9 @@ async function expectNoTooltip() {
 
 add_task(async function () {
   window.windowUtils.disableNonTestMouseEvents(true);
+  registerCleanupFunction(() => {
+    window.windowUtils.disableNonTestMouseEvents(false);
+  });
 
   // Ensure the URL bar is neither focused nor hovered before we start.
   gBrowser.selectedBrowser.focus();
@@ -73,7 +76,7 @@ add_task(async function () {
   gURLBar.value = longURL;
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(longURL),
+    longURL.replace(/^http:\/\//, ""),
     "Urlbar value has http:// stripped"
   );
   await expectTooltip(longURL);

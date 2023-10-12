@@ -12,12 +12,11 @@ const TEST_DATA = [
   },
   {
     input: "https:\n//\nexample.\ncom",
-    expected: UrlbarTestUtils.trimURL("https://example.com"),
+    expected: "https://example.com",
   },
   {
     input: "http:\n//\nexample.\ncom",
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    expected: UrlbarTestUtils.trimURL("http://example.com"),
+    expected: "example.com",
   },
   {
     input: "javasc\nript:\nalert(1)",
