@@ -1298,6 +1298,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.print_page:
         printPage(session);
         break;
+      case R.id.request_shopping_analysis:
+        requestAnalysis(session, mCurrentUri);
+        break;
       case R.id.create_shopping_analysis:
         requestCreateAnalysis(session, mCurrentUri);
         break;
@@ -2245,7 +2248,12 @@ public class GeckoViewActivity extends AppCompatActivity
   }
 
   public void requestAnalysis(@NonNull final GeckoSession session, @NonNull final String url) {
-    session.requestAnalysis(url);
+    GeckoResult<GeckoSession.ReviewAnalysis> result = session.requestAnalysis(url);
+    result.map(
+        analysis -> {
+          Log.d(LOGTAG, "Requested shopping analysis: " + analysis);
+          return analysis;
+        });
   }
 
   public void requestCreateAnalysis(

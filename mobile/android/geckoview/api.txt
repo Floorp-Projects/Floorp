@@ -1665,6 +1665,7 @@ package org.mozilla.geckoview {
     field @Nullable public final GeckoSession.ReviewAnalysis.Highlight highlights;
     field public final long lastAnalysisTime;
     field public final boolean needsAnalysis;
+    field public final boolean pageNotSupported;
     field @Nullable public final String productId;
   }
 
@@ -1679,6 +1680,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder highlights(@Nullable GeckoSession.ReviewAnalysis.Highlight);
     method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder lastAnalysisTime(long);
     method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder needsAnalysis(@NonNull Boolean);
+    method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder pageNotSupported(@NonNull Boolean);
     method @AnyThread @NonNull public GeckoSession.ReviewAnalysis.Builder productId(@Nullable String);
   }
 
