@@ -315,7 +315,7 @@ if CONFIG["OS_ARCH"] == "OpenBSD":
     ]
 
 if CONFIG["MOZ_ENABLE_DBUS"]:
-    OS_LIBS += CONFIG["MOZ_DBUS_GLIB_LIBS"]
+    OS_LIBS += CONFIG["MOZ_DBUS_LIBS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["COMPILE_ENVIRONMENT"]:
     OS_LIBS += [l for l in CONFIG["MOZ_GTK3_LIBS"] if l not in ("-lgtk-3", "-lgdk-3")]

@@ -18,7 +18,6 @@ if CONFIG["MOZ_ENABLE_DBUS"]:
     SOURCES += ["GeoclueLocationProvider.cpp"]
     SOURCES += ["PortalLocationProvider.cpp"]
     LOCAL_INCLUDES += ["/dom/geolocation"]
-    CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]
 
 FINAL_LIBRARY = "xul"
