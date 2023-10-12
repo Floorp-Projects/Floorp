@@ -74,7 +74,7 @@ class InactiveCssTooltipHelper {
    */
   getTemplate(data, tooltip) {
     const XHTML_NS = "http://www.w3.org/1999/xhtml";
-    const { fixId, msgId, property, display, learnMoreURL } = data;
+    const { fixId, msgId, property, display, lineCount, learnMoreURL } = data;
     const { doc } = tooltip;
 
     const documentUrl = new URL(
@@ -92,7 +92,7 @@ class InactiveCssTooltipHelper {
     templateNode.innerHTML = `
     <div class="devtools-tooltip-inactive-css">
       <p data-l10n-id="${msgId}"
-         data-l10n-args='${JSON.stringify({ property, display })}'>
+         data-l10n-args='${JSON.stringify({ property, display, lineCount })}'>
       </p>
       <p data-l10n-id="${fixId}">
         <span data-l10n-name="link" class="link"></span>
