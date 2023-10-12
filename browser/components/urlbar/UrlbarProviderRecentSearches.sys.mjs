@@ -83,16 +83,16 @@ class ProviderRecentSearches extends UrlbarProvider {
       source: engine.name,
     });
 
-    if (results.length > lazy.UrlbarPrefs.get("recentsearches.maxResults")) {
-      results.length = lazy.UrlbarPrefs.get("recentsearches.maxResults");
-    }
-
     let expiration =
       1000 * 60 * 60 * 24 * lazy.UrlbarPrefs.get(EXPIRATION_PREF);
     results = results.filter(
       result => result.lastUsed / 1000 > Date.now() - expiration
     );
     results.sort((a, b) => b.lastUsed - a.lastUsed);
+
+    if (results.length > lazy.UrlbarPrefs.get("recentsearches.maxResults")) {
+      results.length = lazy.UrlbarPrefs.get("recentsearches.maxResults");
+    }
 
     for (let result of results) {
       let res = new lazy.UrlbarResult(

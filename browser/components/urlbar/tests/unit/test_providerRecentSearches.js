@@ -18,6 +18,15 @@ function makeRecentSearchResult(context, engine, suggestion) {
   return result;
 }
 
+async function addSearches(searches = TEST_SEARCHES) {
+  await UrlbarTestUtils.formHistory.add(
+    searches.map(value => ({
+      value,
+      source: defaultEngine.name,
+    }))
+  );
+}
+
 add_setup(async () => {
   defaultEngine = await addTestSuggestionsEngine();
   await Services.search.setDefault(
@@ -27,21 +36,17 @@ add_setup(async () => {
 
   let oldCurrentEngine = Services.search.defaultEngine;
 
-  await UrlbarTestUtils.formHistory.add(
-    TEST_SEARCHES.map(value => ({
-      value,
-      source: defaultEngine.name,
-    }))
-  );
-
   registerCleanupFunction(() => {
     Services.search.defaultEngine = oldCurrentEngine;
+    Services.prefs.clearUserPref(RECENTSEARCHES_ENABLED_PREF);
+    Services.prefs.clearUserPref(RECENTSEARCHES_SUGGESTS_PREF);
   });
 });
 
 add_task(async function test_enabled() {
   Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
   Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+  await addSearches();
   let context = createContext("", { isPrivate: false });
   await check_results({
     context,
@@ -51,15 +56,32 @@ add_task(async function test_enabled() {
       makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
     ],
   });
-  Services.prefs.clearUserPref(RECENTSEARCHES_ENABLED_PREF);
-  Services.prefs.clearUserPref(RECENTSEARCHES_SUGGESTS_PREF);
 });
 
 add_task(async function test_disabled() {
   Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, false);
   Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, false);
+  await addSearches();
   await check_results({
     context: createContext("", { isPrivate: false }),
     matches: [],
+  });
+});
+
+add_task(async function test_most_recent_shown() {
+  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
+  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+
+  await addSearches(Array.from(Array(10).keys()).map(i => `Search ${i}`));
+  let context = createContext("", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeRecentSearchResult(context, defaultEngine, "Search 9"),
+      makeRecentSearchResult(context, defaultEngine, "Search 8"),
+      makeRecentSearchResult(context, defaultEngine, "Search 7"),
+      makeRecentSearchResult(context, defaultEngine, "Search 6"),
+      makeRecentSearchResult(context, defaultEngine, "Search 5"),
+    ],
   });
 });
