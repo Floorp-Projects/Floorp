@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "name": "Chrome",
+      "schema": 1696637108664,
+      "status": "nightly",
+      "version": "120",
+      "browserid": "chrome",
+      "id": "cf6b3ef6-f749-47bb-abe0-81bd0f134ff9",
+      "last_modified": 1696863920660
+    },
+    {
+      "name": "Chrome",
+      "schema": 1696637108722,
+      "status": "planned",
+      "version": "121",
+      "browserid": "chrome",
+      "id": "5693902f-f878-4936-984d-044b573430a6",
+      "last_modified": 1696863920657
+    },
+    {
+      "name": "Opera",
+      "schema": 1696637108907,
+      "status": "beta",
+      "version": "104",
+      "browserid": "opera",
+      "id": "513fd25f-3df1-4785-875b-766683e3445b",
+      "last_modified": 1696863920654
+    },
+    {
+      "name": "Safari",
+      "schema": 1696637108964,
+      "status": "beta",
+      "version": "17.1",
+      "browserid": "safari",
+      "id": "d517252f-b545-46e6-ab30-6ff27c72b32a",
+      "last_modified": 1696863920651
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1696637109022,
+      "status": "beta",
+      "version": "17.1",
+      "browserid": "safari_ios",
+      "id": "af9852bc-ad45-481d-a3b5-f8854224f568",
+      "last_modified": 1696863920647
+    },
+    {
+      "name": "Chrome",
+      "schema": 1696637108258,
+      "status": "current",
+      "version": "118",
+      "browserid": "chrome",
+      "id": "258f1f77-a3c6-43d5-99c6-f9e58c8c3fef",
+      "last_modified": 1696863920639
+    },
+    {
+      "name": "Chrome",
+      "schema": 1696637108602,
+      "status": "beta",
+      "version": "119",
+      "browserid": "chrome",
+      "id": "d8e663e0-6298-4339-9234-343ecfb2f40d",
+      "last_modified": 1696863920636
+    },
+    {
+      "name": "Opera",
+      "schema": 1696637108846,
+      "status": "current",
+      "version": "103",
+      "browserid": "opera",
+      "id": "aa7dd3da-4f83-4dce-84de-784409ffeed7",
+      "last_modified": 1696863920633
+    },
+    {
       "name": "Firefox for Android",
       "schema": 1696377903863,
       "status": "nightly",
@@ -73,24 +145,6 @@
       "last_modified": 1695880503554
     },
     {
-      "name": "Opera",
-      "schema": 1695859508717,
-      "status": "current",
-      "version": "102",
-      "browserid": "opera",
-      "id": "fc5303f1-32a1-4ff8-b9b2-46a37cfae839",
-      "last_modified": 1695880503551
-    },
-    {
-      "name": "Opera",
-      "schema": 1695859508786,
-      "status": "beta",
-      "version": "103",
-      "browserid": "opera",
-      "id": "aa7dd3da-4f83-4dce-84de-784409ffeed7",
-      "last_modified": 1695880503547
-    },
-    {
       "name": "Safari on iOS",
       "schema": 1695859508984,
       "status": "current",
@@ -145,15 +199,6 @@
       "last_modified": 1695282430511
     },
     {
-      "name": "Chrome",
-      "schema": 1694690135724,
-      "status": "planned",
-      "version": "119",
-      "browserid": "chrome",
-      "id": "d8e663e0-6298-4339-9234-343ecfb2f40d",
-      "last_modified": 1695115973103
-    },
-    {
       "name": "Chrome Android",
       "schema": 1695036260807,
       "status": "planned",
@@ -181,15 +226,6 @@
       "last_modified": 1692814731159
     },
     {
-      "name": "Chrome",
-      "schema": 1692797055536,
-      "status": "nightly",
-      "version": "118",
-      "browserid": "chrome",
-      "id": "258f1f77-a3c6-43d5-99c6-f9e58c8c3fef",
-      "last_modified": 1692814731157
-    },
-    {
       "name": "Firefox",
       "schema": 1692797056261,
       "status": "esr",
@@ -197,15 +233,6 @@
       "browserid": "firefox",
       "id": "f8bed161-4be5-435b-9b42-7a7eafd672b7",
       "last_modified": 1692814731149
-    },
-    {
-      "name": "Chrome",
-      "schema": 1692797055441,
-      "status": "beta",
-      "version": "117",
-      "browserid": "chrome",
-      "id": "4a76576f-c18f-4838-a852-53aa632fff3d",
-      "last_modified": 1692814731136
     },
     {
       "name": "Chrome Android",
@@ -242,15 +269,6 @@
       "browserid": "chrome_android",
       "id": "273b8828-7fec-44b7-a60b-6c76c7241986",
       "last_modified": 1692814731119
-    },
-    {
-      "name": "Chrome",
-      "schema": 1692797055355,
-      "status": "current",
-      "version": "116",
-      "browserid": "chrome",
-      "id": "02404c04-3a0c-4b9a-9af6-a77c9327bf58",
-      "last_modified": 1692814731116
     },
     {
       "name": "Edge",
@@ -325,5 +343,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1696403012472
+  "timestamp": 1696863920660
 }
