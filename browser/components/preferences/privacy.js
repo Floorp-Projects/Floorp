@@ -230,7 +230,8 @@ Preferences.addAll([
 
   // Cookie Banner Handling
   { id: "cookiebanners.ui.desktop.enabled", type: "bool" },
-  { id: "cookiebanners.service.mode.privateBrowsing", type: "int" },
+  { id: "cookiebanners.service.mode", type: "int" },
+  { id: "cookiebanners.service.detectOnly", type: "bool" },
 
   // DoH
   { id: "network.trr.mode", type: "int" },
@@ -2508,12 +2509,15 @@ var gPrivacyPane = {
   },
 
   /**
-   * Reads the cookiebanners.service.mode.privateBrowsing pref,
-   * interpreting the multiple modes as a true/false value
+   * Reads the cookiebanners.service.mode and detectOnly preference value and
+   * updates the cookie banner handling checkbox accordingly.
    */
   readCookieBannerMode() {
+    if (Preferences.get("cookiebanners.service.detectOnly").value) {
+      return false;
+    }
     return (
-      Preferences.get("cookiebanners.service.mode.privateBrowsing").value !=
+      Preferences.get("cookiebanners.service.mode").value !=
       Ci.nsICookieBannerService.MODE_DISABLED
     );
   },
@@ -2524,16 +2528,27 @@ var gPrivacyPane = {
    */
   writeCookieBannerMode() {
     let checkbox = document.getElementById("handleCookieBanners");
-    if (!checkbox.checked) {
-      /* because we removed UI control for the non-PBM pref, disabling it here
-         provides an off-ramp for profiles where it had previously been enabled from the UI */
-      Services.prefs.setIntPref(
-        "cookiebanners.service.mode",
-        Ci.nsICookieBannerService.MODE_DISABLED
-      );
-      return Ci.nsICookieBannerService.MODE_DISABLED;
+    let mode;
+    if (checkbox.checked) {
+      mode = Ci.nsICookieBannerService.MODE_REJECT;
+
+      // Also unset the detect-only mode pref, just in case the user enabled
+      // the feature via about:preferences, not the onboarding doorhanger.
+      Services.prefs.setBoolPref("cookiebanners.service.detectOnly", false);
+    } else {
+      mode = Ci.nsICookieBannerService.MODE_DISABLED;
     }
-    return Ci.nsICookieBannerService.MODE_REJECT;
+
+    /**
+     * There is a second service.mode pref for private browsing,
+     * but for now we want it always be the same as service.mode
+     * more info: https://bugzilla.mozilla.org/show_bug.cgi?id=1817201
+     */
+    Services.prefs.setIntPref(
+      "cookiebanners.service.mode.privateBrowsing",
+      mode
+    );
+    return mode;
   },
 
   /**
