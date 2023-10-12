@@ -5,6 +5,7 @@ prefs = [
   # Disable the fakespot feature callouts to avoid interference. Individual tests
   # that need them can re-enable them as needed.
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features=false",
+  "toolkit.shopping.environment=test",
 ]
 support-files = [
   "head.js",

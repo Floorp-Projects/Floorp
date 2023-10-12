@@ -38,31 +38,23 @@ const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 const TELEMETRY_SCALARS = {
   BLOCK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.block_dynamic_wikipedia`,
   BLOCK_NONSPONSORED: `${TELEMETRY_PREFIX}.block_nonsponsored`,
-  BLOCK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_nonsponsored_bestmatch`,
   BLOCK_SPONSORED: `${TELEMETRY_PREFIX}.block_sponsored`,
-  BLOCK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_sponsored_bestmatch`,
   CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
   CLICK_NAV_NOTMATCHED: `${TELEMETRY_PREFIX}.click_nav_notmatched`,
   CLICK_NAV_SHOWN_HEURISTIC: `${TELEMETRY_PREFIX}.click_nav_shown_heuristic`,
   CLICK_NAV_SHOWN_NAV: `${TELEMETRY_PREFIX}.click_nav_shown_nav`,
   CLICK_NAV_SUPERCEDED: `${TELEMETRY_PREFIX}.click_nav_superceded`,
   CLICK_NONSPONSORED: `${TELEMETRY_PREFIX}.click_nonsponsored`,
-  CLICK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_nonsponsored_bestmatch`,
   CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
-  CLICK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_sponsored_bestmatch`,
   HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
-  HELP_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_nonsponsored_bestmatch`,
   HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
-  HELP_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_sponsored_bestmatch`,
   IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
   IMPRESSION_NAV_NOTMATCHED: `${TELEMETRY_PREFIX}.impression_nav_notmatched`,
   IMPRESSION_NAV_SHOWN: `${TELEMETRY_PREFIX}.impression_nav_shown`,
   IMPRESSION_NAV_SUPERCEDED: `${TELEMETRY_PREFIX}.impression_nav_superceded`,
   IMPRESSION_NONSPONSORED: `${TELEMETRY_PREFIX}.impression_nonsponsored`,
-  IMPRESSION_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_nonsponsored_bestmatch`,
   IMPRESSION_SPONSORED: `${TELEMETRY_PREFIX}.impression_sponsored`,
-  IMPRESSION_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_sponsored_bestmatch`,
 };
 
 /**
@@ -384,17 +376,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
     result.payload.icon ||= suggestion.icon;
     result.payload.iconBlob ||= suggestion.icon_blob;
 
+    // Set the appropriate suggested index and related properties unless the
+    // feature did it already.
     if (!result.hasSuggestedIndex) {
-      // When `bestMatchEnabled` is true, a "Top pick" checkbox appears in
-      // about:preferences. Show top pick suggestions as top picks only if that
-      // checkbox is checked. `suggest.bestMatch` is the corresponding pref. If
-      // `bestMatchEnabled` is false, the top pick feature is disabled, so show
-      // the suggestion as a usual Suggest result.
-      if (
-        suggestion.is_top_pick &&
-        lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-        lazy.UrlbarPrefs.get("suggest.bestmatch")
-      ) {
+      if (suggestion.is_top_pick) {
         result.isBestMatch = true;
         result.isRichSuggestion = true;
         result.richSuggestionIconSize ||= 52;
@@ -586,21 +571,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
               break;
           }
         }
-        if (result.isBestMatch) {
-          scalars.push(TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH);
-          if (resultClicked) {
-            scalars.push(TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH);
-          } else {
-            switch (resultSelType) {
-              case "help":
-                scalars.push(TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH);
-                break;
-              case "dismiss":
-                scalars.push(TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH);
-                break;
-            }
-          }
-        }
         break;
       case "adm_sponsored":
         scalars.push(TELEMETRY_SCALARS.IMPRESSION_SPONSORED);
@@ -614,21 +584,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
             case "dismiss":
               scalars.push(TELEMETRY_SCALARS.BLOCK_SPONSORED);
               break;
-          }
-        }
-        if (result.isBestMatch) {
-          scalars.push(TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH);
-          if (resultClicked) {
-            scalars.push(TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH);
-          } else {
-            switch (resultSelType) {
-              case "help":
-                scalars.push(TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH);
-                break;
-              case "dismiss":
-                scalars.push(TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH);
-                break;
-            }
           }
         }
         break;

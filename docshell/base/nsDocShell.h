@@ -450,7 +450,8 @@ class nsDocShell final : public nsDocLoader,
       const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
       bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
       bool aNotifyKeywordSearchLoading = false,
-      nsIInputStream** aNewPostData = nullptr);
+      nsIInputStream** aNewPostData = nullptr,
+      bool* outWasSchemelessInput = nullptr);
 
   static already_AddRefed<nsIURI> MaybeFixBadCertDomainErrorURI(
       nsIChannel* aChannel, nsIURI* aUrl);

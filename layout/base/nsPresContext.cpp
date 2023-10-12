@@ -615,18 +615,6 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
 
-  // We will end up calling InvalidatePreferenceSheets one from each pres
-  // context, but all it's doing is clearing its cached sheet pointers, so it
-  // won't be wastefully recreating the sheet multiple times.
-  //
-  // The first pres context that flushes will be the one to cause the
-  // reconstruction of the pref style sheet via the UpdatePreferenceStyles call
-  // in FlushPendingNotifications.
-  if (GlobalStyleSheetCache::AffectedByPref(prefName)) {
-    restyleHint |= RestyleHint::RestyleSubtree();
-    GlobalStyleSheetCache::InvalidatePreferenceSheets();
-  }
-
   if (PreferenceSheet::AffectedByPref(prefName)) {
     restyleHint |= RestyleHint::RestyleSubtree();
     PreferenceSheet::Refresh();
@@ -1300,6 +1288,13 @@ void nsPresContext::MaybeIncreaseMeasuredTicksSinceLoading() {
     }
   }
 }
+
+bool nsPresContext::NeedsMoreTicksForUserInput() const {
+  MOZ_ASSERT(IsRoot());
+  return mMeasuredTicksSinceLoading <
+         StaticPrefs::dom_input_events_security_minNumTicks();
+}
+
 // Helper function for setting Anim Mode on image
 static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, uint16_t aMode) {
   if (aImgReq) {

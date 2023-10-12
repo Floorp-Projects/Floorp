@@ -4,111 +4,125 @@ Miscellaneous utility functions -- anything that doesn't fit into
 one of the other *util.py modules.
 """
 
+import importlib.util
 import os
 import re
-import importlib.util
 import string
+import subprocess
 import sys
-from distutils.errors import DistutilsPlatformError
-from distutils.dep_util import newer
-from distutils.spawn import spawn
-from distutils import log
-from distutils.errors import DistutilsByteCompileError
-from .py35compat import _optim_args_from_interpreter_flags
+import sysconfig
+import functools
+
+from .errors import DistutilsPlatformError, DistutilsByteCompileError
+from .dep_util import newer
+from .spawn import spawn
+from ._log import log
 
 
 def get_host_platform():
-    """Return a string that identifies the current platform.  This is used mainly to
-    distinguish platform-specific build directories and platform-specific built
-    distributions.  Typically includes the OS name and version and the
-    architecture (as supplied by 'os.uname()'), although the exact information
-    included depends on the OS; eg. on Linux, the kernel version isn't
-    particularly important.
-
-    Examples of returned values:
-       linux-i586
-       linux-alpha (?)
-       solaris-2.6-sun4u
-
-    Windows will return one of:
-       win-amd64 (64bit Windows on AMD64 (aka x86_64, Intel64, EM64T, etc)
-       win32 (all others - specifically, sys.platform is returned)
-
-    For other non-POSIX platforms, currently just returns 'sys.platform'.
-
     """
-    if os.name == 'nt':
-        if 'amd64' in sys.version.lower():
-            return 'win-amd64'
-        if '(arm)' in sys.version.lower():
-            return 'win-arm32'
-        if '(arm64)' in sys.version.lower():
-            return 'win-arm64'
-        return sys.platform
+    Return a string that identifies the current platform. Use this
+    function to distinguish platform-specific build directories and
+    platform-specific built distributions.
+    """
 
-    # Set for cross builds explicitly
-    if "_PYTHON_HOST_PLATFORM" in os.environ:
-        return os.environ["_PYTHON_HOST_PLATFORM"]
+    # This function initially exposed platforms as defined in Python 3.9
+    # even with older Python versions when distutils was split out.
+    # Now it delegates to stdlib sysconfig, but maintains compatibility.
 
-    if os.name != "posix" or not hasattr(os, 'uname'):
-        # XXX what about the architecture? NT is Intel or Alpha,
-        # Mac OS is M68k or PPC, etc.
-        return sys.platform
+    if sys.version_info < (3, 8):
+        if os.name == 'nt':
+            if '(arm)' in sys.version.lower():
+                return 'win-arm32'
+            if '(arm64)' in sys.version.lower():
+                return 'win-arm64'
 
-    # Try to distinguish various flavours of Unix
+    if sys.version_info < (3, 9):
+        if os.name == "posix" and hasattr(os, 'uname'):
+            osname, host, release, version, machine = os.uname()
+            if osname[:3] == "aix":
+                from .py38compat import aix_platform
 
-    (osname, host, release, version, machine) = os.uname()
+                return aix_platform(osname, version, release)
 
-    # Convert the OS name to lowercase, remove '/' characters, and translate
-    # spaces (for "Power Macintosh")
-    osname = osname.lower().replace('/', '')
-    machine = machine.replace(' ', '_')
-    machine = machine.replace('/', '-')
+    return sysconfig.get_platform()
 
-    if osname[:5] == "linux":
-        # At least on Linux/Intel, 'machine' is the processor --
-        # i386, etc.
-        # XXX what about Alpha, SPARC, etc?
-        return  "%s-%s" % (osname, machine)
-    elif osname[:5] == "sunos":
-        if release[0] >= "5":           # SunOS 5 == Solaris 2
-            osname = "solaris"
-            release = "%d.%s" % (int(release[0]) - 3, release[2:])
-            # We can't use "platform.architecture()[0]" because a
-            # bootstrap problem. We use a dict to get an error
-            # if some suspicious happens.
-            bitness = {2147483647:"32bit", 9223372036854775807:"64bit"}
-            machine += ".%s" % bitness[sys.maxsize]
-        # fall through to standard osname-release-machine representation
-    elif osname[:3] == "aix":
-        from .py38compat import aix_platform
-        return aix_platform(osname, version, release)
-    elif osname[:6] == "cygwin":
-        osname = "cygwin"
-        rel_re = re.compile (r'[\d.]+', re.ASCII)
-        m = rel_re.match(release)
-        if m:
-            release = m.group()
-    elif osname[:6] == "darwin":
-        import _osx_support, distutils.sysconfig
-        osname, release, machine = _osx_support.get_platform_osx(
-                                        distutils.sysconfig.get_config_vars(),
-                                        osname, release, machine)
-
-    return "%s-%s-%s" % (osname, release, machine)
 
 def get_platform():
     if os.name == 'nt':
         TARGET_TO_PLAT = {
-            'x86' : 'win32',
-            'x64' : 'win-amd64',
-            'arm' : 'win-arm32',
+            'x86': 'win32',
+            'x64': 'win-amd64',
+            'arm': 'win-arm32',
+            'arm64': 'win-arm64',
         }
-        return TARGET_TO_PLAT.get(os.environ.get('VSCMD_ARG_TGT_ARCH')) or get_host_platform()
-    else:
-        return get_host_platform()
+        target = os.environ.get('VSCMD_ARG_TGT_ARCH')
+        return TARGET_TO_PLAT.get(target) or get_host_platform()
+    return get_host_platform()
 
-def convert_path (pathname):
+
+if sys.platform == 'darwin':
+    _syscfg_macosx_ver = None  # cache the version pulled from sysconfig
+MACOSX_VERSION_VAR = 'MACOSX_DEPLOYMENT_TARGET'
+
+
+def _clear_cached_macosx_ver():
+    """For testing only. Do not call."""
+    global _syscfg_macosx_ver
+    _syscfg_macosx_ver = None
+
+
+def get_macosx_target_ver_from_syscfg():
+    """Get the version of macOS latched in the Python interpreter configuration.
+    Returns the version as a string or None if can't obtain one. Cached."""
+    global _syscfg_macosx_ver
+    if _syscfg_macosx_ver is None:
+        from distutils import sysconfig
+
+        ver = sysconfig.get_config_var(MACOSX_VERSION_VAR) or ''
+        if ver:
+            _syscfg_macosx_ver = ver
+    return _syscfg_macosx_ver
+
+
+def get_macosx_target_ver():
+    """Return the version of macOS for which we are building.
+
+    The target version defaults to the version in sysconfig latched at time
+    the Python interpreter was built, unless overridden by an environment
+    variable. If neither source has a value, then None is returned"""
+
+    syscfg_ver = get_macosx_target_ver_from_syscfg()
+    env_ver = os.environ.get(MACOSX_VERSION_VAR)
+
+    if env_ver:
+        # Validate overridden version against sysconfig version, if have both.
+        # Ensure that the deployment target of the build process is not less
+        # than 10.3 if the interpreter was built for 10.3 or later.  This
+        # ensures extension modules are built with correct compatibility
+        # values, specifically LDSHARED which can use
+        # '-undefined dynamic_lookup' which only works on >= 10.3.
+        if (
+            syscfg_ver
+            and split_version(syscfg_ver) >= [10, 3]
+            and split_version(env_ver) < [10, 3]
+        ):
+            my_msg = (
+                '$' + MACOSX_VERSION_VAR + ' mismatch: '
+                'now "%s" but "%s" during configure; '
+                'must use 10.3 or later' % (env_ver, syscfg_ver)
+            )
+            raise DistutilsPlatformError(my_msg)
+        return env_ver
+    return syscfg_ver
+
+
+def split_version(s):
+    """Convert a dot-separated string into a list of numbers for comparisons"""
+    return [int(n) for n in s.split('.')]
+
+
+def convert_path(pathname):
     """Return 'pathname' as a name that will work on the native filesystem,
     i.e. split it on '/' and put it back together again using the current
     directory separator.  Needed because filenames in the setup script are
@@ -133,10 +147,11 @@ def convert_path (pathname):
         return os.curdir
     return os.path.join(*paths)
 
+
 # convert_path ()
 
 
-def change_root (new_root, pathname):
+def change_root(new_root, pathname):
     """Return 'pathname' with 'new_root' prepended.  If 'pathname' is
     relative, this is equivalent to "os.path.join(new_root,pathname)".
     Otherwise, it requires making 'pathname' relative and then joining the
@@ -154,12 +169,11 @@ def change_root (new_root, pathname):
             path = path[1:]
         return os.path.join(new_root, path)
 
-    else:
-        raise DistutilsPlatformError("nothing known about platform '%s'" % os.name)
+    raise DistutilsPlatformError(f"nothing known about platform '{os.name}'")
 
 
-_environ_checked = 0
-def check_environ ():
+@functools.lru_cache()
+def check_environ():
     """Ensure that 'os.environ' has all the environment variables we
     guarantee that users can use in config files, command-line options,
     etc.  Currently this includes:
@@ -167,13 +181,10 @@ def check_environ ():
       PLAT - description of the current platform, including hardware
              and OS (see 'get_platform()')
     """
-    global _environ_checked
-    if _environ_checked:
-        return
-
     if os.name == 'posix' and 'HOME' not in os.environ:
         try:
             import pwd
+
             os.environ['HOME'] = pwd.getpwuid(os.getuid())[5]
         except (ImportError, KeyError):
             # bpo-10496: if the current user identifier doesn't exist in the
@@ -183,35 +194,47 @@ def check_environ ():
     if 'PLAT' not in os.environ:
         os.environ['PLAT'] = get_platform()
 
-    _environ_checked = 1
 
-
-def subst_vars (s, local_vars):
-    """Perform shell/Perl-style variable substitution on 'string'.  Every
-    occurrence of '$' followed by a name is considered a variable, and
-    variable is substituted by the value found in the 'local_vars'
-    dictionary, or in 'os.environ' if it's not in 'local_vars'.
+def subst_vars(s, local_vars):
+    """
+    Perform variable substitution on 'string'.
+    Variables are indicated by format-style braces ("{var}").
+    Variable is substituted by the value found in the 'local_vars'
+    dictionary or in 'os.environ' if it's not in 'local_vars'.
     'os.environ' is first checked/augmented to guarantee that it contains
     certain values: see 'check_environ()'.  Raise ValueError for any
     variables not found in either 'local_vars' or 'os.environ'.
     """
     check_environ()
-    def _subst (match, local_vars=local_vars):
-        var_name = match.group(1)
-        if var_name in local_vars:
-            return str(local_vars[var_name])
-        else:
-            return os.environ[var_name]
-
+    lookup = dict(os.environ)
+    lookup.update((name, str(value)) for name, value in local_vars.items())
     try:
-        return re.sub(r'\$([a-zA-Z_][a-zA-Z_0-9]*)', _subst, s)
+        return _subst_compat(s).format_map(lookup)
     except KeyError as var:
-        raise ValueError("invalid variable '$%s'" % var)
-
-# subst_vars ()
+        raise ValueError(f"invalid variable {var}")
 
 
-def grok_environment_error (exc, prefix="error: "):
+def _subst_compat(s):
+    """
+    Replace shell/Perl-style variable substitution with
+    format-style. For compatibility.
+    """
+
+    def _subst(match):
+        return f'{{{match.group(1)}}}'
+
+    repl = re.sub(r'\$([a-zA-Z_][a-zA-Z_0-9]*)', _subst, s)
+    if repl != s:
+        import warnings
+
+        warnings.warn(
+            "shell/Perl-style substitutions are deprecated",
+            DeprecationWarning,
+        )
+    return repl
+
+
+def grok_environment_error(exc, prefix="error: "):
     # Function kept for backward compatibility.
     # Used to try clever things with EnvironmentErrors,
     # but nowadays str(exception) produces good messages.
@@ -220,13 +243,16 @@ def grok_environment_error (exc, prefix="error: "):
 
 # Needed by 'split_quoted()'
 _wordchars_re = _squote_re = _dquote_re = None
+
+
 def _init_regex():
     global _wordchars_re, _squote_re, _dquote_re
     _wordchars_re = re.compile(r'[^\\\'\"%s ]*' % string.whitespace)
     _squote_re = re.compile(r"'(?:[^'\\]|\\.)*'")
     _dquote_re = re.compile(r'"(?:[^"\\]|\\.)*"')
 
-def split_quoted (s):
+
+def split_quoted(s):
     """Split a string up according to Unix shell-like rules for quotes and
     backslashes.  In short: words are delimited by spaces, as long as those
     spaces are not escaped by a backslash, or inside a quoted string.
@@ -240,7 +266,8 @@ def split_quoted (s):
     # This is a nice algorithm for splitting up a single string, since it
     # doesn't require character-by-character examination.  It was a little
     # bit of a brain-bender to get it working right, though...
-    if _wordchars_re is None: _init_regex()
+    if _wordchars_re is None:
+        _init_regex()
 
     s = s.strip()
     words = []
@@ -253,20 +280,23 @@ def split_quoted (s):
             words.append(s[:end])
             break
 
-        if s[end] in string.whitespace: # unescaped, unquoted whitespace: now
-            words.append(s[:end])       # we definitely have a word delimiter
+        if s[end] in string.whitespace:
+            # unescaped, unquoted whitespace: now
+            # we definitely have a word delimiter
+            words.append(s[:end])
             s = s[end:].lstrip()
             pos = 0
 
-        elif s[end] == '\\':            # preserve whatever is being escaped;
-                                        # will become part of the current word
-            s = s[:end] + s[end+1:]
-            pos = end+1
+        elif s[end] == '\\':
+            # preserve whatever is being escaped;
+            # will become part of the current word
+            s = s[:end] + s[end + 1 :]
+            pos = end + 1
 
         else:
-            if s[end] == "'":           # slurp singly-quoted string
+            if s[end] == "'":  # slurp singly-quoted string
                 m = _squote_re.match(s, end)
-            elif s[end] == '"':         # slurp doubly-quoted string
+            elif s[end] == '"':  # slurp doubly-quoted string
                 m = _dquote_re.match(s, end)
             else:
                 raise RuntimeError("this can't happen (bad char '%c')" % s[end])
@@ -275,7 +305,7 @@ def split_quoted (s):
                 raise ValueError("bad string (mismatched %s quotes?)" % s[end])
 
             (beg, end) = m.span()
-            s = s[:beg] + s[beg+1:end-1] + s[end:]
+            s = s[:beg] + s[beg + 1 : end - 1] + s[end:]
             pos = m.end() - 2
 
         if pos >= len(s):
@@ -284,10 +314,11 @@ def split_quoted (s):
 
     return words
 
+
 # split_quoted ()
 
 
-def execute (func, args, msg=None, verbose=0, dry_run=0):
+def execute(func, args, msg=None, verbose=0, dry_run=0):
     """Perform some action that affects the outside world (eg.  by
     writing to the filesystem).  Such actions are special because they
     are disabled by the 'dry_run' flag.  This method takes care of all
@@ -297,8 +328,8 @@ def execute (func, args, msg=None, verbose=0, dry_run=0):
     print.
     """
     if msg is None:
-        msg = "%s%r" % (func.__name__, args)
-        if msg[-2:] == ',)':        # correct for singleton tuple
+        msg = "{}{!r}".format(func.__name__, args)
+        if msg[-2:] == ',)':  # correct for singleton tuple
             msg = msg[0:-2] + ')'
 
     log.info(msg)
@@ -306,7 +337,7 @@ def execute (func, args, msg=None, verbose=0, dry_run=0):
         func(*args)
 
 
-def strtobool (val):
+def strtobool(val):
     """Convert a string representation of truth to true (1) or false (0).
 
     True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
@@ -319,14 +350,19 @@ def strtobool (val):
     elif val in ('n', 'no', 'f', 'false', 'off', '0'):
         return 0
     else:
-        raise ValueError("invalid truth value %r" % (val,))
+        raise ValueError("invalid truth value {!r}".format(val))
 
 
-def byte_compile (py_files,
-                  optimize=0, force=0,
-                  prefix=None, base_dir=None,
-                  verbose=1, dry_run=0,
-                  direct=None):
+def byte_compile(  # noqa: C901
+    py_files,
+    optimize=0,
+    force=0,
+    prefix=None,
+    base_dir=None,
+    verbose=1,
+    dry_run=0,
+    direct=None,
+):
     """Byte-compile a collection of Python source files to .pyc
     files in a __pycache__ subdirectory.  'py_files' is a list
     of files to compile; any files that don't end in ".py" are silently
@@ -356,10 +392,6 @@ def byte_compile (py_files,
     it set to None.
     """
 
-    # Late import to fix a bootstrap issue: _posixsubprocess is built by
-    # setup.py, but setup.py uses distutils.
-    import subprocess
-
     # nothing is done if sys.dont_write_bytecode is True
     if sys.dont_write_bytecode:
         raise DistutilsByteCompileError('byte-compiling is disabled.')
@@ -375,16 +407,18 @@ def byte_compile (py_files,
     # optimize mode, or if either optimization level was requested by
     # the caller.
     if direct is None:
-        direct = (__debug__ and optimize == 0)
+        direct = __debug__ and optimize == 0
 
     # "Indirect" byte-compilation: write a temporary script and then
     # run it with the appropriate flags.
     if not direct:
         try:
             from tempfile import mkstemp
+
             (script_fd, script_name) = mkstemp(".py")
         except ImportError:
             from tempfile import mktemp
+
             (script_fd, script_name) = None, mktemp(".py")
         log.info("writing byte-compilation script '%s'", script_name)
         if not dry_run:
@@ -394,10 +428,12 @@ def byte_compile (py_files,
                 script = open(script_name, "w")
 
             with script:
-                script.write("""\
+                script.write(
+                    """\
 from distutils.util import byte_compile
 files = [
-""")
+"""
+                )
 
                 # XXX would be nice to write absolute filenames, just for
                 # safety's sake (script should be more robust in the face of
@@ -409,24 +445,22 @@ files = [
                 # problem is that it's really a directory, but I'm treating it
                 # as a dumb string, so trailing slashes and so forth matter.
 
-                #py_files = map(os.path.abspath, py_files)
-                #if prefix:
-                #    prefix = os.path.abspath(prefix)
-
                 script.write(",\n".join(map(repr, py_files)) + "]\n")
-                script.write("""
+                script.write(
+                    """
 byte_compile(files, optimize=%r, force=%r,
              prefix=%r, base_dir=%r,
              verbose=%r, dry_run=0,
              direct=1)
-""" % (optimize, force, prefix, base_dir, verbose))
+"""
+                    % (optimize, force, prefix, base_dir, verbose)
+                )
 
         cmd = [sys.executable]
-        cmd.extend(_optim_args_from_interpreter_flags())
+        cmd.extend(subprocess._optim_args_from_interpreter_flags())
         cmd.append(script_name)
         spawn(cmd, dry_run=dry_run)
-        execute(os.remove, (script_name,), "removing %s" % script_name,
-                dry_run=dry_run)
+        execute(os.remove, (script_name,), "removing %s" % script_name, dry_run=dry_run)
 
     # "Direct" byte-compilation: use the py_compile module to compile
     # right here, right now.  Note that the script generated in indirect
@@ -446,16 +480,17 @@ byte_compile(files, optimize=%r, force=%r,
             #   dfile - purported source filename (same as 'file' by default)
             if optimize >= 0:
                 opt = '' if optimize == 0 else optimize
-                cfile = importlib.util.cache_from_source(
-                    file, optimization=opt)
+                cfile = importlib.util.cache_from_source(file, optimization=opt)
             else:
                 cfile = importlib.util.cache_from_source(file)
             dfile = file
             if prefix:
-                if file[:len(prefix)] != prefix:
-                    raise ValueError("invalid prefix: filename %r doesn't start with %r"
-                           % (file, prefix))
-                dfile = dfile[len(prefix):]
+                if file[: len(prefix)] != prefix:
+                    raise ValueError(
+                        "invalid prefix: filename %r doesn't start with %r"
+                        % (file, prefix)
+                    )
+                dfile = dfile[len(prefix) :]
             if base_dir:
                 dfile = os.path.join(base_dir, dfile)
 
@@ -466,96 +501,13 @@ byte_compile(files, optimize=%r, force=%r,
                     if not dry_run:
                         compile(file, cfile, dfile)
                 else:
-                    log.debug("skipping byte-compilation of %s to %s",
-                              file, cfile_base)
+                    log.debug("skipping byte-compilation of %s to %s", file, cfile_base)
 
-# byte_compile ()
 
-def rfc822_escape (header):
+def rfc822_escape(header):
     """Return a version of the string escaped for inclusion in an
     RFC-822 header, by ensuring there are 8 spaces space after each newline.
     """
     lines = header.split('\n')
     sep = '\n' + 8 * ' '
     return sep.join(lines)
-
-# 2to3 support
-
-def run_2to3(files, fixer_names=None, options=None, explicit=None):
-    """Invoke 2to3 on a list of Python files.
-    The files should all come from the build area, as the
-    modification is done in-place. To reduce the build time,
-    only files modified since the last invocation of this
-    function should be passed in the files argument."""
-
-    if not files:
-        return
-
-    # Make this class local, to delay import of 2to3
-    from lib2to3.refactor import RefactoringTool, get_fixers_from_package
-    class DistutilsRefactoringTool(RefactoringTool):
-        def log_error(self, msg, *args, **kw):
-            log.error(msg, *args)
-
-        def log_message(self, msg, *args):
-            log.info(msg, *args)
-
-        def log_debug(self, msg, *args):
-            log.debug(msg, *args)
-
-    if fixer_names is None:
-        fixer_names = get_fixers_from_package('lib2to3.fixes')
-    r = DistutilsRefactoringTool(fixer_names, options=options)
-    r.refactor(files, write=True)
-
-def copydir_run_2to3(src, dest, template=None, fixer_names=None,
-                     options=None, explicit=None):
-    """Recursively copy a directory, only copying new and changed files,
-    running run_2to3 over all newly copied Python modules afterward.
-
-    If you give a template string, it's parsed like a MANIFEST.in.
-    """
-    from distutils.dir_util import mkpath
-    from distutils.file_util import copy_file
-    from distutils.filelist import FileList
-    filelist = FileList()
-    curdir = os.getcwd()
-    os.chdir(src)
-    try:
-        filelist.findall()
-    finally:
-        os.chdir(curdir)
-    filelist.files[:] = filelist.allfiles
-    if template:
-        for line in template.splitlines():
-            line = line.strip()
-            if not line: continue
-            filelist.process_template_line(line)
-    copied = []
-    for filename in filelist.files:
-        outname = os.path.join(dest, filename)
-        mkpath(os.path.dirname(outname))
-        res = copy_file(os.path.join(src, filename), outname, update=1)
-        if res[1]: copied.append(outname)
-    run_2to3([fn for fn in copied if fn.lower().endswith('.py')],
-             fixer_names=fixer_names, options=options, explicit=explicit)
-    return copied
-
-class Mixin2to3:
-    '''Mixin class for commands that run 2to3.
-    To configure 2to3, setup scripts may either change
-    the class variables, or inherit from individual commands
-    to override how 2to3 is invoked.'''
-
-    # provide list of fixers to run;
-    # defaults to all from lib2to3.fixers
-    fixer_names = None
-
-    # options dictionary
-    options = None
-
-    # list of fixers to invoke even though they are marked as explicit
-    explicit = None
-
-    def run_2to3(self, files):
-        return run_2to3(files, self.fixer_names, self.options, self.explicit)

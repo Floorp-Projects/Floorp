@@ -28,34 +28,37 @@ add_task(async function test_safari_permissions() {
     sandbox.restore();
   });
 
-  let safariMigrator = new SafariProfileMigrator();
+  let hasPermissionsStub = sandbox
+    .stub(SafariProfileMigrator.prototype, "hasPermissions")
+    .resolves(false);
+
+  let safariMigrator = await MigrationUtils.getMigrator(
+    SafariProfileMigrator.key
+  );
+  Assert.ok(
+    safariMigrator,
+    "Got migrator, even though we don't yet have permission to read its resources."
+  );
+
   sandbox.stub(MigrationUtils, "getMigrator").resolves(safariMigrator);
 
-  sandbox
-    .stub(SafariProfileMigrator.prototype, "hasPermissions")
-    .onFirstCall()
-    .resolves(false)
-    .onSecondCall()
-    .resolves(true);
+  sandbox.stub(safariMigrator, "getPermissions").callsFake(async () => {
+    hasPermissionsStub.resolves(true);
+    return Promise.resolve(true);
+  });
 
-  sandbox
-    .stub(SafariProfileMigrator.prototype, "getPermissions")
-    .resolves(true);
-
-  sandbox
-    .stub(SafariProfileMigrator.prototype, "getResources")
-    .callsFake(() => {
-      return Promise.resolve([
-        {
-          type: MigrationUtils.resourceTypes.BOOKMARKS,
-          migrate: () => {},
-        },
-      ]);
-    });
+  sandbox.stub(safariMigrator, "getResources").callsFake(() => {
+    return Promise.resolve([
+      {
+        type: MigrationUtils.resourceTypes.BOOKMARKS,
+        migrate: () => {},
+      },
+    ]);
+  });
 
   let didMigration = new Promise(resolve => {
     sandbox
-      .stub(SafariProfileMigrator.prototype, "migrate")
+      .stub(safariMigrator, "migrate")
       .callsFake((aResourceTypes, aStartup, aProfile, aProgressCallback) => {
         Assert.ok(
           !aStartup,

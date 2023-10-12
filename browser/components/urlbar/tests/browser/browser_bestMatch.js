@@ -1,13 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests best match rows in the view. See also:
-//
-// browser_quicksuggest_bestMatch.js
-//   UI test for quick suggest best matches specifically
-// test_quicksuggest_bestMatch.js
-//   Tests triggering quick suggest best matches and things that don't depend on
-//   the view
+// Tests best match rows in the view.
 
 "use strict";
 

@@ -137,12 +137,6 @@ class StyleRuleActor extends Actor {
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1224121
       return false;
     }
-    if (this._parentSheet.href === "about:PreferenceStyleSheet") {
-      // Special case about:PreferenceStyleSheet, as it is generated on the
-      // fly and the URI is not registered with the about: protocol handler
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-      return false;
-    }
     return true;
   }
 

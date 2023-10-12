@@ -29,12 +29,6 @@ browser.urlbar.showSearchTerms.enabled (boolean, default: true)
   on a default search engine results page.
   Can be controlled from Search Preferences.
 
-browser.urlbar.suggest.bestmatch (boolean, default: true)
-  When ``browser.urlbar.bestMatch.enabled`` is true, a "Top pick" checkbox
-  corresponding to this pref is shown in Firefox settings. It controls whether
-  results can be shown using the "Top pick" UI treatment. Otherwise the checkbox
-  is hidden and the "Top pick" UI treatment is disabled.
-
 browser.urlbar.suggest.bookmark (boolean, default: true)
   Whether results will include the user's bookmarks.
   Can be controlled from Privacy Preferences.
@@ -101,9 +95,6 @@ browser.urlbar.autoFill.adaptiveHistory.enabled (boolean, default: false)
 browser.urlbar.autoFill.adaptiveHistory.useCountThreshold (float, default: 1.0)
   Threshold for use count of input history that we handle as adaptive history
   autofill. If the use count is this value or more, it will be a candidate.
-
-browser.urlbar.bestMatch.enabled (boolean, default: false)
-  Whether the best match feature is enabled.
 
 browser.urlbar.autoFill.stddevMultiplier (float, default: 0.0)
   Affects the frecency threshold of the autofill algorithm.  The threshold is

@@ -10,6 +10,11 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 SearchTestUtils.init(this);
 
 const kButton = document.getElementById("reload-button");
+const IS_UPGRADING_SCHEMELESS = SpecialPowers.getBoolPref(
+  "dom.security.https_first_schemeless"
+);
+// eslint-disable-next-line @microsoft/sdl/no-insecure-url
+const DEFAULT_URL_SCHEME = IS_UPGRADING_SCHEMELESS ? "https://" : "http://";
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
@@ -72,8 +77,7 @@ add_task(async function test_unknown_host_without_search() {
     let searchPromise = BrowserTestUtils.browserLoaded(
       browser,
       false,
-      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-      "http://" + kNonExistingHost + "/",
+      DEFAULT_URL_SCHEME + kNonExistingHost + "/",
       true /* want an error page */
     );
     gURLBar.value = kNonExistingHost;

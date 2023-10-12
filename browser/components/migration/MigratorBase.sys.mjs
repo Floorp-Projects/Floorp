@@ -236,6 +236,13 @@ export class MigratorBase {
   }
 
   /**
+   * @returns {Promise<boolean|string>}
+   */
+  async canGetPermissions() {
+    return Promise.resolve(false);
+  }
+
+  /**
    * This method returns a number that is the bitwise OR of all resource
    * types that are available in aProfile. See MigrationUtils.resourceTypes
    * for each resource type.

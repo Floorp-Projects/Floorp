@@ -1,26 +1,24 @@
 # This file is dual licensed under the terms of the Apache License, Version
 # 2.0, and the BSD License. See the LICENSE file in the root of this repository
 # for complete details.
-from __future__ import absolute_import, division, print_function
 
 import operator
 import os
 import platform
 import sys
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from setuptools.extern.pyparsing import ParseException, ParseResults, stringStart, stringEnd
-from setuptools.extern.pyparsing import ZeroOrMore, Group, Forward, QuotedString
-from setuptools.extern.pyparsing import Literal as L  # noqa
-
-from ._compat import string_types
-from ._typing import TYPE_CHECKING
-from .specifiers import Specifier, InvalidSpecifier
-
-if TYPE_CHECKING:  # pragma: no cover
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-
-    Operator = Callable[[str, str], bool]
-
+from ._parser import (
+    MarkerAtom,
+    MarkerList,
+    Op,
+    Value,
+    Variable,
+    parse_marker as _parse_marker,
+)
+from ._tokenizer import ParserSyntaxError
+from .specifiers import InvalidSpecifier, Specifier
+from .utils import canonicalize_name
 
 __all__ = [
     "InvalidMarker",
@@ -29,6 +27,8 @@ __all__ = [
     "Marker",
     "default_environment",
 ]
+
+Operator = Callable[[str, str], bool]
 
 
 class InvalidMarker(ValueError):
@@ -50,111 +50,27 @@ class UndefinedEnvironmentName(ValueError):
     """
 
 
-class Node(object):
-    def __init__(self, value):
-        # type: (Any) -> None
-        self.value = value
-
-    def __str__(self):
-        # type: () -> str
-        return str(self.value)
-
-    def __repr__(self):
-        # type: () -> str
-        return "<{0}({1!r})>".format(self.__class__.__name__, str(self))
-
-    def serialize(self):
-        # type: () -> str
-        raise NotImplementedError
+def _normalize_extra_values(results: Any) -> Any:
+    """
+    Normalize extra values.
+    """
+    if isinstance(results[0], tuple):
+        lhs, op, rhs = results[0]
+        if isinstance(lhs, Variable) and lhs.value == "extra":
+            normalized_extra = canonicalize_name(rhs.value)
+            rhs = Value(normalized_extra)
+        elif isinstance(rhs, Variable) and rhs.value == "extra":
+            normalized_extra = canonicalize_name(lhs.value)
+            lhs = Value(normalized_extra)
+        results[0] = lhs, op, rhs
+    return results
 
 
-class Variable(Node):
-    def serialize(self):
-        # type: () -> str
-        return str(self)
+def _format_marker(
+    marker: Union[List[str], MarkerAtom, str], first: Optional[bool] = True
+) -> str:
 
-
-class Value(Node):
-    def serialize(self):
-        # type: () -> str
-        return '"{0}"'.format(self)
-
-
-class Op(Node):
-    def serialize(self):
-        # type: () -> str
-        return str(self)
-
-
-VARIABLE = (
-    L("implementation_version")
-    | L("platform_python_implementation")
-    | L("implementation_name")
-    | L("python_full_version")
-    | L("platform_release")
-    | L("platform_version")
-    | L("platform_machine")
-    | L("platform_system")
-    | L("python_version")
-    | L("sys_platform")
-    | L("os_name")
-    | L("os.name")  # PEP-345
-    | L("sys.platform")  # PEP-345
-    | L("platform.version")  # PEP-345
-    | L("platform.machine")  # PEP-345
-    | L("platform.python_implementation")  # PEP-345
-    | L("python_implementation")  # undocumented setuptools legacy
-    | L("extra")  # PEP-508
-)
-ALIASES = {
-    "os.name": "os_name",
-    "sys.platform": "sys_platform",
-    "platform.version": "platform_version",
-    "platform.machine": "platform_machine",
-    "platform.python_implementation": "platform_python_implementation",
-    "python_implementation": "platform_python_implementation",
-}
-VARIABLE.setParseAction(lambda s, l, t: Variable(ALIASES.get(t[0], t[0])))
-
-VERSION_CMP = (
-    L("===") | L("==") | L(">=") | L("<=") | L("!=") | L("~=") | L(">") | L("<")
-)
-
-MARKER_OP = VERSION_CMP | L("not in") | L("in")
-MARKER_OP.setParseAction(lambda s, l, t: Op(t[0]))
-
-MARKER_VALUE = QuotedString("'") | QuotedString('"')
-MARKER_VALUE.setParseAction(lambda s, l, t: Value(t[0]))
-
-BOOLOP = L("and") | L("or")
-
-MARKER_VAR = VARIABLE | MARKER_VALUE
-
-MARKER_ITEM = Group(MARKER_VAR + MARKER_OP + MARKER_VAR)
-MARKER_ITEM.setParseAction(lambda s, l, t: tuple(t[0]))
-
-LPAREN = L("(").suppress()
-RPAREN = L(")").suppress()
-
-MARKER_EXPR = Forward()
-MARKER_ATOM = MARKER_ITEM | Group(LPAREN + MARKER_EXPR + RPAREN)
-MARKER_EXPR << MARKER_ATOM + ZeroOrMore(BOOLOP + MARKER_EXPR)
-
-MARKER = stringStart + MARKER_EXPR + stringEnd
-
-
-def _coerce_parse_result(results):
-    # type: (Union[ParseResults, List[Any]]) -> List[Any]
-    if isinstance(results, ParseResults):
-        return [_coerce_parse_result(i) for i in results]
-    else:
-        return results
-
-
-def _format_marker(marker, first=True):
-    # type: (Union[List[str], Tuple[Node, ...], str], Optional[bool]) -> str
-
-    assert isinstance(marker, (list, tuple, string_types))
+    assert isinstance(marker, (list, tuple, str))
 
     # Sometimes we have a structure like [[...]] which is a single item list
     # where the single item is itself it's own list. In that case we want skip
@@ -179,7 +95,7 @@ def _format_marker(marker, first=True):
         return marker
 
 
-_operators = {
+_operators: Dict[str, Operator] = {
     "in": lambda lhs, rhs: lhs in rhs,
     "not in": lambda lhs, rhs: lhs not in rhs,
     "<": operator.lt,
@@ -188,52 +104,41 @@ _operators = {
     "!=": operator.ne,
     ">=": operator.ge,
     ">": operator.gt,
-}  # type: Dict[str, Operator]
+}
 
 
-def _eval_op(lhs, op, rhs):
-    # type: (str, Op, str) -> bool
+def _eval_op(lhs: str, op: Op, rhs: str) -> bool:
     try:
         spec = Specifier("".join([op.serialize(), rhs]))
     except InvalidSpecifier:
         pass
     else:
-        return spec.contains(lhs)
+        return spec.contains(lhs, prereleases=True)
 
-    oper = _operators.get(op.serialize())  # type: Optional[Operator]
+    oper: Optional[Operator] = _operators.get(op.serialize())
     if oper is None:
-        raise UndefinedComparison(
-            "Undefined {0!r} on {1!r} and {2!r}.".format(op, lhs, rhs)
-        )
+        raise UndefinedComparison(f"Undefined {op!r} on {lhs!r} and {rhs!r}.")
 
     return oper(lhs, rhs)
 
 
-class Undefined(object):
-    pass
+def _normalize(*values: str, key: str) -> Tuple[str, ...]:
+    # PEP 685 – Comparison of extra names for optional distribution dependencies
+    # https://peps.python.org/pep-0685/
+    # > When comparing extra names, tools MUST normalize the names being
+    # > compared using the semantics outlined in PEP 503 for names
+    if key == "extra":
+        return tuple(canonicalize_name(v) for v in values)
+
+    # other environment markers don't have such standards
+    return values
 
 
-_undefined = Undefined()
-
-
-def _get_env(environment, name):
-    # type: (Dict[str, str], str) -> str
-    value = environment.get(name, _undefined)  # type: Union[str, Undefined]
-
-    if isinstance(value, Undefined):
-        raise UndefinedEnvironmentName(
-            "{0!r} does not exist in evaluation environment.".format(name)
-        )
-
-    return value
-
-
-def _evaluate_markers(markers, environment):
-    # type: (List[Any], Dict[str, str]) -> bool
-    groups = [[]]  # type: List[List[bool]]
+def _evaluate_markers(markers: MarkerList, environment: Dict[str, str]) -> bool:
+    groups: List[List[bool]] = [[]]
 
     for marker in markers:
-        assert isinstance(marker, (list, tuple, string_types))
+        assert isinstance(marker, (list, tuple, str))
 
         if isinstance(marker, list):
             groups[-1].append(_evaluate_markers(marker, environment))
@@ -241,12 +146,15 @@ def _evaluate_markers(markers, environment):
             lhs, op, rhs = marker
 
             if isinstance(lhs, Variable):
-                lhs_value = _get_env(environment, lhs.value)
+                environment_key = lhs.value
+                lhs_value = environment[environment_key]
                 rhs_value = rhs.value
             else:
                 lhs_value = lhs.value
-                rhs_value = _get_env(environment, rhs.value)
+                environment_key = rhs.value
+                rhs_value = environment[environment_key]
 
+            lhs_value, rhs_value = _normalize(lhs_value, rhs_value, key=environment_key)
             groups[-1].append(_eval_op(lhs_value, op, rhs_value))
         else:
             assert marker in ["and", "or"]
@@ -256,8 +164,7 @@ def _evaluate_markers(markers, environment):
     return any(all(item) for item in groups)
 
 
-def format_full_version(info):
-    # type: (sys._version_info) -> str
+def format_full_version(info: "sys._version_info") -> str:
     version = "{0.major}.{0.minor}.{0.micro}".format(info)
     kind = info.releaselevel
     if kind != "final":
@@ -265,18 +172,9 @@ def format_full_version(info):
     return version
 
 
-def default_environment():
-    # type: () -> Dict[str, str]
-    if hasattr(sys, "implementation"):
-        # Ignoring the `sys.implementation` reference for type checking due to
-        # mypy not liking that the attribute doesn't exist in Python 2.7 when
-        # run with the `--py27` flag.
-        iver = format_full_version(sys.implementation.version)  # type: ignore
-        implementation_name = sys.implementation.name  # type: ignore
-    else:
-        iver = "0"
-        implementation_name = ""
-
+def default_environment() -> Dict[str, str]:
+    iver = format_full_version(sys.implementation.version)
+    implementation_name = sys.implementation.name
     return {
         "implementation_name": implementation_name,
         "implementation_version": iver,
@@ -292,27 +190,48 @@ def default_environment():
     }
 
 
-class Marker(object):
-    def __init__(self, marker):
-        # type: (str) -> None
+class Marker:
+    def __init__(self, marker: str) -> None:
+        # Note: We create a Marker object without calling this constructor in
+        #       packaging.requirements.Requirement. If any additional logic is
+        #       added here, make sure to mirror/adapt Requirement.
         try:
-            self._markers = _coerce_parse_result(MARKER.parseString(marker))
-        except ParseException as e:
-            err_str = "Invalid marker: {0!r}, parse error at {1!r}".format(
-                marker, marker[e.loc : e.loc + 8]
-            )
-            raise InvalidMarker(err_str)
+            self._markers = _normalize_extra_values(_parse_marker(marker))
+            # The attribute `_markers` can be described in terms of a recursive type:
+            # MarkerList = List[Union[Tuple[Node, ...], str, MarkerList]]
+            #
+            # For example, the following expression:
+            # python_version > "3.6" or (python_version == "3.6" and os_name == "unix")
+            #
+            # is parsed into:
+            # [
+            #     (<Variable('python_version')>, <Op('>')>, <Value('3.6')>),
+            #     'and',
+            #     [
+            #         (<Variable('python_version')>, <Op('==')>, <Value('3.6')>),
+            #         'or',
+            #         (<Variable('os_name')>, <Op('==')>, <Value('unix')>)
+            #     ]
+            # ]
+        except ParserSyntaxError as e:
+            raise InvalidMarker(str(e)) from e
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return _format_marker(self._markers)
 
-    def __repr__(self):
-        # type: () -> str
-        return "<Marker({0!r})>".format(str(self))
+    def __repr__(self) -> str:
+        return f"<Marker('{self}')>"
 
-    def evaluate(self, environment=None):
-        # type: (Optional[Dict[str, str]]) -> bool
+    def __hash__(self) -> int:
+        return hash((self.__class__.__name__, str(self)))
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Marker):
+            return NotImplemented
+
+        return str(self) == str(other)
+
+    def evaluate(self, environment: Optional[Dict[str, str]] = None) -> bool:
         """Evaluate a marker.
 
         Return the boolean from evaluating the given marker against the
@@ -322,7 +241,12 @@ class Marker(object):
         The environment is determined from the current Python process.
         """
         current_environment = default_environment()
+        current_environment["extra"] = ""
         if environment is not None:
             current_environment.update(environment)
+            # The API used to allow setting extra to None. We need to handle this
+            # case for backwards compatibility.
+            if current_environment["extra"] is None:
+                current_environment["extra"] = ""
 
         return _evaluate_markers(self._markers, current_environment)

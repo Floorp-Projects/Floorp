@@ -8,12 +8,7 @@
 // (1) Any type of suggestion from Merino can have a boolean property called
 //     `is_top_pick`. When true, Firefox should show the suggestion using the
 //     "best match" UI treatment (labeled "top pick" in the UI) that makes a
-//     result's row larger than usual and sets `suggestedIndex` to 1. However,
-//     the treatment must be enabled on Firefox via the `bestMatch.enabled`
-//     feature gate pref (Nimbus variable `bestMatchEnabled`) and the
-//     `suggest.bestMatch` pref, which corresponds to a checkbox in
-//     about:preferences. If the UI treatment is not enabled, Firefox should
-//     show the suggestion as usual.
+//     result's row larger than usual and sets `suggestedIndex` to 1.
 // (2) There is a Merino provider called "top_picks" that returns a specific
 //     type of suggestion called "navigational suggestions". These suggestions
 //     also have `is_top_pick` set to true.
@@ -41,7 +36,6 @@ const MERINO_SUGGESTIONS = [
 
 add_setup(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("bestMatch.enabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
 
   // Disable search suggestions so we don't hit the network.
@@ -159,92 +153,6 @@ add_task(async function heuristicDeduplication() {
 
   sandbox.restore();
 });
-
-add_task(async function prefs_0() {
-  await doPrefsTest({
-    bestMatchEnabled: false,
-    suggestBestMatch: false,
-    expected: {
-      isBestMatch: false,
-      suggestedIndex: -1,
-    },
-  });
-});
-
-add_task(async function prefs_1() {
-  await doPrefsTest({
-    bestMatchEnabled: false,
-    suggestBestMatch: true,
-    expected: {
-      isBestMatch: false,
-      suggestedIndex: -1,
-    },
-  });
-});
-
-add_task(async function prefs_2() {
-  await doPrefsTest({
-    bestMatchEnabled: true,
-    suggestBestMatch: false,
-    expected: {
-      isBestMatch: false,
-      suggestedIndex: -1,
-    },
-  });
-});
-
-add_task(async function prefs_3() {
-  await doPrefsTest({
-    bestMatchEnabled: true,
-    suggestBestMatch: true,
-    expected: {
-      isBestMatch: true,
-      suggestedIndex: 1,
-    },
-  });
-});
-
-async function doPrefsTest({
-  bestMatchEnabled,
-  suggestBestMatch,
-  expected: { isBestMatch, suggestedIndex },
-}) {
-  UrlbarPrefs.set("bestMatch.enabled", bestMatchEnabled);
-  UrlbarPrefs.set("suggest.bestmatch", suggestBestMatch);
-
-  // The mock suggestion has `provider` set to "top_picks", but Firefox should
-  // use only `is_top_pick` to determine whether it should be shown as best
-  // match, regardless of the provider. To make sure, change the provider to
-  // something else.
-  let originalProviders = [];
-  let provider = "some_unknown_provider";
-  for (let s of MerinoTestUtils.server.response.body.suggestions) {
-    originalProviders.push(s.provider);
-    s.provider = provider;
-  }
-
-  await check_results({
-    context: createContext("test", {
-      providers: [UrlbarProviderQuickSuggest.name],
-      isPrivate: false,
-    }),
-    matches: [
-      makeExpectedResult({
-        isBestMatch,
-        suggestedIndex,
-        telemetryType: provider,
-      }),
-    ],
-  });
-
-  UrlbarPrefs.clear("bestMatch.enabled");
-  UrlbarPrefs.clear("suggest.bestmatch");
-
-  // Restore the original provider.
-  for (let s of MerinoTestUtils.server.response.body.suggestions) {
-    s.provider = originalProviders.shift();
-  }
-}
 
 function makeExpectedResult({
   isBestMatch,

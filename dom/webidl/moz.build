@@ -698,7 +698,6 @@ WEBIDL_FILES = [
     "KeyframeEffect.webidl",
     "KeyIdsInitData.webidl",
     "LinkStyle.webidl",
-    "LoadURIOptions.webidl",
     "Localization.webidl",
     "Location.webidl",
     "Lock.webidl",

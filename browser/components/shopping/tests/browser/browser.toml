@@ -5,6 +5,7 @@ prefs = [
   "browser.shopping.experience2023.optedIn=1",
   "browser.shopping.experience2023.ads.enabled=true",
   "browser.shopping.experience2023.ads.userEnabled=true",
+  "toolkit.shopping.environment=test",
   "toolkit.shopping.ohttpRelayURL=https://example.com/relay", # These URLs don't actually host a relay or gateway config, but are needed to stop us making outside network connections.
   "toolkit.shopping.ohttpConfigURL=https://example.com/ohttp-config",
   "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features=false", # Disable the fakespot feature callouts to avoid interference. Individual tests that need them can re-enable them as needed.

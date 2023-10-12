@@ -2,7 +2,6 @@
 
 Build .egg distributions"""
 
-from distutils.errors import DistutilsSetupError
 from distutils.dir_util import remove_tree, mkpath
 from distutils import log
 from types import CodeType
@@ -11,12 +10,10 @@ import os
 import re
 import textwrap
 import marshal
-import warnings
 
-from pkg_resources import get_build_platform, Distribution, ensure_directory
-from pkg_resources import EntryPoint
 from setuptools.extension import Library
-from setuptools import Command, SetuptoolsDeprecationWarning
+from setuptools import Command
+from .._path import ensure_directory
 
 from sysconfig import get_path, get_python_version
 
@@ -66,7 +63,7 @@ class bdist_egg(Command):
         ('bdist-dir=', 'b',
          "temporary directory for creating the distribution"),
         ('plat-name=', 'p', "platform name to embed in generated filenames "
-                            "(default: %s)" % get_build_platform()),
+                            "(by default uses `pkg_resources.get_build_platform()`)"),
         ('exclude-source-files', None,
          "remove all .py files from the generated egg"),
         ('keep-temp', 'k',
@@ -100,18 +97,18 @@ class bdist_egg(Command):
             self.bdist_dir = os.path.join(bdist_base, 'egg')
 
         if self.plat_name is None:
+            from pkg_resources import get_build_platform
+
             self.plat_name = get_build_platform()
 
         self.set_undefined_options('bdist', ('dist_dir', 'dist_dir'))
 
         if self.egg_output is None:
-
             # Compute filename of the output egg
-            basename = Distribution(
-                None, None, ei_cmd.egg_name, ei_cmd.egg_version,
-                get_python_version(),
-                self.distribution.has_ext_modules() and self.plat_name
-            ).egg_name()
+            basename = ei_cmd._get_egg_basename(
+                py_version=get_python_version(),
+                platform=self.distribution.has_ext_modules() and self.plat_name,
+            )
 
             self.egg_output = os.path.join(self.dist_dir, basename + '.egg')
 
@@ -153,7 +150,7 @@ class bdist_egg(Command):
         self.run_command(cmdname)
         return cmd
 
-    def run(self):
+    def run(self):  # noqa: C901  # is too complex (14)  # FIXME
         # Generate metadata first
         self.run_command("egg_info")
         # We run install_lib before install_data, because some data hacks
@@ -268,49 +265,7 @@ class bdist_egg(Command):
         return analyze_egg(self.bdist_dir, self.stubs)
 
     def gen_header(self):
-        epm = EntryPoint.parse_map(self.distribution.entry_points or '')
-        ep = epm.get('setuptools.installation', {}).get('eggsecutable')
-        if ep is None:
-            return 'w'  # not an eggsecutable, do it the usual way.
-
-        warnings.warn(
-            "Eggsecutables are deprecated and will be removed in a future "
-            "version.",
-            SetuptoolsDeprecationWarning
-        )
-
-        if not ep.attrs or ep.extras:
-            raise DistutilsSetupError(
-                "eggsecutable entry point (%r) cannot have 'extras' "
-                "or refer to a module" % (ep,)
-            )
-
-        pyver = '{}.{}'.format(*sys.version_info)
-        pkg = ep.module_name
-        full = '.'.join(ep.attrs)
-        base = ep.attrs[0]
-        basename = os.path.basename(self.egg_output)
-
-        header = (
-            "#!/bin/sh\n"
-            'if [ `basename $0` = "%(basename)s" ]\n'
-            'then exec python%(pyver)s -c "'
-            "import sys, os; sys.path.insert(0, os.path.abspath('$0')); "
-            "from %(pkg)s import %(base)s; sys.exit(%(full)s())"
-            '" "$@"\n'
-            'else\n'
-            '  echo $0 is not the correct name for this egg file.\n'
-            '  echo Please rename it back to %(basename)s and try again.\n'
-            '  exec false\n'
-            'fi\n'
-        ) % locals()
-
-        if not self.dry_run:
-            mkpath(os.path.dirname(self.egg_output), dry_run=self.dry_run)
-            f = open(self.egg_output, 'w')
-            f.write(header)
-            f.close()
-        return 'a'
+        return 'w'
 
     def copy_metadata_to(self, target_dir):
         "Copy metadata (egg info) to the target_dir"

@@ -78,13 +78,6 @@ Object.defineProperty(lazy, "MerinoTestUtils", {
 
 const DEFAULT_CONFIG = {};
 
-const BEST_MATCH_CONFIG = {
-  best_match: {
-    blocked_suggestion_ids: [],
-    min_search_string_length: 4,
-  },
-};
-
 const DEFAULT_PING_PAYLOADS = {
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK]: {
     advertiser: "testadvertiser",
@@ -361,11 +354,6 @@ class _QuickSuggestTestUtils {
   get DEFAULT_CONFIG() {
     // Return a clone so callers can modify it.
     return Cu.cloneInto(DEFAULT_CONFIG, this);
-  }
-
-  get BEST_MATCH_CONFIG() {
-    // Return a clone so callers can modify it.
-    return Cu.cloneInto(BEST_MATCH_CONFIG, this);
   }
 
   /**
@@ -657,19 +645,11 @@ class _QuickSuggestTestUtils {
       this.Assert.ok(helpButton, "The help button should be present");
 
       let blockButton = row._buttons.get("block");
-      if (!isBestMatch) {
-        this.Assert.equal(
-          !!blockButton,
-          lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-          "The block button is present iff quick suggest blocking is enabled"
-        );
-      } else {
-        this.Assert.equal(
-          !!blockButton,
-          lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"),
-          "The block button is present iff best match blocking is enabled"
-        );
-      }
+      this.Assert.equal(
+        !!blockButton,
+        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+        "The block button is present iff quick suggest blocking is enabled"
+      );
     }
 
     return details;

@@ -163,11 +163,6 @@ export class PocketSuggestions extends BaseFeature {
       }
     }
 
-    let isBestMatch =
-      suggestion.is_top_pick &&
-      lazy.UrlbarPrefs.get("bestMatchEnabled") &&
-      lazy.UrlbarPrefs.get("suggest.bestmatch");
-
     let url = new URL(suggestion.url);
     url.searchParams.set("utm_medium", "firefox-desktop");
     url.searchParams.set("utm_source", "firefox-suggest");
@@ -185,10 +180,10 @@ export class PocketSuggestions extends BaseFeature {
           url: url.href,
           originalUrl: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
-          description: isBestMatch ? suggestion.description : "",
+          description: suggestion.is_top_pick ? suggestion.description : "",
           // Use the favicon for non-best matches so the icon exactly matches
           // the Pocket favicon in the user's history and tabs.
-          icon: isBestMatch
+          icon: suggestion.is_top_pick
             ? "chrome://global/skin/icons/pocket.svg"
             : "chrome://global/skin/icons/pocket-favicon.ico",
           shouldShowUrl: true,
@@ -206,7 +201,7 @@ export class PocketSuggestions extends BaseFeature {
       ),
       {
         isRichSuggestion: true,
-        richSuggestionIconSize: isBestMatch ? 24 : 16,
+        richSuggestionIconSize: suggestion.is_top_pick ? 24 : 16,
         showFeedbackMenu: true,
       }
     );

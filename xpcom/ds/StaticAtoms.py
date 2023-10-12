@@ -2396,6 +2396,7 @@ STATIC_ATOMS = [
     Atom("_moz_popover_enabled", "-moz-popover-enabled"),
     # media query for MathML Core's implementation of mi
     Atom("_moz_mathml_core_mi", "-moz-mathml-core-mi"),
+    Atom("_moz_always_underline_links", "-moz-always-underline-links"),
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),
