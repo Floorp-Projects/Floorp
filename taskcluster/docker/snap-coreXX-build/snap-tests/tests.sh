@@ -7,6 +7,8 @@ pwd
 ARTIFACT_DIR=$TASKCLUSTER_ROOT_DIR/builds/worker/artifacts/
 mkdir -p "$ARTIFACT_DIR"
 
+sudo snap refresh
+
 sudo snap refresh --hold=24h firefox
 
 sudo snap install --name firefox --dangerous ./firefox.snap
