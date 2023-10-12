@@ -29,10 +29,10 @@ interface nsIWebAuthnRegisterArgs : nsISupports {
     // We require type = "public-key" and only serialize the alg fields.
     [must_use] readonly attribute Array<COSEAlgorithmIdentifier> coseAlgs;
 
-    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>.
-    // We only include the ID field, as the transport field is optional and we
-    // can assume that the type is "public-key".
+    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>,
+    // we use separate arrays for the credential IDs and transports.
     readonly attribute Array<Array<octet> > excludeList;
+    readonly attribute Array<octet> excludeListTransports;
 
     // CTAP2 passes extensions in a CBOR map of extension identifier ->
     // WebAuthn AuthenticationExtensionsClientInputs. That's not feasible here.
@@ -70,10 +70,10 @@ interface nsIWebAuthnSignArgs : nsISupports {
 
     readonly attribute Array<octet> clientDataHash;
 
-    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>.
-    // We only include the ID field, as the transport field is optional and we
-    // can assume that the type is "public-key".
+    // The spec defines this as a sequence<PublicKeyCredentialDescriptor>,
+    // we use separate arrays for the credential IDs and transports.
     readonly attribute Array<Array<octet> > allowList;
+    readonly attribute Array<octet> allowListTransports;
 
     // CTAP2 passes extensions in a CBOR map of extension identifier ->
     // WebAuthn AuthenticationExtensionsClientInputs. That's not feasible here.

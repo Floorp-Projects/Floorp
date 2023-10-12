@@ -85,6 +85,16 @@ WebAuthnRegisterArgs::GetExcludeList(
 }
 
 NS_IMETHODIMP
+WebAuthnRegisterArgs::GetExcludeListTransports(
+    nsTArray<uint8_t>& aExcludeListTransports) {
+  aExcludeListTransports.Clear();
+  for (const WebAuthnScopedCredential& cred : mInfo.ExcludeList()) {
+    aExcludeListTransports.AppendElement(cred.transports());
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebAuthnRegisterArgs::GetCredProps(bool* aCredProps) {
   *aCredProps = mCredProps;
 
@@ -178,6 +188,16 @@ WebAuthnSignArgs::GetAllowList(nsTArray<nsTArray<uint8_t> >& aAllowList) {
   aAllowList.Clear();
   for (const WebAuthnScopedCredential& cred : mInfo.AllowList()) {
     aAllowList.AppendElement(cred.id().Clone());
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebAuthnSignArgs::GetAllowListTransports(
+    nsTArray<uint8_t>& aAllowListTransports) {
+  aAllowListTransports.Clear();
+  for (const WebAuthnScopedCredential& cred : mInfo.AllowList()) {
+    aAllowListTransports.AppendElement(cred.transports());
   }
   return NS_OK;
 }

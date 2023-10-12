@@ -105,9 +105,7 @@ AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
         }
 
         nsTArray<uint8_t> transportBuf;
-        /* Bug 1857335 - nsIWebAuthnRegisterArgs doesn't expose the transports
-         * associated with the allowList entries. They're optional, so it's
-         * not critical that we include them. */
+        Unused << aArgs->GetExcludeListTransports(transportBuf);
         jni::ByteBuffer::LocalRef transportList = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(transportBuf.Elements())),
@@ -231,9 +229,7 @@ AndroidWebAuthnService::GetAssertion(uint64_t aTransactionId,
         }
 
         nsTArray<uint8_t> transportBuf;
-        /* Bug 1857335 - nsIWebAuthnSignArgs doesn't expose the transports
-         * associated with the allowList entries. They're optional, so it's
-         * not critical that we include them. */
+        Unused << aArgs->GetAllowListTransports(transportBuf);
         jni::ByteBuffer::LocalRef transportList = jni::ByteBuffer::New(
             const_cast<void*>(
                 static_cast<const void*>(transportBuf.Elements())),
