@@ -977,6 +977,24 @@ inline bool FillArgumentsFromArraylike(JSContext* cx, Args& args,
   return true;
 }
 
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+struct PortableBaselineStack {
+  static const size_t DEFAULT_SIZE = 512 * 1024;
+
+  void* base;
+  void* top;
+
+  bool valid() { return base != nullptr; }
+
+  PortableBaselineStack() {
+    base = js_calloc(DEFAULT_SIZE);
+    top = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(base) +
+                                  DEFAULT_SIZE);
+  }
+  ~PortableBaselineStack() { js_free(base); }
+};
+#endif  // ENABLE_PORTABLE_BASELINE_INTERP
+
 }  // namespace js
 
 namespace mozilla {
