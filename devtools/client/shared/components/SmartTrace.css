@@ -25,11 +25,7 @@
 }
 
 .frames .frame {
-  /* Parent is a grid container whose grid template we want to use, so span the whole line */
-  grid-column: 1 / -1;
-  display: grid;
-  /* Grid is defined in `.frames [role="list"]` rule  */
-  grid-template-columns: subgrid;
+  display: contents;
   cursor: pointer;
   white-space: normal;
 }
