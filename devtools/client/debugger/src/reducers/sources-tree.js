@@ -246,9 +246,11 @@ function updateBlackbox(state, sources, shouldBlackBox) {
 function updateExpanded(state, action) {
   // We receive the full list of all expanded items
   // (not only the one added/removed)
+  // Also assume that this action is called only if the Set changed.
   return {
     ...state,
-    expanded: new Set(action.expanded),
+    // Consider that the action already cloned the Set
+    expanded: action.expanded,
   };
 }
 

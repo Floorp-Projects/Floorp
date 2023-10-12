@@ -82,7 +82,10 @@ class SourcesTree extends Component {
   };
 
   setExpanded = (item, isExpanded, shouldIncludeChildren) => {
-    const { expanded } = this.props;
+    // Note that setExpandedState relies on us to clone this Set
+    // which is going to be store as-is in the reducer.
+    const expanded = new Set(this.props.expanded);
+
     let changed = false;
     const expandItem = i => {
       const key = this.getKey(i);
@@ -252,7 +255,6 @@ class SourcesTree extends Component {
       getParent: this.getParent,
       getKey: this.getKey,
       getRoots: this.getRoots,
-      key: this.isEmpty() ? "empty" : "full",
       onCollapse: this.onCollapse,
       onExpand: this.onExpand,
       onFocus: this.onFocus,
