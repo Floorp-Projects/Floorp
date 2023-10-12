@@ -262,6 +262,6 @@ Code Review
 Local configuration
 -------------------
 
-``target-kind``
-  Generate only the given kind and its kind-dependencies. This is used for local inspection of the graph
+``target-kinds``
+  Generate only the given kinds and their kind-dependencies. This is used for local inspection of the graph
   and is not supported at run-time.
