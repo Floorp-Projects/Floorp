@@ -8,11 +8,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const COLLECTION_NAME = "query-stripping";
 const SHARED_DATA_KEY = "URLQueryStripping";
 const PREF_STRIP_LIST_NAME = "privacy.query_stripping.strip_list";
 const PREF_ALLOW_LIST_NAME = "privacy.query_stripping.allow_list";
 const PREF_TESTING_ENABLED = "privacy.query_stripping.testing";
+const PREF_STRIP_IS_TEST =
+  "privacy.query_stripping.strip_on_share.enableTestMode";
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () => {
   return console.createInstance({
@@ -20,6 +24,12 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () => {
     maxLogLevelPref: "privacy.query_stripping.listService.logLevel",
   });
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "testStripOnShare",
+  PREF_STRIP_IS_TEST
+);
 
 // Lazy getter for the strip-on-share strip list.
 ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
@@ -44,6 +54,7 @@ export class URLQueryStrippingListService {
   #isInitialized = false;
   #pendingInit = null;
   #initResolver;
+  #stripOnShareTestList = null;
 
   #rs;
   #onSyncCallback;
@@ -67,6 +78,19 @@ export class URLQueryStrippingListService {
       data: { current },
     } = event;
     this._onRemoteSettingsUpdate(current);
+  }
+
+  async testSetList(testList) {
+    this.#stripOnShareTestList = testList;
+    await this._notifyStripOnShareObservers();
+  }
+
+  testHasStripOnShareObservers() {
+    return !!this.stripOnShareObservers.size;
+  }
+
+  testHasQPSObservers() {
+    return !!this.observers.size;
   }
 
   async #init() {
@@ -253,19 +277,30 @@ export class URLQueryStrippingListService {
 
   async _notifyStripOnShareObservers(observer) {
     this.stripOnShareParams = await lazy.StripOnShareList;
+
+    // Changing to different test list allows us to test
+    // site specific params as the websites that current have
+    // site specific params cannot be opened in a test env
+    if (lazy.testStripOnShare) {
+      this.stripOnShareParams = this.#stripOnShareTestList;
+    }
+
     if (!this.stripOnShareParams) {
       lazy.logger.error("StripOnShare list is undefined");
       return;
     }
+
     // Add the qps params to the global rules of the strip-on-share list.
     let qpsParams = [...this.prefStripList, ...this.remoteStripList].map(
       param => param.toLowerCase()
     );
+
     this.stripOnShareParams.global.queryParams.push(...qpsParams);
     // Getting rid of duplicates.
     this.stripOnShareParams.global.queryParams = [
       ...new Set(this.stripOnShareParams.global.queryParams),
     ];
+
     // Build an array of StripOnShareRules.
     let rules = Object.values(this.stripOnShareParams);
     let stringifiedRules = [];
