@@ -2,7 +2,7 @@
   "name": "Azerdict",
   "description": "Azərbaycanın Online Lüğəti",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "azerdict@search.mozilla.org"
@@ -18,9 +18,7 @@
       "name": "Azerdict",
       "search_url": "https://azerdict.com/english/",
       "search_form": "https://azerdict.com/",
-      "search_url_get_params": "word={searchTerms}",
-      "suggest_url": "https://api.azerdict.com/english/autocomplete",
-      "suggest_url_get_params": "action=opensearch&query={searchTerms}"
+      "search_url_get_params": "word={searchTerms}"
     }
   }
 }
