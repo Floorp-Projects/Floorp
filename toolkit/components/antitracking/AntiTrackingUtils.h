@@ -85,7 +85,7 @@ class AntiTrackingUtils final {
   // with secondary key for embedee aPrincipal.
   static nsresult TestStoragePermissionInParent(nsIPrincipal* aTopPrincipal,
                                                 nsIPrincipal* aPrincipal,
-                                                bool* aResult);
+                                                uint32_t* aResult);
 
   // Returns the storage permission state for the given channel. And this is
   // meant to be called in the parent process. This only reflects the fact that

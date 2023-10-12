@@ -210,7 +210,7 @@ parent:
   async DiscoverIdentityCredentialFromExternalSource(IdentityCredentialRequestOptions aOptions) 
       returns (IPCIdentityCredential? identityCredential);
 
-  async HasStorageAccessPermission() returns(bool granted);
+  async GetStorageAccessPermission() returns(uint32_t permission_action);
 
 
   async SetCookies(nsCString baseDomain,

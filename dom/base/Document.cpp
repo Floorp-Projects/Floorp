@@ -17372,22 +17372,26 @@ Document::CreatePermissionGrantPromise(
         p = new StorageAccessAPIHelper::StorageAccessPermissionGrantPromise::
             Private(__func__);
 
-    RefPtr<PWindowGlobalChild::HasStorageAccessPermissionPromise> promise;
+    RefPtr<PWindowGlobalChild::GetStorageAccessPermissionPromise> promise;
     // Test the permission
     MOZ_ASSERT(XRE_IsContentProcess());
 
     WindowGlobalChild* wgc = inner->GetWindowGlobalChild();
     MOZ_ASSERT(wgc);
 
-    promise = wgc->SendHasStorageAccessPermission();
+    promise = wgc->SendGetStorageAccessPermission();
     MOZ_ASSERT(promise);
     promise->Then(
         GetCurrentSerialEventTarget(), __func__,
         [self, p, inner, principal, aHasUserInteraction,
          aRequireUserInteraction, aTopLevelBaseDomain,
-         aFrameOnly](bool aGranted) {
-          if (aGranted) {
-            p->Resolve(true, __func__);
+         aFrameOnly](uint32_t aAction) {
+          if (aAction == nsIPermissionManager::ALLOW_ACTION) {
+            p->Resolve(StorageAccessAPIHelper::eAllow, __func__);
+            return;
+          }
+          if (aAction == nsIPermissionManager::DENY_ACTION) {
+            p->Reject(false, __func__);
             return;
           }
 
