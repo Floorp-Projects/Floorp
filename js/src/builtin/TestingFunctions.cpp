@@ -618,6 +618,26 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  value = Int32Value(JSFatInlineString::MAX_LENGTH_LATIN1);
+  if (!JS_SetProperty(cx, info, "inline-latin1-chars", value)) {
+    return false;
+  }
+
+  value = Int32Value(JSFatInlineString::MAX_LENGTH_TWO_BYTE);
+  if (!JS_SetProperty(cx, info, "inline-two-byte-chars", value)) {
+    return false;
+  }
+
+  value = Int32Value(JSThinInlineString::MAX_LENGTH_LATIN1);
+  if (!JS_SetProperty(cx, info, "thin-inline-latin1-chars", value)) {
+    return false;
+  }
+
+  value = Int32Value(JSThinInlineString::MAX_LENGTH_TWO_BYTE);
+  if (!JS_SetProperty(cx, info, "thin-inline-two-byte-chars", value)) {
+    return false;
+  }
+
   if (args.length() == 1) {
     RootedString str(cx, ToString(cx, args[0]));
     if (!str) {
