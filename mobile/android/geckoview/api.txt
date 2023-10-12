@@ -1625,16 +1625,16 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class GeckoSession.Recommendation {
     ctor protected Recommendation(@NonNull GeckoSession.Recommendation.Builder);
-    field @Nullable public final Double adjustedRating;
-    field @Nullable public final String aid;
-    field @Nullable public final String analysisUrl;
-    field @Nullable public final String currency;
-    field @Nullable public final String grade;
-    field @Nullable public final String imageUrl;
-    field @Nullable public final String name;
-    field @Nullable public final String price;
-    field @Nullable public final Boolean sponsored;
-    field @Nullable public final String url;
+    field @NonNull public final Double adjustedRating;
+    field @NonNull public final String aid;
+    field @NonNull public final String analysisUrl;
+    field @NonNull public final String currency;
+    field @NonNull public final String grade;
+    field @NonNull public final String imageUrl;
+    field @NonNull public final String name;
+    field @NonNull public final String price;
+    field @NonNull public final Boolean sponsored;
+    field @NonNull public final String url;
   }
 
   public static class GeckoSession.Recommendation.Builder {

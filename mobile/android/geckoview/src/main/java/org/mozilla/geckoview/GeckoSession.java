@@ -3865,34 +3865,34 @@ public class GeckoSession {
   @AnyThread
   public static class Recommendation {
     /** Analysis URL. */
-    @Nullable public final String analysisUrl;
+    @NonNull public final String analysisUrl;
 
     /** Adjusted rating. */
-    @Nullable public final Double adjustedRating;
+    @NonNull public final Double adjustedRating;
 
     /** Whether or not it is a sponsored recommendation. */
-    @Nullable public final Boolean sponsored;
+    @NonNull public final Boolean sponsored;
 
     /** Url of product recommendation image. */
-    @Nullable public final String imageUrl;
+    @NonNull public final String imageUrl;
 
     /** Unique identifier for the ad entity. */
-    @Nullable public final String aid;
+    @NonNull public final String aid;
 
     /** Url of recommended product. */
-    @Nullable public final String url;
+    @NonNull public final String url;
 
     /** Name of recommended product. */
-    @Nullable public final String name;
+    @NonNull public final String name;
 
     /** Grade of recommended product. */
-    @Nullable public final String grade;
+    @NonNull public final String grade;
 
     /** Price of recommended product. */
-    @Nullable public final String price;
+    @NonNull public final String price;
 
     /** Currency of recommended product. */
-    @Nullable public final String currency;
+    @NonNull public final String currency;
 
     /* package */ Recommendation(@NonNull final GeckoBundle message) {
       analysisUrl = message.getString("analysis_url");
