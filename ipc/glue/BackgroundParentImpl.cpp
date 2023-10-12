@@ -126,6 +126,29 @@ BackgroundParentImpl::~BackgroundParentImpl() {
   MOZ_COUNT_DTOR(mozilla::ipc::BackgroundParentImpl);
 }
 
+void BackgroundParentImpl::ProcessingError(Result aCode, const char* aReason) {
+  if (MsgDropped == aCode) {
+    return;
+  }
+
+  // XXX Remove this cut-out once bug 1858621 is fixed. Some parent actors
+  // currently return nullptr in actor allocation methods for non fatal errors.
+  // We don't want to crash the parent process or child processes in that case.
+  if (MsgValueError == aCode) {
+    return;
+  }
+
+  // Other errors are big deals.
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+#ifndef FUZZING
+    BackgroundParent::KillHardAsync(this, aReason);
+#endif
+    if (CanSend()) {
+      GetIPCChannel()->InduceConnectionError();
+    }
+  }
+}
+
 void BackgroundParentImpl::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
@@ -816,11 +839,10 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPBroadcastChannelConstructor(
     return IPC_OK();
   }
 
-  // XXX It's now possible to call KillHardAsync on the PBackground thread, so
-  // the checks can be done directly here.
+  // XXX The principal can be checked right here on the PBackground thread
+  // since BackgroundParentImpl now overrides the ProcessingError method and
+  // kills invalid child processes (IPC_FAIL triggers a processing error).
 
-  // XXX Once BackgroundParent::ProcessingError calls KillHardAsync, we can
-  // just return IPC_FAIL() if a check fails.
   RefPtr<CheckPrincipalRunnable> runnable =
       new CheckPrincipalRunnable(parent.forget(), aPrincipalInfo, aOrigin);
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
