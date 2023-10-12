@@ -206,11 +206,10 @@ extern const char* const CacheKindNames[];
 
 extern size_t NumInputsForCacheKind(CacheKind kind);
 
-enum class CacheOp : uint16_t {
+enum class CacheOp {
 #define DEFINE_OP(op, ...) op,
   CACHE_IR_OPS(DEFINE_OP)
 #undef DEFINE_OP
-      NumOpcodes,
 };
 
 // CacheIR opcode info that's read in performance-sensitive code. Stored as a

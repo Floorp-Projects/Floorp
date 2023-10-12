@@ -5847,9 +5847,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.loadFunctionArgCount(callee, scratch2);
 
   static_assert(sizeof(Value) == 8);
-#ifndef JS_CODEGEN_NONE
   static_assert(JitStackAlignment == 16 || JitStackAlignment == 8);
-#endif
   // If JitStackValueAlignment == 1, then we were already correctly aligned on
   // entry, as guaranteed by the assertStackAlignment at the entry to this
   // function.

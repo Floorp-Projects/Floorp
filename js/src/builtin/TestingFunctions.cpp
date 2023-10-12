@@ -469,15 +469,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "pbl", value)) {
-    return false;
-  }
-
 #ifdef JS_CODEGEN_LOONG64
   value = BooleanValue(true);
 #else

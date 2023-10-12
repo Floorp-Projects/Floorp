@@ -525,27 +525,25 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
     return;
   }
 
-  if (!IsPortableBaselineInterpreterEnabled()) {
-    // Try initializing with sampler pc using native=>bytecode table.
-    JitcodeGlobalTable* table =
-        cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
-    if (tryInitWithTable(table, pc, /* forLastCallSite = */ false)) {
-      endStackAddress_ = sp;
+  // Try initializing with sampler pc using native=>bytecode table.
+  JitcodeGlobalTable* table =
+      cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
+  if (tryInitWithTable(table, pc, /* forLastCallSite = */ false)) {
+    endStackAddress_ = sp;
+    return;
+  }
+
+  // Try initializing with lastProfilingCallSite pc
+  void* lastCallSite = act->lastProfilingCallSite();
+  if (lastCallSite) {
+    if (tryInitWithPC(lastCallSite)) {
       return;
     }
 
-    // Try initializing with lastProfilingCallSite pc
-    void* lastCallSite = act->lastProfilingCallSite();
-    if (lastCallSite) {
-      if (tryInitWithPC(lastCallSite)) {
-        return;
-      }
-
-      // Try initializing with lastProfilingCallSite pc using native=>bytecode
-      // table.
-      if (tryInitWithTable(table, lastCallSite, /* forLastCallSite = */ true)) {
-        return;
-      }
+    // Try initializing with lastProfilingCallSite pc using native=>bytecode
+    // table.
+    if (tryInitWithTable(table, lastCallSite, /* forLastCallSite = */ true)) {
+      return;
     }
   }
 
@@ -554,12 +552,10 @@ JSJitProfilingFrameIterator::JSJitProfilingFrameIterator(JSContext* cx,
   type_ = FrameType::BaselineJS;
   if (frameScript()->hasBaselineScript()) {
     resumePCinCurrentFrame_ = frameScript()->baselineScript()->method()->raw();
-  } else if (!IsPortableBaselineInterpreterEnabled()) {
+  } else {
     MOZ_ASSERT(IsBaselineInterpreterEnabled());
     resumePCinCurrentFrame_ =
         cx->runtime()->jitRuntime()->baselineInterpreter().codeRaw();
-  } else {
-    resumePCinCurrentFrame_ = nullptr;
   }
 }
 

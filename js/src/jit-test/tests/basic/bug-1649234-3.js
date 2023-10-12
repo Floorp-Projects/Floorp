@@ -1,4 +1,4 @@
-// |jit-test| exitstatus: 3; skip-if: getBuildConfiguration('pbl')
+// |jit-test| exitstatus: 3;
 
 let debuggerRealm = newGlobal({newCompartment: true});
 debuggerRealm.debuggee = this;
