@@ -8550,7 +8550,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
 ) -> RegisterCustomPropertyResult {
     use self::RegisterCustomPropertyResult::*;
     use style::custom_properties::SpecifiedValue;
-    use style::properties_and_values::rule::{PropertyRuleData, ToRegistrationError};
+    use style::properties_and_values::rule::{PropertyRuleData, PropertyRegistrationError};
     use style::properties_and_values::syntax::Descriptor;
 
     let mut per_doc_data = per_doc_data.borrow_mut();
@@ -8593,11 +8593,11 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref(), url_data)
     {
         return match error {
-            ToRegistrationError::MissingInherits |
-            ToRegistrationError::MissingSyntax => unreachable!(),
-            ToRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
-            ToRegistrationError::InvalidInitialValue => InvalidInitialValue,
-            ToRegistrationError::NoInitialValue=> NoInitialValue,
+            PropertyRegistrationError::MissingInherits |
+            PropertyRegistrationError::MissingSyntax => unreachable!(),
+            PropertyRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
+            PropertyRegistrationError::InvalidInitialValue => InvalidInitialValue,
+            PropertyRegistrationError::NoInitialValue=> NoInitialValue,
         }
     }
 

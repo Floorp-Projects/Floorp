@@ -23,6 +23,7 @@ use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
+use crate::properties_and_values::rule::Inherits;
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
@@ -2946,13 +2947,18 @@ impl CascadeData {
                 },
                 CssRule::Property(ref rule) => {
                     let url_data = stylesheet.contents().url_data.read();
-                    if let Ok(registration) = rule.to_valid_registration(&url_data) {
-                        self.custom_property_registrations.try_insert(
-                            rule.name.0.clone(),
-                            registration,
-                            containing_rule_state.layer_id,
-                        )?;
-                    }
+                    // FIXME(emilio, bug 1858160): Simplify storage.
+                    let registration = PropertyRegistration {
+                        syntax: rule.syntax.as_ref().unwrap().descriptor().clone(),
+                        inherits: rule.inherits == Some(Inherits::True),
+                        initial_value: rule.initial_value.clone(),
+                        url_data: url_data.clone(),
+                    };
+                    self.custom_property_registrations.try_insert(
+                        rule.name.0.clone(),
+                        registration,
+                        containing_rule_state.layer_id,
+                    )?;
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {

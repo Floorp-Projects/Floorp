@@ -774,13 +774,13 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 })))
             },
             AtRulePrelude::Property(name) => self.nest_for_rule(CssRuleType::Property, |p| {
-                CssRule::Property(Arc::new(parse_property_block(
+                let rule_data = parse_property_block(
                     &p.context,
                     input,
                     name,
-                    start.source_location(),
-                )))
-            }),
+                    start.source_location())?;
+                Ok::<CssRule, ParseError<'i>>(CssRule::Property(Arc::new(rule_data)))
+            })?,
             AtRulePrelude::Document(condition) => {
                 if !cfg!(feature = "gecko") {
                     unreachable!()
