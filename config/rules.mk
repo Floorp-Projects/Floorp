@@ -477,11 +477,11 @@ endif
 ifdef MOZ_POST_PROGRAM_COMMAND
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
-	$(call BUILDSTATUS,END_Program $@)
+	$(call BUILDSTATUS,END_Program $(@F))
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): $(HOST_LIBS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
-	$(call BUILDSTATUS,START_Program $@)
+	$(call BUILDSTATUS,START_Program $(@F))
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
 	$(HOST_LINKER) -OUT:$@ -PDB:$(HOST_PDBFILE) $($(notdir $@)_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LINKER_LIBPATHS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
@@ -495,13 +495,17 @@ endif
 
 $(LIBRARY): $(OBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
+	$(call BUILDSTATUS,START_StaticLib $@)
 	$(RM) $(REAL_LIBRARY)
 	$(AR) $(AR_FLAGS) $($@_OBJS)
+	$(call BUILDSTATUS,END_StaticLib $@)
 
 $(WASM_ARCHIVE): $(CWASMOBJS) $(CPPWASMOBJS) $(STATIC_LIBS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,START_WasmLib $@)
 	$(RM) $(WASM_ARCHIVE)
 	$(WASM_CXX) -o $@ -Wl,--export-all -Wl,--stack-first -Wl,-z,stack-size=$(if $(MOZ_OPTIMIZE),262144,1048576) -Wl,--no-entry -Wl,--import-memory -Wl,--import-table $(CWASMOBJS) $(CPPWASMOBJS) $(addprefix -l,$(WASM_LIBS))
+	$(call BUILDSTATUS,END_WasmLib $@)
 
 ifeq ($(OS_ARCH),WINNT)
 # Import libraries are created by the rules creating shared libraries.
@@ -536,7 +540,6 @@ $(SHARED_LIBRARY): $(OBJS) $(call resfile,$(SHARED_LIBRARY)) $(STATIC_LIBS) $(EX
 	$(RM) $@
 	$(MKSHLIB) $($@_OBJS) $(filter %.res,$^) $(RELRHACK_LDFLAGS) $(LDFLAGS) $(STATIC_LIBS) $(SHARED_LIBS) $(EXTRA_DSO_LDOPTS) $(MOZ_GLUE_LDFLAGS) $(OS_LIBS)
 	$(call py_action,check_binary,$@)
-	$(call BUILDSTATUS,END_SharedLib $@)
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 endif	# WINNT && !GCC
@@ -544,6 +547,7 @@ endif	# WINNT && !GCC
 ifdef ENABLE_STRIP
 	$(STRIP) $(STRIP_FLAGS) $@
 endif
+	$(call BUILDSTATUS,END_SharedLib $@)
 
 # The object file is in the current directory, and the source file can be any
 # relative path. This macro adds the dependency obj: src for each source file.
@@ -568,7 +572,9 @@ $(OBJS) $(HOST_OBJS) $(PROGOBJS) $(HOST_PROGOBJS): $(GLOBAL_DEPS)
 # Rules for building native targets must come first because of the host_ prefix
 $(HOST_COBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(NSPR_CFLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(HOST_CPPOBJS):
 	$(REPORT_BUILD_VERBOSE)
@@ -578,19 +584,27 @@ $(HOST_CPPOBJS):
 
 $(HOST_CMOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(HOST_CC) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CFLAGS) $(HOST_CMFLAGS) $(NSPR_CFLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(HOST_CMMOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ -c $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) $(HOST_CMMFLAGS) $(NSPR_CFLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(COBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(CWASMOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(WASM_CC) -o $@ -c $(WASM_CFLAGS) $($(notdir $<)_FLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 WINEWRAP = $(if $(and $(filter %.exe,$1),$(WINE)),$(WINE) $1,$1)
 
@@ -617,7 +631,9 @@ ifdef ASFILES
 # a '-c' flag.
 $(ASOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(call WINEWRAP,$(AS)) $(ASOUTOPTION)$@ $(ASFLAGS) $($(notdir $<)_FLAGS) $(AS_DASH_C_FLAG) $(call relativize,$<)
+	$(call BUILDSTATUS,END_Object $@)
 endif
 
 define syms_template
@@ -682,11 +698,15 @@ $(CPPWASMOBJS):
 
 $(CMMOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(COMPILE_CMMFLAGS) $($(notdir $<)_FLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(CMOBJS):
 	$(REPORT_BUILD_VERBOSE)
+	$(call BUILDSTATUS,OBJECT_FILE $@)
 	$(CC) -o $@ -c $(COMPILE_CFLAGS) $(COMPILE_CMFLAGS) $($(notdir $<)_FLAGS) $<
+	$(call BUILDSTATUS,END_Object $@)
 
 $(filter %.s,$(CPPSRCS:%.cpp=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD_VERBOSE)
@@ -794,10 +814,14 @@ endif
 # EXTRA_DEPS contains manifests (manually added in Makefile.in ; bug 1498414)
 %.res: $(or $(RCFILE),%.rc) $(MOZILLA_DIR)/config/create_res.py $(EXTRA_DEPS)
 	$(REPORT_BUILD)
+	$(call BUILDSTATUS,START_Res $@)
 	$(PYTHON3) $(MOZILLA_DIR)/config/create_res.py $(DEFINES) $(INCLUDES) -o $@ $<
+	$(call BUILDSTATUS,END_Res $@)
 
 $(notdir $(addsuffix .rc,$(PROGRAM) $(SHARED_LIBRARY) $(SIMPLE_PROGRAMS) module)): %.rc: $(RCINCLUDE) $(MOZILLA_DIR)/config/create_rc.py
+	$(call BUILDSTATUS,START_Rc $@)
 	$(PYTHON3) $(MOZILLA_DIR)/config/create_rc.py '$(if $(filter module,$*),,$*)' '$(RCINCLUDE)'
+	$(call BUILDSTATUS,END_Rc $@)
 
 # Cancel GNU make built-in implicit rules
 MAKEFLAGS += -r
@@ -983,11 +1007,15 @@ install_targets_sanity = $(if $(filter-out $(notdir $@),$(notdir $(<))),$(error 
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_FILES_$(tier)))):
 	$(install_targets_sanity)
+	$(call BUILDSTATUS,START_Install $@)
 	$(call install_cmd,$(IFLAGS1) '$<' '$(@D)')
+	$(call BUILDSTATUS,END_Install $@)
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_EXECUTABLES_$(tier)))):
 	$(install_targets_sanity)
+	$(call BUILDSTATUS,START_Install $@)
 	$(call install_cmd,$(IFLAGS2) '$<' '$(@D)')
+	$(call BUILDSTATUS,END_Install $@)
 
 ################################################################################
 # Preprocessing rules
