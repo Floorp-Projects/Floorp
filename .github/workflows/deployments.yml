@@ -393,14 +393,18 @@ jobs:
       name: Deploy-to-updater-release
 
     steps:
-    - name: get build version 📦
+    - name: get build version & check MAR url replacement 📝
       run: |
         if [[ ${{ inputs.lightning-build }} == 'true' ]]; then
           export BUILD_VERSION=`echo "lightning"`
           echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+          export MAR_URL=`echo "-lightning"`
+          echo "MAR_URL=$MAR_URL" >> $GITHUB_ENV
         else
           export BUILD_VERSION=`echo "normal"`
           echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+          export MAR_URL=`echo ""`
+          echo "MAR_URL=$MAR_URL" >> $GITHUB_ENV
         fi
       env:
         GHA_LIGHTNING_BUILD: ${{ inputs.lightning-build }}
@@ -434,7 +438,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/LINUX-aarch64.mar",
               "os": "Linux",
               "arch": "aarch64",
               "release-note-url": "${{ inputs.release-note-url }}",
@@ -453,7 +457,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/DARWIN-Universal.mar",
               "os": "Darwin",
               "arch": "x86_64",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
@@ -474,7 +478,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/DARWIN-Universal.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/DARWIN-Universal.mar",
               "os": "Darwin",
               "arch": "aarch64",
               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
@@ -496,7 +500,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/WINNT-x86_64.mar",
               "os": "WINNT",
               "arch": "x86_64",
               "release-note-url": "${{ inputs.release-note-url }}",
@@ -516,7 +520,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/WINNT-x86.mar",
               "os": "WINNT",
               "arch": "x86",
               "release-note-url": "${{ inputs.release-note-url }}",
