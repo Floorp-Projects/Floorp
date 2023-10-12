@@ -7639,95 +7639,16 @@ GeneralParser<ParseHandler, Unit>::decoratorList(YieldHandling yieldHandling) {
       return null();
     }
 
-    Node decorator = null();
-    if (tt == TokenKind::LeftParen) {
-      // Handle DecoratorParenthesizedExpression
-      decorator = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
-      if (!decorator) {
-        return null();
-      }
-
-      if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_DECORATOR)) {
-        return null();
-      }
-
-      if (!tokenStream.getToken(&tt)) {
-        return null();
-      }
-    } else {
-      // Get decorator identifier
-      if (!(tt == TokenKind::Name || TokenKindIsContextualKeyword(tt))) {
-        error(JSMSG_DECORATOR_NAME_EXPECTED);
-        return null();
-      }
-      TaggedParserAtomIndex name = anyChars.currentName();
-      if (!tokenStream.getToken(&tt)) {
-        return null();
-      }
-
-      // Handle DecoratorMemberExpression
-      decorator = handler_.newName(name, pos());
-      if (!decorator) {
-        return null();
-      }
-
-      // Ok, this DecoratorMemberExpression is actually a list of
-      // Identifiers separated by `.`
-      if (tt == TokenKind::Dot) {
-        ListNodeType ids =
-            handler_.newList(ParseNodeKind::DecoratorList, pos());
-        if (!ids) {
-          return null();
-        }
-        handler_.addList(ids, decorator);
-        for (;;) {
-          if (!tokenStream.getToken(&tt)) {
-            return null();
-          }
-
-          // Reject invalid or missing identifiers, like dec1.(
-          if (!(tt == TokenKind::Name || TokenKindIsContextualKeyword(tt))) {
-            error(JSMSG_DECORATOR_NAME_EXPECTED);
-            return null();
-          }
-          TaggedParserAtomIndex name = anyChars.currentName();
-          Node id = handler_.newName(name, pos());
-          if (!id) {
-            return null();
-          }
-          handler_.addList(ids, id);
-
-          if (!tokenStream.getToken(&tt)) {
-            return null();
-          }
-
-          if (tt != TokenKind::Dot) {
-            break;
-          }
-        }
-        decorator = ids;
-      }
-
-      // We've hit a `(`, so it's actually a DecoratorCallExpression
-      if (tt == TokenKind::LeftParen) {
-        bool isSpread = false;
-        ListNodeType args = argumentList(yieldHandling, &isSpread);
-        if (!args) {
-          return null();
-        }
-        decorator = handler_.newCall(decorator, args,
-                                     isSpread ? JSOp::SpreadCall : JSOp::Call);
-        if (!decorator) {
-          return null();
-        }
-        if (!tokenStream.getToken(&tt)) {
-          return null();
-        }
-      }
+    Node decorator = decoratorExpr(yieldHandling, tt);
+    if (!decorator) {
+      return null();
     }
-    MOZ_ASSERT(decorator, "Decorator should exist");
+
     handler_.addList(decorators, decorator);
 
+    if (!tokenStream.getToken(&tt)) {
+      return null();
+    }
     if (tt != TokenKind::At) {
       anyChars.ungetToken();
       break;
@@ -11142,6 +11063,96 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
   if (handler_.isSuperBase(lhs)) {
     error(JSMSG_BAD_SUPER);
     return null();
+  }
+
+  return lhs;
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::decoratorExpr(
+    YieldHandling yieldHandling, TokenKind tt) {
+  MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
+
+  AutoCheckRecursionLimit recursion(this->fc_);
+  if (!recursion.check(this->fc_)) {
+    return null();
+  }
+
+  if (tt == TokenKind::LeftParen) {
+    // DecoratorParenthesizedExpression
+    Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed,
+                             /* possibleError*/ nullptr);
+    if (!expr) {
+      return null();
+    }
+    if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_DECORATOR)) {
+      return null();
+    }
+
+    return handler_.parenthesize(expr);
+  }
+
+  if (!TokenKindIsPossibleIdentifier(tt)) {
+    error(JSMSG_DECORATOR_NAME_EXPECTED);
+    return null();
+  }
+
+  TaggedParserAtomIndex name = identifierReference(yieldHandling);
+  if (!name) {
+    return null();
+  }
+
+  Node lhs = identifierReference(name);
+  if (!lhs) {
+    return null();
+  }
+
+  while (true) {
+    if (!tokenStream.getToken(&tt)) {
+      return null();
+    }
+    if (tt == TokenKind::Eof) {
+      anyChars.ungetToken();
+      break;
+    }
+
+    Node nextMember;
+    if (tt == TokenKind::Dot) {
+      if (!tokenStream.getToken(&tt)) {
+        return null();
+      }
+
+      if (TokenKindIsPossibleIdentifierName(tt)) {
+        nextMember = memberPropertyAccess(lhs);
+        if (!nextMember) {
+          return null();
+        }
+      } else if (tt == TokenKind::PrivateName) {
+        nextMember = memberPrivateAccess(lhs);
+        if (!nextMember) {
+          return null();
+        }
+      } else {
+        error(JSMSG_NAME_AFTER_DOT);
+        return null();
+      }
+    } else if (tt == TokenKind::LeftParen) {
+      nextMember =
+          memberCall(tt, lhs, yieldHandling, /* possibleError */ nullptr);
+      if (!nextMember) {
+        return null();
+      }
+      lhs = nextMember;
+      // This is a `DecoratorCallExpression` and it's defined at the top level
+      // of `Decorator`, no other `DecoratorMemberExpression` is allowed to
+      // follow after the arguments.
+      break;
+    } else {
+      anyChars.ungetToken();
+      break;
+    }
+
+    lhs = nextMember;
   }
 
   return lhs;

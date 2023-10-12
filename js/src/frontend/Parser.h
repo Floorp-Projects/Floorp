@@ -1205,6 +1205,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                   TripledotHandling tripledotHandling, TokenKind tt,
                   bool allowCallSyntax, PossibleError* possibleError,
                   InvokedPrediction invoked);
+  Node decoratorExpr(YieldHandling yieldHandling, TokenKind tt);
   Node primaryExpr(YieldHandling yieldHandling,
                    TripledotHandling tripledotHandling, TokenKind tt,
                    PossibleError* possibleError, InvokedPrediction invoked);

@@ -45,9 +45,6 @@ class MOZ_STACK_CLASS DecoratorEmitter {
 
   [[nodiscard]] bool emitUpdateDecorationState();
 
-  [[nodiscard]] bool emitDecoratorCallee(CallOrNewEmitter& cone,
-                                         ParseNode* decorator);
-
   [[nodiscard]] bool emitCallDecoratorForElement(Kind kind, ParseNode* key,
                                                  bool isStatic,
                                                  ParseNode* decorator);
