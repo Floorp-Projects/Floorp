@@ -645,11 +645,7 @@ class _QuickSuggestTestUtils {
       this.Assert.ok(helpButton, "The help button should be present");
 
       let blockButton = row._buttons.get("block");
-      this.Assert.equal(
-        !!blockButton,
-        lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
-        "The block button is present iff quick suggest blocking is enabled"
-      );
+      this.Assert.ok(blockButton, "The block button should be present");
     }
 
     return details;

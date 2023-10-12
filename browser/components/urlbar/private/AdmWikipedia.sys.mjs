@@ -164,7 +164,7 @@ export class AdmWikipedia extends BaseFeature {
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",
       },
-      isBlockable: lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+      isBlockable: true,
       blockL10n: {
         id: "urlbar-result-menu-dismiss-firefox-suggest",
       },

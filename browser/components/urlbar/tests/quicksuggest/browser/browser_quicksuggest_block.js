@@ -43,10 +43,6 @@ const REMOTE_SETTINGS_RESULTS = [
 let spy;
 
 add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.quicksuggest.blockingEnabled", true]],
-  });
-
   ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
 
   await PlacesUtils.history.clear();
@@ -325,93 +321,3 @@ add_task(async function blockMultiple() {
   await UrlbarTestUtils.promisePopupClose(window);
   await QuickSuggest.blockedSuggestions.clear();
 });
-
-// Tests with blocking disabled.
-add_combo_task(async function disabled({ result }) {
-  await doDisabledTest({
-    result,
-    quickSuggestBlockingEnabled: false,
-  });
-});
-
-async function doDisabledTest({ result, quickSuggestBlockingEnabled }) {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.urlbar.quicksuggest.blockingEnabled",
-        quickSuggestBlockingEnabled,
-      ],
-    ],
-  });
-
-  // Do a search to show a suggestion.
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: result.keywords[0],
-  });
-  let expectedResultCount = 2;
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    expectedResultCount,
-    "Two rows are present after searching (heuristic + suggestion)"
-  );
-  let details = await QuickSuggestTestUtils.assertIsQuickSuggest({
-    window,
-    originalUrl: result.url,
-    isSponsored: result.keywords[0] == "sponsored",
-  });
-
-  // Arrow down to select the suggestion and press the key shortcut to block.
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
-  Assert.ok(
-    UrlbarTestUtils.isPopupOpen(window),
-    "View remains open after trying to block result"
-  );
-
-  if (!quickSuggestBlockingEnabled) {
-    // Blocking is disabled. The key shortcut shouldn't have done anything.
-    if (!UrlbarPrefs.get("resultMenu")) {
-      Assert.ok(
-        !details.element.row._buttons.get("block"),
-        "Block button is not present"
-      );
-    }
-    Assert.equal(
-      UrlbarTestUtils.getResultCount(window),
-      expectedResultCount,
-      "Same number of results after key shortcut"
-    );
-    await QuickSuggestTestUtils.assertIsQuickSuggest({
-      window,
-      originalUrl: result.url,
-      isSponsored: result.keywords[0] == "sponsored",
-    });
-    Assert.ok(
-      !(await QuickSuggest.blockedSuggestions.has(result.url)),
-      "Suggestion is not blocked"
-    );
-  } else {
-    // Blocking is enabled. The suggestion should have been blocked.
-    if (!UrlbarPrefs.get("resultMenu")) {
-      Assert.ok(
-        details.element.row._buttons.get("block"),
-        "Block button is present"
-      );
-    }
-    Assert.equal(
-      UrlbarTestUtils.getResultCount(window),
-      1,
-      "Only one row after blocking suggestion"
-    );
-    await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
-    Assert.ok(
-      await QuickSuggest.blockedSuggestions.has(result.url),
-      "Suggestion is blocked"
-    );
-    await QuickSuggest.blockedSuggestions.clear();
-  }
-
-  await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
-}
