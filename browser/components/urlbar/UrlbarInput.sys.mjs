@@ -2949,7 +2949,8 @@ export class UrlbarInput {
    * Strips known tracking query parameters/ link decorators.
    *
    * @returns {nsIURI|null}
-   *   The stripped URI or null
+   *   The stripped URI or original URI, if nothing can be
+   *   stripped, or null, if an error occurs
    */
   #stripURI() {
     let copyString = this._getSelectedValueForClipboard();
@@ -2957,9 +2958,10 @@ export class UrlbarInput {
       return null;
     }
     let strippedURI = null;
+    let uri = null;
     // throws if the selected string is not a valid URI
     try {
-      let uri = Services.io.newURI(copyString);
+      uri = Services.io.newURI(copyString);
       strippedURI = lazy.QueryStringStripper.stripForCopyOrShare(uri);
     } catch (e) {
       console.debug(`stripURI: ${e.message}`);
@@ -2968,7 +2970,27 @@ export class UrlbarInput {
     if (strippedURI) {
       return this.makeURIReadable(strippedURI);
     }
-    return null;
+    return uri;
+  }
+
+  /**
+   * Checks if the clipboard contains a valid URI
+   *
+   * @returns {true|false}
+   */
+  #isClipboardURIValid() {
+    let copyString = this._getSelectedValueForClipboard();
+    if (!copyString) {
+      return false;
+    }
+    // throws if the selected string is not a valid URI
+    try {
+      Services.io.newURI(copyString);
+    } catch (e) {
+      return false;
+    }
+
+    return true;
   }
 
   // The strip-on-share feature will strip known tracking/decorational
@@ -2990,11 +3012,11 @@ export class UrlbarInput {
 
     insertLocation.insertAdjacentElement("afterend", stripOnShare);
 
-    // register listener that returns the stripped version of the url
+    // Register listener that returns the stripped url or falls back
+    // to the original url if nothing can be stripped.
     stripOnShare.addEventListener("command", () => {
       let strippedURI = this.#stripURI();
       if (!strippedURI) {
-        // If there is nothing to strip the menu item should not have been visible.
         // We might end up here if there was an unexpected URI change.
         console.warn("StripOnShare: Unexpected null value.");
         return;
@@ -3002,7 +3024,7 @@ export class UrlbarInput {
       lazy.ClipboardHelper.copyString(strippedURI.displaySpec);
     });
 
-    // register a listener that hides the menu item if there is nothing to copy or nothing to strip.
+    // Register a listener that hides the menu item if there is nothing to copy.
     contextMenu.addEventListener("popupshowing", () => {
       // feature is not enabled
       if (!lazy.QUERY_STRIPPING_STRIP_ON_SHARE) {
@@ -3016,8 +3038,8 @@ export class UrlbarInput {
         stripOnShare.setAttribute("hidden", true);
         return;
       }
-      // nothing to strip/selection is not a valid url
-      if (!this.#stripURI()) {
+      // selection is not a valid url
+      if (!this.#isClipboardURIValid()) {
         stripOnShare.setAttribute("hidden", true);
         return;
       }
