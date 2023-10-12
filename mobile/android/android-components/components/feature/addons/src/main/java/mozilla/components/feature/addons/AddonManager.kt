@@ -4,14 +4,21 @@
 
 package mozilla.components.feature.addons
 
+import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.CancellableOperation
 import mozilla.components.concept.engine.webextension.DisabledFlags
@@ -49,6 +56,13 @@ class AddonManager(
 
     @VisibleForTesting
     internal val pendingAddonActions = newSetFromMap(ConcurrentHashMap<CompletableDeferred<Unit>, Boolean>())
+
+    @VisibleForTesting
+    internal val iconLoadingScope = CoroutineScope(Dispatchers.IO)
+
+    // Acts as an in-memory cache for the fetched addon's icons.
+    @VisibleForTesting
+    internal val iconsCache = ConcurrentHashMap<String, Bitmap>()
 
     /**
      * Returns the list of all installed and featured add-ons.
@@ -94,10 +108,7 @@ class AddonManager(
                 .filterValues { !it.isBuiltIn() }
                 .map {
                     val extension = it.value
-                    val icon = withContext(getIconDispatcher()) {
-                        extension.loadIcon(ADDON_ICON_SIZE)
-                    }
-                    val installedState = extension.toInstalledState().copy(icon = icon)
+                    val installedState = toInstalledState(extension)
                     Addon.newFromWebExtension(extension, installedState)
                 }
 
@@ -134,8 +145,10 @@ class AddonManager(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
-                val installedAddon = Addon.newFromWebExtension(ext, ext.toInstalledState())
+                val installedState = toInstalledState(ext)
+                val installedAddon = Addon.newFromWebExtension(ext, installedState)
                     .copy(iconUrl = addon.iconUrl)
+                addonUpdater.registerForFutureUpdates(installedAddon.id)
                 completePendingAddonAction(pendingAction)
                 onSuccess(installedAddon)
             },
@@ -204,7 +217,7 @@ class AddonManager(
             extension,
             source = source,
             onSuccess = { ext ->
-                val enabledAddon = addon.copy(installedState = ext.toInstalledState())
+                val enabledAddon = addon.copy(installedState = toInstalledState(ext))
                 completePendingAddonAction(pendingAction)
                 onSuccess(enabledAddon)
             },
@@ -240,7 +253,7 @@ class AddonManager(
             extension,
             source,
             onSuccess = { ext ->
-                val disabledAddon = addon.copy(installedState = ext.toInstalledState())
+                val disabledAddon = addon.copy(installedState = toInstalledState(ext))
                 completePendingAddonAction(pendingAction)
                 onSuccess(disabledAddon)
             },
@@ -276,7 +289,7 @@ class AddonManager(
             extension,
             allowed,
             onSuccess = { ext ->
-                val modifiedAddon = addon.copy(installedState = ext.toInstalledState())
+                val modifiedAddon = addon.copy(installedState = toInstalledState(ext))
                 completePendingAddonAction(pendingAction)
                 onSuccess(modifiedAddon)
             },
@@ -327,6 +340,64 @@ class AddonManager(
         pendingAddonActions.remove(action)
     }
 
+    /**
+     * Converts a [WebExtension] to [Addon.InstalledState].
+     */
+    fun toInstalledState(extension: WebExtension): Addon.InstalledState {
+        val metadata = extension.getMetadata()
+        val cachedIcon = iconsCache[extension.id]
+        return Addon.InstalledState(
+            id = extension.id,
+            version = metadata?.version ?: "",
+            optionsPageUrl = metadata?.optionsPageUrl,
+            openOptionsPageInTab = metadata?.openOptionsPageInTab ?: false,
+            enabled = extension.isEnabled(),
+            disabledReason = extension.getDisabledReason(),
+            allowedInPrivateBrowsing = extension.isAllowedInPrivateBrowsing(),
+            icon = cachedIcon ?: loadIcon(extension)?.also {
+                iconsCache[extension.id] = it
+            },
+        )
+    }
+
+    @VisibleForTesting
+    @Suppress("TooGenericExceptionCaught")
+    internal fun loadIcon(extension: WebExtension): Bitmap? {
+        // As we are loading the icon from the xpi file this operation should be quick.
+        // If the operation takes a long time,  we proceed to return early,
+        // and load the icon in background.
+        return runBlocking(getIconDispatcher()) {
+            try {
+                val icon = withTimeoutOrNull(ADDON_ICON_RETRIEVE_TIMEOUT) {
+                    extension.loadIcon(ADDON_ICON_SIZE)
+                }
+                logger.info("Icon for extension ${extension.id} loaded successfully")
+                icon
+            } catch (e: TimeoutCancellationException) {
+                // If the icon is too big, we delegate the task to be done in background.
+                // Eventually, we load the icon and keep it in cache for sequential loads.
+                tryLoadIconInBackground(extension)
+                logger.error("Failed load icon for extension ${extension.id}", e)
+                null
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun tryLoadIconInBackground(extension: WebExtension) {
+        logger.info("Trying to load icon for extension ${extension.id} in background")
+        iconLoadingScope.launch {
+            withContext(getIconDispatcher()) {
+                extension.loadIcon(ADDON_ICON_SIZE)
+            }?.also {
+                logger.info("Icon for extension ${extension.id} loaded in background successfully")
+                iconsCache[extension.id] = it
+            }
+        }
+    }
+
     @VisibleForTesting
     internal fun getIconDispatcher(): CoroutineDispatcher {
         val iconThread = HandlerThread("IconThread").also {
@@ -342,6 +413,8 @@ class AddonManager(
 
         // Size of the icon to load for extensions
         const val ADDON_ICON_SIZE = 48
+
+        private const val ADDON_ICON_RETRIEVE_TIMEOUT = 1000L
     }
 }
 
@@ -349,20 +422,6 @@ class AddonManager(
  * Wraps exceptions thrown by either the initialization process or an [AddonsProvider].
  */
 class AddonManagerException(throwable: Throwable) : Exception(throwable)
-
-/**
- * Converts a [WebExtension] to [Addon.InstalledState].
- */
-fun WebExtension.toInstalledState() =
-    Addon.InstalledState(
-        id = id,
-        version = getMetadata()?.version ?: "",
-        optionsPageUrl = getMetadata()?.optionsPageUrl,
-        openOptionsPageInTab = getMetadata()?.openOptionsPageInTab ?: false,
-        enabled = isEnabled(),
-        disabledReason = getDisabledReason(),
-        allowedInPrivateBrowsing = isAllowedInPrivateBrowsing(),
-    )
 
 internal fun WebExtension.getDisabledReason(): Addon.DisabledReason? {
     return if (isBlockListed()) {

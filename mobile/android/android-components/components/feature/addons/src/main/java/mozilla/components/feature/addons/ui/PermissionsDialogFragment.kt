@@ -19,9 +19,7 @@ import android.view.Window
 import android.widget.Button
 import android.widget.LinearLayout.LayoutParams
 import android.widget.TextView
-import androidx.annotation.ColorRes
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -40,7 +38,7 @@ private const val DEFAULT_VALUE = Int.MAX_VALUE
 /**
  * A dialog that shows a set of permission required by an [Addon].
  */
-class PermissionsDialogFragment : AppCompatDialogFragment() {
+class PermissionsDialogFragment : AddonDialogFragment() {
 
     /**
      * A lambda called when the allow button is clicked.
@@ -51,8 +49,6 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
      * A lambda called when the deny button is clicked.
      */
     var onNegativeButtonClicked: (() -> Unit)? = null
-
-    private val safeArguments get() = requireNotNull(arguments)
 
     internal val addon get() = requireNotNull(safeArguments.getParcelableCompat(KEY_ADDON, Addon::class.java))
 
@@ -144,6 +140,8 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
             null,
             false,
         )
+
+        loadIcon(addon = addon, iconView = rootView.findViewById(R.id.icon))
 
         rootView.findViewById<TextView>(R.id.title).text = requireContext().getString(
             if (forOptionalPermissions) {
@@ -263,11 +261,11 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
                 promptsStyling?.shouldWidthMatchParent?.apply {
                     putBoolean(KEY_DIALOG_WIDTH_MATCH_PARENT, this)
                 }
-                promptsStyling?.positiveButtonBackgroundColor?.apply {
+                promptsStyling?.confirmButtonBackgroundColor?.apply {
                     putInt(KEY_POSITIVE_BUTTON_BACKGROUND_COLOR, this)
                 }
 
-                promptsStyling?.positiveButtonTextColor?.apply {
+                promptsStyling?.confirmButtonTextColor?.apply {
                     putInt(KEY_POSITIVE_BUTTON_TEXT_COLOR, this)
                 }
             }
@@ -277,17 +275,4 @@ class PermissionsDialogFragment : AppCompatDialogFragment() {
             return fragment
         }
     }
-
-    /**
-     * Styling for the permissions dialog.
-     */
-    data class PromptsStyling(
-        val gravity: Int,
-        val shouldWidthMatchParent: Boolean = false,
-        @ColorRes
-        val positiveButtonBackgroundColor: Int? = null,
-        @ColorRes
-        val positiveButtonTextColor: Int? = null,
-        val positiveButtonRadius: Float? = null,
-    )
 }

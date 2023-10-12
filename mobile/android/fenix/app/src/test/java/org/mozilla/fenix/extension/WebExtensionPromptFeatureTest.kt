@@ -16,7 +16,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
 import mozilla.components.support.ktx.android.content.appVersionName
-import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -44,6 +43,7 @@ class WebExtensionPromptFeatureTest {
                 store = store,
                 context = testContext,
                 fragmentManager = mockk(relaxed = true),
+                addonManager = mockk(relaxed = true),
             ),
         )
     }
@@ -220,10 +220,10 @@ class WebExtensionPromptFeatureTest {
     }
 
     @Test
-    fun `WHEN PermissionsOptional is dispatched THEN handleOptionalPermissionsRequest is called`() {
+    fun `WHEN AfterInstallation is dispatched THEN handleAfterInstallationRequest is called`() {
         webExtensionPromptFeature.start()
 
-        every { webExtensionPromptFeature.handleOptionalPermissionsRequest(any(), any()) } just runs
+        every { webExtensionPromptFeature.handleAfterInstallationRequest(any()) } returns mockk()
 
         store.dispatch(
             UpdatePromptRequestWebExtensionAction(
@@ -234,6 +234,16 @@ class WebExtensionPromptFeatureTest {
                 ),
             ),
         ).joinBlocking()
+
+        verify { webExtensionPromptFeature.handleAfterInstallationRequest(any()) }
+    }
+
+    @Test
+    fun `GIVEN Optional Permissions WHEN handleAfterInstallationRequest is called THEN handleOptionalPermissionsRequest is called`() {
+        webExtensionPromptFeature.start()
+        val request = mockk<WebExtensionPromptRequest.AfterInstallation.Permissions.Optional>(relaxed = true)
+
+        webExtensionPromptFeature.handleAfterInstallationRequest(request)
 
         verify { webExtensionPromptFeature.handleOptionalPermissionsRequest(any(), any()) }
     }

@@ -4,8 +4,6 @@
 
 package mozilla.components.feature.addons
 
-import android.graphics.Bitmap
-
 /**
  * A contract that indicate how an add-on provider must behave.
  */
@@ -27,11 +25,4 @@ interface AddonsProvider {
         readTimeoutInSeconds: Long? = null,
         language: String? = null,
     ): List<Addon>
-
-    /**
-     * Provides the decoded bitmap of an add-on's icon.
-     *
-     * @param addon the add-on for which we want to retrieve its icon as a decoded bitmap
-     */
-    suspend fun getAddonIconBitmap(addon: Addon): Bitmap?
 }

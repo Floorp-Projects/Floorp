@@ -5,10 +5,7 @@
 package mozilla.components.feature.addons.ui
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.graphics.Typeface
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.TransitionDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,27 +22,17 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.ExtensionsProcessAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.AddonsProvider
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.ui.CustomViewHolder.AddonViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.FooterViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.HeaderViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.SectionViewHolder
 import mozilla.components.feature.addons.ui.CustomViewHolder.UnsupportedSectionViewHolder
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.content.appVersionName
-import mozilla.components.support.ktx.android.content.res.resolveAttribute
-import java.io.IOException
-import mozilla.components.ui.icons.R as iconsR
 
 private const val VIEW_HOLDER_TYPE_SECTION = 0
 private const val VIEW_HOLDER_TYPE_NOT_YET_SUPPORTED_SECTION = 1
@@ -58,7 +45,6 @@ private const val VIEW_HOLDER_TYPE_HEADER = 4
  * an add-on such as recommended, unsupported or installed. In addition, it will perform actions
  * such as installing an add-on.
  *
- * @property addonsProvider An add-ons provider.
  * @property addonsManagerDelegate Delegate that will provides method for handling the add-on items.
  * @param addons The list of add-ons to display.
  * @property style Indicates how items should look like.
@@ -66,16 +52,12 @@ private const val VIEW_HOLDER_TYPE_HEADER = 4
  */
 @Suppress("LargeClass")
 class AddonsManagerAdapter(
-    private val addonsProvider: AddonsProvider,
     private val addonsManagerDelegate: AddonsManagerAdapterDelegate,
     addons: List<Addon>,
     private val style: Style? = null,
     private val excludedAddonIDs: List<String> = emptyList(),
     private val store: BrowserStore,
 ) : ListAdapter<Any, CustomViewHolder>(DifferCallback) {
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private val logger = Logger("AddonsManagerAdapter")
-
     /**
      * Represents all the add-ons that will be distributed in multiple headers like
      * enabled, recommended and unsupported, this help have the data source of the items,
@@ -96,6 +78,18 @@ class AddonsManagerAdapter(
             VIEW_HOLDER_TYPE_FOOTER -> createFooterSectionViewHolder(parent)
             VIEW_HOLDER_TYPE_HEADER -> createHeaderSectionViewHolder(parent)
             else -> throw IllegalArgumentException("Unrecognized viewType")
+        }
+    }
+
+    override fun onViewRecycled(holder: CustomViewHolder) {
+        super.onViewRecycled(holder)
+        when (holder) {
+            is AddonViewHolder -> {
+                // Prevent the previous icon from showing while scrolling.
+                holder.iconView.setImageBitmap(null)
+            }
+
+            else -> {}
         }
     }
 
@@ -301,7 +295,8 @@ class AddonsManagerAdapter(
         holder.allowedInPrivateBrowsingLabel.isVisible = addon.isAllowedInPrivateBrowsing()
         style?.maybeSetPrivateBrowsingLabelDrawable(holder.allowedInPrivateBrowsingLabel)
 
-        fetchIcon(addon, holder.iconView)
+        holder.iconView.setIcon(addon)
+
         style?.maybeSetAddonNameTextColor(holder.titleView)
         style?.maybeSetAddonSummaryTextColor(holder.summaryView)
 
@@ -337,48 +332,6 @@ class AddonsManagerAdapter(
             holder.statusErrorView.isVisible = true
             // There is no link when the add-on is disabled because it isn't compatible with the application version.
             statusErrorLearnMoreLink.isVisible = false
-        }
-    }
-
-    @Suppress("MagicNumber")
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun fetchIcon(addon: Addon, iconView: ImageView, scope: CoroutineScope = this.scope): Job {
-        return scope.launch {
-            try {
-                // We calculate how much time takes to fetch an icon,
-                // if takes less than a second, we assume it comes
-                // from a cache and we don't show any transition animation.
-                val startTime = System.currentTimeMillis()
-                val iconBitmap = addonsProvider.getAddonIconBitmap(addon)
-                val timeToFetch: Double = (System.currentTimeMillis() - startTime) / 1000.0
-                val isFromCache = timeToFetch < 1
-                if (iconBitmap != null) {
-                    scope.launch(Main) {
-                        if (isFromCache) {
-                            iconView.setImageDrawable(BitmapDrawable(iconView.resources, iconBitmap))
-                        } else {
-                            setWithCrossFadeAnimation(iconView, iconBitmap)
-                        }
-                    }
-                } else if (addon.installedState?.icon != null) {
-                    scope.launch(Main) {
-                        iconView.setImageDrawable(BitmapDrawable(iconView.resources, addon.installedState.icon))
-                    }
-                }
-            } catch (e: IOException) {
-                scope.launch(Main) {
-                    val context = iconView.context
-                    val att = context.theme.resolveAttribute(android.R.attr.textColorPrimary)
-                    iconView.setColorFilter(ContextCompat.getColor(context, att))
-                    iconView.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            context,
-                            iconsR.drawable.mozac_ic_extension_24,
-                        ),
-                    )
-                }
-                logger.error("Attempt to fetch the ${addon.id} icon failed", e)
-            }
         }
     }
 
@@ -547,16 +500,6 @@ class AddonsManagerAdapter(
         @SuppressLint("DiffUtilEquals")
         override fun areContentsTheSame(oldItem: Any, newItem: Any): Boolean {
             return oldItem == newItem
-        }
-    }
-
-    internal fun setWithCrossFadeAnimation(image: ImageView, bitmap: Bitmap, durationMillis: Int = 1700) {
-        with(image) {
-            val bitmapDrawable = BitmapDrawable(context.resources, bitmap)
-            val animation = TransitionDrawable(arrayOf(drawable, bitmapDrawable))
-            animation.isCrossFadeEnabled = true
-            setImageDrawable(animation)
-            animation.startTransition(durationMillis)
         }
     }
 }

@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.addons.ui
 
+import android.graphics.Bitmap
+import android.widget.ImageView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
@@ -12,11 +14,15 @@ import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NotInstalled
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.any
+import org.mockito.Mockito.verify
 import java.util.Calendar.MILLISECOND
 import java.util.Date
 import java.util.GregorianCalendar
@@ -140,5 +146,17 @@ class ExtensionsTest {
 
         request = request.copy(status = NotInstalled)
         assertEquals("", request.status.toLocalizedString(testContext))
+    }
+
+    @Test
+    fun setIcon() {
+        val iconView = mock<ImageView>()
+        val icon = mock<Bitmap>()
+        val addon = mock<Addon>()
+        whenever(addon.provideIcon()).thenReturn(icon)
+
+        iconView.setIcon(addon)
+
+        verify(iconView).setImageDrawable(any())
     }
 }

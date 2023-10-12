@@ -13,6 +13,8 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -470,5 +472,28 @@ class AddonTest {
 
         assertFalse(addon.isDisabledAsIncompatible())
         assertTrue(blockListedAddon.isDisabledAsIncompatible())
+    }
+
+    @Test
+    fun `provideIcon - should provide the icon from either addon or installedState`() {
+        val addonWithoutIcon = Addon(id = "id")
+
+        assertNull(addonWithoutIcon.icon)
+        assertNull(addonWithoutIcon.installedState?.icon)
+        assertNull(addonWithoutIcon.provideIcon())
+
+        val addonWithIcon = addonWithoutIcon.copy(icon = mock())
+
+        assertNotNull(addonWithIcon.icon)
+        assertNull(addonWithIcon.installedState?.icon)
+        assertNotNull(addonWithIcon.provideIcon())
+
+        val addonWithInstalledStateIcon = addonWithoutIcon.copy(
+            installedState = Addon.InstalledState("id", "1.0", "", icon = mock()),
+        )
+
+        assertNull(addonWithInstalledStateIcon.icon)
+        assertNotNull(addonWithInstalledStateIcon.installedState?.icon)
+        assertNotNull(addonWithInstalledStateIcon.provideIcon())
     }
 }

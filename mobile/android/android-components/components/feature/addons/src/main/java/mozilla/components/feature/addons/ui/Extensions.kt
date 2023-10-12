@@ -5,13 +5,17 @@
 package mozilla.components.feature.addons.ui
 
 import android.content.Context
+import android.graphics.drawable.BitmapDrawable
+import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
 import mozilla.components.feature.addons.update.AddonUpdater
 import mozilla.components.feature.addons.update.AddonUpdater.Status.Error
 import mozilla.components.feature.addons.update.AddonUpdater.Status.NoUpdateAvailable
 import mozilla.components.feature.addons.update.AddonUpdater.Status.SuccessfullyUpdated
+import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import java.text.DateFormat
 import java.text.NumberFormat
@@ -109,4 +113,31 @@ private fun AddonUpdater.UpdateAttempt.getDialogMessage(context: Context): Strin
     val lastAttemptLabel = context.getString(R.string.mozac_feature_addons_updater_dialog_last_attempt)
     val statusLabel = context.getString(R.string.mozac_feature_addons_updater_dialog_status)
     return "$lastAttemptLabel $dateString \n $statusLabel $statusString ".trimMargin()
+}
+
+/**
+ * Set icon to this [ImageView] with from the provided [Addon]'s icon.
+ */
+fun ImageView.setIcon(addon: Addon) {
+    val icon = addon.provideIcon()
+    if (icon != null) {
+        setImageDrawable(BitmapDrawable(resources, icon))
+    } else {
+        setDefaultAddonIcon()
+    }
+}
+
+/**
+ * Set the default addon's icon to this [ImageView].
+ */
+fun ImageView.setDefaultAddonIcon() {
+    val safeContext = context ?: return
+    val att = safeContext.theme.resolveAttribute(android.R.attr.textColorPrimary)
+    setColorFilter(ContextCompat.getColor(safeContext, att))
+    setImageDrawable(
+        ContextCompat.getDrawable(
+            safeContext,
+            mozilla.components.ui.icons.R.drawable.mozac_ic_extension_24,
+        ),
+    )
 }

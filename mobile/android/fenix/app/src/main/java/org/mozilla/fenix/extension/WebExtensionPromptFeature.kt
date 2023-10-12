@@ -18,7 +18,8 @@ import mozilla.components.browser.state.state.extension.WebExtensionPromptReques
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import mozilla.components.feature.addons.Addon
-import mozilla.components.feature.addons.toInstalledState
+import mozilla.components.feature.addons.AddonManager
+import mozilla.components.feature.addons.ui.AddonDialogFragment
 import mozilla.components.feature.addons.ui.AddonInstallationDialogFragment
 import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.lib.state.ext.flowScoped
@@ -36,6 +37,7 @@ import java.lang.ref.WeakReference
 class WebExtensionPromptFeature(
     private val store: BrowserStore,
     private val context: Context,
+    private val addonManager: AddonManager = context.components.addonManager,
     private val fragmentManager: FragmentManager,
 ) : LifecycleAwareFeature {
 
@@ -77,19 +79,23 @@ class WebExtensionPromptFeature(
         tryToReAttachButtonHandlersToPreviousDialog()
     }
 
-    private fun handleAfterInstallationRequest(promptRequest: WebExtensionPromptRequest.AfterInstallation) {
-        val addon = Addon.newFromWebExtension(promptRequest.extension)
+    @VisibleForTesting
+    internal fun handleAfterInstallationRequest(promptRequest: WebExtensionPromptRequest.AfterInstallation) {
+        val installedState = addonManager.toInstalledState(promptRequest.extension)
+        val addon = Addon.newFromWebExtension(promptRequest.extension, installedState)
         when (promptRequest) {
             is WebExtensionPromptRequest.AfterInstallation.Permissions.Required -> handleRequiredPermissionRequest(
                 addon,
                 promptRequest,
             )
+
             is WebExtensionPromptRequest.AfterInstallation.Permissions.Optional -> handleOptionalPermissionsRequest(
                 addon,
                 promptRequest,
             )
+
             is WebExtensionPromptRequest.AfterInstallation.PostInstallation -> handlePostInstallationRequest(
-                addon.copy(installedState = promptRequest.extension.toInstalledState()),
+                addon,
             )
         }
     }
@@ -221,18 +227,18 @@ class WebExtensionPromptFeature(
             addon = addon,
             forOptionalPermissions = forOptionalPermissions,
             optionalPermissions = optionalPermissions,
-            promptsStyling = PermissionsDialogFragment.PromptsStyling(
+            promptsStyling = AddonDialogFragment.PromptsStyling(
                 gravity = Gravity.BOTTOM,
                 shouldWidthMatchParent = true,
-                positiveButtonBackgroundColor = ThemeManager.resolveAttribute(
+                confirmButtonBackgroundColor = ThemeManager.resolveAttribute(
                     R.attr.accent,
                     context,
                 ),
-                positiveButtonTextColor = ThemeManager.resolveAttribute(
+                confirmButtonTextColor = ThemeManager.resolveAttribute(
                     R.attr.textOnColorPrimary,
                     context,
                 ),
-                positiveButtonRadius =
+                confirmButtonRadius =
                 (context.resources.getDimensionPixelSize(R.dimen.tab_corner_radius)).toFloat(),
             ),
             onPositiveButtonClicked = { handlePermissions(promptRequest, granted = true) },
@@ -320,8 +326,6 @@ class WebExtensionPromptFeature(
 
     private fun showPostInstallationDialog(addon: Addon) {
         if (!isInstallationInProgress && !hasExistingAddonPostInstallationDialogFragment()) {
-            val addonsProvider = context.components.addonsProvider
-
             // Fragment may not be attached to the context anymore during onConfirmButtonClicked handling,
             // but we still want to be able to process user selection of the 'allowInPrivateBrowsing' pref.
             // This is a best-effort attempt to do so - retain a weak reference to the application context
@@ -331,8 +335,7 @@ class WebExtensionPromptFeature(
 
             val dialog = AddonInstallationDialogFragment.newInstance(
                 addon = addon,
-                addonsProvider = addonsProvider,
-                promptsStyling = AddonInstallationDialogFragment.PromptsStyling(
+                promptsStyling = AddonDialogFragment.PromptsStyling(
                     gravity = Gravity.BOTTOM,
                     shouldWidthMatchParent = true,
                     confirmButtonBackgroundColor = ThemeManager.resolveAttribute(

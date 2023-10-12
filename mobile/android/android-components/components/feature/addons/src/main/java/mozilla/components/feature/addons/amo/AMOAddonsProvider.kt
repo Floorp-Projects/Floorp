@@ -9,6 +9,11 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.AtomicFile
 import androidx.annotation.VisibleForTesting
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
@@ -27,6 +32,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 internal const val API_VERSION = "api/v4"
@@ -72,6 +78,12 @@ class AMOAddonsProvider(
 
     private val diskCacheLock = Any()
 
+    private val scope = CoroutineScope(Dispatchers.IO)
+
+    // Acts as an in-memory cache for the fetched addon's icons.
+    @VisibleForTesting
+    internal val iconsCache = ConcurrentHashMap<String, Bitmap>()
+
     /**
      * Interacts with the collections endpoint to provide a list of available
      * add-ons. May return a cached response, if [allowCache] is true, and the
@@ -103,7 +115,7 @@ class AMOAddonsProvider(
         // that we are trying to fetch the latest localized add-ons when the user changes
         // language from the previous one.
         val cachedFeaturedAddons = if (allowCache && !cacheExpired(context, language, useFallbackFile = false)) {
-            readFromDiskCache(language, useFallbackFile = false)
+            readFromDiskCache(language, useFallbackFile = false)?.loadIcons()
         } else {
             null
         }
@@ -134,7 +146,7 @@ class AMOAddonsProvider(
         }
     }
 
-    private fun fetchFeaturedAddons(readTimeoutInSeconds: Long?, language: String?): List<Addon> {
+    private suspend fun fetchFeaturedAddons(readTimeoutInSeconds: Long?, language: String?): List<Addon> {
         val langParam = if (!language.isNullOrEmpty()) {
             "&lang=$language"
         } else {
@@ -154,12 +166,14 @@ class AMOAddonsProvider(
                 if (response.isSuccess) {
                     val responseBody = response.body.string(Charsets.UTF_8)
                     return try {
-                        JSONObject(responseBody).getAddonsFromCollection(language).also {
-                            if (maxCacheAgeInMinutes > 0) {
-                                writeToDiskCache(responseBody, language)
+                        JSONObject(responseBody).getAddonsFromCollection(language)
+                            .loadIcons()
+                            .also {
+                                if (maxCacheAgeInMinutes > 0) {
+                                    writeToDiskCache(responseBody, language)
+                                }
+                                deleteUnusedCacheFiles(language)
                             }
-                            deleteUnusedCacheFiles(language)
-                        }
                     } catch (e: JSONException) {
                         throw IOException(e)
                     }
@@ -173,26 +187,53 @@ class AMOAddonsProvider(
     }
 
     /**
-     * Fetches given Addon icon from the url and returns a decoded Bitmap
-     * @throws IOException if the request could not be executed due to cancellation,
-     * a connectivity problem or a timeout.
+     * Asynchronously loads add-on icon for the given [iconUrl] and stores in the cache.
      */
-    @Throws(IOException::class)
-    override suspend fun getAddonIconBitmap(addon: Addon): Bitmap? {
-        var bitmap: Bitmap? = null
-        if (addon.iconUrl != "") {
-            client.fetch(
-                Request(url = addon.iconUrl.sanitizeURL()),
-            ).use { response ->
-                if (response.isSuccess) {
-                    response.body.useStream {
-                        bitmap = BitmapFactory.decodeStream(it)
+    @VisibleForTesting
+    internal fun loadIconAsync(addonId: String, iconUrl: String): Deferred<Bitmap?> = scope.async {
+        val cachedIcon = iconsCache[addonId]
+        if (cachedIcon != null) {
+            logger.info("Icon for $addonId was found in the cache")
+            cachedIcon
+        } else if (iconUrl.isBlank()) {
+            logger.info("Unable to find the icon for $addonId blank iconUrl")
+            null
+        } else {
+            try {
+                logger.info("Trying to fetch the icon for $addonId from the network")
+                client.fetch(Request(url = iconUrl.sanitizeURL(), useCaches = true))
+                    .use { response ->
+                        if (response.isSuccess) {
+                            response.body.useStream {
+                                val icon = BitmapFactory.decodeStream(it)
+                                logger.info("Icon for $addonId fetched from the network")
+                                iconsCache[addonId] = icon
+                                icon
+                            }
+                        } else {
+                            // There was an network error and we couldn't fetch the icon.
+                            logger.info("Unable to fetch the icon for $addonId HTTP code ${response.status}")
+                            null
+                        }
                     }
-                }
+            } catch (e: IOException) {
+                logger.error("Attempt to fetch the $addonId icon failed", e)
+                null
             }
         }
+    }
 
-        return bitmap
+    @VisibleForTesting
+    internal suspend fun List<Addon>.loadIcons(): List<Addon> {
+        this.map {
+            // Instead of loading icons one by one, let's load them async
+            // so we can do multiple request at the time.
+            loadIconAsync(it.id, it.iconUrl)
+        }.awaitAll() // wait until all parallel icon requests finish.
+
+        return this.map { addon ->
+            addon.copy(icon = iconsCache[addon.id])
+        }
     }
 
     @VisibleForTesting
@@ -305,26 +346,6 @@ enum class SortOption(val value: String) {
     NAME_DESC("-name"),
     DATE_ADDED("added"),
     DATE_ADDED_DESC("-added"),
-}
-
-internal fun Map<String, Addon>.findAddonsBy(
-    guids: List<String>,
-    language: String,
-): List<Addon> {
-    return if (isNotEmpty()) {
-        filter {
-            guids.contains(it.key) && it.value.translatableName.containsKey(language)
-        }.map { it.value }
-    } else {
-        emptyList()
-    }
-}
-
-internal fun JSONObject.getAddonsFromSearchResults(language: String? = null): List<Addon> {
-    val addonsJson = getJSONArray("results")
-    return (0 until addonsJson.length()).map { index ->
-        addonsJson.getJSONObject(index).toAddon(language)
-    }
 }
 
 internal fun JSONObject.getAddonsFromCollection(language: String? = null): List<Addon> {

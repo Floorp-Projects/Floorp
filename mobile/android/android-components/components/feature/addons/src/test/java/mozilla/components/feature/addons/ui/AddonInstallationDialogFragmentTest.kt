@@ -4,42 +4,31 @@
 
 package mozilla.components.feature.addons.ui
 
-import android.graphics.Bitmap
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.test.runTest
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.amo.AMOAddonsProvider
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.whenever
 import mozilla.components.support.utils.ext.getParcelableCompat
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class AddonInstallationDialogFragmentTest {
@@ -55,9 +44,7 @@ class AddonInstallationDialogFragmentTest {
             translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"),
             permissions = listOf("privacy", "<all_urls>", "tabs"),
         )
-        val mockedCollectionProvider = mock<AMOAddonsProvider>()
-        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
-        assertSame(mockedCollectionProvider, fragment.addonsProvider)
+        val fragment = createAddonInstallationDialogFragment(addon)
         assertSame(addon, fragment.arguments?.getParcelableCompat(KEY_INSTALLED_ADDON, Addon::class.java))
 
         doReturn(testContext).`when`(fragment).requireContext()
@@ -77,7 +64,7 @@ class AddonInstallationDialogFragmentTest {
     fun `clicking on confirm dialog buttons notifies lambda with private browsing boolean`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
 
-        val fragment = createAddonInstallationDialogFragment(addon, mock())
+        val fragment = createAddonInstallationDialogFragment(addon)
         var confirmationWasExecuted = false
         var allowInPrivateBrowsing = false
 
@@ -106,7 +93,7 @@ class AddonInstallationDialogFragmentTest {
     @Test
     fun `dismissing the dialog notifies nothing`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
-        val fragment = createAddonInstallationDialogFragment(addon, mock())
+        val fragment = createAddonInstallationDialogFragment(addon)
         var confirmationWasExecuted = false
 
         fragment.onConfirmButtonClicked = { _, _ ->
@@ -126,7 +113,7 @@ class AddonInstallationDialogFragmentTest {
     @Test
     fun `WHEN calling onCancel THEN notifies onDismiss`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
-        val fragment = createAddonInstallationDialogFragment(addon, mock())
+        val fragment = createAddonInstallationDialogFragment(addon)
         var onDismissedWasExecuted = false
 
         fragment.onDismissed = {
@@ -146,8 +133,8 @@ class AddonInstallationDialogFragmentTest {
     @Test
     fun `dialog must have all the styles of the feature promptsStyling object`() {
         val addon = Addon("id", translatableName = mapOf(Addon.DEFAULT_LOCALE to "my_addon"))
-        val styling = AddonInstallationDialogFragment.PromptsStyling(Gravity.TOP, true)
-        val fragment = createAddonInstallationDialogFragment(addon, mock(), styling)
+        val styling = AddonDialogFragment.PromptsStyling(Gravity.TOP, true)
+        val fragment = createAddonInstallationDialogFragment(addon, styling)
 
         doReturn(testContext).`when`(fragment).requireContext()
         val dialog = fragment.onCreateDialog(null)
@@ -158,43 +145,9 @@ class AddonInstallationDialogFragmentTest {
     }
 
     @Test
-    fun `fetching the add-on icon successfully`() = runTest {
-        val addon = mock<Addon>()
-        val bitmap = mock<Bitmap>()
-        val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AMOAddonsProvider>()
-        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
-
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).thenReturn(bitmap)
-        assertNull(fragment.arguments?.getParcelableCompat(KEY_ICON, Bitmap::class.java))
-        fragment.fetchIcon(addon, mockedImageView, scope).join()
-        assertNotNull(fragment.arguments?.getParcelableCompat(KEY_ICON, Bitmap::class.java))
-        verify(mockedImageView).setImageDrawable(Mockito.any())
-    }
-
-    @Test
-    fun `handle errors while fetching the add-on icon`() = runTest {
-        val addon = mock<Addon>()
-        val mockedImageView = spy(ImageView(testContext))
-        val mockedCollectionProvider = mock<AMOAddonsProvider>()
-        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
-
-        whenever(mockedCollectionProvider.getAddonIconBitmap(addon)).then {
-            throw IOException("Request failed")
-        }
-        try {
-            fragment.fetchIcon(addon, mockedImageView, scope).join()
-            verify(mockedImageView).setColorFilter(Mockito.anyInt())
-        } catch (e: IOException) {
-            fail("The exception must be handle in the adapter")
-        }
-    }
-
-    @Test
     fun `allows state loss when committing`() {
         val addon = mock<Addon>()
-        val mockedCollectionProvider = mock<AMOAddonsProvider>()
-        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
+        val fragment = createAddonInstallationDialogFragment(addon)
 
         val fragmentManager = mock<FragmentManager>()
         val fragmentTransaction = mock<FragmentTransaction>()
@@ -204,24 +157,11 @@ class AddonInstallationDialogFragmentTest {
         verify(fragmentTransaction).commitAllowingStateLoss()
     }
 
-    @Test
-    fun `cancels icon job on stop`() {
-        val addon = mock<Addon>()
-        val mockedCollectionProvider = mock<AMOAddonsProvider>()
-        val fragment = createAddonInstallationDialogFragment(addon, mockedCollectionProvider)
-
-        val job = mock<Job>()
-        fragment.iconJob = job
-        fragment.onStop()
-        verify(job).cancel()
-    }
-
     private fun createAddonInstallationDialogFragment(
         addon: Addon,
-        addonsProvider: AMOAddonsProvider,
-        promptsStyling: AddonInstallationDialogFragment.PromptsStyling? = null,
+        promptsStyling: AddonDialogFragment.PromptsStyling? = null,
     ): AddonInstallationDialogFragment {
-        return spy(AddonInstallationDialogFragment.newInstance(addon, addonsProvider, promptsStyling = promptsStyling)).apply {
+        return spy(AddonInstallationDialogFragment.newInstance(addon, promptsStyling = promptsStyling)).apply {
             doNothing().`when`(this).dismiss()
         }
     }

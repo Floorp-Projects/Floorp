@@ -13,7 +13,7 @@ import androidx.fragment.app.FragmentTransaction
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.R
-import mozilla.components.feature.addons.ui.PermissionsDialogFragment.PromptsStyling
+import mozilla.components.feature.addons.ui.AddonDialogFragment.PromptsStyling
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals

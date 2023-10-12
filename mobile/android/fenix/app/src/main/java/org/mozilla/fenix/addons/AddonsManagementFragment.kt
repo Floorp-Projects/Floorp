@@ -103,7 +103,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     runIfFragmentIsAttached {
                         if (!shouldRefresh) {
                             adapter = AddonsManagerAdapter(
-                                addonsProvider = requireContext().components.addonsProvider,
                                 addonsManagerDelegate = managementView,
                                 addons = addons,
                                 style = createAddonStyle(requireContext()),
