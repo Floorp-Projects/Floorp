@@ -117,7 +117,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 #endif
 
   void writeOp(CacheOp op) {
-    buffer_.writeUnsigned15Bit(uint32_t(op));
+    buffer_.writeFixedUint16_t(uint16_t(op));
     nextInstructionId_++;
 #ifdef DEBUG
     MOZ_ASSERT(currentOp_.isNothing(), "Missing call to assertLengthMatches?");
