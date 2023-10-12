@@ -50,32 +50,27 @@
 
 .titlebar-buttonbox-container {
   align-items: center;
+  /* Hide window controls in fullscreen */
+  :root[inFullscreen] & {
+    display: none;
+  }
 }
 
-/* Hide window controls in fullscreen */
-:root[inFullscreen] .titlebar-buttonbox-container {
-  display: none;
-}
+.titlebar-buttonbox {
+  &:-moz-locale-dir(ltr) {
+    margin-inline: 12px 0;
 
-.titlebar-buttonbox:-moz-locale-dir(ltr) {
-  margin-left: 12px;
-  margin-right: 0;
-}
-
-.titlebar-buttonbox:-moz-locale-dir(rtl) {
-  margin-left: 12px;
-  margin-right: 12px;
-}
-
-@media (-moz-mac-rtl) {
-  .titlebar-buttonbox:-moz-locale-dir(ltr) {
-    margin-left: 12px;
-    margin-right: 12px;
+    @media (-moz-mac-rtl) {
+      margin-inline: 12px;
+    }
   }
 
-  .titlebar-buttonbox:-moz-locale-dir(rtl) {
-    margin-left: 0;
-    margin-right: 12px;
+  &:-moz-locale-dir(rtl) {
+    margin-inline: 12px;
+
+    @media (-moz-mac-rtl) {
+      margin-inline: 12px 0;
+    }
   }
 }
 
@@ -87,11 +82,11 @@
 
 .browser-toolbar {
   appearance: none;
-}
 
-.browser-toolbar:not(.titlebar-color) {
-  background: var(--toolbar-bgcolor);
-  color: var(--toolbar-color);
+  &:not(.titlebar-color) {
+    background: var(--toolbar-bgcolor);
+    color: var(--toolbar-color);
+  }
 }
 
 /* Draw the bottom border of the tabs toolbar when titlebar isn't using vibrancy */
@@ -118,22 +113,26 @@
   list-style-image: none;
 }
 
-.bookmark-item[cutting] > .toolbarbutton-icon,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
-  opacity: 0.5;
-}
+.bookmark-item {
+  > .menu-iconic-left > .menu-iconic-icon {
+    width: 16px;
+    height: 16px;
+  }
 
-.bookmark-item[cutting] > .toolbarbutton-text,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
-  opacity: 0.7;
+  &[cutting] {
+    > .toolbarbutton-icon,
+    > .menu-iconic-left > .menu-iconic-icon {
+      opacity: 0.5;
+    }
+
+    > .toolbarbutton-text,
+    > .menu-iconic-left > .menu-iconic-text {
+      opacity: 0.7;
+    }
+  }
 }
 
 /* ----- BOOKMARK MENUS ----- */
-
-.bookmark-item > .menu-iconic-left > .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
-}
 
 #bookmarksToolbarFolderMenu,
 #BMB_bookmarksToolbar,
@@ -173,11 +172,12 @@
 }
 
 /* Move the margin to the parent element to properly position the ::after badge */
-moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left > .menu-iconic-icon {
-  margin-inline: 0;
-}
 moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-inline: 0 5px;
+
+  > .menu-iconic-icon {
+    margin-inline: 0;
+  }
 }
 
 /* ----- AUTOCOMPLETE ----- */
@@ -237,22 +237,16 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   /* Default font size is 11px on mac, so this is 12px */
   font-size: 1.0909rem;
   --sidebar-background-color: -moz-mac-source-list;
-}
 
-/* Give the sidebar a vibrant appearance. Only do this when no lwtheme sidebar
- * rules are in use. Vibrant appearance values only work if there is no
- * background-color rendered behind the element. If the active theme has sidebar
- * rules, we want to show the theme's background-color in the sidebar. */
-#sidebar-box:not([lwt-sidebar]) {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-source-list;
-  -moz-font-smoothing-background-color: -moz-mac-source-list;
-}
-
-/* ----- CONTENT ----- */
-
-.openintabs-menuitem {
-  list-style-image: none;
+  /* Give the sidebar a vibrant appearance. Only do this when no lwtheme sidebar
+  * rules are in use. Vibrant appearance values only work if there is no
+  * background-color rendered behind the element. If the active theme has sidebar
+  * rules, we want to show the theme's background-color in the sidebar. */
+  &:not([lwt-sidebar]) {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-source-list;
+    -moz-font-smoothing-background-color: -moz-mac-source-list;
+  }
 }
 
 /* ::::: tabbrowser ::::: */
@@ -330,20 +324,20 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
     border-color: hsl(240, 1%, 40%);
     color: rgb(249, 249, 250);
   }
-}
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(ltr),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(rtl) {
-  border-right-style: solid;
-  border-top-right-radius: .3em;
-  margin-right: 1em;
-}
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
+  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
+    border-right-style: solid;
+    border-top-right-radius: .3em;
+    margin-right: 1em;
+  }
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(rtl),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(ltr) {
-  border-left-style: solid;
-  border-top-left-radius: .3em;
-  margin-left: 1em;
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
+  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
+    border-left-style: solid;
+    border-top-left-radius: .3em;
+    margin-left: 1em;
+  }
 }
 
 #UITourTooltipDescription {
