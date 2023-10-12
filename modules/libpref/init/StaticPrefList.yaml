@@ -2204,6 +2204,11 @@
   value: false
   mirror: always
 
+- name: dom.cache.privateBrowsing.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Exposes window.caches and skips SecureContext check.
 # dom.serviceWorkers.testing.enabled also includes the same effect.
 - name: dom.caches.testing.enabled
