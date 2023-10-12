@@ -150,6 +150,8 @@ def setup_vscode(command_context, interactive):
     else:
         new_settings = setup_clangd_rust_in_vscode(command_context)
 
+    relobjdir = mozpath.relpath(command_context.topobjdir, command_context.topsrcdir)
+
     # Add file associations.
     new_settings = {
         **new_settings,
@@ -163,6 +165,8 @@ def setup_vscode(command_context, interactive):
             "editor.defaultFormatter": "esbenp.prettier-vscode",
             "editor.formatOnSave": True,
         },
+        "files.exclude": {"obj-*": True, relobjdir: True},
+        "files.watcherExclude": {"obj-*": True, relobjdir: True},
     }
 
     import difflib
