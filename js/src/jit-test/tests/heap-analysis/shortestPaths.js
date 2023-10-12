@@ -68,25 +68,28 @@ print("shortestPaths([1234n])")
 paths = shortestPaths([1234n]);
 dumpPaths(paths);
 
-var exc;
+// Error messages are more generic under PBL.
+if (!getBuildConfiguration('pbl')) {
+    var exc;
 
-try { paths = shortestPaths(); } catch (exc) { e = ""+exc; };
-assertEq(e.includes("TypeError") && e.includes("1 argument required"), true);
+    try { paths = shortestPaths(); } catch (exc) { e = ""+exc; };
+    assertEq(e.includes("TypeError") && e.includes("1 argument required"), true);
 
-try { paths = shortestPaths(100, {}); } catch (exc) { e = ""+exc; };
-assertEq(e, "TypeError: 100 is not an array object");
+    try { paths = shortestPaths(100, {}); } catch (exc) { e = ""+exc; };
+    assertEq(e, "TypeError: 100 is not an array object");
 
-try { paths = shortestPaths([f], {start: 200}); } catch (exc) { e = ""+exc; };
-assertEq(e, "TypeError: 200 is not a GC thing");
+    try { paths = shortestPaths([f], {start: 200}); } catch (exc) { e = ""+exc; };
+    assertEq(e, "TypeError: 200 is not a GC thing");
 
-try { paths = shortestPaths([f, {}, {}, {}], { maxNumPaths: 0x40000000 }); } catch (exc) { e = "" + exc; };
-assertEq(e, "out of memory");
+    try { paths = shortestPaths([f, {}, {}, {}], { maxNumPaths: 0x40000000 }); } catch (exc) { e = "" + exc; };
+    assertEq(e, "out of memory");
 
-try { paths = shortestPaths([f], { maxNumPaths: -1 }); } catch (exc) { e = "" + exc; };
-assertEq(e, "TypeError: -1 is not greater than 0");
+    try { paths = shortestPaths([f], { maxNumPaths: -1 }); } catch (exc) { e = "" + exc; };
+    assertEq(e, "TypeError: -1 is not greater than 0");
 
-// Bug 1799824.
-let arr = [{}];
-let objWithGetter = {get start() { arr.length = 0; return {}; }};
-try { paths = shortestPaths(arr, objWithGetter); } catch (exc) { e = ""+exc; }
-assertEq(e, "TypeError: arr is not a dense array object with one or more elements");
+    // Bug 1799824.
+    let arr = [{}];
+    let objWithGetter = {get start() { arr.length = 0; return {}; }};
+    try { paths = shortestPaths(arr, objWithGetter); } catch (exc) { e = ""+exc; }
+    assertEq(e, "TypeError: arr is not a dense array object with one or more elements");
+}

@@ -1,3 +1,5 @@
+// |jit-test| skip-if: getBuildConfiguration('pbl')
+
 function check(f, message) {
   let caught = false;
   try {

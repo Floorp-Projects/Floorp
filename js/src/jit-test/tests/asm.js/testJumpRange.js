@@ -2,9 +2,11 @@ load(libdir + "asm.js");
 load(libdir + "asserts.js");
 
 var fatFunc = USE_ASM + '\n';
-for (var i = 0; i < 100; i++)
+// Recursion depth reduced to allow PBL with debug build (hence larger
+// frames) to work.
+for (var i = 0; i < 75; i++)
     fatFunc += "function f" + i + "() { return ((f" + (i+1) + "()|0)+1)|0 }\n";
-fatFunc += "function f100() { return 42 }\n";
+fatFunc += "function f75() { return 42 }\n";
 fatFunc += "return f0";
 
 for (let threshold of [0, 50, 100, 5000, -1]) {
@@ -22,5 +24,5 @@ for (let threshold of [0, 50, 100, 5000, -1]) {
     asmLink(asmCompile(USE_ASM + 'function f() {} function g() { f() } function h() { g() } return h'))();
     disableGeckoProfiling();
 
-    assertEq(asmCompile(fatFunc)()(), 142);
+    assertEq(asmCompile(fatFunc)()(), 117);
 }

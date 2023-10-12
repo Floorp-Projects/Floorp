@@ -1,6 +1,8 @@
 // |jit-test| skip-if: getBuildConfiguration("wasi")
 
-var iters = 250;
+// Recursion depth reduced to allow PBL with debug build (hence larger
+// frames) to work.
+var iters = 75;
 
 // Generate a deeply nested version of:
 //   function outer() {
