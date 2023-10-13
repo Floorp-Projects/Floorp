@@ -503,14 +503,17 @@ Writing theme-friendly CSS
 -  Never write CSS specially for the built-in light/dark theme in
    ``compacttheme.css`` unless that CSS isn't supposed to affect
    WebExtension themes.
--  These selectors can be used to target dark areas:
+-  These selectors can be used to target themed areas, though in general it's
+   recommended to try to avoid them and use ``light-dark()`` to get the right
+   colors automatically:
 
-   -  ``:-moz-lwtheme-brighttext``: dark window frame.
-   -  ``:root[lwt-toolbar-field-brighttext]``: dark address bar and
-      searchbar.
-   -  ``:root[lwt-popup-brighttext]``: dark arrow panels and
-      autocomplete panels.
-   -  ``:root[lwt-sidebar-brighttext]``: dark sidebars.
+   - ``:root[lwt-toolbar-field="light/dark"]``: explicitly light or dark address bar and
+     searchbar.
+   - ``:root[lwt-toolbar-field-focus="light/dark"]``: explicitly light or dark address bar and
+     searchbar in the focused state.
+   - ``:root[lwt-popup="light/dark"]``: explicitly light or dark arrow panels
+     and autocomplete panels.
+   - ``:root[lwt-sidebar="light/dark"]``: explicitly light or dark sidebars.
 
 -  If you'd like a different shade of a themed area and no CSS variable
    is adequate, using colors with alpha transparency is usually a good

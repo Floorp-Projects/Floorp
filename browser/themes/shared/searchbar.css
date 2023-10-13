@@ -31,7 +31,7 @@
 }
 
 /* Make the contrast stronger in dark mode */
-:root[lwt-toolbar-field-focus-brighttext] .search-panel-header > label {
+:root[lwt-toolbar-field-focus="dark"] .search-panel-header > label {
   opacity: 1;
 }
 

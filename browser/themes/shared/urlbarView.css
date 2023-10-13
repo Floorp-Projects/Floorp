@@ -497,7 +497,7 @@
     pointer-events: none;
   }
 
-  :root[lwt-toolbar-field-focus-brighttext] &::before {
+  :root[lwt-toolbar-field-focus="dark"] &::before {
     /* Same as `.search-panel-header > label` in searchbar.css */
     opacity: 1;
   }

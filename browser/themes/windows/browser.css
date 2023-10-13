@@ -6,6 +6,10 @@
 @import url("chrome://browser/skin/contextmenu.css");
 @import url("chrome://browser/skin/browser-custom-colors.css");
 
+:root {
+  --sidebar-border-color: ThreeDLightShadow;
+}
+
 #menubar-items {
   flex-direction: column; /* for flex hack */
   justify-content: normal; /* align the menubar to the top also in customize mode */
@@ -342,12 +346,6 @@
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid ThreeDShadow;
-}
-
-/* Content area */
-
-#browser {
-  --sidebar-border-color: ThreeDLightShadow;
 }
 
 /* Tabstrip */

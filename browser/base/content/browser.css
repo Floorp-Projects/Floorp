@@ -385,11 +385,13 @@ toolbarpaletteitem {
   }
   toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > & {
     list-style-image: var(--webextension-menupanel-image, inherit);
-
-    :root[lwt-popup-brighttext] & {
+    /* TODO: This feels a bit odd, why do we have three images? It feels we
+     * should probably have only two (light/dark), and choose based on
+     * prefers-color-scheme + lwt-popup */
+    :root[lwt-popup="dark"] & {
       list-style-image: var(--webextension-menupanel-image-light, inherit);
     }
-    :root:not([lwt-popup-brighttext]) &:-moz-lwtheme {
+    :root[lwt-popup="light"] & {
       list-style-image: var(--webextension-menupanel-image-dark, inherit);
     }
   }
