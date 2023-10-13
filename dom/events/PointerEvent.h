@@ -48,6 +48,7 @@ class PointerEvent : public MouseEvent {
   int32_t Twist();
   bool IsPrimary();
   void GetPointerType(nsAString& aPointerType);
+  static bool EnableGetCoalescedEvents(JSContext* aCx, JSObject* aGlobal);
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
   void GetPredictedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
 
