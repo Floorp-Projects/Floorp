@@ -717,7 +717,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    * @return Whether web fonts support is enabled.
    */
   public boolean getWebFontsEnabled() {
-    return mWebFonts.get() != 0 ? true : false;
+    return mWebFonts.get() != 0;
   }
 
   /**

@@ -38,8 +38,8 @@ public final class GeckoSurface implements Parcelable {
   public GeckoSurface(final Parcel p) {
     mSurface = Surface.CREATOR.createFromParcel(p);
     mHandle = p.readLong();
-    mIsSingleBuffer = p.readByte() == 1 ? true : false;
-    mIsAvailable = (p.readByte() == 1 ? true : false);
+    mIsSingleBuffer = p.readByte() == 1;
+    mIsAvailable = p.readByte() == 1;
     mMyPid = p.readInt();
   }
 
