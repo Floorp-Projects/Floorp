@@ -27,10 +27,10 @@ class MIDIMessage;
  */
 class MIDIOutput final : public MIDIPort {
  public:
-  static RefPtr<MIDIOutput> Create(nsPIDOMWindowInner* aWindow,
-                                   MIDIAccess* aMIDIAccessParent,
-                                   const MIDIPortInfo& aPortInfo,
-                                   const bool aSysexEnabled);
+  static MIDIOutput* Create(nsPIDOMWindowInner* aWindow,
+                            MIDIAccess* aMIDIAccessParent,
+                            const MIDIPortInfo& aPortInfo,
+                            const bool aSysexEnabled);
   ~MIDIOutput() = default;
 
   JSObject* WrapObject(JSContext* aCx,
@@ -43,7 +43,7 @@ class MIDIOutput final : public MIDIPort {
   void Clear();
 
  private:
-  explicit MIDIOutput(nsPIDOMWindowInner* aWindow);
+  MIDIOutput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent);
 };
 
 }  // namespace dom

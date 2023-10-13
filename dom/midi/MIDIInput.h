@@ -21,10 +21,10 @@ class MIDIPortInfo;
  */
 class MIDIInput final : public MIDIPort {
  public:
-  static RefPtr<MIDIInput> Create(nsPIDOMWindowInner* aWindow,
-                                  MIDIAccess* aMIDIAccessParent,
-                                  const MIDIPortInfo& aPortInfo,
-                                  const bool aSysexEnabled);
+  static MIDIInput* Create(nsPIDOMWindowInner* aWindow,
+                           MIDIAccess* aMIDIAccessParent,
+                           const MIDIPortInfo& aPortInfo,
+                           const bool aSysexEnabled);
   ~MIDIInput() = default;
 
   JSObject* WrapObject(JSContext* aCx,
@@ -37,7 +37,7 @@ class MIDIInput final : public MIDIPort {
   void DisconnectFromOwner() override;
 
  private:
-  explicit MIDIInput(nsPIDOMWindowInner* aWindow);
+  MIDIInput(nsPIDOMWindowInner* aWindow, MIDIAccess* aMIDIAccessParent);
   // Takes an array of IPC MIDIMessage objects and turns them into
   // MIDIMessageEvents, which it then fires.
   void Receive(const nsTArray<MIDIMessage>& aMsgs) override;

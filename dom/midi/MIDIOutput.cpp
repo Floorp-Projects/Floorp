@@ -18,18 +18,19 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-MIDIOutput::MIDIOutput(nsPIDOMWindowInner* aWindow) : MIDIPort(aWindow) {}
+MIDIOutput::MIDIOutput(nsPIDOMWindowInner* aWindow,
+                       MIDIAccess* aMIDIAccessParent)
+    : MIDIPort(aWindow, aMIDIAccessParent) {}
 
 // static
-RefPtr<MIDIOutput> MIDIOutput::Create(nsPIDOMWindowInner* aWindow,
-                                      MIDIAccess* aMIDIAccessParent,
-                                      const MIDIPortInfo& aPortInfo,
-                                      const bool aSysexEnabled) {
+MIDIOutput* MIDIOutput::Create(nsPIDOMWindowInner* aWindow,
+                               MIDIAccess* aMIDIAccessParent,
+                               const MIDIPortInfo& aPortInfo,
+                               const bool aSysexEnabled) {
   MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
              MIDIPortType::Output);
-  RefPtr<MIDIOutput> port = new MIDIOutput(aWindow);
-  if (NS_WARN_IF(
-          !port->Initialize(aPortInfo, aSysexEnabled, aMIDIAccessParent))) {
+  auto* port = new MIDIOutput(aWindow, aMIDIAccessParent);
+  if (NS_WARN_IF(!port->Initialize(aPortInfo, aSysexEnabled))) {
     return nullptr;
   }
   return port;
