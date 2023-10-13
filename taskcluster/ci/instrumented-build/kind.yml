@@ -179,8 +179,6 @@ jobs:
                 - android-ndk-linux
                 - android-sdk-linux
                 - linux64-jdk
-                # Workaround issues in binutils from the ndk with the compiler-rt from clang-13
-                - linux64-binutils
                 - linux64-clang
                 - linux64-rust-android
                 - linux64-rust-size
