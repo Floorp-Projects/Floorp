@@ -105,7 +105,7 @@ class ProviderClipboard extends UrlbarProvider {
       {
         url: this.#previousClipboard.value,
         title: this.#previousClipboard.value,
-        icon: "chrome://global/skin/icons/edit-copy.svg",
+        icon: "chrome://global/skin/icons/clipboard.svg",
       }
     );
 
