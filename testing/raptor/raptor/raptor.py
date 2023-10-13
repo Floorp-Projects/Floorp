@@ -124,6 +124,7 @@ def main(args=sys.argv[1:]):
             benchmark_repository=args.benchmark_repository,
             benchmark_revision=args.benchmark_revision,
             benchmark_branch=args.benchmark_branch,
+            page_timeout=args.page_timeout,
         )
     except Exception:
         traceback.print_exc()

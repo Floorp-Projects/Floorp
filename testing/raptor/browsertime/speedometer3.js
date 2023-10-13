@@ -8,8 +8,6 @@ module.exports = async function (context, commands) {
   context.log.info("Starting Speedometer 3 test");
   let url = context.options.browsertime.url;
   let page_cycles = context.options.browsertime.page_cycles;
-  let speedometer_iterations =
-    context.options.browsertime.speedometer_iterations;
   let page_cycle_delay = context.options.browsertime.page_cycle_delay;
   let post_startup_delay = context.options.browsertime.post_startup_delay;
   let page_timeout = context.options.timeouts.pageLoad;
@@ -36,24 +34,7 @@ module.exports = async function (context, commands) {
     await commands.measure.start(url);
 
     await commands.js.runAndWait(`
-        window.testDone = false;
-        window.suiteValues = [];
-        const benchmarkClient = {
-          didRunSuites(measuredValues) {
-            window.suiteValues.push(measuredValues);
-          },
-          didFinishLastIteration() {
-            window.testDone = true;
-          }
-        };
-        window.Suites.forEach((el) => {
-          el.disabled = false;
-        });
-        // BenchmarkRunner is overriden as the InteractiveBenchmarkRunner
-        const runner = new BenchmarkRunner(window.Suites, ${speedometer_iterations});
-        runner._client = benchmarkClient;
-
-        runner.runSuites();
+        this.benchmarkClient.startBenchmark()
     `);
 
     let data_exists = false;
@@ -66,7 +47,9 @@ module.exports = async function (context, commands) {
       let wait_time = 3000;
       context.log.info("Waiting %d ms for data from speedometer...", wait_time);
       await commands.wait.byTime(wait_time);
-      data_exists = await commands.js.run("return window.testDone;");
+      data_exists = await commands.js.run(
+        "return !(this.benchmarkClient._isRunning)"
+      );
     }
     if (expose_profiler === "true") {
       context.log.info("Custom profiler stop!");
@@ -80,7 +63,9 @@ module.exports = async function (context, commands) {
       context.log.error("Benchmark timed out. Aborting...");
       return false;
     }
-    let data = await commands.js.run(`return window.suiteValues;`);
+    let data = await commands.js.run(
+      `return this.benchmarkClient._measuredValuesList;`
+    );
     context.log.info("Value of benchmark data: ", data);
 
     commands.measure.addObject({ browsertime_benchmark: { s3: data } });
