@@ -21,6 +21,7 @@
 #include "EventLog.h"
 #include "Notification.h"
 #include "Registry.h"
+#include "RemoteSettings.h"
 #include "ScheduledTask.h"
 #include "SetDefaultBrowser.h"
 #include "Telemetry.h"
@@ -307,6 +308,11 @@ int wmain(int argc, wchar_t** argv) {
     }
 
     return RemoveTasks(argv[2], WhichTasks::WdbaTaskOnly);
+  } else if (!wcscmp(argv[1], L"debug-remote-disabled")) {
+    int disabled = IsAgentRemoteDisabled();
+    std::cerr << "default-browser-agent: IsAgentRemoteDisabled: " << disabled
+              << std::endl;
+    return S_OK;
   }
 
   // We check for disablement by policy because that's assumed to be static.
@@ -376,6 +382,12 @@ int wmain(int argc, wchar_t** argv) {
     bool ranRecently = false;
     if (!force && (!CheckIfAppRanRecently(&ranRecently) || !ranRecently)) {
       return SCHED_E_TASK_ATTEMPTED;
+    }
+
+    // Check for remote disable and (re-)enable before (potentially)
+    // updating registry entries and showing notifications.
+    if (IsAgentRemoteDisabled()) {
+      return S_OK;
     }
 
     DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
