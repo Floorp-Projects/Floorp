@@ -65,7 +65,7 @@ g.test('color_attachments,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
     const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
 
@@ -114,7 +114,7 @@ g.test('depth_stencil_attachment,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -153,7 +153,7 @@ g.test('occlusion_query_set,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -178,14 +178,18 @@ g.test('timestamp_query_set,device_mismatch')
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const timestampWrite = {
-      querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
-      queryIndex: 0,
-      location: 'beginning' as const,
+    const timestampQuerySet = sourceDevice.createQuerySet({
+      type: 'timestamp',
+      count: 1,
+    });
+
+    const timestampWrites = {
+      querySet: timestampQuerySet,
+      beginningOfPassWriteIndex: 0,
     };
 
     const colorTexture = t.device.createTexture({
@@ -203,7 +207,7 @@ g.test('timestamp_query_set,device_mismatch')
           storeOp: 'store',
         },
       ],
-      timestampWrites: [timestampWrite],
+      timestampWrites,
     });
     pass.end();
 

@@ -1,4 +1,4 @@
-import { kTextureFormatInfo } from '../../../capability_info.js';
+import { kTextureFormatInfo } from '../../../format_info.js';
 import {
   getFragmentShaderCodeWithOutput,
   getPlainTypeInfo,

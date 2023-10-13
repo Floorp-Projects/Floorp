@@ -12,20 +12,26 @@
     "browser": true,
     "node": true
   },
-  "plugins": ["node", "ban", "import", "deprecation"],
+  "plugins": ["node", "ban", "import", "deprecation", "gpuweb-cts"],
   "rules": {
     // Core rules
     "linebreak-style": ["warn", "unix"],
     "no-console": "warn",
+    "no-throw-literal": "warn",
     "no-undef": "off",
     "no-useless-rename": "warn",
     "object-shorthand": "warn",
+    "prefer-promise-reject-errors": "warn",
     "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
 
     // All test TODOs must be tracked inside file/test descriptions or READMEs.
     // Comments relating to TODOs in descriptions can be marked with references like "[1]".
     // TODOs not relating to test coverage can be marked MAINTENANCE_TODO or similar.
     "no-warning-comments": ["warn", { "terms": ["todo", "fixme", "xxx"], "location": "anywhere" }],
+
+    // Plugin: gpuweb-cts
+    "gpuweb-cts/string-trailing-space": "warn",
+    "gpuweb-cts/string-tabs": "warn",
 
     // Plugin: @typescript-eslint
     "@typescript-eslint/no-inferrable-types": "off",
@@ -46,10 +52,14 @@
     "@typescript-eslint/no-this-alias": "warn",
     "@typescript-eslint/no-unnecessary-type-assertion": "warn",
     "@typescript-eslint/no-unnecessary-type-constraint": "warn",
-    "@typescript-eslint/no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "vars": "all", "args": "none", "varsIgnorePattern": "^_" }
+    ],
     "@typescript-eslint/prefer-as-const": "warn",
     "@typescript-eslint/prefer-for-of": "warn",
     "@typescript-eslint/prefer-namespace-keyword": "warn",
+    "@typescript-eslint/require-await": "warn",
     "@typescript-eslint/restrict-plus-operands": "warn",
     "@typescript-eslint/triple-slash-reference": "warn",
     "@typescript-eslint/unbound-method": "warn",

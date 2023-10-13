@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-TODO: Test more corner case values for Float16 / Float32 (INF, NaN, +-0, ...) and reduce the
+TODO: Test more corner case values for Float16 / Float32 (INF, NaN, ...) and reduce the
 float tolerance.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -138,7 +138,7 @@ fn check(success : bool) {
 }
 
 fn floatsSimilar(a : f32, b : f32, tolerance : f32) -> bool {
-  // TODO do we check for + and - 0?
+  // Note: -0.0 and 0.0 have different bit patterns, but compare as equal.
   return abs(a - b) < tolerance;
 }
 
@@ -257,7 +257,8 @@ struct VSOutputs {
 
     switch (formatInfo.type) {
       case 'float': {
-        const data = [42.42, 0.0, 1.0, -1.0, 1000, -18.7, 25.17];
+        // -0.0 and +0.0 have different bit patterns, but compare as equal.
+        const data = [42.42, 0.0, -0.0, 1.0, -1.0, 1000, -18.7, 25.17];
         const expectedData = new Float32Array(data).buffer;
         const vertexData =
           bitSize === 32
@@ -910,13 +911,15 @@ g.test('max_buffers_and_attribs')
   .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
-    const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
+    // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
+    const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
+    const attributesPerBuffer = Math.ceil(maxVertexAttributes / kMaxVertexBuffers);
     let attributesEmitted = 0;
 
     const state = [];
     for (let i = 0; i < kMaxVertexBuffers; i++) {
       const attributes = [];
-      for (let j = 0; j < attributesPerBuffer && attributesEmitted < kMaxVertexAttributes; j++) {
+      for (let j = 0; j < attributesPerBuffer && attributesEmitted < maxVertexAttributes; j++) {
         attributes.push({ format, offset: 0, shaderLocation: attributesEmitted });
         attributesEmitted++;
       }
@@ -1051,8 +1054,10 @@ g.test('overlapping_attributes')
   .fn(t => {
     const { format } = t.params;
 
+    // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
+    const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
     const attributes = [];
-    for (let i = 0; i < kMaxVertexAttributes; i++) {
+    for (let i = 0; i < maxVertexAttributes; i++) {
       attributes.push({ format, offset: 0, shaderLocation: i });
     }
 

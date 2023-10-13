@@ -53,8 +53,6 @@ g.test('pass_end_invalid_order')
     `
   Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
-
-  TODO: Update this test according to https://github.com/gpuweb/gpuweb/issues/2464
   `
   )
   .params(u =>
@@ -64,8 +62,10 @@ g.test('pass_end_invalid_order')
       .beginSubcases()
       .combine('firstPassEnd', [true, false])
       .combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])
+      // Don't end the first pass multiple times (that generates a validation error but doesn't invalidate the encoder)
+      .unless(p => p.firstPassEnd && p.endPasses.includes(0))
   )
-  .fn(async t => {
+  .fn(t => {
     const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
 
     const view = t.createAttachmentTextureView();
@@ -102,7 +102,7 @@ g.test('call_after_successful_finish')
       .combine('prePassType', ['compute', 'render', 'no-op'])
       .combine('IsEncoderFinished', [false, true])
   )
-  .fn(async t => {
+  .fn(t => {
     const { prePassType, IsEncoderFinished, callCmd } = t.params;
 
     const view = t.createAttachmentTextureView();
@@ -160,7 +160,7 @@ g.test('pass_end_none')
   `
   )
   .paramsSubcasesOnly(u => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1]))
-  .fn(async t => {
+  .fn(t => {
     const { passType, endCount } = t.params;
 
     const view = t.createAttachmentTextureView();
@@ -178,15 +178,20 @@ g.test('pass_end_none')
     }, endCount === 0);
   });
 
-g.test('pass_end_twice')
-  .desc('Test that ending a {compute,render} pass twice generates a validation error.')
+g.test('pass_end_twice,basic')
+  .desc(
+    'Test that ending a {compute,render} pass twice generates a validation error. The parent encoder (command encoder) can be either locked or open.'
+  )
   .paramsSubcasesOnly(u =>
     u //
       .combine('passType', ['compute', 'render'])
+      // Simply end twice, the parent encoder is open at that time. If the second pass end is in the middle of another pass, the parent encoder is locked. It should generate a validation error in either situation.
       .combine('endTwice', [false, true])
+      .combine('secondEndInAnotherPass', [false, 'compute', 'render'])
+      .filter(p => p.endTwice || !p.secondEndInAnotherPass)
   )
-  .fn(async t => {
-    const { passType, endTwice } = t.params;
+  .fn(t => {
+    const { passType, endTwice, secondEndInAnotherPass } = t.params;
 
     const view = t.createAttachmentTextureView();
     const encoder = t.device.createCommandEncoder();
@@ -195,11 +200,52 @@ g.test('pass_end_twice')
       passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
     pass.end();
+
+    if (secondEndInAnotherPass) {
+      const pass1 =
+        secondEndInAnotherPass === 'compute'
+          ? encoder.beginComputePass()
+          : t.beginRenderPass(encoder, view);
+
+      t.expectValidationError(() => {
+        pass.end();
+      });
+
+      pass1.end();
+    } else {
+      if (endTwice) {
+        t.expectValidationError(() => {
+          pass.end();
+        });
+      }
+    }
+
+    encoder.finish();
+  });
+
+g.test('pass_end_twice,render_pass_invalid')
+  .desc(
+    'Test that ending a render pass twice generates a validation error even if the pass is invalid.'
+  )
+  .paramsSubcasesOnly(u => u.combine('endTwice', [false, true]))
+  .fn(t => {
+    const { endTwice } = t.params;
+
+    const encoder = t.device.createCommandEncoder();
+    // Pass encoder creation will fail because both color and depth/stencil attachments are empty.
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [],
+    });
+
+    pass.end();
+
     if (endTwice) {
       t.expectValidationError(() => {
         pass.end();
       });
     }
 
-    encoder.finish();
+    t.expectValidationError(() => {
+      encoder.finish();
+    });
   });

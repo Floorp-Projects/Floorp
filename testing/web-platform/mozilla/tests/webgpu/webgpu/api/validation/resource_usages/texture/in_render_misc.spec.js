@@ -71,7 +71,7 @@ g.test('subresources,set_bind_group_on_same_index_color_texture')
       ])
       .combine('hasConflict', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { useDifferentTextureAsTexture2, baseLayer2, view2Binding, hasConflict } = t.params;
 
     const texture0 = t.device.createTexture({
@@ -147,7 +147,7 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
       .combine('bindAspect', ['depth-only', 'stencil-only'])
       .combine('depthStencilReadOnly', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { bindAspect, depthStencilReadOnly } = t.params;
     const depthStencilTexture = t.device.createTexture({
       format: 'depth24plus-stencil8',
@@ -203,7 +203,7 @@ g.test('subresources,set_unused_bind_group')
   scope can only be a compatible usage list.`
   )
   .params(u => u.combine('inRenderPass', [true, false]).combine('hasConflict', [true, false]))
-  .fn(async t => {
+  .fn(t => {
     const { inRenderPass, hasConflict } = t.params;
 
     const texture0 = t.device.createTexture({
@@ -329,7 +329,7 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
           usage1 === 'copy-dst'
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1 } = t.params;
 
     const texture = t.device.createTexture({

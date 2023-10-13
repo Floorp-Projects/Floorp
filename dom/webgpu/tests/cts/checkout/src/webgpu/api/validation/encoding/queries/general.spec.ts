@@ -30,7 +30,7 @@ Tests that set occlusion query set with all types in render pass descriptor:
       t.selectDeviceForQueryTypeOrSkipTestCase(type);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const type = t.params.type;
     const querySet = type === undefined ? undefined : createQuerySetWithType(t, type, 1);
 
@@ -99,7 +99,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
 
     t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
   })
-  .fn(async t => {
+  .fn(t => {
     const { type, queryIndex } = t.params;
 
     const count = 2;
@@ -121,7 +121,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
   .beforeAllSubcases(t => {
     t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
   })
-  .fn(async t => {
+  .fn(t => {
     const { querySetState } = t.params;
 
     const querySet = t.createQuerySetWithState(querySetState, {
@@ -141,7 +141,7 @@ g.test('timestamp_query,device_mismatch')
     t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 

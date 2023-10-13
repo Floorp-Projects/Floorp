@@ -102,11 +102,11 @@ g.test('state_and_binding_index')
       .combine('state', kResourceStates)
       .combine('resourceType', ['buffer', 'texture'])
   )
-  .fn(async t => {
+  .fn(t => {
     const { encoderType, state, resourceType } = t.params;
     const maxBindGroups = t.device.limits.maxBindGroups;
 
-    async function runTest(index) {
+    function runTest(index) {
       const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
       encoder.setBindGroup(index, t.createBindGroup(state, resourceType, encoderType, [index]));
 
@@ -116,7 +116,7 @@ g.test('state_and_binding_index')
     // MAINTENANCE_TODO: move to subcases() once we can query the device limits
     for (const index of [1, maxBindGroups - 1, maxBindGroups]) {
       t.debug(`test bind group index ${index}`);
-      await runTest(index);
+      runTest(index);
     }
   });
 
@@ -137,7 +137,7 @@ g.test('bind_group,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { encoderType, useU32Array, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -178,7 +178,7 @@ g.test('bind_group,device_mismatch')
 g.test('dynamic_offsets_passed_but_not_expected')
   .desc('Tests that setBindGroup correctly errors on unexpected dynamicOffsets.')
   .params(u => u.combine('encoderType', kProgrammableEncoderTypes))
-  .fn(async t => {
+  .fn(t => {
     const { encoderType } = t.params;
     const bindGroup = t.createBindGroup('valid', 'buffer', encoderType, []);
     const dynamicOffsets = [0];
@@ -214,7 +214,7 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
       ])
       .combine('useU32array', [false, true])
   )
-  .fn(async t => {
+  .fn(t => {
     const kBindingSize = 12;
 
     const bindGroupLayout = t.device.createBindGroupLayout({
@@ -397,7 +397,7 @@ g.test('buffer_dynamic_offsets')
             ]
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const { type, dynamicOffset, encoderType } = t.params;
     const kBindingSize = 12;
 

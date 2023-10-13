@@ -8,16 +8,15 @@ TODO:
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
+import { kCanvasTextureFormats, kTextureUsages } from '../../capability_info.js';
+import { GPUConst } from '../../constants.js';
 import {
   kAllTextureFormats,
-  kCanvasTextureFormats,
-  kTextureUsages,
-  filterFormatsByFeature,
   kFeaturesForFormats,
   kTextureFormats,
+  filterFormatsByFeature,
   viewCompatible,
-} from '../../capability_info.js';
-import { GPUConst } from '../../constants.js';
+} from '../../format_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 
@@ -33,7 +32,7 @@ g.test('defaults')
     u //
       .combine('canvasType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
@@ -65,21 +64,21 @@ g.test('device')
     u //
       .combine('canvasType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const { canvasType } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    // Calling configure without a device should throw.
-    t.shouldThrow(true, () => {
+    // Calling configure without a device should throw a TypeError.
+    t.shouldThrow('TypeError', () => {
       ctx.configure({
         format: 'rgba8unorm',
       } as GPUCanvasConfiguration);
     });
 
-    // Device is not configured, so getCurrentTexture will throw.
-    t.shouldThrow(true, () => {
+    // Device is not configured, so getCurrentTexture will throw an InvalidStateError.
+    t.shouldThrow('InvalidStateError', () => {
       ctx.getCurrentTexture();
     });
 
@@ -94,7 +93,7 @@ g.test('device')
 
     // Unconfiguring should cause the device to be cleared.
     ctx.unconfigure();
-    t.shouldThrow(true, () => {
+    t.shouldThrow('InvalidStateError', () => {
       ctx.getCurrentTexture();
     });
 
@@ -120,7 +119,7 @@ g.test('format')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { canvasType, format } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
@@ -169,7 +168,7 @@ g.test('usage')
         return usageSet;
       })
   )
-  .fn(async t => {
+  .fn(t => {
     const { canvasType, usage } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
@@ -279,7 +278,7 @@ g.test('alpha_mode')
       .beginSubcases()
       .combine('alphaMode', ['opaque', 'premultiplied'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { canvasType, alphaMode } = t.params;
     const canvas = createCanvas(t, canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
@@ -396,6 +395,9 @@ g.test('viewFormats')
   })
   .fn(t => {
     const { canvasType, format, viewFormat } = t.params;
+
+    t.skipIfTextureFormatNotSupported(viewFormat);
+
     const canvas = createCanvas(t, canvasType, 1, 1);
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');

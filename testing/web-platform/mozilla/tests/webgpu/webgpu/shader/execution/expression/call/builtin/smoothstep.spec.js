@@ -13,10 +13,10 @@ For scalar T, the result is t * t * (3.0 - 2.0 * t), where t = clamp((x - low) /
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { smoothStepInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -24,21 +24,21 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('smoothstep', {
   f32_const: () => {
-    return generateTernaryToF32IntervalCases(
+    return FP.f32.generateScalarTripleToIntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      'f32-only',
-      smoothStepInterval
+      'finite',
+      FP.f32.smoothStepInterval
     );
   },
   f32_non_const: () => {
-    return generateTernaryToF32IntervalCases(
+    return FP.f32.generateScalarTripleToIntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
       'unfiltered',
-      smoothStepInterval
+      FP.f32.smoothStepInterval
     );
   },
 });

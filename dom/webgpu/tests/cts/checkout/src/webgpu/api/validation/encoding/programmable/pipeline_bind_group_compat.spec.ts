@@ -365,7 +365,7 @@ g.test('buffer_binding,render_pipeline')
   `
   )
   .params(u => u.combine('type', kBufferBindingTypes))
-  .fn(async t => {
+  .fn(t => {
     const { type } = t.params;
 
     // Create fixed bindGroup
@@ -426,7 +426,7 @@ g.test('sampler_binding,render_pipeline')
       .combine('bglType', kSamplerBindingTypes)
       .combine('bgType', kSamplerBindingTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const { bglType, bgType } = t.params;
     const bindGroup = t.device.createBindGroup({
       entries: [
@@ -657,7 +657,7 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass')
       .combine('bindGroupLayoutEntryCount', [3, 4])
       .combine('computeCommand', ['dispatchIndirect', 'dispatch'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { bindGroupLayoutEntryCount, computeCommand } = t.params;
 
     const emptyBGLCount = 4;
@@ -719,7 +719,7 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
         'drawIndexedIndirect',
       ] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { bindGroupLayoutEntryCount, renderCommand } = t.params;
 
     const emptyBGLCount = 4;

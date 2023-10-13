@@ -33,7 +33,23 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
-<meta name=variant content='?q=webgpu:api,operation,shader_module,compilation_info:compilationInfo_returns:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:copy_texture_to_partial_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:uniform_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:readonly_storage_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:storage_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:vertex_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:index_buffer:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:indirect_buffer_for_draw_indirect:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,buffer:indirect_buffer_for_dispatch_indirect:*'>
+<meta name=variant content='?q=webgpu:api,operation,resource_init,texture_zero:uninitialized_texture_is_zero:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,anisotropy:anisotropic_filter_checkerboard:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,anisotropy:anisotropic_filter_mipmap_color:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,filter_mode:magFilter,nearest:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,filter_mode:magFilter,linear:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,filter_mode:minFilter,nearest:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,filter_mode:minFilter,linear:*'>
+<meta name=variant content='?q=webgpu:api,operation,sampling,filter_mode:mipmapFilter:*'>
+<meta name=variant content='?q=webgpu:api,operation,shader_module,compilation_info:getCompilationInfo_returns:*'>
 <meta name=variant content='?q=webgpu:api,operation,shader_module,compilation_info:line_number_and_position:*'>
 <meta name=variant content='?q=webgpu:api,operation,shader_module,compilation_info:offset_and_length:*'>
 <meta name=variant content='?q=webgpu:api,operation,texture_view,format_reinterpretation:texture_binding:*'>
@@ -42,19 +58,3 @@
 <meta name=variant content='?q=webgpu:api,operation,texture_view,read:dimension:*'>
 <meta name=variant content='?q=webgpu:api,operation,texture_view,read:aspect:*'>
 <meta name=variant content='?q=webgpu:api,operation,texture_view,write:format:*'>
-<meta name=variant content='?q=webgpu:api,operation,texture_view,write:dimension:*'>
-<meta name=variant content='?q=webgpu:api,operation,texture_view,write:aspect:*'>
-<meta name=variant content='?q=webgpu:api,operation,uncapturederror:constructor:*'>
-<meta name=variant content='?q=webgpu:api,operation,uncapturederror:iff_uncaptured:*'>
-<meta name=variant content='?q=webgpu:api,operation,uncapturederror:only_original_device_is_event_target:*'>
-<meta name=variant content='?q=webgpu:api,operation,uncapturederror:uncapturederror_from_non_originating_thread:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:buffers_with_varying_step_mode:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_overlapped:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_interleaved:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:max_buffers_and_attribs:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:discontiguous_location_and_attribs:*'>
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:overlapping_attributes:*'>

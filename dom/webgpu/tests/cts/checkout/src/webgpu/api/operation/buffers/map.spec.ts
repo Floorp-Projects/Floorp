@@ -302,7 +302,7 @@ then expectContents (which does copyBufferToBuffer + map-read) to ensure the con
       .beginSubcases()
       .combineWithParams(kSubcases)
   )
-  .fn(async t => {
+  .fn(t => {
     const { size, range, mappable } = t.params;
     const [, rangeSize] = reifyMapRange(size, range);
 
@@ -367,12 +367,19 @@ g.test('mappedAtCreation,mapState')
   .desc('Test that exposed map state of buffer created with mappedAtCreation has expected values.')
   .params(u =>
     u
-      .combine('validationError', [false, true])
+      .combine('usageType', ['invalid', 'read', 'write'])
       .combine('afterUnmap', [false, true])
       .combine('afterDestroy', [false, true])
   )
-  .fn(async t => {
-    const { validationError, afterUnmap, afterDestroy } = t.params;
+  .fn(t => {
+    const { usageType, afterUnmap, afterDestroy } = t.params;
+    const usage =
+      usageType === 'read'
+        ? GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        : usageType === 'write'
+        ? GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        : 0;
+    const validationError = usage === 0;
     const size = 8;
     const range = [0, 8];
 
@@ -381,7 +388,7 @@ g.test('mappedAtCreation,mapState')
       buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size,
-        usage: validationError ? 0 : GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+        usage,
       });
     }, validationError);
 
@@ -407,8 +414,8 @@ g.test('mapAsync,mapState')
   .desc('Test that exposed map state of buffer mapped with mapAsync has expected values.')
   .params(u =>
     u
-      .combine('bufferCreationValidationError', [false, true])
-      .combine('mapAsyncValidationError', [false, true])
+      .combine('usageType', ['invalid', 'read', 'write'])
+      .combine('mapModeType', ['READ', 'WRITE'] as const)
       .combine('beforeUnmap', [false, true])
       .combine('beforeDestroy', [false, true])
       .combine('afterUnmap', [false, true])
@@ -416,8 +423,8 @@ g.test('mapAsync,mapState')
   )
   .fn(async t => {
     const {
-      bufferCreationValidationError,
-      mapAsyncValidationError,
+      usageType,
+      mapModeType,
       beforeUnmap,
       beforeDestroy,
       afterUnmap,
@@ -425,25 +432,35 @@ g.test('mapAsync,mapState')
     } = t.params;
     const size = 8;
     const range = [0, 8];
+    const usage =
+      usageType === 'read'
+        ? GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        : usageType === 'write'
+        ? GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+        : 0;
+    const bufferCreationValidationError = usage === 0;
+    const mapMode = GPUMapMode[mapModeType];
 
     let buffer: GPUBuffer;
     t.expectValidationError(() => {
       buffer = t.device.createBuffer({
         mappedAtCreation: false,
         size,
-        usage: bufferCreationValidationError
-          ? 0
-          : GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+        usage,
       });
     }, bufferCreationValidationError);
 
     t.expect(buffer!.mapState === 'unmapped');
 
     {
+      const mapAsyncValidationError =
+        bufferCreationValidationError ||
+        (mapMode === GPUMapMode.READ && !(usage & GPUBufferUsage.MAP_READ)) ||
+        (mapMode === GPUMapMode.WRITE && !(usage & GPUBufferUsage.MAP_WRITE));
       let promise: Promise<void>;
       t.expectValidationError(() => {
-        promise = buffer!.mapAsync(mapAsyncValidationError ? 0 : GPUMapMode.WRITE);
-      }, bufferCreationValidationError || mapAsyncValidationError);
+        promise = buffer!.mapAsync(mapMode);
+      }, mapAsyncValidationError);
       t.expect(buffer!.mapState === 'pending');
 
       try {

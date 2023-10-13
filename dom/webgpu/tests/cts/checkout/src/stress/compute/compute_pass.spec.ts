@@ -13,7 +13,7 @@ g.test('many')
     `Tests execution of a huge number of compute passes using the same
 GPUComputePipeline.`
   )
-  .fn(async t => {
+  .fn(t => {
     const kNumElements = 64;
     const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
@@ -58,7 +58,7 @@ g.test('pipeline_churn')
     `Tests execution of a huge number of compute passes which each use a different
 GPUComputePipeline.`
   )
-  .fn(async t => {
+  .fn(t => {
     const buffer = t.makeBufferWithContents(
       new Uint32Array([0]),
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
@@ -98,7 +98,7 @@ g.test('bind_group_churn')
     `Tests execution of compute passes which switch between a huge number of bind
 groups.`
   )
-  .fn(async t => {
+  .fn(t => {
     const kNumElements = 64;
     const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
     const buffer1 = t.makeBufferWithContents(
@@ -157,7 +157,7 @@ groups.`
 
 g.test('many_dispatches')
   .desc(`Tests execution of compute passes with a huge number of dispatch calls`)
-  .fn(async t => {
+  .fn(t => {
     const kNumElements = 64;
     const data = new Uint32Array([...iterRange(kNumElements, x => x)]);
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);

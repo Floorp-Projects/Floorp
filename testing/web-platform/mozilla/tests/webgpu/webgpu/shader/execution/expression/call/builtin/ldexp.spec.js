@@ -15,14 +15,12 @@ Returns e1 * 2^e2. Component-wise when T is a vector.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kValue } from '../../../../../util/constants.js';
-import { f32, i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
-import { ldexpInterval } from '../../../../../util/f32_interval.js';
+import { i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
+import { FP } from '../../../../../util/floating_point.js';
 import {
   biasedRange,
   fullF32Range,
   fullI32Range,
-  quantizeToF32,
   quantizeToI32,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
@@ -32,21 +30,21 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const makeCase = (e1, e2) => {
+function makeCaseF32(e1, e2) {
   // Due to the heterogeneous types of the params to ldexp (f32 & i32),
   // makeBinaryToF32IntervalCase cannot be used here.
-  e1 = quantizeToF32(e1);
+  e1 = FP.f32.quantize(e1);
   e2 = quantizeToI32(e2);
-  const expected = ldexpInterval(e1, e2);
-  return { input: [f32(e1), i32(e2)], expected };
-};
+  const expected = FP.f32.ldexpInterval(e1, e2);
+  return { input: [FP.f32.scalarBuilder(e1), i32(e2)], expected };
+}
 
 export const d = makeCaseCache('ldexp', {
   f32_non_const: () => {
     const cases = [];
     fullF32Range().forEach(e1 => {
       fullI32Range().forEach(e2 => {
-        cases.push(makeCase(e1, e2));
+        cases.push(makeCaseF32(e1, e2));
       });
     });
     return cases;
@@ -55,9 +53,8 @@ export const d = makeCaseCache('ldexp', {
     const cases = [];
     fullF32Range().forEach(e1 => {
       biasedRange(-128, 128, 10).forEach(e2 => {
-        const val = e1 * Math.pow(2, e2);
-        if (val >= kValue.f32.negative.min && val <= kValue.f32.positive.max) {
-          cases.push(makeCase(e1, e2));
+        if (FP.f32.isFinite(e1 * Math.pow(2, e2))) {
+          cases.push(makeCaseF32(e1, e2));
         }
       });
     });

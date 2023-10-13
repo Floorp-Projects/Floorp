@@ -13,7 +13,7 @@ g.test('id_conflict')
 Tests that overrides' explicit numeric identifier should not conflict.
 `
   )
-  .fn(async t => {
+  .fn(t => {
     t.expectValidationError(() => {
       t.device.createShaderModule({
         code: `
@@ -51,7 +51,7 @@ g.test('name_conflict')
 Tests that overrides' variable name should not conflict, regardless of their numeric identifiers.
 `
   )
-  .fn(async t => {
+  .fn(t => {
     t.expectValidationError(() => {
       t.device.createShaderModule({
         code: `

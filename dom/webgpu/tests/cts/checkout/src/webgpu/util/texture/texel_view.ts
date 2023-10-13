@@ -1,7 +1,9 @@
 import { assert, memcpy } from '../../../common/util/util.js';
-import { EncodableTextureFormat, kTextureFormatInfo } from '../../capability_info.js';
+import { kTextureFormatInfo, EncodableTextureFormat } from '../../format_info.js';
+import { generatePrettyTable } from '../pretty_diff_tables.js';
 import { reifyExtent3D, reifyOrigin3D } from '../unions.js';
 
+import { fullSubrectCoordinates } from './base.js';
 import { kTexelRepresentationInfo, makeClampToRange, PerTexelComponent } from './texel_data.js';
 
 /** Function taking some x,y,z coordinates and returning `Readonly<T>`. */
@@ -76,7 +78,7 @@ export class TexelView {
           coords.x < origin.x + size.width &&
           coords.y < origin.y + size.height &&
           coords.z < origin.z + size.depthOrArrayLayers,
-        'coordinate out of bounds'
+        () => `coordinate (${coords.x},${coords.y},${coords.z}) out of bounds`
       );
 
       const imageOffsetInRows = (coords.z - origin.z) * rowsPerImage;
@@ -156,5 +158,44 @@ export class TexelView {
         }
       }
     }
+  }
+
+  /** Returns a pretty table string of the given coordinates and their values. */
+  // MAINTENANCE_TODO: Unify some internal helpers with those in texture_ok.ts.
+  toString(subrectOrigin: Required<GPUOrigin3DDict>, subrectSize: Required<GPUExtent3DDict>) {
+    const info = kTextureFormatInfo[this.format];
+    const repr = kTexelRepresentationInfo[this.format];
+
+    const integerSampleType = info.sampleType === 'uint' || info.sampleType === 'sint';
+    const numberToString = integerSampleType
+      ? (n: number) => n.toFixed()
+      : (n: number) => n.toPrecision(6);
+
+    const componentOrderStr = repr.componentOrder.join(',') + ':';
+    const subrectCoords = [...fullSubrectCoordinates(subrectOrigin, subrectSize)];
+
+    const printCoords = (function* () {
+      yield* [' coords', '==', 'X,Y,Z:'];
+      for (const coords of subrectCoords) yield `${coords.x},${coords.y},${coords.z}`;
+    })();
+    const printActualBytes = (function* (t: TexelView) {
+      yield* [' act. texel bytes (little-endian)', '==', '0x:'];
+      for (const coords of subrectCoords) {
+        yield Array.from(t.bytes(coords), b => b.toString(16).padStart(2, '0')).join(' ');
+      }
+    })(this);
+    const printActualColors = (function* (t: TexelView) {
+      yield* [' act. colors', '==', componentOrderStr];
+      for (const coords of subrectCoords) {
+        const pixel = t.color(coords);
+        yield `${repr.componentOrder.map(ch => numberToString(pixel[ch]!)).join(',')}`;
+      }
+    })(this);
+
+    const opts = {
+      fillToWidth: 120,
+      numberToString,
+    };
+    return `${generatePrettyTable(opts, [printCoords, printActualBytes, printActualColors])}`;
   }
 }

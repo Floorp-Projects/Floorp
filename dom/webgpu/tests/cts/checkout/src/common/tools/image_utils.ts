@@ -49,7 +49,7 @@ export class ScreenshotManager {
     // await page.screenshot({ path: screenshotName });
 
     // we need to set the url and title since the screenshot will include the chrome
-    await page.evaluate(async () => {
+    await page.evaluate(() => {
       document.title = 'screenshot';
       window.history.replaceState({}, '', '/screenshot');
     });

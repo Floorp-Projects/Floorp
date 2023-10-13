@@ -33,6 +33,17 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:shared_shader_module:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:multi_entry_points:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,attachments:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,component_count:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,component_count,blend:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,primitive_topology:basic:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,primitive_topology:unaligned_vertex_count:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,sample_mask:fragment_output_mask:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,sample_mask:alpha_to_coverage_mask:*'>
+<meta name=variant content='?q=webgpu:api,operation,render_pipeline,vertex_only_render_pipeline:draw_depth_and_stencil_with_vertex_only_pipeline:*'>
+<meta name=variant content='?q=webgpu:api,operation,rendering,basic:clear:*'>
 <meta name=variant content='?q=webgpu:api,operation,rendering,basic:fullscreen_quad:*'>
 <meta name=variant content='?q=webgpu:api,operation,rendering,basic:large_draw:*'>
 <meta name=variant content='?q=webgpu:api,operation,rendering,color_target_state:blending,GPUBlendComponent:*'>
@@ -47,14 +58,3 @@
 <meta name=variant content='?q=webgpu:api,operation,rendering,depth:depth_write_disabled:*'>
 <meta name=variant content='?q=webgpu:api,operation,rendering,depth:depth_test_fail:*'>
 <meta name=variant content='?q=webgpu:api,operation,rendering,depth:depth_compare_func:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,depth:reverse_depth:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,depth_bias:depth_bias:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,depth_bias:depth_bias_24bit_format:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,depth_clip_clamp:depth_clamp_and_clip:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,depth_clip_clamp:depth_test_input_clamped:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,draw:arguments:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,draw:default_arguments:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,draw:vertex_attributes,basic:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,draw:vertex_attributes,formats:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,draw:largeish_buffer:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,indirect_draw:basics:*'>

@@ -1,7 +1,9 @@
 export const description = `Unit tests for conversion`;
 
+import { mergeParams } from '../common/internal/params_utils.js';
 import { makeTestGroup } from '../common/internal/test_group.js';
-import { objectEquals } from '../common/util/util.js';
+import { keysOf } from '../common/util/data_tables.js';
+import { assert, objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
   bool,
@@ -16,13 +18,18 @@ import {
   i32,
   kFloat16Format,
   kFloat32Format,
+  Matrix,
+  numbersApproximatelyEqual,
   pack2x16float,
   pack2x16snorm,
   pack2x16unorm,
   pack4x8snorm,
   pack4x8unorm,
+  packRGB9E5UFloat,
   Scalar,
+  toMatrix,
   u32,
+  unpackRGB9E5UFloat,
   vec2,
   vec3,
   vec4,
@@ -33,31 +40,34 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-const cases = [
+const kFloat16BitsToNumberCases = [
   [0b0_01111_0000000000, 1],
   [0b0_00001_0000000000, 0.00006103515625],
   [0b0_01101_0101010101, 0.33325195],
   [0b0_11110_1111111111, 65504],
   [0b0_00000_0000000000, 0],
+  [0b1_00000_0000000000, -0.0], // -0.0 compares as equal to 0.0
   [0b0_01110_0000000000, 0.5],
   [0b0_01100_1001100110, 0.1999512],
   [0b0_01111_0000000001, 1.00097656],
   [0b0_10101_1001000000, 100],
   [0b1_01100_1001100110, -0.1999512],
   [0b1_10101_1001000000, -100],
+  [0b0_11111_1111111111, Number.NaN],
+  [0b0_11111_0000000000, Number.POSITIVE_INFINITY],
+  [0b1_11111_0000000000, Number.NEGATIVE_INFINITY],
 ];
 
 g.test('float16BitsToFloat32').fn(t => {
   for (const [bits, number] of [
-    ...cases,
-    [0b1_00000_0000000000, -0], // (resulting sign is not actually tested)
+    ...kFloat16BitsToNumberCases,
     [0b0_00000_1111111111, 0.00006104], // subnormal f16 input
     [0b1_00000_1111111111, -0.00006104],
   ]) {
     const actual = float16BitsToFloat32(bits);
     t.expect(
       // some loose check
-      Math.abs(actual - number) <= 0.00001,
+      numbersApproximatelyEqual(actual, number, 0.00001),
       `for ${bits.toString(2)}, expected ${number}, got ${actual}`
     );
   }
@@ -65,7 +75,7 @@ g.test('float16BitsToFloat32').fn(t => {
 
 g.test('float32ToFloat16Bits').fn(t => {
   for (const [bits, number] of [
-    ...cases,
+    ...kFloat16BitsToNumberCases,
     [0b0_00000_0000000000, 0.00001], // input that becomes subnormal in f16 is rounded to 0
     [0b1_00000_0000000000, -0.00001], // and sign is preserved
   ]) {
@@ -89,11 +99,14 @@ g.test('float32ToFloatBits_floatBitsToNumber')
     const { signed, exponentBits, mantissaBits } = t.params;
     const bias = (1 << (exponentBits - 1)) - 1;
 
-    for (const [, value] of cases) {
+    for (const [, value] of kFloat16BitsToNumberCases) {
       if (value < 0 && signed === 0) continue;
       const bits = float32ToFloatBits(value, signed, exponentBits, mantissaBits, bias);
       const reconstituted = floatBitsToNumber(bits, { signed, exponentBits, mantissaBits, bias });
-      t.expect(Math.abs(reconstituted - value) <= 0.0000001, `${reconstituted} vs ${value}`);
+      t.expect(
+        numbersApproximatelyEqual(reconstituted, value, 0.0000001),
+        `${reconstituted} vs ${value}`
+      );
     }
   });
 
@@ -102,6 +115,7 @@ g.test('floatBitsToULPFromZero,16').fn(t => {
     t.expect(floatBitsToNormalULPFromZero(bits, kFloat16Format) === ulpFromZero, bits.toString(2));
   // Zero
   test(0b0_00000_0000000000, 0);
+  test(0b1_00000_0000000000, 0);
   // Subnormal
   test(0b0_00000_0000000001, 0);
   test(0b1_00000_0000000001, 0);
@@ -140,6 +154,7 @@ g.test('floatBitsToULPFromZero,32').fn(t => {
     t.expect(floatBitsToNormalULPFromZero(bits, kFloat32Format) === ulpFromZero, bits.toString(2));
   // Zero
   test(0b0_00000000_00000000000000000000000, 0);
+  test(0b1_00000000_00000000000000000000000, 0);
   // Subnormal
   test(0b0_00000000_00000000000000000000001, 0);
   test(0b1_00000000_00000000000000000000001, 0);
@@ -178,6 +193,11 @@ g.test('floatBitsToULPFromZero,32').fn(t => {
 g.test('scalarWGSL').fn(t => {
   const cases: Array<[Scalar, string]> = [
     [f32(0.0), '0.0f'],
+    // The number -0.0 can be remapped to 0.0 when stored in a Scalar
+    // object. It is not possible to guarantee that '-0.0f' will
+    // be emitted. So the WGSL scalar value printing does not try
+    // to handle this case.
+    [f32(-0.0), '0.0f'], // -0.0 can be remapped to 0.0
     [f32(1.0), '1.0f'],
     [f32(-1.0), '-1.0f'],
     [f32Bits(0x70000000), '1.5845632502852868e+29f'],
@@ -239,6 +259,159 @@ expect: ${expect}`
     );
   }
 });
+
+g.test('matrixWGSL').fn(t => {
+  const cases: Array<[Matrix, string]> = [
+    [
+      toMatrix(
+        [
+          [0.0, 1.0],
+          [2.0, 3.0],
+        ],
+        f32
+      ),
+      'mat2x2(0.0f, 1.0f, 2.0f, 3.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0],
+          [3.0, 4.0, 5.0],
+        ],
+        f32
+      ),
+      'mat2x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0, 3.0],
+          [4.0, 5.0, 6.0, 7.0],
+        ],
+        f32
+      ),
+      'mat2x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0],
+          [2.0, 3.0],
+          [4.0, 5.0],
+        ],
+        f32
+      ),
+      'mat3x2(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0],
+          [3.0, 4.0, 5.0],
+          [6.0, 7.0, 8.0],
+        ],
+        f32
+      ),
+      'mat3x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0, 3.0],
+          [4.0, 5.0, 6.0, 7.0],
+          [8.0, 9.0, 10.0, 11.0],
+        ],
+        f32
+      ),
+      'mat3x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0],
+          [2.0, 3.0],
+          [4.0, 5.0],
+          [6.0, 7.0],
+        ],
+        f32
+      ),
+      'mat4x2(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0],
+          [3.0, 4.0, 5.0],
+          [6.0, 7.0, 8.0],
+          [9.0, 10.0, 11.0],
+        ],
+        f32
+      ),
+      'mat4x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f)',
+    ],
+    [
+      toMatrix(
+        [
+          [0.0, 1.0, 2.0, 3.0],
+          [4.0, 5.0, 6.0, 7.0],
+          [8.0, 9.0, 10.0, 11.0],
+          [12.0, 13.0, 14.0, 15.0],
+        ],
+        f32
+      ),
+      'mat4x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f)',
+    ],
+  ];
+  for (const [value, expect] of cases) {
+    const got = value.wgsl();
+    t.expect(
+      got === expect,
+      `[values: ${value.elements}, type: ${value.type}]
+got:    ${got}
+expect: ${expect}`
+    );
+  }
+});
+
+g.test('constructorMatrix')
+  .params(u =>
+    u
+      .combine('cols', [2, 3, 4] as const)
+      .combine('rows', [2, 3, 4] as const)
+      .combine('type', ['f32'] as const)
+  )
+  .fn(t => {
+    const cols = t.params.cols;
+    const rows = t.params.rows;
+    const type = t.params.type;
+    const scalar_builder = type === 'f32' ? f32 : undefined;
+    assert(scalar_builder !== undefined, `Unexpected type param '${type}' provided`);
+
+    const elements = [...Array(cols).keys()].map(c => {
+      return [...Array(rows).keys()].map(r => scalar_builder(c * cols + r));
+    });
+
+    const got = new Matrix(elements);
+    const got_type = got.type;
+    t.expect(
+      got_type.cols === cols,
+      `expected Matrix to have ${cols} columns, received ${got_type.cols} instead`
+    );
+    t.expect(
+      got_type.rows === rows,
+      `expected Matrix to have ${rows} columns, received ${got_type.rows} instead`
+    );
+    t.expect(
+      got_type.elementType.kind === type,
+      `expected Matrix to have ${type} elements, received ${got_type.elementType.kind} instead`
+    );
+    t.expect(
+      objectEquals(got.elements, elements),
+      `Matrix did not have expected elements (${JSON.stringify(elements)}), instead had (${
+        got.elements
+      })`
+    );
+  });
 
 g.test('pack2x16float')
   .paramsSimple([
@@ -405,4 +578,63 @@ g.test('pack4x8unorm')
     const expect = test.params.result;
 
     test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected ${expect}`);
+  });
+
+const kRGB9E5UFloatCommonData = {
+  zero: /*        */ { encoded: 0b00000_000000000_000000000_000000000, rgb: [0, 0, 0] },
+  max: /*         */ { encoded: 0b11111_111111111_111111111_111111111, rgb: [65408, 65408, 65408] },
+  r1: /*          */ { encoded: 0b10000_000000000_000000000_100000000, rgb: [1, 0, 0] },
+  r2: /*          */ { encoded: 0b10001_000000000_000000000_100000000, rgb: [2, 0, 0] },
+  g1: /*          */ { encoded: 0b10000_000000000_100000000_000000000, rgb: [0, 1, 0] },
+  g2: /*          */ { encoded: 0b10001_000000000_100000000_000000000, rgb: [0, 2, 0] },
+  b1: /*          */ { encoded: 0b10000_100000000_000000000_000000000, rgb: [0, 0, 1] },
+  b2: /*          */ { encoded: 0b10001_100000000_000000000_000000000, rgb: [0, 0, 2] },
+  r1_g1_b1: /*    */ { encoded: 0b10000_100000000_100000000_100000000, rgb: [1, 1, 1] },
+  r1_g2_b1: /*    */ { encoded: 0b10001_010000000_100000000_010000000, rgb: [1, 2, 1] },
+  r4_g8_b2: /*    */ { encoded: 0b10011_001000000_100000000_010000000, rgb: [4, 8, 2] },
+  r1_g2_b3: /*    */ { encoded: 0b10001_110000000_100000000_010000000, rgb: [1, 2, 3] },
+  r128_g3968_b65408: { encoded: 0b11111_111111111_000011111_000000001, rgb: [128, 3968, 65408] },
+  r128_g1984_b30016: { encoded: 0b11110_111010101_000011111_000000010, rgb: [128, 1984, 30016] },
+  r_5_g_25_b_8: /**/ { encoded: 0b10011_100000000_000001000_000010000, rgb: [0.5, 0.25, 8] },
+};
+
+const kPackRGB9E5UFloatData = mergeParams(kRGB9E5UFloatCommonData, {
+  clamp_max: /*   */ { encoded: 0b11111_111111111_111111111_111111111, rgb: [1e7, 1e10, 1e50] },
+  subnormals: /*  */ { encoded: 0b00000_000000000_000000000_000000000, rgb: [1e-10, 1e-20, 1e-30] },
+  r57423_g54_b3478: { encoded: 0b11111_000011011_000000000_111000001, rgb: [57423, 54, 3478] },
+  r6852_g3571_b2356: { encoded: 0b11100_010010011_011011111_110101100, rgb: [6852, 3571, 2356] },
+  r68312_g12_b8123: { encoded: 0b11111_000111111_000000000_111111111, rgb: [68312, 12, 8123] },
+  r7321_g846_b32: { encoded: 0b11100_000000010_000110101_111001010, rgb: [7321, 846, 32] },
+});
+
+function bits5_9_9_9(x: number) {
+  const s = (x >>> 0).toString(2).padStart(32, '0');
+  return `${s.slice(0, 5)}_${s.slice(5, 14)}_${s.slice(14, 23)}_${s.slice(23, 32)}`;
+}
+
+g.test('packRGB9E5UFloat')
+  .params(u => u.combine('case', keysOf(kPackRGB9E5UFloatData)))
+  .fn(test => {
+    const c = kPackRGB9E5UFloatData[test.params.case];
+    const got = packRGB9E5UFloat(c.rgb[0], c.rgb[1], c.rgb[2]);
+    const expect = c.encoded;
+
+    test.expect(
+      got === expect,
+      `packRGB9E5UFloat(${c.rgb}) returned ${bits5_9_9_9(got)}. Expected ${bits5_9_9_9(expect)}`
+    );
+  });
+
+g.test('unpackRGB9E5UFloat')
+  .params(u => u.combine('case', keysOf(kRGB9E5UFloatCommonData)))
+  .fn(test => {
+    const c = kRGB9E5UFloatCommonData[test.params.case];
+    const got = unpackRGB9E5UFloat(c.encoded);
+    const expect = c.rgb;
+
+    test.expect(
+      got.R === expect[0] && got.G === expect[1] && got.B === expect[2],
+      `unpackRGB9E5UFloat(${bits5_9_9_9(c.encoded)} ` +
+        `returned ${got.R},${got.G},${got.B}. Expected ${expect}`
+    );
   });

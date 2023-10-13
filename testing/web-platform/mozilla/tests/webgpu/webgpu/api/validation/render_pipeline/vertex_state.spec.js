@@ -627,7 +627,7 @@ g.test('vertex_attribute_contained_in_stride')
 
 g.test('many_attributes_overlapping')
   .desc(`Test that it is valid to have many vertex attributes overlap`)
-  .fn(async t => {
+  .fn(t => {
     // Create many attributes, each of them intersects with at least 3 others.
     const attributes = [];
     const formats = ['float32x4', 'uint32x4', 'sint32x4'];

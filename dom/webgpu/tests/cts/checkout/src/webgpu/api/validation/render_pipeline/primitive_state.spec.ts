@@ -19,7 +19,7 @@ g.test('strip_index_format')
       .combine('topology', [undefined, ...kPrimitiveTopology] as const)
       .combine('stripIndexFormat', [undefined, ...kIndexFormat] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, topology, stripIndexFormat } = t.params;
 
     const descriptor = t.getDescriptor({ primitive: { topology, stripIndexFormat } });
@@ -32,7 +32,7 @@ g.test('strip_index_format')
 g.test('unclipped_depth')
   .desc(`If primitive.unclippedDepth is true, features must contain "depth-clip-control".`)
   .params(u => u.combine('isAsync', [false, true]).combine('unclippedDepth', [false, true]))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, unclippedDepth } = t.params;
 
     const descriptor = t.getDescriptor({ primitive: { unclippedDepth } });

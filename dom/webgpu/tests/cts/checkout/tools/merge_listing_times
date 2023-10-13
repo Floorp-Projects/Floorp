@@ -1,0 +1,38 @@
+#!/usr/bin/env node
+
+require('../src/common/tools/setup-ts-in-node.js');
+
+// See help message in this file for info on how to use the tool.
+require('../src/common/tools/merge_listing_times.ts');
+
+// See docs/adding_timing_metadata.md for a basic walkthrough on adding entries
+// for new tests
+//
+// ## listing_meta.json File Maintenance ##
+//
+// listing_meta.json files are SEMI AUTO-GENERATED.
+//
+// The raw data may be edited manually, to add entries or change timing values.
+// This is a complete listing of tests in the CTS, which can be used for other
+// scripting purposes too. Presubmit checks will fail when it gets out of sync.
+//
+// The subcaseMS values are estimates. They can be set to 0 if for some reason
+// you can't estimate the time (or there's an existing test with a long name and
+// slow subcases that would result in query strings that are too long).
+//
+// If you're developing new tests and need to update this file, it may be
+// easiest to do so manually. Run your tests in your development environment and
+// see how long they take. Record the average time per *subcase* into the
+// listing_meta.json file.
+//
+// Timing data can also be captured in bulk and "merged" into this file using
+// the 'merge_listing_times' tool. This is useful when a large number of tests
+// change or otherwise a lot of tests need to be updated. It can also be used
+// without any inputs to reformat the listing_meta.json file. Please read the
+// documentation of the tool (see above) for more information.
+//
+// Finally, note this data is typically captured by developers using higher-end
+// computers, so typical test machines might execute more slowly. For this
+// reason, the WPT chunking should be configured to generate chunks much shorter
+// than 5 seconds (a typical default time limit in WPT test executors) so they
+// should still execute in under 5 seconds on lower-end computers.

@@ -4,6 +4,7 @@ import { align } from '../util/math.js';
 
 const kArrayLength = 3;
 
+export type Requirement = 'never' | 'may' | 'must'; // never is the same as "must not"
 export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'atomic' | 'array';
 export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
 
@@ -43,7 +44,83 @@ export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
-export type StorageClass = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup';
+export type AddressSpace = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup' | 'handle';
+export type AccessMode = 'read' | 'write' | 'read_write';
+export type Scope = 'module' | 'function';
+
+export const kAccessModeInfo = {
+  read: { read: true, write: false },
+  write: { read: false, write: true },
+  read_write: { read: true, write: true },
+} as const;
+
+export type AddressSpaceInfo = {
+  // Variables in this address space must be declared in what scope?
+  scope: Scope;
+
+  // True if a variable in this address space requires a binding.
+  binding: boolean;
+
+  // Spell the address space in var declarations?
+  spell: Requirement;
+
+  // Access modes for ordinary accesses (loads, stores).
+  // The first one is the default.
+  // This is empty for the 'handle' address space where access is opaque.
+  accessModes: readonly AccessMode[];
+
+  // Spell the access mode in var declarations?
+  //   7.3 var Declarations
+  //   The access mode always has a default value, and except for variables
+  //   in the storage address space, must not be specified in the WGSL source.
+  //   See §13.3 Address Spaces.
+  spellAccessMode: Requirement;
+};
+
+export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
+  storage: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read', 'read_write'],
+    spellAccessMode: 'may',
+  },
+  uniform: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read'],
+    spellAccessMode: 'never',
+  },
+  private: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  workgroup: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  function: {
+    scope: 'function',
+    binding: false,
+    spell: 'may',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  handle: {
+    scope: 'module',
+    binding: true,
+    spell: 'never',
+    accessModes: [],
+    spellAccessMode: 'never',
+  },
+} as const;
 
 /** List of texel formats and their shader representation */
 export const TexelFormats = [
@@ -69,12 +146,12 @@ export const TexelFormats = [
  * Generate a bunch types (vec, mat, sized/unsized array) for testing.
  */
 export function* generateTypes({
-  storageClass,
+  addressSpace,
   baseType,
   containerType,
   isAtomic = false,
 }: {
-  storageClass: StorageClass;
+  addressSpace: AddressSpace;
   /** Base scalar type (i32/u32/f32/bool). */
   baseType: ScalarType;
   /** Container type (scalar/vector/matrix/array) */
@@ -89,7 +166,7 @@ export function* generateTypes({
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
   // Storage and uniform require host-sharable types.
-  if (storageClass === 'storage' || storageClass === 'uniform') {
+  if (addressSpace === 'storage' || addressSpace === 'uniform') {
     assert(isHostSharable(baseType), 'type ' + baseType.toString() + ' is not host sharable');
   }
 
@@ -139,7 +216,7 @@ export function* generateTypes({
         ? {
             alignment: scalarInfo.layout.alignment,
             size:
-              storageClass === 'uniform'
+              addressSpace === 'uniform'
                 ? // Uniform storage class must have array elements aligned to 16.
                   kArrayLength *
                   arrayStride({
@@ -152,7 +229,7 @@ export function* generateTypes({
     };
 
     // Sized
-    if (storageClass === 'uniform') {
+    if (addressSpace === 'uniform') {
       yield {
         type: `array<vec4<${scalarType}>,${kArrayLength}>`,
         _kTypeInfo: arrayTypeInfo,
@@ -161,7 +238,7 @@ export function* generateTypes({
       yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
     }
     // Unsized
-    if (storageClass === 'storage') {
+    if (addressSpace === 'storage') {
       yield { type: `array<${scalarType}>`, _kTypeInfo: arrayTypeInfo };
     }
   }
@@ -180,20 +257,20 @@ export function* generateTypes({
 
 /** Atomic access requires scalar/array container type and storage/workgroup memory. */
 export function supportsAtomics(p: {
-  storageClass: string;
-  storageMode: string | undefined;
+  addressSpace: string;
+  storageMode: AccessMode | undefined;
   access: string;
   containerType: ContainerType;
 }) {
   return (
-    ((p.storageClass === 'storage' && p.storageMode === 'read_write') ||
-      p.storageClass === 'workgroup') &&
+    ((p.addressSpace === 'storage' && p.storageMode === 'read_write') ||
+      p.addressSpace === 'workgroup') &&
     (p.containerType === 'scalar' || p.containerType === 'array')
   );
 }
 
 /** Generates an iterator of supported base types (i32/u32/f32/bool) */
-export function* supportedScalarTypes(p: { isAtomic: boolean; storageClass: string }) {
+export function* supportedScalarTypes(p: { isAtomic: boolean; addressSpace: string }) {
   for (const scalarType of kScalarTypes) {
     const info = kScalarTypeInfo[scalarType];
 
@@ -201,7 +278,7 @@ export function* supportedScalarTypes(p: { isAtomic: boolean; storageClass: stri
     if (p.isAtomic && !info.supportsAtomics) continue;
 
     // Storage and uniform require host-sharable types.
-    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
+    const isHostShared = p.addressSpace === 'storage' || p.addressSpace === 'uniform';
     if (isHostShared && info.layout === undefined) continue;
 
     yield scalarType;

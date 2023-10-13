@@ -18,76 +18,84 @@ Returns the result_struct for the given type.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { f32, toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { modfInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
+import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { FP, FPKind } from '../../../../../util/floating_point.js';
+import { fullF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, ExpressionBuilder, run } from '../../expression.js';
+import {
+  allInputSources,
+  basicExpressionBuilder,
+  Case,
+  run,
+  ShaderBuilder,
+} from '../../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/* @returns an ExpressionBuilder that evaluates modf and returns .whole from the result structure */
-function wholeBuilder(): ExpressionBuilder {
-  return value => `modf(${value}).whole`;
+/** @returns an ShaderBuilder that evaluates modf and returns .whole from the result structure */
+function wholeBuilder(): ShaderBuilder {
+  return basicExpressionBuilder(value => `modf(${value}).whole`);
 }
 
-/* @returns an ExpressionBuilder that evaluates modf and returns .fract from the result structure */
-function fractBuilder(): ExpressionBuilder {
-  return value => `modf(${value}).fract`;
+/** @returns an ShaderBuilder that evaluates modf and returns .fract from the result structure */
+function fractBuilder(): ShaderBuilder {
+  return basicExpressionBuilder(value => `modf(${value}).fract`);
 }
 
-/* @returns a fract Case for a given vector input */
-function makeVectorCaseFract(v: number[]): Case {
-  v = v.map(quantizeToF32);
+/** @returns a fract Case for a given vector input */
+function makeVectorCaseFract(kind: FPKind, v: number[]): Case {
+  const fp = FP[kind];
+  v = v.map(fp.quantize);
   const fs = v.map(e => {
-    return modfInterval(e).fract;
+    return fp.modfInterval(e).fract;
   });
 
-  return { input: toVector(v, f32), expected: fs };
+  return { input: toVector(v, fp.scalarBuilder), expected: fs };
 }
 
-/* @returns a fract Case for a given vector input */
-function makeVectorCaseWhole(v: number[]): Case {
-  v = v.map(quantizeToF32);
+/** @returns a whole Case for a given vector input */
+function makeVectorCaseWhole(kind: FPKind, v: number[]): Case {
+  const fp = FP[kind];
+  v = v.map(fp.quantize);
   const ws = v.map(e => {
-    return modfInterval(e).whole;
+    return fp.modfInterval(e).whole;
   });
 
-  return { input: toVector(v, f32), expected: ws };
+  return { input: toVector(v, fp.scalarBuilder), expected: ws };
 }
 
 export const d = makeCaseCache('modf', {
   f32_fract: () => {
     const makeCase = (n: number): Case => {
-      n = quantizeToF32(n);
-      return { input: f32(n), expected: modfInterval(n).fract };
+      n = FP.f32.quantize(n);
+      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).fract };
     };
     return fullF32Range().map(makeCase);
   },
   f32_whole: () => {
     const makeCase = (n: number): Case => {
-      n = quantizeToF32(n);
-      return { input: f32(n), expected: modfInterval(n).whole };
+      n = FP.f32.quantize(n);
+      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).whole };
     };
     return fullF32Range().map(makeCase);
   },
   f32_vec2_fract: () => {
-    return vectorF32Range(2).map(makeVectorCaseFract);
+    return vectorF32Range(2).map(makeVectorCaseFract.bind(null, 'f32'));
   },
   f32_vec2_whole: () => {
-    return vectorF32Range(2).map(makeVectorCaseWhole);
+    return vectorF32Range(2).map(makeVectorCaseWhole.bind(null, 'f32'));
   },
   f32_vec3_fract: () => {
-    return vectorF32Range(3).map(makeVectorCaseFract);
+    return vectorF32Range(3).map(makeVectorCaseFract.bind(null, 'f32'));
   },
   f32_vec3_whole: () => {
-    return vectorF32Range(3).map(makeVectorCaseWhole);
+    return vectorF32Range(3).map(makeVectorCaseWhole.bind(null, 'f32'));
   },
   f32_vec4_fract: () => {
-    return vectorF32Range(4).map(makeVectorCaseFract);
+    return vectorF32Range(4).map(makeVectorCaseFract.bind(null, 'f32'));
   },
   f32_vec4_whole: () => {
-    return vectorF32Range(4).map(makeVectorCaseWhole);
+    return vectorF32Range(4).map(makeVectorCaseWhole.bind(null, 'f32'));
   },
 });
 

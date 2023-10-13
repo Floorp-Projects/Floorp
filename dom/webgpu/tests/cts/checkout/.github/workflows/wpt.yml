@@ -1,0 +1,26 @@
+name: WPT Lint Test
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-wpt-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+      - run: npm ci
+      - run: npm run wpt
+      - name: copy out-wpt to wpt tree
+        run: |
+          git clone --depth 2 https://github.com/web-platform-tests/wpt.git
+          rsync -av  out-wpt/ wpt/webgpu
+      - name: test wpt lint
+        run: ./wpt lint
+        working-directory: ./wpt

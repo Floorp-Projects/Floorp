@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,serial:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel:*'>
+<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel_order:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:getBindGroupLayout_js_object:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:incompatible_with_explicit:*'>
+<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:layout:*'>
+<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:array_types:*'>
+<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:multiple_writes_at_different_offsets_and_sizes:*'>
+<meta name=variant content='?q=webgpu:api,operation,reflection:buffer_reflection_attributes:*'>
+<meta name=variant content='?q=webgpu:api,operation,reflection:texture_reflection_attributes:*'>
 <meta name=variant content='?q=webgpu:api,operation,reflection:query_set_reflection_attributes:*'>
 <meta name=variant content='?q=webgpu:api,operation,render_pass,clear_value:stored:*'>
 <meta name=variant content='?q=webgpu:api,operation,render_pass,clear_value:loaded:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,operation,render_pipeline,culling_tests:culling:*'>
 <meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:basic:*'>
 <meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:precision:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:shared_shader_module:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,overrides:multi_entry_points:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,attachments:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,component_count:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,pipeline_output_targets:color,component_count,blend:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,primitive_topology:basic:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,primitive_topology:unaligned_vertex_count:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,sample_mask:final_output:*'>
-<meta name=variant content='?q=webgpu:api,operation,render_pipeline,vertex_only_render_pipeline:draw_depth_and_stencil_with_vertex_only_pipeline:*'>
-<meta name=variant content='?q=webgpu:api,operation,rendering,basic:clear:*'>

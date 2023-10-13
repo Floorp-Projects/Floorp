@@ -33,6 +33,22 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,buffer,create:createBuffer_invalid_and_oom:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:all_usages:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:error_buffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:twice:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:while_mapped:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,invalidBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,destroyed:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mappedAtCreation:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mapped:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mappingPending:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,sizeUnspecifiedOOB:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,offsetAndSizeAlignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,offsetAndSizeOOB:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,earlyRejection:*'>
+<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,abort_over_invalid_error:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,state,mapped:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,state,mappedAtCreation:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,state,invalid_mappedAtCreation:*'>
@@ -42,19 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,state,mappingPending:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,subrange,mapped:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,subrange,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,offsetAndSizeAlignment,mapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,offsetAndSizeAlignment,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,sizeAndOffsetOOB,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,sizeAndOffsetOOB,mapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,disjointRanges:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:getMappedRange,disjoinRanges_many:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:unmap,state,unmapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:unmap,state,destroyed:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:unmap,state,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:unmap,state,mapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:unmap,state,mappingPending:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:gc_behavior,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:gc_behavior,mapAsync:*'>
-<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,query_types:createQuerySet:*'>
-<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,query_types:writeTimestamp:*'>
-<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:texture_descriptor:*'>

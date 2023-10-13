@@ -1,0 +1,60 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<meta name="timeout" content="long"> <!-- TODO: narrow to only where it's needed, see https://bugzilla.mozilla.org/show_bug.cgi?id=1850537 -->
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:no_direct_recursion:*'>
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:no_indirect_recursion:*'>
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:param_names_must_differ:*'>
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:param_scope_is_function_body:*'>
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:param_number_matches_call:*'>
+<meta name=variant content='?q=webgpu:shader,validation,functions,restrictions:call_arg_types_match_params:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,align:parsing:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,align:required_alignment:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,align:placement:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,align:multi_align:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,attribute:expressions:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,binary_ops:all:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:null_characters:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:blankspace:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:bom:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,break:placement:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,builtin:parse:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,builtin:placement:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,comments:comments:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,comments:line_comment_eof:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,comments:line_comment_terminators:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,comments:unterminated_block_comment:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,const:placement:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,const_assert:parse:*'>
+<meta name=variant content='?q=webgpu:shader,validation,parse,diagnostic:valid_params:*'>

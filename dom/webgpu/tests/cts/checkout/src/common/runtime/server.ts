@@ -100,7 +100,7 @@ for (let i = 0; i < sys.args.length; ++i) {
     } else if (a === '--verbose') {
       verbose = true;
     } else {
-      console.log(`unrecognised flag: ${a}`);
+      console.log(`unrecognized flag: ${a}`);
     }
   }
 }
@@ -141,6 +141,7 @@ if (verbose) {
   dataCache.setDebugLogger(console.log);
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 (async () => {
   Logger.globalDebugMode = verbose;
   const log = new Logger();

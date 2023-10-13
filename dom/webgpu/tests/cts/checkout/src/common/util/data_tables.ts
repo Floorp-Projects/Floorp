@@ -11,6 +11,20 @@ export function numericKeysOf<T>(obj: object): readonly T[] {
 }
 
 /**
+ * @returns a new Record from @p objects, using the string returned by Object.toString() as the keys
+ * and the objects as the values.
+ */
+export function objectsToRecord<T extends Object>(objects: readonly T[]): Record<string, T> {
+  const record = {};
+  return objects.reduce((obj, type) => {
+    return {
+      ...obj,
+      [type.toString()]: type,
+    };
+  }, record);
+}
+
+/**
  * Creates an info lookup object from a more nicely-formatted table. See below for examples.
  *
  * Note: Using `as const` on the arguments to this function is necessary to infer the correct type.

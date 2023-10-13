@@ -9,6 +9,8 @@ Test Coverage:
       - An error must be generated for non matching counts.
     - Test calling pushDebugGroup with empty and non-empty strings.
     - Test inserting a debug marker with empty and non-empty strings.
+    - Test strings with \0 in them.
+    - Test non-ASCII strings.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -41,7 +43,7 @@ g.test('debug_group')
     u //
       .combine('encoderType', kEncoderTypes)
       .beginSubcases()
-      .combine('label', ['', 'group'])
+      .combine('label', ['', 'group', 'null\0in\0group\0label', '\0null at beginning', '🌞👆'])
   )
   .fn(t => {
     const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
@@ -55,7 +57,7 @@ g.test('debug_marker')
     u //
       .combine('encoderType', kEncoderTypes)
       .beginSubcases()
-      .combine('label', ['', 'marker'])
+      .combine('label', ['', 'marker', 'null\0in\0marker', '\0null at beginning', '🌞👆'])
   )
   .fn(t => {
     const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);

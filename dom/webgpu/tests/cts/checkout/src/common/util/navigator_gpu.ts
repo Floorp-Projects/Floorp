@@ -1,6 +1,8 @@
 /// <reference types="@webgpu/types" />
 
-import { assert } from './util.js';
+import { TestCaseRecorder } from '../framework/fixture.js';
+
+import { ErrorWithExtra, assert, objectEquals } from './util.js';
 
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
@@ -35,17 +37,25 @@ let impl: GPU | undefined = undefined;
 let defaultRequestAdapterOptions: GPURequestAdapterOptions | undefined;
 
 export function setDefaultRequestAdapterOptions(options: GPURequestAdapterOptions) {
+  // It's okay to call this if you don't change the options
+  if (objectEquals(options, defaultRequestAdapterOptions)) {
+    return;
+  }
   if (impl) {
     throw new Error('must call setDefaultRequestAdapterOptions before getGPU');
   }
   defaultRequestAdapterOptions = { ...options };
 }
 
+export function getDefaultRequestAdapterOptions() {
+  return defaultRequestAdapterOptions;
+}
+
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
  * Throws an exception if not found.
  */
-export function getGPU(): GPU {
+export function getGPU(recorder: TestCaseRecorder | null): GPU {
   if (impl) {
     return impl;
   }
@@ -58,14 +68,16 @@ export function getGPU(): GPU {
     impl.requestAdapter = function (
       options?: GPURequestAdapterOptions
     ): Promise<GPUAdapter | null> {
-      const promise = oldFn.call(this, { ...defaultRequestAdapterOptions, ...(options || {}) });
-      void promise.then(async adapter => {
-        if (adapter) {
-          const info = await adapter.requestAdapterInfo();
-          // eslint-disable-next-line no-console
-          console.log(info);
-        }
-      });
+      const promise = oldFn.call(this, { ...defaultRequestAdapterOptions, ...options });
+      if (recorder) {
+        void promise.then(async adapter => {
+          if (adapter) {
+            const info = await adapter.requestAdapterInfo();
+            const infoString = `Adapter: ${info.vendor} / ${info.architecture} / ${info.device}`;
+            recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo: info })));
+          }
+        });
+      }
       return promise;
     };
   }

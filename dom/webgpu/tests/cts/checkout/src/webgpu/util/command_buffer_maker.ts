@@ -1,4 +1,4 @@
-import { ResourceState, GPUTest } from '../gpu_test.js';
+import { ResourceState, GPUTestBase } from '../gpu_test.js';
 
 export const kRenderEncodeTypes = ['render pass', 'render bundle'] as const;
 export type RenderEncodeType = typeof kRenderEncodeTypes[number];
@@ -51,7 +51,7 @@ export class CommandBufferMaker<T extends EncoderType> {
   readonly validateFinishAndSubmitGivenState: (resourceState: ResourceState) => void;
 
   constructor(
-    t: GPUTest,
+    t: GPUTestBase,
     encoder: EncoderByEncoderType<EncoderType>,
     finish: () => GPUCommandBuffer
   ) {

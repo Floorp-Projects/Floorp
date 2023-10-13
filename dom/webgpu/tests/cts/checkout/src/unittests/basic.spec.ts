@@ -20,7 +20,7 @@ g.test('test_with_params,sync')
 
 g.test('test_with_params,async')
   .paramsSimple([{}])
-  .fn(async t => {
+  .fn(t => {
     t.debug(JSON.stringify(t.params));
   });
 

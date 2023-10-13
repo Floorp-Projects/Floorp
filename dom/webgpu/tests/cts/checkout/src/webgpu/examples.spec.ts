@@ -51,7 +51,7 @@ g.test('basic').fn(t => {
   );
 });
 
-g.test('basic,async').fn(async t => {
+g.test('basic,async').fn(t => {
   // shouldReject must be awaited to ensure it can wait for the promise before the test ends.
   t.shouldReject(
     // The expected '.name' of the thrown error.
@@ -65,6 +65,7 @@ g.test('basic,async').fn(async t => {
   // Promise can also be an IIFE.
   t.shouldReject(
     'TypeError',
+    // eslint-disable-next-line @typescript-eslint/require-await
     (async () => {
       throw new TypeError();
     })(),
@@ -210,7 +211,7 @@ g.test('gpu,async').fn(async t => {
   t.expect(x === undefined);
 });
 
-g.test('gpu,buffers').fn(async t => {
+g.test('gpu,buffers').fn(t => {
   const data = new Uint32Array([0, 1234, 0]);
   const src = t.makeBufferWithContents(data, GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
 
@@ -235,7 +236,7 @@ Tests that a BC format passes validation iff the feature is enabled.`
       t.selectDeviceOrSkipTestCase('texture-compression-bc');
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { textureCompressionBC } = t.params;
     const shouldError = !textureCompressionBC;
     t.shouldThrow(shouldError ? 'TypeError' : false, () => {
@@ -260,7 +261,7 @@ Tests that an ETC2 format passes validation iff the feature is enabled.`
       t.selectDeviceOrSkipTestCase('texture-compression-etc2' as GPUFeatureName);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { textureCompressionETC2 } = t.params;
 
     const shouldError = !textureCompressionETC2;

@@ -19,7 +19,8 @@ const kMinSeverityForStack = LogSeverity.Warn;
 
 /** Holds onto a LiveTestCaseResult owned by the Logger, and writes the results into it. */
 export class TestCaseRecorder {
-  private result: LiveTestCaseResult;
+  readonly result: LiveTestCaseResult;
+  public nonskippedSubcaseCount: number = 0;
   private inSubCase: boolean = false;
   private subCaseStatus = LogSeverity.Pass;
   private finalCaseStatus = LogSeverity.Pass;
@@ -42,11 +43,17 @@ export class TestCaseRecorder {
   }
 
   finish(): void {
-    assert(this.startTime >= 0, 'finish() before start()');
+    // This is a framework error. If this assert is hit, it won't be localized
+    // to a test. The whole test run will fail out.
+    assert(this.startTime >= 0, 'internal error: finish() before start()');
 
     const timeMilliseconds = now() - this.startTime;
     // Round to next microsecond to avoid storing useless .xxxx00000000000002 in results.
     this.result.timems = Math.ceil(timeMilliseconds * 1000) / 1000;
+
+    if (this.finalCaseStatus === LogSeverity.Skip && this.nonskippedSubcaseCount !== 0) {
+      this.threw(new Error('internal error: case is "skip" but has nonskipped subcases'));
+    }
 
     // Convert numeric enum back to string (but expose 'exception' as 'fail')
     this.result.status =
@@ -67,6 +74,9 @@ export class TestCaseRecorder {
   }
 
   endSubCase(expectedStatus: Expectation) {
+    if (this.subCaseStatus !== LogSeverity.Skip) {
+      this.nonskippedSubcaseCount++;
+    }
     try {
       if (expectedStatus === 'fail') {
         if (this.subCaseStatus <= LogSeverity.Warn) {

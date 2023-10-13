@@ -33,6 +33,22 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,operation,texture_view,write:dimension:*'>
+<meta name=variant content='?q=webgpu:api,operation,texture_view,write:aspect:*'>
+<meta name=variant content='?q=webgpu:api,operation,uncapturederror:constructor:*'>
+<meta name=variant content='?q=webgpu:api,operation,uncapturederror:iff_uncaptured:*'>
+<meta name=variant content='?q=webgpu:api,operation,uncapturederror:only_original_device_is_event_target:*'>
+<meta name=variant content='?q=webgpu:api,operation,uncapturederror:uncapturederror_from_non_originating_thread:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:buffers_with_varying_step_mode:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_overlapped:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_interleaved:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:max_buffers_and_attribs:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:discontiguous_location_and_attribs:*'>
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:overlapping_attributes:*'>
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,uint16:*'>
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,uint32:*'>
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,change_pipeline_after_setIndexBuffer:*'>
@@ -42,19 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,buffer,create:size:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,create:limit:*'>
 <meta name=variant content='?q=webgpu:api,validation,buffer,create:usage:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,create:createBuffer_invalid_and_oom:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:all_usages:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:error_buffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:twice:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,destroy:while_mapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,usage:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,invalidBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,destroyed:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mappedAtCreation:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mapped:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,state,mappingPending:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,sizeUnspecifiedOOB:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,offsetAndSizeAlignment:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,offsetAndSizeOOB:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,earlyRejection:*'>
-<meta name=variant content='?q=webgpu:api,validation,buffer,mapping:mapAsync,abort_over_invalid_error:*'>

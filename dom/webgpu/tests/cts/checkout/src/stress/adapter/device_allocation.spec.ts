@@ -219,7 +219,7 @@ g.test('coexisting')
   .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
-    const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
+    const adapter = await getGPU(t.rec).requestAdapter(kAdapterTypeOptions[adapterType]);
     assert(adapter !== null, 'Failed to get adapter.');
 
     // Based on Vulkan conformance test requirement to be able to create multiple devices.
@@ -242,7 +242,7 @@ objects are recycled over a very large number of iterations.`
   .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
-    const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
+    const adapter = await getGPU(t.rec).requestAdapter(kAdapterTypeOptions[adapterType]);
     assert(adapter !== null, 'Failed to get adapter.');
 
     // Since devices are being destroyed, we should be able to create many devices.
@@ -274,7 +274,7 @@ implicitly keep the device in scope.`
   .params(u => u.combine('adapterType', kAdapterTypes))
   .fn(async t => {
     const { adapterType } = t.params;
-    const adapter = await getGPU().requestAdapter(kAdapterTypeOptions[adapterType]);
+    const adapter = await getGPU(t.rec).requestAdapter(kAdapterTypeOptions[adapterType]);
     assert(adapter !== null, 'Failed to get adapter.');
 
     const kNumDevices = 10_000;

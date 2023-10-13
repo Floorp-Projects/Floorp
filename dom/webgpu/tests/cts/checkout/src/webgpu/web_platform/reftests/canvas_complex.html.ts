@@ -1,5 +1,5 @@
 import { assert, unreachable } from '../../../common/util/util.js';
-import { kTextureFormatInfo } from '../../capability_info.js';
+import { kTextureFormatInfo, ColorTextureFormat } from '../../format_info.js';
 import { gammaDecompress, float32ToFloat16Bits } from '../../util/conversion.js';
 import { align } from '../../util/math.js';
 
@@ -17,7 +17,7 @@ type WriteCanvasMethod =
   | 'ComputeWorkgroup16x16TextureStore';
 
 export function run(
-  format: GPUTextureFormat,
+  format: ColorTextureFormat,
   targets: { cvs: HTMLCanvasElement; writeCanvasMethod: WriteCanvasMethod }[]
 ) {
   runRefTest(async t => {
@@ -43,7 +43,7 @@ export function run(
 
     function copyBufferToTexture(ctx: GPUCanvasContext) {
       const rows = ctx.canvas.height;
-      const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
+      const bytesPerPixel = kTextureFormatInfo[format].color.bytes;
       if (bytesPerPixel === undefined) {
         unreachable();
       }

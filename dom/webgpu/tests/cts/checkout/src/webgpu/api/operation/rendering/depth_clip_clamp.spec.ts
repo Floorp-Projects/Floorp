@@ -4,7 +4,7 @@ depth ranges as well.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kDepthStencilFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import { kDepthStencilFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
   checkElementsBetween,
@@ -36,7 +36,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
   .params(u =>
     u //
       .combine('format', kDepthStencilFormats)
-      .filter(p => kTextureFormatInfo[p.format].depth)
+      .filter(p => !!kTextureFormatInfo[p.format].depth)
       .combine('unclippedDepth', [undefined, false, true])
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
@@ -177,7 +177,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
         topology: 'point-list',
         unclippedDepth,
       },
-      depthStencil: { format, depthWriteEnabled: true },
+      depthStencil: { format, depthWriteEnabled: true, depthCompare: 'always' },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: {
         module,
@@ -352,7 +352,7 @@ to be empty.`
   .params(u =>
     u //
       .combine('format', kDepthStencilFormats)
-      .filter(p => kTextureFormatInfo[p.format].depth)
+      .filter(p => !!kTextureFormatInfo[p.format].depth)
       .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )
@@ -364,7 +364,7 @@ to be empty.`
       info.feature,
     ]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, unclippedDepth, multisampled } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -426,7 +426,7 @@ to be empty.`
       layout: 'auto',
       vertex: { module, entryPoint: 'vmain' },
       primitive: { topology: 'point-list' },
-      depthStencil: { format, depthWriteEnabled: true },
+      depthStencil: { format, depthWriteEnabled: true, depthCompare: 'always' },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: { module, entryPoint: 'finit', targets: [] },
     });
@@ -440,7 +440,7 @@ to be empty.`
         topology: 'point-list',
         unclippedDepth,
       },
-      depthStencil: { format, depthCompare: 'not-equal' },
+      depthStencil: { format, depthCompare: 'not-equal', depthWriteEnabled: false },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] },
     });

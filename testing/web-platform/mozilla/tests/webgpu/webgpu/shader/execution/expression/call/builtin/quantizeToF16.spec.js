@@ -13,10 +13,10 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { quantizeToF16Interval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -24,7 +24,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('quantizeToF16', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(
+    return FP.f32.generateScalarToIntervalCases(
       [
         kValue.f16.negative.min,
         kValue.f16.negative.max,
@@ -37,12 +37,12 @@ export const d = makeCaseCache('quantizeToF16', {
         ...fullF16Range(),
       ],
 
-      'f32-only',
-      quantizeToF16Interval
+      'finite',
+      FP.f32.quantizeToF16Interval
     );
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(
+    return FP.f32.generateScalarToIntervalCases(
       [
         kValue.f16.negative.min,
         kValue.f16.negative.max,
@@ -56,7 +56,7 @@ export const d = makeCaseCache('quantizeToF16', {
       ],
 
       'unfiltered',
-      quantizeToF16Interval
+      FP.f32.quantizeToF16Interval
     );
   },
 });

@@ -31,7 +31,7 @@ g.test('number_of_dynamic_buffers_exceeds_the_maximum_value')
       .combine('visibility', [0, 2, 4, 6])
       .combine('type', kBufferBindingTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const { type, visibility } = t.params;
     const { maxDynamic } = bufferBindingTypeInfo({ type }).perPipelineLimitClass;
 
@@ -87,7 +87,7 @@ g.test('number_of_bind_group_layouts_exceeds_the_maximum_value')
       fails.
   `
   )
-  .fn(async t => {
+  .fn(t => {
     const bindGroupLayoutDescriptor: GPUBindGroupLayoutDescriptor = {
       entries: [],
     };
@@ -134,7 +134,7 @@ g.test('bind_group_layouts,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { layout0Mismatched, layout1Mismatched } = t.params;
 
     const mismatched = layout0Mismatched || layout1Mismatched;
