@@ -45,3 +45,23 @@ data_storage:
       - AlternateServices
       - ClientAuthRememberList
       - SiteSecurityServiceState
+
+oskeystore:
+  self_test:
+    type: labeled_boolean
+    description:
+      Whether or not each step of the OSKeyStore self test succeeded.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855759
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855759
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - dkeeler@mozilla.com
+    expires: 126
+    labels:
+      - generate
+      - available
+      - encrypt
+      - decrypt
