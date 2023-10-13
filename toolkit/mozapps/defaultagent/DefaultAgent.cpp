@@ -9,27 +9,21 @@
 #include <objbase.h>
 #include <string.h>
 #include <iostream>
-#include <vector>
 
 #include "nsAutoRef.h"
-#include "nsDebug.h"
 #include "nsWindowsHelpers.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-#include "nsICommandLine.h"
-#include "nsString.h"
 
 #include "common.h"
+#include "Policy.h"
 #include "DefaultBrowser.h"
 #include "DefaultPDF.h"
 #include "EventLog.h"
 #include "Notification.h"
-#include "Policy.h"
 #include "Registry.h"
 #include "ScheduledTask.h"
 #include "SetDefaultBrowser.h"
 #include "Telemetry.h"
-
-#include "DefaultAgent.h"
 
 // The AGENT_REGKEY_NAME is dependent on MOZ_APP_VENDOR and MOZ_APP_BASENAME,
 // so using those values in the mutex name prevents waiting on processes that
@@ -40,8 +34,6 @@
 // be short. Although the WDBA runs in the background, uninstallation happens
 // synchronously in the foreground.
 #define REGISTRY_MUTEX_TIMEOUT_MS (3 * 1000)
-
-namespace mozilla::default_agent {
 
 // Returns true if the registry value name given is one of the
 // install-directory-prefixed values used by the Windows Default Browser Agent.
@@ -100,7 +92,7 @@ static void RemoveAllRegistryEntries() {
 
     if (!wcsnicmp(valueName.get(), installPath.get(),
                   wcslen(installPath.get()))) {
-      RegDeleteValueW(regKey.get(), valueName.get());
+      RegDeleteValue(regKey.get(), valueName.get());
       // Only increment the index if we did not delete this value, because if
       // we did then the indexes of all the values after that one just got
       // decremented, meaning the index we already have now refers to a value
@@ -267,10 +259,19 @@ static bool CheckIfAppRanRecently(bool* aResult) {
 //   optional file extensions to register can be specified as additional
 //   argument pairs: the first element is the file extension, the second element
 //   is the root of a ProgID, which will be suffixed with `-$AUMI`.
-int wmain(int argc, const wchar_t** argv) {
+int wmain(int argc, wchar_t** argv) {
   if (argc < 2 || !argv[1]) {
     return E_INVALIDARG;
   }
+
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+  if (FAILED(hr)) {
+    return hr;
+  }
+
+  const struct ComUninitializer {
+    ~ComUninitializer() { CoUninitialize(); }
+  } kCUi;
 
   RegistryMutex regMutex;
 
@@ -413,27 +414,3 @@ int wmain(int argc, const wchar_t** argv) {
     return E_INVALIDARG;
   }
 }
-
-// Use the macro to inject all of the definitions for nsISupports.
-NS_IMPL_ISUPPORTS(DefaultAgent, nsIDefaultAgent)
-
-NS_IMETHODIMP
-DefaultAgent::HandleCommandLine(nsICommandLine* aCommandLine, int32_t* aRet) {
-  std::vector<const wchar_t*> args{L"unused"};
-  std::vector<nsString> argHolder;
-  int32_t argLen;
-  nsresult ret = aCommandLine->GetLength(&argLen);
-  NS_ENSURE_SUCCESS(ret, ret);
-  for (int i = 0; i < argLen; i++) {
-    nsAutoString arg;
-    ret = aCommandLine->GetArgument(i, arg);
-    NS_ENSURE_SUCCESS(ret, ret);
-    argHolder.push_back(arg);
-    args.push_back(argHolder.back().get());
-  }
-
-  *aRet = wmain((int)args.size(), args.data());
-  return NS_OK;
-}
-
-}  // namespace mozilla::default_agent
