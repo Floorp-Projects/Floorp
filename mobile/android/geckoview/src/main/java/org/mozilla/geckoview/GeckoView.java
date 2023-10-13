@@ -192,7 +192,7 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     }
 
     public boolean shouldPinOnScreen() {
-      return mDisplay != null ? mDisplay.shouldPinOnScreen() : false;
+      return mDisplay != null && mDisplay.shouldPinOnScreen();
     }
 
     public void setVerticalClipping(final int clippingHeight) {
