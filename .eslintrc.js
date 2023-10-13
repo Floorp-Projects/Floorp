@@ -536,7 +536,6 @@ module.exports = {
         "dom/serviceworkers/test/test_serviceworkermanager.xhtml",
         "dom/tests/mochitest/chrome/sizemode_attribute.xhtml",
         "dom/tests/mochitest/chrome/test_cyclecollector.xhtml",
-        "dom/tests/mochitest/chrome/window_focus.xhtml",
         "dom/workers/test/test_WorkerDebugger.xhtml",
         "dom/workers/test/test_WorkerDebugger_console.xhtml",
         "dom/workers/test/test_fileReadSlice.xhtml",
@@ -546,7 +545,6 @@ module.exports = {
       rules: {
         "mozilla/no-useless-removeEventListener": "off",
         "mozilla/use-services": "off",
-        complexity: "off",
         "no-caller": "off",
         "no-lone-blocks": "off",
         "no-redeclare": "off",
