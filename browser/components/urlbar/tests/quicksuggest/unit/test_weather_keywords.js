@@ -875,15 +875,11 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
             : undefined,
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-              : "firefox-suggest-urlbar-learn-more",
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
           },
           isBlockable: true,
           blockL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-dismiss-firefox-suggest"
-              : "firefox-suggest-urlbar-block",
+            id: "urlbar-result-menu-dismiss-firefox-suggest",
           },
           source: "remote-settings",
           provider: "AdmWikipedia",
@@ -1356,15 +1352,11 @@ function makeExpectedResult({
       iconId: "6",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-          : "firefox-suggest-urlbar-learn-more",
+        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
       },
       isBlockable: true,
       blockL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-dismiss-firefox-suggest"
-          : "firefox-suggest-urlbar-block",
+        id: "urlbar-result-menu-dismiss-firefox-suggest",
       },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",

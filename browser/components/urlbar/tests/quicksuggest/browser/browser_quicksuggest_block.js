@@ -88,16 +88,9 @@ add_combo_task(async function basic_keyboard({ result }) {
   await doBasicBlockTest({
     result,
     block: async () => {
-      if (UrlbarPrefs.get("resultMenu")) {
-        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-          resultIndex: 1,
-        });
-      } else {
-        // TAB twice to select the block button: once to select the main
-        // part of the row, once to select the block button.
-        EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-        EventUtils.synthesizeKey("KEY_Enter");
-      }
+      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+        resultIndex: 1,
+      });
     },
   });
 });
@@ -107,17 +100,10 @@ add_combo_task(async function basic_mouse({ result }) {
   await doBasicBlockTest({
     result,
     block: async () => {
-      if (UrlbarPrefs.get("resultMenu")) {
-        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-          resultIndex: 1,
-          openByMouse: true,
-        });
-      } else {
-        EventUtils.synthesizeMouseAtCenter(
-          UrlbarTestUtils.getButtonForResultIndex(window, "block", 1),
-          {}
-        );
-      }
+      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+        resultIndex: 1,
+        openByMouse: true,
+      });
     },
   });
 });
@@ -292,14 +278,9 @@ add_task(async function blockMultiple() {
     });
 
     // Block it.
-    if (UrlbarPrefs.get("resultMenu")) {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-        resultIndex: 1,
-      });
-    } else {
-      EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-      EventUtils.synthesizeKey("KEY_Enter");
-    }
+    await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+      resultIndex: 1,
+    });
     Assert.ok(
       await QuickSuggest.blockedSuggestions.has(url),
       "Suggestion is blocked after picking block button"

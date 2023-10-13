@@ -635,18 +635,10 @@ class _QuickSuggestTestUtils {
       "Result helpURL"
     );
 
-    if (lazy.UrlbarPrefs.get("resultMenu")) {
-      this.Assert.ok(
-        row._buttons.get("menu"),
-        "The menu button should be present"
-      );
-    } else {
-      let helpButton = row._buttons.get("help");
-      this.Assert.ok(helpButton, "The help button should be present");
-
-      let blockButton = row._buttons.get("block");
-      this.Assert.ok(blockButton, "The block button should be present");
-    }
+    this.Assert.ok(
+      row._buttons.get("menu"),
+      "The menu button should be present"
+    );
 
     return details;
   }
