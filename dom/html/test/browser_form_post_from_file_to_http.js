@@ -43,6 +43,7 @@ async function runTest(doNewTab) {
         fileBrowser,
         [TEST_HTTP_POST, filePaths, doNewTab],
         (actionUri, filePaths, doNewTab) => {
+          // eslint-disable-next-line mozilla/reject-importGlobalProperties
           Cu.importGlobalProperties(["File"]);
 
           let doc = content.document;
