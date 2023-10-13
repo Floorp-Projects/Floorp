@@ -506,7 +506,13 @@ let ShellServiceInternal = {
   },
 
   async _handleWDBAResult(exeProcess, exeWaitTimeoutMs = 2000) {
+    // Exit codes, see toolkit/mozapps/defaultagent/SetDefaultBrowser.h
+    const S_OK = 0;
     const STILL_ACTIVE = 0x103;
+    const MOZ_E_NO_PROGID = 0xa0000001;
+    const MOZ_E_HASH_CHECK = 0xa0000002;
+    const MOZ_E_REJECTED = 0xa0000003;
+    const MOZ_E_BUILD = 0xa0000004;
 
     const exeWaitPromise = exeProcess.wait();
     const timeoutPromise = new Promise(function (resolve) {
@@ -518,14 +524,14 @@ let ShellServiceInternal = {
 
     const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
 
-    if (exitCode != Cr.NS_OK) {
+    if (exitCode != S_OK) {
       const telemetryResult =
         new Map([
           [STILL_ACTIVE, "ErrExeTimeout"],
-          [Cr.NS_ERROR_WDBA_NO_PROGID, "ErrExeProgID"],
-          [Cr.NS_ERROR_WDBA_HASH_CHECK, "ErrExeHash"],
-          [Cr.NS_ERROR_WDBA_REJECTED, "ErrExeRejected"],
-          [Cr.NS_ERROR_WDBA_BUILD, "ErrBuild"],
+          [MOZ_E_NO_PROGID, "ErrExeProgID"],
+          [MOZ_E_HASH_CHECK, "ErrExeHash"],
+          [MOZ_E_REJECTED, "ErrExeRejected"],
+          [MOZ_E_BUILD, "ErrBuild"],
         ]).get(exitCode) ?? "ErrExeOther";
 
       throw new WDBAError(exitCode, telemetryResult);
