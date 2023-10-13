@@ -470,11 +470,11 @@ static bool AllowOpen(int aReqFlags, int aPerms) {
   return (aPerms & needed) == needed;
 }
 
-static int DoStat(const char* aPath, void* aBuff, int aFlags) {
+static int DoStat(const char* aPath, statstruct* aBuff, int aFlags) {
   if (aFlags & O_NOFOLLOW) {
-    return lstatsyscall(aPath, (statstruct*)aBuff);
+    return lstatsyscall(aPath, aBuff);
   }
-  return statsyscall(aPath, (statstruct*)aBuff);
+  return statsyscall(aPath, aBuff);
 }
 
 static int DoLink(const char* aPath, const char* aPath2,
@@ -878,10 +878,11 @@ void SandboxBroker::ThreadMain(void) {
           break;
 
         case SANDBOX_FILE_STAT:
-          if (DoStat(pathBuf, (struct stat*)&respBuf, req.mFlags) == 0) {
+          MOZ_ASSERT(req.mBufSize == sizeof(statstruct));
+          if (DoStat(pathBuf, (statstruct*)&respBuf, req.mFlags) == 0) {
             resp.mError = 0;
             ios[1].iov_base = &respBuf;
-            ios[1].iov_len = req.mBufSize;
+            ios[1].iov_len = sizeof(statstruct);
           } else {
             resp.mError = -errno;
           }
