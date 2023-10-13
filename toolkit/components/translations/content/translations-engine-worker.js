@@ -768,7 +768,7 @@ class WorkQueue {
       }
     }
     addProfilerMarker();
-    this.isRunning = false;
+    this.#isRunning = false;
   }
 
   async cancelWork() {
