@@ -44,15 +44,11 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
     descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
+      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
     },
     isBlockable: true,
     blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
+      id: "urlbar-result-menu-dismiss-firefox-suggest",
     },
     displayUrl: "http://test.com/q=frabbits",
     source: "remote-settings",
@@ -79,15 +75,11 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
     descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-        : "firefox-suggest-urlbar-learn-more",
+      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
     },
     isBlockable: true,
     blockL10n: {
-      id: UrlbarPrefs.get("resultMenu")
-        ? "urlbar-result-menu-dismiss-firefox-suggest"
-        : "firefox-suggest-urlbar-block",
+      id: "urlbar-result-menu-dismiss-firefox-suggest",
     },
     displayUrl: "url",
     requestId: "request_id",
@@ -451,15 +443,11 @@ add_task(async function multipleMerinoSuggestions() {
           descriptionL10n: { id: "urlbar-result-action-sponsored" },
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-              : "firefox-suggest-urlbar-learn-more",
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
           },
           isBlockable: true,
           blockL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-dismiss-firefox-suggest"
-              : "firefox-suggest-urlbar-block",
+            id: "urlbar-result-menu-dismiss-firefox-suggest",
           },
           displayUrl: "multipleMerinoSuggestions 1 url",
           requestId: "request_id",
@@ -631,15 +619,11 @@ add_task(async function bestMatch() {
           qsSuggestion: "full_keyword",
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-              : "firefox-suggest-urlbar-learn-more",
+            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
           },
           isBlockable: true,
           blockL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-dismiss-firefox-suggest"
-              : "firefox-suggest-urlbar-block",
+            id: "urlbar-result-menu-dismiss-firefox-suggest",
           },
           displayUrl: "url",
           source: "merino",
