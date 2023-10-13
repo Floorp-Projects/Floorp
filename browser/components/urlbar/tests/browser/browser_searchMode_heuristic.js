@@ -45,10 +45,9 @@ add_task(async function noResults() {
   );
 
   // Press enter.  Nothing should happen.
-  let loadPromise = waitForLoadOrTimeout();
+  let promise = waitForLoadStartOrTimeout();
   EventUtils.synthesizeKey("KEY_Enter");
-  let loadEvent = await loadPromise;
-  Assert.ok(!loadEvent, "Nothing should have loaded");
+  await Assert.rejects(promise, /timed out/, "Nothing should have loaded");
 
   await UrlbarTestUtils.promisePopupClose(window);
 });
@@ -90,10 +89,9 @@ add_task(async function localNoHeuristic() {
   Assert.ok(!result.heuristic, "Result should not be heuristic");
 
   // Press enter.  Nothing should happen.
-  let loadPromise = waitForLoadOrTimeout();
+  let promise = waitForLoadStartOrTimeout();
   EventUtils.synthesizeKey("KEY_Enter");
-  let loadEvent = await loadPromise;
-  Assert.ok(!loadEvent, "Nothing should have loaded");
+  await Assert.rejects(promise, /timed out/, "Nothing should have loaded");
 
   await UrlbarTestUtils.promisePopupClose(window);
 });

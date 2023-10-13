@@ -1070,7 +1070,6 @@ module.exports = {
         "browser/components/urlbar/tests/browser/browser_urlbar_telemetry_sponsored_topsites.js",
         "browser/components/urlbar/tests/browser/browser_view_resultDisplay.js",
         "browser/components/urlbar/tests/browser/browser_view_resultTypes_display.js",
-        "browser/components/urlbar/tests/browser/browser_waitForLoadOrTimeout.js",
         "browser/components/urlbar/tests/ext/browser/browser_ext_urlbar_clearInput.js",
         "browser/components/urlbar/tests/quicksuggest/QuickSuggestTestUtils.jsm ",
         "browser/components/urlbar/tests/quicksuggest/browser/browser_quicksuggest.js",

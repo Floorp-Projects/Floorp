@@ -52,37 +52,36 @@ async function selectAndPaste(str, win = window) {
 }
 
 /**
- * Waits for a load in any browser or a timeout, whichever comes first.
+ * Waits for a load starting in any browser or a timeout, whichever comes first.
  *
  * @param {window} win
  *   The top-level browser window to listen in.
  * @param {number} timeoutMs
  *   The timeout in ms.
- * @returns {event|null}
- *   If a load event was detected before the timeout fired, then the event is
- *   returned.  event.target will be the browser in which the load occurred.  If
- *   the timeout fired before a load was detected, null is returned.
+ * @returns {Promise} resolved to the loading uri in case of load, rejected in
+ *   case of timeout.
  */
-async function waitForLoadOrTimeout(win = window, timeoutMs = 1000) {
-  let event;
+function waitForLoadStartOrTimeout(win = window, timeoutMs = 1000) {
   let listener;
   let timeout;
-  let eventName = "BrowserTestUtils:ContentEvent:load";
-  try {
-    event = await Promise.race([
-      new Promise(resolve => {
-        listener = resolve;
-        win.addEventListener(eventName, listener, true);
-      }),
-      new Promise(resolve => {
-        timeout = win.setTimeout(resolve, timeoutMs);
-      }),
-    ]);
-  } finally {
-    win.removeEventListener(eventName, listener, true);
+  return Promise.race([
+    new Promise(resolve => {
+      listener = {
+        onStateChange(browser, webprogress, request, flags, status) {
+          if (flags & Ci.nsIWebProgressListener.STATE_START) {
+            resolve(request.QueryInterface(Ci.nsIChannel).URI);
+          }
+        },
+      };
+      win.gBrowser.addTabsProgressListener(listener);
+    }),
+    new Promise((resolve, reject) => {
+      timeout = win.setTimeout(() => reject("timed out"), timeoutMs);
+    }),
+  ]).finally(() => {
+    win.gBrowser.removeTabsProgressListener(listener);
     win.clearTimeout(timeout);
-  }
-  return event || null;
+  });
 }
 
 /**
