@@ -231,11 +231,14 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
 }
 
 static bool ShouldFreezeBuiltin(JSProtoKey key) {
-  // We can't freeze Reflect because JS_InitReflectParse defines Reflect.parse.
-  if (key == JSProto_Reflect) {
-    return false;
+  switch (key) {
+    case JSProto_Object:
+    case JSProto_Array:
+    case JSProto_Function:
+      return true;
+    default:
+      return false;
   }
-  return true;
 }
 
 static unsigned GetAttrsForResolvedGlobal(GlobalObject* global,
