@@ -1228,13 +1228,16 @@ nsDefaultCommandLineHandler.prototype = {
       return;
     }
 
-    if (AppConstants.platform == "win") {
-      // If we don't have a profile selected yet (e.g. the Profile Manager is
-      // displayed) we will crash if we open an url and then select a profile. To
-      // prevent this handle all url command line flags and set the command line's
-      // preventDefault to true to prevent the display of the ui. The initial
-      // command line will be retained when nsAppRunner calls LaunchChild though
-      // urls launched after the initial launch will be lost.
+    if (AppConstants.platform == "win" || AppConstants.platform == "macosx") {
+      // Handle the case where we don't have a profile selected yet (e.g. the
+      // Profile Manager is displayed).
+      // On Windows, we will crash if we open an url and then select a profile.
+      // On macOS, if we open an url we don't experience a crash but a broken
+      // window is opened.
+      // To prevent this handle all url command line flags and set the
+      // command line's preventDefault to true to prevent the display of the ui.
+      // The initial command line will be retained when nsAppRunner calls
+      // LaunchChild though urls launched after the initial launch will be lost.
       if (!this._haveProfile) {
         try {
           // This will throw when a profile has not been selected.
