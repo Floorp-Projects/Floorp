@@ -3128,6 +3128,8 @@ BrowserGlue.prototype = {
       function reportInstallationTelemetry() {
         lazy.BrowserUsageTelemetry.reportInstallationTelemetry();
       },
+
+      RunOSKeyStoreSelfTest,
     ];
 
     for (let task of idleTasks) {
@@ -6354,3 +6356,63 @@ export var AboutHomeStartupCache = {
     this._cacheEntryResolver(this._cacheEntry);
   },
 };
+
+async function RunOSKeyStoreSelfTest() {
+  // This can cause an OS dialog to appear on local developer builds, so only
+  // run if this has been built and signed by Mozilla's infrastructure.
+  if (!AppConstants.MOZILLA_OFFICIAL) {
+    return;
+  }
+  let osKeyStore = Cc["@mozilla.org/security/oskeystore;1"].getService(
+    Ci.nsIOSKeyStore
+  );
+  let label = Services.prefs.getCharPref("security.oskeystore.test.label", "");
+  if (!label) {
+    label = Services.uuid.generateUUID().toString().slice(1, -1);
+    Services.prefs.setCharPref("security.oskeystore.test.label", label);
+    try {
+      await osKeyStore.asyncGenerateSecret(label);
+      Glean.oskeystore.selfTest.generate.set(true);
+    } catch (_) {
+      Glean.oskeystore.selfTest.generate.set(false);
+      return;
+    }
+  }
+  let secretAvailable = await osKeyStore.asyncSecretAvailable(label);
+  Glean.oskeystore.selfTest.available.set(secretAvailable);
+  if (!secretAvailable) {
+    return;
+  }
+  let encrypted = Services.prefs.getCharPref(
+    "security.oskeystore.test.encrypted",
+    ""
+  );
+  if (!encrypted) {
+    try {
+      encrypted = await osKeyStore.asyncEncryptBytes(label, [1, 1, 3, 8]);
+      Services.prefs.setCharPref(
+        "security.oskeystore.test.encrypted",
+        encrypted
+      );
+      Glean.oskeystore.selfTest.encrypt.set(true);
+    } catch (_) {
+      Glean.oskeystore.selfTest.encrypt.set(false);
+      return;
+    }
+  }
+  try {
+    let decrypted = await osKeyStore.asyncDecryptBytes(label, encrypted);
+    if (
+      decrypted.length != 4 ||
+      decrypted[0] != 1 ||
+      decrypted[1] != 1 ||
+      decrypted[2] != 3 ||
+      decrypted[3] != 8
+    ) {
+      throw new Error("decrypted value not as expected?");
+    }
+    Glean.oskeystore.selfTest.decrypt.set(true);
+  } catch (_) {
+    Glean.oskeystore.selfTest.decrypt.set(false);
+  }
+}
