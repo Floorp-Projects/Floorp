@@ -11,7 +11,6 @@
 #include <iostream>
 #include <vector>
 
-#include "mozilla/mscom/EnsureMTA.h"
 #include "nsAutoRef.h"
 #include "nsDebug.h"
 #include "nsWindowsHelpers.h"
@@ -324,14 +323,8 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   }
   DefaultPdfInfo pdfInfo = defaultPdfResult.unwrap();
 
-  NotificationActivities activitiesPerformed;
-  // We block while waiting for the notification which prevents STA thread
-  // callbacks from running as the event loop won't run. Moving notification
-  // handling to an MTA thread prevents this conflict.
-  mozilla::mscom::EnsureMTA([&] {
-    activitiesPerformed = MaybeShowNotification(
-        browserInfo, PromiseFlatString(aUniqueToken).get(), aForce);
-  });
+  NotificationActivities activitiesPerformed = MaybeShowNotification(
+      browserInfo, PromiseFlatString(aUniqueToken).get(), aForce);
 
   HRESULT hr =
       SendDefaultBrowserPing(browserInfo, pdfInfo, activitiesPerformed);
