@@ -3534,12 +3534,31 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
     return;
   }
 
+  // We will briefly continue to collect HTTP_UPLOAD_BANDWIDTH_MBPS
+  // (a keyed histogram) while live experiments depend on it.
+  // Once complete, we can remove and use the glean probes,
+  // http_1/2/3_upload_throughput.
   nsAutoCString protocolVersion(nsHttp::GetProtocolVersion(mHttpVersion));
   TimeDuration sendTime = mTimings.responseStart - mTimings.requestStart;
   double megabits = static_cast<double>(mRequestSize) * 8.0 / 1000000.0;
   uint32_t mpbs = static_cast<uint32_t>(megabits / sendTime.ToSeconds());
   Telemetry::Accumulate(Telemetry::HTTP_UPLOAD_BANDWIDTH_MBPS, protocolVersion,
                         mpbs);
+
+  switch (mHttpVersion) {
+    case HttpVersion::v1_0:
+    case HttpVersion::v1_1:
+      glean::networking::http_1_upload_throughput.AccumulateSamples({mpbs});
+      break;
+    case HttpVersion::v2_0:
+      glean::networking::http_2_upload_throughput.AccumulateSamples({mpbs});
+      break;
+    case HttpVersion::v3_0:
+      glean::networking::http_3_upload_throughput.AccumulateSamples({mpbs});
+      break;
+    default:
+      break;
+  }
 
   if ((mHttpVersion == HttpVersion::v3_0) || mSupportsHTTP3) {
     nsAutoCString key((mHttpVersion == HttpVersion::v3_0) ? "uses_http3"
