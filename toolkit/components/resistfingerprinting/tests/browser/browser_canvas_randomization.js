@@ -41,9 +41,9 @@ var TEST_CASES = [
         return [imageData.data, imageDataSecond.data];
       });
     },
-    isDataRandomized(data1, data2, isCompareOriginal) {
-      let diffCnt = compareUint8Arrays(data1, data2);
-      info(`There are ${diffCnt} bits are different.`);
+    isDataRandomized(name, data1, data2, isCompareOriginal) {
+      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
 
       // The Canvas randomization adds at most 512 bits noise to the image data.
       // We compare the image data arrays to see if they are different and the
@@ -88,9 +88,9 @@ var TEST_CASES = [
         return [imageData.data, imageDataSecond.data];
       });
     },
-    isDataRandomized(data1, data2, isCompareOriginal) {
-      let diffCnt = compareUint8Arrays(data1, data2);
-      info(`There are ${diffCnt} bits are different.`);
+    isDataRandomized(name, data1, data2, isCompareOriginal) {
+      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
 
       // The Canvas randomization adds at most 512 bits noise to the image data.
       // We compare the image data arrays to see if they are different and the
@@ -135,7 +135,7 @@ var TEST_CASES = [
         return [dataURL, dataURLSecond];
       });
     },
-    isDataRandomized(data1, data2) {
+    isDataRandomized(name, data1, data2) {
       return data1 !== data2;
     },
   },
@@ -170,7 +170,7 @@ var TEST_CASES = [
         return [dataURL, dataURLSecond];
       });
     },
-    isDataRandomized(data1, data2) {
+    isDataRandomized(name, data1, data2) {
       return data1 !== data2;
     },
   },
@@ -210,7 +210,7 @@ var TEST_CASES = [
         return [dataURL, dataURLSecond];
       });
     },
-    isDataRandomized(data1, data2) {
+    isDataRandomized(name, data1, data2) {
       return data1 !== data2;
     },
   },
@@ -257,8 +257,10 @@ var TEST_CASES = [
         return [data, dataSecond];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -302,8 +304,10 @@ var TEST_CASES = [
         return [data, data];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -358,8 +362,10 @@ var TEST_CASES = [
         return [data, dataSecond];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -400,8 +406,10 @@ var TEST_CASES = [
         return [data, dataSecond];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -448,8 +456,10 @@ var TEST_CASES = [
         return [data, dataSecond];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -496,8 +506,10 @@ var TEST_CASES = [
         return [data, dataSecond];
       });
     },
-    isDataRandomized(data1, data2) {
-      return compareArrayBuffer(data1, data2);
+    isDataRandomized(name, data1, data2) {
+      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
+      return diffCnt > 0;
     },
   },
   {
@@ -523,9 +535,9 @@ var TEST_CASES = [
         return [imageData.data, imageDataSecond.data];
       });
     },
-    isDataRandomized(data1, data2, isCompareOriginal) {
-      let diffCnt = compareUint8Arrays(data1, data2);
-      info(`There are ${diffCnt} bits are different.`);
+    isDataRandomized(name, data1, data2, isCompareOriginal) {
+      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
+      info(`For ${name} there are ${diffCnt} bits are different.`);
 
       // The Canvas randomization adds at most 512 bits noise to the image data.
       // We compare the image data arrays to see if they are different and the
@@ -577,7 +589,7 @@ async function runTest(enabled) {
     Services.fog.testResetFOG();
 
     let data = await test.extractCanvasData(tab.linkedBrowser);
-    let result = test.isDataRandomized(data[0], test.originalData);
+    let result = test.isDataRandomized(test.name, data[0], test.originalData);
 
     if (test.shouldBeRandomized) {
       is(
@@ -596,14 +608,19 @@ async function runTest(enabled) {
     }
 
     ok(
-      !test.isDataRandomized(data[0], data[1]),
+      !test.isDataRandomized(test.name, data[0], data[1]),
       `The data of first and second access should be the same for ${test.name}.`
     );
 
     let privateData = await test.extractCanvasData(privateTab.linkedBrowser);
 
     // Check if we add noise to canvas data in private windows.
-    result = test.isDataRandomized(privateData[0], test.originalData, true);
+    result = test.isDataRandomized(
+      test.name,
+      privateData[0],
+      test.originalData,
+      true
+    );
     if (test.shouldBeRandomized) {
       is(
         result,
@@ -621,14 +638,14 @@ async function runTest(enabled) {
     }
 
     ok(
-      !test.isDataRandomized(privateData[0], privateData[1]),
+      !test.isDataRandomized(test.name, privateData[0], privateData[1]),
       "The data of first and second access should be the same for private windows."
     );
 
     if (test.shouldBeRandomized) {
       // Make sure the noises are different between normal window and private
       // windows.
-      result = test.isDataRandomized(privateData[0], data[0]);
+      result = test.isDataRandomized(test.name, privateData[0], data[0]);
       is(
         result,
         enabled,
