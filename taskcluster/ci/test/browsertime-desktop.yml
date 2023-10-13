@@ -427,12 +427,20 @@ browsertime-benchmark:
             motionmark-htmlsuite-ramp: 3000
             motionmark-animometer-ramp: 2100
             unity-webgl: 1500
-            speedometer3: 2100
+            speedometer3:
+                by-test-platform:
+                    macosx1300.*shippable.*: 4200
+                    default: 2100
             speedometer: 2100
             default: 900
     mozharness:
         extra-options:
-            - --extra-profiler-run
+            by-test-platform:
+                macosx1300.*shippable.*:
+                    - --extra-profiler-run
+                    - --page-timeout=900000
+                default:
+                    - --extra-profiler-run
 
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
