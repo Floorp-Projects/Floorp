@@ -141,13 +141,34 @@ class MOZ_STACK_CLASS WSScanResult final {
     // there is no editable block parent, this is topmost editable inline
     // content. Additionally, if there is no editable content, this is the
     // container start of scanner and is not editable.
-    MOZ_ASSERT_IF(
-        mReason == WSType::CurrentBlockBoundary,
-        !mContent || !mContent->GetParentElement() ||
-            HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
-            HTMLEditUtils::IsBlockElement(*mContent->GetParentElement(),
-                                          aBlockInlineCheck) ||
-            !mContent->GetParentElement()->IsEditable());
+    if (mReason == WSType::CurrentBlockBoundary) {
+      if (!mContent ||
+          // Although not expected that scanning in orphan document fragment,
+          // it's okay.
+          !mContent->IsInComposedDoc() ||
+          // This is what the most preferred result is mContent itself is a
+          // block.
+          HTMLEditUtils::IsBlockElement(*mContent, aBlockInlineCheck) ||
+          // If mContent is not editable, we cannot check whether there is no
+          // block ancestor in the limiter which we don't have.  Therefore,
+          // let's skip the ancestor check.
+          !mContent->IsEditable()) {
+        return;
+      }
+      const DebugOnly<Element*> closestAncestorEditableBlockElement =
+          HTMLEditUtils::GetAncestorElement(
+              *mContent, HTMLEditUtils::ClosestEditableBlockElement,
+              aBlockInlineCheck);
+      MOZ_ASSERT_IF(
+          mReason == WSType::CurrentBlockBoundary,
+          // There is no editable block ancestor, it's fine.
+          !closestAncestorEditableBlockElement ||
+              // If we found an editable block, but mContent can be inline if
+              // it's an editing host (root or its parent is not editable).
+              !closestAncestorEditableBlockElement->GetParentElement() ||
+              !closestAncestorEditableBlockElement->GetParentElement()
+                   ->IsEditable());
+    }
 #endif  // #ifdef DEBUG
   }
 
