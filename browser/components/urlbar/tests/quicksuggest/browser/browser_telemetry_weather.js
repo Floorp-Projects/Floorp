@@ -81,34 +81,37 @@ add_task(async function () {
         },
       },
     },
-    selectables: {
-      // click
-      "urlbarView-row-inner": {
-        scalars: {
-          [WEATHER_SCALARS.IMPRESSION]: position,
-          [WEATHER_SCALARS.CLICK]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "click",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
+    // click
+    click: {
+      scalars: {
+        [WEATHER_SCALARS.IMPRESSION]: position,
+        [WEATHER_SCALARS.CLICK]: position,
+      },
+      event: {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "click",
+        extra: {
+          suggestion_type,
+          match_type,
+          position: position.toString(),
         },
       },
-      // block
-      "urlbarView-button-block": {
+    },
+    commands: [
+      // not relevant
+      {
+        command: [
+          "[data-l10n-id=firefox-suggest-command-dont-show-this]",
+          "not_relevant",
+        ],
         scalars: {
           [WEATHER_SCALARS.IMPRESSION]: position,
-          [WEATHER_SCALARS.BLOCK]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
           method: "engagement",
-          object: "block",
+          object: "other",
           extra: {
             suggestion_type,
             match_type,
@@ -117,7 +120,8 @@ add_task(async function () {
         },
       },
       // help
-      "urlbarView-button-help": {
+      {
+        command: "help",
         scalars: {
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.HELP]: position,
@@ -133,7 +137,7 @@ add_task(async function () {
           },
         },
       },
-    },
+    ],
   });
 });
 
