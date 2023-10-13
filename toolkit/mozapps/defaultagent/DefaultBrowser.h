@@ -15,7 +15,7 @@
 namespace mozilla::default_agent {
 
 MOZ_DEFINE_ENUM_CLASS(Browser,
-                      (Error, Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
+                      (Unknown, Firefox, Chrome, EdgeWithEdgeHTML,
                        EdgeWithBlink, InternetExplorer, Opera, Brave, Yandex,
                        QQBrowser, _360Browser, Sogou, DuckDuckGo));
 
