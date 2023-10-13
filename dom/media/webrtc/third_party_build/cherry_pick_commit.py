@@ -253,6 +253,15 @@ if __name__ == "__main__":
             os.path.join(args.tmp_path, "cherry-pick-commit_msg.txt"),
         )
 
+        # The normal vendoring process updates README.mozilla with info
+        # on what commit was vendored and the command line used to do
+        # the vendoring.  Since we're only reusing the vendoring script
+        # here, we don't want to update the README.mozilla file.
+        cmd = "hg revert -r tip^ third_party/libwebrtc/README.mozilla"
+        run_hg(cmd)
+        cmd = "hg amend"
+        run_hg(cmd)
+
         # get the files changed from the newly vendored cherry-pick
         # commit in mercurial
         cmd = "hg status --change tip --exclude '**/README.*'"
