@@ -8,7 +8,7 @@ var supportedProps = [
   "appCodeName",
   "appName",
   "appVersion",
-  { name: "globalPrivacyControl", isNightly: true, isAndroid: false },
+  { name: "globalPrivacyControl", isAndroid: false },
   "platform",
   "product",
   "userAgent",
