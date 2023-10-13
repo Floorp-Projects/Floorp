@@ -27,14 +27,16 @@ function markTestCaseComplete() {
 
 window.onmessage = function(event) {
   if (event.data.src.includes("test1")) {
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    is(event.data.target, "http://test1.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html", "error thrown for failed iframe load should be from test1's iframe.");
-    is(event.data.outcome, "blocked", "http iframe should be blocked from loading in child https window.");
-    is(event.data.method, "http", "messages from test1 iframe should be http.");
+    if (event.data.outcome != 'network-error') {
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      is(event.data.target, "http://test1.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html", "error thrown for failed iframe load should be from test1's iframe.");
+      is(event.data.outcome, "blocked", "http iframe should be blocked from loading in child https window.");
+      is(event.data.method, "http", "messages from test1 iframe should be http.");
+    }
     markTestCaseComplete();
   }
   else if (event.data.src.includes("test2")) {
-    if (event.data.outcome != 'csp-error') {
+    if (event.data.outcome != 'network-error') {
       is(event.data.target, "https://test2.example.com/tests/dom/security/test/mixedcontentblocker/file_windowOpen.html", "event message received for successful iframe load should be from test2's iframe.");
       is(event.data.triggeringPrincipal, "https://example.com/tests/dom/security/test/mixedcontentblocker/test_windowOpen.html", "triggeringPrincipal for successfully loaded https iframe should be the original test file.");
       is(event.data.outcome, "loaded", "https iframe should be allowed to load in child https window.");
@@ -47,29 +49,29 @@ window.onmessage = function(event) {
 function testURLInOpenedWindow(testURL) {
   let openedWindow = window.open("javascript:''","_blank");
   openedWindow.onload = function() {
-    openedWindow.document.body.innerHTML = '<iframe id="testframe">'
+    openedWindow.document.body.innerHTML = '<iframe id="openedframe">'
 
-    let testframe = openedWindow.document.getElementById("testframe");
-    testframe.onload = function(event) {
+    let openedframe = openedWindow.document.getElementById("openedframe");
+    openedframe.onload = function(event) {
       try {
         let triggeringPrincipal = SpecialPowers.wrap(this.contentWindow).docShell.currentDocumentChannel.loadInfo.triggeringPrincipal.asciiSpec;
         openedWindow.opener.postMessage({outcome: 'loaded', method: this.src.split(":")[0], src: this.src, target: event.target.src, triggeringPrincipal}, '*');
       }
       catch (error) {
-        // If we can't get the docShell due to CSP blocking access to the iframe's docShell then skip this test case
+        // If we can't access the docShell due to CSP or the iframe silently failing on network errors then skip this test case
         if (error.name === "SecurityError" && error.message === 'Permission denied to access property "docShell" on cross-origin object') {
-          openedWindow.opener.postMessage({outcome: 'csp-error', method: this.src.split(":")[0], src: this.src}, '*');
+          openedWindow.opener.postMessage({outcome: 'network-error', method: this.src.split(":")[0], src: this.src, target: event.target.src}, '*');
         }
         else throw error;
       }
       openedWindow.close();
     }
-    testframe.onerror = function(error) {
+    openedframe.onerror = function(error) {
       openedWindow.opener.postMessage({outcome: 'blocked', method: this.src.split(":")[0], src: this.src, target: error.target.src}, '*');
       openedWindow.close();
     }
 
-    testframe.src = testURL;
+    openedframe.src = testURL;
   };
 };
 
