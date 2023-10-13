@@ -585,8 +585,9 @@ void SetPrefableCompileOptions(JS::PrefableCompileOptions& options);
 // you can't get a *mutable* JS::RealmOptions& from an existing global
 // object.)
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
-                             bool aIsSystemPrincipal, bool aSecureContext, bool aForceUTC,
-                             bool aAlwaysUseFdlibm, bool aLocaleEnUS);
+                             bool aIsSystemPrincipal, bool aSecureContext,
+                             bool aForceUTC, bool aAlwaysUseFdlibm,
+                             bool aLocaleEnUS);
 
 class ErrorBase {
  public:

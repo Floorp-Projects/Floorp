@@ -493,7 +493,8 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
     aOptions.creationOptions().setSecureContext(true);
     aOptions.behaviors().setClampAndJitterTime(false);
     aOptions.behaviors().setDiscardSource(ShouldDiscardSystemSource());
-    MOZ_ASSERT(aSecureContext, "aIsSystemPrincipal should imply aSecureContext");
+    MOZ_ASSERT(aSecureContext,
+               "aIsSystemPrincipal should imply aSecureContext");
   } else {
     aOptions.creationOptions().setSecureContext(aSecureContext);
   }
