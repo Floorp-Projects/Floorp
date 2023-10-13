@@ -192,4 +192,24 @@ class AddonDetailsBindingDelegateTest {
         assertFalse(binding.homePageLabel.isVisible)
         assertFalse(binding.homePageDivider.isVisible)
     }
+
+    @Test
+    fun `bind add-on detail url`() {
+        detailsBindingDelegate.bind(baseAddon.copy(detailUrl = "https://example.org"))
+
+        assertTrue(binding.detailUrl.isVisible)
+        assertTrue(binding.detailUrlDivider.isVisible)
+
+        binding.detailUrl.performClick()
+
+        verify { interactor.openWebsite(Uri.parse("https://example.org")) }
+    }
+
+    @Test
+    fun `bind add-on without a detail url`() {
+        detailsBindingDelegate.bind(baseAddon.copy(detailUrl = ""))
+
+        assertFalse(binding.detailUrl.isVisible)
+        assertFalse(binding.detailUrlDivider.isVisible)
+    }
 }

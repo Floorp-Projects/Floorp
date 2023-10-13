@@ -372,6 +372,7 @@ class GeckoWebExtension(
                 openOptionsPageInTab = it.openOptionsPageInTab,
                 baseUrl = it.baseUrl,
                 temporary = it.temporary,
+                detailUrl = it.amoListingUrl,
             )
         }
     }

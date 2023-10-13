@@ -87,6 +87,8 @@
     <string name="mozac_feature_addons_learn_more">Learn more about permissions</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Rating</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">More about this add-on</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Settings</string>
     <!-- Indicates the add-on is enabled. -->

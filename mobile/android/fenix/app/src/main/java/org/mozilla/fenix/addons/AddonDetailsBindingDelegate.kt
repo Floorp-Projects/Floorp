@@ -55,6 +55,7 @@ class AddonDetailsBindingDelegate(
         bindLastUpdated(addon)
         bindHomepage(addon)
         bindRating(addon)
+        bindDetailUrl(addon)
     }
 
     private fun bindRating(addon: Addon) {
@@ -165,5 +166,17 @@ class AddonDetailsBindingDelegate(
         }
         spannableStringBuilder.setSpan(clickable, start, end, flags)
         spannableStringBuilder.removeSpan(link)
+    }
+
+    private fun bindDetailUrl(addon: Addon) {
+        if (addon.detailUrl.isBlank()) {
+            binding.detailUrl.isVisible = false
+            binding.detailUrlDivider.isVisible = false
+            return
+        }
+
+        binding.detailUrl.setOnClickListener {
+            interactor.openWebsite(addon.detailUrl.toUri())
+        }
     }
 }

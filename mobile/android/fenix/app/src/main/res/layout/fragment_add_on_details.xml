@@ -148,6 +148,7 @@
             app:layout_constraintTop_toBottomOf="@+id/home_page_label" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/rating"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
@@ -192,6 +193,26 @@
                 tools:text="591,642" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:id="@+id/detail_url_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="10dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/rating" />
+
+        <TextView
+            android:id="@+id/detail_url"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/mozac_feature_addons_more_info_link"
+            android:textColor="?textAccent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detail_url_divider" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

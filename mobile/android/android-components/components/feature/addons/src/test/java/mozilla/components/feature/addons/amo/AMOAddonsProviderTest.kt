@@ -70,6 +70,7 @@ class AMOAddonsProviderTest {
         assertTrue(addon.translatableSummary.isEmpty())
         assertEquals("", addon.translatableDescription.getValue("ca"))
         assertEquals(Addon.DEFAULT_LOCALE, addon.defaultLocale)
+        assertEquals("", addon.detailUrl)
 
         // Author
         assertNull(addon.author)
@@ -646,6 +647,10 @@ class AMOAddonsProviderTest {
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/reviews/",
             addon.ratingUrl,
+        )
+        assertEquals(
+            "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
+            addon.detailUrl,
         )
     }
 

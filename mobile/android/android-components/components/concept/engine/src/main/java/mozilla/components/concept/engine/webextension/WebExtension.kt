@@ -465,6 +465,11 @@ data class Metadata(
      * such as web-ext, and won't be retained when the application exits.
      */
     val temporary: Boolean = false,
+
+    /**
+     * The URL to the detail page of this extension.
+     */
+    val detailUrl: String?,
 )
 
 /**
