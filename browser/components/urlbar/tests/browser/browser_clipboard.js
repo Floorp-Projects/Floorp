@@ -70,7 +70,7 @@ add_task(async function testUserEngagementWithClipboardSuggestion() {
       );
       Assert.equal(
         result.icon,
-        "chrome://global/skin/icons/edit-copy.svg",
+        "chrome://global/skin/icons/clipboard.svg",
         "Clipboard suggestion icon"
       );
       await checkClipboardSuggestionAbsent(1);

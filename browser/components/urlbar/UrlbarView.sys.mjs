@@ -1834,7 +1834,7 @@ export class UrlbarView {
           result.payload.displayUrl = "";
           actionSetter = () => {
             this.#setElementL10n(action, {
-              id: "urlbar-result-action-visit-from-your-clipboard",
+              id: "urlbar-result-action-visit-from-clipboard",
             });
           };
           title.toggleAttribute("is-url", true);
@@ -2835,7 +2835,7 @@ export class UrlbarView {
       { id: "urlbar-result-action-search-tabs" },
       { id: "urlbar-result-action-switch-tab" },
       { id: "urlbar-result-action-visit" },
-      { id: "urlbar-result-action-visit-from-your-clipboard" },
+      { id: "urlbar-result-action-visit-from-clipboard" },
     ];
 
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {
