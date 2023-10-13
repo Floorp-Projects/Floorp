@@ -51,8 +51,6 @@
 #  define RRF_SUBKEY_WOW6464KEY 0x00010000
 #endif  // !defined(RRF_SUBKEY_WOW6464KEY)
 
-namespace mozilla::default_agent {
-
 using TelemetryFieldResult = mozilla::WindowsErrorResult<std::string>;
 using BoolResult = mozilla::WindowsErrorResult<bool>;
 
@@ -498,5 +496,3 @@ HRESULT SendDefaultBrowserPing(
                   notificationShown, notificationAction, prevNotificationAction)
       .AsHResult();
 }
-
-}  // namespace mozilla::default_agent

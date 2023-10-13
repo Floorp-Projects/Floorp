@@ -16,8 +16,6 @@
 #include "EventLog.h"
 #include "SetDefaultBrowser.h"
 
-namespace mozilla::default_agent {
-
 /*
  * The implementation for setting extension handlers by writing UserChoice.
  *
@@ -365,5 +363,3 @@ HRESULT SetDefaultExtensionHandlersUserChoiceImpl(
 
   return S_OK;
 }
-
-}  // namespace mozilla::default_agent

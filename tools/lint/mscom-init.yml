@@ -34,6 +34,7 @@ forbid-mscom-init:
         - netwerk/system/win32/nsNotifyAddrListener.cpp
         - toolkit/components/parentalcontrols/nsParentalControlsServiceWin.cpp
         - toolkit/crashreporter/google-breakpad/src/common/windows/pdb_source_line_writer.cc
+        - toolkit/mozapps/defaultagent/main.cpp
         - uriloader/exthandler/win/nsOSHelperAppService.cpp
         - widget/windows/TaskbarPreview.cpp
         - widget/windows/WinTaskbar.cpp

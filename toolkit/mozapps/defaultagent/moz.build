@@ -4,17 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Program("default-browser-agent")
+
 SPHINX_TREES["default-browser-agent"] = "docs"
 
-DIRS += ["proxy"]
-
 UNIFIED_SOURCES += [
+    "/mfbt/Poison.cpp",
+    "/mfbt/Unused.cpp",
     "Cache.cpp",
     "common.cpp",
     "DefaultAgent.cpp",
     "DefaultBrowser.cpp",
     "DefaultPDF.cpp",
     "EventLog.cpp",
+    "Notification.cpp",
     "Policy.cpp",
     "Registry.cpp",
     "ScheduledTask.cpp",
@@ -24,23 +27,15 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
+    "/browser/components/shell/WindowsDefaultBrowser.cpp",
+    "/browser/components/shell/WindowsUserChoice.cpp",
+    "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
     "/third_party/WinToast/wintoastlib.cpp",
     "/toolkit/mozapps/update/common/readstrings.cpp",
-    "Notification.cpp",
 ]
 
 # Suppress warnings from third-party code.
-SOURCES["/third_party/WinToast/wintoastlib.cpp"].flags += [
-    "-Wno-implicit-fallthrough",
-    "-Wno-nonportable-include-path",  # Needed for wintoastlib.h including "Windows.h"
-]
-SOURCES["Notification.cpp"].flags += [
-    "-Wno-nonportable-include-path",  # Needed for wintoastlib.h including "Windows.h"
-]
-
-EXPORTS.mozilla += [
-    "DefaultAgent.h",
-]
+SOURCES["/third_party/WinToast/wintoastlib.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
 USE_LIBS += [
     "jsoncpp",
@@ -48,10 +43,12 @@ USE_LIBS += [
 
 LOCAL_INCLUDES += [
     "/browser/components/shell/",
+    "/mfbt/",
     "/other-licenses/nsis/Contrib/CityHash/cityhash",
     "/third_party/WinToast",
     "/toolkit/components/jsoncpp/include",
     "/toolkit/mozapps/update/common",
+    "/xpcom/build",
 ]
 
 OS_LIBS += [
@@ -73,21 +70,28 @@ OS_LIBS += [
     "ntdll",
 ]
 
-XPIDL_SOURCES += [
-    "nsIDefaultAgent.idl",
-]
+DEFINES["NS_NO_XPCOM"] = True
+DEFINES["IMPL_MFBT"] = True
 
-XPIDL_MODULE = "default-agent"
-
-XPCOM_MANIFESTS += [
-    "components.conf",
-]
+DEFINES["UNICODE"] = True
+DEFINES["_UNICODE"] = True
 
 # If defines are added to this list that are required by the Cache,
 # SetDefaultBrowser, or their dependencies (Registry, EventLog, common),
 # tests/gtest/moz.build will need to be updated as well.
 for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
     DEFINES[var] = '"%s"' % CONFIG[var]
+
+# We need STL headers that aren't allowed when wrapping is on (at least
+# <filesystem>, and possibly others).
+DisableStlWrapping()
+
+# We need this to be able to use wmain as the entry point on MinGW;
+# otherwise it will try to use WinMain.
+if CONFIG["CC_TYPE"] == "clang-cl":
+    WIN32_EXE_LDFLAGS += ["-ENTRY:wmainCRTStartup"]
+else:
+    WIN32_EXE_LDFLAGS += ["-municode"]
 
 GENERATED_FILES += ["defaultagent.ini"]
 defaultagentini = GENERATED_FILES["defaultagent.ini"]
@@ -98,14 +102,8 @@ defaultagentini.inputs = [
 ]
 FINAL_TARGET_FILES += ["!defaultagent.ini"]
 
-FINAL_LIBRARY = "xul"
-
 if CONFIG["ENABLE_TESTS"]:
     DIRS += ["tests/gtest"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Default Browser Agent")
-
-EXTRA_JS_MODULES.backgroundtasks += [
-    "BackgroundTask_defaultagent.sys.mjs",
-]

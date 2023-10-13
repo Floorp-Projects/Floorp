@@ -6,8 +6,6 @@
 #ifndef DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
 #define DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
 
-namespace mozilla::default_agent {
-
 /*
  * Set the default browser by writing the UserChoice registry keys.
  *
@@ -62,7 +60,5 @@ const HRESULT MOZ_E_NO_PROGID = 0xa0000001L;
 const HRESULT MOZ_E_HASH_CHECK = 0xa0000002L;
 const HRESULT MOZ_E_REJECTED = 0xa0000003L;
 const HRESULT MOZ_E_BUILD = 0xa0000004L;
-
-}  // namespace mozilla::default_agent
 
 #endif  // DEFAULT_BROWSER_SET_DEFAULT_BROWSER_H__
