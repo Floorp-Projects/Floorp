@@ -1020,9 +1020,7 @@ pref("privacy.temporary_permission_expire_time_ms",  3600000);
 pref("privacy.authPromptSpoofingProtection",         true);
 
 // Enable GPC if the user turns it on in about:preferences
-#ifdef NIGHTLY_BUILD
 pref("privacy.globalprivacycontrol.functionality.enabled",  true);
-#endif
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
