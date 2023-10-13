@@ -12,12 +12,12 @@ assert_pretty("regs", "{ fp_ = , sp = fp_.slots() + 2, pc =  (JSOp::True) }")
 run_fragment("Interpreter.AbstractFramePtr")
 
 assert_pretty(
-    "ifptr", "AbstractFramePtr ((js::InterpreterFrame *) ) = {ptr_ = 146464513}"
+    "ifptr", "AbstractFramePtr ((js::InterpreterFrame *) ) = {ptr_ = 146464512}"
 )
 assert_pretty(
-    "bfptr", "AbstractFramePtr ((js::jit::BaselineFrame *) ) = {ptr_ = 3135025122}"
+    "bfptr", "AbstractFramePtr ((js::jit::BaselineFrame *) ) = {ptr_ = 3135025121}"
 )
 assert_pretty(
     "rfptr",
-    "AbstractFramePtr ((js::jit::RematerializedFrame *) ) = {ptr_ = 3669732611}",
+    "AbstractFramePtr ((js::jit::RematerializedFrame *) ) = {ptr_ = 3669732610}",
 )
