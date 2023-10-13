@@ -27,7 +27,7 @@ g.test('many')
 TODO: There may be a normative limit to the number of entry points allowed in
 a shader, in which case this would become a validation test instead.`
   )
-  .fn(async t => {
+  .fn(t => {
     const data = new Uint32Array([0]);
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
 

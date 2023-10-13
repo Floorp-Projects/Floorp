@@ -7,13 +7,15 @@ import { unreachable } from '../../../common/util/util.js';
 import {
   kTextureAspects,
   kTextureDimensions,
+  kTextureViewDimensions,
+} from '../../capability_info.js';
+import {
   kTextureFormatInfo,
   kTextureFormats,
-  kTextureViewDimensions,
   kFeaturesForFormats,
-  viewCompatible,
   filterFormatsByFeature,
-} from '../../capability_info.js';
+  viewCompatible,
+} from '../../format_info.js';
 import { kResourceStates } from '../../gpu_test.js';
 import {
   getTextureDimensionFromView,
@@ -49,9 +51,11 @@ g.test('format')
     const { textureFormatFeature, viewFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([textureFormatFeature, viewFormatFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { textureFormat, viewFormat, useViewFormatList } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
+
+    t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
 
     const compatible = viewFormat === undefined || viewCompatible(textureFormat, viewFormat);
 
@@ -87,6 +91,9 @@ g.test('dimension')
       .combine('textureDimension', kTextureDimensions)
       .combine('viewDimension', [...kTextureViewDimensions, undefined])
   )
+  .beforeAllSubcases(t => {
+    t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+  })
   .fn(t => {
     const { textureDimension, viewDimension } = t.params;
 
@@ -124,7 +131,7 @@ g.test('aspect')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, aspect } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -211,6 +218,8 @@ g.test('array_layers')
       arrayLayerCount,
     } = t.params;
 
+    t.skipIfTextureViewDimensionNotSupported(viewDimension);
+
     const kWidth = 1 << (kLevels - 1); // 32
     const textureDescriptor = {
       format: 'rgba8unorm',
@@ -270,6 +279,8 @@ g.test('mip_levels')
       mipLevelCount,
     } = t.params;
 
+    t.skipIfTextureViewDimensionNotSupported(viewDimension);
+
     const textureDescriptor = {
       format: 'rgba8unorm',
       dimension: textureDimension,
@@ -305,8 +316,10 @@ g.test('cube_faces_square')
         [8, 4, 6],
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { dimension, size } = t.params;
+
+    t.skipIfTextureViewDimensionNotSupported(dimension);
 
     const texture = t.device.createTexture({
       format: 'rgba8unorm',
@@ -323,7 +336,7 @@ g.test('cube_faces_square')
 g.test('texture_state')
   .desc(`createView should fail if the texture is invalid (but succeed if it is destroyed)`)
   .paramsSubcasesOnly(u => u.combine('state', kResourceStates))
-  .fn(async t => {
+  .fn(t => {
     const { state } = t.params;
     const texture = t.createTextureWithState(state);
 

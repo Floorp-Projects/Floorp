@@ -29,7 +29,7 @@ g.test('buffer_reflection_attributes')
       },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { descriptor } = t.params;
 
     t.expectValidationError(() => {
@@ -87,7 +87,7 @@ g.test('texture_reflection_attributes')
       },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { descriptor } = t.params;
 
     let width;
@@ -126,7 +126,7 @@ g.test('query_set_reflection_attributes')
       { type: 'occlusion', count: 8193, invalid: true },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { descriptor } = t.params;
 
     t.expectValidationError(() => {

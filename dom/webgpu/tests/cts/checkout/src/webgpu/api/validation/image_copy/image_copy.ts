@@ -1,9 +1,10 @@
 import {
-  kTextureFormatInfo,
-  SizedTextureFormat,
-  DepthStencilFormat,
   depthStencilFormatCopyableAspects,
-} from '../../../capability_info.js';
+  DepthStencilFormat,
+  SizedTextureFormat,
+  kTextureFormatInfo,
+  isCompressedTextureFormat,
+} from '../../../format_info.js';
 import { align } from '../../../util/math.js';
 import { ImageCopyType } from '../../../util/texture/layout.js';
 import { ValidationTest } from '../validation_test.js';
@@ -61,6 +62,11 @@ export class ImageCopyTest extends ValidationTest {
         break;
       }
       case 'CopyT2B': {
+        if (this.isCompatibility && isCompressedTextureFormat(textureCopyView.texture.format)) {
+          this.skip(
+            'copyTextureToBuffer is not supported for compressed texture formats in compatibility mode.'
+          );
+        }
         const buffer = this.device.createBuffer({
           size: dataSize,
           usage: GPUBufferUsage.COPY_DST,
@@ -159,6 +165,11 @@ export class ImageCopyTest extends ValidationTest {
         break;
       }
       case 'CopyT2B': {
+        if (this.isCompatibility && isCompressedTextureFormat(texture.format)) {
+          this.skip(
+            'copyTextureToBuffer is not supported for compressed texture formats in compatibility mode.'
+          );
+        }
         const { encoder, validateFinish, validateFinishAndSubmit } = this.createEncoder('non-pass');
         encoder.copyTextureToBuffer({ texture }, { buffer, ...textureDataLayout }, size);
 

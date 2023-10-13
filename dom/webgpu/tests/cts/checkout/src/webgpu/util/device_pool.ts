@@ -1,4 +1,4 @@
-import { SkipTestCase } from '../../common/framework/fixture.js';
+import { SkipTestCase, TestCaseRecorder } from '../../common/framework/fixture.js';
 import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import {
@@ -22,12 +22,15 @@ export class DevicePool {
   private holders: 'uninitialized' | 'failed' | DescriptorToHolderMap = 'uninitialized';
 
   /** Acquire a device from the pool and begin the error scopes. */
-  async acquire(descriptor?: UncanonicalizedDeviceDescriptor): Promise<DeviceProvider> {
+  async acquire(
+    recorder: TestCaseRecorder,
+    descriptor?: UncanonicalizedDeviceDescriptor
+  ): Promise<DeviceProvider> {
     let errorMessage = '';
     if (this.holders === 'uninitialized') {
       this.holders = new DescriptorToHolderMap();
       try {
-        await this.holders.getOrCreate(undefined);
+        await this.holders.getOrCreate(recorder, undefined);
       } catch (ex) {
         this.holders = 'failed';
         if (ex instanceof Error) {
@@ -41,7 +44,7 @@ export class DevicePool {
       `WebGPU device failed to initialize${errorMessage}; not retrying`
     );
 
-    const holder = await this.holders.getOrCreate(descriptor);
+    const holder = await this.holders.getOrCreate(recorder, descriptor);
 
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
     holder.state = 'acquired';
@@ -132,6 +135,7 @@ class DescriptorToHolderMap {
    * Throws SkipTestCase if devices with this descriptor are unsupported.
    */
   async getOrCreate(
+    recorder: TestCaseRecorder,
     uncanonicalizedDescriptor: UncanonicalizedDeviceDescriptor | undefined
   ): Promise<DeviceHolder> {
     const [descriptor, key] = canonicalizeDescriptor(uncanonicalizedDescriptor);
@@ -156,7 +160,7 @@ class DescriptorToHolderMap {
     // No existing item was found; add a new one.
     let value;
     try {
-      value = await DeviceHolder.create(descriptor);
+      value = await DeviceHolder.create(recorder, descriptor);
     } catch (ex) {
       if (ex instanceof FeaturesNotSupported) {
         this.unsupported.add(key);
@@ -284,8 +288,11 @@ class DeviceHolder implements DeviceProvider {
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
-  static async create(descriptor: CanonicalDeviceDescriptor | undefined): Promise<DeviceHolder> {
-    const gpu = getGPU();
+  static async create(
+    recorder: TestCaseRecorder,
+    descriptor: CanonicalDeviceDescriptor | undefined
+  ): Promise<DeviceHolder> {
+    const gpu = getGPU(recorder);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null, 'requestAdapter returned null');
     if (!supportsFeature(adapter, descriptor)) {
@@ -312,8 +319,9 @@ class DeviceHolder implements DeviceProvider {
   /** Push error scopes that surround test execution. */
   beginTestScope(): void {
     assert(this.state === 'acquired');
-    this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
+    this.device.pushErrorScope('internal');
+    this.device.pushErrorScope('out-of-memory');
   }
 
   /** Mark the DeviceHolder as expecting a device loss when the test scope ends. */
@@ -341,6 +349,7 @@ class DeviceHolder implements DeviceProvider {
 
   private async attemptEndTestScope(): Promise<void> {
     let gpuValidationError: GPUError | null;
+    let gpuInternalError: GPUError | null;
     let gpuOutOfMemoryError: GPUError | null;
 
     // Submit to the queue to attempt to force a GPU flush.
@@ -348,7 +357,8 @@ class DeviceHolder implements DeviceProvider {
 
     try {
       // May reject if the device was lost.
-      [gpuValidationError, gpuOutOfMemoryError] = await Promise.all([
+      [gpuOutOfMemoryError, gpuInternalError, gpuValidationError] = await Promise.all([
+        this.device.popErrorScope(),
         this.device.popErrorScope(),
         this.device.popErrorScope(),
       ]);
@@ -367,17 +377,24 @@ class DeviceHolder implements DeviceProvider {
       'There was an extra error scope on the stack after a test'
     );
 
+    if (gpuOutOfMemoryError !== null) {
+      assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
+      // Don't allow the device to be reused; unexpected OOM could break the device.
+      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
+    }
+    if (gpuInternalError !== null) {
+      assert(gpuInternalError instanceof GPUInternalError);
+      // Allow the device to be reused.
+      throw new TestFailedButDeviceReusable(
+        `Unexpected internal error occurred: ${gpuInternalError.message}`
+      );
+    }
     if (gpuValidationError !== null) {
       assert(gpuValidationError instanceof GPUValidationError);
       // Allow the device to be reused.
       throw new TestFailedButDeviceReusable(
         `Unexpected validation error occurred: ${gpuValidationError.message}`
       );
-    }
-    if (gpuOutOfMemoryError !== null) {
-      assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-      // Don't allow the device to be reused; unexpected OOM could break the device.
-      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
     }
   }
 

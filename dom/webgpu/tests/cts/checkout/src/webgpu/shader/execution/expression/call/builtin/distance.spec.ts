@@ -11,15 +11,10 @@ Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { distanceInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import {
-  allInputSources,
-  generateBinaryToF32IntervalCases,
-  generateVectorPairToF32IntervalCases,
-  run,
-} from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -27,67 +22,67 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('distance', {
   f32_const: () => {
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
       fullF32Range(),
       fullF32Range(),
-      'f32-only',
-      distanceInterval
+      'finite',
+      FP.f32.distanceInterval
     );
   },
   f32_non_const: () => {
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
       fullF32Range(),
       fullF32Range(),
       'unfiltered',
-      distanceInterval
+      FP.f32.distanceInterval
     );
   },
   f32_vec2_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      'f32-only',
-      distanceInterval
+      'finite',
+      FP.f32.distanceInterval
     );
   },
   f32_vec2_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       'unfiltered',
-      distanceInterval
+      FP.f32.distanceInterval
     );
   },
   f32_vec3_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      'f32-only',
-      distanceInterval
+      'finite',
+      FP.f32.distanceInterval
     );
   },
   f32_vec3_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       'unfiltered',
-      distanceInterval
+      FP.f32.distanceInterval
     );
   },
   f32_vec4_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      'f32-only',
-      distanceInterval
+      'finite',
+      FP.f32.distanceInterval
     );
   },
   f32_vec4_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       'unfiltered',
-      distanceInterval
+      FP.f32.distanceInterval
     );
   },
 });

@@ -217,7 +217,7 @@ In this test we test that a small buffer bound to unused buffer slot won't cause
       .combine('bufferOffset', [0, 4])
       .combine('boundSize', [0, 1])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       smallIndexBuffer,
       smallVertexBuffer,
@@ -308,7 +308,7 @@ drawIndexedIndirect as it is GPU-validated.
       .beginSubcases()
       .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       indexFormat,
       bindingSizeInElements,
@@ -427,7 +427,7 @@ success/error as expected. Such set of buffer parameters should include cases li
       .filter(p => p.IStride0 === (p.firstInstance + p.instanceCount === 0))
       .unless(p => p.vertexCount === 10000 && p.instanceCount === 10000)
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       type: drawType,
       VBSize: boundVertexBufferSizeState,
@@ -597,7 +597,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
       .combine('indexBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
       .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       drawType,
       vertexBoundOffestFactor,
@@ -753,7 +753,7 @@ and checks whether GPUCommandEncoder.finish() causes a validation error.
       .beginSubcases()
       .expand('drawCount', p => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))
   )
-  .fn(async t => {
+  .fn(t => {
     const { bundleFirstHalf, bundleSecondHalf, maxDrawCount, drawCount } = t.params;
 
     const colorFormat = 'rgba8unorm';

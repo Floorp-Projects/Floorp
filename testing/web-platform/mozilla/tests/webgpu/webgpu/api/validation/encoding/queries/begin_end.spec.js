@@ -37,7 +37,7 @@ Tests that begin/end occlusion queries mismatch on render pass:
     { begin: 1, end: 2 },
     { begin: 2, end: 1 },
   ])
-  .fn(async t => {
+  .fn(t => {
     const { begin, end } = t.params;
 
     const occlusionQuerySet = createQuerySetWithType(t, 'occlusion', 2);
@@ -66,7 +66,7 @@ Tests the invalid nesting of begin/end occlusion queries:
     { calls: [0, 0, 'end', 'end'], _valid: false },
     { calls: [0, 1, 'end', 'end'], _valid: false },
   ])
-  .fn(async t => {
+  .fn(t => {
     const { calls, _valid } = t.params;
 
     const occlusionQuerySet = createQuerySetWithType(t, 'occlusion', 2);
@@ -91,7 +91,7 @@ Tests that two disjoint occlusion queries cannot be begun with same query index 
   `
   )
   .paramsSubcasesOnly(u => u.combine('isOnSameRenderPass', [false, true]))
-  .fn(async t => {
+  .fn(t => {
     const querySet = createQuerySetWithType(t, 'occlusion', 1);
 
     const encoder = t.device.createCommandEncoder();

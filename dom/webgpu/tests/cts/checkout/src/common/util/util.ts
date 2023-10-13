@@ -1,4 +1,5 @@
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { SkipTestCase } from '../framework/fixture.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { Logger } from '../internal/logging/logger.js';
 
@@ -63,6 +64,13 @@ export async function assertReject(p: Promise<unknown>, msg?: string): Promise<v
  */
 export function unreachable(msg?: string): never {
   throw new Error(msg);
+}
+
+/**
+ * Throw a `SkipTestCase` exception, which skips the test case.
+ */
+export function skipTestCase(msg: string): never {
+  throw new SkipTestCase(msg);
 }
 
 /**
@@ -155,6 +163,13 @@ export function rejectWithoutUncaught<T>(err: unknown): Promise<T> {
 }
 
 /**
+ * Returns true if v is a plain JavaScript object.
+ */
+export function isPlainObject(v: unknown) {
+  return !!v && Object.getPrototypeOf(v).constructor === Object.prototype.constructor;
+}
+
+/**
  * Makes a copy of a JS `object`, with the keys reordered into sorted order.
  */
 export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unknown } {
@@ -219,6 +234,41 @@ export function mapLazy<T, R>(xs: Iterable<T>, f: (x: T) => R): Iterable<R> {
   };
 }
 
+const ReorderOrders = {
+  forward: true,
+  backward: true,
+  shiftByHalf: true,
+};
+export type ReorderOrder = keyof typeof ReorderOrders;
+export const kReorderOrderKeys = keysOf(ReorderOrders);
+
+/**
+ * Creates a new array from the given array with the first half
+ * swapped with the last half.
+ */
+export function shiftByHalf<R>(arr: R[]): R[] {
+  const len = arr.length;
+  const half = (len / 2) | 0;
+  const firstHalf = arr.splice(0, half);
+  return [...arr, ...firstHalf];
+}
+
+/**
+ * Creates a reordered array from the input array based on the Order
+ */
+export function reorder<R>(order: ReorderOrder, arr: R[]): R[] {
+  switch (order) {
+    case 'forward':
+      return arr.slice();
+    case 'backward':
+      return arr.slice().reverse();
+    case 'shiftByHalf': {
+      // should this be pseudo random?
+      return shiftByHalf(arr);
+    }
+  }
+}
+
 const TypedArrayBufferViewInstances = [
   new Uint8Array(),
   new Uint8ClampedArray(),
@@ -269,6 +319,78 @@ export const kTypedArrayBufferViews: {
 };
 export const kTypedArrayBufferViewKeys = keysOf(kTypedArrayBufferViews);
 export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBufferViews);
+
+interface TypedArrayMap {
+  Int8Array: Int8Array;
+  Uint8Array: Uint8Array;
+  Int16Array: Int16Array;
+  Uint16Array: Uint16Array;
+  Uint8ClampedArray: Uint8ClampedArray;
+  Int32Array: Int32Array;
+  Uint32Array: Uint32Array;
+  Float32Array: Float32Array;
+  Float64Array: Float64Array;
+  BigInt64Array: BigInt64Array;
+  BigUint64Array: BigUint64Array;
+}
+
+type TypedArrayParam<K extends keyof TypedArrayMap> = {
+  type: K;
+  data: number[];
+};
+
+/**
+ * Creates a case parameter for a typedarray.
+ *
+ * You can't put typedarrays in case parameters directly so instead of
+ *
+ * ```
+ * u.combine('data', [
+ *   new Uint8Array([1, 2, 3]),
+ *   new Float32Array([4, 5, 6]),
+ * ])
+ * ```
+ *
+ * You can use
+ *
+ * ```
+ * u.combine('data', [
+ *   typedArrayParam('Uint8Array' [1, 2, 3]),
+ *   typedArrayParam('Float32Array' [4, 5, 6]),
+ * ])
+ * ```
+ *
+ * and then convert the params to typedarrays eg.
+ *
+ * ```
+ *  .fn(t => {
+ *    const data = t.params.data.map(v => typedArrayFromParam(v));
+ *  })
+ * ```
+ */
+export function typedArrayParam<K extends keyof TypedArrayMap>(
+  type: K,
+  data: number[]
+): TypedArrayParam<K> {
+  return { type, data };
+}
+
+export function createTypedArray<K extends keyof TypedArrayMap>(
+  type: K,
+  data: number[]
+): TypedArrayMap[K] {
+  return new kTypedArrayBufferViews[type](data) as TypedArrayMap[K];
+}
+
+/**
+ * Converts a TypedArrayParam to a typedarray. See typedArrayParam
+ */
+export function typedArrayFromParam<K extends keyof TypedArrayMap>(
+  param: TypedArrayParam<K>
+): TypedArrayMap[K] {
+  const { type, data } = param;
+  return createTypedArray(type, data);
+}
 
 function subarrayAsU8(
   buf: ArrayBuffer | TypedArrayBufferView,

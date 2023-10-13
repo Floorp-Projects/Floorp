@@ -9,4 +9,4 @@ TODO: plan and implement
 - device.lost
 - queue.onSubmittedWorkDone()
 - buffer.mapAsync()
-- shadermodule.compilationInfo()
+- shadermodule.getCompilationInfo()

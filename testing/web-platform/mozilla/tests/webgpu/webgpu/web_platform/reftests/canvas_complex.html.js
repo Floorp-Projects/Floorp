@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert, unreachable } from '../../../common/util/util.js';
-import { kTextureFormatInfo } from '../../capability_info.js';
+import { kTextureFormatInfo } from '../../format_info.js';
 import { gammaDecompress, float32ToFloat16Bits } from '../../util/conversion.js';
 import { align } from '../../util/math.js';
 
@@ -32,7 +32,7 @@ export function run(format, targets) {
 
     function copyBufferToTexture(ctx) {
       const rows = ctx.canvas.height;
-      const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
+      const bytesPerPixel = kTextureFormatInfo[format].color.bytes;
       if (bytesPerPixel === undefined) {
         unreachable();
       }

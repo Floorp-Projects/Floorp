@@ -1,4 +1,5 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
+/* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
 import { setBaseResourcePath } from '../framework/resources.js';
@@ -12,94 +13,50 @@ import { TestTreeNode, TestSubtree, TestTreeLeaf, TestTree } from '../internal/t
 import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
 import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
 
-import { optionEnabled, optionString } from './helper/options.js';
+import {
+  kCTSOptionsInfo,
+  parseSearchParamLikeWithOptions,
+  CTSOptions,
+  OptionInfo,
+  OptionsInfos,
+  camelCaseToSnakeCase,
+} from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
+
+const rootQuerySpec = 'webgpu:*';
+let promptBeforeReload = false;
+let isFullCTS = false;
+
+globalTestConfig.frameworkDebugLog = console.log;
 
 window.onbeforeunload = () => {
   // Prompt user before reloading if there are any results
-  return haveSomeResults ? false : undefined;
+  return promptBeforeReload ? false : undefined;
 };
 
-let haveSomeResults = false;
+const kOpenTestLinkAltText = 'Open';
 
-// The possible options for the tests.
-interface StandaloneOptions {
-  runnow: boolean;
-  worker: boolean;
-  debug: boolean;
-  unrollConstEvalLoops: boolean;
-  powerPreference: string;
-}
+type StandaloneOptions = CTSOptions & { runnow: OptionInfo };
 
-// Extra per option info.
-interface StandaloneOptionInfo {
-  description: string;
-  parser?: (key: string) => boolean | string;
-  selectValueDescriptions?: { value: string; description: string }[];
-}
-
-// Type for info for every option. This definition means adding an option
-// will generate a compile time error if not extra info is provided.
-type StandaloneOptionsInfos = Record<keyof StandaloneOptions, StandaloneOptionInfo>;
-
-const optionsInfo: StandaloneOptionsInfos = {
+const kStandaloneOptionsInfos: OptionsInfos<StandaloneOptions> = {
+  ...kCTSOptionsInfo,
   runnow: { description: 'run immediately on load' },
-  worker: { description: 'run in a worker' },
-  debug: { description: 'show more info' },
-  unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
-  powerPreference: {
-    description: 'set default powerPreference for some tests',
-    parser: optionString,
-    selectValueDescriptions: [
-      { value: '', description: 'default' },
-      { value: 'low-power', description: 'low-power' },
-      { value: 'high-performance', description: 'high-performance' },
-    ],
-  },
 };
 
-/**
- * Converts camel case to snake case.
- * Examples:
- *    fooBar -> foo_bar
- *    parseHTMLFile -> parse_html_file
- */
-function camelCaseToSnakeCase(id: string) {
-  return id
-    .replace(/(.)([A-Z][a-z]+)/g, '$1_$2')
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .toLowerCase();
-}
-
-/**
- * Creates a StandaloneOptions from the current URL search parameters.
- */
-function getOptionsInfoFromSearchParameters(
-  optionsInfos: StandaloneOptionsInfos
-): StandaloneOptions {
-  const optionValues: Record<string, boolean | string> = {};
-  for (const [optionName, info] of Object.entries(optionsInfos)) {
-    const parser = info.parser || optionEnabled;
-    optionValues[optionName] = parser(camelCaseToSnakeCase(optionName));
-  }
-  return (optionValues as unknown) as StandaloneOptions;
-}
-
-// This is just a cast in one place.
-function optionsToRecord(options: StandaloneOptions) {
-  return (options as unknown) as Record<string, boolean | string>;
-}
-
-const options = getOptionsInfoFromSearchParameters(optionsInfo);
-const { runnow, debug, unrollConstEvalLoops, powerPreference } = options;
+const { queries: qs, options } = parseSearchParamLikeWithOptions(
+  kStandaloneOptionsInfos,
+  window.location.search || rootQuerySpec
+);
+const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
 globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+globalTestConfig.compatibility = compatibility;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
 
 setBaseResourcePath('../out/resources');
 
-const worker = options.worker ? new TestWorker(debug) : undefined;
+const worker = options.worker ? new TestWorker(options) : undefined;
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
@@ -113,8 +70,12 @@ stopButtonElem.addEventListener('click', () => {
   stopRequested = true;
 });
 
-if (powerPreference) {
-  setDefaultRequestAdapterOptions({ powerPreference: powerPreference as GPUPowerPreference });
+if (powerPreference || compatibility) {
+  setDefaultRequestAdapterOptions({
+    ...(powerPreference && { powerPreference }),
+    // MAINTENANCE_TODO: Change this to whatever the option ends up being
+    ...(compatibility && { compatibilityMode: true }),
+  });
 }
 
 dataCache.setStore({
@@ -205,7 +166,6 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     const result: SubtreeResult = emptySubtreeResult();
     progressTestNameElem.textContent = name;
 
-    haveSomeResults = true;
     const [rec, res] = logger.record(name);
     caseResult = res;
     if (worker) {
@@ -302,6 +262,10 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
     if (runDepth === 0) {
       stopRequested = false;
       progressElem.style.display = '';
+      // only prompt if this is the full CTS and we started from the root.
+      if (isFullCTS && n.query.filePathParts.length === 0) {
+        promptBeforeReload = true;
+      }
     }
     if (stopRequested) {
       const result = emptySubtreeResult();
@@ -357,6 +321,9 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
       if (subtreeResult.fail > 0) {
         status += 'fail';
       }
+      if (subtreeResult.skip === subtreeResult.total && subtreeResult.total > 0) {
+        status += 'skip';
+      }
       div.setAttribute('data-status', status);
       if (autoCloseOnPass.checked && status === 'pass') {
         div.firstElementChild!.removeAttribute('open');
@@ -407,10 +374,8 @@ function consoleLogError(e: Error | ErrorWithExtra | undefined) {
   if (e === undefined) return;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (globalThis as any)._stack = e;
-  /* eslint-disable-next-line no-console */
   console.log('_stack =', e);
   if ('extra' in e && e.extra !== undefined) {
-    /* eslint-disable-next-line no-console */
     console.log('_stack.extra =', e.extra);
   }
 }
@@ -425,12 +390,25 @@ function makeTreeNodeHeaderHTML(
   const div = $('<details>').addClass('nodeheader');
   const header = $('<summary>').appendTo(div);
 
+  // prevent toggling if user is selecting text from an input element
+  {
+    let lastNodeName = '';
+    div.on('pointerdown', event => {
+      lastNodeName = event.target.nodeName;
+    });
+    div.on('click', event => {
+      if (lastNodeName === 'INPUT') {
+        event.preventDefault();
+      }
+    });
+  }
+
   const setChecked = () => {
     div.prop('open', true); // (does not fire onChange)
     onChange(true);
   };
 
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
+  const href = createSearchQuery([n.query.toString()]);
   if (onChange) {
     div.on('toggle', function (this) {
       onChange((this as HTMLDetailsElement).open);
@@ -448,13 +426,28 @@ function makeTreeNodeHeaderHTML(
     .addClass(isLeaf ? 'leafrun' : 'subtreerun')
     .attr('alt', runtext)
     .attr('title', runtext)
-    .on('click', () => void runSubtree())
+    .on('click', async () => {
+      console.log(`Starting run for ${n.query}`);
+      const startTime = performance.now();
+      await runSubtree();
+      const dt = performance.now() - startTime;
+      const dtMinutes = dt / 1000 / 60;
+      console.log(`Finished run: ${dt.toFixed(1)} ms = ${dtMinutes.toFixed(1)} min`);
+    })
     .appendTo(header);
   $('<a>')
     .addClass('nodelink')
     .attr('href', href)
-    .attr('alt', 'Open')
-    .attr('title', 'Open')
+    .attr('alt', kOpenTestLinkAltText)
+    .attr('title', kOpenTestLinkAltText)
+    .appendTo(header);
+  $('<button>')
+    .addClass('copybtn')
+    .attr('alt', 'copy query')
+    .attr('title', 'copy query')
+    .on('click', () => {
+      void navigator.clipboard.writeText(n.query.toString());
+    })
     .appendTo(header);
   if ('testCreationStack' in n && n.testCreationStack) {
     $('<button>')
@@ -473,6 +466,9 @@ function makeTreeNodeHeaderHTML(
       .attr('type', 'text')
       .prop('readonly', true)
       .addClass('nodequery')
+      .on('click', event => {
+        (event.target as HTMLInputElement).select();
+      })
       .val(n.query.toString())
       .appendTo(nodecolumns);
     if (n.subtreeCounts) {
@@ -530,26 +526,46 @@ function prepareParams(params: Record<string, ParamValue>): string {
   return new URLSearchParams(pairs).toString();
 }
 
+// This is just a cast in one place.
+export function optionsToRecord(options: CTSOptions) {
+  return (options as unknown) as Record<string, boolean | string>;
+}
+
+/**
+ * Given a search query, generates a search parameter string
+ * @param queries array of queries
+ * @param params an optional existing search
+ * @returns a search query string
+ */
+function createSearchQuery(queries: string[], params?: string) {
+  params = params === undefined ? prepareParams(optionsToRecord(options)) : params;
+  // Add in q separately to avoid escaping punctuation marks.
+  return `?${params}${params ? '&' : ''}${queries.map(q => 'q=' + q).join('&')}`;
+}
+
 void (async () => {
   const loader = new DefaultTestFileLoader();
 
   // MAINTENANCE_TODO: start populating page before waiting for everything to load?
-  const qs = new URLSearchParams(window.location.search).getAll('q');
-  if (qs.length === 0) {
-    qs.push('webgpu:*');
-  }
+  isFullCTS = qs.length === 1 && qs[0] === rootQuerySpec;
 
   // Update the URL bar to match the exact current options.
-  const updateURLWithCurrentOptions = () => {
-    const search = prepareParams(optionsToRecord(options));
+  const updateURLsWithCurrentOptions = () => {
+    const params = prepareParams(optionsToRecord(options));
     let url = `${window.location.origin}${window.location.pathname}`;
-    // Add in q separately to avoid escaping punctuation marks.
-    url += `?${search}${search ? '&' : ''}${qs.map(q => 'q=' + q).join('&')}`;
+    url += createSearchQuery(qs, params);
     window.history.replaceState(null, '', url.toString());
+    document.querySelectorAll(`a[alt=${kOpenTestLinkAltText}]`).forEach(elem => {
+      const a = elem as HTMLAnchorElement;
+      const qs = new URLSearchParams(a.search).getAll('q');
+      a.search = createSearchQuery(qs, params);
+    });
   };
-  updateURLWithCurrentOptions();
 
-  const addOptionsToPage = (options: StandaloneOptions, optionsInfos: StandaloneOptionsInfos) => {
+  const addOptionsToPage = (
+    options: StandaloneOptions,
+    optionsInfos: typeof kStandaloneOptionsInfos
+  ) => {
     const optionsElem = $('table#options>tbody')[0];
     const optionValues = optionsToRecord(options);
 
@@ -559,14 +575,14 @@ void (async () => {
         .prop('checked', optionValues[optionName] as boolean)
         .on('change', function () {
           optionValues[optionName] = (this as HTMLInputElement).checked;
-          updateURLWithCurrentOptions();
+          updateURLsWithCurrentOptions();
         });
     };
 
-    const createSelect = (optionName: string, info: StandaloneOptionInfo) => {
+    const createSelect = (optionName: string, info: OptionInfo) => {
       const select = $('<select>').on('change', function () {
         optionValues[optionName] = (this as HTMLInputElement).value;
-        updateURLWithCurrentOptions();
+        updateURLsWithCurrentOptions();
       });
       const currentValue = optionValues[optionName];
       for (const { value, description } of info.selectValueDescriptions!) {
@@ -591,7 +607,7 @@ void (async () => {
         .appendTo(optionsElem);
     }
   };
-  addOptionsToPage(options, optionsInfo);
+  addOptionsToPage(options, kStandaloneOptionsInfos);
 
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const rootQuery = parseQuery(qs[0]);
@@ -601,10 +617,20 @@ void (async () => {
   loader.addEventListener('import', ev => {
     $('#info')[0].textContent = `loading: ${ev.data.url}`;
   });
+  loader.addEventListener('imported', ev => {
+    $('#info')[0].textContent = `imported: ${ev.data.url}`;
+  });
   loader.addEventListener('finish', () => {
     $('#info')[0].textContent = '';
   });
-  const tree = await loader.loadTree(rootQuery);
+
+  let tree;
+  try {
+    tree = await loader.loadTree(rootQuery);
+  } catch (err) {
+    $('#info')[0].textContent = (err as Error).toString();
+    return;
+  }
 
   tree.dissolveSingleChildTrees();
 

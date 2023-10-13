@@ -1,4 +1,4 @@
-import { assert, sortObjectByKey } from '../../util/util.js';
+import { assert, sortObjectByKey, isPlainObject } from '../../util/util.js';
 import { JSONWithUndefined } from '../params_utils.js';
 
 // JSON can't represent various values and by default stores them as `null`.
@@ -12,6 +12,9 @@ const jsNegativeInfinityMagicValue = '_neginfinity_';
 // special casing +0/0, since it behaves intuitively. Assuming that if -0 is
 // being used, the differentiation from +0 is desired.
 const jsNegativeZeroMagicValue = '_negzero_';
+
+// bigint values are not defined in JSON, so need to wrap them up as strings
+const jsBigIntMagicPattern = /^(\d+)n$/;
 
 const toStringMagicValue = new Map<unknown, string>([
   [undefined, jsUndefinedMagicValue],
@@ -42,10 +45,30 @@ function stringifyFilter(k: string, v: unknown): unknown {
       v !== jsNegativeZeroMagicValue,
       `${v} is a magic value for stringification, so cannot be used`
     );
+
+    assert(
+      v.match(jsBigIntMagicPattern) === null,
+      `${v} matches bigint magic pattern for stringification, so cannot be used`
+    );
   }
+
+  const isObject = v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (isObject) {
+    assert(
+      isPlainObject(v),
+      `value must be a plain object but it appears to be a '${
+        Object.getPrototypeOf(v).constructor.name
+      }`
+    );
+  }
+  assert(typeof v !== 'function', `${v} can not be a function`);
 
   if (Object.is(v, -0)) {
     return jsNegativeZeroMagicValue;
+  }
+
+  if (typeof v === 'bigint') {
+    return `${v}n`;
   }
 
   return toStringMagicValue.has(v) ? toStringMagicValue.get(v) : v;
@@ -73,6 +96,14 @@ export function stringifyParamValueUniquely(value: JSONWithUndefined): string {
 function parseParamValueReviver(k: string, v: any): any {
   if (fromStringMagicValue.has(v)) {
     return fromStringMagicValue.get(v);
+  }
+
+  if (typeof v === 'string') {
+    const match: RegExpMatchArray | null = v.match(jsBigIntMagicPattern);
+    if (match !== null) {
+      // [0] is the entire match, and following entries are the capture groups
+      return BigInt(match[1]);
+    }
   }
 
   return v;

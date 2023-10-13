@@ -399,7 +399,7 @@ export class ValidationTest extends GPUTest {
     isAsync: boolean,
     _success: boolean,
     descriptor: GPURenderPipelineDescriptor,
-    errorTypeName: 'OperationError' | 'TypeError' = 'OperationError'
+    errorTypeName: 'GPUPipelineError' | 'TypeError' = 'GPUPipelineError'
   ) {
     if (isAsync) {
       if (_success) {
@@ -408,7 +408,7 @@ export class ValidationTest extends GPUTest {
         this.shouldReject(errorTypeName, this.device.createRenderPipelineAsync(descriptor));
       }
     } else {
-      if (errorTypeName === 'OperationError') {
+      if (errorTypeName === 'GPUPipelineError') {
         this.expectValidationError(() => {
           this.device.createRenderPipeline(descriptor);
         }, !_success);
@@ -425,7 +425,7 @@ export class ValidationTest extends GPUTest {
     isAsync: boolean,
     _success: boolean,
     descriptor: GPUComputePipelineDescriptor,
-    errorTypeName: 'OperationError' | 'TypeError' = 'OperationError'
+    errorTypeName: 'GPUPipelineError' | 'TypeError' = 'GPUPipelineError'
   ) {
     if (isAsync) {
       if (_success) {
@@ -434,7 +434,7 @@ export class ValidationTest extends GPUTest {
         this.shouldReject(errorTypeName, this.device.createComputePipelineAsync(descriptor));
       }
     } else {
-      if (errorTypeName === 'OperationError') {
+      if (errorTypeName === 'GPUPipelineError') {
         this.expectValidationError(() => {
           this.device.createComputePipeline(descriptor);
         }, !_success);

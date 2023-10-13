@@ -1,3 +1,5 @@
+import { getDefaultRequestAdapterOptions } from '../../../common/util/navigator_gpu.js';
+
 export type TestResult = {
   error: String | undefined;
 };
@@ -11,6 +13,6 @@ export async function launchWorker() {
   const promise = new Promise<TestResult>(resolve => {
     worker.addEventListener('message', ev => resolve(ev.data as TestResult), { once: true });
   });
-  worker.postMessage({});
+  worker.postMessage({ defaultRequestAdapterOptions: getDefaultRequestAdapterOptions() });
   return await promise;
 }

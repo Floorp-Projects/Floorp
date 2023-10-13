@@ -23,30 +23,19 @@ const kValidIdentifiers = new Set([
   'שָׁלוֹם',
   'गुलाबी',
   'փիրուզ',
-]);
-const kInvalidIdentifiers = new Set([
-  '_', // Single underscore is a syntactic token for phony assignment.
-  '__', // Leading double underscore is reserved.
-  '__foo', // Leading double underscore is reserved.
-  '0foo', // Must start with single underscore or a letter.
-  // No punctuation:
-  'foo.bar',
-  'foo-bar',
-  'foo+bar',
-  'foo#bar',
-  'foo!bar',
-  'foo\\bar',
-  'foo/bar',
-  'foo,bar',
-  'foo@bar',
-  'foo::bar',
-  // Type-defining Keywords:
+  // Builtin type identifiers:
   'array',
   'atomic',
   'bool',
+  'bf16',
+  'bitcast',
   'f32',
   'f16',
+  'f64',
   'i32',
+  'i16',
+  'i64',
+  'i8',
   'mat2x2',
   'mat2x3',
   'mat2x4',
@@ -57,8 +46,10 @@ const kInvalidIdentifiers = new Set([
   'mat4x3',
   'mat4x4',
   'ptr',
+  'quat',
   'sampler',
   'sampler_comparison',
+  'signed',
   'texture_1d',
   'texture_2d',
   'texture_2d_array',
@@ -76,17 +67,40 @@ const kInvalidIdentifiers = new Set([
   'texture_depth_cube_array',
   'texture_depth_multisampled_2d',
   'u32',
+  'u16',
+  'u64',
+  'u8',
+  'unsigned',
   'vec2',
   'vec3',
   'vec4',
-  // Other Keywords:
-  'bitcast',
+]);
+const kInvalidIdentifiers = new Set([
+  '_', // Single underscore is a syntactic token for phony assignment.
+  '__', // Leading double underscore is reserved.
+  '__foo', // Leading double underscore is reserved.
+  '0foo', // Must start with single underscore or a letter.
+  // No punctuation:
+  'foo.bar',
+  'foo-bar',
+  'foo+bar',
+  'foo#bar',
+  'foo!bar',
+  'foo\\bar',
+  'foo/bar',
+  'foo,bar',
+  'foo@bar',
+  'foo::bar',
+  // Keywords:
+  'alias',
   'break',
   'case',
   'const',
+  'const_assert',
   'continue',
   'continuing',
   'default',
+  'diagnostic',
   'discard',
   'else',
   'enable',
@@ -97,20 +111,14 @@ const kInvalidIdentifiers = new Set([
   'let',
   'loop',
   'override',
+  'requires',
   'return',
-  'static_assert',
   'struct',
   'switch',
   'true',
-  'type',
   'var',
   'while',
   // Reserved Words
-  'CompileShader',
-  'ComputeShader',
-  'DomainShader',
-  'GeometryShader',
-  'Hullshader',
   'NULL',
   'Self',
   'abstract',
@@ -166,13 +174,11 @@ const kInvalidIdentifiers = new Set([
   'get',
   'goto',
   'groupshared',
-  'handle',
   'highp',
   'impl',
   'implements',
   'import',
   'inline',
-  'inout',
   'instanceof',
   'interface',
   'layout',
@@ -216,17 +222,17 @@ const kInvalidIdentifiers = new Set([
   'regardless',
   'register',
   'reinterpret_cast',
-  'requires',
+  'require',
   'resource',
   'restrict',
   'self',
   'set',
   'shared',
-  'signed',
   'sizeof',
   'smooth',
   'snorm',
   'static',
+  'static_assert',
   'static_cast',
   'std',
   'subroutine',
@@ -238,6 +244,7 @@ const kInvalidIdentifiers = new Set([
   'throw',
   'trait',
   'try',
+  'type',
   'typedef',
   'typeid',
   'typename',
@@ -258,13 +265,136 @@ const kInvalidIdentifiers = new Set([
   'writeonly',
   'yield',
 ]);
-g.test('identifiers')
-  .desc(`Test that valid identifiers are accepted, and invalid identifiers are rejected.`)
+
+g.test('module_var_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of module-scope 'var's, and invalid identifiers are rejected.`
+  )
   .params(u =>
     u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
   )
   .fn(t => {
-    const code = `var<private> ${t.params.ident} : i32;`;
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `var<private> ${t.params.ident} : ${type};`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('module_const_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of module-scope 'const's, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `const ${t.params.ident} : ${type} = 0;`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('override_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of 'override's, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `override ${t.params.ident} : ${type} = 0;`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('function_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of functions, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const code = `fn ${t.params.ident}() {}`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('struct_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of structs, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `struct ${t.params.ident} { i : ${type} }`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('alias_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of aliases, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `alias ${t.params.ident} = ${type};`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('function_param_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of function parameters, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `fn F(${t.params.ident} : ${type}) {}`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('function_const_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of function-scoped 'const's, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const code = `fn F() {
+  const ${t.params.ident} = 1;
+}`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('function_let_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of function-scoped 'let's, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const code = `fn F() {
+  let ${t.params.ident} = 1;
+}`;
+    t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
+  });
+
+g.test('function_var_name')
+  .desc(
+    `Test that valid identifiers are accepted for names of function-scoped 'var's, and invalid identifiers are rejected.`
+  )
+  .params(u =>
+    u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
+  )
+  .fn(t => {
+    const code = `fn F() {
+  var ${t.params.ident} = 1;
+}`;
     t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
   });
 

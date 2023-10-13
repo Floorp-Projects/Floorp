@@ -59,7 +59,7 @@ function createHugeVertexBuffer(t: GPUTest, size: number) {
 
 g.test('many')
   .desc(`Tests execution of draw calls using a huge vertex buffer.`)
-  .fn(async t => {
+  .fn(t => {
     const kSize = 4096;
     const buffer = createHugeVertexBuffer(t, kSize);
     const module = t.device.createShaderModule({

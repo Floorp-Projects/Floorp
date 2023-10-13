@@ -3,15 +3,14 @@
  **/ export const description = `Texture related validation tests for B2T copy and T2B copy and writeTexture.`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
+import { kTextureDimensions, kTextureUsages } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import {
   kColorTextureFormats,
   kSizedTextureFormats,
-  kTextureDimensions,
   kTextureFormatInfo,
-  kTextureUsages,
   textureDimensionAndFormatCompatible,
-} from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
+} from '../../../format_info.js';
 import { kResourceStates } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
 import { virtualMipSize } from '../../../util/texture/base.js';
@@ -46,7 +45,7 @@ Test that the texture must be valid and not destroyed.
         { dimension: '3d', size: [4, 4, 3] },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { method, textureState, size, dimension } = t.params;
 
     const texture = t.createTextureWithState(textureState, {
@@ -75,7 +74,7 @@ g.test('texture,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { method, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -123,7 +122,7 @@ The texture must have the appropriate COPY_SRC/COPY_DST usage.
           (dimension === '1d' || dimension === '3d')
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, method, size, dimension } = t.params;
 
     const usage = usage0 | usage1;
@@ -163,7 +162,7 @@ Note: we don't test 1D, 2D array and 3D textures because multisample is not supp
       .beginSubcases()
       .combine('sampleCount', [1, 4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { sampleCount, method } = t.params;
 
     const texture = t.device.createTexture({
@@ -210,7 +209,7 @@ Test that the mipLevel of the copy must be in range of the texture.
       .unless(p => p.dimension === '1d' && p.mipLevelCount !== 1)
       .combine('mipLevel', [0, 1, 3, 4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { mipLevelCount, mipLevel, method, size, dimension } = t.params;
 
     const texture = t.device.createTexture({
@@ -268,9 +267,10 @@ Test the copy must be a full subresource if the texture's format is depth/stenci
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       method,
       depthOrArrayLayers,
@@ -359,9 +359,10 @@ Test that the texture copy origin must be aligned to the format's block size.
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       valueToCoordinate,
       coordinateToTest,
@@ -422,9 +423,10 @@ Test that the copy size must be aligned to the texture's format's block size.
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { valueToCoordinate, coordinateToTest, dimension, format, method } = t.params;
     const info = kTextureFormatInfo[format];
     const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
@@ -481,7 +483,7 @@ Test that the max corner of the copy rectangle (origin+copySize) must be inside 
       .combine('coordinateToTest', [0, 1, 2])
       .unless(p => p.dimension === '1d' && (p.coordinateToTest !== 0 || p.mipLevel !== 0))
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       originValue,
       copySizeValue,

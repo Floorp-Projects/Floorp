@@ -41,7 +41,7 @@ g.test('push_pop_call_count_unbalance,command_encoder')
       .combine('pushCount', [1, 2, 3])
       .combine('popCount', [1, 2, 3])
   )
-  .fn(async t => {
+  .fn(t => {
     const { pushCount, popCount } = t.params;
 
     const encoder = t.device.createCommandEncoder();
@@ -75,7 +75,7 @@ g.test('push_pop_call_count_unbalance,render_compute_pass')
       .combine('pushCount', [1, 2, 3])
       .combine('popCount', [1, 2, 3])
   )
-  .fn(async t => {
+  .fn(t => {
     const { passType, pushCount, popCount } = t.params;
 
     const encoder = t.device.createCommandEncoder();

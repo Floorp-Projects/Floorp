@@ -1,0 +1,6 @@
+{
+  "suite": "webgpu",
+  "out": "../out-wpt/cts-chunked2sec.https.html",
+  "template": "../src/common/templates/cts.https.html",
+  "maxChunkTimeMS": 2000
+}

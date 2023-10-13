@@ -6,7 +6,7 @@ interface GPURefTest {
   readonly queue: GPUQueue;
 }
 
-export function runRefTest(fn: (t: GPURefTest) => Promise<void>): void {
+export function runRefTest(fn: (t: GPURefTest) => Promise<void> | void): void {
   void (async () => {
     assert(
       typeof navigator !== 'undefined' && navigator.gpu !== undefined,

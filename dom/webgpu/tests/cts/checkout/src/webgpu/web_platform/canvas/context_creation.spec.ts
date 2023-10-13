@@ -22,7 +22,7 @@ g.test('return_type')
       .beginSubcases()
       .combine('attributes', [undefined, {}])
   )
-  .fn(async t => {
+  .fn(t => {
     let canvas: HTMLCanvasElement | OffscreenCanvas;
     if (t.params.offscreen) {
       if (typeof OffscreenCanvas === 'undefined') {

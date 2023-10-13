@@ -12,9 +12,9 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
-import { refractInterval } from '../../../../../util/f32_interval.js';
-import { sparseVectorF32Range, quantizeToF32, sparseF32Range } from '../../../../../util/math.js';
+import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { FP, FPKind } from '../../../../../util/floating_point.js';
+import { sparseVectorF32Range, sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
@@ -28,39 +28,45 @@ export const g = makeTestGroup(GPUTest);
 
 /**
  * @returns a Case for `refract`
+ * @param kind what type of floating point numbers to operate on
  * @param i the `i` param for the case
  * @param s the `s` param for the case
  * @param r the `r` param for the case
  * @param check what interval checking to apply
  * */
-function makeCaseF32(i: number[], s: number[], r: number, check: IntervalFilter): Case | undefined {
-  i = i.map(quantizeToF32);
-  s = s.map(quantizeToF32);
-  r = quantizeToF32(r);
+function makeCase(
+  kind: FPKind,
+  i: number[],
+  s: number[],
+  r: number,
+  check: IntervalFilter
+): Case | undefined {
+  const fp = FP[kind];
+  i = i.map(fp.quantize);
+  s = s.map(fp.quantize);
+  r = fp.quantize(r);
 
-  const i_f32 = i.map(f32);
-  const s_f32 = s.map(f32);
-  const r_f32 = f32(r);
-
-  const vectors = refractInterval(i, s, r);
-  if (check === 'f32-only' && vectors.some(e => !e.isFinite())) {
+  const vectors = fp.refractInterval(i, s, r);
+  if (check === 'finite' && vectors.some(e => !e.isFinite())) {
     return undefined;
   }
 
   return {
-    input: [new Vector(i_f32), new Vector(s_f32), r_f32],
-    expected: refractInterval(i, s, r),
+    input: [toVector(i, fp.scalarBuilder), toVector(s, fp.scalarBuilder), fp.scalarBuilder(r)],
+    expected: fp.refractInterval(i, s, r),
   };
 }
 
 /**
  * @returns an array of Cases for `refract`
+ * @param kind what type of floating point numbers to operate on
  * @param param_is array of inputs to try for the `i` param
  * @param param_ss array of inputs to try for the `s` param
  * @param param_rs array of inputs to try for the `r` param
  * @param check what interval checking to apply
  */
-function generateCasesF32(
+function generateCases(
+  kind: FPKind,
   param_is: number[][],
   param_ss: number[][],
   param_rs: number[],
@@ -71,7 +77,7 @@ function generateCasesF32(
     .flatMap(i => {
       return param_ss.flatMap(s => {
         return param_rs.map(r => {
-          return makeCaseF32(i, s, r, check);
+          return makeCase('f32', i, s, r, check);
         });
       });
     })
@@ -80,15 +86,17 @@ function generateCasesF32(
 
 export const d = makeCaseCache('refract', {
   f32_vec2_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec2_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseF32Range(),
@@ -96,15 +104,17 @@ export const d = makeCaseCache('refract', {
     );
   },
   f32_vec3_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec3_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseF32Range(),
@@ -112,15 +122,17 @@ export const d = makeCaseCache('refract', {
     );
   },
   f32_vec4_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec4_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseF32Range(),

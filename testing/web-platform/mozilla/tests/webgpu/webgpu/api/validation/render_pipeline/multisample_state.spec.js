@@ -18,7 +18,7 @@ g.test('count')
       .beginSubcases()
       .combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, count } = t.params;
 
     const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled: false } });
@@ -38,7 +38,7 @@ g.test('alpha_to_coverage,count')
       .beginSubcases()
       .combine('count', [1, 4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, alphaToCoverageEnabled, count } = t.params;
 
     const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled } });
@@ -58,8 +58,12 @@ g.test('alpha_to_coverage,sample_mask')
       .beginSubcases()
       .combine('hasSampleMaskOutput', [false, true])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
+
+    if (t.isCompatibility && hasSampleMaskOutput) {
+      t.skip('WGSL sample_mask is not supported in compatibility mode');
+    }
 
     const descriptor = t.getDescriptor({
       multisample: { alphaToCoverageEnabled, count: 4 },

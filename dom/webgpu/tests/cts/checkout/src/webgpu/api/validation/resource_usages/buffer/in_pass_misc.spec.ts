@@ -22,7 +22,7 @@ do not contribute directly to any usage scope in a compute pass.`
       .combine('usage0', ['uniform', 'storage', 'read-only-storage'] as const)
       .combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1 } = t.params;
 
     const kUsages = GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT;
@@ -92,7 +92,7 @@ still contribute directly to the usage scope of the draw call.`
         return t.usage0 === 'index' && t.usage1 === 'indirect';
       })
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1 } = t.params;
 
     const kUsages =
@@ -279,7 +279,7 @@ g.test('subresources,buffer_usages_in_copy_and_pass')
         return false;
       })
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, pass } = t.params;
 
     const kUsages =

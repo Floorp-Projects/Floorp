@@ -10,10 +10,10 @@ Returns the cross product of e1 and e2.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { crossInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateVectorPairToVectorCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,19 +21,19 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('cross', {
   f32_const: () => {
-    return generateVectorPairToVectorCases(
+    return FP.f32.generateVectorPairToVectorCases(
       vectorF32Range(3),
       vectorF32Range(3),
-      'f32-only',
-      crossInterval
+      'finite',
+      FP.f32.crossInterval
     );
   },
   f32_non_const: () => {
-    return generateVectorPairToVectorCases(
+    return FP.f32.generateVectorPairToVectorCases(
       vectorF32Range(3),
       vectorF32Range(3),
       'unfiltered',
-      crossInterval
+      FP.f32.crossInterval
     );
   },
 });

@@ -27,19 +27,6 @@ export const kValidCanvasContextIds = [
 ] as const;
 export type CanvasContext = typeof kValidCanvasContextIds[number];
 
-/** Helper(s) to determine if context is copyable. */
-export function canCopyFromCanvasContext(contextName: CanvasContext) {
-  switch (contextName) {
-    case '2d':
-    case 'webgl':
-    case 'webgl2':
-    case 'webgpu':
-      return true;
-    default:
-      return false;
-  }
-}
-
 /** Create HTMLCanvas/OffscreenCanvas. */
 export function createCanvas<T extends CanvasType>(
   test: Fixture,

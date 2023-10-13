@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,operation,compute_pipeline,overrides:multi_entry_points:*'>
+<meta name=variant content='?q=webgpu:api,operation,device,lost:not_lost_on_gc:*'>
+<meta name=variant content='?q=webgpu:api,operation,device,lost:lost_on_destroy:*'>
+<meta name=variant content='?q=webgpu:api,operation,device,lost:same_object:*'>
+<meta name=variant content='?q=webgpu:api,operation,labels:object_has_descriptor_label:*'>
+<meta name=variant content='?q=webgpu:api,operation,labels:wrappers_do_not_share_labels:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:rw:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:wr:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:ww:*'>
+<meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:multiple_pairs_of_draws_in_one_render_pass:*'>
 <meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:multiple_pairs_of_draws_in_one_render_bundle:*'>
 <meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,multiple_buffers:multiple_pairs_of_dispatches_in_one_compute_pass:*'>
 <meta name=variant content='?q=webgpu:api,operation,memory_sync,buffer,single_buffer:rw:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,operation,memory_sync,texture,same_subresource:ww:*'>
 <meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:without_work:*'>
 <meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:with_work:*'>
-<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,serial:*'>
-<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel:*'>
-<meta name=variant content='?q=webgpu:api,operation,onSubmittedWorkDone:many,parallel_order:*'>
-<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:getBindGroupLayout_js_object:*'>
-<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:incompatible_with_explicit:*'>
-<meta name=variant content='?q=webgpu:api,operation,pipeline,default_layout:layout:*'>
-<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:array_types:*'>
-<meta name=variant content='?q=webgpu:api,operation,queue,writeBuffer:multiple_writes_at_different_offsets_and_sizes:*'>
-<meta name=variant content='?q=webgpu:api,operation,reflection:buffer_reflection_attributes:*'>
-<meta name=variant content='?q=webgpu:api,operation,reflection:texture_reflection_attributes:*'>

@@ -4,6 +4,8 @@ import {
   SkipTestCase,
   TestParams,
   UnexpectedPassError,
+  SubcaseBatchStateFromFixture,
+  FixtureClass,
 } from '../framework/fixture.js';
 import {
   CaseParamsBuilder,
@@ -26,6 +28,8 @@ import {
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { assert, unreachable } from '../util/util.js';
 
+import { logToWebsocket } from './websocket_logger.js';
+
 export type RunFn = (
   rec: TestCaseRecorder,
   expectations?: TestQueryWithExpectation[]
@@ -39,6 +43,7 @@ export interface TestCaseID {
 export interface RunCase {
   readonly id: TestCaseID;
   readonly isUnimplemented: boolean;
+  computeSubcaseCount(): number;
   run(
     rec: TestCaseRecorder,
     selfQuery: TestQuerySingleCase,
@@ -47,12 +52,10 @@ export interface RunCase {
 }
 
 // Interface for defining tests
-export interface TestGroupBuilder<S extends SubcaseBatchState, F extends Fixture<S>> {
-  test(name: string): TestBuilderWithName<S, F>;
+export interface TestGroupBuilder<F extends Fixture> {
+  test(name: string): TestBuilderWithName<F>;
 }
-export function makeTestGroup<S extends SubcaseBatchState, F extends Fixture<S>>(
-  fixture: FixtureClass<S, F>
-): TestGroupBuilder<S, F> {
+export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
   return new TestGroup((fixture as unknown) as FixtureClass);
 }
 
@@ -60,37 +63,34 @@ export function makeTestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
 export interface IterableTestGroup {
   iterate(): Iterable<IterableTest>;
   validate(): void;
+  /** Returns the file-relative test paths of tests which have >0 cases. */
+  collectNonEmptyTests(): { testPath: string[] }[];
 }
 export interface IterableTest {
   testPath: string[];
   description: string | undefined;
   readonly testCreationStack: Error;
-  iterate(): Iterable<RunCase>;
+  iterate(caseFilter: TestParams | null): Iterable<RunCase>;
 }
 
 export function makeTestGroupForUnitTesting<F extends Fixture>(
-  fixture: FixtureClass<SubcaseBatchState, F>
-): TestGroup<SubcaseBatchState, F> {
+  fixture: FixtureClass<F>
+): TestGroup<F> {
   return new TestGroup(fixture);
 }
 
-export type FixtureClass<
-  S extends SubcaseBatchState = SubcaseBatchState,
-  F extends Fixture<S> = Fixture<S>
-> = {
-  new (sharedState: S, log: TestCaseRecorder, params: TestParams): F;
-  MakeSharedState(params: TestParams): S;
-};
+/** Parameter name for batch number (see also TestBuilder.batch). */
+const kBatchParamName = 'batch__';
+
 type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
 type BeforeAllSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
   s: S & { params: P }
 ) => Promise<void> | void;
 
-export class TestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
-  implements TestGroupBuilder<S, F> {
+export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
   private fixture: FixtureClass;
   private seen: Set<string> = new Set();
-  private tests: Array<TestBuilder<S, F>> = [];
+  private tests: Array<TestBuilder<SubcaseBatchStateFromFixture<F>, F>> = [];
 
   constructor(fixture: FixtureClass) {
     this.fixture = fixture;
@@ -112,7 +112,7 @@ export class TestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
     this.seen.add(name);
   }
 
-  test(name: string): TestBuilderWithName<S, F> {
+  test(name: string): TestBuilderWithName<F> {
     const testCreationStack = new Error(`Test created: ${name}`);
 
     this.checkName(name);
@@ -124,7 +124,7 @@ export class TestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
 
     const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return (test as unknown) as TestBuilderWithName<S, F>;
+    return (test as unknown) as TestBuilderWithName<F>;
   }
 
   validate(): void {
@@ -132,10 +132,19 @@ export class TestGroup<S extends SubcaseBatchState, F extends Fixture<S>>
       test.validate();
     }
   }
+
+  collectNonEmptyTests(): { testPath: string[] }[] {
+    const testPaths = [];
+    for (const test of this.tests) {
+      if (test.computeCaseCount() > 0) {
+        testPaths.push({ testPath: test.testPath });
+      }
+    }
+    return testPaths;
+  }
 }
 
-interface TestBuilderWithName<S extends SubcaseBatchState, F extends Fixture<S>>
-  extends TestBuilderWithParams<S, F, {}, {}> {
+interface TestBuilderWithName<F extends Fixture> extends TestBuilderWithParams<F, {}, {}> {
   desc(description: string): this;
   /**
    * A noop function to associate a test with the relevant part of the specification.
@@ -152,7 +161,7 @@ interface TestBuilderWithName<S extends SubcaseBatchState, F extends Fixture<S>>
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: (unit: CaseParamsBuilder<{}>) => ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<S, F, CaseP, SubcaseP>;
+  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
   /**
    * Parameterize the test, generating multiple cases, each possibly having subcases.
    *
@@ -160,17 +169,17 @@ interface TestBuilderWithName<S extends SubcaseBatchState, F extends Fixture<S>>
    */
   params<CaseP extends {}, SubcaseP extends {}>(
     cases: ParamsBuilderBase<CaseP, SubcaseP>
-  ): TestBuilderWithParams<S, F, CaseP, SubcaseP>;
+  ): TestBuilderWithParams<F, CaseP, SubcaseP>;
 
   /**
    * Parameterize the test, generating multiple cases, without subcases.
    */
-  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<S, F, P, {}>;
+  paramsSimple<P extends {}>(cases: Iterable<P>): TestBuilderWithParams<F, P, {}>;
 
   /**
    * Parameterize the test, generating one case with multiple subcases.
    */
-  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<S, F, {}, P>;
+  paramsSubcasesOnly<P extends {}>(subcases: Iterable<P>): TestBuilderWithParams<F, {}, P>;
   /**
    * Parameterize the test, generating one case with multiple subcases.
    *
@@ -179,15 +188,10 @@ interface TestBuilderWithName<S extends SubcaseBatchState, F extends Fixture<S>>
    */
   paramsSubcasesOnly<P extends {}>(
     subcases: (unit: SubcaseParamsBuilder<{}, {}>) => SubcaseParamsBuilder<{}, P>
-  ): TestBuilderWithParams<S, F, {}, P>;
+  ): TestBuilderWithParams<F, {}, P>;
 }
 
-interface TestBuilderWithParams<
-  S extends SubcaseBatchState,
-  F extends Fixture<S>,
-  CaseP extends {},
-  SubcaseP extends {}
-> {
+interface TestBuilderWithParams<F extends Fixture, CaseP extends {}, SubcaseP extends {}> {
   /**
    * Limit subcases to a maximum number of per testcase.
    * @param b the maximum number of subcases per testcase.
@@ -207,7 +211,7 @@ interface TestBuilderWithParams<
    * any state on the shared subcase batch state which could result
    * in unexpected order-dependent test behavior.
    */
-  beforeAllSubcases(fn: BeforeAllSubcasesFn<S, CaseP>): this;
+  beforeAllSubcases(fn: BeforeAllSubcasesFn<SubcaseBatchStateFromFixture<F>, CaseP>): this;
   /**
    * Set the test function.
    * @param fn the test function.
@@ -279,6 +283,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     };
   }
 
+  /** Perform various validation/"lint" chenks. */
   validate(): void {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
@@ -294,13 +299,18 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     }
 
     const seen = new Set<string>();
-    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
+    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
-        assert(this.batchSize === 0 || !('batch__' in params));
+        assert(this.batchSize === 0 || !(kBatchParamName in params));
 
         // stringifyPublicParams also checks for invalid params values
-        const testcaseString = stringifyPublicParams(params);
+        let testcaseString;
+        try {
+          testcaseString = stringifyPublicParams(params);
+        } catch (e) {
+          throw new Error(`${e}: ${testPathString}`);
+        }
 
         // A (hopefully) unique representation of a params value.
         const testcaseStringUnique = stringifyPublicParamsUniquely(params);
@@ -311,6 +321,18 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
         seen.add(testcaseStringUnique);
       }
     }
+  }
+
+  computeCaseCount(): number {
+    if (this.testCases === undefined) {
+      return 1;
+    }
+
+    let caseCount = 0;
+    for (const [_caseParams, _subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
+      caseCount++;
+    }
+    return caseCount;
   }
 
   params(
@@ -341,48 +363,69 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     }
   }
 
-  *iterate(): IterableIterator<RunCase> {
+  private makeCaseSpecific(params: {}, subcases: Iterable<{}> | undefined) {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
+    return new RunCaseSpecific(
+      this.testPath,
+      params,
+      this.isUnimplemented,
+      subcases,
+      this.fixture,
+      this.testFn,
+      this.beforeFn,
+      this.testCreationStack
+    );
+  }
+
+  *iterate(caseFilter: TestParams | null): IterableIterator<RunCase> {
     this.testCases ??= kUnitCaseParamsBuilder;
-    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
+
+    // Remove the batch__ from the caseFilter because the params builder doesn't
+    // know about it (we don't add it until later in this function).
+    let filterToBatch: number | undefined;
+    const caseFilterWithoutBatch = caseFilter ? { ...caseFilter } : null;
+    if (caseFilterWithoutBatch && kBatchParamName in caseFilterWithoutBatch) {
+      const batchParam = caseFilterWithoutBatch[kBatchParamName];
+      assert(typeof batchParam === 'number');
+      filterToBatch = batchParam;
+      delete caseFilterWithoutBatch[kBatchParamName];
+    }
+
+    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(
+      this.testCases,
+      caseFilterWithoutBatch
+    )) {
+      // If batches are not used, yield just one case.
       if (this.batchSize === 0 || subcases === undefined) {
-        yield new RunCaseSpecific(
-          this.testPath,
-          caseParams,
-          this.isUnimplemented,
-          subcases,
-          this.fixture,
-          this.testFn,
-          this.beforeFn,
-          this.testCreationStack
+        yield this.makeCaseSpecific(caseParams, subcases);
+        continue;
+      }
+
+      // Same if there ends up being only one batch.
+      const subcaseArray = Array.from(subcases);
+      if (subcaseArray.length <= this.batchSize) {
+        yield this.makeCaseSpecific(caseParams, subcaseArray);
+        continue;
+      }
+
+      // There are multiple batches. Helper function for this case:
+      const makeCaseForBatch = (batch: number) => {
+        const sliceStart = batch * this.batchSize;
+        return this.makeCaseSpecific(
+          { ...caseParams, [kBatchParamName]: batch },
+          subcaseArray.slice(sliceStart, Math.min(subcaseArray.length, sliceStart + this.batchSize))
         );
-      } else {
-        const subcaseArray = Array.from(subcases);
-        if (subcaseArray.length <= this.batchSize) {
-          yield new RunCaseSpecific(
-            this.testPath,
-            caseParams,
-            this.isUnimplemented,
-            subcaseArray,
-            this.fixture,
-            this.testFn,
-            this.beforeFn,
-            this.testCreationStack
-          );
-        } else {
-          for (let i = 0; i < subcaseArray.length; i = i + this.batchSize) {
-            yield new RunCaseSpecific(
-              this.testPath,
-              { ...caseParams, batch__: i / this.batchSize },
-              this.isUnimplemented,
-              subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
-              this.fixture,
-              this.testFn,
-              this.beforeFn,
-              this.testCreationStack
-            );
-          }
-        }
+      };
+
+      // If we filter to just one batch, yield it.
+      if (filterToBatch !== undefined) {
+        yield makeCaseForBatch(filterToBatch);
+        continue;
+      }
+
+      // Finally, if not, yield all of the batches.
+      for (let batch = 0; batch * this.batchSize < subcaseArray.length; ++batch) {
+        yield makeCaseForBatch(batch);
       }
     }
   }
@@ -419,6 +462,18 @@ class RunCaseSpecific implements RunCase {
     this.testCreationStack = testCreationStack;
   }
 
+  computeSubcaseCount(): number {
+    if (this.subcases) {
+      let count = 0;
+      for (const _subcase of this.subcases) {
+        count++;
+      }
+      return count;
+    } else {
+      return 1;
+    }
+  }
+
   async runTest(
     rec: TestCaseRecorder,
     sharedState: SubcaseBatchState,
@@ -445,10 +500,10 @@ class RunCaseSpecific implements RunCase {
       // An error from init or test may have been a SkipTestCase.
       // An error from finalize may have been an eventualAsyncExpectation failure
       // or unexpected validation/OOM error from the GPUDevice.
+      rec.threw(ex);
       if (throwSkip && ex instanceof SkipTestCase) {
         throw ex;
       }
-      rec.threw(ex);
     } finally {
       try {
         rec.endSubCase(expectedStatus);
@@ -493,7 +548,7 @@ class RunCaseSpecific implements RunCase {
     const { testHeartbeatCallback, maxSubcasesInFlight } = globalTestConfig;
     try {
       rec.start();
-      const sharedState = this.fixture.MakeSharedState(this.params);
+      const sharedState = this.fixture.MakeSharedState(rec, this.params);
       try {
         await sharedState.init();
         if (this.beforeFn) {
@@ -641,6 +696,24 @@ class RunCaseSpecific implements RunCase {
       rec.threw(ex);
     } finally {
       rec.finish();
+
+      const msg: CaseTimingLogLine = {
+        q: selfQuery.toString(),
+        timems: rec.result.timems,
+        nonskippedSubcaseCount: rec.nonskippedSubcaseCount,
+      };
+      logToWebsocket(JSON.stringify(msg));
     }
   }
 }
+
+export type CaseTimingLogLine = {
+  q: string;
+  /** Total time it took to execute the case. */
+  timems: number;
+  /**
+   * Number of subcases that ran in the case (excluding skipped subcases, so
+   * they don't dilute the average per-subcase time.
+   */
+  nonskippedSubcaseCount: number;
+};

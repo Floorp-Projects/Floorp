@@ -33,7 +33,7 @@ g.test('inputs')
       ] as const)
       .beginSubcases()
   )
-  .fn(async t => {
+  .fn(t => {
     const invocationsPerGroup = t.params.groupSize.x * t.params.groupSize.y * t.params.groupSize.z;
     const totalInvocations =
       invocationsPerGroup * t.params.numGroups.x * t.params.numGroups.y * t.params.numGroups.z;

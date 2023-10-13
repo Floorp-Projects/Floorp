@@ -24,7 +24,7 @@ g.test('single')
       .expand('srcBufferSize', p => [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8])
       .expand('dstBufferSize', p => [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8])
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;
 
     const srcData = new Uint8Array(srcBufferSize);
@@ -57,7 +57,7 @@ g.test('state_transitions')
     `Test proper state transitions/barriers happen between copy commands.
     Copy part of src to dst, then a different part of dst to src, and check contents of both.`
   )
-  .fn(async t => {
+  .fn(t => {
     const srcData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]);
     const dstData = new Uint8Array([10, 20, 30, 40, 50, 60, 70, 80]);
 
@@ -87,7 +87,7 @@ g.test('copy_order')
     First copies one region from src to dst, then another region from src to an overlapping region
     of dst, then checks the dst buffer's contents.`
   )
-  .fn(async t => {
+  .fn(t => {
     const srcData = new Uint32Array([1, 2, 3, 4, 5, 6, 7, 8]);
 
     const src = t.makeBufferWithContents(srcData, GPUBufferUsage.COPY_SRC);

@@ -290,19 +290,9 @@ fn run(args: CliArgs) -> miette::Result<()> {
     let cts_https_html_path = out_wpt_dir.child("cts.https.html");
     log::info!("refining the output of {cts_https_html_path} with `npm run gen_wpt_cts_html …`…");
     EasyCommand::new(&npm_bin, |cmd| {
-        cmd.args(["run", "gen_wpt_cts_html"])
-            .arg(existing_file(&cts_https_html_path))
-            .args([
-                existing_file(cts_ckt.child(join_path([
-                    "src",
-                    "common",
-                    "templates",
-                    "cts.https.html",
-                ]))),
-                existing_file(cts_vendor_dir.child("arguments.txt")),
-                existing_file(cts_vendor_dir.child("myexpectations.txt")),
-            ])
-            .arg("")
+        cmd.args(["run", "gen_wpt_cts_html"]).arg(existing_file(
+            &cts_ckt.child("tools/gen_wpt_cfg_unchunked.json"),
+        ))
     })
     .spawn()?;
 
@@ -320,6 +310,12 @@ fn run(args: CliArgs) -> miette::Result<()> {
         copy_dir(out_subdir, out_wpt_subdir)?
     }
     log::info!("  …done stealing!");
+
+    {
+        let extra_cts_https_html_path = out_wpt_dir.child("cts-chunked2sec.https.html");
+        log::info!("removing extraneous {extra_cts_https_html_path}…");
+        remove_file(&*extra_cts_https_html_path)?;
+    }
 
     log::info!("analyzing {cts_https_html_path}…");
     let cts_https_html_content = fs::read_to_string(&*cts_https_html_path)?;
@@ -378,6 +374,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
                     1,
                 );
 
+                // TODO: remove this?
                 log::info!(
                     "  …adding long timeouts to WPT boilerplate to reduce timeout failures…"
                 );
@@ -409,7 +406,7 @@ fn run(args: CliArgs) -> miette::Result<()> {
             cts_cases = cases_start.split_terminator('\n').collect::<Vec<_>>();
             let mut parsing_failed = false;
             let meta_variant_regex =
-                Regex::new("^<meta name=variant content='([^']*?)'>$").unwrap();
+                Regex::new(concat!("^", "<meta name=variant content='([^']*?)'>", "$")).unwrap();
             cts_cases.iter().for_each(|line| {
                 if !meta_variant_regex.is_match(line) {
                     parsing_failed = true;

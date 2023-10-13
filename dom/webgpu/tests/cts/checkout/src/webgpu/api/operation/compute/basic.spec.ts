@@ -15,7 +15,7 @@ const kMaxComputeWorkgroupSize = [
   kLimitInfo.maxComputeWorkgroupSizeZ.default,
 ];
 
-g.test('memcpy').fn(async t => {
+g.test('memcpy').fn(t => {
   const data = new Uint32Array([0x01020304]);
 
   const src = t.makeBufferWithContents(data, GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE);
@@ -85,7 +85,7 @@ g.test('large_dispatch')
       .combine('largeDimension', [0, 1, 2] as const)
       .expand('workgroupSize', p => [1, 2, 8, 32, kMaxComputeWorkgroupSize[p.largeDimension]])
   )
-  .fn(async t => {
+  .fn(t => {
     // The output storage buffer is filled with this value.
     const val = 0x01020304;
     const badVal = 0xbaadf00d;

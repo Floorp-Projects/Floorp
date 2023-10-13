@@ -1,0 +1,5 @@
+{
+  "suite": "webgpu",
+  "out": "../out-wpt/cts.https.html",
+  "template": "../src/common/templates/cts.https.html"
+}

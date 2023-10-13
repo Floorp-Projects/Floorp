@@ -33,8 +33,11 @@ export function extractPublicParams(params: TestParams): TestParams {
   return publicParams;
 }
 
+/** Used to escape reserved characters in URIs */
+const kPercent = '%';
+
 export const badParamValueChars = new RegExp(
-  '[' + kParamKVSeparator + kParamSeparator + kWildcard + ']'
+  '[' + kParamKVSeparator + kParamSeparator + kWildcard + kPercent + ']'
 );
 
 export function publicParamsEquals(x: TestParams, y: TestParams): boolean {
@@ -116,9 +119,20 @@ export type MergedFromFlat<A, B> = {
   [K in keyof A | keyof B]: K extends keyof B ? B[K] : K extends keyof A ? A[K] : never;
 };
 
+/** Merges two objects into one `{ ...a, ...b }` and return it with a flattened type. */
 export function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
-  for (const key of Object.keys(a)) {
-    assert(!(key in b), 'Duplicate key: ' + key);
-  }
   return { ...a, ...b } as Merged<A, B>;
+}
+
+/**
+ * Merges two objects into one `{ ...a, ...b }` and asserts they had no overlapping keys.
+ * This is slower than {@link mergeParams}.
+ */
+export function mergeParamsChecked<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
+  const merged = mergeParams(a, b);
+  assert(
+    Object.keys(merged).length === Object.keys(a).length + Object.keys(b).length,
+    () => `Duplicate key between ${JSON.stringify(a)} and ${JSON.stringify(b)}`
+  );
+  return merged;
 }

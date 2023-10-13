@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { runRefTest } from './gpu_ref_test.js';
-runRefTest(async t => {
+runRefTest(t => {
   const device = t.device;
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 

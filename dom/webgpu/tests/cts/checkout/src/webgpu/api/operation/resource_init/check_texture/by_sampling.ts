@@ -1,5 +1,5 @@
 import { assert, unreachable } from '../../../../../common/util/util.js';
-import { EncodableTextureFormat, kTextureFormatInfo } from '../../../../capability_info.js';
+import { kTextureFormatInfo, EncodableTextureFormat } from '../../../../format_info.js';
 import { virtualMipSize } from '../../../../util/texture/base.js';
 import {
   kTexelRepresentationInfo,

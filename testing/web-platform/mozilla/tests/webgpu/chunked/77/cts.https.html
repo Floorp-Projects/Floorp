@@ -1,0 +1,60 @@
+<!-- AUTO-GENERATED - DO NOT EDIT. See WebGPU CTS: tools/gen_wpt_cts_html. -->
+<!--
+    This test suite is built from the TypeScript sources at:
+    https://github.com/gpuweb/cts
+
+    If you are debugging WebGPU conformance tests, it's highly recommended that
+    you use the standalone interactive runner in that repository, which
+    provides tools for easier debugging and editing (source maps, debug
+    logging, warn/skip functionality, etc.)
+
+    NOTE:
+    The WPT version of this file is generated with *one variant per test spec
+    file*. If your harness needs more fine-grained suppressions, you'll need to
+    generate your own variants list from your suppression list.
+    See `tools/gen_wpt_cts_html` to do this.
+
+    When run under browser CI, the original cts.https.html should be skipped, and
+    this alternate version should be run instead, under a non-exported WPT test
+    directory (e.g. Chromium's wpt_internal).
+-->
+
+<!doctype html>
+<title>WebGPU CTS</title>
+<meta charset=utf-8>
+<meta name="timeout" content="long"> <!-- TODO: narrow to only where it's needed, see https://bugzilla.mozilla.org/show_bug.cgi?id=1850537 -->
+<link rel=help href='https://gpuweb.github.io/gpuweb/'>
+
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<script>
+    const loadWebGPUExpectations = undefined;
+    const shouldWebGPUCTSFailOnWarnings = undefined;
+</script>
+<script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
+
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:device:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:format:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:usage:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:alpha_mode:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:size_zero_before_configure:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:size_zero_after_configure:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,configure:viewFormats:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,context_creation:return_type:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getCurrentTexture:configured:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getCurrentTexture:single_frames:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getCurrentTexture:multiple_frames:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getCurrentTexture:resize:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getCurrentTexture:expiry:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,getPreferredCanvasFormat:value:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:onscreenCanvas,snapshot:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:onscreenCanvas,uploadToWebGL:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:offscreenCanvas,snapshot:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:drawTo2DCanvas:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:transferToImageBitmap_unconfigured_nonzero_size:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:transferToImageBitmap_zero_size:*'>
+<meta name=variant content='?q=webgpu:web_platform,canvas,readbackFromWebGPUCanvas:transferToImageBitmap_huge_size:*'>
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,ImageBitmap:from_ImageData:*'>
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,ImageBitmap:from_canvas:*'>
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,ImageBitmap:copy_subrect_from_ImageData:*'>
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,ImageBitmap:copy_subrect_from_2D_Canvas:*'>

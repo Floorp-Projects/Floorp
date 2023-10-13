@@ -18,7 +18,7 @@ TODO: needs review and rename
     { storeOp: 'store', _expected: 1 }, //
     { storeOp: 'discard', _expected: 0 },
   ] as const)
-  .fn(async t => {
+  .fn(t => {
     const renderTexture = t.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: 'r8unorm',

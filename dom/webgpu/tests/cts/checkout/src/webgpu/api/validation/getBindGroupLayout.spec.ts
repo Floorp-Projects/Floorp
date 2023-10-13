@@ -17,7 +17,7 @@ g.test('index_range,explicit_layout')
   `
   )
   .params(u => u.combine('index', [0, 1, 2, 3, 4, 5]))
-  .fn(async t => {
+  .fn(t => {
     const { index } = t.params;
 
     const pipelineBindGroupLayouts = t.device.createBindGroupLayout({
@@ -69,7 +69,7 @@ g.test('index_range,auto_layout')
   `
   )
   .params(u => u.combine('index', [0, 1, 2, 3, 4, 5]))
-  .fn(async t => {
+  .fn(t => {
     const { index } = t.params;
 
     const kBindGroupLayoutsSizeInPipelineLayout = 1;
@@ -114,7 +114,7 @@ g.test('unique_js_object,auto_layout')
   Test that getBindGroupLayout returns a new JavaScript object for each call.
   `
   )
-  .fn(async t => {
+  .fn(t => {
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -157,7 +157,7 @@ g.test('unique_js_object,explicit_layout')
   Test that getBindGroupLayout returns a new JavaScript object for each call.
   `
   )
-  .fn(async t => {
+  .fn(t => {
     const pipelineBindGroupLayouts = t.device.createBindGroupLayout({
       entries: [],
     });

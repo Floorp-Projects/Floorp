@@ -5,12 +5,12 @@
 TODO check if the tests need to be updated to support aspects of depth-stencil textures`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
+import { kTextureDimensions } from '../../../capability_info.js';
 import {
   kTextureFormatInfo,
   kSizedTextureFormats,
   textureDimensionAndFormatCompatible,
-  kTextureDimensions,
-} from '../../../capability_info.js';
+} from '../../../format_info.js';
 import { align } from '../../../util/math.js';
 import {
   bytesInACompleteRow,
@@ -55,7 +55,7 @@ Test that rowsPerImage must be at least the copy height (if defined).
       .unless(p => p.dimension === '1d' && p.copyHeightInBlocks !== 1)
       .unless(p => p.copyDepth > p.size[2])
   )
-  .fn(async t => {
+  .fn(t => {
     const { rowsPerImage, copyHeightInBlocks, copyDepth, dimension, size, method } = t.params;
 
     const format = 'rgba8unorm';
@@ -100,7 +100,7 @@ Test an error is produced when offset+requiredBytesInCopy overflows GPUSize64.
         { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 16, _success: false }, // bytesPerRow * rowsPerImage * (depthOrArrayLayers - 1) overflows.
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { method, bytesPerRow, rowsPerImage, depthOrArrayLayers, _success } = t.params;
 
     const texture = t.device.createTexture({
@@ -175,14 +175,15 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
         if (info.depth || info.stencil) {
           return [p._offsetMultiplier * 4];
         }
-        return [p._offsetMultiplier * info.bytesPerBlock];
+        return [p._offsetMultiplier * info.color.bytes];
       })
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       offset,
       bytesPerRowPadding,
@@ -252,9 +253,10 @@ Test that rowsPerImage has no alignment constraints.
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { rowsPerImage, format, method } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -294,9 +296,10 @@ Test the alignment requirement on the linear data offset (block size, or 4 for d
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, offset, method } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -312,7 +315,7 @@ Test the alignment requirement on the linear data offset (block size, or 4 for d
     if (info.depth || info.stencil) {
       if (offset % 4 === 0) success = true;
     } else {
-      if (offset % info.bytesPerBlock === 0) success = true;
+      if (offset % info.color.bytes === 0) success = true;
     }
 
     t.testRun({ texture }, { offset, bytesPerRow: 256 }, size, {
@@ -398,9 +401,10 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       method,
       format,
@@ -455,13 +459,13 @@ Test that the offset cannot be larger than the linear data size (even for an emp
       .combine('offsetInBlocks', [0, 1, 2])
       .combine('dataSizeInBlocks', [0, 1, 2])
   )
-  .fn(async t => {
+  .fn(t => {
     const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
     const format = 'rgba8unorm';
     const info = kTextureFormatInfo[format];
-    const offset = offsetInBlocks * info.bytesPerBlock;
-    const dataSize = dataSizeInBlocks * info.bytesPerBlock;
+    const offset = offsetInBlocks * info.color.bytes;
+    const dataSize = dataSizeInBlocks * info.color.bytes;
 
     const texture = t.device.createTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },

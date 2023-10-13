@@ -5,7 +5,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { loadMetadataForSuite } from '../framework/metadata.js';
 import { SpecFile } from '../internal/file_loader.js';
+import { TestQueryMultiCase } from '../internal/query/query.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../internal/test_suite_listing.js';
 import { assert, unreachable } from '../util/util.js';
@@ -43,13 +45,20 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
   );
 }
 
-export async function crawl(
-  suiteDir: string,
-  validate: boolean = true
-): Promise<TestSuiteListingEntry[]> {
+export async function crawl(suiteDir: string, validate: boolean): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
-    console.error(`Could not find ${suiteDir}`);
-    process.exit(1);
+    throw new Error(`Could not find suite: ${suiteDir}`);
+  }
+
+  let validateTimingsEntries;
+  if (validate) {
+    const metadata = loadMetadataForSuite(suiteDir);
+    if (metadata) {
+      validateTimingsEntries = {
+        metadata,
+        testsFoundInFiles: new Set<string>(),
+      };
+    }
   }
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
@@ -62,6 +71,7 @@ export async function crawl(
     // |file| is the suite-relative file path.
     if (file.endsWith(specFileSuffix)) {
       const filepathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
+      const pathSegments = filepathWithoutExtension.split('/');
 
       const suite = path.basename(suiteDir);
 
@@ -73,10 +83,14 @@ export async function crawl(
         assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
         assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 
-        mod.g.validate();
+        for (const { testPath } of mod.g.collectNonEmptyTests()) {
+          const testQuery = new TestQueryMultiCase(suite, pathSegments, testPath, {}).toString();
+          if (validateTimingsEntries) {
+            validateTimingsEntries.testsFoundInFiles.add(testQuery);
+          }
+        }
       }
 
-      const pathSegments = filepathWithoutExtension.split('/');
       for (const p of pathSegments) {
         assert(validQueryPart.test(p), `Invalid directory name ${p}; must match ${validQueryPart}`);
       }
@@ -90,6 +104,55 @@ export async function crawl(
     } else {
       unreachable(`Matched an unrecognized filename ${file}`);
     }
+  }
+
+  if (validateTimingsEntries) {
+    let failed = false;
+
+    const zeroEntries = [];
+    const staleEntries = [];
+    for (const [metadataKey, metadataValue] of Object.entries(validateTimingsEntries.metadata)) {
+      if (metadataKey.startsWith('_')) {
+        // Ignore json "_comments".
+        continue;
+      }
+      if (metadataValue.subcaseMS <= 0) {
+        zeroEntries.push(metadataKey);
+      }
+      if (!validateTimingsEntries.testsFoundInFiles.has(metadataKey)) {
+        staleEntries.push(metadataKey);
+      }
+    }
+    if (zeroEntries.length) {
+      console.warn('WARNING: subcaseMS≤0 found in listing_meta.json (allowed, but try to avoid):');
+      for (const metadataKey of zeroEntries) {
+        console.warn(`  ${metadataKey}`);
+      }
+    }
+    if (staleEntries.length) {
+      console.error('ERROR: Non-existent tests found in listing_meta.json:');
+      for (const metadataKey of staleEntries) {
+        console.error(`  ${metadataKey}`);
+      }
+      failed = true;
+    }
+
+    const missingEntries = [];
+    for (const metadataKey of validateTimingsEntries.testsFoundInFiles) {
+      if (!(metadataKey in validateTimingsEntries.metadata)) {
+        missingEntries.push(metadataKey);
+      }
+    }
+    if (missingEntries.length) {
+      console.error(
+        'ERROR: Tests missing from listing_meta.json. Please add the new tests (See docs/adding_timing_metadata.md):'
+      );
+      for (const metadataKey of missingEntries) {
+        console.error(`  ${metadataKey}`);
+        failed = true;
+      }
+    }
+    assert(!failed);
   }
 
   return entries;
