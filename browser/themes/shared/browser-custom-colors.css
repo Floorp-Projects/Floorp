@@ -49,8 +49,6 @@
       color-mix(in srgb, currentColor 14%, transparent)
     );
 
-    --panel-shortcut-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
-
     --input-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --input-bgcolor: light-dark(rgb(255, 255, 255), #42414d);
     --input-border-color: light-dark(color-mix(in srgb, currentColor 41%, transparent), #8f8f9d);

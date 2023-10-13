@@ -229,40 +229,40 @@ toolbarseparator + .panel-subview-body {
 
 /* Tweaks for menupopups hanging off toolbar buttons to make them feel like panels */
 
-.toolbar-menupopup,
-.toolbar-menupopup menupopup {
-  appearance: none;
-  border: none;
-  font: menu;
-  background-color: transparent;
-  --panel-background: var(--arrowpanel-background);
-  --panel-color: var(--arrowpanel-color);
-  --panel-border-color: var(--arrowpanel-border-color);
-  --panel-border-radius: var(--arrowpanel-border-radius);
-  --panel-padding: var(--panel-subview-body-padding);
-}
+.toolbar-menupopup {
+  &,
+  menupopup {
+    appearance: none;
+    border: none;
+    font: menu;
+    background-color: transparent;
+    --panel-background: var(--arrowpanel-background);
+    --panel-color: var(--arrowpanel-color);
+    --panel-border-color: var(--arrowpanel-border-color);
+    --panel-border-radius: var(--arrowpanel-border-radius);
+    --panel-padding: var(--panel-subview-body-padding);
+  }
 
-.toolbar-menupopup menupopup {
-  /* Align non top-level menupopup's first menuitem with the menuitem that opened it.
-   * The 1px is for the menupopup's border. */
-  margin-top: calc(-1 * (var(--panel-subview-body-padding-block) + var(--panel-shadow-margin) + 1px));
-}
+  menupopup {
+    /* Align non top-level menupopup's first menuitem with the menuitem that opened it.
+     * The 1px is for the menupopup's border. */
+    margin-top: calc(-1 * (var(--panel-subview-body-padding-block) + var(--panel-shadow-margin) + 1px));
+  }
 
-.toolbar-menupopup :is(menu, menuitem)[disabled] {
-  color: var(--panel-disabled-color);
-}
+  :is(menu, menuitem)[disabled] {
+    color: var(--panel-disabled-color);
+  }
 
-.toolbar-menupopup :is(menu, menuitem):not([disabled])[_moz-menuactive] {
-  color: inherit;
-  background-color: var(--panel-item-hover-bgcolor);
-}
+  :is(menu, menuitem):not([disabled])[_moz-menuactive] {
+    color: inherit;
+    background-color: var(--panel-item-hover-bgcolor);
 
-.toolbar-menupopup :is(menu, menuitem):not([disabled])[_moz-menuactive]:active {
-  color: inherit;
-  background-color: var(--panel-item-active-bgcolor);
-}
+    &:active {
+      color: inherit;
+      background-color: var(--panel-item-active-bgcolor);
+    }
+  }
 
-.toolbar-menupopup :is(
   .menu-text,
   .menu-iconic-text,
   .menu-iconic-icon,
@@ -270,39 +270,44 @@ toolbarseparator + .panel-subview-body {
   .menu-iconic-accel,
   .menu-accel-container,
   .menu-accel,
-  .menu-right
-) {
-  /* Reset every spacing and appearance set by the platforms' menu.css
-   * and set the ones we need in the following rules. */
-  margin: 0 !important;
-  padding: 0 !important;
-  appearance: none !important;
-}
+  .menu-right {
+    /* Reset every spacing and appearance set by the platforms' menu.css
+     * and set the ones we need in the following rules. */
+    margin: 0 !important;
+    padding: 0 !important;
+    appearance: none !important;
+  }
 
-.toolbar-menupopup :is(.menu-iconic, .menuitem-iconic) > .menu-iconic-left {
-  margin-inline-end: 8px !important;
-}
+  :is(.menu-iconic, .menuitem-iconic) > .menu-iconic-left {
+    margin-inline-end: 8px !important;
+  }
 
-.toolbar-menupopup .menu-accel-container > :is(.menu-accel, .menu-iconic-accel) {
-  margin-inline-start: 16px !important;
-  color: var(--panel-shortcut-color);
-}
+  :is(.menu-accel, .menu-iconic-accel) {
+    margin-inline-start: 16px !important;
 
-.toolbar-menupopup menu > .menu-right {
-  list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.6;
-  width: unset;
-  height: unset;
-}
+    @media not (prefers-contrast) {
+      menuitem:not([disabled]) > .menu-accel-container > & {
+        color: var(--panel-disabled-color);
+      }
+    }
+  }
 
-.toolbar-menupopup menu > .menu-right:-moz-locale-dir(rtl) {
-  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
-}
+  menu > .menu-right {
+    list-style-image: url(chrome://global/skin/icons/arrow-right.svg);
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: 0.6;
+    width: unset;
+    height: unset;
 
-.toolbar-menupopup menuseparator {
-  padding: var(--panel-separator-margin);
+    &:-moz-locale-dir(rtl) {
+      list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
+    }
+  }
+
+  menuseparator {
+    padding: var(--panel-separator-margin);
+  }
 }
 
 #BMB_bookmarksPopup {
@@ -1097,7 +1102,12 @@ panelview .toolbarbutton-1,
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
   display: flex;
-  color: var(--panel-shortcut-color);
+}
+
+@media not (prefers-contrast) {
+  .subviewbutton[shortcut]:not([disabled])::after {
+    color: var(--panel-disabled-color);
+  }
 }
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound)::after,
