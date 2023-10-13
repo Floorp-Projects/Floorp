@@ -1,6 +1,11 @@
 ---
 extends: default
 
+rules:
+  document-start:
+    ignore: |
+      **/moz.yaml
+
 ignore: |
   *node_modules*
   *bad.yml
