@@ -469,6 +469,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``signon.firefoxRelay.feature``: User choice regarding Firefox Relay integration with Firefox Password Manager. Can be one of undefined, "available", "offered", "enabled" or "disabled".
 
+- ``dom.popup_allowed_events``: Which events should allow popups. Only exposed with about:config.
+
 attribution
 ~~~~~~~~~~~
 
