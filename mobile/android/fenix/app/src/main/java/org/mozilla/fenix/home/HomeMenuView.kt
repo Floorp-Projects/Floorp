@@ -154,6 +154,7 @@ class HomeMenuView(
                 )
             }
             HomeMenu.Item.Help -> {
+                HomeMenuMetrics.helpTapped.record(NoExtras())
                 homeActivity.openToBrowserAndLoad(
                     searchTermOrURL = SupportUtils.getSumoURLForTopic(
                         context = context,

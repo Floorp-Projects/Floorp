@@ -180,8 +180,12 @@ class HomeMenuViewTest {
     }
 
     @Test
-    fun `WHEN Help menu item is tapped THEN open the browser to the SUMO help page`() {
+    fun `WHEN Help menu item is tapped THEN open the browser to the SUMO help page  and record metrics`() {
+        assertNull(HomeMenuMetrics.helpTapped.testGetValue())
+
         homeMenuView.onItemTapped(HomeMenu.Item.Help)
+
+        assertNotNull(HomeMenuMetrics.helpTapped.testGetValue())
 
         verify {
             homeActivity.openToBrowserAndLoad(
