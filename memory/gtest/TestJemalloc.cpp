@@ -459,6 +459,9 @@ TEST(Jemalloc, JunkPoison)
   params.mMaxDirty = size_t(-1);
   arena_id_t arena = moz_create_arena_with_params(&params);
 
+  // Mozjemalloc is configured to only poison the first four cache lines.
+  const size_t poison_check_len = 256;
+
   // Allocating should junk the buffer, and freeing should poison the buffer.
   for (size_t size : sSizes) {
     if (size <= stats.large_max) {
@@ -473,7 +476,8 @@ TEST(Jemalloc, JunkPoison)
       // We purposefully do a use-after-free here, to check that the data was
       // poisoned.
       ASSERT_NO_FATAL_FAILURE(
-          bulk_compare(buf, 0, allocated, poison_buf, stats.page_size));
+          bulk_compare(buf, 0, std::min(allocated, poison_check_len),
+                       poison_buf, stats.page_size));
     }
   }
 
@@ -489,8 +493,9 @@ TEST(Jemalloc, JunkPoison)
     ASSERT_EQ(ptr, ptr2);
     ASSERT_NO_FATAL_FAILURE(
         bulk_compare(ptr, 0, prev + 1, fill_buf, stats.page_size));
-    ASSERT_NO_FATAL_FAILURE(
-        bulk_compare(ptr, prev + 1, size, poison_buf, stats.page_size));
+    ASSERT_NO_FATAL_FAILURE(bulk_compare(ptr, prev + 1,
+                                         std::min(size, poison_check_len),
+                                         poison_buf, stats.page_size));
     moz_arena_free(arena, ptr);
     prev = size;
   }
@@ -514,12 +519,14 @@ TEST(Jemalloc, JunkPoison)
           // beyond the valid range.
           if (to_size > stats.large_max) {
             size_t page_limit = ALIGNMENT_CEILING(to_size, stats.page_size);
-            ASSERT_NO_FATAL_FAILURE(bulk_compare(ptr, to_size, page_limit,
-                                                 poison_buf, stats.page_size));
+            ASSERT_NO_FATAL_FAILURE(bulk_compare(
+                ptr, to_size, std::min(page_limit, poison_check_len),
+                poison_buf, stats.page_size));
             ASSERT_DEATH_WRAP(ptr[page_limit] = 0, "");
           } else {
-            ASSERT_NO_FATAL_FAILURE(bulk_compare(ptr, to_size, from_size,
-                                                 poison_buf, stats.page_size));
+            ASSERT_NO_FATAL_FAILURE(bulk_compare(
+                ptr, to_size, std::min(from_size, poison_check_len), poison_buf,
+                stats.page_size));
           }
         } else {
           // Enlarging allocation
@@ -563,7 +570,8 @@ TEST(Jemalloc, JunkPoison)
         ASSERT_NE(ptr, ptr2);
         if (from_size <= stats.large_max) {
           ASSERT_NO_FATAL_FAILURE(
-              bulk_compare(ptr, 0, from_size, poison_buf, stats.page_size));
+              bulk_compare(ptr, 0, std::min(from_size, poison_check_len),
+                           poison_buf, stats.page_size));
         }
         ASSERT_NO_FATAL_FAILURE(
             bulk_compare(ptr2, 0, from_size, fill_buf, stats.page_size));
@@ -594,7 +602,8 @@ TEST(Jemalloc, JunkPoison)
         ASSERT_NE(ptr, ptr2);
         if (from_size <= stats.large_max) {
           ASSERT_NO_FATAL_FAILURE(
-              bulk_compare(ptr, 0, from_size, poison_buf, stats.page_size));
+              bulk_compare(ptr, 0, std::min(from_size, poison_check_len),
+                           poison_buf, stats.page_size));
         }
         ASSERT_NO_FATAL_FAILURE(
             bulk_compare(ptr2, 0, to_size, fill_buf, stats.page_size));
