@@ -1243,6 +1243,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "defaultagent-static"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "mozilla-central-workspace-hack",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "url",
+ "viaduct",
+ "winapi",
+ "wineventlog",
+ "wio",
+]
+
+[[package]]
 name = "derive_arbitrary"
 version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6443,6 +6459,15 @@ version = "0.48.999"
 dependencies = [
  "quote",
  "syn",
+]
+
+[[package]]
+name = "wineventlog"
+version = "0.1.0"
+dependencies = [
+ "log",
+ "winapi",
+ "wio",
 ]
 
 [[package]]

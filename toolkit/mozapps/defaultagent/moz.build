@@ -8,6 +8,8 @@ Program("default-browser-agent")
 
 SPHINX_TREES["default-browser-agent"] = "docs"
 
+DIRS += ["rust"]
+
 UNIFIED_SOURCES += [
     "/mfbt/Poison.cpp",
     "/mfbt/Unused.cpp",
@@ -20,6 +22,7 @@ UNIFIED_SOURCES += [
     "Notification.cpp",
     "Policy.cpp",
     "Registry.cpp",
+    "RemoteSettings.cpp",
     "ScheduledTask.cpp",
     "SetDefaultBrowser.cpp",
     "Telemetry.cpp",
@@ -38,6 +41,7 @@ SOURCES += [
 SOURCES["/third_party/WinToast/wintoastlib.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
 USE_LIBS += [
+    "defaultagent-static",
     "jsoncpp",
 ]
 
