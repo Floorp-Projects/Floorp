@@ -7,9 +7,29 @@
 #ifndef __DEFAULT_BROWSER_AGENT_DEFAULT_AGENT_H__
 #define __DEFAULT_BROWSER_AGENT_DEFAULT_AGENT_H__
 
+#include "mozilla/WinHeaderOnlyUtils.h"
+
 #include "nsIDefaultAgent.h"
 
 namespace mozilla::default_agent {
+
+// This class is designed to prevent concurrency problems when accessing the
+// registry. It should be acquired before any usage of unprefixed registry
+// entries.
+class RegistryMutex {
+ private:
+  nsAutoHandle mMutex;
+  bool mLocked = false;
+
+ public:
+  RegistryMutex() = default;
+  ~RegistryMutex();
+
+  // Returns true on success, false on failure.
+  bool Acquire();
+  bool IsLocked();
+  void Release();
+};
 
 class DefaultAgent final : public nsIDefaultAgent {
  public:
@@ -21,6 +41,8 @@ class DefaultAgent final : public nsIDefaultAgent {
  private:
   // A private destructor must be declared.
   ~DefaultAgent() = default;
+
+  RegistryMutex mRegMutex;
 };
 
 }  // namespace mozilla::default_agent
