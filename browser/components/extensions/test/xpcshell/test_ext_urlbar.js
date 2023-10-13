@@ -6,7 +6,6 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -375,9 +374,7 @@ add_task(async function test_onProviderResultsRequested() {
         buttonUrl: "https://example.com/tip-button",
         helpUrl: "https://example.com/tip-help",
         helpL10n: {
-          id: UrlbarPrefs.get("resultMenu")
-            ? "urlbar-result-menu-tip-get-help"
-            : "urlbar-tip-help-icon",
+          id: "urlbar-result-menu-tip-get-help",
         },
         type: "extension",
       },
