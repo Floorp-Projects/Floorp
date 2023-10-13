@@ -862,11 +862,15 @@ static int DaysInMonth(int year, int month) {
 }
 
 /*
- * Parse a string according to the formats specified in section 20.3.1.16
- * of the ECMAScript standard. These formats are based upon a simplification
- * of the ISO 8601 Extended Format. As per the spec omitted month and day
- * values are defaulted to '01', omitted HH:mm:ss values are defaulted to '00'
- * and an omitted sss field is defaulted to '000'.
+ * Parse a string according to the formats specified in the standard:
+ *
+ * https://tc39.es/ecma262/#sec-date-time-string-format
+ * https://tc39.es/ecma262/#sec-expanded-years
+ *
+ * These formats are based upon a simplification of the ISO 8601 Extended
+ * Format. As per the spec omitted month and day values are defaulted to '01',
+ * omitted HH:mm:ss values are defaulted to '00' and an omitted sss field is
+ * defaulted to '000'.
  *
  * For cross compatibility we allow the following extensions.
  *
@@ -1131,14 +1135,16 @@ static constexpr const char* const months_names[] = {
     "july",    "august",   "september", "october", "november", "december",
 };
 
-// Try to parse the following date format:
-//   dd-MMM-yyyy
-//   dd-MMM-yy
-//   yyyy-MMM-dd
-//   yy-MMM-dd
-//
-// Returns true and fills all out parameters when successfully parsed
-// dashed-date.  Otherwise returns false and leaves out parameters untouched.
+/*
+ * Try to parse the following date formats:
+ *   dd-MMM-yyyy
+ *   dd-MMM-yy
+ *   yyyy-MMM-dd
+ *   yy-MMM-dd
+ *
+ * Returns true and fills all out parameters when successfully parsed
+ * dashed-date.  Otherwise returns false and leaves out parameters untouched.
+ */
 template <typename CharT>
 static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
                                      size_t* indexOut, int* yearOut,
@@ -1210,6 +1216,96 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
   }
 
   if (yearDigits < 4) {
+    year = FixupNonFullYear(year);
+  }
+
+  *indexOut = i;
+  *yearOut = year;
+  *monOut = mon;
+  *mdayOut = mday;
+  return true;
+}
+
+/*
+ * Try to parse dates in the style of YYYY-MM-DD which do not conform to
+ * the formal standard from ParseISOStyleDate. This includes cases such as
+ *
+ *  - Year does not have 4 digits
+ *  - Month or mday has 1 digit
+ *  - Space in between date and time, rather than a 'T'
+ *
+ * Regarding the last case, this function only parses out the date, returning
+ * to ParseDate to finish parsing the time and timezone, if present.
+ *
+ * Returns true and fills all out parameters when successfully parsed
+ * dashed-date.  Otherwise returns false and leaves out parameters untouched.
+ */
+template <typename CharT>
+static bool TryParseDashedNumericDatePrefix(const CharT* s, size_t length,
+                                            size_t* indexOut, int* yearOut,
+                                            int* monOut, int* mdayOut) {
+  size_t i = 0;
+
+  size_t first;
+  if (!ParseDigitsNOrLess(6, &first, s, &i, length)) {
+    return false;
+  }
+
+  if (i >= length || s[i] != '-') {
+    return false;
+  }
+  ++i;
+
+  size_t second;
+  if (!ParseDigitsNOrLess(2, &second, s, &i, length)) {
+    return false;
+  }
+
+  if (i >= length || s[i] != '-') {
+    return false;
+  }
+  ++i;
+
+  size_t third;
+  if (!ParseDigitsNOrLess(6, &third, s, &i, length)) {
+    return false;
+  }
+
+  int year;
+  int mon = -1;
+  int mday = -1;
+
+  // 1 or 2 digits for the first number is tricky; 1-12 means it's a month, 0 or
+  // >31 means it's a year, and 13-31 is invalid due to ambiguity.
+  if (first >= 1 && first <= 12) {
+    mon = first;
+  } else if (first == 0 || first > 31) {
+    year = first;
+  } else {
+    return false;
+  }
+
+  if (mon < 0) {
+    // If month hasn't been set yet, it's definitely the 2nd number
+    mon = second;
+  } else {
+    // If it has, the next number is the mday
+    mday = second;
+  }
+
+  if (mday < 0) {
+    // The third number is probably the mday...
+    mday = third;
+  } else {
+    // But otherwise, it's the year
+    year = third;
+  }
+
+  if (mon > 12 || mday > 31) {
+    return false;
+  }
+
+  if (year < 100) {
     year = FixupNonFullYear(year);
   }
 
@@ -1313,7 +1409,15 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   //
   // Otherwise, this is no-op.
   bool isDashedDate =
-      TryParseDashedDatePrefix(s, length, &index, &year, &mon, &mday);
+      TryParseDashedDatePrefix(s, length, &index, &year, &mon, &mday) ||
+      TryParseDashedNumericDatePrefix(s, length, &index, &year, &mon, &mday);
+
+  // If we don't check this here, the keywords check later will think that the
+  // 'T' in e.g. "1-20-2012T10:00:00" is an abbreviation for "Thursday" and
+  // allow it when it should be rejected.
+  if (isDashedDate && s[index] == 'T') {
+    return false;
+  }
 
   while (index < length) {
     int c = s[index];
