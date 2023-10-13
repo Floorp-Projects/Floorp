@@ -62,6 +62,5 @@ skip-if = [
 ["test_windowOpen.html"]
 scheme = "https"
 skip-if = [
-  "http3",
-  "http2",
+  "!debug" # Bug 1855588
 ]
