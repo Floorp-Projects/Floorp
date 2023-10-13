@@ -21,7 +21,11 @@
 #  include "ICU4XLineSegmenter.h"
 #  include "ICU4XSentenceSegmenter.h"
 #  include "ICU4XWordSegmenter.h"
+#  include "mozilla/ClearOnShutdown.h"
 #  include "mozilla/intl/ICU4XGeckoDataProvider.h"
+#  include "nsThreadUtils.h"
+
+#  include <mutex>
 #endif
 
 using namespace mozilla::unicode;
@@ -187,6 +191,11 @@ Maybe<uint32_t> WordBreakIteratorUtf16::Seek(uint32_t aPos) {
   return SegmentIteratorUtf16::Seek(aPos);
 }
 
+#if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
+capi::ICU4XGraphemeClusterSegmenter*
+    GraphemeClusterBreakIteratorUtf16::sSegmenter = nullptr;
+#endif
+
 GraphemeClusterBreakIteratorUtf16::GraphemeClusterBreakIteratorUtf16(
     Span<const char16_t> aText)
     : SegmentIteratorUtf16(aText) {
@@ -194,12 +203,26 @@ GraphemeClusterBreakIteratorUtf16::GraphemeClusterBreakIteratorUtf16(
   if (!StaticPrefs::intl_icu4x_segmenter_enabled()) {
     return;
   }
-  auto result = capi::ICU4XGraphemeClusterSegmenter_create(
-      mozilla::intl::GetDataProvider());
-  MOZ_RELEASE_ASSERT(result.is_ok);
-  mSegmenter = result.ok;
+  static std::once_flag sOnce;
+
+  std::call_once(sOnce, [] {
+    auto result = capi::ICU4XGraphemeClusterSegmenter_create(
+        mozilla::intl::GetDataProvider());
+    MOZ_RELEASE_ASSERT(result.is_ok);
+    sSegmenter = result.ok;
+
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("GraphemeClusterBreakIteratorUtf16", [] {
+          RunOnShutdown([] {
+            capi::ICU4XGraphemeClusterSegmenter_destroy(sSegmenter);
+            sSegmenter = nullptr;
+          });
+        }));
+  });
+
+  MOZ_RELEASE_ASSERT(sSegmenter);
   mIterator = capi::ICU4XGraphemeClusterSegmenter_segment_utf16(
-      mSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
+      sSegmenter, (const uint16_t*)mText.Elements(), mText.Length());
 #endif
 }
 
@@ -207,9 +230,6 @@ GraphemeClusterBreakIteratorUtf16::~GraphemeClusterBreakIteratorUtf16() {
 #if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
   if (mIterator) {
     capi::ICU4XGraphemeClusterBreakIteratorUtf16_destroy(mIterator);
-  }
-  if (mSegmenter) {
-    capi::ICU4XGraphemeClusterSegmenter_destroy(mSegmenter);
   }
 #endif
 }
