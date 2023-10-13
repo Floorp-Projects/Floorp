@@ -214,6 +214,8 @@ class Context final : public SafeRefCounted<Context> {
           SafeRefPtr<Action> aInitAction);
   ~Context();
 
+  void Stringify(nsACString& aData);
+
   NS_DECL_OWNINGTHREAD
   MOZ_DECLARE_REFCOUNTED_TYPENAME(cache::Context)
 };
