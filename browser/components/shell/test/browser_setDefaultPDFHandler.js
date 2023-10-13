@@ -4,18 +4,21 @@
 ChromeUtils.defineESModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-const setDefaultBrowserUserChoiceStub = sinon.stub();
-const setDefaultExtensionHandlersUserChoiceStub = sinon.stub();
+const mockedDefaultAgent = {
+  setDefaultBrowserUserChoice: sinon.stub(),
+  setDefaultExtensionHandlersUserChoice: sinon.stub(),
+  QueryInterface: ChromeUtils.generateQI(["nsIDefaultAgent"]),
+};
 
-const defaultAgentStub = sinon.stub(ShellService, "defaultAgent").value({
-  setDefaultBrowserUserChoice: setDefaultBrowserUserChoiceStub,
-  setDefaultExtensionHandlersUserChoice:
-    setDefaultExtensionHandlersUserChoiceStub,
-});
+const defaultAgentCID = MockRegistrar.register(
+  "@mozilla.org/default-agent;1",
+  mockedDefaultAgent
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -38,7 +41,7 @@ const shellStub = sinon.stub(ShellService, "shellService").value({
 });
 
 registerCleanupFunction(() => {
-  defaultAgentStub.restore();
+  MockRegistrar.unregister(defaultAgentCID);
   _userChoiceImpossibleTelemetryResultStub.restore();
   shellStub.restore();
 
@@ -75,15 +78,15 @@ add_task(async function remoteEnableWithPDF() {
     true
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  mockedDefaultAgent.setDefaultBrowserUserChoice.resetHistory();
   ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
-  Assert.deepEqual(setDefaultBrowserUserChoiceStub.firstCall.args, [
-    aumi,
-    [".pdf", "FirefoxPDF"],
-  ]);
+  Assert.ok(mockedDefaultAgent.setDefaultBrowserUserChoice.called);
+  Assert.deepEqual(
+    mockedDefaultAgent.setDefaultBrowserUserChoice.firstCall.args,
+    [aumi, [".pdf", "FirefoxPDF"]]
+  );
 
   await doCleanup();
 });
@@ -120,12 +123,12 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
   for (let progId of ["", "MSEdgePDF"]) {
     queryCurrentDefaultHandlerForStub.callsFake(() => progId);
 
-    setDefaultBrowserUserChoiceStub.resetHistory();
+    mockedDefaultAgent.setDefaultBrowserUserChoice.resetHistory();
     ShellService.setDefaultBrowser();
 
-    Assert.ok(setDefaultBrowserUserChoiceStub.called);
+    Assert.ok(mockedDefaultAgent.setDefaultBrowserUserChoice.called);
     Assert.deepEqual(
-      setDefaultBrowserUserChoiceStub.firstCall.args,
+      mockedDefaultAgent.setDefaultBrowserUserChoice.firstCall.args,
       [aumi, [".pdf", "FirefoxPDF"]],
       `Will take default from missing association or known browser with ProgID '${progId}'`
     );
@@ -134,12 +137,12 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
   // But not from a non-browser.
   queryCurrentDefaultHandlerForStub.callsFake(() => "Acrobat.Document.DC");
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  mockedDefaultAgent.setDefaultBrowserUserChoice.resetHistory();
   ShellService.setDefaultBrowser();
 
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
+  Assert.ok(mockedDefaultAgent.setDefaultBrowserUserChoice.called);
   Assert.deepEqual(
-    setDefaultBrowserUserChoiceStub.firstCall.args,
+    mockedDefaultAgent.setDefaultBrowserUserChoice.firstCall.args,
     [aumi, []],
     `Will not take default from non-browser`
   );
@@ -166,12 +169,15 @@ add_task(async function remoteEnableWithoutPDF() {
     false
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  mockedDefaultAgent.setDefaultBrowserUserChoice.resetHistory();
   ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
-  Assert.deepEqual(setDefaultBrowserUserChoiceStub.firstCall.args, [aumi, []]);
+  Assert.ok(mockedDefaultAgent.setDefaultBrowserUserChoice.called);
+  Assert.deepEqual(
+    mockedDefaultAgent.setDefaultBrowserUserChoice.firstCall.args,
+    [aumi, []]
+  );
 
   await doCleanup();
 });
@@ -195,10 +201,10 @@ add_task(async function remoteDisable() {
     true
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  mockedDefaultAgent.setDefaultBrowserUserChoice.resetHistory();
   ShellService.setDefaultBrowser();
 
-  Assert.ok(setDefaultBrowserUserChoiceStub.notCalled);
+  Assert.ok(mockedDefaultAgent.setDefaultBrowserUserChoice.notCalled);
   Assert.ok(setDefaultStub.called);
 
   await doCleanup();
@@ -219,51 +225,51 @@ add_task(async function test_setAsDefaultPDFHandler_knownBrowser() {
     info("Testing setAsDefaultPDFHandler(true) when knownBrowser = true");
     ShellService.setAsDefaultPDFHandler(true);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.firstCall.args,
       expectedArguments,
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.resetHistory();
 
     info("Testing setAsDefaultPDFHandler(false) when knownBrowser = true");
     ShellService.setAsDefaultPDFHandler(false);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.firstCall.args,
       expectedArguments,
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.resetHistory();
 
     pdfHandlerResult.knownBrowser = false;
 
     info("Testing setAsDefaultPDFHandler(true) when knownBrowser = false");
     ShellService.setAsDefaultPDFHandler(true);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.notCalled,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.notCalled,
       "Did not call default browser agent"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.resetHistory();
 
     info("Testing setAsDefaultPDFHandler(false) when knownBrowser = false");
     ShellService.setAsDefaultPDFHandler(false);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
+      mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.firstCall.args,
       expectedArguments,
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    mockedDefaultAgent.setDefaultExtensionHandlersUserChoice.resetHistory();
   } finally {
     sandbox.restore();
   }
