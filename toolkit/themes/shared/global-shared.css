@@ -79,11 +79,11 @@
 
 :root:-moz-lwtheme {
   toolbar,
-  panel {
+  &[lwt-popup="light"] panel {
     color-scheme: light;
   }
   toolbar[brighttext],
-  &[lwt-popup-brighttext] panel {
+  &[lwt-popup="dark"] panel {
     color-scheme: dark;
   }
 }

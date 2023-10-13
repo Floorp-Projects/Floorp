@@ -11,6 +11,9 @@
   appearance: none;
 
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
+
+  --sidebar-border-color: hsla(240, 5%, 5%, .1);
+  --sidebar-background-color: -moz-mac-source-list;
 }
 
 #browser,
@@ -229,20 +232,15 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 /* ----- SIDEBAR ELEMENTS ----- */
 
-#browser {
-  --sidebar-border-color: hsla(240, 5%, 5%, .1);
-}
-
 #sidebar-box {
   /* Default font size is 11px on mac, so this is 12px */
   font-size: 1.0909rem;
-  --sidebar-background-color: -moz-mac-source-list;
 
   /* Give the sidebar a vibrant appearance. Only do this when no lwtheme sidebar
-  * rules are in use. Vibrant appearance values only work if there is no
-  * background-color rendered behind the element. If the active theme has sidebar
-  * rules, we want to show the theme's background-color in the sidebar. */
-  &:not([lwt-sidebar]) {
+   * rules are in use. Vibrant appearance values only work if there is no
+   * background-color rendered behind the element. If the active theme has sidebar
+   * rules, we want to show the theme's background-color in the sidebar. */
+  :root:not([lwt-sidebar]) & {
     appearance: auto;
     -moz-default-appearance: -moz-mac-source-list;
     -moz-font-smoothing-background-color: -moz-mac-source-list;

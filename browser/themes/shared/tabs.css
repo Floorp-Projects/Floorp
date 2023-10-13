@@ -770,7 +770,8 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
         url("chrome://browser/skin/tabbrowser/tab-loading@2x.png") 2x
       );
 
-      :root[lwt-popup-brighttext] &[progress]:not([selected]) {
+      /* FIXME: This should probably also apply in regular dark mode? */
+      :root[lwt-popup="dark"] &[progress]:not([selected]) {
         list-style-image: image-set(
           url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png"),
           url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png") 2x

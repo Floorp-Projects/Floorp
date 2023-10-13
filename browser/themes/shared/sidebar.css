@@ -4,12 +4,22 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-#sidebar-box {
+:root {
   --sidebar-background-color: Field;
   --sidebar-text-color: FieldText;
+}
+
+#sidebar-box {
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
   text-shadow: none;
+
+  :root[lwt-sidebar="light"] & {
+    color-scheme: light;
+  }
+  :root[lwt-sidebar="dark"] & {
+    color-scheme: dark;
+  }
 }
 
 #sidebar-header {

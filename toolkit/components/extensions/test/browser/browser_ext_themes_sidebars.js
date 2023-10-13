@@ -6,7 +6,7 @@
  * Test whether the selected browser has the sidebar theme applied
  *
  * @param {object} theme that is applied
- * @param {boolean} isBrightText whether the brighttext attribute should be set
+ * @param {boolean} isBrightText whether the text color is light
  */
 async function test_sidebar_theme(theme, isBrightText) {
   let extension = ExtensionTestUtils.loadExtension({
@@ -16,20 +16,21 @@ async function test_sidebar_theme(theme, isBrightText) {
   });
 
   const sidebarBox = document.getElementById("sidebar-box");
+  const browserRoot = document.documentElement;
   const content = SidebarUI.browser.contentWindow;
   const root = content.document.documentElement;
 
   ok(
-    !sidebarBox.hasAttribute("lwt-sidebar"),
-    "Sidebar box should not have lwt-sidebar attribute"
+    !browserRoot.hasAttribute("lwt-sidebar"),
+    "Browser should not have lwt-sidebar attribute"
   );
   ok(
     !root.hasAttribute("lwt-sidebar"),
-    "Sidebar should not have lwt-sidebar attribute"
+    "Root should not have lwt-sidebar attribute"
   );
   ok(
-    !root.hasAttribute("lwt-sidebar-brighttext"),
-    "Sidebar should not have lwt-sidebar-brighttext attribute"
+    !browserRoot.hasAttribute("lwt-sidebar-highlight"),
+    "Browser should not have lwt-sidebar-brighttext attribute"
   );
   ok(
     !root.hasAttribute("lwt-sidebar-highlight"),
@@ -80,23 +81,30 @@ async function test_sidebar_theme(theme, isBrightText) {
   const isCustomSidebar = !!theme.colors.sidebar_text;
 
   is(
-    sidebarBox.hasAttribute("lwt-sidebar"),
+    browserRoot.hasAttribute("lwt-sidebar"),
     isCustomSidebar,
-    `Sidebar box should${
-      !isCustomSidebar ? " not" : ""
-    } have lwt-sidebar attribute`
+    `Browser should${!isCustomSidebar ? " not" : ""} have lwt-sidebar attribute`
   );
   is(
     root.hasAttribute("lwt-sidebar"),
     isCustomSidebar,
     `Sidebar should${!isCustomSidebar ? " not" : ""} have lwt-sidebar attribute`
   );
+  if (isCustomSidebar) {
+    // Quite confusingly, getAttribute() on XUL elements for attributes that
+    // are not present has different behavior to HTML (empty string vs. null).
+    is(
+      root.getAttribute("lwt-sidebar"),
+      browserRoot.getAttribute("lwt-sidebar"),
+      `Sidebar lwt-sidebar attribute should match browser`
+    );
+  }
   is(
-    root.hasAttribute("lwt-sidebar-brighttext"),
+    browserRoot.getAttribute("lwt-sidebar") == "dark",
     isBrightText,
-    `Sidebar should${
+    `Browser should${
       !isBrightText ? " not" : ""
-    } have lwt-sidebar-brighttext attribute`
+    } have lwt-sidebar="dark" attribute`
   );
   is(
     root.hasAttribute("lwt-sidebar-highlight"),
@@ -126,7 +134,6 @@ async function test_sidebar_theme(theme, isBrightText) {
     "Sidebar background should be set."
   );
   is(rootCS.color, actualColor, "Sidebar text color should be set.");
-
   is(
     highlightCS.backgroundColor,
     actualHighlightBackground,
@@ -143,16 +150,12 @@ async function test_sidebar_theme(theme, isBrightText) {
   Services.ppmm.sharedData.flush();
 
   ok(
-    !sidebarBox.hasAttribute("lwt-sidebar"),
-    "Sidebar box should not have lwt-sidebar attribute"
+    !browserRoot.hasAttribute("lwt-sidebar"),
+    "Browser should not have lwt-sidebar attribute"
   );
   ok(
     !root.hasAttribute("lwt-sidebar"),
     "Sidebar should not have lwt-sidebar attribute"
-  );
-  ok(
-    !root.hasAttribute("lwt-sidebar-brighttext"),
-    "Sidebar should not have lwt-sidebar-brighttext attribute"
   );
   ok(
     !root.hasAttribute("lwt-sidebar-highlight"),

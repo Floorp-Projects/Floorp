@@ -126,14 +126,11 @@ export const ThemeVariableMap = [
     "--sidebar-background-color",
     {
       lwtProperty: "sidebar",
-      optionalElementID: "sidebar-box",
-      processColor(rgbaChannels, element) {
+      processColor(rgbaChannels) {
         if (!rgbaChannels) {
-          element.removeAttribute("lwt-sidebar");
           return null;
         }
         const { r, g, b } = rgbaChannels;
-        element.setAttribute("lwt-sidebar", "true");
         // Drop alpha channel
         return `rgb(${r}, ${g}, ${b})`;
       },

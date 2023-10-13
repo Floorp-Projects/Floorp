@@ -20,11 +20,10 @@
 #search-container {
   padding-block: 4px;
   margin-inline: var(--urlbar-margin-inline);
-}
 
-:root[uidensity=touch] #urlbar-container,
-:root[uidensity=touch] #search-container {
-  padding-block: 5px;
+  :root[uidensity=touch] & {
+    padding-block: 5px;
+  }
 }
 
 #urlbar,
@@ -32,28 +31,25 @@
   min-height: var(--urlbar-min-height);
   text-shadow: none;
   color: var(--toolbar-field-color);
-}
-
-/**
- * System colors and widgets are set based on toolbar color. Since toolbar
- * fields can be styled differently from the toolbar, we need to use the
- * correct color scheme in toolbar fields.
- */
-#urlbar:-moz-lwtheme,
-#searchbar:-moz-lwtheme {
-  color-scheme: light;
-}
-
-:root[lwt-toolbar-field-brighttext] {
-  #urlbar:not([focused="true"]),
-  #searchbar:not(:focus-within) {
+  /**
+   * System colors and widgets are set based on toolbar color. Since toolbar
+   * fields can be styled differently from the toolbar, we need to use the
+   * correct color scheme in toolbar fields.
+   */
+  :root[lwt-toolbar-field="light"] & {
+    color-scheme: light;
+  }
+  :root[lwt-toolbar-field="dark"] & {
     color-scheme: dark;
   }
 }
 
-:root[lwt-toolbar-field-focus-brighttext] {
-  #urlbar[focused="true"],
-  #searchbar:focus-within {
+#urlbar[focused="true"],
+#searchbar:focus-within {
+  :root[lwt-toolbar-field-focus="light"] & {
+    color-scheme: light;
+  }
+  :root[lwt-toolbar-field-focus="dark"] & {
     color-scheme: dark;
   }
 }
