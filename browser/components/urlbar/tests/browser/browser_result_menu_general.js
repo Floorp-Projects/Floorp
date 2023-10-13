@@ -1,32 +1,29 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests the help/info button that appears for results whose payloads have a
-// `helpUrl` property.
+// General tests for the result menu that aren't related to specific result
+// types.
 
 "use strict";
 
 const MAX_RESULTS = UrlbarPrefs.get("maxRichResults");
-const RESULT_URL = "http://example.com/test";
-const RESULT_HELP_URL = "http://example.com/help";
+const RESULT_URL = "https://example.com/test";
+const RESULT_HELP_URL = "https://example.com/help";
 
 add_setup(async function () {
   // Add enough results to fill up the view.
   await PlacesUtils.history.clear();
   for (let i = 0; i < MAX_RESULTS; i++) {
-    await PlacesTestUtils.addVisits("http://example.com/" + i);
+    await PlacesTestUtils.addVisits("https://example.com/" + i);
   }
   registerCleanupFunction(async () => {
     await PlacesUtils.history.clear();
   });
 });
 
-// Sets `helpL10n` on the result payload and makes sure the help button ends
-// up with a corresponding l10n attribute.
-add_task(async function title_helpL10n() {
-  if (UrlbarPrefs.get("resultMenu")) {
-    return;
-  }
+// Sets `helpUrl` on a result payload and makes sure the result menu ends up
+// with a help command.
+add_task(async function help() {
   let provider = registerTestProvider(1);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     value: "example",
@@ -36,22 +33,52 @@ add_task(async function title_helpL10n() {
   await assertIsTestResult(1);
 
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  let helpButton = result.element.row._buttons.get("help");
-  Assert.ok(helpButton, "Sanity check: help button should exist");
+  let menuButton = result.element.row._buttons.get("menu");
+  Assert.ok(menuButton, "Sanity check: menu button should exist");
 
-  let l10nAttrs = document.l10n.getAttributes(helpButton);
+  let menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
+    window,
+    command: "help",
+    resultIndex: 1,
+    openByMouse: true,
+  });
+  Assert.ok(menuitem, "Help menu item should exist");
+
+  let l10nAttrs = document.l10n.getAttributes(menuitem);
   Assert.deepEqual(
     l10nAttrs,
-    { id: "urlbar-tip-help-icon", args: null },
+    { id: "urlbar-result-menu-tip-get-help", args: null },
     "The l10n ID attribute was correctly set"
   );
 
-  await UrlbarTestUtils.promisePopupClose(window);
+  // The result menu needs to be closed before calling
+  // `openResultMenuAndClickItem()` below; otherwise it will wait on a
+  // `popupshown` event that will never come.
+  gURLBar.view.resultMenu.hidePopup(true);
+
+  // We assume clicking "help" will load a page in a new tab.
+  let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+
+  await UrlbarTestUtils.openResultMenuAndClickItem(window, "help", {
+    resultIndex: 1,
+    openByMouse: true,
+  });
+
+  info("Waiting for load");
+  await loadPromise;
+  await TestUtils.waitForTick();
+  Assert.equal(
+    gBrowser.currentURI.spec,
+    RESULT_HELP_URL,
+    "The load URL should be the help URL"
+  );
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-// (SHIFT+)TABs through a result with a help button.  The result is the
-// second result and has other results after it.
+// (SHIFT+)TABs through a result with a menu button. The result is the second
+// result and has other results after it.
 add_task(async function keyboardSelection_secondResult() {
   let provider = registerTestProvider(1);
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -84,7 +111,7 @@ add_task(async function keyboardSelection_secondResult() {
   EventUtils.synthesizeKey("KEY_Tab");
   assertOtherResultSelected(3, "next result");
 
-  info("SHIFT+TAB to the help button.");
+  info("SHIFT+TAB to the menu button.");
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertButtonSelected(2);
 
@@ -122,15 +149,13 @@ add_task(async function keyboardSelection_lastResult() {
   );
   await assertIsTestResult(MAX_RESULTS - 1);
 
-  let numSelectable = UrlbarPrefs.get("resultMenu")
-    ? MAX_RESULTS * 2 - 2
-    : MAX_RESULTS;
+  let numSelectable = MAX_RESULTS * 2 - 2;
 
   // Arrow down to the main part of the result.
   EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: MAX_RESULTS - 1 });
   assertMainPartSelected(numSelectable - 1);
 
-  // TAB to the help button.
+  // TAB to the menu button.
   EventUtils.synthesizeKey("KEY_Tab");
   assertButtonSelected(numSelectable);
 
@@ -157,7 +182,7 @@ add_task(async function keyboardSelection_lastResult() {
     "No results should be selected."
   );
 
-  // SHIFT+TAB to the help button.
+  // SHIFT+TAB to the menu button.
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   assertButtonSelected(numSelectable);
 
@@ -167,38 +192,33 @@ add_task(async function keyboardSelection_lastResult() {
 
   // Arrow up to the previous result.
   EventUtils.synthesizeKey("KEY_ArrowUp");
-  assertOtherResultSelected(
-    numSelectable - (UrlbarPrefs.get("resultMenu") ? 3 : 2),
-    "previous result"
-  );
+  assertOtherResultSelected(numSelectable - 3, "previous result");
 
   await UrlbarTestUtils.promisePopupClose(window);
   UrlbarProvidersManager.unregisterProvider(provider);
 });
 
-// Picks the main part of the test result -- the non-help-button part -- with
-// the keyboard.
+// Picks the main part of the test result with the keyboard.
 add_task(async function pick_mainPart_keyboard() {
-  await doPickTest({ pickButton: false, useKeyboard: true });
+  await doPickTest({ pickHelp: false, useKeyboard: true });
 });
 
-// Picks the help button with the keyboard.
-add_task(async function pick_helpButton_keyboard() {
-  await doPickTest({ pickButton: true, useKeyboard: true });
+// Picks the help command with the keyboard.
+add_task(async function pick_help_keyboard() {
+  await doPickTest({ pickHelp: true, useKeyboard: true });
 });
 
-// Picks the main part of the test result -- the non-help-button part -- with
-// the mouse.
+// Picks the main part of the test result with the mouse.
 add_task(async function pick_mainPart_mouse() {
-  await doPickTest({ pickButton: false, useKeyboard: false });
+  await doPickTest({ pickHelp: false, useKeyboard: false });
 });
 
-// Picks the help button with the mouse.
-add_task(async function pick_helpButton_mouse() {
-  await doPickTest({ pickButton: true, useKeyboard: false });
+// Picks the help command with the mouse.
+add_task(async function pick_help_mouse() {
+  await doPickTest({ pickHelp: true, useKeyboard: false });
 });
 
-async function doPickTest({ pickButton, useKeyboard }) {
+async function doPickTest({ pickHelp, useKeyboard }) {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     let index = 1;
     let provider = registerTestProvider(index);
@@ -218,54 +238,39 @@ async function doPickTest({ pickButton, useKeyboard }) {
     if (useKeyboard) {
       // Arrow down to the result.
       EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: index });
-      assertMainPartSelected(
-        UrlbarPrefs.get("resultMenu") ? index * 2 - 1 : index
-      );
+      assertMainPartSelected(index * 2 - 1);
     }
 
     // Pick the result.  The appropriate URL should load.
-    let loadPromise = pickButton
+    let loadPromise = pickHelp
       ? BrowserTestUtils.waitForNewTab(gBrowser)
       : BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     await Promise.all([
       loadPromise,
       UrlbarTestUtils.promisePopupClose(window, async () => {
-        if (pickButton && UrlbarPrefs.get("resultMenu")) {
+        if (pickHelp) {
           await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
             openByMouse: !useKeyboard,
             resultIndex: index,
           });
         } else if (useKeyboard) {
-          if (pickButton) {
-            // TAB to the button.
-            EventUtils.synthesizeKey("KEY_Tab");
-            assertButtonSelected(index + 1);
-          }
           EventUtils.synthesizeKey("KEY_Enter");
         } else {
-          // Get the click target.
           let result = await UrlbarTestUtils.getDetailsOfResultAt(
             window,
             index
           );
-          let clickTarget = pickButton
-            ? result.element.row._buttons.get("help")
-            : result.element.row._content;
-          Assert.ok(
-            clickTarget,
-            "Click target found, pickButton=" + pickButton
-          );
-          EventUtils.synthesizeMouseAtCenter(clickTarget, {});
+          EventUtils.synthesizeMouseAtCenter(result.element.row._content, {});
         }
       }),
     ]);
     Assert.equal(
       gBrowser.selectedBrowser.currentURI.spec,
-      pickButton ? RESULT_HELP_URL : RESULT_URL,
+      pickHelp ? RESULT_HELP_URL : RESULT_URL,
       "Expected URL should have loaded"
     );
 
-    if (pickButton) {
+    if (pickHelp) {
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
     UrlbarProvidersManager.unregisterProvider(provider);
@@ -276,7 +281,7 @@ async function doPickTest({ pickButton, useKeyboard }) {
 }
 
 /**
- * Registers a provider that creates a result with a help button.
+ * Registers a provider that creates a result with a help URL.
  *
  * @param {number} suggestedIndex
  *   The result's suggestedIndex.
@@ -293,9 +298,7 @@ function registerTestProvider(suggestedIndex) {
           url: RESULT_URL,
           helpUrl: RESULT_HELP_URL,
           helpL10n: {
-            id: UrlbarPrefs.get("resultMenu")
-              ? "urlbar-result-menu-tip-get-help"
-              : "urlbar-tip-help-icon",
+            id: "urlbar-result-menu-tip-get-help",
           },
         }
       ),
@@ -308,7 +311,7 @@ function registerTestProvider(suggestedIndex) {
 }
 
 /**
- * Asserts that the result at the given index is our test result with a help
+ * Asserts that the result at the given index is our test result with a menu
  * button.
  *
  * @param {number} index
@@ -328,13 +331,7 @@ async function assertIsTestResult(index) {
   );
 
   let { row } = result.element;
-  if (UrlbarPrefs.get("resultMenu")) {
-    Assert.ok(row._buttons.get("menu"), "The result should have a menu button");
-  } else {
-    let helpButton = row._buttons.get("help");
-    Assert.ok(helpButton, "The result should have a help button");
-    Assert.ok(helpButton.id, "Help button has an ID");
-  }
+  Assert.ok(row._buttons.get("menu"), "The result should have a menu button");
   Assert.ok(row._content.id, "Row-inner has an ID");
   Assert.equal(
     row.getAttribute("role"),
@@ -375,8 +372,7 @@ function assertSelection(expectedSelectedElementIndex, expectedClassName, msg) {
 }
 
 /**
- * Asserts that the main part of our test resut -- the non-help-button part --
- * is selected.
+ * Asserts that the main part of our test result is selected.
  *
  * @param {number} expectedSelectedElementIndex
  *   The expected selected element index.
@@ -390,25 +386,17 @@ function assertMainPartSelected(expectedSelectedElementIndex) {
 }
 
 /**
- * Asserts that the help button part of our test result is selected.
+ * Asserts that the menu button is selected.
  *
  * @param {number} expectedSelectedElementIndex
  *   The expected selected element index.
  */
 function assertButtonSelected(expectedSelectedElementIndex) {
-  if (UrlbarPrefs.get("resultMenu")) {
-    assertSelection(
-      expectedSelectedElementIndex,
-      "urlbarView-button-menu",
-      "menu button"
-    );
-  } else {
-    assertSelection(
-      expectedSelectedElementIndex,
-      "urlbarView-button-help",
-      "help button"
-    );
-  }
+  assertSelection(
+    expectedSelectedElementIndex,
+    "urlbarView-button-menu",
+    "menu button"
+  );
 }
 
 /**

@@ -129,9 +129,7 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   let mainButton = row._buttons.get("0");
-  let target = helpUrl
-    ? row._buttons.get(UrlbarPrefs.get("resultMenu") ? "menu" : "help")
-    : mainButton;
+  let target = helpUrl ? row._buttons.get("menu") : mainButton;
 
   // If we're picking the tip with the keyboard, TAB to select the proper
   // target.
@@ -151,7 +149,7 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   }
   await UrlbarTestUtils.promisePopupClose(window, () => {
-    if (helpUrl && UrlbarPrefs.get("resultMenu")) {
+    if (helpUrl) {
       UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
         openByMouse: click,
         resultIndex: 0,
@@ -195,9 +193,7 @@ function makeTipResult({ buttonUrl, helpUrl }) {
       ],
       helpUrl,
       helpL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-tip-get-help"
-          : "urlbar-tip-help-icon",
+        id: "urlbar-result-menu-tip-get-help",
       },
     }
   );

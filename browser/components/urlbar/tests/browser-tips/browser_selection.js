@@ -54,31 +54,25 @@ add_task(async function tipIsSecondResult() {
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
-    UrlbarPrefs.get("resultMenu") ? 2 : 1,
+    2,
     "Selected element index"
   );
 
   EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      UrlbarPrefs.get("resultMenu")
-        ? "urlbarView-button-menu"
-        : "urlbarView-button-help"
+      "urlbarView-button-menu"
     ),
-    UrlbarPrefs.get("resultMenu")
-      ? "The selected element should be the tip menu button."
-      : "The selected element should be the tip help button."
+    "The selected element should be the tip menu button."
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedRowIndex(window),
     1,
-    UrlbarPrefs.get("resultMenu")
-      ? "getSelectedRowIndex should return 1 even though the menu button is selected."
-      : "getSelectedRowIndex should return 1 even though the help button is selected."
+    "getSelectedRowIndex should return 1 even though the menu button is selected."
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
-    UrlbarPrefs.get("resultMenu") ? 3 : 2,
+    3,
     "Selected element index"
   );
 
@@ -107,13 +101,9 @@ add_task(async function tipIsSecondResult() {
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      UrlbarPrefs.get("resultMenu")
-        ? "urlbarView-button-menu"
-        : "urlbarView-button-help"
+      "urlbarView-button-menu"
     ),
-    UrlbarPrefs.get("resultMenu")
-      ? "The selected element should be the tip menu button."
-      : "The selected element should be the tip help button."
+    "The selected element should be the tip menu button."
   );
 
   gURLBar.view.close();
@@ -159,13 +149,9 @@ add_task(async function tipIsOnlyResult() {
   EventUtils.synthesizeKey("KEY_Tab");
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      UrlbarPrefs.get("resultMenu")
-        ? "urlbarView-button-menu"
-        : "urlbarView-button-help"
+      "urlbarView-button-menu"
     ),
-    UrlbarPrefs.get("resultMenu")
-      ? "The selected element should be the tip menu button."
-      : "The selected element should be the tip help button."
+    "The selected element should be the tip menu button."
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
@@ -183,13 +169,9 @@ add_task(async function tipIsOnlyResult() {
   EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
   Assert.ok(
     UrlbarTestUtils.getSelectedElement(window).classList.contains(
-      UrlbarPrefs.get("resultMenu")
-        ? "urlbarView-button-menu"
-        : "urlbarView-button-help"
+      "urlbarView-button-menu"
     ),
-    UrlbarPrefs.get("resultMenu")
-      ? "The selected element should be the tip menu button."
-      : "The selected element should be the tip help button."
+    "The selected element should be the tip menu button."
   );
 
   gURLBar.view.close();
@@ -242,7 +224,7 @@ add_task(async function tipHasNoHelpButton() {
   );
   Assert.equal(
     UrlbarTestUtils.getSelectedElementIndex(window),
-    UrlbarPrefs.get("resultMenu") ? 2 : 1,
+    2,
     "Selected element index"
   );
 
