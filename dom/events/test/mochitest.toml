@@ -467,6 +467,7 @@ skip-if = [
 ["test_mouse_enterleave_iframe.html"]
 support-files = ["file_mouse_enterleave.html"]
 skip-if = [
+  "!debug", # Bug 1781668
   "os == 'android'", # timeout
   "display == 'wayland' && os_version == '22.04'",  # Bug 1857022
   "http3",
