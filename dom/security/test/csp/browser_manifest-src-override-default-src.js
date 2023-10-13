@@ -102,6 +102,7 @@ function createNetObserver(test) {
   const finished = new Promise(resolver => {
     finishedTest = resolver;
   });
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   const timeoutId = setTimeout(() => {
     if (!success) {
       test.run("This test timed out.");
