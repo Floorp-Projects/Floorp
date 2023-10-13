@@ -543,7 +543,6 @@ module.exports = {
         "dom/workers/test/test_fileSlice.xhtml",
       ],
       rules: {
-        "mozilla/no-useless-removeEventListener": "off",
         "mozilla/use-services": "off",
         "no-caller": "off",
         "no-lone-blocks": "off",
