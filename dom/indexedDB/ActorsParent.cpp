@@ -1612,14 +1612,14 @@ struct ConnectionPool::DatabaseInfo final {
   bool mClosing;
 
 #ifdef DEBUG
-  PRThread* mDEBUGConnectionThread;
+  nsISerialEventTarget* mDEBUGConnectionEventTarget;
 #endif
 
   DatabaseInfo(ConnectionPool* aConnectionPool, const nsACString& aDatabaseId);
 
   void AssertIsOnConnectionThread() const {
-    MOZ_ASSERT(mDEBUGConnectionThread);
-    MOZ_ASSERT(PR_GetCurrentThread() == mDEBUGConnectionThread);
+    MOZ_ASSERT(mDEBUGConnectionEventTarget);
+    MOZ_ASSERT(GetCurrentSerialEventTarget() == mDEBUGConnectionEventTarget);
   }
 
   uint64_t TotalTransactionCount() const {
@@ -7642,7 +7642,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
     return dbInfo->mConnection;
   }
 
-  MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
+  MOZ_ASSERT(!dbInfo->mDEBUGConnectionEventTarget);
 
   QM_TRY_UNWRAP(
       MovingNotNull<nsCOMPtr<mozIStorageConnection>> storageConnection,
@@ -7661,7 +7661,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
                  NS_ConvertUTF16toUTF8(aDatabase.FilePath()).get()));
 
 #ifdef DEBUG
-  dbInfo->mDEBUGConnectionThread = PR_GetCurrentThread();
+  dbInfo->mDEBUGConnectionEventTarget = GetCurrentSerialEventTarget();
 #endif
 
   return connection;
@@ -8483,7 +8483,7 @@ ConnectionPool::CloseConnectionRunnable::Run() {
       mDatabaseInfo.mConnection = nullptr;
 
 #ifdef DEBUG
-      mDatabaseInfo.mDEBUGConnectionThread = nullptr;
+      mDatabaseInfo.mDEBUGConnectionEventTarget = nullptr;
 #endif
     }
 
@@ -8509,7 +8509,7 @@ ConnectionPool::DatabaseInfo::DatabaseInfo(ConnectionPool* aConnectionPool,
       mClosing(false)
 #ifdef DEBUG
       ,
-      mDEBUGConnectionThread(nullptr)
+      mDEBUGConnectionEventTarget(nullptr)
 #endif
 {
   AssertIsOnBackgroundThread();
