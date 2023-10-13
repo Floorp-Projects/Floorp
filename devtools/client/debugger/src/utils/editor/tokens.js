@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { getTokenLocation } from ".";
-
-function isInvalidTarget(target) {
+function _isInvalidTarget(target) {
   if (!target || !target.innerText) {
     return true;
   }
@@ -37,11 +35,11 @@ function isInvalidTarget(target) {
   return !!(invalidTarget || invalidToken || invalidType);
 }
 
-function dispatch(codeMirror, eventName, data) {
+function _dispatch(codeMirror, eventName, data) {
   codeMirror.constructor.signal(codeMirror, eventName, data);
 }
 
-function invalidLeaveTarget(target) {
+function _invalidLeaveTarget(target) {
   if (!target || target.closest(".popover")) {
     return true;
   }
@@ -49,17 +47,22 @@ function invalidLeaveTarget(target) {
   return false;
 }
 
+/**
+ * Wraps the codemirror mouse events  to generate token events
+ * @param {*} codeMirror
+ * @returns
+ */
 export function onMouseOver(codeMirror) {
   let prevTokenPos = null;
 
   function onMouseLeave(event) {
-    if (invalidLeaveTarget(event.relatedTarget)) {
+    if (_invalidLeaveTarget(event.relatedTarget)) {
       addMouseLeave(event.target);
       return;
     }
 
     prevTokenPos = null;
-    dispatch(codeMirror, "tokenleave", event);
+    _dispatch(codeMirror, "tokenleave", event);
   }
 
   function addMouseLeave(target) {
@@ -72,7 +75,7 @@ export function onMouseOver(codeMirror) {
   return enterEvent => {
     const { target } = enterEvent;
 
-    if (isInvalidTarget(target)) {
+    if (_isInvalidTarget(target)) {
       return;
     }
 
@@ -84,12 +87,50 @@ export function onMouseOver(codeMirror) {
     ) {
       addMouseLeave(target);
 
-      dispatch(codeMirror, "tokenenter", {
+      _dispatch(codeMirror, "tokenenter", {
         event: enterEvent,
         target,
         tokenPos,
       });
       prevTokenPos = tokenPos;
     }
+  };
+}
+
+/**
+ * Gets the end position of a token at a specific line/column
+ *
+ * @param {*} codeMirror
+ * @param {Number} line
+ * @param {Number} column
+ * @returns {Number}
+ */
+export function getTokenEnd(codeMirror, line, column) {
+  const token = codeMirror.getTokenAt({
+    line,
+    ch: column + 1,
+  });
+  const tokenString = token.string;
+
+  return tokenString === "{" || tokenString === "[" ? null : token.end;
+}
+
+/**
+ * Given the dom element realted to the token, this gets its line and column.
+ *
+ * @param {*} codeMirror
+ * @param {*} tokenEl
+ * @returns {Object} An object of the form { line, column }
+ */
+export function getTokenLocation(codeMirror, tokenEl) {
+  const { left, top, width, height } = tokenEl.getBoundingClientRect();
+  const { line, ch } = codeMirror.coordsChar({
+    left: left + width / 2,
+    top: top + height / 2,
+  });
+
+  return {
+    line: line + 1,
+    column: ch,
   };
 }

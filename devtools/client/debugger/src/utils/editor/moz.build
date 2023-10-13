@@ -8,10 +8,9 @@ DIRS += []
 CompiledModules(
     "create-editor.js",
     "get-expression.js",
-    "get-token-location.js",
     "index.js",
     "source-documents.js",
     "source-editor.js",
     "source-search.js",
-    "token-events.js",
+    "tokens.js",
 )
