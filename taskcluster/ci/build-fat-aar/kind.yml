@@ -81,7 +81,6 @@ job-defaults:
         toolchain:
             - android-ndk-linux
             - android-sdk-linux
-            - linux64-binutils
             - linux64-clang
             - linux64-jdk
             - linux64-rust-android

@@ -461,7 +461,6 @@ linux64-devedition/opt:
     run-on-projects: ['mozilla-beta']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -725,7 +724,6 @@ linux-devedition/opt:
     run-on-projects: ['mozilla-beta']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -771,7 +769,6 @@ linux-shippable/opt:
     run-on-projects: ['release']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -815,7 +812,6 @@ linux-reproduced/opt:
     run-on-projects: ['mozilla-central', 'comm-central']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -907,7 +903,6 @@ linux64-reproduced/opt:
     run-on-projects: ['mozilla-central', 'comm-central']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1401,7 +1396,6 @@ linux64-shippable/opt:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1450,7 +1444,6 @@ linux64-nightlyasrelease/opt:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
@@ -1738,7 +1731,6 @@ linux64-aarch64/opt:
     run-on-projects: ['integration']
     fetches:
         toolchain:
-            - linux64-binutils
             - linux64-clang
             - linux64-rust
             - linux64-rust-size
