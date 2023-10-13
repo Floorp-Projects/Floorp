@@ -907,16 +907,6 @@ bool DedicatedWorkerGlobalScope::WrapGlobalObject(
   JS::RealmOptions options;
   mWorkerPrivate->CopyJSRealmOptions(options);
 
-  const bool usesSystemPrincipal = mWorkerPrivate->UsesSystemPrincipal();
-
-  // Note that xpc::ShouldDiscardSystemSource() reads a prefs that is cached
-  // on the main thread. This is benignly racey.
-  const bool discardSource =
-      usesSystemPrincipal && xpc::ShouldDiscardSystemSource();
-
-  JS::RealmBehaviors& behaviors = options.behaviors();
-  behaviors.setDiscardSource(discardSource);
-
   xpc::SetPrefableRealmOptions(options);
 
   return DedicatedWorkerGlobalScope_Binding::Wrap(
