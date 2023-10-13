@@ -281,7 +281,9 @@ DefaultAgent::Uninstall(const nsAString& aUniqueToken) {
   mRegMutex.Acquire();
 
   RemoveAllRegistryEntries();
-  return NS_OK;
+  HRESULT hr = RemoveTasks(PromiseFlatString(aUniqueToken).get(),
+                           WhichTasks::AllTasksForInstallation);
+  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

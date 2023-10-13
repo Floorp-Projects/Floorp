@@ -9,39 +9,7 @@ Program("default-browser-agent")
 SPHINX_TREES["default-browser-agent"] = "docs"
 
 UNIFIED_SOURCES += [
-    "../DefaultBrowser.cpp",
-    "../EventLog.cpp",
-    "../Registry.cpp",
-    "../ScheduledTask.cpp",
-    "../UtfConvert.cpp",
-    "/mfbt/Poison.cpp",
-    "/mfbt/Unused.cpp",
     "main.cpp",
-]
-
-SOURCES += [
-    "/browser/components/shell/WindowsDefaultBrowser.cpp",
-    "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
-    "/toolkit/mozapps/update/common/readstrings.cpp",
-]
-
-LOCAL_INCLUDES += [
-    "../",
-    "/browser/components/shell/",
-    "/mfbt/",
-    "/other-licenses/nsis/Contrib/CityHash/cityhash",
-    "/toolkit/mozapps/update/common/",
-]
-
-OS_LIBS += [
-    "advapi32",
-    "comsupp",
-    "netapi32",
-    "ole32",
-    "oleaut32",
-    "shell32",
-    "shlwapi",
-    "taskschd",
 ]
 
 DEFINES["NS_NO_XPCOM"] = True
@@ -50,13 +18,7 @@ DEFINES["IMPL_MFBT"] = True
 DEFINES["UNICODE"] = True
 DEFINES["_UNICODE"] = True
 
-for var in (
-    "MOZ_APP_NAME",
-    "MOZ_APP_DISPLAYNAME",
-    "MOZ_APP_VENDOR",
-    "MOZ_APP_BASENAME",
-):
-    DEFINES[var] = '"%s"' % CONFIG[var]
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 
 # We need STL headers that aren't allowed when wrapping is on (at least
 # <filesystem>, and possibly others).
