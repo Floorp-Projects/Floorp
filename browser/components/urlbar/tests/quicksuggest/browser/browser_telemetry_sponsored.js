@@ -86,53 +86,54 @@ add_task(async function sponsored() {
           },
         },
       },
-      selectables: {
-        // click
-        "urlbarView-row-inner": {
-          scalars: {
-            [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-            [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
-          },
-          event: {
-            category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-            method: "engagement",
-            object: "click",
-            extra: {
-              suggestion_type,
-              match_type,
-              position: position.toString(),
-            },
-          },
-          pings: [
-            {
-              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-              payload: {
-                match_type,
-                position,
-                suggested_index: -1,
-                suggested_index_relative_to_group: true,
-                improve_suggest_experience_checked,
-                is_clicked: true,
-                block_id: REMOTE_SETTINGS_RESULT.id,
-                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
-              },
-            },
-            {
-              type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
-              payload: {
-                match_type,
-                position,
-                suggested_index: -1,
-                suggested_index_relative_to_group: true,
-                improve_suggest_experience_checked,
-                block_id: REMOTE_SETTINGS_RESULT.id,
-                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
-              },
-            },
-          ],
+      // click
+      click: {
+        scalars: {
+          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
+          [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
         },
-        // block
-        "urlbarView-button-block": {
+        event: {
+          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+          method: "engagement",
+          object: "click",
+          extra: {
+            suggestion_type,
+            match_type,
+            position: position.toString(),
+          },
+        },
+        pings: [
+          {
+            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+            payload: {
+              match_type,
+              position,
+              suggested_index: -1,
+              suggested_index_relative_to_group: true,
+              improve_suggest_experience_checked,
+              is_clicked: true,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+            },
+          },
+          {
+            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+            payload: {
+              match_type,
+              position,
+              suggested_index: -1,
+              suggested_index_relative_to_group: true,
+              improve_suggest_experience_checked,
+              block_id: REMOTE_SETTINGS_RESULT.id,
+              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+            },
+          },
+        ],
+      },
+      commands: [
+        // dismiss
+        {
+          command: "dismiss",
           scalars: {
             [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
             [TELEMETRY_SCALARS.BLOCK_SPONSORED]: position,
@@ -177,7 +178,8 @@ add_task(async function sponsored() {
           ],
         },
         // help
-        "urlbarView-button-help": {
+        {
+          command: "help",
           scalars: {
             [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
             [TELEMETRY_SCALARS.HELP_SPONSORED]: position,
@@ -208,7 +210,7 @@ add_task(async function sponsored() {
             },
           ],
         },
-      },
+      ],
     });
     await SpecialPowers.popPrefEnv();
   }
@@ -252,53 +254,54 @@ add_task(async function sponsoredBestMatch() {
         },
       },
     },
-    selectables: {
-      // click
-      "urlbarView-row-inner": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "click",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
-            payload: {
-              match_type,
-              position,
-              suggested_index: 1,
-              suggested_index_relative_to_group: false,
-              is_clicked: true,
-              improve_suggest_experience_checked: false,
-              block_id: REMOTE_SETTINGS_RESULT.id,
-              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
-            },
-          },
-          {
-            type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
-            payload: {
-              match_type,
-              position,
-              suggested_index: 1,
-              suggested_index_relative_to_group: false,
-              improve_suggest_experience_checked: false,
-              block_id: REMOTE_SETTINGS_RESULT.id,
-              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
-            },
-          },
-        ],
+    // click
+    click: {
+      scalars: {
+        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
+        [TELEMETRY_SCALARS.CLICK_SPONSORED]: position,
       },
-      // block
-      "urlbarView-button-block": {
+      event: {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "click",
+        extra: {
+          suggestion_type,
+          match_type,
+          position: position.toString(),
+        },
+      },
+      pings: [
+        {
+          type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
+          payload: {
+            match_type,
+            position,
+            suggested_index: 1,
+            suggested_index_relative_to_group: false,
+            is_clicked: true,
+            improve_suggest_experience_checked: false,
+            block_id: REMOTE_SETTINGS_RESULT.id,
+            advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+          },
+        },
+        {
+          type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
+          payload: {
+            match_type,
+            position,
+            suggested_index: 1,
+            suggested_index_relative_to_group: false,
+            improve_suggest_experience_checked: false,
+            block_id: REMOTE_SETTINGS_RESULT.id,
+            advertiser: REMOTE_SETTINGS_RESULT.advertiser,
+          },
+        },
+      ],
+    },
+    commands: [
+      // dismiss
+      {
+        command: "dismiss",
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
           [TELEMETRY_SCALARS.BLOCK_SPONSORED]: position,
@@ -343,7 +346,8 @@ add_task(async function sponsoredBestMatch() {
         ],
       },
       // help
-      "urlbarView-button-help": {
+      {
+        command: "help",
         scalars: {
           [TELEMETRY_SCALARS.IMPRESSION_SPONSORED]: position,
           [TELEMETRY_SCALARS.HELP_SPONSORED]: position,
@@ -374,7 +378,7 @@ add_task(async function sponsoredBestMatch() {
           },
         ],
       },
-    },
+    ],
   });
   await SpecialPowers.popPrefEnv();
 });
