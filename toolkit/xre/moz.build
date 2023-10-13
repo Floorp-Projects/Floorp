@@ -12,7 +12,7 @@ with Files("**"):
 if CONFIG["OS_ARCH"] == "WINNT":
     TEST_DIRS += ["test/win"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 MARIONETTE_UNIT_MANIFESTS += ["test/marionette/marionette.ini"]

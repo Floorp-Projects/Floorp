@@ -38,4 +38,4 @@ FINAL_TARGET_FILES.actors += [
     "SelectionActionDelegateParent.sys.mjs",
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitests/mochitest.toml"]

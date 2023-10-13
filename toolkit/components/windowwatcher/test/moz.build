@@ -9,7 +9,7 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "mochitest.ini",
+    "mochitest.toml",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

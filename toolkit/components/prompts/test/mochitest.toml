@@ -1,0 +1,26 @@
+[DEFAULT]
+support-files = [
+  "../../passwordmgr/test/authenticate.sjs",
+  "bug619644_inner.html",
+  "bug625187_iframe.html",
+  "prompt_common.js",
+  "chromeScript.js",
+]
+
+["test_bug619644.html"]
+skip-if = ["os == 'android'"] # No tab prompts on android
+
+["test_bug620145.html"]
+skip-if = ["os == 'android'"] #TIMED_OUT
+
+["test_dom_prompts.html"]
+skip-if = ["os == 'android'"] #android: bug 1267092
+
+["test_subresources_prompts.html"]
+skip-if = [
+  "os == 'android'",
+  "verify",
+  "http3",
+  "http2",
+]
+fail-if = ["xorigin"]

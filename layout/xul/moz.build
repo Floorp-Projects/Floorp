@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "XUL")
 
 if CONFIG["ENABLE_TESTS"]:
-    MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+    MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
     MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
     BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
 

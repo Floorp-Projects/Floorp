@@ -1,0 +1,15 @@
+[DEFAULT]
+
+["test_bug348497.html"]
+
+["test_bug384147.html"]
+
+["test_bug389350.html"]
+
+["test_bug519928.html"]
+
+["test_bug738440.html"]
+
+["test_bug1453190.html"]
+skip-if = ["os == 'android'"]
+support-files = ["file_bug1453190.html"]

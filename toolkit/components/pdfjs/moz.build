@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "PDF Viewer")
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]
 

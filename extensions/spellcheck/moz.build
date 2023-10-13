@@ -11,7 +11,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     DIRS += ["locales"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
-MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.toml"]
 
 SPHINX_TREES["/extensions/spellcheck"] = "docs"
 

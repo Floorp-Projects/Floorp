@@ -10,7 +10,7 @@ with Files("**"):
 if CONFIG["MOZ_ZIPWRITER"]:
     DIRS += ["zipwriter"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 

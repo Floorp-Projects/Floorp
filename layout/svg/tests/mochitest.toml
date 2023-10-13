@@ -1,0 +1,40 @@
+[DEFAULT]
+support-files = [
+  "file_disabled_iframe.html",
+  "file_context_fill_fallback_red.svg",
+]
+
+["test_bug1544209.html"]
+
+["test_disabled.html"]
+
+["test_embed_sizing.html"]
+support-files = [
+  "file_embed_sizing_none.svg",
+  "file_embed_sizing_size.svg",
+  "file_embed_sizing_ratio.svg",
+  "file_embed_sizing_both.svg",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_filter_crossorigin.html"]
+support-files = [
+  "filters.svg",
+  "file_filter_crossorigin.svg",
+  "file_black_yellow.svg",
+  "file_yellow_black.svg",
+]
+# Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+skip-if = [
+  "xorigin",
+  "os == 'linux' && bits == 64", #Bug 1642198
+]
+
+["test_hover_near_text.html"]
+
+["test_multiple_font_size.html"]
+
+["test_use_tree_cycle.html"]

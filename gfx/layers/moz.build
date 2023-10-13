@@ -507,7 +507,7 @@ if CONFIG["ENABLE_TESTS"]:
     DIRS += ["apz/test/gtest"]
     DIRS += ["apz/test/gtest/mvm"]
 
-MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.toml"]
 BROWSER_CHROME_MANIFESTS += ["apz/test/mochitest/browser.toml"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":

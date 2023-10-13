@@ -16,6 +16,6 @@ EXTRA_COMPONENTS += [
 
 DIRS += ["schemas"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/mochitest/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
