@@ -2174,7 +2174,7 @@ async function hoverAtPos(dbg, pos) {
 function hoverToken(tokenEl) {
   info(`Hovering on token "${tokenEl.innerText}"`);
 
-  // This first event helps utils/editor/token-events.js to receive the right mouseover event
+  // This first event helps utils/editor/tokens.js to receive the right mouseover event
   EventUtils.synthesizeMouseAtCenter(
     tokenEl,
     {
@@ -2215,7 +2215,7 @@ async function closePreviewForToken(
 
   // Force "mousing out" from all elements.
   //
-  // This helps utils/editor/token-events.js to receive the right mouseleave event.
+  // This helps utils/editor/tokens.js to receive the right mouseleave event.
   // This is super important as it will then allow re-emitting a tokenenter event if you try to re-preview the same token!
   EventUtils.synthesizeMouseAtCenter(
     tokenEl,
