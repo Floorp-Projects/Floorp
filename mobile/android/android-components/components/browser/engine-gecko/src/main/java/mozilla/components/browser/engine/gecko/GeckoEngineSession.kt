@@ -681,16 +681,16 @@ class GeckoEngineSession(
 
             val productRecommendations = response.map { it: Recommendation ->
                 GeckoProductRecommendation(
-                    it.url!!,
-                    it.analysisUrl!!,
-                    it.adjustedRating!!,
-                    it.sponsored!!,
-                    it.imageUrl!!,
-                    it.aid!!,
-                    it.name!!,
-                    it.grade!!,
-                    it.price!!,
-                    it.currency!!,
+                    it.url,
+                    it.analysisUrl,
+                    it.adjustedRating,
+                    it.sponsored,
+                    it.imageUrl,
+                    it.aid,
+                    it.name,
+                    it.grade,
+                    it.price,
+                    it.currency,
                 )
             }
             onResult(productRecommendations)
