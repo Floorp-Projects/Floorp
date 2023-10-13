@@ -2774,7 +2774,7 @@
 # that need to occur before user input events are allowed to be handled.
 - name: dom.input_events.security.minNumTicks
   type: uint32_t
-  value: 0
+  value: 3
   mirror: always
 
 # The minimum elapsed time (in milliseconds) after page navigation
