@@ -27,7 +27,7 @@ function doTest() {
   w.addEventListener("message", function(e) {
     is("test", e.data, "We got the data without a compartment mismatch assertion!");
     SimpleTest.finish();
-    }, false);
+    });
   w.postMessage("test", "*");
 }
 

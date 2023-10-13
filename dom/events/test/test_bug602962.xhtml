@@ -34,13 +34,13 @@ function doTest() {
   content.style.width = 400 + "px";
 
   win.addEventListener("resize", function() {
-    win.removeEventListener("resize", arguments.callee, false);
+    win.removeEventListener("resize", arguments.callee);
 
     setTimeout(function(){
       scrollbox.scrollBy(200,0);
       resize();
     },0);
-  }, false);
+  });
 
   oldWidth = win.outerWidth;
   oldHeight = win.outerHeight;
