@@ -55,7 +55,7 @@ public class UiThreadUtils {
 
   private static RuntimeException unwrapRuntimeException(final Throwable e) {
     final Throwable cause = e.getCause();
-    if (cause != null && cause instanceof RuntimeException) {
+    if (cause instanceof RuntimeException) {
       return (RuntimeException) cause;
     } else if (e instanceof RuntimeException) {
       return (RuntimeException) e;

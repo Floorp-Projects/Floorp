@@ -2810,7 +2810,7 @@ public class GeckoSession {
 
     @Override
     public boolean equals(final Object other) {
-      if (other == null || !(other instanceof SessionState)) {
+      if (!(other instanceof SessionState)) {
         return false;
       }
 
