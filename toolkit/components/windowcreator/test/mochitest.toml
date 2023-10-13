@@ -1,0 +1,12 @@
+[DEFAULT]
+
+["test_private_window_from_content.html"]
+
+["test_window_open_position_constraint.html"]
+skip-if = [
+  "os == 'android'",
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857074
+]
+
+["test_window_open_units.html"]
+skip-if = ["os == 'android'"]

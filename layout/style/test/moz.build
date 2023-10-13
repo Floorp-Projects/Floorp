@@ -22,7 +22,7 @@ HostSimplePrograms(
 )
 
 MOCHITEST_MANIFESTS += [
-    "mochitest.ini",
+    "mochitest.toml",
 ]
 BROWSER_CHROME_MANIFESTS += ["browser.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.toml"]

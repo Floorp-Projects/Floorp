@@ -1,0 +1,6 @@
+[DEFAULT]
+support-files = ["file_empty.html"]
+
+["test_blocklist_gfx_initialized.html"]
+
+["test_bug887098.html"]

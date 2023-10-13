@@ -1,0 +1,15 @@
+[DEFAULT]
+
+["test_acceleration.html"]
+skip-if = ["os == 'win'"] # Bug 1430530
+subsuite = "gpu"
+
+["test_bug509244.html"]
+
+["test_bug513439.html"]
+
+["test_font_whitelist.html"]
+skip-if = [
+  "debug", # Race between pref service and gfx platform IPC causes frequent failures on debug/ASan
+  "asan",  # Race between pref service and gfx platform IPC causes frequent failures on debug/ASan
+]

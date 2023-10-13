@@ -286,7 +286,7 @@ CONTENT_ACCESSIBLE_FILES.html = [
     "folder.png",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":

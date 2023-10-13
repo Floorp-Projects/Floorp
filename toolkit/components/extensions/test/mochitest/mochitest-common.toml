@@ -1,0 +1,587 @@
+[DEFAULT]
+tags = "condprof"
+support-files = [
+  "chrome_cleanup_script.js",
+  "file_WebNavigation_page1.html",
+  "file_WebNavigation_page2.html",
+  "file_WebNavigation_page3.html",
+  "file_WebRequest_page3.html",
+  "file_contains_img.html",
+  "file_contains_iframe.html",
+  "file_green.html",
+  "file_green_blue.html",
+  "file_contentscript_activeTab.html",
+  "file_contentscript_activeTab2.html",
+  "file_contentscript_iframe.html",
+  "file_image_bad.png",
+  "file_image_good.png",
+  "file_image_great.png",
+  "file_image_redirect.png",
+  "file_indexedDB.html",
+  "file_mixed.html",
+  "file_remote_frame.html",
+  "file_sample.html",
+  "file_sample.txt",
+  "file_sample.txt^headers^",
+  "file_script_bad.js",
+  "file_script_good.js",
+  "file_script_redirect.js",
+  "file_script_xhr.js",
+  "file_serviceWorker.html",
+  "file_simple_iframe_worker.html",
+  "file_simple_sandboxed_frame.html",
+  "file_simple_sandboxed_subframe.html",
+  "file_simple_xhr.html",
+  "file_simple_xhr_frame.html",
+  "file_simple_xhr_frame2.html",
+  "file_simple_sharedworker.js",
+  "file_simple_webrequest_worker.html",
+  "file_simple_worker.js",
+  "file_slowed_document.sjs",
+  "file_streamfilter.txt",
+  "file_style_bad.css",
+  "file_style_good.css",
+  "file_style_redirect.css",
+  "file_third_party.html",
+  "file_to_drawWindow.html",
+  "file_webNavigation_clientRedirect.html",
+  "file_webNavigation_clientRedirect_httpHeaders.html",
+  "file_webNavigation_clientRedirect_httpHeaders.html^headers^",
+  "file_webNavigation_frameClientRedirect.html",
+  "file_webNavigation_frameRedirect.html",
+  "file_webNavigation_manualSubframe.html",
+  "file_webNavigation_manualSubframe_page1.html",
+  "file_webNavigation_manualSubframe_page2.html",
+  "file_with_about_blank.html",
+  "file_with_subframes_and_embed.html",
+  "file_with_xorigin_frame.html",
+  "head.js",
+  "head_cookies.js",
+  "head_notifications.js",
+  "head_unlimitedStorage.js",
+  "head_webrequest.js",
+  "hsts.sjs",
+  "mochitest_console.js",
+  "oauth.html",
+  "redirect_auto.sjs",
+  "redirection.sjs",
+  "return_headers.sjs",
+  "serviceWorker.js",
+  "slow_response.sjs",
+  "webrequest_worker.js",
+  "!/dom/tests/mochitest/geolocation/network_geolocation.sjs",
+  "!/toolkit/components/passwordmgr/test/authenticate.sjs",
+  "file_redirect_data_uri.html",
+  "file_redirect_cors_bypass.html",
+  "file_tabs_permission_page1.html",
+  "file_tabs_permission_page2.html",
+  "file_language_fr_en.html",
+  "file_language_ja.html",
+  "file_language_tlh.html",
+]
+prefs = [
+  "security.mixed_content.upgrade_display_content=false",
+  "browser.chrome.guess_favicon=true",
+]
+
+["test_check_startupcache.html"]
+
+["test_ext_action.html"]
+
+["test_ext_activityLog.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845604: test case uses tabHide permission which is not available on Android
+  "tsan",  # Times out on TSan, bug 1612707
+  "xorigin",  # Inconsistent pass/fail in opt and debug
+  "http3",
+  "http2",
+]
+
+["test_ext_async_clipboard.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845607
+  "tsan", # Bug 1612707: times out on TSan
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857067
+]
+
+["test_ext_background_canvas.html"]
+
+["test_ext_background_page.html"]
+skip-if = ["os == 'android'"] # test case covering desktop-only expected behavior (android doesn't have devtools)
+
+["test_ext_background_page_dpi.html"]
+
+["test_ext_browserAction_getUserSettings.html"]
+
+["test_ext_browserAction_onClicked.html"]
+
+["test_ext_browserAction_openPopup.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_browserAction_openPopup_incognito_window.html"]
+skip-if = ["os == 'android'"] # cannot open private windows - bug 1372178
+
+["test_ext_browserAction_openPopup_windowId.html"]
+skip-if = ["os == 'android'"] # only the current window is supported - bug 1795956
+
+["test_ext_browserAction_openPopup_without_pref.html"]
+
+["test_ext_browsingData_indexedDB.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_browsingData_localStorage.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_browsingData_pluginData.html"]
+
+["test_ext_browsingData_serviceWorkers.html"]
+skip-if = [
+  "condprof",  #  "Wait for 2 service workers to be registered - timed out after 50 tries."
+  "http3",
+  "http2",
+]
+
+["test_ext_browsingData_settings.html"]
+
+["test_ext_canvas_resistFingerprinting.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_clipboard.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845607
+  "http3",
+  "http2",
+]
+
+["test_ext_clipboard_image.html"]
+skip-if = ["headless"] # Bug 1405872
+
+["test_ext_contentscript_about_blank.html"]
+
+["test_ext_contentscript_activeTab.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_contentscript_cache.html"]
+skip-if = [
+  "os == 'linux' && debug",
+  "os == 'android' && debug", # bug 1348241
+]
+fail-if = ["xorigin"] # TypeError: can't access property "staticScripts", ext is undefined - Should not throw any errors
+
+["test_ext_contentscript_canvas.html"]
+skip-if = [
+  "os == 'android'", # Bug 1617062
+  "verify && debug && os == 'linux'",
+]
+
+["test_ext_contentscript_devtools_metadata.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_contentscript_fission_frame.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_contentscript_getFrameId.html"]
+
+["test_ext_contentscript_incognito.html"]
+skip-if = [
+  "os == 'android'", # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
+  "http3",
+  "http2",
+]
+
+["test_ext_contentscript_permission.html"]
+skip-if = ["tsan"] # Times out on TSan, bug 1612707
+
+["test_ext_cookies.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845615
+  "tsan", # Times out on TSan intermittently, bug 1615184;
+  "condprof",  #: "one tabId returned for store - Expected: 1, Actual: 3"
+  "http3",
+  "http2",
+]
+
+["test_ext_cookies_containers.html"]
+
+["test_ext_cookies_expiry.html"]
+
+["test_ext_cookies_first_party.html"]
+
+["test_ext_cookies_incognito.html"]
+skip-if = ["os == 'android'"] # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
+
+["test_ext_cookies_permissions_bad.html"]
+
+["test_ext_cookies_permissions_good.html"]
+
+["test_ext_dnr_other_extensions.html"]
+
+["test_ext_dnr_tabIds.html"]
+
+["test_ext_dnr_upgradeScheme.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_downloads_download.html"]
+
+["test_ext_embeddedimg_iframe_frameAncestors.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_exclude_include_globs.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_extension_iframe_messaging.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_external_messaging.html"]
+
+["test_ext_generate.html"]
+
+["test_ext_geolocation.html"]
+skip-if = ["os == 'android'"] # Bug 1336194 (GeckoView doesn't yet account for geolocation to be granted for extensions requesting it from their manifest)
+
+["test_ext_identity.html"]
+skip-if = [
+  "win11_2009 && !debug && socketprocess_networking",  # Bug 1777016
+  "os == 'android'", # Bug 1475887 (API not supported on android yet)
+  "tsan", # Bug 1612707
+]
+
+["test_ext_idle.html"]
+skip-if = ["tsan"] # Times out on TSan, bug 1612707
+
+["test_ext_inIncognitoContext_window.html"]
+skip-if = ["os == 'android'"] # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
+
+["test_ext_listener_proxies.html"]
+
+["test_ext_new_tab_processType.html"]
+skip-if = [
+  "verify && debug && (os == 'linux' || os == 'mac')",
+  "condprof",  #: Page URL should match - got "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_serviceWorker.html", expected "https://example.com/"
+  "http3",
+  "http2",
+]
+
+["test_ext_notifications.html"]
+skip-if = ["os == 'android'"] # Bug 1845617
+
+["test_ext_optional_permissions.html"]
+
+["test_ext_pageAction_onClicked.html"]
+
+["test_ext_protocolHandlers.html"]
+skip-if = ["os == 'android'"] # Bug 1342577: not implemented on GeckoView yet
+
+["test_ext_redirect_jar.html"]
+skip-if = ["os == 'win' && (debug || asan)"] # Bug 1563440
+
+["test_ext_request_urlClassification.html"]
+skip-if = [
+  "os == 'android'", # Bug 1615427
+  "http3",
+  "http2",
+]
+
+["test_ext_runtime_connect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_runtime_connect2.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_runtime_connect_iframe.html"]
+
+["test_ext_runtime_connect_twoway.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_runtime_disconnect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_script_filenames.html"]
+
+["test_ext_scripting_contentScripts.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_executeScript.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_executeScript_activeTab.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_executeScript_injectImmediately.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_insertCSS.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_permissions.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_scripting_removeCSS.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_sendmessage_doublereply.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_sendmessage_frameId.html"]
+
+["test_ext_sendmessage_no_receiver.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_sendmessage_reply.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_sendmessage_reply2.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_storage_manager_capabilities.html"]
+skip-if = [
+  "xorigin", # JavaScript Error: "SecurityError: Permission denied to access property "wrappedJSObject" on cross-origin object" {file: "https://example.com/tests/SimpleTest/TestRunner.js" line: 157}
+  "http3",
+  "http2",
+]
+scheme = "https"
+
+["test_ext_storage_smoke_test.html"]
+
+["test_ext_streamfilter_multiple.html"]
+skip-if = [
+  "!debug", # Bug 1628642
+  "os == 'linux'", # Bug 1628642
+]
+
+["test_ext_streamfilter_processswitch.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_subframes_privileges.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845918
+  "verify", # Bug 1489771
+  "http3",
+  "http2",
+]
+
+["test_ext_tabs_captureTab.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_tabs_create_cookieStoreId.html"]
+
+["test_ext_tabs_detectLanguage.html"]
+
+["test_ext_tabs_executeScript_good.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_tabs_permissions.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_tabs_query_popup.html"]
+
+["test_ext_tabs_sendMessage.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_test.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_unlimitedStorage.html"]
+skip-if = ["os == 'android'"] # Bug 1845911 (GeckoView doesn't yet account for persistent-storage to be granted for extension requesting unlimitedStorage permission)
+
+["test_ext_web_accessible_incognito.html"]
+skip-if = ["os == 'android'"] # bug 1397615, bug 1513544
+
+["test_ext_web_accessible_resources.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1397615
+  "os  == 'linux' && bits == 64", # bug 1618231
+]
+
+["test_ext_webnavigation.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1397615
+  "http3",
+  "http2",
+]
+
+["test_ext_webnavigation_filters.html"]
+skip-if = [
+  "os == 'android' && debug",
+  "verify && (os == 'linux' || os == 'mac')", # bug 1397615
+  "http3",
+  "http2",
+]
+
+["test_ext_webnavigation_incognito.html"]
+skip-if = [
+  "os == 'android'", # Bug 1513544 (GeckoView is missing the windows API and ability to open private tabs)
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_and_proxy_filter.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_auth.html"]
+skip-if = [
+  "os == 'android'", # Bug 1845906 (skip-if added for Fennec)
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_background_events.html"]
+
+["test_ext_webrequest_basic.html"]
+skip-if = [
+  "os == 'android' && debug",  # bug 1397615
+  "tsan",  # bug 1612707
+  "xorigin",  # JavaScript Error: "SecurityError: Permission denied to access property "wrappedJSObject" on cross-origin object" {file: "http://mochi.false-test:8888/tests/SimpleTest/TestRunner.js" line: 157}]
+  "os == 'linux' && bits == 64 && !debug && asan", # Bug 1633189
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_errors.html"]
+skip-if = [
+  "tsan",
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_filter.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1452348
+  "tsan", # tsan: bug 1612707
+  "os == 'linux' && bits == 64 && !debug && xorigin", # Bug 1756023
+]
+
+["test_ext_webrequest_frameId.html"]
+
+["test_ext_webrequest_getSecurityInfo.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_hsts.html"]
+https_first_disabled = true
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_ext_webrequest_redirect_bypass_cors.html"]
+
+["test_ext_webrequest_redirect_data_uri.html"]
+
+["test_ext_webrequest_upgrade.html"]
+https_first_disabled = true
+
+["test_ext_webrequest_upload.html"]
+skip-if = ["os == 'android'"] # Bug 1845906 (skip-if added for Fennec)
+
+["test_ext_webrequest_worker.html"]
+
+["test_ext_window_postMessage.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_startup_canary.html"]
+# test_startup_canary.html is at the bottom to minimize the time spent waiting in the test.

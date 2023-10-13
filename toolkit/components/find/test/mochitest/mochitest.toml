@@ -1,0 +1,6 @@
+[DEFAULT]
+prefs = ["layout.css.content-visibility.enabled=true"]
+
+["test_bug499115.html"]
+
+["test_nsFind.html"]

@@ -1,0 +1,80 @@
+[DEFAULT]
+prefs = [
+  "layout.css.basic-shape-rect.enabled=true",
+  "layout.css.basic-shape-xywh.enabled=true",
+  "layout.css.properties-and-values.enabled=true",
+  "dom.customHighlightAPI.enabled=true",
+]
+support-files = [
+  "bug1202095.css",
+  "bug1202095-2.css",
+  "bug856317.css",
+  "file_bug522601.html",
+]
+
+["test_bug462787.html"]
+
+["test_bug462789.html"]
+
+["test_bug522601-shadow.xhtml"]
+
+["test_bug536379-2.html"]
+
+["test_bug536379.html"]
+
+["test_bug557726.html"]
+
+["test_bug609549-shadow.xhtml"]
+
+["test_bug856317.html"]
+
+["test_bug877690.html"]
+
+["test_bug1006595.html"]
+
+["test_color_to_rgba.html"]
+
+["test_containing_block_of.html"]
+
+["test_css_property_is_shorthand.html"]
+
+["test_getCSSPseudoElementNames.html"]
+
+["test_getCSSStyleRules.html"]
+support-files = [
+  "file_getCSSStyleRules-default.html",
+  "file_getCSSStyleRules-alternate.html",
+  "getCSSStyleRules-1.css",
+  "getCSSStyleRules-2.css",
+]
+
+["test_getCSSStyleRules_pseudo.html"]
+
+["test_getCSSStyleRules_slotted.html"]
+
+["test_getRegisteredCssHighlights.html"]
+
+["test_getRegisteredCustomProperties.html"]
+
+["test_getRelativeRuleLine.html"]
+
+["test_get_all_style_sheets.html"]
+
+["test_is_element_themed.html"]
+skip-if = ["os == 'android'"]
+
+["test_is_valid_css_color.html"]
+
+["test_isinheritableproperty.html"]
+
+["test_parseStyleSheet.html"]
+
+["test_parseStyleSheetImport.html"]
+
+["test_parseStyleSheet_nested.html"]
+
+["test_rgba_to_color_name.html"]
+
+["test_selectormatcheselement.html"]
+
+["test_supports.html"]

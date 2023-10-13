@@ -6,7 +6,7 @@
 
 if CONFIG["ENABLE_TESTS"]:
     MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
-    MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+    MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 XPIDL_SOURCES += [
     "inIDeepTreeWalker.idl",

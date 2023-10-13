@@ -24,6 +24,6 @@ SOURCES += [
     "nsFindService.cpp",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 
 FINAL_LIBRARY = "xul"

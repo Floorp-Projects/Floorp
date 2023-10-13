@@ -1,0 +1,785 @@
+[DEFAULT]
+prefs = [
+  "dom.animations-api.compositing.enabled=true",
+  "dom.animations-api.getAnimations.enabled=true",
+  "dom.animations-api.timelines.enabled=true",
+  "dom.animations.mainthread-synchronization-with-geometric-animations=true",
+  "gfx.omta.background-color=true",
+  "gfx.font_loader.delay=0",
+  "layout.css.container-queries.enabled=true",
+  "layout.css.individual-transform.enabled=true",
+  "layout.css.motion-path-ray.enabled=true",
+  "layout.css.motion-path-basic-shapes.enabled=true",
+  "layout.css.motion-path-coord-box.enabled=true",
+  "layout.css.motion-path-offset-position.enabled=true",
+  "layout.css.motion-path-url.enabled=true",
+  "layout.css.backdrop-filter.enabled=true",
+  "layout.css.fit-content-function.enabled=true",
+  "layout.css.scroll-driven-animations.enabled=true",
+  "layout.css.animation-composition.enabled=true",
+  "layout.css.basic-shape-rect.enabled=true",
+  "layout.css.basic-shape-xywh.enabled=true",
+  "layout.css.transform-box-content-stroke.enabled=true",
+]
+support-files = [
+  "animation_utils.js",
+  "bug1729861.js",
+  "ccd-quirks.html",
+  "ccd.sjs",
+  "ccd-standards.html",
+  "chrome/bug418986-2.js",
+  "chrome/match.png",
+  "chrome/mismatch.png",
+  "descriptor_database.js",
+  "!/dom/events/test/event_leak_utils.js",
+  "empty.html",
+  "file_computed_style_bfcache_display_none.html",
+  "file_computed_style_bfcache_display_none2.html",
+  "media_queries_iframe.html",
+  "media_queries_iframe2.html",
+  "neverending_font_load.sjs",
+  "neverending_stylesheet_load.sjs",
+  "post-redirect-1.css",
+  "post-redirect-2.css",
+  "post-redirect-3.css",
+  "property_database.js",
+  "redirect.sjs",
+  "style_attribute_tests.js",
+  "support/blue-100x100.png",
+  "support/1x1-transparent.png",
+  "unstyled.css",
+  "unstyled-frame.css",
+  "unstyled-frame.xml",
+  "unstyled.xml",
+  "viewport_units_iframe.html",
+  "visited_image_loading_frame_empty.html",
+  "visited_image_loading_frame.html",
+  "visited_image_loading.sjs",
+  "visited-lying-inner.html",
+  "visited-pref-iframe.html",
+]
+
+["test_acid3_test46.html"]
+
+["test_addSheet.html"]
+support-files = ["additional_sheets_helper.html"]
+
+["test_additional_sheets.html"]
+support-files = ["additional_sheets_helper.html"]
+
+["test_align_justify_computed_values.html"]
+
+["test_all_shorthand.html"]
+
+["test_animations.html"]
+
+["test_animations_async_tests.html"]
+support-files = [
+  "Ahem.ttf",
+  "file_animations_async_tests.html",
+]
+
+["test_animations_dynamic_changes.html"]
+
+["test_animations_effect_timing_duration.html"]
+
+["test_animations_effect_timing_enddelay.html"]
+
+["test_animations_effect_timing_iterations.html"]
+
+["test_animations_event_handler_attribute.html"]
+
+["test_animations_event_order.html"]
+
+["test_animations_iterationstart.html"]
+
+["test_animations_omta.html"]
+
+["test_animations_omta_scroll.html"]
+support-files = ["file_animations_omta_scroll.html"]
+
+["test_animations_omta_scroll_rtl.html"]
+support-files = ["file_animations_omta_scroll_rtl.html"]
+
+["test_animations_omta_start.html"]
+
+["test_animations_pausing.html"]
+
+["test_animations_playbackrate.html"]
+
+["test_animations_reverse.html"]
+
+["test_animations_styles_on_event.html"]
+
+["test_animations_variable_changes.html"]
+
+["test_animations_with_disabled_properties.html"]
+support-files = ["file_animations_with_disabled_properties.html"]
+
+["test_any_dynamic.html"]
+
+["test_area_url_cursor.html"]
+
+["test_asyncopen.html"]
+
+["test_at_rule_parse_serialize.html"]
+
+["test_attribute_selector_eof_behavior.html"]
+
+["test_backdrop_filter_enabled_state.html"]
+
+["test_background_blend_mode.html"]
+
+["test_border_device_pixel_rounding_initial_style.html"]
+
+["test_box_size_keywords.html"]
+
+["test_bug73586.html"]
+
+["test_bug74880.html"]
+
+["test_bug98997.html"]
+
+["test_bug160403.html"]
+
+["test_bug200089.html"]
+
+["test_bug221428.html"]
+
+["test_bug229915.html"]
+
+["test_bug302186.html"]
+
+["test_bug319381.html"]
+
+["test_bug357614.html"]
+
+["test_bug363146.html"]
+
+["test_bug372770.html"]
+
+["test_bug373293.html"]
+
+["test_bug377947.html"]
+
+["test_bug379440.html"]
+
+["test_bug379741.html"]
+
+["test_bug382027.html"]
+
+["test_bug383075.html"]
+
+["test_bug387615.html"]
+
+["test_bug389464.html"]
+
+["test_bug391034.html"]
+
+["test_bug391221.html"]
+
+["test_bug397427.html"]
+fail-if = ["xorigin"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug399349.html"]
+
+["test_bug401046.html"]
+skip-if = ["true"] # Bug 701060
+
+["test_bug405818.html"]
+
+["test_bug412901.html"]
+
+["test_bug413958.html"]
+
+["test_bug418986-2.html"]
+
+["test_bug437915.html"]
+
+["test_bug450191.html"]
+
+["test_bug470769.html"]
+
+["test_bug499655.html"]
+
+["test_bug499655.xhtml"]
+
+["test_bug517224.html"]
+support-files = ["bug517224.sjs"]
+
+["test_bug524175.html"]
+
+["test_bug525952.html"]
+
+["test_bug534804.html"]
+
+["test_bug573255.html"]
+
+["test_bug580685.html"]
+
+["test_bug621351.html"]
+
+["test_bug635286.html"]
+
+["test_bug645998.html"]
+support-files = [
+  "file_bug645998-1.css",
+  "file_bug645998-2.css",
+]
+
+["test_bug652486.html"]
+
+["test_bug657143.html"]
+
+["test_bug667520.html"]
+
+["test_bug716226.html"]
+
+["test_bug732153.html"]
+
+["test_bug732209.html"]
+support-files = ["bug732209-css.sjs"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug765590.html"]
+
+["test_bug771043.html"]
+
+["test_bug795520.html"]
+
+["test_bug798843_pref.html"]
+
+["test_bug829816.html"]
+support-files = ["file_bug829816.css"]
+
+["test_bug874919.html"]
+
+["test_bug887741_at-rules_in_declaration_lists.html"]
+
+["test_bug892929.html"]
+
+["test_bug1055933.html"]
+support-files = ["file_bug1055933_circle-xxl.png"]
+
+["test_bug1089417.html"]
+support-files = ["file_bug1089417_iframe.html"]
+
+["test_bug1112014.html"]
+
+["test_bug1203766.html"]
+
+["test_bug1232829.html"]
+
+["test_bug1292447.html"]
+
+["test_bug1330375.html"]
+
+["test_bug1371488.html"]
+
+["test_bug1375944.html"]
+support-files = [
+  "file_bug1375944.html",
+  "Ahem.ttf",
+]
+
+["test_bug1382568.html"]
+support-files = ["bug1382568-iframe.html"]
+
+["test_bug1394302.html"]
+
+["test_bug1443344-1.html"]
+scheme = "https"
+support-files = ["file_bug1443344.css"]
+
+["test_bug1443344-2.html"]
+scheme = "https"
+support-files = ["file_bug1443344.css"]
+
+["test_bug1451199-1.html"]
+
+["test_bug1451199-2.html"]
+
+["test_bug1490890.html"]
+
+["test_bug1505254.html"]
+
+["test_bug1729861.html"]
+
+["test_cascade.html"]
+
+["test_ch_ex_no_infloops.html"]
+
+["test_change_hint_optimizations.html"]
+
+["test_clip-path_polygon.html"]
+
+["test_color_rounding.html"]
+
+["test_compute_data_with_start_struct.html"]
+skip-if = ["os == 'android'"]
+
+["test_computed_style.html"]
+
+["test_computed_style_bfcache_display_none.html"]
+
+["test_computed_style_difference.html"]
+
+["test_computed_style_grid_with_pseudo.html"]
+
+["test_computed_style_in_created_document.html"]
+
+["test_computed_style_min_size_auto.html"]
+
+["test_computed_style_no_flush.html"]
+
+["test_computed_style_no_pseudo.html"]
+
+["test_computed_style_prefs.html"]
+
+["test_condition_text.html"]
+
+["test_constructable_stylesheets_chrome_only_rules_in_content.html"]
+
+["test_counter_descriptor_storage.html"]
+
+["test_counter_style.html"]
+
+["test_crash_with_content_policy.html"]
+support-files = ["file_bug1381233.html"]
+
+["test_css_cross_domain.html"]
+skip-if = [
+  "http3",
+  "http2",
+  "socketprocess_networking",
+]
+
+["test_css_cross_domain_no_orb.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_css_eof_handling.html"]
+
+["test_css_escape_api.html"]
+
+["test_css_function_mismatched_parenthesis.html"]
+
+["test_css_loader_crossorigin_data_url.html"]
+
+["test_css_parse_error_smoketest.html"]
+
+["test_css_supports.html"]
+
+["test_css_supports_variables.html"]
+
+["test_cue_restrictions.html"]
+
+["test_custom_content_inheritance.html"]
+
+["test_default_bidi_css.html"]
+
+["test_default_computed_style.html"]
+
+["test_descriptor_storage.html"]
+
+["test_descriptor_syntax_errors.html"]
+
+["test_display_mode.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_dont_use_document_colors.html"]
+
+["test_dont_use_document_fonts.html"]
+
+["test_dynamic_change_causing_reflow.html"]
+
+["test_exposed_prop_accessors.html"]
+
+["test_extra_inherit_initial.html"]
+
+["test_first_letter_restrictions.html"]
+
+["test_first_line_restrictions.html"]
+
+["test_flexbox_child_display_values.xhtml"]
+
+["test_flexbox_flex_grow_and_shrink.html"]
+
+["test_flexbox_flex_shorthand.html"]
+
+["test_flexbox_focus_order.html"]
+
+["test_flexbox_layout.html"]
+support-files = ["flexbox_layout_testcases.js"]
+
+["test_flexbox_order.html"]
+
+["test_flexbox_order_abspos.html"]
+
+["test_flexbox_order_table.html"]
+
+["test_flexbox_reflow_counts.html"]
+skip-if = ["verify"]
+
+["test_flushing_frame.html"]
+
+["test_font_face_cascade.html"]
+
+["test_font_face_parser.html"]
+
+["test_font_family_parsing.html"]
+
+["test_font_family_serialization.html"]
+
+["test_font_loading_api.html"]
+support-files = [
+  "BitPattern.woff",
+  "file_font_loading_api_vframe.html",
+]
+# This test checks font loading state. When loaded second time, fonts may be
+# loaded synchronously, causing this test to fail in test-verify task.
+skip-if = [
+  "verify",          # Bug 1455824
+  "os == 'android'", # Bug 1455824
+  "http3",
+  "http2",
+]
+
+["test_garbage_at_end_of_declarations.html"]
+
+["test_grid_computed_values.html"]
+
+["test_grid_container_shorthands.html"]
+
+["test_grid_item_shorthands.html"]
+
+["test_grid_shorthand_serialization.html"]
+
+["test_group_insertRule.html"]
+
+["test_hover_on_part.html"]
+
+["test_hover_quirk.html"]
+
+["test_html_attribute_computed_values.html"]
+
+["test_ident_escaping.html"]
+
+["test_img_src_causing_reflow.html"]
+
+["test_import_preload.html"]
+support-files = ["slow_load.sjs"]
+# Test is slightly racy and on Android it fails frequently enough to be
+# annoying.
+skip-if = ["os == 'android'"]
+
+["test_inherit_computation.html"]
+
+["test_inherit_storage.html"]
+
+["test_initial_computation.html"]
+
+["test_initial_storage.html"]
+
+["test_invalidation_basic.html"]
+
+["test_keyframes_rules.html"]
+
+["test_keyframes_vendor_prefix.html"]
+
+["test_load_events_on_stylesheets.html"]
+support-files = [
+  "slow_broken_sheet.sjs",
+  "slow_ok_sheet.sjs",
+]
+
+["test_logical_properties.html"]
+
+["test_marker_restrictions.html"]
+
+["test_mask_image_CORS.html"]
+
+["test_media_queries.html"]
+# times out on verify, see bug 1461033.
+skip-if = ["verify"]
+support-files = ["chrome/chrome-only-media-queries.js"]
+
+["test_media_queries_dynamic.html"]
+skip-if = ["xorigin"] # Crashes, Assertion failure: mInFlightProcessId == 0, at /builds/worker/checkouts/gecko/docshell/base/CanonicalBrowsingContext.cpp:110, [Child][MessageChannel] Error: (msgtype=0xFFF7,name=<unknown IPC msg name>) Channel error: cannot send/recv
+
+["test_media_query_list.html"]
+
+["test_media_query_serialization.html"]
+
+["test_medialist_privilege.html"]
+
+["test_moz_device_pixel_ratio.html"]
+
+["test_moz_prefixed_cursor.html"]
+
+["test_mq_any_hover_and_any_pointer.html"]
+
+["test_mq_changes_in_iframe.html"]
+support-files = ["mq_changes_child.html"]
+skip-if = [
+  "headless",
+  "os == 'win'",
+]
+
+["test_mq_hover_and_pointer.html"]
+
+["test_mq_prefers_contrast_dynamic.html"]
+skip-if = [
+  "headless",
+  "os == 'win'",
+]
+
+["test_mq_prefers_reduced_motion_dynamic.html"]
+skip-if = [
+  "headless",
+  "os == 'win'",
+]
+
+["test_mql_event_listener_leaks.html"]
+
+["test_namespace_rule.html"]
+
+["test_non_content_accessible_env_vars.html"]
+
+["test_non_content_accessible_properties.html"]
+
+["test_non_content_accessible_pseudos.html"]
+
+["test_non_content_accessible_values.html"]
+
+["test_non_matching_sheet_media.html"]
+
+["test_of_type_selectors.xhtml"]
+
+["test_overscroll_behavior_pref.html"]
+
+["test_page_parser.html"]
+
+["test_parse_eof.html"]
+
+["test_parse_ident.html"]
+
+["test_parse_rule.html"]
+
+["test_parse_url.html"]
+
+["test_parser_diagnostics_unprintables.html"]
+
+["test_pixel_lengths.html"]
+
+["test_placeholder_restrictions.html"]
+
+["test_pointer-events.html"]
+
+["test_position_float_display.html"]
+
+["test_position_sticky.html"]
+
+["test_prefers_contrast_color_pairs.html"]
+
+["test_priority_preservation.html"]
+
+["test_property_database.html"]
+
+["test_property_syntax_errors.html"]
+
+["test_pseudo_display_fixup.html"]
+
+["test_pseudoelement_parsing.html"]
+
+["test_pseudoelement_state.html"]
+skip-if = ["verify && debug && os == 'linux'"]
+
+["test_query_container_for.html"]
+
+["test_redundant_font_download.html"]
+support-files = ["redundant_font_download.sjs"]
+
+["test_reframe_cb.html"]
+
+["test_reframe_image_loading.html"]
+
+["test_reframe_input.html"]
+
+["test_reframe_pseudo_element.html"]
+
+["test_rem_unit.html"]
+
+["test_restyle_table_wrapper.html"]
+
+["test_restyles_in_smil_animation.html"]
+
+["test_revert.html"]
+
+["test_root_node_display.html"]
+
+["test_rule_insertion.html"]
+
+["test_rules_out_of_sheets.html"]
+
+["test_selectors.html"]
+
+["test_setPropertyWithNull.html"]
+skip-if = ["xorigin && debug"]
+
+["test_shape_outside_CORS.html"]
+
+["test_shared_sheet_caching.html"]
+support-files = [
+  "file_shared_sheet_caching.css",
+  "file_shared_sheet_caching.html",
+]
+fail-if = ["xorigin"]
+
+["test_shorthand_property_getters.html"]
+
+["test_specified_value_serialization.html"]
+support-files = ["file_specified_value_serialization_individual_transforms.html"]
+
+["test_style_attr_listener.html"]
+
+["test_style_attribute_quirks.html"]
+
+["test_style_attribute_standards.html"]
+
+["test_style_struct_copy_constructors.html"]
+
+["test_stylesheet_additions.html"]
+
+["test_stylesheet_clone_font_face.html"]
+
+["test_supports_rules.html"]
+
+["test_system_font_serialization.html"]
+
+["test_text_decoration_shorthands.html"]
+
+["test_transitions.html"]
+
+["test_transitions_and_reframes.html"]
+
+["test_transitions_and_restyles.html"]
+
+["test_transitions_and_zoom.html"]
+
+["test_transitions_at_start.html"]
+
+["test_transitions_bug537151.html"]
+
+["test_transitions_cancel_near_end.html"]
+
+["test_transitions_computed_value_combinations.html"]
+
+["test_transitions_computed_values.html"]
+
+["test_transitions_dynamic_changes.html"]
+
+["test_transitions_events.html"]
+
+["test_transitions_per_property.html"]
+
+["test_transitions_replacement_on_busy_frame.html"]
+
+["test_transitions_replacement_with_setKeyframes.html"]
+
+["test_transitions_step_functions.html"]
+
+["test_unclosed_parentheses.html"]
+
+["test_unicode_range_loading.html"]
+support-files = [
+  "../../reftests/fonts/markA.woff",
+  "../../reftests/fonts/markB.woff",
+  "../../reftests/fonts/markC.woff",
+  "../../reftests/fonts/markD.woff",
+]
+
+["test_units_angle.html"]
+
+["test_units_frequency.html"]
+
+["test_units_length.html"]
+
+["test_units_time.html"]
+
+["test_use_counters.html"]
+skip-if = ["!nightly_build"]
+
+["test_user_sheet_shadow_dom.html"]
+
+["test_value_cloning.html"]
+# This test requires too much memory on TSan (bug 1612707)
+# See bug 775227 for android
+skip-if = [
+  "os == 'android'",
+  "tsan",
+]
+
+["test_value_computation.html"]
+# This test requires too much memory on TSan (bug 1612707)
+skip-if = ["tsan"]
+
+["test_value_storage.html"]
+
+["test_variable_serialization_computed.html"]
+
+["test_variable_serialization_specified.html"]
+
+["test_variables.html"]
+support-files = ["support/external-variable-url.css"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_variables_loop.html"]
+
+["test_variables_order.html"]
+support-files = ["support/external-variable-url.css"]
+
+["test_video_object_fit.html"]
+
+["test_viewport_scrollbar_causing_reflow.html"]
+skip-if = ["verify && (os == 'win' || os == 'mac')"]
+
+["test_viewport_units.html"]
+
+["test_visited_image_loading.html"]
+skip-if = ["os == 'android'"] # TIMED_OUT for android
+
+["test_visited_image_loading_empty.html"]
+skip-if = ["os == 'android'"] # TIMED_OUT for android
+
+["test_visited_lying.html"]
+skip-if = ["os == 'android'"] # TIMED_OUT for android
+fail-if = ["xorigin"]
+
+["test_visited_pref.html"]
+skip-if = ["os == 'android'"] # TIMED_OUT for android
+fail-if = ["xorigin"]
+
+["test_visited_reftests.html"]
+skip-if = ["os == 'android'"] # TIMED_OUT for android
+
+["test_webkit_device_pixel_ratio.html"]
+skip-if = ["xorigin"] # process crash: Assertion failure: mInFlightProcessId == 0, at /builds/worker/checkouts/gecko/docshell/base/CanonicalBrowsingContext.cpp:110
+
+["test_webkit_flex_display.html"]
+skip-if = ["xorigin"] # Crashes, Assertion failure: mInFlightProcessId == 0, at /builds/worker/checkouts/gecko/docshell/base/CanonicalBrowsingContext.cpp:110

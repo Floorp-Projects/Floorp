@@ -1,0 +1,258 @@
+[DEFAULT]
+support-files = [
+  "INT32_MIN.bmp",
+  "animated1.gif",
+  "animated1.svg",
+  "animated2.gif",
+  "animatedMask.gif",
+  "animated-gif.gif",
+  "animated-gif2.gif",
+  "animated-gif_trailing-garbage.gif",
+  "animated-gif-finalframe.gif",
+  "animated-avif.avif",
+  "animation.svg",
+  "animationPolling.js",
+  "bad.jpg",
+  "big.png",
+  "blue.gif",
+  "blue.png",
+  "bug399925.gif",
+  "bug468160.sjs",
+  "bug478398_ONLY.png",
+  "bug490949-iframe.html",
+  "bug490949.sjs",
+  "bug496292-1.sjs",
+  "bug496292-2.sjs",
+  "bug496292-iframe-1.html",
+  "bug496292-iframe-2.html",
+  "bug496292-iframe-ref.html",
+  "bug497665-iframe.html",
+  "bug497665.sjs",
+  "bug552605.sjs",
+  "bug657191.sjs",
+  "bug671906-iframe.html",
+  "bug671906.sjs",
+  "bug733553-informant.sjs",
+  "bug733553.sjs",
+  "bug767779.sjs",
+  "bug89419-iframe.html",
+  "bug89419.sjs",
+  "bug900200.png",
+  "bug900200-ref.png",
+  "bug1132427.html",
+  "bug1132427.gif",
+  "bug1180105.sjs",
+  "bug1180105-waiter.sjs",
+  "bug1217571-iframe.html",
+  "bug1217571.jpg",
+  "bug1319025.png",
+  "bug1319025-ref.png",
+  "clear.gif",
+  "clear.png",
+  "clear.webp",
+  "clear.avif",
+  "clear2.gif",
+  "clear2.webp",
+  "clear2-results.gif",
+  "damon.jpg",
+  "error-early.png",
+  "filter-final.svg",
+  "filter.svg",
+  "finite-apng.png",
+  "first-frame-padding.gif",
+  "green.png",
+  "green-background.html",
+  "grey.png",
+  "ico-bmp-opaque.ico",
+  "ico-bmp-transparent.ico",
+  "iframe.html",
+  "imgutils.js",
+  "infinite.avif",
+  "infinite.webp",
+  "infinite-apng.png",
+  "invalid.jpg",
+  "keep.gif",
+  "keep.png",
+  "keep.webp",
+  "lime100x100.svg",
+  "lime-anim-100x100.svg",
+  "lime-anim-100x100-2.svg",
+  "lime-css-anim-100x100.svg",
+  "mq_dynamic_svg_test.html",
+  "mq_dynamic_svg_ref.html",
+  "opaque.bmp",
+  "purple.gif",
+  "rainbow.gif",
+  "red.gif",
+  "red.png",
+  "ref-iframe.html",
+  "restore-previous.gif",
+  "restore-previous.png",
+  "rillybad.jpg",
+  "schrep.png",
+  "shaver.png",
+  "short_header.gif",
+  "source.png",
+  "transparent.gif",
+  "transparent.png",
+  "over.png",
+  "webcam-simulacrum.sjs",
+  "6M-pixels.png",
+  "12M-pixels-1.png",
+  "12M-pixels-2.png",
+]
+
+["test_animSVGImage.html"]
+skip-if = [
+  "os == 'android'",
+  "os == 'win'",
+  "os == 'mac' && os_version == '10.15'", # Bug 1370784, macosx due to bug 1549058
+]
+
+["test_animSVGImage2.html"]
+skip-if = [
+  "os == 'win'", # Bug 1354561
+  "os == 'linux'", # Bug 1354561
+  "os == 'android'", # Bug 1354561
+]
+
+["test_animated_css_image.html"]
+
+["test_animated_gif.html"]
+support-files = ["child.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_animation.html"]
+
+["test_animation2.html"]
+
+["test_animation_operators.html"]
+
+["test_background_image_anim.html"]
+
+["test_bug89419-1.html"]
+
+["test_bug89419-2.html"]
+
+["test_bug399925.html"]
+
+["test_bug435296.html"]
+skip-if = ["true"] # disabled - See bug 578591
+
+["test_bug466586.html"]
+
+["test_bug468160.html"]
+
+["test_bug478398.html"]
+skip-if = ["true"] # disabled - See bug 579139
+
+["test_bug490949.html"]
+
+["test_bug496292.html"]
+skip-if = ["verify"]
+
+["test_bug497665.html"]
+
+["test_bug552605-1.html"]
+
+["test_bug552605-2.html"]
+
+["test_bug553982.html"]
+
+["test_bug601470.html"]
+
+["test_bug614392.html"]
+
+["test_bug657191.html"]
+
+["test_bug671906.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug733553.html"]
+skip-if = [
+  "verify",
+  "http3",
+  "http2",
+]
+
+["test_bug767779.html"]
+
+["test_bug865919.html"]
+
+["test_bug1132427.html"]
+skip-if = ["display == 'wayland' && os_version == '22.04'"]  # Bug 18570
+
+["test_bug1180105.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug1217571.html"]
+
+["test_bug1325080.html"]
+
+["test_bullet_animation.html"]
+
+["test_canvas_frame_animation.html"]
+
+["test_changeOfSource.html"]
+
+["test_changeOfSource2.html"]
+
+["test_discardAnimatedImage.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_discardFinishedAnimatedImage.html"]
+
+["test_discardFramesAnimatedImage.html"]
+
+["test_drawDiscardedImage.html"]
+
+["test_error_events.html"]
+
+["test_has_transparency.html"]
+
+["test_image_cache_notification.html"]
+
+["test_image_crossorigin_data_url.html"]
+
+["test_mq_dynamic_svg.html"]
+
+["test_net_failedtoprocess.html"]
+skip-if = ["verify"]
+
+["test_removal_ondecode.html"]
+
+["test_removal_onload.html"]
+
+["test_short_gif_header.html"]
+
+["test_staticClone.html"]
+
+["test_svg_animatedGIF.html"]
+
+["test_svg_filter_animation.html"]
+
+["test_synchronized_animation.html"]
+skip-if = ["true"] # bug 1295501
+
+["test_undisplayed_iframe.html"]
+
+["test_webcam.html"]
+
+["test_xultree_animation.xhtml"]
+allow_xul_xbl = true
+skip-if = [
+  "http3",
+  "http2",
+]

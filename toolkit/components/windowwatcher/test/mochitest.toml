@@ -1,0 +1,11 @@
+[DEFAULT]
+tags = "openwindow"
+skip-if = ["os == 'android'"] # Fennec doesn't support web content opening new windows (See bug 1277544 for details)
+
+["test_blank_named_window.html"]
+
+["test_named_window.html"]
+support-files = ["file_named_window.html"]
+
+["test_storage_copied.html"]
+support-files = ["file_storage_copied.html"]

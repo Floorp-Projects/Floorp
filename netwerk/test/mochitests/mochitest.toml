@@ -1,0 +1,212 @@
+[DEFAULT]
+support-files = [
+  "method.sjs",
+  "partial_content.sjs",
+  "rel_preconnect.sjs",
+  "set_cookie_xhr.sjs",
+  "reset_cookie_xhr.sjs",
+  "web_packaged_app.sjs",
+  "file_documentcookie_maxage_chromescript.js",
+  "file_loadinfo_redirectchain.sjs",
+  "file_1331680.js",
+  "file_1503201.sjs",
+  "file_iframe_allow_scripts.html",
+  "file_iframe_allow_same_origin.html",
+  "redirect_idn.html^headers^",
+  "redirect_idn.html",
+  "empty.html",
+  "redirect.sjs",
+  "redirect_to.sjs",
+  "origin_header.sjs",
+  "origin_header_form_post.html",
+  "origin_header_form_post_xorigin.html",
+  "subResources.sjs",
+  "beltzner.jpg",
+  "beltzner.jpg^headers^",
+  "file_chromecommon.js",
+  "file_domain_hierarchy_inner.html",
+  "file_domain_hierarchy_inner.html^headers^",
+  "file_domain_hierarchy_inner_inner.html",
+  "file_domain_hierarchy_inner_inner.html^headers^",
+  "file_domain_hierarchy_inner_inner_inner.html",
+  "file_domain_hierarchy_inner_inner_inner.html^headers^",
+  "file_domain_inner.html",
+  "file_domain_inner.html^headers^",
+  "file_domain_inner_inner.html",
+  "file_domain_inner_inner.html^headers^",
+  "file_image_inner.html",
+  "file_image_inner.html^headers^",
+  "file_image_inner_inner.html",
+  "file_image_inner_inner.html^headers^",
+  "file_lnk.lnk",
+  "file_loadflags_inner.html",
+  "file_loadflags_inner.html^headers^",
+  "file_localhost_inner.html",
+  "file_localhost_inner.html^headers^",
+  "file_loopback_inner.html",
+  "file_loopback_inner.html^headers^",
+  "file_subdomain_inner.html",
+  "file_subdomain_inner.html^headers^",
+  "file_testcommon.js",
+  "file_testloadflags.js",
+  "file_testloadflags_chromescript.js",
+  "image1.png",
+  "image1.png^headers^",
+  "image2.png",
+  "image2.png^headers^",
+  "test1.css",
+  "test1.css^headers^",
+  "test2.css",
+  "test2.css^headers^",
+]
+prefs = ["javascript.options.large_arraybuffers=true"]
+
+["test_1331680.html"]
+
+["test_1331680_iframe.html"]
+
+["test_1331680_xhr.html"]
+skip-if = ["verify"]
+
+["test_1396395.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_1421324.html"]
+
+["test_1425031.html"]
+
+["test_1502055.html"]
+support-files = [
+  "sw_1502055.js",
+  "file_1502055.sjs",
+  "iframe_1502055.html",
+]
+
+["test_1503201.html"]
+
+["test_accept_header.html"]
+support-files = ["test_accept_header.sjs"]
+
+["test_arraybufferinputstream.html"]
+
+["test_arraybufferinputstream_large.html"]
+# Large ArrayBuffers not supported on 32-bit. TSan shadow memory causes OOMs.
+skip-if = [
+  "bits == 32",
+  "tsan",
+  "asan",
+]
+
+["test_different_domain_in_hierarchy.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_differentdomain.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_documentcookies_maxage.html"]
+# Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+skip-if = ["xorigin"]
+
+["test_fetch_lnk.html"]
+
+["test_idn_redirect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_image.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_loadflags.html"]
+# Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+skip-if = [
+  "xorigin",
+  "http3",
+  "http2",
+]
+
+["test_loadinfo_redirectchain.html"]
+fail-if = ["xorigin"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_origin_header.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_partially_cached_content.html"]
+
+["test_redirect_ref.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_rel_preconnect.html"]
+
+["test_same_base_domain.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_same_base_domain_2.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_same_base_domain_3.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_same_base_domain_4.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_same_base_domain_5.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_same_base_domain_6.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_samedomain.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_uri_scheme.html"]
+skip-if = ["verify && debug && os == 'mac'"]
+
+["test_viewsource_unlinkable.html"]
+
+["test_xhr_method_case.html"]
+skip-if = ["http2"]

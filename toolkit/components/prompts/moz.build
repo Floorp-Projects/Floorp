@@ -18,7 +18,7 @@ TESTING_JS_MODULES += [
     "test/PromptTestUtils.sys.mjs",
 ]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.toml"]
 
 JAR_MANIFESTS += ["jar.mn"]

@@ -11,7 +11,7 @@ BROWSER_CHROME_MANIFESTS += [
     "useragent/browser_nonsnap.ini",
     "useragent/browser_snap.ini",
 ]
-MOCHITEST_MANIFESTS += ["mochitests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["mochitests/mochitest.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [
     "unit/xpcshell.ini",

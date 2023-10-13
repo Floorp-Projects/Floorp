@@ -17,6 +17,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "mochitest/mochitest.ini",
-    "widgets/mochitest.ini",
+    "mochitest/mochitest.toml",
+    "widgets/mochitest.toml",
 ]

@@ -1,0 +1,7 @@
+[DEFAULT]
+
+["test_bug1173171.html"]
+support-files = [
+  "bug1173171.zip",
+  "bug1173171.zip^headers^",
+]

@@ -1,0 +1,15 @@
+[DEFAULT]
+tags = "webextensions in-process-webextensions"
+prefs = [
+  "extensions.webextensions.remote=false",
+  "javascript.options.asyncstack_capture_debuggee_only=false",
+]
+dupe-manifest = true
+
+["include:mochitest-common.toml"]
+skip-if = ["os == 'win'"] # Windows WebExtensions always run OOP
+
+["test_ext_storage_cleanup.html"]
+# Bug 1426514 storage_cleanup: clearing localStorage fails with oop
+
+["test_verify_non_remote_mode.html"]

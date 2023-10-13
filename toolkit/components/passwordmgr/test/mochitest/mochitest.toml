@@ -1,0 +1,409 @@
+[DEFAULT]
+prefs = [
+  "signon.rememberSignons=true",
+  "signon.autofillForms.http=true",
+  "signon.showAutoCompleteFooter=true",
+  'signon.showAutoCompleteImport=""',
+  "signon.testOnlyUserHasInteractedByPrefValue=true",
+  "signon.testOnlyUserHasInteractedWithDocument=true",
+  "network.auth.non-web-content-triggered-resources-http-auth-allow=true",
+  # signon.relatedRealms.enabled pref needed until Bug 1699698 lands
+  "signon.relatedRealms.enabled=true",
+  "signon.usernameOnlyForm.enabled=true",
+  "signon.usernameOnlyForm.lookupThreshold=100",
+]
+support-files = [
+  "../../../prompts/test/chromeScript.js",
+  "!/toolkit/components/prompts/test/prompt_common.js",
+  "../../../satchel/test/parent_utils.js",
+  "!/toolkit/components/satchel/test/satchel_common.js",
+  "../blank.html",
+  "../browser/form_autofocus_js.html",
+  "../browser/form_basic.html",
+  "../browser/formless_basic.html",
+  "../browser/form_cross_origin_secure_action.html",
+  "../browser/form_same_origin_action.html",
+  "auth2/authenticate.sjs",
+  "file_history_back.html",
+  "form_basic_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+  "form_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  "form_basic_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+  "form_nested_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+  "form_nested_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  "form_nested_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+  "formless_basic_shadow_DOM_both_fields_together_in_a_shadow_root.html",
+  "formless_basic_shadow_DOM_each_field_in_its_own_shadow_root.html",
+  "formless_basic_shadow_DOM_form_and_fields_together_in_a_shadow_root.html",
+  "multiple_forms_shadow_DOM_all_known_variants.html",
+  "pwmgr_common.js",
+  "pwmgr_common_parent.js",
+  "../authenticate.sjs",
+]
+skip-if = ["os == 'android'"] # Don't run on GeckoView
+
+# Note: new tests should use scheme = https unless they have a specific reason not to
+
+["test_DOMInputPasswordAdded_fired_between_DOMContentLoaded_and_load_events.html"]
+scheme = "https"
+support-files = [
+  "slow_image.sjs",
+  "slow_image.html",
+]
+
+["test_LoginManagerContent_passwordEditedOrGenerated.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # password generation
+
+["test_autocomplete_autofill_related_realms_no_dupes.html"]
+skip-if = ["xorigin"]  # Bug 1716412 - New fission platform triage
+scheme = "https"
+
+["test_autocomplete_basic_form.html"]
+skip-if = [
+  "os == 'android'",  # autocomplete
+  "xorigin",  # Bug 1716412 - New fission platform triage
+  "display == 'wayland' && os_version == '22.04'",  # Bug 1857071
+]
+scheme = "https"
+
+["test_autocomplete_basic_form_formActionOrigin.html"]
+skip-if = [
+  "os == 'android'", # android:autocomplete.
+  "xorigin",  # Bug 1716412 - New fission platform triage
+]
+scheme = "https"
+
+["test_autocomplete_basic_form_insecure.html"]
+skip-if = [
+  "os == 'android'",  # autocomplete
+  "xorigin",  # Bug 1716412 - New fission platform triage
+]
+
+["test_autocomplete_basic_form_related_realms.html"]
+skip-if = ["xorigin"]  # Bug 1716412 - New fission platform triage
+scheme = "https"
+
+["test_autocomplete_hasBeenTypePassword.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_highlight.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_highlight_non_login.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_highlight_username_only_form.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_https_downgrade.html"]
+scheme = "http" # Tests downgrading
+skip-if = [
+  "os == 'android'",  # autocomplete
+  "os == 'linux' && debug",  # Bug 1554959
+  "xorigin",  # Bug 1716412 - New fission platform triage
+]
+
+["test_autocomplete_https_upgrade.html"]
+scheme = "https"
+skip-if = [
+  "verify",
+  "os == 'android'", # autocomplete
+  "os == 'linux' && debug", # Bug 1554959 for linux debug disable
+]
+
+["test_autocomplete_password_generation.html"]
+scheme = "https"
+skip-if = [
+  "xorigin",
+  "os == 'android'", # autocomplete
+]
+
+["test_autocomplete_password_generation_confirm.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_password_open.html"]
+scheme = "https"
+skip-if = [
+  "os == 'android'", # autocomplete
+  "verify",
+]
+
+["test_autocomplete_sandboxed.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_autocomplete_tab_between_fields.html"]
+scheme = "https"
+skip-if = [
+  "xorigin",
+  "os == 'android'", # autocomplete
+]
+
+["test_autofill_autocomplete_types.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # bug 1533965
+
+["test_autofill_different_formActionOrigin.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # Bug 1259768
+
+["test_autofill_different_subdomain.html"]
+scheme = "https"
+skip-if = [
+  "os == 'android'", # Bug 1259768
+  "http3",
+  "http2",
+]
+
+["test_autofill_from_bfcache.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # bug 1527403
+support-files = ["form_basic_bfcache.html"]
+
+["test_autofill_hasBeenTypePassword.html"]
+scheme = "https"
+
+["test_autofill_highlight.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # Bug 1531185
+
+["test_autofill_highlight_empty_username.html"]
+scheme = "https"
+
+["test_autofill_highlight_username_only_form.html"]
+scheme = "https"
+
+["test_autofill_https_downgrade.html"]
+scheme = "http"  # we need http to test handling of https logins on http forms
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_autofill_https_upgrade.html"]
+skip-if = [
+  "os == 'android'", # Bug 1259768
+  "http3",
+  "http2",
+]
+
+["test_autofill_password-only.html"]
+
+["test_autofill_sandboxed.html"]
+scheme = "https"
+skip-if = ["os == 'android'"]
+
+["test_autofill_tab_between_fields.html"]
+scheme = "https"
+
+["test_autofill_username-only.html"]
+
+["test_autofill_username-only_threshold.html"]
+
+["test_autofocus_js.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # autocomplete
+
+["test_basic_form.html"]
+
+["test_basic_form_0pw.html"]
+
+["test_basic_form_1pw.html"]
+
+["test_basic_form_1pw_2.html"]
+
+["test_basic_form_2pw_1.html"]
+
+["test_basic_form_2pw_2.html"]
+
+["test_basic_form_3pw_1.html"]
+
+["test_basic_form_honor_autocomplete_off.html"]
+scheme = "https"
+skip-if = [
+  "xorigin",
+  "os == 'android'", # android:autocomplete.
+]
+
+["test_basic_form_html5.html"]
+
+["test_basic_form_pwevent.html"]
+skip-if = ["xorigin"]
+
+["test_basic_form_pwonly.html"]
+
+["test_bug_627616.html"]
+skip-if = [
+  "os == 'android'", # Tests desktop prompts
+  "http3",
+  "http2",
+]
+
+["test_bug_776171.html"]
+
+["test_case_differences.html"]
+skip-if = ["os == 'android'"] # autocomplete
+scheme = "https"
+
+["test_dismissed_doorhanger_in_shadow_DOM.html"]
+skip-if = ["os == 'android'"] # Tests desktop prompt
+scheme = "https"
+
+["test_formLike_rootElement_with_Shadow_DOM.html"]
+scheme = "https"
+
+["test_form_action_1.html"]
+
+["test_form_action_2.html"]
+
+["test_form_action_javascript.html"]
+
+["test_formless_autofill.html"]
+skip-if = [
+  "xorigin",
+  "http3",
+  "http2",
+]
+
+["test_formless_submit.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1397615
+  "http3",
+  "http2",
+]
+
+["test_formless_submit_form_removal.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_formless_submit_form_removal_negative.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_formless_submit_navigation.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1397615
+  "http3",
+  "http2",
+]
+
+["test_formless_submit_navigation_negative.html"]
+skip-if = [
+  "os == 'android' && debug", # bug 1397615
+  "http3",
+  "http2",
+]
+
+["test_include_other_subdomains_in_lookup.html"]
+skip-if = ["os == 'android'"] # android:autocomplete.
+scheme = "https"
+
+["test_input_events.html"]
+skip-if = ["xorigin"]
+
+["test_input_events_for_identical_values.html"]
+
+["test_insecure_form_field_no_saved_login.html"]
+skip-if = ["os == 'android'"] # android:autocomplete.
+
+["test_maxlength.html"]
+
+["test_munged_values.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # bug 1527403
+
+["test_one_doorhanger_per_un_pw.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # bug 1535505
+
+["test_onsubmit_value_change.html"]
+
+["test_password_field_autocomplete.html"]
+skip-if = ["os == 'android'"] # android:autocomplete.
+
+["test_password_length.html"]
+scheme = "https"
+skip-if = ["os == 'android'"] # bug 1527403
+
+["test_passwords_in_type_password.html"]
+
+["test_primary_password.html"]
+scheme = "https"
+run-if = ["os == 'mac'"]
+skip-if = [
+  "verify",
+  "xorigin", # Tests desktop prompts and bug 1333264
+]
+support-files = [
+  "chrome_timeout.js",
+  "subtst_primary_pass.html",
+]
+
+["test_prompt.html"]
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'", # Tests desktop prompts
+]
+
+["test_prompt_async.html"]
+skip-if = [
+  "os == 'android'", # Tests desktop prompts
+  "http3",
+  "http2",
+]
+support-files = ["subtst_prompt_async.html"]
+
+["test_prompt_http.html"]
+skip-if = [
+  "os == 'android'",  # Tests desktop prompts
+  "os == 'linux'",
+  "xorigin",  # Bug 1716412 - New fission platform triage
+]
+
+["test_prompt_noWindow.html"]
+skip-if = ["os == 'android'"] # Tests desktop prompts.
+
+["test_prompt_promptAuth.html"]
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'", # Tests desktop prompts
+]
+
+["test_prompt_promptAuth_proxy.html"]
+skip-if = [
+  "os == 'linux'",
+  "os == 'android'", # Tests desktop prompts
+]
+
+["test_recipe_login_fields.html"]
+skip-if = ["xorigin"]
+
+["test_set_stored_logins_during_task.html"]
+
+["test_submit_without_field_modifications.html"]
+support-files = ["subtst_prefilled_form.html"]
+skip-if = [
+  "xorigin",
+  "http3",
+  "http2",
+]
+
+["test_username_focus.html"]
+skip-if = [
+  "xorigin",
+  "os == 'android'", # android:autocomplete.
+]
+
+["test_xhr.html"]
+skip-if = ["os == 'android'"] # Tests desktop prompts
+
+["test_xhr_2.html"]
