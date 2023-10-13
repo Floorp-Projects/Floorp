@@ -20,6 +20,7 @@ support-files = [
   "!/image/test/mochitest/blue.png",
   "file_redirect.html",
   "file_redirect_handler.sjs",
+  "file_bug1550792.html",
   "file_bug1551886.html",
   "file_windowOpen.html",
 ]
@@ -29,6 +30,12 @@ skip-if = [
   "os=='linux' && bits==32", # Linux32:bug 1324870
   "headless", # Headless:bug 1405870
   "tsan", # tsan:bug 1612707
+  "http3",
+  "http2",
+]
+
+["test_bug1550792.html"]
+skip-if = [
   "http3",
   "http2",
 ]
