@@ -1503,8 +1503,8 @@ void CTFontInfo::LoadFontFamilyData(const nsACString& aFamilyName) {
     }
     prevFace = faceDesc;
 
-    AutoCFRelease<CTFontRef> fontRef = CTFontCreateWithFontDescriptorAndOptions(
-        faceDesc, 0.0, nullptr, kCTFontOptionsPreferSystemFont);
+    AutoCFRelease<CTFontRef> fontRef =
+        CTFontCreateWithFontDescriptor(faceDesc, 0.0, nullptr);
     if (!fontRef) {
       NS_WARNING("failed to create a CTFontRef");
       continue;
