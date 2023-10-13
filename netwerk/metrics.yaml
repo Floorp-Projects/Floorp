@@ -227,3 +227,66 @@ networking:
       - acreskey@mozilla.com
     expires: never
     telemetry_mirror: NETWORKING_DOWNLOAD_THROUGHPUT_HTTP_3
+
+  http_1_upload_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/1.0, http/1.1 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_1
+
+  http_2_upload_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/2 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_2
+
+  http_3_upload_throughput:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 5000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/3 requests larger than 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858256#c2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_3
