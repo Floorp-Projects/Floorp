@@ -14,12 +14,13 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
- * A bottom sheet fragment displaying the Firefox Translation dialog.
+ * A bottom sheet fragment displaying the Firefox Translation Options dialog.
  */
-class TranslationsDialogFragment : BottomSheetDialogFragment() {
+class TranslationOptionsDialogFragment : BottomSheetDialogFragment() {
 
     private var behavior: BottomSheetBehavior<View>? = null
 
@@ -40,13 +41,21 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
     ): View = ComposeView(requireContext()).apply {
         setContent {
             FirefoxTheme {
-                TranslationsDialogBottomSheet(
-                    onSettingClicked = {
+                TranslationOptionsDialogBottomSheet(
+                    translationOptionsList = getTranslationOptionsList(),
+                    onBackClicked = {
                         findNavController().popBackStack()
                         findNavController().navigate(
-                            TranslationsDialogFragmentDirections.actionGlobalToTranslationOptionsDialogFragment(),
+                            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
                         )
                     },
+                    onTranslationSettingsClicked = {
+                        findNavController().popBackStack()
+                        findNavController().navigate(
+                            TranslationSettingsFragmentDirections.actionGlobalToTranslationSettingsFragment(),
+                        )
+                    },
+                    aboutTranslationClicked = {},
                 )
             }
         }

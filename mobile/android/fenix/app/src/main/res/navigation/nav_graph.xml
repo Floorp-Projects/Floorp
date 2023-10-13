@@ -164,7 +164,12 @@
     <action
         android:id="@+id/action_global_tabSettingsFragment"
         app:destination="@id/tabsSettingsFragment" />
-
+    <action
+        android:id="@+id/action_global_to_translationOptionsDialogFragment"
+        app:destination="@id/translationOptionsDialogFragment" />
+    <action
+        android:id="@+id/action_global_to_translationSettingsFragment"
+        app:destination="@id/translationSettingsFragment" />
     <dialog
         android:id="@+id/tabsTrayFragment"
         android:name="org.mozilla.fenix.tabstray.TabsTrayFragment">
@@ -422,6 +427,14 @@
     <dialog
         android:id="@+id/translationsDialogFragment"
         android:name="org.mozilla.fenix.translations.TranslationsDialogFragment"/>
+
+    <dialog
+        android:id="@+id/translationOptionsDialogFragment"
+        android:name="org.mozilla.fenix.translations.TranslationOptionsDialogFragment" />
+
+    <fragment
+        android:id="@+id/translationSettingsFragment"
+        android:name="org.mozilla.fenix.translations.TranslationSettingsFragment" />
 
     <fragment
         android:id="@+id/savedLoginsAuthFragment"

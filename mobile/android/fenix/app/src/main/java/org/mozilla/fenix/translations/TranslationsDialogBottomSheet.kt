@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -36,7 +38,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Firefox Translations bottom sheet dialog.
  */
 @Composable
-fun TranslationsDialogBottomSheet() {
+fun TranslationsDialogBottomSheet(onSettingClicked: () -> Unit) {
     Column(
         modifier = Modifier
             .background(
@@ -45,7 +47,7 @@ fun TranslationsDialogBottomSheet() {
             )
             .padding(16.dp),
     ) {
-        TranslationsDialogHeader()
+        TranslationsDialogHeader(onSettingClicked)
 
         Spacer(modifier = Modifier.height(14.dp))
 
@@ -68,13 +70,15 @@ fun TranslationsDialogBottomSheet() {
 }
 
 @Composable
-private fun TranslationsDialogHeader() {
+private fun TranslationsDialogHeader(onSettingClicked: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = stringResource(id = R.string.translations_bottom_sheet_title),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() },
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline7,
         )
@@ -82,12 +86,12 @@ private fun TranslationsDialogHeader() {
         Spacer(modifier = Modifier.width(4.dp))
 
         IconButton(
-            onClick = {},
+            onClick = { onSettingClicked() },
             modifier = Modifier.size(24.dp),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.mozac_ic_settings_24),
-                contentDescription = null,
+                contentDescription = stringResource(id = R.string.translation_option_bottom_sheet_title),
                 tint = FirefoxTheme.colors.iconPrimary,
             )
         }
@@ -152,6 +156,6 @@ private fun TranslationsDialogActionButtons() {
 @LightDarkPreview
 private fun TranslationsDialogBottomSheetPreview() {
     FirefoxTheme {
-        TranslationsDialogBottomSheet()
+        TranslationsDialogBottomSheet(onSettingClicked = {})
     }
 }
