@@ -689,11 +689,7 @@ support-files = [
 fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 skip-if = ["os == 'linux' && asan"] # Bug 1789051
 
-["browser_waitForLoadOrTimeout.js"]
+["browser_waitForLoadStartOrTimeout.js"]
 https_first_disabled = true
-skip-if = [
-  "tsan", # Bug 1683730
-  "os == 'linux' && bits == 64 && !debug", # Bug 1666092
-]
 
 ["browser_whereToOpen.js"]
