@@ -360,4 +360,7 @@
     <!-- Star icon fill colors -->
     <color name="mozac_ic_star_filled">@color/photonBlack</color>
     <color name="mozac_ic_star_unfilled">#D9D9D9</color>
+
+    <!-- Private Mode mask icon circle fill colors -->
+    <color name="mozac_ui_private_mode_circle_fill" tools:ignore="UnusedResources">@color/photonPurple60</color>
 </resources>

@@ -39,7 +39,7 @@
 
         <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/counter_mask"
-            app:srcCompat="@drawable/mozac_ui_tabcounter_badge"
+            app:srcCompat="@drawable/mozac_ic_private_mode_circle_fill_20"
             android:translationX="8dp"
             android:translationY="-8dp"
             android:layout_height="wrap_content"

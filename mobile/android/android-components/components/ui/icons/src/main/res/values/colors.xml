@@ -9,4 +9,7 @@
     <!-- Star icon fill colors for mozac_ic_star_one_half_fill_20 -->
     <color name="mozac_ic_star_filled">#000000</color>
     <color name="mozac_ic_star_unfilled">#FFFFFF</color>
+
+    <!-- Private Mode mask icon circle fill colors for mozac_ic_private_mode_circle_fill_20 -->
+    <color name="mozac_ui_private_mode_circle_fill">#000000</color>
 </resources>
