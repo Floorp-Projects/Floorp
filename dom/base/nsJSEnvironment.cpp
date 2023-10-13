@@ -1693,20 +1693,35 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
   }
 
   if (!sScheduler.IsUserActive()) {
-    Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
-    // Try to not delay the next RefreshDriver tick, so give a reasonable
-    // deadline for collectors.
-    if (next.isSome()) {
-      if (sScheduler.InIncrementalGC() || sScheduler.IsCollectingCycles()) {
+    if (sScheduler.InIncrementalGC() || sScheduler.IsCollectingCycles()) {
+      Maybe<TimeStamp> next = nsRefreshDriver::GetNextTickHint();
+      if (next.isSome()) {
+        // Try to not delay the next RefreshDriver tick, so give a reasonable
+        // deadline for collectors.
         sScheduler.RunNextCollectorTimer(aReason, next.value());
-      } else {
-        // In order to improve performance on the next page, run a minor GC.
-        // The 16ms limit ensures it isn't called all the time if there are for
-        // example multiple iframes loading at the same time.
-        JS::RunNurseryCollection(CycleCollectedJSRuntime::Get()->Runtime(),
-                                 JS::GCReason::PREPARE_FOR_PAGELOAD,
-                                 mozilla::TimeDuration::FromMilliseconds(16));
       }
+    } else {
+      nsCOMPtr<nsIDocShell> shell = aDocShell;
+      NS_DispatchToCurrentThreadQueue(
+          NS_NewRunnableFunction(
+              "nsJSContext::MaybeRunNextCollectorSlice",
+              [shell] {
+                nsIDocShell::BusyFlags busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
+                shell->GetBusyFlags(&busyFlags);
+                if (busyFlags == nsIDocShell::BUSY_FLAGS_NONE) {
+                  return;
+                }
+
+                // In order to improve performance on the next page, run a minor
+                // GC. The 16ms limit ensures it isn't called all the time if
+                // there are for example multiple iframes loading at the same
+                // time.
+                JS::RunNurseryCollection(
+                    CycleCollectedJSRuntime::Get()->Runtime(),
+                    JS::GCReason::PREPARE_FOR_PAGELOAD,
+                    mozilla::TimeDuration::FromMilliseconds(16));
+              }),
+          EventQueuePriority::Idle);
     }
   }
 }
