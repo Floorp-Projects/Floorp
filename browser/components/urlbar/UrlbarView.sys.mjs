@@ -9,6 +9,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.sys.mjs",
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -1365,6 +1367,10 @@ export class UrlbarView {
     noWrap.appendChild(action);
     item._elements.set("action", action);
 
+    let userContextBox = this.#createElement("span");
+    noWrap.appendChild(userContextBox);
+    item._elements.set("user-context", userContextBox);
+
     let url = this.#createElement("span");
     url.className = "urlbarView-url";
     item._content.appendChild(url);
@@ -1717,6 +1723,11 @@ export class UrlbarView {
 
     let favicon = item._elements.get("favicon");
     favicon.src = this.#iconForResult(result);
+
+    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
+      let userContextBox = item._elements.get("user-context");
+      this.#setResultUserContextBox(result, userContextBox);
+    }
 
     let title = item._elements.get("title");
     this.#setResultTitle(result, title);
@@ -2600,6 +2611,62 @@ export class UrlbarView {
       highlight[0] + startOffset,
       highlight[1],
     ]);
+  }
+
+  /**
+   * Sets `result`'s userContext in `userContextNode`'s DOM.
+   *
+   * @param {UrlbarResult} result
+   *   The result for which the userContext is being set.
+   * @param {Element} userContextNode
+   *   The DOM node for the result's userContext.
+   */
+  #setResultUserContextBox(result, userContextNode) {
+    // clear the element
+    while (userContextNode.firstChild) {
+      userContextNode.firstChild.remove();
+    }
+    if (
+      lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+      result.payload.userContextId
+    ) {
+      let userContextBox = this.#createElement("span");
+      userContextBox.classList.add("urlbarView-userContext-indicator");
+      let identity = lazy.ContextualIdentityService.getPublicIdentityFromId(
+        result.payload.userContextId
+      );
+      let label = lazy.ContextualIdentityService.getUserContextLabel(
+        result.payload.userContextId
+      );
+      if (identity) {
+        userContextNode.classList.add("urlbarView-action");
+        let userContextLabel = this.#createElement("label");
+        userContextLabel.classList.add("urlbarView-userContext-label");
+        userContextBox.appendChild(userContextLabel);
+
+        let userContextIcon = this.#createElement("img");
+        userContextIcon.classList.add("urlbarView-userContext-icons");
+        userContextBox.appendChild(userContextIcon);
+
+        if (identity.icon) {
+          userContextIcon.classList.add("identity-icon-" + identity.icon);
+          userContextIcon.src =
+            "resource://usercontext-content/" + identity.icon + ".svg";
+        }
+        if (identity.color) {
+          userContextBox.classList.add("identity-color-" + identity.color);
+        }
+        if (label) {
+          userContextLabel.setAttribute("value", label);
+          userContextLabel.innerText = label;
+        }
+        userContextBox.setAttribute("tooltiptext", label);
+        userContextNode.appendChild(userContextBox);
+      }
+    } else {
+      userContextNode.classList.remove("urlbarView-action");
+    }
   }
 
   /**

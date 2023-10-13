@@ -217,6 +217,16 @@
   }
 }
 
+/* Display userContext icon instead of text, when window is too narrow. */
+.urlbarView-results[wrap] > .urlbarView-row[type=switchtab] {
+  .urlbarView-userContext-label {
+    display: none;
+  }
+  .urlbarView-userContext-icons {
+    display: inline-block;
+  }
+}
+
 .urlbarView-overflowable,
 .urlbarView-url {
   overflow: hidden;
@@ -524,6 +534,28 @@
      fallback fonts with extreme metrics. */
   line-height: 1.4;
 }
+
+/* user context box */
+.urlbarView-userContext-indicator {
+  align-items: center;
+}
+
+.urlbarView-userContext-label {
+  color: var(--identity-tab-color);
+}
+
+.urlbarView-userContext-icons {
+  height: var(--urlbarView-favicon-width);
+  vertical-align: middle;
+  background-image: var(--identity-icon);
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+  display: none;
+}
+
 
 /* Tail suggestions */
 

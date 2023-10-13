@@ -146,6 +146,7 @@ add_task(async function test_tab_matches() {
       makeTabSwitchResult(context, {
         uri: "http://foobar.org/",
         title: "foobar.org - much better than ABC, definitely better than XYZ",
+        userContextId: 3,
       }),
     ],
   });

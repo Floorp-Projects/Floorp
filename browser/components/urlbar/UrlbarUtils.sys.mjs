@@ -1556,6 +1556,18 @@ export var UrlbarUtils = {
     }
     return `${source}_${result.payload.telemetryType}`;
   },
+
+  /**
+   * For use when we want to hash a pair of items in a dictionary
+   *
+   * @param {string[]} tokens
+   *   list of tokens to join into a string eg "a" "b" "c"
+   * @returns {string}
+   *   the tokens joined in a string "a|b|c"
+   */
+  tupleString(...tokens) {
+    return tokens.filter(t => t).join("|");
+  },
 };
 
 ChromeUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

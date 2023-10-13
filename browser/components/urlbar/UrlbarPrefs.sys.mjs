@@ -245,6 +245,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include QuickActions in the default search mode.
   ["suggest.quickactions", false],
 
+  // Controls whether searching for open tabs returns tabs from any container
+  // or only from the current container.
+  ["switchTabs.searchAllContainers", false],
+
   // If disabled, QuickActions will not be included in either the default search
   // mode or the QuickActions search mode.
   ["quickactions.enabled", false],

@@ -46,3 +46,22 @@ function openTabInContainer(gBrowser, url, reopenMenu, id) {
 function loadTestSubscript(filePath) {
   Services.scriptloader.loadSubScript(new URL(filePath, gTestPath).href, this);
 }
+
+/**
+ * Opens `uri' in a new tab with the provided userContextId and focuses it.
+ *
+ * @param {string} uri The uri which should be opened in the new tab.
+ * @param {number} userContextId The id of the user context in which the tab
+ *                               should be opened.
+ * @returns {MozTabbrowserTab} The newly opened tab
+ */
+async function openTabInUserContext(uri, userContextId) {
+  let tab = BrowserTestUtils.addTab(gBrowser, uri, { userContextId });
+
+  gBrowser.selectedTab = tab;
+  tab.ownerGlobal.focus();
+
+  let browser = gBrowser.getBrowserForTab(tab);
+  await BrowserTestUtils.browserLoaded(browser);
+  return tab;
+}

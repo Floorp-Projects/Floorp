@@ -1074,7 +1074,10 @@ export class UrlbarInput {
         let switched = this.window.switchToTabHavingURI(
           Services.io.newURI(url),
           false,
-          loadOpts
+          loadOpts,
+          lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")
+            ? result.payload.userContextId
+            : null
         );
         if (switched && prevTab.isEmpty) {
           this.window.gBrowser.removeTab(prevTab);
