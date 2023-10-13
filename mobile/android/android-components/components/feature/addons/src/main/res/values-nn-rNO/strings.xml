@@ -118,6 +118,8 @@
     <string name="mozac_feature_addons_permissions_dialog_title">Leggje til %1$s?</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Det krev løyve frå deg for å:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Den vil:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Legg til</string>
     <!-- This is a button to allow the optional permissions requested by an add-on . -->
@@ -138,6 +140,8 @@
     <string name="mozac_feature_addons_addons">Tillegg</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Utvidingshandsamar</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Tillegg er mellombels deaktivert</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">Finn fleire tillegg</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

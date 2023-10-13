@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">開いているタブのユーザーデータへアクセスするため開発ツールを展開</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">バージョン</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">作者</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">作者</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">作者</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">最終更新日時</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -132,6 +134,8 @@
     <string name="mozac_feature_addons_addons">アドオン</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">アドオンマネージャー</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">アドオンを再起動</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">アドオンを探す</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

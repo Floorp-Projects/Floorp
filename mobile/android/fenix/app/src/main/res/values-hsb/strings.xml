@@ -538,7 +538,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Zdalene pytanje zmylkow přez USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Pytawy pokazać</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Pytawy pokazać</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Pytanske namjety pokazać</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1948,7 +1948,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Přidać</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Składować</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Składować</string>
 
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Wobdźěłać</string>
@@ -2198,7 +2198,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Kontrola pohódnoćenjow</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Kontrola pohódnoćenjow</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Kontrola pohódnoćenjow</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Spušćomne pohódnoćenja</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2243,7 +2245,9 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Wabjenje w kontroli pohódnoćenjow pokazać</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Budźeće hdys a hdys wabjenje za relewantne produkty widźeć. Wšě wabjenske anonsy dyrbja našim standardam za kwalitu pohódnoćenjow wotpowědować. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Budźeće hdys a hdys wabjenje za relewantne produkty widźeć. Wšě wabjenske anonsy dyrbja našim standardam za kwalitu pohódnoćenjow wotpowědować. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Budźeće hdys a hdys wabjenje za relewantne produkty widźeć. Wabimy jenož za produkty ze spušćomnymi pohódnoćenjemi. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Dalše informacije</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2271,7 +2275,9 @@ To budźe jenož pomhać, kwalitu pohódnoćenjow posudźić, nic kwalitu produk
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Jeli widźiće, zo tutón produkt je zaso na składźe, zdźělće to a budźemy na kontrolowanju pohódnoćenjow dźěłać.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Zdźělić, zo tutón produkt je zaso na składźe</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Zdźělić, zo tutón produkt je zaso na składźe</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Zdźělić, zo produkt je na składźe</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Kontrola kwalitu pohódnoćenjow</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

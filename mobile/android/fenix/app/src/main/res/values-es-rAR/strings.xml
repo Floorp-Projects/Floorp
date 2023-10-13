@@ -545,7 +545,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depuración remota vía USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Mostrar buscadores</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Mostrar buscadores</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugerencias de búsqueda</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -693,7 +693,7 @@
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Administrar cuenta</string>
     <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
-    <string name="preferences_manage_account_summary">Cambiar su contraseña, administrar la recopilación de datos o eliminar su cuenta</string>
+    <string name="preferences_manage_account_summary">Cambiar la contraseña, administrar la recopilación de datos o eliminar la cuenta</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ahora</string>
     <!-- Preference category for sync -->
@@ -1967,7 +1967,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Agregar</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Guardar</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Guardar</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Editar</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2219,7 +2219,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Verificador de revisiones</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Verificador de revisiones</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Verificador de revisiones</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Revisiones confiables</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2263,7 +2265,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Mostrar publicidad en el verificador de revisiones</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Verás publicidades ocasionales de productos relevantes. Todos los anuncios deben cumplir con nuestros estándares de calidad de revisiones. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Verás publicidades ocasionales de productos relevantes. Todos los anuncios deben cumplir con nuestros estándares de calidad de revisiones. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Verás anuncios ocasionales de productos relevantes. Solo anunciamos productos con valoraciones fiables. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Conocer más</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2291,7 +2295,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Si ves que este producto está nuevamente en stock, informanos y trabajaremos en verificar las revisiones.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Informar que este producto vuelve a estar en stock</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Informar que este producto vuelve a estar en stock</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Informar que el producto está en stock.</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Verificando la calidad de la revisión</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

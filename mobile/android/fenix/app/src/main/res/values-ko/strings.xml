@@ -550,7 +550,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB 원격 디버깅</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">검색 엔진 표시</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">검색 엔진 표시</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">검색 제안 표시</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1994,7 +1994,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">추가</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">저장</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">저장</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">편집</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2246,7 +2246,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">리뷰 검사기</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">리뷰 검사기</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">리뷰 검사기</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">신뢰할 수 있는 리뷰</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2290,7 +2292,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">리뷰 검사기에 광고 표시</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">관련 제품에 대한 광고가 가끔 표시됩니다. 모든 광고는 리뷰 품질 기준을 충족해야 합니다. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">관련 제품에 대한 광고가 가끔 표시됩니다. 모든 광고는 리뷰 품질 기준을 충족해야 합니다. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">관련 제품에 대한 광고가 가끔 표시됩니다. 믿을 수 있는 리뷰가 있는 제품만을 광고합니다. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">더 알아보기</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2318,7 +2322,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">이 제품이 재입고된 것을 확인하시면, 보고해 주시면 리뷰를 확인하도록 하겠습니다.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">이 제품이 재입고되었다고 보고</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">이 제품이 재입고되었다고 보고</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">제품 재고가 있다고 보고</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">리뷰 품질 확인 중</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

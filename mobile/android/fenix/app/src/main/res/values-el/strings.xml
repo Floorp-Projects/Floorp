@@ -2194,7 +2194,11 @@
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">Πόσο αξιόπιστες είναι αυτές οι κριτικές;</string>
     <!-- Title for when the rating has been updated by the review checker -->
-    <string name="review_quality_check_adjusted_rating_title">Προσαρμοσμένη βαθμολογία</string>
+    <string name="review_quality_check_adjusted_rating_title">Αναπροσαρμοσμένη βαθμολογία</string>
+    <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
+    <string name="review_quality_check_highlights_title">Σημαντικά σημεία από πρόσφατες κριτικές</string>
+    <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Τα <b>σημαντικά σημεία</b> προέρχονται από κριτικές για το %s, οι οποίες γράφτηκαν τις τελευταίες 80 ημέρες και πιστεύουμε ότι είναι αξιόπιστες.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Μάθετε περισσότερα σχετικά με το %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

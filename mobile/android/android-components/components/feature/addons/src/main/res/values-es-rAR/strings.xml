@@ -145,7 +145,7 @@
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text">Los complementos están deshabilitados temporalmente</string>
     <!-- The content of the "crash" notification in the add-ons manager -->
-    <string name="mozac_feature_addons_manager_notification_content_text">Uno o más complementos dejaron de funcionar, haciendo que tu sistema sea inestable.</string>
+    <string name="mozac_feature_addons_manager_notification_content_text">Uno o más complementos dejaron de funcionar, haciendo que el sistema sea inestable.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button">Reiniciar complementos</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->

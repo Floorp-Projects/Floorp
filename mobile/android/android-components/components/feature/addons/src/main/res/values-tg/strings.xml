@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">Васеъкунии абзорҳои барномасозӣ барои дастрас кардани маълумоти шумо дар варақаҳои кушодашуда</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Силсила</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">Муаллиф</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">Муаллифон</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Муаллифон</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Санаи навсозии охирин</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -114,10 +116,18 @@
     <string name="mozac_feature_addons_remove">Тоза кардан</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s-ро илова мекунед?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s иҷозати иловагиро дархост мекунад.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Ин иҷозати шуморо барои зерин талаб мекунад:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Дархост барои:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Илова кардан</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">Иҷозат додан</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">Рад кардан</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Бекор кардан</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -132,6 +142,12 @@
     <string name="mozac_feature_addons_addons">Ҷузъҳои иловагӣ</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Мудири ҷузъи иловагӣ</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Ҷузъҳои иловагӣ муваққатан ғайрифаъол шудаанд</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Кори як ё якчанд ҷузъи иловагӣ қатъ карда шуд ва кори низоми шуморо ба вазъияти ноустувор гардонид.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Аз нав оғоз кардани ҷузъҳои иловагӣ</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">Ёфтани ҷузъҳои иловагии бештар</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

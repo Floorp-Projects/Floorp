@@ -682,6 +682,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">ანგარიშის მართვა</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">შეცვალეთ თქვენი პაროლი, მართეთ მონაცემთა აღრიცხვა ან წაშალეთ თქვენი ანგარიში</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">დასინქრონება ახლავე</string>
     <!-- Preference category for sync -->

@@ -697,6 +697,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Mba’ete ñangareko</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Emoambue ñe’ẽñemi, eñangareko mba’ekuaarã ñembyaty térã embogue mba’ete</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Embojuehe ko’ág̃a</string>
     <!-- Preference category for sync -->

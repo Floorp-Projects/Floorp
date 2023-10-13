@@ -483,7 +483,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ניפוי שגיאות מרחוק דרך USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">הצגת מנועי חיפוש</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">הצגת מנועי חיפוש</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">הצגת הצעות חיפוש</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -605,9 +605,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">התוספת אינה נתמכת</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">התוספת אינה נתמכת</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">התוספת כבר מותקנת</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">התוספת כבר מותקנת</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -622,6 +622,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">ניהול חשבון</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">שינוי הססמה שלך, ניהול איסוף נתונים או מחיקת החשבון שלך</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">סנכרון כעת</string>
     <!-- Preference category for sync -->
@@ -1880,7 +1882,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">הוספה</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">שמירה</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">שמירה</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">עריכה</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2130,7 +2132,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">בודק הסקירות</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">בודק הסקירות</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">בודק הסקירות</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">סקירות אמינות</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2152,15 +2156,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[אנו מקצים לסקירות של כל מוצר <b>ציון אות</b> מ־A עד F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">סקירות אמינות. אנו מאמינים שהסקירות הן ככל הנראה מלקוחות אמיתיים שהשאירו סקירות כנות ושאינן משוחדות.</string>
+    <string name="review_quality_check_info_grade_info_AB">סקירות אמינות. אנו מאמינים שהסקירות הן ככל הנראה מלקוחות אמיתיים שהשאירו סקירות כנות ושאינן משוחדות.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">אנו מאמינים שסקירות אלו אמינות.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">אנו מאמינים שסקירות אלו אמינות.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">אנו מאמינים שיש שילוב של סקירות אמינות ובלתי אמינות.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">סקירות בלתי אמינות. אנו מאמינים שהסקירות כנראה מזויפות או של סוקרים מוטים או משוחדים.</string>
+    <string name="review_quality_check_info_grade_info_DF">סקירות בלתי אמינות. אנו מאמינים שהסקירות כנראה מזויפות או של סוקרים מוטים או משוחדים.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">אנו מאמינים שסקירות אלו אינן אמינות.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">אנו מאמינים שסקירות אלו אינן אמינות.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>הדירוג המותאם</b> מבוסס רק על סקירות שאנו מאמינים שהן אמינות.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
@@ -2174,7 +2178,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">הצגת פרסומות בבודק הסקירות</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">מדי פעם יוצגו פרסומות עבור מוצרים רלוונטיים. כל הפרסומות חייבות לעמוד בתקני איכות הסקירות שלנו. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">מדי פעם יוצגו פרסומות עבור מוצרים רלוונטיים. כל הפרסומות חייבות לעמוד בתקני איכות הסקירות שלנו. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">מדי פעם יוצגו פרסומות עבור מוצרים רלוונטיים. אנו מפרסמים רק מוצרים עם סקירות אמינות. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">מידע נוסף</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2201,7 +2207,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">אם מוצר זה חזר למלאי, נא לדווח על כך ואנו נעבוד על בדיקת הסקירות.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">שליחת דיווח שמוצר זה חזר למלאי</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">שליחת דיווח שמוצר זה חזר למלאי</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">שליחת דיווח שמוצר זה חזר למלאי</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">בתהליך בדיקת איכות הסקירות</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

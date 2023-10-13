@@ -670,9 +670,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Ҷузъи иловагӣ дастгирӣ намешавад</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Ҷузъи иловагӣ дастгирӣ намешавад</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Ҷузъи иловагӣ аллакай насб карда шуд</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Ҷузъи иловагӣ аллакай насб карда шуд</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -687,6 +687,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Идоракунии ҳисобҳо</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Ниҳонвожаи худро иваз кунед, ҷамъоварии маълумотро идора намоед ё ҳисоби худро нест кунед</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Ҳозир ҳамоҳанг кунед</string>
     <!-- Preference category for sync -->
@@ -2221,15 +2223,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Мо ба тақризҳои ҳар як маҳсул <b>баҳои ҳарфиро</b> аз A то F таъин мекунем.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Тақризҳои боэътимод. Мо боварӣ дорем, ки тақризҳо аз муштариёни ҳақиқӣ ба таври ростқавл ва беғаразона пешниҳод карда шудаанд.</string>
+    <string name="review_quality_check_info_grade_info_AB">Тақризҳои боэътимод. Мо боварӣ дорем, ки тақризҳо аз муштариёни ҳақиқӣ ба таври ростқавл ва беғаразона пешниҳод карда шудаанд.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">Мо умедворем, ки тақризҳо боэътимоданд.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Мо умедворем, ки тақризҳо боэътимоданд.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Мо боварӣ дорем, ки ҳозир будани маҷмӯи тақризҳои боэътимод ва беэътимод имконпазир аст.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Тақризҳои беэътимод. Мо боварӣ дорем, ки чунин тақризҳо аз тақризгарони қалбақӣ ва боғараз ворид карда шудаанд.</string>
+    <string name="review_quality_check_info_grade_info_DF">Тақризҳои беэътимод. Мо боварӣ дорем, ки чунин тақризҳо аз тақризгарони қалбақӣ ва боғараз ворид карда шудаанд.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">Мо умедворем, ки тақризҳо беэътимоданд.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Мо умедворем, ки тақризҳо беэътимоданд.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Баҳодиҳии санҷида дурустшуда</b> танҳо дар он тақризҳое асос меёбад, ки ба умеди мо боэътимод мебошанд.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
