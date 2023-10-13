@@ -1351,13 +1351,6 @@ function makeExpectedResult({
       url: WEATHER_SUGGESTION.url,
       iconId: "6",
       helpUrl: QuickSuggest.HELP_URL,
-      helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-      },
-      isBlockable: true,
-      blockL10n: {
-        id: "urlbar-result-menu-dismiss-firefox-suggest",
-      },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
       provider: "accuweather",

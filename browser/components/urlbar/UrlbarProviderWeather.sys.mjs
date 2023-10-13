@@ -241,19 +241,6 @@ class ProviderWeather extends UrlbarProvider {
         url: suggestion.url,
         iconId: suggestion.current_conditions.icon_id,
         helpUrl: lazy.QuickSuggest.HELP_URL,
-        // TODO: Remove helpL10n, isBlockable, and blockL10n once the telemetry
-        // test is updated for the result menu.
-        helpL10n: {
-          id: lazy.UrlbarPrefs.get("resultMenu")
-            ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-            : "firefox-suggest-urlbar-learn-more",
-        },
-        isBlockable: true,
-        blockL10n: {
-          id: lazy.UrlbarPrefs.get("resultMenu")
-            ? "urlbar-result-menu-dismiss-firefox-suggest"
-            : "firefox-suggest-urlbar-block",
-        },
         requestId: suggestion.request_id,
         source: suggestion.source,
         provider: suggestion.provider,

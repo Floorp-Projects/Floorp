@@ -1566,23 +1566,7 @@ export class UrlbarView {
       item._buttons.get("tip").textContent = result.payload.buttonText;
     }
 
-    if (!lazy.UrlbarPrefs.get("resultMenu")) {
-      if (result.payload.isBlockable) {
-        this.#addRowButton(item, {
-          name: "block",
-          command: "dismiss",
-          l10n: result.payload.blockL10n,
-        });
-      }
-      if (result.payload.helpUrl) {
-        this.#addRowButton(item, {
-          name: "help",
-          command: "help",
-          url: result.payload.helpUrl,
-          l10n: result.payload.helpL10n,
-        });
-      }
-    } else if (this.#getResultMenuCommands(result)) {
+    if (this.#getResultMenuCommands(result)) {
       this.#addRowButton(item, {
         name: "menu",
         l10n: {
@@ -1639,9 +1623,6 @@ export class UrlbarView {
       // always need updating.
       provider?.getViewTemplate ||
       oldResult.isRichSuggestion != result.isRichSuggestion ||
-      (!lazy.UrlbarPrefs.get("resultMenu") &&
-        (!!result.payload.helpUrl != item._buttons.has("help") ||
-          !!result.payload.isBlockable != item._buttons.has("block"))) ||
       !!this.#getResultMenuCommands(result) != item._buttons.has("menu") ||
       !!oldResult.showFeedbackMenu != !!result.showFeedbackMenu ||
       !lazy.ObjectUtils.deepEqual(
@@ -2363,9 +2344,7 @@ export class UrlbarView {
     let result = row?.result;
     if (updateInput) {
       let urlOverride = null;
-      if (element?.classList?.contains("urlbarView-button-help")) {
-        urlOverride = result.payload.helpUrl;
-      } else if (element?.classList?.contains("urlbarView-button")) {
+      if (element?.classList?.contains("urlbarView-button")) {
         // Clear the input when a button is selected.
         urlOverride = "";
       }
@@ -3016,9 +2995,6 @@ export class UrlbarView {
    *   Array of menu commands available for the result, null if there are none.
    */
   #getResultMenuCommands(result) {
-    if (!lazy.UrlbarPrefs.get("resultMenu")) {
-      return null;
-    }
     if (this.#resultMenuCommands.has(result)) {
       return this.#resultMenuCommands.get(result);
     }

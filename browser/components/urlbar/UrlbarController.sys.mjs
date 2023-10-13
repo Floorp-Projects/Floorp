@@ -1315,18 +1315,12 @@ class TelemetryEvent {
     if (!element) {
       return "none";
     }
-    if (
-      element.classList.contains("urlbarView-button-help") ||
-      element.dataset.command == "help"
-    ) {
+    if (element.dataset.command == "help") {
       return result?.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
         ? "tiphelp"
         : "help";
     }
-    if (
-      element.classList.contains("urlbarView-button-block") ||
-      element.dataset.command == "dismiss"
-    ) {
+    if (element.dataset.command == "dismiss") {
       return "block";
     }
     // Now handle the result.

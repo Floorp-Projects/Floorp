@@ -1164,7 +1164,6 @@ export class UrlbarInput {
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
         let scalarName =
-          element.classList.contains("urlbarView-button-help") ||
           element.dataset.command == "help"
             ? `${result.payload.type}-help`
             : `${result.payload.type}-picked`;

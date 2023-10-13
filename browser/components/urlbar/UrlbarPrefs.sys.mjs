@@ -377,9 +377,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // suggestions.
   ["quicksuggest.allowPositionInSuggestions", true],
 
-  // Enable three-dot options button and menu for eligible results.
-  ["resultMenu", true],
-
   // Allow the result menu button to be reached with the Tab key.
   ["resultMenu.keyboardAccessible", true],
 

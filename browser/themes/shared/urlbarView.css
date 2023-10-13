@@ -339,14 +339,6 @@
   }
 }
 
-.urlbarView-button-block {
-  background-image: url("chrome://browser/skin/thumb-down.svg");
-}
-
-.urlbarView-button-help {
-  background-image: url("chrome://global/skin/icons/help.svg");
-}
-
 /* Result menu button */
 
 .urlbarView-button-menu {
