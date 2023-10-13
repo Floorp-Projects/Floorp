@@ -63,16 +63,7 @@ MIDIPort::~MIDIPort() {
 }
 
 bool MIDIPort::Initialize(const MIDIPortInfo& aPortInfo, bool aSysexEnabled) {
-  nsCOMPtr<Document> document = GetDocumentIfCurrent();
-  if (!document) {
-    return false;
-  }
-
-  nsCOMPtr<nsIURI> uri = document->GetDocumentURI();
-  if (!uri) {
-    return false;
-  }
-
+  nsIURI* uri = GetDocumentIfCurrent()->GetDocumentURI();
   nsAutoCString origin;
   nsresult rv = nsContentUtils::GetASCIIOrigin(uri, origin);
   if (NS_FAILED(rv)) {
