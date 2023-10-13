@@ -187,7 +187,7 @@ class BuildMonitor(MozbuildObject):
         warnings_path is a path of a warnings database to use.
         """
         self._warnings_path = warnings_path
-        self.resources = SystemResourceMonitor(poll_interval=1.0)
+        self.resources = SystemResourceMonitor(poll_interval=0.1)
         self._resources_started = False
 
         self.tiers = TierStatus(self.resources)
