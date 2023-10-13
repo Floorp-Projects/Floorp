@@ -959,9 +959,15 @@ class SystemResourceMonitor(object):
                 stringArray.append(string)
                 return len(stringArray) - 1
 
-        def add_marker(name_index, start, end, data):
-            markers["startTime"].append((start - startTime) * 1000)
-            markers["endTime"].append((end - startTime) * 1000)
+        def add_marker(name_index, start, end, data, precision=None):
+            # The precision argument allows setting how many digits after the
+            # decimal point are desired.
+            # For resource use samples where we sample with a timer, an integer
+            # number of ms is good enough.
+            # For short duration markers, the profiler front-end may show up to
+            # 3 digits after the decimal point (ie. µs precision).
+            markers["startTime"].append(round((start - startTime) * 1000, precision))
+            markers["endTime"].append(round((end - startTime) * 1000, precision))
             markers["category"].append(0)
             # 1 = marker with start and end times, 2 = start but no end.
             markers["phase"].append(1)
@@ -987,7 +993,7 @@ class SystemResourceMonitor(object):
 
             # Sample times
             samples["stack"].append(0)
-            samples["time"].append((m.end - startTime) * 1000)
+            samples["time"].append(round((m.end - startTime) * 1000))
 
             # CPU
             markerData = {
@@ -1004,7 +1010,7 @@ class SystemResourceMonitor(object):
                     )
                     if total > 0:
                         valid_cpu_fields.add(field)
-                    markerData[field] = total
+                    markerData[field] = round(total, 3)
             for field in ["nice", "user", "system", "iowait", "idle"]:
                 if hasattr(m.cpu_times[0], field):
                     markerData[field + "_pct"] = format_percent(
@@ -1087,13 +1093,13 @@ class SystemResourceMonitor(object):
             if total_cpu_time_ms > 0:
                 markerData["cpuTime"] = total_cpu_time_ms
 
-            add_marker(phase_string_index, v[0], v[1], markerData)
+            add_marker(phase_string_index, v[0], v[1], markerData, 3)
 
         # Add generic markers
         for name, start, end, text in self.markers:
             markerData = {"type": "Text"}
             if text:
                 markerData["text"] = text
-            add_marker(get_string_index(name), start, end, markerData)
+            add_marker(get_string_index(name), start, end, markerData, 3)
 
         return profile
