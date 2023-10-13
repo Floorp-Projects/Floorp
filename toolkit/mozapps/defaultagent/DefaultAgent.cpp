@@ -43,79 +43,6 @@
 
 namespace mozilla::default_agent {
 
-// This class is designed to prevent concurrency problems when accessing the
-// registry. It should be acquired before any usage of unprefixed registry
-// entries.
-class RegistryMutex {
- private:
-  nsAutoHandle mMutex;
-  bool mLocked;
-
- public:
-  RegistryMutex() : mMutex(nullptr), mLocked(false) {}
-  ~RegistryMutex() {
-    Release();
-    // nsAutoHandle will take care of closing the mutex's handle.
-  }
-
-  // Returns true on success, false on failure.
-  bool Acquire() {
-    if (mLocked) {
-      return true;
-    }
-
-    if (mMutex.get() == nullptr) {
-      // It seems like we would want to set the second parameter (bInitialOwner)
-      // to TRUE, but the documentation for CreateMutexW suggests that, because
-      // we aren't sure that the mutex doesn't already exist, we can't be sure
-      // whether we got ownership via this mechanism.
-      mMutex.own(CreateMutexW(nullptr, FALSE, REGISTRY_MUTEX_NAME));
-      if (mMutex.get() == nullptr) {
-        LOG_ERROR_MESSAGE(L"Couldn't open registry mutex: %#X", GetLastError());
-        return false;
-      }
-    }
-
-    DWORD mutexStatus =
-        WaitForSingleObject(mMutex.get(), REGISTRY_MUTEX_TIMEOUT_MS);
-    if (mutexStatus == WAIT_OBJECT_0) {
-      mLocked = true;
-    } else if (mutexStatus == WAIT_TIMEOUT) {
-      LOG_ERROR_MESSAGE(L"Timed out waiting for registry mutex");
-    } else if (mutexStatus == WAIT_ABANDONED) {
-      // This isn't really an error for us. No one else is using the registry.
-      // This status code means that we are supposed to check our data for
-      // consistency, but there isn't really anything we can fix here.
-      // This is an indication that an agent crashed though, which is clearly an
-      // error, so log an error message.
-      LOG_ERROR_MESSAGE(L"Found abandoned registry mutex. Continuing...");
-      mLocked = true;
-    } else {
-      // The only other documented status code is WAIT_FAILED. In the case that
-      // we somehow get some other code, that is also an error.
-      LOG_ERROR_MESSAGE(L"Failed to wait on registry mutex: %#X",
-                        GetLastError());
-    }
-    return mLocked;
-  }
-
-  bool IsLocked() { return mLocked; }
-
-  void Release() {
-    if (mLocked) {
-      if (mMutex.get() == nullptr) {
-        LOG_ERROR_MESSAGE(L"Unexpectedly missing registry mutex");
-        return;
-      }
-      BOOL success = ReleaseMutex(mMutex.get());
-      if (!success) {
-        LOG_ERROR_MESSAGE(L"Failed to release registry mutex");
-      }
-      mLocked = false;
-    }
-  }
-};
-
 // Returns true if the registry value name given is one of the
 // install-directory-prefixed values used by the Windows Default Browser Agent.
 // ex: "C:\Program Files\Mozilla Firefox|PreviousDefault"
@@ -213,6 +140,66 @@ static void WriteInstallationRegistryEntry() {
   }
 }
 
+RegistryMutex::~RegistryMutex() {
+  Release();
+  // nsAutoHandle will take care of closing the mutex's handle.
+}
+
+bool RegistryMutex::Acquire() {
+  if (mLocked) {
+    return true;
+  }
+
+  if (mMutex.get() == nullptr) {
+    // It seems like we would want to set the second parameter (bInitialOwner)
+    // to TRUE, but the documentation for CreateMutexW suggests that, because
+    // we aren't sure that the mutex doesn't already exist, we can't be sure
+    // whether we got ownership via this mechanism.
+    mMutex.own(CreateMutexW(nullptr, FALSE, REGISTRY_MUTEX_NAME));
+    if (mMutex.get() == nullptr) {
+      LOG_ERROR_MESSAGE(L"Couldn't open registry mutex: %#X", GetLastError());
+      return false;
+    }
+  }
+
+  DWORD mutexStatus =
+      WaitForSingleObject(mMutex.get(), REGISTRY_MUTEX_TIMEOUT_MS);
+  if (mutexStatus == WAIT_OBJECT_0) {
+    mLocked = true;
+  } else if (mutexStatus == WAIT_TIMEOUT) {
+    LOG_ERROR_MESSAGE(L"Timed out waiting for registry mutex");
+  } else if (mutexStatus == WAIT_ABANDONED) {
+    // This isn't really an error for us. No one else is using the registry.
+    // This status code means that we are supposed to check our data for
+    // consistency, but there isn't really anything we can fix here.
+    // This is an indication that an agent crashed though, which is clearly an
+    // error, so log an error message.
+    LOG_ERROR_MESSAGE(L"Found abandoned registry mutex. Continuing...");
+    mLocked = true;
+  } else {
+    // The only other documented status code is WAIT_FAILED. In the case that
+    // we somehow get some other code, that is also an error.
+    LOG_ERROR_MESSAGE(L"Failed to wait on registry mutex: %#X", GetLastError());
+  }
+  return mLocked;
+}
+
+bool RegistryMutex::IsLocked() { return mLocked; }
+
+void RegistryMutex::Release() {
+  if (mLocked) {
+    if (mMutex.get() == nullptr) {
+      LOG_ERROR_MESSAGE(L"Unexpectedly missing registry mutex");
+      return;
+    }
+    BOOL success = ReleaseMutex(mMutex.get());
+    if (!success) {
+      LOG_ERROR_MESSAGE(L"Failed to release registry mutex");
+    }
+    mLocked = false;
+  }
+}
+
 // Returns false (without setting aResult) if reading last run time failed.
 static bool CheckIfAppRanRecently(bool* aResult) {
   const ULONGLONG kTaskExpirationDays = 90;
@@ -248,8 +235,7 @@ DefaultAgent::RegisterTask(const nsAString& aUniqueToken) {
   //   2. If another installation's agent is holding the mutex, it either
   //      is far enough out of date that it doesn't yet use the migrated
   //      values, or it already did the migration for us.
-  RegistryMutex regMutex;
-  regMutex.Acquire();
+  mRegMutex.Acquire();
 
   WriteInstallationRegistryEntry();
 
@@ -262,8 +248,7 @@ NS_IMETHODIMP
 DefaultAgent::UpdateTask(const nsAString& aUniqueToken) {
   // Not checking if we got the mutex for the same reason we didn't in
   // register-task
-  RegistryMutex regMutex;
-  regMutex.Acquire();
+  mRegMutex.Acquire();
 
   WriteInstallationRegistryEntry();
 
@@ -294,8 +279,7 @@ DefaultAgent::Uninstall(const nsAString& aUniqueToken) {
   //      registry entries, we won't remove the whole key or touch the
   //      unprefixed entries during uninstallation. Therefore, we should
   //      be able to safely uninstall without stepping on anyone's toes.
-  RegistryMutex regMutex;
-  regMutex.Acquire();
+  mRegMutex.Acquire();
 
   RemoveAllRegistryEntries();
   return NS_OK;
@@ -316,8 +300,7 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   // If the other process fails, this one will most likely fail for the same
   // reason.
   // So we'll just bail if we can't get the mutex quickly.
-  RegistryMutex regMutex;
-  if (!regMutex.Acquire()) {
+  if (!mRegMutex.Acquire()) {
     return NS_ERROR_FAILURE;
   }
 
