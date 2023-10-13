@@ -162,7 +162,7 @@ class GraphemeClusterBreakIteratorUtf16 final : public SegmentIteratorUtf16 {
 
 #if defined(MOZ_ICU4X) && defined(JS_HAS_INTL_API)
  private:
-  capi::ICU4XGraphemeClusterSegmenter* mSegmenter = nullptr;
+  static capi::ICU4XGraphemeClusterSegmenter* sSegmenter;
   capi::ICU4XGraphemeClusterBreakIteratorUtf16* mIterator = nullptr;
 #endif
 };
