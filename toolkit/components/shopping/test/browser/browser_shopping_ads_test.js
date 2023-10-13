@@ -1,0 +1,211 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
+add_task(async function test_ad_attribution() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["toolkit.shopping.ohttpRelayURL", ""],
+      ["toolkit.shopping.ohttpConfigURL", ""],
+      ["browser.shopping.experience2023.ads.enabled", true],
+      ["browser.shopping.experience2023.ads.userEnabled", true],
+    ],
+  });
+  let recommendedAdsEventListener = function (eventName, sidebar) {
+    return SpecialPowers.spawn(
+      sidebar.querySelector("browser"),
+      [eventName],
+      name => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        let adEl = shoppingContainer.recommendedAdEl;
+        return new Promise(resolve => {
+          let listener = () => {
+            resolve();
+          };
+          adEl.addEventListener(name, listener, {
+            once: true,
+          });
+        });
+      }
+    );
+  };
+
+  let recommendedAdVisible = async function (sidebar) {
+    await SpecialPowers.spawn(
+      sidebar.querySelector("browser"),
+      [],
+      async () => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        await ContentTaskUtils.waitForCondition(() => {
+          return ContentTaskUtils.is_visible(
+            shoppingContainer?.recommendedAdEl
+          );
+        });
+      }
+    );
+  };
+
+  await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
+    // Test that impression event is fired when opening sidebar
+    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
+    Assert.ok(sidebar, "Sidebar should exist");
+    Assert.ok(
+      BrowserTestUtils.is_visible(sidebar),
+      "Sidebar should be visible."
+    );
+    let shoppingButton = document.getElementById("shopping-sidebar-button");
+    ok(
+      BrowserTestUtils.is_visible(shoppingButton),
+      "Shopping Button should be visible on a product page"
+    );
+
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(sidebar, PRODUCT_TEST_URL);
+
+    let impressionEvent = recommendedAdsEventListener("AdImpression", sidebar);
+
+    info("Verifying product info for initial product.");
+    await verifyProductInfo(sidebar, {
+      productURL: PRODUCT_TEST_URL,
+      adjustedRating: "4.1",
+      letterGrade: "B",
+    });
+
+    await recommendedAdVisible(sidebar);
+
+    info("Waiting for ad impression event.");
+    await impressionEvent;
+    Assert.ok(true, "Got ad impression event");
+
+    //
+    // Test that impression event is fired after switching to a tab that was
+    // opened in the background
+
+    let tab = BrowserTestUtils.addTab(gBrowser, PRODUCT_TEST_URL);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+    let tabSidebar = gBrowser
+      .getPanel(tab.linkedBrowser)
+      .querySelector("shopping-sidebar");
+    Assert.ok(tabSidebar, "Sidebar should exist");
+
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(tabSidebar, PRODUCT_TEST_URL);
+    await recommendedAdVisible(tabSidebar);
+
+    // Need to wait the impression timeout to confirm that no impression event
+    // has been dispatched
+    // Bug 1859029 should update this to use sinon fake timers instead of using
+    // setTimeout
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 2000));
+
+    let hasImpressed = await SpecialPowers.spawn(
+      tabSidebar.querySelector("browser"),
+      [],
+      () => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        let adEl = shoppingContainer.recommendedAdEl;
+        return adEl.hasImpressed;
+      }
+    );
+    Assert.ok(!hasImpressed, "We haven't seend the ad yet");
+
+    impressionEvent = recommendedAdsEventListener("AdImpression", tabSidebar);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    await recommendedAdVisible(tabSidebar);
+
+    info("Waiting for ad impression event.");
+    await impressionEvent;
+    Assert.ok(true, "Got ad impression event");
+
+    //
+    // Test that the impression event is fired after opening foreground tab,
+    // switching away and the event is not fired, then switching back and the
+    // event does fire
+
+    gBrowser.removeTab(tab);
+
+    tab = BrowserTestUtils.addTab(gBrowser, PRODUCT_TEST_URL);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+    tabSidebar = gBrowser
+      .getPanel(tab.linkedBrowser)
+      .querySelector("shopping-sidebar");
+    Assert.ok(tabSidebar, "Sidebar should exist");
+
+    info("Waiting for sidebar to update.");
+    await promiseSidebarUpdated(tabSidebar, PRODUCT_TEST_URL);
+    await recommendedAdVisible(tabSidebar);
+
+    // Switch to new sidebar tab
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    // switch back to original tab
+    await BrowserTestUtils.switchTab(
+      gBrowser,
+      gBrowser.getTabForBrowser(browser)
+    );
+
+    // Need to wait the impression timeout to confirm that no impression event
+    // has been dispatched
+    // Bug 1859029 should update this to use sinon fake timers instead of using
+    // setTimeout
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(r => setTimeout(r, 2000));
+
+    hasImpressed = await SpecialPowers.spawn(
+      tabSidebar.querySelector("browser"),
+      [],
+      () => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        let adEl = shoppingContainer.recommendedAdEl;
+        return adEl.hasImpressed;
+      }
+    );
+    Assert.ok(!hasImpressed, "We haven't seend the ad yet");
+
+    impressionEvent = recommendedAdsEventListener("AdImpression", tabSidebar);
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+    await recommendedAdVisible(tabSidebar);
+
+    info("Waiting for ad impression event.");
+    await impressionEvent;
+    Assert.ok(true, "Got ad impression event");
+
+    gBrowser.removeTab(tab);
+
+    //
+    // Test ad clicked event
+
+    let adOpenedTabPromise = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      PRODUCT_TEST_URL,
+      true
+    );
+
+    let clickedEvent = recommendedAdsEventListener("AdClicked", sidebar);
+    await SpecialPowers.spawn(sidebar.querySelector("browser"), [], () => {
+      let shoppingContainer =
+        content.document.querySelector("shopping-container").wrappedJSObject;
+      let adEl = shoppingContainer.recommendedAdEl;
+      adEl.linkEl.click();
+    });
+
+    let adTab = await adOpenedTabPromise;
+
+    info("Waiting for ad clicked event.");
+    await clickedEvent;
+    Assert.ok(true, "Got ad clicked event");
+
+    gBrowser.removeTab(adTab);
+  });
+});
