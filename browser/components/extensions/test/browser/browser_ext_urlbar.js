@@ -3,7 +3,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
 });
 
@@ -202,12 +201,7 @@ add_task(async function tip_onResultPicked_helpButton_url_enter() {
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
     );
-    if (UrlbarPrefs.get("resultMenu")) {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h");
-    } else {
-      EventUtils.synthesizeKey("KEY_Tab");
-      EventUtils.synthesizeKey("KEY_Enter");
-    }
+    await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h");
     info("Waiting for help URL to load");
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "https://example.com/");
@@ -230,15 +224,9 @@ add_task(async function tip_onResultPicked_helpButton_url_mouse() {
     let loadedPromise = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser
     );
-    if (UrlbarPrefs.get("resultMenu")) {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
-        openByMouse: true,
-      });
-    } else {
-      let helpButton = gURLBar.querySelector(".urlbarView-button-help");
-      Assert.ok(helpButton);
-      EventUtils.synthesizeMouseAtCenter(helpButton, {});
-    }
+    await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
+      openByMouse: true,
+    });
     info("Waiting for help URL to load");
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "https://example.com/");
