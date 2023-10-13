@@ -536,8 +536,6 @@ pref("browser.urlbar.switchTabs.searchAllContainers", false);
 // should be opened in new tabs by default.
 pref("browser.urlbar.openintab", false);
 
-// Enable three-dot options button and menu for eligible results.
-pref("browser.urlbar.resultMenu", true);
 // Allow the result menu button to be reached with the Tab key.
 pref("browser.urlbar.resultMenu.keyboardAccessible", true);
 

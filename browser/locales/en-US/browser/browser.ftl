@@ -103,8 +103,6 @@ urlbar-persistent-storage-notification-anchor =
     .tooltiptext = Store data in Persistent Storage
 urlbar-addons-notification-anchor =
     .tooltiptext = Open add-on installation message panel
-urlbar-tip-help-icon =
-    .title = Get help
 urlbar-search-tips-confirm = Okay, Got It
 urlbar-search-tips-confirm-short = Got it
 # Read out before Urlbar Tip text content so screenreader users know the
