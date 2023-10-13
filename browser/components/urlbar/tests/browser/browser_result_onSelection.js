@@ -50,7 +50,7 @@ add_task(async function test() {
   });
 
   EventUtils.synthesizeKey("KEY_Tab", {
-    repeat: UrlbarPrefs.get("resultMenu") ? 5 : 3,
+    repeat: 5,
   });
   EventUtils.synthesizeKey("KEY_ArrowDown");
   ok(
@@ -58,10 +58,6 @@ add_task(async function test() {
     "a one off button is selected"
   );
 
-  Assert.equal(
-    selectionCount,
-    UrlbarPrefs.get("resultMenu") ? 6 : 4,
-    "Number of elements selected in the view."
-  );
+  Assert.equal(selectionCount, 6, "Number of elements selected in the view.");
   UrlbarProvidersManager.unregisterProvider(provider);
 });

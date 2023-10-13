@@ -64,11 +64,7 @@ add_task(async function engagement_type_dismiss() {
 
     const originalResultCount = UrlbarTestUtils.getResultCount(window);
     await selectRowByURL("https://example.com/sponsored");
-    if (UrlbarPrefs.get("resultMenu")) {
-      UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D");
-    } else {
-      doClickSubButton(".urlbarView-button-block");
-    }
+    UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D");
     await BrowserTestUtils.waitForCondition(
       () => originalResultCount != UrlbarTestUtils.getResultCount(window)
     );
@@ -111,11 +107,7 @@ add_task(async function engagement_type_help() {
     await openPopup("sponsored");
     await selectRowByURL("https://example.com/sponsored");
     const onTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
-    if (UrlbarPrefs.get("resultMenu")) {
-      UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L");
-    } else {
-      doClickSubButton(".urlbarView-button-help");
-    }
+    UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L");
     const tab = await onTabOpened;
     BrowserTestUtils.removeTab(tab);
 
