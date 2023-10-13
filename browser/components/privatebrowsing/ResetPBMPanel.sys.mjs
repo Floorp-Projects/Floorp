@@ -187,6 +187,9 @@ export const ResetPBMPanel = {
       true
     );
 
+    // In the remaining PBM window: If the sidebar is open close it.
+    triggeringWindow.SidebarUI?.hide();
+
     // 4. Clear private browsing data.
     //    TODO: this doesn't wait for data to be cleared. This is probably
     //    fine since PBM data is stored in memory and can be cleared quick
