@@ -303,6 +303,8 @@ browsertime-benchmark:
                         custom-car: []
                         chromium: []
                         safari: []  # Bug 1848400 safari perma-fails on osx1300
+                        chrome:
+                            - [speedometer, sp]
                         default:
                             - [speedometer, sp]
                             - [speedometer3, sp3]
