@@ -437,10 +437,10 @@ function startTest()
   gLastFocusMethod = 0;
   var selectFired = false;
   function selectListener() { selectFired = true; }
-  t19.addEventListener("select", selectListener, false);
+  t19.addEventListener("select", selectListener);
   expectFocusShift(() => t19.select(),
                    null, getById("t" + 19), true, "input.select()");
-  t19.removeEventListener("select", selectListener, false);
+  t19.removeEventListener("select", selectListener);
   ok(!selectFired, "select event does not fire asynchronously for input");
 
   // mouse clicking
@@ -624,9 +624,9 @@ function startTest()
   {
     element.focus();
     gEvents = "";
-    element.addEventListener("blur", eventListener, false);
+    element.addEventListener("blur", eventListener);
     blurFunction();
-    element.removeEventListener("blur", eventListener, false);
+    element.removeEventListener("blur", eventListener);
   }
 
   var functions = [
@@ -703,9 +703,9 @@ function startTest()
 
   var trapFocus = function (element, eventListener)
   {
-    element.addEventListener("focus", eventListener, false);
+    element.addEventListener("focus", eventListener);
     element.focus();
-    element.removeEventListener("focus", eventListener, false);
+    element.removeEventListener("focus", eventListener);
   }
 
   fm.clearFocus(window);
@@ -1552,14 +1552,14 @@ function doFrameHistoryTests()
 
 function addFrameSwitchingListeners(frame)
 {
-  frame.contentWindow.addEventListener("focus", frameSwitchingEventOccured, false);
-  frame.contentWindow.addEventListener("blur", frameSwitchingEventOccured, false);
-  frame.contentDocument.addEventListener("focus", frameSwitchingEventOccured, false);
-  frame.contentDocument.addEventListener("blur", frameSwitchingEventOccured, false);
+  frame.contentWindow.addEventListener("focus", frameSwitchingEventOccured);
+  frame.contentWindow.addEventListener("blur", frameSwitchingEventOccured);
+  frame.contentDocument.addEventListener("focus", frameSwitchingEventOccured);
+  frame.contentDocument.addEventListener("blur", frameSwitchingEventOccured);
 
   var node = frame.contentDocument.body.firstChild;
-  node.addEventListener("focus", frameSwitchingEventOccured, false);
-  node.addEventListener("blur", frameSwitchingEventOccured, false);
+  node.addEventListener("focus", frameSwitchingEventOccured);
+  node.addEventListener("blur", frameSwitchingEventOccured);
 }
 
 function frameSwitchingEventOccured(event)

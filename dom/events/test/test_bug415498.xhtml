@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
       var browser = $("browser");
       browser.addEventListener("load", function() {
         setTimeout(nextTest, 0)
-      }, false);
+      });
 
       // 1) This document uses addEventListener to register a method throwing an exception
       var chromeDir = getRootDirectory(window.location.href);

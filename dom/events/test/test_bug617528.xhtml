@@ -24,14 +24,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
 
     function start() {
       _window = window.browsingContext.topChromeWindow.open("window_bug617528.xhtml", "_new", "chrome");
-      _window.addEventListener("load", onLoad, false);
+      _window.addEventListener("load", onLoad);
     }
 
     function onLoad() {
-      _window.removeEventListener("load", onLoad, false);
+      _window.removeEventListener("load", onLoad);
 
       browser = _window.document.getElementById("browser");
-      browser.addEventListener("pageshow", onPageShow, false);
+      browser.addEventListener("pageshow", onPageShow);
 
       var uri='data:text/html,\
 <html>\
@@ -77,14 +77,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=617528
 
       var wu = win.windowUtils;
 
-      browser.addEventListener("contextmenu", onContextMenu1, false);
+      browser.addEventListener("contextmenu", onContextMenu1);
       wu.sendMouseEvent("contextmenu", left, top, 2, 1, 0);
-      browser.removeEventListener("contextmenu", onContextMenu1, false);
+      browser.removeEventListener("contextmenu", onContextMenu1);
 
-      browser.addEventListener("contextmenu", onContextMenu2, false);
+      browser.addEventListener("contextmenu", onContextMenu2);
       var shiftMask = Event.SHIFT_MASK;
       wu.sendMouseEvent("contextmenu", left, top, 2, 1, shiftMask);
-      browser.removeEventListener("contextmenu", onContextMenu2, false);
+      browser.removeEventListener("contextmenu", onContextMenu2);
 
       _window.close();
       SimpleTest.finish();
