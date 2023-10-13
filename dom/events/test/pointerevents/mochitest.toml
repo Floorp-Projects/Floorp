@@ -1,5 +1,9 @@
 [DEFAULT]
-prefs = ["gfx.font_loader.delay=0"]
+prefs = [
+  "gfx.font_loader.delay=0",
+  "dom.w3c_pointer_events.getcoalescedevents_only_in_securecontext=false"
+]
+
 support-files = [
   "iframe.html",
   "mochitest_support_external.js",
