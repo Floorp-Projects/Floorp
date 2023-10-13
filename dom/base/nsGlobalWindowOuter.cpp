@@ -2031,8 +2031,6 @@ static nsresult CreateNativeGlobalForInner(
 
   SelectZone(aCx, principal, aNewInner, creationOptions);
 
-  creationOptions.setSecureContext(aIsSecureContext);
-
   // Define the SharedArrayBuffer global constructor property only if shared
   // memory may be used and structured-cloned (e.g. through postMessage).
   //
@@ -2043,7 +2041,7 @@ static nsresult CreateNativeGlobalForInner(
       aDefineSharedArrayBufferConstructor);
 
   xpc::InitGlobalObjectOptions(
-      options, principal->IsSystemPrincipal(),
+      options, principal->IsSystemPrincipal(), aIsSecureContext,
       aDocument->ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
       aDocument->ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
       aDocument->ShouldResistFingerprinting(RFPTarget::JSLocale));
