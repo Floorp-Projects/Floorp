@@ -62,7 +62,7 @@ class AMOAddonsProviderTest {
         assertEquals("", addon.createdAt)
         assertEquals("", addon.updatedAt)
         assertEquals("", addon.iconUrl)
-        assertEquals("", addon.siteUrl)
+        assertEquals("", addon.homepageUrl)
         assertEquals("", addon.version)
         assertEquals("", addon.downloadUrl)
         assertTrue(addon.permissions.isEmpty())
@@ -105,7 +105,7 @@ class AMOAddonsProviderTest {
         )
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-            addon.siteUrl,
+            addon.homepageUrl,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
@@ -613,7 +613,7 @@ class AMOAddonsProviderTest {
         )
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
-            addon.siteUrl,
+            addon.homepageUrl,
         )
         assertEquals(
             "https://addons.mozilla.org/firefox/downloads/file/4141256/ublock_origin-1.51.0.xpi",

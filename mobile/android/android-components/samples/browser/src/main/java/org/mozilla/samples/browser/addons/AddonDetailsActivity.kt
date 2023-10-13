@@ -79,7 +79,7 @@ class AddonDetailsActivity : AppCompatActivity() {
     private fun bindWebsite(addon: Addon) {
         findViewById<View>(R.id.home_page_text).setOnClickListener {
             val intent =
-                Intent(Intent.ACTION_VIEW).setData(Uri.parse(addon.siteUrl))
+                Intent(Intent.ACTION_VIEW).setData(Uri.parse(addon.homepageUrl))
             startActivity(intent)
         }
     }

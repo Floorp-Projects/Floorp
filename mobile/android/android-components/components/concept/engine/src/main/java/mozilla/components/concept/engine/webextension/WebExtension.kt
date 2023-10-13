@@ -392,7 +392,7 @@ data class Metadata(
      * Url of extension's homepage:
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/homepage_url
      */
-    val homePageUrl: String?,
+    val homepageUrl: String?,
 
     /**
      * Options page:

@@ -53,7 +53,7 @@ class AddonDetailsBindingDelegate(
         bindAuthor(addon)
         bindVersion(addon)
         bindLastUpdated(addon)
-        bindWebsite(addon)
+        bindHomepage(addon)
         bindRating(addon)
     }
 
@@ -75,15 +75,15 @@ class AddonDetailsBindingDelegate(
         }
     }
 
-    private fun bindWebsite(addon: Addon) {
-        if (addon.siteUrl.isBlank()) {
+    private fun bindHomepage(addon: Addon) {
+        if (addon.homepageUrl.isBlank()) {
             binding.homePageLabel.isVisible = false
             binding.homePageDivider.isVisible = false
             return
         }
 
         binding.homePageLabel.setOnClickListener {
-            interactor.openWebsite(addon.siteUrl.toUri())
+            interactor.openWebsite(addon.homepageUrl.toUri())
         }
     }
 

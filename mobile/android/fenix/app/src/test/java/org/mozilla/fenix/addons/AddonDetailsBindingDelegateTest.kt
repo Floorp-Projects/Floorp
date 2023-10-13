@@ -87,10 +87,10 @@ class AddonDetailsBindingDelegateTest {
     }
 
     @Test
-    fun `bind addons website`() {
+    fun `bind addons homepage`() {
         detailsBindingDelegate.bind(
             baseAddon.copy(
-                siteUrl = "https://mozilla.org",
+                homepageUrl = "https://mozilla.org",
             ),
         )
 
@@ -187,7 +187,7 @@ class AddonDetailsBindingDelegateTest {
 
     @Test
     fun `bind without a home page`() {
-        detailsBindingDelegate.bind(baseAddon.copy(siteUrl = ""))
+        detailsBindingDelegate.bind(baseAddon.copy(homepageUrl = ""))
 
         assertFalse(binding.homePageLabel.isVisible)
         assertFalse(binding.homePageDivider.isVisible)

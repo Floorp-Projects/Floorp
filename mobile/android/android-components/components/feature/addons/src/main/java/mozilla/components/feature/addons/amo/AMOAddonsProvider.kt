@@ -352,7 +352,10 @@ internal fun JSONObject.toAddon(language: String? = null): Addon {
             translatableDescription = getSafeTranslations("description", safeLanguage),
             translatableSummary = summary,
             iconUrl = getSafeString("icon_url"),
-            siteUrl = getSafeString("url"),
+            // This isn't the add-on homepage but the URL to the AMO detail page. On AMO, the homepage is
+            // a translatable field but https://github.com/mozilla/addons-server/issues/21310 prevents us
+            // from retrieving the homepage URL of any add-on reliably.
+            homepageUrl = getSafeString("url"),
             rating = getRating(),
             ratingUrl = getSafeString("ratings_url"),
             defaultLocale = (
