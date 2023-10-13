@@ -791,25 +791,25 @@ export class ShoppingProduct {
       throw new Error("An Ad ID is required.");
     }
 
-    let requestOptions = {
+    let requestBody = {
       event_source: source,
     };
 
     switch (eventName) {
       case "impression":
-        requestOptions.event_name = "trusted_deals_impression";
-        requestOptions.aidvs = [aid];
+        requestBody.event_name = "trusted_deals_impression";
+        requestBody.aidvs = [aid];
         break;
       case "click":
-        requestOptions.event_name = "trusted_deals_link_clicked";
-        requestOptions.aid = aid;
+        requestBody.event_name = "trusted_deals_link_clicked";
+        requestBody.aid = aid;
         break;
       default:
         throw new Error(`"${eventName}" is not a valid event name`);
     }
 
     let { url, requestSchema, responseSchema } = options;
-    let result = await this.request(url, requestOptions, {
+    let result = await this.request(url, requestBody, {
       requestSchema,
       responseSchema,
     });
