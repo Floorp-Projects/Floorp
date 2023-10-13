@@ -420,7 +420,7 @@ jobs:
           -d '{
             "ref": "main",
             "inputs": {
-              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-x86_64.mar",
+              "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}${{ env.MAR_URL }}/LINUX-x86_64.mar",
               "os": "Linux",
               "arch": "x86_64",
               "buildVersion": "${{ env.BUILD_VERSION }}"
