@@ -1072,4 +1072,32 @@ void Context::DoomTargetData() {
   MOZ_DIAGNOSTIC_ASSERT(!mData);
 }
 
+void Context::Stringify(nsACString& aData) {
+  NS_ASSERT_OWNINGTHREAD(Context);
+
+  constexpr auto kQuotaGenericDelimiterString = "|"_ns;
+
+  aData.Append(
+      "Context ("_ns +
+      //
+      "State:"_ns + IntToCString(mState) + kQuotaGenericDelimiterString +
+      //
+      "OrphanedData:"_ns + IntToCString(mOrphanedData) +
+      kQuotaGenericDelimiterString +
+      //
+      "PendingActions:"_ns +
+      IntToCString(static_cast<uint64_t>(mPendingActions.Length())) +
+      kQuotaGenericDelimiterString +
+      //
+      "DirectoryLock:"_ns + IntToCString(static_cast<bool>(mDirectoryLock)) +
+      kQuotaGenericDelimiterString +
+      //
+      "NextContext:"_ns + IntToCString(static_cast<bool>(mNextContext)));
+
+  if (mNextContext) {
+    aData.Append(kQuotaGenericDelimiterString);
+    mNextContext->Stringify(aData);
+  };
+}
+
 }  // namespace mozilla::dom::cache
