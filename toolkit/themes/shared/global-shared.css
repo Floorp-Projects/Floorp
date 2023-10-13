@@ -41,6 +41,7 @@
   --toolbar-field-border-color: ThreeDShadow;
   --toolbar-field-focus-background-color: Field;
   --toolbar-field-focus-color: FieldText;
+  --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
 }
 
 :root:-moz-lwtheme {
@@ -58,6 +59,7 @@
     --toolbarbutton-disabled-opacity: 0.3;
 
     --panel-separator-color: currentColor;
+    --toolbar-field-focus-border-color: var(--focus-outline-color);
   }
 
   :root:not(:-moz-lwtheme) {
