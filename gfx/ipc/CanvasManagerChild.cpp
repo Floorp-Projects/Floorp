@@ -34,6 +34,7 @@ void CanvasManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (sLocalManager.get() == this) {
     sLocalManager.set(nullptr);
   }
+  mWorkerRef = nullptr;
 }
 
 void CanvasManagerChild::Destroy() {
@@ -42,9 +43,9 @@ void CanvasManagerChild::Destroy() {
     mCanvasChild = nullptr;
   }
 
-  // The caller has a strong reference. ActorDestroy will clear sLocalManager.
+  // The caller has a strong reference. ActorDestroy will clear sLocalManager
+  // and mWorkerRef.
   Close();
-  mWorkerRef = nullptr;
 }
 
 /* static */ void CanvasManagerChild::Shutdown() {
