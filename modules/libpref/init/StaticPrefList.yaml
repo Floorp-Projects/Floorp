@@ -13725,7 +13725,7 @@
 # (OS) mapping when loaded via the file:// protocol.
 - name: security.block_fileuri_script_with_wrong_mime
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # Cancel outgoing requests from SystemPrincipal:
