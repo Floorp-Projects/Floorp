@@ -119,7 +119,7 @@ add_task(async function () {
   invokeInTab(TEST_FUNCTION_NAME);
   await waitForPaused(dbg);
 
-  await assertPreviewTextValue(dbg, 26, 16, {
+  await assertPreviewTextValue(dbg, 26, {
     expression: VARIABLE_NAME,
     result: "CUSTOM",
     doNotClose: true,

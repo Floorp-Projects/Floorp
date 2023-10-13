@@ -25,21 +25,21 @@ add_task(async function () {
   await waitForLoadedScopes(dbg);
   ok(getOriginalScope(dbg) != null, "Scopes are now mapped");
 
-  await assertPreviewTextValue(dbg, 20, 16, {
+  await assertPreviewTextValue(dbg, 20, {
     result: '"a-default"',
     expression: "aDefault",
   });
 
   info("3. Hover on a token with mapScopes disabled");
   await toggleMapScopes(dbg);
-  await assertPreviewTextValue(dbg, 21, 16, {
+  await assertPreviewTextValue(dbg, 21, {
     result: "undefined",
     expression: "anAliased",
   });
 
   info("4. StepOver with mapScopes disabled");
   await stepOver(dbg);
-  await assertPreviewTextValue(dbg, 20, 16, {
+  await assertPreviewTextValue(dbg, 20, {
     result: "undefined",
     expression: "aDefault",
   });

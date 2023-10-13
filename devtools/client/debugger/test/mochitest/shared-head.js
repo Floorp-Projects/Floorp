@@ -2172,11 +2172,25 @@ async function hoverAtPos(dbg, pos) {
 }
 
 function hoverToken(tokenEl) {
-  info(`Hovering on token "${tokenEl.innerText}"`);
+  info(`Hovering on token <${tokenEl.innerText}>`);
+
+  // We can't use synthesizeMouse(AtCenter) as it's using the element bounding client rect.
+  // But here, we might have a token that wraps on multiple line and the center of the
+  // bounding client rect won't actually hover the token.
+  // +───────────────────────+
+  // │      myLongVariableNa│
+  // │me         +          │
+  // +───────────────────────+
+
+  // Instead, we need to get the first quad.
+  const { p1, p2, p3 } = tokenEl.getBoxQuads()[0];
+  const x = p1.x + (p2.x - p1.x) / 2;
+  const y = p1.y + (p3.y - p1.y) / 2;
 
   // This first event helps utils/editor/tokens.js to receive the right mouseover event
-  EventUtils.synthesizeMouseAtCenter(
-    tokenEl,
+  EventUtils.synthesizeMouseAtPoint(
+    x,
+    y,
     {
       type: "mouseover",
     },
@@ -2184,8 +2198,9 @@ function hoverToken(tokenEl) {
   );
 
   // This second event helps Popover to have :hover pseudoclass set on the token element
-  EventUtils.synthesizeMouseAtCenter(
-    tokenEl,
+  EventUtils.synthesizeMouseAtPoint(
+    x,
+    y,
     {
       type: "mousemove",
     },
@@ -2217,8 +2232,22 @@ async function closePreviewForToken(
   //
   // This helps utils/editor/tokens.js to receive the right mouseleave event.
   // This is super important as it will then allow re-emitting a tokenenter event if you try to re-preview the same token!
-  EventUtils.synthesizeMouseAtCenter(
+  // We can't use synthesizeMouse(AtCenter) as it's using the element bounding client rect.
+  // But here, we might have a token that wraps on multiple line and the center of the
+  // bounding client rect won't actually hover the token.
+  // +───────────────────────+
+  // │      myLongVariableNa│
+  // │me         +          │
+  // +───────────────────────+
+
+  // Instead, we need to get the first quad.
+  const { p1, p2, p3 } = tokenEl.getBoxQuads()[0];
+  const x = p1.x + (p2.x - p1.x) / 2;
+  const y = p1.y + (p3.y - p1.y) / 2;
+  EventUtils.synthesizeMouseAtPoint(
     tokenEl,
+    x,
+    y,
     {
       type: "mouseout",
     },
@@ -2246,9 +2275,20 @@ async function closePreviewForToken(
   info("Preview closed");
 }
 
-// tryHovering will hover at a position every second until we
-// see a preview element (popup, tooltip) appear. Once it appears,
-// it considers it a success.
+/**
+ * Hover at a position until we see a preview element (popup, tooltip) appear.
+ * ⚠️ Note that this is using CodeMirror method to retrieve the token element
+ * and that could be subject to CodeMirror bugs / outdated internal state
+ *
+ * @param {Debugger} dbg
+ * @param {Integer} line: The line we want to hover over
+ * @param {Integer} column: The column we want to hover over
+ * @param {String} elementName: "Selector" string that will be passed to waitForElement,
+ *                              describing the element that should be displayed on hover.
+ * @returns Promise<{element, tokenEl}>
+ *          element is the DOM element matching the passed elementName
+ *          tokenEl is the DOM element for the token we hovered
+ */
 async function tryHovering(dbg, line, column, elementName) {
   ok(
     !findElement(dbg, elementName),
@@ -2256,13 +2296,75 @@ async function tryHovering(dbg, line, column, elementName) {
   );
 
   const tokenEl = await getTokenFromPosition(dbg, { line, column });
+  return tryHoverToken(dbg, tokenEl, elementName);
+}
+
+/**
+ * Retrieve the token element matching `expression` at line `line` and hover it.
+ * This is retrieving the token from the DOM, contrary to `tryHovering`, which calls
+ * CodeMirror internal method for this (and which might suffer from bugs / outdated internal state)
+ *
+ * @param {Debugger} dbg
+ * @param {String} expression: The text of the token we want to hover
+ * @param {Integer} line: The line the token should be at
+ * @param {String} elementName: "Selector" string that will be passed to waitForElement,
+ *                              describing the element that should be displayed on hover.
+ * @returns Promise<{element, tokenEl}>
+ *          element is the DOM element matching the passed elementName
+ *          tokenEl is the DOM element for the token we hovered
+ */
+async function tryHoverTokenAtLine(dbg, expression, line, elementName) {
+  // Lookup for the token matching the passed expression
+  const tokenEl = getTokenElAtLine(dbg, expression, line);
+  if (!tokenEl) {
+    throw new Error(`Couldn't find token <${expression}> on line ${line}\n`);
+  }
+
+  ok(true, `Found token <${expression}> on line ${line}`);
+
+  info("Scroll codeMirror to make the token visible");
+  const cm = getCM(dbg);
+  const onScrolled = waitForScrolling(cm);
+  cm.scrollIntoView({ line: line - 1, ch: 0 }, 0);
+  await onScrolled;
+
+  return tryHoverToken(dbg, tokenEl, elementName);
+}
+
+async function tryHoverToken(dbg, tokenEl, elementName) {
   hoverToken(tokenEl);
 
   // Wait for the preview element to be created
   const element = await waitForElement(dbg, elementName);
-
   return { element, tokenEl };
 }
+
+/**
+ * Retrieve the token element matching `expression` at line `line`, from the DOM.
+ *
+ * @param {Debugger} dbg
+ * @param {String} expression: The text of the token we want to hover
+ * @param {Integer} line: The line the token should be at
+ * @returns {Element} the token element, or null if not found
+ */
+function getTokenElAtLine(dbg, expression, line) {
+  info(`Search for <${expression}> token on line ${line}`);
+  // Get the line gutter element matching the passed line
+  const lineGutterEl = [
+    ...dbg.win.document.querySelectorAll(".CodeMirror-linenumber"),
+  ].find(el => el.textContent === `${line}`);
+
+  // Get the related editor line
+  const editorLineEl = lineGutterEl
+    .closest(".CodeMirror-gutter-wrapper")
+    .parentElement.querySelector(".CodeMirror-line");
+
+  // Lookup for the token matching the passed expression
+  return Array.from(editorLineEl.querySelectorAll("span")).find(
+    span => span.textContent === expression
+  );
+}
+
 /**
  * Hovers and asserts tooltip previews with simple text expressions (i.e numbers and strings)
  * @param {*} dbg
@@ -2276,22 +2378,16 @@ async function tryHovering(dbg, line, column, elementName) {
 async function assertPreviewTextValue(
   dbg,
   line,
-  column,
   { result, expression, doNotClose = false }
 ) {
-  const { element: previewEl, tokenEl } = await tryHovering(
-    dbg,
-    line,
-    column,
-    "previewPopup"
-  );
+  // CodeMirror refreshes after inline previews are displayed, so wait until they're rendered.
+  await waitForInlinePreviews(dbg);
 
-  ok(
-    tokenEl.innerText.includes(expression),
-    "Popup preview hovered expression is correct. Got: " +
-      tokenEl.innerText +
-      " Expected: " +
-      expression
+  const { element: previewEl, tokenEl } = await tryHoverTokenAtLine(
+    dbg,
+    expression,
+    line,
+    "previewPopup"
   );
 
   ok(
@@ -2313,23 +2409,34 @@ async function assertPreviewTextValue(
  * @param {Array} previews
  */
 async function assertPreviews(dbg, previews) {
+  // Move the cursor to the top left corner to have a clean state
+  EventUtils.synthesizeMouse(
+    findElement(dbg, "codeMirror"),
+    0,
+    0,
+    {
+      type: "mousemove",
+    },
+    dbg.win
+  );
+
+  // CodeMirror refreshes after inline previews are displayed, so wait until they're rendered.
+  await waitForInlinePreviews(dbg);
+
   for (const { line, column, expression, result, header, fields } of previews) {
     info(" # Assert preview on " + line + ":" + column);
 
     if (result) {
-      await assertPreviewTextValue(dbg, line, column, {
+      await assertPreviewTextValue(dbg, line, {
         expression,
         result,
       });
     }
 
     if (fields) {
-      const { element: popupEl, tokenEl } = await tryHovering(
-        dbg,
-        line,
-        column,
-        "popup"
-      );
+      const { element: popupEl, tokenEl } = expression
+        ? await tryHoverTokenAtLine(dbg, expression, line, "popup")
+        : await tryHovering(dbg, line, column, "popup");
 
       info("Wait for child nodes to load");
       await waitUntil(
