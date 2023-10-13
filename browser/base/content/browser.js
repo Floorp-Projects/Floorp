@@ -5081,7 +5081,10 @@ var XULBrowserWindow = {
 
       this.isBusy = true;
 
-      if (!(aStateFlags & nsIWebProgressListener.STATE_RESTORING)) {
+      if (
+        !(aStateFlags & nsIWebProgressListener.STATE_RESTORING) &&
+        aWebProgress.isTopLevel
+      ) {
         this.busyUI = true;
 
         // XXX: This needs to be based on window activity...
@@ -5148,7 +5151,7 @@ var XULBrowserWindow = {
 
       this.isBusy = false;
 
-      if (this.busyUI) {
+      if (this.busyUI && aWebProgress.isTopLevel) {
         this.busyUI = false;
 
         this.stopCommand.setAttribute("disabled", "true");
