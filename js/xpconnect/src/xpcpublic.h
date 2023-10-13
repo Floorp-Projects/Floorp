@@ -576,6 +576,18 @@ void SetPrefableContextOptions(JS::ContextOptions& options);
 // This function may be used off-main-thread.
 void SetPrefableCompileOptions(JS::PrefableCompileOptions& options);
 
+// Modify the provided realm options, consistent with |aIsSystemPrincipal| and
+// with globally-cached values of various preferences.
+//
+// Call this function *before* |aOptions| is used to create the corresponding
+// global object, as not all of the options it sets can be modified on an
+// existing global object.  (The type system should make this obvious, because
+// you can't get a *mutable* JS::RealmOptions& from an existing global
+// object.)
+void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
+                             bool aIsSystemPrincipal, bool aForceUTC,
+                             bool aAlwaysUseFdlibm, bool aLocaleEnUS);
+
 class ErrorBase {
  public:
   nsString mErrorMsg;
