@@ -3150,7 +3150,8 @@
 
         // Vetical tab has a bug. 3 closed tabs are restored when Floorp is started.
         // Destroy 3 tabs for now.
-        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 3 && tabDataList.length > 3) {
+        let bugOccured = Services.prefs.getBoolPref("floorp.tabs.verticaltab.getTabBug", false);
+        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 2 && tabDataList.length > 3 && bugOccured) {
           continue;
         }
 
@@ -5930,7 +5931,18 @@
 
         let filter = this._tabFilters.get(tab);
         if (filter) {
-          browser.webProgress.removeProgressListener(filter);
+          //Floorp Injection
+          try {
+            browser.webProgress.removeProgressListener(filter);
+          } catch (e) {
+            Services.prefs.setBoolPref(
+              "floorp.tabs.verticaltab.getTabBug",
+              true
+            );
+            Services.console.logStringMessage(
+              "Floorp Injection: " + e.toString()
+            );
+          }
 
           let listener = this._tabListeners.get(tab);
           if (listener) {
