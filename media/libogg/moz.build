@@ -23,3 +23,6 @@ NoVisibilityFlags()
 
 # Add libFuzzer configuration directives
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
+
+if CONFIG['FUZZING']:
+    DEFINES['DISABLE_CRC'] = 1

@@ -33,6 +33,7 @@ vendoring:
     - "include/ogg/ogg.h"
     - "include/ogg/os_types.h"
     - "src/bitwise.c"
+    - "src/crctable.h"
     - "src/framing.c"
     - AUTHORS
     - CHANGES
@@ -46,6 +47,9 @@ vendoring:
     - action: move-file
       from: '{vendor_dir}/src/bitwise.c'
       to: '{vendor_dir}/src/ogg_bitwise.c'
+    - action: move-file
+      from: '{vendor_dir}/src/crctable.h'
+      to: '{vendor_dir}/src/crctable.h'
     - action: move-file
       from: '{vendor_dir}/src/framing.c'
       to: '{vendor_dir}/src/ogg_framing.c'
@@ -83,6 +87,10 @@ vendoring:
       pattern: '@SIZE64@'
       with: 'int64_t'
       file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@USIZE64@'
+      with: 'uint64_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
     - action: move-file
       from: '{vendor_dir}/include/ogg/config_types.h.in'
       to: '{vendor_dir}/include/ogg/config_types.h'
@@ -90,4 +98,3 @@ vendoring:
   patches:
     - solaris-types.patch
     - memory-reporting.patch
-    - ogg-fuzzing.patch
