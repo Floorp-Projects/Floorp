@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.60"
 name = "prost-derive"
-version = "0.11.9"
+version = "0.12.1"
 authors = [
     "Dan Burkert <dan@danburkert.com>",
     "Lucio Franco <luciofranco14@gmail.com>",
@@ -28,15 +28,19 @@ repository = "https://github.com/tokio-rs/prost"
 [lib]
 proc_macro = true
 
-[dependencies]
-anyhow = "1.0.1"
-proc-macro2 = "1"
-quote = "1"
+[dependencies.anyhow]
+version = "1.0.1"
 
 [dependencies.itertools]
-version = "0.10"
+version = ">=0.10, <0.12"
 features = ["use_alloc"]
 default-features = false
+
+[dependencies.proc-macro2]
+version = "1"
+
+[dependencies.quote]
+version = "1"
 
 [dependencies.syn]
 version = "2"

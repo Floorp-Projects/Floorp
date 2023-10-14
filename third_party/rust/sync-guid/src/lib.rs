@@ -19,6 +19,9 @@ use std::{
     ops, str,
 };
 
+#[cfg(feature = "random")]
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+
 /// This is a type intended to be used to represent the guids used by sync. It
 /// has several benefits over using a `String`:
 ///
@@ -140,8 +143,9 @@ impl Guid {
         // build the FastGuid
         let mut output = [0u8; MAX_FAST_GUID_LEN];
 
-        let bytes_written =
-            base64::encode_config_slice(bytes, base64::URL_SAFE_NO_PAD, &mut output[..12]);
+        let bytes_written = URL_SAFE_NO_PAD
+            .encode_slice(bytes, &mut output[..12])
+            .expect("Output buffer too small");
 
         debug_assert!(bytes_written == 12);
 
@@ -473,7 +477,7 @@ mod test {
             let g = Guid::random();
             assert_eq!(g.len(), 12);
             assert!(g.is_valid_for_places());
-            let decoded = base64::decode_config(&g, base64::URL_SAFE_NO_PAD).unwrap();
+            let decoded = URL_SAFE_NO_PAD.decode(&g).unwrap();
             assert_eq!(decoded.len(), 9);
             let no_collision = seen.insert(g.clone().into_string());
             assert!(no_collision, "{}", g);

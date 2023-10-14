@@ -85,12 +85,12 @@ mod tests {
         let mut commands = vec![
             CommandRecord {
                 name: "wipeEngine".into(),
-                args: vec!["bookmarks".into()],
+                args: vec![Some("bookmarks".into())],
                 flow_id: Some("flow".into()),
             },
             CommandRecord {
                 name: "resetEngine".into(),
-                args: vec!["history".into()],
+                args: vec![Some("history".into())],
                 flow_id: Some("flow".into()),
             },
             CommandRecord {

@@ -3,6 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::error::{Error, Result};
+use base64::{
+    engine::general_purpose::{STANDARD, URL_SAFE_NO_PAD},
+    Engine,
+};
 use rc_crypto::{
     aead::{self, OpeningKey, SealingKey},
     rand,
@@ -68,13 +72,13 @@ impl KeyBundle {
     }
 
     pub fn from_ksync_base64(ksync: &str) -> Result<KeyBundle> {
-        let bytes = base64::decode_config(ksync, base64::URL_SAFE_NO_PAD)?;
+        let bytes = URL_SAFE_NO_PAD.decode(ksync)?;
         KeyBundle::from_ksync_bytes(&bytes)
     }
 
     pub fn from_base64(enc: &str, mac: &str) -> Result<KeyBundle> {
-        let enc_bytes = base64::decode(enc)?;
-        let mac_bytes = base64::decode(mac)?;
+        let enc_bytes = STANDARD.decode(enc)?;
+        let mac_bytes = STANDARD.decode(mac)?;
         KeyBundle::new(enc_bytes, mac_bytes)
     }
 
@@ -90,7 +94,10 @@ impl KeyBundle {
 
     #[inline]
     pub fn to_b64_array(&self) -> [String; 2] {
-        [base64::encode(&self.enc_key), base64::encode(&self.mac_key)]
+        [
+            STANDARD.encode(&self.enc_key),
+            STANDARD.encode(&self.mac_key),
+        ]
     }
 
     /// Decrypt the provided ciphertext with the given iv, and decodes the
@@ -104,8 +111,8 @@ impl KeyBundle {
             log::warn!("Garbage HMAC verification string: contained non base16 characters");
             return Err(Error::HmacMismatch);
         }
-        let iv = base64::decode(iv_base64)?;
-        let ciphertext_bytes = base64::decode(enc_base64)?;
+        let iv = STANDARD.decode(iv_base64)?;
+        let ciphertext_bytes = STANDARD.decode(enc_base64)?;
         let key_bytes = [self.encryption_key(), self.hmac_key()].concat();
         let key = OpeningKey::new(&aead::LEGACY_SYNC_AES_256_CBC_HMAC_SHA256, &key_bytes)?;
         let nonce = aead::Nonce::try_assume_unique_for_key(
@@ -132,7 +139,7 @@ impl KeyBundle {
         let ciphertext_len = ciphertext_and_hmac.len() - key.algorithm().tag_len();
         // Do the string conversions here so we don't have to split and copy to 2 vectors.
         let (ciphertext, hmac_signature) = ciphertext_and_hmac.split_at(ciphertext_len);
-        let enc_base64 = base64::encode(ciphertext);
+        let enc_base64 = STANDARD.encode(ciphertext);
         let hmac_base16 = base16::encode_lower(&hmac_signature);
         Ok((enc_base64, hmac_base16))
     }
@@ -146,7 +153,7 @@ impl KeyBundle {
         let mut iv = [0u8; 16];
         rand::fill(&mut iv)?;
         let (enc_base64, hmac_base16) = self.encrypt_bytes_with_iv(cleartext_bytes, &iv)?;
-        let iv_base64 = base64::encode(iv);
+        let iv_base64 = STANDARD.encode(iv);
         Ok((enc_base64, iv_base64, hmac_base16))
     }
 
@@ -194,16 +201,16 @@ mod test {
         let s = key_bundle.decrypt(&ciphertext, IV_B64, HMAC_B16).unwrap();
 
         let cleartext =
-            String::from_utf8(base64::decode(CLEARTEXT_B64_PIECES.join("")).unwrap()).unwrap();
+            String::from_utf8(STANDARD.decode(CLEARTEXT_B64_PIECES.join("")).unwrap()).unwrap();
         assert_eq!(&cleartext, &s);
     }
 
     #[test]
     fn test_encrypt() {
         let key_bundle = KeyBundle::from_base64(ENC_KEY_B64, HMAC_KEY_B64).unwrap();
-        let iv = base64::decode(IV_B64).unwrap();
+        let iv = STANDARD.decode(IV_B64).unwrap();
 
-        let cleartext_bytes = base64::decode(CLEARTEXT_B64_PIECES.join("")).unwrap();
+        let cleartext_bytes = STANDARD.decode(CLEARTEXT_B64_PIECES.join("")).unwrap();
         let (enc_base64, _hmac_base16) = key_bundle
             .encrypt_bytes_with_iv(&cleartext_bytes, &iv)
             .unwrap();

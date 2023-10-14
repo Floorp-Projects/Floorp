@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.60"
 name = "prost"
-version = "0.11.9"
+version = "0.12.1"
 authors = [
     "Dan Burkert <dan@danburkert.com>",
     "Lucio Franco <luciofranco14@gmail.com",
@@ -31,7 +31,7 @@ license = "Apache-2.0"
 repository = "https://github.com/tokio-rs/prost"
 
 [profile.bench]
-debug = true
+debug = 2
 
 [lib]
 bench = false
@@ -45,14 +45,15 @@ version = "1"
 default-features = false
 
 [dependencies.prost-derive]
-version = "0.11.9"
+version = "0.12.1"
 optional = true
 
 [dev-dependencies.criterion]
-version = "0.3"
+version = "0.4"
+default-features = false
 
 [dev-dependencies.env_logger]
-version = "0.8"
+version = "0.10"
 default-features = false
 
 [dev-dependencies.log]

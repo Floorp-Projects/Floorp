@@ -19,7 +19,7 @@ capabilities and limitations.
   from the Kani repository.
   ```bash
   git clone https://github.com/model-checking/kani.git --branch features/proptest propproof
-  cd propproof; git submodule update --init --recursive
+  cd propproof; git submodule update --init
   ```
 
   Then, use `.cargo/config.toml` enable it in the local directory you
@@ -34,7 +34,7 @@ capabilities and limitations.
 
 **Please Note**:
 - `features/proptest` branch under Kani is likely not the final
-  location for this code. If this instruction stops working, please
+  location for this code. If these instructions stop working, please
   consult the Kani documentation and file an issue on [the Kani
   repo](https://github.com/model-checking/kani.git).
 - The cargo config file will force cargo to always use PropProof. To

@@ -14,7 +14,7 @@
       {
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ cargo rustc ];
-          buildInputs = with pkgs; [ pkg-config protobuf curl ];
+          buildInputs = with pkgs; [ pkg-config protobuf curl cmake ninja ];
         };
       });
 }
