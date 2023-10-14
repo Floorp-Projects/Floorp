@@ -2293,7 +2293,10 @@ class nsPrefLocalizedString final : public nsIPrefLocalizedString {
 //----------------------------------------------------------------------------
 
 nsPrefBranch::nsPrefBranch(const char* aPrefRoot, PrefValueKind aKind)
-    : mPrefRoot(aPrefRoot), mKind(aKind), mFreeingObserverList(false) {
+    : mPrefRoot(aPrefRoot),
+      mKind(aKind),
+      mFreeingObserverList(false),
+      mObservers() {
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     ++mRefCnt;  // must be > 0 when we call this, or we'll get deleted!
@@ -3373,7 +3376,7 @@ void Preferences::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 }
 
 class PreferenceServiceReporter final : public nsIMemoryReporter {
-  ~PreferenceServiceReporter() = default;
+  ~PreferenceServiceReporter() {}
 
  public:
   NS_DECL_ISUPPORTS

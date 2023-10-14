@@ -2586,7 +2586,8 @@ void EstimateOp::CloseDirectory() {
 
 ListOriginsOp::ListOriginsOp(MovingNotNull<RefPtr<QuotaManager>> aQuotaManager)
     : OpenStorageDirectoryHelper(std::move(aQuotaManager),
-                                 "dom::quota::ListOriginsOp") {
+                                 "dom::quota::ListOriginsOp"),
+      TraverseRepositoryHelper() {
   AssertIsOnOwningThread();
 }
 

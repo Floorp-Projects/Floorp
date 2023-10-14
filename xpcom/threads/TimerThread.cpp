@@ -209,7 +209,7 @@ class TimerEventAllocator {
 
  public:
   TimerEventAllocator()
-      : mFirstFree(nullptr), mMonitor("TimerEventAllocator") {}
+      : mPool(), mFirstFree(nullptr), mMonitor("TimerEventAllocator") {}
 
   ~TimerEventAllocator() = default;
 

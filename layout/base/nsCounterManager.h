@@ -212,7 +212,7 @@ inline bool nsCounterNode::IsUnitializedIncrementNode() {
 class nsCounterList : public nsGenConList {
  public:
   nsCounterList(nsAtom* aCounterName, mozilla::ContainStyleScope* aScope)
-      : mCounterName(aCounterName), mScope(aScope) {
+      : nsGenConList(), mCounterName(aCounterName), mScope(aScope) {
     MOZ_ASSERT(aScope);
   }
 

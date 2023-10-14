@@ -84,6 +84,7 @@ class EncodingCompleteEvent final : public DiscardableRunnable {
       EncodeCompleteCallback* aEncodeCompleteCallback)
       : DiscardableRunnable("EncodingCompleteEvent"),
         mImgSize(0),
+        mType(),
         mImgData(nullptr),
         mEncodeCompleteCallback(aEncodeCompleteCallback),
         mFailed(false) {

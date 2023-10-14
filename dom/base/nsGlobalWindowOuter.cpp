@@ -1261,7 +1261,7 @@ const nsOuterWindowProxy nsOuterWindowProxy::singleton;
 
 class nsChromeOuterWindowProxy : public nsOuterWindowProxy {
  public:
-  constexpr nsChromeOuterWindowProxy() = default;
+  constexpr nsChromeOuterWindowProxy() : nsOuterWindowProxy() {}
 
   const char* className(JSContext* cx,
                         JS::Handle<JSObject*> wrapper) const override;

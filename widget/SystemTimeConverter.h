@@ -30,6 +30,8 @@ class SystemTimeConverter {
  public:
   SystemTimeConverter()
       : mReferenceTime(Time(0)),
+        mReferenceTimeStamp()  // Initializes to the null timestamp
+        ,
         mLastBackwardsSkewCheck(Time(0)),
         kTimeRange(std::numeric_limits<Time>::max()),
         kTimeHalfRange(kTimeRange / 2),

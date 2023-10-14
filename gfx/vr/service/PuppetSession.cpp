@@ -21,7 +21,7 @@ using namespace mozilla::gfx;
 
 namespace mozilla::gfx {
 
-PuppetSession::PuppetSession() = default;
+PuppetSession::PuppetSession() : VRSession() {}
 
 PuppetSession::~PuppetSession() { Shutdown(); }
 

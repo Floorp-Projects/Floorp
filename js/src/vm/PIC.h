@@ -108,7 +108,9 @@ struct ForOfPIC {
     const HeapPtr<Shape*> shape_;
 
    public:
-    explicit Stub(Shape* shape) : shape_(shape) { MOZ_ASSERT(shape_); }
+    explicit Stub(Shape* shape) : BaseStub(), shape_(shape) {
+      MOZ_ASSERT(shape_);
+    }
 
     Shape* shape() { return shape_; }
 
@@ -181,7 +183,8 @@ struct ForOfPIC {
 
    public:
     explicit Chain(JSObject* picObject)
-        : picObject_(picObject),
+        : BaseChain(),
+          picObject_(picObject),
           arrayProto_(nullptr),
           arrayIteratorProto_(nullptr),
           arrayProtoShape_(nullptr),

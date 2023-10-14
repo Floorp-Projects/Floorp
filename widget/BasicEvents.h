@@ -510,7 +510,9 @@ class WidgetEvent : public WidgetEventTime {
     SetDefaultComposedInNativeAnonymousContent();
   }
 
-  WidgetEvent() : mPath(nullptr) { MOZ_COUNT_CTOR(WidgetEvent); }
+  WidgetEvent() : WidgetEventTime(), mPath(nullptr) {
+    MOZ_COUNT_CTOR(WidgetEvent);
+  }
 
  public:
   WidgetEvent(bool aIsTrusted, EventMessage aMessage,
@@ -519,7 +521,7 @@ class WidgetEvent : public WidgetEventTime {
 
   MOZ_COUNTED_DTOR_VIRTUAL(WidgetEvent)
 
-  WidgetEvent(const WidgetEvent& aOther) {
+  WidgetEvent(const WidgetEvent& aOther) : WidgetEventTime() {
     MOZ_COUNT_CTOR(WidgetEvent);
     *this = aOther;
   }

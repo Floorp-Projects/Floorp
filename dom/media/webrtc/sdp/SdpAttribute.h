@@ -75,7 +75,7 @@ class SdpAttribute {
   };
 
   explicit SdpAttribute(AttributeType type) : mType(type) {}
-  virtual ~SdpAttribute() = default;
+  virtual ~SdpAttribute() {}
 
   virtual SdpAttribute* Clone() const = 0;
 
@@ -738,7 +738,7 @@ class SdpImageattrAttributeList : public SdpAttribute {
 
   class Imageattr {
    public:
-    Imageattr() : sendAll(false), recvAll(false) {}
+    Imageattr() : pt(), sendAll(false), recvAll(false) {}
     void Serialize(std::ostream& os) const;
     // TODO: Remove this Bug 1469702
     bool Parse(std::istream& is, std::string* error);
@@ -1228,7 +1228,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
     explicit Parameters(SdpRtpmapAttributeList::CodecType aCodec)
         : codec_type(aCodec) {}
 
-    virtual ~Parameters() = default;
+    virtual ~Parameters() {}
     virtual Parameters* Clone() const = 0;
     virtual void Serialize(std::ostream& os) const = 0;
     virtual bool CompareEq(const Parameters& other) const = 0;
@@ -1269,7 +1269,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
     RtxParameters() : Parameters(SdpRtpmapAttributeList::kRtx) {}
 
-    virtual ~RtxParameters() = default;
+    virtual ~RtxParameters() {}
 
     virtual Parameters* Clone() const override {
       return new RtxParameters(*this);

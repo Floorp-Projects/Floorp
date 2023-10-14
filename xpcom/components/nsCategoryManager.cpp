@@ -346,7 +346,10 @@ nsresult nsCategoryManager::Create(REFNSIID aIID, void** aResult) {
 }
 
 nsCategoryManager::nsCategoryManager()
-    : mLock("nsCategoryManager"), mSuppressNotifications(false) {}
+    : mArena(),
+      mTable(),
+      mLock("nsCategoryManager"),
+      mSuppressNotifications(false) {}
 
 void nsCategoryManager::InitMemoryReporter() {
   RegisterWeakMemoryReporter(this);

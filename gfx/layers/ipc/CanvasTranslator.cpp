@@ -67,7 +67,7 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
   return textureData;
 }
 
-CanvasTranslator::CanvasTranslator() {
+CanvasTranslator::CanvasTranslator() : gfx::InlineTranslator() {
   // Track when remote canvas has been activated.
   Telemetry::ScalarAdd(Telemetry::ScalarID::GFX_CANVAS_REMOTE_ACTIVATED, 1);
 }

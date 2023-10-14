@@ -2139,7 +2139,11 @@ Value SnapshotIterator::maybeReadAllocByIndex(size_t index) {
 
 InlineFrameIterator::InlineFrameIterator(JSContext* cx,
                                          const JSJitFrameIter* iter)
-    : calleeTemplate_(cx), script_(cx), pc_(nullptr), numActualArgs_(0) {
+    : calleeTemplate_(cx),
+      calleeRVA_(),
+      script_(cx),
+      pc_(nullptr),
+      numActualArgs_(0) {
   resetOn(iter);
 }
 
@@ -2149,6 +2153,7 @@ InlineFrameIterator::InlineFrameIterator(JSContext* cx,
       framesRead_(0),
       frameCount_(iter ? iter->frameCount_ : UINT32_MAX),
       calleeTemplate_(cx),
+      calleeRVA_(),
       script_(cx),
       pc_(nullptr),
       numActualArgs_(0) {

@@ -78,6 +78,7 @@ class MOZ_STACK_CLASS OriginParser final {
   explicit OriginParser(const nsACString& aOrigin)
       : mOrigin(aOrigin),
         mTokenizer(aOrigin, '+'),
+        mPort(),
         mSchemeType(eNone),
         mState(eExpectingAppIdOrScheme),
         mInIsolatedMozBrowser(false),

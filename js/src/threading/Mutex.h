@@ -36,7 +36,7 @@ struct MutexId {
 // we must override it and make Mutex a friend.
 class MutexImpl : public mozilla::detail::MutexImpl {
  protected:
-  MutexImpl() {}
+  MutexImpl() : mozilla::detail::MutexImpl() {}
 
   friend class Mutex;
 };

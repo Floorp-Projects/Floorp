@@ -4981,7 +4981,7 @@ void AutoAssertEmptyNursery::checkCondition(JSContext* cx) {
   MOZ_ASSERT(cx->nursery().isEmpty());
 }
 
-AutoEmptyNursery::AutoEmptyNursery(JSContext* cx) {
+AutoEmptyNursery::AutoEmptyNursery(JSContext* cx) : AutoAssertEmptyNursery() {
   MOZ_ASSERT(!cx->suppressGC);
   cx->runtime()->gc.stats().suspendPhases();
   cx->runtime()->gc.evictNursery(JS::GCReason::EVICT_NURSERY);

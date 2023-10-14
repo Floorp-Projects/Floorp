@@ -643,7 +643,7 @@ AutoJSContext::AutoJSContext() : mCx(nullptr) {
 
 AutoJSContext::operator JSContext*() const { return mCx; }
 
-AutoSafeJSContext::AutoSafeJSContext() {
+AutoSafeJSContext::AutoSafeJSContext() : AutoJSAPI() {
   MOZ_ASSERT(NS_IsMainThread());
 
   DebugOnly<bool> ok = Init(xpc::UnprivilegedJunkScope());

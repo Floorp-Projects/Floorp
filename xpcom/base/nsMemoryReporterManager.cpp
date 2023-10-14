@@ -2245,6 +2245,7 @@ nsMemoryReporterManager::PendingProcessesState::PendingProcessesState(
     : mGeneration(aGeneration),
       mAnonymize(aAnonymize),
       mMinimize(aMinimize),
+      mChildrenPending(),
       mNumProcessesRunning(1),  // reporting starts with the parent
       mNumProcessesCompleted(0),
       mConcurrencyLimit(aConcurrencyLimit),

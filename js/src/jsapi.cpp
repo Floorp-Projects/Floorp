@@ -2366,7 +2366,8 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
   noScriptRval = rhs.noScriptRval;
 }
 
-JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx) {}
+JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
+    : ReadOnlyCompileOptions() {}
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
@@ -2458,7 +2459,7 @@ bool JS::OwningCompileOptions::copy(JS::FrontendContext* fc,
   return copyImpl(fc, rhs);
 }
 
-JS::CompileOptions::CompileOptions(JSContext* cx) {
+JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   prefableOptions_ = cx->options().compileOptions();
 
   if (cx->options().asmJSOption() == AsmJSOption::Enabled) {
@@ -3955,7 +3956,7 @@ void JSErrorBase::freeMessage() {
   message_ = JS::ConstUTF8CharsZ();
 }
 
-JSErrorNotes::JSErrorNotes() = default;
+JSErrorNotes::JSErrorNotes() : notes_() {}
 
 JSErrorNotes::~JSErrorNotes() = default;
 

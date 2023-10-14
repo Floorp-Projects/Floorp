@@ -559,7 +559,8 @@ size_t nsIContent::nsExtendedContentSlots::SizeOfExcludingThis(
   return 0;
 }
 
-FragmentOrElement::nsDOMSlots::nsDOMSlots() : mDataset(nullptr) {
+FragmentOrElement::nsDOMSlots::nsDOMSlots()
+    : nsIContent::nsContentSlots(), mDataset(nullptr) {
   MOZ_COUNT_CTOR(nsDOMSlots);
 }
 

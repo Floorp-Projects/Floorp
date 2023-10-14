@@ -14,6 +14,7 @@ CanvasPattern::CanvasPattern(CanvasRenderingContext2D* aContext,
     : mContext(aContext),
       mSurface(aSurface),
       mPrincipal(principalForSecurityCheck),
+      mTransform(),
       mForceWriteOnly(forceWriteOnly),
       mCORSUsed(CORSUsed),
       mRepeat(aRepeat) {}

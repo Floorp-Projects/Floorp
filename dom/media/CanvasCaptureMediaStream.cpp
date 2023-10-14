@@ -23,7 +23,9 @@ namespace mozilla::dom {
 
 OutputStreamDriver::OutputStreamDriver(SourceMediaTrack* aSourceStream,
                                        const PrincipalHandle& aPrincipalHandle)
-    : mSourceStream(aSourceStream), mPrincipalHandle(aPrincipalHandle) {
+    : FrameCaptureListener(),
+      mSourceStream(aSourceStream),
+      mPrincipalHandle(aPrincipalHandle) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mSourceStream);
 }

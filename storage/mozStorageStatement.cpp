@@ -41,7 +41,7 @@ NS_IMPL_CI_INTERFACE_GETTER(Statement, mozIStorageStatement,
 
 class StatementClassInfo : public nsIClassInfo {
  public:
-  constexpr StatementClassInfo() = default;
+  constexpr StatementClassInfo() {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -99,9 +99,11 @@ static StatementClassInfo sStatementClassInfo;
 //// Statement
 
 Statement::Statement()
-    : mDBStatement(nullptr),
+    : StorageBaseStatementInternal(),
+      mDBStatement(nullptr),
       mParamCount(0),
       mResultColumnCount(0),
+      mColumnNames(),
       mExecuting(false),
       mQueryStatusRecorded(false),
       mHasExecuted(false) {}

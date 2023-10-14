@@ -159,7 +159,8 @@ class TestNat {
         block_tls_(false),
         error_code_for_drop_(0),
         delay_stun_resp_ms_(0),
-        nat_delegate_(nullptr) {}
+        nat_delegate_(nullptr),
+        sockets_() {}
 
   bool has_port_mappings() const;
 
@@ -292,7 +293,10 @@ class TestNrSocket : public NrSocketBase {
     DeferredPacket(TestNrSocket* sock, const void* data, size_t len, int flags,
                    const nr_transport_addr* addr,
                    RefPtr<NrSocketBase> internal_socket)
-        : socket_(sock), flags_(flags), internal_socket_(internal_socket) {
+        : socket_(sock),
+          buffer_(),
+          flags_(flags),
+          internal_socket_(internal_socket) {
       buffer_.Copy(reinterpret_cast<const uint8_t*>(data), len);
       nr_transport_addr_copy(&to_, addr);
     }

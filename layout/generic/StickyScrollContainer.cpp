@@ -23,7 +23,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(StickyScrollContainerProperty,
                                     StickyScrollContainer)
 
 StickyScrollContainer::StickyScrollContainer(nsIScrollableFrame* aScrollFrame)
-    : mScrollFrame(aScrollFrame) {
+    : mScrollFrame(aScrollFrame), mScrollPosition() {
   mScrollFrame->AddScrollPositionListener(this);
 }
 
