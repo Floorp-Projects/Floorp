@@ -25,7 +25,9 @@
 //!     that you'd like to expose to the application. These can be the same
 //!     fields as `DownloadedTSuggestion`, or slightly different, depending on
 //!     what the application needs to show the suggestion.
-//!  7. Update any [`db::SuggestDao`] methods that query the database to include
+//!  7. Update the `Suggestion` enum definition in `suggest.udl` to match your
+//!     new [`suggestion::Suggestion`] variant.
+//!  8. Update any [`db::SuggestDao`] methods that query the database to include
 //!     the new suggestion in their results, and return `Suggestion::T` variants
 //!     as needed.
 
@@ -84,6 +86,10 @@ pub(crate) enum SuggestRecord {
     Icon,
     #[serde(rename = "data")]
     AmpWikipedia,
+    #[serde(rename = "amo-suggestions")]
+    Amo,
+    #[serde(rename = "pocket-suggestions")]
+    Pocket,
 }
 
 /// Represents either a single value, or a list of values. This is used to
@@ -233,4 +239,30 @@ impl<'de> Deserialize<'de> for DownloadedAmpWikipediaSuggestion {
             MaybeTagged::Untagged(amp) => Self::Amp(amp),
         })
     }
+}
+
+/// An AMO suggestion to ingest from an attachment
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedAmoSuggestion {
+    pub description: String,
+    pub url: String,
+    pub guid: String,
+    #[serde(rename = "icon")]
+    pub icon_url: String,
+    pub rating: Option<String>,
+    pub number_of_ratings: i64,
+    pub title: String,
+    pub keywords: Vec<String>,
+    pub score: f64,
+}
+/// A Pocket suggestion to ingest from a Pocket Suggestion Attachment
+#[derive(Clone, Debug, Deserialize)]
+pub(crate) struct DownloadedPocketSuggestion {
+    pub url: String,
+    pub title: String,
+    #[serde(rename = "lowConfidenceKeywords")]
+    pub low_confidence_keywords: Vec<String>,
+    #[serde(rename = "highConfidenceKeywords")]
+    pub high_confidence_keywords: Vec<String>,
+    pub score: f64,
 }

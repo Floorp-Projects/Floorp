@@ -37,7 +37,7 @@ version = "0.2"
 optional = true
 
 [dependencies.base64]
-version = "0.13"
+version = "0.21"
 optional = true
 
 [dependencies.error-support]

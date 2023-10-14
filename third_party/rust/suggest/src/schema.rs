@@ -6,7 +6,7 @@
 use rusqlite::{Connection, Transaction};
 use sql_support::open_database::{self, ConnectionInitializer};
 
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 6;
 
 pub const SQL: &str = "
     CREATE TABLE meta(
@@ -19,6 +19,15 @@ pub const SQL: &str = "
         suggestion_id INTEGER NOT NULL REFERENCES suggestions(id) ON DELETE CASCADE,
         rank INTEGER NOT NULL,
         PRIMARY KEY (keyword, suggestion_id)
+    ) WITHOUT ROWID;
+
+    CREATE TABLE pocket_keywords( 
+        keyword_prefix TEXT NOT NULL,
+        keyword_suffix TEXT NOT NULL DEFAULT '',
+        confidence INTEGER NOT NULL,
+        rank INTEGER NOT NULL,
+        suggestion_id INTEGER NOT NULL REFERENCES suggestions(id),
+        PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id) 
     ) WITHOUT ROWID;
 
     CREATE UNIQUE INDEX keywords_suggestion_id_rank ON keywords(suggestion_id, rank);
@@ -43,9 +52,26 @@ pub const SQL: &str = "
         ON DELETE CASCADE
     );
 
+    CREATE TABLE pocket_custom_details(
+        suggestion_id INTEGER PRIMARY KEY REFERENCES suggestions(id) ON DELETE CASCADE,
+        score REAL NOT NULL
+    );
+
     CREATE TABLE wikipedia_custom_details(
         suggestion_id INTEGER PRIMARY KEY REFERENCES suggestions(id) ON DELETE CASCADE,
         icon_id TEXT NOT NULL
+    );
+
+    CREATE TABLE amo_custom_details(
+        suggestion_id INTEGER PRIMARY KEY,
+        description TEXT NOT NULL,
+        guid TEXT NOT NULL,
+        icon_url TEXT NOT NULL,
+        rating TEXT,
+        number_of_ratings INTEGER NOT NULL,
+        score REAL NOT NULL,
+        FOREIGN KEY(suggestion_id) REFERENCES suggestions(id)
+        ON DELETE CASCADE
     );
 
     CREATE INDEX suggestions_record_id ON suggestions(record_id);
@@ -84,7 +110,7 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
 
     fn upgrade_from(&self, _db: &Transaction<'_>, version: u32) -> open_database::Result<()> {
         match version {
-            1..=2 => {
+            1..=5 => {
                 // These schema versions were used during development, and never
                 // shipped in any applications. Treat these databases as
                 // corrupt, so that they'll be replaced.

@@ -219,15 +219,17 @@ impl Field {
                 struct #wrap_name<'a>(&'a i32);
                 impl<'a> ::core::fmt::Debug for #wrap_name<'a> {
                     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
-                        match #ty::from_i32(*self.0) {
-                            None => ::core::fmt::Debug::fmt(&self.0, f),
-                            Some(en) => ::core::fmt::Debug::fmt(&en, f),
+                        let res: ::core::result::Result<#ty, _> = ::core::convert::TryFrom::try_from(*self.0);
+                        match res {
+                            Err(_) => ::core::fmt::Debug::fmt(&self.0, f),
+                            Ok(en) => ::core::fmt::Debug::fmt(&en, f),
                         }
                     }
                 }
             }
         } else {
             quote! {
+                #[allow(non_snake_case)]
                 fn #wrap_name<T>(v: T) -> T { v }
             }
         }
@@ -295,7 +297,7 @@ impl Field {
                     quote! {
                         #[doc=#get_doc]
                         pub fn #get(&self) -> #ty {
-                            #ty::from_i32(self.#ident).unwrap_or(#default)
+                            ::core::convert::TryFrom::try_from(self.#ident).unwrap_or(#default)
                         }
 
                         #[doc=#set_doc]
@@ -313,7 +315,10 @@ impl Field {
                     quote! {
                         #[doc=#get_doc]
                         pub fn #get(&self) -> #ty {
-                            self.#ident.and_then(#ty::from_i32).unwrap_or(#default)
+                            self.#ident.and_then(|x| {
+                                let result: ::core::result::Result<#ty, _> = ::core::convert::TryFrom::try_from(x);
+                                result.ok()
+                            }).unwrap_or(#default)
                         }
 
                         #[doc=#set_doc]
@@ -335,7 +340,10 @@ impl Field {
                             ::core::iter::Cloned<::core::slice::Iter<i32>>,
                             fn(i32) -> ::core::option::Option<#ty>,
                         > {
-                            self.#ident.iter().cloned().filter_map(#ty::from_i32)
+                            self.#ident.iter().cloned().filter_map(|x| {
+                                let result: ::core::result::Result<#ty, _> = ::core::convert::TryFrom::try_from(x);
+                                result.ok()
+                            })
                         }
                         #[doc=#push_doc]
                         pub fn #push(&mut self, value: #ty) {

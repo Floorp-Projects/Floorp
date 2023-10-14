@@ -2743,6 +2743,11 @@ criteria = "safe-to-deploy"
 delta = "0.8.0 -> 0.11.9"
 notes = "Mostly internal refactorings. Minimal new unsafe code, but with the invariants explicitly checked in code"
 
+[[audits.prost]]
+who = "Drew Willcoxon <adw@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.9 -> 0.12.1"
+
 [[audits.prost-derive]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -2754,6 +2759,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.11.9 -> 0.11.9@git:95964e9d33df3c2a9c3f14285e262867cab6f96b"
 notes = "Changes against 0.11.9 are mine."
+
+[[audits.prost-derive]]
+who = "Drew Willcoxon <adw@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.11.9 -> 0.12.1"
 
 [[audits.qcms]]
 who = "Jeff Muizelaar <jmuizelaar@mozilla.com>"
