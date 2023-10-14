@@ -344,7 +344,7 @@ export function gradient(value) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                117, // external_types:uniffi_external_types_fn_func_gradient
+                118, // external_types:uniffi_external_types_fn_func_gradient
                 FfiConverterOptionalTypeLine.lower(value),
             )
         }

@@ -356,7 +356,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callSync(
-                23, // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+                24, // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
                 FfiConverterTypeRemoteSettingsConfig.lower(remoteSettingsConfig),
             )
         }
@@ -367,7 +367,7 @@ export class RemoteSettings {
         const liftError = (data) => FfiConverterTypeRemoteSettingsError.lift(data);
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                24, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+                25, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
                 FfiConverterTypeRemoteSettings.lower(this),
             )
         }
@@ -391,7 +391,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                25, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+                26, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
                 FfiConverterTypeRemoteSettings.lower(this),
                 FfiConverterU64.lower(timestamp),
             )
@@ -424,7 +424,7 @@ export class RemoteSettings {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                26, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+                27, // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
                 FfiConverterTypeRemoteSettings.lower(this),
                 FfiConverterString.lower(attachmentId),
                 FfiConverterString.lower(path),
