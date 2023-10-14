@@ -80,7 +80,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/FileSystemQuotaClient.h"
+#include "mozilla/dom/FileSystemQuotaClientFactory.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/StorageDBUpdater.h"
