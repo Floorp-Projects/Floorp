@@ -98,3 +98,11 @@ vendoring:
   patches:
     - solaris-types.patch
     - memory-reporting.patch
+
+updatebot:
+  maintainer-phab: "#media-playback-reviewers"
+  maintainer-bz: padenot@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
