@@ -750,7 +750,6 @@ static int16_t nsSSLIOLayerPoll(PRFileDesc* fd, int16_t in_flags,
 
 nsSSLIOLayerHelpers::nsSSLIOLayerHelpers(uint32_t aTlsFlags)
     : mTreatUnsafeNegotiationAsBroken(false),
-      mTLSIntoleranceInfo(),
       mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0),
       mutex("nsSSLIOLayerHelpers.mutex"),
       mTlsFlags(aTlsFlags) {}

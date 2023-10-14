@@ -347,8 +347,7 @@ already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
    public:
     QueueDecodeTask(nsImageLoadingContent* aOwner, Promise* aPromise,
                     uint32_t aRequestGeneration)
-        : MicroTaskRunnable(),
-          mOwner(aOwner),
+        : mOwner(aOwner),
           mPromise(aPromise),
           mRequestGeneration(aRequestGeneration) {}
 

@@ -200,7 +200,7 @@ bool NumberFormatFields::toPartsVector(size_t overallLength,
    public:
     PartGenerator(const FieldsVector& vec, uint32_t limit,
                   const NumberPartSourceMap& sourceMap)
-        : fields(vec), limit(limit), sourceMap(sourceMap), enclosingFields() {}
+        : fields(vec), limit(limit), sourceMap(sourceMap) {}
 
     bool nextPart(bool* hasPart, NumberPart* part) {
       // There are no parts left if we've partitioned the entire string.

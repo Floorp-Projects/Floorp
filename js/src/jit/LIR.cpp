@@ -26,8 +26,7 @@ const char* const js::jit::LIROpNames[] = {
 };
 
 LIRGraph::LIRGraph(MIRGraph* mir)
-    : blocks_(),
-      constantPool_(mir->alloc()),
+    : constantPool_(mir->alloc()),
       constantPoolMap_(mir->alloc()),
       safepoints_(mir->alloc()),
       nonCallSafepoints_(mir->alloc()),
@@ -72,7 +71,7 @@ void LIRGraph::dump() {
 #endif
 
 LBlock::LBlock(MBasicBlock* from)
-    : block_(from), phis_(), entryMoveGroup_(nullptr), exitMoveGroup_(nullptr) {
+    : block_(from), entryMoveGroup_(nullptr), exitMoveGroup_(nullptr) {
   from->assignLir(this);
 }
 

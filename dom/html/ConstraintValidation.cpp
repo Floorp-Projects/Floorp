@@ -56,7 +56,7 @@ bool ConstraintValidation::CheckValidity() {
   return nsIConstraintValidation::CheckValidity(*content);
 }
 
-ConstraintValidation::ConstraintValidation() : nsIConstraintValidation() {}
+ConstraintValidation::ConstraintValidation() {}
 
 void ConstraintValidation::SetCustomValidity(const nsAString& aError) {
   mCustomValidity.Assign(aError);

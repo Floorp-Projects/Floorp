@@ -18,11 +18,10 @@
 
 namespace js {
 
-ScriptCounts::ScriptCounts()
-    : pcCounts_(), throwCounts_(), ionCounts_(nullptr) {}
+ScriptCounts::ScriptCounts() : ionCounts_(nullptr) {}
 
 ScriptCounts::ScriptCounts(PCCountsVector&& jumpTargets)
-    : pcCounts_(std::move(jumpTargets)), throwCounts_(), ionCounts_(nullptr) {}
+    : pcCounts_(std::move(jumpTargets)), ionCounts_(nullptr) {}
 
 ScriptCounts::ScriptCounts(ScriptCounts&& src)
     : pcCounts_(std::move(src.pcCounts_)),
@@ -41,8 +40,7 @@ ScriptCounts& ScriptCounts::operator=(ScriptCounts&& src) {
 
 ScriptCounts::~ScriptCounts() { js_delete(ionCounts_); }
 
-ScriptAndCounts::ScriptAndCounts(JSScript* script)
-    : script(script), scriptCounts() {
+ScriptAndCounts::ScriptAndCounts(JSScript* script) : script(script) {
   script->releaseScriptCounts(&scriptCounts);
 }
 

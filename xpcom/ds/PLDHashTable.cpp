@@ -183,7 +183,6 @@ PLDHashTable::HashShift(uint32_t aEntrySize, uint32_t aLength) {
 PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
                            uint32_t aLength)
     : mOps(aOps),
-      mEntryStore(),
       mGeneration(0),
       mHashShift(HashShift(aEntrySize, aLength)),
       mEntrySize(aEntrySize),

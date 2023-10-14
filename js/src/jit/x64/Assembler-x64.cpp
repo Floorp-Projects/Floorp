@@ -16,13 +16,13 @@ ABIArgGenerator::ABIArgGenerator()
     :
 #if defined(XP_WIN)
       regIndex_(0),
-      stackOffset_(ShadowStackSpace),
+      stackOffset_(ShadowStackSpace)
 #else
       intRegIndex_(0),
       floatRegIndex_(0),
-      stackOffset_(0),
+      stackOffset_(0)
 #endif
-      current_() {
+{
 }
 
 ABIArg ABIArgGenerator::next(MIRType type) {

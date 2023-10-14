@@ -134,7 +134,7 @@ EventListenerManagerBase::EventListenerManagerBase()
 }
 
 EventListenerManager::EventListenerManager(EventTarget* aTarget)
-    : EventListenerManagerBase(), mTarget(aTarget) {
+    : mTarget(aTarget) {
   NS_ASSERTION(aTarget, "unexpected null pointer");
 
   if (mIsMainThreadELM) {

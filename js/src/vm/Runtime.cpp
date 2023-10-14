@@ -107,7 +107,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       readPrincipals(nullptr),
       canAddPrivateElement(&DefaultHostEnsureCanAddPrivateElementCallback),
       warningReporter(nullptr),
-      selfHostedLazyScript(),
       geckoProfiler_(thisFromCtor()),
       trustedPrincipals_(nullptr),
       wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
@@ -123,7 +122,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       profilingScripts(false),
       scriptAndCountsVector(nullptr),
       watchtowerTestingLog(nullptr),
-      lcovOutput_(),
       jitRuntime_(nullptr),
       gc(thisFromCtor()),
       emptyString(nullptr),
@@ -151,12 +149,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       stackFormat_(parentRuntime ? js::StackFormat::Default
                                  : js::StackFormat::SpiderMonkey),
       wasmInstances(mutexid::WasmRuntimeInstances),
-      moduleAsyncEvaluatingPostOrder(ASYNC_EVALUATING_POST_ORDER_INIT),
-      moduleResolveHook(),
-      moduleMetadataHook(),
-      moduleDynamicImportHook(),
-      scriptPrivateAddRefHook(),
-      scriptPrivateReleaseHook() {
+      moduleAsyncEvaluatingPostOrder(ASYNC_EVALUATING_POST_ORDER_INIT) {
   JS_COUNT_CTOR(JSRuntime);
   liveRuntimesCount++;
 

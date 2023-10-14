@@ -128,7 +128,7 @@ class nsInputStreamTeeWriteEvent : public Runnable {
 };
 
 nsInputStreamTee::nsInputStreamTee()
-    : mWriter(nullptr), mClosure(nullptr), mLock(), mSinkIsValid(true) {}
+    : mWriter(nullptr), mClosure(nullptr), mSinkIsValid(true) {}
 
 bool nsInputStreamTee::SinkIsValid() {
   MutexAutoLock lock(*mLock);

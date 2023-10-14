@@ -744,11 +744,7 @@ class LiveBlock {
  public:
   LiveBlock(const void* aPtr, size_t aReqSize,
             const StackTrace* aAllocStackTrace)
-      : mPtr(aPtr),
-        mReqSize(aReqSize),
-        mAllocStackTrace(aAllocStackTrace),
-        mReportStackTrace_mReportedOnAlloc()  // all fields get zeroed
-  {}
+      : mPtr(aPtr), mReqSize(aReqSize), mAllocStackTrace(aAllocStackTrace) {}
 
   const void* Address() const { return mPtr; }
 

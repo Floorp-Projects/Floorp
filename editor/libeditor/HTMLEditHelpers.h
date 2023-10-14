@@ -189,15 +189,13 @@ class MOZ_STACK_CLASS MoveNodeResult final : public CaretPoint {
  private:
   explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
                           bool aHandled)
-      : CaretPoint(),
-        mNextInsertionPoint(aNextInsertionPoint),
+      : mNextInsertionPoint(aNextInsertionPoint),
         mHandled(aHandled && aNextInsertionPoint.IsSet()) {
     AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
         mNextInsertionPoint);
   }
   explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint, bool aHandled)
-      : CaretPoint(),
-        mNextInsertionPoint(std::move(aNextInsertionPoint)),
+      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
         mHandled(aHandled && mNextInsertionPoint.IsSet()) {
     AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
         mNextInsertionPoint);
@@ -673,8 +671,7 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final : public CaretPoint {
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent,
                               nsIContent* aMiddleContent,
                               nsIContent* aRightContent)
-      : CaretPoint(),
-        mLeftContent(aLeftContent),
+      : mLeftContent(aLeftContent),
         mMiddleContent(aMiddleContent),
         mRightContent(aRightContent) {}
 
@@ -752,8 +749,7 @@ class MOZ_STACK_CLASS SplitRangeOffResult final : public CaretPoint {
   SplitRangeOffResult(EditorDOMRange&& aTrackedRange,
                       SplitNodeResult&& aSplitNodeResultAtStart,
                       SplitNodeResult&& aSplitNodeResultAtEnd)
-      : CaretPoint(),
-        mRange(std::move(aTrackedRange)),
+      : mRange(std::move(aTrackedRange)),
         mHandled(aSplitNodeResultAtStart.Handled() ||
                  aSplitNodeResultAtEnd.Handled()) {
     MOZ_ASSERT(mRange.StartRef().IsSet());

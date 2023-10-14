@@ -49,8 +49,7 @@ static void CreateWebRenderCommands(wr::DisplayListBuilder& aBuilder,
 }
 
 HitTestInfoManager::HitTestInfoManager()
-    : mArea(nsRect()),
-      mFlags(gfx::CompositorHitTestInvisibleToHit),
+    : mFlags(gfx::CompositorHitTestInvisibleToHit),
       mViewId(ScrollableLayerGuid::NULL_SCROLL_ID),
       mSpaceAndClipChain(wr::InvalidScrollNodeWithChain()) {}
 

@@ -13,8 +13,7 @@
 
 namespace mozilla {
 
-TransactionStack::TransactionStack(Type aType)
-    : nsRefPtrDeque<TransactionItem>(), mType(aType) {}
+TransactionStack::TransactionStack(Type aType) : mType(aType) {}
 
 TransactionStack::~TransactionStack() { Clear(); }
 

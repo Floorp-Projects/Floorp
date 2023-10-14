@@ -413,8 +413,7 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
   }
 
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
-      : Accessible(),
-        mParent(kNoParent),
+      : mParent(kNoParent),
         mDoc(aThisAsDoc),
         mWrapper(0),
         mID(0),

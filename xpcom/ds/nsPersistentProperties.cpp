@@ -404,8 +404,7 @@ nsresult nsPropertiesParser::ParseBuffer(const char16_t* aBuffer,
 
 nsPersistentProperties::nsPersistentProperties()
     : mIn(nullptr),
-      mTable(&property_HashTableOps, sizeof(PropertyTableEntry), 16),
-      mArena() {}
+      mTable(&property_HashTableOps, sizeof(PropertyTableEntry), 16) {}
 
 nsPersistentProperties::~nsPersistentProperties() = default;
 

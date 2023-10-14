@@ -170,8 +170,7 @@ class imgFrame {
   already_AddRefed<SourceSurface> GetSourceSurface();
 
   struct AddSizeOfCbData : public SourceSurface::SizeOfInfo {
-    AddSizeOfCbData()
-        : SourceSurface::SizeOfInfo(), mIndex(0), mFinished(false) {}
+    AddSizeOfCbData() : mIndex(0), mFinished(false) {}
 
     size_t mIndex;
     bool mFinished;

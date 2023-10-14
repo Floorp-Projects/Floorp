@@ -2760,8 +2760,7 @@ void nsStyleContent::TriggerImageLoads(Document& aDoc,
 //
 
 nsStyleTextReset::nsStyleTextReset()
-    : mTextOverflow(),
-      mTextDecorationLine(StyleTextDecorationLine::NONE),
+    : mTextDecorationLine(StyleTextDecorationLine::NONE),
       mTextDecorationStyle(StyleTextDecorationStyle::Solid),
       mUnicodeBidi(StyleUnicodeBidi::Normal),
       mInitialLetterSink(0),

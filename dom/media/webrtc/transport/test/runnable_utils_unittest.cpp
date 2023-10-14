@@ -128,7 +128,7 @@ class TargetClass {
 
 class RunnableArgsTest : public MtransportTest {
  public:
-  RunnableArgsTest() : MtransportTest(), ran_(0), cl_(&ran_) {}
+  RunnableArgsTest() : ran_(0), cl_(&ran_) {}
 
   void Test1Arg() {
     Runnable* r = WrapRunnable(&cl_, &TargetClass::m1, 1);
@@ -149,7 +149,7 @@ class RunnableArgsTest : public MtransportTest {
 
 class DispatchTest : public MtransportTest {
  public:
-  DispatchTest() : MtransportTest(), ran_(0), cl_(&ran_) {}
+  DispatchTest() : ran_(0), cl_(&ran_) {}
 
   void SetUp() {
     MtransportTest::SetUp();

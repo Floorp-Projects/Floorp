@@ -167,7 +167,7 @@ class TransportLayerLossy : public TransportLayer {
 
 class TlsParser {
  public:
-  TlsParser(const unsigned char* data, size_t len) : buffer_(), offset_(0) {
+  TlsParser(const unsigned char* data, size_t len) : offset_(0) {
     buffer_.Copy(data, len);
   }
 
@@ -221,8 +221,7 @@ class TlsParser {
 
 class DtlsRecordParser {
  public:
-  DtlsRecordParser(const unsigned char* data, size_t len)
-      : buffer_(), offset_(0) {
+  DtlsRecordParser(const unsigned char* data, size_t len) : offset_(0) {
     buffer_.Copy(data, len);
   }
 
@@ -324,7 +323,7 @@ class DtlsInspectorInjector : public DtlsRecordInspector {
 class DtlsInspectorRecordHandshakeMessage : public DtlsRecordInspector {
  public:
   explicit DtlsInspectorRecordHandshakeMessage(uint8_t handshake_type)
-      : handshake_type_(handshake_type), buffer_() {}
+      : handshake_type_(handshake_type) {}
 
   virtual void OnRecord(TransportLayer* layer, uint8_t content_type,
                         const unsigned char* data, size_t len) {
@@ -440,13 +439,9 @@ class TransportTestPeer : public sigslot::has_slots<> {
         lossy_(new TransportLayerLossy()),
         dtls_(new TransportLayerDtls()),
         identity_(DtlsIdentity::Generate()),
-        ice_ctx_(),
-        streams_(),
         peer_(nullptr),
         gathering_complete_(false),
         digest_("sha-1"_ns),
-        enabled_cipersuites_(),
-        disabled_cipersuites_(),
         test_utils_(utils) {
     NrIceCtx::InitializeGlobals(NrIceCtx::GlobalConfig());
     ice_ctx_ = NrIceCtx::Create(name);

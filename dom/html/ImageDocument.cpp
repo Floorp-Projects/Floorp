@@ -122,8 +122,7 @@ ImageListener::OnStartRequest(nsIRequest* request) {
 }
 
 ImageDocument::ImageDocument()
-    : MediaDocument(),
-      mVisibleWidth(0.0),
+    : mVisibleWidth(0.0),
       mVisibleHeight(0.0),
       mImageWidth(0),
       mImageHeight(0),
