@@ -75,7 +75,7 @@ class SdpAttribute {
   };
 
   explicit SdpAttribute(AttributeType type) : mType(type) {}
-  virtual ~SdpAttribute() {}
+  virtual ~SdpAttribute() = default;
 
   virtual SdpAttribute* Clone() const = 0;
 
@@ -1228,7 +1228,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
     explicit Parameters(SdpRtpmapAttributeList::CodecType aCodec)
         : codec_type(aCodec) {}
 
-    virtual ~Parameters() {}
+    virtual ~Parameters() = default;
     virtual Parameters* Clone() const = 0;
     virtual void Serialize(std::ostream& os) const = 0;
     virtual bool CompareEq(const Parameters& other) const = 0;
@@ -1269,7 +1269,7 @@ class SdpFmtpAttributeList : public SdpAttribute {
 
     RtxParameters() : Parameters(SdpRtpmapAttributeList::kRtx) {}
 
-    virtual ~RtxParameters() {}
+    virtual ~RtxParameters() = default;
 
     virtual Parameters* Clone() const override {
       return new RtxParameters(*this);

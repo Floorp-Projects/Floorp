@@ -281,7 +281,7 @@ class DrawableFrameRef final {
   typedef gfx::DataSourceSurface DataSourceSurface;
 
  public:
-  DrawableFrameRef() {}
+  DrawableFrameRef() = default;
 
   explicit DrawableFrameRef(imgFrame* aFrame) : mFrame(aFrame) {
     MOZ_ASSERT(aFrame);
@@ -373,7 +373,7 @@ class RawAccessFrameRef final {
     aOther.mData = nullptr;
   }
 
-  ~RawAccessFrameRef() {}
+  ~RawAccessFrameRef() = default;
 
   RawAccessFrameRef& operator=(RawAccessFrameRef&& aOther) {
     MOZ_ASSERT(this != &aOther, "Self-moves are prohibited");

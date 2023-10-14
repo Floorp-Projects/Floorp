@@ -15,8 +15,8 @@
 class Lock {
  public:
   // Optimized wrapper implementation
-  Lock() {}
-  ~Lock() {}
+  Lock() = default;
+  ~Lock() = default;
   void Acquire() { lock_.Lock(); }
   void Release() { lock_.Unlock(); }
 

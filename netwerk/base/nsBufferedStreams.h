@@ -90,7 +90,7 @@ class nsBufferedInputStream final : public nsBufferedStream,
   NS_DECL_NSIASYNCINPUTSTREAMLENGTH
   NS_DECL_NSIINPUTSTREAMLENGTHCALLBACK
 
-  nsBufferedInputStream() {}
+  nsBufferedInputStream() = default;
 
   static nsresult Create(REFNSIID aIID, void** aResult);
 
@@ -146,7 +146,7 @@ class nsBufferedOutputStream : public nsBufferedStream,
   NS_DECL_NSIBUFFEREDOUTPUTSTREAM
   NS_DECL_NSISTREAMBUFFERACCESS
 
-  nsBufferedOutputStream() {}
+  nsBufferedOutputStream() = default;
 
   static nsresult Create(REFNSIID aIID, void** aResult);
 

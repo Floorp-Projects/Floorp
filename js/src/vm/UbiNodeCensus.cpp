@@ -125,7 +125,7 @@ class BucketCount : public CountType {
   };
 
  public:
-  explicit BucketCount() {}
+  explicit BucketCount() = default;
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);

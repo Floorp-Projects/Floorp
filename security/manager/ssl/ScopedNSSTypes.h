@@ -192,7 +192,7 @@ class DigestBase {
  */
 class Digest : public DigestBase {
  public:
-  explicit Digest() {}
+  explicit Digest() = default;
 
   static nsresult DigestBuf(SECOidTag hashAlg, Span<const uint8_t> buf,
                             /*out*/ nsTArray<uint8_t>& out) {
@@ -263,7 +263,7 @@ class Digest : public DigestBase {
 //   NS_ENSURE_SUCCESS(rv, rv);
 class HMAC : public DigestBase {
  public:
-  explicit HMAC() {}
+  explicit HMAC() = default;
 
   nsresult Begin(SECOidTag hashAlg, Span<const uint8_t> key) {
     if (!EnsureNSSInitializedChromeOrContent()) {

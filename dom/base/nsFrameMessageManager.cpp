@@ -1497,7 +1497,7 @@ class nsAsyncMessageToSameProcessParent
     : public nsSameProcessAsyncMessageBase,
       public SameProcessMessageQueue::Runnable {
  public:
-  nsAsyncMessageToSameProcessParent() {}
+  nsAsyncMessageToSameProcessParent() = default;
   nsresult HandleMessage() override {
     nsFrameMessageManager* ppm =
         nsFrameMessageManager::sSameProcessParentManager;

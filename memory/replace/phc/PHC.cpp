@@ -168,7 +168,7 @@ class InfallibleAllocPolicy {
 
 class StackTrace : public phc::StackTrace {
  public:
-  StackTrace() {}
+  StackTrace() = default;
 
   void Clear() { mLength = 0; }
 

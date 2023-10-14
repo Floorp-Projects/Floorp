@@ -111,7 +111,7 @@ class FuncType {
   }
 
  public:
-  FuncType() {}
+  FuncType() = default;
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
       : args_(std::move(args)), results_(std::move(results)) {}
 
