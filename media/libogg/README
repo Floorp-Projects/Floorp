@@ -26,8 +26,6 @@ Directory:
 
 - `win32` Win32 projects and build automation
 
-- `macosx` Mac OS X project and build files
-
 ## Contact ##
 
 The Ogg homepage is located at https://www.xiph.org/ogg/ .
@@ -92,12 +90,14 @@ be found in those source modules' README files)
 Ogg supports building using [CMake](http://www.cmake.org/). CMake is a meta build system that generates native projects for each platform.
 To generate projects just run cmake replacing `YOUR-PROJECT-GENERATOR` with a proper generator from a list [here](http://www.cmake.org/cmake/help/v3.2/manual/cmake-generators.7.html):
 
-    cmake -G YOUR-PROJECT-GENERATOR .
+    mkdir build
+    cd build
+    cmake -G YOUR-PROJECT-GENERATOR ..
 
 Note that by default cmake generates projects that will build static libraries.
 To generate projects that will build dynamic library use `BUILD_SHARED_LIBS` option like this:
 
-    cmake -G YOUR-PROJECT-GENERATOR -DBUILD_SHARED_LIBS=1 .
+    cmake -G YOUR-PROJECT-GENERATOR -DBUILD_SHARED_LIBS=1 ..
 
 After projects are generated use them as usual
 
@@ -105,20 +105,49 @@ After projects are generated use them as usual
 
 Use proper generator for your Visual Studio version like:
 
-    cmake -G "Visual Studio 12 2013" .
+    cmake -G "Visual Studio 12 2013" ..
 
 #### Building on Mac OS X ####
 
 Use Xcode generator. To build framework run:
 
-    cmake -G Xcode -DBUILD_FRAMEWORK=1 .
+    cmake -G Xcode -DBUILD_FRAMEWORK=1 ..
 
 #### Building on Linux ####
 
 Use Makefile generator which is default one.
 
-    cmake .
+    cmake ..
     make
+
+## Testing ##
+
+This package includes a collection of automated tests.
+Running them is not part of building nor installation but optional.
+
+### Unix-like System or MinGW ###
+
+If build under automake:
+
+    make check
+
+If build under CMake:
+
+    make test
+
+or:
+
+    ctest
+
+### Windows with MSBuild ###
+
+If build with configuration type "Debug", then:
+
+    ctest -C Debug
+
+If build with configuration type "Release", then:
+
+    ctest -C Release
 
 ## License ##
 
@@ -127,5 +156,5 @@ USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS
 GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE
 IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.
 
-THE OggVorbis SOURCE CODE IS COPYRIGHT (C) 1994-2015
+THE OggVorbis SOURCE CODE IS COPYRIGHT (C) 1994-2019
 by the Xiph.Org Foundation https://www.xiph.org/

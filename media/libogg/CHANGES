@@ -1,6 +1,24 @@
+Version 1.3.5 (2020 June 3)
+
+ * Fix unsigned typedef problem on macOS.
+ * Fix overflow check in ogg_sync_buffer.
+ * Clean up cmake and autotools build files.
+ * Remove Symbian and Apple XCode build files.
+ * Fix documentation cross-reference links.
+
+Version 1.3.4 (2019 August 30)
+
+* Faster slice-by-8 CRC32 implementation.
+  see https://lwn.net/Articles/453931/ for motivation.
+* Add CMake build.
+* Deprecate Visual Studio project files in favor of CMake.
+* configure --disable-crc option for fuzzing.
+* Various build fixes.
+* Documentation and example code fixes.
+
 Version 1.3.3 (2017 November 7)
 
- * Fix and issue with corrupt continued packet handling.
+ * Fix an issue with corrupt continued packet handling.
  * Update Windows projects and build settings.
  * Remove Mac OS 9 build support.
 
@@ -82,7 +100,7 @@ Version 1.1 (2003 November 17)
 
  * big-endian bitpacker routines for Theora
  * various portability fixes
- * improved API documenation
+ * improved API documentation
  * RFC 3533 documentation of the format by Silvia Pfeiffer at CSIRO
  * RFC 3534 documentation of the application/ogg mime-type by Linus Walleij
 
