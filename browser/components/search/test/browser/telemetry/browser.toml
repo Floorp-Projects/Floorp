@@ -41,7 +41,10 @@ support-files = [
 support-files = ["searchTelemetryDomainExtraction.html"]
 
 ["browser_search_telemetry_domain_categorization_reporting.js"]
-support-files = ["searchTelemetryDomainCategorizationReporting.html"]
+support-files = [
+  "searchTelemetryDomainCategorizationReporting.html",
+  "searchTelemetryDomainCategorizationCapProcessedDomains.html",
+]
 
 ["browser_search_telemetry_engagement_cached.js"]
 support-files = [

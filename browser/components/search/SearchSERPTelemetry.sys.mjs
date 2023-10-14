@@ -29,6 +29,8 @@ export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
+const maxDomainsToCategorize = 10;
+
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchTelemetry",
@@ -1442,6 +1444,9 @@ class DomainCategorizer {
         continue;
       }
       domains = this.processDomains(domains, provider);
+      // Per a request from Data Science, we need to limit the number of domains
+      // categorized to 10 non ad domains and 10 ad domains.
+      domains = new Set([...domains].slice(0, maxDomainsToCategorize));
       let resultsToReport = this.applyCategorizationLogic(domains);
       this.dummyLogger(
         domains,

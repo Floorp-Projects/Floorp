@@ -202,7 +202,81 @@ add_task(async function test_no_reporting_if_no_records() {
   Assert.equal(
     stub.getCall(2),
     null,
-    "dummyLogger should not have been called if attachments weren't downloaded."
+    "dummyLogger should not have been called if there are no records."
+  );
+
+  stub.restore();
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Per a request from Data Science, we need to limit the number of domains
+// categorized to 10 non ad domains and 10 ad domains.
+add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
+  resetTelemetry();
+  stub = sinon.stub(SearchSERPCategorization, "applyCategorizationLogic");
+
+  await db.clear();
+  let { record, attachment } = await mockRecordWithAttachment({
+    id: "example_id",
+    version: 1,
+    filename: "domain_category_mappings.json",
+  });
+  await db.create(record);
+  await client.attachments.cacheImpl.set(record.id, attachment);
+  await db.importChanges({}, Date.now());
+
+  let mapUpdatedPromise = TestUtils.topicObserved(
+    "domain-to-categories-map-update-complete"
+  );
+  const payload = {
+    current: [record],
+    created: [record],
+    updated: [],
+    deleted: [],
+  };
+  await client.emit("sync", { data: payload });
+  await mapUpdatedPromise;
+
+  let url = getSERPUrl(
+    "searchTelemetryDomainCategorizationCapProcessedDomains.html"
+  );
+  info("Load a sample SERP with organic results.");
+  let domainsCategorizedPromise = waitForPageWithCategorizedDomains();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await domainsCategorizedPromise;
+
+  Assert.deepEqual(
+    Array.from(stub.getCall(0).args[0]),
+    [
+      "test1.com",
+      "test2.com",
+      "test3.com",
+      "test4.com",
+      "test5.com",
+      "test6.com",
+      "test7.com",
+      "test8.com",
+      "test9.com",
+      "test10.com",
+    ],
+    "First call to applyCategorizationLogic should pass in 10 non-ad domains."
+  );
+
+  Assert.deepEqual(
+    Array.from(stub.getCall(1).args[0]),
+    [
+      "foo.com",
+      "bar.com",
+      "baz.com",
+      "qux.com",
+      "abc.com",
+      "def.com",
+      "ghi.org",
+      "jkl.org",
+      "mno.org",
+      "pqr.org",
+    ],
+    "Second call to applyCategorizationLogic should pass in 10 ad domains."
   );
 
   BrowserTestUtils.removeTab(tab);
