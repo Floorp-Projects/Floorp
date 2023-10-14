@@ -89,6 +89,7 @@ ScriptLoadRequest::ScriptLoadRequest(
       mIntegrity(aIntegrity),
       mReferrer(aReferrer),
       mScriptTextLength(0),
+      mScriptBytecode(),
       mBytecodeOffset(0),
       mURI(aURI),
       mLoadContext(aContext),

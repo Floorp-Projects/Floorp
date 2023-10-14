@@ -1918,7 +1918,7 @@ using ModuleCompileTask =
 class ScriptDecodeTask final : public CompileOrDecodeTask {
  public:
   explicit ScriptDecodeTask(const JS::TranscodeRange& aRange)
-      : mRange(aRange) {}
+      : CompileOrDecodeTask(), mRange(aRange) {}
 
   nsresult Init(JS::DecodeOptions& aOptions) {
     nsresult rv = InitFrontendContext();

@@ -50,6 +50,8 @@ ChangeStyleTransaction::ChangeStyleTransaction(nsStyledElement& aStyledElement,
     : EditTransactionBase(),
       mStyledElement(&aStyledElement),
       mProperty(&aProperty),
+      mUndoValue(),
+      mRedoValue(),
       mRemoveProperty(aRemove),
       mUndoAttributeWasSet(false),
       mRedoAttributeWasSet(false) {

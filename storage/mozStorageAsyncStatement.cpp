@@ -37,7 +37,7 @@ NS_IMPL_CI_INTERFACE_GETTER(AsyncStatement, mozIStorageAsyncStatement,
 
 class AsyncStatementClassInfo : public nsIClassInfo {
  public:
-  constexpr AsyncStatementClassInfo() = default;
+  constexpr AsyncStatementClassInfo() {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -94,7 +94,8 @@ static AsyncStatementClassInfo sAsyncStatementClassInfo;
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatement
 
-AsyncStatement::AsyncStatement() : mFinalized(false) {}
+AsyncStatement::AsyncStatement()
+    : StorageBaseStatementInternal(), mFinalized(false) {}
 
 nsresult AsyncStatement::initialize(Connection* aDBConnection,
                                     sqlite3* aNativeConnection,

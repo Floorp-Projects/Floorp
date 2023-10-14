@@ -694,7 +694,8 @@ bool ContentCacheInChild::SetSelection(
  *****************************************************************************/
 
 ContentCacheInParent::ContentCacheInParent(BrowserParent& aBrowserParent)
-    : mBrowserParent(aBrowserParent),
+    : ContentCache(),
+      mBrowserParent(aBrowserParent),
       mCommitStringByRequest(nullptr),
       mPendingCommitLength(0),
       mIsChildIgnoringCompositionEvents(false) {}

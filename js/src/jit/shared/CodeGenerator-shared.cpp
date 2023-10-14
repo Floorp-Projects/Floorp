@@ -48,10 +48,12 @@ MacroAssembler& CodeGeneratorShared::ensureMasm(MacroAssembler* masmArg,
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
                                          MacroAssembler* masmArg)
-    : masm(ensureMasm(masmArg, gen->alloc(), gen->realm)),
+    : maybeMasm_(),
+      masm(ensureMasm(masmArg, gen->alloc(), gen->realm)),
       gen(gen),
       graph(*graph),
       current(nullptr),
+      snapshots_(),
       recovers_(),
 #ifdef DEBUG
       pushedArgs_(0),

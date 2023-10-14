@@ -66,7 +66,7 @@ const uint32_t FIXED_FRAMESIZE = 500;
 
 class TestWebMWriter : public WebMWriter {
  public:
-  TestWebMWriter() = default;
+  TestWebMWriter() : WebMWriter() {}
 
   // When we append an I-Frame into WebM muxer, the muxer will treat previous
   // data as "a cluster".

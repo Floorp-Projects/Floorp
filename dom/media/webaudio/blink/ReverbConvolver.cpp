@@ -62,6 +62,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
                                  bool useBackgroundThreads,
                                  bool* aAllocationFailure)
     : m_impulseResponseLength(impulseResponseLength),
+      m_accumulationBuffer(),
       m_inputBuffer(InputBufferSize),
       m_backgroundThread("ConvolverWorker"),
       m_backgroundThreadMonitor("ConvolverMonitor"),

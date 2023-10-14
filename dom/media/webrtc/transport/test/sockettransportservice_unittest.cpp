@@ -28,7 +28,8 @@ namespace {
 class SocketTransportServiceTest : public MtransportTest {
  public:
   SocketTransportServiceTest()
-      : received_(0),
+      : MtransportTest(),
+        received_(0),
         readpipe_(nullptr),
         writepipe_(nullptr),
         registered_(false) {}

@@ -236,6 +236,7 @@ NS_QUERYFRAME_TAIL_INHERITING(SimpleXULLeafFrame)
 nsTreeBodyFrame::nsTreeBodyFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
     : SimpleXULLeafFrame(aStyle, aPresContext, kClassID),
+      mImageCache(),
       mTopRowIndex(0),
       mPageLength(0),
       mHorzPosition(0),

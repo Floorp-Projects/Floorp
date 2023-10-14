@@ -22,7 +22,7 @@ static double CubicRoot(double aValue) {
 struct PointD : public BasePoint<double, PointD> {
   typedef BasePoint<double, PointD> Super;
 
-  PointD() = default;
+  PointD() : Super() {}
   PointD(double aX, double aY) : Super(aX, aY) {}
   MOZ_IMPLICIT PointD(const Point& aPoint) : Super(aPoint.x, aPoint.y) {}
 

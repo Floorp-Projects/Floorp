@@ -28,6 +28,7 @@ class TransportLayerLoopback : public TransportLayer {
   TransportLayerLoopback()
       : peer_(nullptr),
         timer_(nullptr),
+        packets_(),
         packets_lock_(nullptr),
         deliverer_(nullptr),
         combinePackets_(false) {}

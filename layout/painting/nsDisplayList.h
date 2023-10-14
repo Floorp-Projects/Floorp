@@ -310,7 +310,9 @@ class nsDisplayListBuilder {
         : mAccumulatedRectLevels(0), mAllowAsyncAnimation(true) {}
 
     Preserves3DContext(const Preserves3DContext& aOther)
-        : mAccumulatedRectLevels(0),
+        : mAccumulatedTransform(),
+          mAccumulatedRect(),
+          mAccumulatedRectLevels(0),
           mVisibleRect(aOther.mVisibleRect),
           mAllowAsyncAnimation(aOther.mAllowAsyncAnimation) {}
 

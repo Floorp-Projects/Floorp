@@ -466,7 +466,8 @@ NonNativeInputTrack::NonNativeInputTrack(
     const PrincipalHandle& aPrincipalHandle)
     : DeviceInputTrack(aSampleRate, aDeviceId, aPrincipalHandle),
       mAudioSource(nullptr),
-      mSourceIdNumber(0) {}
+      mSourceIdNumber(0),
+      mGraphDriverThreadId(std::thread::id()) {}
 
 void NonNativeInputTrack::DestroyImpl() {
   MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());

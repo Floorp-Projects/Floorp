@@ -253,7 +253,7 @@ class AbstractFramePtr {
 
 class NullFramePtr : public AbstractFramePtr {
  public:
-  NullFramePtr() = default;
+  NullFramePtr() : AbstractFramePtr() {}
 };
 
 enum MaybeConstruct { NO_CONSTRUCT = false, CONSTRUCT = true };

@@ -91,7 +91,12 @@ class AddrInfo {
   bool mPhcWasLocked = false;
 
   // Default to no PHC info.
-  AddrInfo() : mKind(Kind::Unknown), mBaseAddr(nullptr), mUsableSize(0) {}
+  AddrInfo()
+      : mKind(Kind::Unknown),
+        mBaseAddr(nullptr),
+        mUsableSize(0),
+        mAllocStack(),
+        mFreeStack() {}
 };
 
 // Global instance that is retrieved by the process generating the crash report

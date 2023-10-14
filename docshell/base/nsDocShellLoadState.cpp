@@ -222,6 +222,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mOriginalFrameSrc(false),
       mIsFormSubmission(false),
       mLoadType(LOAD_NORMAL),
+      mTarget(),
       mSrcdocData(VoidString()),
       mLoadFlags(0),
       mInternalLoadFlags(0),

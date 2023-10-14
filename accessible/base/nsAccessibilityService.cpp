@@ -397,7 +397,9 @@ xpcAccessibleApplication* nsAccessibilityService::gXPCApplicationAccessible =
 uint32_t nsAccessibilityService::gConsumers = 0;
 
 nsAccessibilityService::nsAccessibilityService()
-    : mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList)),
+    : DocManager(),
+      FocusManager(),
+      mHTMLMarkupMap(ArrayLength(sHTMLMarkupMapList)),
       mMathMLMarkupMap(ArrayLength(sMathMLMarkupMapList)),
       mXULMarkupMap(ArrayLength(sXULMarkupMapList)) {}
 

@@ -747,7 +747,12 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
  public:
   explicit GetPossibleBreakpointsMatcher(JSContext* cx,
                                          MutableHandleObject result)
-      : cx_(cx), result_(result) {}
+      : cx_(cx),
+        result_(result),
+        minOffset(),
+        maxOffset(),
+        minLine(),
+        maxLine() {}
 
   bool parseQuery(HandleObject query) {
     RootedValue lineValue(cx_);

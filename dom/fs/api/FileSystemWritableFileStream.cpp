@@ -219,6 +219,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
       mManager(aManager),
       mActor(std::move(aActor)),
       mTaskQueue(aTaskQueue),
+      mWorkerRef(),
       mStreamParams(std::move(aStreamParams)),
       mMetadata(std::move(aMetadata)),
       mCloseHandler(MakeAndAddRef<CloseHandler>()),

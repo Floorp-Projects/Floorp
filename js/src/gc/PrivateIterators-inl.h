@@ -33,7 +33,8 @@ class ArenaCellIterUnderFinalize : public ArenaCellIter {
 
 class GrayObjectIter : public ZoneAllCellIter<js::gc::TenuredCell> {
  public:
-  explicit GrayObjectIter(JS::Zone* zone, AllocKind kind) {
+  explicit GrayObjectIter(JS::Zone* zone, AllocKind kind)
+      : ZoneAllCellIter<js::gc::TenuredCell>() {
     initForTenuredIteration(zone, kind);
   }
 

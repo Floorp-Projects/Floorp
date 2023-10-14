@@ -33,7 +33,8 @@ static size_t kStunMessageLen = sizeof(kStunMessage);
 
 class BufferedStunSocketTest : public MtransportTest {
  public:
-  BufferedStunSocketTest() : dummy_(nullptr), test_socket_(nullptr) {}
+  BufferedStunSocketTest()
+      : MtransportTest(), dummy_(nullptr), test_socket_(nullptr) {}
 
   ~BufferedStunSocketTest() { nr_socket_destroy(&test_socket_); }
 

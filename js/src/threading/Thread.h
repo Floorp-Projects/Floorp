@@ -63,7 +63,7 @@ class Thread {
             typename DerefO = std::remove_reference_t<NonConstO>,
             typename = std::enable_if_t<std::is_same_v<DerefO, Options>>>
   explicit Thread(O&& options = Options())
-      : options_(std::forward<O>(options)) {
+      : id_(ThreadId()), options_(std::forward<O>(options)) {
     MOZ_ASSERT(isInitialized());
   }
 

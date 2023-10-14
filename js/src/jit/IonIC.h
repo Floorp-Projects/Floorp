@@ -113,7 +113,8 @@ class IonIC {
         pc_(nullptr),
         rejoinOffset_(0),
         fallbackOffset_(0),
-        kind_(kind) {}
+        kind_(kind),
+        state_() {}
 
   void attachStub(IonICStub* newStub, JitCode* code);
 

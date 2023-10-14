@@ -113,7 +113,8 @@ class FrontendContext {
       : alloc_(this),
         nameCollectionPool_(nullptr),
         ownNameCollectionPool_(false),
-        scriptDataTableHolder_(&js::globalSharedScriptDataTableHolder) {}
+        scriptDataTableHolder_(&js::globalSharedScriptDataTableHolder),
+        supportedImportAssertions_() {}
   ~FrontendContext();
 
   void setStackQuota(JS::NativeStackSize stackSize);
@@ -232,7 +233,7 @@ class MOZ_STACK_CLASS AutoReportFrontendContext : public FrontendContext {
  public:
   explicit AutoReportFrontendContext(JSContext* cx,
                                      Warning warning = Warning::Report)
-      : cx_(cx), warning_(warning) {
+      : FrontendContext(), cx_(cx), warning_(warning) {
     setCurrentJSContext(cx_);
     MOZ_ASSERT(cx_ == maybeCx_);
   }
@@ -266,7 +267,8 @@ class ManualReportFrontendContext : public FrontendContext {
 #endif
 
  public:
-  explicit ManualReportFrontendContext(JSContext* cx) : cx_(cx) {
+  explicit ManualReportFrontendContext(JSContext* cx)
+      : FrontendContext(), cx_(cx) {
     setCurrentJSContext(cx_);
   }
 

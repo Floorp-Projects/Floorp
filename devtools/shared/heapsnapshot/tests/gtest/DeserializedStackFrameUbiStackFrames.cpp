@@ -18,7 +18,7 @@ using testing::ReturnRef;
 
 // A mock DeserializedStackFrame for testing.
 struct MockDeserializedStackFrame : public DeserializedStackFrame {
-  MockDeserializedStackFrame() = default;
+  MockDeserializedStackFrame() : DeserializedStackFrame() {}
 };
 
 DEF_TEST(DeserializedStackFrameUbiStackFrames, {

@@ -43,6 +43,7 @@ BlockReflowState::BlockReflowState(
           mReflowInput
               .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
               .ApplySkipSides(aFrame->PreReflowBlockLevelLogicalSkipSides())),
+      mPrevBEndMargin(),
       mMinLineHeight(aReflowInput.GetLineHeight()),
       mLineNumber(0),
       mTrailingClearFromPIF(StyleClear::None),

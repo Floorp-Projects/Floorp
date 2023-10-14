@@ -90,6 +90,7 @@ nsFormFillController::nsFormFillController()
       mTimeout(50),
       mMinResultsForPopup(1),
       mMaxRows(0),
+      mLastRightClickTimeStamp(TimeStamp()),
       mDisableAutoComplete(false),
       mCompleteDefaultIndex(false),
       mCompleteSelectedIndex(false),
