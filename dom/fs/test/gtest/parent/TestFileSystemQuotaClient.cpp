@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileSystemParentTypes.h"
-#include "FileSystemQuotaClient.h"
 #include "TestHelpers.h"
 #include "datamodel/FileSystemDataManager.h"
 #include "datamodel/FileSystemDatabaseManager.h"
@@ -14,6 +13,7 @@
 #include "mozIStorageService.h"
 #include "mozStorageCID.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/dom/FileSystemQuotaClientFactory.h"
 #include "mozilla/dom/PFileSystemManager.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/quota/FileStreams.h"
