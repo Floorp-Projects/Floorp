@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SuggestIngestionConstraints: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
+  SuggestionProvider: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestionQuery: "resource://gre/modules/RustSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -97,12 +98,17 @@ export class SuggestBackendRust extends BaseFeature {
 
     searchString = searchString.toLocaleLowerCase();
 
+    // TODO: Generalize this and support the other providers.
+    let providers = [];
+    if (lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) {
+      providers.push(lazy.SuggestionProvider.AMP);
+    }
+    if (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")) {
+      providers.push(lazy.SuggestionProvider.WIKIPEDIA);
+    }
+
     let suggestions = await this.#store.query(
-      new lazy.SuggestionQuery(
-        searchString,
-        lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored"),
-        lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")
-      )
+      new lazy.SuggestionQuery(searchString, providers)
     );
 
     for (let suggestion of suggestions) {

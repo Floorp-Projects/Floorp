@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
+  SuggestionProvider: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
@@ -278,22 +279,27 @@ export class MockRustSuggest {
       let isSponsored = suggestion.hasOwnProperty("is_sponsored")
         ? suggestion.is_sponsored
         : suggestion.iab_category == "22 - Shopping";
+      // TODO: Generalize this and support the other providers.
       if (
-        (isSponsored && query.includeSponsored) ||
-        (!isSponsored && query.includeNonSponsored)
+        (isSponsored &&
+          query.providers.includes(lazy.SuggestionProvider.AMP)) ||
+        (!isSponsored &&
+          query.providers.includes(lazy.SuggestionProvider.WIKIPEDIA))
       ) {
         matchedSuggestions.push(
           isSponsored
             ? new lazy.Suggestion.Amp(
                 suggestion.title,
                 suggestion.url,
+                suggestion.url, // rawUrl
                 [], // icon
                 query.keyword, // fullKeyword
                 suggestion.id, // blockId
                 suggestion.advertiser,
                 suggestion.iab_category,
                 suggestion.impression_url,
-                suggestion.click_url
+                suggestion.click_url,
+                suggestion.click_url // rawClickUrl
               )
             : new lazy.Suggestion.Wikipedia(
                 suggestion.title,
