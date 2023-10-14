@@ -50,6 +50,7 @@ extern "C" {
   void uniffi_suggest_fn_method_suggeststore_interrupt(void *, RustCallStatus*);
   void uniffi_suggest_fn_method_suggeststore_ingest(void *, RustBuffer, RustCallStatus*);
   void uniffi_suggest_fn_method_suggeststore_clear(void *, RustCallStatus*);
+  int8_t uniffi_suggest_fn_func_raw_suggestion_url_matches(RustBuffer, RustBuffer, RustCallStatus*);
   void uniffi_remote_settings_fn_free_remotesettings(void *, RustCallStatus*);
   void * uniffi_remote_settings_fn_constructor_remotesettings_new(RustBuffer, RustCallStatus*);
   RustBuffer uniffi_remote_settings_fn_method_remotesettings_get_records(void *, RustCallStatus*);
@@ -180,19 +181,23 @@ Maybe<already_AddRefed<Promise>> UniFFICallAsync(const GlobalObject& aGlobal, ui
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kSuggestSuggestStorePointerType>>;
       return Some(CallHandler::CallAsync(uniffi_suggest_fn_method_suggeststore_clear, aGlobal, aArgs, "uniffi_suggest_fn_method_suggeststore_clear: "_ns, aError));
     }
-    case 23: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+    case 23: { // suggest:uniffi_suggest_fn_func_raw_suggestion_url_matches
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      return Some(CallHandler::CallAsync(uniffi_suggest_fn_func_raw_suggestion_url_matches, aGlobal, aArgs, "uniffi_suggest_fn_func_raw_suggestion_url_matches: "_ns, aError));
+    }
+    case 24: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_constructor_remotesettings_new, aGlobal, aArgs, "uniffi_remote_settings_fn_constructor_remotesettings_new: "_ns, aError));
     }
-    case 24: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>>;
       return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_get_records, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_get_records: "_ns, aError));
     }
-    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<uint64_t>>;
       return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_get_records_since, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_get_records_since: "_ns, aError));
     }
-    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+    case 27: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       return Some(CallHandler::CallAsync(uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path, aGlobal, aArgs, "uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path: "_ns, aError));
     }
@@ -317,22 +322,27 @@ bool UniFFICallSync(const GlobalObject& aGlobal, uint64_t aId, const Sequence<Sc
       CallHandler::CallSync(uniffi_suggest_fn_method_suggeststore_clear, aGlobal, aArgs, aReturnValue, "uniffi_suggest_fn_method_suggeststore_clear: "_ns, aError);
       return true;
     }
-    case 23: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
+    case 23: { // suggest:uniffi_suggest_fn_func_raw_suggestion_url_matches
+      using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<int8_t>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
+      CallHandler::CallSync(uniffi_suggest_fn_func_raw_suggestion_url_matches, aGlobal, aArgs, aReturnValue, "uniffi_suggest_fn_func_raw_suggestion_url_matches: "_ns, aError);
+      return true;
+    }
+    case 24: { // remote_settings:uniffi_remote_settings_fn_constructor_remotesettings_new
       using CallHandler = ScaffoldingCallHandler<ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(uniffi_remote_settings_fn_constructor_remotesettings_new, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_constructor_remotesettings_new: "_ns, aError);
       return true;
     }
-    case 24: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
+    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>>;
       CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_get_records, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_get_records: "_ns, aError);
       return true;
     }
-    case 25: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
+    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_get_records_since
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<RustBuffer>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<uint64_t>>;
       CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_get_records_since, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_get_records_since: "_ns, aError);
       return true;
     }
-    case 26: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
+    case 27: { // remote_settings:uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path
       using CallHandler = ScaffoldingCallHandler<ScaffoldingConverter<void>, ScaffoldingObjectConverter<&kRemoteSettingsRemoteSettingsPointerType>, ScaffoldingConverter<RustBuffer>, ScaffoldingConverter<RustBuffer>>;
       CallHandler::CallSync(uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path, aGlobal, aArgs, aReturnValue, "uniffi_remote_settings_fn_method_remotesettings_download_attachment_to_path: "_ns, aError);
       return true;

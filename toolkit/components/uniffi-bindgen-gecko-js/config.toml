@@ -13,6 +13,7 @@ main = [
 [suggest.receiver_thread]
 default = "worker"
 main = [
+  "raw_suggestion_url_matches",
   "SuggestStore",
   "SuggestStore.interrupt",
 ]
