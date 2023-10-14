@@ -3147,6 +3147,13 @@
       // together. This prevents synch reflow for each tab
       // insertion.
       for (var i = 0; i < tabDataList.length; i++) {
+
+        // Vetical tab has a bug. 3 closed tabs are restored when Floorp is started.
+        // Destroy 3 tabs for now.
+        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 3 && tabDataList.length > 3) {
+          continue;
+        }
+
         let tabData = tabDataList[i];
 
         let userContextId = tabData.userContextId;
