@@ -186,23 +186,10 @@ class Editor extends PureComponent {
     }
 
     const { codeMirror } = editor;
-
-    this.abortController = new window.AbortController();
-
-    // CodeMirror refreshes its internal state on window resize, but we need to also
-    // refresh it when the side panels are resized.
-    // We could have a ResizeObserver instead, but we wouldn't be able to differentiate
-    // between window resize and side panel resize and as a result, might refresh
-    // codeMirror twice, which is wasteful.
-    window.document
-      .querySelector(".editor-pane")
-      .addEventListener("resizeend", () => codeMirror.refresh(), {
-        signal: this.abortController.signal,
-      });
+    const codeMirrorWrapper = codeMirror.getWrapperElement();
 
     codeMirror.on("gutterClick", this.onGutterClick);
 
-    const codeMirrorWrapper = codeMirror.getWrapperElement();
     // Set code editor wrapper to be focusable
     codeMirrorWrapper.tabIndex = 0;
     codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
@@ -273,11 +260,6 @@ class Editor extends PureComponent {
     shortcuts.off(L10N.getStr("toggleBreakpoint.key"));
     shortcuts.off(L10N.getStr("toggleCondPanel.breakpoint.key"));
     shortcuts.off(L10N.getStr("toggleCondPanel.logPoint.key"));
-
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
   }
 
   getCurrentLine() {
