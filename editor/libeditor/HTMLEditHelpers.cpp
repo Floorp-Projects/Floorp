@@ -79,9 +79,7 @@ void DOMIterator::AppendNodesToArray(
   }
 }
 
-DOMSubtreeIterator::DOMSubtreeIterator() : DOMIterator() {
-  mIter = &mSubtreeIter;
-}
+DOMSubtreeIterator::DOMSubtreeIterator() { mIter = &mSubtreeIter; }
 
 nsresult DOMSubtreeIterator::Init(nsRange& aRange) {
   return mIter->Init(&aRange);

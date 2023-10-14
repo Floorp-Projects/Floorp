@@ -22,8 +22,7 @@ class Element;
 class HTMLEditorEventListener final : public EditorEventListener {
  public:
   HTMLEditorEventListener()
-      : EditorEventListener(),
-        mListeningToMouseMoveEventForResizers(false),
+      : mListeningToMouseMoveEventForResizers(false),
         mListeningToMouseMoveEventForGrabber(false),
         mListeningToResizeEvent(false) {}
 

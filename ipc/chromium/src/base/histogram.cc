@@ -218,8 +218,7 @@ size_t Histogram::SampleSet::SizeOfExcludingThis(
 }
 
 Histogram::Histogram(Sample minimum, Sample maximum, size_t bucket_count)
-    : sample_(),
-      declared_min_(minimum),
+    : declared_min_(minimum),
       declared_max_(maximum),
       bucket_count_(bucket_count),
       flags_(kNoFlags),
@@ -228,8 +227,7 @@ Histogram::Histogram(Sample minimum, Sample maximum, size_t bucket_count)
 }
 
 Histogram::Histogram(TimeDelta minimum, TimeDelta maximum, size_t bucket_count)
-    : sample_(),
-      declared_min_(static_cast<int>(minimum.InMilliseconds())),
+    : declared_min_(static_cast<int>(minimum.InMilliseconds())),
       declared_max_(static_cast<int>(maximum.InMilliseconds())),
       bucket_count_(bucket_count),
       flags_(kNoFlags),
@@ -388,7 +386,7 @@ double Histogram::GetPeakBucketSize(const SampleSet& snapshot) const {
 // Methods for the Histogram::SampleSet class
 //------------------------------------------------------------------------------
 
-Histogram::SampleSet::SampleSet() : counts_(), sum_(0), redundant_count_(0) {}
+Histogram::SampleSet::SampleSet() : sum_(0), redundant_count_(0) {}
 
 Histogram::SampleSet::~SampleSet() {}
 
@@ -543,7 +541,7 @@ Histogram* FlagHistogram::FactoryGet(Flags flags, const int* buckets) {
   return h;
 }
 
-FlagHistogram::FlagHistogram() : BooleanHistogram(), mSwitched(false) {}
+FlagHistogram::FlagHistogram() : mSwitched(false) {}
 
 Histogram::ClassType FlagHistogram::histogram_type() const {
   return FLAG_HISTOGRAM;

@@ -218,8 +218,7 @@ class CrashStatsLogForwarder : public mozilla::gfx::LogForwarder {
 };
 
 CrashStatsLogForwarder::CrashStatsLogForwarder(CrashReporter::Annotation aKey)
-    : mBuffer(),
-      mCrashCriticalKey(aKey),
+    : mCrashCriticalKey(aKey),
       mMaxCapacity(0),
       mIndex(-1),
       mMutex("CrashStatsLogForwarder") {}

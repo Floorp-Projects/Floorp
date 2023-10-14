@@ -976,7 +976,7 @@ namespace {
 
 Histogram::Histogram(HistogramID histogramId, const HistogramInfo& info,
                      bool expired)
-    : mStorage(), mSingleStore(nullptr), mIsExpired(expired) {
+    : mSingleStore(nullptr), mIsExpired(expired) {
   if (IsExpired()) {
     return;
   }
@@ -1117,8 +1117,7 @@ nsresult internal_ReflectKeyedHistogram(
 
 KeyedHistogram::KeyedHistogram(HistogramID id, const HistogramInfo& info,
                                bool expired)
-    : mStorage(),
-      mSingleStore(nullptr),
+    : mSingleStore(nullptr),
       mId(id),
       mHistogramInfo(info),
       mIsExpired(expired) {

@@ -144,9 +144,7 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction final {
   AutoSetCurrentTransaction& operator=(AutoSetCurrentTransaction&&) = delete;
 
   explicit AutoSetCurrentTransaction(Maybe<IDBTransaction&> aTransaction)
-      : mTransaction(aTransaction),
-        mPreviousTransaction(),
-        mThreadLocal(nullptr) {
+      : mTransaction(aTransaction), mThreadLocal(nullptr) {
     if (aTransaction) {
       BackgroundChildImpl::ThreadLocal* threadLocal =
           BackgroundChildImpl::GetThreadLocalForCurrentThread();

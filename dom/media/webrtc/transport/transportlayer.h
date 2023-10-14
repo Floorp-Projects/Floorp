@@ -37,7 +37,7 @@ class TransportLayer : public sigslot::has_slots<> {
   enum State { TS_NONE, TS_INIT, TS_CONNECTING, TS_OPEN, TS_CLOSED, TS_ERROR };
 
   // Is this a stream or datagram flow
-  TransportLayer() : state_(TS_NONE), flow_id_(), downward_(nullptr) {}
+  TransportLayer() : state_(TS_NONE), downward_(nullptr) {}
 
   virtual ~TransportLayer() = default;
 

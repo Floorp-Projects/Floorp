@@ -681,7 +681,6 @@ class ProcessExecutableMemory {
         lock_(mutexid::ProcessExecutableRegion),
         pagesAllocated_(0),
         cursor_(0),
-        rng_(),
         pages_() {}
 
   [[nodiscard]] bool init() {

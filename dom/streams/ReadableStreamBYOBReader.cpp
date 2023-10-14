@@ -36,8 +36,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamBYOBReader)
 NS_INTERFACE_MAP_END_INHERITING(ReadableStreamGenericReader)
 
 ReadableStreamBYOBReader::ReadableStreamBYOBReader(nsISupports* aGlobal)
-    : ReadableStreamGenericReader(do_QueryInterface(aGlobal)),
-      mReadIntoRequests({}) {}
+    : ReadableStreamGenericReader(do_QueryInterface(aGlobal)) {}
 
 JSObject* ReadableStreamBYOBReader::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

@@ -100,7 +100,7 @@ static std::ostream& operator<<(std::ostream& aStream, UINT12 aId) {
 
 class STUNUDPSocketFilter : public nsISocketFilter {
  public:
-  STUNUDPSocketFilter() : white_list_(), pending_requests_() {}
+  STUNUDPSocketFilter() {}
 
   // Allocated/freed and used on the PBackground IPC thread
   NS_DECL_ISUPPORTS
@@ -287,8 +287,7 @@ class PendingSTUNId {
 
 class STUNTCPSocketFilter : public nsISocketFilter {
  public:
-  STUNTCPSocketFilter()
-      : white_listed_(false), pending_request_ids_(), response_allowed_ids_() {}
+  STUNTCPSocketFilter() : white_listed_(false) {}
 
   // Allocated/freed and used on the PBackground IPC thread
   NS_DECL_ISUPPORTS

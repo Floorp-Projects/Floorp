@@ -81,7 +81,6 @@ class DoubleBufferQueueImpl
   using DataType = FileSystemEntryMetadata;
   explicit DoubleBufferQueueImpl(const FileSystemEntryMetadata& aMetadata)
       : mEntryId(aMetadata.entryId()),
-        mData(),
         mWithinPageEnd(0u),
         mWithinPageIndex(0u),
         mCurrentPageIsLastPage(true),

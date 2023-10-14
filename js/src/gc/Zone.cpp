@@ -167,7 +167,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       allocNurseryStrings_(true),
       allocNurseryBigInts_(true),
       pretenuring(this),
-      compartments_(),
       crossZoneStringWrappers_(this),
       gcEphemeronEdges_(SystemAllocPolicy(), rt->randomHashCodeScrambler()),
       gcNurseryEphemeronEdges_(SystemAllocPolicy(),

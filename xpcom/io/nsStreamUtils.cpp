@@ -497,7 +497,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsAStreamCopier, CancelableRunnable,
 
 class nsStreamCopierIB final : public nsAStreamCopier {
  public:
-  nsStreamCopierIB() : nsAStreamCopier() {}
+  nsStreamCopierIB() {}
   virtual ~nsStreamCopierIB() = default;
 
   struct MOZ_STACK_CLASS ReadSegmentsState {
@@ -541,7 +541,7 @@ class nsStreamCopierIB final : public nsAStreamCopier {
 
 class nsStreamCopierOB final : public nsAStreamCopier {
  public:
-  nsStreamCopierOB() : nsAStreamCopier() {}
+  nsStreamCopierOB() {}
   virtual ~nsStreamCopierOB() = default;
 
   struct MOZ_STACK_CLASS WriteSegmentsState {

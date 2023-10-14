@@ -94,8 +94,7 @@ static AsyncStatementClassInfo sAsyncStatementClassInfo;
 ////////////////////////////////////////////////////////////////////////////////
 //// AsyncStatement
 
-AsyncStatement::AsyncStatement()
-    : StorageBaseStatementInternal(), mFinalized(false) {}
+AsyncStatement::AsyncStatement() : mFinalized(false) {}
 
 nsresult AsyncStatement::initialize(Connection* aDBConnection,
                                     sqlite3* aNativeConnection,

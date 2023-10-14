@@ -661,7 +661,7 @@ class nsIContent : public nsINode {
 
   class nsContentSlots : public nsINode::nsSlots {
    public:
-    nsContentSlots() : nsINode::nsSlots(), mExtendedSlots(0) {}
+    nsContentSlots() : mExtendedSlots(0) {}
 
     ~nsContentSlots() {
       if (!(mExtendedSlots & sNonOwningExtendedSlotsFlag)) {

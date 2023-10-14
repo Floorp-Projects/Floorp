@@ -199,7 +199,7 @@ inline void AssertObjectIsSavedFrameOrWrapper(JSContext* cx,
 // to the subsumes callback, and should be special cased with a shortcut before
 // that.
 struct ReconstructedSavedFramePrincipals : public JSPrincipals {
-  explicit ReconstructedSavedFramePrincipals() : JSPrincipals() {
+  explicit ReconstructedSavedFramePrincipals() {
     MOZ_ASSERT(is(this));
     this->refcount = 1;
   }

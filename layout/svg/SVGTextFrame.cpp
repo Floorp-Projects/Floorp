@@ -1421,7 +1421,6 @@ class MOZ_STACK_CLASS TextFrameIterator {
       : mRootFrame(aRoot),
         mSubtree(aSubtree),
         mCurrentFrame(aRoot),
-        mCurrentPosition(),
         mSubtreePosition(mSubtree ? eBeforeSubtree : eWithinSubtree) {
     Init();
   }
@@ -1436,7 +1435,6 @@ class MOZ_STACK_CLASS TextFrameIterator {
                      ? aSubtree->GetPrimaryFrame()
                      : nullptr),
         mCurrentFrame(aRoot),
-        mCurrentPosition(),
         mSubtreePosition(mSubtree ? eBeforeSubtree : eWithinSubtree) {
     Init();
   }

@@ -590,8 +590,7 @@ class nsIFrame : public nsQueryFrame {
 
   explicit nsIFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                     ClassID aID)
-      : mRect(),
-        mContent(nullptr),
+      : mContent(nullptr),
         mComputedStyle(aStyle),
         mPresContext(aPresContext),
         mParent(nullptr),

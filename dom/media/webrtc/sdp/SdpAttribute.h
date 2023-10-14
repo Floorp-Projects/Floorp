@@ -738,7 +738,7 @@ class SdpImageattrAttributeList : public SdpAttribute {
 
   class Imageattr {
    public:
-    Imageattr() : pt(), sendAll(false), recvAll(false) {}
+    Imageattr() : sendAll(false), recvAll(false) {}
     void Serialize(std::ostream& os) const;
     // TODO: Remove this Bug 1469702
     bool Parse(std::istream& is, std::string* error);

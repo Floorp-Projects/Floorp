@@ -534,7 +534,7 @@ TEST_F(LulDwarfCFI, CIEVersion3ReturnColumn) {
 }
 
 struct CFIInsnFixture : public CFIFixture {
-  CFIInsnFixture() : CFIFixture() {
+  CFIInsnFixture() {
     data_factor = 0xb6f;
     return_register = 0x9be1ed9f;
     version = 3;
@@ -2045,7 +2045,7 @@ TEST_F(LulDwarfCFIRestore, RestoreValExpressionRuleChangedValExpression) {
 }
 
 struct EHFrameFixture : public CFIInsnFixture {
-  EHFrameFixture() : CFIInsnFixture(), section(kBigEndian, 4, true) {
+  EHFrameFixture() : section(kBigEndian, 4, true) {
     encoded_pointer_bases.cfi = 0x7f496cb2;
     encoded_pointer_bases.text = 0x540f67b6;
     encoded_pointer_bases.data = 0xe3eab768;

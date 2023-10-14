@@ -37,9 +37,7 @@ namespace layers {
 class ISurfaceAllocator;
 
 WebRenderImageHost::WebRenderImageHost(const TextureInfo& aTextureInfo)
-    : CompositableHost(aTextureInfo),
-      ImageComposite(),
-      mCurrentAsyncImageManager(nullptr) {}
+    : CompositableHost(aTextureInfo), mCurrentAsyncImageManager(nullptr) {}
 
 WebRenderImageHost::~WebRenderImageHost() {
   MOZ_ASSERT(mPendingRemoteTextureWrappers.empty());
