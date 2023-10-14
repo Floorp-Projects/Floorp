@@ -116,32 +116,18 @@ export function getTokenEnd(codeMirror, line, column) {
 }
 
 /**
- * Given the dom element related to the token, this gets its line and column.
+ * Given the dom element realted to the token, this gets its line and column.
  *
  * @param {*} codeMirror
  * @param {*} tokenEl
  * @returns {Object} An object of the form { line, column }
  */
 export function getTokenLocation(codeMirror, tokenEl) {
-  // Get the quad (and not the bounding rect), as the span could wrap on multiple lines
-  // and the middle of the bounding rect may not be over the token:
-  // +───────────────────────+
-  // │      myLongVariableNa│
-  // │me         +          │
-  // +───────────────────────+
-  const { p1, p2, p3 } = tokenEl.getBoxQuads()[0];
-  const left = p1.x + (p2.x - p1.x) / 2;
-  const top = p1.y + (p3.y - p1.y) / 2;
-  const { line, ch } = codeMirror.coordsChar(
-    {
-      left,
-      top,
-    },
-    // Use the "window" context where the coordinates are relative to the top-left corner
-    // of the currently visible (scrolled) window.
-    // This enables codemirror also correctly handle wrappped lines in the editor.
-    "window"
-  );
+  const { left, top, width, height } = tokenEl.getBoundingClientRect();
+  const { line, ch } = codeMirror.coordsChar({
+    left: left + width / 2,
+    top: top + height / 2,
+  });
 
   return {
     line: line + 1,
