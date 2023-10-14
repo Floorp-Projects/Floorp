@@ -115,7 +115,7 @@ static std::string Resolve(const std::string& fqdn, int address_family) {
 
 class StunTest : public MtransportTest {
  public:
-  StunTest() {}
+  StunTest() = default;
 
   void SetUp() override {
     MtransportTest::SetUp();

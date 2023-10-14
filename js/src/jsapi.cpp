@@ -3955,7 +3955,7 @@ void JSErrorBase::freeMessage() {
   message_ = JS::ConstUTF8CharsZ();
 }
 
-JSErrorNotes::JSErrorNotes() {}
+JSErrorNotes::JSErrorNotes() = default;
 
 JSErrorNotes::~JSErrorNotes() = default;
 

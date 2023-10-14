@@ -17,7 +17,7 @@ using namespace mozilla::a11y;
 
 // ApplicationAccessibleWrap
 
-ApplicationAccessibleWrap::ApplicationAccessibleWrap() {}
+ApplicationAccessibleWrap::ApplicationAccessibleWrap() = default;
 
 ApplicationAccessibleWrap::~ApplicationAccessibleWrap() {
   AccessibleWrap::ShutdownAtkObject();

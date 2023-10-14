@@ -39,7 +39,7 @@ static inline void AlignTo(size_t* aOffset, size_t aAlign) {
   }
 }
 
-SharedMap::SharedMap() {}
+SharedMap::SharedMap() = default;
 
 SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
                      size_t aMapSize, nsTArray<RefPtr<BlobImpl>>&& aBlobs)
