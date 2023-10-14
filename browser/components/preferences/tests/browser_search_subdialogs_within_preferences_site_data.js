@@ -13,6 +13,9 @@ add_task(async function () {
  * Test for searching for the "Settings - Site Data" subdialog.
  */
 add_task(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["cookiebanners.ui.desktop.enabled", false]],
+  });
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });

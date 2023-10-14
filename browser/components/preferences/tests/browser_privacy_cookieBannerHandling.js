@@ -8,7 +8,6 @@
 const FEATURE_PREF = "cookiebanners.ui.desktop.enabled";
 const MODE_PREF = "cookiebanners.service.mode";
 const PBM_MODE_PREF = "cookiebanners.service.mode.privateBrowsing";
-const DETECT_ONLY_PREF = "cookiebanners.service.detectOnly";
 
 const GROUPBOX_ID = "cookieBannerHandlingGroup";
 const CHECKBOX_ID = "handleCookieBanners";
@@ -18,7 +17,7 @@ add_task(async function test_section_hidden_when_feature_flag_disabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, false],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
     ],
   });
 
@@ -38,7 +37,7 @@ add_task(async function test_section_shown_when_feature_flag_enabled() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
     ],
   });
 
@@ -58,7 +57,7 @@ add_task(async function test_checkbox_unchecked_disabled_mode() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
     ],
   });
 
@@ -73,53 +72,12 @@ add_task(async function test_checkbox_unchecked_disabled_mode() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Test the checkbox is unchecked in detect-only mode.
-add_task(async function test_checkbox_unchecked_detect_only_mode() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
-      [DETECT_ONLY_PREF, true],
-    ],
-  });
-
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:preferences#privacy" },
-    async function (browser) {
-      let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
-      ok(!checkbox.checked, "checkbox is not checked in detect-only mode");
-    }
-  );
-
-  await SpecialPowers.popPrefEnv();
-});
-
-// Test the checkbox is checked in REJECT_OR_ACCEPT mode.
-add_task(async function test_checkbox_checked_reject_or_accept_mode() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT],
-    ],
-  });
-
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:preferences#privacy" },
-    async function (browser) {
-      let checkbox = browser.contentDocument.getElementById(CHECKBOX_ID);
-      ok(checkbox.checked, "checkbox is checked in REJECT_OR_ACCEPT mode");
-    }
-  );
-
-  await SpecialPowers.popPrefEnv();
-});
-
 // Test the checkbox is checked in REJECT mode.
 add_task(async function test_checkbox_checked_reject_mode() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_REJECT],
     ],
   });
 
@@ -134,15 +92,13 @@ add_task(async function test_checkbox_checked_reject_mode() {
   await SpecialPowers.popPrefEnv();
 });
 
-// Test that toggling the checkbox toggles the mode pref value as expected,
-// and also disables detect only mode, as expected.
+// Test that toggling the checkbox toggles the mode pref value as expected
 add_task(async function test_checkbox_modifies_prefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [FEATURE_PREF, true],
-      [MODE_PREF, Ci.nsICookieBannerService.MODE_UNSET],
-      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_UNSET],
-      [DETECT_ONLY_PREF, true],
+      [MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_DISABLED],
     ],
   });
 
@@ -166,20 +122,17 @@ add_task(async function test_checkbox_modifies_prefs() {
         browser
       );
       Assert.ok(checkbox.checked, "checkbox should be checked");
-      Assert.equal(
-        Ci.nsICookieBannerService.MODE_REJECT,
-        Services.prefs.getIntPref(MODE_PREF),
-        "cookie banner handling mode should be set to REJECT mode after checking the checkbox"
-      );
+
       Assert.equal(
         Ci.nsICookieBannerService.MODE_REJECT,
         Services.prefs.getIntPref(PBM_MODE_PREF),
-        "cookie banner handling mode for PBM should be set to REJECT mode after checking the checkbox"
+        "cookie banner handling mode for PBM should be set to REJECT after checking the checkbox"
       );
+
       Assert.equal(
-        false,
-        Services.prefs.getBoolPref(DETECT_ONLY_PREF),
-        "cookie banner handling detect-only mode should be disabled after checking the checkbox"
+        Ci.nsICookieBannerService.MODE_DISABLED,
+        Services.prefs.getIntPref(MODE_PREF),
+        "non-PBM cookie banner handling mode should be unchanged after checking the checkbox"
       );
 
       await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -190,18 +143,15 @@ add_task(async function test_checkbox_modifies_prefs() {
       Assert.ok(!checkbox.checked, "checkbox should be unchecked");
       Assert.equal(
         Ci.nsICookieBannerService.MODE_DISABLED,
-        Services.prefs.getIntPref(MODE_PREF),
-        "cookie banner handling mode should be set to DISABLED mode after unchecking the checkbox"
+        Services.prefs.getIntPref(PBM_MODE_PREF),
+        "cookie banner handling mode for PBM should be set to DISABLED after unchecking the checkbox"
       );
+
+      // this ensures the off-ramp for non-PBM pref is working
       Assert.equal(
         Ci.nsICookieBannerService.MODE_DISABLED,
-        Services.prefs.getIntPref(PBM_MODE_PREF),
-        "cookie banner handling mode for PBM should be set to DISABLED mode after unchecking the checkbox"
-      );
-      Assert.equal(
-        false,
-        Services.prefs.getBoolPref(DETECT_ONLY_PREF),
-        "cookie banner handling detect-only mode should still be disabled after unchecking the checkbox"
+        Services.prefs.getIntPref(MODE_PREF),
+        "non-PBM cookie banner handling mode should be set to DISABLED after unchecking the checkbox"
       );
     }
   );
