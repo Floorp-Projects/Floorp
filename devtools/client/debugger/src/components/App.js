@@ -279,7 +279,6 @@ class App extends Component {
         splitterSize: 1,
         onResizeEnd: num => {
           prefs.startPanelSize = num;
-          this.triggerEditorPaneResize();
         },
         startPanelCollapsed: startPanelCollapsed,
         startPanel: React.createElement(PrimaryPanes, {
