@@ -537,7 +537,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Հեռակա վրիպազերծում USB-ով</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Ցուցադրել որոնիչները</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Ցուցադրել որոնիչները</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Ցուցադրել որոնման հուշումներ</string>
 
@@ -1937,7 +1937,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Ավելացնել</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Պահպանել</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Պահպանել</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Խմբագրել</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2186,7 +2186,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Վերանայման ստուգիչ</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Վերանայման ստուգիչ</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Վերանայել ստուգիչը</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Հուսալի կարծիքներ</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2231,7 +2233,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Ցուցադրել գովազդը կարծիքների ստուգիչում</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Դուք երբեմն կտեսնեք համապատասխան ապրանքների գովազդներ: Բոլոր գովազդները պետք է համապատասխանեն կարծիքների որակի մեր չափանիշներին: %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Դուք երբեմն կտեսնեք համապատասխան ապրանքների գովազդներ: Բոլոր գովազդները պետք է համապատասխանեն կարծիքների որակի մեր չափանիշներին: %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Դուք երբեմն կտեսնեք համապատասխան ապրանքների գովազդներ: Մենք գովազդում ենք միայն վստահելի կարխիքներով ապրանքներ: %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Իմանալ ավելին</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2259,7 +2263,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Եթե տեսնեք, որ այս ապրանքը կրկին պահեստում է, հաղորդեք դրա մասին, և մենք կաշխատենք ստուգել ակնարկները:</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Հաղորդեք, որ այս ապրանքը կրկին պահեստում է</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Հաղորդեք, որ այս ապրանքը կրկին պահեստում է</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Զեկուցված ապրանքը պահեստում է</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Կարծիքի որակի ստուգում</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

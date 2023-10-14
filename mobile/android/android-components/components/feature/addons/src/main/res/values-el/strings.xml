@@ -144,6 +144,8 @@
     <string name="mozac_feature_addons_addons_manager">Διαχείριση προσθέτων</string>
     <!-- The title of the "crash" notification in the add-ons manager -->
     <string name="mozac_feature_addons_manager_notification_title_text">Τα πρόσθετα έχουν απενεργοποιηθεί προσωρινά</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Ένα ή περισσότερα πρόσθετα σταμάτησαν να λειτουργούν, καθιστώντας το σύστημά σας ασταθές.</string>
     <!-- Button to re-enable the add-ons in the "crash" notification -->
     <string name="mozac_feature_addons_manager_notification_restart_button">Επανεκκίνηση προσθέτων</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->

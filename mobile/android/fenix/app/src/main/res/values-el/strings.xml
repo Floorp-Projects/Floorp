@@ -71,6 +71,9 @@
        Συνήθεις παρανοήσεις σχετικά με την ιδιωτική περιήγηση
     </string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Περιηγηθείτε χωρίς να αφήνετε ίχνη σε αυτήν τη συσκευή</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -494,6 +497,8 @@
     <string name="preferences_override_sync_tokenserver">Προσαρμοσμένος διακομιστής Sync</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
     <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Ο διακομιστής λογαριασμού Firefox/Sync τροποποιήθηκε. Τερματισμός εφαρμογής για εφαρμογή αλλαγών…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Ο διακομιστής λογαριασμού Mozilla και συγχρονισμού τροποποιήθηκε. Γίνεται τερματισμός της εφαρμογής για εφαρμογή των αλλαγών…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Λογαριασμός</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -524,7 +529,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Απομακρυσμένος έλεγχος σφαλμάτων μέσω USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Εμφάνιση μηχανών αναζήτησης</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Εμφάνιση μηχανών αναζήτησης</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Εμφάνιση προτάσεων αναζήτησης</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -667,6 +672,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Διαχείριση λογαριασμού</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Αλλάξτε τον κωδικό πρόσβασής σας, διαχειριστείτε τη συλλογή δεδομένων ή διαγράψτε τον λογαριασμό σας</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Συγχρονισμός τώρα</string>
     <!-- Preference category for sync -->
@@ -1931,7 +1938,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Προσθήκη</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Αποθήκευση</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Αποθήκευση</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Επεξεργασία</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2184,7 +2191,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Έλεγχος κριτικών</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Έλεγχος κριτικών</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Έλεγχος κριτικών</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Αξιόπιστες κριτικές</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2197,6 +2206,20 @@
     <string name="review_quality_check_adjusted_rating_title">Αναπροσαρμοσμένη βαθμολογία</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Σημαντικά σημεία από πρόσφατες κριτικές</string>
+    <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_explanation_body_reliability">Χρησιμοποιούμε τεχνολογία AI από το %s της Mozilla για να ελέγξουμε την αξιοπιστία των κριτικών προϊόντων. Αυτό θα σας βοηθήσει να αξιολογήσετε μόνο την ποιότητα των κριτικών, όχι την ποιότητα των προϊόντων. </string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB">Αξιόπιστες κριτικές. Πιστεύουμε ότι οι κριτικές προέρχονται πιθανότατα από πραγματικούς πελάτες, που άφησαν ειλικρινείς και αντικειμενικές κριτικές.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Πιστεύουμε ότι οι κριτικές είναι αξιόπιστες.</string>
+    <!-- Description explaining grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_C">Πιστεύουμε ότι υπάρχει ένας συνδυασμός αξιόπιστων και αναξιόπιστων κριτικών.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF">Αναξιόπιστες κριτικές. Πιστεύουμε ότι οι κριτικές είναι μάλλον ψευδείς ή προέρχονται από άτομα που μεροληπτούν.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Πιστεύουμε ότι οι κριτικές είναι αναξιόπιστες.</string>
+    <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[Η <b>αναπροσαρμοσμένη βαθμολογία</b> βασίζεται μόνο στις κριτικές που πιστεύουμε ότι είναι αξιόπιστες.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[Τα <b>σημαντικά σημεία</b> προέρχονται από κριτικές για το %s, οι οποίες γράφτηκαν τις τελευταίες 80 ημέρες και πιστεύουμε ότι είναι αξιόπιστες.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
@@ -2215,6 +2238,10 @@
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Περισσότερες εναλλακτικές</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Διαφήμιση από το %s</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Ο έλεγχος κριτικών παρέχεται από το %s.</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Ο έλεγχος κριτικών παρέχεται από το %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s από τη Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2229,8 +2256,16 @@
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Έλεγχος ποιότητας κριτικής</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_title">Έλεγχος ποιότητας κριτικής</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">Αυτό μπορεί να διαρκέσει περίπου 60 δευτερόλεπτα.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Ευχαριστούμε για την αναφορά!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">Δεν μπορούμε να ελέγξουμε αυτές τις κριτικές</string>
+    <!-- Title for info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_title" tools:ignore="UnusedResources">Η ανάλυση είναι ενημερωμένη</string>
+    <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
+    <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Το κατάλαβα</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">Δεν υπάρχει σύνδεση στο δίκτυο</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->

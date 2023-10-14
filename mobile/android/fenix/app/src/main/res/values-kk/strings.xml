@@ -540,7 +540,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB арқылы қашықтан жөндеу</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Іздеу жүйелерін көрсету</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Іздеу жүйелерін көрсету</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Іздеу ұсыныстарын көрсету</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1942,7 +1942,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Қосу</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Сақтау</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Сақтау</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Түзету</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2191,7 +2191,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Пікірлерді тексеру құралы</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Пікірлерді тексеру құралы</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Пікірлерді тексеру</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Сенімді пікірлер</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2235,7 +2237,7 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Пікірлерді тексеру құралында жарнаманы көрсету</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Сәйкес өнімдерге арналған жарнамаларды анда-санда көретін боласыз. Барлық жарнамалар біздің пікір сапа стандарттарына сай болуы керек. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Сәйкес өнімдерге арналған жарнамаларды анда-санда көретін боласыз. Барлық жарнамалар біздің пікір сапа стандарттарына сай болуы керек. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Көбірек білу</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2263,7 +2265,7 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Бұл өнімнің қоймаға қайта оралғанын көрсеңіз, оны бізге хабарлаңыз, біз пікірлерді тексереміз.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Бұл өнімнің қоймаға оралғанын хабарлау</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Бұл өнімнің қоймаға оралғанын хабарлау</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Пікір сапасын тексеру</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

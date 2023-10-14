@@ -542,7 +542,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Ислоҳкунии дурдасти хатоҳо тавассути USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Намоиш додани низомҳои ҷустуҷӯӣ</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Намоиш додани низомҳои ҷустуҷӯӣ</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Намоиш додани пешниҳодҳои ҷустуҷӯ</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1951,7 +1951,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Илова кардан</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Нигоҳ доштан</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Нигоҳ доштан</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Таҳрир кардан</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2201,7 +2201,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Абзори тафтиши тақризҳо</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Абзори тафтиши тақризҳо</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Абзори тафтиши тақризҳо</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Тақризҳои боэътимод</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2245,7 +2247,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Намоиш додани реклама дар абзори тафтиши тақризҳо</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Баъзе вақт шумо рекламаи тасодуфиро барои маҳсулоти дахлдор мебинед. Тамоми реклама бояд ба стандартҳои сифати тақризҳои мо ҷавобгӯ бошад. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Баъзе вақт шумо рекламаи тасодуфиро барои маҳсулоти дахлдор мебинед. Тамоми реклама бояд ба стандартҳои сифати тақризҳои мо ҷавобгӯ бошад. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Шумо барои маҳсулоти муносиб рекламаи тасодуфиро мебинед. Мо танҳо он маҳсулотеро таблиғ мекунем, ки дорои тақризҳои боэътимод мебошад. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Маълумоти бештар</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2273,7 +2277,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Агар шумо бинед, ки ин маҳсул аз нав дастрас бошад, гузориш диҳед ва мо тақризҳои онро тафтиш мекунем.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Гузориш диҳед, ки ин маҳсул аз нав дастрас аст</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Гузориш диҳед, ки ин маҳсул аз нав дастрас аст</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Огоҳ кунед, ки маҳсул дастрас аст</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Дар ҳоли санҷиши сифати тақризҳо</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

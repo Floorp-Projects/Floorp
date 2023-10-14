@@ -318,16 +318,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Betg ussa</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Tscherna %s sco navigatur preferì</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Fa da Firefox tes navigatur preferì</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s dat la prioritad a las persunas, betg al profit e defenda tia sfera privata cun bloccar fastizaders interpaginals.\n\nUlteriuras infurmaziuns en nossa %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox dat la prioritad a las persunas, betg al profit e defenda tia sfera privata cun bloccar fastizaders interpaginals.\n\nUlteriuras infurmaziuns èn da chattar en nossas infurmaziuns davart la protecziun da datas.</string>
@@ -346,15 +339,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">S\'annunziar</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Betg ussa</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Communicaziuns ta gidan da far dapli cun %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Communicaziuns ta gidan da far dapli cun Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Trametta tabs dad in apparat a l\'auter, administrescha telechargiadas e ve a savair co profitar maximalmain da %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Trametta tabs dad in apparat a l\'auter, administrescha telechargiadas e ve a savair co profitar il meglier pussaivel da Firefox.</string>
@@ -507,11 +494,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibladad</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Server persunalisà per tes conto da Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Server persunalisà per tes conto da Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Agen server per contos Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Server persunalisà per Sync</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Il server per il conto da Firefox/Sync è vegnì modifitgà. L\'applicaziun vegn serrada per applitgar las midadas…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Il server per il conto da Firefox/Sync è vegnì modifitgà. L\'applicaziun vegn serrada per applitgar las midadas…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Il server per il conto da Mozilla/Sync è vegnì modifitgà. L\'applicaziun vegn serrada per applitgar las midadas…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -527,7 +518,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">T\'annunzia per sincronisar tabs, segnapaginas, pleds-clav e dapli.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Conto da Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Conto da Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Conto Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Ta reconnectescha per cuntinuar cun la sincronisaziun</string>
     <!-- Preference for language -->
@@ -539,7 +532,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Debugging a distanza via USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Mussar las maschinas da tschertgar</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Mussar las maschinas da tschertgar</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mussar propostas da tschertga</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -559,6 +552,16 @@
     <string name="preferences_account_settings">Parameters dal conto</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Cumplettar automaticamain URLs</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Propostas da sponsurs</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Sustegna %1$s cun propostas occasiunalas sponsurisadas </string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Propostas da %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Retschaiva propostas dal web en connex cun tia tschertga</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Avrir colliaziuns en apps</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -658,9 +661,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Il supplement na vegn betg sustegnì</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Il supplement na vegn betg sustegnì</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Il supplement è gia installà</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Il supplement è gia installà</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -675,6 +678,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Administrar il conto</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Midar tes pled-clav, administrar la rimnada da datas u stizzar tes conto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronisar ussa</string>
     <!-- Preference category for sync -->
@@ -1937,7 +1942,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Agiuntar</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Memorisar</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Memorisar</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Modifitgar</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2187,7 +2192,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Verificatur da recensiuns</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Verificatur da recensiuns</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Verificaziun da recensiuns</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Recensiuns fidablas</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2207,17 +2214,21 @@
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">Nus utilisain tecnologia dad intelligenza artifiziala da %s da Mozilla per analisar quant fidablas che las recensiuns da products èn. Quai gida dentant mo a giuditgar la qualitad da las recensiuns, betg la qualitad dals products.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Nus attribuin a mintga recensiun dad in product ina <b>nota en letras</b> dad A enfin F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Nus attribuin a mintga recensiun dad in product ina <b>nota en letras</b> dad A enfin F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">Recensiuns fidablas. Nus cartain che las recensiuns èn cun auta probabilitad da dretgs clients che han scrit recensiuns onestas independentas.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Nus cartain che las recensiuns èn fidablas.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Nus cartain ch\'i sa tracta dad ina maschaida da recensiuns fidablas e dubiusas.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">Revistas dubiusas. Nus cartain che las recensiuns èn probablamain sfalsifitgadas u da recensents partischants.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Nus cartain che las recensiuns n\'èn betg fidablas.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[La <b>valitaziun rectifitgada</b> sa basa mo sin recensiuns da las qualas nus cartain ch\'ellas sajan fidablas.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[Ils elements <b>accentuads</b> derivan da las recensiun sin %s dals ultims 80 dis che nus tegnain per fidablas.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[Ils elements <b>accentuads</b> derivan da las recensiun sin %s dals ultims 80 dis che nus tegnain per fidablas.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Ulteriuras infurmaziuns davart %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2227,7 +2238,7 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Mussar reclamas en la verificaziun da recensiuns</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">I vegnan mussadas reclamas occasiunalas per products relevants. Tut las reclamas ston resguardar noss standards da qualitad per recensiuns. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">I vegnan mussadas reclamas occasiunalas per products relevants. Tut las reclamas ston resguardar noss standards da qualitad per recensiuns. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Ulteriuras infurmaziuns</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2247,29 +2258,29 @@
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Controllar ussa</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Anc betg avunda recensiuns</string>
+    <string name="review_quality_check_no_reviews_warning_title">Anc betg avunda recensiuns</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Uschespert che quest product ha dapli recensiuns, vegnin nus a pudair controllar lur qualitad.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Uschespert che quest product ha dapli recensiuns, vegnin nus a pudair controllar lur qualitad.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Il product n\'è betg disponibel</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Sche ti vesas che quest product è puspè disponibel, annunzia quai e nus vegnin a lavurar per controllar las recensiuns.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Rapportar che quest product è puspè disponibel</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Rapportar che quest product è puspè disponibel</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Controllar la qualitad da las recensiuns</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Controllar la qualitad da las recensiuns</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Controllar la qualitad da las recensiuns</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Controllar la qualitad da las recensiuns</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">Quai po cuzzar var 60 secundas.</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">Quai po cuzzar var 60 secundas.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Grazia per rapportar!</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Nus stuessan avair infurmaziuns davart las recensiuns da quest product entaifer las proximas 24 uras. Controllescha pli tard anc ina giada.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Nus na pudain betg controllar questas recensiuns</string>
+    <string name="review_quality_check_not_analyzable_info_title">Nus na pudain betg controllar questas recensiuns</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Deplorablamain na pudain nus betg controllar la qualitad da las recensiuns da tscherts tips da products. Per exempel cartas da regal e videostreaming, musica e gieus.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Deplorablamain na pudain nus betg controllar la qualitad da las recensiuns da tscherts tips da products. Per exempel cartas da regal e videostreaming, musica e gieus.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Proximamain datti ulteriuras infurmaziuns</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2279,19 +2290,19 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Jau hai chapì</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Naginas infurmaziuns disponiblas actualmain</string>
+    <string name="review_quality_check_generic_error_title">Naginas infurmaziuns disponiblas actualmain</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Nus lavurain per schliar quest problem. Dà svelt puspè in tgit.</string>
+    <string name="review_quality_check_generic_error_body">Nus lavurain per schliar quest problem. Dà svelt puspè in tgit.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Nagina connexiun cun l\'internet</string>
+    <string name="review_quality_check_no_connection_title">Nagina connexiun cun l\'internet</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Controllescha tia connexiun cun la rait ed emprova lura da rechargiar la pagina.</string>
+    <string name="review_quality_check_no_connection_body">Controllescha tia connexiun cun la rait ed emprova lura da rechargiar la pagina.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Anc naginas infurmaziuns davart questas recensiuns</string>
+    <string name="review_quality_check_no_analysis_title">Anc naginas infurmaziuns davart questas recensiuns</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Per vegnir a savair sche las recensiuns da quest product èn fidablas, controllescha la qualitad da las recensiuns. Quai cuzza mo var 60 secundas.</string>
+    <string name="review_quality_check_no_analysis_body">Per vegnir a savair sche las recensiuns da quest product èn fidablas, controllescha la qualitad da las recensiuns. Quai cuzza mo var 60 secundas.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Controllar la qualitad da las recensiuns</string>
+    <string name="review_quality_check_no_analysis_link">Controllar la qualitad da las recensiuns</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Emprova noss guid fidà per recensiuns da products</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2319,11 +2330,11 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Avrir il verificatur da recensiuns</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Avrir la controlla da la qualitad da recensiuns</string>
+    <string name="review_quality_check_open_handle_content_description">Avrir la verificaziun da recensiuns</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Serrar la controlla da la qualitad da recensiuns</string>
+    <string name="review_quality_check_close_handle_content_description">Serrar la verificaziun da recensiuns</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s da 5 stailas</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

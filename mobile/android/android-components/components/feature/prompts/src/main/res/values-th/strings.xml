@@ -132,9 +132,13 @@
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">เลือกผู้ให้บริการเข้าสู่ระบบ</string>
     <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">เลือกบัญชี</string>
+    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">เลือกบัญชี</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">ลงชื่อเข้าด้วยบัญชี %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">ใช้ %1$s เป็นผู้ให้บริการเข้าสู่ระบบ</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[การลงชื่อเข้าใช้ %1$s ด้วยบัญชี %2$s อยู่ภายใต้<a href="%3$s">นโยบายความเป็นส่วนตัว</a>และ<a href="%4$s">ข้อกำหนดในการให้บริการ</a>ของผู้ให้บริการ]]></string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">ดำเนินการต่อ</string>
 </resources>
