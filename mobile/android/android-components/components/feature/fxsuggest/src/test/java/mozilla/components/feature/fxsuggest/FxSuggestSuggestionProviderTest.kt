@@ -118,10 +118,10 @@ class FxSuggestSuggestionProviderTest {
             ),
         )
         assertEquals(2, suggestions.size)
-        assertEquals("lasagna — Lasagna Come Out Tomorrow", suggestions[0].title)
+        assertEquals("Lasagna Come Out Tomorrow", suggestions[0].title)
         assertEquals(testContext.resources.getString(R.string.sponsored_suggestion_description), suggestions[0].description)
         assertNotNull(suggestions[0].icon)
-        assertEquals("las — Las Vegas", suggestions[1].title)
+        assertEquals("Las Vegas", suggestions[1].title)
         assertNull(suggestions[1].description)
         assertNull(suggestions[1].icon)
     }
@@ -173,7 +173,7 @@ class FxSuggestSuggestionProviderTest {
             ),
         )
         assertEquals(1, suggestions.size)
-        assertEquals("las — Las Vegas", suggestions.first().title)
+        assertEquals("Las Vegas", suggestions.first().title)
         assertNull(suggestions.first().description)
         assertNull(suggestions.first().icon)
     }
@@ -216,7 +216,7 @@ class FxSuggestSuggestionProviderTest {
             ),
         )
         assertEquals(1, suggestions.size)
-        assertEquals("lasagna — Lasagna Come Out Tomorrow", suggestions.first().title)
+        assertEquals("Lasagna Come Out Tomorrow", suggestions.first().title)
         assertEquals(testContext.resources.getString(R.string.sponsored_suggestion_description), suggestions.first().description)
     }
 }

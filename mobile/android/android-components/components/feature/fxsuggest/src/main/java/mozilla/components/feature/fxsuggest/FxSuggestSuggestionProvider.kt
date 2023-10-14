@@ -81,7 +81,7 @@ class FxSuggestSuggestionProvider(
                 icon = details.icon?.let {
                     it.toUByteArray().asByteArray().toBitmap()
                 },
-                title = "${details.fullKeyword} — ${details.title}",
+                title = details.title,
                 description = if (details.isSponsored) {
                     resources.getString(R.string.sponsored_suggestion_description)
                 } else {
