@@ -564,7 +564,7 @@ class AllocatableSetAccessors<RegisterSet> {
   }
 
  public:
-  AllocatableSetAccessors() {}
+  AllocatableSetAccessors() = default;
   explicit constexpr AllocatableSetAccessors(SetType) = delete;
   explicit constexpr AllocatableSetAccessors(RegisterSet set) : set_(set) {}
 
@@ -641,7 +641,7 @@ class LiveSetAccessors<RegisterSet> {
   }
 
  public:
-  LiveSetAccessors() {}
+  LiveSetAccessors() = default;
   explicit constexpr LiveSetAccessors(SetType) = delete;
   explicit constexpr LiveSetAccessors(RegisterSet set) : set_(set) {}
 

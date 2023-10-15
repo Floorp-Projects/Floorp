@@ -100,7 +100,7 @@ static std::ostream& operator<<(std::ostream& aStream, UINT12 aId) {
 
 class STUNUDPSocketFilter : public nsISocketFilter {
  public:
-  STUNUDPSocketFilter() {}
+  STUNUDPSocketFilter() = default;
 
   // Allocated/freed and used on the PBackground IPC thread
   NS_DECL_ISUPPORTS

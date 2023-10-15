@@ -262,7 +262,7 @@ class Section {
 
   // A base class destructor should be either public and virtual,
   // or protected and nonvirtual.
-  virtual ~Section(){};
+  virtual ~Section() = default;
 
   // Return the default endianness of this section.
   Endianness endianness() const { return endianness_; }

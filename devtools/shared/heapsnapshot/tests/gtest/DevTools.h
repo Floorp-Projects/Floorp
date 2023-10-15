@@ -199,7 +199,7 @@ MATCHER_P(EdgeTo, id, "") {
 // A mock `Writer` class to be used with testing `WriteHeapGraph`.
 class MockWriter : public CoreDumpWriter {
  public:
-  virtual ~MockWriter() override {}
+  virtual ~MockWriter() override = default;
   MOCK_METHOD2(writeNode,
                bool(const JS::ubi::Node&, CoreDumpWriter::EdgePolicy));
   MOCK_METHOD1(writeMetadata, bool(uint64_t));

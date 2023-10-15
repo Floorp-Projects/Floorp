@@ -41,7 +41,7 @@ NS_IMPL_CI_INTERFACE_GETTER(Statement, mozIStorageStatement,
 
 class StatementClassInfo : public nsIClassInfo {
  public:
-  constexpr StatementClassInfo() {}
+  constexpr StatementClassInfo() = default;
 
   NS_DECL_ISUPPORTS_INHERITED
 
