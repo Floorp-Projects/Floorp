@@ -4647,7 +4647,7 @@ static bool IsAvxPresent(JSContext* cx, unsigned argc, Value* vp) {
 
 class ShellAllocationMetadataBuilder : public AllocationMetadataBuilder {
  public:
-  ShellAllocationMetadataBuilder() {}
+  ShellAllocationMetadataBuilder() = default;
 
   virtual JSObject* build(JSContext* cx, HandleObject,
                           AutoEnterOOMUnsafeRegion& oomUnsafe) const override;

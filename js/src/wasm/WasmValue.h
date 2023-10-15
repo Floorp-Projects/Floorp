@@ -172,7 +172,7 @@ class LitVal {
   Cell cell_;
 
  public:
-  LitVal() {}
+  LitVal() = default;
 
   explicit LitVal(ValType type) : type_(type) {
     switch (type.kind()) {
@@ -259,7 +259,7 @@ WASM_DECLARE_CACHEABLE_POD(LitVal::Cell);
 
 class MOZ_NON_PARAM Val : public LitVal {
  public:
-  Val() {}
+  Val() = default;
   explicit Val(ValType type) : LitVal(type) {}
   explicit Val(const LitVal& val);
   explicit Val(uint32_t i32) : LitVal(i32) {}

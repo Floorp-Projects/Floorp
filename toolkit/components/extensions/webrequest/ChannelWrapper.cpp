@@ -86,7 +86,7 @@ static const ClassificationStruct classificationArray[] = {
 namespace {
 class ChannelListHolder : public LinkedList<ChannelWrapper> {
  public:
-  ChannelListHolder() {}
+  ChannelListHolder() = default;
 
   ~ChannelListHolder();
 };

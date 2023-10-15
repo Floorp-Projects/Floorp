@@ -894,7 +894,7 @@ class DeadBlock {
         mSlopSize(aLb.SlopSize()),
         mAllocStackTrace(aLb.AllocStackTrace()) {}
 
-  ~DeadBlock() {}
+  ~DeadBlock() = default;
 
   size_t ReqSize() const { return mReqSize; }
   size_t SlopSize() const { return mSlopSize; }

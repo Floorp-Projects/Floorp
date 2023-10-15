@@ -388,7 +388,7 @@ double Histogram::GetPeakBucketSize(const SampleSet& snapshot) const {
 
 Histogram::SampleSet::SampleSet() : sum_(0), redundant_count_(0) {}
 
-Histogram::SampleSet::~SampleSet() {}
+Histogram::SampleSet::~SampleSet() = default;
 
 void Histogram::SampleSet::Resize(const Histogram& histogram) {
   size_t oldSize = counts_.Length();
@@ -428,7 +428,7 @@ void Histogram::SampleSet::Add(const SampleSet& other) {
 // buckets.
 //------------------------------------------------------------------------------
 
-LinearHistogram::~LinearHistogram() {}
+LinearHistogram::~LinearHistogram() = default;
 
 Histogram* LinearHistogram::FactoryGet(Sample minimum, Sample maximum,
                                        size_t bucket_count, Flags flags,
