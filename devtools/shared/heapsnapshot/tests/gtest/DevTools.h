@@ -99,7 +99,7 @@ class MOZ_STACK_CLASS FakeNode {
   JS::Zone* zone;
   size_t size;
 
-  explicit FakeNode() : edges(), compartment(nullptr), zone(nullptr), size(1) {}
+  explicit FakeNode() : compartment(nullptr), zone(nullptr), size(1) {}
 };
 
 namespace JS {

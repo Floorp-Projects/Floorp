@@ -35,7 +35,7 @@ struct nsRect : public mozilla::gfx::BaseRect<nscoord, nsRect, nsPoint, nsSize,
       Super;
 
   // Constructors
-  nsRect() : Super() { MOZ_COUNT_CTOR(nsRect); }
+  nsRect() { MOZ_COUNT_CTOR(nsRect); }
   nsRect(const nsRect& aRect) : Super(aRect) { MOZ_COUNT_CTOR(nsRect); }
   nsRect(const nsPoint& aOrigin, const nsSize& aSize) : Super(aOrigin, aSize) {
     MOZ_COUNT_CTOR(nsRect);

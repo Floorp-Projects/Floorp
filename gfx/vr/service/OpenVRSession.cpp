@@ -183,8 +183,7 @@ bool GenerateTempFileName(nsCString& aPath) {
 #endif  // defined(XP_WIN)
 
 OpenVRSession::OpenVRSession()
-    : VRSession(),
-      mVRSystem(nullptr),
+    : mVRSystem(nullptr),
       mVRChaperone(nullptr),
       mVRCompositor(nullptr),
       mHapticPulseRemaining{},

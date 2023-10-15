@@ -17,10 +17,7 @@ namespace {
 class LocalAddress {
  public:
   LocalAddress()
-      : ifname_(),
-        addr_(),
-        key_(),
-        is_vpn_(-1),
+      : is_vpn_(-1),
         estimated_speed_(-1),
         type_preference_(-1),
         ip_version_(-1) {}
@@ -164,7 +161,7 @@ class LocalAddress {
 
 class InterfacePrioritizer {
  public:
-  InterfacePrioritizer() : local_addrs_(), preference_map_(), sorted_(false) {}
+  InterfacePrioritizer() : sorted_(false) {}
 
   int add(const nr_local_addr* iface) {
     LocalAddress addr;

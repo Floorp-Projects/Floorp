@@ -118,7 +118,7 @@ class FrameHeader {
 // header and side info.
 class Frame {
  public:
-  Frame() : mOffset(0), mHeader() {}
+  Frame() : mOffset(0) {}
 
   uint64_t Offset() const { return mOffset; }
   size_t Length() const {

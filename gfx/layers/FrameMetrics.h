@@ -88,18 +88,13 @@ struct FrameMetrics {
         mCompositionBoundsWidthIgnoringScrollbars(0),
         mDisplayPort(0, 0, 0, 0),
         mScrollableRect(0, 0, 0, 0),
-        mCumulativeResolution(),
         mDevPixelsPerCSSPixel(1),
         mScrollOffset(0, 0),
-        mZoom(),
         mBoundingCompositionSize(0, 0),
         mPresShellId(-1),
         mLayoutViewport(0, 0, 0, 0),
-        mTransformToAncestorScale(),
-        mPaintRequestTime(),
         mVisualDestination(0, 0),
         mVisualScrollUpdateType(eNone),
-        mCompositionSizeWithoutDynamicToolbar(),
         mIsRootContent(false),
         mIsScrollInfoLayer(false),
         mHasNonZeroDisplayPortMargins(false),
@@ -740,10 +735,7 @@ struct ScrollMetadata {
       sNullMetadata;  // We sometimes need an empty metadata
 
   ScrollMetadata()
-      : mMetrics(),
-        mSnapInfo(),
-        mScrollParentId(ScrollableLayerGuid::NULL_SCROLL_ID),
-        mContentDescription(),
+      : mScrollParentId(ScrollableLayerGuid::NULL_SCROLL_ID),
         mLineScrollAmount(0, 0),
         mPageScrollAmount(0, 0),
         mHasScrollgrab(false),
@@ -755,8 +747,7 @@ struct ScrollMetadata {
         mDidContentGetPainted(true),
         mForceMousewheelAutodir(false),
         mForceMousewheelAutodirHonourRoot(false),
-        mIsPaginatedPresentation(false),
-        mOverscrollBehavior() {}
+        mIsPaginatedPresentation(false) {}
 
   bool operator==(const ScrollMetadata& aOther) const {
     return mMetrics == aOther.mMetrics && mSnapInfo == aOther.mSnapInfo &&

@@ -504,8 +504,7 @@ void FakeWebrtcTCPSocket::InvokeOnRead(nsTArray<uint8_t>&& aReadData) {
 class WebrtcTCPSocketTest : public MtransportTest {
  public:
   WebrtcTCPSocketTest()
-      : MtransportTest(),
-        mSocketThread(nullptr),
+      : mSocketThread(nullptr),
         mSocketTransport(nullptr),
         mInputStream(nullptr),
         mOutputStream(nullptr),

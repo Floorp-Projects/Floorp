@@ -168,7 +168,7 @@ class InfallibleAllocPolicy {
 
 class StackTrace : public phc::StackTrace {
  public:
-  StackTrace() : phc::StackTrace() {}
+  StackTrace() {}
 
   void Clear() { mLength = 0; }
 
@@ -546,10 +546,7 @@ class GMut {
    public:
     AllocPageInfo()
         : mState(AllocPageState::NeverAllocated),
-          mArenaId(),
           mBaseAddr(nullptr),
-          mAllocStack(),
-          mFreeStack(),
           mReuseTime(0) {}
 
     // The current allocation page state.
@@ -619,9 +616,7 @@ class GMut {
   // The mutex that protects the other members.
   static Mutex sMutex MOZ_UNANNOTATED;
 
-  GMut() : mRNG(RandomSeed<0>(), RandomSeed<1>()), mAllocPages() {
-    sMutex.Init();
-  }
+  GMut() : mRNG(RandomSeed<0>(), RandomSeed<1>()) { sMutex.Init(); }
 
   uint64_t Random64(GMutLock) { return mRNG.next(); }
 

@@ -64,8 +64,7 @@ class SVGRootRenderingObserver final : public SVGRenderingObserver {
 
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage* aVectorImage)
-      : SVGRenderingObserver(),
-        mDocWrapper(aDocWrapper),
+      : mDocWrapper(aDocWrapper),
         mVectorImage(aVectorImage),
         mHonoringInvalidations(true) {
     MOZ_ASSERT(mDocWrapper, "Need a non-null SVG document wrapper");

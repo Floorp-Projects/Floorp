@@ -261,7 +261,6 @@ NrIceCtx::NrIceCtx(const std::string& name)
       gathering_state_(ICE_CTX_GATHER_INIT),
       name_(name),
       ice_controlling_set_(false),
-      streams_(),
       ctx_(nullptr),
       peer_(nullptr),
       ice_handler_vtbl_(nullptr),

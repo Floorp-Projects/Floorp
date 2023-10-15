@@ -254,8 +254,7 @@ struct TrapSite {
 #ifdef DEBUG
         insn(TrapMachineInsn::OfficialUD),
 #endif
-        pcOffset(-1),
-        bytecode() {
+        pcOffset(-1) {
   }
   TrapSite(TrapMachineInsn insn, FaultingCodeOffset fco,
            BytecodeOffset bytecode)
@@ -319,7 +318,7 @@ struct Offsets {
 WASM_DECLARE_CACHEABLE_POD(Offsets);
 
 struct CallableOffsets : Offsets {
-  MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0) : Offsets(), ret(ret) {}
+  MOZ_IMPLICIT CallableOffsets(uint32_t ret = 0) : ret(ret) {}
 
   // The offset of the return instruction precedes 'end' by a variable number
   // of instructions due to out-of-line codegen.
@@ -331,8 +330,7 @@ struct CallableOffsets : Offsets {
 WASM_DECLARE_CACHEABLE_POD(CallableOffsets);
 
 struct FuncOffsets : CallableOffsets {
-  MOZ_IMPLICIT FuncOffsets()
-      : CallableOffsets(), uncheckedCallEntry(0), tierEntry(0) {}
+  MOZ_IMPLICIT FuncOffsets() : uncheckedCallEntry(0), tierEntry(0) {}
 
   // Function CodeRanges have a checked call entry which takes an extra
   // signature argument which is checked against the callee's signature before

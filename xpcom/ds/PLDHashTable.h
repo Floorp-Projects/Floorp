@@ -414,7 +414,7 @@ class PLDHashTable {
   PLDHashTable(PLDHashTable&& aOther)
       // Initialize fields which are checked by the move assignment operator
       // and the destructor (which the move assignment operator calls).
-      : mOps(nullptr), mEntryStore(), mGeneration(0), mEntrySize(0) {
+      : mOps(nullptr), mGeneration(0), mEntrySize(0) {
     *this = std::move(aOther);
   }
 

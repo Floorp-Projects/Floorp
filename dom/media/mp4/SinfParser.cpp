@@ -11,7 +11,7 @@
 
 namespace mozilla {
 
-Sinf::Sinf(Box& aBox) : mDefaultIVSize(0), mDefaultEncryptionType() {
+Sinf::Sinf(Box& aBox) : mDefaultIVSize(0) {
   SinfParser parser(aBox);
   if (parser.GetSinf().IsValid()) {
     *this = parser.GetSinf();

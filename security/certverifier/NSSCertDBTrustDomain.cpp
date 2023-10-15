@@ -100,8 +100,6 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mHostname(hostname),
       mCertStorage(do_GetService(NS_CERT_STORAGE_CID)),
       mOCSPStaplingStatus(CertVerifier::OCSP_STAPLING_NEVER_CHECKED),
-      mSCTListFromCertificate(),
-      mSCTListFromOCSPStapling(),
       mBuiltInRootsModule(SECMOD_FindModule(kRootModuleName)),
       mOCSPFetchStatus(OCSPFetchStatus::NotFetched) {}
 

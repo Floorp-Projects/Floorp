@@ -197,8 +197,7 @@ mozilla::gfx::VRFieldOfView SetFromTanRadians(double left, double right,
 }
 
 OSVRSession::OSVRSession()
-    : VRSession(),
-      mRuntimeLoaded(false),
+    : mRuntimeLoaded(false),
       mOSVRInitialized(false),
       mClientContextInitialized(false),
       mDisplayConfigInitialized(false),

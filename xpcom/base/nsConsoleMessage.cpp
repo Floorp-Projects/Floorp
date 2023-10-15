@@ -13,7 +13,7 @@
 
 NS_IMPL_ISUPPORTS(nsConsoleMessage, nsIConsoleMessage)
 
-nsConsoleMessage::nsConsoleMessage() : mMicroSecondTimeStamp(0), mMessage() {}
+nsConsoleMessage::nsConsoleMessage() : mMicroSecondTimeStamp(0) {}
 
 nsConsoleMessage::nsConsoleMessage(const nsAString& aMessage) {
   mMicroSecondTimeStamp = JS_Now();

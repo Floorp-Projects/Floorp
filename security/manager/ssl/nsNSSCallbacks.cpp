@@ -133,9 +133,7 @@ OCSPRequest::OCSPRequest(const nsACString& aiaLocation,
       mPOSTData(reinterpret_cast<const char*>(ocspRequest), ocspRequestLength),
       mTimeout(timeout),
       mTimeoutTimer(nullptr),
-      mStartTime(),
-      mResponseResult(NS_ERROR_FAILURE),
-      mResponseBytes() {
+      mResponseResult(NS_ERROR_FAILURE) {
   MOZ_ASSERT(ocspRequestLength <= OCSP_REQUEST_MAX_LENGTH);
 }
 

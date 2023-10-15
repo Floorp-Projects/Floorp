@@ -30,9 +30,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmrootFrame)
 
 nsMathMLmrootFrame::nsMathMLmrootFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)
-    : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
-      mSqrChar(),
-      mBarRect() {}
+    : nsMathMLContainerFrame(aStyle, aPresContext, kClassID) {}
 
 nsMathMLmrootFrame::~nsMathMLmrootFrame() = default;
 
