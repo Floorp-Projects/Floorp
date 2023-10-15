@@ -1,0 +1,39 @@
+# Fix MacOS 14 default timezone issue
+#
+# ICU bug: https://unicode-org.atlassian.net/browse/ICU-22541
+
+diff --git a/intl/icu/source/common/putil.cpp b/intl/icu/source/common/putil.cpp
+--- a/intl/icu/source/common/putil.cpp
++++ b/intl/icu/source/common/putil.cpp
+@@ -1170,16 +1170,31 @@ uprv_tzname(int n)
+         This is a trick to look at the name of the link to get the Olson ID
+         because the tzfile contents is underspecified.
+         This isn't guaranteed to work because it may not be a symlink.
+         */
+         char *ret = realpath(TZDEFAULT, gTimeZoneBuffer);
+         if (ret != nullptr && uprv_strcmp(TZDEFAULT, gTimeZoneBuffer) != 0) {
+             int32_t tzZoneInfoTailLen = uprv_strlen(TZZONEINFOTAIL);
+             const char *tzZoneInfoTailPtr = uprv_strstr(gTimeZoneBuffer, TZZONEINFOTAIL);
++            // MacOS14 has the realpath as something like
++            // /usr/share/zoneinfo.default/Australia/Melbourne
++            // which will not have "/zoneinfo/" in the path.
++            // Therefore if we fail, we fall back to read the link which is
++            // /var/db/timezone/zoneinfo/Australia/Melbourne
++            // We also fall back to reading the link if the realpath leads to something like
++            // /usr/share/zoneinfo/posixrules
++            if (tzZoneInfoTailPtr == nullptr ||
++                    uprv_strcmp(tzZoneInfoTailPtr + tzZoneInfoTailLen, "posixrules") == 0) {
++                ssize_t size = readlink(TZDEFAULT, gTimeZoneBuffer, sizeof(gTimeZoneBuffer)-1);
++                if (size > 0) {
++                    gTimeZoneBuffer[size] = 0;
++                    tzZoneInfoTailPtr = uprv_strstr(gTimeZoneBuffer, TZZONEINFOTAIL);
++                }
++            }
+             if (tzZoneInfoTailPtr != nullptr) {
+                 tzZoneInfoTailPtr += tzZoneInfoTailLen;
+                 skipZoneIDPrefix(&tzZoneInfoTailPtr);
+                 if (isValidOlsonID(tzZoneInfoTailPtr)) {
+                     return (gTimeZoneBufferPtr = tzZoneInfoTailPtr);
+                 }
+             }
+         } else {
