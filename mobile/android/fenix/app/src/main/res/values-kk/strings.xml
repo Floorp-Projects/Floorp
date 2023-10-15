@@ -2238,6 +2238,8 @@
     <string name="review_quality_check_settings_recommended_products">Пікірлерді тексеру құралында жарнаманы көрсету</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Сәйкес өнімдерге арналған жарнамаларды анда-санда көретін боласыз. Барлық жарнамалар біздің пікір сапа стандарттарына сай болуы керек. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Сәйкес өнімдерге арналған кездейсоқ жарнамаларды көресіз. Біз тек сенімді пікірлері бар өнімдерді жарнамалаймыз. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Көбірек білу</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2266,6 +2268,8 @@
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Бұл өнімнің қоймаға қайта оралғанын көрсеңіз, оны бізге хабарлаңыз, біз пікірлерді тексереміз.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Бұл өнімнің қоймаға оралғанын хабарлау</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Өнімнің қоймада бар болғанын хабарлау</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Пікір сапасын тексеру</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

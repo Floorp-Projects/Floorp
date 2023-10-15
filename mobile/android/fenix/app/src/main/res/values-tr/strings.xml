@@ -533,7 +533,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB ile uzaktan hata ayıklama</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Arama motorlarını göster</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Arama motorlarını göster</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Arama önerilerini göster</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1931,7 +1931,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Ekle</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Kaydet</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Kaydet</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Düzenle</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2180,7 +2180,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Değerlendirme kontrolcüsü</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Değerlendirme kontrolcüsü</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Değerlendirme Kontrolcüsü</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Güvenilir değerlendirmeler</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2232,7 +2234,7 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Bu ürünün yeniden stoğa girdiğini görürseniz bize bildirin, biz de değerlendirmeleri kontrol etmeye çalışalım.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Bu ürünün tekrar stokta olduğunu bildir</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Bu ürünün tekrar stokta olduğunu bildir</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Değerlendirme kalitesi kontrol ediliyor</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

@@ -327,16 +327,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Micca subitu</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Impiegate %s cum’è navigatore predefinitu</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Impiegate Firefox cum’è navigatore predefinitu</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s fà passà a ghjente nanzu à i prufiti è prutege a vostra vita privata blucchendu l’elementi intersiti di spiunagiu.\n\nSapene di più in a nostra %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox fà passà a ghjente nanzu à i prufiti è prutege a vostra vita privata blucchendu l’elementi intersiti di spiunagiu.\n\nSapene di più in a nostra dichjarazione di cunfidenzialità.</string>
@@ -356,15 +349,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Cunnettesi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Micca subitu</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">E nutificazioni vi aiutanu à fane di più cù %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">E nutificazioni vi aiutanu à fane di più cù Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Mandate l’unghjette trà i vostri apparechji, urganizate i scaricamenti è ricivete cunsiglii per sapè cumu ottene u più bonu di %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Mandate l’unghjette trà i vostri apparechji, urganizate i scaricamenti è ricivete cunsiglii per sapè cumu ottene u più bonu di Firefox.</string>
@@ -521,11 +508,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilità</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Servitore persunalizatu di contu Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Servitore persunalizatu di contu Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Servitore persunalizatu di contu Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Servitore persunalizatu di sincrunizazione</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Mudificazione di u servitore di contu o di sincrunizazione. Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Mudificazione di u servitore di contu o di sincrunizazione. Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Servitore di contu o di sincrunizazione Mozilla mudificatu. Chjusura di l’appiecazione per piglià i cambiamenti in contu…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Contu</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -541,7 +532,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Cunnittitevi per sincrunizà unghjette, indette, parolle d’intesa è ancu di più</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Contu Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Contu Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Contu Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Ricunnittitevi per cuntinuà a sincrunizazione</string>
     <!-- Preference for language -->
@@ -553,7 +546,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Spannatura alluntanata via USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Affissà i mutori di ricerca</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Affissà i mutori di ricerca</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Affissà e sugestioni di ricerca</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -574,6 +567,16 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Compie autumaticamente l’indirizzi</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Sugestioni da i finanzieri</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Sustene %1$s cù sugestioni finanziare occasiunale</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Sugestioni da %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Ottene sugestioni da u web relative à a vostra ricerca</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Apre i liami in l’appiecazioni</string>
 
@@ -677,15 +680,15 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Stu modulu addiziunale ùn hè micca accettatu</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Stu modulu addiziunale ùn hè micca accettatu</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Stu modulu addiziunale hè dighjà installatu</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Stu modulu addiziunale hè dighjà installatu</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
     <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">I moduli addiziunali sò disattivati timpurariamente</string>
     <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
-    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Qualchì modulu addiziunale hà firmatu di funziunà, rindendu u vostru sistema instabile. %1$s hà pruvatu, senza successu, di rilancialli.\n\nSti moduli addiziunale ùn seranu micca rilanciati durante a sessione attuale.\n\nCaccialli o disattivalli puderia currege stu prublema.</string>
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Qualchì modulu addiziunale hà fermatu di funziunà, rindendu u vostru sistema instabile. %1$s hà pruvatu, senza successu, di rilancialli.\n\nSti moduli addiziunale ùn seranu micca rilanciati durante a sessione attuale.\n\nCaccialli o disattivalli puderia currege stu prublema.</string>
     <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
     <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Pruvà di rilancià i moduli</string>
     <!-- The user will continue with all add-ons disabled -->
@@ -694,6 +697,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Ghjestione di u contu</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Cambià a vostra parolla d’intesa, amministrà a culletta di dati o squassà u vostru contu</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincrunizà avà</string>
     <!-- Preference category for sync -->
@@ -1953,7 +1958,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Aghjunghje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Arregistrà</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Arregistrà</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Mudificà</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2206,7 +2211,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Verificadore d’avisu</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Verificadore d’avisu</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Verificadore d’avisu</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Avisi degni di cunfidenza</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2229,18 +2236,22 @@
     <string name="review_quality_check_explanation_body_reliability">Impieghemu a tecnolugia AI di %s da Mozilla per verificà s’è l’avisi nant’à i prudutti sò degni di cunfidenza. Què vi aiuterà à misurà a qualità di l’avisu, micca quella di u pruduttu.</string>
 
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
-    <string name="review_quality_check_info_review_grade_header" tools:ignore="UnusedResources"><![CDATA[Demu à ogni avisu di pruduttu un <b>lettera di rangu</b> da A fine à F.]]></string>
+    <string name="review_quality_check_info_review_grade_header"><![CDATA[Demu à ogni avisu di pruduttu un <b>lettera di rangu</b> da A fine à F.]]></string>
 
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">Avisi degni di cunfidenza. Cridemu chì l’avisi venenu sicuramente da clienti veri chì anu lasciatu avisi sinceri è imparziali.</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Pensemu chì l’avisi sò di cunfidenza.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Cridemu chì ci hè un mischju d’avisi più o menu degni di cunfidenza.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">Avisi micca degni di cunfidenza. Cridemu chì l’avisi sò sicuramente falsi o ch’elli venenu da persone partigiane.</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Pensemu chì l’avisi ùn sò micca di cunfidenza.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[A <b>valutazione rettificata</b> si basa solu nant’à l’avisi chì no cridemu degni di cunfidenza.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights" tools:ignore="UnusedResources"><![CDATA[L’elementi <b>messi in lume</b> sò l’avisi %s durante l’ultimi 80 ghjorni chì no cridemu degni di cunfidenza.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[L’elementi <b>messi in lume</b> sò l’avisi %s durante l’ultimi 80 ghjorni chì no cridemu degni di cunfidenza.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Sapene di più nant’à %s.</string>
 
@@ -2252,7 +2263,9 @@
     <string name="review_quality_check_settings_recommended_products">Affissà publicità in u verificadore d’avisu</string>
 
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Viderete, di quandu in quandu, una publicità per un pruduttu pertinente. Tutte ste publicità devenu risponde à e norme di qualità per l’avisi. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Viderete, di quandu in quandu, una publicità per un pruduttu pertinente. Tutte ste publicità devenu risponde à e norme di qualità per l’avisi. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Viderete, di quandu in quandu, una publicità per un pruduttu pertinente. Femu a publicità per i prudutti solu quandu i so avisi sò di cunfidenza. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Sapene di più</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2273,29 +2286,31 @@
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Cuntrollà subitu</string>
 
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_title" tools:ignore="UnusedResources">Ùn ci hè ancu abbastanza avisi</string>
+    <string name="review_quality_check_no_reviews_warning_title">Ùn ci hè ancu abbastanza avisi</string>
     <!-- Text for body of warning card informing the user that the current product does not have enough reviews for a review analysis. -->
-    <string name="review_quality_check_no_reviews_warning_body" tools:ignore="UnusedResources">Quandu stu pruduttu averà d’altri avisi, puderemu cuntrollà a so qualità.</string>
+    <string name="review_quality_check_no_reviews_warning_body">Quandu stu pruduttu averà d’altri avisi, puderemu cuntrollà a so qualità.</string>
     <!-- Title for warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">U pruduttu ùn hè micca dispunibule</string>
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">S’è vo fighjate chì stu pruduttu hè torna dispunibule, fatecilu sapè è cuntinueremu à cuntrollà l’avisi.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Fà sapè chì stu pruduttu hè torna dispunibule</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Fà sapè chì stu pruduttu hè torna dispunibule</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Signalà chì u pruduttu hè dispunibule</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" tools:ignore="UnusedResources">Cuntrollà a qualità di l’avisi</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Cuntrollà a qualità di l’avisi</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" tools:ignore="UnusedResources">Cuntrollà a qualità di l’avisi</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Cuntrollà a qualità di l’avisi</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_body" tools:ignore="UnusedResources">St’operazione puderià piglià 60 seconde</string>
+    <string name="review_quality_check_analysis_in_progress_warning_body">St’operazione puderià piglià 60 seconde</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Vi ringraziemu di u vostru signalamentu !</string>
     <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">Duveriamu avè l’infurmazioni nant’à l’avisi di stu pruduttu nanzu 24 ore. Ci vole à verificà dopu.</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_title" tools:ignore="UnusedResources">Ùn pudemu micca cuntrollà st’avisi</string>
+    <string name="review_quality_check_not_analyzable_info_title">Ùn pudemu micca cuntrollà st’avisi</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body" tools:ignore="UnusedResources">Per disgrazia, ùn pudemu micca cuntrollà a qualità di l’avisi per certi tipi di prudutti. Per indettu, e carte di rigalu, a diffusione di filmetti è di musica, è i ghjochi.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Per disgrazia, ùn pudemu micca cuntrollà a qualità di l’avisi per certi tipi di prudutti. Per indettu, e carte di rigalu, a diffusione di filmetti è di musica, è i ghjochi.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Infurmazione dispunibule frà pocu</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2305,19 +2320,19 @@
     <!-- Text for the action button from info card displayed to the user when analysis finished updating. -->
     <string name="review_quality_check_analysis_updated_confirmation_action" tools:ignore="UnusedResources">Ahju capitu</string>
     <!-- Title for error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_title" tools:ignore="UnusedResources">Alcuna infurmazione dispunibule fine à quì</string>
+    <string name="review_quality_check_generic_error_title">Alcuna infurmazione dispunibule fine à quì</string>
     <!-- Text for body of error card displayed to the user when an error occurred. -->
-    <string name="review_quality_check_generic_error_body" tools:ignore="UnusedResources">Travagliemu per currege stu penseru. Ci vole à verificà ulteriurmente.</string>
+    <string name="review_quality_check_generic_error_body">Travagliemu per currege stu penseru. Ci vole à verificà ulteriurmente.</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_title" tools:ignore="UnusedResources">Alcuna cunnessione di reta</string>
+    <string name="review_quality_check_no_connection_title">Alcuna cunnessione di reta</string>
     <!-- Text for body of error card displayed to the user when the device is disconnected from the network. -->
-    <string name="review_quality_check_no_connection_body" tools:ignore="UnusedResources">Verificate a vostra cunnessione di reta è pruvate di ricaricà a pagina.</string>
+    <string name="review_quality_check_no_connection_body">Verificate a vostra cunnessione di reta è pruvate di ricaricà a pagina.</string>
     <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_title" tools:ignore="UnusedResources">Ùn ci hè ancu infurmazione nant’à st’avisi</string>
+    <string name="review_quality_check_no_analysis_title">Ùn ci hè ancu infurmazione nant’à st’avisi</string>
     <!-- Text for the body of card displayed to the user for products whose reviews were not analyzed yet. -->
-    <string name="review_quality_check_no_analysis_body" tools:ignore="UnusedResources">Per sapè s’è l’avisi di stu pruduttu sò degni di cunfidenza, cuntrollà a qualità di l’avisi. St’operazione piglia circa 60 seconde solu.</string>
+    <string name="review_quality_check_no_analysis_body">Per sapè s’è l’avisi di stu pruduttu sò degni di cunfidenza, cuntrollà a qualità di l’avisi. St’operazione piglia circa 60 seconde solu.</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
-    <string name="review_quality_check_no_analysis_link" tools:ignore="UnusedResources">Cuntrollà a qualità di l’avisi</string>
+    <string name="review_quality_check_no_analysis_link">Cuntrollà a qualità di l’avisi</string>
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Pruvate a nostra guida di cunfidenza nant’à l’avisi di prudutti</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
@@ -2346,11 +2361,11 @@
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Apre u verificadore d’avisu</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check">Apre u cuntrollu di qualità di l’avisi</string>
+    <string name="review_quality_check_open_handle_content_description">Apre u verificadore d’avisu</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="browser_menu_review_quality_check_close">Chjode u cuntrollu di qualità di l’avisi</string>
+    <string name="review_quality_check_close_handle_content_description">Chjode u verificadore d’avisu</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s stelle nant’à 5</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

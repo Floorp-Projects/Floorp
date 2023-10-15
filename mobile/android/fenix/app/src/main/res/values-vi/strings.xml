@@ -537,7 +537,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Gỡ lỗi từ xa qua USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Hiển thị công cụ tìm kiếm</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Hiển thị công cụ tìm kiếm</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Hiển thị đề xuất tìm kiếm</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1930,7 +1930,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Thêm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Lưu</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Lưu</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Chỉnh sửa</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2179,7 +2179,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Trình kiểm tra đánh giá</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Trình kiểm tra đánh giá</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Trình kiểm tra đánh giá</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Đánh giá đáng tin cậy</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2223,7 +2225,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Hiển thị quảng cáo trong trình kiểm tra đánh giá</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Bạn sẽ thấy quảng cáo không thường xuyên cho các sản phẩm có liên quan. Tất cả quảng cáo phải đáp ứng tiêu chuẩn chất lượng đánh giá của chúng tôi. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Bạn sẽ thấy quảng cáo không thường xuyên cho các sản phẩm có liên quan. Tất cả quảng cáo phải đáp ứng tiêu chuẩn chất lượng đánh giá của chúng tôi. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Bạn sẽ thấy quảng cáo không thường xuyên cho các sản phẩm có liên quan. Chúng tôi chỉ quảng cáo những sản phẩm có đánh giá đáng tin cậy. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2251,7 +2255,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Nếu bạn thấy sản phẩm này đã có hàng trở lại, hãy báo cáo và chúng tôi sẽ kiểm tra đánh giá.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Báo sản phẩm này đã có hàng trở lại</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Báo sản phẩm này đã có hàng trở lại</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Báo sản phẩm còn hàng</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Đang kiểm tra chất lượng đánh giá</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

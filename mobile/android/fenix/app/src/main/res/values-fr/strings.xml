@@ -2269,7 +2269,7 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Afficher des publicités dans le vérificateur d’avis</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Vous verrez de temps en temps des publicités pour des produits pertinents. Toutes les publicités doivent répondre à nos critères de qualité. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Vous verrez à l’occasion des publicités pour des produits pertinents. Ces produits doivent disposer d’avis qui répondent à nos critères de qualité. %s</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Vous verrez à l’occasion des publicités pour des produits pertinents.  Nous  faisons uniquement la promotion de produits dont les avis sont fiables. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->

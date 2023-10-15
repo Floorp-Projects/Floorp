@@ -187,7 +187,7 @@
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Додатки</string>
     <!-- Browser menu button that opens account settings -->
-    <string name="browser_menu_account_settings">Інформація про обліковий запис</string>
+    <string name="browser_menu_account_settings">Ваш обліковий запис</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Немає додатків</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -544,7 +544,7 @@
     <string name="preferences_remote_debugging">Віддалене налагодження через USB</string>
 
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Показати засоби пошуку</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Показати засоби пошуку</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Показувати пошукові пропозиції</string>
 
@@ -675,9 +675,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Додаток не підтримується</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Додаток не підтримується</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Додаток вже встановлено</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Додаток вже встановлено</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -692,6 +692,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Керувати обліковим записом</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Зміна пароля, керування збором даних або видалення облікового запису</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронізувати</string>
     <!-- Preference category for sync -->
@@ -1952,7 +1954,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Додати</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Зберегти</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Зберегти</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Змінити</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2202,7 +2204,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Засіб перевірки відгуків</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Засіб перевірки відгуків</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Засіб перевірки відгуків</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Надійні відгуки</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2246,7 +2250,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Показувати рекламу в засобі перевірки</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Ви періодично бачитимете рекламу схожих товарів. Усі оголошення мають відповідати нашим стандартам якості відгуків. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ви періодично бачитимете рекламу схожих товарів. Усі оголошення мають відповідати нашим стандартам якості відгуків. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Ви періодично бачитимете рекламу відповідних товарів. Ми рекламуємо лише товари з надійними відгуками. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Докладніше</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2274,7 +2280,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Якщо цей товар знову з’явиться, повідомте про це нам, і ми його проаналізуємо.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Повідомити, що цей товар знову в наявності</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Повідомити, що цей товар знову в наявності</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Повідомити про наявність товару</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Перевірка якості відгуку</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

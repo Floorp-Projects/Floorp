@@ -550,7 +550,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">USB 経由でリモートデバッグする</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">検索エンジンを表示する</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">検索エンジンを表示する</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">検索語句の候補を表示する</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1970,7 +1970,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">追加</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">保存</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">保存</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">編集</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2221,7 +2221,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">レビューチェッカー</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">レビューチェッカー</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">レビューチェッカー</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">信頼できるレビュー</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2245,10 +2247,14 @@
     <string name="review_quality_check_info_review_grade_header"><![CDATA[私たちは、各製品のレビューを A から F までの <b>レターグレード</b> で評価します。]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB">信頼できるレビューです。これは正直で偏見を持たない本物の顧客によるレビューであると思われます。</string>
+    <!-- Description explaining grades A and B for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">信頼できるレビューと思われます。</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">信頼できるレビューと信頼できないレビューが混在していると思われます。</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF">信頼できないレビューです。これは偽物または偏見を持ったレビュアーによるレビューであると思われます。</string>
+    <!-- Description explaining grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">信頼できないレビューです。</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>調整されたレート</b> は私たちが信頼するに足ると評価したレビューのみを基にしています。]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
@@ -2262,7 +2268,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">レビューチェッカーに広告を表示する</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">時々、関連製品の広告が表示されます。すべての広告は私たちのレビュー品質基準を満たしています。%s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">時々、関連製品の広告が表示されます。すべての広告は私たちのレビュー品質基準を満たしています。%s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">時々、関連製品の広告が表示されます。私たちはレビュー品質基準を満たした信頼できる製品のみを広告しています。%s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">詳細情報</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2290,7 +2298,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">この製品が再入荷されている場合はご報告ください。その製品レビューを確認します。</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">製品が再入荷されたことを報告する</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">製品が再入荷されたことを報告する</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">製品の在庫があることを報告する</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">レビューの品質の確認</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
