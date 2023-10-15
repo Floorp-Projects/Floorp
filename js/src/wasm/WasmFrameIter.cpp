@@ -62,7 +62,6 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       fp_(fp ? fp : activation->wasmExitFP()),
       instance_(nullptr),
       unwoundCallerFP_(nullptr),
-      unwoundJitFrameType_(),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr) {

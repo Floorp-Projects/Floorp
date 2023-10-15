@@ -2051,7 +2051,7 @@ void Animation::UpdatePendingAnimationTracker(AnimationTimeline* aOldTimeline,
 class AsyncFinishNotification : public MicroTaskRunnable {
  public:
   explicit AsyncFinishNotification(Animation* aAnimation)
-      : MicroTaskRunnable(), mAnimation(aAnimation) {}
+      : mAnimation(aAnimation) {}
 
   virtual void Run(AutoSlowOperation& aAso) override {
     mAnimation->DoFinishNotificationImmediately(this);

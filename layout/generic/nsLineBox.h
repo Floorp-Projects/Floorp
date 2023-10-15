@@ -535,8 +535,7 @@ class nsLineBox final : public nsLineLink {
   };
 
   struct ExtraBlockData : public ExtraData {
-    explicit ExtraBlockData(const nsRect& aBounds)
-        : ExtraData(aBounds), mCarriedOutBEndMargin() {}
+    explicit ExtraBlockData(const nsRect& aBounds) : ExtraData(aBounds) {}
     nsCollapsingMargin mCarriedOutBEndMargin;
   };
 

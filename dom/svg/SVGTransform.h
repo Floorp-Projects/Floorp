@@ -21,9 +21,7 @@ class SVGTransform {
  public:
   // Default ctor initialises to matrix type with identity matrix
   SVGTransform()
-      : mMatrix()  // Initialises to identity
-        ,
-        mAngle(0.f),
+      : mAngle(0.f),
         mOriginX(0.f),
         mOriginY(0.f),
         mType(dom::SVGTransform_Binding::SVG_TRANSFORM_MATRIX) {}

@@ -479,7 +479,7 @@ Result<bool, nsresult> Addon::UpdateLastModifiedTime() {
 }
 
 InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)
-    : WrapperBase(cx, value), mAddonsObj(cx), mAddonsIter() {
+    : WrapperBase(cx, value), mAddonsObj(cx) {
   mAddonsObj = GetObject("addons");
   if (!mAddonsObj) {
     mAddonsObj = JS_NewPlainObject(cx);

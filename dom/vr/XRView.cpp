@@ -20,8 +20,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WITH_JS_MEMBERS(XRView,
 XRView::XRView(nsISupports* aParent, const XREye& aEye)
     : mParent(aParent),
       mEye(aEye),
-      mPosition(gfx::PointDouble3D()),
-      mOrientation(gfx::QuaternionDouble()),
+
       mJSProjectionMatrix(nullptr) {
   mozilla::HoldJSObjects(this);
 }

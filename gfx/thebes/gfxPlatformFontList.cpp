@@ -1918,7 +1918,6 @@ FamilyAndGeneric gfxPlatformFontList::GetDefaultFontFamily(
 
 ShmemCharMapHashEntry::ShmemCharMapHashEntry(const gfxSparseBitSet* aCharMap)
     : mList(gfxPlatformFontList::PlatformFontList()->SharedFontList()),
-      mCharMap(),
       mHash(aCharMap->GetChecksum()) {
   size_t len = SharedBitSet::RequiredSize(*aCharMap);
   mCharMap = mList->Alloc(len);

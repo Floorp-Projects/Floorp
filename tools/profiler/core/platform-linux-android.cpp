@@ -262,12 +262,7 @@ static void SigprofHandler(int aSignal, siginfo_t* aInfo, void* aContext) {
   errno = savedErrno;
 }
 
-Sampler::Sampler(PSLockRef aLock)
-    : mMyPid(profiler_current_process_id()),
-      // We don't know what the sampler thread's ID will be until it runs, so
-      // set mSamplerTid to a dummy value and fill it in for real in
-      // SuspendAndSampleAndResumeThread().
-      mSamplerTid{} {
+Sampler::Sampler(PSLockRef aLock) : mMyPid(profiler_current_process_id()) {
 #if defined(USE_EHABI_STACKWALK)
   mozilla::EHABIStackWalkInit();
 #endif

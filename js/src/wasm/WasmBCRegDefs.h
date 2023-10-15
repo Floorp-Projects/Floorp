@@ -208,7 +208,7 @@ struct RegPtr : public Register {
 };
 
 struct RegF32 : public FloatRegister {
-  RegF32() : FloatRegister() {}
+  RegF32() {}
   explicit RegF32(FloatRegister reg) : FloatRegister(reg) {
     MOZ_ASSERT(isSingle());
   }
@@ -217,7 +217,7 @@ struct RegF32 : public FloatRegister {
 };
 
 struct RegF64 : public FloatRegister {
-  RegF64() : FloatRegister() {}
+  RegF64() {}
   explicit RegF64(FloatRegister reg) : FloatRegister(reg) {
     MOZ_ASSERT(isDouble());
   }
@@ -227,7 +227,7 @@ struct RegF64 : public FloatRegister {
 
 #ifdef ENABLE_WASM_SIMD
 struct RegV128 : public FloatRegister {
-  RegV128() : FloatRegister() {}
+  RegV128() {}
   explicit RegV128(FloatRegister reg) : FloatRegister(reg) {
     MOZ_ASSERT(isSimd128());
   }

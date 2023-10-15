@@ -39,7 +39,7 @@ static inline void AlignTo(size_t* aOffset, size_t aAlign) {
   }
 }
 
-SharedMap::SharedMap() : DOMEventTargetHelper() {}
+SharedMap::SharedMap() {}
 
 SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
                      size_t aMapSize, nsTArray<RefPtr<BlobImpl>>&& aBlobs)
@@ -240,7 +240,7 @@ void SharedMap::MaybeRebuild() const {
   Unused << const_cast<SharedMap*>(this)->MaybeRebuild();
 }
 
-WritableSharedMap::WritableSharedMap() : SharedMap() {
+WritableSharedMap::WritableSharedMap() {
   mWritable = true;
   // Serialize the initial empty contents of the map immediately so that we
   // always have a file descriptor to send to callers of CloneMapFile().

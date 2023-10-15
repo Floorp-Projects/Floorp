@@ -53,7 +53,7 @@ class nsArray final : public nsArrayBase {
   NS_DECL_ISUPPORTS
 
  private:
-  nsArray() : nsArrayBase() {}
+  nsArray() {}
   nsArray(const nsArray& aOther);
   explicit nsArray(const nsCOMArray_base& aBaseArray)
       : nsArrayBase(aBaseArray) {}
@@ -68,7 +68,7 @@ class nsArrayCC final : public nsArrayBase {
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsArrayCC, nsIMutableArray)
 
  private:
-  nsArrayCC() : nsArrayBase() {}
+  nsArrayCC() {}
   nsArrayCC(const nsArrayCC& aOther);
   explicit nsArrayCC(const nsCOMArray_base& aBaseArray)
       : nsArrayBase(aBaseArray) {}

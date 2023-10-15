@@ -193,8 +193,6 @@ class nsWindowSizes {
   explicit nsWindowSizes(mozilla::SizeOfState& aState)
       : FOR_EACH_SIZE(ZERO_SIZE) mDOMEventTargetsCount(0),
         mDOMEventListenersCount(0),
-        mArenaSizes(),
-        mStyleSizes(),
         mState(aState) {}
 
   void addToTabSizes(nsTabSizes* aSizes) const {

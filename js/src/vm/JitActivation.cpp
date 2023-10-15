@@ -34,7 +34,6 @@ js::jit::JitActivation::JitActivation(JSContext* cx)
       packedExitFP_(nullptr),
       encodedWasmExitReason_(0),
       prevJitActivation_(cx->jitActivation),
-      rematerializedFrames_(),
       ionRecovery_(cx),
       bailoutData_(nullptr),
       lastProfilingFrame_(nullptr),

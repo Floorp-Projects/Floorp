@@ -228,9 +228,7 @@ NS_IMPL_QUERY_INTERFACE(nsWindowWatcher, nsIWindowWatcher, nsIPromptFactory,
                         nsPIWindowWatcher)
 
 nsWindowWatcher::nsWindowWatcher()
-    : mEnumeratorList(),
-      mOldestWindow(nullptr),
-      mListLock("nsWindowWatcher.mListLock") {}
+    : mOldestWindow(nullptr), mListLock("nsWindowWatcher.mListLock") {}
 
 nsWindowWatcher::~nsWindowWatcher() {
   // delete data

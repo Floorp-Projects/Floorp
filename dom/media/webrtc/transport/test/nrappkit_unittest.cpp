@@ -26,7 +26,7 @@ namespace {
 
 class TimerTest : public MtransportTest {
  public:
-  TimerTest() : MtransportTest(), handle_(nullptr), fired_(false) {}
+  TimerTest() : handle_(nullptr), fired_(false) {}
   virtual ~TimerTest() = default;
 
   int ArmTimer(int timeout) {

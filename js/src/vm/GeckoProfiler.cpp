@@ -29,11 +29,7 @@ GeckoProfilerThread::GeckoProfilerThread()
     : profilingStack_(nullptr), profilingStackIfEnabled_(nullptr) {}
 
 GeckoProfilerRuntime::GeckoProfilerRuntime(JSRuntime* rt)
-    : rt(rt),
-      strings_(),
-      slowAssertions(false),
-      enabled_(false),
-      eventMarker_(nullptr) {
+    : rt(rt), slowAssertions(false), enabled_(false), eventMarker_(nullptr) {
   MOZ_ASSERT(rt != nullptr);
 }
 
