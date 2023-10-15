@@ -516,7 +516,8 @@ bool nsTSubstring<T>::Assign(const self_type& aStr,
     // get an owning reference to the this->mData
     nsStringBuffer::FromData(this->mData)->AddRef();
     return true;
-  } else if (aStr.mDataFlags & DataFlags::LITERAL) {
+  }
+  if (aStr.mDataFlags & DataFlags::LITERAL) {
     MOZ_ASSERT(aStr.mDataFlags & DataFlags::TERMINATED, "Unterminated literal");
 
     AssignLiteral(aStr.mData, aStr.mLength);
@@ -1312,7 +1313,7 @@ int_type ToIntegerCommon(const nsTSubstring<T>& aSrc, nsresult* aErrorCode,
   //     16 we'd skip the 'G', and parse just 'e' returning 14.
   while ((cp < endcp) && (!done)) {
     switch (*cp++) {
-      // clang-format off
+        // clang-format off
       case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
       case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
       case '0': case '1': case '2': case '3': case '4':
@@ -1347,16 +1348,14 @@ int_type ToIntegerCommon(const nsTSubstring<T>& aSrc, nsresult* aErrorCode,
       if (10 == aRadix) {
         // Invalid base 10 digit, error out.
         return 0;
-      } else {
-        result = (aRadix * result) + ((theChar - 'A') + 10);
       }
+      result = (aRadix * result) + ((theChar - 'A') + 10);
     } else if ((theChar >= 'a') && (theChar <= 'f')) {
       if (10 == aRadix) {
         // Invalid base 10 digit, error out.
         return 0;
-      } else {
-        result = (aRadix * result) + ((theChar - 'a') + 10);
       }
+      result = (aRadix * result) + ((theChar - 'a') + 10);
     } else if ((('X' == theChar) || ('x' == theChar)) && result == 0) {
       // For some reason we support a leading 'x' regardless of radix. For
       // example: "000000x500", aRadix = 10 would be parsed as 500 rather
