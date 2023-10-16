@@ -11,8 +11,6 @@ yamllint:
         - testing/mozharness
         - tools
         - build/cargo
-    exclude:
-        - taskcluster/test/params
     extensions: ['yml', 'yaml']
     support-files:
         - '**/.yamllint'

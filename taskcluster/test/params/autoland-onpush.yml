@@ -1,43 +1,38 @@
-app_version: 120.0a1
+---
+app_version: 87.0a1
 backstop: false
-base_ref: default
 base_repository: https://hg.mozilla.org/mozilla-unified
-base_rev: 38fb0c2583c731c3534fb272054c40eb9d5f3add
-build_date: 1696598308
+build_date: 1612296233
 build_number: 1
 do_not_optimize: []
-enable_always_target:
-  - docker-image
 existing_tasks: {}
 filters:
-  - target_tasks_method
-head_ref: 6ce0530618383c2dbe76362aed3b796bb31749ec
+    - target_tasks_method
+head_ref: cee95ac4c0a6dfe53a4a85ecfd854e449561b4a9
 head_repository: https://hg.mozilla.org/integration/autoland
-head_rev: 6ce0530618383c2dbe76362aed3b796bb31749ec
-head_tag: ''
+head_rev: cee95ac4c0a6dfe53a4a85ecfd854e449561b4a9
 hg_branch: default
-level: '3'
-message: ''
-moz_build_date: '20231006131828'
+level: "3"
+message: ""
+moz_build_date: "20210202200353"
 next_version: null
 optimize_strategies: gecko_taskgraph.optimize:project.autoland
 optimize_target_tasks: true
-owner: user@example.com
+owner: cbrindusan@mozilla.com
 phabricator_diff: null
 project: autoland
-pushdate: 1696598308
-pushlog_id: '192789'
+pushdate: 1612296233
+pushlog_id: "135570"
 release_enable_emefree: false
 release_enable_partner_attribution: false
 release_enable_partner_repack: false
-release_eta: ''
+release_eta: ""
 release_history: {}
 release_partner_build_number: 1
 release_partner_config: {}
 release_partners: []
 release_product: null
-release_type: ''
-repository_type: hg
+release_type: ""
 required_signoffs: []
 signoff_urls: {}
 target_tasks_method: autoland_tasks
@@ -46,4 +41,4 @@ test_manifest_loader: bugbug
 try_mode: null
 try_options: null
 try_task_config: {}
-version: 120.0a1
+version: 87.0a1
