@@ -502,7 +502,7 @@ index 9c2fad652f..f9e49db574 100644
  #include "call/audio_sender.h"
  #include "call/rtp_config.h"
 diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 431c267e1e..de18fc7b92 100644
+index 5fde44a719..1a0261be1b 100644
 --- a/call/video_send_stream.h
 +++ b/call/video_send_stream.h
 @@ -23,7 +23,7 @@
@@ -687,7 +687,7 @@ index dd698af8a4..f35ebe2940 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index dee53bb5ca..5362758212 100644
+index 3fd37b34aa..54814373e4 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -66,10 +66,6 @@ class Timing;

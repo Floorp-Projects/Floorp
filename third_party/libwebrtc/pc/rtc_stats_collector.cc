@@ -669,9 +669,9 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
   // support the "unspecified" value.
   if (video_receiver_info.content_type == VideoContentType::SCREENSHARE)
     inbound_video->content_type = "screenshare";
-  if (!video_receiver_info.decoder_implementation_name.empty()) {
+  if (video_receiver_info.decoder_implementation_name.has_value()) {
     inbound_video->decoder_implementation =
-        video_receiver_info.decoder_implementation_name;
+        *video_receiver_info.decoder_implementation_name;
   }
   if (video_receiver_info.power_efficient_decoder.has_value()) {
     inbound_video->power_efficient_decoder =
@@ -811,9 +811,9 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
   // optional, support the "unspecified" value.
   if (video_sender_info.content_type == VideoContentType::SCREENSHARE)
     outbound_video->content_type = "screenshare";
-  if (!video_sender_info.encoder_implementation_name.empty()) {
+  if (video_sender_info.encoder_implementation_name.has_value()) {
     outbound_video->encoder_implementation =
-        video_sender_info.encoder_implementation_name;
+        *video_sender_info.encoder_implementation_name;
   }
   if (video_sender_info.rid.has_value()) {
     outbound_video->rid = *video_sender_info.rid;
