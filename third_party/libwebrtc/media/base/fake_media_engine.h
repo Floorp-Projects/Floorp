@@ -778,29 +778,6 @@ class FakeVoiceEngine : public VoiceEngineInterface {
       const AudioOptions& options,
       const webrtc::CryptoOptions& crypto_options,
       webrtc::AudioCodecPairId codec_pair_id) override;
-  VoiceMediaChannel* CreateMediaChannel(
-      MediaChannel::Role role,
-      webrtc::Call* call,
-      const MediaConfig& config,
-      const AudioOptions& options,
-      const webrtc::CryptoOptions& crypto_options,
-      webrtc::AudioCodecPairId codec_pair_id) override {
-    RTC_DCHECK_RUN_ON(call->worker_thread());
-    std::unique_ptr<VoiceMediaSendChannelInterface> send_channel;
-    std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_channel;
-    if (role == MediaChannel::Role::kSend ||
-        role == MediaChannel::Role::kBoth) {
-      send_channel = CreateSendChannel(call, config, options, crypto_options,
-                                       codec_pair_id);
-    }
-    if (role == MediaChannel::Role::kReceive ||
-        role == MediaChannel::Role::kBoth) {
-      receive_channel = CreateReceiveChannel(call, config, options,
-                                             crypto_options, codec_pair_id);
-    }
-    return new VoiceMediaShimChannel(std::move(send_channel),
-                                     std::move(receive_channel));
-  }
 
   // TODO(ossu): For proper testing, These should either individually settable
   //             or the voice engine should reference mockable factories.
@@ -844,30 +821,6 @@ class FakeVideoEngine : public VideoEngineInterface {
       const MediaConfig& config,
       const VideoOptions& options,
       const webrtc::CryptoOptions& crypto_options) override;
-  VideoMediaChannel* CreateMediaChannel(
-      MediaChannel::Role role,
-      webrtc::Call* call,
-      const MediaConfig& config,
-      const VideoOptions& options,
-      const webrtc::CryptoOptions& crypto_options,
-      webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
-      override {
-    RTC_LOG(LS_INFO) << "CreateMediaChannel. Options: " << options.ToString();
-    std::unique_ptr<VideoMediaSendChannelInterface> send_channel;
-    std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel;
-    if (role == MediaChannel::Role::kSend ||
-        role == MediaChannel::Role::kBoth) {
-      send_channel = CreateSendChannel(call, config, options, crypto_options,
-                                       video_bitrate_allocator_factory);
-    }
-    if (role == MediaChannel::Role::kReceive ||
-        role == MediaChannel::Role::kBoth) {
-      receive_channel =
-          CreateReceiveChannel(call, config, options, crypto_options);
-    }
-    return new VideoMediaShimChannel(std::move(send_channel),
-                                     std::move(receive_channel));
-  }
   FakeVideoMediaSendChannel* GetSendChannel(size_t index);
   FakeVideoMediaReceiveChannel* GetReceiveChannel(size_t index);
 

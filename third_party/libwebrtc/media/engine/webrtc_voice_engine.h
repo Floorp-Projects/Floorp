@@ -53,7 +53,6 @@
 #include "media/base/codec.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
-#include "media/base/media_channel_shim.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
@@ -115,14 +114,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
       webrtc::AudioCodecPairId codec_pair_id) override;
 
   std::unique_ptr<VoiceMediaReceiveChannelInterface> CreateReceiveChannel(
-      webrtc::Call* call,
-      const MediaConfig& config,
-      const AudioOptions& options,
-      const webrtc::CryptoOptions& crypto_options,
-      webrtc::AudioCodecPairId codec_pair_id) override;
-
-  VoiceMediaChannel* CreateMediaChannel(
-      MediaChannel::Role role,
       webrtc::Call* call,
       const MediaConfig& config,
       const AudioOptions& options,

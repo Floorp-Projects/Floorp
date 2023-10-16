@@ -106,7 +106,7 @@ index 65b7a6b158..6078d27d7a 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 47476e4525..19fe420b14 100644
+index c3e253a4e8..65751d3fba 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -32,7 +32,7 @@ if (is_android) {
@@ -118,7 +118,7 @@ index 47476e4525..19fe420b14 100644
    # This target should (transitively) cause everything to be built; if you run
    # 'ninja default' and then 'ninja all', the second build should do no work.
    group("default") {
-@@ -150,6 +150,10 @@ config("common_inherited_config") {
+@@ -149,6 +149,10 @@ config("common_inherited_config") {
      defines += [ "WEBRTC_ENABLE_OBJC_SYMBOL_EXPORT" ]
    }
  
@@ -129,7 +129,7 @@ index 47476e4525..19fe420b14 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -464,9 +468,11 @@ config("common_config") {
+@@ -463,9 +467,11 @@ config("common_config") {
    }
  }
  
@@ -141,7 +141,7 @@ index 47476e4525..19fe420b14 100644
  
  if (!build_with_chromium) {
    # Target to build all the WebRTC production code.
-@@ -516,6 +522,33 @@ if (!build_with_chromium) {
+@@ -515,6 +521,33 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -175,7 +175,7 @@ index 47476e4525..19fe420b14 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -528,6 +561,16 @@ if (!build_with_chromium) {
+@@ -527,6 +560,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 3ecc881f31..3f1e3d2eed 100644
+index 22eb02ab4f..9dd837c851 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -573,7 +573,7 @@ index 3ecc881f31..3f1e3d2eed 100644
      "../api:scoped_refptr",
      "../api:sequence_checker",
      "../api:transport_api",
-@@ -139,6 +139,15 @@ rtc_library("rtc_media_base") {
+@@ -139,9 +139,19 @@ rtc_library("rtc_media_base") {
      "base/video_source_base.cc",
      "base/video_source_base.h",
    ]
@@ -588,16 +588,12 @@ index 3ecc881f31..3f1e3d2eed 100644
 +  }
  }
  
- rtc_library("media_channel_shim") {
-@@ -176,6 +185,7 @@ rtc_library("media_channel_shim") {
- }
- 
  rtc_library("media_channel_impl") {
 +if (!build_with_mozilla) {
    sources = [
      "base/media_channel_impl.cc",
      "base/media_channel_impl.h",
-@@ -225,6 +235,7 @@ rtc_library("media_channel_impl") {
+@@ -191,6 +201,7 @@ rtc_library("media_channel_impl") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -605,7 +601,7 @@ index 3ecc881f31..3f1e3d2eed 100644
  
  rtc_source_set("media_channel") {
    sources = [ "base/media_channel.h" ]
-@@ -309,6 +320,7 @@ rtc_library("codec") {
+@@ -269,6 +280,7 @@ rtc_library("codec") {
  }
  
  rtc_library("rtp_utils") {
@@ -613,7 +609,7 @@ index 3ecc881f31..3f1e3d2eed 100644
    sources = [
      "base/rtp_utils.cc",
      "base/rtp_utils.h",
-@@ -325,8 +337,10 @@ rtc_library("rtp_utils") {
+@@ -285,8 +297,10 @@ rtc_library("rtp_utils") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
@@ -624,7 +620,7 @@ index 3ecc881f31..3f1e3d2eed 100644
    sources = [
      "base/stream_params.cc",
      "base/stream_params.h",
-@@ -339,6 +353,7 @@ rtc_library("stream_params") {
+@@ -299,6 +313,7 @@ rtc_library("stream_params") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
  }
@@ -632,7 +628,7 @@ index 3ecc881f31..3f1e3d2eed 100644
  
  rtc_library("media_constants") {
    sources = [
-@@ -349,6 +364,7 @@ rtc_library("media_constants") {
+@@ -309,6 +324,7 @@ rtc_library("media_constants") {
  }
  
  rtc_library("turn_utils") {
@@ -640,7 +636,7 @@ index 3ecc881f31..3f1e3d2eed 100644
    sources = [
      "base/turn_utils.cc",
      "base/turn_utils.h",
-@@ -359,14 +375,17 @@ rtc_library("turn_utils") {
+@@ -319,14 +335,17 @@ rtc_library("turn_utils") {
      "../rtc_base/system:rtc_export",
    ]
  }
@@ -658,7 +654,7 @@ index 3ecc881f31..3f1e3d2eed 100644
  
  rtc_library("rtc_simulcast_encoder_adapter") {
    visibility = [ "*" ]
-@@ -438,6 +457,12 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -398,6 +417,12 @@ rtc_library("rtc_internal_video_codecs") {
      "../system_wrappers:field_trial",
      "../test:fake_video_codecs",
    ]
@@ -671,7 +667,7 @@ index 3ecc881f31..3f1e3d2eed 100644
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -463,6 +488,14 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -423,6 +448,14 @@ rtc_library("rtc_internal_video_codecs") {
      "engine/multiplex_codec_factory.cc",
      "engine/multiplex_codec_factory.h",
    ]
@@ -687,10 +683,10 @@ index 3ecc881f31..3f1e3d2eed 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 3fd37b34aa..54814373e4 100644
+index 9657f1fbe5..7681a1650e 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
-@@ -66,10 +66,6 @@ class Timing;
+@@ -65,10 +65,6 @@ class Timing;
  
  namespace webrtc {
  class VideoFrame;
@@ -702,7 +698,7 @@ index 3fd37b34aa..54814373e4 100644
  
  namespace cricket {
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index 12f2179712..369a2ae050 100644
+index 9bfb0f037b..60db41ee2f 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -31,19 +31,6 @@

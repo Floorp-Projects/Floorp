@@ -140,32 +140,6 @@ BaseChannel::BaseChannel(
   RTC_DLOG(LS_INFO) << "Created channel: " << ToString();
 }
 
-BaseChannel::BaseChannel(rtc::Thread* worker_thread,
-                         rtc::Thread* network_thread,
-                         rtc::Thread* signaling_thread,
-                         std::unique_ptr<MediaChannel> media_channel,
-                         absl::string_view mid,
-                         bool srtp_required,
-                         webrtc::CryptoOptions crypto_options,
-                         UniqueRandomIdGenerator* ssrc_generator)
-    : media_channel_(std::move(media_channel)),
-      worker_thread_(worker_thread),
-      network_thread_(network_thread),
-      signaling_thread_(signaling_thread),
-      alive_(PendingTaskSafetyFlag::Create()),
-      srtp_required_(srtp_required),
-      extensions_filter_(
-          crypto_options.srtp.enable_encrypted_rtp_header_extensions
-              ? webrtc::RtpExtension::kPreferEncryptedExtension
-              : webrtc::RtpExtension::kDiscardEncryptedExtension),
-      demuxer_criteria_(mid),
-      ssrc_generator_(ssrc_generator) {
-  RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_DCHECK(media_channel_);
-  RTC_DCHECK(ssrc_generator_);
-  RTC_DLOG(LS_INFO) << "Created channel: " << ToString();
-}
-
 BaseChannel::~BaseChannel() {
   TRACE_EVENT0("webrtc", "BaseChannel::~BaseChannel");
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -178,15 +152,9 @@ BaseChannel::~BaseChannel() {
 }
 
 std::string BaseChannel::ToString() const {
-  if (media_send_channel_) {
-    return StringFormat(
-        "{mid: %s, media_type: %s}", mid().c_str(),
-        MediaTypeToString(media_send_channel_->media_type()).c_str());
-  } else {
-    return StringFormat(
-        "{mid: %s, media_type: %s}", mid().c_str(),
-        MediaTypeToString(media_channel_->media_type()).c_str());
-  }
+  return StringFormat(
+      "{mid: %s, media_type: %s}", mid().c_str(),
+      MediaTypeToString(media_send_channel_->media_type()).c_str());
 }
 
 bool BaseChannel::ConnectToRtpTransport_n() {
@@ -866,26 +834,6 @@ VoiceChannel::VoiceChannel(
                   crypto_options,
                   ssrc_generator) {}
 
-VoiceChannel::VoiceChannel(
-    rtc::Thread* worker_thread,
-    rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
-    std::unique_ptr<VoiceMediaChannel> media_channel_impl,
-    absl::string_view mid,
-    bool srtp_required,
-    webrtc::CryptoOptions crypto_options,
-    UniqueRandomIdGenerator* ssrc_generator)
-    : BaseChannel(worker_thread,
-                  network_thread,
-                  signaling_thread,
-                  std::move(media_channel_impl),
-                  mid,
-                  srtp_required,
-                  crypto_options,
-                  ssrc_generator) {
-  InitCallback();
-}
-
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");
   // this can't be done in the base class, since it calls a virtual
@@ -1041,23 +989,6 @@ VideoChannel::VideoChannel(
         send_channel()->SendCodecRtxTime());
   });
 }
-VideoChannel::VideoChannel(
-    rtc::Thread* worker_thread,
-    rtc::Thread* network_thread,
-    rtc::Thread* signaling_thread,
-    std::unique_ptr<VideoMediaChannel> media_channel_impl,
-    absl::string_view mid,
-    bool srtp_required,
-    webrtc::CryptoOptions crypto_options,
-    UniqueRandomIdGenerator* ssrc_generator)
-    : BaseChannel(worker_thread,
-                  network_thread,
-                  signaling_thread,
-                  std::move(media_channel_impl),
-                  mid,
-                  srtp_required,
-                  crypto_options,
-                  ssrc_generator) {}
 
 VideoChannel::~VideoChannel() {
   TRACE_EVENT0("webrtc", "VideoChannel::~VideoChannel");

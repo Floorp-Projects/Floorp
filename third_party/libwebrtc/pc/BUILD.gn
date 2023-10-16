@@ -2450,7 +2450,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../common_video",
       "../logging:fake_rtc_event_log",
       "../media:codec",
-      "../media:delayable",
       "../media:media_channel",
       "../media:media_constants",
       "../media:rid_description",
@@ -2557,27 +2556,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:test_main",
       "../test:test_support",
     ]
-  }
-
-  rtc_test("peer_connection_mediachannel_split_unittests") {
-    testonly = true
-    sources = [ "peer_connection_mediachannel_split_unittest.cc" ]
-    deps = [
-      ":integration_test_helpers",
-      ":session_description",
-      "../api:libjingle_peerconnection_api",
-      "../api:media_stream_interface",
-      "../api:rtc_error",
-      "../api:rtc_stats_api",
-      "../api:scoped_refptr",
-      "../media:codec",
-      "../media:media_constants",
-      "../rtc_base:gunit_helpers",
-      "../rtc_base:rtc_base_tests_utils",
-      "../test:test_main",
-      "../test:test_support",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
 
   rtc_library("data_channel_controller_unittest") {
@@ -2758,7 +2736,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "test/mock_peer_connection_observers.h",
       "test/mock_rtp_receiver_internal.h",
       "test/mock_rtp_sender_internal.h",
-      "test/mock_voice_media_channel.h",
+      "test/mock_voice_media_receive_channel_interface.h",
       "test/peer_connection_test_wrapper.cc",
       "test/peer_connection_test_wrapper.h",
       "test/rtc_stats_obtainer.h",

@@ -59,7 +59,6 @@
 #include "media/base/codec.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
-#include "media/base/media_channel_shim.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 #include "media/base/stream_params.h"
@@ -116,15 +115,6 @@ class WebRtcVideoEngine : public VideoEngineInterface {
       const MediaConfig& config,
       const VideoOptions& options,
       const webrtc::CryptoOptions& crypto_options) override;
-
-  VideoMediaChannel* CreateMediaChannel(
-      MediaChannel::Role role,
-      webrtc::Call* call,
-      const MediaConfig& config,
-      const VideoOptions& options,
-      const webrtc::CryptoOptions& crypto_options,
-      webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory)
-      override;
 
   std::vector<VideoCodec> send_codecs() const override {
     return send_codecs(true);
