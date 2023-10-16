@@ -158,7 +158,7 @@ AudioSendParameters::AudioSendParameters() = default;
 AudioSendParameters::~AudioSendParameters() = default;
 
 std::map<std::string, std::string> AudioSendParameters::ToStringMap() const {
-  auto params = RtpSendParameters<AudioCodec>::ToStringMap();
+  auto params = RtpSendParameters::ToStringMap();
   params["options"] = options.ToString();
   return params;
 }
@@ -167,7 +167,7 @@ VideoSendParameters::VideoSendParameters() = default;
 VideoSendParameters::~VideoSendParameters() = default;
 
 std::map<std::string, std::string> VideoSendParameters::ToStringMap() const {
-  auto params = RtpSendParameters<VideoCodec>::ToStringMap();
+  auto params = RtpSendParameters::ToStringMap();
   params["conference_mode"] = (conference_mode ? "yes" : "no");
   return params;
 }

@@ -82,7 +82,7 @@ void RtpParametersFromMediaDescription(
     const MediaContentDescriptionImpl<Codec>* desc,
     const RtpHeaderExtensions& extensions,
     bool is_stream_active,
-    RtpParameters<Codec>* params) {
+    RtpParameters* params) {
   params->is_stream_active = is_stream_active;
   params->codecs = desc->codecs();
   // TODO(bugs.webrtc.org/11513): See if we really need
@@ -98,7 +98,7 @@ template <class Codec>
 void RtpSendParametersFromMediaDescription(
     const MediaContentDescriptionImpl<Codec>* desc,
     webrtc::RtpExtension::Filter extensions_filter,
-    RtpSendParameters<Codec>* send_params) {
+    RtpSendParameters* send_params) {
   RtpHeaderExtensions extensions =
       webrtc::RtpExtension::DeduplicateHeaderExtensions(
           desc->rtp_header_extensions(), extensions_filter);

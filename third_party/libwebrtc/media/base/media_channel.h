@@ -807,7 +807,6 @@ struct RtcpParameters {
   bool remote_estimate = false;
 };
 
-template <class Codec>
 struct RtpParameters {
   virtual ~RtpParameters() = default;
 
@@ -841,8 +840,7 @@ struct RtpParameters {
 
 // TODO(deadbeef): Rename to RtpSenderParameters, since they're intended to
 // encapsulate all the parameters needed for an RtpSender.
-template <class Codec>
-struct RtpSendParameters : RtpParameters<Codec> {
+struct RtpSendParameters : RtpParameters {
   int max_bandwidth_bps = -1;
   // This is the value to be sent in the MID RTP header extension (if the header
   // extension in included in the list of extensions).
@@ -851,7 +849,7 @@ struct RtpSendParameters : RtpParameters<Codec> {
 
  protected:
   std::map<std::string, std::string> ToStringMap() const override {
-    auto params = RtpParameters<Codec>::ToStringMap();
+    auto params = RtpParameters::ToStringMap();
     params["max_bandwidth_bps"] = rtc::ToString(max_bandwidth_bps);
     params["mid"] = (mid.empty() ? "<not set>" : mid);
     params["extmap-allow-mixed"] = extmap_allow_mixed ? "true" : "false";
@@ -859,7 +857,7 @@ struct RtpSendParameters : RtpParameters<Codec> {
   }
 };
 
-struct AudioSendParameters : RtpSendParameters<AudioCodec> {
+struct AudioSendParameters : RtpSendParameters {
   AudioSendParameters();
   ~AudioSendParameters() override;
   AudioOptions options;
@@ -868,7 +866,7 @@ struct AudioSendParameters : RtpSendParameters<AudioCodec> {
   std::map<std::string, std::string> ToStringMap() const override;
 };
 
-struct AudioRecvParameters : RtpParameters<AudioCodec> {};
+struct AudioRecvParameters : RtpParameters {};
 
 class VoiceMediaSendChannelInterface : public MediaSendChannelInterface {
  public:
@@ -920,7 +918,7 @@ class VoiceMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
 
 // TODO(deadbeef): Rename to VideoSenderParameters, since they're intended to
 // encapsulate all the parameters needed for a video RtpSender.
-struct VideoSendParameters : RtpSendParameters<VideoCodec> {
+struct VideoSendParameters : RtpSendParameters {
   VideoSendParameters();
   ~VideoSendParameters() override;
   // Use conference mode? This flag comes from the remote
@@ -937,7 +935,7 @@ struct VideoSendParameters : RtpSendParameters<VideoCodec> {
 
 // TODO(deadbeef): Rename to VideoReceiverParameters, since they're intended to
 // encapsulate all the parameters needed for a video RtpReceiver.
-struct VideoRecvParameters : RtpParameters<VideoCodec> {};
+struct VideoRecvParameters : RtpParameters {};
 
 class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
  public:
