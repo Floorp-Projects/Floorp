@@ -77,19 +77,14 @@
 }
 
 .fxview-tab-row-title {
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-align: match-parent;
 }
 
 .fxview-tab-row-url {
   color: var(--text-color-deemphasized);
-  word-break: break-word;
   text-decoration-line: underline;
-}
-
-.fxview-tab-row-title,
-.fxview-tab-row-url {
-  overflow: hidden;
+  direction: ltr;
+  text-align: match-parent;
 }
 
 .fxview-tab-row-date,
