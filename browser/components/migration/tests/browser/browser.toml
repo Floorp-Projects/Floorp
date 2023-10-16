@@ -1,7 +1,6 @@
 [DEFAULT]
 head = "head.js"
 prefs = [
-  "browser.migrate.content-modal.enabled=true",
   "browser.migrate.internal-testing.enabled=true",
   "dom.window.sizeToContent.enabled=true",
 ]
