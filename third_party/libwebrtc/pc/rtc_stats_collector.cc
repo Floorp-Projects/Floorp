@@ -677,6 +677,12 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
     inbound_video->power_efficient_decoder =
         *video_receiver_info.power_efficient_decoder;
   }
+  for (const auto& ssrc_group : video_receiver_info.ssrc_groups) {
+    if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
+        ssrc_group.ssrcs.size() == 2) {
+      inbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
+    }
+  }
 
   return inbound_video;
 }
@@ -825,6 +831,12 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
   if (video_sender_info.scalability_mode) {
     outbound_video->scalability_mode = std::string(
         ScalabilityModeToString(*video_sender_info.scalability_mode));
+  }
+  for (const auto& ssrc_group : video_sender_info.ssrc_groups) {
+    if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
+        ssrc_group.ssrcs.size() == 2) {
+      outbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
+    }
   }
   return outbound_video;
 }
