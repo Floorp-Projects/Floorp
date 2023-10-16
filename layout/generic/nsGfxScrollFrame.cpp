@@ -4499,11 +4499,11 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
       nsRect displayportBase = *aVisibleRect;
       nsPresContext* pc = PresContext();
 
-      bool isContentRootDoc = pc->IsRootContentDocumentCrossProcess();
       bool isChromeRootDoc =
           !pc->Document()->IsContentDocument() && !pc->GetParentPresContext();
 
-      if (mIsRoot && (isContentRootDoc || isChromeRootDoc)) {
+      if (mIsRoot &&
+          (pc->IsRootContentDocumentCrossProcess() || isChromeRootDoc)) {
         displayportBase =
             nsRect(nsPoint(0, 0),
                    nsLayoutUtils::CalculateCompositionSizeForFrame(this));
