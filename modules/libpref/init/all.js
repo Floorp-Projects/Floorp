@@ -3986,6 +3986,9 @@ pref("extensions.formautofill.creditCards.heuristics.fathom.testConfidence", "0"
 
 pref("extensions.formautofill.firstTimeUse", true);
 pref("extensions.formautofill.loglevel", "Warn");
+// The interactivityCheckMode pref is only temporary.
+// It will be removed when we decide to only support the `focusability` mode
+pref("extensions.formautofill.heuristics.interactivityCheckMode", "focusability");
 
 pref("toolkit.osKeyStore.loglevel", "Warn");
 

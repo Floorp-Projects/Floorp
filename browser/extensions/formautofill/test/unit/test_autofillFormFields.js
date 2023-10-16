@@ -423,39 +423,6 @@ const TESTCASES = [
   },
   {
     description:
-      "Form with hidden input and visible input that share the same autocomplete attribute",
-    document: `<form>
-               <input id="hidden-cc" autocomplete="cc-number" hidden>
-               <input id="hidden-cc-2" autocomplete="cc-number" style="display:none">
-               <input id="visible-cc" autocomplete="cc-number">
-               <input id="hidden-name" autocomplete="cc-name" hidden>
-               <input id="hidden-name-2" autocomplete="cc-name" style="display:none">
-               <input id="visible-name" autocomplete="cc-name">
-               <input id="cc-exp-month" autocomplete="cc-exp-month">
-               <input id="cc-exp-year" autocomplete="cc-exp-year">
-               </form>`,
-    focusedInputId: "visible-cc",
-    profileData: {
-      guid: "123",
-      "cc-number": "4111111111111111",
-      "cc-name": "test name",
-      "cc-exp-month": 6,
-      "cc-exp-year": 25,
-    },
-    expectedResult: {
-      guid: "123",
-      "visible-cc": "4111111111111111",
-      "visible-name": "test name",
-      "cc-exp-month": "06",
-      "cc-exp-year": "25",
-      "hidden-cc": undefined,
-      "hidden-cc-2": undefined,
-      "hidden-name": undefined,
-      "hidden-name-2": undefined,
-    },
-  },
-  {
-    description:
       "Fill credit card fields in a form where the value property is being used as a placeholder for cardholder name",
     document: `<form>
               <input id="cc-number" autocomplete="cc-number">
