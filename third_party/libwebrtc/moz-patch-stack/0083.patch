@@ -26,7 +26,7 @@ Also includes:
  2 files changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 7df6becb4e..1af19a1fd2 100644
+index 6262f7fb6d..319602414e 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
 @@ -26,7 +26,7 @@
@@ -38,7 +38,7 @@ index 7df6becb4e..1af19a1fd2 100644
  #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
  #endif
  
-@@ -88,7 +88,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+@@ -89,7 +89,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
    return capturer;
  }
  
@@ -46,7 +46,7 @@ index 7df6becb4e..1af19a1fd2 100644
  // static
  std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
      const DesktopCaptureOptions& options) {
-@@ -100,17 +99,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+@@ -101,17 +100,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
    return capturer;
  }
  
