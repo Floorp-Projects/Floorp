@@ -760,6 +760,20 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
     ExtractBits(dest, src.valueReg(), 0, JSVAL_TAG_SHIFT - 1);
   }
 
+  void unboxWasmAnyRefGCThingForGCBarrier(const Address& src, Register dest) {
+    ScratchRegisterScope scratch(asMasm());
+    MOZ_ASSERT(scratch != dest);
+    movePtr(ImmWord(wasm::AnyRef::GCThingMask), scratch);
+    loadPtr(src, dest);
+    ma_and(dest, dest, scratch);
+  }
+
+  void getWasmAnyRefGCThingChunk(Register src, Register dest) {
+    MOZ_ASSERT(src != dest);
+    movePtr(ImmWord(wasm::AnyRef::GCThingChunkMask), dest);
+    ma_and(dest, dest, src);
+  }
+
   // Like unboxGCThingForGCBarrier, but loads the GC thing's chunk base.
   void getGCThingValueChunk(const Address& src, Register dest) {
     ScratchRegisterScope scratch(asMasm());
