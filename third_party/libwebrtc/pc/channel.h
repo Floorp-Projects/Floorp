@@ -429,12 +429,12 @@ class VoiceChannel : public BaseChannel {
                           std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
 
-  // Last AudioSendParameters sent down to the media_channel() via
+  // Last AudioSenderParameter sent down to the media_channel() via
   // SetSendParameters.
-  AudioSendParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
-  // Last AudioRecvParameters sent down to the media_channel() via
+  AudioSenderParameter last_send_params_ RTC_GUARDED_BY(worker_thread());
+  // Last AudioReceiverParameters sent down to the media_channel() via
   // SetRecvParameters.
-  AudioRecvParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
+  AudioReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
 // VideoChannel is a specialization for video.
@@ -498,12 +498,12 @@ class VideoChannel : public BaseChannel {
                           std::string& error_desc)
       RTC_RUN_ON(worker_thread()) override;
 
-  // Last VideoSendParameters sent down to the media_channel() via
+  // Last VideoSenderParameters sent down to the media_channel() via
   // SetSendParameters.
-  VideoSendParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
-  // Last VideoRecvParameters sent down to the media_channel() via
+  VideoSenderParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
+  // Last VideoReceiverParameters sent down to the media_channel() via
   // SetRecvParameters.
-  VideoRecvParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
+  VideoReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
 }  // namespace cricket

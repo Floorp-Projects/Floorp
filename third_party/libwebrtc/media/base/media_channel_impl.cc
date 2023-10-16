@@ -154,20 +154,20 @@ VideoMediaReceiveInfo::~VideoMediaReceiveInfo() = default;
 VoiceMediaReceiveInfo::VoiceMediaReceiveInfo() = default;
 VoiceMediaReceiveInfo::~VoiceMediaReceiveInfo() = default;
 
-AudioSendParameters::AudioSendParameters() = default;
-AudioSendParameters::~AudioSendParameters() = default;
+AudioSenderParameter::AudioSenderParameter() = default;
+AudioSenderParameter::~AudioSenderParameter() = default;
 
-std::map<std::string, std::string> AudioSendParameters::ToStringMap() const {
-  auto params = RtpSendParameters::ToStringMap();
+std::map<std::string, std::string> AudioSenderParameter::ToStringMap() const {
+  auto params = SenderParameters::ToStringMap();
   params["options"] = options.ToString();
   return params;
 }
 
-VideoSendParameters::VideoSendParameters() = default;
-VideoSendParameters::~VideoSendParameters() = default;
+VideoSenderParameters::VideoSenderParameters() = default;
+VideoSenderParameters::~VideoSenderParameters() = default;
 
-std::map<std::string, std::string> VideoSendParameters::ToStringMap() const {
-  auto params = RtpSendParameters::ToStringMap();
+std::map<std::string, std::string> VideoSenderParameters::ToStringMap() const {
+  auto params = SenderParameters::ToStringMap();
   params["conference_mode"] = (conference_mode ? "yes" : "no");
   return params;
 }

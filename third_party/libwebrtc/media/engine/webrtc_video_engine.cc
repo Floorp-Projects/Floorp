@@ -972,7 +972,7 @@ std::vector<VideoCodecSettings> WebRtcVideoSendChannel::SelectSendVideoCodecs(
 }
 
 bool WebRtcVideoSendChannel::GetChangedSendParameters(
-    const VideoSendParameters& params,
+    const VideoSenderParameters& params,
     ChangedSendParameters* changed_params) const {
   if (!ValidateCodecFormats(params.codecs) ||
       !ValidateRtpExtensions(params.extensions, send_rtp_extensions_)) {
@@ -1045,7 +1045,7 @@ bool WebRtcVideoSendChannel::GetChangedSendParameters(
 }
 
 bool WebRtcVideoSendChannel::SetSendParameters(
-    const VideoSendParameters& params) {
+    const VideoSenderParameters& params) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoSendChannel::SetSendParameters");
   RTC_LOG(LS_INFO) << "SetSendParameters: " << params.ToString();
@@ -1594,7 +1594,7 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::WebRtcVideoSendStream(
     const absl::optional<std::vector<webrtc::RtpExtension>>& rtp_extensions,
     // TODO(deadbeef): Don't duplicate information between send_params,
     // rtp_extensions, options, etc.
-    const VideoSendParameters& send_params)
+    const VideoSenderParameters& send_params)
     : worker_thread_(call->worker_thread()),
       ssrcs_(sp.ssrcs),
       ssrc_groups_(sp.ssrc_groups),
@@ -2554,7 +2554,7 @@ WebRtcVideoReceiveChannel::GetDefaultRtpReceiveParameters() const {
 }
 
 bool WebRtcVideoReceiveChannel::GetChangedRecvParameters(
-    const VideoRecvParameters& params,
+    const VideoReceiverParameters& params,
     ChangedRecvParameters* changed_params) const {
   if (!ValidateCodecFormats(params.codecs) ||
       !ValidateRtpExtensions(params.extensions, recv_rtp_extensions_)) {
@@ -2609,7 +2609,7 @@ bool WebRtcVideoReceiveChannel::GetChangedRecvParameters(
 }
 
 bool WebRtcVideoReceiveChannel::SetRecvParameters(
-    const VideoRecvParameters& params) {
+    const VideoReceiverParameters& params) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   TRACE_EVENT0("webrtc", "WebRtcVideoReceiveChannel::SetRecvParameters");
   RTC_LOG(LS_INFO) << "SetRecvParameters: " << params.ToString();
