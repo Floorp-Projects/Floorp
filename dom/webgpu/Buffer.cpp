@@ -144,7 +144,7 @@ void Buffer::Drop() {
   }
   mMapped.reset();
 
-  if (mValid && !GetDevice().IsLost()) {
+  if (mValid && GetDevice().IsBridgeAlive()) {
     GetDevice().GetBridge()->SendBufferDrop(mId);
   }
   mValid = false;
