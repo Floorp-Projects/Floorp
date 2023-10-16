@@ -1,5 +1,5 @@
 use object::read::elf::{FileHeader, SectionHeader};
-use object::read::{Object, ObjectSymbol};
+use object::read::{Object, ObjectSection, ObjectSymbol};
 use object::{
     elf, read, write, Architecture, BinaryFormat, Endianness, LittleEndian, SectionIndex,
     SectionKind, SymbolFlags, SymbolKind, SymbolScope, SymbolSection, U32,
@@ -40,6 +40,37 @@ fn symtab_shndx() {
             SymbolSection::Section(SectionIndex(symbol.index().0))
         );
     }
+}
+
+#[test]
+fn aligned_sections() {
+    let mut object =
+        write::Object::new(BinaryFormat::Elf, Architecture::X86_64, Endianness::Little);
+
+    let text_section_id = object.add_section(vec![], b".text".to_vec(), SectionKind::Text);
+    let text_section = object.section_mut(text_section_id);
+    text_section.set_data(&[][..], 4096);
+
+    let data_section_id = object.add_section(vec![], b".data".to_vec(), SectionKind::Data);
+    let data_section = object.section_mut(data_section_id);
+    data_section.set_data(&b"1234"[..], 16);
+
+    let bytes = object.write().unwrap();
+
+    let object = read::File::parse(&*bytes).unwrap();
+    assert_eq!(object.format(), BinaryFormat::Elf);
+    assert_eq!(object.architecture(), Architecture::X86_64);
+
+    let mut sections = object.sections();
+    let _ = sections.next().unwrap();
+
+    let section = sections.next().unwrap();
+    assert_eq!(section.name(), Ok(".text"));
+    assert_eq!(section.file_range(), Some((4096, 0)));
+
+    let section = sections.next().unwrap();
+    assert_eq!(section.name(), Ok(".data"));
+    assert_eq!(section.file_range(), Some((4096, 4)));
 }
 
 #[cfg(feature = "compression")]
@@ -214,5 +245,45 @@ fn note() {
     assert_eq!(note.name(), b"abc");
     assert_eq!(note.desc(), b"descriptor\0");
     assert_eq!(note.n_type(endian), 2);
+    assert!(notes.next().unwrap().is_none());
+}
+
+#[test]
+fn gnu_property() {
+    gnu_property_inner::<elf::FileHeader32<Endianness>>(Architecture::I386);
+    gnu_property_inner::<elf::FileHeader64<Endianness>>(Architecture::X86_64);
+}
+
+fn gnu_property_inner<Elf: FileHeader<Endian = Endianness>>(architecture: Architecture) {
+    let endian = Endianness::Little;
+    let mut object = write::Object::new(BinaryFormat::Elf, architecture, endian);
+    object.add_elf_gnu_property_u32(
+        elf::GNU_PROPERTY_X86_FEATURE_1_AND,
+        elf::GNU_PROPERTY_X86_FEATURE_1_IBT | elf::GNU_PROPERTY_X86_FEATURE_1_SHSTK,
+    );
+
+    let bytes = &*object.write().unwrap();
+
+    //std::fs::write(&"note.o", &bytes).unwrap();
+
+    let header = Elf::parse(bytes).unwrap();
+    assert_eq!(header.endian().unwrap(), endian);
+    let sections = header.sections(endian, bytes).unwrap();
+    let section = sections.section(SectionIndex(1)).unwrap();
+    assert_eq!(
+        sections.section_name(endian, section).unwrap(),
+        b".note.gnu.property"
+    );
+    assert_eq!(section.sh_flags(endian).into(), u64::from(elf::SHF_ALLOC));
+    let mut notes = section.notes(endian, bytes).unwrap().unwrap();
+    let note = notes.next().unwrap().unwrap();
+    let mut props = note.gnu_properties(endian).unwrap();
+    let prop = props.next().unwrap().unwrap();
+    assert_eq!(prop.pr_type(), elf::GNU_PROPERTY_X86_FEATURE_1_AND);
+    assert_eq!(
+        prop.data_u32(endian).unwrap(),
+        elf::GNU_PROPERTY_X86_FEATURE_1_IBT | elf::GNU_PROPERTY_X86_FEATURE_1_SHSTK
+    );
+    assert!(props.next().unwrap().is_none());
     assert!(notes.next().unwrap().is_none());
 }

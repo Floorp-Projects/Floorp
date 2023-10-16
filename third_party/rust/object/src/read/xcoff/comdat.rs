@@ -109,7 +109,6 @@ pub type XcoffComdatSectionIterator64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct XcoffComdatSectionIterator<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {

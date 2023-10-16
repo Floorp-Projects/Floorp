@@ -77,7 +77,7 @@ impl<'data> RichHeaderInfo<'data> {
     }
 }
 
-/// Find the offset of the first occurence of needle in the data.
+/// Find the offset of the first occurrence of needle in the data.
 ///
 /// The offset must have the given alignment.
 fn memmem(data: &[u8], needle: &[u8], align: usize) -> Option<usize> {

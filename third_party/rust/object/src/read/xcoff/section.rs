@@ -36,7 +36,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|(index, section)| XcoffSection {
-            index: SectionIndex(index),
+            index: SectionIndex(index + 1),
             file: self.file,
             section,
         })
@@ -54,7 +54,6 @@ pub type XcoffSection64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct XcoffSection<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {
@@ -252,9 +251,11 @@ where
     }
 
     /// Return the section header at the given index.
+    ///
+    /// The index is 1-based.
     pub fn section(&self, index: SectionIndex) -> read::Result<&'data Xcoff::SectionHeader> {
         self.sections
-            .get(index.0)
+            .get(index.0.wrapping_sub(1))
             .read_error("Invalid XCOFF section index")
     }
 }

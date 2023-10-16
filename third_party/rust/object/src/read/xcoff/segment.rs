@@ -19,7 +19,6 @@ pub type XcoffSegmentIterator64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct XcoffSegmentIterator<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {
@@ -50,7 +49,6 @@ pub type XcoffSegment64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct XcoffSegment<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {

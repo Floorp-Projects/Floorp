@@ -100,10 +100,10 @@ pub const CPU_SUBTYPE_UVAXIII: u32 = 12;
  *
  * The subtype definitions here are unusual for historical reasons.
  * NeXT used to consider 68030 code as generic 68000 code.  For
- * backwards compatability:
+ * backwards compatibility:
  *
  *	CPU_SUBTYPE_MC68030 symbol has been preserved for source code
- *	compatability.
+ *	compatibility.
  *
  *	CPU_SUBTYPE_MC680x0_ALL has been defined to be the same
  *	subtype as CPU_SUBTYPE_MC68030 for binary comatability.
@@ -394,7 +394,7 @@ pub struct DyldSubCacheInfo<E: Endian> {
 
 /*
  * This header file describes the structures of the file format for "fat"
- * architecture specific file (wrapper design).  At the begining of the file
+ * architecture specific file (wrapper design).  At the beginning of the file
  * there is one `FatHeader` structure followed by a number of `FatArch*`
  * structures.  For each architecture in the file, specified by a pair of
  * cputype and cpusubtype, the `FatHeader` describes the file offset, file
@@ -576,7 +576,7 @@ pub const MH_FILESET: u32 = 0xc;
 pub const MH_NOUNDEFS: u32 = 0x1;
 /// the object file is the output of an incremental link against a base file and can't be link edited again
 pub const MH_INCRLINK: u32 = 0x2;
-/// the object file is input for the dynamic linker and can't be staticly link edited again
+/// the object file is input for the dynamic linker and can't be statically link edited again
 pub const MH_DYLDLINK: u32 = 0x4;
 /// the object file's undefined references are bound by the dynamic linker when loaded.
 pub const MH_BINDATLOAD: u32 = 0x8;
@@ -590,7 +590,7 @@ pub const MH_LAZY_INIT: u32 = 0x40;
 pub const MH_TWOLEVEL: u32 = 0x80;
 /// the executable is forcing all images to use flat name space bindings
 pub const MH_FORCE_FLAT: u32 = 0x100;
-/// this umbrella guarantees no multiple defintions of symbols in its sub-images so the two-level namespace hints can always be used.
+/// this umbrella guarantees no multiple definitions of symbols in its sub-images so the two-level namespace hints can always be used.
 pub const MH_NOMULTIDEFS: u32 = 0x200;
 /// do not have dyld notify the prebinding agent about this executable
 pub const MH_NOFIXPREBINDING: u32 = 0x400;
@@ -1142,7 +1142,7 @@ pub const SEG_LINKINFO: &str = "__LINKINFO";
 /// the unix stack segment
 pub const SEG_UNIXSTACK: &str = "__UNIXSTACK";
 
-/// the segment for the self (dyld) modifing code stubs that has read, write and execute permissions
+/// the segment for the self (dyld) modifying code stubs that has read, write and execute permissions
 pub const SEG_IMPORT: &str = "__IMPORT";
 
 /*
@@ -1181,7 +1181,7 @@ pub struct FvmlibCommand<E: Endian> {
 }
 
 /*
- * Dynamicly linked shared libraries are identified by two things.  The
+ * Dynamically linked shared libraries are identified by two things.  The
  * pathname (the name of the library as found for execution), and the
  * compatibility version number.  The pathname must match and the compatibility
  * number in the user of the library must be greater than or equal to the
@@ -1265,7 +1265,7 @@ pub struct SubClientCommand<E: Endian> {
  * A dynamically linked shared library may be a sub_umbrella of an umbrella
  * framework.  If so it will be linked with "-sub_umbrella umbrella_name" where
  * Where "umbrella_name" is the name of the sub_umbrella framework.  When
- * staticly linking when -twolevel_namespace is in effect a twolevel namespace
+ * statically linking when -twolevel_namespace is in effect a twolevel namespace
  * umbrella framework will only cause its subframeworks and those frameworks
  * listed as sub_umbrella frameworks to be implicited linked in.  Any other
  * dependent dynamic libraries will not be linked it when -twolevel_namespace
@@ -1289,7 +1289,7 @@ pub struct SubUmbrellaCommand<E: Endian> {
  * A dynamically linked shared library may be a sub_library of another shared
  * library.  If so it will be linked with "-sub_library library_name" where
  * Where "library_name" is the name of the sub_library shared library.  When
- * staticly linking when -twolevel_namespace is in effect a twolevel namespace
+ * statically linking when -twolevel_namespace is in effect a twolevel namespace
  * shared library will only cause its subframeworks and those frameworks
  * listed as sub_umbrella frameworks and libraries listed as sub_libraries to
  * be implicited linked in.  Any other dependent dynamic libraries will not be
@@ -1630,7 +1630,7 @@ pub struct DysymtabCommand<E: Endian> {
     /*
      * All the local relocation entries are grouped together (they are not
      * grouped by their module since they are only used if the object is moved
-     * from it staticly link edited address).
+     * from it statically link edited address).
      */
     /// offset to local relocation entries
     pub locreloff: U32<E>,
@@ -1640,7 +1640,7 @@ pub struct DysymtabCommand<E: Endian> {
 
 /*
  * An indirect symbol table entry is simply a 32bit index into the symbol table
- * to the symbol that the pointer or stub is refering to.  Unless it is for a
+ * to the symbol that the pointer or stub is referring to.  Unless it is for a
  * non-lazy symbol pointer section for a defined symbol which strip(1) as
  * removed.  In which case it has the value INDIRECT_SYMBOL_LOCAL.  If the
  * symbol was also absolute INDIRECT_SYMBOL_ABS is or'ed with that.
@@ -2025,7 +2025,7 @@ pub struct DyldInfoCommand<E: Endian> {
      *    <seg-index, seg-offset, type, symbol-library-ordinal, symbol-name, addend>
      * The opcodes are a compressed way to encode the table by only
      * encoding when a column changes.  In addition simple patterns
-     * like for runs of pointers initialzed to the same value can be
+     * like for runs of pointers initialized to the same value can be
      * encoded in a few bytes.
      */
     /// file offset to binding info
@@ -2486,7 +2486,7 @@ pub const REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY: u16 = 5;
 /*
  * To simplify stripping of objects that use are used with the dynamic link
  * editor, the static link editor marks the symbols defined an object that are
- * referenced by a dynamicly bound object (dynamic shared libraries, bundles).
+ * referenced by a dynamically bound object (dynamic shared libraries, bundles).
  * With this marking strip knows not to strip these symbols.
  */
 pub const REFERENCED_DYNAMICALLY: u16 = 0x0010;
@@ -2561,9 +2561,9 @@ pub const N_WEAK_REF: u16 = 0x0040;
  * The N_WEAK_DEF bit of the n_desc field indicates to the static and dynamic
  * linkers that the symbol definition is weak, allowing a non-weak symbol to
  * also be used which causes the weak definition to be discared.  Currently this
- * is only supported for symbols in coalesed sections.
+ * is only supported for symbols in coalesced sections.
  */
-/// coalesed symbol is a weak definition
+/// coalesced symbol is a weak definition
 pub const N_WEAK_DEF: u16 = 0x0080;
 
 /*
@@ -2575,7 +2575,7 @@ pub const N_REF_TO_WEAK: u16 = 0x0080;
 
 /*
  * The N_ARM_THUMB_DEF bit of the n_desc field indicates that the symbol is
- * a defintion of a Thumb function.
+ * a definition of a Thumb function.
  */
 /// symbol is a Thumb function (ARM)
 pub const N_ARM_THUMB_DEF: u16 = 0x0008;
@@ -2619,7 +2619,7 @@ pub const N_ALT_ENTRY: u16 = 0x0200;
  *
  * where n_type is the defined constant and not listed in the comment.  Other
  * fields not listed are zero. n_sect is the section ordinal the entry is
- * refering to.
+ * referring to.
  */
 /// global symbol: name,,NO_SECT,type,0
 pub const N_GSYM: u8 = 0x20;
@@ -2840,7 +2840,7 @@ pub const R_ABS: u8 = 0;
 /*
  * To make scattered loading by the link editor work correctly "local"
  * relocation entries can't be used when the item to be relocated is the value
- * of a symbol plus an offset (where the resulting expresion is outside the
+ * of a symbol plus an offset (where the resulting expression is outside the
  * block the link editor is moving, a blocks are divided at symbol addresses).
  * In this case. where the item is a symbol value plus offset, the link editor
  * needs to know more than just the section the symbol was defined.  What is
@@ -2851,7 +2851,7 @@ pub const R_ABS: u8 = 0;
  * there is a non-zero offset added to a symbol.  The "external" and "local"
  * relocation entries remain unchanged.
  *
- * The implemention is quite messy given the compatibility with the existing
+ * The implementation is quite messy given the compatibility with the existing
  * relocation entry format.  The ASSUMPTION is that a section will never be
  * bigger than 2**24 - 1 (0x00ffffff or 16,777,215) bytes.  This assumption
  * allows the r_address (which is really an offset) to fit in 24 bits and high
@@ -2882,7 +2882,7 @@ pub struct ScatteredRelocationInfo {
     pub r_length: u8,
     /// was relocated pc relative already
     pub r_pcrel: bool,
-    /// the value the item to be relocated is refering to (without any offset added)
+    /// the value the item to be relocated is referring to (without any offset added)
     pub r_value: u32,
 }
 
@@ -2904,7 +2904,7 @@ impl ScatteredRelocationInfo {
 
 /*
  * Relocation types used in a generic implementation.  Relocation entries for
- * normal things use the generic relocation as discribed above and their r_type
+ * normal things use the generic relocation as described above and their r_type
  * is GENERIC_RELOC_VANILLA (a value of zero).
  *
  * Another type of generic relocation, GENERIC_RELOC_SECTDIFF, is to support
@@ -2920,7 +2920,7 @@ impl ScatteredRelocationInfo {
  * using the GENERIC_RELOC_PB_LA_PTR r_type.  This is a scattered relocation
  * entry where the r_value feild is the value of the lazy pointer not prebound.
  */
-/// generic relocation as discribed above
+/// generic relocation as described above
 pub const GENERIC_RELOC_VANILLA: u8 = 0;
 /// Only follows a GENERIC_RELOC_SECTDIFF
 pub const GENERIC_RELOC_PAIR: u8 = 1;
@@ -2935,13 +2935,13 @@ pub const GENERIC_RELOC_TLV: u8 = 5;
 
 /*
  * Relocation types used in the arm implementation.  Relocation entries for
- * things other than instructions use the same generic relocation as discribed
+ * things other than instructions use the same generic relocation as described
  * in <mach-o/reloc.h> and their r_type is ARM_RELOC_VANILLA, one of the
  * *_SECTDIFF or the *_PB_LA_PTR types.  The rest of the relocation types are
  * for instructions.  Since they are for instructions the r_address field
- * indicates the 32 bit instruction that the relocation is to be preformed on.
+ * indicates the 32 bit instruction that the relocation is to be performed on.
  */
-/// generic relocation as discribed above
+/// generic relocation as described above
 pub const ARM_RELOC_VANILLA: u8 = 0;
 /// the second relocation entry of a pair
 pub const ARM_RELOC_PAIR: u8 = 1;
@@ -3027,10 +3027,10 @@ pub const ARM64_RELOC_AUTHENTICATED_POINTER: u8 = 11;
 
 /*
  * Relocation types used in the ppc implementation.  Relocation entries for
- * things other than instructions use the same generic relocation as discribed
+ * things other than instructions use the same generic relocation as described
  * above and their r_type is RELOC_VANILLA.  The rest of the relocation types
  * are for instructions.  Since they are for instructions the r_address field
- * indicates the 32 bit instruction that the relocation is to be preformed on.
+ * indicates the 32 bit instruction that the relocation is to be performed on.
  * The fields r_pcrel and r_length are ignored for non-RELOC_VANILLA r_types
  * except for PPC_RELOC_BR14.
  *
@@ -3040,7 +3040,7 @@ pub const ARM64_RELOC_AUTHENTICATED_POINTER: u8 = 11;
  * the value of the Y-bit if the sign of the displacement changes for non-branch
  * always conditions.
  */
-/// generic relocation as discribed above
+/// generic relocation as described above
 pub const PPC_RELOC_VANILLA: u8 = 0;
 /// the second relocation entry of a pair
 pub const PPC_RELOC_PAIR: u8 = 1;
@@ -3053,7 +3053,7 @@ pub const PPC_RELOC_HI16: u8 = 4;
 /// a PAIR follows with the high half
 pub const PPC_RELOC_LO16: u8 = 5;
 /// Same as the RELOC_HI16 except the low 16 bits and the high 16 bits are added together
-/// with the low 16 bits sign extened first.  This means if bit 15 of the low 16 bits is
+/// with the low 16 bits sign extended first.  This means if bit 15 of the low 16 bits is
 /// set the high 16 bits stored in the instruction will be adjusted.
 pub const PPC_RELOC_HA16: u8 = 6;
 /// Same as the LO16 except that the low 2 bits are not stored in the instruction and are

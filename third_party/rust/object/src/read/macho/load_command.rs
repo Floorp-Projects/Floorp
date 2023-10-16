@@ -1,10 +1,11 @@
 use core::marker::PhantomData;
+use core::mem;
 
 use crate::endian::Endian;
 use crate::macho;
 use crate::pod::Pod;
 use crate::read::macho::{MachHeader, SymbolTable};
-use crate::read::{Bytes, ReadError, ReadRef, Result, StringTable};
+use crate::read::{Bytes, Error, ReadError, ReadRef, Result, StringTable};
 
 /// An iterator over the load commands of a `MachHeader`.
 #[derive(Debug, Default, Clone, Copy)]
@@ -34,6 +35,9 @@ impl<'data, E: Endian> LoadCommandIterator<'data, E> {
             .read_error("Invalid Mach-O load command header")?;
         let cmd = header.cmd.get(self.endian);
         let cmdsize = header.cmdsize.get(self.endian) as usize;
+        if cmdsize < mem::size_of::<macho::LoadCommand<E>>() {
+            return Err(Error("Invalid Mach-O load command size"));
+        }
         let data = self
             .data
             .read_bytes(cmdsize)
@@ -349,5 +353,21 @@ impl<E: Endian> macho::SymtabCommand<E> {
             .read_error("Invalid Mach-O string table length")?;
         let strings = StringTable::new(data, str_start, str_end);
         Ok(SymbolTable::new(symbols, strings))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::LittleEndian;
+
+    #[test]
+    fn cmd_size_invalid() {
+        let mut commands = LoadCommandIterator::new(LittleEndian, &[0; 8], 10);
+        assert!(commands.next().is_err());
+        let mut commands = LoadCommandIterator::new(LittleEndian, &[0, 0, 0, 0, 7, 0, 0, 0, 0], 10);
+        assert!(commands.next().is_err());
+        let mut commands = LoadCommandIterator::new(LittleEndian, &[0, 0, 0, 0, 8, 0, 0, 0, 0], 10);
+        assert!(commands.next().is_ok());
     }
 }

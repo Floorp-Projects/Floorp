@@ -8,7 +8,7 @@ fn coff_extended_relocations() {
     let path_to_obj: PathBuf = ["testfiles", "coff", "relocs_overflow.o"].iter().collect();
     let contents = fs::read(&path_to_obj).expect("Could not read relocs_overflow.o");
     let file =
-        read::coff::CoffFile::parse(&contents[..]).expect("Could not parse relocs_overflow.o");
+        read::coff::CoffFile::<_>::parse(&contents[..]).expect("Could not parse relocs_overflow.o");
     let code_section = file
         .section_by_name(".text")
         .expect("Could not find .text section in relocs_overflow.o");
