@@ -193,7 +193,7 @@ index 67c5603364..8adbedda4d 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index a9217400fe..1c3084a074 100644
+index ca5a869a40..9a60e912ec 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -310,7 +310,7 @@ index a9217400fe..1c3084a074 100644
  
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
-@@ -899,6 +927,7 @@ rtc_source_set("refcountedbase") {
+@@ -900,6 +928,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -318,7 +318,7 @@ index a9217400fe..1c3084a074 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -917,6 +946,7 @@ rtc_library("ice_transport_factory") {
+@@ -918,6 +947,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -698,7 +698,7 @@ index 01aa2b251c..0d09670239 100644
  
  namespace cricket {
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index bd5b513e91..3a5f20bc30 100644
+index 88aa279470..5fee8a2fb0 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -31,19 +31,6 @@
