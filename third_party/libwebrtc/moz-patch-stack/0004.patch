@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a18
  2 files changed, 5 insertions(+)
 
 diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index 9627076eea..381d1021c4 100644
+index a4e3e897fd..e777a45f92 100644
 --- a/modules/desktop_capture/desktop_capture_types.h
 +++ b/modules/desktop_capture/desktop_capture_types.h
 @@ -13,6 +13,10 @@
@@ -28,7 +28,7 @@ index 9627076eea..381d1021c4 100644
 +
  namespace webrtc {
  
- enum class CaptureType { kWindow, kScreen };
+ enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
 diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
 index e207598d68..58485f28e9 100644
 --- a/modules/video_capture/video_capture.h

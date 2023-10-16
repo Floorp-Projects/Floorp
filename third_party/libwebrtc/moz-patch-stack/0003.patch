@@ -497,7 +497,7 @@ index 9f78aca6e2..115bfcf97b 100644
    }
    max_extrapolation_samples_ = 7 * fs_hz / 100;
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index fd884f13ff..f39852b58e 100644
+index 9c7ecc78f4..2c9c419bcd 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
 @@ -82,6 +82,7 @@ class RTC_EXPORT DesktopCapturer {
