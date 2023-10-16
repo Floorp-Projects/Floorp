@@ -140,6 +140,9 @@ class MediaChannelUtil {
                  size_t length,
                  const webrtc::PacketOptions& options) override;
     bool SendRtcp(const uint8_t* packet, size_t length) override;
+    bool SendRtp(rtc::ArrayView<const uint8_t> packet,
+                 const webrtc::PacketOptions& options) override;
+    bool SendRtcp(rtc::ArrayView<const uint8_t> packet) override;
 
     // Not implementation of webrtc::Transport
     void SetInterface(MediaChannelNetworkInterface* iface);
