@@ -419,6 +419,53 @@ if (is_ios || is_mac) {
           "../rtc_base/system:gcd_helpers",
         ]
       }
+
+      rtc_library("opengl_objc") {
+        sources = [
+          "objc/components/renderer/opengl/RTCDefaultShader.h",
+          "objc/components/renderer/opengl/RTCDefaultShader.mm",
+          "objc/components/renderer/opengl/RTCI420TextureCache.h",
+          "objc/components/renderer/opengl/RTCI420TextureCache.mm",
+          "objc/components/renderer/opengl/RTCNV12TextureCache.h",
+          "objc/components/renderer/opengl/RTCNV12TextureCache.m",
+          "objc/components/renderer/opengl/RTCOpenGLDefines.h",
+          "objc/components/renderer/opengl/RTCShader.h",
+          "objc/components/renderer/opengl/RTCShader.mm",
+          "objc/components/renderer/opengl/RTCVideoViewShading.h",
+        ]
+        frameworks = [
+          "CoreVideo.framework",
+          "GLKit.framework",
+          "OpenGLES.framework",
+          "QuartzCore.framework",
+        ]
+
+        # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
+        # workaround.
+        defines = [ "GLES_SILENCE_DEPRECATION" ]
+
+        deps = [
+          ":base_objc",
+          ":helpers_objc",
+          ":mediaconstraints_objc",
+          ":native_video",
+          ":videoframebuffer_objc",
+          ":videosource_objc",
+          "../api:libjingle_peerconnection_api",
+          "../api/video:video_frame",
+          "../api/video:video_rtp_headers",
+          "../common_video",
+          "../media:rtc_media_base",
+          "../rtc_base:checks",
+          "../rtc_base:logging",
+        ]
+        absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+
+        configs += [
+          "..:common_objc",
+          ":used_from_extension",
+        ]
+      }
     }
 
     rtc_source_set("audio_device_api_objc") {
@@ -550,62 +597,6 @@ if (is_ios || is_mac) {
     }
 
     if (!build_with_mozilla) {
-    rtc_library("opengl_objc") {
-      sources = [
-        "objc/components/renderer/opengl/RTCDefaultShader.h",
-        "objc/components/renderer/opengl/RTCDefaultShader.mm",
-        "objc/components/renderer/opengl/RTCI420TextureCache.h",
-        "objc/components/renderer/opengl/RTCI420TextureCache.mm",
-        "objc/components/renderer/opengl/RTCOpenGLDefines.h",
-        "objc/components/renderer/opengl/RTCShader.h",
-        "objc/components/renderer/opengl/RTCShader.mm",
-        "objc/components/renderer/opengl/RTCVideoViewShading.h",
-      ]
-      frameworks = [ "CoreVideo.framework" ]
-      if (is_ios) {
-        sources += [
-          "objc/components/renderer/opengl/RTCNV12TextureCache.h",
-          "objc/components/renderer/opengl/RTCNV12TextureCache.m",
-        ]
-        frameworks += [
-          "GLKit.framework",
-          "OpenGLES.framework",
-          "QuartzCore.framework",
-        ]
-      } else if (is_mac) {
-        frameworks += [
-          "CoreMedia.framework",
-          "OpenGL.framework",
-        ]
-      }
-
-      # TODO(bugs.webrtc.org/12937): Remove OpenGL deprecation warning
-      # workaround.
-      defines = [ "GLES_SILENCE_DEPRECATION" ]
-
-      deps = [
-        ":base_objc",
-        ":helpers_objc",
-        ":mediaconstraints_objc",
-        ":native_video",
-        ":videoframebuffer_objc",
-        ":videosource_objc",
-        "../api:libjingle_peerconnection_api",
-        "../api/video:video_frame",
-        "../api/video:video_rtp_headers",
-        "../common_video",
-        "../media:rtc_media_base",
-        "../rtc_base:checks",
-        "../rtc_base:logging",
-      ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-
-      configs += [
-        "..:common_objc",
-        ":used_from_extension",
-      ]
-    }
-
     rtc_library("metal_objc") {
       visibility = [ "*" ]
       allow_poison = [
