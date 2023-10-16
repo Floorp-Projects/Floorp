@@ -1274,7 +1274,7 @@ void Call::OnSentPacket(const rtc::SentPacket& sent_packet) {
   // on a ProcessThread. This is alright as is since we forward the call to
   // implementations that either just do a PostTask or use locking.
   video_send_delay_stats_->OnSentPacket(sent_packet.packet_id,
-                                        clock_->TimeInMilliseconds());
+                                        clock_->CurrentTime());
   transport_send_->OnSentPacket(sent_packet);
 }
 

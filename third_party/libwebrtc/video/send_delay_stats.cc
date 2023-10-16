@@ -18,8 +18,8 @@
 namespace webrtc {
 namespace {
 // Packet with a larger delay are removed and excluded from the delay stats.
-// Set to larger than max histogram delay which is 10000.
-const int64_t kMaxSentPacketDelayMs = 11000;
+// Set to larger than max histogram delay which is 10 seconds.
+constexpr TimeDelta kMaxSentPacketDelay = TimeDelta::Seconds(11);
 const size_t kMaxPacketMapSize = 2000;
 
 // Limit for the maximum number of streams to calculate stats for.
@@ -70,25 +70,24 @@ AvgCounter* SendDelayStats::GetSendDelayCounter(uint32_t ssrc) {
 }
 
 void SendDelayStats::OnSendPacket(uint16_t packet_id,
-                                  int64_t capture_time_ms,
+                                  Timestamp capture_time,
                                   uint32_t ssrc) {
   // Packet sent to transport.
   MutexLock lock(&mutex_);
   if (ssrcs_.find(ssrc) == ssrcs_.end())
     return;
 
-  int64_t now = clock_->TimeInMilliseconds();
+  Timestamp now = clock_->CurrentTime();
   RemoveOld(now, &packets_);
 
   if (packets_.size() > kMaxPacketMapSize) {
     ++num_skipped_packets_;
     return;
   }
-  packets_.insert(
-      std::make_pair(packet_id, Packet(ssrc, capture_time_ms, now)));
+  packets_.insert(std::make_pair(packet_id, Packet(ssrc, capture_time, now)));
 }
 
-bool SendDelayStats::OnSentPacket(int packet_id, int64_t time_ms) {
+bool SendDelayStats::OnSentPacket(int packet_id, Timestamp time) {
   // Packet leaving socket.
   if (packet_id == -1)
     return false;
@@ -100,16 +99,16 @@ bool SendDelayStats::OnSentPacket(int packet_id, int64_t time_ms) {
 
   // TODO(asapersson): Remove SendSideDelayUpdated(), use capture -> sent.
   // Elapsed time from send (to transport) -> sent (leaving socket).
-  int diff_ms = time_ms - it->second.send_time_ms;
-  GetSendDelayCounter(it->second.ssrc)->Add(diff_ms);
+  TimeDelta diff = time - it->second.send_time;
+  GetSendDelayCounter(it->second.ssrc)->Add(diff.ms());
   packets_.erase(it);
   return true;
 }
 
-void SendDelayStats::RemoveOld(int64_t now, PacketMap* packets) {
+void SendDelayStats::RemoveOld(Timestamp now, PacketMap* packets) {
   while (!packets->empty()) {
     auto it = packets->begin();
-    if (now - it->second.capture_time_ms < kMaxSentPacketDelayMs)
+    if (now - it->second.capture_time < kMaxSentPacketDelay)
       break;
 
     packets->erase(it);
