@@ -190,14 +190,20 @@ if (!build_with_chromium) {
     sources = [
       "include/test_audio_device.cc",
       "include/test_audio_device.h",
+      "test_audio_device_impl.cc",
+      "test_audio_device_impl.h",
     ]
     deps = [
       ":audio_device_api",
+      ":audio_device_buffer",
       ":audio_device_default",
+      ":audio_device_generic",
+      ":audio_device_impl",
       "../../api:array_view",
       "../../api:make_ref_counted",
       "../../api:scoped_refptr",
       "../../api/task_queue",
+      "../../api/units:time_delta",
       "../../common_audio",
       "../../rtc_base:buffer",
       "../../rtc_base:checks",
@@ -212,7 +218,10 @@ if (!build_with_chromium) {
       "../../rtc_base/synchronization:mutex",
       "../../rtc_base/task_utils:repeating_task",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
 
@@ -275,6 +284,7 @@ if (!build_with_mozilla) { # See Bug 1820869.
     "../../api:scoped_refptr",
     "../../api:sequence_checker",
     "../../api/task_queue",
+    "../../api/units:time_delta",
     "../../common_audio",
     "../../common_audio:common_audio_c",
     "../../rtc_base:buffer",
@@ -300,6 +310,7 @@ if (!build_with_mozilla) { # See Bug 1820869.
   absl_deps = [
     "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings:strings",
+    "//third_party/abseil-cpp/absl/types:optional",
   ]
   if (rtc_include_internal_audio_device && is_ios) {
     deps += [ "../../sdk:audio_device" ]
@@ -460,10 +471,12 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
     sources = [
       "fine_audio_buffer_unittest.cc",
       "include/test_audio_device_unittest.cc",
+      "test_audio_device_impl_test.cc",
     ]
     deps = [
       ":audio_device",
       ":audio_device_buffer",
+      ":audio_device_generic",
       ":audio_device_impl",
       ":mock_audio_device",
       ":test_audio_device_module",
@@ -472,6 +485,8 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
       "../../api:sequence_checker",
       "../../api/task_queue",
       "../../api/task_queue:default_task_queue_factory",
+      "../../api/units:time_delta",
+      "../../api/units:timestamp",
       "../../common_audio",
       "../../rtc_base:buffer",
       "../../rtc_base:checks",
@@ -486,6 +501,7 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
       "../../system_wrappers",
       "../../test:fileutils",
       "../../test:test_support",
+      "../../test/time_controller",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/strings",

@@ -29,9 +29,10 @@ namespace webrtc {
 // This is test API and is in development, so it can be changed/removed without
 // notice.
 
-// TestAudioDeviceModule implements an AudioDevice module that can act both as a
-// capturer and a renderer. It will use 10ms audio frames.
-class TestAudioDeviceModule : public AudioDeviceModule {
+// This class exists for historical reasons. For now it only contains static
+// methods to create test AudioDeviceModule. Implementation details of that
+// module are considered private. This class isn't intended to be instantiated.
+class TestAudioDeviceModule {
  public:
   // Returns the number of samples that Capturers and Renderers with this
   // sampling frequency will work with every time Capture or Render is called.
@@ -72,8 +73,6 @@ class TestAudioDeviceModule : public AudioDeviceModule {
 
     virtual void SetMaxAmplitude(int16_t amplitude) = 0;
   };
-
-  ~TestAudioDeviceModule() override {}
 
   // Creates a new TestAudioDeviceModule. When capturing or playing, 10 ms audio
   // frames will be processed every 10ms / `speed`.
@@ -132,19 +131,8 @@ class TestAudioDeviceModule : public AudioDeviceModule {
       int sampling_frequency_in_hz,
       int num_channels = 1);
 
-  int32_t Init() override = 0;
-  int32_t RegisterAudioCallback(AudioTransport* callback) override = 0;
-
-  int32_t StartPlayout() override = 0;
-  int32_t StopPlayout() override = 0;
-  int32_t StartRecording() override = 0;
-  int32_t StopRecording() override = 0;
-
-  bool Playing() const override = 0;
-  bool Recording() const override = 0;
-
-  // Blocks forever until the Recorder stops producing data.
-  virtual void WaitForRecordingEnd() = 0;
+ private:
+  TestAudioDeviceModule() = default;
 };
 
 }  // namespace webrtc
