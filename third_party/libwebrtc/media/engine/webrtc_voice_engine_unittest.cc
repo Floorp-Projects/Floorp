@@ -3255,9 +3255,7 @@ TEST_P(WebRtcVoiceEngineTestFake, TestSetDscpOptions) {
 
   // Packets should also self-identify their dscp in PacketOptions.
   const uint8_t kData[10] = {0};
-  EXPECT_TRUE(SendImplFromPointer(channel.get())
-                  ->transport()
-                  ->SendRtcp(kData, sizeof(kData)));
+  EXPECT_TRUE(SendImplFromPointer(channel.get())->transport()->SendRtcp(kData));
   EXPECT_EQ(rtc::DSCP_CS1, network_interface.options().dscp);
   channel->SetInterface(nullptr);
 

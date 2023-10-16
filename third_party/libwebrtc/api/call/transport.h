@@ -48,6 +48,8 @@ class Transport {
   // New style functions. Default implementations are to accomodate
   // subclasses that haven't been converted to new style yet.
   // TODO(bugs.webrtc.org/14870): Deprecate and remove old functions.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   virtual bool SendRtp(rtc::ArrayView<const uint8_t> packet,
                        const PacketOptions& options) {
     return SendRtp(packet.data(), packet.size(), options);
@@ -55,11 +57,17 @@ class Transport {
   virtual bool SendRtcp(rtc::ArrayView<const uint8_t> packet) {
     return SendRtcp(packet.data(), packet.size());
   }
+#pragma clang diagnostic pop
   // Old style functions.
-  virtual bool SendRtp(const uint8_t* packet,
-                       size_t length,
-                       const PacketOptions& options) = 0;
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) = 0;
+  [[deprecated("Use ArrayView version")]] virtual bool
+  SendRtp(const uint8_t* packet, size_t length, const PacketOptions& options) {
+    return SendRtp(rtc::MakeArrayView(packet, length), options);
+  }
+  [[deprecated("Use ArrayView version")]] virtual bool SendRtcp(
+      const uint8_t* packet,
+      size_t length) {
+    return SendRtcp(rtc::MakeArrayView(packet, length));
+  }
 
  protected:
   virtual ~Transport() {}
