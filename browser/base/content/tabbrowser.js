@@ -3151,7 +3151,8 @@
         // Vetical tab has a bug. 3 closed tabs are restored when Floorp is started.
         // Destroy 3 tabs for now.
         let bugOccured = Services.prefs.getBoolPref("floorp.tabs.verticaltab.getTabBug", false);
-        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 2 && tabDataList.length > 3 && bugOccured) {
+        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 3 && tabDataList.length > 3 && bugOccured) {
+          console.info("Floorp: Vertical tab has a bug. 3 closed tabs are restored when Floorp is started. Destroy 3 tabs for now.");
           continue;
         }
 
