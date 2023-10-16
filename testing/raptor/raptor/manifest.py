@@ -257,8 +257,7 @@ def write_test_settings_json(args, test_details, oskey):
 
     # if Gecko profiling is enabled, write profiling settings for webext
     if test_details.get("gecko_profile", False):
-        threads = ["GeckoMain", "Compositor"]
-        threads.extend(["Renderer", "WR"])
+        threads = ["GeckoMain", "Compositor", "Renderer"]
 
         if test_details.get("gecko_profile_threads"):
             # pylint --py3k: W1639
