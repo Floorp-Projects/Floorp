@@ -24,7 +24,7 @@ namespace webrtc {
 namespace {
 constexpr uint32_t kTimestampTicksPerMs = 90;
 constexpr int kSendSideDelayWindowMs = 1000;
-constexpr int kBitrateStatisticsWindowMs = 1000;
+constexpr TimeDelta kBitrateStatisticsWindow = TimeDelta::Seconds(1);
 constexpr size_t kRtpSequenceNumberMapMaxEntries = 1 << 13;
 
 }  // namespace
@@ -82,8 +82,7 @@ DEPRECATED_RtpSenderEgress::DEPRECATED_RtpSenderEgress(
       timestamp_offset_(0),
       max_delay_it_(send_delays_.end()),
       sum_delays_ms_(0),
-      send_rates_(kNumMediaTypes,
-                  {kBitrateStatisticsWindowMs, RateStatistics::kBpsScale}),
+      send_rates_(kNumMediaTypes, BitrateTracker(kBitrateStatisticsWindow)),
       rtp_sequence_number_map_(need_rtp_packet_infos_
                                    ? std::make_unique<RtpSequenceNumberMap>(
                                          kRtpSequenceNumberMapMaxEntries)
@@ -221,12 +220,11 @@ RtpSendRates DEPRECATED_RtpSenderEgress::GetSendRates() const {
 }
 
 RtpSendRates DEPRECATED_RtpSenderEgress::GetSendRatesLocked() const {
-  const int64_t now_ms = clock_->TimeInMilliseconds();
+  const Timestamp now = clock_->CurrentTime();
   RtpSendRates current_rates;
   for (size_t i = 0; i < kNumMediaTypes; ++i) {
     RtpPacketMediaType type = static_cast<RtpPacketMediaType>(i);
-    current_rates[type] =
-        DataRate::BitsPerSec(send_rates_[i].Rate(now_ms).value_or(0));
+    current_rates[type] = send_rates_[i].Rate(now).value_or(DataRate::Zero());
   }
   return current_rates;
 }
@@ -453,7 +451,7 @@ void DEPRECATED_RtpSenderEgress::UpdateRtpStats(const RtpPacketToSend& packet) {
 
   RTC_DCHECK(packet.packet_type().has_value());
   send_rates_[static_cast<size_t>(*packet.packet_type())].Update(packet.size(),
-                                                                 now.ms());
+                                                                 now);
 
   if (rtp_stats_callback_) {
     rtp_stats_callback_->DataCountersUpdated(*counters, packet.Ssrc());

@@ -47,8 +47,7 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
     : ssrc_(ssrc),
       clock_(clock),
       delta_internal_unix_epoch_(UnixEpochDelta(*clock_)),
-      incoming_bitrate_(kStatisticsProcessInterval.ms(),
-                        RateStatistics::kBpsScale),
+      incoming_bitrate_(/*max_window_size=*/kStatisticsProcessInterval),
       max_reordering_threshold_(max_reordering_threshold),
       enable_retransmit_detection_(false),
       cumulative_loss_is_capped_(false),
@@ -117,7 +116,7 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   RTC_DCHECK_EQ(ssrc_, packet.Ssrc());
   Timestamp now = clock_->CurrentTime();
 
-  incoming_bitrate_.Update(packet.size(), now.ms());
+  incoming_bitrate_.Update(packet.size(), now);
   receive_counters_.transmitted.AddPacket(packet);
   --cumulative_loss_;
 
@@ -310,7 +309,9 @@ StreamDataCounters StreamStatisticianImpl::GetReceiveStreamDataCounters()
 }
 
 uint32_t StreamStatisticianImpl::BitrateReceived() const {
-  return incoming_bitrate_.Rate(clock_->TimeInMilliseconds()).value_or(0);
+  return incoming_bitrate_.Rate(clock_->CurrentTime())
+      .value_or(DataRate::Zero())
+      .bps<uint32_t>();
 }
 
 bool StreamStatisticianImpl::IsRetransmitOfOldPacket(
