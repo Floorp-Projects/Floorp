@@ -1300,7 +1300,7 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
 
   return it->second->SetRtpParameters(parameters, std::move(callback));
 }
-absl::optional<VideoCodec> WebRtcVideoSendChannel::GetSendCodec() {
+absl::optional<Codec> WebRtcVideoSendChannel::GetSendCodec() const {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (!send_codec()) {
     RTC_LOG(LS_VERBOSE) << "GetSendCodec: No send codec set.";

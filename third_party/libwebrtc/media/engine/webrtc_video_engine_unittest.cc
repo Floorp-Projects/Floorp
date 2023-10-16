@@ -2539,7 +2539,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderFallback) {
   parameters.codecs.push_back(GetEngineCodec("VP8"));
   EXPECT_TRUE(channel_->SetSendParameters(parameters));
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP9", codec->name);
 
@@ -2547,14 +2547,14 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderFallback) {
   // the current thread), hence the ProcessMessages call.
   SendImpl()->RequestEncoderFallback();
   time_controller_.AdvanceTime(kFrameDuration);
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 
   // No other codec to fall back to, keep using VP8.
   SendImpl()->RequestEncoderFallback();
   time_controller_.AdvanceTime(kFrameDuration);
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 }
@@ -2565,7 +2565,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchDefaultFallback) {
   parameters.codecs.push_back(GetEngineCodec("VP8"));
   EXPECT_TRUE(channel_->SetSendParameters(parameters));
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP9", codec->name);
 
@@ -2577,7 +2577,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchDefaultFallback) {
 
   // Requested encoder is not available. Default fallback is allowed. Switch to
   // the next negotiated codec, VP8.
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 }
@@ -2591,7 +2591,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchStrictPreference) {
   parameters.codecs.push_back(vp9);
   EXPECT_TRUE(channel_->SetSendParameters(parameters));
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 
@@ -2602,7 +2602,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchStrictPreference) {
 
   // VP9 profile_id=1 is not available. Default fallback is not allowed. Switch
   // is not performed.
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 
@@ -2612,7 +2612,7 @@ TEST_F(WebRtcVideoChannelBaseTest, RequestEncoderSwitchStrictPreference) {
   time_controller_.AdvanceTime(kFrameDuration);
 
   // VP9 profile_id=0 is available. Switch encoder.
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP9", codec->name);
 }
@@ -4281,7 +4281,7 @@ TEST_F(WebRtcVideoChannelTest, SetDefaultSendCodecs) {
   AssignDefaultAptRtxTypes();
   ASSERT_TRUE(channel_->SetSendParameters(send_parameters_));
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_TRUE(codec->Matches(engine_.send_codecs()[0], &field_trials_));
 
@@ -5036,7 +5036,7 @@ TEST_F(WebRtcVideoChannelTest, SetSendCodecsWithMaxQuantization) {
   EXPECT_EQ(atoi(kMaxQuantization),
             AddSendStream()->GetVideoStreams().back().max_qp);
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ(kMaxQuantization, codec->params[kCodecParamMaxQuantization]);
 }
@@ -9751,7 +9751,7 @@ TEST_F(WebRtcVideoChannelBaseTest, EncoderSelectorSwitchCodec) {
   EXPECT_TRUE(channel_->SetSendParameters(parameters));
   channel_->SetSend(true);
 
-  absl::optional<VideoCodec> codec = channel_->GetSendCodec();
+  absl::optional<VideoCodec> codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP8", codec->name);
 
@@ -9762,7 +9762,7 @@ TEST_F(WebRtcVideoChannelBaseTest, EncoderSelectorSwitchCodec) {
   channel_->SetEncoderSelector(kSsrc, &encoder_selector);
   time_controller_.AdvanceTime(kFrameDuration);
 
-  codec = channel_->GetSendCodec();
+  codec = send_channel_->GetSendCodec();
   ASSERT_TRUE(codec);
   EXPECT_EQ("VP9", codec->name);
 

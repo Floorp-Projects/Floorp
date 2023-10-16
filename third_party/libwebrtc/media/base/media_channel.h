@@ -189,6 +189,9 @@ class MediaSendChannelInterface {
   virtual VoiceMediaSendChannelInterface* AsVoiceSendChannel() = 0;
   virtual cricket::MediaType media_type() const = 0;
 
+  // Gets the currently set codecs/payload types to be used for outgoing media.
+  virtual absl::optional<Codec> GetSendCodec() const = 0;
+
   // Creates a new outgoing media stream with SSRCs and CNAME as described
   // by sp.
   virtual bool AddSendStream(const StreamParams& sp) = 0;
@@ -927,8 +930,6 @@ struct VideoRecvParameters : RtpParameters<VideoCodec> {};
 class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
  public:
   virtual bool SetSendParameters(const VideoSendParameters& params) = 0;
-  // Gets the currently set codecs/payload types to be used for outgoing media.
-  virtual absl::optional<VideoCodec> GetSendCodec() = 0;
   // Starts or stops transmission (and potentially capture) of local video.
   virtual bool SetSend(bool send) = 0;
   // Configure stream for sending and register a source.

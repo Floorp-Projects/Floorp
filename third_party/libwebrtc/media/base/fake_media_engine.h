@@ -423,6 +423,7 @@ class FakeVoiceMediaChannel : public RtpHelper<VoiceMediaChannel> {
   bool SendCodecHasNack() const override { return false; }
   void SetSendCodecChangedCallback(
       absl::AnyInvocable<void()> callback) override {}
+  absl::optional<Codec> GetSendCodec() const override;
 
  private:
   class VoiceChannelAudioSink : public AudioSource::Sink {
@@ -489,7 +490,7 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   bool AddSendStream(const StreamParams& sp) override;
   bool RemoveSendStream(uint32_t ssrc) override;
 
-  absl::optional<VideoCodec> GetSendCodec() override;
+  absl::optional<Codec> GetSendCodec() const override;
   bool SetSink(uint32_t ssrc,
                rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
   void SetDefaultSink(

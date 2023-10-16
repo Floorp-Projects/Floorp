@@ -218,6 +218,8 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
   }
   VoiceMediaSendChannelInterface* AsVoiceSendChannel() override { return this; }
 
+  absl::optional<Codec> GetSendCodec() const override;
+
   // Functions imported from MediaChannelUtil
   void SetInterface(MediaChannelNetworkInterface* iface) override {
     MediaChannelUtil::SetInterface(iface);
