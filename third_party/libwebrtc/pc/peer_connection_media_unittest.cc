@@ -43,6 +43,7 @@
 #include "api/task_queue/task_queue_factory.h"
 #include "media/base/codec.h"
 #include "media/base/fake_media_engine.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
 #include "media/base/stream_params.h"
@@ -50,9 +51,11 @@
 #include "p2p/base/p2p_constants.h"
 #include "p2p/base/port_allocator.h"
 #include "p2p/base/transport_info.h"
+#include "pc/channel_interface.h"
 #include "pc/media_session.h"
 #include "pc/peer_connection_wrapper.h"
 #include "pc/rtp_media_utils.h"
+#include "pc/rtp_transceiver.h"
 #include "pc/session_description.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/checks.h"
@@ -77,6 +80,47 @@ using ::testing::Combine;
 using ::testing::ElementsAre;
 using ::testing::NotNull;
 using ::testing::Values;
+
+cricket::MediaSendChannelInterface* SendChannelInternal(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  auto transceiver_with_internal = static_cast<rtc::RefCountedObject<
+      webrtc::RtpTransceiverProxyWithInternal<webrtc::RtpTransceiver>>*>(
+      transceiver.get());
+  auto transceiver_internal =
+      static_cast<RtpTransceiver*>(transceiver_with_internal->internal());
+  return transceiver_internal->channel()->media_send_channel();
+}
+
+cricket::MediaReceiveChannelInterface* ReceiveChannelInternal(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  auto transceiver_with_internal = static_cast<rtc::RefCountedObject<
+      webrtc::RtpTransceiverProxyWithInternal<webrtc::RtpTransceiver>>*>(
+      transceiver.get());
+  auto transceiver_internal =
+      static_cast<RtpTransceiver*>(transceiver_with_internal->internal());
+  return transceiver_internal->channel()->media_receive_channel();
+}
+
+cricket::FakeVideoMediaSendChannel* VideoMediaSendChannel(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  return static_cast<cricket::FakeVideoMediaSendChannel*>(
+      SendChannelInternal(transceiver));
+}
+cricket::FakeVideoMediaReceiveChannel* VideoMediaReceiveChannel(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  return static_cast<cricket::FakeVideoMediaReceiveChannel*>(
+      ReceiveChannelInternal(transceiver));
+}
+cricket::FakeVoiceMediaSendChannel* VoiceMediaSendChannel(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  return static_cast<cricket::FakeVoiceMediaSendChannel*>(
+      SendChannelInternal(transceiver));
+}
+cricket::FakeVoiceMediaReceiveChannel* VoiceMediaReceiveChannel(
+    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+  return static_cast<cricket::FakeVoiceMediaReceiveChannel*>(
+      ReceiveChannelInternal(transceiver));
+}
 
 class PeerConnectionWrapperForMediaTest : public PeerConnectionWrapper {
  public:
@@ -272,7 +316,8 @@ std::vector<std::string> GetIds(
 // Test that exchanging an offer and answer with each side having an audio and
 // video stream creates the appropriate send/recv streams in the underlying
 // media engine on both sides.
-TEST_P(PeerConnectionMediaTest, AudioVideoOfferAnswerCreateSendRecvStreams) {
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       AudioVideoOfferAnswerCreateSendRecvStreams) {
   const std::string kCallerAudioId = "caller_a";
   const std::string kCallerVideoId = "caller_v";
   const std::string kCalleeAudioId = "callee_a";
@@ -290,33 +335,37 @@ TEST_P(PeerConnectionMediaTest, AudioVideoOfferAnswerCreateSendRecvStreams) {
   ASSERT_TRUE(
       caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
 
-  auto* caller_voice_send = caller->media_engine()->GetVoiceSendChannel(0);
+  auto* caller_voice_send =
+      VoiceMediaSendChannel(caller->pc()->GetTransceivers()[0]);
   auto* caller_voice_receive =
-      caller->media_engine()->GetVoiceReceiveChannel(0);
+      VoiceMediaReceiveChannel(caller->pc()->GetTransceivers()[0]);
   EXPECT_THAT(GetIds(caller_voice_receive->recv_streams()),
               ElementsAre(kCalleeAudioId));
   EXPECT_THAT(GetIds(caller_voice_send->send_streams()),
               ElementsAre(kCallerAudioId));
 
-  auto* caller_video_send = caller->media_engine()->GetVideoSendChannel(0);
+  auto* caller_video_send =
+      VideoMediaSendChannel(caller->pc()->GetTransceivers()[1]);
   auto* caller_video_receive =
-      caller->media_engine()->GetVideoReceiveChannel(0);
+      VideoMediaReceiveChannel(caller->pc()->GetTransceivers()[1]);
   EXPECT_THAT(GetIds(caller_video_receive->recv_streams()),
               ElementsAre(kCalleeVideoId));
   EXPECT_THAT(GetIds(caller_video_send->send_streams()),
               ElementsAre(kCallerVideoId));
 
-  auto* callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
+  auto* callee_voice_send =
+      VoiceMediaSendChannel(callee->pc()->GetTransceivers()[0]);
   auto* callee_voice_receive =
-      callee->media_engine()->GetVoiceReceiveChannel(0);
+      VoiceMediaReceiveChannel(callee->pc()->GetTransceivers()[0]);
   EXPECT_THAT(GetIds(callee_voice_receive->recv_streams()),
               ElementsAre(kCallerAudioId));
   EXPECT_THAT(GetIds(callee_voice_send->send_streams()),
               ElementsAre(kCalleeAudioId));
 
-  auto* callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
+  auto* callee_video_send =
+      VideoMediaSendChannel(callee->pc()->GetTransceivers()[1]);
   auto* callee_video_receive =
-      callee->media_engine()->GetVideoReceiveChannel(0);
+      VideoMediaReceiveChannel(callee->pc()->GetTransceivers()[1]);
   EXPECT_THAT(GetIds(callee_video_receive->recv_streams()),
               ElementsAre(kCallerVideoId));
   EXPECT_THAT(GetIds(callee_video_send->send_streams()),
@@ -342,10 +391,7 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
-  ASSERT_FALSE(callee->media_engine()->GetVoiceSendChannel(0));
-  ASSERT_FALSE(callee->media_engine()->GetVideoSendChannel(0));
-  ASSERT_FALSE(callee->media_engine()->GetVoiceReceiveChannel(0));
-  ASSERT_FALSE(callee->media_engine()->GetVideoReceiveChannel(0));
+  ASSERT_TRUE(callee->pc()->GetTransceivers().empty());
 }
 
 // Test that removing streams from a subsequent offer causes the receive streams
@@ -365,14 +411,8 @@ TEST_F(PeerConnectionMediaTestPlanB, EmptyRemoteOfferRemovesRecvStreams) {
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
-  auto callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
-  auto callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
-  auto callee_voice_receive = callee->media_engine()->GetVoiceReceiveChannel(0);
-  auto callee_video_receive = callee->media_engine()->GetVideoReceiveChannel(0);
-  EXPECT_EQ(1u, callee_voice_send->send_streams().size());
-  EXPECT_EQ(0u, callee_voice_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_video_send->send_streams().size());
-  EXPECT_EQ(0u, callee_video_receive->recv_streams().size());
+  EXPECT_TRUE(callee->pc()->GetReceivers().empty());
+  EXPECT_EQ(2u, callee->pc()->GetSenders().size());
 }
 
 // Test enabling of simulcast with Plan B semantics.
@@ -444,8 +484,7 @@ TEST_F(PeerConnectionMediaTestUnifiedPlan,
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
-  EXPECT_FALSE(callee->media_engine()->GetVoiceReceiveChannel(0));
-  EXPECT_FALSE(callee->media_engine()->GetVideoReceiveChannel(0));
+  EXPECT_TRUE(callee->pc()->GetTransceivers().empty());
 }
 
 // Test that removing streams from a subsequent answer causes the send streams
@@ -465,14 +504,8 @@ TEST_F(PeerConnectionMediaTestPlanB, EmptyLocalAnswerRemovesSendStreams) {
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
-  auto callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
-  auto callee_voice_receive = callee->media_engine()->GetVoiceReceiveChannel(0);
-  auto callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
-  auto callee_video_receive = callee->media_engine()->GetVideoReceiveChannel(0);
-  EXPECT_EQ(0u, callee_voice_send->send_streams().size());
-  EXPECT_EQ(1u, callee_voice_receive->recv_streams().size());
-  EXPECT_EQ(0u, callee_video_send->send_streams().size());
-  EXPECT_EQ(1u, callee_video_receive->recv_streams().size());
+  EXPECT_TRUE(callee->pc()->GetSenders().empty());
+  EXPECT_EQ(2u, callee->pc()->GetReceivers().size());
 }
 
 // Test that a new stream in a subsequent offer causes a new receive stream to
@@ -489,11 +522,12 @@ TEST_P(PeerConnectionMediaTest, NewStreamInRemoteOfferAddsRecvStreams) {
 
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get()));
 
-  auto a1 = callee->media_engine()->GetVoiceReceiveChannel(0);
-  auto a2 = callee->media_engine()->GetVoiceReceiveChannel(1);
-  auto v1 = callee->media_engine()->GetVideoReceiveChannel(0);
-  auto v2 = callee->media_engine()->GetVideoReceiveChannel(1);
   if (IsUnifiedPlan()) {
+    auto a1 = VoiceMediaReceiveChannel(callee->pc()->GetTransceivers()[0]);
+    auto a2 = VoiceMediaReceiveChannel(callee->pc()->GetTransceivers()[2]);
+    auto v1 = VideoMediaReceiveChannel(callee->pc()->GetTransceivers()[1]);
+    auto v2 = VideoMediaReceiveChannel(callee->pc()->GetTransceivers()[3]);
+
     ASSERT_TRUE(a1);
     EXPECT_EQ(1u, a1->recv_streams().size());
     ASSERT_TRUE(a2);
@@ -503,12 +537,7 @@ TEST_P(PeerConnectionMediaTest, NewStreamInRemoteOfferAddsRecvStreams) {
     ASSERT_TRUE(v2);
     EXPECT_EQ(1u, v2->recv_streams().size());
   } else {
-    ASSERT_TRUE(a1);
-    EXPECT_EQ(2u, a1->recv_streams().size());
-    ASSERT_FALSE(a2);
-    ASSERT_TRUE(v1);
-    EXPECT_EQ(2u, v1->recv_streams().size());
-    ASSERT_FALSE(v2);
+    EXPECT_EQ(4u, callee->pc()->GetReceivers().size());
   }
 }
 
@@ -535,17 +564,18 @@ TEST_P(PeerConnectionMediaTest, NewStreamInLocalAnswerAddsSendStreams) {
   ASSERT_TRUE(caller->ExchangeOfferAnswerWith(callee.get(), offer_options,
                                               answer_options));
 
-  auto callee_voice = callee->media_engine()->GetVoiceSendChannel(0);
-  ASSERT_TRUE(callee_voice);
-  auto callee_video = callee->media_engine()->GetVideoSendChannel(0);
-  ASSERT_TRUE(callee_video);
-
   if (IsUnifiedPlan()) {
+    auto callee_voice =
+        VoiceMediaSendChannel(callee->pc()->GetTransceivers()[0]);
+    ASSERT_TRUE(callee_voice);
+    auto callee_video =
+        VideoMediaSendChannel(callee->pc()->GetTransceivers()[1]);
+    ASSERT_TRUE(callee_video);
+
     EXPECT_EQ(1u, callee_voice->send_streams().size());
     EXPECT_EQ(1u, callee_video->send_streams().size());
   } else {
-    EXPECT_EQ(2u, callee_voice->send_streams().size());
-    EXPECT_EQ(2u, callee_video->send_streams().size());
+    EXPECT_EQ(4u, callee->pc()->GetSenders().size());
   }
 }
 
@@ -1088,158 +1118,18 @@ INSTANTIATE_TEST_SUITE_P(
                                    ChangeMediaTypeAudioToVideo,
                                    kMLinesOutOfOrder))));
 
-// Test that the correct media engine send/recv streams are created when doing
-// a series of offer/answers where audio/video are both sent, then audio is
-// rejected, then both audio/video sent again.
-TEST_P(PeerConnectionMediaTest, TestAVOfferWithAudioOnlyAnswer) {
-  if (IsUnifiedPlan()) {
-    // offer_to_receive_ is not implemented when creating answers with Unified
-    // Plan semantics specified.
-    return;
-  }
-
-  RTCOfferAnswerOptions options_reject_video;
-  options_reject_video.offer_to_receive_audio =
-      RTCOfferAnswerOptions::kOfferToReceiveMediaTrue;
-  options_reject_video.offer_to_receive_video = 0;
-
-  auto caller = CreatePeerConnection();
-  caller->AddAudioTrack("a");
-  caller->AddVideoTrack("v");
-  auto callee = CreatePeerConnection();
-
-  // Caller initially offers to send/recv audio and video.
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  // Callee accepts the audio as recv only but rejects the video.
-  ASSERT_TRUE(caller->SetRemoteDescription(
-      callee->CreateAnswerAndSetAsLocal(options_reject_video)));
-
-  auto caller_voice_send = caller->media_engine()->GetVoiceSendChannel(0);
-  auto caller_voice_receive = caller->media_engine()->GetVoiceReceiveChannel(0);
-  ASSERT_TRUE(caller_voice_send && caller_voice_receive);
-  EXPECT_EQ(0u, caller_voice_receive->recv_streams().size());
-  EXPECT_EQ(1u, caller_voice_send->send_streams().size());
-  auto caller_video = caller->media_engine()->GetVideoSendChannel(0);
-  EXPECT_FALSE(caller_video);
-
-  // Callee adds its own audio/video stream and offers to receive audio/video
-  // too.
-  callee->AddAudioTrack("a");
-  auto callee_video_track = callee->AddVideoTrack("v");
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  ASSERT_TRUE(
-      caller->SetRemoteDescription(callee->CreateAnswerAndSetAsLocal()));
-
-  auto callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
-  auto callee_voice_receive = callee->media_engine()->GetVoiceReceiveChannel(0);
-  ASSERT_TRUE(callee_voice_send && callee_voice_receive);
-  EXPECT_EQ(1u, callee_voice_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_voice_send->send_streams().size());
-  auto callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
-  auto callee_video_receive = callee->media_engine()->GetVideoReceiveChannel(0);
-  ASSERT_TRUE(callee_video_send && callee_video_receive);
-  EXPECT_EQ(1u, callee_video_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_video_send->send_streams().size());
-
-  // Callee removes video but keeps audio and rejects the video once again.
-  callee->pc()->RemoveTrackOrError(callee_video_track);
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  ASSERT_TRUE(
-      callee->SetLocalDescription(callee->CreateAnswer(options_reject_video)));
-
-  callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
-  callee_voice_receive = callee->media_engine()->GetVoiceReceiveChannel(0);
-  ASSERT_TRUE(callee_voice_send && callee_voice_receive);
-  EXPECT_EQ(1u, callee_voice_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_voice_send->send_streams().size());
-  auto callee_video = callee->media_engine()->GetVideoSendChannel(0);
-  EXPECT_FALSE(callee_video);
-}
-
-// Test that the correct media engine send/recv streams are created when doing
-// a series of offer/answers where audio/video are both sent, then video is
-// rejected, then both audio/video sent again.
-TEST_P(PeerConnectionMediaTest, TestAVOfferWithVideoOnlyAnswer) {
-  if (IsUnifiedPlan()) {
-    // offer_to_receive_ is not implemented when creating answers with Unified
-    // Plan semantics specified.
-    return;
-  }
-
-  // Disable the bundling here. If the media is bundled on audio
-  // transport, then we can't reject the audio because switching the bundled
-  // transport is not currently supported.
-  // (https://bugs.chromium.org/p/webrtc/issues/detail?id=6704)
-  RTCOfferAnswerOptions options_no_bundle;
-  options_no_bundle.use_rtp_mux = false;
-  RTCOfferAnswerOptions options_reject_audio = options_no_bundle;
-  options_reject_audio.offer_to_receive_audio = 0;
-  options_reject_audio.offer_to_receive_video =
-      RTCOfferAnswerOptions::kMaxOfferToReceiveMedia;
-
-  auto caller = CreatePeerConnection();
-  caller->AddAudioTrack("a");
-  caller->AddVideoTrack("v");
-  auto callee = CreatePeerConnection();
-
-  // Caller initially offers to send/recv audio and video.
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  // Callee accepts the video as recv only but rejects the audio.
-  ASSERT_TRUE(caller->SetRemoteDescription(
-      callee->CreateAnswerAndSetAsLocal(options_reject_audio)));
-
-  auto caller_voice = caller->media_engine()->GetVoiceSendChannel(0);
-  EXPECT_FALSE(caller_voice);
-  auto caller_video_send = caller->media_engine()->GetVideoSendChannel(0);
-  auto caller_video_receive = caller->media_engine()->GetVideoReceiveChannel(0);
-  ASSERT_TRUE(caller_video_send && caller_video_receive);
-  EXPECT_EQ(0u, caller_video_receive->recv_streams().size());
-  EXPECT_EQ(1u, caller_video_send->send_streams().size());
-
-  // Callee adds its own audio/video stream and offers to receive audio/video
-  // too.
-  auto callee_audio_track = callee->AddAudioTrack("a");
-  callee->AddVideoTrack("v");
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  ASSERT_TRUE(caller->SetRemoteDescription(
-      callee->CreateAnswerAndSetAsLocal(options_no_bundle)));
-
-  auto callee_voice_send = callee->media_engine()->GetVoiceSendChannel(0);
-  auto callee_voice_receive = callee->media_engine()->GetVoiceReceiveChannel(0);
-  ASSERT_TRUE(callee_voice_send && callee_voice_receive);
-  EXPECT_EQ(1u, callee_voice_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_voice_send->send_streams().size());
-  auto callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
-  auto callee_video_receive = callee->media_engine()->GetVideoReceiveChannel(0);
-  ASSERT_TRUE(callee_video_send && callee_video_receive);
-  EXPECT_EQ(1u, callee_video_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_video_send->send_streams().size());
-
-  // Callee removes audio but keeps video and rejects the audio once again.
-  callee->pc()->RemoveTrackOrError(callee_audio_track);
-  ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
-  ASSERT_TRUE(
-      callee->SetLocalDescription(callee->CreateAnswer(options_reject_audio)));
-
-  auto callee_voice = callee->media_engine()->GetVoiceReceiveChannel(0);
-  EXPECT_FALSE(callee_voice);
-  callee_video_send = callee->media_engine()->GetVideoSendChannel(0);
-  callee_video_receive = callee->media_engine()->GetVideoReceiveChannel(0);
-  ASSERT_TRUE(callee_video_send && callee_video_receive);
-  EXPECT_EQ(1u, callee_video_receive->recv_streams().size());
-  EXPECT_EQ(1u, callee_video_send->send_streams().size());
-}
-
 // Tests that if the underlying video encoder fails to be initialized (signaled
 // by failing to set send codecs), the PeerConnection signals the error to the
 // client.
-TEST_P(PeerConnectionMediaTest, MediaEngineErrorPropagatedToClients) {
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
+       MediaEngineErrorPropagatedToClients) {
   auto caller = CreatePeerConnectionWithAudioVideo();
   auto callee = CreatePeerConnectionWithAudioVideo();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
-  auto video_channel = caller->media_engine()->GetVideoSendChannel(0);
+  auto video_channel =
+      VideoMediaSendChannel(caller->pc()->GetTransceivers()[1]);
   video_channel->set_fail_set_send_codecs(true);
 
   std::string error;
@@ -1255,14 +1145,15 @@ TEST_P(PeerConnectionMediaTest, MediaEngineErrorPropagatedToClients) {
 // Tests that if the underlying video encoder fails once then subsequent
 // attempts at setting the local/remote description will also fail, even if
 // SetSendCodecs no longer fails.
-TEST_P(PeerConnectionMediaTest,
+TEST_F(PeerConnectionMediaTestUnifiedPlan,
        FailToApplyDescriptionIfVideoEncoderHasEverFailed) {
   auto caller = CreatePeerConnectionWithAudioVideo();
   auto callee = CreatePeerConnectionWithAudioVideo();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
 
-  auto video_channel = caller->media_engine()->GetVideoSendChannel(0);
+  auto video_channel =
+      VideoMediaSendChannel(caller->pc()->GetTransceivers()[1]);
   video_channel->set_fail_set_send_codecs(true);
 
   EXPECT_FALSE(

@@ -770,6 +770,7 @@ if (rtc_include_tests) {
     deps = [
       ":codec",
       ":media_channel",
+      ":media_channel_impl",
       ":media_constants",
       ":rtc_audio_video",
       ":rtc_internal_video_codecs",
@@ -780,6 +781,7 @@ if (rtc_include_tests) {
       ":stream_params",
       "../api:call_api",
       "../api:fec_controller_api",
+      "../api:rtp_parameters",
       "../api:scoped_refptr",
       "../api/task_queue",
       "../api/task_queue:pending_task_safety_flag",
@@ -823,6 +825,7 @@ if (rtc_include_tests) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
