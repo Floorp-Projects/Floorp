@@ -420,11 +420,11 @@ if (is_ios) {
     sources = [
       "ios/coverage_util_ios.h",
       "ios/coverage_util_ios.mm",
-      "ios/google_test_runner_delegate.h",
       "ios/test_support.h",
       "ios/test_support.mm",
     ]
     deps = [
+      ":google_test_runner_delegate",
       ":perf_test",
       "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
       "../api/test/metrics:global_metrics_logger_and_exporter",
@@ -438,13 +438,17 @@ if (is_ios) {
     configs += [ ":test_support_objc_config" ]
   }
 
+  rtc_library("google_test_runner_delegate") {
+    sources = [ "ios/google_test_runner_delegate.h" ]
+  }
+
   rtc_library("google_test_runner_objc") {
     testonly = true
     visibility = [ "*" ]
     sources = [ "ios/google_test_runner.mm" ]
-    deps = [ ":test_support_objc" ]
     configs += [ "//build/config/ios:xctest_config" ]
     frameworks = [ "UIKit.framework" ]
+    deps = [ ":google_test_runner_delegate" ]
   }
 
   config("test_support_objc_config") {

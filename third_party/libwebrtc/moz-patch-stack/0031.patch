@@ -1225,7 +1225,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 4107162cd1..409d3006d6 100644
+index e60febb0a9..860ae3a089 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -241,6 +241,7 @@ rtc_library("audio_test_common") {
@@ -1257,7 +1257,7 @@ index 4107162cd1..409d3006d6 100644
  
    deps = [
      "../api:array_view",
-@@ -557,7 +563,9 @@ rtc_library("video_test_support") {
+@@ -561,7 +567,9 @@ rtc_library("video_test_support") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  
    if (!is_ios) {
@@ -1267,7 +1267,7 @@ index 4107162cd1..409d3006d6 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1313,6 +1321,7 @@ if (!build_with_chromium) {
+@@ -1317,6 +1325,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1275,7 +1275,7 @@ index 4107162cd1..409d3006d6 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1326,6 +1335,7 @@ if (!build_with_chromium && is_android) {
+@@ -1330,6 +1339,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
