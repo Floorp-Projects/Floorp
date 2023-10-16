@@ -870,6 +870,7 @@ if (rtc_include_tests) {
       defines = []
       deps = [
         ":codec",
+        ":media_channel",
         ":media_channel_shim",
         ":media_constants",
         ":rtc_audio_video",
