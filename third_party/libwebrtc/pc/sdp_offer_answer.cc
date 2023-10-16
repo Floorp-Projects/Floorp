@@ -491,25 +491,6 @@ RTCError ValidateBundledPayloadTypes(
   return RTCError::OK();
 }
 
-RTCError ValidateSsrcGroups(const cricket::SessionDescription& description) {
-  // https://www.rfc-editor.org/rfc/rfc5576#section-4.2
-  // Every <ssrc-id> listed in an "ssrc-group" attribute MUST be
-  // defined by a corresponding "ssrc:" line in the same media
-  // description.
-  for (const ContentInfo& content : description.contents()) {
-    if (!content.media_description()) {
-      continue;
-    }
-    for (const StreamParams& sp : content.media_description()->streams()) {
-      for (const cricket::SsrcGroup& group : sp.ssrc_groups) {
-        RTC_LOG(LS_ERROR) << "YO " << group.semantics << " #"
-                          << group.ssrcs.size();
-      }
-    }
-  }
-  return RTCError::OK();
-}
-
 RTCError FindDuplicateHeaderExtensionIds(
     const RtpExtension extension,
     std::map<int, RtpExtension>& id_to_extension) {
@@ -3584,11 +3565,6 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
   if (!pc_->ValidateBundleSettings(sdesc->description(),
                                    bundle_groups_by_mid)) {
     return RTCError(RTCErrorType::INVALID_PARAMETER, kBundleWithoutRtcpMux);
-  }
-
-  error = ValidateSsrcGroups(*sdesc->description());
-  if (!error.ok()) {
-    return error;
   }
 
   // TODO(skvlad): When the local rtcp-mux policy is Require, reject any
