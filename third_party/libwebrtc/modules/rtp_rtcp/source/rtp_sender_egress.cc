@@ -522,7 +522,7 @@ bool RtpSenderEgress::SendPacketToNetwork(const RtpPacketToSend& packet,
   RTC_DCHECK_RUN_ON(worker_queue_);
   int bytes_sent = -1;
   if (transport_) {
-    bytes_sent = transport_->SendRtp(packet.data(), packet.size(), options)
+    bytes_sent = transport_->SendRtp(packet, options)
                      ? static_cast<int>(packet.size())
                      : -1;
     if (event_log_ && bytes_sent > 0) {

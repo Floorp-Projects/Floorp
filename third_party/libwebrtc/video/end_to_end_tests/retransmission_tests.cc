@@ -166,7 +166,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
         nack.SetPacketIds(nack_list, 1);
         rtc::Buffer buffer = nack.Build();
 
-        EXPECT_TRUE(receive_transport_->SendRtcp(buffer.data(), buffer.size()));
+        EXPECT_TRUE(receive_transport_->SendRtcp(buffer));
       }
 
       return SEND_PACKET;
