@@ -26,7 +26,7 @@ Also includes:
  2 files changed, 3 insertions(+), 8 deletions(-)
 
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 6262f7fb6d..319602414e 100644
+index 1337c266dc..77a753b2ce 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
 @@ -26,7 +26,7 @@

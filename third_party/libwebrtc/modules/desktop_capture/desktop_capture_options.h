@@ -159,10 +159,6 @@ class RTC_EXPORT DesktopCaptureOptions {
   }
 
 #if defined(RTC_ENABLE_WIN_WGC)
-  // TODO(henrika): to be removed.
-  bool allow_wgc_capturer() const { return allow_wgc_capturer_; }
-  void set_allow_wgc_capturer(bool allow) { allow_wgc_capturer_ = allow; }
-
   // This flag enables the WGC capturer for capturing the screen.
   // This capturer should offer similar or better performance than the cropping
   // capturer without the disadvantages listed above. However, the WGC capturer
@@ -248,7 +244,6 @@ class RTC_EXPORT DesktopCaptureOptions {
   bool allow_directx_capturer_ = false;
   bool allow_cropping_window_capturer_ = false;
 #if defined(RTC_ENABLE_WIN_WGC)
-  bool allow_wgc_capturer_ = false;
   bool allow_wgc_screen_capturer_ = false;
   bool allow_wgc_window_capturer_ = false;
   bool allow_wgc_capturer_fallback_ = false;
