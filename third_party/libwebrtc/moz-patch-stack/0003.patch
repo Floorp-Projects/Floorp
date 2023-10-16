@@ -1,51 +1,233 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 17 May 2023 14:41:47 +0200
-Subject: (cherry-pick-branch-heads/5845) [M116] In
- VideoCaptureDS::{Start|Stop}Capture do not lock
+From: Tony Herre <herre@google.com>
+Date: Tue, 11 Jul 2023 12:41:06 +0000
+Subject: (cherry-pick-branch-heads/5845) [116] Set surrogate receive times for
+ transformed sender frames
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Sequence- and RaceCheckers ensure thread safety, and show that these
-locks protect nothing.
+Without this, 'Sender' frames inserted into the writer of an encoded
+transform have an invalid receive time (0), which breaks all later
+heuristics which build on the receive time, eg the VCMTiming estimators
+used for controlling the playback delay.
 
-(cherry picked from commit dcf600d7a5cdf8da51daf5b6f79df1de05002b13)
+(cherry picked from commit 9d677f4cdcd536a2beb9f195b93e0d3df1cd6c9c)
 
-Bug: webrtc:15181, chromium:1457919
-Change-Id: I7c26cd9aea5fa72ad9435de5ec1b9135ac22b1e8
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305649
-Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Reviewed-by: Per Kjellander <perkj@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40345}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/310520
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5845@{#3}
+Bug: chromium:1463451
+Change-Id: I413c884e08986148d4a854cd275212b21d093ceb
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/311544
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Reviewed-by: Palak Agarwal <agpalak@google.com>
+Reviewed-by: Erik Språng <sprang@webrtc.org>
+Commit-Queue: Tony Herre <herre@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#40416}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/311662
+Commit-Queue: Erik Språng <sprang@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5845@{#4}
 Cr-Branched-From: f80cf814353d11a9f22bef5ce5e8868f2c72f0d0-refs/heads/main@{#40319}
 ---
- modules/video_capture/windows/video_capture_ds.cc | 2 --
- 1 file changed, 2 deletions(-)
+ ...eam_receiver_frame_transformer_delegate.cc |  9 ++++---
+ ...ream_receiver_frame_transformer_delegate.h |  3 +++
+ ...ver_frame_transformer_delegate_unittest.cc | 25 +++++++++++++------
+ video/rtp_video_stream_receiver2.cc           |  4 +--
+ 4 files changed, 28 insertions(+), 13 deletions(-)
 
-diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
-index acdf4004f6..37ee0fde01 100644
---- a/modules/video_capture/windows/video_capture_ds.cc
-+++ b/modules/video_capture/windows/video_capture_ds.cc
-@@ -125,7 +125,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+index aa5c8dfa28..1e4d0540f0 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
+@@ -78,13 +78,15 @@ class TransformableVideoReceiverFrame
+ RtpVideoStreamReceiverFrameTransformerDelegate::
+     RtpVideoStreamReceiverFrameTransformerDelegate(
+         RtpVideoFrameReceiver* receiver,
++        Clock* clock,
+         rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+         rtc::Thread* network_thread,
+         uint32_t ssrc)
+     : receiver_(receiver),
+       frame_transformer_(std::move(frame_transformer)),
+       network_thread_(network_thread),
+-      ssrc_(ssrc) {}
++      ssrc_(ssrc),
++      clock_(clock) {}
  
- int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
-   RTC_DCHECK_RUN_ON(&api_checker_);
--  MutexLock lock(&api_lock_);
+ void RtpVideoStreamReceiverFrameTransformerDelegate::Init() {
+   RTC_DCHECK_RUN_ON(&network_sequence_checker_);
+@@ -159,13 +161,14 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
+     RTPVideoHeader video_header = RTPVideoHeader::FromMetadata(metadata);
+     VideoSendTiming timing;
+     rtc::ArrayView<const uint8_t> data = transformed_frame->GetData();
++    int64_t receive_time = clock_->CurrentTime().ms();
+     receiver_->ManageFrame(std::make_unique<RtpFrameObject>(
+         /*first_seq_num=*/metadata.GetFrameId().value_or(0),
+         /*last_seq_num=*/metadata.GetFrameId().value_or(0),
+         /*markerBit=*/video_header.is_last_frame_in_picture,
+         /*times_nacked=*/0,
+-        /*first_packet_received_time=*/0,
+-        /*last_packet_received_time=*/0,
++        /*first_packet_received_time=*/receive_time,
++        /*last_packet_received_time=*/receive_time,
+         /*rtp_timestamp=*/transformed_frame->GetTimestamp(),
+         /*ntp_time_ms=*/0, timing, transformed_frame->GetPayloadType(),
+         metadata.GetCodec(), metadata.GetRotation(), metadata.GetContentType(),
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+index 3e8257f906..62a42fdddf 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.h
+@@ -18,6 +18,7 @@
+ #include "modules/rtp_rtcp/source/frame_object.h"
+ #include "rtc_base/system/no_unique_address.h"
+ #include "rtc_base/thread.h"
++#include "system_wrappers/include/clock.h"
  
-   if (capability != _requestedCapability) {
-     DisconnectGraph();
-@@ -150,7 +149,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+ namespace webrtc {
  
- int32_t VideoCaptureDS::StopCapture() {
-   RTC_DCHECK_RUN_ON(&api_checker_);
--  MutexLock lock(&api_lock_);
+@@ -38,6 +39,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+  public:
+   RtpVideoStreamReceiverFrameTransformerDelegate(
+       RtpVideoFrameReceiver* receiver,
++      Clock* clock,
+       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
+       rtc::Thread* network_thread,
+       uint32_t ssrc);
+@@ -67,6 +69,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
+       RTC_GUARDED_BY(network_sequence_checker_);
+   rtc::Thread* const network_thread_;
+   const uint32_t ssrc_;
++  Clock* const clock_;
+ };
  
-   HRESULT hr = _mediaControl->StopWhenReady();
-   if (FAILED(hr)) {
+ }  // namespace webrtc
+diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc
+index e0b53742a4..5c72412404 100644
+--- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate_unittest.cc
+@@ -72,9 +72,10 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+      RegisterTransformedFrameCallbackSinkOnInit) {
+   TestRtpVideoFrameReceiver receiver;
+   auto frame_transformer(rtc::make_ref_counted<MockFrameTransformer>());
++  SimulatedClock clock(0);
+   auto delegate(
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, frame_transformer, rtc::Thread::Current(),
++          &receiver, &clock, frame_transformer, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111));
+   EXPECT_CALL(*frame_transformer,
+               RegisterTransformedFrameSinkCallback(testing::_, 1111));
+@@ -85,9 +86,10 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+      UnregisterTransformedFrameSinkCallbackOnReset) {
+   TestRtpVideoFrameReceiver receiver;
+   auto frame_transformer(rtc::make_ref_counted<MockFrameTransformer>());
++  SimulatedClock clock(0);
+   auto delegate(
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, frame_transformer, rtc::Thread::Current(),
++          &receiver, &clock, frame_transformer, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111));
+   EXPECT_CALL(*frame_transformer, UnregisterTransformedFrameSinkCallback(1111));
+   delegate->Reset();
+@@ -97,9 +99,10 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest, TransformFrame) {
+   TestRtpVideoFrameReceiver receiver;
+   auto frame_transformer(
+       rtc::make_ref_counted<testing::NiceMock<MockFrameTransformer>>());
++  SimulatedClock clock(0);
+   auto delegate(
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, frame_transformer, rtc::Thread::Current(),
++          &receiver, &clock, frame_transformer, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111));
+   auto frame = CreateRtpFrameObject();
+   EXPECT_CALL(*frame_transformer, Transform);
+@@ -112,10 +115,11 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+   TestRtpVideoFrameReceiver receiver;
+   auto mock_frame_transformer(
+       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>());
++  SimulatedClock clock(0);
+   std::vector<uint32_t> csrcs = {234, 345, 456};
+   auto delegate =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, mock_frame_transformer, rtc::Thread::Current(),
++          &receiver, &clock, mock_frame_transformer, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111);
+ 
+   rtc::scoped_refptr<TransformedFrameCallback> callback;
+@@ -144,9 +148,11 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+   TestRtpVideoFrameReceiver receiver;
+   auto mock_frame_transformer =
+       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
++  SimulatedClock clock(0);
+   auto delegate =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, mock_frame_transformer, rtc::Thread::Current(), 1111);
++          &receiver, &clock, mock_frame_transformer, rtc::Thread::Current(),
++          1111);
+   delegate->Init();
+   RTPVideoHeader video_header;
+   video_header.width = 1280u;
+@@ -191,9 +197,10 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+   TestRtpVideoFrameReceiver receiver;
+   auto mock_frame_transformer =
+       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
++  SimulatedClock clock(/*initial_timestamp_us=*/12345000);
+   auto delegate =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver, mock_frame_transformer, rtc::Thread::Current(),
++          &receiver, &clock, mock_frame_transformer, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111);
+ 
+   auto mock_sender_frame =
+@@ -218,6 +225,7 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+   EXPECT_CALL(receiver, ManageFrame)
+       .WillOnce([&](std::unique_ptr<RtpFrameObject> frame) {
+         EXPECT_EQ(frame->codec_type(), metadata.GetCodec());
++        EXPECT_EQ(frame->ReceivedTime(), 12345);
+       });
+   callback->OnTransformedFrame(std::move(mock_sender_frame));
+   rtc::ThreadManager::ProcessAllMessageQueuesForTesting();
+@@ -232,9 +240,10 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+   TestRtpVideoFrameReceiver receiver1;
+   auto mock_frame_transformer1(
+       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>());
++  SimulatedClock clock(0);
+   auto delegate1 =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver1, mock_frame_transformer1, rtc::Thread::Current(),
++          &receiver1, &clock, mock_frame_transformer1, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111);
+ 
+   TestRtpVideoFrameReceiver receiver2;
+@@ -242,7 +251,7 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
+       rtc::make_ref_counted<NiceMock<MockFrameTransformer>>());
+   auto delegate2 =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          &receiver2, mock_frame_transformer2, rtc::Thread::Current(),
++          &receiver2, &clock, mock_frame_transformer2, rtc::Thread::Current(),
+           /*remote_ssrc*/ 1111);
+ 
+   delegate1->Init();
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index a01e60f8bb..aceee90313 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -336,7 +336,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
+   if (frame_transformer) {
+     frame_transformer_delegate_ =
+         rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-            this, std::move(frame_transformer), rtc::Thread::Current(),
++            this, clock_, std::move(frame_transformer), rtc::Thread::Current(),
+             config_.rtp.remote_ssrc);
+     frame_transformer_delegate_->Init();
+   }
+@@ -950,7 +950,7 @@ void RtpVideoStreamReceiver2::SetDepacketizerToDecoderFrameTransformer(
+   RTC_DCHECK_RUN_ON(&worker_task_checker_);
+   frame_transformer_delegate_ =
+       rtc::make_ref_counted<RtpVideoStreamReceiverFrameTransformerDelegate>(
+-          this, std::move(frame_transformer), rtc::Thread::Current(),
++          this, clock_, std::move(frame_transformer), rtc::Thread::Current(),
+           config_.rtp.remote_ssrc);
+   frame_transformer_delegate_->Init();
+ }
 -- 
 2.34.1
 
