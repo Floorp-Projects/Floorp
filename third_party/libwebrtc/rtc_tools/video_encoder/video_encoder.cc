@@ -28,18 +28,18 @@
 ABSL_FLAG(std::string,
           video_codec,
           "",
-          "Sepcify codec of video encoder: vp8, vp9, h264, av1");
+          "Specify codec of video encoder: vp8, vp9, h264, av1");
 ABSL_FLAG(std::string,
           scalability_mode,
           "L1T1",
-          "Sepcify scalability mode of video encoder");
+          "Specify scalability mode of video encoder");
 
 ABSL_FLAG(uint32_t,
           raw_frame_generator,
           0,
-          "Sepcify SquareFrameGenerator or SlideGenerator.\n"
+          "Specify SquareFrameGenerator or SlideGenerator.\n"
           "0: SquareFrameGenerator, 1: SlideGenerator");
-ABSL_FLAG(uint32_t, width, 1280, "Sepcify width of video encoder");
+ABSL_FLAG(uint32_t, width, 1280, "Specify width of video encoder");
 ABSL_FLAG(uint32_t, height, 720, "Specify height of video encoder");
 
 ABSL_FLAG(std::string,
