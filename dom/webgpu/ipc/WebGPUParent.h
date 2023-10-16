@@ -42,6 +42,7 @@ class WebGPUParent final : public PWebGPUParent {
       AdapterRequestDeviceResolver&& resolver);
   ipc::IPCResult RecvAdapterDestroy(RawId aAdapterId);
   ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
+  ipc::IPCResult RecvDeviceDrop(RawId aDeviceId);
   ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
                                   dom::GPUBufferDescriptor&& aDesc,
                                   ipc::UnsafeSharedMemoryHandle&& aShmem);

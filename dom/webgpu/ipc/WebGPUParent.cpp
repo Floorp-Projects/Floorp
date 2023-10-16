@@ -428,6 +428,11 @@ ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aAdapterId) {
 }
 
 ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
+  ffi::wgpu_server_device_destroy(mContext.get(), aDeviceId);
+  return IPC_OK();
+}
+
+ipc::IPCResult WebGPUParent::RecvDeviceDrop(RawId aDeviceId) {
   ffi::wgpu_server_device_drop(mContext.get(), aDeviceId);
   mErrorScopeStackByDevice.erase(aDeviceId);
   return IPC_OK();
