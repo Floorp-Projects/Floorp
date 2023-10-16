@@ -25,35 +25,45 @@ function stylesheetLoadPromise(styleSheet, url) {
  *           or fails to load.
  */
 function appendStyleSheet(doc, url) {
-  if (doc.head) {
-    const styleSheet = doc.createElement("link");
-    styleSheet.setAttribute("rel", "stylesheet");
-    styleSheet.setAttribute("href", url);
-    const loadPromise = stylesheetLoadPromise(styleSheet);
+  const styleSheet = doc.createElementNS(
+    "http://www.w3.org/1999/xhtml",
+    "link"
+  );
+  styleSheet.setAttribute("rel", "stylesheet");
+  styleSheet.setAttribute("href", url);
+  const loadPromise = stylesheetLoadPromise(styleSheet);
 
-    // In order to make overriding styles sane, we want the order of loaded
-    // sheets to be something like this:
-    //   global.css
-    //   *-theme.css (the file loaded here)
-    //   document-specific-sheet.css
-    // See Bug 1582786 / https://phabricator.services.mozilla.com/D46530#inline-284756.
-    const globalSheet = doc.head.querySelector(
-      "link[href='chrome://global/skin/global.css']"
-    );
-    if (globalSheet) {
-      globalSheet.after(styleSheet);
-    } else {
-      doc.head.prepend(styleSheet);
-    }
+  // In order to make overriding styles sane, we want the order of loaded
+  // sheets to be something like this:
+  //   global.css
+  //   *-theme.css (the file loaded here)
+  //   document-specific-sheet.css
+  // See Bug 1582786 / https://phabricator.services.mozilla.com/D46530#inline-284756.
+
+  // If there is a global sheet then insert after it.
+  const globalSheet = doc.querySelector(
+    "link[href='chrome://global/skin/global.css']"
+  );
+  if (globalSheet) {
+    globalSheet.after(styleSheet);
     return { styleSheet, loadPromise };
   }
 
-  const styleSheet = doc.createProcessingInstruction(
-    "xml-stylesheet",
-    `href="${url}" type="text/css"`
-  );
-  const loadPromise = stylesheetLoadPromise(styleSheet);
-  doc.insertBefore(styleSheet, doc.documentElement);
+  // Otherwise insert before any existing link.
+  const links = doc.querySelectorAll("link");
+  if (links.length) {
+    links[0].before(styleSheet);
+    return { styleSheet, loadPromise };
+  }
+
+  // Fall back to putting at the start of the head or in a non-HTML doc the
+  // start of the document.
+  if (doc.head) {
+    doc.head.prepend(styleSheet);
+  } else {
+    doc.documentElement.prepend(styleSheet);
+  }
+
   return { styleSheet, loadPromise };
 }
 
