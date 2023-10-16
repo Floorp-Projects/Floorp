@@ -446,6 +446,7 @@ rtc_library("video_coding_utility") {
     "../../rtc_base/task_utils:repeating_task",
     "../../system_wrappers:field_trial",
     "../rtp_rtcp:rtp_rtcp_format",
+    "svc:scalability_mode_util",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/numeric:bits",
