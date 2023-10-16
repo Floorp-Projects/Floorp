@@ -408,7 +408,8 @@ void DEPRECATED_RtpSenderEgress::UpdateOnSendPacket(int packet_id,
     return;
   }
 
-  send_packet_observer_->OnSendPacket(packet_id, capture_time_ms, ssrc);
+  send_packet_observer_->OnSendPacket(packet_id,
+                                      Timestamp::Millis(capture_time_ms), ssrc);
 }
 
 bool DEPRECATED_RtpSenderEgress::SendPacketToNetwork(

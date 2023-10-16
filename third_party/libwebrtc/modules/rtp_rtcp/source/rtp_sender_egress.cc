@@ -516,7 +516,7 @@ void RtpSenderEgress::UpdateOnSendPacket(int packet_id,
     return;
   }
 
-  send_packet_observer_->OnSendPacket(packet_id, capture_time.ms(), ssrc);
+  send_packet_observer_->OnSendPacket(packet_id, capture_time, ssrc);
 }
 
 bool RtpSenderEgress::SendPacketToNetwork(const RtpPacketToSend& packet,
