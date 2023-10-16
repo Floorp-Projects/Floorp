@@ -141,7 +141,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
       red_payload_type_(config.red_payload_type),
       fec_type_(config.fec_type),
       fec_overhead_bytes_(config.fec_overhead_bytes),
-      post_encode_overhead_bitrate_(1000, RateStatistics::kBpsScale),
+      post_encode_overhead_bitrate_(/*max_window_size=*/TimeDelta::Seconds(1)),
       frame_encryptor_(config.frame_encryptor),
       require_frame_encryption_(config.require_frame_encryption),
       generic_descriptor_auth_experiment_(!absl::StartsWith(
@@ -182,8 +182,7 @@ void RTPSenderVideo::LogAndSendToNetwork(
     // unpacketized.
     if (packetized_payload_size >= encoder_output_size) {
       post_encode_overhead_bitrate_.Update(
-          packetized_payload_size - encoder_output_size,
-          clock_->TimeInMilliseconds());
+          packetized_payload_size - encoder_output_size, clock_->CurrentTime());
     }
   }
 
@@ -802,9 +801,8 @@ bool RTPSenderVideo::SendEncodedImage(int payload_type,
 
 DataRate RTPSenderVideo::PostEncodeOverhead() const {
   MutexLock lock(&stats_mutex_);
-  return DataRate::BitsPerSec(
-      post_encode_overhead_bitrate_.Rate(clock_->TimeInMilliseconds())
-          .value_or(0));
+  return post_encode_overhead_bitrate_.Rate(clock_->CurrentTime())
+      .value_or(DataRate::Zero());
 }
 
 bool RTPSenderVideo::AllowRetransmission(

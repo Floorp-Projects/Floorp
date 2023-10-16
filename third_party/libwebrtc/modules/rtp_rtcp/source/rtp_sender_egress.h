@@ -32,7 +32,7 @@
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "modules/rtp_rtcp/source/rtp_sequence_number_map.h"
-#include "rtc_base/rate_statistics.h"
+#include "rtc_base/bitrate_tracker.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/repeating_task.h"
@@ -170,7 +170,7 @@ class RtpSenderEgress {
   StreamDataCounters rtp_stats_ RTC_GUARDED_BY(worker_queue_);
   StreamDataCounters rtx_rtp_stats_ RTC_GUARDED_BY(worker_queue_);
   // One element per value in RtpPacketMediaType, with index matching value.
-  std::vector<RateStatistics> send_rates_ RTC_GUARDED_BY(worker_queue_);
+  std::vector<BitrateTracker> send_rates_ RTC_GUARDED_BY(worker_queue_);
   absl::optional<std::pair<FecProtectionParams, FecProtectionParams>>
       pending_fec_params_ RTC_GUARDED_BY(worker_queue_);
 

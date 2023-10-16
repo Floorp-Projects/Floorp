@@ -35,6 +35,7 @@
 #include "modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
+#include "rtc_base/bitrate_tracker.h"
 #include "rtc_base/one_time_event.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/rate_statistics.h"
@@ -248,7 +249,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   const size_t fec_overhead_bytes_;  // Per packet max FEC overhead.
 
   mutable Mutex stats_mutex_;
-  RateStatistics post_encode_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
+  BitrateTracker post_encode_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
 
   std::map<int, TemporalLayerStats> frame_stats_by_temporal_layer_
       RTC_GUARDED_BY(stats_mutex_);
