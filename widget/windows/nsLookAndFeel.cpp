@@ -875,10 +875,6 @@ auto nsLookAndFeel::ComputeTitlebarColors() -> TitlebarColors {
   result.mActiveDark.mBorder = result.mActiveLight.mBorder = *result.mAccent;
   result.mInactiveDark.mBorder = result.mInactiveLight.mBorder =
       result.mAccentInactive.valueOr(NS_RGB(57, 57, 57));
-  if (!StaticPrefs::widget_windows_titlebar_accent_enabled()) {
-    return result;
-  }
-
   result.mActiveLight.mBg = result.mActiveDark.mBg = *result.mAccent;
   result.mActiveLight.mFg = result.mActiveDark.mFg = *result.mAccentText;
   if (result.mAccentInactive) {
