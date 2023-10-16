@@ -1987,12 +1987,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #reset-pbm-panel {
   max-width: var(--menu-panel-width-wide);
-}
-
-#reset-pbm-panel-container {
   padding: 16px 16px 0;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 
