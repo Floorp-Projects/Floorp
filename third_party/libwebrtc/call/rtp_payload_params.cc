@@ -657,7 +657,15 @@ void RtpPayloadParams::Vp9ToGeneric(const CodecSpecificInfoVP9& vp9_info,
       result.chain_diffs[sid] = 0;
       continue;
     }
-    result.chain_diffs[sid] = shared_frame_id - chain_last_frame_id_[sid];
+    int64_t chain_diff = shared_frame_id - chain_last_frame_id_[sid];
+    if (chain_diff >= 256) {
+      RTC_LOG(LS_ERROR)
+          << "Too many frames since last VP9 T0 frame for spatial layer #"
+          << sid << " at frame#" << shared_frame_id;
+      chain_last_frame_id_[sid] = -1;
+      chain_diff = 0;
+    }
+    result.chain_diffs[sid] = chain_diff;
   }
 
   if (temporal_index == 0) {
