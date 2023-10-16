@@ -1263,7 +1263,7 @@ bool WebRtcVoiceSendChannel::SetOptions(const AudioOptions& options) {
 }
 
 bool WebRtcVoiceSendChannel::SetSendParameters(
-    const AudioSendParameters& params) {
+    const AudioSenderParameter& params) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetSendParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetSendParameters: "
@@ -1998,7 +1998,7 @@ WebRtcVoiceReceiveChannel::~WebRtcVoiceReceiveChannel() {
 }
 
 bool WebRtcVoiceReceiveChannel::SetRecvParameters(
-    const AudioRecvParameters& params) {
+    const AudioReceiverParameters& params) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetRecvParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetRecvParameters: "
