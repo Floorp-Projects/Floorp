@@ -7,9 +7,6 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-
-#include <stdlib.h>
-
 #include <string>
 
 #include "absl/flags/flag.h"
@@ -22,8 +19,8 @@
 #include "modules/video_coding/codecs/av1/av1_svc_config.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
-#include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/logging.h"
+#include "rtc_tools/video_encoder/encoded_image_file_writer.h"
 
 ABSL_FLAG(std::string,
           video_codec,
@@ -153,110 +150,42 @@ std::string ToString(const EncodedImage& encoded_image) {
 }
 
 // Wrapper of `EncodedImageCallback` that writes all encoded images into ivf
-// output. Each spatial layer has separated output including all its dependant
-// layers.
-class EncodedImageFileWriter : public EncodedImageCallback {
-  using TestIvfWriter = std::pair<std::unique_ptr<IvfFileWriter>, std::string>;
-
+// files through `test::EncodedImageFileWriter`.
+class TestEncodedImageCallback final : public EncodedImageCallback {
  public:
-  explicit EncodedImageFileWriter(const VideoCodec& video_codec_setting)
+  explicit TestEncodedImageCallback(const VideoCodec& video_codec_setting)
       : video_codec_setting_(video_codec_setting) {
-    const char* codec_string =
-        CodecTypeToPayloadString(video_codec_setting.codecType);
-
-    // Retrieve scalability mode information.
-    absl::optional<ScalabilityMode> scalability_mode =
-        video_codec_setting.GetScalabilityMode();
-    RTC_CHECK(scalability_mode);
-    spatial_layers_ = ScalabilityModeToNumSpatialLayers(*scalability_mode);
-    inter_layer_pred_mode_ =
-        ScalabilityModeToInterLayerPredMode(*scalability_mode);
-
-    RTC_CHECK_GT(spatial_layers_, 0);
-    // Create writer for every spatial layer with the "-Lx" postfix.
-    for (int i = 0; i < spatial_layers_; ++i) {
-      char buffer[256];
-      rtc::SimpleStringBuilder name(buffer);
-      name << "output-" << codec_string << "-"
-           << ScalabilityModeToString(*scalability_mode) << "-L" << i << ".ivf";
-
-      writers_.emplace_back(std::make_pair(
-          IvfFileWriter::Wrap(FileWrapper::OpenWriteOnly(name.str()), 0),
-          name.str()));
-    }
+    writer_ =
+        std::make_unique<test::EncodedImageFileWriter>(video_codec_setting);
   }
 
-  ~EncodedImageFileWriter() override {
-    for (size_t i = 0; i < writers_.size(); ++i) {
-      writers_[i].first->Close();
-      RTC_LOG(LS_INFO) << "Written: " << writers_[i].second;
-    }
-  }
+  ~TestEncodedImageCallback() = default;
 
  private:
   Result OnEncodedImage(const EncodedImage& encoded_image,
                         const CodecSpecificInfo* codec_specific_info) override {
-    RTC_CHECK(codec_specific_info);
-
-    ++frames_;
     RTC_LOG(LS_VERBOSE) << "frame " << frames_ << ": {"
                         << ToString(encoded_image)
                         << "}, codec_specific_info: {"
                         << ToString(*codec_specific_info) << "}";
 
-    if (spatial_layers_ == 1) {
-      // Single spatial layer stream.
-      RTC_CHECK_EQ(writers_.size(), 1);
-      RTC_CHECK(!encoded_image.SpatialIndex() ||
-                *encoded_image.SpatialIndex() == 0);
-      writers_[0].first->WriteFrame(encoded_image,
-                                    video_codec_setting_.codecType);
-    } else {
-      // Multiple spatial layers stream.
-      RTC_CHECK_GT(spatial_layers_, 1);
-      RTC_CHECK_GT(writers_.size(), 1);
-      RTC_CHECK(encoded_image.SpatialIndex());
-      int index = *encoded_image.SpatialIndex();
+    RTC_CHECK(writer_);
+    writer_->Write(encoded_image);
 
-      RTC_CHECK_LT(index, writers_.size());
-      switch (inter_layer_pred_mode_) {
-        case InterLayerPredMode::kOff:
-          writers_[index].first->WriteFrame(encoded_image,
-                                            video_codec_setting_.codecType);
-          break;
-
-        case InterLayerPredMode::kOn:
-          // Write the encoded image into this layer and higher spatial layers.
-          for (size_t i = index; i < writers_.size(); ++i) {
-            writers_[i].first->WriteFrame(encoded_image,
-                                          video_codec_setting_.codecType);
-          }
-          break;
-
-        case InterLayerPredMode::kOnKeyPic:
-          // Write the encoded image into this layer.
-          writers_[index].first->WriteFrame(encoded_image,
-                                            video_codec_setting_.codecType);
-          // If this is key frame, write to higher spatial layers as well.
-          if (encoded_image._frameType == VideoFrameType::kVideoFrameKey) {
-            for (size_t i = index + 1; i < writers_.size(); ++i) {
-              writers_[i].first->WriteFrame(encoded_image,
-                                            video_codec_setting_.codecType);
-            }
-          }
-          break;
-      }
+    RTC_CHECK(codec_specific_info);
+    // For SVC, every picture generates multiple encoded images of different
+    // spatial layers.
+    if (codec_specific_info->end_of_picture) {
+      ++frames_;
     }
 
     return Result(Result::Error::OK);
   }
 
-  VideoCodec video_codec_setting_ = {};
-  int spatial_layers_ = 0;
-  InterLayerPredMode inter_layer_pred_mode_ = InterLayerPredMode::kOff;
-
-  std::vector<TestIvfWriter> writers_;
+  VideoCodec video_codec_setting_;
   int32_t frames_ = 0;
+
+  std::unique_ptr<test::EncodedImageFileWriter> writer_;
 };
 
 // Wrapper of `BuiltinVideoEncoderFactory`.
@@ -267,7 +196,7 @@ class TestVideoEncoderFactoryWrapper final {
     RTC_CHECK(builtin_video_encoder_factory_);
   }
 
-  ~TestVideoEncoderFactoryWrapper() {}
+  ~TestVideoEncoderFactoryWrapper() = default;
 
   void ListSupportedFormats() const {
     // Log all supported formats.
@@ -570,12 +499,14 @@ int main(int argc, char* argv[]) {
           video_codec_setting);
   RTC_CHECK(video_encoder);
 
-  // Create `EncodedImageFileWriter`.
-  std::unique_ptr<webrtc::EncodedImageFileWriter> encoded_image_file_writer =
-      std::make_unique<webrtc::EncodedImageFileWriter>(video_codec_setting);
-  RTC_CHECK(encoded_image_file_writer);
+  // Create `TestEncodedImageCallback`.
+  std::unique_ptr<webrtc::TestEncodedImageCallback>
+      test_encoded_image_callback =
+          std::make_unique<webrtc::TestEncodedImageCallback>(
+              video_codec_setting);
+  RTC_CHECK(test_encoded_image_callback);
   int ret = video_encoder->RegisterEncodeCompleteCallback(
-      encoded_image_file_writer.get());
+      test_encoded_image_callback.get());
   RTC_CHECK_EQ(ret, WEBRTC_VIDEO_CODEC_OK);
 
   // Start to encode frames.

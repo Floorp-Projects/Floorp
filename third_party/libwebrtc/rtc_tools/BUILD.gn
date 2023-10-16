@@ -428,7 +428,11 @@ if (!build_with_chromium) {
   rtc_executable("video_encoder") {
     visibility = [ "*" ]
     testonly = true
-    sources = [ "video_encoder/video_encoder.cc" ]
+    sources = [
+      "video_encoder/encoded_image_file_writer.cc",
+      "video_encoder/encoded_image_file_writer.h",
+      "video_encoder/video_encoder.cc",
+    ]
     deps = [
       "//api:create_frame_generator",
       "//api:frame_generator_api",
