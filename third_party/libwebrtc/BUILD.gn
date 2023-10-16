@@ -138,6 +138,10 @@ config("common_inherited_config") {
   cflags = []
   ldflags = []
 
+  if (rtc_jni_generator_legacy_symbols) {
+    defines += [ "RTC_JNI_GENERATOR_LEGACY_SYMBOLS" ]
+  }
+
   if (rtc_objc_prefix != "") {
     defines += [ "RTC_OBJC_TYPE_PREFIX=${rtc_objc_prefix}" ]
   }
