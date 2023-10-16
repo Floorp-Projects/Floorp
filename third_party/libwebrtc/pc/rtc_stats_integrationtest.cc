@@ -617,6 +617,7 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(inbound_stream.fec_bytes_received);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_received);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_discarded);
+      verifier.TestMemberIsUndefined(inbound_stream.fec_ssrc);
     }
     verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.bytes_received);
     verifier.TestMemberIsNonNegative<uint64_t>(
@@ -700,6 +701,7 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(
           inbound_stream.retransmitted_bytes_received);
       verifier.TestMemberIsUndefined(inbound_stream.rtx_ssrc);
+      verifier.TestMemberIsUndefined(inbound_stream.fec_ssrc);
     }
 
     // Test runtime too short to get an estimate (at least two RTCP sender

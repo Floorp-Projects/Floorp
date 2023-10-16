@@ -2370,6 +2370,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].fec_bytes_received = 54;
   video_media_info.receivers[0].ssrc_groups.push_back(
       {cricket::kFidSsrcGroupSemantics, {1, 4404}});
+  video_media_info.receivers[0].ssrc_groups.push_back(
+      {cricket::kFecFrSsrcGroupSemantics, {1, 5505}});
 
   // Note: these two values intentionally differ,
   // only the decoded one should show up.
@@ -2437,6 +2439,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   expected_video.fec_packets_received = 32;
   expected_video.fec_bytes_received = 54;
   expected_video.rtx_ssrc = 4404;
+  expected_video.fec_ssrc = 5505;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(

@@ -250,6 +250,8 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   RTCStatsMember<uint64_t> fec_packets_received;
   RTCStatsMember<uint64_t> fec_bytes_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
+  // Inbound FEC SSRC. Only present if a mechanism like FlexFEC is negotiated.
+  RTCStatsMember<uint32_t> fec_ssrc;
   RTCStatsMember<uint64_t> bytes_received;
   RTCStatsMember<uint64_t> header_bytes_received;
   // Inbound RTX stats. Only defined when RTX is used and it is therefore

@@ -681,6 +681,11 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
     if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
         ssrc_group.ssrcs.size() == 2) {
       inbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
+    } else if (ssrc_group.semantics == cricket::kFecFrSsrcGroupSemantics &&
+               ssrc_group.ssrcs.size() == 2) {
+      // TODO(bugs.webrtc.org/15002): the ssrc-group might be >= 2 with
+      // multistream support.
+      inbound_video->fec_ssrc = ssrc_group.ssrcs[1];
     }
   }
 
