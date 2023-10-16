@@ -2,16 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from distutils.version import StrictVersion
-
 from mach.decorators import Command, CommandArgument
+from packaging.version import Version
 
 
 def is_osx_10_10_or_greater(cls):
     import platform
 
     release = platform.mac_ver()[0]
-    return release and StrictVersion(release) >= StrictVersion("10.10")
+    return release and Version(release) >= Version("10.10")
 
 
 # Get system power consumption and related measurements.

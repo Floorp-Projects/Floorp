@@ -263,10 +263,10 @@ class RaptorRunner(MozbuildObject):
 def setup_node(command_context):
     """Fetch the latest node-16 binary and install it into the .mozbuild directory."""
     import platform
-    from distutils.version import StrictVersion
 
     from mozbuild.artifact_commands import artifact_toolchain
     from mozbuild.nodeutil import find_node_executable
+    from packaging.version import Version
 
     print("Setting up node for browsertime...")
     state_dir = get_state_dir()
@@ -274,7 +274,7 @@ def setup_node(command_context):
 
     def __check_for_node():
         # Check standard locations first
-        node_exe = find_node_executable(min_version=StrictVersion("16.0.0"))
+        node_exe = find_node_executable(min_version=Version("16.0.0"))
         if node_exe and (node_exe[0] is not None):
             return node_exe[0]
         if not os.path.exists(cache_path):
