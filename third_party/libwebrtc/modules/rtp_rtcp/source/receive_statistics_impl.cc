@@ -319,7 +319,7 @@ bool StreamStatisticianImpl::IsRetransmitOfOldPacket(
     Timestamp now) const {
   int frequency_hz = packet.payload_type_frequency();
   RTC_DCHECK(last_receive_time_.has_value());
-  RTC_DCHECK_GT(frequency_hz, 0);
+  RTC_CHECK_GT(frequency_hz, 0);
   TimeDelta time_diff = now - *last_receive_time_;
 
   // Diff in time stamp since last received in order.
