@@ -93,7 +93,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08567f4539a12b542
  create mode 100644 common_audio/intrin.h
 
 diff --git a/.gn b/.gn
-index ed92a1b296..d5cf5c031c 100644
+index 02cfb6de64..3208b6bb4e 100644
 --- a/.gn
 +++ b/.gn
 @@ -69,6 +69,8 @@ default_args = {
