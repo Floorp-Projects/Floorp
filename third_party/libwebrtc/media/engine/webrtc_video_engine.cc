@@ -2036,14 +2036,17 @@ WebRtcVideoSendChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   int stream_max_bitrate = parameters_.max_bitrate_bps;
   // The codec max bitrate comes from the "x-google-max-bitrate" parameter
   // attribute set in the SDP for a specific codec. It only has an effect if
-  // max bitrate is not specified via "b=AS" and doesn't apply in singlecast
-  // if the encoding has a max bitrate.
+  // max bitrate is not specified through other means.
+  bool encodings_has_max_bitrate = false;
+  for (const auto& encoding : rtp_parameters_.encodings) {
+    if (encoding.active && encoding.max_bitrate_bps.value_or(0) > 0) {
+      encodings_has_max_bitrate = true;
+      break;
+    }
+  }
   int codec_max_bitrate_kbps;
-  bool is_single_encoding_with_max_bitrate =
-      rtp_parameters_.encodings.size() == 1 &&
-      rtp_parameters_.encodings[0].max_bitrate_bps.value_or(0) > 0;
   if (codec.GetParam(kCodecParamMaxBitrate, &codec_max_bitrate_kbps) &&
-      stream_max_bitrate == -1 && !is_single_encoding_with_max_bitrate) {
+      stream_max_bitrate == -1 && !encodings_has_max_bitrate) {
     stream_max_bitrate = codec_max_bitrate_kbps * 1000;
   }
   encoder_config.max_bitrate_bps = stream_max_bitrate;
