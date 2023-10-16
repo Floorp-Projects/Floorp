@@ -1721,7 +1721,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
     if (type == SdpType::kOffer) {
       // TODO(bugs.webrtc.org/4676) - Handle CreateChannel failure, as new local
       // description is applied. Restore back to old description.
-      RTCError error = CreateChannels(*local_description()->description());
+      error = CreateChannels(*local_description()->description());
       if (!error.ok()) {
         RTC_LOG(LS_ERROR) << error.message() << " (" << SdpTypeToString(type)
                           << ")";
@@ -1752,6 +1752,23 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   // If setting the description decided our SSL role, allocate any necessary
   // SCTP sids.
   AllocateSctpSids();
+
+  // Validate SSRCs, we do not allow duplicates.
+  if (ConfiguredForMedia()) {
+    std::set<uint32_t> used_ssrcs;
+    for (const auto& content : local_description()->description()->contents()) {
+      for (const auto& stream : content.media_description()->streams()) {
+        for (uint32_t ssrc : stream.ssrcs) {
+          auto result = used_ssrcs.insert(ssrc);
+          if (!result.second) {
+            LOG_AND_RETURN_ERROR(
+                RTCErrorType::INVALID_PARAMETER,
+                "Duplicate ssrc " + rtc::ToString(ssrc) + " is not allowed");
+          }
+        }
+      }
+    }
+  }
 
   if (IsUnifiedPlan()) {
     if (ConfiguredForMedia()) {
