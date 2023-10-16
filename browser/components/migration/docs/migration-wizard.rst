@@ -4,11 +4,6 @@ Migration Wizard Reference
 
 The migration wizard is the piece of UI that allows users to migrate from other browsers to Firefox.
 
-  .. note::
-    Firefox has had a legacy migration wizard for many years, and this has historically been a top-level XUL dialog window. **This documentation is not for the legacy migration wizard**, but is instead for an in-progress replacement migration wizard.
-
-    The new migration wizard can be enabled by setting ``browser.migrate.content-modal.enabled`` to ``true``.
-
 The migration wizard can be embedded in the following contexts:
 
 1. In a top level stand-alone dialog window
