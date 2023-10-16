@@ -2,7 +2,12 @@ Setting Up An Update Server
 ===========================
 
 The goal of this document is to provide instructions for installing a
-locally-served Firefox update.
+locally-served Firefox update for testing purposes. Note that these are not
+instructions for how to create or run a production update server. This method of
+serving updates is intended to trick Firefox into doing something that it
+normally wouldn't do: download and install the same update over and over again.
+This is useful for testing but is obviously not the correct behavior for a
+production update server.
 
 Obtaining an update MAR
 -----------------------
