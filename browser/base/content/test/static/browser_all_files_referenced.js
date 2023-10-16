@@ -73,6 +73,11 @@ var gExceptionPaths = [
 
   // CSS files are referenced inside JS in an html template
   "chrome://browser/content/aboutlogins/components/",
+
+  // These files are for the old migration wizard which will be removed
+  // shortly.
+  "chrome://browser/content/migration/migration.xhtml",
+  "chrome://browser/content/migration/migration.js",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
