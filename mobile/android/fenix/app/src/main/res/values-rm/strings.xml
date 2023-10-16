@@ -2239,6 +2239,8 @@
     <string name="review_quality_check_settings_recommended_products">Mussar reclamas en la verificaziun da recensiuns</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">I vegnan mussadas reclamas occasiunalas per products relevants. Tut las reclamas ston resguardar noss standards da qualitad per recensiuns. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">I vegnan mussadas reclamas occasiunalas per products relevants. Nus faschain mo reclama per products cun recensiuns fidablas. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Ulteriuras infurmaziuns</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2267,6 +2269,8 @@
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Sche ti vesas che quest product è puspè disponibel, annunzia quai e nus vegnin a lavurar per controllar las recensiuns.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Rapportar che quest product è puspè disponibel</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Annunziar ch\'il product è disponibel</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Controllar la qualitad da las recensiuns</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

@@ -540,7 +540,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Távoli hibakeresés USB-n</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Keresőszolgáltatások megjelenítése</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Keresőszolgáltatások megjelenítése</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Keresési javaslatok</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1953,7 +1953,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Hozzáadás</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Mentés</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Mentés</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Szerkesztés</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2203,7 +2203,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Értékelés-ellenőrző</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Értékelés-ellenőrző</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Értékelés-ellenőrző</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Megbízható értékelések</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2247,7 +2249,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Reklámok megjelenítése az értékelés-ellenőrzőben</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Alkalmanként releváns termékek hirdetéseit fogja látni. Minden reklámnak meg kell felelnie az ellenőrzési minőségi követelményeinknek. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Alkalmanként releváns termékek hirdetéseit fogja látni. Minden reklámnak meg kell felelnie az ellenőrzési minőségi követelményeinknek. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Alkalmanként releváns termékek hirdetéseit fogja látni. Csak megbízható értékeléssel rendelkező termékeket hirdetünk. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">További tudnivalók</string>
 
@@ -2277,7 +2281,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Ha úgy látja, hogy a termék újra raktáron van, akkor jelentse, és akkor dolgozni fogunk az értékelések ellenőrzésén.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Jelentés, hogy a termék újra raktáron van</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Jelentés, hogy a termék újra raktáron van</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Jelentés, hogy a termék raktáron van</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Értékelési minőség ellenőrzése</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

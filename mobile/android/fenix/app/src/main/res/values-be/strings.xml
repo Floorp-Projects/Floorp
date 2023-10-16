@@ -501,11 +501,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Даступнасць</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Уласны сервер уліковых запісаў Firefox</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Уласны сервер уліковых запісаў Firefox</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Уласны сервер уліковых запісаў Mozilla</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Уласны сервер сінхранізацыі</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Сервер уліковага запісу Firefox/сінхранізацыі зменены. Выхад з праграмы, каб прымяніць змены…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Сервер уліковага запісу Firefox/сінхранізацыі зменены. Выхад з праграмы, каб прымяніць змены…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Сервер уліковых запісаў Mozilla/сінхранізацыі зменены. Выхад з праграмы, каб прымяніць змены…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Уліковы запіс</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -522,7 +526,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Увайсці, каб сінхранізаваць карткі, закладкі, паролі і іншае.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Уліковы запіс Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Уліковы запіс Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Уліковы запіс Mozilla</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Падключыцеся, каб аднавіць сінхранізацыю</string>
     <!-- Preference for language -->
@@ -534,7 +540,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Аддаленая адладка праз USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Паказаць пашукавікі</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Паказаць пашукавікі</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Паказваць пошукавыя прапановы</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -553,6 +559,16 @@
     <string name="preferences_account_settings">Налады ўліковага запісу</string>
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Аўтазапаўненне URL-адрасоў</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Прапановы ад спонсараў</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Падтрымаць %1$s выпадковымі спонсарскімі прапановамі</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Прапановы ад %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Атрымлівайце прапановы з інтэрнэту, звязаныя з вашым пошукам</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Адкрываць спасылкі ў праграмах</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -655,9 +671,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Дадатак не падтрымліваецца</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Дадатак не падтрымліваецца</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Дадатак ужо ўсталяваны</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Дадатак ужо ўсталяваны</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -672,6 +688,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Кіраванне ўліковым запісам</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Зменіць пароль, кіраваць зборам дадзеных або выдаліць свой уліковы запіс</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Сінхранізаваць</string>
     <!-- Preference category for sync -->
@@ -1948,7 +1966,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Дадаць</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Захаваць</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Захаваць</string>
 
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Змяніць</string>
@@ -2205,7 +2223,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Праверка водгукаў</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Праверка водгукаў</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Праверка водгукаў</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Надзейныя водгукі</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2227,15 +2247,15 @@
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[Кожнаму водгуку на прадукт мы прысвойваем <b>літарную адзнаку</b> ад A да F.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB" moz:RemovedIn="120" tools:ignore="UnusedResources">Надзейныя водгукі. Мы лічым, што водгукі, хутчэй за ўсё, ад сапраўдных кліентаў, якія пакінулі сумленныя, непрадузятыя водгукі.</string>
+    <string name="review_quality_check_info_grade_info_AB">Надзейныя водгукі. Мы лічым, што водгукі, хутчэй за ўсё, ад сапраўдных кліентаў, якія пакінулі сумленныя, непрадузятыя водгукі.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB_2">Мы лічым, што водгукі надзейныя.</string>
+    <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Мы лічым, што водгукі надзейныя.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">Мы лічым, што тут ёсць сумесь надзейных і ненадзейных водгукаў.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF" moz:RemovedIn="120" tools:ignore="UnusedResources">Ненадзейныя водгукі. Мы лічым, што агляды, хутчэй за ўсё, падробленыя або ад неаб\'ектыўных аглядальнікаў.</string>
+    <string name="review_quality_check_info_grade_info_DF">Ненадзейныя водгукі. Мы лічым, што агляды, хутчэй за ўсё, падробленыя або ад неаб\'ектыўных аглядальнікаў.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF_2">Мы лічым, што водгукі ненадзейныя.</string>
+    <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Мы лічым, што водгукі ненадзейныя.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Скарэкціраваны рэйтынг</b> заснаваны толькі на водгуках, якія мы лічым надзейнымі.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
@@ -2249,7 +2269,9 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Паказваць рэкламу ў сродку праверкі водгукаў</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Вы будзеце час ад часу бачыць рэкламу адпаведных тавараў. Усе аб’явы павінны адпавядаць нашым стандартам якасці водгукаў. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Вы будзеце час ад часу бачыць рэкламу адпаведных тавараў. Усе аб’явы павінны адпавядаць нашым стандартам якасці водгукаў. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Вы будзеце час ад часу бачыць рэкламу адпаведных тавараў. Мы рэкламуем прадукты толькі з надзейнымі водгукамі. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Падрабязней</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2277,7 +2299,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Калі вы ўбачыце гэты прадукт ізноў у наяўнасці, паведаміце нам пра гэта, і мы будзем правяраць водгукі.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Паведаміць, што гэты прадукт ізноў у наяўнасці</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Паведаміць, што гэты прадукт ізноў у наяўнасці</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Паведаміць, што прадукт ёсць у наяўнасці</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Праверка якасці водгукаў</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

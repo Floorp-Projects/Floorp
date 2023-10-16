@@ -555,9 +555,14 @@
     <string name="preferences_enable_autocomplete_urls">Adresleri otomatik tamamla</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">Sponsorlardan öneriler</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Ara sıra görünecek sponsorlu önerilerle %1$s tarayıcınızı destekleyin</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">%1$s önerileri</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Aramanızla ilgili öneriler alın</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Bağlantıları uygulamalarda aç</string>
 
@@ -675,6 +680,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Hesabı yönet</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Parolanızı değiştirin, veri toplamayı yönetin veya hesabınızı silin</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Şimdi eşitle</string>
     <!-- Preference category for sync -->
@@ -2211,18 +2218,30 @@
     <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">Değerlendirmelerin güvenilmez olduğunu düşünüyoruz.</string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s hakkında daha fazla bilgi alın.</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_info_learn_more_link">Mozilla %s değerlendirme kalitesini nasıl belirliyor?</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Ayarlar</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Değerlendirme denetleyicisinde reklamları göster</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ara sıra ilgili ürünlerin reklamlarını görebilirsiniz. Tüm reklamlar değerlendirme kalitesi standartlarımızı karşılamak zorundadır. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Ara sıra ilgili ürünlerin reklamlarını görebilirsiniz. Yalnızca güvenilir değerlendirmeleri olan ürünlerin reklamlarını kabul ediyoruz. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Daha fazla bilgi alın</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
     <string name="review_quality_check_settings_turn_off">Değerlendirme kontrolcüsünü kapat</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">%s reklamı</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Değerlendirme kontrolcüsünün altyapısı %s tarafından sağlanmaktadır.</string>
+    <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
+    <string name="review_quality_check_powered_by_2">Değerlendirme kontrolcüsünün altyapısı %s tarafından sağlanmaktadır</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">Mozilla’dan %s</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">Kontrol edilecek yeni bilgiler</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">Şimdi kontrol et</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
@@ -2235,6 +2254,8 @@
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Bu ürünün yeniden stoğa girdiğini görürseniz bize bildirin, biz de değerlendirmeleri kontrol etmeye çalışalım.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Bu ürünün tekrar stokta olduğunu bildir</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Ürünün stokta olduğunu bildir</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Değerlendirme kalitesi kontrol ediliyor</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
@@ -2245,6 +2266,8 @@
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">Bildirdiğiniz için teşekkürler!</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Bu değerlendirmeleri kontrol edemiyoruz</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">Maalesef bazı ürün türlerinin değerlendirme kalitelerini kontrol edemiyoruz. Örneğin, hediye kartları ve video, müzik ve oyun akışı.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Bilgiler yakında gelecek</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
@@ -2269,8 +2292,14 @@
     <string name="review_quality_check_contextual_onboarding_privacy_policy">gizlilik politikası</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">kullanım koşulları</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Evet, deneyeceğim</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">Şimdi değil</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Satın almadan önce bu ürünün değerlendirmelerine güvenip güvenemeyeceğinizi öğrenin.</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Değerlendirme kontrolcüsünü deneyin</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Değerlendirme kontrolcüsünü aç</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->

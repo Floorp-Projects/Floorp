@@ -428,7 +428,7 @@
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction">ფუნთუშის მოთხოვნების შემცირება</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">შეამცირეთ ფუნთუშის მოთხოვნები</string>
+    <string name="reduce_cookie_banner_option">ფუნთუშის მოთხოვნების შემცირება</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">გამორთ.</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->

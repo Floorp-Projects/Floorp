@@ -324,16 +324,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Nie teraz</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Używaj przeglądarki %s za każdym razem</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Używaj przeglądarki Firefox za każdym razem</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s stawia ludzi ponad zyski i chroni Twoją prywatność, blokując elementy śledzące między witrynami.\n\nWięcej informacji znajdziesz w naszych %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox stawia ludzi ponad zyski i chroni Twoją prywatność, blokując elementy śledzące między witrynami.\n\nWięcej informacji znajdziesz w naszych zasadach ochrony prywatności.</string>
@@ -353,15 +346,9 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nie teraz</string>
 
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Dzięki powiadomieniom lepiej wykorzystasz przeglądarkę %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Dzięki powiadomieniom lepiej wykorzystasz przeglądarkę Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Przesyłaj karty między urządzeniami, zarządzaj pobieranymi plikami i otrzymuj wskazówki, jak najlepiej wykorzystać przeglądarkę %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Przesyłaj karty między urządzeniami, zarządzaj pobieranymi plikami i otrzymuj wskazówki, jak najlepiej wykorzystać przeglądarkę Firefox.</string>
@@ -516,11 +503,15 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Ułatwienia dostępu</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Własny serwer konta Firefoksa</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Własny serwer kont Firefoksa</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Własny serwer kont Mozilli</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Własny serwer synchronizacji</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Zmieniono serwer konta Firefoksa/synchronizacji. Wyłączanie aplikacji, aby zastosować zmiany…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Zmieniono serwer kont Firefoksa/synchronizacji. Wyłączanie aplikacji, aby zastosować zmiany…</string>
+    <!-- Toast shown after updating the Mozilla account/Sync server override preferences -->
+    <string name="toast_override_account_sync_server_done">Zmieniono serwer kont Mozilli/synchronizacji. Wyłączanie aplikacji, aby zastosować zmiany…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -536,7 +527,9 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Zaloguj się i synchronizuj karty, zakładki, hasła i więcej.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Konto Firefoksa</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Konto Firefoksa</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Konto Mozilli</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Połącz ponownie, aby wznowić synchronizację</string>
     <!-- Preference for language -->
@@ -548,7 +541,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Zdalne debugowanie przez USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Wyszukiwarki</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Wyszukiwarki</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Podpowiedzi wyszukiwania</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -568,6 +561,16 @@
 
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">Automatyczne uzupełnianie adresów</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">Podpowiedzi sponsorów</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">Wspieraj przeglądarkę %1$s, od czasu do czasu wyświetlając sponsorowane podpowiedzi</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">Podpowiedzi przeglądarki %1$s</string>
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">Otrzymuj podpowiedzi z Internetu związane z wyszukiwanymi słowami</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otwieranie odnośników w aplikacjach</string>
 
@@ -669,9 +672,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Dodatek nie jest obsługiwany</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Dodatek nie jest obsługiwany</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Dodatek jest już zainstalowany</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Dodatek jest już zainstalowany</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -687,6 +690,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Zarządzaj kontem</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Zmień hasło, zarządzaj zbieraniem danych lub usuń konto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchronizuj</string>
     <!-- Preference category for sync -->
@@ -1945,7 +1950,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Dodaj</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Zapisz</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Zapisz</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Edytuj</string>
     <!-- Text for the menu button to delete a search engine -->
