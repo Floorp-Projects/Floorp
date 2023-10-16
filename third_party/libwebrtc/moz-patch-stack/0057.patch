@@ -74,10 +74,10 @@ index d64ea689bb..c3c6955a7b 100644
  #endif  // defined(WEBRTC_POSIX)
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index d04115c6e1..058437f0dd 100644
+index 9e49573c98..ae3f99cb67 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -339,7 +339,7 @@ rtc_opus_dir = "//third_party/opus"
+@@ -340,7 +340,7 @@ rtc_opus_dir = "//third_party/opus"
  
  # Desktop capturer is supported only on Windows, OSX and Linux.
  rtc_desktop_capture_supported =
