@@ -182,6 +182,10 @@ class WebGPUParent final : public PWebGPUParent {
 
   std::unordered_map<ffi::WGPUTextureId, std::shared_ptr<ExternalTexture>>
       mExternalTextures;
+
+  // Store a set of DeviceIds that have been SendDeviceLost. We use this to
+  // limit each Device to one DeviceLost message.
+  nsTHashSet<RawId> mLostDeviceIds;
 };
 
 }  // namespace webgpu
