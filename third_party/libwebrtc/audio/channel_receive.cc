@@ -70,7 +70,8 @@ acm2::AcmReceiver::Config AcmConfig(
     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory,
     absl::optional<AudioCodecPairId> codec_pair_id,
     size_t jitter_buffer_max_packets,
-    bool jitter_buffer_fast_playout) {
+    bool jitter_buffer_fast_playout,
+    int jitter_buffer_min_delay_ms) {
   acm2::AcmReceiver::Config acm_config;
   acm_config.neteq_factory = neteq_factory;
   acm_config.decoder_factory = decoder_factory;
@@ -78,6 +79,7 @@ acm2::AcmReceiver::Config AcmConfig(
   acm_config.neteq_config.max_packets_in_buffer = jitter_buffer_max_packets;
   acm_config.neteq_config.enable_fast_accelerate = jitter_buffer_fast_playout;
   acm_config.neteq_config.enable_muted_state = true;
+  acm_config.neteq_config.min_delay_ms = jitter_buffer_min_delay_ms;
 
   return acm_config;
 }
@@ -553,7 +555,8 @@ ChannelReceive::ChannelReceive(
                               decoder_factory,
                               codec_pair_id,
                               jitter_buffer_max_packets,
-                              jitter_buffer_fast_playout)),
+                              jitter_buffer_fast_playout,
+                              jitter_buffer_min_delay_ms)),
       _outputAudioLevel(),
       clock_(clock),
       ntp_estimator_(clock),
