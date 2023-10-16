@@ -1625,7 +1625,7 @@ index 61a3c667ba..ad2303735e 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index d59b9a0ef7..73a8bf7454 100644
+index b171cfe11e..df7f173f58 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -581,6 +581,12 @@ class LogMessage {
