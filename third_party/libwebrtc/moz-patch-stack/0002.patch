@@ -1681,7 +1681,7 @@ index 0a9226ef6f..620c1c02f3 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 4b3ce8635f..892bb0d642 100644
+index c6509c837b..f4789be93e 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -122,7 +122,7 @@ declare_args() {
