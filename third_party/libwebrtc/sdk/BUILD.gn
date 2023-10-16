@@ -303,6 +303,7 @@ if (is_ios || is_mac) {
           "../api/task_queue:pending_task_safety_flag",
           "../modules/audio_device:audio_device_api",
           "../modules/audio_device:audio_device_buffer",
+          "../modules/audio_device:audio_device_config",
           "../modules/audio_device:audio_device_generic",
           "../rtc_base:buffer",
           "../rtc_base:checks",
