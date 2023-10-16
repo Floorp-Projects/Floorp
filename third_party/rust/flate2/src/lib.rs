@@ -76,6 +76,7 @@
 #![deny(missing_debug_implementations)]
 #![allow(trivial_numeric_casts)]
 #![cfg_attr(test, deny(warnings))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 pub use crate::crc::{Crc, CrcReader, CrcWriter};
 pub use crate::gz::GzBuilder;
@@ -115,6 +116,7 @@ pub mod write {
     pub use crate::deflate::write::DeflateEncoder;
     pub use crate::gz::write::GzDecoder;
     pub use crate::gz::write::GzEncoder;
+    pub use crate::gz::write::MultiGzDecoder;
     pub use crate::zlib::write::ZlibDecoder;
     pub use crate::zlib::write::ZlibEncoder;
 }
