@@ -93,6 +93,7 @@ void GenericPrinter::vprintf(const char* fmt, va_list ap) {
   // Simple shortcut to avoid allocating strings.
   if (strchr(fmt, '%') == nullptr) {
     put(fmt);
+    return;
   }
 
   GenericPrinterPrintfTarget printer(*this);
