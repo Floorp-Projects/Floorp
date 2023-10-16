@@ -36,7 +36,7 @@ class RTC_EXPORT CopyOnWriteBuffer {
   // Share the data with an existing buffer.
   CopyOnWriteBuffer(const CopyOnWriteBuffer& buf);
   // Move contents from an existing buffer.
-  CopyOnWriteBuffer(CopyOnWriteBuffer&& buf);
+  CopyOnWriteBuffer(CopyOnWriteBuffer&& buf) noexcept;
 
   // Construct a buffer from a string, convenient for unittests.
   explicit CopyOnWriteBuffer(absl::string_view s);
