@@ -893,10 +893,7 @@ rtc_library("net_helpers") {
     "net_helpers.cc",
     "net_helpers.h",
   ]
-  deps = [
-    ":net_test_helpers",
-    "system:rtc_export",
-  ]
+  deps = [ "system:rtc_export" ]
   if (is_android) {
     deps += [ ":ifaddrs_android" ]
   }

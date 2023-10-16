@@ -21,8 +21,6 @@
 
 #include "absl/strings/string_view.h"
 #include "rtc_base/system/rtc_export.h"
-// TODO(mbonadei): Remove this, after Chromium tests have been migrated.
-#include "rtc_base/net_test_helpers.h"
 
 namespace rtc {
 
