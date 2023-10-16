@@ -2125,7 +2125,8 @@ EncodedImage VideoStreamEncoder::AugmentEncodedImage(
             .Parse(codec_type, stream_idx, image_copy.data(), image_copy.size())
             .value_or(-1);
   }
-  RTC_LOG(LS_VERBOSE) << __func__ << " stream_idx " << stream_idx << " qp "
+  RTC_LOG(LS_VERBOSE) << __func__ << " ntp time " << encoded_image.NtpTimeMs()
+                      << " stream_idx " << stream_idx << " qp "
                       << image_copy.qp_;
   image_copy.SetAtTargetQuality(codec_type == kVideoCodecVP8 &&
                                 image_copy.qp_ <= kVp8SteadyStateQpThreshold);
