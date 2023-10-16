@@ -91,6 +91,7 @@ class ErrorBuffer {
       ffi::WGPUErrorBufferType aType) {
     switch (aType) {
       case ffi::WGPUErrorBufferType_None:
+      case ffi::WGPUErrorBufferType_DeviceLost:
         return {};
       case ffi::WGPUErrorBufferType_Internal:
         return Some(dom::GPUErrorFilter::Internal);
@@ -107,6 +108,7 @@ class ErrorBuffer {
 
   struct Error {
     dom::GPUErrorFilter type;
+    bool isDeviceLost;
     nsCString message;
   };
 
@@ -118,11 +120,19 @@ class ErrorBuffer {
   // won't assert.
   Maybe<Error> GetError() {
     mAwaitingGetError = false;
+    if (mType == ffi::WGPUErrorBufferType_DeviceLost) {
+      // This error is for a lost device, so we return an Error struct
+      // with the isDeviceLost bool set to true. It doesn't matter what
+      // GPUErrorFilter type we use, so we just use Validation. The error
+      // will not be reported.
+      return Some(Error{dom::GPUErrorFilter::Validation, true,
+                        nsCString{mMessageUtf8}});
+    }
     auto filterType = ErrorTypeToFilterType(mType);
     if (!filterType) {
       return {};
     }
-    return Some(Error{*filterType, nsCString{mMessageUtf8}});
+    return Some(Error{*filterType, false, nsCString{mMessageUtf8}});
   }
 };
 
@@ -297,9 +307,27 @@ void WebGPUParent::MaintainDevices() {
   ffi::wgpu_server_poll_all_devices(mContext.get(), false);
 }
 
+void WebGPUParent::LoseDevice(const RawId aDeviceId, Maybe<uint8_t> aReason,
+                              const nsACString& aMessage) {
+  if (!SendDeviceLost(aDeviceId, aReason, aMessage)) {
+    NS_ERROR("SendDeviceLost failed");
+  }
+}
+
 bool WebGPUParent::ForwardError(const Maybe<RawId> aDeviceId,
                                 ErrorBuffer& aError) {
   if (auto error = aError.GetError()) {
+    // If this is a error has isDeviceLost true, then instead of reporting
+    // the error, we swallow it and call LoseDevice if we have an
+    // aDeviceID. This is to comply with the spec declaration in
+    // https://gpuweb.github.io/gpuweb/#lose-the-device
+    // "No errors are generated after device loss."
+    if (error->isDeviceLost) {
+      if (aDeviceId.isSome()) {
+        LoseDevice(*aDeviceId, Nothing(), error->message);
+      }
+      return false;
+    }
     ReportError(aDeviceId, error->type, error->message);
     return true;
   }
@@ -382,6 +410,10 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   ffi::wgpu_server_adapter_request_device(
       mContext.get(), aAdapterId, ToFFI(&aByteBuf), aDeviceId, error.ToFFI());
   if (ForwardError(0, error)) {
+    uint8_t reasonDestroyed = 0;  // GPUDeviceLostReason::Destroyed
+    auto maybeError = error.GetError();
+    MOZ_ASSERT(maybeError.isSome());
+    LoseDevice(aDeviceId, Some(reasonDestroyed), maybeError->message);
     resolver(false);
   } else {
     mErrorScopeStackByDevice.insert({aDeviceId, {}});
@@ -435,7 +467,8 @@ ipc::IPCResult WebGPUParent::RecvCreateBuffer(
         size = aDesc.mSize;
       }
 
-      BufferMapData data = {std::move(shmem), hasMapFlags, offset, size};
+      BufferMapData data = {std::move(shmem), hasMapFlags, offset, size,
+                            aDeviceId};
       mSharedMemoryMap.insert({aBufferId, std::move(data)});
     }
   }
@@ -488,9 +521,9 @@ static const char* MapStatusString(ffi::WGPUBufferMapAsyncStatus status) {
   MOZ_CRASH("Bad ffi::WGPUBufferMapAsyncStatus");
 }
 
-static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
-                        uint8_t* userdata) {
-  auto* req = reinterpret_cast<MapRequest*>(userdata);
+void WebGPUParent::MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
+                               uint8_t* aUserData) {
+  auto* req = reinterpret_cast<MapRequest*>(aUserData);
 
   if (!req->mParent->CanSend()) {
     delete req;
@@ -503,9 +536,18 @@ static void MapCallback(ffi::WGPUBufferMapAsyncStatus status,
   auto* mapData = req->mParent->GetBufferMapData(bufferId);
   MOZ_RELEASE_ASSERT(mapData);
 
-  if (status != ffi::WGPUBufferMapAsyncStatus_Success) {
+  if (aStatus != ffi::WGPUBufferMapAsyncStatus_Success) {
+    // A buffer map operation that fails with a DeviceError gets
+    // mapped to the ContextLost status. If we have this status, we
+    // need to lose the device.
+    if (aStatus == ffi::WGPUBufferMapAsyncStatus_ContextLost) {
+      req->mParent->LoseDevice(
+          mapData->mDeviceId, Nothing(),
+          nsPrintfCString("Buffer %" PRIu64 " invalid", bufferId));
+    }
+
     result = BufferMapError(nsPrintfCString("Mapping WebGPU buffer failed: %s",
-                                            MapStatusString(status)));
+                                            MapStatusString(aStatus)));
   } else {
     auto size = req->mSize;
     auto offset = req->mOffset;

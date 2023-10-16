@@ -89,6 +89,7 @@ parent:
 child:
   async UncapturedError(RawId? aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);
+  async DeviceLost(RawId aDeviceId, uint8_t? reason, nsCString message);
   async __delete__();
 };
 

@@ -1128,6 +1128,29 @@ ipc::IPCResult WebGPUChild::RecvDropAction(const ipc::ByteBuf& aByteBuf) {
   return IPC_OK();
 }
 
+ipc::IPCResult WebGPUChild::RecvDeviceLost(RawId aDeviceId,
+                                           Maybe<uint8_t> aReason,
+                                           const nsACString& aMessage) {
+  RefPtr<Device> device;
+  const auto itr = mDeviceMap.find(aDeviceId);
+  if (itr != mDeviceMap.end()) {
+    device = itr->second.get();
+    MOZ_ASSERT(device);
+  }
+
+  if (device) {
+    auto message = NS_ConvertUTF8toUTF16(aMessage);
+    if (aReason.isSome()) {
+      dom::GPUDeviceLostReason reason =
+          static_cast<dom::GPUDeviceLostReason>(*aReason);
+      device->ResolveLost(Some(reason), message);
+    } else {
+      device->ResolveLost(Nothing(), message);
+    }
+  }
+  return IPC_OK();
+}
+
 void WebGPUChild::DeviceCreateSwapChain(
     RawId aSelfId, const RGBDescriptor& aRgbDesc, size_t maxBufferCount,
     const layers::RemoteTextureOwnerId& aOwnerId,

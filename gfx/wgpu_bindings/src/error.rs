@@ -94,9 +94,10 @@ impl ErrorBuffer {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub(crate) enum ErrorBufferType {
     None = 0,
-    Internal = 1,
-    OutOfMemory = 2,
-    Validation = 3,
+    DeviceLost = 1,
+    Internal = 2,
+    OutOfMemory = 3,
+    Validation = 4,
 }
 
 /// A trait for querying the [`ErrorBufferType`] classification of an error. Used by
@@ -174,7 +175,7 @@ mod foreign {
             match self {
                 RequestDeviceError::OutOfMemory => ErrorBufferType::OutOfMemory,
 
-                RequestDeviceError::DeviceLost => ErrorBufferType::None,
+                RequestDeviceError::DeviceLost => ErrorBufferType::DeviceLost,
 
                 RequestDeviceError::Internal
                 | RequestDeviceError::InvalidAdapter
@@ -437,7 +438,7 @@ mod foreign {
         fn error_type(&self) -> ErrorBufferType {
             match self {
                 DeviceError::Invalid | DeviceError::WrongDevice => ErrorBufferType::Validation,
-                DeviceError::Lost => ErrorBufferType::None,
+                DeviceError::Lost => ErrorBufferType::DeviceLost,
                 DeviceError::OutOfMemory => ErrorBufferType::OutOfMemory,
                 DeviceError::ResourceCreationFailed => ErrorBufferType::Internal,
             }

@@ -144,6 +144,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
   ipc::IPCResult RecvUncapturedError(Maybe<RawId> aDeviceId,
                                      const nsACString& aMessage);
   ipc::IPCResult RecvDropAction(const ipc::ByteBuf& aByteBuf);
+  ipc::IPCResult RecvDeviceLost(RawId aDeviceId, Maybe<uint8_t> aReason,
+                                const nsACString& aMessage);
   void ActorDestroy(ActorDestroyReason) override;
 };
 

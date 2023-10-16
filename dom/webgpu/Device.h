@@ -45,6 +45,7 @@ class Promise;
 template <typename T>
 class Sequence;
 class GPUBufferOrGPUTexture;
+enum class GPUDeviceLostReason : uint8_t;
 enum class GPUErrorFilter : uint8_t;
 enum class GPUFeatureName : uint8_t;
 class GPULogCallback;
@@ -121,6 +122,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   void SetLabel(const nsAString& aLabel);
   dom::Promise* GetLost(ErrorResult& aRv);
   dom::Promise* MaybeGetLost() const { return mLostPromise; }
+  void ResolveLost(Maybe<dom::GPUDeviceLostReason> aReason,
+                   const nsAString& aMessage);
 
   const RefPtr<SupportedFeatures>& Features() const { return mFeatures; }
   const RefPtr<SupportedLimits>& Limits() const { return mLimits; }
