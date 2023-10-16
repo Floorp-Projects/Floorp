@@ -1268,6 +1268,7 @@ if (!build_with_chromium) {
       ":run_loop",
       ":scoped_key_value_config",
       ":test_support",
+      ":test_video_capturer",
       ":video_test_common",
       ":video_test_constants",
       "../api:array_view",
