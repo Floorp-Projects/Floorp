@@ -1477,6 +1477,13 @@ class AsyncPanZoomController {
    */
   void DispatchStateChangeNotification(PanZoomState aOldState,
                                        PanZoomState aNewState);
+
+  /**
+   * Send a TransformBegin notification followed by a TransformEnd
+   * notification.
+   */
+  void SendTransformBeginAndEnd();
+
   /**
    * Internal helpers for checking general state of this apzc.
    */
