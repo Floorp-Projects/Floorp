@@ -269,46 +269,41 @@ class MediaContentDescriptionImpl : public MediaContentDescription {
     protocol_ = std::string(protocol);
   }
 
-  typedef C CodecType;
-
   // Codecs should be in preference order (most preferred codec first).
-  const std::vector<C>& codecs() const { return codecs_; }
-  void set_codecs(const std::vector<C>& codecs) { codecs_ = codecs; }
+  const std::vector<Codec>& codecs() const { return codecs_; }
+  void set_codecs(const std::vector<Codec>& codecs) { codecs_ = codecs; }
   bool has_codecs() const override { return !codecs_.empty(); }
   bool HasCodec(int id) {
     bool found = false;
-    for (typename std::vector<C>::iterator iter = codecs_.begin();
-         iter != codecs_.end(); ++iter) {
-      if (iter->id == id) {
+    for (auto it = codecs_.begin(); it != codecs_.end(); ++it) {
+      if (it->id == id) {
         found = true;
         break;
       }
     }
     return found;
   }
-  void AddCodec(const C& codec) { codecs_.push_back(codec); }
-  void AddOrReplaceCodec(const C& codec) {
-    for (typename std::vector<C>::iterator iter = codecs_.begin();
-         iter != codecs_.end(); ++iter) {
-      if (iter->id == codec.id) {
-        *iter = codec;
+  void AddCodec(const Codec& codec) { codecs_.push_back(codec); }
+  void AddOrReplaceCodec(const Codec& codec) {
+    for (auto it = codecs_.begin(); it != codecs_.end(); ++it) {
+      if (it->id == codec.id) {
+        *it = codec;
         return;
       }
     }
     AddCodec(codec);
   }
-  void AddCodecs(const std::vector<C>& codecs) {
-    typename std::vector<C>::const_iterator codec;
-    for (codec = codecs.begin(); codec != codecs.end(); ++codec) {
-      AddCodec(*codec);
+  void AddCodecs(const std::vector<Codec>& codecs) {
+    for (const auto& codec : codecs) {
+      AddCodec(codec);
     }
   }
 
  private:
-  std::vector<C> codecs_;
+  std::vector<Codec> codecs_;
 };
 
-class AudioContentDescription : public MediaContentDescriptionImpl<AudioCodec> {
+class AudioContentDescription : public MediaContentDescriptionImpl<Codec> {
  public:
   AudioContentDescription() {}
 
@@ -322,7 +317,7 @@ class AudioContentDescription : public MediaContentDescriptionImpl<AudioCodec> {
   }
 };
 
-class VideoContentDescription : public MediaContentDescriptionImpl<VideoCodec> {
+class VideoContentDescription : public MediaContentDescriptionImpl<Codec> {
  public:
   virtual MediaType type() const { return MEDIA_TYPE_VIDEO; }
   virtual VideoContentDescription* as_video() { return this; }
