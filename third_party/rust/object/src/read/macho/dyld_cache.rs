@@ -191,7 +191,7 @@ where
     /// The file system path of this image.
     pub fn path(&self) -> Result<&'data str> {
         let path = self.image_info.path(self.cache.endian, self.cache.data)?;
-        // The path should always be ascii, so from_utf8 should alway succeed.
+        // The path should always be ascii, so from_utf8 should always succeed.
         let path = core::str::from_utf8(path).map_err(|_| Error("Path string not valid utf-8"))?;
         Ok(path)
     }

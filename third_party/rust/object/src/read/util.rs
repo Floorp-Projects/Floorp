@@ -165,6 +165,48 @@ impl<'data> Bytes<'data> {
         self.skip(offset)?;
         self.read_string()
     }
+
+    /// Read an unsigned LEB128 number.
+    pub fn read_uleb128(&mut self) -> Result<u64, ()> {
+        let mut result = 0;
+        let mut shift = 0;
+
+        loop {
+            let byte = *self.read::<u8>()?;
+            if shift == 63 && byte != 0x00 && byte != 0x01 {
+                return Err(());
+            }
+            result |= u64::from(byte & 0x7f) << shift;
+            shift += 7;
+
+            if byte & 0x80 == 0 {
+                return Ok(result);
+            }
+        }
+    }
+
+    /// Read a signed LEB128 number.
+    pub fn read_sleb128(&mut self) -> Result<i64, ()> {
+        let mut result = 0;
+        let mut shift = 0;
+
+        loop {
+            let byte = *self.read::<u8>()?;
+            if shift == 63 && byte != 0x00 && byte != 0x7f {
+                return Err(());
+            }
+            result |= i64::from(byte & 0x7f) << shift;
+            shift += 7;
+
+            if byte & 0x80 == 0 {
+                if shift < 64 && (byte & 0x40) != 0 {
+                    // Sign extend the result.
+                    result |= !0 << shift;
+                }
+                return Ok(result);
+            }
+        }
+    }
 }
 
 // Only for Debug impl of `Bytes`.

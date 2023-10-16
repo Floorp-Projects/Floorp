@@ -37,3 +37,6 @@ pub use hash::*;
 
 mod version;
 pub use version::*;
+
+mod attributes;
+pub use attributes::*;

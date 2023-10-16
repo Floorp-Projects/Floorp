@@ -1,20 +1,22 @@
 //! # `object`
 //!
 //! The `object` crate provides a unified interface to working with object files
-//! across platforms. It supports reading object files and executable files,
-//! and writing object files and some executable files.
+//! across platforms. It supports reading relocatable object files and executable files,
+//! and writing relocatable object files and some executable files.
 //!
 //! ## Raw struct definitions
 //!
-//! Raw structs are defined for: [ELF](elf), [Mach-O](macho), [PE/COFF](pe), [archive].
+//! Raw structs are defined for: [ELF](elf), [Mach-O](macho), [PE/COFF](pe),
+//! [XCOFF](xcoff), [archive].
 //! Types and traits for zerocopy support are defined in [pod] and [endian].
 //!
 //! ## Unified read API
 //!
-//! The [read::Object] trait defines the unified interace. This trait is implemented
+//! The [read::Object] trait defines the unified interface. This trait is implemented
 //! by [read::File], which allows reading any file format, as well as implementations
 //! for each file format: [ELF](read::elf::ElfFile), [Mach-O](read::macho::MachOFile),
-//! [COFF](read::coff::CoffFile), [PE](read::pe::PeFile), [Wasm](read::wasm::WasmFile).
+//! [COFF](read::coff::CoffFile), [PE](read::pe::PeFile), [Wasm](read::wasm::WasmFile),
+//! [XCOFF](read::xcoff::XcoffFile).
 //!
 //! ## Low level read API
 //!
@@ -24,7 +26,8 @@
 //!
 //! ## Unified write API
 //!
-//! [write::Object] allows building a COFF/ELF/Mach-O object and then writing it out.
+//! [write::Object] allows building a COFF/ELF/Mach-O/XCOFF relocatable object file and
+//! then writing it out.
 //!
 //! ## Low level executable writers
 //!
@@ -55,6 +58,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 #![no_std]
+#![warn(rust_2018_idioms)]
 // Style.
 #![allow(clippy::collapsible_if)]
 #![allow(clippy::comparison_chain)]
@@ -65,16 +69,11 @@
 #![allow(clippy::should_implement_trait)]
 // Unit errors are converted to other types by callers.
 #![allow(clippy::result_unit_err)]
-// Clippy is wrong.
-#![allow(clippy::transmute_ptr_to_ptr)]
 // Worse readability sometimes.
 #![allow(clippy::collapsible_else_if)]
 
 #[cfg(feature = "cargo-all")]
 compile_error!("'--all-features' is not supported; use '--features all' instead");
-
-#[cfg(all(feature = "xcoff", not(feature = "unstable")))]
-compile_error!("'xcoff` is an unstable feature; enable 'unstable' as well");
 
 #[cfg(any(feature = "read_core", feature = "write_core"))]
 #[allow(unused_imports)]

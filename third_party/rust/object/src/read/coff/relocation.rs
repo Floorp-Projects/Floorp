@@ -7,20 +7,31 @@ use crate::read::{
     ReadRef, Relocation, RelocationEncoding, RelocationKind, RelocationTarget, SymbolIndex,
 };
 
-use super::CoffFile;
+use super::{CoffFile, CoffHeader};
+
+/// An iterator over the relocations in a `CoffBigSection`.
+pub type CoffBigRelocationIterator<'data, 'file, R = &'data [u8]> =
+    CoffRelocationIterator<'data, 'file, R, pe::AnonObjectHeaderBigobj>;
 
 /// An iterator over the relocations in a `CoffSection`.
-pub struct CoffRelocationIterator<'data, 'file, R: ReadRef<'data> = &'data [u8]> {
-    pub(super) file: &'file CoffFile<'data, R>,
+pub struct CoffRelocationIterator<
+    'data,
+    'file,
+    R: ReadRef<'data> = &'data [u8],
+    Coff: CoffHeader = pe::ImageFileHeader,
+> {
+    pub(super) file: &'file CoffFile<'data, R, Coff>,
     pub(super) iter: slice::Iter<'data, pe::ImageRelocation>,
 }
 
-impl<'data, 'file, R: ReadRef<'data>> Iterator for CoffRelocationIterator<'data, 'file, R> {
+impl<'data, 'file, R: ReadRef<'data>, Coff: CoffHeader> Iterator
+    for CoffRelocationIterator<'data, 'file, R, Coff>
+{
     type Item = (u64, Relocation);
 
     fn next(&mut self) -> Option<Self::Item> {
         self.iter.next().map(|relocation| {
-            let (kind, size, addend) = match self.file.header.machine.get(LE) {
+            let (kind, size, addend) = match self.file.header.machine() {
                 pe::IMAGE_FILE_MACHINE_ARMNT => match relocation.typ.get(LE) {
                     pe::IMAGE_REL_ARM_ADDR32 => (RelocationKind::Absolute, 32, 0),
                     pe::IMAGE_REL_ARM_ADDR32NB => (RelocationKind::ImageOffset, 32, 0),
@@ -84,7 +95,9 @@ impl<'data, 'file, R: ReadRef<'data>> Iterator for CoffRelocationIterator<'data,
     }
 }
 
-impl<'data, 'file, R: ReadRef<'data>> fmt::Debug for CoffRelocationIterator<'data, 'file, R> {
+impl<'data, 'file, R: ReadRef<'data>, Coff: CoffHeader> fmt::Debug
+    for CoffRelocationIterator<'data, 'file, R, Coff>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("CoffRelocationIterator").finish()
     }

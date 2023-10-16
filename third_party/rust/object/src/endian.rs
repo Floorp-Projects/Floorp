@@ -402,6 +402,11 @@ mod aligned {
     pub struct U16<E: Endian>(u16, PhantomData<E>);
 
     impl<E: Endian> U16<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 2]) -> Self {
+            Self(u16::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: u16) -> Self {
             Self(e.write_u16(n), PhantomData)
@@ -424,6 +429,11 @@ mod aligned {
     pub struct U32<E: Endian>(u32, PhantomData<E>);
 
     impl<E: Endian> U32<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 4]) -> Self {
+            Self(u32::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: u32) -> Self {
             Self(e.write_u32(n), PhantomData)
@@ -444,6 +454,11 @@ mod aligned {
     pub struct U64<E: Endian>(u64, PhantomData<E>);
 
     impl<E: Endian> U64<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 8]) -> Self {
+            Self(u64::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: u64) -> Self {
             Self(e.write_u64(n), PhantomData)
@@ -464,6 +479,11 @@ mod aligned {
     pub struct I16<E: Endian>(i16, PhantomData<E>);
 
     impl<E: Endian> I16<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 2]) -> Self {
+            Self(i16::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: i16) -> Self {
             Self(e.write_i16(n), PhantomData)
@@ -484,6 +504,11 @@ mod aligned {
     pub struct I32<E: Endian>(i32, PhantomData<E>);
 
     impl<E: Endian> I32<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 4]) -> Self {
+            Self(i32::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: i32) -> Self {
             Self(e.write_i32(n), PhantomData)
@@ -504,6 +529,11 @@ mod aligned {
     pub struct I64<E: Endian>(i64, PhantomData<E>);
 
     impl<E: Endian> I64<E> {
+        /// Construct a new value given bytes that already have the required endianness.
+        pub fn from_bytes(n: [u8; 8]) -> Self {
+            Self(i64::from_ne_bytes(n), PhantomData)
+        }
+
         /// Construct a new value given a native endian value.
         pub fn new(e: E, n: i64) -> Self {
             Self(e.write_i64(n), PhantomData)
@@ -590,6 +620,11 @@ pub type I64<E> = I64Bytes<E>;
 pub struct U16Bytes<E: Endian>([u8; 2], PhantomData<E>);
 
 impl<E: Endian> U16Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 2]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: u16) -> Self {
         Self(e.write_u16_bytes(n), PhantomData)
@@ -612,6 +647,11 @@ impl<E: Endian> U16Bytes<E> {
 pub struct U32Bytes<E: Endian>([u8; 4], PhantomData<E>);
 
 impl<E: Endian> U32Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 4]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: u32) -> Self {
         Self(e.write_u32_bytes(n), PhantomData)
@@ -634,6 +674,11 @@ impl<E: Endian> U32Bytes<E> {
 pub struct U64Bytes<E: Endian>([u8; 8], PhantomData<E>);
 
 impl<E: Endian> U64Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 8]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: u64) -> Self {
         Self(e.write_u64_bytes(n), PhantomData)
@@ -656,6 +701,11 @@ impl<E: Endian> U64Bytes<E> {
 pub struct I16Bytes<E: Endian>([u8; 2], PhantomData<E>);
 
 impl<E: Endian> I16Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 2]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: i16) -> Self {
         Self(e.write_i16_bytes(n), PhantomData)
@@ -678,6 +728,11 @@ impl<E: Endian> I16Bytes<E> {
 pub struct I32Bytes<E: Endian>([u8; 4], PhantomData<E>);
 
 impl<E: Endian> I32Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 4]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: i32) -> Self {
         Self(e.write_i32_bytes(n), PhantomData)
@@ -700,6 +755,11 @@ impl<E: Endian> I32Bytes<E> {
 pub struct I64Bytes<E: Endian>([u8; 8], PhantomData<E>);
 
 impl<E: Endian> I64Bytes<E> {
+    /// Construct a new value given bytes that already have the required endianness.
+    pub fn from_bytes(n: [u8; 8]) -> Self {
+        Self(n, PhantomData)
+    }
+
     /// Construct a new value given a native endian value.
     pub fn new(e: E, n: i64) -> Self {
         Self(e.write_i64_bytes(n), PhantomData)

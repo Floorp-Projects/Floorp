@@ -70,7 +70,7 @@ pub struct Error(&'static str);
 
 impl fmt::Display for Error {
     #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.0)
     }
 }
@@ -151,6 +151,14 @@ pub enum FileKind {
     /// A COFF object file.
     #[cfg(feature = "coff")]
     Coff,
+    /// A COFF bigobj object file.
+    ///
+    /// This supports a larger number of sections.
+    #[cfg(feature = "coff")]
+    CoffBig,
+    /// A Windows short import file.
+    #[cfg(feature = "coff")]
+    CoffImport,
     /// A dyld cache file containing Mach-O images.
     #[cfg(feature = "macho")]
     DyldCache,
@@ -226,7 +234,8 @@ impl FileKind {
             #[cfg(feature = "wasm")]
             [0x00, b'a', b's', b'm', ..] => FileKind::Wasm,
             #[cfg(feature = "pe")]
-            [b'M', b'Z', ..] => {
+            [b'M', b'Z', ..] if offset == 0 => {
+                // offset == 0 restriction is because optional_header_magic only looks at offset 0
                 match pe::optional_header_magic(data) {
                     Ok(crate::pe::IMAGE_NT_OPTIONAL_HDR32_MAGIC) => {
                         FileKind::Pe32
@@ -247,10 +256,20 @@ impl FileKind {
             | [0x4c, 0x01, ..]
             // COFF x86-64
             | [0x64, 0x86, ..] => FileKind::Coff,
+            #[cfg(feature = "coff")]
+            [0x00, 0x00, 0xff, 0xff, 0x00, 0x00, ..] => FileKind::CoffImport,
+            #[cfg(feature = "coff")]
+            [0x00, 0x00, 0xff, 0xff, 0x02, 0x00, ..] if offset == 0 => {
+                // offset == 0 restriction is because anon_object_class_id only looks at offset 0
+                match coff::anon_object_class_id(data) {
+                    Ok(crate::pe::ANON_OBJECT_HEADER_BIGOBJ_CLASS_ID) => FileKind::CoffBig,
+                    _ => return Err(Error("Unknown anon object file")),
+                }
+            }
             #[cfg(feature = "xcoff")]
-            [0x01, 0xDF, ..] => FileKind::Xcoff32,
+            [0x01, 0xdf, ..] => FileKind::Xcoff32,
             #[cfg(feature = "xcoff")]
-            [0x01, 0xF7, ..] => FileKind::Xcoff64,
+            [0x01, 0xf7, ..] => FileKind::Xcoff64,
             _ => return Err(Error("Unknown file magic")),
         };
         Ok(kind)
@@ -620,6 +639,10 @@ pub enum CompressionFormat {
     ///
     /// Used for ELF compression and GNU compressed debug information.
     Zlib,
+    /// Zstandard.
+    ///
+    /// Used for ELF compression.
+    Zstandard,
 }
 
 /// A range in a file that may be compressed.
@@ -717,6 +740,25 @@ impl<'data> CompressedData<'data> {
                     )
                     .ok()
                     .read_error("Invalid zlib compressed data")?;
+                Ok(Cow::Owned(decompressed))
+            }
+            #[cfg(feature = "compression")]
+            CompressionFormat::Zstandard => {
+                use core::convert::TryInto;
+                use std::io::Read;
+                let size = self
+                    .uncompressed_size
+                    .try_into()
+                    .ok()
+                    .read_error("Uncompressed data size is too large.")?;
+                let mut decompressed = Vec::with_capacity(size);
+                let mut decoder = ruzstd::StreamingDecoder::new(self.data)
+                    .ok()
+                    .read_error("Invalid zstd compressed data")?;
+                decoder
+                    .read_to_end(&mut decompressed)
+                    .ok()
+                    .read_error("Invalid zstd compressed data")?;
                 Ok(Cow::Owned(decompressed))
             }
             _ => Err(Error("Unsupported compressed data.")),

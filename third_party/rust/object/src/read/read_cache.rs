@@ -77,10 +77,7 @@ impl<'a, R: Read + Seek> ReadRef<'a> for &'a ReadCache<R> {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
                 let size = size.try_into().map_err(|_| ())?;
-                cache
-                    .read
-                    .seek(SeekFrom::Start(offset as u64))
-                    .map_err(|_| ())?;
+                cache.read.seek(SeekFrom::Start(offset)).map_err(|_| ())?;
                 let mut bytes = vec![0; size].into_boxed_slice();
                 cache.read.read_exact(&mut bytes).map_err(|_| ())?;
                 entry.insert(bytes)

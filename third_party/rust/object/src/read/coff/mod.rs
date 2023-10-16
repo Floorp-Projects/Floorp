@@ -16,3 +16,6 @@ pub use relocation::*;
 
 mod comdat;
 pub use comdat::*;
+
+mod import;
+pub use import::*;

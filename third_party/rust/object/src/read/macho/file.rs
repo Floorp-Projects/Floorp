@@ -192,6 +192,7 @@ where
         match self.header.cputype(self.endian) {
             macho::CPU_TYPE_ARM => Architecture::Arm,
             macho::CPU_TYPE_ARM64 => Architecture::Aarch64,
+            macho::CPU_TYPE_ARM64_32 => Architecture::Aarch64_Ilp32,
             macho::CPU_TYPE_X86 => Architecture::I386,
             macho::CPU_TYPE_X86_64 => Architecture::X86_64,
             macho::CPU_TYPE_MIPS => Architecture::Mips,
@@ -531,7 +532,6 @@ pub type MachOComdatSectionIterator64<'data, 'file, Endian = Endianness, R = &'d
 #[derive(Debug)]
 pub struct MachOComdatSectionIterator<'data, 'file, Mach, R = &'data [u8]>
 where
-    'data: 'file,
     Mach: MachHeader,
     R: ReadRef<'data>,
 {

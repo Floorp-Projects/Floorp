@@ -21,7 +21,6 @@ pub type MachOSectionIterator64<'data, 'file, Endian = Endianness, R = &'data [u
 /// An iterator over the sections of a `MachOFile`.
 pub struct MachOSectionIterator<'data, 'file, Mach, R = &'data [u8]>
 where
-    'data: 'file,
     Mach: MachHeader,
     R: ReadRef<'data>,
 {
@@ -66,7 +65,6 @@ pub type MachOSection64<'data, 'file, Endian = Endianness, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct MachOSection<'data, 'file, Mach, R = &'data [u8]>
 where
-    'data: 'file,
     Mach: MachHeader,
     R: ReadRef<'data>,
 {
@@ -120,7 +118,12 @@ where
 
     #[inline]
     fn align(&self) -> u64 {
-        1 << self.internal.section.align(self.file.endian)
+        let align = self.internal.section.align(self.file.endian);
+        if align < 64 {
+            1 << align
+        } else {
+            0
+        }
     }
 
     #[inline]

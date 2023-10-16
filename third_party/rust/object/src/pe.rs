@@ -7,7 +7,9 @@
 
 #![allow(missing_docs)]
 
-use crate::endian::{LittleEndian as LE, U16Bytes, U32Bytes, I32, U16, U32, U64};
+use core::convert::TryInto;
+
+use crate::endian::{I32Bytes, LittleEndian as LE, U16Bytes, U32Bytes, I32, U16, U32, U64};
 use crate::pod::Pod;
 
 /// MZ
@@ -274,7 +276,7 @@ pub const IMAGE_SIZEOF_FILE_HEADER: usize = 20;
 pub const IMAGE_FILE_RELOCS_STRIPPED: u16 = 0x0001;
 /// File is executable  (i.e. no unresolved external references).
 pub const IMAGE_FILE_EXECUTABLE_IMAGE: u16 = 0x0002;
-/// Line nunbers stripped from file.
+/// Line numbers stripped from file.
 pub const IMAGE_FILE_LINE_NUMS_STRIPPED: u16 = 0x0004;
 /// Local symbols stripped from file.
 pub const IMAGE_FILE_LOCAL_SYMS_STRIPPED: u16 = 0x0008;
@@ -589,16 +591,33 @@ pub const IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT: usize = 13;
 /// COM Runtime descriptor
 pub const IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR: usize = 14;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-pub struct Guid {
-    pub data1: U32<LE>,
-    pub data2: U16<LE>,
-    pub data3: U16<LE>,
-    pub data4: [u8; 8],
+pub struct Guid(pub [u8; 16]);
+
+impl Guid {
+    #[inline]
+    pub fn data1(self) -> U32<LE> {
+        U32::from_bytes(self.0[0..4].try_into().unwrap())
+    }
+
+    #[inline]
+    pub fn data2(self) -> U16<LE> {
+        U16::from_bytes(self.0[4..6].try_into().unwrap())
+    }
+
+    #[inline]
+    pub fn data3(self) -> U16<LE> {
+        U16::from_bytes(self.0[6..8].try_into().unwrap())
+    }
+
+    #[inline]
+    pub fn data4(self) -> [u8; 8] {
+        self.0[8..16].try_into().unwrap()
+    }
 }
 
-pub type ClsId = Guid;
+pub use Guid as ClsId;
 
 /// Non-COFF Object file header
 #[derive(Debug, Clone, Copy)]
@@ -641,6 +660,11 @@ pub struct AnonObjectHeaderV2 {
     pub meta_data_offset: U32<LE>,
 }
 
+/// The required value of `AnonObjectHeaderBigobj::class_id`.
+pub const ANON_OBJECT_HEADER_BIGOBJ_CLASS_ID: ClsId = ClsId([
+    0xC7, 0xA1, 0xBA, 0xD1, 0xEE, 0xBA, 0xA9, 0x4B, 0xAF, 0x20, 0xFA, 0xF6, 0x6A, 0xA4, 0xDC, 0xB8,
+]);
+
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct AnonObjectHeaderBigobj {
@@ -654,7 +678,7 @@ pub struct AnonObjectHeaderBigobj {
     /// Actual machine - IMAGE_FILE_MACHINE_xxx
     pub machine: U16<LE>,
     pub time_date_stamp: U32<LE>,
-    /// {D1BAA1C7-BAEE-4ba9-AF20-FAF66AA4DCB8}
+    /// Must be `ANON_OBJECT_HEADER_BIGOBJ_CLASS_ID`.
     pub class_id: ClsId,
     /// Size of data that follows the header
     pub size_of_data: U32<LE>,
@@ -756,7 +780,7 @@ pub const IMAGE_SCN_ALIGN_MASK: u32 = 0x00F0_0000;
 pub const IMAGE_SCN_LNK_NRELOC_OVFL: u32 = 0x0100_0000;
 /// Section can be discarded.
 pub const IMAGE_SCN_MEM_DISCARDABLE: u32 = 0x0200_0000;
-/// Section is not cachable.
+/// Section is not cacheable.
 pub const IMAGE_SCN_MEM_NOT_CACHED: u32 = 0x0400_0000;
 /// Section is not pageable.
 pub const IMAGE_SCN_MEM_NOT_PAGED: u32 = 0x0800_0000;
@@ -805,7 +829,7 @@ pub struct ImageSymbolEx {
     /// If first 4 bytes are 0, then second 4 bytes are offset into string table.
     pub name: [u8; 8],
     pub value: U32Bytes<LE>,
-    pub section_number: U32Bytes<LE>,
+    pub section_number: I32Bytes<LE>,
     pub typ: U16Bytes<LE>,
     pub storage_class: u8,
     pub number_of_aux_symbols: u8,
@@ -823,11 +847,11 @@ pub struct ImageSymbolExBytes(pub [u8; IMAGE_SIZEOF_SYMBOL_EX]);
 // defined. Otherwise, section numbers have the following meanings:
 
 /// Symbol is undefined or is common.
-pub const IMAGE_SYM_UNDEFINED: u16 = 0;
+pub const IMAGE_SYM_UNDEFINED: i32 = 0;
 /// Symbol is an absolute value.
-pub const IMAGE_SYM_ABSOLUTE: u16 = 0xffff;
+pub const IMAGE_SYM_ABSOLUTE: i32 = -1;
 /// Symbol is a special debug item.
-pub const IMAGE_SYM_DEBUG: u16 = 0xfffe;
+pub const IMAGE_SYM_DEBUG: i32 = -2;
 /// Values 0xFF00-0xFFFF are special
 pub const IMAGE_SYM_SECTION_MAX: u16 = 0xFEFF;
 pub const IMAGE_SYM_SECTION_MAX_EX: u32 = 0x7fff_ffff;
@@ -912,30 +936,6 @@ pub const N_BTSHFT: usize = 4;
 pub const N_TSHIFT: usize = 2;
 
 pub const IMAGE_SYM_DTYPE_SHIFT: usize = N_BTSHFT;
-
-impl ImageSymbol {
-    #[inline]
-    pub fn base_type(&self) -> u16 {
-        self.typ.get(LE) & N_BTMASK
-    }
-
-    #[inline]
-    pub fn derived_type(&self) -> u16 {
-        (self.typ.get(LE) & N_TMASK) >> N_BTSHFT
-    }
-}
-
-impl ImageSymbolEx {
-    #[inline]
-    pub fn base_type(&self) -> u16 {
-        self.typ.get(LE) & N_BTMASK
-    }
-
-    #[inline]
-    pub fn derived_type(&self) -> u16 {
-        (self.typ.get(LE) & N_TMASK) >> N_BTSHFT
-    }
-}
 
 //
 // Auxiliary entry format.
@@ -1095,7 +1095,7 @@ pub const IMAGE_REL_MIPS_GPREL: u16 = 0x0006;
 pub const IMAGE_REL_MIPS_LITERAL: u16 = 0x0007;
 pub const IMAGE_REL_MIPS_SECTION: u16 = 0x000A;
 pub const IMAGE_REL_MIPS_SECREL: u16 = 0x000B;
-/// Low 16-bit section relative referemce (used for >32k TLS)
+/// Low 16-bit section relative reference (used for >32k TLS)
 pub const IMAGE_REL_MIPS_SECRELLO: u16 = 0x000C;
 /// High 16-bit section relative reference (used for >32k TLS)
 pub const IMAGE_REL_MIPS_SECRELHI: u16 = 0x000D;
@@ -2010,7 +2010,7 @@ pub const IMAGE_DELAYLOAD_RVA_BASED: u32 = 0x8000_0000;
 //
 // This structure allows fast lookup by either name or number, but for any
 // given resource entry only one form of lookup is supported, not both.
-// This is consistant with the syntax of the .RC file and the .RES file.
+// This is consistent with the syntax of the .RC file and the .RES file.
 //
 
 #[derive(Debug, Clone, Copy)]
@@ -2560,7 +2560,7 @@ pub struct ImageRuntimeFunctionEntry {
 }
 
 //
-// Sofware enclave information
+// Software enclave information
 //
 
 pub const IMAGE_ENCLAVE_LONG_ID_LENGTH: usize = 32;
@@ -2754,7 +2754,7 @@ pub struct ImageFunctionEntry64 {
 // flag in the Characteristics field of the file header.  The beginning of
 // the .DBG file contains the following structure which captures certain
 // information from the image file.  This allows a debug to proceed even if
-// the original image file is not accessable.  This header is followed by
+// the original image file is not accessible.  This header is followed by
 // zero of more IMAGE_SECTION_HEADER structures, followed by zero or more
 // IMAGE_DEBUG_DIRECTORY structures.  The latter structures and those in
 // the image file contain file offsets relative to the beginning of the
@@ -2873,10 +2873,14 @@ pub struct ImportObjectHeader {
     pub name_type: U16<LE>,
 }
 
+pub const IMPORT_OBJECT_TYPE_MASK: u16 = 0b11;
+pub const IMPORT_OBJECT_TYPE_SHIFT: u16 = 0;
 pub const IMPORT_OBJECT_CODE: u16 = 0;
 pub const IMPORT_OBJECT_DATA: u16 = 1;
 pub const IMPORT_OBJECT_CONST: u16 = 2;
 
+pub const IMPORT_OBJECT_NAME_MASK: u16 = 0b111;
+pub const IMPORT_OBJECT_NAME_SHIFT: u16 = 2;
 /// Import by ordinal
 pub const IMPORT_OBJECT_ORDINAL: u16 = 0;
 /// Import name == public symbol name.
