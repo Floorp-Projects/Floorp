@@ -59,12 +59,15 @@ rtc_source_set("audio_device_api") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+rtc_library("audio_device_config") {
+  sources = [ "audio_device_config.h" ]
+}
+
 rtc_library("audio_device_buffer") {
 if (!build_with_mozilla) { # See Bug 1820869.
   sources = [
     "audio_device_buffer.cc",
     "audio_device_buffer.h",
-    "audio_device_config.h",
     "fine_audio_buffer.cc",
     "fine_audio_buffer.h",
   ]
@@ -213,6 +216,47 @@ if (!build_with_chromium) {
   }
 }
 
+rtc_library("audio_device_dummy") {
+  visibility = [ "*" ]
+  sources = [
+    "dummy/audio_device_dummy.cc",
+    "dummy/audio_device_dummy.h",
+  ]
+  deps = [
+    ":audio_device_api",
+    ":audio_device_buffer",
+    ":audio_device_generic",
+  ]
+}
+
+if (!build_with_chromium) {
+  rtc_library("file_audio_device") {
+    visibility = [ "*" ]
+    sources = [
+      "dummy/file_audio_device.cc",
+      "dummy/file_audio_device.h",
+      "dummy/file_audio_device_factory.cc",
+      "dummy/file_audio_device_factory.h",
+    ]
+    defines = []
+    if (rtc_use_dummy_audio_file_devices) {
+      defines += [ "WEBRTC_DUMMY_FILE_DEVICES" ]
+    }
+    deps = [
+      ":audio_device_generic",
+      "../../rtc_base:checks",
+      "../../rtc_base:logging",
+      "../../rtc_base:platform_thread",
+      "../../rtc_base:stringutils",
+      "../../rtc_base:timeutils",
+      "../../rtc_base/synchronization:mutex",
+      "../../rtc_base/system:file_wrapper",
+      "../../system_wrappers",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  }
+}
+
 # Contains default implementations of webrtc::AudioDeviceModule for Windows,
 # Linux, Mac, iOS and Android.
 rtc_library("audio_device_impl") {
@@ -221,7 +265,9 @@ if (!build_with_mozilla) { # See Bug 1820869.
   deps = [
     ":audio_device_api",
     ":audio_device_buffer",
+    ":audio_device_config",
     ":audio_device_default",
+    ":audio_device_dummy",
     ":audio_device_generic",
     "../../api:array_view",
     "../../api:make_ref_counted",
@@ -259,13 +305,7 @@ if (!build_with_mozilla) { # See Bug 1820869.
     deps += [ "../../sdk:audio_device" ]
   }
 
-  sources = [
-    "dummy/audio_device_dummy.cc",
-    "dummy/audio_device_dummy.h",
-    "dummy/file_audio_device.cc",
-    "dummy/file_audio_device.h",
-    "include/fake_audio_device.h",
-  ]
+  sources = [ "include/fake_audio_device.h" ]
 
   if (build_with_mozilla) {
     sources -= [
@@ -401,11 +441,10 @@ if (!build_with_mozilla) { # See Bug 1820869.
   }
 
   if (!build_with_chromium) {
-    sources += [
-      # Do not link these into Chrome since they contain static data.
-      "dummy/file_audio_device_factory.cc",
-      "dummy/file_audio_device_factory.h",
-    ]
+    deps += [ ":file_audio_device" ]
+
+    # TODO(titovartem): remove after downstream is fixed
+    sources += [ "dummy/file_audio_device_factory.h" ]
   }
 }
 }

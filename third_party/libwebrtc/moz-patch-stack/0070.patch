@@ -26,10 +26,10 @@ index f1f9b48c75..379f4e85e7 100644
        deps += [ "logging:rtc_event_log_proto" ]
      }
 diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index 0e9ce250e9..8742121f58 100644
+index 5375baba36..252df2a6d8 100644
 --- a/sdk/BUILD.gn
 +++ b/sdk/BUILD.gn
-@@ -485,6 +485,7 @@ if (is_ios || is_mac) {
+@@ -486,6 +486,7 @@ if (is_ios || is_mac) {
        }
      }
  
@@ -37,7 +37,7 @@ index 0e9ce250e9..8742121f58 100644
      rtc_library("videosource_objc") {
        sources = [
          "objc/api/peerconnection/RTCVideoSource+Private.h",
-@@ -514,6 +515,7 @@ if (is_ios || is_mac) {
+@@ -515,6 +516,7 @@ if (is_ios || is_mac) {
          ":used_from_extension",
        ]
      }
@@ -45,7 +45,7 @@ index 0e9ce250e9..8742121f58 100644
  
      rtc_library("videoframebuffer_objc") {
        visibility = [ "*" ]
-@@ -546,6 +548,7 @@ if (is_ios || is_mac) {
+@@ -547,6 +549,7 @@ if (is_ios || is_mac) {
        ]
      }
  
@@ -53,7 +53,7 @@ index 0e9ce250e9..8742121f58 100644
      rtc_library("opengl_objc") {
        sources = [
          "objc/components/renderer/opengl/RTCDefaultShader.h",
-@@ -663,6 +666,7 @@ if (is_ios || is_mac) {
+@@ -664,6 +667,7 @@ if (is_ios || is_mac) {
          ":videoframebuffer_objc",
        ]
      }
@@ -61,7 +61,7 @@ index 0e9ce250e9..8742121f58 100644
  
      rtc_library("videocapture_objc") {
        visibility = [ "*" ]
-@@ -691,6 +695,7 @@ if (is_ios || is_mac) {
+@@ -692,6 +696,7 @@ if (is_ios || is_mac) {
        ]
      }
  
@@ -69,7 +69,7 @@ index 0e9ce250e9..8742121f58 100644
      rtc_library("videocodec_objc") {
        visibility = [ "*" ]
        configs += [ "..:no_global_constructors" ]
-@@ -1737,5 +1742,6 @@ if (is_ios || is_mac) {
+@@ -1738,5 +1743,6 @@ if (is_ios || is_mac) {
          "VideoToolbox.framework",
        ]
      }
