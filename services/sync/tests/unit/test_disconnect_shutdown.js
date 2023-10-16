@@ -9,6 +9,9 @@ const { SyncDisconnect, SyncDisconnectInternal } = ChromeUtils.importESModule(
 const { AsyncShutdown } = ChromeUtils.importESModule(
   "resource://gre/modules/AsyncShutdown.sys.mjs"
 );
+const { PREF_LAST_FXA_USER } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsCommon.sys.mjs"
+);
 
 add_task(async function test_shutdown_blocker() {
   let spySignout = sinon.stub(
@@ -55,6 +58,8 @@ add_task(async function test_shutdown_blocker() {
   let weaveStub = sinon.stub(SyncDisconnectInternal, "getWeave");
   weaveStub.returns(Weave);
 
+  Services.prefs.setStringPref(PREF_LAST_FXA_USER, "dGVzdEBleGFtcGxlLmNvbQ==");
+
   let promiseDisconnected = SyncDisconnect.disconnect(true);
 
   // Pretend we hit the shutdown blocker.
@@ -66,6 +71,10 @@ add_task(async function test_shutdown_blocker() {
   info("waiting for disconnect to complete");
   await promiseDisconnected;
 
+  Assert.ok(
+    !Services.prefs.prefHasUserValue(PREF_LAST_FXA_USER),
+    "Should have reset different user warning pref"
+  );
   Assert.equal(
     Weave.Service.unlock.callCount,
     0,
