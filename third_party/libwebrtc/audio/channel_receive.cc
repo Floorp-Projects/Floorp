@@ -293,7 +293,8 @@ class ChannelReceive : public ChannelReceiveInterface,
   webrtc::AbsoluteCaptureTimeInterpolator absolute_capture_time_interpolator_
       RTC_GUARDED_BY(worker_thread_checker_);
 
-  webrtc::CaptureClockOffsetUpdater capture_clock_offset_updater_;
+  webrtc::CaptureClockOffsetUpdater capture_clock_offset_updater_
+      RTC_GUARDED_BY(ts_stats_lock_);
 
   rtc::scoped_refptr<ChannelReceiveFrameTransformerDelegate>
       frame_transformer_delegate_;
@@ -475,6 +476,7 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
   for (auto& packet_info : audio_frame->packet_infos_) {
     absl::optional<int64_t> local_capture_clock_offset_q32x32;
     if (packet_info.absolute_capture_time().has_value()) {
+      MutexLock lock(&ts_stats_lock_);
       local_capture_clock_offset_q32x32 =
           capture_clock_offset_updater_.AdjustEstimatedCaptureClockOffset(
               packet_info.absolute_capture_time()
