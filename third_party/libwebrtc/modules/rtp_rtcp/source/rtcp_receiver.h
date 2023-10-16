@@ -20,6 +20,7 @@
 #include "api/array_view.h"
 #include "api/sequence_checker.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -210,10 +211,10 @@ class RTCPReceiver final {
   struct TmmbrInformation {
     struct TimedTmmbrItem {
       rtcp::TmmbItem tmmbr_item;
-      int64_t last_updated_ms;
+      Timestamp last_updated = Timestamp::Zero();
     };
 
-    int64_t last_time_received_ms = 0;
+    Timestamp last_time_received = Timestamp::Zero();
 
     bool ready_for_delete = false;
 
@@ -238,9 +239,9 @@ class RTCPReceiver final {
   };
 
   struct LastFirStatus {
-    LastFirStatus(int64_t now_ms, uint8_t sequence_number)
-        : request_ms(now_ms), sequence_number(sequence_number) {}
-    int64_t request_ms;
+    LastFirStatus(Timestamp now, uint8_t sequence_number)
+        : request(now), sequence_number(sequence_number) {}
+    Timestamp request;
     uint8_t sequence_number;
   };
 
@@ -387,7 +388,7 @@ class RTCPReceiver final {
   bool xr_rrtr_status_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   absl::optional<TimeDelta> xr_rr_rtt_;
 
-  int64_t oldest_tmmbr_info_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);
+  Timestamp oldest_tmmbr_info_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   // Mapped by remote ssrc.
   flat_map<uint32_t, TmmbrInformation> tmmbr_infos_
       RTC_GUARDED_BY(rtcp_receiver_lock_);
@@ -421,7 +422,7 @@ class RTCPReceiver final {
   RtcpNackStats nack_stats_;
 
   size_t num_skipped_packets_;
-  int64_t last_skipped_packets_warning_ms_;
+  Timestamp last_skipped_packets_warning_;
 };
 }  // namespace webrtc
 #endif  // MODULES_RTP_RTCP_SOURCE_RTCP_RECEIVER_H_
