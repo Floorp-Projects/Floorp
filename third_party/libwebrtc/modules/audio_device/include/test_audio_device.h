@@ -102,8 +102,8 @@ class TestAudioDeviceModule {
 
   // WavReader and WavWriter creation based on file name.
 
-  // Returns a Capturer instance that gets its data from a file. The sample rate
-  // and channels will be checked against the Wav file.
+  // Returns a Capturer instance that gets its data from a WAV file. The sample
+  // rate and channels will be checked against the Wav file.
   static std::unique_ptr<Capturer> CreateWavFileReader(
       absl::string_view filename,
       int sampling_frequency_in_hz,
@@ -130,6 +130,21 @@ class TestAudioDeviceModule {
       absl::string_view filename,
       int sampling_frequency_in_hz,
       int num_channels = 1);
+
+  // Returns a Capturer instance that gets its data from a raw file (*.raw).
+  static std::unique_ptr<Capturer> CreateRawFileReader(
+      absl::string_view filename,
+      int sampling_frequency_in_hz = 48000,
+      int num_channels = 2,
+      bool repeat = true);
+
+  // Returns a Renderer instance that writes its data to a raw file (*.raw),
+  // cutting off silence at the beginning (not necessarily perfect silence, see
+  // kAmplitudeThreshold) and at the end (only actual 0 samples in this case).
+  static std::unique_ptr<Renderer> CreateRawFileWriter(
+      absl::string_view filename,
+      int sampling_frequency_in_hz = 48000,
+      int num_channels = 2);
 
  private:
   TestAudioDeviceModule() = default;
