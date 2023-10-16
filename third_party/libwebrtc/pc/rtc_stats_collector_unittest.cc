@@ -1549,6 +1549,10 @@ TEST_F(RTCStatsCollectorTest, CertificateStatsCache) {
 }
 
 TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
+  // Note: The test assumes data channel IDs are predictable.
+  // This is not a safe assumption, but in order to make it work for
+  // the test, we reset the ID allocator at test start.
+  SctpDataChannel::ResetInternalIdAllocatorForTesting(-1);
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), /*id=*/-1,
       DataChannelInterface::kConnecting));
@@ -1557,6 +1561,20 @@ TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
       DataChannelInterface::kConnecting));
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+  RTCDataChannelStats expected_data_channel0("D0", Timestamp::Zero());
+  // Default values from MockDataChannel.
+  expected_data_channel0.label = "MockSctpDataChannel";
+  expected_data_channel0.protocol = "someProtocol";
+  expected_data_channel0.state = "connecting";
+  expected_data_channel0.messages_sent = 0;
+  expected_data_channel0.bytes_sent = 0;
+  expected_data_channel0.messages_received = 0;
+  expected_data_channel0.bytes_received = 0;
+
+  ASSERT_TRUE(report->Get(expected_data_channel0.id()));
+  EXPECT_EQ(
+      expected_data_channel0,
+      report->Get(expected_data_channel0.id())->cast_to<RTCDataChannelStats>());
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
@@ -1566,10 +1584,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   SctpDataChannel::ResetInternalIdAllocatorForTesting(-1);
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 0, "MockSctpDataChannel0",
-      DataChannelInterface::kConnecting, "udp", 1, 2, 3, 4));
+      DataChannelInterface::kConnecting, "proto1", 1, 2, 3, 4));
   RTCDataChannelStats expected_data_channel0("D0", Timestamp::Zero());
   expected_data_channel0.label = "MockSctpDataChannel0";
-  expected_data_channel0.protocol = "udp";
+  expected_data_channel0.protocol = "proto1";
   expected_data_channel0.data_channel_identifier = 0;
   expected_data_channel0.state = "connecting";
   expected_data_channel0.messages_sent = 1;
@@ -1579,10 +1597,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 1, "MockSctpDataChannel1",
-      DataChannelInterface::kOpen, "tcp", 5, 6, 7, 8));
+      DataChannelInterface::kOpen, "proto2", 5, 6, 7, 8));
   RTCDataChannelStats expected_data_channel1("D1", Timestamp::Zero());
   expected_data_channel1.label = "MockSctpDataChannel1";
-  expected_data_channel1.protocol = "tcp";
+  expected_data_channel1.protocol = "proto2";
   expected_data_channel1.data_channel_identifier = 1;
   expected_data_channel1.state = "open";
   expected_data_channel1.messages_sent = 5;
@@ -1592,10 +1610,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 2, "MockSctpDataChannel2",
-      DataChannelInterface::kClosing, "udp", 9, 10, 11, 12));
+      DataChannelInterface::kClosing, "proto1", 9, 10, 11, 12));
   RTCDataChannelStats expected_data_channel2("D2", Timestamp::Zero());
   expected_data_channel2.label = "MockSctpDataChannel2";
-  expected_data_channel2.protocol = "udp";
+  expected_data_channel2.protocol = "proto1";
   expected_data_channel2.data_channel_identifier = 2;
   expected_data_channel2.state = "closing";
   expected_data_channel2.messages_sent = 9;
@@ -1605,10 +1623,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 3, "MockSctpDataChannel3",
-      DataChannelInterface::kClosed, "tcp", 13, 14, 15, 16));
+      DataChannelInterface::kClosed, "proto3", 13, 14, 15, 16));
   RTCDataChannelStats expected_data_channel3("D3", Timestamp::Zero());
   expected_data_channel3.label = "MockSctpDataChannel3";
-  expected_data_channel3.protocol = "tcp";
+  expected_data_channel3.protocol = "proto3";
   expected_data_channel3.data_channel_identifier = 3;
   expected_data_channel3.state = "closed";
   expected_data_channel3.messages_sent = 13;

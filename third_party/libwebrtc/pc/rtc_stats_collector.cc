@@ -1402,7 +1402,11 @@ void RTCStatsCollector::ProduceDataChannelStats_n(
         "D" + rtc::ToString(stats.internal_id), timestamp);
     data_channel_stats->label = std::move(stats.label);
     data_channel_stats->protocol = std::move(stats.protocol);
-    data_channel_stats->data_channel_identifier = stats.id;
+    if (stats.id >= 0) {
+      // Do not set this value before the DTLS handshake is finished
+      // and filter out the magic value -1.
+      data_channel_stats->data_channel_identifier = stats.id;
+    }
     data_channel_stats->state = DataStateToRTCDataChannelState(stats.state);
     data_channel_stats->messages_sent = stats.messages_sent;
     data_channel_stats->bytes_sent = stats.bytes_sent;
