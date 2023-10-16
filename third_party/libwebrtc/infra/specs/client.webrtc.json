@@ -453,6 +453,9 @@
     ],
     "junit_tests": [
       {
+        "args": [
+          "--shards=1"
+        ],
         "name": "android_examples_junit_tests",
         "resultdb": {
           "enable": true,
@@ -924,6 +927,9 @@
     ],
     "junit_tests": [
       {
+        "args": [
+          "--shards=1"
+        ],
         "name": "android_examples_junit_tests",
         "resultdb": {
           "enable": true,
@@ -1424,6 +1430,9 @@
     ],
     "junit_tests": [
       {
+        "args": [
+          "--shards=1"
+        ],
         "name": "android_examples_junit_tests",
         "resultdb": {
           "enable": true,
@@ -1895,6 +1904,9 @@
     ],
     "junit_tests": [
       {
+        "args": [
+          "--shards=1"
+        ],
         "name": "android_examples_junit_tests",
         "resultdb": {
           "enable": true,
