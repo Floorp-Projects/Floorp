@@ -291,9 +291,9 @@ TimeDelta PacingController::UpdateTimeAndGetElapsed(Timestamp now) {
   TimeDelta elapsed_time = now - last_process_time_;
   last_process_time_ = now;
   if (elapsed_time > kMaxElapsedTime) {
-    RTC_LOG(LS_WARNING) << "Elapsed time (" << elapsed_time.ms()
-                        << " ms) longer than expected, limiting to "
-                        << kMaxElapsedTime.ms();
+    RTC_LOG(LS_WARNING) << "Elapsed time (" << ToLogString(elapsed_time)
+                        << ") longer than expected, limiting to "
+                        << ToLogString(kMaxElapsedTime);
     elapsed_time = kMaxElapsedTime;
   }
   return elapsed_time;
