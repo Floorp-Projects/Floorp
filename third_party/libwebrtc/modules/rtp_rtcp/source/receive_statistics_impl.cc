@@ -260,7 +260,7 @@ void StreamStatisticianImpl::MaybeAppendReportBlockAndReset(
 
   int packets_lost = cumulative_loss_ + cumulative_loss_rtcp_offset_;
   if (packets_lost < 0) {
-    // Clamp to zero. Work around to accomodate for senders that misbehave with
+    // Clamp to zero. Work around to accommodate for senders that misbehave with
     // negative cumulative loss.
     packets_lost = 0;
     cumulative_loss_rtcp_offset_ = -cumulative_loss_;

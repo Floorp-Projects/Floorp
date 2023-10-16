@@ -179,9 +179,9 @@ bool Flexfec03HeaderReader::ReadFecHeader(
       }
       // At this point, K-bits 0 and 1 have been removed, and the front-most
       // part of the FlexFEC packet mask has been packed accordingly. We will
-      // now shift the remaning part of the packet mask three steps to the left.
-      // This corresponds to the (in total) three K-bits, which have been
-      // removed.
+      // now shift the remaining part of the packet mask three steps to
+      // the left. This corresponds to the (in total) three K-bits, which
+      // have been removed.
       uint8_t tail_bits = (packet_mask[6] >> 5) & 0x03;
       packet_mask[5] |= tail_bits;
       uint64_t mask_part2 =
