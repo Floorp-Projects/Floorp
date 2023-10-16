@@ -276,6 +276,7 @@ class LWasmAtomicExchangeI64
 
   const LAllocation* ptr() { return getOperand(0); }
   const LInt64Allocation value() { return getInt64Operand(1); }
+  const LAllocation* memoryBase() { return getOperand(1 + INT64_PIECES); }
   const MWasmAtomicExchangeHeap* mir() const {
     return mir_->toWasmAtomicExchangeHeap();
   }
