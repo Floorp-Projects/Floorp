@@ -24,6 +24,8 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
 #include "api/video/video_layers_allocation.h"
@@ -36,9 +38,9 @@
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
 #include "rtc_base/bitrate_tracker.h"
+#include "rtc_base/frequency_tracker.h"
 #include "rtc_base/one_time_event.h"
 #include "rtc_base/race_checker.h"
-#include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -62,7 +64,7 @@ enum RetransmissionMode : uint8_t {
 
 class RTPSenderVideo : public RTPVideoFrameSenderInterface {
  public:
-  static constexpr int64_t kTLRateWindowSizeMs = 2500;
+  static constexpr TimeDelta kTLRateWindowSize = TimeDelta::Millis(2'500);
 
   struct Config {
     Config() = default;
@@ -154,14 +156,8 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
 
  private:
   struct TemporalLayerStats {
-    TemporalLayerStats()
-        : frame_rate_fp1000s(kTLRateWindowSizeMs, 1000 * 1000),
-          last_frame_time_ms(0) {}
-    // Frame rate, in frames per 1000 seconds. This essentially turns the fps
-    // value into a fixed point value with three decimals. Improves precision at
-    // low frame rates.
-    RateStatistics frame_rate_fp1000s;
-    int64_t last_frame_time_ms;
+    FrequencyTracker frame_rate{kTLRateWindowSize};
+    Timestamp last_frame_time = Timestamp::Zero();
   };
 
   enum class SendVideoLayersAllocation {
@@ -189,7 +185,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   bool red_enabled() const { return red_payload_type_.has_value(); }
 
   bool UpdateConditionalRetransmit(uint8_t temporal_id,
-                                   int64_t expected_retransmission_time_ms)
+                                   TimeDelta expected_retransmission_time)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(stats_mutex_);
 
   void MaybeUpdateCurrentPlayoutDelay(const RTPVideoHeader& header)

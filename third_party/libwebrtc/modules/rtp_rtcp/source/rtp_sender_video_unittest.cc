@@ -414,8 +414,7 @@ TEST_F(RtpSenderVideoTest, ConditionalRetransmit) {
 
   // Fill averaging window to prevent rounding errors.
   constexpr int kNumRepetitions =
-      (RTPSenderVideo::kTLRateWindowSizeMs + (kFrameInterval.ms() / 2)) /
-      kFrameInterval.ms();
+      RTPSenderVideo::kTLRateWindowSize / kFrameInterval;
   constexpr int kPattern[] = {0, 2, 1, 2};
   auto& vp8_header = header.video_type_header.emplace<RTPVideoHeaderVP8>();
   for (size_t i = 0; i < arraysize(kPattern) * kNumRepetitions; ++i) {
@@ -466,8 +465,7 @@ TEST_F(RtpSenderVideoTest, ConditionalRetransmitLimit) {
 
   // Fill averaging window to prevent rounding errors.
   constexpr int kNumRepetitions =
-      (RTPSenderVideo::kTLRateWindowSizeMs + (kFrameInterval.ms() / 2)) /
-      kFrameInterval.ms();
+      RTPSenderVideo::kTLRateWindowSize / kFrameInterval;
   constexpr int kPattern[] = {0, 2, 2, 2};
   auto& vp8_header = header.video_type_header.emplace<RTPVideoHeaderVP8>();
   for (size_t i = 0; i < arraysize(kPattern) * kNumRepetitions; ++i) {
