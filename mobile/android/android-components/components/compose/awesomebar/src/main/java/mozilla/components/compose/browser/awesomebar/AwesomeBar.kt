@@ -28,6 +28,7 @@ import mozilla.components.concept.base.profiler.Profiler
  * @param orientation Whether the AwesomeBar is oriented to the top or the bottom of the screen.
  * @param onSuggestionClicked Gets invoked whenever the user clicks on a suggestion in the AwesomeBar.
  * @param onAutoComplete Gets invoked when the user clicks on the "autocomplete" icon of a suggestion.
+ * @param onVisibilityStateUpdated Gets invoked when the list of currently displayed suggestions changes.
  * @param onScroll Gets invoked at the beginning of the user performing a scroll gesture.
  */
 @Composable
@@ -38,6 +39,7 @@ fun AwesomeBar(
     orientation: AwesomeBarOrientation = AwesomeBarOrientation.TOP,
     onSuggestionClicked: (AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.Suggestion) -> Unit,
+    onVisibilityStateUpdated: (AwesomeBar.VisibilityState) -> Unit = {},
     onScroll: () -> Unit = {},
     profiler: Profiler? = null,
 ) {
@@ -59,6 +61,7 @@ fun AwesomeBar(
         orientation = orientation,
         onSuggestionClicked = { _, suggestion -> onSuggestionClicked(suggestion) },
         onAutoComplete = { _, suggestion -> onAutoComplete(suggestion) },
+        onVisibilityStateUpdated = onVisibilityStateUpdated,
         onScroll = onScroll,
         profiler = profiler,
     )
@@ -73,6 +76,7 @@ fun AwesomeBar(
  * @param orientation Whether the AwesomeBar is oriented to the top or the bottom of the screen.
  * @param onSuggestionClicked Gets invoked whenever the user clicks on a suggestion in the AwesomeBar.
  * @param onAutoComplete Gets invoked when the user clicks on the "autocomplete" icon of a suggestion.
+ * @param onVisibilityStateUpdated Gets invoked when the list of currently displayed suggestions changes.
  * @param onScroll Gets invoked at the beginning of the user performing a scroll gesture.
  */
 @Composable
@@ -83,6 +87,7 @@ fun AwesomeBar(
     orientation: AwesomeBarOrientation = AwesomeBarOrientation.TOP,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
     onAutoComplete: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
+    onVisibilityStateUpdated: (AwesomeBar.VisibilityState) -> Unit = {},
     onScroll: () -> Unit = {},
     profiler: Profiler? = null,
 ) {
@@ -109,6 +114,7 @@ fun AwesomeBar(
             orientation,
             onSuggestionClicked,
             onAutoComplete,
+            onVisibilityStateUpdated,
             onScroll,
         )
     }

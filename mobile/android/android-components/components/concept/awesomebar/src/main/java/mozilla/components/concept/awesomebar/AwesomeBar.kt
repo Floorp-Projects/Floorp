@@ -73,6 +73,17 @@ interface AwesomeBar {
     fun setOnEditSuggestionListener(listener: (String) -> Unit)
 
     /**
+     * Information about the [Suggestion]s that are currently displayed by the [AwesomeBar].
+     */
+    data class VisibilityState(
+        /**
+         * An ordered map of the currently visible [SuggestionProviderGroup]s, and the visible [Suggestion]s in each
+         * group. The groups and their suggestions are ordered top to bottom.
+         */
+        val visibleProviderGroups: Map<SuggestionProviderGroup, List<Suggestion>> = emptyMap(),
+    )
+
+    /**
      * A [Suggestion] to be displayed by an [AwesomeBar] implementation.
      *
      * @property provider The provider this suggestion came from.
