@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-12T17:34:35.401624'
+updated_at: '2023-10-16T17:08:49.465830'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -408,6 +408,10 @@ people:
     bmo_id: 448747
     name: Gabriele Svelto
     nick: gsvelto
+  - &gw
+    bmo_id: 504871
+    name: Glenn Watson
+    nick: gw
   - &haik
     bmo_id: 558190
     name: Haik Aftandilian
@@ -1739,6 +1743,7 @@ modules:
       - *sotaro
       - *jnicol
       - *rhunt
+      - *gw
     machine_name: core_graphics
 
   - name: 'Core: HAL'
@@ -4200,5 +4205,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: b6048ef220609203d8a630974dfd73321761dcce
-  export: dd5d7f2127edc8694c19f8f1a981e0687d8eb575
+  config: d8c4484d39645eb0b2e175b1a3634d6b3cc47426
+  export: a6e22c1edd65c7da848df1cb4c92c507e6803737
