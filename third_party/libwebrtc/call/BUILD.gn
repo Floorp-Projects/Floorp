@@ -71,6 +71,7 @@ rtc_library("call_interfaces") {
     "../modules/audio_processing",
     "../modules/audio_processing:api",
     "../modules/audio_processing:audio_processing_statistics",
+    "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:audio_format_to_string",
     "../rtc_base:checks",

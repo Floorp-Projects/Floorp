@@ -458,6 +458,12 @@ struct MediaReceiverInfo {
   absl::optional<int> codec_payload_type;
   std::vector<SsrcReceiverInfo> local_stats;
   std::vector<SsrcSenderInfo> remote_stats;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-fecpacketsreceived
+  absl::optional<uint64_t> fec_packets_received;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-fecpacketsdiscarded
+  absl::optional<uint64_t> fec_packets_discarded;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-fecbytesreceived
+  absl::optional<uint64_t> fec_bytes_received;
 };
 
 struct VoiceSenderInfo : public MediaSenderInfo {
@@ -492,8 +498,6 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   uint64_t concealment_events = 0;
   uint64_t inserted_samples_for_deceleration = 0;
   uint64_t removed_samples_for_acceleration = 0;
-  uint64_t fec_packets_received = 0;
-  uint64_t fec_packets_discarded = 0;
   // Stats below correspond to similarly-named fields in the WebRTC stats spec.
   // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats
   uint64_t packets_discarded = 0;

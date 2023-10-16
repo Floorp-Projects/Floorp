@@ -450,7 +450,7 @@ index 12a1f57066..d8f095c700 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 63a3a2d53d..a85ad0c0d4 100644
+index 2e8a997fc4..173c220b9b 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -46,7 +46,7 @@ rtc_library("call_interfaces") {
@@ -462,7 +462,7 @@ index 63a3a2d53d..a85ad0c0d4 100644
      "../api:scoped_refptr",
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
-@@ -346,6 +346,16 @@ rtc_library("call") {
+@@ -347,6 +347,16 @@ rtc_library("call") {
      "//third_party/abseil-cpp/absl/strings",
      "//third_party/abseil-cpp/absl/types:optional",
    ]
@@ -479,7 +479,7 @@ index 63a3a2d53d..a85ad0c0d4 100644
  }
  
  rtc_source_set("receive_stream_interface") {
-@@ -373,7 +383,7 @@ rtc_library("video_stream_api") {
+@@ -374,7 +384,7 @@ rtc_library("video_stream_api") {
      "../api:frame_transformer_interface",
      "../api:rtp_headers",
      "../api:rtp_parameters",
@@ -561,7 +561,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index c0aba7aac1..8dd3779b3b 100644
+index 6a271da117..ea23a15a13 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -687,7 +687,7 @@ index c0aba7aac1..8dd3779b3b 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 99197020cb..98e32d1cb7 100644
+index dee53bb5ca..5362758212 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -66,10 +66,6 @@ class Timing;

@@ -608,8 +608,13 @@ class RTCStatsReportVerifier {
           inbound_stream.fec_packets_received);
       verifier.TestMemberIsNonNegative<uint64_t>(
           inbound_stream.fec_packets_discarded);
+      verifier.TestMemberIsUndefined(inbound_stream.fec_bytes_received);
     } else {
       verifier.TestMemberIsUndefined(inbound_stream.packets_discarded);
+      // FEC stats are only present when FlexFEC was negotiated which is guarded
+      // by the WebRTC-FlexFEC-03-Advertised/Enabled/ field trial and off by
+      // default.
+      verifier.TestMemberIsUndefined(inbound_stream.fec_bytes_received);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_received);
       verifier.TestMemberIsUndefined(inbound_stream.fec_packets_discarded);
     }

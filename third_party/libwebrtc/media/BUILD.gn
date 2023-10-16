@@ -571,6 +571,7 @@ rtc_library("rtc_audio_video") {
     "../modules/audio_processing:audio_processing_statistics",
     "../modules/audio_processing/aec_dump",
     "../modules/audio_processing/agc:gain_control_interface",
+    "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../modules/video_coding",
     "../modules/video_coding:video_codec_interface",

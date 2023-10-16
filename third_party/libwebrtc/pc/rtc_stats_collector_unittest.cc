@@ -2348,6 +2348,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].power_efficient_decoder = false;
   video_media_info.receivers[0].retransmitted_packets_received = 17;
   video_media_info.receivers[0].retransmitted_bytes_received = 62;
+  video_media_info.receivers[0].fec_packets_received = 32;
+  video_media_info.receivers[0].fec_bytes_received = 54;
 
   // Note: these two values intentionally differ,
   // only the decoded one should show up.
@@ -2412,6 +2414,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   expected_video.power_efficient_decoder = false;
   expected_video.retransmitted_packets_received = 17;
   expected_video.retransmitted_bytes_received = 62;
+  expected_video.fec_packets_received = 32;
+  expected_video.fec_bytes_received = 54;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(

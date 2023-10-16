@@ -425,6 +425,17 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   if (media_receiver_info.nacks_sent.has_value()) {
     inbound_stats->nack_count = *media_receiver_info.nacks_sent;
   }
+  if (media_receiver_info.fec_packets_received.has_value()) {
+    inbound_stats->fec_packets_received =
+        *media_receiver_info.fec_packets_received;
+  }
+  if (media_receiver_info.fec_packets_discarded.has_value()) {
+    inbound_stats->fec_packets_discarded =
+        *media_receiver_info.fec_packets_discarded;
+  }
+  if (media_receiver_info.fec_bytes_received.has_value()) {
+    inbound_stats->fec_bytes_received = *media_receiver_info.fec_bytes_received;
+  }
 }
 
 std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
@@ -483,10 +494,6 @@ std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
     inbound_audio->estimated_playout_timestamp = static_cast<double>(
         *voice_receiver_info.estimated_playout_ntp_timestamp_ms);
   }
-  inbound_audio->fec_packets_received =
-      voice_receiver_info.fec_packets_received;
-  inbound_audio->fec_packets_discarded =
-      voice_receiver_info.fec_packets_discarded;
   inbound_audio->packets_discarded = voice_receiver_info.packets_discarded;
   inbound_audio->jitter_buffer_flushes =
       voice_receiver_info.jitter_buffer_flushes;
@@ -670,6 +677,7 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
     inbound_video->power_efficient_decoder =
         *video_receiver_info.power_efficient_decoder;
   }
+
   return inbound_video;
 }
 

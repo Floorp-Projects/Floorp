@@ -248,6 +248,7 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   RTCStatsMember<uint32_t> packets_received;
   RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<uint64_t> fec_packets_received;
+  RTCStatsMember<uint64_t> fec_bytes_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
   RTCStatsMember<uint64_t> bytes_received;
   RTCStatsMember<uint64_t> header_bytes_received;

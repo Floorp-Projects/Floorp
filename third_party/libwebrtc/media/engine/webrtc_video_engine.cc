@@ -51,6 +51,7 @@
 #include "media/base/rid_description.h"
 #include "media/base/rtp_utils.h"
 #include "media/engine/webrtc_media_engine.h"
+#include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -3650,6 +3651,29 @@ WebRtcVideoReceiveChannel::WebRtcVideoReceiveStream::GetVideoReceiverInfo(
         stats.rtx_rtp_stats->packet_counter.header_bytes +
         stats.rtx_rtp_stats->packet_counter.padding_bytes;
     info.packets_received += stats.rtx_rtp_stats->packet_counter.packets;
+  }
+
+  if (flexfec_stream_) {
+    const webrtc::ReceiveStatistics* fec_stats = flexfec_stream_->GetStats();
+    if (fec_stats) {
+      const webrtc::StreamStatistician* statistican =
+          fec_stats->GetStatistician(flexfec_config_.rtp.remote_ssrc);
+      if (statistican) {
+        const webrtc::RtpReceiveStats fec_rtp_stats = statistican->GetStats();
+        info.fec_packets_received = fec_rtp_stats.packet_counter.packets;
+        // TODO(bugs.webrtc.org/15250): implement fecPacketsDiscarded.
+        info.fec_bytes_received = fec_rtp_stats.packet_counter.payload_bytes;
+        // FEC information gets added to primary counters.
+        info.payload_bytes_received +=
+            fec_rtp_stats.packet_counter.payload_bytes;
+        info.header_and_padding_bytes_received +=
+            fec_rtp_stats.packet_counter.header_bytes +
+            fec_rtp_stats.packet_counter.padding_bytes;
+        info.packets_received += fec_rtp_stats.packet_counter.packets;
+      } else {
+        info.fec_packets_received = 0;
+      }
+    }
   }
 
   if (log_stats)

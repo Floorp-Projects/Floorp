@@ -348,6 +348,8 @@ class FakeFlexfecReceiveStream final : public webrtc::FlexfecReceiveStream {
 
   uint32_t remote_ssrc() const { return config_.rtp.remote_ssrc; }
 
+  const webrtc::ReceiveStatistics* GetStats() const override { return nullptr; }
+
  private:
   void OnRtpPacket(const webrtc::RtpPacketReceived& packet) override;
 
