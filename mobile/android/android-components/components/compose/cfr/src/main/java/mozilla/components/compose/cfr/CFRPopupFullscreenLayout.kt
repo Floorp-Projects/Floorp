@@ -169,7 +169,7 @@ internal class CFRPopupFullscreenLayout(
                 popupBounds = popupBounds,
             ),
             properties = PopupProperties(
-                focusable = properties.dismissOnBackPress,
+                focusable = true,
                 dismissOnBackPress = properties.dismissOnBackPress,
                 dismissOnClickOutside = properties.dismissOnClickOutside,
             ),
