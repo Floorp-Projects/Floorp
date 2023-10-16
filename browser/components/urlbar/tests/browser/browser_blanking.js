@@ -28,11 +28,7 @@ add_task(async function () {
   // active document rather than the javascript: URL itself. But we can still
   // verify that the URL bar's value is correct.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
-  is(
-    gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_URL),
-    "The URL bar should match the URI"
-  );
+  is(gURLBar.value, TEST_URL, "The URL bar should match the URI");
   let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   SpecialPowers.spawn(tab.linkedBrowser, [], function () {
     content.document.querySelector("a").click();
@@ -40,7 +36,7 @@ add_task(async function () {
   await browserLoaded;
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_URL),
+    TEST_URL,
     "The URL bar should be the previous active document's URI."
   );
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
@@ -51,7 +47,7 @@ add_task(async function () {
   });
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_URL),
+    TEST_URL,
     "The URL bar should still be the previous active document's URI."
   );
   BrowserTestUtils.removeTab(tab);

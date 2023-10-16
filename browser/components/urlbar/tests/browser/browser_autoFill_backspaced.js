@@ -28,11 +28,7 @@ async function test_autocomplete(data) {
   }
   await UrlbarTestUtils.promiseSearchComplete(window);
 
-  Assert.equal(
-    gURLBar.value,
-    UrlbarTestUtils.trimURL(modified),
-    "backspaced value is as expected"
-  );
+  Assert.equal(gURLBar.value, modified, "backspaced value is as expected");
 
   Assert.greater(
     UrlbarTestUtils.getResultCount(window),
@@ -263,7 +259,7 @@ add_task(async function () {
     desc: "Selecting the next result and then backspace should delete the last character and not re-trigger autofill",
     typed: "ex",
     autofilled: "example.com/",
-    modified: "http://example.com/fo",
+    modified: "example.com/fo",
     keys: ["KEY_ArrowDown", "KEY_Backspace"],
     type: UrlbarUtils.RESULT_TYPE.URL,
   });

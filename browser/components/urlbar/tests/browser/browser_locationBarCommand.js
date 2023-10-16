@@ -7,7 +7,7 @@
  * combinations in the urlbar.
  */
 
-const TEST_VALUE = "http://example.com";
+const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
 add_setup(async function () {
@@ -42,7 +42,7 @@ add_task(async function alt_left_click_test() {
 add_task(async function shift_left_click_test() {
   info("Running test: Shift left click");
 
-  let destinationURL = TEST_VALUE + "/";
+  let destinationURL = "http://" + TEST_VALUE + "/";
   let newWindowPromise = BrowserTestUtils.waitForNewWindow({
     url: destinationURL,
   });
@@ -57,11 +57,7 @@ add_task(async function shift_left_click_test() {
     gBrowser.selectedBrowser,
     "Content window should be focused"
   );
-  is(
-    win.gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_VALUE),
-    "New URL is loaded in new window"
-  );
+  is(win.gURLBar.value, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
   let ourWindowRefocusedPromise = Promise.all([
@@ -105,11 +101,7 @@ add_task(async function shift_accel_left_click_test() {
 
   // Select the new background tab
   gBrowser.selectedTab = gBrowser.selectedTab.nextElementSibling;
-  is(
-    gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_VALUE),
-    "New URL is loaded in new tab"
-  );
+  is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
 
   // Cleanup.
   gBrowser.removeCurrentTab();
@@ -155,11 +147,7 @@ add_task(async function load_in_current_tab_test() {
     await loadStartedPromise;
 
     info("URL should be loaded in the current tab");
-    is(
-      gURLBar.value,
-      UrlbarTestUtils.trimURL(TEST_VALUE),
-      "Urlbar still has the value we entered"
-    );
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
     await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(
       document.activeElement,
@@ -208,11 +196,7 @@ add_task(async function load_in_new_tab_test() {
 
     // Check the load occurred in a new tab.
     info("URL should be loaded in a new focused tab");
-    is(
-      gURLBar.value,
-      UrlbarTestUtils.trimURL(TEST_VALUE),
-      "Urlbar still has the value we entered"
-    );
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
     await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
     is(
       document.activeElement,
@@ -235,13 +219,13 @@ add_task(async function go_button_after_tab_switch() {
   await BrowserTestUtils.switchTab(gBrowser, gBrowser.visibleTabs[0]);
   isnot(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_VALUE),
+    TEST_VALUE,
     "Urlbar does not have the entered value after switching to a different tab"
   );
   await BrowserTestUtils.switchTab(gBrowser, tab);
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_VALUE),
+    TEST_VALUE,
     "Urlbar still has the entered value restored after switching back to the new tab"
   );
 
@@ -251,11 +235,7 @@ add_task(async function go_button_after_tab_switch() {
   await loadStartedPromise;
 
   info("URL should be loaded in the current tab");
-  is(
-    gURLBar.value,
-    UrlbarTestUtils.trimURL(TEST_VALUE),
-    "Urlbar still has the value we entered"
-  );
+  is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
   await promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
   is(
     document.activeElement,
