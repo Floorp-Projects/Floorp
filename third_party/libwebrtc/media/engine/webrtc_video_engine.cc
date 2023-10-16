@@ -311,30 +311,37 @@ static bool ValidateStreamParams(const StreamParams& sp) {
 
   std::vector<uint32_t> primary_ssrcs;
   sp.GetPrimarySsrcs(&primary_ssrcs);
-  std::vector<uint32_t> rtx_ssrcs;
-  sp.GetFidSsrcs(primary_ssrcs, &rtx_ssrcs);
-  for (uint32_t rtx_ssrc : rtx_ssrcs) {
-    bool rtx_ssrc_present = false;
-    for (uint32_t sp_ssrc : sp.ssrcs) {
-      if (sp_ssrc == rtx_ssrc) {
-        rtx_ssrc_present = true;
-        break;
+  for (const auto& semantic :
+       {kFidSsrcGroupSemantics, kFecFrSsrcGroupSemantics}) {
+    if (!sp.has_ssrc_group(semantic)) {
+      continue;
+    }
+    std::vector<uint32_t> secondary_ssrcs;
+    sp.GetSecondarySsrcs(semantic, primary_ssrcs, &secondary_ssrcs);
+    for (uint32_t secondary_ssrc : secondary_ssrcs) {
+      bool secondary_ssrc_present = false;
+      for (uint32_t sp_ssrc : sp.ssrcs) {
+        if (sp_ssrc == secondary_ssrc) {
+          secondary_ssrc_present = true;
+          break;
+        }
+      }
+      if (!secondary_ssrc_present) {
+        RTC_LOG(LS_ERROR) << "SSRC '" << secondary_ssrc
+                          << "' missing from StreamParams ssrcs with semantics "
+                          << semantic << ": " << sp.ToString();
+        return false;
       }
     }
-    if (!rtx_ssrc_present) {
-      RTC_LOG(LS_ERROR) << "RTX SSRC '" << rtx_ssrc
-                        << "' missing from StreamParams ssrcs: "
-                        << sp.ToString();
+    if (!secondary_ssrcs.empty() &&
+        primary_ssrcs.size() != secondary_ssrcs.size()) {
+      RTC_LOG(LS_ERROR)
+          << semantic
+          << " secondary SSRCs exist, but don't cover all SSRCs (unsupported): "
+          << sp.ToString();
       return false;
     }
   }
-  if (!rtx_ssrcs.empty() && primary_ssrcs.size() != rtx_ssrcs.size()) {
-    RTC_LOG(LS_ERROR)
-        << "RTX SSRCs exist, but don't cover all SSRCs (unsupported): "
-        << sp.ToString();
-    return false;
-  }
-
   return true;
 }
 

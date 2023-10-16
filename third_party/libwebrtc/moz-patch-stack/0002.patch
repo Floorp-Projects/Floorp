@@ -26,10 +26,10 @@ Cr-Branched-From: f80cf814353d11a9f22bef5ce5e8868f2c72f0d0-refs/heads/main@{#403
  1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 6596d82167..4874444eae 100644
+index fa16ec6282..97d01573cf 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
-@@ -5145,11 +5145,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
+@@ -5169,11 +5169,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
  
  bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
    RTC_DCHECK_RUN_ON(signaling_thread());
