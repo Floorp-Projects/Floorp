@@ -167,7 +167,6 @@ struct VideoCodecSettings {
 
 class WebRtcVideoSendChannel : public MediaChannelUtil,
                                public VideoMediaSendChannelInterface,
-                               public webrtc::Transport,
                                public webrtc::EncoderSwitchRequestCallback {
  public:
   WebRtcVideoSendChannel(
@@ -452,11 +451,6 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
 
   void Construct(webrtc::Call* call, WebRtcVideoEngine* engine);
 
-  bool SendRtp(const uint8_t* data,
-               size_t len,
-               const webrtc::PacketOptions& options) override;
-  bool SendRtcp(const uint8_t* data, size_t len) override;
-
   // Get all codecs that are compatible with the receiver.
   std::vector<VideoCodecSettings> SelectSendVideoCodecs(
       const std::vector<VideoCodecSettings>& remote_mapped_codecs) const
@@ -584,8 +578,7 @@ class WebRtcVideoSendChannel : public MediaChannelUtil,
 };
 
 class WebRtcVideoReceiveChannel : public MediaChannelUtil,
-                                  public VideoMediaReceiveChannelInterface,
-                                  public webrtc::Transport {
+                                  public VideoMediaReceiveChannelInterface {
  public:
   WebRtcVideoReceiveChannel(webrtc::Call* call,
                             const MediaConfig& config,
@@ -602,17 +595,6 @@ class WebRtcVideoReceiveChannel : public MediaChannelUtil,
   VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() override {
     RTC_CHECK_NOTREACHED();
     return nullptr;
-  }
-  // Functions imported from MediaChannelUtil
-  bool SendRtp(const uint8_t* data,
-               size_t len,
-               const webrtc::PacketOptions& options) override {
-    MediaChannelUtil::SendRtp(data, len, options);
-    return true;
-  }
-  bool SendRtcp(const uint8_t* data, size_t len) override {
-    MediaChannelUtil::SendRtcp(data, len);
-    return true;
   }
 
   // Common functions between sender and receiver

@@ -1371,7 +1371,7 @@ bool WebRtcVideoSendChannel::AddSendStream(const StreamParams& sp) {
   for (uint32_t used_ssrc : sp.ssrcs)
     send_ssrcs_.insert(used_ssrc);
 
-  webrtc::VideoSendStream::Config config(this);
+  webrtc::VideoSendStream::Config config(transport());
 
   for (const RidDescription& rid : sp.rids()) {
     config.rtp.rids.push_back(rid.rid);
@@ -1601,18 +1601,6 @@ void WebRtcVideoSendChannel::SetVideoCodecSwitchingEnabled(bool enabled) {
   if (allow_codec_switching_) {
     RTC_LOG(LS_INFO) << "Encoder switching enabled.";
   }
-}
-
-bool WebRtcVideoSendChannel::SendRtp(const uint8_t* data,
-                                     size_t len,
-                                     const webrtc::PacketOptions& options) {
-  MediaChannelUtil::SendRtp(data, len, options);
-  return true;
-}
-
-bool WebRtcVideoSendChannel::SendRtcp(const uint8_t* data, size_t len) {
-  MediaChannelUtil::SendRtcp(data, len);
-  return true;
 }
 
 WebRtcVideoSendChannel::WebRtcVideoSendStream::VideoSendStreamParameters::
@@ -2798,8 +2786,9 @@ bool WebRtcVideoReceiveChannel::AddRecvStream(const StreamParams& sp,
   for (uint32_t used_ssrc : sp.ssrcs)
     receive_ssrcs_.insert(used_ssrc);
 
-  webrtc::VideoReceiveStreamInterface::Config config(this, decoder_factory_);
-  webrtc::FlexfecReceiveStream::Config flexfec_config(this);
+  webrtc::VideoReceiveStreamInterface::Config config(transport(),
+                                                     decoder_factory_);
+  webrtc::FlexfecReceiveStream::Config flexfec_config(transport());
   ConfigureReceiverRtp(&config, &flexfec_config, sp);
 
   config.crypto_options = crypto_options_;
