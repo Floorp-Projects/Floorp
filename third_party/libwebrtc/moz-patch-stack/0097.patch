@@ -1,41 +1,42 @@
-From: stransky <stransky@redhat.com>
-Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
- config r=ng,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D172224
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
+
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 0c26e7a7d5..22aa355e44 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -28,6 +28,13 @@
- #include "rtc_base/synchronization/mutex.h"
- #include "rtc_base/time_utils.h"
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index f784b8eebc..528ed6c616 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -281,12 +281,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
+   }
  
-+// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
-+// We don't want to use dmabuf of known broken systems.
-+// See FEATURE_DMABUF for details.
-+namespace mozilla::gfx {
-+bool IsDMABufEnabled();
-+}
-+
- namespace webrtc {
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
  
- const int kBytesPerPixel = 4;
-@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
-   that->modifier_ =
-       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-   std::vector<const spa_pod*> params;
--  const int buffer_types = has_modifier
-+  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
-                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-                                : (1 << SPA_DATA_MemFd);
- 
+  private:
 -- 
-2.37.3
+2.34.1
 

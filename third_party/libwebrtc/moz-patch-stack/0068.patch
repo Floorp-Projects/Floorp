@@ -1,31 +1,27 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Record video frame captures with PerformanceRecorder in
- the new mac camera backend. r=padenot
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:11:09 -0500
+Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
+ r=mjf,firefox-build-system-reviewers,ahochheiden
 
-Also includes:
-Bug 1806605 - Pass TrackingId instead of nsCString to CaptureStage.
-
-Differential Revision: https://phabricator.services.mozilla.com/D163687
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7362238c9e6fbe0d28200f6b41fc40a0c9a2158
 ---
- modules/video_capture/video_capture.h | 3 +++
- 1 file changed, 3 insertions(+)
+ build_overrides/build.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 04203033b0..6614032299 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -154,6 +154,9 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-   // Return whether the rotation is applied or left pending.
-   virtual bool GetApplyRotation() = 0;
+diff --git a/build_overrides/build.gni b/build_overrides/build.gni
+index 900367d0e1..e427ebba8e 100644
+--- a/build_overrides/build.gni
++++ b/build_overrides/build.gni
+@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
+   use_system_xcode = _result == 0
+ }
  
-+  // Mozilla: TrackingId setter for use in profiler markers.
-+  virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
++use_system_xcode = false
++xcode_version = "10.15"
++mac_xcode_version = "default"
 +
-  protected:
-   ~VideoCaptureModule() override {}
- };
+ declare_args() {
+   # WebRTC doesn't depend on //base from production code but only for testing
+   # purposes. In any case, it doesn't depend on //third_party/perfetto which
 -- 
-2.37.3
+2.34.1
 

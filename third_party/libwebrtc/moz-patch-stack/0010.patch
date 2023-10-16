@@ -1,26 +1,37 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 08:34:00 -0400
-Subject: Bug 1376873 - Allow single channel opus; r=padenot
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 9 Jul 2021 18:14:00 -0500
+Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D7469
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
+Differential Revision: https://phabricator.services.mozilla.com/D119674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
 ---
- modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ rtc_base/logging.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-index 51b0fcd492..17e0e33b1d 100644
---- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-+++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
- absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
-     const SdpAudioFormat& format) {
-   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
--      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
-+      format.clockrate_hz != kRtpTimestampRateHz) {
-     return absl::nullopt;
-   }
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index ad2303735e..9c2d3b0a39 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
+ }
  
+ void LogMessage::LogToDebug(LoggingSeverity min_sev) {
+-  g_dbg_sev = min_sev;
+   webrtc::MutexLock lock(&GetLoggingLock());
++  g_dbg_sev = min_sev;
+   UpdateMinLogSeverity();
+ }
+ 
+@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+ 
+ // static
+ bool LogMessage::IsNoop(LoggingSeverity severity) {
++  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
++  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
++  webrtc::MutexLock lock(&GetLoggingLock());
+   if (severity >= g_dbg_sev || severity >= g_min_sev)
+     return false;
+   return streams_empty_.load(std::memory_order_relaxed);
 -- 
-2.37.3
+2.34.1
 

@@ -1,47 +1,56 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 29 Mar 2019 18:43:00 +0000
-Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
- r=pehrsons
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-We've hit a number of problems with handling of RGB24 video capture on
-Windows. This adds a check that will ignore any RGB24 capture capabilities
-when determining a best match if there are other capabilities available to
-workaround the problems.
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
 
-Differential Revision: https://phabricator.services.mozilla.com/D25449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- modules/video_capture/device_info_impl.cc | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 7cccdb51a7..2a6afb3147 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
-   const int32_t numberOfCapabilies =
-       static_cast<int32_t>(_captureCapabilities.size());
- 
-+  bool hasNonRGB24Capability = false;
-   for (int32_t tmp = 0; tmp < numberOfCapabilies;
-        ++tmp)  // Loop through all capabilities
-   {
-     VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (capability.videoType != VideoType::kRGB24) {
-+      hasNonRGB24Capability = true;
-+    }
-+  }
-+
-+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
-+       ++tmp)  // Loop through all capabilities
-+  {
-+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
-+      continue;
-+    }
- 
-     const int32_t diffWidth = capability.width - requested.width;
-     const int32_t diffHeight = capability.height - requested.height;
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 8b9af35193..76fec13a39 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -357,7 +357,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
+   }
+   return true;
+ }
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
 -- 
-2.37.3
+2.34.1
 

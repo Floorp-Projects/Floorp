@@ -1,0 +1,33 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 5 Oct 2023 14:21:00 +0000
+Subject: Bug 1857037 - pt1 - add shim gni files to limit BUILD.gn changes.
+ r=ng,webrtc-reviewers
+
+Differential Revision: https://phabricator.services.mozilla.com/D190104
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a84d39db037cbe34aa19588b0d18335eb5e2d79b
+---
+ testing/libfuzzer/fuzzer_test.gni | 2 ++
+ testing/test.gni                  | 2 ++
+ 2 files changed, 4 insertions(+)
+ create mode 100644 testing/libfuzzer/fuzzer_test.gni
+ create mode 100644 testing/test.gni
+
+diff --git a/testing/libfuzzer/fuzzer_test.gni b/testing/libfuzzer/fuzzer_test.gni
+new file mode 100644
+index 0000000000..8fdf3cdad2
+--- /dev/null
++++ b/testing/libfuzzer/fuzzer_test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/libfuzzer
++# to allow BUILD.gn imports to succeed.
+diff --git a/testing/test.gni b/testing/test.gni
+new file mode 100644
+index 0000000000..f46fa82778
+--- /dev/null
++++ b/testing/test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/test.gni
++# to allow BUILD.gn imports to succeed.
+-- 
+2.34.1
+

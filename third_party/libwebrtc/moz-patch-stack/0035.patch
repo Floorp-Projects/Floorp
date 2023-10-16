@@ -1,44 +1,66 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Feb 2021 13:45:00 +0100
-Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
- VideoReceiveStream. r=ng
+From: Randell Jesup <rjesup@wgate.com>
+Date: Sat, 11 Jul 2020 12:31:00 +0000
+Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
+ r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D105774
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
+Also we drop support for an independent-of-scroll/viewport capture, which
+the old Tab Sharing supported, for security reasons (and we don't need it).
+
+Differential Revision: https://phabricator.services.mozilla.com/D80974
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
 ---
- call/video_receive_stream.h         | 3 +++
- video/rtp_video_stream_receiver2.cc | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
+ modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
+ 2 files changed, 19 insertions(+)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 2817c9bd9a..e7489a6cdf 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -210,6 +210,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // disabled.
-       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 5211f1acec..4baa93cab9 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+   return capturer;
+ }
  
-+      // See draft-alvestrand-rmcat-remb for information.
-+      bool remb = false;
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
++    const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
++  if (capturer && options.detect_updated_region()) {
++    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
++  }
 +
-       bool tmmbr = false;
++  return capturer;
++}
++
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+ bool DesktopCapturer::IsRunningUnderWayland() {
+   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index f39852b58e..9b667739a8 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
  
-       // See LntfConfig for description.
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index aceee90313..7d7021ee85 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
-       frames_decryptable_(false),
-       absolute_capture_time_interpolator_(clock) {
-   packet_sequence_checker_.Detach();
--  constexpr bool remb_candidate = true;
-   if (packet_router_)
--    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
-+    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
++  // Creates a DesktopCapturer instance which targets to capture tab.
++  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
++      const DesktopCaptureOptions& options);
++
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
  
-   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
-       << "A stream should not be configured with RTCP disabled. This value is "
+@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
+   // capture screens.
+   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
+       const DesktopCaptureOptions& options);
++
++  // Creates a DesktopCapturer instance which targets to capture tabs
++  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
++      const DesktopCaptureOptions& options);
+ };
+ 
+ }  // namespace webrtc
 -- 
-2.37.3
+2.34.1
 

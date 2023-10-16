@@ -1,77 +1,27 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 8 Aug 2023 10:05:00 +0000
-Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
- to avoid concurrent access r=jib,webrtc-reviewers,mjf
+From: Mike Hommey <mh+mozilla@glandium.org>
+Date: Fri, 7 Jul 2023 00:58:00 +0000
+Subject: Bug 1841577 - Don't set WEBRTC_ENABLE_AVX2 on platforms that don't
+ have AVX2. r=mjf,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
-
-Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
-
-Differential Revision: https://phabricator.services.mozilla.com/D184386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
+Differential Revision: https://phabricator.services.mozilla.com/D182695
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/46fb51c90709be64c35946a8cf69195121441024
 ---
- modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
- modules/video_capture/linux/pipewire_session.h  |  5 ++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ webrtc.gni | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index 2adb1cdb50..3f52b3dd61 100644
---- a/modules/video_capture/linux/pipewire_session.cc
-+++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
- }
+diff --git a/webrtc.gni b/webrtc.gni
+index ae3f99cb67..e30bc6b9bb 100644
+--- a/webrtc.gni
++++ b/webrtc.gni
+@@ -290,7 +290,7 @@ declare_args() {
  
- void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
--  callback_ = callback;
-+  {
-+    webrtc::MutexLock lock(&callback_lock_);
-+    callback_ = callback;
-+  }
- 
-   if (fd != kInvalidPipeWireFd) {
-     InitPipeWire(fd);
-@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
- }
- 
- void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
-+  webrtc::MutexLock lock(&callback_lock_);
-+
-   if (callback_) {
-     callback_->OnInitialized(status);
-     callback_ = nullptr;
-@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
- }
- 
- void PipeWireSession::Cleanup() {
-+  webrtc::MutexLock lock(&callback_lock_);
-+  callback_ = nullptr;
-+
-   StopPipeWire();
- }
- 
-diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
-index 982b468838..fdc06a6b2a 100644
---- a/modules/video_capture/linux/pipewire_session.h
-+++ b/modules/video_capture/linux/pipewire_session.h
-@@ -24,6 +24,7 @@
- #include "modules/video_capture/linux/camera_portal.h"
- #include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_options.h"
-+#include "rtc_base/synchronization/mutex.h"
- 
- namespace webrtc {
- namespace videocapturemodule {
-@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
-   void Finish(VideoCaptureOptions::Status status);
-   void Cleanup();
- 
--  VideoCaptureOptions::Callback* callback_ = nullptr;
-+  webrtc::Mutex callback_lock_;
-+  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
-+      nullptr;
- 
-   VideoCaptureOptions::Status status_;
- 
+   # Set this to true to enable the avx2 support in webrtc.
+   # TODO: Make sure that AVX2 works also for non-clang compilers.
+-  if (is_clang == true) {
++  if (is_clang == true && (target_cpu == "x86" || target_cpu == "x64")) {
+     rtc_enable_avx2 = true
+   } else {
+     rtc_enable_avx2 = false
 -- 
-2.37.3
+2.34.1
 
