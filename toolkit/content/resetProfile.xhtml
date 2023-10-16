@@ -4,11 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://global/content/commonDialog.css"?>
-<?xml-stylesheet href="chrome://global/skin/commonDialog.css"?>
-<?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
-
 <window
   id="resetProfileDialogWindow"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -25,6 +20,20 @@
     <!-- The empty onload event handler is a hack to get the accept button text applied by Fluent. -->
 
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/content/commonDialog.css"
+      />
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/skin/commonDialog.css"
+      />
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/content/resetProfile.css"
+      />
+
       <html:link rel="localization" href="branding/brand.ftl" />
       <html:link rel="localization" href="toolkit/global/resetProfile.ftl" />
     </linkset>

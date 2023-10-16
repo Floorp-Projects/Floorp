@@ -4,9 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://mozapps/skin/downloads/unknownContentType.css" type="text/css"?>
-
 <window id="unknownContentTypeWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -20,6 +17,12 @@
         persist="screenX screenY"
         aria-describedby="intro location whichIs type from source unknownPrompt">
 <linkset>
+  <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+  <html:link
+    rel="stylesheet"
+    href="chrome://mozapps/skin/downloads/unknownContentType.css"
+  />
+
   <html:link rel="localization" href="branding/brand.ftl"/>
   <html:link rel="localization" href="toolkit/global/unknownContentType.ftl"/>
 </linkset>
