@@ -1,76 +1,49 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 8 Aug 2023 10:05:00 +0000
-Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
- to avoid concurrent access r=jib,webrtc-reviewers,mjf
+From: stransky <stransky@redhat.com>
+Date: Tue, 29 Aug 2023 12:43:00 +0000
+Subject: Bug 1821629 [Pipewire/DMABuf] Don't create dmabuf backend if it's
+ disabled r=ng,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
+Depends on D172224
 
-Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
-
-Differential Revision: https://phabricator.services.mozilla.com/D184386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
+Differential Revision: https://phabricator.services.mozilla.com/D172229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/237d19fe96dd7d25b6a817415ee4e6854678d648
 ---
- modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
- modules/video_capture/linux/pipewire_session.h  |  5 ++++-
- 2 files changed, 13 insertions(+), 2 deletions(-)
+ .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
-index 2adb1cdb50..3f52b3dd61 100644
---- a/modules/video_capture/linux/pipewire_session.cc
-+++ b/modules/video_capture/linux/pipewire_session.cc
-@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
- }
- 
- void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
--  callback_ = callback;
-+  {
-+    webrtc::MutexLock lock(&callback_lock_);
-+    callback_ = callback;
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 22aa355e44..61c6957d27 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -419,7 +419,9 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     RTC_LOG(LS_ERROR) << "Unable to open PipeWire library";
+     return false;
+   }
+-  egl_dmabuf_ = std::make_unique<EglDmaBuf>();
++  if (mozilla::gfx::IsDMABufEnabled()) {
++    egl_dmabuf_ = std::make_unique<EglDmaBuf>();
 +  }
  
-   if (fd != kInvalidPipeWireFd) {
-     InitPipeWire(fd);
-@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
- }
+   pw_stream_node_id_ = stream_node_id;
  
- void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
-+  webrtc::MutexLock lock(&callback_lock_);
-+
-   if (callback_) {
-     callback_->OnInitialized(status);
-     callback_ = nullptr;
-@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
- }
+@@ -508,7 +510,8 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+     for (uint32_t format : {SPA_VIDEO_FORMAT_BGRA, SPA_VIDEO_FORMAT_RGBA,
+                             SPA_VIDEO_FORMAT_BGRx, SPA_VIDEO_FORMAT_RGBx}) {
+       // Modifiers can be used with PipeWire >= 0.3.33
+-      if (has_required_pw_client_version && has_required_pw_server_version) {
++      if (egl_dmabuf_ &&
++          has_required_pw_client_version && has_required_pw_server_version) {
+         modifiers_ = egl_dmabuf_->QueryDmaBufModifiers(format);
  
- void PipeWireSession::Cleanup() {
-+  webrtc::MutexLock lock(&callback_lock_);
-+  callback_ = nullptr;
-+
-   StopPipeWire();
- }
+         if (!modifiers_.empty()) {
+@@ -927,7 +930,7 @@ bool SharedScreenCastStreamPrivate::ProcessDMABuffer(
  
-diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
-index 982b468838..fdc06a6b2a 100644
---- a/modules/video_capture/linux/pipewire_session.h
-+++ b/modules/video_capture/linux/pipewire_session.h
-@@ -24,6 +24,7 @@
- #include "modules/video_capture/linux/camera_portal.h"
- #include "modules/video_capture/video_capture.h"
- #include "modules/video_capture/video_capture_options.h"
-+#include "rtc_base/synchronization/mutex.h"
+   const uint n_planes = spa_buffer->n_datas;
  
- namespace webrtc {
- namespace videocapturemodule {
-@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
-   void Finish(VideoCaptureOptions::Status status);
-   void Cleanup();
- 
--  VideoCaptureOptions::Callback* callback_ = nullptr;
-+  webrtc::Mutex callback_lock_;
-+  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
-+      nullptr;
- 
-   VideoCaptureOptions::Status status_;
+-  if (!n_planes) {
++  if (!n_planes || !egl_dmabuf_) {
+     return false;
+   }
  
 -- 
 2.34.1
