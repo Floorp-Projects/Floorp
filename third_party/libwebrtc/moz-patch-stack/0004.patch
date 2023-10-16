@@ -774,7 +774,7 @@ index 3745e9cba5..f68cfb94c1 100644
        device_names->push_back(rtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 75f403d6fa..c62c65506a 100644
+index 9e462882f6..43ecbf6a23 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
 @@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
