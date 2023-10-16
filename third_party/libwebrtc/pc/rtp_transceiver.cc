@@ -202,8 +202,6 @@ RTCError RtpTransceiver::CreateChannel(
     return RTCError(RTCErrorType::INTERNAL_ERROR,
                     "No media engine for mid=" + std::string(mid));
   }
-  bool use_split_media_channel =
-      !context()->field_trials().IsDisabled("WebRTC-SplitMediaChannel");
   std::unique_ptr<cricket::ChannelInterface> new_channel;
   if (media_type() == cricket::MEDIA_TYPE_AUDIO) {
     // TODO(bugs.webrtc.org/11992): CreateVideoChannel internally switches to
@@ -219,50 +217,34 @@ RTCError RtpTransceiver::CreateChannel(
 
       AudioCodecPairId codec_pair_id = AudioCodecPairId::Create();
 
-      if (use_split_media_channel) {
-        std::unique_ptr<cricket::VoiceMediaSendChannelInterface>
-            media_send_channel = media_engine()->voice().CreateSendChannel(
-                call_ptr, media_config, audio_options, crypto_options,
-                codec_pair_id);
-        if (!media_send_channel) {
-          // TODO(bugs.webrtc.org/14912): Consider CHECK or reporting failure
-          return;
-        }
-        std::unique_ptr<cricket::VoiceMediaReceiveChannelInterface>
-            media_receive_channel =
-                media_engine()->voice().CreateReceiveChannel(
-                    call_ptr, media_config, audio_options, crypto_options,
-                    codec_pair_id);
-        if (!media_receive_channel) {
-          return;
-        }
-        // Note that this is safe because both sending and
-        // receiving channels will be deleted at the same time.
-        media_send_channel->SetSsrcListChangedCallback(
-            [receive_channel = media_receive_channel.get()](
-                const std::set<uint32_t>& choices) {
-              receive_channel->ChooseReceiverReportSsrc(choices);
-            });
-
-        new_channel = std::make_unique<cricket::VoiceChannel>(
-            context()->worker_thread(), context()->network_thread(),
-            context()->signaling_thread(), std::move(media_send_channel),
-            std::move(media_receive_channel), mid, srtp_required,
-            crypto_options, context()->ssrc_generator());
-      } else {
-        cricket::VoiceMediaChannel* media_channel =
-            media_engine()->voice().CreateMediaChannel(
-                cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
-                audio_options, crypto_options, AudioCodecPairId::Create());
-        if (!media_channel) {
-          return;
-        }
-
-        new_channel = std::make_unique<cricket::VoiceChannel>(
-            context()->worker_thread(), context()->network_thread(),
-            context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
-            srtp_required, crypto_options, context()->ssrc_generator());
+      std::unique_ptr<cricket::VoiceMediaSendChannelInterface>
+          media_send_channel = media_engine()->voice().CreateSendChannel(
+              call_ptr, media_config, audio_options, crypto_options,
+              codec_pair_id);
+      if (!media_send_channel) {
+        // TODO(bugs.webrtc.org/14912): Consider CHECK or reporting failure
+        return;
       }
+      std::unique_ptr<cricket::VoiceMediaReceiveChannelInterface>
+          media_receive_channel = media_engine()->voice().CreateReceiveChannel(
+              call_ptr, media_config, audio_options, crypto_options,
+              codec_pair_id);
+      if (!media_receive_channel) {
+        return;
+      }
+      // Note that this is safe because both sending and
+      // receiving channels will be deleted at the same time.
+      media_send_channel->SetSsrcListChangedCallback(
+          [receive_channel =
+               media_receive_channel.get()](const std::set<uint32_t>& choices) {
+            receive_channel->ChooseReceiverReportSsrc(choices);
+          });
+
+      new_channel = std::make_unique<cricket::VoiceChannel>(
+          context()->worker_thread(), context()->network_thread(),
+          context()->signaling_thread(), std::move(media_send_channel),
+          std::move(media_receive_channel), mid, srtp_required, crypto_options,
+          context()->ssrc_generator());
     });
   } else {
     RTC_DCHECK_EQ(cricket::MEDIA_TYPE_VIDEO, media_type());
@@ -273,49 +255,33 @@ RTCError RtpTransceiver::CreateChannel(
     context()->worker_thread()->BlockingCall([&] {
       RTC_DCHECK_RUN_ON(context()->worker_thread());
 
-      if (use_split_media_channel) {
-        std::unique_ptr<cricket::VideoMediaSendChannelInterface>
-            media_send_channel = media_engine()->video().CreateSendChannel(
-                call_ptr, media_config, video_options, crypto_options,
-                video_bitrate_allocator_factory);
-        if (!media_send_channel) {
-          return;
-        }
-
-        std::unique_ptr<cricket::VideoMediaReceiveChannelInterface>
-            media_receive_channel =
-                media_engine()->video().CreateReceiveChannel(
-                    call_ptr, media_config, video_options, crypto_options);
-        if (!media_receive_channel) {
-          return;
-        }
-        // Note that this is safe because both sending and
-        // receiving channels will be deleted at the same time.
-        media_send_channel->SetSsrcListChangedCallback(
-            [receive_channel = media_receive_channel.get()](
-                const std::set<uint32_t>& choices) {
-              receive_channel->ChooseReceiverReportSsrc(choices);
-            });
-
-        new_channel = std::make_unique<cricket::VideoChannel>(
-            context()->worker_thread(), context()->network_thread(),
-            context()->signaling_thread(), std::move(media_send_channel),
-            std::move(media_receive_channel), mid, srtp_required,
-            crypto_options, context()->ssrc_generator());
-      } else {
-        cricket::VideoMediaChannel* media_channel =
-            media_engine()->video().CreateMediaChannel(
-                cricket::MediaChannel::Role::kBoth, call_ptr, media_config,
-                video_options, crypto_options, video_bitrate_allocator_factory);
-        if (!media_channel) {
-          return;
-        }
-
-        new_channel = std::make_unique<cricket::VideoChannel>(
-            context()->worker_thread(), context()->network_thread(),
-            context()->signaling_thread(), absl::WrapUnique(media_channel), mid,
-            srtp_required, crypto_options, context()->ssrc_generator());
+      std::unique_ptr<cricket::VideoMediaSendChannelInterface>
+          media_send_channel = media_engine()->video().CreateSendChannel(
+              call_ptr, media_config, video_options, crypto_options,
+              video_bitrate_allocator_factory);
+      if (!media_send_channel) {
+        return;
       }
+
+      std::unique_ptr<cricket::VideoMediaReceiveChannelInterface>
+          media_receive_channel = media_engine()->video().CreateReceiveChannel(
+              call_ptr, media_config, video_options, crypto_options);
+      if (!media_receive_channel) {
+        return;
+      }
+      // Note that this is safe because both sending and
+      // receiving channels will be deleted at the same time.
+      media_send_channel->SetSsrcListChangedCallback(
+          [receive_channel =
+               media_receive_channel.get()](const std::set<uint32_t>& choices) {
+            receive_channel->ChooseReceiverReportSsrc(choices);
+          });
+
+      new_channel = std::make_unique<cricket::VideoChannel>(
+          context()->worker_thread(), context()->network_thread(),
+          context()->signaling_thread(), std::move(media_send_channel),
+          std::move(media_receive_channel), mid, srtp_required, crypto_options,
+          context()->ssrc_generator());
     });
   }
   if (!new_channel) {

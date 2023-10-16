@@ -762,29 +762,6 @@ WebRtcVideoEngine::CreateReceiveChannel(
       call, config, options, crypto_options, decoder_factory_.get());
 }
 
-VideoMediaChannel* WebRtcVideoEngine::CreateMediaChannel(
-    MediaChannel::Role role,
-    webrtc::Call* call,
-    const MediaConfig& config,
-    const VideoOptions& options,
-    const webrtc::CryptoOptions& crypto_options,
-    webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
-  RTC_LOG(LS_INFO) << "CreateMediaChannel. Options: " << options.ToString();
-  std::unique_ptr<VideoMediaSendChannelInterface> send_channel;
-  std::unique_ptr<VideoMediaReceiveChannelInterface> receive_channel;
-  if (role == MediaChannel::Role::kSend || role == MediaChannel::Role::kBoth) {
-    send_channel = CreateSendChannel(call, config, options, crypto_options,
-                                     video_bitrate_allocator_factory);
-  }
-  if (role == MediaChannel::Role::kReceive ||
-      role == MediaChannel::Role::kBoth) {
-    receive_channel =
-        CreateReceiveChannel(call, config, options, crypto_options);
-  }
-  return new VideoMediaShimChannel(std::move(send_channel),
-                                   std::move(receive_channel));
-}
-
 std::vector<VideoCodec> WebRtcVideoEngine::send_codecs(bool include_rtx) const {
   return GetPayloadTypesAndDefaultCodecs(encoder_factory_.get(),
                                          /*is_decoder_factory=*/false,

@@ -28,7 +28,6 @@
 #include "media/base/fake_network_interface.h"
 #include "media/base/fake_rtp.h"
 #include "media/base/media_channel.h"
-#include "media/base/media_channel_shim.h"
 #include "media/base/media_constants.h"
 #include "media/engine/fake_webrtc_call.h"
 #include "modules/audio_device/include/mock_audio_device.h"

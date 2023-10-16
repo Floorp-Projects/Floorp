@@ -37,7 +37,6 @@
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "api/video/video_codec_constants.h"
 #include "media/base/codec.h"
-#include "media/base/delayable.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_config.h"
@@ -485,9 +484,10 @@ class RtpSenderReceiverTest
 
   // Check that minimum Jitter Buffer delay is propagated to the underlying
   // `media_channel`.
-  void VerifyRtpReceiverDelayBehaviour(cricket::Delayable* media_channel,
-                                       RtpReceiverInterface* receiver,
-                                       uint32_t ssrc) {
+  void VerifyRtpReceiverDelayBehaviour(
+      cricket::MediaReceiveChannelInterface* media_channel,
+      RtpReceiverInterface* receiver,
+      uint32_t ssrc) {
     receiver->SetJitterBufferMinimumDelay(/*delay_seconds=*/0.5);
     absl::optional<int> delay_ms =
         media_channel->GetBaseMinimumPlayoutDelayMs(ssrc);  // In milliseconds.

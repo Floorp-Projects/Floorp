@@ -43,7 +43,6 @@
 #include "call/video_receive_stream.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "media/base/codec.h"
-#include "media/base/delayable.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
@@ -71,7 +70,6 @@ class VideoFrame;
 namespace cricket {
 
 class AudioSource;
-class MediaChannel;  // TODO(bugs.webrtc.org/13931): Delete when irrelevant
 class VideoCapturer;
 struct RtpHeader;
 struct VideoFormat;
@@ -256,7 +254,7 @@ class MediaSendChannelInterface {
       absl::AnyInvocable<void()> callback) = 0;
 };
 
-class MediaReceiveChannelInterface : public Delayable {
+class MediaReceiveChannelInterface {
  public:
   virtual ~MediaReceiveChannelInterface() = default;
 
@@ -308,6 +306,16 @@ class MediaReceiveChannelInterface : public Delayable {
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface>
           frame_transformer) = 0;
+
+  // Set base minimum delay of the receive stream with specified ssrc.
+  // Base minimum delay sets lower bound on minimum delay value which
+  // determines minimum delay until audio playout.
+  // Returns false if there is no stream with given ssrc.
+  virtual bool SetBaseMinimumPlayoutDelayMs(uint32_t ssrc, int delay_ms) = 0;
+
+  // Returns current value of base minimum delay in milliseconds.
+  virtual absl::optional<int> GetBaseMinimumPlayoutDelayMs(
+      uint32_t ssrc) const = 0;
 };
 
 // The stats information is structured as follows:
