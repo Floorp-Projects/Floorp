@@ -9,10 +9,10 @@
 //! # Usage
 //!
 //! [`channel`] returns a [`Sender`] / [`Receiver`] pair. These are the producer
-//! and sender halves of the channel. The channel is created with an initial
+//! and consumer halves of the channel. The channel is created with an initial
 //! value. The **latest** value stored in the channel is accessed with
 //! [`Receiver::borrow()`]. Awaiting [`Receiver::changed()`] waits for a new
-//! value to sent by the [`Sender`] half.
+//! value to be sent by the [`Sender`] half.
 //!
 //! # Examples
 //!
@@ -20,15 +20,15 @@
 //! use tokio::sync::watch;
 //!
 //! # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
-//!     let (tx, mut rx) = watch::channel("hello");
+//! let (tx, mut rx) = watch::channel("hello");
 //!
-//!     tokio::spawn(async move {
-//!         while rx.changed().await.is_ok() {
-//!             println!("received = {:?}", *rx.borrow());
-//!         }
-//!     });
+//! tokio::spawn(async move {
+//!     while rx.changed().await.is_ok() {
+//!         println!("received = {:?}", *rx.borrow());
+//!     }
+//! });
 //!
-//!     tx.send("world")?;
+//! tx.send("world")?;
 //! # Ok(())
 //! # }
 //! ```
@@ -38,6 +38,9 @@
 //! [`Sender::is_closed`] and [`Sender::closed`] allow the producer to detect
 //! when all [`Receiver`] handles have been dropped. This indicates that there
 //! is no further interest in the values being produced and work can be stopped.
+//!
+//! The value in the channel will not be dropped until the sender and all receivers
+//! have been dropped.
 //!
 //! # Thread safety
 //!
@@ -58,8 +61,10 @@ use crate::sync::notify::Notify;
 use crate::loom::sync::atomic::AtomicUsize;
 use crate::loom::sync::atomic::Ordering::Relaxed;
 use crate::loom::sync::{Arc, RwLock, RwLockReadGuard};
+use std::fmt;
 use std::mem;
 use std::ops;
+use std::panic;
 
 /// Receives values from the associated [`Sender`](struct@Sender).
 ///
@@ -89,8 +94,11 @@ pub struct Sender<T> {
 /// Returns a reference to the inner value.
 ///
 /// Outstanding borrows hold a read lock on the inner value. This means that
-/// long lived borrows could cause the produce half to block. It is recommended
-/// to keep the borrow as short lived as possible.
+/// long-lived borrows could cause the producer half to block. It is recommended
+/// to keep the borrow as short-lived as possible. Additionally, if you are
+/// running in an environment that allows `!Send` futures, you must ensure that
+/// the returned `Ref` type is never held alive across an `.await` point,
+/// otherwise, it can lead to a deadlock.
 ///
 /// The priority policy of the lock is dependent on the underlying lock
 /// implementation, and this type does not guarantee that any particular policy
@@ -111,9 +119,57 @@ pub struct Sender<T> {
 #[derive(Debug)]
 pub struct Ref<'a, T> {
     inner: RwLockReadGuard<'a, T>,
+    has_changed: bool,
 }
 
-#[derive(Debug)]
+impl<'a, T> Ref<'a, T> {
+    /// Indicates if the borrowed value is considered as _changed_ since the last
+    /// time it has been marked as seen.
+    ///
+    /// Unlike [`Receiver::has_changed()`], this method does not fail if the channel is closed.
+    ///
+    /// When borrowed from the [`Sender`] this function will always return `false`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::watch;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let (tx, mut rx) = watch::channel("hello");
+    ///
+    ///     tx.send("goodbye").unwrap();
+    ///     // The sender does never consider the value as changed.
+    ///     assert!(!tx.borrow().has_changed());
+    ///
+    ///     // Drop the sender immediately, just for testing purposes.
+    ///     drop(tx);
+    ///
+    ///     // Even if the sender has already been dropped...
+    ///     assert!(rx.has_changed().is_err());
+    ///     // ...the modified value is still readable and detected as changed.
+    ///     assert_eq!(*rx.borrow(), "goodbye");
+    ///     assert!(rx.borrow().has_changed());
+    ///
+    ///     // Read the changed value and mark it as seen.
+    ///     {
+    ///         let received = rx.borrow_and_update();
+    ///         assert_eq!(*received, "goodbye");
+    ///         assert!(received.has_changed());
+    ///         // Release the read lock when leaving this scope.
+    ///     }
+    ///
+    ///     // Now the value has already been marked as seen and could
+    ///     // never be modified again (after the sender has been dropped).
+    ///     assert!(!rx.borrow().has_changed());
+    /// }
+    /// ```
+    pub fn has_changed(&self) -> bool {
+        self.has_changed
+    }
+}
+
 struct Shared<T> {
     /// The most recent value.
     value: RwLock<T>,
@@ -128,10 +184,22 @@ struct Shared<T> {
     ref_count_rx: AtomicUsize,
 
     /// Notifies waiting receivers that the value changed.
-    notify_rx: Notify,
+    notify_rx: big_notify::BigNotify,
 
     /// Notifies any task listening for `Receiver` dropped events.
     notify_tx: Notify,
+}
+
+impl<T: fmt::Debug> fmt::Debug for Shared<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let state = self.state.load();
+        f.debug_struct("Shared")
+            .field("value", &self.value)
+            .field("version", &state.version())
+            .field("is_closed", &state.is_closed())
+            .field("ref_count_rx", &self.ref_count_rx)
+            .finish()
+    }
 }
 
 pub mod error {
@@ -140,21 +208,27 @@ pub mod error {
     use std::fmt;
 
     /// Error produced when sending a value fails.
-    #[derive(Debug)]
+    #[derive(PartialEq, Eq, Clone, Copy)]
     pub struct SendError<T>(pub T);
 
     // ===== impl SendError =====
 
-    impl<T: fmt::Debug> fmt::Display for SendError<T> {
+    impl<T> fmt::Debug for SendError<T> {
+        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+            f.debug_struct("SendError").finish_non_exhaustive()
+        }
+    }
+
+    impl<T> fmt::Display for SendError<T> {
         fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
             write!(fmt, "channel closed")
         }
     }
 
-    impl<T: fmt::Debug> std::error::Error for SendError<T> {}
+    impl<T> std::error::Error for SendError<T> {}
 
     /// Error produced when receiving a change notification.
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct RecvError(pub(super) ());
 
     // ===== impl RecvError =====
@@ -166,6 +240,62 @@ pub mod error {
     }
 
     impl std::error::Error for RecvError {}
+}
+
+mod big_notify {
+    use super::*;
+    use crate::sync::notify::Notified;
+
+    // To avoid contention on the lock inside the `Notify`, we store multiple
+    // copies of it. Then, we use either circular access or randomness to spread
+    // out threads over different `Notify` objects.
+    //
+    // Some simple benchmarks show that randomness performs slightly better than
+    // circular access (probably due to contention on `next`), so we prefer to
+    // use randomness when Tokio is compiled with a random number generator.
+    //
+    // When the random number generator is not available, we fall back to
+    // circular access.
+
+    pub(super) struct BigNotify {
+        #[cfg(not(all(not(loom), feature = "sync", any(feature = "rt", feature = "macros"))))]
+        next: AtomicUsize,
+        inner: [Notify; 8],
+    }
+
+    impl BigNotify {
+        pub(super) fn new() -> Self {
+            Self {
+                #[cfg(not(all(
+                    not(loom),
+                    feature = "sync",
+                    any(feature = "rt", feature = "macros")
+                )))]
+                next: AtomicUsize::new(0),
+                inner: Default::default(),
+            }
+        }
+
+        pub(super) fn notify_waiters(&self) {
+            for notify in &self.inner {
+                notify.notify_waiters();
+            }
+        }
+
+        /// This function implements the case where randomness is not available.
+        #[cfg(not(all(not(loom), feature = "sync", any(feature = "rt", feature = "macros"))))]
+        pub(super) fn notified(&self) -> Notified<'_> {
+            let i = self.next.fetch_add(1, Relaxed) % 8;
+            self.inner[i].notified()
+        }
+
+        /// This function implements the case where randomness is available.
+        #[cfg(all(not(loom), feature = "sync", any(feature = "rt", feature = "macros")))]
+        pub(super) fn notified(&self) -> Notified<'_> {
+            let i = crate::runtime::context::thread_rng_n(8) as usize;
+            self.inner[i].notified()
+        }
+    }
 }
 
 use self::state::{AtomicState, Version};
@@ -267,7 +397,7 @@ pub fn channel<T>(init: T) -> (Sender<T>, Receiver<T>) {
         value: RwLock::new(init),
         state: AtomicState::new(),
         ref_count_rx: AtomicUsize::new(1),
-        notify_rx: Notify::new(),
+        notify_rx: big_notify::BigNotify::new(),
         notify_tx: Notify::new(),
     });
 
@@ -298,9 +428,12 @@ impl<T> Receiver<T> {
     /// [`changed`] may return immediately even if you have already seen the
     /// value with a call to `borrow`.
     ///
-    /// Outstanding borrows hold a read lock. This means that long lived borrows
-    /// could cause the send half to block. It is recommended to keep the borrow
-    /// as short lived as possible.
+    /// Outstanding borrows hold a read lock on the inner value. This means that
+    /// long-lived borrows could cause the producer half to block. It is recommended
+    /// to keep the borrow as short-lived as possible. Additionally, if you are
+    /// running in an environment that allows `!Send` futures, you must ensure that
+    /// the returned `Ref` type is never held alive across an `.await` point,
+    /// otherwise, it can lead to a deadlock.
     ///
     /// The priority policy of the lock is dependent on the underlying lock
     /// implementation, and this type does not guarantee that any particular policy
@@ -331,19 +464,28 @@ impl<T> Receiver<T> {
     /// ```
     pub fn borrow(&self) -> Ref<'_, T> {
         let inner = self.shared.value.read().unwrap();
-        Ref { inner }
+
+        // After obtaining a read-lock no concurrent writes could occur
+        // and the loaded version matches that of the borrowed reference.
+        let new_version = self.shared.state.load().version();
+        let has_changed = self.version != new_version;
+
+        Ref { inner, has_changed }
     }
 
-    /// Returns a reference to the most recently sent value and mark that value
+    /// Returns a reference to the most recently sent value and marks that value
     /// as seen.
     ///
-    /// This method marks the value as seen, so [`changed`] will not return
-    /// immediately if the newest value is one previously returned by
-    /// `borrow_and_update`.
+    /// This method marks the current value as seen. Subsequent calls to [`changed`]
+    /// will not return immediately until the [`Sender`] has modified the shared
+    /// value again.
     ///
-    /// Outstanding borrows hold a read lock. This means that long lived borrows
-    /// could cause the send half to block. It is recommended to keep the borrow
-    /// as short lived as possible.
+    /// Outstanding borrows hold a read lock on the inner value. This means that
+    /// long-lived borrows could cause the producer half to block. It is recommended
+    /// to keep the borrow as short-lived as possible. Additionally, if you are
+    /// running in an environment that allows `!Send` futures, you must ensure that
+    /// the returned `Ref` type is never held alive across an `.await` point,
+    /// otherwise, it can lead to a deadlock.
     ///
     /// The priority policy of the lock is dependent on the underlying lock
     /// implementation, and this type does not guarantee that any particular policy
@@ -365,8 +507,16 @@ impl<T> Receiver<T> {
     /// [`changed`]: Receiver::changed
     pub fn borrow_and_update(&mut self) -> Ref<'_, T> {
         let inner = self.shared.value.read().unwrap();
-        self.version = self.shared.state.load().version();
-        Ref { inner }
+
+        // After obtaining a read-lock no concurrent writes could occur
+        // and the loaded version matches that of the borrowed reference.
+        let new_version = self.shared.state.load().version();
+        let has_changed = self.version != new_version;
+
+        // Mark the shared value as seen by updating the version
+        self.version = new_version;
+
+        Ref { inner, has_changed }
     }
 
     /// Checks if this channel contains a message that this receiver has not yet
@@ -451,19 +601,110 @@ impl<T> Receiver<T> {
     /// }
     /// ```
     pub async fn changed(&mut self) -> Result<(), error::RecvError> {
-        loop {
-            // In order to avoid a race condition, we first request a notification,
-            // **then** check the current value's version. If a new version exists,
-            // the notification request is dropped.
-            let notified = self.shared.notify_rx.notified();
+        changed_impl(&self.shared, &mut self.version).await
+    }
 
-            if let Some(ret) = maybe_changed(&self.shared, &mut self.version) {
-                return ret;
+    /// Waits for a value that satisifes the provided condition.
+    ///
+    /// This method will call the provided closure whenever something is sent on
+    /// the channel. Once the closure returns `true`, this method will return a
+    /// reference to the value that was passed to the closure.
+    ///
+    /// Before `wait_for` starts waiting for changes, it will call the closure
+    /// on the current value. If the closure returns `true` when given the
+    /// current value, then `wait_for` will immediately return a reference to
+    /// the current value. This is the case even if the current value is already
+    /// considered seen.
+    ///
+    /// The watch channel only keeps track of the most recent value, so if
+    /// several messages are sent faster than `wait_for` is able to call the
+    /// closure, then it may skip some updates. Whenever the closure is called,
+    /// it will be called with the most recent value.
+    ///
+    /// When this function returns, the value that was passed to the closure
+    /// when it returned `true` will be considered seen.
+    ///
+    /// If the channel is closed, then `wait_for` will return a `RecvError`.
+    /// Once this happens, no more messages can ever be sent on the channel.
+    /// When an error is returned, it is guaranteed that the closure has been
+    /// called on the last value, and that it returned `false` for that value.
+    /// (If the closure returned `true`, then the last value would have been
+    /// returned instead of the error.)
+    ///
+    /// Like the `borrow` method, the returned borrow holds a read lock on the
+    /// inner value. This means that long-lived borrows could cause the producer
+    /// half to block. It is recommended to keep the borrow as short-lived as
+    /// possible. See the documentation of `borrow` for more information on
+    /// this.
+    ///
+    /// [`Receiver::changed()`]: crate::sync::watch::Receiver::changed
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::watch;
+    ///
+    /// #[tokio::main]
+    ///
+    /// async fn main() {
+    ///     let (tx, _rx) = watch::channel("hello");
+    ///
+    ///     tx.send("goodbye").unwrap();
+    ///
+    ///     // here we subscribe to a second receiver
+    ///     // now in case of using `changed` we would have
+    ///     // to first check the current value and then wait
+    ///     // for changes or else `changed` would hang.
+    ///     let mut rx2 = tx.subscribe();
+    ///
+    ///     // in place of changed we have use `wait_for`
+    ///     // which would automatically check the current value
+    ///     // and wait for changes until the closure returns true.
+    ///     assert!(rx2.wait_for(|val| *val == "goodbye").await.is_ok());
+    ///     assert_eq!(*rx2.borrow(), "goodbye");
+    /// }
+    /// ```
+    pub async fn wait_for(
+        &mut self,
+        mut f: impl FnMut(&T) -> bool,
+    ) -> Result<Ref<'_, T>, error::RecvError> {
+        let mut closed = false;
+        loop {
+            {
+                let inner = self.shared.value.read().unwrap();
+
+                let new_version = self.shared.state.load().version();
+                let has_changed = self.version != new_version;
+                self.version = new_version;
+
+                if (!closed || has_changed) && f(&inner) {
+                    return Ok(Ref { inner, has_changed });
+                }
             }
 
-            notified.await;
-            // loop around again in case the wake-up was spurious
+            if closed {
+                return Err(error::RecvError(()));
+            }
+
+            // Wait for the value to change.
+            closed = changed_impl(&self.shared, &mut self.version).await.is_err();
         }
+    }
+
+    /// Returns `true` if receivers belong to the same channel.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let (tx, rx) = tokio::sync::watch::channel(true);
+    /// let rx2 = rx.clone();
+    /// assert!(rx.same_channel(&rx2));
+    ///
+    /// let (tx3, rx3) = tokio::sync::watch::channel(true);
+    /// assert!(!rx3.same_channel(&rx2));
+    /// ```
+    pub fn same_channel(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.shared, &other.shared)
     }
 
     cfg_process_driver! {
@@ -495,6 +736,27 @@ fn maybe_changed<T>(
     None
 }
 
+async fn changed_impl<T>(
+    shared: &Shared<T>,
+    version: &mut Version,
+) -> Result<(), error::RecvError> {
+    crate::trace::async_trace_leaf().await;
+
+    loop {
+        // In order to avoid a race condition, we first request a notification,
+        // **then** check the current value's version. If a new version exists,
+        // the notification request is dropped.
+        let notified = shared.notify_rx.notified();
+
+        if let Some(ret) = maybe_changed(shared, version) {
+            return ret;
+        }
+
+        notified.await;
+        // loop around again in case the wake-up was spurious
+    }
+}
+
 impl<T> Clone for Receiver<T> {
     fn clone(&self) -> Self {
         let version = self.version;
@@ -518,8 +780,22 @@ impl<T> Drop for Receiver<T> {
 impl<T> Sender<T> {
     /// Sends a new value via the channel, notifying all receivers.
     ///
-    /// This method fails if the channel has been closed, which happens when
-    /// every receiver has been dropped.
+    /// This method fails if the channel is closed, which is the case when
+    /// every receiver has been dropped. It is possible to reopen the channel
+    /// using the [`subscribe`] method. However, when `send` fails, the value
+    /// isn't made available for future receivers (but returned with the
+    /// [`SendError`]).
+    ///
+    /// To always make a new value available for future receivers, even if no
+    /// receiver currently exists, one of the other send methods
+    /// ([`send_if_modified`], [`send_modify`], or [`send_replace`]) can be
+    /// used instead.
+    ///
+    /// [`subscribe`]: Sender::subscribe
+    /// [`SendError`]: error::SendError
+    /// [`send_if_modified`]: Sender::send_if_modified
+    /// [`send_modify`]: Sender::send_modify
+    /// [`send_replace`]: Sender::send_replace
     pub fn send(&self, value: T) -> Result<(), error::SendError<T>> {
         // This is pretty much only useful as a hint anyway, so synchronization isn't critical.
         if 0 == self.receiver_count() {
@@ -528,6 +804,145 @@ impl<T> Sender<T> {
 
         self.send_replace(value);
         Ok(())
+    }
+
+    /// Modifies the watched value **unconditionally** in-place,
+    /// notifying all receivers.
+    ///
+    /// This can be useful for modifying the watched value, without
+    /// having to allocate a new instance. Additionally, this
+    /// method permits sending values even when there are no receivers.
+    ///
+    /// Prefer to use the more versatile function [`Self::send_if_modified()`]
+    /// if the value is only modified conditionally during the mutable borrow
+    /// to prevent unneeded change notifications for unmodified values.
+    ///
+    /// # Panics
+    ///
+    /// This function panics when the invocation of the `modify` closure panics.
+    /// No receivers are notified when panicking. All changes of the watched
+    /// value applied by the closure before panicking will be visible in
+    /// subsequent calls to `borrow`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::watch;
+    ///
+    /// struct State {
+    ///     counter: usize,
+    /// }
+    /// let (state_tx, state_rx) = watch::channel(State { counter: 0 });
+    /// state_tx.send_modify(|state| state.counter += 1);
+    /// assert_eq!(state_rx.borrow().counter, 1);
+    /// ```
+    pub fn send_modify<F>(&self, modify: F)
+    where
+        F: FnOnce(&mut T),
+    {
+        self.send_if_modified(|value| {
+            modify(value);
+            true
+        });
+    }
+
+    /// Modifies the watched value **conditionally** in-place,
+    /// notifying all receivers only if modified.
+    ///
+    /// This can be useful for modifying the watched value, without
+    /// having to allocate a new instance. Additionally, this
+    /// method permits sending values even when there are no receivers.
+    ///
+    /// The `modify` closure must return `true` if the value has actually
+    /// been modified during the mutable borrow. It should only return `false`
+    /// if the value is guaranteed to be unmodified despite the mutable
+    /// borrow.
+    ///
+    /// Receivers are only notified if the closure returned `true`. If the
+    /// closure has modified the value but returned `false` this results
+    /// in a *silent modification*, i.e. the modified value will be visible
+    /// in subsequent calls to `borrow`, but receivers will not receive
+    /// a change notification.
+    ///
+    /// Returns the result of the closure, i.e. `true` if the value has
+    /// been modified and `false` otherwise.
+    ///
+    /// # Panics
+    ///
+    /// This function panics when the invocation of the `modify` closure panics.
+    /// No receivers are notified when panicking. All changes of the watched
+    /// value applied by the closure before panicking will be visible in
+    /// subsequent calls to `borrow`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use tokio::sync::watch;
+    ///
+    /// struct State {
+    ///     counter: usize,
+    /// }
+    /// let (state_tx, mut state_rx) = watch::channel(State { counter: 1 });
+    /// let inc_counter_if_odd = |state: &mut State| {
+    ///     if state.counter % 2 == 1 {
+    ///         state.counter += 1;
+    ///         return true;
+    ///     }
+    ///     false
+    /// };
+    ///
+    /// assert_eq!(state_rx.borrow().counter, 1);
+    ///
+    /// assert!(!state_rx.has_changed().unwrap());
+    /// assert!(state_tx.send_if_modified(inc_counter_if_odd));
+    /// assert!(state_rx.has_changed().unwrap());
+    /// assert_eq!(state_rx.borrow_and_update().counter, 2);
+    ///
+    /// assert!(!state_rx.has_changed().unwrap());
+    /// assert!(!state_tx.send_if_modified(inc_counter_if_odd));
+    /// assert!(!state_rx.has_changed().unwrap());
+    /// assert_eq!(state_rx.borrow_and_update().counter, 2);
+    /// ```
+    pub fn send_if_modified<F>(&self, modify: F) -> bool
+    where
+        F: FnOnce(&mut T) -> bool,
+    {
+        {
+            // Acquire the write lock and update the value.
+            let mut lock = self.shared.value.write().unwrap();
+
+            // Update the value and catch possible panic inside func.
+            let result = panic::catch_unwind(panic::AssertUnwindSafe(|| modify(&mut lock)));
+            match result {
+                Ok(modified) => {
+                    if !modified {
+                        // Abort, i.e. don't notify receivers if unmodified
+                        return false;
+                    }
+                    // Continue if modified
+                }
+                Err(panicked) => {
+                    // Drop the lock to avoid poisoning it.
+                    drop(lock);
+                    // Forward the panic to the caller.
+                    panic::resume_unwind(panicked);
+                    // Unreachable
+                }
+            };
+
+            self.shared.state.increment_version();
+
+            // Release the write lock.
+            //
+            // Incrementing the version counter while holding the lock ensures
+            // that receivers are able to figure out the version number of the
+            // value they are currently looking at.
+            drop(lock);
+        }
+
+        self.shared.notify_rx.notify_waiters();
+
+        true
     }
 
     /// Sends a new value via the channel, notifying all receivers and returning
@@ -546,35 +961,21 @@ impl<T> Sender<T> {
     /// assert_eq!(tx.send_replace(2), 1);
     /// assert_eq!(tx.send_replace(3), 2);
     /// ```
-    pub fn send_replace(&self, value: T) -> T {
-        let old = {
-            // Acquire the write lock and update the value.
-            let mut lock = self.shared.value.write().unwrap();
-            let old = mem::replace(&mut *lock, value);
+    pub fn send_replace(&self, mut value: T) -> T {
+        // swap old watched value with the new one
+        self.send_modify(|old| mem::swap(old, &mut value));
 
-            self.shared.state.increment_version();
-
-            // Release the write lock.
-            //
-            // Incrementing the version counter while holding the lock ensures
-            // that receivers are able to figure out the version number of the
-            // value they are currently looking at.
-            drop(lock);
-
-            old
-        };
-
-        // Notify all watchers
-        self.shared.notify_rx.notify_waiters();
-
-        old
+        value
     }
 
     /// Returns a reference to the most recently sent value
     ///
-    /// Outstanding borrows hold a read lock. This means that long lived borrows
-    /// could cause the send half to block. It is recommended to keep the borrow
-    /// as short lived as possible.
+    /// Outstanding borrows hold a read lock on the inner value. This means that
+    /// long-lived borrows could cause the producer half to block. It is recommended
+    /// to keep the borrow as short-lived as possible. Additionally, if you are
+    /// running in an environment that allows `!Send` futures, you must ensure that
+    /// the returned `Ref` type is never held alive across an `.await` point,
+    /// otherwise, it can lead to a deadlock.
     ///
     /// # Examples
     ///
@@ -586,7 +987,11 @@ impl<T> Sender<T> {
     /// ```
     pub fn borrow(&self) -> Ref<'_, T> {
         let inner = self.shared.value.read().unwrap();
-        Ref { inner }
+
+        // The sender/producer always sees the current version
+        let has_changed = false;
+
+        Ref { inner, has_changed }
     }
 
     /// Checks if the channel has been closed. This happens when all receivers
@@ -635,6 +1040,8 @@ impl<T> Sender<T> {
     /// }
     /// ```
     pub async fn closed(&self) {
+        crate::trace::async_trace_leaf().await;
+
         while self.receiver_count() > 0 {
             let notified = self.shared.notify_tx.notified();
 

@@ -1,19 +1,19 @@
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "sync")]
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(tokio_wasm_not_wasi)]
 use wasm_bindgen_test::wasm_bindgen_test as test;
-#[cfg(target_arch = "wasm32")]
+#[cfg(tokio_wasm_not_wasi)]
 use wasm_bindgen_test::wasm_bindgen_test as maybe_tokio_test;
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(tokio_wasm_not_wasi))]
 use tokio::test as maybe_tokio_test;
 
 use std::task::Poll;
 
 use futures::future::FutureExt;
 
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, RwLockWriteGuard};
 use tokio_test::task::spawn;
 use tokio_test::{assert_pending, assert_ready};
 
@@ -31,7 +31,7 @@ fn read_shared() {
     let mut t1 = spawn(rwlock.read());
     let _g1 = assert_ready!(t1.poll());
     let mut t2 = spawn(rwlock.read());
-    assert_ready!(t2.poll());
+    let _g2 = assert_ready!(t2.poll());
 }
 
 // When there is an active shared owner, exclusive access should not be possible
@@ -75,7 +75,7 @@ fn exhaust_reading() {
     let g2 = reads.pop().unwrap();
     drop(g2);
     assert!(t1.is_woken());
-    assert_ready!(t1.poll());
+    let _g1 = assert_ready!(t1.poll());
 }
 
 // When there is an active exclusive owner, subsequent exclusive access should not be possible
@@ -100,7 +100,7 @@ fn write_shared_drop() {
     assert_pending!(t2.poll());
     drop(g1);
     assert!(t2.is_woken());
-    assert_ready!(t2.poll());
+    let _g2 = assert_ready!(t2.poll());
 }
 
 // when there is an active shared owner, and exclusive access is triggered,
@@ -112,7 +112,7 @@ fn write_read_shared_pending() {
     let _g1 = assert_ready!(t1.poll());
 
     let mut t2 = spawn(rwlock.read());
-    assert_ready!(t2.poll());
+    let _g2 = assert_ready!(t2.poll());
 
     let mut t3 = spawn(rwlock.write());
     assert_pending!(t3.poll());
@@ -137,7 +137,7 @@ fn write_read_shared_drop_pending() {
     drop(t2);
 
     assert!(t3.is_woken());
-    assert_ready!(t3.poll());
+    let _t3 = assert_ready!(t3.poll());
 }
 
 // Acquire an RwLock nonexclusively by a single task
@@ -172,7 +172,7 @@ async fn write_order() {
 }
 
 // A single RwLock is contested by tasks in multiple threads
-#[cfg(feature = "full")]
+#[cfg(all(feature = "full", not(tokio_wasi)))] // Wasi doesn't support threads
 #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
 async fn multithreaded() {
     use futures::stream::{self, StreamExt};
@@ -278,4 +278,54 @@ fn try_read_try_write() {
     }
 
     assert_eq!(*lock.try_read().unwrap(), 1515);
+}
+
+#[maybe_tokio_test]
+async fn downgrade_map() {
+    let lock = RwLock::new(0);
+    let write_guard = lock.write().await;
+    let mut read_t = spawn(lock.read());
+
+    // We can't create a read when a write exists
+    assert_pending!(read_t.poll());
+
+    // During the call to `f`, `read_t` doesn't have access yet.
+    let read_guard1 = RwLockWriteGuard::downgrade_map(write_guard, |v| {
+        assert_pending!(read_t.poll());
+        v
+    });
+
+    // After the downgrade, `read_t` got the lock
+    let read_guard2 = assert_ready!(read_t.poll());
+
+    // Ensure they're equal, as we return the original value
+    assert_eq!(&*read_guard1 as *const _, &*read_guard2 as *const _);
+}
+
+#[maybe_tokio_test]
+async fn try_downgrade_map() {
+    let lock = RwLock::new(0);
+    let write_guard = lock.write().await;
+    let mut read_t = spawn(lock.read());
+
+    // We can't create a read when a write exists
+    assert_pending!(read_t.poll());
+
+    // During the call to `f`, `read_t` doesn't have access yet.
+    let write_guard = RwLockWriteGuard::try_downgrade_map(write_guard, |_| {
+        assert_pending!(read_t.poll());
+        None::<&()>
+    })
+    .expect_err("downgrade didn't fail");
+
+    // After `f` returns `None`, `read_t` doesn't have access
+    assert_pending!(read_t.poll());
+
+    // After `f` returns `Some`, `read_t` does have access
+    let read_guard1 = RwLockWriteGuard::try_downgrade_map(write_guard, |v| Some(v))
+        .expect("downgrade didn't succeed");
+    let read_guard2 = assert_ready!(read_t.poll());
+
+    // Ensure they're equal, as we return the original value
+    assert_eq!(&*read_guard1 as *const _, &*read_guard2 as *const _);
 }

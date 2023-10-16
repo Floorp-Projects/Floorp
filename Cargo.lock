@@ -352,6 +352,10 @@ name = "autocfg"
 version = "1.1.0"
 
 [[package]]
+name = "backtrace"
+version = "0.3.999"
+
+[[package]]
 name = "base64"
 version = "0.13.999"
 dependencies = [
@@ -5544,18 +5548,19 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.17.0"
+version = "1.29.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2af73ac49756f3f7c01172e34a23e5d0216f6c32333757c2c61feb2bbff5a5ee"
+checksum = "532826ff75199d5833b9d2c5fe410f29235e25704ee5f0ef599fb51c21f4a4da"
 dependencies = [
+ "autocfg",
+ "backtrace",
  "bytes",
  "libc",
- "memchr",
  "mio 0.8.8",
  "num_cpus",
  "pin-project-lite",
  "socket2",
- "winapi",
+ "windows-sys",
 ]
 
 [[package]]

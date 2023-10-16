@@ -1,111 +1,191 @@
-//! Thread local runtime context
-use crate::runtime::{Handle, TryCurrentError};
+use crate::loom::thread::AccessError;
+use crate::runtime::coop;
 
-use std::cell::RefCell;
+use std::cell::Cell;
 
-thread_local! {
-    static CONTEXT: RefCell<Option<Handle>> = RefCell::new(None)
-}
+#[cfg(any(feature = "rt", feature = "macros"))]
+use crate::util::rand::FastRand;
 
-pub(crate) fn try_current() -> Result<Handle, crate::runtime::TryCurrentError> {
-    match CONTEXT.try_with(|ctx| ctx.borrow().clone()) {
-        Ok(Some(handle)) => Ok(handle),
-        Ok(None) => Err(TryCurrentError::new_no_context()),
-        Err(_access_error) => Err(TryCurrentError::new_thread_local_destroyed()),
+cfg_rt! {
+    mod blocking;
+    pub(crate) use blocking::{disallow_block_in_place, try_enter_blocking_region, BlockingRegionGuard};
+
+    mod current;
+    pub(crate) use current::{with_current, try_set_current, SetCurrentGuard};
+
+    mod runtime;
+    pub(crate) use runtime::{EnterRuntime, enter_runtime};
+
+    mod scoped;
+    use scoped::Scoped;
+
+    use crate::runtime::{scheduler, task::Id};
+
+    use std::task::Waker;
+
+    cfg_taskdump! {
+        use crate::runtime::task::trace;
     }
 }
 
-pub(crate) fn current() -> Handle {
-    match try_current() {
-        Ok(handle) => handle,
-        Err(e) => panic!("{}", e),
-    }
+cfg_rt_multi_thread! {
+    mod runtime_mt;
+    pub(crate) use runtime_mt::{current_enter_context, exit_runtime};
 }
 
-cfg_io_driver! {
-    pub(crate) fn io_handle() -> crate::runtime::driver::IoHandle {
-        match CONTEXT.try_with(|ctx| {
-            let ctx = ctx.borrow();
-            ctx.as_ref().expect(crate::util::error::CONTEXT_MISSING_ERROR).io_handle.clone()
-        }) {
-            Ok(io_handle) => io_handle,
-            Err(_) => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
+struct Context {
+    /// Uniquely identifies the current thread
+    #[cfg(feature = "rt")]
+    thread_id: Cell<Option<ThreadId>>,
+
+    /// Handle to the runtime scheduler running on the current thread.
+    #[cfg(feature = "rt")]
+    current: current::HandleCell,
+
+    /// Handle to the scheduler's internal "context"
+    #[cfg(feature = "rt")]
+    scheduler: Scoped<scheduler::Context>,
+
+    #[cfg(feature = "rt")]
+    current_task_id: Cell<Option<Id>>,
+
+    /// Tracks if the current thread is currently driving a runtime.
+    /// Note, that if this is set to "entered", the current scheduler
+    /// handle may not reference the runtime currently executing. This
+    /// is because other runtime handles may be set to current from
+    /// within a runtime.
+    #[cfg(feature = "rt")]
+    runtime: Cell<EnterRuntime>,
+
+    #[cfg(any(feature = "rt", feature = "macros"))]
+    rng: Cell<Option<FastRand>>,
+
+    /// Tracks the amount of "work" a task may still do before yielding back to
+    /// the sheduler
+    budget: Cell<coop::Budget>,
+
+    #[cfg(all(
+        tokio_unstable,
+        tokio_taskdump,
+        feature = "rt",
+        target_os = "linux",
+        any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64")
+    ))]
+    trace: trace::Context,
+}
+
+tokio_thread_local! {
+    static CONTEXT: Context = const {
+        Context {
+            #[cfg(feature = "rt")]
+            thread_id: Cell::new(None),
+
+            /// Tracks the current runtime handle to use when spawning,
+            /// accessing drivers, etc...
+            #[cfg(feature = "rt")]
+            current: current::HandleCell::new(),
+
+            /// Tracks the current scheduler internal context
+            #[cfg(feature = "rt")]
+            scheduler: Scoped::new(),
+
+            #[cfg(feature = "rt")]
+            current_task_id: Cell::new(None),
+
+            /// Tracks if the current thread is currently driving a runtime.
+            /// Note, that if this is set to "entered", the current scheduler
+            /// handle may not reference the runtime currently executing. This
+            /// is because other runtime handles may be set to current from
+            /// within a runtime.
+            #[cfg(feature = "rt")]
+            runtime: Cell::new(EnterRuntime::NotEntered),
+
+            #[cfg(any(feature = "rt", feature = "macros"))]
+            rng: Cell::new(None),
+
+            budget: Cell::new(coop::Budget::unconstrained()),
+
+            #[cfg(all(
+                tokio_unstable,
+                tokio_taskdump,
+                feature = "rt",
+                target_os = "linux",
+                any(
+                    target_arch = "aarch64",
+                    target_arch = "x86",
+                    target_arch = "x86_64"
+                )
+            ))]
+            trace: trace::Context::new(),
         }
     }
 }
 
-cfg_signal_internal! {
-    #[cfg(unix)]
-    pub(crate) fn signal_handle() -> crate::runtime::driver::SignalHandle {
-        match CONTEXT.try_with(|ctx| {
-            let ctx = ctx.borrow();
-            ctx.as_ref().expect(crate::util::error::CONTEXT_MISSING_ERROR).signal_handle.clone()
-        }) {
-            Ok(signal_handle) => signal_handle,
-            Err(_) => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-        }
-    }
+#[cfg(any(feature = "macros", all(feature = "sync", feature = "rt")))]
+pub(crate) fn thread_rng_n(n: u32) -> u32 {
+    CONTEXT.with(|ctx| {
+        let mut rng = ctx.rng.get().unwrap_or_else(FastRand::new);
+        let ret = rng.fastrand_n(n);
+        ctx.rng.set(Some(rng));
+        ret
+    })
 }
 
-cfg_time! {
-    pub(crate) fn time_handle() -> crate::runtime::driver::TimeHandle {
-        match CONTEXT.try_with(|ctx| {
-            let ctx = ctx.borrow();
-            ctx.as_ref().expect(crate::util::error::CONTEXT_MISSING_ERROR).time_handle.clone()
-        }) {
-            Ok(time_handle) => time_handle,
-            Err(_) => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-        }
-    }
-
-    cfg_test_util! {
-        pub(crate) fn clock() -> Option<crate::runtime::driver::Clock> {
-            match CONTEXT.try_with(|ctx| (*ctx.borrow()).as_ref().map(|ctx| ctx.clock.clone())) {
-                Ok(clock) => clock,
-                Err(_) => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-            }
-        }
-    }
+pub(super) fn budget<R>(f: impl FnOnce(&Cell<coop::Budget>) -> R) -> Result<R, AccessError> {
+    CONTEXT.try_with(|ctx| f(&ctx.budget))
 }
 
 cfg_rt! {
-    pub(crate) fn spawn_handle() -> Option<crate::runtime::Spawner> {
-        match CONTEXT.try_with(|ctx| (*ctx.borrow()).as_ref().map(|ctx| ctx.spawner.clone())) {
-            Ok(spawner) => spawner,
-            Err(_) => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-        }
-    }
-}
+    use crate::runtime::ThreadId;
 
-/// Sets this [`Handle`] as the current active [`Handle`].
-///
-/// [`Handle`]: Handle
-pub(crate) fn enter(new: Handle) -> EnterGuard {
-    match try_enter(new) {
-        Some(guard) => guard,
-        None => panic!("{}", crate::util::error::THREAD_LOCAL_DESTROYED_ERROR),
-    }
-}
-
-/// Sets this [`Handle`] as the current active [`Handle`].
-///
-/// [`Handle`]: Handle
-pub(crate) fn try_enter(new: Handle) -> Option<EnterGuard> {
-    CONTEXT
-        .try_with(|ctx| {
-            let old = ctx.borrow_mut().replace(new);
-            EnterGuard(old)
+    pub(crate) fn thread_id() -> Result<ThreadId, AccessError> {
+        CONTEXT.try_with(|ctx| {
+            match ctx.thread_id.get() {
+                Some(id) => id,
+                None => {
+                    let id = ThreadId::next();
+                    ctx.thread_id.set(Some(id));
+                    id
+                }
+            }
         })
-        .ok()
-}
+    }
 
-#[derive(Debug)]
-pub(crate) struct EnterGuard(Option<Handle>);
+    pub(crate) fn set_current_task_id(id: Option<Id>) -> Option<Id> {
+        CONTEXT.try_with(|ctx| ctx.current_task_id.replace(id)).unwrap_or(None)
+    }
 
-impl Drop for EnterGuard {
-    fn drop(&mut self) {
-        CONTEXT.with(|ctx| {
-            *ctx.borrow_mut() = self.0.take();
+    pub(crate) fn current_task_id() -> Option<Id> {
+        CONTEXT.try_with(|ctx| ctx.current_task_id.get()).unwrap_or(None)
+    }
+
+    #[track_caller]
+    pub(crate) fn defer(waker: &Waker) {
+        with_scheduler(|maybe_scheduler| {
+            if let Some(scheduler) = maybe_scheduler {
+                scheduler.defer(waker);
+            } else {
+                // Called from outside of the runtime, immediately wake the
+                // task.
+                waker.wake_by_ref();
+            }
         });
+    }
+
+    pub(super) fn set_scheduler<R>(v: &scheduler::Context, f: impl FnOnce() -> R) -> R {
+        CONTEXT.with(|c| c.scheduler.set(v, f))
+    }
+
+    #[track_caller]
+    pub(super) fn with_scheduler<R>(f: impl FnOnce(Option<&scheduler::Context>) -> R) -> R {
+        CONTEXT.with(|c| c.scheduler.with(f))
+    }
+
+    cfg_taskdump! {
+        /// SAFETY: Callers of this function must ensure that trace frames always
+        /// form a valid linked list.
+        pub(crate) unsafe fn with_trace<R>(f: impl FnOnce(&trace::Context) -> R) -> Option<R> {
+            CONTEXT.try_with(|c| f(&c.trace)).ok()
+        }
     }
 }

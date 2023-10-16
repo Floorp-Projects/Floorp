@@ -1,7 +1,9 @@
 use crate::loom::sync::atomic::Ordering::Relaxed;
 use crate::loom::sync::atomic::{AtomicU64, AtomicUsize};
+use crate::runtime::metrics::Histogram;
+use crate::runtime::Config;
 
-/// Retreive runtime worker metrics.
+/// Retrieve runtime worker metrics.
 ///
 /// **Note**: This is an [unstable API][unstable]. The public API of this type
 /// may break in 1.x releases. See [the documentation on unstable
@@ -17,8 +19,11 @@ pub(crate) struct WorkerMetrics {
     /// Number of times the worker woke then parked again without doing work.
     pub(crate) noop_count: AtomicU64,
 
-    /// Number of times the worker attempted to steal.
+    /// Number of tasks the worker stole.
     pub(crate) steal_count: AtomicU64,
+
+    /// Number of times the worker stole
+    pub(crate) steal_operations: AtomicU64,
 
     /// Number of tasks the worker polled.
     pub(crate) poll_count: AtomicU64,
@@ -35,19 +40,33 @@ pub(crate) struct WorkerMetrics {
     /// Number of tasks currently in the local queue. Used only by the
     /// current-thread scheduler.
     pub(crate) queue_depth: AtomicUsize,
+
+    /// If `Some`, tracks the the number of polls by duration range.
+    pub(super) poll_count_histogram: Option<Histogram>,
 }
 
 impl WorkerMetrics {
+    pub(crate) fn from_config(config: &Config) -> WorkerMetrics {
+        let mut worker_metrics = WorkerMetrics::new();
+        worker_metrics.poll_count_histogram = config
+            .metrics_poll_count_histogram
+            .as_ref()
+            .map(|histogram_builder| histogram_builder.build());
+        worker_metrics
+    }
+
     pub(crate) fn new() -> WorkerMetrics {
         WorkerMetrics {
             park_count: AtomicU64::new(0),
             noop_count: AtomicU64::new(0),
             steal_count: AtomicU64::new(0),
+            steal_operations: AtomicU64::new(0),
             poll_count: AtomicU64::new(0),
             overflow_count: AtomicU64::new(0),
             busy_duration_total: AtomicU64::new(0),
             local_schedule_count: AtomicU64::new(0),
             queue_depth: AtomicUsize::new(0),
+            poll_count_histogram: None,
         }
     }
 

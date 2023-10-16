@@ -1,5 +1,3 @@
-#![cfg_attr(loom, allow(dead_code, unreachable_pub))]
-
 //! Traits, helpers, and type definitions for asynchronous I/O functionality.
 //!
 //! This module is the asynchronous version of `std::io`. Primarily, it
@@ -132,19 +130,23 @@
 //! other words, these types must never block the thread, and instead the
 //! current task is notified when the I/O resource is ready.
 //!
-//! ## Conversion to and from Sink/Stream
+//! ## Conversion to and from Stream/Sink
 //!
-//! It is often convenient to encapsulate the reading and writing of
-//! bytes and instead work with a [`Sink`] or [`Stream`] of some data
-//! type that is encoded as bytes and/or decoded from bytes. Tokio
-//! provides some utility traits in the [tokio-util] crate that
-//! abstract the asynchronous buffering that is required and allows
-//! you to write [`Encoder`] and [`Decoder`] functions working with a
-//! buffer of bytes, and then use that ["codec"] to transform anything
-//! that implements [`AsyncRead`] and [`AsyncWrite`] into a `Sink`/`Stream` of
-//! your structured data.
+//! It is often convenient to encapsulate the reading and writing of bytes in a
+//! [`Stream`] or [`Sink`] of data.
 //!
-//! [tokio-util]: https://docs.rs/tokio-util/0.6/tokio_util/codec/index.html
+//! Tokio provides simple wrappers for converting [`AsyncRead`] to [`Stream`]
+//! and vice-versa in the [tokio-util] crate, see [`ReaderStream`] and
+//! [`StreamReader`].
+//!
+//! There are also utility traits that abstract the asynchronous buffering
+//! necessary to write your own adaptors for encoding and decoding bytes to/from
+//! your structured data, allowing to transform something that implements
+//! [`AsyncRead`]/[`AsyncWrite`] into a [`Stream`]/[`Sink`], see [`Decoder`] and
+//! [`Encoder`] in the [tokio-util::codec] module.
+//!
+//! [tokio-util]: https://docs.rs/tokio-util
+//! [tokio-util::codec]: https://docs.rs/tokio-util/latest/tokio_util/codec/index.html
 //!
 //! # Standard input and output
 //!
@@ -169,9 +171,11 @@
 //! [`AsyncWrite`]: trait@AsyncWrite
 //! [`AsyncReadExt`]: trait@AsyncReadExt
 //! [`AsyncWriteExt`]: trait@AsyncWriteExt
-//! ["codec"]: https://docs.rs/tokio-util/0.6/tokio_util/codec/index.html
-//! [`Encoder`]: https://docs.rs/tokio-util/0.6/tokio_util/codec/trait.Encoder.html
-//! [`Decoder`]: https://docs.rs/tokio-util/0.6/tokio_util/codec/trait.Decoder.html
+//! ["codec"]: https://docs.rs/tokio-util/latest/tokio_util/codec/index.html
+//! [`Encoder`]: https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Encoder.html
+//! [`Decoder`]: https://docs.rs/tokio-util/latest/tokio_util/codec/trait.Decoder.html
+//! [`ReaderStream`]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.ReaderStream.html
+//! [`StreamReader`]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.StreamReader.html
 //! [`Error`]: struct@Error
 //! [`ErrorKind`]: enum@ErrorKind
 //! [`Result`]: type@Result
@@ -180,6 +184,12 @@
 //! [`Sink`]: https://docs.rs/futures/0.3/futures/sink/trait.Sink.html
 //! [`Stream`]: https://docs.rs/futures/0.3/futures/stream/trait.Stream.html
 //! [`Write`]: std::io::Write
+
+#![cfg_attr(
+    not(all(feature = "rt", feature = "net")),
+    allow(dead_code, unused_imports)
+)]
+
 cfg_io_blocking! {
     pub(crate) mod blocking;
 }
@@ -205,15 +215,19 @@ pub use self::read_buf::ReadBuf;
 pub use std::io::{Error, ErrorKind, Result, SeekFrom};
 
 cfg_io_driver_impl! {
-    pub(crate) mod driver;
+    pub(crate) mod interest;
+    pub(crate) mod ready;
 
     cfg_net! {
-        pub use driver::{Interest, Ready};
+        pub use interest::Interest;
+        pub use ready::Ready;
     }
 
+    #[cfg_attr(tokio_wasi, allow(unused_imports))]
     mod poll_evented;
 
     #[cfg(not(loom))]
+    #[cfg_attr(tokio_wasi, allow(unused_imports))]
     pub(crate) use poll_evented::PollEvented;
 }
 
