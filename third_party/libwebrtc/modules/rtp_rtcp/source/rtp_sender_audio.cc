@@ -288,8 +288,7 @@ bool RTPSenderAudio::SendAudio(AudioFrameType frame_type,
   }
 
   uint8_t* payload = packet->AllocatePayload(payload_size);
-  if (!payload)  // Too large payload buffer.
-    return false;
+  RTC_CHECK(payload);
   memcpy(payload, payload_data, payload_size);
 
   {
