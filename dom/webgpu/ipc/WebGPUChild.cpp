@@ -1215,17 +1215,7 @@ void WebGPUChild::ActorDestroy(ActorDestroyReason) {
       continue;
     }
 
-    RefPtr<dom::Promise> promise = device->MaybeGetLost();
-    if (!promise) {
-      continue;
-    }
-
-    auto info = MakeRefPtr<DeviceLostInfo>(device->GetParentObject(),
-                                           u"WebGPUChild destroyed"_ns);
-
-    // We have strong references to both the Device and the DeviceLostInfo and
-    // the Promise objects on the stack which keeps them alive for long enough.
-    promise->MaybeResolve(info);
+    device->ResolveLost(Nothing(), u"WebGPUChild destroyed"_ns);
   }
 }
 

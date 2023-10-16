@@ -105,6 +105,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   void GenerateValidationError(const nsCString& aMessage);
 
   bool IsLost() const;
+  bool IsBridgeAlive() const;
 
  private:
   ~Device();
@@ -121,7 +122,6 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   void GetLabel(nsAString& aValue) const;
   void SetLabel(const nsAString& aLabel);
   dom::Promise* GetLost(ErrorResult& aRv);
-  dom::Promise* MaybeGetLost() const { return mLostPromise; }
   void ResolveLost(Maybe<dom::GPUDeviceLostReason> aReason,
                    const nsAString& aMessage);
 
