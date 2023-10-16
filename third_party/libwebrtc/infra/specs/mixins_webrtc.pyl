@@ -92,6 +92,13 @@
       }
     }
   },
+  'linux-bionic': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Ubuntu-18.04',
+      }
+    }
+  },
   'perf-output': {
     'args': [
       '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb',
