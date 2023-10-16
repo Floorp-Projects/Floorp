@@ -3,21 +3,36 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
 <!DOCTYPE window [ ]>
 <window
   id="winTest"
   title="Title Test"
   windowtype="Test Type"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  xmlns:html="http://www.w3.org/1999/xhtml"
 >
-  <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
-
-  <dialog id="dia">
+  <dialog
+    id="dia"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  >
     <vbox id="things">
-      <html:input id="textInput" size="6" value="test" label="input" />
-      <html:input id="textInput2" size="6" value="test" label="input" />
-      <html:input
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="textInput"
+        size="6"
+        value="test"
+        label="input"
+      />
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="textInput2"
+        size="6"
+        value="test"
+        label="input"
+      />
+      <input
+        xmlns="http://www.w3.org/1999/xhtml"
         id="textInput3"
         class="asdf"
         size="6"
