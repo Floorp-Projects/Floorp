@@ -1724,8 +1724,7 @@ static void PopAndAllocate(BaseCompiler* bc, ValType type,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    Address srcAddr, RegI32 rv, RegI32 rd,
-                    const Temps& temps) {
+                    Address srcAddr, RegI32 rv, RegI32 rd, const Temps& temps) {
   bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps.t0, temps.t1, temps.t2,
                               rd);
 }
