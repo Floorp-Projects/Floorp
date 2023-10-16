@@ -11,28 +11,13 @@
   title="Title Test"
   windowtype="Test Type"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
 >
-  <dialog
-    id="dia"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  >
+  <dialog id="dia">
     <vbox id="things">
-      <input
-        xmlns="http://www.w3.org/1999/xhtml"
-        id="textInput"
-        size="6"
-        value="test"
-        label="input"
-      />
-      <input
-        xmlns="http://www.w3.org/1999/xhtml"
-        id="textInput2"
-        size="6"
-        value="test"
-        label="input"
-      />
-      <input
-        xmlns="http://www.w3.org/1999/xhtml"
+      <html:input id="textInput" size="6" value="test" label="input" />
+      <html:input id="textInput2" size="6" value="test" label="input" />
+      <html:input
         id="textInput3"
         class="asdf"
         size="6"
