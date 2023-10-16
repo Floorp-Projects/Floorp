@@ -1497,6 +1497,14 @@
   mirror: always
   rust: true
 
+# Whether the firefox titlebar respects the
+# -moz-windows-accent-color-in-titlebar setting on the tab strip.
+- name: browser.theme.windows.accent-color-in-tabs.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Blocked plugin content
 - name: browser.safebrowsing.blockedURIs.enabled
   type: bool
@@ -15491,13 +15499,6 @@
 # false for now since it can cause some contrast-with-background issues
 # specially with grey accents, see bug 1776588.
 - name: widget.windows.uwp-system-colors.highlight-accent
-  type: bool
-  value: false
-  mirror: always
-
-# Whether to use the accent color for the titlebar, if the relevant Windows
-# setting says so. See bug 1851155.
-- name: widget.windows.titlebar-accent.enabled
   type: bool
   value: false
   mirror: always
