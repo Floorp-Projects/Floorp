@@ -2464,6 +2464,18 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
       expected_video);
   EXPECT_TRUE(report->Get(*expected_video.transport_id));
   EXPECT_TRUE(report->Get(*expected_video.codec_id));
+
+  // Make sure content type is still reported as "screenshare" even when the
+  // VideoContentType enum is overloaded with additional information.
+  videocontenttypehelpers::SetSimulcastId(
+      &video_media_info.receivers[0].content_type, 2);
+  video_media_channels.first->SetStats(video_media_info);
+  video_media_channels.second->SetStats(video_media_info);
+
+  report = stats_->GetFreshStatsReport();
+  EXPECT_EQ(
+      report->Get(expected_video.id())->cast_to<RTCInboundRtpStreamStats>(),
+      expected_video);
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCAudioPlayoutStats) {
@@ -2714,6 +2726,18 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
       expected_video);
   EXPECT_TRUE(report->Get(*expected_video.transport_id));
   EXPECT_TRUE(report->Get(*expected_video.codec_id));
+
+  // Make sure content type is still reported as "screenshare" even when the
+  // VideoContentType enum is overloaded with additional information.
+  videocontenttypehelpers::SetSimulcastId(
+      &video_media_info.senders[0].content_type, 2);
+  video_media_channels.first->SetStats(video_media_info);
+  video_media_channels.second->SetStats(video_media_info);
+
+  report = stats_->GetFreshStatsReport();
+  EXPECT_EQ(
+      report->Get(expected_video.id())->cast_to<RTCOutboundRtpStreamStats>(),
+      expected_video);
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCTransportStats) {
