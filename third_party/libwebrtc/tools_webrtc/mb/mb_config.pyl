@@ -122,9 +122,7 @@
       # build anything).
       # TODO(http://crbug.com/1029452): Nuke these and isolate on builder
       # instead?
-      'Perf Android32 (O Pixel2)': 'release_bot_x64',
       'Perf Android32 (R Pixel5)': 'release_bot_x64',
-      'Perf Android64 (O Pixel2)': 'release_bot_x64',
       'Perf Android64 (R Pixel5)': 'release_bot_x64',
       'Perf Fuchsia': 'release_bot_x64_fuchsia',
       'Perf Linux Bionic': 'release_bot_x64',
