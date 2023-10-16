@@ -139,7 +139,6 @@ bool TestAudioDevice::RecordingIsInitialized() const {
 
 int32_t TestAudioDevice::StartRecording() {
   MutexLock lock(&lock_);
-  RTC_CHECK(capturer_);
   capturing_ = true;
   return 0;
 }
@@ -165,7 +164,7 @@ void TestAudioDevice::ProcessAudio() {
   if (audio_buffer_ == nullptr) {
     return;
   }
-  if (capturing_) {
+  if (capturing_ && capturer_ != nullptr) {
     // Capture 10ms of audio. 2 bytes per sample.
     const bool keep_capturing = capturer_->Capture(&recording_buffer_);
     if (recording_buffer_.size() > 0) {
