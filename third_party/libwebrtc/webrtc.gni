@@ -59,6 +59,10 @@ declare_args() {
 }
 
 declare_args() {
+  # If set to true, C++ code will refer to the new JNI Generator symbols.
+  # If set to false the old ones will be used (to provide a nice update path).
+  rtc_jni_generator_legacy_symbols = false
+
   # Setting this to true, will make RTC_DLOG() expand to log statements instead
   # of being removed by the preprocessor.
   # This is useful for example to be able to get RTC_DLOGs on a release build.
