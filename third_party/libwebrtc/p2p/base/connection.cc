@@ -704,6 +704,28 @@ void Connection::SendStunBindingResponse(const StunMessage* message) {
     }
   }
 
+  const StunByteStringAttribute* delta =
+      message->GetByteString(STUN_ATTR_GOOG_DELTA);
+  if (delta) {
+    if (field_trials_->answer_goog_delta && goog_delta_consumer_) {
+      auto ack = (*goog_delta_consumer_)(delta);
+      if (ack) {
+        RTC_LOG(LS_INFO) << "Sending GOOG_DELTA_ACK"
+                         << " delta len: " << delta->length();
+        response.AddAttribute(std::move(ack));
+      } else {
+        RTC_LOG(LS_ERROR) << "GOOG_DELTA consumer did not return ack!";
+      }
+    } else {
+      RTC_LOG(LS_WARNING) << "Ignore GOOG_DELTA"
+                          << " len: " << delta->length()
+                          << " answer_goog_delta = "
+                          << field_trials_->answer_goog_delta
+                          << " goog_delta_consumer_ = "
+                          << goog_delta_consumer_.has_value();
+    }
+  }
+
   response.AddMessageIntegrity(local_candidate().password());
   response.AddFingerprint();
 
@@ -933,7 +955,8 @@ int64_t Connection::last_ping_sent() const {
   return last_ping_sent_;
 }
 
-void Connection::Ping(int64_t now) {
+void Connection::Ping(int64_t now,
+                      std::unique_ptr<StunByteStringAttribute> delta) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!port_)
     return;
@@ -948,10 +971,11 @@ void Connection::Ping(int64_t now) {
     nomination = nomination_;
   }
 
-  auto req =
-      std::make_unique<ConnectionRequest>(requests_, this, BuildPingRequest());
+  bool has_delta = delta != nullptr;
+  auto req = std::make_unique<ConnectionRequest>(
+      requests_, this, BuildPingRequest(std::move(delta)));
 
-  if (ShouldSendGoogPing(req->msg())) {
+  if (!has_delta && ShouldSendGoogPing(req->msg())) {
     auto message = std::make_unique<IceMessage>(GOOG_PING_REQUEST, req->id());
     message->AddMessageIntegrity32(remote_candidate_.password());
     req.reset(new ConnectionRequest(requests_, this, std::move(message)));
@@ -966,7 +990,8 @@ void Connection::Ping(int64_t now) {
   num_pings_sent_++;
 }
 
-std::unique_ptr<IceMessage> Connection::BuildPingRequest() {
+std::unique_ptr<IceMessage> Connection::BuildPingRequest(
+    std::unique_ptr<StunByteStringAttribute> delta) {
   auto message = std::make_unique<IceMessage>(STUN_BINDING_REQUEST);
   // Note that the order of attributes does not impact the parsing on the
   // receiver side. The attribute is retrieved then by iterating and matching
@@ -1022,6 +1047,13 @@ std::unique_ptr<IceMessage> Connection::BuildPingRequest() {
     list->AddTypeAtIndex(kSupportGoogPingVersionRequestIndex, kGoogPingVersion);
     message->AddAttribute(std::move(list));
   }
+
+  if (delta) {
+    RTC_DCHECK(delta->type() == STUN_ATTR_GOOG_DELTA);
+    RTC_LOG(LS_INFO) << "Sending GOOG_DELTA: len: " << delta->length();
+    message->AddAttribute(std::move(delta));
+  }
+
   message->AddMessageIntegrity(remote_candidate_.password());
   message->AddFingerprint();
 
@@ -1392,6 +1424,34 @@ void Connection::OnConnectionRequestResponse(StunRequest* request,
     if (field_trials_->enable_goog_ping && remote_support_goog_ping_) {
       cached_stun_binding_ = request->msg()->Clone();
     }
+  }
+
+  // Did we send a delta ?
+  const bool sent_goog_delta =
+      request->msg()->GetByteString(STUN_ATTR_GOOG_DELTA) != nullptr;
+  // Did we get a GOOG_DELTA_ACK ?
+  const StunUInt64Attribute* delta_ack =
+      response->GetUInt64(STUN_ATTR_GOOG_DELTA_ACK);
+
+  if (goog_delta_ack_consumer_) {
+    if (sent_goog_delta && delta_ack) {
+      RTC_LOG(LS_VERBOSE) << "Got GOOG_DELTA_ACK len: " << delta_ack->length();
+      (*goog_delta_ack_consumer_)(delta_ack);
+    } else if (sent_goog_delta) {
+      // We sent DELTA but did not get a DELTA_ACK.
+      // This means that remote does not support GOOG_DELTA
+      RTC_LOG(LS_INFO) << "NO DELTA ACK => disable GOOG_DELTA";
+      (*goog_delta_ack_consumer_)(
+          webrtc::RTCError(webrtc::RTCErrorType::UNSUPPORTED_OPERATION));
+    } else if (delta_ack) {
+      // We did NOT send DELTA but got a DELTA_ACK.
+      // That is internal error.
+      RTC_LOG(LS_ERROR) << "DELTA ACK w/o DELTA => disable GOOG_DELTA";
+      (*goog_delta_ack_consumer_)(
+          webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR));
+    }
+  } else if (delta_ack) {
+    RTC_LOG(LS_ERROR) << "Discard GOOG_DELTA_ACK, no consumer";
   }
 }
 

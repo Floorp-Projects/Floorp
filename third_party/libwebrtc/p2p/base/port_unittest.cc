@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/candidate.h"
@@ -3833,7 +3834,6 @@ class ConnectionTest : public PortTest {
 
   void OnConnectionStateChange(Connection* connection) { num_state_changes_++; }
 
- private:
   std::unique_ptr<TestPort> lport_;
   std::unique_ptr<TestPort> rport_;
 };
@@ -3920,6 +3920,95 @@ TEST_F(ConnectionTest, ConnectionForgetLearnedStateDoesNotTriggerStateChange) {
   EXPECT_FALSE(lconn->writable());
   EXPECT_FALSE(lconn->receiving());
   EXPECT_EQ(num_state_changes_, 2);
+}
+
+// Test normal happy case.
+// Sending a delta and getting a delta ack in response.
+TEST_F(ConnectionTest, SendReceiveGoogDelta) {
+  constexpr int64_t ms = 10;
+  Connection* lconn = CreateConnection(ICEROLE_CONTROLLING);
+  Connection* rconn = CreateConnection(ICEROLE_CONTROLLED);
+
+  std::unique_ptr<StunByteStringAttribute> delta =
+      absl::WrapUnique(new StunByteStringAttribute(STUN_ATTR_GOOG_DELTA));
+  delta->CopyBytes("DELTA");
+
+  std::unique_ptr<StunAttribute> delta_ack =
+      absl::WrapUnique(new StunUInt64Attribute(STUN_ATTR_GOOG_DELTA_ACK, 133));
+
+  bool received_goog_delta = false;
+  bool received_goog_delta_ack = false;
+  lconn->SetStunDictConsumer(
+      // DeltaReceived
+      [](const StunByteStringAttribute* delta)
+          -> std::unique_ptr<StunAttribute> { return nullptr; },
+      // DeltaAckReceived
+      [&](webrtc::RTCErrorOr<const StunUInt64Attribute*> error_or_ack) {
+        received_goog_delta_ack = true;
+        EXPECT_TRUE(error_or_ack.ok());
+        EXPECT_EQ(error_or_ack.value()->value(), 133ull);
+      });
+
+  rconn->SetStunDictConsumer(
+      // DeltaReceived
+      [&](const StunByteStringAttribute* delta)
+          -> std::unique_ptr<StunAttribute> {
+        received_goog_delta = true;
+        EXPECT_EQ(delta->string_view(), "DELTA");
+        return std::move(delta_ack);
+      },
+      // DeltaAckReceived
+      [](webrtc::RTCErrorOr<const StunUInt64Attribute*> error_or__ack) {});
+
+  lconn->Ping(rtc::TimeMillis(), std::move(delta));
+  ASSERT_TRUE_WAIT(lport_->last_stun_msg(), kDefaultTimeout);
+  ASSERT_TRUE(lport_->last_stun_buf());
+  rconn->OnReadPacket(lport_->last_stun_buf()->data<char>(),
+                      lport_->last_stun_buf()->size(), /* packet_time_us */ -1);
+  EXPECT_TRUE(received_goog_delta);
+
+  clock_.AdvanceTime(webrtc::TimeDelta::Millis(ms));
+  ASSERT_TRUE_WAIT(rport_->last_stun_msg(), kDefaultTimeout);
+  ASSERT_TRUE(rport_->last_stun_buf());
+  lconn->OnReadPacket(rport_->last_stun_buf()->data<char>(),
+                      rport_->last_stun_buf()->size(), /* packet_time_us */ -1);
+  EXPECT_TRUE(received_goog_delta_ack);
+}
+
+// Test that sending a goog delta and not getting
+// a delta ack in reply gives an error callback.
+TEST_F(ConnectionTest, SendGoogDeltaNoReply) {
+  constexpr int64_t ms = 10;
+  Connection* lconn = CreateConnection(ICEROLE_CONTROLLING);
+  Connection* rconn = CreateConnection(ICEROLE_CONTROLLED);
+
+  std::unique_ptr<StunByteStringAttribute> delta =
+      absl::WrapUnique(new StunByteStringAttribute(STUN_ATTR_GOOG_DELTA));
+  delta->CopyBytes("DELTA");
+
+  bool received_goog_delta_ack_error = false;
+  lconn->SetStunDictConsumer(
+      // DeltaReceived
+      [](const StunByteStringAttribute* delta)
+          -> std::unique_ptr<StunAttribute> { return nullptr; },
+      // DeltaAckReceived
+      [&](webrtc::RTCErrorOr<const StunUInt64Attribute*> error_or_ack) {
+        received_goog_delta_ack_error = true;
+        EXPECT_FALSE(error_or_ack.ok());
+      });
+
+  lconn->Ping(rtc::TimeMillis(), std::move(delta));
+  ASSERT_TRUE_WAIT(lport_->last_stun_msg(), kDefaultTimeout);
+  ASSERT_TRUE(lport_->last_stun_buf());
+  rconn->OnReadPacket(lport_->last_stun_buf()->data<char>(),
+                      lport_->last_stun_buf()->size(), /* packet_time_us */ -1);
+
+  clock_.AdvanceTime(webrtc::TimeDelta::Millis(ms));
+  ASSERT_TRUE_WAIT(rport_->last_stun_msg(), kDefaultTimeout);
+  ASSERT_TRUE(rport_->last_stun_buf());
+  lconn->OnReadPacket(rport_->last_stun_buf()->data<char>(),
+                      rport_->last_stun_buf()->size(), /* packet_time_us */ -1);
+  EXPECT_TRUE(received_goog_delta_ack_error);
 }
 
 }  // namespace cricket

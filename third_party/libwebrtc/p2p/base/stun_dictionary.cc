@@ -233,7 +233,15 @@ size_t StunDictionaryView::GetLength(int key) const {
   return 0;
 }
 
+void StunDictionaryWriter::Disable() {
+  disabled_ = true;
+}
+
 void StunDictionaryWriter::Delete(int key) {
+  if (disabled_) {
+    return;
+  }
+
   if (dictionary_) {
     if (dictionary_->attrs_.find(key) == dictionary_->attrs_.end()) {
       return;
@@ -262,6 +270,9 @@ void StunDictionaryWriter::Delete(int key) {
 }
 
 void StunDictionaryWriter::Set(std::unique_ptr<StunAttribute> attr) {
+  if (disabled_) {
+    return;
+  }
   int key = attr->type();
   // remove any pending updates.
   pending_.erase(
@@ -284,6 +295,9 @@ void StunDictionaryWriter::Set(std::unique_ptr<StunAttribute> attr) {
 // Create an StunByteStringAttribute containing the pending (e.g not ack:ed)
 // modifications.
 std::unique_ptr<StunByteStringAttribute> StunDictionaryWriter::CreateDelta() {
+  if (disabled_) {
+    return nullptr;
+  }
   if (pending_.empty()) {
     return nullptr;
   }

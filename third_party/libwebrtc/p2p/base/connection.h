@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/strings/string_view.h"
@@ -205,12 +206,15 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
 
   // Called when this connection should try checking writability again.
   int64_t last_ping_sent() const;
-  void Ping(int64_t now);
+  void Ping(int64_t now,
+            std::unique_ptr<StunByteStringAttribute> delta = nullptr);
   void ReceivedPingResponse(
       int rtt,
       absl::string_view request_id,
       const absl::optional<uint32_t>& nomination = absl::nullopt);
-  std::unique_ptr<IceMessage> BuildPingRequest() RTC_RUN_ON(network_thread_);
+  std::unique_ptr<IceMessage> BuildPingRequest(
+      std::unique_ptr<StunByteStringAttribute> delta)
+      RTC_RUN_ON(network_thread_);
 
   int64_t last_ping_response_received() const;
   const absl::optional<std::string>& last_ping_id_received() const;
@@ -319,7 +323,7 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
 
   std::unique_ptr<IceMessage> BuildPingRequestForTest() {
     RTC_DCHECK_RUN_ON(network_thread_);
-    return BuildPingRequest();
+    return BuildPingRequest(nullptr);
   }
 
   // Public for unit tests.
@@ -331,6 +335,20 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   }
   void set_remote_password_for_test(absl::string_view pwd) {
     remote_candidate_.set_password(pwd);
+  }
+
+  void SetStunDictConsumer(
+      std::function<std::unique_ptr<StunAttribute>(
+          const StunByteStringAttribute*)> goog_delta_consumer,
+      std::function<void(webrtc::RTCErrorOr<const StunUInt64Attribute*>)>
+          goog_delta_ack_consumer) {
+    goog_delta_consumer_ = std::move(goog_delta_consumer);
+    goog_delta_ack_consumer_ = std::move(goog_delta_ack_consumer);
+  }
+
+  void ClearStunDictConsumer() {
+    goog_delta_consumer_ = absl::nullopt;
+    goog_delta_ack_consumer_ = absl::nullopt;
   }
 
  protected:
@@ -475,6 +493,13 @@ class RTC_EXPORT Connection : public CandidatePairInterface {
   const IceFieldTrials* field_trials_;
   rtc::EventBasedExponentialMovingAverage rtt_estimate_
       RTC_GUARDED_BY(network_thread_);
+
+  absl::optional<std::function<std::unique_ptr<StunAttribute>(
+      const StunByteStringAttribute*)>>
+      goog_delta_consumer_;
+  absl::optional<
+      std::function<void(webrtc::RTCErrorOr<const StunUInt64Attribute*>)>>
+      goog_delta_ack_consumer_;
 };
 
 // ProxyConnection defers all the interesting work to the port.
