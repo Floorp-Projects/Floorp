@@ -309,9 +309,17 @@ void WebGPUParent::MaintainDevices() {
 
 void WebGPUParent::LoseDevice(const RawId aDeviceId, Maybe<uint8_t> aReason,
                               const nsACString& aMessage) {
+  // Check to see if we've already sent a DeviceLost message to aDeviceId.
+  if (mLostDeviceIds.Contains(aDeviceId)) {
+    return;
+  }
+
   if (!SendDeviceLost(aDeviceId, aReason, aMessage)) {
     NS_ERROR("SendDeviceLost failed");
+    return;
   }
+
+  mLostDeviceIds.Insert(aDeviceId);
 }
 
 bool WebGPUParent::ForwardError(const Maybe<RawId> aDeviceId,
@@ -435,6 +443,7 @@ ipc::IPCResult WebGPUParent::RecvDeviceDestroy(RawId aDeviceId) {
 ipc::IPCResult WebGPUParent::RecvDeviceDrop(RawId aDeviceId) {
   ffi::wgpu_server_device_drop(mContext.get(), aDeviceId);
   mErrorScopeStackByDevice.erase(aDeviceId);
+  mLostDeviceIds.Remove(aDeviceId);
   return IPC_OK();
 }
 
