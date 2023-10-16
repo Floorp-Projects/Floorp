@@ -485,6 +485,8 @@ nimbus {
     // It will be fetched by Experimenter (the Nimbus experiment website)
     // and used to inform experiment configuration.
     experimenterManifest = ".experimenter.yaml"
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+            ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
 }
 
 tasks.withType(KotlinCompile).configureEach {

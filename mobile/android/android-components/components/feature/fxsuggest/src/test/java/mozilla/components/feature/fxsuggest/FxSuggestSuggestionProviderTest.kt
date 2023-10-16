@@ -7,6 +7,7 @@ package mozilla.components.feature.fxsuggest
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.appservices.suggest.Suggestion
+import mozilla.appservices.suggest.SuggestionProvider
 import mozilla.appservices.suggest.SuggestionQuery
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -112,8 +113,7 @@ class FxSuggestSuggestionProviderTest {
             eq(
                 SuggestionQuery(
                     keyword = "la",
-                    includeSponsored = true,
-                    includeNonSponsored = true,
+                    providers = listOf(SuggestionProvider.AMP, SuggestionProvider.WIKIPEDIA),
                 ),
             ),
         )
@@ -168,8 +168,7 @@ class FxSuggestSuggestionProviderTest {
             eq(
                 SuggestionQuery(
                     keyword = "la",
-                    includeSponsored = false,
-                    includeNonSponsored = true,
+                    providers = listOf(SuggestionProvider.WIKIPEDIA),
                 ),
             ),
         )
@@ -212,8 +211,7 @@ class FxSuggestSuggestionProviderTest {
             eq(
                 SuggestionQuery(
                     keyword = "la",
-                    includeSponsored = true,
-                    includeNonSponsored = false,
+                    providers = listOf(SuggestionProvider.AMP),
                 ),
             ),
         )

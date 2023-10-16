@@ -56,7 +56,7 @@ class NimbusMessagingHomescreenTest {
     @Before
     fun setUp() {
         // Set up nimbus message
-        FxNimbusMessaging.features.messaging.withInitializer {
+        FxNimbusMessaging.features.messaging.withInitializer { _, _ ->
             // FML generated objects.
             Messaging(
                 messages = mapOf(
@@ -82,7 +82,7 @@ class NimbusMessagingHomescreenTest {
         }
 
         // Remove some homescreen features not needed for testing
-        FxNimbus.features.homescreen.withInitializer {
+        FxNimbus.features.homescreen.withInitializer { _, _ ->
             // These are FML generated objects and enums
             Homescreen(
                 sectionsEnabled = mapOf(
