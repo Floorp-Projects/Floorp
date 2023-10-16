@@ -7,6 +7,7 @@
 #include "ScaledFontMac.h"
 #include "UnscaledFontMac.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "nsCocoaFeatures.h"
 #include "PathSkia.h"
 #include "skia/include/core/SkPaint.h"
 #include "skia/include/core/SkPath.h"
@@ -69,10 +70,35 @@ class AutoRelease final {
 };
 
 // Helper to create a CTFont from a CGFont, copying any variations that were
-// set on the original CGFont.
+// set on the CGFont, and applying attributes from (optional) aFontDesc.
 CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize,
                                                bool aInstalledFont,
                                                CTFontDescriptorRef aFontDesc) {
+  // New implementation (see bug 1856035) for macOS 13+.
+  if (nsCocoaFeatures::OnVenturaOrLater()) {
+    // Create CTFont, applying any descriptor that was passed (used by
+    // gfxCoreTextShaper to set features).
+    AutoRelease<CTFontRef> ctFont(
+        CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, aFontDesc));
+    AutoRelease<CFDictionaryRef> vars(CGFontCopyVariations(aCGFont));
+    if (vars) {
+      // Create an attribute dictionary containing the variations.
+      AutoRelease<CFDictionaryRef> attrs(CFDictionaryCreate(
+          nullptr, (const void**)&kCTFontVariationAttribute,
+          (const void**)&vars, 1, &kCFTypeDictionaryKeyCallBacks,
+          &kCFTypeDictionaryValueCallBacks));
+      // Get the original descriptor from the CTFont, then add the variations
+      // attribute to it.
+      AutoRelease<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(ctFont));
+      desc = CTFontDescriptorCreateCopyWithAttributes(desc, attrs);
+      // Return a copy of the font that has the variations added.
+      return CTFontCreateCopyWithAttributes(ctFont, 0.0, nullptr, desc);
+    }
+    // No variations to set, just return the default CTFont.
+    return ctFont.forget();
+  }
+
+  // Older implementation used up to macOS 12.
   CTFontRef ctFont;
   if (aInstalledFont) {
     AutoRelease<CFDictionaryRef> vars(CGFontCopyVariations(aCGFont));
