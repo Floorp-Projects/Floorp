@@ -3470,6 +3470,11 @@ void MacroAssembler::PopStackPtr() {
   loadPtr(Address(StackPointer, 0), StackPointer);
   adjustFrame(-int32_t(sizeof(intptr_t)));
 }
+void MacroAssembler::freeStackTo(uint32_t framePushed) {
+  MOZ_ASSERT(framePushed <= framePushed_);
+  ma_sub64(StackPointer, FramePointer, Imm32(framePushed));
+  framePushed_ = framePushed;
+}
 void MacroAssembler::PushBoxed(FloatRegister reg) {
   subFromStackPtr(Imm32(sizeof(double)));
   boxDouble(reg, Address(getStackPointer(), 0));
