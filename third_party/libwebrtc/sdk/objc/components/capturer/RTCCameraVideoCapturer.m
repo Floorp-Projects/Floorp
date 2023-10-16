@@ -118,16 +118,11 @@ const int64_t kNanosecondsPerSecond = 1000000000;
 }
 
 + (NSArray<AVCaptureDevice *> *)captureDevices {
-#if defined(WEBRTC_IOS) && defined(__IPHONE_10_0) && \
-    __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_10_0
   AVCaptureDeviceDiscoverySession *session = [AVCaptureDeviceDiscoverySession
       discoverySessionWithDeviceTypes:@[ AVCaptureDeviceTypeBuiltInWideAngleCamera ]
                             mediaType:AVMediaTypeVideo
                              position:AVCaptureDevicePositionUnspecified];
   return session.devices;
-#else
-  return [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
-#endif
 }
 
 + (NSArray<AVCaptureDeviceFormat *> *)supportedFormatsForDevice:(AVCaptureDevice *)device {
