@@ -439,21 +439,13 @@ bool IsWaylandEnabled() {
         return true;
       }
     }
-#  ifdef EARLY_BETA_OR_EARLIER
     // Enable by default when we're running on a recent enough GTK version. We'd
     // like to check further details like compositor version and so on ideally
     // to make sure we don't enable it on old Mutter or what not, but we can't,
     // so let's assume that if the user is running on a Wayland session by
     // default we're ok, since either the distro has enabled Wayland by default,
     // or the user has gone out of their way to use Wayland.
-    //
-    // TODO(emilio): If users hit problems, we might be able to restrict it to
-    // GNOME / KDE  / known-good-desktop environments by checking
-    // XDG_CURRENT_DESKTOP or so...
     return !gtk_check_version(3, 24, 30);
-#  else
-    return false;
-#  endif
   }();
   return isWaylandEnabled;
 }
