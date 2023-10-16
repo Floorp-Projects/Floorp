@@ -67,6 +67,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   }
 
   uint32_t GetTimestamp() const override { return timestamp_; }
+  void SetRTPTimestamp(uint32_t timestamp) override { timestamp_ = timestamp; }
+
   uint32_t GetSsrc() const override { return ssrc_; }
 
   bool IsKeyFrame() const override {
@@ -109,7 +111,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   const VideoFrameType frame_type_;
   const uint8_t payload_type_;
   const absl::optional<VideoCodecType> codec_type_ = absl::nullopt;
-  const uint32_t timestamp_;
+  uint32_t timestamp_;
   const int64_t capture_time_ms_;
   const absl::optional<Timestamp> capture_time_identifier_;
   const absl::optional<int64_t> expected_retransmission_time_ms_;

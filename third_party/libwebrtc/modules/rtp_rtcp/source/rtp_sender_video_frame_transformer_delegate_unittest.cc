@@ -270,5 +270,23 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
   event.Wait(TimeDelta::Seconds(1));
 }
 
+TEST_F(RtpSenderVideoFrameTransformerDelegateTest, SettingRTPTimestamp) {
+  auto delegate = rtc::make_ref_counted<RTPSenderVideoFrameTransformerDelegate>(
+      &test_sender_, frame_transformer_,
+      /*ssrc=*/1111, /*csrcs=*/std::vector<uint32_t>(),
+      time_controller_.CreateTaskQueueFactory().get());
+
+  std::unique_ptr<TransformableFrameInterface> frame =
+      GetTransformableFrame(delegate);
+  ASSERT_TRUE(frame);
+  auto& video_frame = static_cast<TransformableVideoFrameInterface&>(*frame);
+
+  uint32_t rtp_timestamp = 12345;
+  ASSERT_FALSE(video_frame.GetTimestamp() == rtp_timestamp);
+
+  video_frame.SetRTPTimestamp(rtp_timestamp);
+  EXPECT_EQ(video_frame.GetTimestamp(), rtp_timestamp);
+}
+
 }  // namespace
 }  // namespace webrtc
