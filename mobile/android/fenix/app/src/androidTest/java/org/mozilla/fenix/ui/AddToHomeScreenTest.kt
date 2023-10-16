@@ -70,10 +70,11 @@ class AddToHomeScreenTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/414970
     @Ignore("Failure, more details at: https://bugzilla.mozilla.org/show_bug.cgi?id=1830005")
     @SmokeTest
     @Test
-    fun addPrivateBrowsingShortcutTest() {
+    fun addPrivateBrowsingShortcutFromHomeScreenCFRTest() {
         homeScreen {
         }.triggerPrivateBrowsingShortcutPrompt {
             verifyNoThanksPrivateBrowsingShortcutButton(composeTestRule)

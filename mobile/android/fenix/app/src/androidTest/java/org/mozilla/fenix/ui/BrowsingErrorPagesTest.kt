@@ -56,9 +56,10 @@ class BrowsingErrorPagesTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2326774
     @SmokeTest
     @Test
-    fun blockMalwarePageTest() {
+    fun verifyMalwareWebsiteWarningMessageTest() {
         val malwareURl = "http://itisatrap.org/firefox/its-an-attack.html"
 
         navigationToolbar {
@@ -67,9 +68,10 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2326773
     @SmokeTest
     @Test
-    fun blockPhishingPageTest() {
+    fun verifyPhishingWebsiteWarningMessageTest() {
         val phishingURl = "http://itisatrap.org/firefox/its-a-trap.html"
 
         navigationToolbar {
@@ -78,9 +80,10 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2326772
     @SmokeTest
     @Test
-    fun blockUnwantedSoftwarePageTest() {
+    fun verifyUnwantedSoftwareWebsiteWarningMessageTest() {
         val unwantedURl = "http://itisatrap.org/firefox/unwanted.html"
 
         navigationToolbar {
@@ -89,9 +92,10 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/329877
     @SmokeTest
     @Test
-    fun blockHarmfulPageTest() {
+    fun verifyHarmfulWebsiteWarningMessageTest() {
         val harmfulURl = "https://itisatrap.org/firefox/harmful.html"
 
         navigationToolbar {
@@ -100,10 +104,11 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/329882
     // Failing with network interruption, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1833874
     // This tests the server ERROR_CONNECTION_REFUSED
     @Test
-    fun connectionRefusedErrorMessageTest() {
+    fun verifyConnectionInterruptedErrorMessageTest() {
         val testUrl = getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -119,8 +124,9 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/329881
     @Test
-    fun addressNotFoundErrorMessageTest() {
+    fun verifyAddressNotFoundErrorMessageTest() {
         val url = "ww.example.com"
 
         navigationToolbar {
@@ -132,8 +138,9 @@ class BrowsingErrorPagesTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2140588
     @Test
-    fun noInternetConnectionErrorMessageTest() {
+    fun verifyNoInternetConnectionErrorMessageTest() {
         val url = "www.example.com"
 
         setNetworkEnabled(false)
