@@ -19,6 +19,8 @@
 #include "modules/remote_bitrate_estimator/inter_arrival.h"
 #include "modules/remote_bitrate_estimator/overuse_detector.h"
 #include "modules/remote_bitrate_estimator/overuse_estimator.h"
+#include "modules/rtp_rtcp/source/rtp_header_extensions.h"
+#include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "system_wrappers/include/clock.h"
@@ -73,19 +75,19 @@ RemoteBitrateEstimatorSingleStream::~RemoteBitrateEstimatorSingleStream() {
 }
 
 void RemoteBitrateEstimatorSingleStream::IncomingPacket(
-    int64_t arrival_time_ms,
-    size_t payload_size,
-    const RTPHeader& header) {
+    const RtpPacketReceived& rtp_packet) {
+  absl::optional<int32_t> transmission_time_offset =
+      rtp_packet.GetExtension<TransmissionOffset>();
   if (!uma_recorded_) {
-    BweNames type = BweNames::kReceiverTOffset;
-    if (!header.extension.hasTransmissionTimeOffset)
-      type = BweNames::kReceiverNoExtension;
+    BweNames type = transmission_time_offset.has_value()
+                        ? BweNames::kReceiverTOffset
+                        : BweNames::kReceiverNoExtension;
     RTC_HISTOGRAM_ENUMERATION(kBweTypeHistogram, type, BweNames::kBweNamesMax);
     uma_recorded_ = true;
   }
-  uint32_t ssrc = header.ssrc;
+  uint32_t ssrc = rtp_packet.Ssrc();
   uint32_t rtp_timestamp =
-      header.timestamp + header.extension.transmissionTimeOffset;
+      rtp_packet.Timestamp() + transmission_time_offset.value_or(0);
   int64_t now_ms = clock_->TimeInMilliseconds();
   SsrcOveruseEstimatorMap::iterator it = overuse_detectors_.find(ssrc);
   if (it == overuse_detectors_.end()) {
@@ -113,6 +115,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     incoming_bitrate_.Reset();
     last_valid_incoming_bitrate_ = 0;
   }
+  size_t payload_size = rtp_packet.payload_size() + rtp_packet.padding_size();
   incoming_bitrate_.Update(payload_size, now_ms);
 
   const BandwidthUsage prior_state = estimator->detector.State();
@@ -120,7 +123,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
   int64_t time_delta = 0;
   int size_delta = 0;
   if (estimator->inter_arrival.ComputeDeltas(
-          rtp_timestamp, arrival_time_ms, now_ms, payload_size,
+          rtp_timestamp, rtp_packet.arrival_time().ms(), now_ms, payload_size,
           &timestamp_delta, &time_delta, &size_delta)) {
     double timestamp_delta_ms = timestamp_delta * kTimestampToMs;
     estimator->estimator.Update(time_delta, timestamp_delta_ms, size_delta,
