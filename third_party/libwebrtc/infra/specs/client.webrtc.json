@@ -12,7 +12,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -34,7 +33,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -56,7 +54,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -78,7 +75,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -100,7 +96,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -122,7 +117,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -144,7 +138,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -167,7 +160,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -190,7 +182,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -212,7 +203,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -235,7 +225,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -257,7 +246,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -279,7 +267,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -301,7 +288,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -324,7 +310,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -346,7 +331,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -369,7 +353,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -391,7 +374,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -413,7 +395,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -435,7 +416,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -458,7 +438,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -480,7 +459,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -501,7 +479,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_examples_junit_tests",
         "test_id_prefix": "ninja://examples:android_examples_junit_tests/"
       },
@@ -511,7 +488,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_sdk_junit_tests",
         "test_id_prefix": "ninja://sdk/android:android_sdk_junit_tests/"
       }
@@ -528,7 +504,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -550,7 +525,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -572,7 +546,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -594,7 +567,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -616,7 +588,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -638,7 +609,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -660,7 +630,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -683,7 +652,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -706,7 +674,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -728,7 +695,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -751,7 +717,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -773,7 +738,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -795,7 +759,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -817,7 +780,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -840,7 +802,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -862,7 +823,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -885,7 +845,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -907,7 +866,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -929,7 +887,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -951,7 +908,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -974,7 +930,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -996,7 +951,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1017,7 +971,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_examples_junit_tests",
         "test_id_prefix": "ninja://examples:android_examples_junit_tests/"
       },
@@ -1027,7 +980,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_sdk_junit_tests",
         "test_id_prefix": "ninja://sdk/android:android_sdk_junit_tests/"
       }
@@ -1044,7 +996,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1074,7 +1025,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1096,7 +1046,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1118,7 +1067,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1140,7 +1088,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1162,7 +1109,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1184,7 +1130,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1206,7 +1151,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1229,7 +1173,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1252,7 +1195,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1274,7 +1216,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1297,7 +1238,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1319,7 +1259,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1341,7 +1280,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1363,7 +1301,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1386,7 +1323,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1408,7 +1344,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1431,7 +1366,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1453,7 +1387,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1475,7 +1408,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1497,7 +1429,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1520,7 +1451,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1542,7 +1472,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1563,7 +1492,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_examples_junit_tests",
         "test_id_prefix": "ninja://examples:android_examples_junit_tests/"
       },
@@ -1573,7 +1501,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_sdk_junit_tests",
         "test_id_prefix": "ninja://sdk/android:android_sdk_junit_tests/"
       }
@@ -1590,7 +1517,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1612,7 +1538,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1634,7 +1559,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1656,7 +1580,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1678,7 +1601,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1700,7 +1622,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1722,7 +1643,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1745,7 +1665,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1768,7 +1687,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1790,7 +1708,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1813,7 +1730,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1835,7 +1751,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1857,7 +1772,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1879,7 +1793,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1902,7 +1815,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1924,7 +1836,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1947,7 +1858,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1969,7 +1879,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -1991,7 +1900,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -2013,7 +1921,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -2036,7 +1943,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -2058,7 +1964,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -2079,7 +1984,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_examples_junit_tests",
         "test_id_prefix": "ninja://examples:android_examples_junit_tests/"
       },
@@ -2089,7 +1993,6 @@
           "enable": true,
           "has_native_resultdb_integration": true
         },
-        "swarming": {},
         "test": "android_sdk_junit_tests",
         "test_id_prefix": "ninja://sdk/android:android_sdk_junit_tests/"
       }
@@ -2117,7 +2020,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2144,7 +2046,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2171,7 +2072,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2198,7 +2098,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2225,7 +2124,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2252,7 +2150,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2279,7 +2176,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2307,7 +2203,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2334,7 +2229,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2362,7 +2256,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2389,7 +2282,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2413,7 +2305,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2438,7 +2329,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2458,7 +2348,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2478,7 +2367,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2498,7 +2386,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2518,7 +2405,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2539,7 +2425,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2560,7 +2445,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2580,7 +2464,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2601,7 +2484,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2621,7 +2503,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2641,7 +2522,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2661,7 +2541,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2682,7 +2561,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2702,7 +2580,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2722,7 +2599,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2743,7 +2619,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2763,7 +2638,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2783,7 +2657,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2803,7 +2676,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2824,7 +2696,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2844,7 +2715,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2868,7 +2738,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2888,7 +2757,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2908,7 +2776,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2928,7 +2795,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2948,7 +2814,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2969,7 +2834,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -2990,7 +2854,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3010,7 +2873,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3031,7 +2893,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3051,7 +2912,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3071,7 +2931,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3091,7 +2950,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3112,7 +2970,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3132,7 +2989,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3153,7 +3009,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3173,7 +3028,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3193,7 +3047,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3213,7 +3066,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3234,7 +3086,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3254,7 +3105,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3278,7 +3128,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3298,7 +3147,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3318,7 +3166,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3338,7 +3185,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3358,7 +3204,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3379,7 +3224,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3400,7 +3244,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3420,7 +3263,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3441,7 +3283,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3461,7 +3302,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3481,7 +3321,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3501,7 +3340,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3522,7 +3360,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3542,7 +3379,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3563,7 +3399,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3583,7 +3418,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3603,7 +3437,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3623,7 +3456,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3644,7 +3476,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3664,7 +3495,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3688,7 +3518,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3708,7 +3537,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3728,7 +3556,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3748,7 +3575,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3768,7 +3594,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3789,7 +3614,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3810,7 +3634,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3830,7 +3653,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3851,7 +3673,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3871,7 +3692,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3891,7 +3711,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3911,7 +3730,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3932,7 +3750,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3952,7 +3769,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3972,7 +3788,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -3993,7 +3808,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4013,7 +3827,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4033,7 +3846,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4053,7 +3865,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4074,7 +3885,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4094,7 +3904,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4118,7 +3927,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4138,7 +3946,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4158,7 +3965,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4178,7 +3984,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4198,7 +4003,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4219,7 +4023,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4240,7 +4043,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4260,7 +4062,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4281,7 +4082,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4301,7 +4101,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4321,7 +4120,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4341,7 +4139,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4362,7 +4159,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4382,7 +4178,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4402,7 +4197,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4423,7 +4217,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4443,7 +4236,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4463,7 +4255,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4483,7 +4274,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4504,7 +4294,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4524,7 +4313,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4548,7 +4336,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4568,7 +4355,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4588,7 +4374,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4608,7 +4393,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4628,7 +4412,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4649,7 +4432,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4670,7 +4452,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4690,7 +4471,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4711,7 +4491,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4731,7 +4510,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4751,7 +4529,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4771,7 +4548,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4792,7 +4568,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4812,7 +4587,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4833,7 +4607,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4853,7 +4626,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4873,7 +4645,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4893,7 +4664,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4914,7 +4684,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4934,7 +4703,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4959,7 +4727,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4979,7 +4746,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -4999,7 +4765,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5019,7 +4784,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5039,7 +4803,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5060,7 +4823,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5081,7 +4843,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5101,7 +4862,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5122,7 +4882,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5142,7 +4901,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5162,7 +4920,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5182,7 +4939,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5203,7 +4959,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5223,7 +4978,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5244,7 +4998,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5264,7 +5017,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5284,7 +5036,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5304,7 +5055,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5325,7 +5075,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5345,7 +5094,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5371,7 +5119,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5391,7 +5138,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5411,7 +5157,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5431,7 +5176,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5451,7 +5195,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5472,7 +5215,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5493,7 +5235,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5513,7 +5254,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5534,7 +5274,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5554,7 +5293,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5574,7 +5312,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5594,7 +5331,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5615,7 +5351,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5635,7 +5370,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5655,7 +5389,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5676,7 +5409,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5696,7 +5428,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5716,7 +5447,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5736,7 +5466,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5757,7 +5486,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5777,7 +5505,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5802,7 +5529,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5822,7 +5548,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5842,7 +5567,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5862,7 +5586,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5882,7 +5605,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5903,7 +5625,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5924,7 +5645,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5944,7 +5664,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5965,7 +5684,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -5985,7 +5703,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6005,7 +5722,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6025,7 +5741,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6046,7 +5761,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6066,7 +5780,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6086,7 +5799,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6107,7 +5819,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6127,7 +5838,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6147,7 +5857,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6167,7 +5876,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6188,7 +5896,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6209,7 +5916,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6229,7 +5935,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -6255,7 +5960,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6276,7 +5980,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6297,7 +6000,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6318,7 +6020,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6339,7 +6040,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6361,7 +6061,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6383,7 +6082,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6404,7 +6102,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6426,7 +6123,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6447,7 +6143,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6468,7 +6163,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6489,7 +6183,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6511,7 +6204,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6532,7 +6224,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6554,7 +6245,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6575,7 +6265,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6596,7 +6285,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6617,7 +6305,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6639,7 +6326,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6660,7 +6346,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6686,7 +6371,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6707,7 +6391,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6728,7 +6411,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6749,7 +6431,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6770,7 +6451,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6792,7 +6472,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6814,7 +6493,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6835,7 +6513,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6857,7 +6534,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6878,7 +6554,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6899,7 +6574,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6920,7 +6594,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6942,7 +6615,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6963,7 +6635,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -6985,7 +6656,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7006,7 +6676,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7027,7 +6696,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7048,7 +6716,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7070,7 +6737,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7091,7 +6757,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cores": "12",
@@ -7116,7 +6781,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7136,7 +6800,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7156,7 +6819,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7176,7 +6838,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7196,7 +6857,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7217,7 +6877,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7238,7 +6897,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7258,7 +6916,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7279,7 +6936,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7299,7 +6955,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7319,7 +6974,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7339,7 +6993,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7360,7 +7013,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7380,7 +7032,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7401,7 +7052,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7421,7 +7071,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7441,7 +7090,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7461,7 +7109,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7482,7 +7129,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7503,7 +7149,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7523,7 +7168,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7547,7 +7191,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7567,7 +7210,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7587,7 +7229,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7607,7 +7248,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7627,7 +7267,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7648,7 +7287,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7669,7 +7307,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7689,7 +7326,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7710,7 +7346,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7730,7 +7365,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7750,7 +7384,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7770,7 +7403,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7791,7 +7423,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7811,7 +7442,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7832,7 +7462,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7852,7 +7481,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7872,7 +7500,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7892,7 +7519,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7913,7 +7539,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7933,7 +7558,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -7958,7 +7582,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -7985,7 +7608,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8005,7 +7627,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8025,7 +7646,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8045,7 +7665,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8065,7 +7684,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8086,7 +7704,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8107,7 +7724,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8127,7 +7743,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8148,7 +7763,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8168,7 +7782,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8188,7 +7801,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8208,7 +7820,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8229,7 +7840,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8249,7 +7859,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8270,7 +7879,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8290,7 +7898,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8310,7 +7917,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8330,7 +7936,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8351,7 +7956,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8371,7 +7975,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8395,7 +7998,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8415,7 +8017,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8435,7 +8036,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8455,7 +8055,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8475,7 +8074,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8496,7 +8094,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8517,7 +8114,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8537,7 +8133,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8558,7 +8153,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8578,7 +8172,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8598,7 +8191,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8618,7 +8210,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8639,7 +8230,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8659,7 +8249,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8680,7 +8269,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8700,7 +8288,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8720,7 +8307,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8740,7 +8326,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8761,7 +8346,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8781,7 +8365,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8805,7 +8388,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8825,7 +8407,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8845,7 +8426,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8865,7 +8445,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8885,7 +8464,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8906,7 +8484,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8927,7 +8504,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8947,7 +8523,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8968,7 +8543,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -8988,7 +8562,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9008,7 +8581,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9028,7 +8600,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9049,7 +8620,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9069,7 +8639,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9090,7 +8659,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9110,7 +8678,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9130,7 +8697,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9150,7 +8716,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9171,7 +8736,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9191,7 +8755,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9215,7 +8778,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9235,7 +8797,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9255,7 +8816,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9275,7 +8835,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9295,7 +8854,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9316,7 +8874,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9337,7 +8894,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9357,7 +8913,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9378,7 +8933,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9398,7 +8952,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9418,7 +8971,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9438,7 +8990,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9459,7 +9010,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9479,7 +9029,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9500,7 +9049,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9520,7 +9068,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9540,7 +9087,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9560,7 +9106,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9581,7 +9126,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9602,7 +9146,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9622,7 +9165,6 @@
           "result_format": "json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -9659,12 +9201,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9711,12 +9252,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9763,12 +9303,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9814,12 +9353,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9865,12 +9403,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9916,12 +9453,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -9967,12 +9503,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10018,12 +9553,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10069,12 +9603,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10120,12 +9653,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10171,12 +9703,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10222,12 +9753,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10273,12 +9803,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10324,12 +9853,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10375,12 +9903,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10426,12 +9953,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10478,12 +10004,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10530,12 +10055,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10582,12 +10106,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10635,12 +10158,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10688,12 +10210,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10741,12 +10262,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10792,12 +10312,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10843,12 +10362,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10894,12 +10412,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10945,12 +10462,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -10996,12 +10512,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11047,12 +10562,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11098,12 +10612,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11149,12 +10662,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11200,12 +10712,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11252,12 +10763,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11304,12 +10814,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11357,12 +10866,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11409,12 +10917,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11461,12 +10968,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11513,12 +11019,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11565,12 +11070,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11617,12 +11121,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11668,12 +11171,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11721,12 +11223,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11774,12 +11275,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11827,12 +11327,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11878,12 +11377,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11929,12 +11427,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -11980,12 +11477,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12031,12 +11527,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12082,12 +11577,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12133,12 +11627,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12184,12 +11677,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12235,12 +11727,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12286,12 +11777,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12337,12 +11827,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12388,12 +11877,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12439,12 +11927,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12491,12 +11978,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12543,12 +12029,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12595,12 +12080,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12646,12 +12130,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12697,12 +12180,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12748,12 +12230,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12799,12 +12280,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
@@ -12850,12 +12330,11 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "cipd_packages": [
             {
               "cipd_package": "infra/tools/mac_toolchain/${platform}",
               "location": ".",
-              "revision": "git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118"
+              "revision": "git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77"
             }
           ],
           "dimension_sets": [
