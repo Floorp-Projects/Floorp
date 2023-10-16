@@ -4474,6 +4474,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Is support for the Web GPU API enabled on DOM workers?
+- name: dom.webgpu.workers.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Are WebGPU indirect draws/dispatches enabled?
 - name: dom.webgpu.indirect-dispatch.enabled
   type: RelaxedAtomicBool
