@@ -1,33 +1,125 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 5 Oct 2023 14:21:00 +0000
-Subject: Bug 1857037 - pt1 - add shim gni files to limit BUILD.gn changes.
- r=ng,webrtc-reviewers
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 10 Oct 2023 07:13:00 +0000
+Subject: Bug 1817263 - update additional WebRTC desktop capturer API to
+ upstream version r=jib,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D190104
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a84d39db037cbe34aa19588b0d18335eb5e2d79b
+This was a change we introduced for Firefox and we didn't backport it to
+WebRTC, however, it has been now requested also by Electron so this API
+additon is now also part of WebRTC with just minor changes. This change
+makes it on par with the WebRTC version so the next time we do WebRTC
+rebase, we don't need to cherry-pick it and resolve conflicts.
+
+WebRTC change: 0e9556a90cec52c2375c9250269f3abc21e8ca0c
+
+Differential Revision: https://phabricator.services.mozilla.com/D183482
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5682fe53745131b57c6b8a35c405236660d943bb
 ---
- testing/libfuzzer/fuzzer_test.gni | 2 ++
- testing/test.gni                  | 2 ++
- 2 files changed, 4 insertions(+)
- create mode 100644 testing/libfuzzer/fuzzer_test.gni
- create mode 100644 testing/test.gni
+ modules/desktop_capture/desktop_capturer.cc | 36 +++++++++------------
+ modules/desktop_capture/desktop_capturer.h  | 14 +++-----
+ 2 files changed, 21 insertions(+), 29 deletions(-)
 
-diff --git a/testing/libfuzzer/fuzzer_test.gni b/testing/libfuzzer/fuzzer_test.gni
-new file mode 100644
-index 0000000000..8fdf3cdad2
---- /dev/null
-+++ b/testing/libfuzzer/fuzzer_test.gni
-@@ -0,0 +1,2 @@
-+# "empty" file in place of importing new testing/libfuzzer
-+# to allow BUILD.gn imports to succeed.
-diff --git a/testing/test.gni b/testing/test.gni
-new file mode 100644
-index 0000000000..f46fa82778
---- /dev/null
-+++ b/testing/test.gni
-@@ -0,0 +1,2 @@
-+# "empty" file in place of importing new testing/test.gni
-+# to allow BUILD.gn imports to succeed.
+diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
+index 336e169890..a52a76c262 100644
+--- a/modules/desktop_capture/desktop_capturer.cc
++++ b/modules/desktop_capture/desktop_capturer.cc
+@@ -90,9 +90,16 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
+ }
+ 
+ // static
+-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+     const DesktopCaptureOptions& options) {
+-  std::unique_ptr<DesktopCapturer> capturer = CreateRawGenericCapturer(options);
++#if defined(RTC_ENABLE_WIN_WGC)
++  if (options.allow_wgc_screen_capturer() &&
++      IsWgcSupported(CaptureType::kScreen)) {
++    return WgcCapturerWin::CreateRawScreenCapturer(options);
++  }
++#endif  // defined(RTC_ENABLE_WIN_WGC)
++
++  std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
+   if (capturer && options.detect_updated_region()) {
+     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+   }
+@@ -100,32 +107,21 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+   return capturer;
+ }
+ 
+-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
++// static
++std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
+     const DesktopCaptureOptions& options) {
++  std::unique_ptr<DesktopCapturer> capturer;
++
+ #if defined(WEBRTC_USE_PIPEWIRE)
+   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
+-    return std::make_unique<BaseCapturerPipeWire>(options,
+-                                                  CaptureType::kAnyScreenContent);
++    capturer = std::make_unique<BaseCapturerPipeWire>(
++        options, CaptureType::kAnyScreenContent);
+   }
+-#endif  // defined(WEBRTC_USE_PIPEWIRE)
+ 
+-  return nullptr;
+-}
+-
+-// static
+-std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
+-    const DesktopCaptureOptions& options) {
+-#if defined(RTC_ENABLE_WIN_WGC)
+-  if (options.allow_wgc_screen_capturer() &&
+-      IsWgcSupported(CaptureType::kScreen)) {
+-    return WgcCapturerWin::CreateRawScreenCapturer(options);
+-  }
+-#endif  // defined(RTC_ENABLE_WIN_WGC)
+-
+-  std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
+   if (capturer && options.detect_updated_region()) {
+     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
+   }
++#endif  // defined(WEBRTC_USE_PIPEWIRE)
+ 
+   return capturer;
+ }
+diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
+index 5efd2efc0f..2c9c419bcd 100644
+--- a/modules/desktop_capture/desktop_capturer.h
++++ b/modules/desktop_capture/desktop_capturer.h
+@@ -179,10 +179,6 @@ class RTC_EXPORT DesktopCapturer {
+   // The return value if `pos` is out of the scope of the source is undefined.
+   virtual bool IsOccluded(const DesktopVector& pos);
+ 
+-  // Creates a DesktopCapturer instance which targets to capture windows and screens.
+-  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
+-      const DesktopCaptureOptions& options);
+-
+   // Creates a DesktopCapturer instance which targets to capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateWindowCapturer(
+       const DesktopCaptureOptions& options);
+@@ -191,6 +187,11 @@ class RTC_EXPORT DesktopCapturer {
+   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
+       const DesktopCaptureOptions& options);
+ 
++  // Creates a DesktopCapturer instance which targets to capture windows and
++  // screens.
++  static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
++      const DesktopCaptureOptions& options);
++
+ #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+   static bool IsRunningUnderWayland();
+ 
+@@ -207,11 +208,6 @@ class RTC_EXPORT DesktopCapturer {
+   // CroppingWindowCapturer needs to create raw capturers without wrappers, so
+   // the following two functions are protected.
+ 
+-  // Creates a platform specific DesktopCapturer instance which targets to
+-  // capture windows and screens.
+-  static std::unique_ptr<DesktopCapturer> CreateRawGenericCapturer(
+-      const DesktopCaptureOptions& options);
+-
+   // Creates a platform specific DesktopCapturer instance which targets to
+   // capture windows.
+   static std::unique_ptr<DesktopCapturer> CreateRawWindowCapturer(
 -- 
 2.34.1
 
