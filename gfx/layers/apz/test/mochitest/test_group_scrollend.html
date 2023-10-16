@@ -24,19 +24,7 @@ var prefs = [
 
 var smoothScrollDisabled = [
   ...basePrefs,
-  ["general.smoothScroll", false],
-];
-
-var smoothMsdScrollEnabled = [
-  ...basePrefs,
   ["general.smoothScroll", true],
-  ["general.smoothScroll.msdPhysics.enabled", true],
-];
-
-var smoothScrollEnabled = [
-  ...basePrefs,
-  ["general.smoothScroll", true],
-  ["general.smoothScroll.msdPhysics.enabled", false],
 ];
 
 var subtests = [
@@ -52,22 +40,6 @@ var subtests = [
   {"file": "helper_scrollend_bubbles.html?scroll-target=element",
         "prefs": smoothScrollDisabled},
   {"file": "helper_main_thread_smooth_scroll_scrollend.html",
-        "prefs": smoothScrollDisabled},
-  {"file": "helper_keyboard_scrollend.html?direction=up",
-        "prefs": smoothMsdScrollEnabled},
-  {"file": "helper_keyboard_scrollend.html?direction=up",
-        "prefs": smoothScrollEnabled},
-  {"file": "helper_keyboard_scrollend.html?direction=up&flush-before-key",
-        "prefs": smoothScrollEnabled},
-  {"file": "helper_keyboard_scrollend.html?direction=up",
-        "prefs": smoothScrollDisabled},
-  {"file": "helper_keyboard_scrollend.html?direction=up&flush-before-key",
-        "prefs": smoothScrollDisabled},
-  {"file": "helper_keyboard_scrollend.html?direction=down&flush-before-key",
-        "prefs": smoothScrollEnabled},
-  {"file": "helper_keyboard_scrollend.html?direction=down&flush-before-key",
-        "prefs": smoothScrollDisabled},
-  {"file": "helper_keyboard_scrollend.html?direction=down",
         "prefs": smoothScrollDisabled},
 ];
 
