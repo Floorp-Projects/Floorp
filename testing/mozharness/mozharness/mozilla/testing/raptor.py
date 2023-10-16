@@ -726,7 +726,6 @@ class Raptor(
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
         self.browser_cycles = self.config.get("browser_cycles")
         self.clean = self.config.get("clean")
-        self.page_timeout = self.config.get("page_timeout", None)
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -1034,8 +1033,6 @@ class Raptor(
                     for method in self.config.get("extra_summary_methods")
                 ]
             )
-        if self.config.get("page_timeout"):
-            options.extend([f"--page-timeout={self.page_timeout}"])
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line

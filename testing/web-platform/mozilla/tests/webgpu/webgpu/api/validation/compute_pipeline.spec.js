@@ -29,7 +29,7 @@ Call the API with valid compute shader and matching valid entryPoint, making sur
 `
   )
   .params(u => u.combine('isAsync', [true, false]))
-  .fn(t => {
+  .fn(async t => {
     const { isAsync } = t.params;
     t.doCreateComputePipelineTest(isAsync, true, {
       layout: 'auto',
@@ -44,7 +44,7 @@ Tests calling createComputePipeline(Async) with a invalid compute shader, and ch
 `
   )
   .params(u => u.combine('isAsync', [true, false]))
-  .fn(t => {
+  .fn(async t => {
     const { isAsync } = t.params;
     t.doCreateComputePipelineTest(isAsync, false, {
       layout: 'auto',
@@ -67,7 +67,7 @@ and check that the APIs only accept compute shader.
       .combine('isAsync', [true, false])
       .combine('shaderModuleStage', ['compute', 'vertex', 'fragment'])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, shaderModuleStage } = t.params;
     const descriptor = {
       layout: 'auto',
@@ -87,7 +87,7 @@ g.test('shader_module,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, mismatched } = t.params;
 
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
@@ -115,7 +115,7 @@ g.test('pipeline_layout,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -148,7 +148,7 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
       .beginSubcases()
       .combine('countDeltaFromLimit', [0, 1])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, type, _typeSize, countDeltaFromLimit } = t.params;
     const countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / _typeSize);
     const count = countAtLimit + countDeltaFromLimit;
@@ -189,7 +189,7 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
         [1, 8, 33],
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, size } = t.params;
 
     const descriptor = {
@@ -233,7 +233,7 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
         [1, 1, 65],
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, size } = t.params;
 
     const descriptor = {
@@ -272,7 +272,6 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: {}, _success: true },
         { constants: { c0: 0 }, _success: true },
         { constants: { c0: 0, c1: 1 }, _success: true },
-        { constants: { 'c0\0': 0 }, _success: false },
         { constants: { c9: 0 }, _success: false },
         { constants: { 1: 0 }, _success: true },
         { constants: { c3: 0 }, _success: false }, // pipeline constant id is specified for c3
@@ -280,11 +279,9 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: { 1000: 0 }, _success: true },
         { constants: { 9999: 0 }, _success: false },
         { constants: { 1000: 0, c2: 0 }, _success: false },
-        { constants: { 数: 0 }, _success: true },
-        { constants: { séquençage: 0 }, _success: false }, // test unicode is not normalized
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -294,16 +291,14 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
           code: `
             override c0: bool = true;      // type: bool
             override c1: u32 = 0u;          // default override
-            override 数: u32 = 0u;          // non-ASCII
-            override séquençage: u32 = 0u;  // normalizable unicode (WGSL does not normalize)
             @id(1000) override c2: u32 = 10u;  // default
             @id(1) override c3: u32 = 11u;     // default
             @compute @workgroup_size(1) fn main () {
               // make sure the overridable constants are not optimized out
               _ = u32(c0);
               _ = u32(c1);
-              _ = u32(c2 + séquençage);
-              _ = u32(c3 + 数);
+              _ = u32(c2);
+              _ = u32(c3);
             }`,
         }),
         entryPoint: 'main',
@@ -330,7 +325,7 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         { constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true },
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -388,7 +383,7 @@ Tests calling createComputePipeline(Async) validation for constant values like i
         { constants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -414,7 +409,7 @@ g.test('overrides,value,validation_error')
     `
 Tests calling createComputePipeline(Async) validation for unrepresentable constant values in compute stage.
 
-TODO(#2060): test with last_castable_pipeline_override.
+TODO(#2060): test with last_f64_castable.
 `
   )
   .params(u =>
@@ -430,22 +425,17 @@ TODO(#2060): test with last_castable_pipeline_override.
         { constants: { ci: kValue.i32.positive.max }, _success: true },
         { constants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { constants: { cf: kValue.f32.negative.min }, _success: true },
-        {
-          constants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
-          _success: false,
-        },
+        { constants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
         { constants: { cf: kValue.f32.positive.max }, _success: true },
-        {
-          constants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
-          _success: false,
-        },
+        { constants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
         // Conversion to boolean can't fail
         { constants: { cb: Number.MAX_VALUE }, _success: true },
         { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, constants, _success } = t.params;
+
     const descriptor = {
       layout: 'auto',
       compute: {
@@ -476,7 +466,7 @@ g.test('overrides,value,validation_error,f16')
 Tests calling createComputePipeline(Async) validation for unrepresentable f16 constant values in compute stage.
 
 TODO(#2060): Tighten the cases around the valid/invalid boundary once we have WGSL spec
-clarity on whether values like f16.positive.last_castable_pipeline_override would be valid. See issue.
+clarity on whether values like f16.positive.last_f64_castable would be valid. See issue.
 `
   )
   .params(u =>
@@ -484,31 +474,19 @@ clarity on whether values like f16.positive.last_castable_pipeline_override woul
       .combine('isAsync', [true, false])
       .combineWithParams([
         { constants: { cf16: kValue.f16.negative.min }, _success: true },
-        {
-          constants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
-          _success: false,
-        },
+        { constants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
         { constants: { cf16: kValue.f16.positive.max }, _success: true },
-        {
-          constants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
-          _success: false,
-        },
+        { constants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
         { constants: { cf16: kValue.f32.negative.min }, _success: false },
         { constants: { cf16: kValue.f32.positive.max }, _success: false },
-        {
-          constants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
-          _success: false,
-        },
-        {
-          constants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
-          _success: false,
-        },
+        { constants: { cf16: kValue.f32.negative.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f32.positive.first_f64_not_castable }, _success: false },
       ])
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -568,7 +546,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: { x: 16, y: 1, z: 1 }, _success: true },
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, type, constants, _success } = t.params;
 
     const descriptor = {
@@ -596,7 +574,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
       .combine('isAsync', [true, false])
       .combine('type', ['u32', 'i32'])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, type } = t.params;
 
     const limits = t.device.limits;
@@ -647,7 +625,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
     u //
       .combine('isAsync', [true, false])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync } = t.params;
 
     const limits = t.device.limits;

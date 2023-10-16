@@ -7,7 +7,6 @@ use remote_settings::RemoteSettingsConfig;
 mod db;
 mod error;
 mod keyword;
-pub mod pocket;
 mod provider;
 mod rs;
 mod schema;
@@ -17,7 +16,7 @@ mod suggestion;
 pub use error::SuggestApiError;
 pub use provider::SuggestionProvider;
 pub use store::{SuggestIngestionConstraints, SuggestStore};
-pub use suggestion::{raw_suggestion_url_matches, Suggestion};
+pub use suggestion::Suggestion;
 
 pub(crate) type Result<T> = std::result::Result<T, error::Error>;
 pub type SuggestApiResult<T> = std::result::Result<T, error::SuggestApiError>;
@@ -26,7 +25,8 @@ pub type SuggestApiResult<T> = std::result::Result<T, error::SuggestApiError>;
 #[derive(Debug, Default)]
 pub struct SuggestionQuery {
     pub keyword: String,
-    pub providers: Vec<SuggestionProvider>,
+    pub include_sponsored: bool,
+    pub include_non_sponsored: bool,
 }
 
 uniffi::include_scaffolding!("suggest");

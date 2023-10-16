@@ -15,7 +15,7 @@ XPCSHELL_TESTS_MANIFESTS += [
     "test/unit_ipc/xpcshell.ini",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["test/browser/browser.ini"]
 
 XPIDL_SOURCES += [
     "nsIPrefBranch.idl",
@@ -172,3 +172,6 @@ else:
     FINAL_TARGET_PP_FILES += [
         "greprefs.js",
     ]
+
+if CONFIG["MOZ_PHC"]:
+    DEFINES["MOZ_PHC"] = True

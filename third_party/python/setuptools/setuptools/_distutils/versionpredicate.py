@@ -1,14 +1,15 @@
 """Module for parsing and testing package version predicate strings.
 """
 import re
-from . import version
+import distutils.version
 import operator
 
 
-re_validPackage = re.compile(r"(?i)^\s*([a-z_]\w*(?:\.[a-z_]\w*)*)(.*)", re.ASCII)
+re_validPackage = re.compile(r"(?i)^\s*([a-z_]\w*(?:\.[a-z_]\w*)*)(.*)",
+    re.ASCII)
 # (package) (rest)
 
-re_paren = re.compile(r"^\s*\((.*)\)\s*$")  # (list) inside of parentheses
+re_paren = re.compile(r"^\s*\((.*)\)\s*$") # (list) inside of parentheses
 re_splitComparison = re.compile(r"^\s*(<=|>=|<|>|!=|==)\s*([^\s,]+)\s*$")
 # (comp) (version)
 
@@ -22,20 +23,10 @@ def splitUp(pred):
     if not res:
         raise ValueError("bad package restriction syntax: %r" % pred)
     comp, verStr = res.groups()
-    with version.suppress_known_deprecation():
-        other = version.StrictVersion(verStr)
-    return (comp, other)
+    return (comp, distutils.version.StrictVersion(verStr))
 
-
-compmap = {
-    "<": operator.lt,
-    "<=": operator.le,
-    "==": operator.eq,
-    ">": operator.gt,
-    ">=": operator.ge,
-    "!=": operator.ne,
-}
-
+compmap = {"<": operator.lt, "<=": operator.le, "==": operator.eq,
+           ">": operator.gt, ">=": operator.ge, "!=": operator.ne}
 
 class VersionPredicate:
     """Parse and test package version predicates.
@@ -103,7 +94,8 @@ class VersionPredicate:
     """
 
     def __init__(self, versionPredicateStr):
-        """Parse a version predicate string."""
+        """Parse a version predicate string.
+        """
         # Fields:
         #    name:  package name
         #    pred:  list of (comparison string, StrictVersion)
@@ -123,7 +115,8 @@ class VersionPredicate:
             str = match.groups()[0]
             self.pred = [splitUp(aPred) for aPred in str.split(",")]
             if not self.pred:
-                raise ValueError("empty parenthesized list in %r" % versionPredicateStr)
+                raise ValueError("empty parenthesized list in %r"
+                                 % versionPredicateStr)
         else:
             self.pred = []
 
@@ -147,7 +140,6 @@ class VersionPredicate:
 
 _provision_rx = None
 
-
 def split_provision(value):
     """Return the name and optional version number of a provision.
 
@@ -162,14 +154,13 @@ def split_provision(value):
     global _provision_rx
     if _provision_rx is None:
         _provision_rx = re.compile(
-            r"([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*)(?:\s*\(\s*([^)\s]+)\s*\))?$", re.ASCII
-        )
+            r"([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*)(?:\s*\(\s*([^)\s]+)\s*\))?$",
+            re.ASCII)
     value = value.strip()
     m = _provision_rx.match(value)
     if not m:
         raise ValueError("illegal provides specification: %r" % value)
     ver = m.group(2) or None
     if ver:
-        with version.suppress_known_deprecation():
-            ver = version.StrictVersion(ver)
+        ver = distutils.version.StrictVersion(ver)
     return m.group(1), ver

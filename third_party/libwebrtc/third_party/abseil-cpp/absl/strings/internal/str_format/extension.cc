@@ -58,8 +58,7 @@ constexpr FormatConversionCharSet FormatConversionCharSetInternal::kPointer;
 bool FormatSinkImpl::PutPaddedString(string_view value, int width,
                                      int precision, bool left) {
   size_t space_remaining = 0;
-  if (width >= 0)
-    space_remaining = static_cast<size_t>(width);
+  if (width >= 0) space_remaining = width;
   size_t n = value.size();
   if (precision >= 0) n = std::min(n, static_cast<size_t>(precision));
   string_view shown(value.data(), n);

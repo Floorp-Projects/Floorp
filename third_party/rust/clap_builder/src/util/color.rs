@@ -64,15 +64,6 @@ pub enum ColorChoice {
     Never,
 }
 
-impl ColorChoice {
-    /// Report all `possible_values`
-    pub fn possible_values() -> impl Iterator<Item = PossibleValue> {
-        Self::value_variants()
-            .iter()
-            .filter_map(ValueEnum::to_possible_value)
-    }
-}
-
 impl Default for ColorChoice {
     fn default() -> Self {
         Self::Auto
@@ -108,9 +99,11 @@ impl ValueEnum for ColorChoice {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(match self {
-            Self::Auto => PossibleValue::new("auto"),
-            Self::Always => PossibleValue::new("always"),
-            Self::Never => PossibleValue::new("never"),
+            Self::Auto => {
+                PossibleValue::new("auto").help("Use colored output if writing to a terminal/TTY")
+            }
+            Self::Always => PossibleValue::new("always").help("Always use colored output"),
+            Self::Never => PossibleValue::new("never").help("Never use colored output"),
         })
     }
 }

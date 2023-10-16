@@ -23,10 +23,6 @@ const FEATURES = {
   MDNSuggestions: "resource:///modules/urlbar/private/MDNSuggestions.sys.mjs",
   PocketSuggestions:
     "resource:///modules/urlbar/private/PocketSuggestions.sys.mjs",
-  SuggestBackendJs:
-    "resource:///modules/urlbar/private/SuggestBackendJs.sys.mjs",
-  SuggestBackendRust:
-    "resource:///modules/urlbar/private/SuggestBackendRust.sys.mjs",
   Weather: "resource:///modules/urlbar/private/Weather.sys.mjs",
 };
 
@@ -101,32 +97,6 @@ class _QuickSuggest {
   }
 
   /**
-   * @returns {SuggestBackendJs|SuggestBackendRust}
-   *   The currently active backend.
-   */
-  get backend() {
-    return lazy.UrlbarPrefs.get("quickSuggestRustEnabled")
-      ? this.rustBackend
-      : this.jsBackend;
-  }
-
-  /**
-   * @returns {SuggestBackendRust}
-   *   The Rust backend. Not used when the JS backend is enabled.
-   */
-  get rustBackend() {
-    return this.#features.SuggestBackendRust;
-  }
-
-  /**
-   * @returns {SuggestBackendJs}
-   *   The JS backend. Not used when the Rust backend is enabled.
-   */
-  get jsBackend() {
-    return this.#features.SuggestBackendJs;
-  }
-
-  /**
    * @returns {BlockedSuggestions}
    *   The blocked suggestions feature.
    */
@@ -175,9 +145,6 @@ class _QuickSuggest {
       if (feature.merinoProvider) {
         this.#featuresByMerinoProvider.set(feature.merinoProvider, feature);
       }
-      for (let type of feature.rustSuggestionTypes) {
-        this.#featuresByRustSuggestionType.set(type, feature);
-      }
 
       // Update the map from enabling preferences to features.
       let prefs = feature.enablingPreferences;
@@ -223,21 +190,6 @@ class _QuickSuggest {
    */
   getFeatureByMerinoProvider(provider) {
     return this.#featuresByMerinoProvider.get(provider);
-  }
-
-  /**
-   * Returns a Suggest feature by the type of Rust suggestion it manages (as
-   * defined by `feature.rustSuggestionTypes`). Not all features correspond to a
-   * Rust suggestion type.
-   *
-   * @param {string} type
-   *   The name of a Rust suggestion type.
-   * @returns {BaseFeature}
-   *   The feature object, an instance of a subclass of `BaseFeature`, or null
-   *   if no feature corresponds to the type.
-   */
-  getFeatureByRustSuggestionType(type) {
-    return this.#featuresByRustSuggestionType.get(type);
   }
 
   /**
@@ -535,14 +487,11 @@ class _QuickSuggest {
     );
   }
 
-  // Maps from Suggest feature class names to feature instances.
+  // Maps from quick suggest feature class names to feature instances.
   #features = {};
 
-  // Maps from Merino provider names to Suggest feature instances.
+  // Maps from Merino provider names to quick suggest feature class names.
   #featuresByMerinoProvider = new Map();
-
-  // Maps from Rust suggestion types to Suggest feature instances.
-  #featuresByRustSuggestionType = new Map();
 
   // Maps from preference names to the `Set` of feature instances they enable.
   #featuresByEnablingPrefs = new Map();

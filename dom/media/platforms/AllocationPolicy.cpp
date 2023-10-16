@@ -93,19 +93,25 @@ NotNull<AllocPolicy*> GlobalAllocPolicy::Instance(TrackType aTrack) {
   StaticMutexAutoLock lock(sMutex);
   if (aTrack == TrackType::kAudioTrack) {
     static RefPtr<AllocPolicyImpl> sAudioPolicy = []() {
-      SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-          "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
-            ClearOnShutdown(&sAudioPolicy, ShutdownPhase::XPCOMShutdownThreads);
-          }));
+      SchedulerGroup::Dispatch(
+          TaskCategory::Other,
+          NS_NewRunnableFunction(
+              "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
+                ClearOnShutdown(&sAudioPolicy,
+                                ShutdownPhase::XPCOMShutdownThreads);
+              }));
       return new AllocPolicyImpl(MediaDecoderLimitDefault());
     }();
     return WrapNotNull(sAudioPolicy.get());
   }
   static RefPtr<AllocPolicyImpl> sVideoPolicy = []() {
-    SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-        "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
-          ClearOnShutdown(&sVideoPolicy, ShutdownPhase::XPCOMShutdownThreads);
-        }));
+    SchedulerGroup::Dispatch(
+        TaskCategory::Other,
+        NS_NewRunnableFunction(
+            "GlobalAllocPolicy::GlobalAllocPolicy:Audio", []() {
+              ClearOnShutdown(&sVideoPolicy,
+                              ShutdownPhase::XPCOMShutdownThreads);
+            }));
     return new AllocPolicyImpl(MediaDecoderLimitDefault());
   }();
   return WrapNotNull(sVideoPolicy.get());

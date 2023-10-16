@@ -94,9 +94,6 @@ void ChromeProcessController::Destroy() {
 
   MOZ_ASSERT(mUIThread->IsOnCurrentThread());
   mWidget = nullptr;
-  if (mAPZEventState) {
-    mAPZEventState->Destroy();
-  }
   mAPZEventState = nullptr;
 }
 
@@ -193,19 +190,17 @@ void ChromeProcessController::HandleTap(
   InputAPZContext context(aGuid, aInputBlockId, nsEventStatus_eSentinel);
 
   switch (aType) {
-    case TapType::eSingleTap: {
-      RefPtr<APZEventState> eventState(mAPZEventState);
-      eventState->ProcessSingleTap(point, scale, aModifiers, 1, aInputBlockId);
+    case TapType::eSingleTap:
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 1,
+                                       aInputBlockId);
       break;
-    }
     case TapType::eDoubleTap:
       HandleDoubleTap(point, aModifiers, aGuid);
       break;
-    case TapType::eSecondTap: {
-      RefPtr<APZEventState> eventState(mAPZEventState);
-      eventState->ProcessSingleTap(point, scale, aModifiers, 2, aInputBlockId);
+    case TapType::eSecondTap:
+      mAPZEventState->ProcessSingleTap(point, scale, aModifiers, 2,
+                                       aInputBlockId);
       break;
-    }
     case TapType::eLongTap: {
       RefPtr<APZEventState> eventState(mAPZEventState);
       eventState->ProcessLongTap(presShell, point, scale, aModifiers,

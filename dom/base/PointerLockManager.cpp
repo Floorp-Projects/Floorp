@@ -162,7 +162,7 @@ void PointerLockManager::RequestLock(Element* aElement,
       aCallerType == CallerType::System;
   nsCOMPtr<nsIRunnable> request =
       new PointerLockRequest(aElement, userInputOrSystemCaller);
-  doc->Dispatch(request.forget());
+  doc->Dispatch(TaskCategory::Other, request.forget());
 }
 
 /* static */

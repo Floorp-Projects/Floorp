@@ -29,7 +29,7 @@ pub type sighandler_t = ::size_t;
 pub type cc_t = ::c_uchar;
 
 cfg_if! {
-    if #[cfg(any(target_os = "espidf", target_os = "horizon", target_os = "vita"))] {
+    if #[cfg(any(target_os = "espidf", target_os = "horizon"))] {
         pub type uid_t = ::c_ushort;
         pub type gid_t = ::c_ushort;
     } else if #[cfg(target_os = "nto")] {
@@ -130,7 +130,7 @@ s! {
         #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
         __pad14: u32,
 
-        #[cfg(any(target_env = "musl", target_env = "ohos", target_os = "emscripten"))]
+        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
         __reserved: [c_long; 16],
     }
 
@@ -351,7 +351,7 @@ cfg_if! {
         #[link(name = "dl", cfg(not(target_feature = "crt-static")))]
         #[link(name = "c", cfg(not(target_feature = "crt-static")))]
         extern {}
-    } else if #[cfg(any(target_env = "musl", target_env = "ohos"))] {
+    } else if #[cfg(target_env = "musl")] {
         #[cfg_attr(feature = "rustc-dep-of-std",
                    link(name = "c", kind = "static", modifiers = "-bundle",
                         cfg(target_feature = "crt-static")))]
@@ -403,12 +403,6 @@ cfg_if! {
                         cfg(target_feature = "crt-static")))]
         #[cfg_attr(feature = "rustc-dep-of-std",
                    link(name = "c", cfg(not(target_feature = "crt-static"))))]
-        extern {}
-    } else if #[cfg(target_env = "aix")] {
-        #[link(name = "c")]
-        #[link(name = "m")]
-        #[link(name = "bsd")]
-        #[link(name = "pthread")]
         extern {}
     } else {
         #[link(name = "c")]
@@ -1048,7 +1042,6 @@ extern "C" {
 
     pub fn symlink(path1: *const c_char, path2: *const c_char) -> ::c_int;
 
-    pub fn truncate(path: *const c_char, length: off_t) -> ::c_int;
     pub fn ftruncate(fd: ::c_int, length: off_t) -> ::c_int;
 
     pub fn signal(signum: ::c_int, handler: sighandler_t) -> sighandler_t;
@@ -1193,6 +1186,7 @@ extern "C" {
     pub fn dlerror() -> *mut ::c_char;
     pub fn dlsym(handle: *mut ::c_void, symbol: *const ::c_char) -> *mut ::c_void;
     pub fn dlclose(handle: *mut ::c_void) -> ::c_int;
+    pub fn dladdr(addr: *const ::c_void, info: *mut Dl_info) -> ::c_int;
 
     #[cfg(not(all(
         libc_cfg_target_vendor,
@@ -1218,10 +1212,7 @@ extern "C" {
     pub fn gai_strerror(errcode: ::c_int) -> *const ::c_char;
     #[cfg_attr(
         any(
-            all(
-                target_os = "linux",
-                not(any(target_env = "musl", target_env = "ohos"))
-            ),
+            all(target_os = "linux", not(target_env = "musl")),
             target_os = "freebsd",
             target_os = "dragonfly",
             target_os = "haiku"
@@ -1240,11 +1231,11 @@ extern "C" {
     pub fn res_init() -> ::c_int;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__gmtime_r50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn gmtime_r(time_p: *const time_t, result: *mut tm) -> *mut tm;
     #[cfg_attr(target_os = "netbsd", link_name = "__localtime_r50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn localtime_r(time_p: *const time_t, result: *mut tm) -> *mut tm;
     #[cfg_attr(
@@ -1252,27 +1243,27 @@ extern "C" {
         link_name = "mktime$UNIX2003"
     )]
     #[cfg_attr(target_os = "netbsd", link_name = "__mktime50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn mktime(tm: *mut tm) -> time_t;
     #[cfg_attr(target_os = "netbsd", link_name = "__time50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn time(time: *mut time_t) -> time_t;
     #[cfg_attr(target_os = "netbsd", link_name = "__gmtime50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn gmtime(time_p: *const time_t) -> *mut tm;
     #[cfg_attr(target_os = "netbsd", link_name = "__locatime50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn localtime(time_p: *const time_t) -> *mut tm;
     #[cfg_attr(target_os = "netbsd", link_name = "__difftime50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn difftime(time1: time_t, time0: time_t) -> ::c_double;
     #[cfg_attr(target_os = "netbsd", link_name = "__timegm50")]
-    #[cfg_attr(any(target_env = "musl", target_env = "ohos"), allow(deprecated))]
+    #[cfg_attr(target_env = "musl", allow(deprecated))]
     // FIXME: for `time_t`
     pub fn timegm(tm: *mut ::tm) -> time_t;
 
@@ -1426,14 +1417,6 @@ cfg_if! {
 }
 
 cfg_if! {
-    if #[cfg(not(target_os = "aix"))] {
-        extern "C" {
-            pub fn dladdr(addr: *const ::c_void, info: *mut Dl_info) -> ::c_int;
-        }
-    }
-}
-
-cfg_if! {
     if #[cfg(not(any(target_env = "uclibc", target_os = "nto")))] {
         extern "C" {
             pub fn open_wmemstream(
@@ -1448,6 +1431,7 @@ cfg_if! {
     if #[cfg(not(target_os = "redox"))] {
         extern {
             pub fn getsid(pid: pid_t) -> pid_t;
+            pub fn truncate(path: *const c_char, length: off_t) -> ::c_int;
             #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
                        link_name = "pause$UNIX2003")]
             pub fn pause() -> ::c_int;
@@ -1498,11 +1482,6 @@ cfg_if! {
                 errorfds: *mut fd_set,
                 timeout: *mut timespec,
                 sigmask: *const sigset_t,
-            ) -> ::c_int;
-            pub fn sigaction(
-                signum: ::c_int,
-                act: *const sigaction,
-                oldact: *mut sigaction
             ) -> ::c_int;
         }
     } else {
@@ -1591,9 +1570,6 @@ cfg_if! {
     } else if #[cfg(target_os = "nto")] {
         mod nto;
         pub use self::nto::*;
-    } else if #[cfg(target_os = "aix")] {
-        mod aix;
-        pub use self::aix::*;
     } else {
         // Unknown target_os
     }

@@ -377,31 +377,31 @@ bool SVGSVGElement::IsEventAttributeNameInternal(nsAtom* aName) {
       aName, (EventNameType_SVGGraphic | EventNameType_SVGSVG));
 }
 
-LengthPercentage SVGSVGElement::GetIntrinsicWidthOrHeight(int aAttr) {
-  MOZ_ASSERT(aAttr == ATTR_WIDTH || aAttr == ATTR_HEIGHT);
+//----------------------------------------------------------------------
+// public helpers:
 
-  if (mLengthAttributes[aAttr].IsPercentage()) {
-    float rawSize = mLengthAttributes[aAttr].GetAnimValInSpecifiedUnits();
-    return LengthPercentage::FromPercentage(rawSize);
+int32_t SVGSVGElement::GetIntrinsicWidth() {
+  if (mLengthAttributes[ATTR_WIDTH].IsPercentage()) {
+    return -1;
   }
-
   // Passing |this| as a SVGViewportElement* invokes the variant of GetAnimValue
   // that uses the passed argument as the context, but that's fine since we
   // know the length isn't a percentage so the context won't be used (and we
   // need to pass the element to be able to resolve em/ex units).
-  float rawSize = mLengthAttributes[aAttr].GetAnimValue(this);
-  return LengthPercentage::FromPixels(rawSize);
+  float width = mLengthAttributes[ATTR_WIDTH].GetAnimValue(this);
+  return SVGUtils::ClampToInt(width);
 }
 
-//----------------------------------------------------------------------
-// public helpers:
-
-LengthPercentage SVGSVGElement::GetIntrinsicWidth() {
-  return GetIntrinsicWidthOrHeight(ATTR_WIDTH);
-}
-
-LengthPercentage SVGSVGElement::GetIntrinsicHeight() {
-  return GetIntrinsicWidthOrHeight(ATTR_HEIGHT);
+int32_t SVGSVGElement::GetIntrinsicHeight() {
+  if (mLengthAttributes[ATTR_HEIGHT].IsPercentage()) {
+    return -1;
+  }
+  // Passing |this| as a SVGViewportElement* invokes the variant of GetAnimValue
+  // that uses the passed argument as the context, but that's fine since we
+  // know the length isn't a percentage so the context won't be used (and we
+  // need to pass the element to be able to resolve em/ex units).
+  float height = mLengthAttributes[ATTR_HEIGHT].GetAnimValue(this);
+  return SVGUtils::ClampToInt(height);
 }
 
 void SVGSVGElement::FlushImageTransformInvalidation() {

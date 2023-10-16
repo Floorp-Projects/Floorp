@@ -13,8 +13,8 @@ use crate::ctap2::commands::get_next_assertion::GetNextAssertion;
 use crate::ctap2::commands::make_credentials::UserVerification;
 use crate::ctap2::server::{
     AuthenticationExtensionsClientInputs, AuthenticationExtensionsClientOutputs,
-    AuthenticatorAttachment, PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity,
-    RelyingParty, RpIdHash, UserVerificationRequirement,
+    PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingPartyWrapper, RpIdHash,
+    UserVerificationRequirement,
 };
 use crate::ctap2::utils::{read_be_u32, read_byte};
 use crate::errors::AuthenticatorError;
@@ -159,7 +159,7 @@ impl GetAssertionExtensions {
 #[derive(Debug, Clone)]
 pub struct GetAssertion {
     pub client_data_hash: ClientDataHash,
-    pub rp: RelyingParty,
+    pub rp: RelyingPartyWrapper,
     pub allow_list: Vec<PublicKeyCredentialDescriptor>,
 
     // https://www.w3.org/TR/webauthn/#client-extension-input
@@ -176,7 +176,7 @@ pub struct GetAssertion {
 impl GetAssertion {
     pub fn new(
         client_data_hash: ClientDataHash,
-        rp: RelyingParty,
+        rp: RelyingPartyWrapper,
         allow_list: Vec<PublicKeyCredentialDescriptor>,
         options: GetAssertionOptions,
         extensions: GetAssertionExtensions,
@@ -191,18 +191,14 @@ impl GetAssertion {
         }
     }
 
-    pub fn finalize_result<Dev: FidoDevice>(&self, dev: &Dev, result: &mut GetAssertionResult) {
-        result.attachment = match dev.get_authenticator_info() {
-            Some(info) if info.options.platform_device => AuthenticatorAttachment::Platform,
-            Some(_) => AuthenticatorAttachment::CrossPlatform,
-            None => AuthenticatorAttachment::Unknown,
-        };
-
+    pub fn finalize_result(&self, result: &mut GetAssertionResult) {
         // Handle extensions whose outputs are not encoded in the authenticator data.
         // 1. appId
         if let Some(app_id) = &self.extensions.app_id {
-            result.extensions.app_id =
-                Some(result.assertion.auth_data.rp_id_hash == RelyingParty::from(app_id).hash());
+            result.extensions.app_id = Some(
+                result.assertion.auth_data.rp_id_hash
+                    == RelyingPartyWrapper::from(app_id.as_str()).hash(),
+            );
         }
     }
 }
@@ -229,7 +225,11 @@ impl PinUvAuthCommand for GetAssertion {
     }
 
     fn get_rp_id(&self) -> Option<&String> {
-        Some(&self.rp.id)
+        match &self.rp {
+            // CTAP1 case: We only have the hash, not the entire RpID
+            RelyingPartyWrapper::Hash(..) => None,
+            RelyingPartyWrapper::Data(r) => Some(&r.id),
+        }
     }
 
     fn can_skip_user_verification(
@@ -273,7 +273,17 @@ impl Serialize for GetAssertion {
         }
 
         let mut map = serializer.serialize_map(Some(map_len))?;
-        map.serialize_entry(&1, &self.rp.id)?;
+        match self.rp {
+            RelyingPartyWrapper::Data(ref d) => {
+                map.serialize_entry(&1, &d.id)?;
+            }
+            _ => {
+                return Err(S::Error::custom(
+                    "Can't serialize a RelyingParty::Hash for CTAP2",
+                ));
+            }
+        }
+
         map.serialize_entry(&2, &self.client_data_hash)?;
         if !self.allow_list.is_empty() {
             map.serialize_entry(&3, &self.allow_list)?;
@@ -331,9 +341,8 @@ impl RequestCtap1 for GetAssertion {
         Ok((apdu, key_handle.clone()))
     }
 
-    fn handle_response_ctap1<Dev: FidoDevice>(
+    fn handle_response_ctap1(
         &self,
-        dev: &mut Dev,
         status: Result<(), ApduErrorStatus>,
         input: &[u8],
         add_info: &PublicKeyCredentialDescriptor,
@@ -347,7 +356,7 @@ impl RequestCtap1 for GetAssertion {
 
         let mut result = GetAssertionResult::from_ctap1(input, &self.rp.hash(), add_info)
             .map_err(|e| Retryable::Error(HIDError::Command(e)))?;
-        self.finalize_result(dev, &mut result);
+        self.finalize_result(&mut result);
         // Although there's only one result, we return a vector for consistency with CTAP2.
         Ok(vec![result])
     }
@@ -358,7 +367,7 @@ impl RequestCtap1 for GetAssertion {
     ) -> Result<Self::Output, HIDError> {
         let mut results = dev.get_assertion(self)?;
         for result in results.iter_mut() {
-            self.finalize_result(dev, result);
+            self.finalize_result(result);
         }
         Ok(results)
     }
@@ -405,7 +414,6 @@ impl RequestCtap2 for GetAssertion {
             let mut results = Vec::with_capacity(number_of_credentials);
             results.push(GetAssertionResult {
                 assertion: assertion.into(),
-                attachment: AuthenticatorAttachment::Unknown,
                 extensions: Default::default(),
             });
 
@@ -415,13 +423,12 @@ impl RequestCtap2 for GetAssertion {
                 let assertion = dev.send_cbor(&msg)?;
                 results.push(GetAssertionResult {
                     assertion: assertion.into(),
-                    attachment: AuthenticatorAttachment::Unknown,
                     extensions: Default::default(),
                 });
             }
 
             for result in results.iter_mut() {
-                self.finalize_result(dev, result);
+                self.finalize_result(result);
             }
             Ok(results)
         } else {
@@ -436,7 +443,7 @@ impl RequestCtap2 for GetAssertion {
     ) -> Result<Self::Output, HIDError> {
         let mut results = dev.get_assertion(self)?;
         for result in results.iter_mut() {
-            self.finalize_result(dev, result);
+            self.finalize_result(result);
         }
         Ok(results)
     }
@@ -465,7 +472,6 @@ impl From<GetAssertionResponse> for Assertion {
 #[derive(Debug, PartialEq, Eq)]
 pub struct GetAssertionResult {
     pub assertion: Assertion,
-    pub attachment: AuthenticatorAttachment,
     pub extensions: AuthenticationExtensionsClientOutputs,
 }
 
@@ -502,7 +508,6 @@ impl GetAssertionResult {
 
         Ok(GetAssertionResult {
             assertion,
-            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         })
     }
@@ -616,8 +621,8 @@ pub mod test {
         do_credential_list_filtering_ctap1, do_credential_list_filtering_ctap2,
     };
     use crate::ctap2::server::{
-        AuthenticatorAttachment, PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity,
-        RelyingParty, RpIdHash, Transport,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingParty,
+        RelyingPartyWrapper, RpIdHash, Transport,
     };
     use crate::transport::device_selector::Device;
     use crate::transport::hid::HIDDevice;
@@ -636,7 +641,10 @@ pub mod test {
         };
         let assertion = GetAssertion::new(
             client_data.hash().expect("failed to serialize client data"),
-            RelyingParty::from("example.com"),
+            RelyingPartyWrapper::Data(RelyingParty {
+                id: String::from("example.com"),
+                name: Some(String::from("Acme")),
+            }),
             vec![PublicKeyCredentialDescriptor {
                 id: vec![
                     0x3E, 0xBD, 0x89, 0xBF, 0x77, 0xEC, 0x50, 0x97, 0x55, 0xEE, 0x9C, 0x26, 0x35,
@@ -778,7 +786,6 @@ pub mod test {
 
         let expected = vec![GetAssertionResult {
             assertion: expected_assertion,
-            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         }];
         let response = device.send_cbor(&assertion).unwrap();
@@ -844,7 +851,10 @@ pub mod test {
         };
         let mut assertion = GetAssertion::new(
             client_data.hash().expect("failed to serialize client data"),
-            RelyingParty::from("example.com"),
+            RelyingPartyWrapper::Data(RelyingParty {
+                id: String::from("example.com"),
+                name: Some(String::from("Acme")),
+            }),
             vec![allowed_key.clone()],
             GetAssertionOptions {
                 user_presence: Some(true),
@@ -911,7 +921,6 @@ pub mod test {
 
         let expected = vec![GetAssertionResult {
             assertion: expected_assertion,
-            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         }];
         assert_eq!(response, expected);
@@ -933,7 +942,10 @@ pub mod test {
         };
         let mut assertion = GetAssertion::new(
             client_data.hash().expect("failed to serialize client data"),
-            RelyingParty::from("example.com"),
+            RelyingPartyWrapper::Data(RelyingParty {
+                id: String::from("example.com"),
+                name: Some(String::from("Acme")),
+            }),
             vec![too_long_key_handle.clone()],
             GetAssertionOptions {
                 user_presence: Some(true),
@@ -1053,7 +1065,6 @@ pub mod test {
 
         let expected = vec![GetAssertionResult {
             assertion: expected_assertion,
-            attachment: AuthenticatorAttachment::Unknown,
             extensions: Default::default(),
         }];
         assert_eq!(response, expected);
@@ -1070,7 +1081,10 @@ pub mod test {
         };
         let assertion = GetAssertion::new(
             client_data.hash().expect("failed to serialize client data"),
-            RelyingParty::from("example.com"),
+            RelyingPartyWrapper::Data(RelyingParty {
+                id: String::from("example.com"),
+                name: Some(String::from("Acme")),
+            }),
             vec![
                 // This should never be tested, because it gets pre-filtered, since it is too long
                 // (see max_credential_id_length)

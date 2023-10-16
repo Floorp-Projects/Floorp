@@ -26,7 +26,7 @@ Tests that create query set with the count for all query types:
   .beforeAllSubcases(t => {
     t.selectDeviceForQueryTypeOrSkipTestCase(t.params.type);
   })
-  .fn(t => {
+  .fn(async t => {
     const { type, count } = t.params;
 
     t.expectValidationError(() => {

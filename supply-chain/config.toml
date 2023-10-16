@@ -100,10 +100,6 @@ notes = "This was originally servo code which Bobby Holley put on crates.io some
 audit-as-crates-io = false
 notes = "This is a first-party crate which is also published to crates.io. We certify audits for this crate as part of the documented release process, but that step happens after the version bump lands on central so we don't enforce it here."
 
-[policy.metal]
-audit-as-crates-io = true
-notes = "Upstream project which we pin."
-
 [policy.midir]
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
@@ -165,6 +161,10 @@ audit-as-crates-io = false
 [policy.peek-poke-derive]
 audit-as-crates-io = false
 
+[policy.prost-derive]
+audit-as-crates-io = true
+notes = "Fork of prost-derive with support for syn 2"
+
 [policy.pulse]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
@@ -172,6 +172,10 @@ notes = "This is a first-party crate which is entirely unrelated to the crates.i
 [policy.qcms]
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
+
+[policy.rayon-core]
+audit-as-crates-io = true
+notes = "Identical to upstream, with a Mozilla-authored PR, see Cargo.toml comment for details"
 
 [policy.rure]
 audit-as-crates-io = true

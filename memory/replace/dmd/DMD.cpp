@@ -744,7 +744,11 @@ class LiveBlock {
  public:
   LiveBlock(const void* aPtr, size_t aReqSize,
             const StackTrace* aAllocStackTrace)
-      : mPtr(aPtr), mReqSize(aReqSize), mAllocStackTrace(aAllocStackTrace) {}
+      : mPtr(aPtr),
+        mReqSize(aReqSize),
+        mAllocStackTrace(aAllocStackTrace),
+        mReportStackTrace_mReportedOnAlloc()  // all fields get zeroed
+  {}
 
   const void* Address() const { return mPtr; }
 
@@ -894,7 +898,7 @@ class DeadBlock {
         mSlopSize(aLb.SlopSize()),
         mAllocStackTrace(aLb.AllocStackTrace()) {}
 
-  ~DeadBlock() = default;
+  ~DeadBlock() {}
 
   size_t ReqSize() const { return mReqSize; }
   size_t SlopSize() const { return mSlopSize; }

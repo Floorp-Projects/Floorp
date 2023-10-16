@@ -9,9 +9,13 @@ Examples of incorrect code for this rule:
 
 .. code-block:: js
 
+    Components.utils.import("resource://gre/modules/AppConstants.jsm");
+    Cu.import("resource://gre/modules/AppConstants.jsm");
     ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
     ChromeUtils.defineModuleGetter(
+      obj, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+    XPCOMUtils.defineLazyModuleGetter(
       obj, "AppConstants", "resource://gre/modules/AppConstants.jsm");
     XPCOMUtils.defineLazyModuleGetters(
       obj, { AppConstants: "resource://gre/modules/AppConstants.jsm" });

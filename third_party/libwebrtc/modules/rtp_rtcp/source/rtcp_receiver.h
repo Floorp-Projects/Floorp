@@ -55,7 +55,7 @@ class RTCPReceiver final {
     virtual void OnReceivedNack(
         const std::vector<uint16_t>& nack_sequence_numbers) = 0;
     virtual void OnReceivedRtcpReportBlocks(
-        rtc::ArrayView<const ReportBlockData> report_blocks) = 0;
+        const ReportBlockList& report_blocks) = 0;
 
    protected:
     virtual ~ModuleRtpRtcp() = default;
@@ -129,7 +129,7 @@ class RTCPReceiver final {
   NonSenderRttStats GetNonSenderRTT() const;
 
   void SetNonSenderRttMeasurement(bool enabled);
-  absl::optional<TimeDelta> GetAndResetXrRrRtt();
+  bool GetAndResetXrRrRtt(int64_t* rtt_ms);
 
   // Called once per second on the worker thread to do rtt calculations.
   // Returns an optional rtt value if one is available.
@@ -383,9 +383,9 @@ class RTCPReceiver final {
   flat_map<uint32_t, std::list<RrtrInformation>::iterator>
       received_rrtrs_ssrc_it_ RTC_GUARDED_BY(rtcp_receiver_lock_);
 
-  // Estimated rtt, nullopt when there is no valid estimate.
+  // Estimated rtt, zero when there is no valid estimate.
   bool xr_rrtr_status_ RTC_GUARDED_BY(rtcp_receiver_lock_);
-  absl::optional<TimeDelta> xr_rr_rtt_;
+  int64_t xr_rr_rtt_ms_;
 
   int64_t oldest_tmmbr_info_ms_ RTC_GUARDED_BY(rtcp_receiver_lock_);
   // Mapped by remote ssrc.

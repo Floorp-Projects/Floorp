@@ -937,7 +937,8 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
         src += data->mSourcePitch;
       }
       req->mRemoteTextureOwner->PushTexture(req->mTextureId, req->mOwnerId,
-                                            std::move(textureData));
+                                            std::move(textureData),
+                                            /* aSharedSurface */ nullptr);
     } else {
       NS_WARNING("WebGPU present skipped: the swapchain is resized!");
     }

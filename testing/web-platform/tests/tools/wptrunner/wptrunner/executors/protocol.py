@@ -70,10 +70,9 @@ class Protocol:
             msg = "Post-connection steps failed"
             self.after_connect()
         except Exception:
-            message = "Protocol.setup caught an exception:\n"
-            message += f"{msg}\n" if msg is not None else ""
-            message += traceback.format_exc()
-            self.logger.warning(message)
+            if msg is not None:
+                self.logger.warning(msg)
+            self.logger.warning(traceback.format_exc())
             raise
 
     @abstractmethod
@@ -626,11 +625,6 @@ class FedCMProtocolPart(ProtocolPart):
     @abstractmethod
     def cancel_fedcm_dialog(self):
         """Cancel the FedCM dialog"""
-        pass
-
-    @abstractmethod
-    def confirm_idp_login(self):
-        """Confirm IDP login"""
         pass
 
     @abstractmethod

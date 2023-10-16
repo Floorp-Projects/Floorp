@@ -364,15 +364,10 @@ impl super::Adapter {
             extensions.contains("OVR_multiview2"),
         );
         features.set(
-            wgt::Features::DUAL_SOURCE_BLENDING,
-            extensions.contains("GL_EXT_blend_func_extended"),
-        );
-        features.set(
             wgt::Features::SHADER_PRIMITIVE_INDEX,
             ver >= (3, 2) || extensions.contains("OES_geometry_shader"),
         );
         features.set(wgt::Features::SHADER_EARLY_DEPTH_TEST, ver >= (3, 1));
-        features.set(wgt::Features::SHADER_UNUSED_VERTEX_OUTPUT, true);
         let gles_bcn_exts = [
             "GL_EXT_texture_compression_s3tc_srgb",
             "GL_EXT_texture_compression_rgtc",
@@ -828,7 +823,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
             Tf::Rgba8Snorm => filterable,
             Tf::Rgba8Uint => renderable | storage,
             Tf::Rgba8Sint => renderable | storage,
-            Tf::Rgb10a2Uint => renderable,
             Tf::Rgb10a2Unorm => filterable_renderable,
             Tf::Rg11b10Float => filterable | float_renderable,
             Tf::Rg32Uint => renderable,

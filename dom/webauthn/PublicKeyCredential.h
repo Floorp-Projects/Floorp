@@ -36,14 +36,9 @@ class PublicKeyCredential final : public Credential {
   void GetRawId(JSContext* aCx, JS::MutableHandle<JSObject*> aValue,
                 ErrorResult& aRv);
 
-  void GetAuthenticatorAttachment(DOMString& aAuthenticatorAttachment);
-
   already_AddRefed<AuthenticatorResponse> Response() const;
 
   void SetRawId(const nsTArray<uint8_t>& aBuffer);
-
-  void SetAuthenticatorAttachment(
-      const Maybe<nsString>& aAuthenticatorAttachment);
 
   void SetAttestationResponse(
       const RefPtr<AuthenticatorAttestationResponse>& aAttestationResponse);
@@ -85,7 +80,6 @@ class PublicKeyCredential final : public Credential {
  private:
   nsTArray<uint8_t> mRawId;
   JS::Heap<JSObject*> mRawIdCachedObj;
-  Maybe<nsString> mAuthenticatorAttachment;
   RefPtr<AuthenticatorAttestationResponse> mAttestationResponse;
   RefPtr<AuthenticatorAssertionResponse> mAssertionResponse;
   AuthenticationExtensionsClientOutputs mClientExtensionOutputs;

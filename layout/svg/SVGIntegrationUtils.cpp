@@ -367,10 +367,12 @@ nsRect SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
   // Note: we do not return here for eHasNoRefs since we must still handle any
   // CSS filter functions.
+  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
+  // actually should get the filter frames and then pass them into
+  // GetPostFilterBounds below!  See bug 1494263.
   // TODO: we should really return an empty rect for eHasRefsSomeInvalid since
   // in that case we disable painting of the element.
-  nsTArray<SVGFilterFrame*> filterFrames;
-  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, &filterFrames) ==
+  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, nullptr) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
     return aPreEffectsOverflowRect;
   }
@@ -386,8 +388,8 @@ nsRect SVGIntegrationUtils::ComputePostEffectsInkOverflowRect(
       AppUnitsPerCSSPixel());
   overrideBBox.RoundOut();
 
-  Maybe<nsRect> overflowRect = FilterInstance::GetPostFilterBounds(
-      firstFrame, filterFrames, &overrideBBox);
+  Maybe<nsRect> overflowRect =
+      FilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
   if (!overflowRect) {
     return aPreEffectsOverflowRect;
   }
@@ -406,9 +408,8 @@ nsRect SVGIntegrationUtils::GetRequiredSourceForInvalidArea(
   // during reflow/ComputeFrameEffectsRect, so we use GetFiltersIfObserving
   // here to avoid needless work (or masking bugs by setting up observers at
   // the wrong time).
-  nsTArray<SVGFilterFrame*> filterFrames;
   if (!aFrame->StyleEffects()->HasFilters() ||
-      SVGObserverUtils::GetFiltersIfObserving(firstFrame, &filterFrames) ==
+      SVGObserverUtils::GetFiltersIfObserving(firstFrame, nullptr) ==
           SVGObserverUtils::eHasRefsSomeInvalid) {
     return aDirtyRect;
   }
@@ -419,8 +420,7 @@ nsRect SVGIntegrationUtils::GetRequiredSourceForInvalidArea(
   nsRect postEffectsRect = aDirtyRect + toUserSpace;
 
   // Return ther result, relative to aFrame, not in user space:
-  return FilterInstance::GetPreFilterNeededArea(firstFrame, filterFrames,
-                                                postEffectsRect)
+  return FilterInstance::GetPreFilterNeededArea(firstFrame, postEffectsRect)
              .GetBounds() -
          toUserSpace;
 }
@@ -951,11 +951,13 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(frame);
   // Note: we do not return here for eHasNoRefs since we must still handle any
   // CSS filter functions.
+  // TODO: We currently pass nullptr instead of an nsTArray* here, but we
+  // actually should get the filter frames and then pass them into
+  // PaintFilteredFrame below!  See bug 1494263.
   // XXX: Do we need to check for eHasRefsSomeInvalid here given that
   // nsDisplayFilter::BuildLayer returns nullptr for eHasRefsSomeInvalid?
   // Or can we just assert !eHasRefsSomeInvalid?
-  nsTArray<SVGFilterFrame*> filterFrames;
-  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, &filterFrames) ==
+  if (SVGObserverUtils::GetAndObserveFilters(firstFrame, nullptr) ==
       SVGObserverUtils::eHasRefsSomeInvalid) {
     aCallback(aParams.ctx, aParams.imgParams, nullptr, nullptr);
     return;
@@ -969,9 +971,8 @@ void SVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams,
   /* Paint the child and apply filters */
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
 
-  FilterInstance::PaintFilteredFrame(frame, aFilters, filterFrames, &context,
-                                     aCallback, &dirtyRegion, aParams.imgParams,
-                                     opacity);
+  FilterInstance::PaintFilteredFrame(frame, aFilters, &context, aCallback,
+                                     &dirtyRegion, aParams.imgParams, opacity);
 }
 
 bool SVGIntegrationUtils::CreateWebRenderCSSFilters(

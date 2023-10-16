@@ -40,16 +40,12 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
         EXPORTS.mozilla.layers += [
             "d3d11/CompositorD3D11.h",
             "d3d11/DeviceAttachmentsD3D11.h",
-            "d3d11/GpuProcessD3D11TextureMap.h",
             "d3d11/HelpersD3D11.h",
             "d3d11/ShaderDefinitionsD3D11.h",
             "d3d11/TextureD3D11.h",
-            "d3d11/TextureHostWrapperD3D11.h",
         ]
         UNIFIED_SOURCES += [
-            "d3d11/GpuProcessD3D11TextureMap.cpp",
             "d3d11/TextureD3D11.cpp",
-            "d3d11/TextureHostWrapperD3D11.cpp",
         ]
         SOURCES += [
             "d3d11/CompositorD3D11.cpp",
@@ -150,6 +146,7 @@ EXPORTS.mozilla.layers += [
     "ipc/APZInputBridgeChild.h",
     "ipc/APZInputBridgeParent.h",
     "ipc/CanvasChild.h",
+    "ipc/CanvasThread.h",
     "ipc/CanvasTranslator.h",
     "ipc/CompositableForwarder.h",
     "ipc/CompositableTransactionParent.h",
@@ -373,6 +370,7 @@ UNIFIED_SOURCES += [
     "ipc/APZInputBridgeChild.cpp",
     "ipc/APZInputBridgeParent.cpp",
     "ipc/CanvasChild.cpp",
+    "ipc/CanvasThread.cpp",
     "ipc/CanvasTranslator.cpp",
     "ipc/CompositableForwarder.cpp",
     "ipc/CompositableTransactionParent.cpp",
@@ -507,8 +505,8 @@ if CONFIG["ENABLE_TESTS"]:
     DIRS += ["apz/test/gtest"]
     DIRS += ["apz/test/gtest/mvm"]
 
-MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.toml"]
-BROWSER_CHROME_MANIFESTS += ["apz/test/mochitest/browser.toml"]
+MOCHITEST_MANIFESTS += ["apz/test/mochitest/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["apz/test/mochitest/browser.ini"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]

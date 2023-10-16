@@ -206,7 +206,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
           LookAndFeel::GetInt(LookAndFeel::IntID::TooltipDelay, 500),
           nsITimer::TYPE_ONE_SHOT, "sTooltipCallback",
-          GetMainThreadSerialEventTarget());
+          sourceContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
       if (NS_FAILED(rv)) {
         mTargetNode = nullptr;
         mSourceNode = nullptr;
@@ -374,7 +374,7 @@ nsresult nsXULTooltipListener::ShowTooltip() {
   // Make sure the document still has focus.
   auto* doc = tooltipNode->GetComposedDoc();
   if (!doc || !nsContentUtils::IsChromeDoc(doc) ||
-      doc->IsTopLevelWindowInactive()) {
+      doc->GetDocumentState().HasState(DocumentState::WINDOW_INACTIVE)) {
     return NS_OK;
   }
 

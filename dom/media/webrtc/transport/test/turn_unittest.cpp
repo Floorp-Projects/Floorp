@@ -71,7 +71,8 @@ static std::string kDummyTurnServer("192.0.2.1");  // From RFC 5737
 class TurnClient : public MtransportTest {
  public:
   TurnClient()
-      : real_socket_(nullptr),
+      : MtransportTest(),
+        real_socket_(nullptr),
         net_socket_(nullptr),
         buffered_socket_(nullptr),
         net_fd_(nullptr),

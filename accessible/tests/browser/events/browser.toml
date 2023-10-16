@@ -31,3 +31,4 @@ skip-if = ["os == 'win'"] # Bug 1818994
 ["browser_test_selection_urlbar.js"]
 
 ["browser_test_textcaret.js"]
+

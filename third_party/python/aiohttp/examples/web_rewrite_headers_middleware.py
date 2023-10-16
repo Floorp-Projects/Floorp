@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Example for rewriting response headers by middleware."""
+"""
+Example for rewriting response headers by middleware.
+"""
 
 from aiohttp import web
-from aiohttp.typedefs import Handler
 
 
 async def handler(request):
@@ -10,7 +11,7 @@ async def handler(request):
 
 
 @web.middleware
-async def middleware(request: web.Request, handler: Handler) -> web.StreamResponse:
+async def middleware(request, handler):
     try:
         response = await handler(request)
     except web.HTTPException as exc:

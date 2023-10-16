@@ -63,7 +63,7 @@ class Thread {
             typename DerefO = std::remove_reference_t<NonConstO>,
             typename = std::enable_if_t<std::is_same_v<DerefO, Options>>>
   explicit Thread(O&& options = Options())
-      : options_(std::forward<O>(options)) {
+      : id_(ThreadId()), options_(std::forward<O>(options)) {
     MOZ_ASSERT(isInitialized());
   }
 
@@ -91,7 +91,7 @@ class Thread {
   // The thread must be joined or detached before destruction.
   ~Thread();
 
-  // Move the thread into the detached state without blocking. In the detached
+  // Move the thread into the detached state without blocking. In the detatched
   // state, the thread continues to run until it exits, but cannot be joined.
   // After this method returns, this Thread no longer represents a thread of
   // execution. When the thread exits, its resources will be cleaned up by the

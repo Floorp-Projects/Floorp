@@ -468,42 +468,19 @@ class Loader final {
 
   bool ShouldBypassCache() const;
 
-  enum class PendingLoad { No, Yes };
-
  private:
   friend class mozilla::SharedStyleSheetCache;
   friend class SheetLoadData;
   friend class StreamLoader;
 
-  // Only to be called by `LoadSheet`.
-  [[nodiscard]] bool MaybeDeferLoad(SheetLoadData& aLoadData,
-                                    SheetState aSheetState,
-                                    PendingLoad aPendingLoad,
-                                    const SheetLoadDataHashKey& aKey);
-
-  // Only to be called by `LoadSheet`.
-  bool MaybeCoalesceLoadAndNotifyOpen(SheetLoadData& aLoadData,
-                                      SheetState aSheetState,
-                                      const SheetLoadDataHashKey& aKey,
-                                      const PreloadHashKey& aPreloadKey);
-
-  // Only to be called by `LoadSheet`.
-  [[nodiscard]] nsresult LoadSheetSyncInternal(SheetLoadData& aLoadData,
-                                               SheetState aSheetState);
-
-  // Only to be called by `LoadSheet`.
-  [[nodiscard]] nsresult LoadSheetAsyncInternal(
-      SheetLoadData& aLoadData, uint64_t aEarlyHintPreloaderId,
-      const SheetLoadDataHashKey& aKey);
-
   // Helpers to conditionally block onload if mDocument is non-null.
-  void IncrementOngoingLoadCountAndMaybeBlockOnload() {
+  void IncrementOngoingLoadCount() {
     if (!mOngoingLoadCount++) {
       BlockOnload();
     }
   }
 
-  void DecrementOngoingLoadCountAndMaybeUnblockOnload() {
+  void DecrementOngoingLoadCount() {
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount);
     MOZ_DIAGNOSTIC_ASSERT(mOngoingLoadCount > mPendingLoadCount);
     if (!--mOngoingLoadCount) {
@@ -513,6 +490,10 @@ class Loader final {
 
   void BlockOnload();
   void UnblockOnload(bool aFireSync);
+
+  // Helper to select the correct dispatch target for asynchronous events for
+  // this loader.
+  already_AddRefed<nsISerialEventTarget> DispatchTarget();
 
   nsresult CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
                               nsIPrincipal* aTriggeringPrincipal,
@@ -570,6 +551,7 @@ class Loader final {
 
   // Note: LoadSheet is responsible for setting the sheet to complete on
   // failure.
+  enum class PendingLoad { No, Yes };
   nsresult LoadSheet(SheetLoadData&, SheetState, uint64_t aEarlyHintPreloaderId,
                      PendingLoad = PendingLoad::No);
 

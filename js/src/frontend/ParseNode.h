@@ -507,17 +507,17 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   atom: property name being accessed
  *   privateNameKind: kind of the name if private
  * DotExpr (PropertyAccess)
- *   left: Member expr to left of '.'
+ *   left: MEMBER expr to left of '.'
  *   right: PropertyName to right of '.'
  * OptionalDotExpr (OptionalPropertyAccess)
- *   left: Member expr to left of '.', short circuits back to OptionalChain
+ *   left: MEMBER expr to left of '.', short circuits back to OptionalChain
  *        if nullish.
  *   right: PropertyName to right of '.'
  * ElemExpr (PropertyByValue)
- *   left: Member expr to left of '['
+ *   left: MEMBER expr to left of '['
  *   right: expr between '[' and ']'
  * OptionalElemExpr (OptionalPropertyByValue)
- *   left: Member expr to left of '[', short circuits back to OptionalChain
+ *   left: MEMBER expr to left of '[', short circuits back to OptionalChain
  *         if nullish.
  *   right: expr between '[' and ']'
  * CallExpr (BinaryNode)
@@ -696,7 +696,7 @@ static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
 #endif
 
 class ParseNode {
-  const ParseNodeKind pn_type;
+  const ParseNodeKind pn_type; /* ParseNodeKind::PNK_* type */
 
   bool pn_parens : 1;       /* this expr was enclosed in parens */
   bool pn_rhs_anon_fun : 1; /* this expr is anonymous function or class that
@@ -794,7 +794,7 @@ class ParseNode {
   void setDirectRHSAnonFunction(bool enabled) { pn_rhs_anon_fun = enabled; }
 
   TokenPos pn_pos;    /* two 16-bit pairs here, for 64 bits */
-  ParseNode* pn_next; /* intrinsic link in parent ListNode */
+  ParseNode* pn_next; /* intrinsic link in parent PN_LIST */
 
  public:
   /*
@@ -1227,8 +1227,8 @@ class ListNode : public ParseNode {
   bool accept(Visitor& visitor) {
     ParseNode** listp = &head_;
     for (; *listp; listp = &(*listp)->pn_next) {
-      // Don't use reference because we want to check if it changed, so we can
-      // use ReplaceNode
+      // Don't use PN*& because we want to check if it changed, so we can use
+      // ReplaceNode
       ParseNode* pn = *listp;
       if (!visitor.visit(pn)) {
         return false;
@@ -2239,8 +2239,6 @@ class CallNode : public BinaryNode {
 };
 
 class ClassMethod : public BinaryNode {
-  using Base = BinaryNode;
-
   bool isStatic_;
   AccessorType accessorType_;
   FunctionNode* initializerIfPrivate_;
@@ -2295,17 +2293,10 @@ class ClassMethod : public BinaryNode {
 
 #ifdef ENABLE_DECORATORS
   ListNode* decorators() const { return decorators_; }
-
-#  ifdef DEBUG
-  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
-                int indent);
-#  endif
 #endif
 };
 
 class ClassField : public BinaryNode {
-  using Base = BinaryNode;
-
   bool isStatic_;
 #ifdef ENABLE_DECORATORS
   // The accessorGetterNode_ and accessorSetterNode_ are used to store the
@@ -2366,11 +2357,6 @@ class ClassField : public BinaryNode {
   }
   ClassMethod* accessorGetterNode() { return accessorGetterNode_; }
   ClassMethod* accessorSetterNode() { return accessorSetterNode_; }
-
-#  ifdef DEBUG
-  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
-                int indent);
-#  endif
 #endif
 };
 
@@ -2490,8 +2476,6 @@ class ClassNames : public BinaryNode {
 };
 
 class ClassNode : public TernaryNode {
-  using Base = TernaryNode;
-
  private:
   LexicalScopeNode* innerScope() const {
     return &kid3()->as<LexicalScopeNode>();
@@ -2547,11 +2531,6 @@ class ClassNode : public TernaryNode {
   }
 #ifdef ENABLE_DECORATORS
   ListNode* decorators() const { return decorators_; }
-
-#  ifdef DEBUG
-  void dumpImpl(const ParserAtomsTable* parserAtoms, GenericPrinter& out,
-                int indent);
-#  endif
 #endif
 };
 

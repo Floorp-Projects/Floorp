@@ -1,4 +1,0 @@
-[DEFAULT]
-
-["browser_openLayoutDebug.js"]
-run-if = ["debug"]

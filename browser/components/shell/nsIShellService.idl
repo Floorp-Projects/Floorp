@@ -26,11 +26,14 @@ interface nsIShellService : nsISupports
   /**
    * Registers Firefox as the "Default Browser."
    *
+   * @param aClaimAllTypes Register Firefox as the handler for
+   *                       additional protocols (chrome etc)
+   *                       and web documents (.html, .xhtml etc).
    * @param aForAllUsers   Whether or not Firefox should attempt
    *                       to become the default browser for all
    *                       users on a multi-user system.
    */
-  void setDefaultBrowser(in boolean aForAllUsers);
+  void setDefaultBrowser(in boolean aClaimAllTypes, in boolean aForAllUsers);
 
   /**
    * Flags for positioning/sizing of the Desktop Background image.

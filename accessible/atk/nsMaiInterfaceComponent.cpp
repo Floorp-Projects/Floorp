@@ -10,12 +10,10 @@
 #include "AccessibleWrap.h"
 #include "nsAccUtils.h"
 #include "nsMai.h"
-#include "nsWindow.h"
 #include "mozilla/Likely.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/Document.h"
 #include "nsAccessibilityService.h"
 
 using namespace mozilla;
@@ -109,36 +107,6 @@ AtkObject* refAccessibleAtPointHelper(AtkObject* aAtkObj, gint aX, gint aY,
   return atkObj;
 }
 
-static double getScaleFactor(Accessible* aAccessible) {
-  DocAccessible* docAcc = nullptr;
-  if (LocalAccessible* localAcc = aAccessible->AsLocal()) {
-    docAcc = localAcc->Document();
-  } else {
-    RemoteAccessible* remote = aAccessible->AsRemote();
-    LocalAccessible* outerDoc = remote->OuterDocOfRemoteBrowser();
-    if (outerDoc) {
-      docAcc = outerDoc->Document();
-    }
-  }
-
-  if (!docAcc || !docAcc->DocumentNode()) {
-    return 1.0;
-  }
-
-  nsCOMPtr<nsIWidget> rootWidget =
-      nsContentUtils::WidgetForDocument(docAcc->DocumentNode());
-  if (!rootWidget) {
-    return 1.0;
-  }
-
-  if (RefPtr<nsWindow> window =
-          static_cast<nsWindow*>(rootWidget->GetTopLevelWidget())) {
-    return window->FractionalScaleFactor();
-  }
-
-  return 1.0;
-}
-
 void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
                       gint* aHeight, AtkCoordType aCoordType) {
   *aX = *aY = *aWidth = *aHeight = -1;
@@ -160,12 +128,10 @@ void getExtentsHelper(AtkObject* aAtkObj, gint* aX, gint* aY, gint* aWidth,
     screenRect.y -= winCoords.y;
   }
 
-  double scaleFactor = getScaleFactor(acc);
-
-  *aX = screenRect.x / scaleFactor;
-  *aY = screenRect.y / scaleFactor;
-  *aWidth = screenRect.width / scaleFactor;
-  *aHeight = screenRect.height / scaleFactor;
+  *aX = screenRect.x;
+  *aY = screenRect.y;
+  *aWidth = screenRect.width;
+  *aHeight = screenRect.height;
 }
 
 void componentInterfaceInitCB(AtkComponentIface* aIface) {

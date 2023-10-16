@@ -356,43 +356,39 @@
         </vbox>
       </radiogroup>
     </vbox>
-  </vbox>
-</groupbox>
-<groupbox id="nonTechnicalPrivacyGroup" data-category="panePrivacy" data-subcategory="nontechnicalprivacy" hidden="true">
-  <label id="nonTechnicalPrivacyHeader"><html:h2 data-l10n-id="non-technical-privacy-header"/></label>
-  <vbox id="nonTechnicalPrivacyBox">
-    <hbox id="globalPrivacyControlBox" flex="1" align="center" hidden="true">
-      <checkbox id="globalPrivacyControlCheckbox"
-              class="tail-with-learn-more"
-              preference="privacy.globalprivacycontrol.enabled"
-              data-l10n-id="global-privacy-control-description"
-              search-l10n-ids="global-privacy-control-search" />
-      <html:a is="moz-support-link"
-          id="globalPrivacyControlLearnMoreLink"
-          support-page="global-privacy-control" />
-    </hbox>
-    <vbox id="legacyDoNotTrackBox">
-      <label>
-        <label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label>
-      <html:a is="moz-support-link"
-              class="learnMore"
-              support-page="how-do-i-turn-do-not-track-feature"
-      />
-      </label>
-      <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
-        <radio value="true" data-l10n-id="do-not-track-option-always"/>
-        <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking-known"/>
-      </radiogroup>
+    <vbox id="nonTechnicalPrivacyBox">
+      <hbox id="globalPrivacyControlBox" flex="1" align="center" hidden="true">
+        <checkbox id="globalPrivacyControlCheckbox"
+                class="tail-with-learn-more"
+                preference="privacy.globalprivacycontrol.enabled"
+                data-l10n-id="global-privacy-control-description" />
+        <html:a is="moz-support-link"
+            id="globalPrivacyControlLearnMoreLink"
+            support-page="global-privacy-control" />
+      </hbox>
+      <vbox id="legacyDoNotTrackBox">
+        <label>
+          <label class="tail-with-learn-more" data-l10n-id="do-not-track-description" id="doNotTrackDesc"></label>
+        <html:a is="moz-support-link"
+                class="learnMore"
+                support-page="how-do-i-turn-do-not-track-feature"
+        />
+        </label>
+        <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
+          <radio value="true" data-l10n-id="do-not-track-option-always"/>
+          <radio value="false" data-l10n-id="do-not-track-option-default-content-blocking-known"/>
+        </radiogroup>
+      </vbox>
+      <hbox id="doNotTrackBox" flex="1" align="center">
+        <checkbox id="doNotTrackCheckbox"
+                class="tail-with-learn-more"
+                preference="privacy.donottrackheader.enabled"
+                data-l10n-id="do-not-track-description2" />
+        <html:a is="moz-support-link"
+            id="doNotTrackLearnMoreLink"
+            support-page="how-do-i-turn-do-not-track-feature" />
+      </hbox>
     </vbox>
-    <hbox id="doNotTrackBox" flex="1" align="center">
-      <checkbox id="doNotTrackCheckbox"
-              class="tail-with-learn-more"
-              preference="privacy.donottrackheader.enabled"
-              data-l10n-id="do-not-track-description2" />
-      <html:a is="moz-support-link"
-          id="doNotTrackLearnMoreLink"
-          support-page="how-do-i-turn-do-not-track-feature" />
-    </hbox>
   </vbox>
 </groupbox>
 
@@ -460,18 +456,18 @@
 
 <!-- Cookie Banner Handling -->
 <groupbox id="cookieBannerHandlingGroup" data-category="panePrivacy" data-subcategory="cookiebanner" hidden="true">
-  <label><html:h2 data-l10n-id="cookie-banner-blocker-header" /></label>
+  <label><html:h2 data-l10n-id="cookie-banner-handling-header" /></label>
   <vbox flex="1">
     <hbox>
       <description>
-        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-blocker-description" ></html:span>
+        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-handling-description" ></html:span>
         <html:a is="moz-support-link" id="cookieBannerHandlingLearnMore" class="learnMore"  data-l10n-id="cookie-banner-learn-more" support-page="cookie-banner-reduction"/>
       </description>
     </hbox>
     <hbox>
       <checkbox id="handleCookieBanners"
-                preference="cookiebanners.service.mode.privateBrowsing"
-                data-l10n-id="cookie-banner-blocker-checkbox-label"
+                preference="cookiebanners.service.mode"
+                data-l10n-id="forms-handle-cookie-banners"
                 flex="1" />
     </hbox>
   </vbox>
@@ -511,6 +507,7 @@
         <hbox class="indent" id="generatePasswordsBox" flex="1">
           <checkbox id="generatePasswords"
                     data-l10n-id="forms-generate-passwords"
+                    search-l10n-ids="forms-generate-passwords.label"
                     preference="signon.generation.enabled"
                     flex="1" />
         </hbox>
@@ -530,13 +527,15 @@
                 is="highlightable-button"
                 class="accessory-button"
                 data-l10n-id="forms-saved-logins"
+                search-l10n-ids="forms-saved-logins.label"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </vbox>
     </hbox>
     <hbox class="indent" id="relayIntegrationBox" flex="1" align="center">
       <checkbox id="relayIntegration"
                 class="tail-with-learn-more"
-                data-l10n-id="preferences-relay-integration-checkbox"/>
+                data-l10n-id="preferences-relay-integration-checkbox"
+                search-l10n-ids="preferences-relay-integration-checkbox.label" />
       <html:a id="relayIntegrationLearnMoreLink" class="learnMore"
              data-l10n-id="relay-integration-learn-more-link"/>
     </hbox>
@@ -544,6 +543,7 @@
       <checkbox id="breachAlerts"
                 class="tail-with-learn-more"
                 data-l10n-id="forms-breach-alerts"
+                search-l10n-ids="breach-alerts.label"
                 preference="signon.management.page.breach-alerts.enabled"/>
       <html:a is="moz-support-link"
               id="breachAlertsLearnMoreLink"
@@ -717,6 +717,18 @@
             preference="browser.urlbar.suggest.topsites"/>
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
+  <hbox id="firefoxSuggestBestMatchContainer" align="center" hidden="true">
+    <checkbox id="firefoxSuggestBestMatch"
+              class="tail-with-learn-more"
+              data-l10n-id="addressbar-firefox-suggest-best-match-option"
+              preference="browser.urlbar.suggest.bestmatch"/>
+    <html:a is="moz-support-link"
+            id="firefoxSuggestBestMatchLearnMore"
+            class="learnMore"
+            data-l10n-id="addressbar-best-match-learn-more"
+            support-page="firefox-suggest"
+    />
+  </hbox>
   <hbox id="quickActionsBox" align="center" hidden="true">
     <checkbox id="enableQuickActions"
               class="tail-with-learn-more"
@@ -1180,18 +1192,6 @@
                 devmgr-button-unload.label
               "/>
     </vbox>
-  </hbox>
-
-  <hbox id="certEnableThirdPartyToggleBox" align="center">
-    <checkbox id="certEnableThirdPartyToggle"
-              data-l10n-id="certs-thirdparty-toggle"
-              preference="security.enterprise_roots.enabled"
-              class="tail-with-learn-more"
-    />
-    <html:a is="moz-support-link"
-            class="learnMore"
-            support-page="automatically-trust-third-party-certificates"
-    />
   </hbox>
 </groupbox>
 

@@ -13,7 +13,7 @@
 use crate::Atom;
 use app_units::Au;
 use crate::computed_value_flags::*;
-use crate::custom_properties::ComputedCustomProperties;
+use crate::custom_properties::CustomPropertiesMap;
 use crate::gecko_bindings::bindings;
 % for style_struct in data.style_structs:
 use crate::gecko_bindings::bindings::Gecko_Construct_Default_${style_struct.gecko_ffi_name};
@@ -37,7 +37,7 @@ use servo_arc::{Arc, UniqueArc};
 use std::mem::{forget, MaybeUninit, ManuallyDrop};
 use std::{cmp, ops, ptr};
 use crate::values::{self, CustomIdent, KeyframesName};
-use crate::values::computed::{BorderStyle, Percentage, Time, TransitionProperty, Zoom};
+use crate::values::computed::{BorderStyle, Percentage, Time, TransitionProperty};
 use crate::values::computed::font::FontSize;
 use crate::values::generics::column::ColumnCount;
 
@@ -65,9 +65,8 @@ impl ComputedValues {
 
     pub fn new(
         pseudo: Option<<&PseudoElement>,
-        custom_properties: ComputedCustomProperties,
+        custom_properties: Option<Arc<CustomPropertiesMap>>,
         writing_mode: WritingMode,
-        effective_zoom: Zoom,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
         visited_style: Option<Arc<ComputedValues>>,
@@ -78,7 +77,6 @@ impl ComputedValues {
         ComputedValuesInner::new(
             custom_properties,
             writing_mode,
-            effective_zoom,
             flags,
             rules,
             visited_style,
@@ -90,9 +88,8 @@ impl ComputedValues {
 
     pub fn default_values(doc: &structs::Document) -> Arc<Self> {
         ComputedValuesInner::new(
-            ComputedCustomProperties::default(),
-            WritingMode::empty(), // FIXME(bz): This seems dubious
-            Zoom::ONE,
+            /* custom_properties = */ None,
+            /* writing_mode = */ WritingMode::empty(), // FIXME(bz): This seems dubious
             ComputedValueFlags::empty(),
             /* rules = */ None,
             /* visited_style = */ None,
@@ -174,7 +171,6 @@ impl Clone for ComputedValuesInner {
             custom_properties: self.custom_properties.clone(),
             writing_mode: self.writing_mode.clone(),
             flags: self.flags.clone(),
-            effective_zoom: self.effective_zoom,
             rules: self.rules.clone(),
             visited_style: if self.visited_style.is_null() {
                 ptr::null()
@@ -199,9 +195,8 @@ impl Drop for ComputedValuesInner {
 
 impl ComputedValuesInner {
     pub fn new(
-        custom_properties: ComputedCustomProperties,
+        custom_properties: Option<Arc<CustomPropertiesMap>>,
         writing_mode: WritingMode,
-        effective_zoom: Zoom,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
         visited_style: Option<Arc<ComputedValues>>,
@@ -215,7 +210,6 @@ impl ComputedValuesInner {
             rules,
             visited_style: visited_style.map_or(ptr::null(), |p| Arc::into_raw(p)) as *const _,
             flags,
-            effective_zoom,
             % for style_struct in data.style_structs:
             ${style_struct.gecko_name}: Arc::into_raw(${style_struct.ident}) as *const _,
             % endfor

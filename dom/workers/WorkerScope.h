@@ -133,8 +133,14 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
   virtual void Control(const ServiceWorkerDescriptor& aServiceWorker);
 
   // DispatcherTrait implementation
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final;
-  nsISerialEventTarget* SerialEventTarget() const final;
+  nsresult Dispatch(TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable) final;
+
+  nsISerialEventTarget* EventTargetFor(TaskCategory) const final;
+
+  AbstractThread* AbstractMainThreadFor(TaskCategory) final {
+    MOZ_CRASH("AbstractMainThreadFor not supported for workers.");
+  }
 
   MOZ_CAN_RUN_SCRIPT
   void ReportError(JSContext* aCx, JS::Handle<JS::Value> aError,

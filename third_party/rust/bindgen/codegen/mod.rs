@@ -601,10 +601,7 @@ impl CodeGenerator for Module {
         let inner_items = result.inner(|result| {
             result.push(root_import(ctx, item));
 
-            let path = item
-                .namespace_aware_canonical_path(ctx)
-                .join("::")
-                .into_boxed_str();
+            let path = item.namespace_aware_canonical_path(ctx).join("::");
             if let Some(raw_lines) = ctx.options().module_lines.get(&path) {
                 for raw_line in raw_lines {
                     found_any = true;
@@ -717,18 +714,18 @@ impl CodeGenerator for Var {
                     let len = proc_macro2::Literal::usize_unsuffixed(
                         cstr_bytes.len(),
                     );
+                    let cstr = CStr::from_bytes_with_nul(&cstr_bytes).unwrap();
 
                     // TODO: Here we ignore the type we just made up, probably
                     // we should refactor how the variable type and ty ID work.
                     let array_ty = quote! { [u8; #len] };
                     let cstr_ty = quote! { ::#prefix::ffi::CStr };
 
-                    let bytes = proc_macro2::Literal::byte_string(&cstr_bytes);
+                    let bytes = proc_macro2::Literal::byte_string(
+                        cstr.to_bytes_with_nul(),
+                    );
 
-                    if options.generate_cstr &&
-                        rust_features.const_cstr &&
-                        CStr::from_bytes_with_nul(&cstr_bytes).is_ok()
-                    {
+                    if rust_features.const_cstr && options.generate_cstr {
                         result.push(quote! {
                             #(#attrs)*
                             #[allow(unsafe_code)]
@@ -4351,7 +4348,7 @@ fn unsupported_abi_diagnostic(
         .add_annotation(
             format!(
                 "The configured Rust version is {}.",
-                ctx.options().rust_target
+                String::from(ctx.options().rust_target)
             ),
             Level::Note,
         );
@@ -4915,7 +4912,7 @@ pub(crate) mod utils {
 
         let items = vec![use_objc, id_type];
         let old_items = mem::replace(result, items);
-        result.extend(old_items);
+        result.extend(old_items.into_iter());
     }
 
     pub(crate) fn prepend_block_header(
@@ -4934,7 +4931,7 @@ pub(crate) mod utils {
 
         let items = vec![use_block];
         let old_items = mem::replace(result, items);
-        result.extend(old_items);
+        result.extend(old_items.into_iter());
     }
 
     pub(crate) fn prepend_union_types(
@@ -4993,7 +4990,7 @@ pub(crate) mod utils {
             impl<T> ::#prefix::clone::Clone for __BindgenUnionField<T> {
                 #[inline]
                 fn clone(&self) -> Self {
-                    *self
+                    Self::new()
                 }
             }
         };
@@ -5046,7 +5043,7 @@ pub(crate) mod utils {
         ];
 
         let old_items = mem::replace(result, items);
-        result.extend(old_items);
+        result.extend(old_items.into_iter());
     }
 
     pub(crate) fn prepend_incomplete_array_types(
@@ -5122,7 +5119,7 @@ pub(crate) mod utils {
         ];
 
         let old_items = mem::replace(result, items);
-        result.extend(old_items);
+        result.extend(old_items.into_iter());
     }
 
     pub(crate) fn prepend_complex_type(
@@ -5139,7 +5136,7 @@ pub(crate) mod utils {
 
         let items = vec![complex_type];
         let old_items = mem::replace(result, items);
-        result.extend(old_items);
+        result.extend(old_items.into_iter());
     }
 
     pub(crate) fn build_path(

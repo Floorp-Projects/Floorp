@@ -96,12 +96,26 @@ nsresult AsyncEventDispatcher::Cancel() {
 
 nsresult AsyncEventDispatcher::PostDOMEvent() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
-  return NS_DispatchToCurrentThread(ensureDeletionWhenFailing.forget());
+  if (NS_IsMainThread()) {
+    if (nsCOMPtr<nsIGlobalObject> global = mTarget->GetOwnerGlobal()) {
+      return global->Dispatch(TaskCategory::Other,
+                              ensureDeletionWhenFailing.forget());
+    }
+
+    // Sometimes GetOwnerGlobal returns null because it uses
+    // GetScriptHandlingObject rather than GetScopeObject.
+    if (nsINode* node = nsINode::FromEventTargetOrNull(mTarget)) {
+      RefPtr<Document> doc = node->OwnerDoc();
+      return doc->Dispatch(TaskCategory::Other,
+                           ensureDeletionWhenFailing.forget());
+    }
+  }
+  return NS_DispatchToCurrentThread(this);
 }
 
 void AsyncEventDispatcher::RunDOMEventWhenSafe() {
   RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
-  nsContentUtils::AddScriptRunner(ensureDeletionWhenFailing.forget());
+  nsContentUtils::AddScriptRunner(this);
 }
 
 // static
@@ -128,7 +142,7 @@ void AsyncEventDispatcher::RunDOMEventWhenSafe(
                           Composed::eDefault);
     return;
   }
-  (new AsyncEventDispatcher(&aTarget, do_AddRef(&aEvent), aOnlyChromeDispatch))
+  (new AsyncEventDispatcher(&aTarget, &aEvent, aOnlyChromeDispatch))
       ->RunDOMEventWhenSafe();
 }
 

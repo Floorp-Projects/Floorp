@@ -234,6 +234,9 @@ include image/reftest.list
 # image-element/
 include image-element/reftest.list
 
+# image-rect/
+include image-rect/reftest.list
+
 # indic shaping with harfbuzz
 include indic-shaping/reftest.list
 
@@ -371,7 +374,7 @@ include ../../toolkit/themes/osx/reftests/reftest.list
 
 include ../../toolkit/content/tests/reftests/reftest.list
 
-# transform/
+# -moz-transform/
 # skipping on non-e10s windows because of assertion in bug 1401228
 skip-if(winWidget&&!browserIsRemote) include transform/reftest.list
 

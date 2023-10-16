@@ -39,7 +39,6 @@ def edit_config(filename, settings, dry_run=False):
     """
     log.debug("Reading configuration from %s", filename)
     opts = configparser.RawConfigParser()
-    opts.optionxform = lambda x: x
     opts.read([filename])
     for section, options in settings.items():
         if options is None:

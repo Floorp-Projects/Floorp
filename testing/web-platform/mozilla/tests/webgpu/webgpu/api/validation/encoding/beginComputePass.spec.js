@@ -21,6 +21,49 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
+g.test('timestampWrites,same_location')
+  .desc(
+    `
+  Test that entries in timestampWrites do not have the same location in GPUComputePassDescriptor.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('locationA', ['beginning', 'end'])
+      .combine('locationB', ['beginning', 'end'])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { locationA, locationB } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: 'timestamp',
+      count: 2,
+    });
+
+    const timestampWriteA = {
+      querySet,
+      queryIndex: 0,
+      location: locationA,
+    };
+
+    const timestampWriteB = {
+      querySet,
+      queryIndex: 1,
+      location: locationB,
+    };
+
+    const isValid = locationA !== locationB;
+
+    const descriptor = {
+      timestampWrites: [timestampWriteA, timestampWriteB],
+    };
+
+    t.tryComputePass(isValid, descriptor);
+  });
+
 g.test('timestampWrites,query_set_type')
   .desc(
     `
@@ -30,24 +73,35 @@ g.test('timestampWrites,query_set_type')
   )
   .params(u =>
     u //
-      .combine('queryType', kQueryTypes)
+      .combine('queryTypeA', kQueryTypes)
+      .combine('queryTypeB', kQueryTypes)
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForQueryTypeOrSkipTestCase(['timestamp', t.params.queryType]);
+    t.selectDeviceForQueryTypeOrSkipTestCase([
+      'timestamp',
+      t.params.queryTypeA,
+      t.params.queryTypeB,
+    ]);
   })
-  .fn(t => {
-    const { queryType } = t.params;
+  .fn(async t => {
+    const { queryTypeA, queryTypeB } = t.params;
 
-    const isValid = queryType === 'timestamp';
-
-    const timestampWrites = {
-      querySet: t.device.createQuerySet({ type: queryType, count: 2 }),
-      beginningOfPassWriteIndex: 0,
-      endOfPassWriteIndex: 1,
+    const timestampWriteA = {
+      querySet: t.device.createQuerySet({ type: queryTypeA, count: 1 }),
+      queryIndex: 0,
+      location: 'beginning',
     };
 
+    const timestampWriteB = {
+      querySet: t.device.createQuerySet({ type: queryTypeB, count: 1 }),
+      queryIndex: 0,
+      location: 'end',
+    };
+
+    const isValid = queryTypeA === 'timestamp' && queryTypeB === 'timestamp';
+
     const descriptor = {
-      timestampWrites,
+      timestampWrites: [timestampWriteA, timestampWriteB],
     };
 
     t.tryComputePass(isValid, descriptor);
@@ -59,7 +113,7 @@ g.test('timestampWrites,invalid_query_set')
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(t => {
+  .fn(async t => {
     const { querySetState } = t.params;
 
     const querySet = t.createQuerySetWithState(querySetState, {
@@ -67,49 +121,40 @@ g.test('timestampWrites,invalid_query_set')
       count: 1,
     });
 
-    const timestampWrites = {
+    const timestampWrite = {
       querySet,
-      beginningOfPassWriteIndex: 0,
+      queryIndex: 0,
+      location: 'beginning',
     };
 
     const descriptor = {
-      timestampWrites,
+      timestampWrites: [timestampWrite],
     };
 
     t.tryComputePass(querySetState === 'valid', descriptor);
   });
 
-g.test('timestampWrites,query_index')
-  .desc(
-    `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
-         query indexes are unique.`
-  )
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3])
-      .combine('endOfPassWriteIndex', [undefined, 0, 1, 2, 3])
-  )
+g.test('timestampWrites,query_index_count')
+  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`)
+  .params(u => u.combine('queryIndex', [0, 1, 2, 3]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(t => {
-    const { beginningOfPassWriteIndex, endOfPassWriteIndex } = t.params;
+  .fn(async t => {
+    const { queryIndex } = t.params;
 
     const querySetCount = 2;
 
-    const timestampWrites = {
+    const timestampWrite = {
       querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
-      beginningOfPassWriteIndex,
-      endOfPassWriteIndex,
+      queryIndex,
+      location: 'beginning',
     };
 
-    const isValid =
-      beginningOfPassWriteIndex !== endOfPassWriteIndex &&
-      (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
-      (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount);
+    const isValid = queryIndex < querySetCount;
 
     const descriptor = {
-      timestampWrites,
+      timestampWrites: [timestampWrite],
     };
 
     t.tryComputePass(isValid, descriptor);
@@ -126,7 +171,7 @@ g.test('timestamp_query_set,device_mismatch')
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
-  .fn(t => {
+  .fn(async t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -135,13 +180,14 @@ g.test('timestamp_query_set,device_mismatch')
       count: 1,
     });
 
-    const timestampWrites = {
+    const timestampWrite = {
       querySet: timestampQuerySet,
-      beginningOfPassWriteIndex: 0,
+      queryIndex: 0,
+      location: 'beginning',
     };
 
     const descriptor = {
-      timestampWrites,
+      timestampWrites: [timestampWrite],
     };
 
     t.tryComputePass(!mismatched, descriptor);

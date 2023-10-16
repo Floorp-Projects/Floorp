@@ -6,7 +6,6 @@
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeOwner.h"
-#include "mozilla/Try.h"
 
 namespace mozilla {
 

@@ -61,21 +61,6 @@ add_task(async function search_history() {
   });
 });
 
-add_task(async function recent_search() {
-  await doRecentSearchTest({
-    trigger: () => waitForPauseImpression(),
-    assert: () =>
-      assertImpressionTelemetry([
-        {
-          reason: "pause",
-          groups: "recent_search,suggested_index",
-          results: "recent_search,action",
-          n_results: 2,
-        },
-      ]),
-  });
-});
-
 add_task(async function search_suggest() {
   await doSearchSuggestTest({
     trigger: () => waitForPauseImpression(),
@@ -113,7 +98,7 @@ add_task(async function top_pick() {
           reason: "pause",
           groups: "heuristic,top_pick,search_suggest,search_suggest",
           results:
-            "search_engine,merino_top_picks,search_suggest,search_suggest",
+            "search_engine,rs_adm_sponsored,search_suggest,search_suggest",
           n_results: 4,
         },
       ]),

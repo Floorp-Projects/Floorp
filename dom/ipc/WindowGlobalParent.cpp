@@ -1396,21 +1396,21 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
   return IPC_OK();
 }
 
-IPCResult WindowGlobalParent::RecvGetStorageAccessPermission(
-    GetStorageAccessPermissionResolver&& aResolve) {
+IPCResult WindowGlobalParent::RecvHasStorageAccessPermission(
+    HasStorageAccessPermissionResolver&& aResolve) {
   WindowGlobalParent* top = TopWindowContext();
   if (!top) {
     return IPC_FAIL_NO_REASON(this);
   }
   nsIPrincipal* topPrincipal = top->DocumentPrincipal();
   nsIPrincipal* principal = DocumentPrincipal();
-  uint32_t result;
+  bool result;
   nsresult rv = AntiTrackingUtils::TestStoragePermissionInParent(
       topPrincipal, principal, &result);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aResolve(nsIPermissionManager::UNKNOWN_ACTION);
-    return IPC_OK();
-  }
+  NS_ENSURE_SUCCESS(
+      rv, IPC_FAIL(
+              this,
+              "Storage Access Permission: Failed to test storage permission."));
 
   aResolve(result);
   return IPC_OK();

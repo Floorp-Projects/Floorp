@@ -1222,7 +1222,8 @@ struct FontFamily {
 // together with the CSS generic (if any) that was mapped to it in this
 // particular case (so it can be reported to the DevTools font inspector).
 struct FamilyAndGeneric final {
-  FamilyAndGeneric() : mGeneric(mozilla::StyleGenericFontFamily(0)) {}
+  FamilyAndGeneric()
+      : mFamily(), mGeneric(mozilla::StyleGenericFontFamily(0)) {}
   FamilyAndGeneric(const FamilyAndGeneric& aOther) = default;
   explicit FamilyAndGeneric(gfxFontFamily* aFamily,
                             mozilla::StyleGenericFontFamily aGeneric =

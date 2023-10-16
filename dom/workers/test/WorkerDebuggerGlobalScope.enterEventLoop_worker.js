@@ -1,7 +1,6 @@
 "use strict";
 
 function f() {
-  // eslint-disable-next-line no-debugger
   debugger;
 }
 
@@ -21,7 +20,6 @@ self.onmessage = function (event) {
   }
   switch (message) {
     case "ping":
-      // eslint-disable-next-line no-debugger
       debugger;
       postMessage("pong");
       break;

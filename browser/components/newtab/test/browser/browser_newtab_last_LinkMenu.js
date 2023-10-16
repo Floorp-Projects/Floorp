@@ -4,11 +4,6 @@
 "use strict";
 
 async function setupPrefs() {
-  sinon
-    .stub(DiscoveryStreamFeed.prototype, "generateFeedUrl")
-    .returns(
-      "https://example.com/browser/browser/components/newtab/test/browser/topstories.json"
-    );
   await setDefaultTopSites();
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -18,7 +13,11 @@ async function setupPrefs() {
           api_key_pref: "extensions.pocket.oAuthConsumerKey",
           collapsible: true,
           enabled: true,
+          show_spocs: false,
+          hardcoded_layout: false,
           personalized: false,
+          layout_endpoint:
+            "https://example.com/browser/browser/components/newtab/test/browser/ds_layout.json",
         }),
       ],
       [
@@ -149,5 +148,4 @@ add_task(async function test_newtab_last_LinkMenu() {
   // Resetting prefs we set for this test.
   await resetPrefs();
   BrowserTestUtils.removeTab(tab);
-  sinon.restore();
 });

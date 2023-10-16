@@ -68,7 +68,7 @@ PaymentResponse::PaymentResponse(
   NS_NewTimerWithCallback(getter_AddRefs(mTimer), this,
                           StaticPrefs::dom_payments_response_timeout(),
                           nsITimer::TYPE_ONE_SHOT,
-                          GetMainThreadSerialEventTarget());
+                          aWindow->EventTargetFor(TaskCategory::Other));
 }
 
 PaymentResponse::~PaymentResponse() = default;
@@ -299,7 +299,7 @@ void PaymentResponse::RespondRetry(const nsAString& aMethodName,
   NS_NewTimerWithCallback(getter_AddRefs(mTimer), this,
                           StaticPrefs::dom_payments_response_timeout(),
                           nsITimer::TYPE_ONE_SHOT,
-                          GetMainThreadSerialEventTarget());
+                          GetOwner()->EventTargetFor(TaskCategory::Other));
   MOZ_ASSERT(mRetryPromise);
   mRetryPromise->MaybeResolve(JS::UndefinedHandleValue);
   mRetryPromise = nullptr;

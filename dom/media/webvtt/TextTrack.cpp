@@ -283,9 +283,11 @@ void TextTrack::DispatchAsyncTrustedEvent(const nsString& aEventName) {
     return;
   }
   RefPtr<TextTrack> self = this;
-  nsGlobalWindowInner::Cast(win)->Dispatch(NS_NewRunnableFunction(
-      "dom::TextTrack::DispatchAsyncTrustedEvent",
-      [self, aEventName]() { self->DispatchTrustedEvent(aEventName); }));
+  nsGlobalWindowInner::Cast(win)->Dispatch(
+      TaskCategory::Other,
+      NS_NewRunnableFunction(
+          "dom::TextTrack::DispatchAsyncTrustedEvent",
+          [self, aEventName]() { self->DispatchTrustedEvent(aEventName); }));
 }
 
 bool TextTrack::IsLoaded() {

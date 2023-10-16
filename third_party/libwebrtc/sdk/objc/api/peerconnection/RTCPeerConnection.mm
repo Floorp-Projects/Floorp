@@ -251,9 +251,10 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
   NSMutableArray* ice_candidates =
       [NSMutableArray arrayWithCapacity:candidates.size()];
   for (const auto& candidate : candidates) {
-    JsepIceCandidate candidate_wrapper(candidate.transport_name(), -1, candidate);
+    std::unique_ptr<JsepIceCandidate> candidate_wrapper(
+        new JsepIceCandidate(candidate.transport_name(), -1, candidate));
     RTC_OBJC_TYPE(RTCIceCandidate) *ice_candidate =
-        [[RTC_OBJC_TYPE(RTCIceCandidate) alloc] initWithNativeCandidate:&candidate_wrapper];
+        [[RTC_OBJC_TYPE(RTCIceCandidate) alloc] initWithNativeCandidate:candidate_wrapper.get()];
     [ice_candidates addObject:ice_candidate];
   }
   RTC_OBJC_TYPE(RTCPeerConnection) *peer_connection = peer_connection_;
@@ -264,14 +265,14 @@ void PeerConnectionDelegateAdapter::OnIceCandidatesRemoved(
 void PeerConnectionDelegateAdapter::OnIceSelectedCandidatePairChanged(
     const cricket::CandidatePairChangeEvent &event) {
   const auto &selected_pair = event.selected_candidate_pair;
-  JsepIceCandidate local_candidate_wrapper(
+  auto local_candidate_wrapper = std::make_unique<JsepIceCandidate>(
       selected_pair.local_candidate().transport_name(), -1, selected_pair.local_candidate());
-  RTC_OBJC_TYPE(RTCIceCandidate) *local_candidate =
-      [[RTC_OBJC_TYPE(RTCIceCandidate) alloc] initWithNativeCandidate:&local_candidate_wrapper];
-  JsepIceCandidate remote_candidate_wrapper(
+  RTC_OBJC_TYPE(RTCIceCandidate) *local_candidate = [[RTC_OBJC_TYPE(RTCIceCandidate) alloc]
+      initWithNativeCandidate:local_candidate_wrapper.release()];
+  auto remote_candidate_wrapper = std::make_unique<JsepIceCandidate>(
       selected_pair.remote_candidate().transport_name(), -1, selected_pair.remote_candidate());
-  RTC_OBJC_TYPE(RTCIceCandidate) *remote_candidate =
-      [[RTC_OBJC_TYPE(RTCIceCandidate) alloc] initWithNativeCandidate:&remote_candidate_wrapper];
+  RTC_OBJC_TYPE(RTCIceCandidate) *remote_candidate = [[RTC_OBJC_TYPE(RTCIceCandidate) alloc]
+      initWithNativeCandidate:remote_candidate_wrapper.release()];
   RTC_OBJC_TYPE(RTCPeerConnection) *peer_connection = peer_connection_;
   NSString *nsstr_reason = [NSString stringForStdString:event.reason];
   if ([peer_connection.delegate
@@ -370,7 +371,7 @@ void PeerConnectionDelegateAdapter::OnRemoveTrack(
     _nativeConstraints = constraints.nativeConstraints;
     CopyConstraintsIntoRtcConfiguration(_nativeConstraints.get(), config.get());
 
-    webrtc::PeerConnectionDependencies deps = std::move(*dependencies);
+    webrtc::PeerConnectionDependencies deps = std::move(*dependencies.release());
     deps.observer = _observer.get();
     auto result = factory.nativeFactory->CreatePeerConnectionOrError(*config, std::move(deps));
 

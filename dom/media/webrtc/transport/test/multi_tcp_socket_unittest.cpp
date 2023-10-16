@@ -32,7 +32,8 @@ namespace {
 
 class MultiTcpSocketTest : public MtransportTest {
  public:
-  MultiTcpSocketTest() : socks(3, nullptr), readable(false) {}
+  MultiTcpSocketTest()
+      : MtransportTest(), socks(3, nullptr), readable(false), ice_ctx_() {}
 
   void SetUp() {
     MtransportTest::SetUp();

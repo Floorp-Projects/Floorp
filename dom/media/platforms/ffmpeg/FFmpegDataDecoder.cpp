@@ -32,7 +32,7 @@ static bool IsVideoCodec(AVCodecID aCodecID) {
 #if LIBAVCODEC_VERSION_MAJOR >= 55
     case AV_CODEC_ID_VP9:
 #endif
-#if LIBAVCODEC_VERSION_MAJOR >= 59
+#ifdef FFMPEG_AV1_DECODE
     case AV_CODEC_ID_AV1:
 #endif
       return true;

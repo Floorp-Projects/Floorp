@@ -47,7 +47,15 @@ struct GetFullOriginMetadataResponse
   FullOriginMetadata? maybeFullOriginMetadata;
 };
 
+struct ClearOriginResponse
+{
+};
+
 struct ResetOriginResponse
+{
+};
+
+struct ClearDataResponse
 {
 };
 
@@ -81,7 +89,9 @@ union RequestResponse
   InitializePersistentOriginResponse;
   InitializeTemporaryOriginResponse;
   GetFullOriginMetadataResponse;
+  ClearOriginResponse;
   ResetOriginResponse;
+  ClearDataResponse;
   PersistedResponse;
   PersistResponse;
   EstimateResponse;

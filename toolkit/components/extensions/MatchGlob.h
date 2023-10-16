@@ -27,8 +27,7 @@ class MatchGlobCore final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MatchGlobCore)
 
-  MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion, bool aIsPathGlob,
-                ErrorResult& aRv);
+  MatchGlobCore(const nsACString& aGlob, bool aAllowQuestion, ErrorResult& aRv);
 
   bool Matches(const nsACString& aString) const;
 

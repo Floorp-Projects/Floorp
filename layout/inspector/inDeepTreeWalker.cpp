@@ -7,7 +7,6 @@
 #include "inDeepTreeWalker.h"
 #include "inLayoutUtils.h"
 
-#include "mozilla/Try.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"

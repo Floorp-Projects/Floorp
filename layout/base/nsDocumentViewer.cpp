@@ -56,7 +56,6 @@
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/Try.h"
 
 #include "nsViewManager.h"
 #include "nsView.h"
@@ -2154,7 +2153,7 @@ nsDocumentViewer::Show() {
   // from the event loop after we actually draw the page.
   RefPtr<nsDocumentShownDispatcher> event =
       new nsDocumentShownDispatcher(document);
-  document->Dispatch(event.forget());
+  document->Dispatch(TaskCategory::Other, event.forget());
 
   return NS_OK;
 }

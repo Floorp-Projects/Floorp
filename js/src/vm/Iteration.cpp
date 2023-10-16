@@ -793,11 +793,13 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
     return nullptr;
   }
 
-  auto* res = NativeObject::create<PropertyIteratorObject>(
+  JSObject* obj = NativeObject::create(
       cx, ITERATOR_FINALIZE_KIND, GetInitialHeap(GenericObject, clasp), shape);
-  if (!res) {
+  if (!obj) {
     return nullptr;
   }
+
+  PropertyIteratorObject* res = &obj->as<PropertyIteratorObject>();
 
   // CodeGenerator::visitIteratorStartO assumes the iterator object is not
   // inside the nursery when deciding whether a barrier is necessary.

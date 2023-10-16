@@ -1451,9 +1451,10 @@ nsIFrame::SizeComputationResult nsImageFrame::ComputeSize(
 }
 
 Element* nsImageFrame::GetMapElement() const {
-  return IsForImageLoadingContent()
-             ? nsImageLoadingContent::FindImageMap(mContent->AsElement())
-             : nullptr;
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  return imageLoader ? static_cast<nsImageLoadingContent*>(imageLoader.get())
+                           ->FindImageMap()
+                     : nullptr;
 }
 
 // get the offset into the content area of the image where aImg starts if it is

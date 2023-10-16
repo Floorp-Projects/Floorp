@@ -72,7 +72,6 @@ s! {
             target_arch = "aarch64",
             target_arch = "loongarch64",
             target_arch = "mips64",
-            target_arch = "mips64r6",
             target_arch = "powerpc64",
             target_arch = "riscv64",
             target_arch = "sparc64")))]
@@ -82,7 +81,6 @@ s! {
             target_arch = "aarch64",
             target_arch = "loongarch64",
             target_arch = "mips64",
-            target_arch = "mips64r6",
             target_arch = "powerpc64",
             target_arch = "riscv64",
             target_arch = "sparc64")))]
@@ -107,7 +105,7 @@ cfg_if! {
     } else if #[cfg(any(target_arch = "sparc64"))] {
         mod sparc64;
         pub use self::sparc64::*;
-    } else if #[cfg(any(target_arch = "mips64", target_arch = "mips64r6"))] {
+    } else if #[cfg(any(target_arch = "mips64"))] {
         mod mips64;
         pub use self::mips64::*;
     } else if #[cfg(any(target_arch = "s390x"))] {

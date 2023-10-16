@@ -1235,7 +1235,6 @@ class TreeMetadataEmitter(LoggingMixin):
             "RCINCLUDE",
             "WIN32_EXE_LDFLAGS",
             "USE_EXTENSION_MANIFEST",
-            "WASM_LIBS",
         ]
         for v in varlist:
             if v in context and context[v]:

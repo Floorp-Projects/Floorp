@@ -14,16 +14,14 @@ use crate::values::generics::font::{
     FeatureTagValue, FontSettings, TaggedFontValue, VariationValue,
 };
 use crate::values::generics::{font as generics, NonNegative};
-use crate::values::resolved::{Context as ResolvedContext, ToResolvedValue};
 use crate::values::specified::font::{
     self as specified, KeywordInfo, MAX_FONT_WEIGHT, MIN_FONT_WEIGHT,
 };
-use crate::values::specified::length::{FontBaseSize, LineHeightBase, NoCalcLength};
+use crate::values::specified::length::{FontBaseSize, NoCalcLength};
 use crate::Atom;
 use cssparser::{serialize_identifier, CssStringWriter, Parser};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use num_traits::cast::AsPrimitive;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
 
@@ -68,48 +66,28 @@ pub use crate::values::specified::Number as SpecifiedNumber;
     ToResolvedValue,
 )]
 pub struct FixedPoint<T, const FRACTION_BITS: u16> {
-    /// The actual representation.
-    pub value: T,
+    value: T,
 }
 
 impl<T, const FRACTION_BITS: u16> FixedPoint<T, FRACTION_BITS>
 where
-    T: AsPrimitive<f32>,
-    f32: AsPrimitive<T>,
-    u16: AsPrimitive<T>,
+    T: num_traits::cast::AsPrimitive<f32>,
+    f32: num_traits::cast::AsPrimitive<T>,
 {
     const SCALE: u16 = 1 << FRACTION_BITS;
     const INVERSE_SCALE: f32 = 1.0 / Self::SCALE as f32;
 
     /// Returns a fixed-point bit from a floating-point context.
-    pub fn from_float(v: f32) -> Self {
+    fn from_float(v: f32) -> Self {
+        use num_traits::cast::AsPrimitive;
         Self {
             value: (v * Self::SCALE as f32).round().as_(),
         }
     }
 
     /// Returns the floating-point representation.
-    pub fn to_float(&self) -> f32 {
+    fn to_float(&self) -> f32 {
         self.value.as_() * Self::INVERSE_SCALE
-    }
-}
-
-// We implement this and mul below only for u16 types, because u32 types might need more care about
-// overflow. But it's not hard to implement in either case.
-impl<const FRACTION_BITS: u16> std::ops::Div for FixedPoint<u16, FRACTION_BITS> {
-    type Output = Self;
-    fn div(self, rhs: Self) -> Self {
-        Self {
-            value: (((self.value as u32) << (FRACTION_BITS as u32)) / (rhs.value as u32)) as u16,
-        }
-    }
-}
-impl<const FRACTION_BITS: u16> std::ops::Mul for FixedPoint<u16, FRACTION_BITS> {
-    type Output = Self;
-    fn mul(self, rhs: Self) -> Self {
-        Self {
-            value: (((self.value as u32) * (rhs.value as u32)) >> (FRACTION_BITS as u32)) as u16,
-        }
     }
 }
 
@@ -993,11 +971,8 @@ impl ToComputedValue for specified::MozScriptMinSize {
         // this value is used in the computation of font-size, so
         // we use the parent size
         let base_size = FontBaseSize::InheritedStyle;
-        let line_height_base = LineHeightBase::InheritedStyle;
         match self.0 {
-            NoCalcLength::FontRelative(value) => {
-                value.to_computed_value(cx, base_size, line_height_base)
-            },
+            NoCalcLength::FontRelative(value) => value.to_computed_value(cx, base_size),
             NoCalcLength::ServoCharacterWidth(value) => {
                 value.to_computed_value(base_size.resolve(cx).computed_size())
             },
@@ -1335,30 +1310,5 @@ impl ToAnimatedValue for FontStretch {
     #[inline]
     fn from_animated_value(animated: Self::AnimatedValue) -> Self {
         Self::from_percentage(animated.0)
-    }
-}
-
-/// A computed value for the `line-height` property.
-pub type LineHeight = generics::GenericLineHeight<NonNegativeNumber, NonNegativeLength>;
-
-impl ToResolvedValue for LineHeight {
-    type ResolvedValue = Self;
-
-    fn to_resolved_value(self, context: &ResolvedContext) -> Self::ResolvedValue {
-        // Resolve <number> to an absolute <length> based on font size.
-        if matches!(self, Self::Normal | Self::MozBlockHeight) {
-            return self;
-        }
-        let wm = context.style.writing_mode;
-        Self::Length(context.device.calc_line_height(
-            context.style.get_font(),
-            wm,
-            Some(context.element_info.element),
-        ))
-    }
-
-    #[inline]
-    fn from_resolved_value(value: Self::ResolvedValue) -> Self {
-        value
     }
 }

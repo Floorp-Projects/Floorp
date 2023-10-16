@@ -30,17 +30,8 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase,
   TimeStamp mLowMemoryStart;
 
  protected:
-  // On Windows the publicly available methods (::Observe() and ::Notify()) are
-  // called on the main thread while the ::LowMemoryCallback() method is called
-  // by an external thread. All functions called from those must acquire a lock
-  // on this mutex before accessing the object's fields to prevent races.
-  //
-  // On Linux we might tell polling to start/stop from our polling thread
-  // or from the main thread during ::Observe().
-  Mutex mMutex;
-
-  uint32_t mNumOfTabUnloading MOZ_GUARDED_BY(mMutex);
-  uint32_t mNumOfMemoryPressure MOZ_GUARDED_BY(mMutex);
+  uint32_t mNumOfTabUnloading;
+  uint32_t mNumOfMemoryPressure;
 
   nsCOMPtr<nsITabUnloader> mTabUnloader;
   nsCOMPtr<nsIObserverService> mObserverSvc;
@@ -51,8 +42,7 @@ class nsAvailableMemoryWatcherBase : public nsIAvailableMemoryWatcherBase,
   virtual nsresult Init();
   void Shutdown();
   void UpdateLowMemoryTimeStamp();
-  void RecordTelemetryEventOnHighMemory(const MutexAutoLock&)
-      MOZ_REQUIRES(mMutex);
+  void RecordTelemetryEventOnHighMemory();
 
  public:
   static already_AddRefed<nsAvailableMemoryWatcherBase> GetSingleton();

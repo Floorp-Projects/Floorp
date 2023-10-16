@@ -9,7 +9,6 @@
 
 #include <cstdint>
 #include "mozilla/dom/quota/CommonMetadata.h"
-#include "mozilla/dom/quota/UsageInfo.h"
 #include "nsIQuotaResults.h"
 #include "nsISupports.h"
 #include "nsString.h"
@@ -48,10 +47,11 @@ class UsageResult : public nsIQuotaUsageResult {
 };
 
 class OriginUsageResult : public nsIQuotaOriginUsageResult {
-  UsageInfo mUsageInfo;
+  uint64_t mUsage;
+  uint64_t mFileUsage;
 
  public:
-  explicit OriginUsageResult(UsageInfo aUsageInfo);
+  OriginUsageResult(uint64_t aUsage, uint64_t aFileUsage);
 
  private:
   virtual ~OriginUsageResult() = default;

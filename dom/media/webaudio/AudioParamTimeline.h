@@ -13,19 +13,6 @@
 
 namespace mozilla::dom {
 
-struct AudioParamEvent final : public AudioTimelineEvent {
-  AudioParamEvent(Type aType, double aTime, float aValue,
-                  double aTimeConstant = 0.0)
-      : AudioTimelineEvent(aType, aTime, aValue, aTimeConstant) {}
-  AudioParamEvent(Type aType, const nsTArray<float>& aValues, double aStartTime,
-                  double aDuration)
-      : AudioTimelineEvent(aType, aValues, aStartTime, aDuration) {}
-  explicit AudioParamEvent(AudioNodeTrack* aTrack)
-      : AudioTimelineEvent(Track, 0.0, 0.f), mTrack(aTrack) {}
-
-  RefPtr<AudioNodeTrack> mTrack;
-};
-
 // This helper class is used to represent the part of the AudioParam
 // class that gets sent to AudioNodeEngine instances.  In addition to
 // AudioEventTimeline methods, it holds a pointer to an optional
@@ -55,7 +42,7 @@ class AudioParamTimeline : public AudioEventTimeline {
   float GetComplexValueAtTime(double aTime) = delete;
 
   template <typename TimeType>
-  void InsertEvent(const AudioParamEvent& aEvent) {
+  void InsertEvent(const AudioTimelineEvent& aEvent) {
     if (aEvent.mType == AudioTimelineEvent::Cancel) {
       CancelScheduledValues(aEvent.Time<TimeType>());
       return;
@@ -65,7 +52,7 @@ class AudioParamTimeline : public AudioEventTimeline {
       return;
     }
     if (aEvent.mType == AudioTimelineEvent::SetValue) {
-      AudioEventTimeline::SetValue(aEvent.NominalValue());
+      AudioEventTimeline::SetValue(aEvent.mValue);
       return;
     }
     AudioEventTimeline::InsertEvent<TimeType>(aEvent);

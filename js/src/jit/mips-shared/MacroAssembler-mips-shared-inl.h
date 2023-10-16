@@ -1251,26 +1251,21 @@ void MacroAssembler::spectreZeroRegister(Condition cond, Register scratch,
 // ========================================================================
 // Memory access primitives.
 
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
-    FloatRegister src, const Address& addr) {
-  // FIXME -- see https://bugzilla.mozilla.org/show_bug.cgi?id=1855960
-  return FaultingCodeOffset();
+void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
+                                                const Address& addr) {
   ma_sd(src, addr);
 }
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
-    FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
+void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
+                                                const BaseIndex& addr) {
   ma_sd(src, addr);
 }
 
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
-    FloatRegister src, const Address& addr) {
-  return FaultingCodeOffset();  // FIXME
+void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
+                                                 const Address& addr) {
   ma_ss(src, addr);
 }
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
-    FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
+void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
+                                                 const BaseIndex& addr) {
   ma_ss(src, addr);
 }
 

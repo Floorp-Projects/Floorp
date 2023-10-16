@@ -560,45 +560,22 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsOnDroppedFrame) {
 TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecodeTimingStats) {
   const int kMaxDecodeMs = 2;
   const int kCurrentDelayMs = 3;
-  const TimeDelta kTargetDelay = TimeDelta::Millis(4);
-  const int kJitterDelayMs = 5;
+  const int kTargetDelayMs = 4;
+  const int kJitterBufferMs = 5;
   const int kMinPlayoutDelayMs = 6;
   const int kRenderDelayMs = 7;
   const int64_t kRttMs = 8;
-  const TimeDelta kJitterBufferDelay = TimeDelta::Millis(9);
-  const TimeDelta kMinimumDelay = TimeDelta::Millis(1);
   statistics_proxy_->OnRttUpdate(kRttMs);
   statistics_proxy_->OnFrameBufferTimingsUpdated(
-      kMaxDecodeMs, kCurrentDelayMs, kTargetDelay.ms(), kJitterDelayMs,
+      kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
       kMinPlayoutDelayMs, kRenderDelayMs);
-  statistics_proxy_->OnDecodableFrame(kJitterBufferDelay, kTargetDelay,
-                                      kMinimumDelay);
   VideoReceiveStreamInterface::Stats stats = FlushAndGetStats();
   EXPECT_EQ(kMaxDecodeMs, stats.max_decode_ms);
   EXPECT_EQ(kCurrentDelayMs, stats.current_delay_ms);
-  EXPECT_EQ(kTargetDelay.ms(), stats.target_delay_ms);
-  EXPECT_EQ(kJitterDelayMs, stats.jitter_buffer_ms);
+  EXPECT_EQ(kTargetDelayMs, stats.target_delay_ms);
+  EXPECT_EQ(kJitterBufferMs, stats.jitter_buffer_ms);
   EXPECT_EQ(kMinPlayoutDelayMs, stats.min_playout_delay_ms);
   EXPECT_EQ(kRenderDelayMs, stats.render_delay_ms);
-  EXPECT_EQ(kJitterBufferDelay, stats.jitter_buffer_delay);
-  EXPECT_EQ(kTargetDelay, stats.jitter_buffer_target_delay);
-  EXPECT_EQ(1u, stats.jitter_buffer_emitted_count);
-  EXPECT_EQ(kMinimumDelay, stats.jitter_buffer_minimum_delay);
-}
-
-TEST_F(ReceiveStatisticsProxyTest, CumulativeDecodeGetStatsAccumulate) {
-  const TimeDelta kJitterBufferDelay = TimeDelta::Millis(3);
-  const TimeDelta kTargetDelay = TimeDelta::Millis(2);
-  const TimeDelta kMinimumDelay = TimeDelta::Millis(1);
-  statistics_proxy_->OnDecodableFrame(kJitterBufferDelay, kTargetDelay,
-                                      kMinimumDelay);
-  statistics_proxy_->OnDecodableFrame(kJitterBufferDelay, kTargetDelay,
-                                      kMinimumDelay);
-  VideoReceiveStreamInterface::Stats stats = FlushAndGetStats();
-  EXPECT_EQ(2 * kJitterBufferDelay, stats.jitter_buffer_delay);
-  EXPECT_EQ(2 * kTargetDelay, stats.jitter_buffer_target_delay);
-  EXPECT_EQ(2u, stats.jitter_buffer_emitted_count);
-  EXPECT_EQ(2 * kMinimumDelay, stats.jitter_buffer_minimum_delay);
 }
 
 TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsRtcpPacketTypeCounts) {
@@ -905,13 +882,13 @@ TEST_F(ReceiveStatisticsProxyTest, TimingHistogramsNotUpdatedForTooFewSamples) {
   const int kMaxDecodeMs = 2;
   const int kCurrentDelayMs = 3;
   const int kTargetDelayMs = 4;
-  const int kJitterDelayMs = 5;
+  const int kJitterBufferMs = 5;
   const int kMinPlayoutDelayMs = 6;
   const int kRenderDelayMs = 7;
 
   for (int i = 0; i < kMinRequiredSamples - 1; ++i) {
     statistics_proxy_->OnFrameBufferTimingsUpdated(
-        kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterDelayMs,
+        kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
         kMinPlayoutDelayMs, kRenderDelayMs);
   }
 
@@ -929,13 +906,13 @@ TEST_F(ReceiveStatisticsProxyTest, TimingHistogramsAreUpdated) {
   const int kMaxDecodeMs = 2;
   const int kCurrentDelayMs = 3;
   const int kTargetDelayMs = 4;
-  const int kJitterDelayMs = 5;
+  const int kJitterBufferMs = 5;
   const int kMinPlayoutDelayMs = 6;
   const int kRenderDelayMs = 7;
 
   for (int i = 0; i < kMinRequiredSamples; ++i) {
     statistics_proxy_->OnFrameBufferTimingsUpdated(
-        kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterDelayMs,
+        kMaxDecodeMs, kCurrentDelayMs, kTargetDelayMs, kJitterBufferMs,
         kMinPlayoutDelayMs, kRenderDelayMs);
   }
 
@@ -947,7 +924,7 @@ TEST_F(ReceiveStatisticsProxyTest, TimingHistogramsAreUpdated) {
   EXPECT_METRIC_EQ(1, metrics::NumSamples("WebRTC.Video.OnewayDelayInMs"));
 
   EXPECT_METRIC_EQ(1, metrics::NumEvents("WebRTC.Video.JitterBufferDelayInMs",
-                                         kJitterDelayMs));
+                                         kJitterBufferMs));
   EXPECT_METRIC_EQ(
       1, metrics::NumEvents("WebRTC.Video.TargetDelayInMs", kTargetDelayMs));
   EXPECT_METRIC_EQ(
@@ -1153,7 +1130,8 @@ TEST_F(ReceiveStatisticsProxyTest, AverageDelayOfDelayedFramesIsReported) {
 TEST_F(ReceiveStatisticsProxyTest,
        RtcpHistogramsNotUpdatedIfMinRuntimeHasNotPassed) {
   StreamDataCounters data_counters;
-  data_counters.first_packet_time = time_controller_.GetClock()->CurrentTime();
+  data_counters.first_packet_time_ms =
+      time_controller_.GetClock()->TimeInMilliseconds();
 
   time_controller_.AdvanceTime(
       TimeDelta::Seconds(metrics::kMinRunTimeInSeconds) - TimeDelta::Millis(1));
@@ -1172,7 +1150,8 @@ TEST_F(ReceiveStatisticsProxyTest,
 
 TEST_F(ReceiveStatisticsProxyTest, RtcpHistogramsAreUpdated) {
   StreamDataCounters data_counters;
-  data_counters.first_packet_time = time_controller_.GetClock()->CurrentTime();
+  data_counters.first_packet_time_ms =
+      time_controller_.GetClock()->TimeInMilliseconds();
   time_controller_.AdvanceTime(
       TimeDelta::Seconds(metrics::kMinRunTimeInSeconds));
 

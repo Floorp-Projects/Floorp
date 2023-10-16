@@ -581,18 +581,10 @@ bool MutatePrototype(JSContext* cx, Handle<PlainObject*> obj,
 template <EqualityKind Kind>
 bool StringsEqual(JSContext* cx, HandleString lhs, HandleString rhs,
                   bool* res) {
-  JSLinearString* linearLhs = lhs->ensureLinear(cx);
-  if (!linearLhs) {
+  if (!js::EqualStrings(cx, lhs, rhs, res)) {
     return false;
   }
-  JSLinearString* linearRhs = rhs->ensureLinear(cx);
-  if (!linearRhs) {
-    return false;
-  }
-
-  *res = EqualChars(linearLhs, linearRhs);
-
-  if constexpr (Kind == EqualityKind::NotEqual) {
+  if (Kind != EqualityKind::Equal) {
     *res = !*res;
   }
   return true;

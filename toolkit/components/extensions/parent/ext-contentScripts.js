@@ -6,6 +6,9 @@
 
 "use strict";
 
+/* exported registerContentScript, unregisterContentScript */
+/* global registerContentScript, unregisterContentScript */
+
 var { ExtensionUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionUtils.sys.mjs"
 );

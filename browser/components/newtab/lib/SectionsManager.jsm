@@ -25,7 +25,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * Built in sections may depend on options stored as serialised JSON in the pref
  * `${feed_pref_name}.options`.
  */
-
 const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
   "feeds.section.topstories": options => ({
     id: "topstories",
@@ -39,10 +38,7 @@ const BUILT_IN_SECTIONS = ({ newtab, pocketNewtab }) => ({
         values: { provider: options.provider_name },
       },
       nestedPrefs: [
-        ...(Services.prefs.getBoolPref(
-          "browser.newtabpage.activity-stream.system.showSponsored",
-          true
-        )
+        ...(options.show_spocs
           ? [
               {
                 name: "showSponsored",

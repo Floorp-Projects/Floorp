@@ -1,4 +1,4 @@
-// |reftest| skip-if(!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration("decorators"))) -- decorators is not enabled unconditionally
+// |reftest| skip-if(!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration()['decorators'])) -- decorators is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/class-elements/field-definition-accessor-no-line-terminator.case
 // - src/class-elements/default/cls-expr.template

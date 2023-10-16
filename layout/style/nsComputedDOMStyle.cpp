@@ -390,9 +390,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsComputedDOMStyle)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(nsComputedDOMStyle,
-                                                   ClearComputedStyle())
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    nsComputedDOMStyle, ClearComputedStyle())
 
 void nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
                                           nsACString& aValue) {
@@ -466,8 +466,7 @@ void nsComputedDOMStyle::GetPropertyValue(
     MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aMaybeCustomPropertyName));
     const nsACString& name =
         Substring(aMaybeCustomPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
-    Servo_GetCustomPropertyValue(
-        mComputedStyle, mPresShell->StyleSet()->RawData(), &name, &aReturn);
+    Servo_GetCustomPropertyValue(mComputedStyle, &name, &aReturn);
     return;
   }
 
@@ -573,7 +572,8 @@ nsComputedDOMStyle::DoGetComputedStyleNoFlush(
     return nullptr;
   }
 
-  if (!IsInFlatTree(*aElement)) {
+  if (!StaticPrefs::layout_css_computed_style_styles_outside_flat_tree() &&
+      !IsInFlatTree(*aElement)) {
     return nullptr;
   }
 
@@ -936,7 +936,7 @@ bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
     case eCSSProperty_height:
       return !IsNonReplacedInline(frame);
     case eCSSProperty_line_height:
-      return frame->StyleFont()->mLineHeight.IsMozBlockHeight();
+      return frame->StyleText()->mLineHeight.IsMozBlockHeight();
     case eCSSProperty_grid_template_rows:
     case eCSSProperty_grid_template_columns:
       return !!nsGridContainerFrame::GetGridContainerFrame(frame);

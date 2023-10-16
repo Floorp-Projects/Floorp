@@ -234,9 +234,8 @@ bool BackgroundTasks::IsUpdatingTaskName(const nsCString& aName) {
 
 bool BackgroundTasks::IsEphemeralProfileTaskName(const nsCString& aName) {
   return !(aName.EqualsLiteral("backgroundupdate") ||
-           aName.EqualsLiteral("defaultagent") ||
            aName.EqualsLiteral("message") ||  // Just for development.
-           aName.EqualsLiteral("not_ephemeral_profile"));  // Just for testing.
+           aName.EqualsLiteral("not_ephemeral_profile"));
 }
 
 bool BackgroundTasks::IsNoOutputTaskName(const nsCString& aName) {

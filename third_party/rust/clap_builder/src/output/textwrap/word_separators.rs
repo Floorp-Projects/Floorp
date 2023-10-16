@@ -5,15 +5,14 @@ pub(crate) fn find_words_ascii_space(line: &str) -> impl Iterator<Item = &'_ str
 
     std::iter::from_fn(move || {
         for (idx, ch) in char_indices.by_ref() {
-            let next_whitespace = ch == ' ';
-            if in_whitespace && !next_whitespace {
+            if in_whitespace && ch != ' ' {
                 let word = &line[start..idx];
                 start = idx;
-                in_whitespace = next_whitespace;
+                in_whitespace = ch == ' ';
                 return Some(word);
             }
 
-            in_whitespace = next_whitespace;
+            in_whitespace = ch == ' ';
         }
 
         if start < line.len() {

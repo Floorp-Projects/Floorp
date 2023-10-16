@@ -334,16 +334,8 @@ void DOMMediaStream::AddTrack(MediaStreamTrack& aTrack) {
 }
 
 void DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack) {
-  if (static_cast<LogModule*>(gMediaStreamLog)->ShouldLog(LogLevel::Info)) {
-    if (aTrack.Ended()) {
-      LOG(LogLevel::Info,
-          ("DOMMediaStream %p Removing (ended) track %p", this, &aTrack));
-    } else {
-      LOG(LogLevel::Info,
-          ("DOMMediaStream %p Removing track %p (from track %p)", this, &aTrack,
-           aTrack.GetTrack()));
-    }
-  }
+  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from track %p)",
+                       this, &aTrack, aTrack.GetTrack()));
 
   if (!mTracks.RemoveElement(&aTrack)) {
     LOG(LogLevel::Debug,

@@ -244,8 +244,7 @@ HttpBaseChannel::HttpBaseChannel()
       mCachedOpaqueResponseBlockingPref(
           StaticPrefs::browser_opaqueResponseBlocking()),
       mChannelBlockedByOpaqueResponse(false),
-      mDummyChannelForImageCache(false),
-      mHasContentDecompressed(false) {
+      mDummyChannelForImageCache(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
   StoreTracingEnabled(true);
@@ -5870,12 +5869,6 @@ HttpBaseChannel::SetNavigationStartTimeStamp(TimeStamp aTimeStamp) {
 
 nsresult HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const {
   if (aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
-    // for internal redirect due to auth retry we do not have any limit
-    // as we might restrict the number of times a user might retry
-    // authentication
-    if (aRedirectFlags & nsIChannelEventSink::REDIRECT_AUTH_RETRY) {
-      return NS_OK;
-    }
     // Some platform features, like Service Workers, depend on internal
     // redirects.  We should allow some number of internal redirects above
     // and beyond the normal redirect limit so these features continue
@@ -6402,19 +6395,6 @@ NS_IMETHODIMP HttpBaseChannel::SetEarlyHintLinkType(
 NS_IMETHODIMP HttpBaseChannel::GetEarlyHintLinkType(
     uint32_t* aEarlyHintLinkType) {
   *aEarlyHintLinkType = mEarlyHintLinkType;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::SetHasContentDecompressed(bool aValue) {
-  LOG(("HttpBaseChannel::SetHasContentDecompressed [this=%p value=%d]\n", this,
-       aValue));
-  mHasContentDecompressed = aValue;
-  return NS_OK;
-}
-NS_IMETHODIMP
-HttpBaseChannel::GetHasContentDecompressed(bool* value) {
-  *value = mHasContentDecompressed;
   return NS_OK;
 }
 

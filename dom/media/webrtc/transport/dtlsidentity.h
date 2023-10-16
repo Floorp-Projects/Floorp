@@ -6,6 +6,7 @@
 #ifndef dtls_identity_h__
 #define dtls_identity_h__
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -13,7 +14,6 @@
 #include "m_cpp_utils.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "sslt.h"
 
@@ -26,9 +26,8 @@ class DtlsDigest {
  public:
   const static size_t kMaxDtlsDigestLength = HASH_LENGTH_MAX;
   DtlsDigest() = default;
-  explicit DtlsDigest(const nsACString& algorithm) : algorithm_(algorithm) {}
-
-  DtlsDigest(const nsACString& algorithm, const std::vector<uint8_t>& value)
+  explicit DtlsDigest(const std::string& algorithm) : algorithm_(algorithm) {}
+  DtlsDigest(const std::string& algorithm, const std::vector<uint8_t>& value)
       : algorithm_(algorithm), value_(value) {
     MOZ_ASSERT(value.size() <= kMaxDtlsDigestLength);
   }
@@ -44,7 +43,7 @@ class DtlsDigest {
     return value_ == rhs.value_;
   }
 
-  nsCString algorithm_;
+  std::string algorithm_;
   std::vector<uint8_t> value_;
 };
 
@@ -85,7 +84,7 @@ class DtlsIdentity final {
   static nsresult ComputeFingerprint(const UniqueCERTCertificate& cert,
                                      DtlsDigest* digest);
 
-  static constexpr nsLiteralCString DEFAULT_HASH_ALGORITHM = "sha-256"_ns;
+  static const std::string DEFAULT_HASH_ALGORITHM;
   enum { HASH_ALGORITHM_MAX_LENGTH = 64 };
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DtlsIdentity)

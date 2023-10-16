@@ -609,10 +609,6 @@ bool Gecko_IsMainThread();
 // Returns true if we're currently on a DOM worker thread.
 bool Gecko_IsDOMWorkerThread();
 
-// Returns the preferred number of style threads to use, or -1 for no
-// preference.
-int32_t Gecko_GetNumStyleThreads();
-
 // Media feature helpers.
 //
 // Defined in nsMediaFeatures.cpp.

@@ -7,16 +7,28 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-:root {
-  --sidebar-border-color: ThreeDShadow;
-}
-
 /**
  * We intentionally do not include browser-custom-colors.css,
  * instead choosing to fall back to system colours and transparencies
  * in order to accomodate the wider variety of system themes on that
  * platform.
  */
+
+:root {
+  --toolbox-non-lwt-bgcolor: -moz-headerbar;
+  --toolbox-non-lwt-textcolor:-moz-headerbartext;
+  --toolbox-non-lwt-bgcolor-inactive: -moz-headerbarinactive;
+  --toolbox-non-lwt-textcolor-inactive: -moz-headerbarinactivetext;
+
+  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
+
+  --chrome-content-separator-color: ThreeDShadow;
+}
+
+:root:-moz-lwtheme {
+  --chrome-content-separator-color: rgba(0,0,0,.3);
+}
 
 #menubar-items {
   flex-direction: column; /* for flex hack */
@@ -123,6 +135,18 @@ menuitem.bookmark-item {
   }
 }
 
+:root {
+  --toolbar-field-border-color: ThreeDShadow;
+}
+
+/* Address bar results view */
+
+:root:not(:-moz-lwtheme) {
+  --urlbar-popup-action-color: LinkText;
+  --autocomplete-popup-highlight-background: SelectedItem;
+  --autocomplete-popup-highlight-color: SelectedItemText;
+}
+
 /* AutoComplete */
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
@@ -130,6 +154,11 @@ menuitem.bookmark-item {
 }
 
 /* Content area */
+
+
+#browser {
+  --sidebar-border-color: ThreeDShadow;
+}
 
 .sidebar-splitter {
   appearance: none;

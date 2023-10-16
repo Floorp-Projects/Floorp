@@ -368,7 +368,9 @@ size_t js::PutEscapedStringImpl(char* buffer, size_t bufferSize,
         buffer = nullptr;
       }
     } else if (out) {
-      out->put(&c, 1);
+      if (!out->put(&c, 1)) {
+        return size_t(-1);
+      }
     }
     n++;
   }

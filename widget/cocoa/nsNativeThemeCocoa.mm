@@ -1108,8 +1108,11 @@ void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext,
 }
 
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
+static const NSSize kMenuarrowSize = NSMakeSize(9, 10);
 static const NSSize kMenuScrollArrowSize = NSMakeSize(10, 8);
 static NSString* kCheckmarkImage = @"MenuOnState";
+static NSString* kMenuarrowRightImage = @"MenuSubmenu";
+static NSString* kMenuarrowLeftImage = @"MenuSubmenuLeft";
 static NSString* kMenuDownScrollArrowImage = @"MenuScrollDown";
 static NSString* kMenuUpScrollArrowImage = @"MenuScrollUp";
 static const CGFloat kMenuIconIndent = 6.0f;
@@ -1118,6 +1121,8 @@ NSString* nsNativeThemeCocoa::GetMenuIconName(const MenuIconParams& aParams) {
   switch (aParams.icon) {
     case MenuIcon::eCheckmark:
       return kCheckmarkImage;
+    case MenuIcon::eMenuArrow:
+      return aParams.rtl ? kMenuarrowLeftImage : kMenuarrowRightImage;
     case MenuIcon::eMenuDownScrollArrow:
       return kMenuDownScrollArrowImage;
     case MenuIcon::eMenuUpScrollArrow:
@@ -1129,6 +1134,8 @@ NSSize nsNativeThemeCocoa::GetMenuIconSize(MenuIcon aIcon) {
   switch (aIcon) {
     case MenuIcon::eCheckmark:
       return kCheckmarkSize;
+    case MenuIcon::eMenuArrow:
+      return kMenuarrowSize;
     case MenuIcon::eMenuDownScrollArrow:
     case MenuIcon::eMenuUpScrollArrow:
       return kMenuScrollArrowSize;
@@ -2347,6 +2354,10 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Menupopup:
       return Nothing();
 
+    case StyleAppearance::Menuarrow:
+      return Some(WidgetInfo::MenuIcon(
+          ComputeMenuIconParams(aFrame, elementState, MenuIcon::eMenuArrow)));
+
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
       return Some(WidgetInfo::MenuItem(ComputeMenuItemParams(
@@ -2395,7 +2406,8 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         // default buttons in active windows have blue background and white
         // text, and default buttons in inactive windows have white background
         // and black text.)
-        DocumentState docState = aFrame->PresContext()->Document()->State();
+        DocumentState docState =
+            aFrame->GetContent()->OwnerDoc()->GetDocumentState();
         ControlParams params = ComputeControlParams(aFrame, elementState);
         params.insideActiveWindow =
             !docState.HasState(DocumentState::WINDOW_INACTIVE);
@@ -2908,6 +2920,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
   //  - If the case in DrawWidgetBackground draws something complicated for the
   //    given widget type, return false here.
   switch (aAppearance) {
+    case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::ButtonArrowUp:
@@ -3009,6 +3022,12 @@ LayoutDeviceIntMargin nsNativeThemeCocoa::GetWidgetBorder(
       result = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
+    case StyleAppearance::Menuarrow:
+      if (nsCocoaFeatures::OnBigSurOrLater()) {
+        result.SizeTo(0, 0, 0, 28);
+      }
+      break;
+
     case StyleAppearance::NumberInput:
     case StyleAppearance::Textfield: {
       SInt32 frameOutset = 0;
@@ -3080,6 +3099,7 @@ bool nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext,
       aResult->SizeTo(0, 0, 0, 0);
       return true;
 
+    case StyleAppearance::Menuarrow:
     case StyleAppearance::Searchfield:
       if (nsCocoaFeatures::OnBigSurOrLater()) {
         return true;
@@ -3176,6 +3196,11 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown: {
       result.SizeTo(kMenuScrollArrowSize.width, kMenuScrollArrowSize.height);
+      break;
+    }
+
+    case StyleAppearance::Menuarrow: {
+      result.SizeTo(kMenuarrowSize.width, kMenuarrowSize.height);
       break;
     }
 
@@ -3387,6 +3412,7 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MozWindowTitlebar:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Menupopup:
+    case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Tooltip:
 
@@ -3492,6 +3518,7 @@ bool nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(
     case StyleAppearance::ButtonArrowDown:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Menupopup:
+    case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Tooltip:
     case StyleAppearance::Spinner:

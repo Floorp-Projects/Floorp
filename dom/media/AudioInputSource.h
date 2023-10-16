@@ -11,12 +11,10 @@
 #include "AudioSegment.h"
 #include "CubebInputStream.h"
 #include "CubebUtils.h"
-#include "TimeUnits.h"
 #include "mozilla/ProfilerUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SPSCQueue.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/Variant.h"
 
 namespace mozilla {
 
@@ -50,7 +48,8 @@ class AudioInputSource : public CubebInputStream::Listener {
   AudioInputSource(RefPtr<EventListener>&& aListener, Id aSourceId,
                    CubebUtils::AudioDeviceID aDeviceId, uint32_t aChannelCount,
                    bool aIsVoice, const PrincipalHandle& aPrincipalHandle,
-                   TrackRate aSourceRate, TrackRate aTargetRate);
+                   TrackRate aSourceRate, TrackRate aTargetRate,
+                   uint32_t aBufferMs);
 
   // The following functions should always be called in the same thread: They
   // are always run on MediaTrackGraph's graph thread.
@@ -118,22 +117,9 @@ class AudioInputSource : public CubebInputStream::Listener {
   // An input-only cubeb stream operated within mTaskThread.
   UniquePtr<CubebInputStream> mStream;
 
-  struct Empty {};
-
-  struct LatencyChangeData {
-    media::TimeUnit mLatency;
-  };
-
-  struct Data : public Variant<AudioChunk, LatencyChangeData, Empty> {
-    Data() : Variant(AsVariant(Empty())) {}
-    explicit Data(AudioChunk aChunk) : Variant(AsVariant(std::move(aChunk))) {}
-    explicit Data(LatencyChangeData aLatencyChangeData)
-        : Variant(AsVariant(std::move(aLatencyChangeData))) {}
-  };
-
   // A single-producer-single-consumer lock-free queue whose data is produced by
   // the audio callback thread and consumed by AudioInputSource's data reader.
-  SPSCQueue<Data> mSPSCQueue{30};
+  SPSCQueue<AudioChunk> mSPSCQueue{30};
 };
 
 }  // namespace mozilla

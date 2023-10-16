@@ -57,8 +57,11 @@ SVGFEComponentTransferElement::GetPrimitiveDescription(
 
   for (nsIContent* childContent = nsINode::GetFirstChild(); childContent;
        childContent = childContent->GetNextSibling()) {
-    if (auto* child =
-            SVGComponentTransferFunctionElement::FromNode(childContent)) {
+    RefPtr<SVGComponentTransferFunctionElement> child;
+    CallQueryInterface(
+        childContent,
+        (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
+    if (child) {
       childForChannel[child->GetChannel()] = child;
     }
   }
@@ -92,7 +95,7 @@ nsresult SVGFEComponentTransferElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feComponentTransfer);
   }
 
-  return SVGFEComponentTransferElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace mozilla::dom

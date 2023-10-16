@@ -1025,7 +1025,8 @@ class MediaTrackGraph {
   static MediaTrackGraph* GetInstance(
       GraphDriverType aGraphDriverRequested, nsPIDOMWindowInner* aWindow,
       TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID);
-  static MediaTrackGraph* CreateNonRealtimeInstance(TrackRate aSampleRate);
+  static MediaTrackGraph* CreateNonRealtimeInstance(
+      TrackRate aSampleRate, nsPIDOMWindowInner* aWindowId);
 
   // Idempotent
   void ForceShutDown();

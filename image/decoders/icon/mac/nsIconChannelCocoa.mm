@@ -224,7 +224,9 @@ nsIconChannel::AsyncOpen(nsIStreamListener* aListener) {
   }
 
   // Init our stream pump
-  nsCOMPtr<nsISerialEventTarget> target = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsISerialEventTarget> target =
+      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo,
+                                               mozilla::TaskCategory::Other);
   rv = mPump->Init(inStream, 0, 0, false, target);
   if (NS_FAILED(rv)) {
     mCallbacks = nullptr;

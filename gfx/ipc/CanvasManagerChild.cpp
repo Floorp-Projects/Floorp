@@ -10,7 +10,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/Endpoint.h"
-#include "mozilla/layers/CanvasChild.h"
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/webgpu/WebGPUChild.h"
 
@@ -34,18 +33,12 @@ void CanvasManagerChild::ActorDestroy(ActorDestroyReason aReason) {
   if (sLocalManager.get() == this) {
     sLocalManager.set(nullptr);
   }
-  mWorkerRef = nullptr;
 }
 
 void CanvasManagerChild::Destroy() {
-  if (mCanvasChild) {
-    mCanvasChild->Destroy();
-    mCanvasChild = nullptr;
-  }
-
-  // The caller has a strong reference. ActorDestroy will clear sLocalManager
-  // and mWorkerRef.
+  // The caller has a strong reference. ActorDestroy will clear sLocalManager.
   Close();
+  mWorkerRef = nullptr;
 }
 
 /* static */ void CanvasManagerChild::Shutdown() {
@@ -137,42 +130,6 @@ void CanvasManagerChild::Destroy() {
   manager->SendInitialize(manager->Id());
   sLocalManager.set(manager);
   return manager;
-}
-
-void CanvasManagerChild::EndCanvasTransaction() {
-  if (!mCanvasChild) {
-    return;
-  }
-
-  mCanvasChild->EndTransaction();
-  if (mCanvasChild->ShouldBeCleanedUp()) {
-    mCanvasChild->Destroy();
-    mCanvasChild = nullptr;
-  }
-}
-
-void CanvasManagerChild::DeactivateCanvas() {
-  mActive = false;
-  if (mCanvasChild) {
-    mCanvasChild->Destroy();
-    mCanvasChild = nullptr;
-  }
-}
-
-RefPtr<layers::CanvasChild> CanvasManagerChild::GetCanvasChild() {
-  if (!mActive) {
-    MOZ_ASSERT(!mCanvasChild);
-    return nullptr;
-  }
-
-  if (!mCanvasChild) {
-    mCanvasChild = MakeAndAddRef<layers::CanvasChild>();
-    if (!SendPCanvasConstructor(mCanvasChild)) {
-      mCanvasChild = nullptr;
-    }
-  }
-
-  return mCanvasChild;
 }
 
 RefPtr<webgpu::WebGPUChild> CanvasManagerChild::GetWebGPUChild() {

@@ -8,10 +8,9 @@ import { assert } from '../../common/util/util.js';
  * Base fixture for testing the exposed interface is correct (without actually using WebGPU).
  */
 export class IDLTest extends Fixture {
-  init() {
+  async init() {
     // Ensure the GPU provider is initialized
-    getGPU(this.rec);
-    return Promise.resolve();
+    getGPU();
   }
 
   /**

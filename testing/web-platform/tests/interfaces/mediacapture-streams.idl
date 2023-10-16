@@ -239,6 +239,10 @@ typedef (DOMString or
 sequence<DOMString> or
 ConstrainDOMStringParameters) ConstrainDOMString;
 
-dictionary CameraDevicePermissionDescriptor : PermissionDescriptor {
+dictionary DevicePermissionDescriptor : PermissionDescriptor {
+  DOMString deviceId;
+};
+
+dictionary CameraDevicePermissionDescriptor : DevicePermissionDescriptor {
   boolean panTiltZoom = false;
 };

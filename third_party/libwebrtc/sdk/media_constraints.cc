@@ -117,6 +117,8 @@ const char MediaConstraints::kUseRtpMux[] = "googUseRtpMUX";
 const char MediaConstraints::kEnableDscp[] = "googDscp";
 const char MediaConstraints::kEnableVideoSuspendBelowMinBitrate[] =
     "googSuspendBelowMinBitrate";
+const char MediaConstraints::kCombinedAudioVideoBwe[] =
+    "googCombinedAudioVideoBwe";
 const char MediaConstraints::kScreencastMinBitrate[] =
     "googScreencastMinBitrate";
 // TODO(ronghuawu): Remove once cpu overuse detection is stable.
@@ -160,6 +162,9 @@ void CopyConstraintsIntoRtcConfiguration(
   ConstraintToOptional<int>(constraints,
                             MediaConstraints::kScreencastMinBitrate,
                             &configuration->screencast_min_bitrate);
+  ConstraintToOptional<bool>(constraints,
+                             MediaConstraints::kCombinedAudioVideoBwe,
+                             &configuration->combined_audio_video_bwe);
 }
 
 void CopyConstraintsIntoAudioOptions(const MediaConstraints* constraints,

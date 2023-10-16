@@ -94,44 +94,6 @@ interface nsIQuotaManagerService : nsISupports
                             in nsIPrincipal aPrincipal);
 
   /**
-   * Initializes persistent client directory for the given origin and client.
-   * This can be used in tests to verify client initialization.
-   *
-   * If the dom.quotaManager.testing preference is not true the call will be
-   * a no-op.
-   *
-   * @param aPrincipal
-   *        A principal for the origin whose client directory is to be
-   *        initialized.
-   * @param aClientType
-   *        A string that tells what client type will be initialized.
-   */
-  [must_use] nsIQuotaRequest
-  initializePersistentClient(in nsIPrincipal aPrincipal,
-                             in AString aClientType);
-
-  /**
-   * Initializes temporary client directory for the given origin and client.
-   * This can be used in tests to verify client initialization.
-   *
-   * If the dom.quotaManager.testing preference is not true the call will be
-   * a no-op.
-   *
-   * @param aPersistenceType
-   *        A string that tells what persistence type will be initialized
-   *        (either "temporary" or "default").
-   * @param aPrincipal
-   *        A principal for the origin whose client directory is to be
-   *        initialized.
-   * @param aClientType
-   *        A string that tells what client type will be initialized.
-   */
-  [must_use] nsIQuotaRequest
-  initializeTemporaryClient(in ACString aPersistenceType,
-                            in nsIPrincipal aPrincipal,
-                            in AString aClientType);
-
-  /**
    * Gets full origin metadata cached in memory for the given persistence type
    * and origin.
    *
@@ -252,36 +214,15 @@ interface nsIQuotaManagerService : nsISupports
    *        from Client.h, then only that client's storage will be cleared.
    *        If you want to clear multiple client types (but not all), then you
    *        must call this method multiple times.
+   * @param aClearAll
+   *        An optional boolean to indicate clearing all storages under the
+   *        given origin.
    */
   [must_use] nsIQuotaRequest
   clearStoragesForPrincipal(in nsIPrincipal aPrincipal,
                             [optional] in ACString aPersistenceType,
-                            [optional] in AString aClientType);
-
-  /**
-   * Removes all storages stored for the given prefix. The files may not be
-   * deleted immediately depending on prohibitive concurrent operations.
-   *
-   * Effectively, this clears all possible OriginAttribute suffixes that
-   * could exist.  So this clears the given origin across all userContextIds,
-   * in private browsing, all third-party partitioned uses of the origin (by
-   * way of partitionKey), etc.
-   *
-   * @param aPrincipal
-   *        A prefix for the origins whose storages are to be cleared.
-   * @param aPersistenceType
-   *        An optional string that tells what persistence type of storages
-   *        will be cleared.  If omitted (or void), all persistence types will
-   *        be cleared for the prefix.  If a single persistence type
-   *        ("persistent", "temporary", or "default") is provided, then only
-   *        that persistence directory will be considered.  Note that
-   *        "persistent" is different than being "persisted" via persist() and
-   *        is only for chrome principals.  See bug 1354500 for more info.
-   *        In general, null is the right thing to pass here.
-   */
-  [must_use] nsIQuotaRequest
-  clearStoragesForOriginPrefix(in nsIPrincipal aPrincipal,
-                            [optional] in ACString aPersistenceType);
+                            [optional] in AString aClientType,
+                            [optional] in boolean aClearAll);
 
   /**
    * Resets quota and storage management. This can be used to force

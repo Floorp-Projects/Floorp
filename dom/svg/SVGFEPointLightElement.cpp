@@ -20,7 +20,9 @@ JSObject* SVGFEPointLightElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] = {
-    {nsGkAtoms::x, 0}, {nsGkAtoms::y, 0}, {nsGkAtoms::z, 0}};
+    {nsGkAtoms::x, 0, false},
+    {nsGkAtoms::y, 0, false},
+    {nsGkAtoms::z, 0, false}};
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -28,7 +30,7 @@ SVGElement::NumberInfo SVGFEPointLightElement::sNumberInfo[3] = {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEPointLightElement)
 
 //----------------------------------------------------------------------
-// SVGFilterPrimitiveChildElement methods
+// nsFEUnstyledElement methods
 
 bool SVGFEPointLightElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

@@ -7,7 +7,7 @@ use std::cell::Cell;
 /// A dynamic set of regular expressions.
 #[derive(Clone, Debug, Default)]
 pub struct RegexSet {
-    items: Vec<Box<str>>,
+    items: Vec<String>,
     /// Whether any of the items in the set was ever matched. The length of this
     /// vector is exactly the length of `items`.
     matched: Vec<Cell<bool>>,
@@ -32,25 +32,25 @@ impl RegexSet {
     where
         S: AsRef<str>,
     {
-        self.items.push(string.as_ref().to_owned().into_boxed_str());
+        self.items.push(string.as_ref().to_owned());
         self.matched.push(Cell::new(false));
         self.set = None;
     }
 
     /// Returns slice of String from its field 'items'
-    pub fn get_items(&self) -> &[Box<str>] {
-        &self.items
+    pub fn get_items(&self) -> &[String] {
+        &self.items[..]
     }
 
     /// Returns an iterator over regexes in the set which didn't match any
     /// strings yet.
-    pub fn unmatched_items(&self) -> impl Iterator<Item = &str> {
+    pub fn unmatched_items(&self) -> impl Iterator<Item = &String> {
         self.items.iter().enumerate().filter_map(move |(i, item)| {
             if !self.record_matches || self.matched[i].get() {
                 return None;
             }
 
-            Some(item.as_ref())
+            Some(item)
         })
     }
 
@@ -197,7 +197,7 @@ fn invalid_regex_warning(
         Level::Note,
     );
 
-    if set.items.iter().any(|item| item.as_ref() == "*") {
+    if set.items.iter().any(|item| item == "*") {
         diagnostic.add_annotation("Wildcard patterns \"*\" are no longer considered valid. Use \".*\" instead.", Level::Help);
     }
     diagnostic.display();

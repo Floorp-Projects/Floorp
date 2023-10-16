@@ -6,7 +6,7 @@ that uses .pypirc in the distutils.command package.
 import os
 from configparser import RawConfigParser
 
-from .cmd import Command
+from distutils.cmd import Command
 
 DEFAULT_PYPIRC = """\
 [distutils]
@@ -18,19 +18,20 @@ username:%s
 password:%s
 """
 
-
 class PyPIRCCommand(Command):
-    """Base command that knows how to handle the .pypirc file"""
-
+    """Base command that knows how to handle the .pypirc file
+    """
     DEFAULT_REPOSITORY = 'https://upload.pypi.org/legacy/'
     DEFAULT_REALM = 'pypi'
     repository = None
     realm = None
 
     user_options = [
-        ('repository=', 'r', "url of repository [default: %s]" % DEFAULT_REPOSITORY),
-        ('show-response', None, 'display full response text from server'),
-    ]
+        ('repository=', 'r',
+         "url of repository [default: %s]" % \
+            DEFAULT_REPOSITORY),
+        ('show-response', None,
+         'display full response text from server')]
 
     boolean_options = ['show-response']
 
@@ -44,7 +45,7 @@ class PyPIRCCommand(Command):
         with os.fdopen(os.open(rc, os.O_CREAT | os.O_WRONLY, 0o600), 'w') as f:
             f.write(DEFAULT_PYPIRC % (username, password))
 
-    def _read_pypirc(self):  # noqa: C901
+    def _read_pypirc(self):
         """Reads the .pypirc file."""
         rc = self._get_rc_file()
         if os.path.exists(rc):
@@ -57,11 +58,9 @@ class PyPIRCCommand(Command):
             if 'distutils' in sections:
                 # let's get the list of servers
                 index_servers = config.get('distutils', 'index-servers')
-                _servers = [
-                    server.strip()
-                    for server in index_servers.split('\n')
-                    if server.strip() != ''
-                ]
+                _servers = [server.strip() for server in
+                            index_servers.split('\n')
+                            if server.strip() != '']
                 if _servers == []:
                     # nothing set, let's try to get the default pypi
                     if 'pypi' in sections:
@@ -75,11 +74,10 @@ class PyPIRCCommand(Command):
                     current['username'] = config.get(server, 'username')
 
                     # optional params
-                    for key, default in (
-                        ('repository', self.DEFAULT_REPOSITORY),
-                        ('realm', self.DEFAULT_REALM),
-                        ('password', None),
-                    ):
+                    for key, default in (('repository',
+                                          self.DEFAULT_REPOSITORY),
+                                         ('realm', self.DEFAULT_REALM),
+                                         ('password', None)):
                         if config.has_option(server, key):
                             current[key] = config.get(server, key)
                         else:
@@ -88,17 +86,13 @@ class PyPIRCCommand(Command):
                     # work around people having "repository" for the "pypi"
                     # section of their config set to the HTTP (rather than
                     # HTTPS) URL
-                    if server == 'pypi' and repository in (
-                        self.DEFAULT_REPOSITORY,
-                        'pypi',
-                    ):
+                    if (server == 'pypi' and
+                        repository in (self.DEFAULT_REPOSITORY, 'pypi')):
                         current['repository'] = self.DEFAULT_REPOSITORY
                         return current
 
-                    if (
-                        current['server'] == repository
-                        or current['repository'] == repository
-                    ):
+                    if (current['server'] == repository or
+                        current['repository'] == repository):
                         return current
             elif 'server-login' in sections:
                 # old format
@@ -107,20 +101,17 @@ class PyPIRCCommand(Command):
                     repository = config.get(server, 'repository')
                 else:
                     repository = self.DEFAULT_REPOSITORY
-                return {
-                    'username': config.get(server, 'username'),
-                    'password': config.get(server, 'password'),
-                    'repository': repository,
-                    'server': server,
-                    'realm': self.DEFAULT_REALM,
-                }
+                return {'username': config.get(server, 'username'),
+                        'password': config.get(server, 'password'),
+                        'repository': repository,
+                        'server': server,
+                        'realm': self.DEFAULT_REALM}
 
         return {}
 
     def _read_pypi_response(self, response):
         """Read and decode a PyPI HTTP response."""
         import cgi
-
         content_type = response.getheader('content-type', 'text/plain')
         encoding = cgi.parse_header(content_type)[1].get('charset', 'ascii')
         return response.read().decode(encoding)

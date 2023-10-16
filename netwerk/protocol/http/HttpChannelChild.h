@@ -208,8 +208,7 @@ class HttpChannelChild final : public PHttpChannelChild,
                              const bool& aUseResponseHead,
                              const nsHttpHeaderArray& aRequestHeaders,
                              const HttpChannelOnStartRequestArgs& aArgs,
-                             const HttpChannelAltDataStream& aAltData,
-                             const TimeStamp& aOnStartRequestStartTime);
+                             const HttpChannelAltDataStream& aAltData);
 
   // Callbacks while receiving OnTransportAndData/OnStopRequest/OnProgress/
   // OnStatus/FlushedForDiversion/DivertMessages on background IPC channel.
@@ -217,14 +216,12 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsresult& aTransportStatus,
                                  const uint64_t& aOffset,
                                  const uint32_t& aCount,
-                                 const nsACString& aData,
-                                 const TimeStamp& aOnDataAvailableStartTime);
+                                 const nsACString& aData);
   void ProcessOnStopRequest(const nsresult& aChannelStatus,
                             const ResourceTimingStructArgs& aTiming,
                             const nsHttpHeaderArray& aResponseTrailers,
                             nsTArray<ConsoleReportCollected>&& aConsoleReports,
-                            bool aFromSocketProcess,
-                            const TimeStamp& aOnStopRequestStartTime);
+                            bool aFromSocketProcess);
   void ProcessOnConsoleReport(
       nsTArray<ConsoleReportCollected>&& aConsoleReports);
 

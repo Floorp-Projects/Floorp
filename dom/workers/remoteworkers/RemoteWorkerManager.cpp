@@ -358,7 +358,8 @@ void RemoteWorkerManager::LaunchInternal(
           }
         });
 
-    MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
   }
 
   RefPtr<RemoteWorkerParent> workerActor = MakeAndAddRef<RemoteWorkerParent>();
@@ -620,7 +621,7 @@ void RemoteWorkerManager::LaunchNewContentProcess(
                          });
       });
 
-  SchedulerGroup::Dispatch(r.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
 }  // namespace dom

@@ -96,24 +96,22 @@ validButUnsupportedConfigs.forEach(entry => {
 });
 
 validButUnsupportedConfigs.forEach(entry => {
-  async_test(
-      t => {
-        let codec = new VideoDecoder({
+  promise_test(
+    async t => {
+        const callbacks = {
           output: t.unreached_func('unexpected output'),
-          error: t.step_func_done(e => {
-            assert_true(e instanceof DOMException);
-            assert_equals(e.name, 'NotSupportedError');
-            assert_equals(codec.state, 'closed', 'state');
-          })
+        };
+        const error = new Promise(resolve => callbacks.error = e => {
+          resolve(e);
         });
+        let codec = new VideoDecoder(callbacks);
         codec.configure(entry.config);
-        codec.flush()
-            .then(t.unreached_func('flush succeeded unexpectedly'))
-            .catch(t.step_func(e => {
-              assert_true(e instanceof DOMException);
-              assert_equals(e.name, 'NotSupportedError');
-              assert_equals(codec.state, 'closed', 'state');
-            }));
+        let e = await error;
+        assert_true(e instanceof DOMException);
+        assert_equals(e.name, 'NotSupportedError');
+        assert_equals(codec.state, 'closed', 'state');
+
+        t.done();
       },
       'Test that VideoDecoder.configure() doesn\'t support config: ' +
           entry.comment);

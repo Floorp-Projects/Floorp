@@ -66,9 +66,11 @@ UntrustedModulesBackupService* UntrustedModulesBackupService::Get() {
           return instance.forget();
         }
 
-        SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-            "mozilla::UntrustedModulesBackupService::Get",
-            std::move(setClearOnShutdown)));
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction(
+                "mozilla::UntrustedModulesBackupService::Get",
+                std::move(setClearOnShutdown)));
 
         return instance.forget();
       }());

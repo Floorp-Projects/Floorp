@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include "mozilla/layers/LayersMessageUtils.h";
-include protocol PCanvas;
 include protocol PWebGL;
 include protocol PWebGPU;
 
@@ -25,13 +24,10 @@ namespace gfx {
 [NeedsOtherPid]
 sync protocol PCanvasManager
 {
-  manages PCanvas;
   manages PWebGL;
   manages PWebGPU;
 
 parent:
-  async PCanvas();
-
   // Actor that represents one WebGL context.
   async PWebGL();
 

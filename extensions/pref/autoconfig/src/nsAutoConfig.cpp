@@ -29,7 +29,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/Try.h"
 
 using mozilla::LogLevel;
 

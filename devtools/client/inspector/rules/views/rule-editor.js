@@ -471,7 +471,6 @@ RuleEditor.prototype = {
       ".ruleview-rule-source-label"
     );
     sourceLabel.setAttribute("title", title);
-    sourceLabel.setAttribute("data-url", displayURL);
     sourceLabel.textContent = sourceTextContent;
   },
 
@@ -485,15 +484,10 @@ RuleEditor.prototype = {
 
       const uaLabel = STYLE_INSPECTOR_L10N.getStr("rule.userAgentStyles");
       sourceLabel.textContent = uaLabel + " " + title;
-      sourceLabel.setAttribute("data-url", this.rule.sheet?.href);
 
       // Special case about:PreferenceStyleSheet, as it is generated on the
       // fly and the URI is not registered with the about: handler.
       // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-      //
-      // @backward-compat { version 120 } about:preferenceStyleSheet was
-      // removed in bug 1857915, so we can remove this whole block when 120
-      // hits release.
       if (sourceHref === "about:PreferenceStyleSheet") {
         this.source.setAttribute("unselectable", "permanent");
         sourceLabel.textContent = uaLabel;

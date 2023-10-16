@@ -29,8 +29,10 @@
 #ifndef ABSL_BASE_INTERNAL_SPINLOCK_H_
 #define ABSL_BASE_INTERNAL_SPINLOCK_H_
 
+#include <stdint.h>
+#include <sys/types.h>
+
 #include <atomic>
-#include <cstdint>
 
 #include "absl/base/attributes.h"
 #include "absl/base/const_init.h"
@@ -39,6 +41,8 @@
 #include "absl/base/internal/raw_logging.h"
 #include "absl/base/internal/scheduling_mode.h"
 #include "absl/base/internal/tsan_mutex_interface.h"
+#include "absl/base/macros.h"
+#include "absl/base/port.h"
 #include "absl/base/thread_annotations.h"
 
 namespace absl {
@@ -133,7 +137,7 @@ class ABSL_LOCKABLE SpinLock {
                                    int64_t wait_end_time);
 
   // Extract number of wait cycles in a lock value.
-  static int64_t DecodeWaitCycles(uint32_t lock_value);
+  static uint64_t DecodeWaitCycles(uint32_t lock_value);
 
   // Provide access to protected method above.  Use for testing only.
   friend struct SpinLockTest;

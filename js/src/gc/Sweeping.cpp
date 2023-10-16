@@ -1131,7 +1131,7 @@ IncrementalProgress GCRuntime::markGray(JS::GCContext* gcx,
                                         SliceBudget& budget) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
 
-  if (markUntilBudgetExhausted(budget, useParallelMarking) == NotFinished) {
+  if (markUntilBudgetExhausted(budget, AllowParallelMarking) == NotFinished) {
     return NotFinished;
   }
 
@@ -1720,7 +1720,7 @@ IncrementalProgress GCRuntime::markDuringSweeping(JS::GCContext* gcx,
   }
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK);
-  return markUntilBudgetExhausted(budget, useParallelMarking);
+  return markUntilBudgetExhausted(budget, AllowParallelMarking);
 }
 
 void GCRuntime::beginSweepPhase(JS::GCReason reason, AutoGCSession& session) {

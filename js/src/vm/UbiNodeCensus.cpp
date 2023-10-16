@@ -49,12 +49,13 @@ class SimpleCount : public CountType {
  public:
   explicit SimpleCount(UniqueTwoByteChars& label, bool reportCount = true,
                        bool reportBytes = true)
-      : label(std::move(label)),
+      : CountType(),
+        label(std::move(label)),
         reportCount(reportCount),
         reportBytes(reportBytes) {}
 
   explicit SimpleCount()
-      : label(nullptr), reportCount(true), reportBytes(true) {}
+      : CountType(), label(nullptr), reportCount(true), reportBytes(true) {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -121,11 +122,11 @@ class BucketCount : public CountType {
   struct Count : CountBase {
     JS::ubi::Vector<JS::ubi::Node::Id> ids_;
 
-    explicit Count(BucketCount& count) : CountBase(count) {}
+    explicit Count(BucketCount& count) : CountBase(count), ids_() {}
   };
 
  public:
-  explicit BucketCount() = default;
+  explicit BucketCount() : CountType() {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -201,7 +202,8 @@ class ByCoarseType : public CountType {
   ByCoarseType(CountTypePtr& objects, CountTypePtr& scripts,
                CountTypePtr& strings, CountTypePtr& other,
                CountTypePtr& domNode)
-      : objects(std::move(objects)),
+      : CountType(),
+        objects(std::move(objects)),
         scripts(std::move(scripts)),
         strings(std::move(strings)),
         other(std::move(other)),
@@ -410,7 +412,9 @@ class ByObjectClass : public CountType {
 
  public:
   ByObjectClass(CountTypePtr& classesType, CountTypePtr& otherType)
-      : classesType(std::move(classesType)), otherType(std::move(otherType)) {}
+      : CountType(),
+        classesType(std::move(classesType)),
+        otherType(std::move(otherType)) {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -520,7 +524,7 @@ class ByDomObjectClass : public CountType {
 
  public:
   explicit ByDomObjectClass(CountTypePtr& classesType)
-      : classesType(std::move(classesType)) {}
+      : CountType(), classesType(std::move(classesType)) {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -614,7 +618,7 @@ class ByUbinodeType : public CountType {
 
  public:
   explicit ByUbinodeType(CountTypePtr& entryType)
-      : entryType(std::move(entryType)) {}
+      : CountType(), entryType(std::move(entryType)) {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -759,7 +763,9 @@ class ByAllocationStack : public CountType {
 
  public:
   ByAllocationStack(CountTypePtr& entryType, CountTypePtr& noStackType)
-      : entryType(std::move(entryType)), noStackType(std::move(noStackType)) {}
+      : CountType(),
+        entryType(std::move(entryType)),
+        noStackType(std::move(noStackType)) {}
 
   void destructCount(CountBase& countBase) override {
     Count& count = static_cast<Count&>(countBase);
@@ -935,7 +941,8 @@ class ByFilename : public CountType {
 
  public:
   ByFilename(CountTypePtr&& thenType, CountTypePtr&& noFilenameType)
-      : thenType(std::move(thenType)),
+      : CountType(),
+        thenType(std::move(thenType)),
         noFilenameType(std::move(noFilenameType)) {}
 
   void destructCount(CountBase& countBase) override {

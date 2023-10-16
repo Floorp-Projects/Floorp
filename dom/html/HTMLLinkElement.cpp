@@ -92,24 +92,23 @@ nsresult HTMLLinkElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   LinkStyle::BindToTree();
 
-  if (IsInUncomposedDoc()) {
-    if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
-                    eIgnoreCase)) {
-      aContext.OwnerDoc().LocalizationLinkAdded(this);
-    }
-
-    LinkAdded();
+  if (IsInUncomposedDoc() &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
+                  eIgnoreCase)) {
+    aContext.OwnerDoc().LocalizationLinkAdded(this);
   }
+
+  LinkAdded();
 
   return rv;
 }
 
 void HTMLLinkElement::LinkAdded() {
-  CreateAndDispatchEvent(u"DOMLinkAdded"_ns);
+  CreateAndDispatchEvent(OwnerDoc(), u"DOMLinkAdded"_ns);
 }
 
 void HTMLLinkElement::LinkRemoved() {
-  CreateAndDispatchEvent(u"DOMLinkRemoved"_ns);
+  CreateAndDispatchEvent(OwnerDoc(), u"DOMLinkRemoved"_ns);
 }
 
 void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
@@ -124,16 +123,13 @@ void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
   // We want to update the localization but only if the link is removed from a
   // DOM change, and not because the document is going away.
   bool ignore;
-  if (oldDoc) {
-    if (oldDoc->GetScriptHandlingObject(ignore) &&
-        AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
-                    eIgnoreCase)) {
-      oldDoc->LocalizationLinkRemoved(this);
-    }
-
-    CreateAndDispatchEvent(u"DOMLinkRemoved"_ns);
+  if (oldDoc && oldDoc->GetScriptHandlingObject(ignore) &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::rel, nsGkAtoms::localization,
+                  eIgnoreCase)) {
+    oldDoc->LocalizationLinkRemoved(this);
   }
 
+  CreateAndDispatchEvent(oldDoc, u"DOMLinkRemoved"_ns);
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 
   Unused << UpdateStyleSheetInternal(oldDoc, oldShadowRoot);
@@ -169,8 +165,9 @@ bool HTMLLinkElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void HTMLLinkElement::CreateAndDispatchEvent(const nsAString& aEventName) {
-  MOZ_ASSERT(IsInUncomposedDoc());
+void HTMLLinkElement::CreateAndDispatchEvent(Document* aDoc,
+                                             const nsAString& aEventName) {
+  if (!aDoc) return;
 
   // In the unlikely case that both rev is specified *and* rel=stylesheet,
   // this code will cause the event to fire, on the principle that maybe the
@@ -215,7 +212,7 @@ void HTMLLinkElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::href) {
     mCachedURI = nullptr;
     if (IsInUncomposedDoc()) {
-      CreateAndDispatchEvent(u"DOMLinkChanged"_ns);
+      CreateAndDispatchEvent(OwnerDoc(), u"DOMLinkChanged"_ns);
     }
     mTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
         this, aValue ? aValue->GetStringValue() : EmptyString(),

@@ -500,7 +500,7 @@ void MediaController::HandlePositionStateChanged(const PositionState& aState) {
   init.mPosition = aState.mLastReportedPlaybackPosition;
   RefPtr<PositionStateEvent> event =
       PositionStateEvent::Constructor(this, u"positionstatechange"_ns, init);
-  DispatchAsyncEvent(event.forget());
+  DispatchAsyncEvent(event);
 }
 
 void MediaController::HandleMetadataChanged(
@@ -522,14 +522,13 @@ void MediaController::DispatchAsyncEvent(const nsAString& aName) {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   event->InitEvent(aName, false, false);
   event->SetTrusted(true);
-  DispatchAsyncEvent(event.forget());
+  DispatchAsyncEvent(event);
 }
 
-void MediaController::DispatchAsyncEvent(already_AddRefed<Event> aEvent) {
-  RefPtr<Event> event = aEvent;
-  MOZ_ASSERT(event);
+void MediaController::DispatchAsyncEvent(Event* aEvent) {
+  MOZ_ASSERT(aEvent);
   nsAutoString eventType;
-  event->GetType(eventType);
+  aEvent->GetType(eventType);
   if (!mIsActive && !eventType.EqualsLiteral("deactivated")) {
     LOG("Only 'deactivated' can be dispatched on a deactivated controller, not "
         "'%s'",
@@ -538,7 +537,7 @@ void MediaController::DispatchAsyncEvent(already_AddRefed<Event> aEvent) {
   }
   LOG("Dispatch event %s", NS_ConvertUTF16toUTF8(eventType).get());
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event.forget());
+      new AsyncEventDispatcher(this, aEvent);
   asyncDispatcher->PostDOMEvent();
 }
 

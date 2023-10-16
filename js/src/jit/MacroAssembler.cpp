@@ -3644,7 +3644,7 @@ void MacroAssembler::movePropertyKey(PropertyKey key, Register dest) {
       JSString* str = key.toString();
       MOZ_ASSERT((uintptr_t(str) & PropertyKey::TypeMask) == 0);
       static_assert(PropertyKey::StringTypeTag == 0,
-                    "need to orPtr StringTypeTag tag if it's not 0");
+                    "need to orPtr JSID_TYPE_STRING tag if it's not 0");
       movePtr(ImmGCPtr(str), dest);
     } else {
       MOZ_ASSERT(key.isSymbol());
@@ -4630,12 +4630,11 @@ void MacroAssembler::branchTestObjectNeedsProxyResultValidation(
 
 void MacroAssembler::wasmTrap(wasm::Trap trap,
                               wasm::BytecodeOffset bytecodeOffset) {
-  FaultingCodeOffset fco = wasmTrapInstruction();
+  uint32_t trapOffset = wasmTrapInstruction().offset();
   MOZ_ASSERT_IF(!oom(),
-                currentOffset() - fco.get() == WasmTrapInstructionLength);
+                currentOffset() - trapOffset == WasmTrapInstructionLength);
 
-  append(trap, wasm::TrapSite(wasm::TrapMachineInsn::OfficialUD, fco,
-                              bytecodeOffset));
+  append(trap, wasm::TrapSite(trapOffset, bytecodeOffset));
 }
 
 std::pair<CodeOffset, uint32_t> MacroAssembler::wasmReserveStackChecked(
@@ -4749,16 +4748,13 @@ static ReturnCallTrampolineData MakeReturnCallTrampoline(MacroAssembler& masm) {
   masm.moveToStackPtr(FramePointer);
 #  ifdef JS_CODEGEN_ARM64
   masm.pop(FramePointer, lr);
-  masm.append(wasm::CodeRangeUnwindInfo::UseFpLr, masm.currentOffset());
   masm.Mov(PseudoStackPointer64, vixl::sp);
   masm.abiret();
 #  else
   masm.pop(FramePointer);
-  masm.append(wasm::CodeRangeUnwindInfo::UseFp, masm.currentOffset());
   masm.ret();
 #  endif
 
-  masm.append(wasm::CodeRangeUnwindInfo::Normal, masm.currentOffset());
   masm.setFramePushed(savedPushed);
   return data;
 }
@@ -4833,7 +4829,6 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   masm.loadPtr(Address(FramePointer, wasm::Frame::callerFPOffset()), tempForFP);
   masm.loadPtr(Address(FramePointer, wasm::Frame::returnAddressOffset()),
                tempForRA);
-  masm.append(wasm::CodeRangeUnwindInfo::RestoreFpRa, masm.currentOffset());
   bool copyCallerSlot = oldSlotsAndStackArgBytes != newSlotsAndStackArgBytes;
   if (copyCallerSlot) {
     masm.loadPtr(
@@ -4873,21 +4868,12 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   masm.storePtr(tempForRA,
                 Address(FramePointer,
                         newFrameOffset + wasm::Frame::returnAddressOffset()));
-  // Restore tempForRA, but keep RA on top of the stack.
-  // There is no non-locking exchange instruction between register and memory.
-  // Using tempForCaller as scratch register.
-  masm.loadPtr(Address(masm.getStackPointer(), 0), tempForCaller);
-  masm.storePtr(tempForRA, Address(masm.getStackPointer(), 0));
-  masm.mov(tempForCaller, tempForRA);
-  masm.append(wasm::CodeRangeUnwindInfo::RestoreFp, masm.currentOffset());
+  masm.pop(tempForRA);
   masm.addToStackPtr(Imm32(framePushedAtStart + newFrameOffset +
-                           wasm::Frame::returnAddressOffset() + sizeof(void*)));
+                           wasm::Frame::returnAddressOffset()));
 #  endif
 
   masm.movePtr(tempForFP, FramePointer);
-  // Setting framePushed to pre-collapse state, to properly set that in the
-  // following code.
-  masm.setFramePushed(framePushedAtStart);
 }
 
 static void CollapseWasmFrameSlow(MacroAssembler& masm,
@@ -4952,7 +4938,6 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.loadPtr(Address(FramePointer, wasm::Frame::callerFPOffset()), tempForFP);
   masm.loadPtr(Address(FramePointer, wasm::Frame::returnAddressOffset()),
                tempForRA);
-  masm.append(wasm::CodeRangeUnwindInfo::RestoreFpRa, masm.currentOffset());
   masm.loadPtr(
       Address(FramePointer, newArgSrc + WasmCallerInstanceOffsetBeforeCall),
       tempForCaller);
@@ -5014,24 +4999,15 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
   masm.storePtr(tempForRA,
                 Address(FramePointer,
                         newFrameOffset + wasm::Frame::returnAddressOffset()));
-  // Restore tempForRA, but keep RA on top of the stack.
-  // There is no non-locking exchange instruction between register and memory.
-  // Using tempForCaller as scratch register.
-  masm.loadPtr(Address(masm.getStackPointer(), 0), tempForCaller);
-  masm.storePtr(tempForRA, Address(masm.getStackPointer(), 0));
-  masm.mov(tempForCaller, tempForRA);
-  masm.append(wasm::CodeRangeUnwindInfo::RestoreFp, masm.currentOffset());
+  masm.pop(tempForRA);
+  masm.freeStack(reserved);
   masm.addToStackPtr(Imm32(framePushedAtStart + newFrameOffset +
-                           wasm::Frame::returnAddressOffset() + reserved +
-                           sizeof(void*)));
+                           wasm::Frame::returnAddressOffset()));
 #  endif
 
   // Point FramePointer to hidden frame.
   masm.computeEffectiveAddress(Address(FramePointer, newFPOffset),
                                FramePointer);
-  // Setting framePushed to pre-collapse state, to properly set that in the
-  // following code.
-  masm.setFramePushed(framePushedAtStart);
 }
 
 void MacroAssembler::wasmCollapseFrameFast(
@@ -5052,7 +5028,6 @@ void MacroAssembler::wasmCollapseFrameSlow(
   wasmCheckSlowCallsite(temp1, &slow, temp1, temp2);
   CollapseWasmFrameFast(*this, retCallInfo);
   jump(&done);
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   ReturnCallTrampolineData data = MakeReturnCallTrampoline(*this);
 
@@ -5150,7 +5125,6 @@ CodeOffset MacroAssembler::wasmReturnCallImport(
                               wasm::CallSiteDesc::ReturnStub);
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(ABINonArgReg0);
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
   return CodeOffset(currentOffset());
 }
 
@@ -5160,7 +5134,6 @@ CodeOffset MacroAssembler::wasmReturnCall(
   wasmCollapseFrameFast(retCallInfo);
   CodeOffset offset = farJumpWithPatch();
   append(desc, offset, funcDefIndex);
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
   return offset;
 }
 #endif  // ENABLE_WASM_TAIL_CALLS
@@ -5503,7 +5476,6 @@ void MacroAssembler::wasmReturnCallIndirect(
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(calleeScratch);
   *slowCallOffset = CodeOffset(currentOffset());
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   // Fast path: just load the code pointer and go.
 
@@ -5515,7 +5487,6 @@ void MacroAssembler::wasmReturnCallIndirect(
   wasmCollapseFrameFast(retCallInfo);
   jump(calleeScratch);
   *fastCallOffset = CodeOffset(currentOffset());
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 }
 #endif  // ENABLE_WASM_TAIL_CALLS
 
@@ -5538,10 +5509,9 @@ void MacroAssembler::wasmCallRef(const wasm::CallSiteDesc& desc,
       FunctionExtended::WASM_INSTANCE_SLOT);
   static_assert(FunctionExtended::WASM_INSTANCE_SLOT < wasm::NullPtrGuardSize);
   wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
-  FaultingCodeOffset fco =
-      loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
   append(wasm::Trap::NullPointerDereference,
-         wasm::TrapSite(wasm::TrapMachineInsnForLoadWord(), fco, trapOffset));
+         wasm::TrapSite(currentOffset(), trapOffset));
+  loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
   branchPtr(Assembler::Equal, InstanceReg, newInstanceTemp, &fastCall);
 
   storePtr(InstanceReg,
@@ -5605,10 +5575,9 @@ void MacroAssembler::wasmReturnCallRef(
       FunctionExtended::WASM_INSTANCE_SLOT);
   static_assert(FunctionExtended::WASM_INSTANCE_SLOT < wasm::NullPtrGuardSize);
   wasm::BytecodeOffset trapOffset(desc.lineOrBytecode());
-  FaultingCodeOffset fco =
-      loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
   append(wasm::Trap::NullPointerDereference,
-         wasm::TrapSite(wasm::TrapMachineInsnForLoadWord(), fco, trapOffset));
+         wasm::TrapSite(currentOffset(), trapOffset));
+  loadPtr(Address(calleeFnObj, instanceSlotOffset), newInstanceTemp);
   branchPtr(Assembler::Equal, InstanceReg, newInstanceTemp, &fastCall);
 
   storePtr(InstanceReg,
@@ -5631,7 +5600,6 @@ void MacroAssembler::wasmReturnCallRef(
                               wasm::CallSiteDesc::ReturnStub);
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(calleeScratch);
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   // Fast path: just load WASM_FUNC_UNCHECKED_ENTRY_SLOT value and go.
   // The instance and pinned registers are the same as in the caller.
@@ -5642,26 +5610,8 @@ void MacroAssembler::wasmReturnCallRef(
 
   wasmCollapseFrameFast(retCallInfo);
   jump(calleeScratch);
-  append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 }
 #endif
-
-void MacroAssembler::wasmBoundsCheckRange32(
-    Register index, Register length, Register limit, Register tmp,
-    wasm::BytecodeOffset bytecodeOffset) {
-  Label ok;
-  Label fail;
-
-  mov(index, tmp);
-  branchAdd32(Assembler::CarrySet, length, tmp, &fail);
-  branch32(Assembler::Above, tmp, limit, &fail);
-  jump(&ok);
-
-  bind(&fail);
-  wasmTrap(wasm::Trap::OutOfBounds, bytecodeOffset);
-
-  bind(&ok);
-}
 
 bool MacroAssembler::needScratch1ForBranchWasmRefIsSubtypeAny(
     wasm::RefType type) {
@@ -6450,13 +6400,11 @@ void MacroAssembler::loadWasmPinnedRegsFromInstance(
 #ifdef WASM_HAS_HEAPREG
   static_assert(wasm::Instance::offsetOfMemory0Base() < 4096,
                 "We count only on the low page being inaccessible");
-  FaultingCodeOffset fco = loadPtr(
-      Address(InstanceReg, wasm::Instance::offsetOfMemory0Base()), HeapReg);
   if (trapOffset) {
-    append(
-        wasm::Trap::IndirectCallToNull,
-        wasm::TrapSite(wasm::TrapMachineInsnForLoadWord(), fco, *trapOffset));
+    append(wasm::Trap::IndirectCallToNull,
+           wasm::TrapSite(currentOffset(), *trapOffset));
   }
+  loadPtr(Address(InstanceReg, wasm::Instance::offsetOfMemory0Base()), HeapReg);
 #else
   MOZ_ASSERT(!trapOffset);
 #endif

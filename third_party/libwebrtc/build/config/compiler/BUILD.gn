@@ -2646,6 +2646,3 @@ config("cet_shadow_stack") {
     ldflags = [ "/CETCOMPAT" ]
   }
 }
-
-# moz shim target to limit widespread BUILD.gn changes
-config("prevent_unsafe_narrowing") {}

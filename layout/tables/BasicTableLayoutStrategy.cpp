@@ -849,8 +849,7 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
             col_iSize = col_iSize_before_adjust = col_min;
             if (pref_minus_min != 0) {
               float c = float(space) / float(basis.c);
-              basis.c = NSCoordSaturatingSubtract(basis.c, pref_minus_min,
-                                                  nscoord_MAX);
+              basis.c -= pref_minus_min;
               col_iSize = NSCoordSaturatingAdd(
                   col_iSize, NSToCoordRound(float(pref_minus_min) * c));
             }
@@ -901,8 +900,7 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
               col_iSize = nscoord_MAX;
             } else {
               float c = float(space) / float(basis.c);
-              basis.c =
-                  NSCoordSaturatingSubtract(basis.c, col_iSize, nscoord_MAX);
+              basis.c -= col_iSize;
               col_iSize = NSCoordSaturatingAdd(
                   col_iSize, NSToCoordRound(float(col_iSize) * c));
             }
@@ -930,8 +928,7 @@ void BasicTableLayoutStrategy::DistributeISizeToColumns(
               "wrong case");
           if (col_iSize != 0) {
             float c = float(space) / float(basis.c);
-            basis.c =
-                NSCoordSaturatingSubtract(basis.c, col_iSize, nscoord_MAX);
+            basis.c -= col_iSize;
             col_iSize = NSCoordSaturatingAdd(
                 col_iSize, NSToCoordRound(float(col_iSize) * c));
           }

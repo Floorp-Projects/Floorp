@@ -139,8 +139,6 @@ enum class SymbolicAddress {
   ArrayNew_false,
   ArrayNewData,
   ArrayNewElem,
-  ArrayInitData,
-  ArrayInitElem,
   ArrayCopy,
 #define DECL_INTRINSIC_SA(op, export, sa_name, abitype, entry, idx) sa_name,
   FOR_EACH_INTRINSIC(DECL_INTRINSIC_SA)
@@ -275,8 +273,6 @@ extern const SymbolicAddressSignature SASigArrayNew_true;
 extern const SymbolicAddressSignature SASigArrayNew_false;
 extern const SymbolicAddressSignature SASigArrayNewData;
 extern const SymbolicAddressSignature SASigArrayNewElem;
-extern const SymbolicAddressSignature SASigArrayInitData;
-extern const SymbolicAddressSignature SASigArrayInitElem;
 extern const SymbolicAddressSignature SASigArrayCopy;
 #define EXT_INTR_SA_DECL(op, export, sa_name, abitype, entry, idx) \
   extern const SymbolicAddressSignature SASig##sa_name;

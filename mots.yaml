@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-12T17:34:35.401624'
+updated_at: '2023-09-12T17:27:25.112116'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -208,10 +208,6 @@ people:
     bmo_id: 625428
     name: Chris Martin
     nick: cmartin
-  - &cmkm
-    bmo_id: 693338
-    name: Cieara Meador
-    nick: cmkm
   - &cpeterson
     bmo_id: 430528
     name: Chris Peterson
@@ -292,10 +288,6 @@ people:
     bmo_id: 1689
     name: Daniel Veditz
     nick: dveditz
-  - &dwalker
-    bmo_id: 713270
-    name: DJ
-    nick: dwalker
   - &ed
     bmo_id: 629148
     name: Ed Lee
@@ -332,7 +324,8 @@ people:
     bmo_id: 5842
     name: Masatoshi Kimura
     nick: emk
-  - bmo_id: 6102
+  - &enndeakin
+    bmo_id: 6102
     name: Neil Deakin
     nick: enndeakin
   - &erahm
@@ -420,10 +413,6 @@ people:
     bmo_id: 131213
     name: Hiroyuki Ikezoe
     nick: hiro
-  - &hjones
-    bmo_id: 692246
-    name: Hanna Jones
-    nick: hjones
   - &hneiva
     bmo_id: 693369
     name: Heitor Neiva
@@ -460,6 +449,10 @@ people:
     bmo_id: 8340
     name: Jan Varga
     nick: janv
+  - &jaws
+    bmo_id: 409754
+    name: Jared Wein
+    nick: jaws
   - &jchen
     bmo_id: 281508
     name: ''
@@ -560,10 +553,6 @@ people:
     bmo_id: 701257
     name: James Teow
     nick: jteow
-  - &jules
-    bmo_id: 699161
-    name: Jules Simplicio
-    nick: jules
   - &jwatt
     bmo_id: 32767
     name: Jonathan Watt
@@ -3152,7 +3141,6 @@ modules:
         - Georg Fritzsche
         - Felipe Gomes
         - Tim Guan-tin Chien
-        - Johann Hofmann
         - KM Lee Rex
         - Fred Lin
         - Ray Lin
@@ -3161,14 +3149,13 @@ modules:
         - Mark Mentovai
         - Ted Mielczarek
         - Brian Nicholson
-        - Matthew Noorenberghe
         - Neil Rashbrook
         - Asaf Romano
         - Marina Samuel
         - J Ryan Stinnett
         - Gregory Szorc
         - Tim Taubert
-        - Jared Wein
+        - Johann Hofmann
       group: firefox-dev
       components:
         - Firefox
@@ -3178,9 +3165,9 @@ modules:
       - *Gijs
     peers:
       - *dao
+      - *jaws
       - *mak
-      - *mconley
-      - *mhowell
+      - *MattN
     submodules:
 
       - name: Add-ons Manager
@@ -3275,25 +3262,18 @@ modules:
           - *sfoster
           - *amy
           - *emilio
-          - *jules
         machine_name: desktop_theme
 
       - name: Desktop UI
         description: The main browser UI except where covered by more specific submodules.
         includes:
           - browser/base/content/**/*
-        meta:
-          owners_emeritus:
-            - Jared Wein
-          peers_emeritus:
-            - Florian Quèze
+        meta: {}
         owners:
-          - *mconley
+          - *jaws
         peers:
-          - *jhirsch
-          - *sclements
-          - *dwalker
-          - *cmkm
+          - *mconley
+          - *florian
         machine_name: desktop_ui
 
       - name: Download Manager
@@ -3452,7 +3432,6 @@ modules:
           peers_emeritus:
             - Bianca Danforth
             - Severin Rudie
-            - Jared Wein
           url: https://wiki.mozilla.org/Toolkit:Password_Manager
           components:
             - Toolkit::Password Manager
@@ -3462,6 +3441,7 @@ modules:
         owners:
           - *serg
         peers:
+          - *jaws
           - *tgiles
           - *dimi
           - *sfoster
@@ -3572,17 +3552,17 @@ modules:
             - Michael de Boer
             - Kashav Madan
             - *daleharvey
-            - *dao
           peers_emeritus:
             - Anny Gakhokidze
           components:
             - Firefox::Session Restore
         owners:
-          - *sclements
-          - *sfoster
+          - *dao
           - *farre
         peers:
-          - *dao
+          - *daleharvey
+          - *sclements
+          - *sfoster
         machine_name: session_restore
 
       - name: Settings UI
@@ -3592,15 +3572,14 @@ modules:
           - browser/themes/*/preferences
           - toolkit/mozapps/preferences
         meta:
-          owners_emeritus:
-            - Jared Wein
           peers_emeritus:
             - Tim Nguyen
         owners:
-          - *mossop
+          - *jaws
         peers:
           - *mstriemer
           - *Gijs
+          - *mossop
           - *mconley
         machine_name: settings_ui
 
@@ -4089,17 +4068,13 @@ modules:
       components:
         - Firefox
         - Toolkit
-      peers_emeritus:
-        - Matthew Noorenberghe
-        - Jared Wein
     owners:
       - *mossop
       - *Gijs
     peers:
-      - *dao
+      - *jaws
       - *mak
-      - *mconley
-      - *mhowell
+      - *MattN
     submodules:
 
       - name: Application Startup
@@ -4146,16 +4121,11 @@ modules:
         includes:
           - toolkit/content/widgets/**/*
         meta:
-          owners_emeritus:
-            - Neil Deakin
           peers_emeritus:
             - Andrew Swan
         owners:
-          - *mstriemer
+          - *enndeakin
         peers:
-          - *mak
-          - *tgiles
-          - *hjones
         machine_name: ui_widgets
 
       - name: Webextensions
@@ -4200,5 +4170,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: b6048ef220609203d8a630974dfd73321761dcce
-  export: dd5d7f2127edc8694c19f8f1a981e0687d8eb575
+  config: b3a3e5b0f7a9103c3b94e31d4ad7920a66789df2
+  export: 98ee1308e0a2c5ec27e6a448c5a8d0fda7c6bfa7

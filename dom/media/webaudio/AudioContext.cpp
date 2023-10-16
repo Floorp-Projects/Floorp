@@ -766,8 +766,9 @@ double AudioContext::CurrentTime() {
 
 nsISerialEventTarget* AudioContext::GetMainThread() const {
   if (nsPIDOMWindowInner* window = GetParentObject()) {
-    return window->AsGlobal()->SerialEventTarget();
+    return window->AsGlobal()->EventTargetFor(TaskCategory::Other);
   }
+
   return GetCurrentSerialEventTarget();
 }
 
@@ -850,10 +851,12 @@ class OnStateChangeTask final : public Runnable {
 
 void AudioContext::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) {
   MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIGlobalObject> parentObject = do_QueryInterface(GetParentObject());
   // It can happen that this runnable took a long time to reach the main thread,
   // and the global is not valid anymore.
-  if (GetParentObject()) {
-    AbstractThread::MainThread()->Dispatch(std::move(aRunnable));
+  if (parentObject) {
+    parentObject->AbstractMainThreadFor(TaskCategory::Other)
+        ->Dispatch(std::move(aRunnable));
   } else {
     RefPtr<nsIRunnable> runnable(aRunnable);
     runnable = nullptr;

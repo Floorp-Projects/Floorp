@@ -61,9 +61,6 @@ void Event::ConstructorInit(EventTarget* aOwner, nsPresContext* aPresContext,
                             WidgetEvent* aEvent) {
   SetOwner(aOwner);
   mIsMainThreadEvent = NS_IsMainThread();
-  if (mIsMainThreadEvent) {
-    mRefCnt.SetIsOnMainThread();
-  }
 
   mPrivateDataDuplicated = false;
   mWantsPopupControlCheck = false;

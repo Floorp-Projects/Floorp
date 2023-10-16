@@ -202,7 +202,6 @@ load 1322537-1.html
 load 1322537-2.html
 load 1322852.html
 load 1348564.svg
-load 1402013.html
 load 1402109.html
 load 1402124.html
 load 1402486.html
@@ -222,14 +221,13 @@ load 1467552-1.html
 load 1474982.html
 load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
-skip-if(wayland) pref(widget.windows.window_occlusion_tracking.enabled,false) load blob-merging-and-retained-display-list.html  # Bug 1819154, wayland: Bug 1857256
-skip-if(wayland) load empty-blob-merging.html  # wayland: Bug 1857256
+pref(widget.windows.window_occlusion_tracking.enabled,false) load blob-merging-and-retained-display-list.html # Bug 1819154
+load empty-blob-merging.html
 load grouping-empty-bounds.html
 load 1480275.html
 load 1480224.html
 load 1502936.html
 load 1504918.svg
-load 1508858.html
 load perspective-invalidation.html
 load invalid_url.html
 load 1535517-1.svg
@@ -242,7 +240,7 @@ load 1539318-1.svg
 load 1548985-1.html
 load 1548985-2.svg
 load 1555851.html
-skip-if(wayland) pref(widget.windows.window_occlusion_tracking.enabled,false) load invalidation-of-opacity-0.html  # Bug 1819154, wayland: Bug 1857256
+pref(widget.windows.window_occlusion_tracking.enabled,false) load invalidation-of-opacity-0.html # Bug 1819154
 load 1563779.html
 load 1600855.html
 load 1601824.html

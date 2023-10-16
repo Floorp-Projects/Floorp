@@ -185,11 +185,9 @@ void BM_Time_FromCivil_Absl(benchmark::State& state) {
   int i = 0;
   while (state.KeepRunning()) {
     if ((i & 1) == 0) {
-      benchmark::DoNotOptimize(
-          absl::FromCivil(absl::CivilSecond(2014, 12, 18, 20, 16, 18), tz));
+      absl::FromCivil(absl::CivilSecond(2014, 12, 18, 20, 16, 18), tz);
     } else {
-      benchmark::DoNotOptimize(
-          absl::FromCivil(absl::CivilSecond(2013, 11, 15, 18, 30, 27), tz));
+      absl::FromCivil(absl::CivilSecond(2013, 11, 15, 18, 30, 27), tz);
     }
     ++i;
   }
@@ -226,8 +224,7 @@ BENCHMARK(BM_Time_FromCivil_Libc);
 void BM_Time_FromCivilUTC_Absl(benchmark::State& state) {
   const absl::TimeZone tz = absl::UTCTimeZone();
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(
-        absl::FromCivil(absl::CivilSecond(2014, 12, 18, 20, 16, 18), tz));
+    absl::FromCivil(absl::CivilSecond(2014, 12, 18, 20, 16, 18), tz);
   }
 }
 BENCHMARK(BM_Time_FromCivilUTC_Absl);
@@ -238,11 +235,9 @@ void BM_Time_FromCivilDay0_Absl(benchmark::State& state) {
   int i = 0;
   while (state.KeepRunning()) {
     if ((i & 1) == 0) {
-      benchmark::DoNotOptimize(
-          absl::FromCivil(absl::CivilSecond(2014, 12, 0, 20, 16, 18), tz));
+      absl::FromCivil(absl::CivilSecond(2014, 12, 0, 20, 16, 18), tz);
     } else {
-      benchmark::DoNotOptimize(
-          absl::FromCivil(absl::CivilSecond(2013, 11, 0, 18, 30, 27), tz));
+      absl::FromCivil(absl::CivilSecond(2013, 11, 0, 18, 30, 27), tz);
     }
     ++i;
   }

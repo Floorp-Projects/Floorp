@@ -1,5 +1,3 @@
-// META: global=window,dedicatedworker,shadowrealm
-//
 function decode(input, output, desc) {
   test(function() {
     var d = new TextDecoder("iso-2022-jp"),

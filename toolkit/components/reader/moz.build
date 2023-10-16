@@ -22,7 +22,7 @@ EXTRA_JS_MODULES.reader = [
     "ReaderWorker.sys.mjs",
 ]
 
-BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Reader Mode")

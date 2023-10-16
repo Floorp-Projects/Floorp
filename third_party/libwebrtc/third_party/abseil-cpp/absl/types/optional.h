@@ -130,7 +130,7 @@ class optional : private optional_internal::optional_data<T>,
 
   // Constructs an `optional` holding an empty value, NOT a default constructed
   // `T`.
-  constexpr optional() noexcept = default;
+  constexpr optional() noexcept {}
 
   // Constructs an `optional` initialized with `nullopt` to hold an empty value.
   constexpr optional(nullopt_t) noexcept {}  // NOLINT(runtime/explicit)
@@ -357,7 +357,7 @@ class optional : private optional_internal::optional_data<T>,
   template <typename... Args,
             typename = typename std::enable_if<
                 std::is_constructible<T, Args&&...>::value>::type>
-  T& emplace(Args&&... args) ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T& emplace(Args&&... args) {
     this->destruct();
     this->construct(std::forward<Args>(args)...);
     return reference();
@@ -377,8 +377,7 @@ class optional : private optional_internal::optional_data<T>,
   template <typename U, typename... Args,
             typename = typename std::enable_if<std::is_constructible<
                 T, std::initializer_list<U>&, Args&&...>::value>::type>
-  T& emplace(std::initializer_list<U> il,
-             Args&&... args) ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T& emplace(std::initializer_list<U> il, Args&&... args) {
     this->destruct();
     this->construct(il, std::forward<Args>(args)...);
     return reference();
@@ -415,11 +414,11 @@ class optional : private optional_internal::optional_data<T>,
   // `optional` is empty, behavior is undefined.
   //
   // If you need myOpt->foo in constexpr, use (*myOpt).foo instead.
-  const T* operator->() const ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  const T* operator->() const {
     ABSL_HARDENING_ASSERT(this->engaged_);
     return std::addressof(this->data_);
   }
-  T* operator->() ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T* operator->() {
     ABSL_HARDENING_ASSERT(this->engaged_);
     return std::addressof(this->data_);
   }
@@ -428,17 +427,17 @@ class optional : private optional_internal::optional_data<T>,
   //
   // Accesses the underlying `T` value of an `optional`. If the `optional` is
   // empty, behavior is undefined.
-  constexpr const T& operator*() const& ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  constexpr const T& operator*() const& {
     return ABSL_HARDENING_ASSERT(this->engaged_), reference();
   }
-  T& operator*() & ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T& operator*() & {
     ABSL_HARDENING_ASSERT(this->engaged_);
     return reference();
   }
-  constexpr const T&& operator*() const&& ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  constexpr const T&& operator*() const && {
     return ABSL_HARDENING_ASSERT(this->engaged_), absl::move(reference());
   }
-  T&& operator*() && ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T&& operator*() && {
     ABSL_HARDENING_ASSERT(this->engaged_);
     return std::move(reference());
   }
@@ -473,24 +472,23 @@ class optional : private optional_internal::optional_data<T>,
   // and lvalue/rvalue-ness of the `optional` is preserved to the view of
   // the `T` sub-object. Throws `absl::bad_optional_access` when the `optional`
   // is empty.
-  constexpr const T& value() const& ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  constexpr const T& value() const & {
     return static_cast<bool>(*this)
                ? reference()
                : (optional_internal::throw_bad_optional_access(), reference());
   }
-  T& value() & ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  T& value() & {
     return static_cast<bool>(*this)
                ? reference()
                : (optional_internal::throw_bad_optional_access(), reference());
   }
-  T&& value() && ABSL_ATTRIBUTE_LIFETIME_BOUND {  // NOLINT(build/c++11)
+  T&& value() && {  // NOLINT(build/c++11)
     return std::move(
         static_cast<bool>(*this)
             ? reference()
             : (optional_internal::throw_bad_optional_access(), reference()));
   }
-  constexpr const T&& value()
-      const&& ABSL_ATTRIBUTE_LIFETIME_BOUND {  // NOLINT(build/c++11)
+  constexpr const T&& value() const && {  // NOLINT(build/c++11)
     return absl::move(
         static_cast<bool>(*this)
             ? reference()

@@ -130,9 +130,9 @@ class OpcodeInfo:
         #   /*
         #    * comment
         #    */
-        #   MACRO(Sub, ...)
-        #   MACRO(Mul, ...)
-        #   MACRO(Div, ...)
+        #   MACRO(JSOP_SUB, ...)
+        #   MACRO(JSOP_MUL, ...)
+        #   MACRO(JSOP_DIV, ...)
         self.group = []
 
         self.sort_key = ""

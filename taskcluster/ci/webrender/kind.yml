@@ -26,7 +26,6 @@ job-defaults:
             RUSTFLAGS: '--deny warnings'
     run:
         sparse-profile: webrender
-    use-system-python: false
 
 jobs:
     lint-tidy:
@@ -38,10 +37,6 @@ jobs:
             using: run-task
             cwd: '{checkout}/gfx/wr'
             command: >-
-                pushd /tmp &&
-                python3 -m pip install six &&
-                python3 -m pip install -e 'git+https://github.com/servo/servo.git@65a4d1646da46c37fe748add6dcf24b62ebb602a#egg=servo_tidy&subdirectory=python/tidy' &&
-                popd &&
                 servo-tidy
         treeherder:
             platform: linux64-qr/opt
@@ -259,9 +254,6 @@ jobs:
                 - type: file
                   name: public/build/mozdevice.tar.gz
                   path: /builds/worker/checkouts/gecko/testing/mozbase/mozdevice.tar.gz
-                - type: file
-                  name: public/build/six.tar.gz
-                  path: /builds/worker/checkouts/gecko/third_party/python/six.tar.gz
         run:
             using: run-task
             cwd: '{checkout}/gfx/wr/wrench'
@@ -269,9 +261,7 @@ jobs:
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh debug &&
                 tar czf reftests.tar.gz reftests/ &&
                 cd $GECKO_PATH/testing/mozbase &&
-                tar czf mozdevice.tar.gz mozdevice/ &&
-                cd $GECKO_PATH/third_party/python &&
-                tar czf six.tar.gz six/
+                tar czf mozdevice.tar.gz mozdevice/
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -309,9 +299,6 @@ jobs:
                 - type: file
                   name: public/build/mozdevice.tar.gz
                   path: /builds/worker/checkouts/gecko/testing/mozbase/mozdevice.tar.gz
-                - type: file
-                  name: public/build/six.tar.gz
-                  path: /builds/worker/checkouts/gecko/third_party/python/six.tar.gz
         run:
             using: run-task
             cwd: '{checkout}/gfx/wr/wrench'
@@ -319,9 +306,7 @@ jobs:
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh release &&
                 tar czf reftests.tar.gz reftests/ &&
                 cd $GECKO_PATH/testing/mozbase &&
-                tar czf mozdevice.tar.gz mozdevice/ &&
-                cd $GECKO_PATH/third_party/python &&
-                tar czf six.tar.gz six/
+                tar czf mozdevice.tar.gz mozdevice/
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -452,7 +437,6 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 MOZ_FETCHES_DIR: fetches
-                PYTHONPATH: "fetches/mozdevice:fetches/six"
         dependencies:
             webrender-wrench-android-debug: webrender-wrench-android-debug
             android-build: build-android-arm/debug
@@ -462,7 +446,6 @@ jobs:
                   extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
-                - 'six.tar.gz'
             android-build:
                 - artifact: 'mozharness.zip'
                   dest: 'mozharness'
@@ -474,6 +457,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-debug.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p5-13-0-arm7/debug
@@ -500,7 +484,6 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 MOZ_FETCHES_DIR: fetches
-                PYTHONPATH: "fetches/mozdevice:fetches/six"
         dependencies:
             webrender-wrench-android-release: webrender-wrench-android-release
             android-build: build-android-arm/opt
@@ -510,7 +493,6 @@ jobs:
                   extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
-                - 'six.tar.gz'
             android-build:
                 - artifact: 'mozharness.zip'
                   dest: 'mozharness'
@@ -522,6 +504,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-release.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p5-13-0-arm7/opt
@@ -548,7 +531,6 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 MOZ_FETCHES_DIR: fetches
-                PYTHONPATH: "fetches/mozdevice:fetches/six"
         dependencies:
             webrender-wrench-android-debug: webrender-wrench-android-debug
             android-build: build-android-arm/debug
@@ -558,7 +540,6 @@ jobs:
                   extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
-                - 'six.tar.gz'
             android-build:
                 - artifact: 'mozharness.zip'
                   dest: 'mozharness'
@@ -570,6 +551,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-debug.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-a51-11-0-arm7/debug
@@ -596,7 +578,6 @@ jobs:
                 MOZHARNESS_SCRIPT: android_wrench.py
                 MOZHARNESS_CONFIG: android/wrench.py
                 MOZ_FETCHES_DIR: fetches
-                PYTHONPATH: "fetches/mozdevice:fetches/six"
         dependencies:
             webrender-wrench-android-release: webrender-wrench-android-release
             android-build: build-android-arm/opt
@@ -606,7 +587,6 @@ jobs:
                   extract: false
                 - 'reftests.tar.gz'
                 - 'mozdevice.tar.gz'
-                - 'six.tar.gz'
             android-build:
                 - artifact: 'mozharness.zip'
                   dest: 'mozharness'
@@ -618,6 +598,7 @@ jobs:
                 export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-release.apk &&
                 export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
                 export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
+                export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-a51-11-0-arm7/opt

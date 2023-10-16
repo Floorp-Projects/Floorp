@@ -11,10 +11,10 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
+import { expInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -33,10 +33,10 @@ const inputs = [
 
 export const d = makeCaseCache('exp', {
   f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(inputs, 'finite', FP.f32.expInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', expInterval);
   },
   f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(inputs, 'unfiltered', FP.f32.expInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', expInterval);
   },
 });
 

@@ -83,7 +83,6 @@ bitflags! {
     /// page-rule applies.
     ///
     /// https://drafts.csswg.org/css-page-3/#page-selectors
-    #[derive(Clone, Copy)]
     #[repr(C)]
     pub struct PagePseudoClassFlags : u8 {
         /// No pseudo-classes

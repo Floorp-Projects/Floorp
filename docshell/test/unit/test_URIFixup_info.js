@@ -795,7 +795,6 @@ if (AppConstants.platform == "win") {
   });
 } else {
   const homeDir = Services.dirsvc.get("Home", Ci.nsIFile).path;
-  const homeBase = AppConstants.platform == "macosx" ? "/Users" : "/home";
 
   testcases.push({
     input: "~",
@@ -805,16 +804,6 @@ if (AppConstants.platform == "win") {
   testcases.push({
     input: "~/foo",
     fixedURI: `file://${homeDir}/foo`,
-    protocolChange: true,
-  });
-  testcases.push({
-    input: "~foo",
-    fixedURI: `file://${homeBase}/foo`,
-    protocolChange: true,
-  });
-  testcases.push({
-    input: "~foo/bar",
-    fixedURI: `file://${homeBase}/foo/bar`,
     protocolChange: true,
   });
   testcases.push({

@@ -4,6 +4,7 @@ if (!wasmIsSupported())
 load(libdir + "asserts.js");
 
 function canRunHugeMemoryTests() {
+    let conf = getBuildConfiguration();
     // We're aiming for 64-bit desktop builds with no interesting analysis
     // running that might inflate memory consumption unreasonably.  It's OK if
     // they're debug builds, though.
@@ -15,12 +16,12 @@ function canRunHugeMemoryTests() {
     let blocked = ['rooting-analysis','simulator',
                    'android','wasi','asan','tsan','ubsan','dtrace','valgrind'];
     for ( let b of blocked ) {
-        if (getBuildConfiguration(b)) {
+        if (conf[b]) {
             print("Failing canRunHugeMemoryTests() because '" + b + "' is true");
             return false;
         }
     }
-    if (getBuildConfiguration("pointer-byte-size") != 8) {
+    if (conf['pointer-byte-size'] != 8) {
         print("Failing canRunHugeMemoryTests() because the build is not 64-bit");
         return false;
     }
@@ -582,6 +583,6 @@ function assertSame(got, expected) {
 
 // TailCallIterations is selected to be large enough to trigger
 // "too much recursion", but not to be slow.
-var TailCallIterations = getBuildConfiguration("simulator") ? 1000 : 100000;
+var TailCallIterations = getBuildConfiguration().simulator ? 1000 : 100000;
 // TailCallBallast is selected to spill registers as parameters.
 var TailCallBallast = 30;

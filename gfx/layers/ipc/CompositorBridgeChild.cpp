@@ -22,7 +22,6 @@
 #include "mozilla/layers/TextureClientPool.h"  // for TextureClientPool
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/SyncObject.h"  // for SyncObjectClient
-#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/Logging.h"
@@ -120,6 +119,10 @@ void CompositorBridgeChild::AfterDestroy() {
       Send__delete__(this);
     }
     mActorDestroyed = true;
+  }
+
+  if (mCanvasChild) {
+    mCanvasChild->Destroy();
   }
 
   if (sCompositorBridge == this) {
@@ -517,15 +520,33 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {
   MOZ_ASSERT(gfx::gfxVars::RemoteCanvasEnabled());
-  if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    return cm->GetCanvasChild().forget();
+
+  if (CanvasChild::Deactivated()) {
+    return nullptr;
   }
-  return nullptr;
+
+  if (!mCanvasChild) {
+    ipc::Endpoint<PCanvasParent> parentEndpoint;
+    ipc::Endpoint<PCanvasChild> childEndpoint;
+    nsresult rv = PCanvas::CreateEndpoints(OtherPid(), base::GetCurrentProcId(),
+                                           &parentEndpoint, &childEndpoint);
+    if (NS_SUCCEEDED(rv)) {
+      Unused << SendInitPCanvasParent(std::move(parentEndpoint));
+      mCanvasChild = new CanvasChild(std::move(childEndpoint));
+    }
+  }
+
+  return do_AddRef(mCanvasChild);
 }
 
 void CompositorBridgeChild::EndCanvasTransaction() {
-  if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    cm->EndCanvasTransaction();
+  if (mCanvasChild) {
+    mCanvasChild->EndTransaction();
+    if (mCanvasChild->ShouldBeCleanedUp()) {
+      mCanvasChild->Destroy();
+      Unused << SendReleasePCanvasParent();
+      mCanvasChild = nullptr;
+    }
   }
 }
 

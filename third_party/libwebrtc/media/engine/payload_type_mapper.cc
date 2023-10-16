@@ -14,7 +14,6 @@
 
 #include "absl/strings/ascii.h"
 #include "api/audio_codecs/audio_format.h"
-#include "media/base/codec.h"
 #include "media/base/media_constants.h"
 
 namespace cricket {
@@ -131,9 +130,8 @@ absl::optional<AudioCodec> PayloadTypeMapper::ToAudioCodec(
   // ACM or NetEq.
   auto opt_payload_type = GetMappingFor(format);
   if (opt_payload_type) {
-    AudioCodec codec =
-        cricket::CreateAudioCodec(*opt_payload_type, format.name,
-                                  format.clockrate_hz, format.num_channels);
+    AudioCodec codec(*opt_payload_type, format.name, format.clockrate_hz, 0,
+                     format.num_channels);
     codec.params = format.parameters;
     return std::move(codec);
   }

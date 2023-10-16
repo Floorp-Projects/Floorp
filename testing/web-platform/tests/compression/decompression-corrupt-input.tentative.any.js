@@ -1,4 +1,4 @@
-// META global=window,worker,shadowrealm
+// META global=window,worker
 
 // This test checks that DecompressionStream behaves according to the standard
 // when the input is corrupted. To avoid a combinatorial explosion in the

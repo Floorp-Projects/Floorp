@@ -246,6 +246,7 @@ nsHTMLScrollFrame::nsHTMLScrollFrame(ComputedStyle* aStyle,
       mLastPos(-1, -1),
       mApzScrollPos(0, 0),
       mLastUpdateFramesPos(-1, -1),
+      mDisplayPortAtLastFrameUpdate(),
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
       mAnchor(this),
       mCurrentAPZScrollAnimationType(APZScrollAnimationType::No),
@@ -1765,19 +1766,17 @@ void nsHTMLScrollFrame::SetHasOutOfFlowContentInsideFilter() {
 
 bool nsHTMLScrollFrame::WantAsyncScroll() const {
   ScrollStyles styles = GetScrollStyles();
-
-  // First, as an optimization because getting the scrollrange is
-  // relatively slow, check overflow hidden and not a zoomed scroll frame.
-  if (styles.mHorizontal == StyleOverflow::Hidden &&
-      styles.mVertical == StyleOverflow::Hidden) {
-    if (!mIsRoot || GetVisualViewportSize() == mScrollPort.Size()) {
-      return false;
-    }
-  }
-
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
   nsRect scrollRange = GetLayoutScrollRange();
+
+  // If the page has a visual viewport size that's different from
+  // the layout viewport size at the current zoom level, we need to be
+  // able to scroll the visual viewport inside the layout viewport
+  // even if the page is not zoomable.
+  if (!GetVisualScrollRange().IsEqualInterior(scrollRange)) {
+    return true;
+  }
 
   bool isVScrollable = (scrollRange.height >= oneDevPixel) &&
                        (styles.mVertical != StyleOverflow::Hidden);
@@ -1798,16 +1797,7 @@ bool nsHTMLScrollFrame::WantAsyncScroll() const {
       isVScrollable && (mVScrollbarBox || canScrollWithoutScrollbars);
   bool isHAsyncScrollable =
       isHScrollable && (mHScrollbarBox || canScrollWithoutScrollbars);
-  if (isVAsyncScrollable || isHAsyncScrollable) {
-    return true;
-  }
-
-  // If the page has a visual viewport size that's different from
-  // the layout viewport size at the current zoom level, we need to be
-  // able to scroll the visual viewport inside the layout viewport
-  // even if the page is not zoomable.
-  return mIsRoot && GetVisualViewportSize() != mScrollPort.Size() &&
-         !GetVisualScrollRange().IsEqualInterior(scrollRange);
+  return isVAsyncScrollable || isHAsyncScrollable;
 }
 
 static nsRect GetOnePixelRangeAroundPoint(const nsPoint& aPoint,
@@ -2909,7 +2899,8 @@ void nsHTMLScrollFrame::ScrollActivityCallback(nsITimer* aTimer,
 
 void nsHTMLScrollFrame::ScheduleSyntheticMouseMove() {
   if (!mScrollActivityTimer) {
-    mScrollActivityTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
+    mScrollActivityTimer = NS_NewTimer(
+        PresContext()->Document()->EventTargetFor(TaskCategory::Other));
     if (!mScrollActivityTimer) {
       return;
     }
@@ -4471,14 +4462,14 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
     nsDisplayListBuilder* aBuilder, nsRect* aVisibleRect, nsRect* aDirtyRect,
     bool aSetBase, bool* aDirtyRectHasBeenOverriden) {
   nsIContent* content = GetContent();
-  bool hasDisplayPort = DisplayPortUtils::HasDisplayPort(content);
   // For hit testing purposes with fission we want to create a
   // minimal display port for every scroll frame that could be active. (We only
   // do this when aSetBase is true because we only want to do this the first
   // time this function is called for the same scroll frame.)
-  if (aSetBase && !hasDisplayPort && aBuilder->IsPaintingToWindow() &&
-      ShouldActivateAllScrollFrames() &&
-      nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll()) {
+  if (ShouldActivateAllScrollFrames() &&
+      !DisplayPortUtils::HasDisplayPort(content) &&
+      nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll() &&
+      aBuilder->IsPaintingToWindow() && aSetBase) {
     // SetDisplayPortMargins calls TriggerDisplayPortExpiration which starts a
     // display port expiry timer for display ports that do expire. However
     // minimal display ports do not expire, so the display port has to be
@@ -4491,9 +4482,9 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
         content, PresShell(), DisplayPortMargins::Empty(content),
         DisplayPortUtils::ClearMinimalDisplayPortProperty::No, 0,
         DisplayPortUtils::RepaintMode::DoNotRepaint);
-    hasDisplayPort = true;
   }
 
+  bool usingDisplayPort = DisplayPortUtils::HasDisplayPort(content);
   if (aBuilder->IsPaintingToWindow()) {
     if (aSetBase) {
       nsRect displayportBase = *aVisibleRect;
@@ -4529,8 +4520,7 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
         // And don't call RestrictToRootDisplayPort if we would be trying to
         // restrict to our own display port, which doesn't make sense (ie if we
         // are a root scroll frame in a process root prescontext).
-        if (hasDisplayPort && (!mIsRoot || pc->GetParentPresContext()) &&
-            !DisplayPortUtils::WillUseEmptyDisplayPortMargins(content)) {
+        if (usingDisplayPort && (!mIsRoot || pc->GetParentPresContext())) {
           displayportBase = RestrictToRootDisplayPort(displayportBase);
           MOZ_LOG(sDisplayportLog, LogLevel::Verbose,
                   ("Scroll id %" PRIu64 " has restricted base %s\n", viewID,
@@ -4547,7 +4537,7 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
     // displayport base.
     MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
     nsRect displayPort;
-    hasDisplayPort = DisplayPortUtils::GetDisplayPort(
+    usingDisplayPort = DisplayPortUtils::GetDisplayPort(
         content, &displayPort,
         DisplayPortOptions().With(DisplayportRelativeTo::ScrollFrame));
 
@@ -4558,7 +4548,7 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
       }
     };
 
-    if (hasDisplayPort) {
+    if (usingDisplayPort) {
       // Override the dirty rectangle if the displayport has been set.
       *aVisibleRect = displayPort;
       if (aBuilder->IsReusingStackingContextItems() ||
@@ -4589,7 +4579,7 @@ bool nsHTMLScrollFrame::DecideScrollableLayer(
   // the compositor can find the scrollable layer for async scrolling.
   // If the element is marked 'scrollgrab', also force building of a layer
   // so that APZ can implement scroll grabbing.
-  mWillBuildScrollableLayer = hasDisplayPort ||
+  mWillBuildScrollableLayer = usingDisplayPort ||
                               nsContentUtils::HasScrollgrab(content) ||
                               mZoomableByAPZ;
   return mWillBuildScrollableLayer;

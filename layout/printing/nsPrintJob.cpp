@@ -27,7 +27,6 @@
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_print.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Try.h"
 #include "nsIBrowserChild.h"
 #include "nsIOService.h"
 #include "nsIScriptGlobalObject.h"
@@ -2101,7 +2100,8 @@ void nsPrintJob::FirePrintCompletionEvent() {
   NS_ENSURE_TRUE_VOID(cv);
   nsCOMPtr<Document> doc = cv->GetDocument();
   NS_ENSURE_TRUE_VOID(doc);
-  NS_ENSURE_SUCCESS_VOID(doc->Dispatch(event.forget()));
+
+  NS_ENSURE_SUCCESS_VOID(doc->Dispatch(TaskCategory::Other, event.forget()));
 }
 
 void nsPrintJob::DisconnectPagePrintTimer() {

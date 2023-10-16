@@ -20,6 +20,7 @@
 #include "mozilla/RemoteLazyInputStreamParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
+#include "nsIAppStartup.h"
 #include "nsIConsoleService.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsIObserverService.h"
@@ -88,7 +89,16 @@ void SocketProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   if (aWhy == AbnormalShutdown) {
     GenerateCrashReport(OtherPid());
-    MaybeTerminateProcess();
+
+    if (PR_GetEnv("MOZ_CRASHREPORTER_SHUTDOWN")) {
+      printf_stderr("Shutting down due to socket process crash.\n");
+      nsCOMPtr<nsIAppStartup> appService =
+          do_GetService("@mozilla.org/toolkit/app-startup;1");
+      if (appService) {
+        bool userAllowedQuit = true;
+        appService->Quit(nsIAppStartup::eForceQuit, 1, &userAllowedQuit);
+      }
+    }
   }
 
   if (mHost) {

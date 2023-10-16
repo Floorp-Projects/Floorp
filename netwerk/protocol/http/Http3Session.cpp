@@ -940,7 +940,7 @@ nsresult Http3Session::ProcessOutputAndEvents(nsIUDPSocket* socket) {
 
   mTimerShouldTrigger = TimeStamp();
 
-  nsresult rv = SendData(socket);
+  nsresult rv = ProcessOutput(socket);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1601,7 +1601,7 @@ nsresult Http3Session::RecvData(nsIUDPSocket* socket) {
     return rv;
   }
 
-  rv = SendData(socket);
+  rv = ProcessOutput(socket);
   if (NS_FAILED(rv)) {
     return rv;
   }

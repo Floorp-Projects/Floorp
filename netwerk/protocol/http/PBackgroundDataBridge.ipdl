@@ -14,14 +14,12 @@ async protocol PBackgroundDataBridge
 child:
   async OnTransportAndData(uint64_t  offset,
                            uint32_t  count,
-                           nsCString data,
-                           TimeStamp onDataAvailableStart);
+                           nsCString data);
 
   async OnStopRequest(nsresult aStatus,
                       ResourceTimingStructArgs timing,
                       TimeStamp lastActiveTabOptimization,
-                      nsHttpHeaderArray responseTrailers,
-                      TimeStamp onStopRequestStart);
+                      nsHttpHeaderArray responseTrailers);
 
 both:
   async __delete__();

@@ -386,9 +386,9 @@ bool AntiTrackingUtils::CheckStoragePermission(nsIPrincipal* aPrincipal,
 
 /* static */
 nsresult AntiTrackingUtils::TestStoragePermissionInParent(
-    nsIPrincipal* aTopPrincipal, nsIPrincipal* aPrincipal, uint32_t* aResult) {
+    nsIPrincipal* aTopPrincipal, nsIPrincipal* aPrincipal, bool* aResult) {
   NS_ENSURE_ARG(aResult);
-  *aResult = nsIPermissionManager::UNKNOWN_ACTION;
+  *aResult = false;
   NS_ENSURE_ARG(aTopPrincipal);
   NS_ENSURE_ARG(aPrincipal);
 
@@ -413,8 +413,8 @@ nsresult AntiTrackingUtils::TestStoragePermissionInParent(
       aTopPrincipal, requestPermissionKey, &access);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (access != nsIPermissionManager::UNKNOWN_ACTION) {
-    *aResult = access;
+  if (access == nsIPermissionManager::ALLOW_ACTION) {
+    *aResult = true;
     return NS_OK;
   }
 
@@ -423,7 +423,7 @@ nsresult AntiTrackingUtils::TestStoragePermissionInParent(
       aTopPrincipal, requestFramePermissionKey, &frameAccess);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult = frameAccess;
+  *aResult = frameAccess == nsIPermissionManager::ALLOW_ACTION;
   return NS_OK;
 }
 

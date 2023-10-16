@@ -104,7 +104,6 @@ class APZCCallbackHelper {
 
   /* Synthesize a mouse event with the given parameters, and dispatch it
    * via the given widget. */
-  MOZ_CAN_RUN_SCRIPT
   static nsEventStatus DispatchSynthesizedMouseEvent(
       EventMessage aMsg, const LayoutDevicePoint& aRefPoint,
       Modifiers aModifiers, int32_t aClickCount, nsIWidget* aWidget);
@@ -122,7 +121,6 @@ class APZCCallbackHelper {
 
   /* Fire a single-tap event at the given point. The event is dispatched
    * via the given widget. */
-  MOZ_CAN_RUN_SCRIPT
   static void FireSingleTapEvent(const LayoutDevicePoint& aPoint,
                                  Modifiers aModifiers, int32_t aClickCount,
                                  nsIWidget* aWidget);

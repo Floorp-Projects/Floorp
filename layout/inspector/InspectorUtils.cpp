@@ -21,14 +21,12 @@
 #include "nsComputedDOMStyle.h"
 #include "mozilla/EventStateManager.h"
 #include "nsAtom.h"
-#include "nsBlockFrame.h"
 #include "nsPresContext.h"
 #include "nsRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/dom/CharacterData.h"
-#include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/Highlight.h"
@@ -721,41 +719,6 @@ Element* InspectorUtils::ContainingBlockOf(GlobalObject&, Element& aElement) {
   return Element::FromNodeOrNull(cb->GetContent());
 }
 
-void InspectorUtils::GetBlockLineCounts(GlobalObject& aGlobal,
-                                        Element& aElement,
-                                        Nullable<nsTArray<uint32_t>>& aResult) {
-  nsBlockFrame* block =
-      do_QueryFrame(aElement.GetPrimaryFrame(FlushType::Layout));
-  if (!block) {
-    aResult.SetNull();
-    return;
-  }
-
-  // If CSS columns were specified on the actual block element (rather than an
-  // ancestor block, GetPrimaryFrame will return its ColumnSetWrapperFrame, and
-  // we need to drill down to the actual block that contains the lines.
-  if (block->IsColumnSetWrapperFrame()) {
-    nsIFrame* firstChild = block->PrincipalChildList().FirstChild();
-    if (!firstChild->IsColumnSetFrame()) {
-      aResult.SetNull();
-      return;
-    }
-    block = do_QueryFrame(firstChild->PrincipalChildList().FirstChild());
-    if (!block || block->GetContent() != &aElement) {
-      aResult.SetNull();
-      return;
-    }
-  }
-
-  nsTArray<uint32_t> result;
-  do {
-    result.AppendElement(block->Lines().size());
-    block = static_cast<nsBlockFrame*>(block->GetNextInFlow());
-  } while (block);
-
-  aResult.SetValue(std::move(result));
-}
-
 static bool FrameHasSpecifiedSize(const nsIFrame* aFrame) {
   auto wm = aFrame->GetWritingMode();
 
@@ -852,29 +815,6 @@ void InspectorUtils::GetRegisteredCssHighlights(GlobalObject& aGlobalObject,
     if (!aActiveOnly || highlight->Size() > 0) {
       aResult.AppendElement(highlightName->GetUTF16String());
     }
-  }
-}
-
-/* static */
-void InspectorUtils::GetCSSRegisteredProperties(
-    GlobalObject& aGlobalObject, Document& aDocument,
-    nsTArray<InspectorCSSPropertyDefinition>& aResult) {
-  nsTArray<StylePropDef> result;
-  Servo_GetRegisteredCustomProperties(
-      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawData(),
-      &result);
-  for (const auto& propDef : result) {
-    InspectorCSSPropertyDefinition& property = *aResult.AppendElement();
-
-    propDef.name.AsAtom()->ToUTF8String(property.mName);
-    property.mSyntax.Append(propDef.syntax);
-    property.mInherits = propDef.inherits;
-    if (propDef.has_initial_value) {
-      property.mInitialValue.Append(propDef.initial_value);
-    } else {
-      property.mInitialValue.SetIsVoid(true);
-    }
-    property.mFromJS = propDef.from_js;
   }
 }
 

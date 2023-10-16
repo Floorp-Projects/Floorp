@@ -5,10 +5,7 @@ support-files = [
   "!/accessible/tests/mochitest/*.js",
   "*.sys.mjs",
   "head.js",
-  "python_runner_wsh.py",
   "shared-head.js",
-  "windows/a11y_setup.py",
-  "windows/a11y_setup_requirements.txt",
 ]
 prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 
@@ -49,3 +46,4 @@ skip-if = ["os == 'win' && verify && debug"]
 
 ["browser_shutdown_start_restart.js"]
 skip-if = ["verify && debug"]
+

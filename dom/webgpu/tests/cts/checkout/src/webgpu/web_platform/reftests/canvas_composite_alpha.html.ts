@@ -9,7 +9,7 @@ export function run(
   alphaMode: GPUCanvasAlphaMode,
   writeCanvasMethod: WriteCanvasMethod
 ) {
-  runRefTest(t => {
+  runRefTest(async t => {
     const module = t.device.createShaderModule({
       code: `
 struct VertexOutput {

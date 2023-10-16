@@ -10,7 +10,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "mochitest.toml",
+    "mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

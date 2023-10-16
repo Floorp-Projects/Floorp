@@ -112,8 +112,6 @@ class DatabaseFileManager final
 
   [[nodiscard]] nsresult AsyncDeleteFile(int64_t aFileId);
 
-  nsresult Invalidate() override;
-
   MOZ_DECLARE_REFCOUNTED_TYPENAME(DatabaseFileManager)
 
   static StaticMutex& Mutex() { return sMutex; }

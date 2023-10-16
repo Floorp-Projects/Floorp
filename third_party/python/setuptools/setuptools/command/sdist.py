@@ -4,22 +4,24 @@ import os
 import sys
 import io
 import contextlib
-from itertools import chain
 
-from .._importlib import metadata
-from .build import _ORIGINAL_SUBCOMMANDS
+from setuptools.extern import ordered_set
+
+from .py36compat import sdist_add_defaults
+
+import pkg_resources
 
 _default_revctrl = list
 
 
 def walk_revctrl(dirname=''):
     """Find all files under revision control"""
-    for ep in metadata.entry_points(group='setuptools.file_finders'):
+    for ep in pkg_resources.iter_entry_points('setuptools.file_finders'):
         for item in ep.load()(dirname):
             yield item
 
 
-class sdist(orig.sdist):
+class sdist(sdist_add_defaults, orig.sdist):
     """Smart sdist that finds anything supported by revision control"""
 
     user_options = [
@@ -31,10 +33,6 @@ class sdist(orig.sdist):
         ('dist-dir=', 'd',
          "directory to put the source distribution archive(s) in "
          "[default: dist]"),
-        ('owner=', 'u',
-         "Owner name used when creating a tar file [default: current user]"),
-        ('group=', 'g',
-         "Group name used when creating a tar file [default: current group]"),
     ]
 
     negative_opt = {}
@@ -100,10 +98,6 @@ class sdist(orig.sdist):
             if orig_val is not NoValue:
                 setattr(os, 'link', orig_val)
 
-    def add_defaults(self):
-        super().add_defaults()
-        self._add_defaults_build_sub_commands()
-
     def _add_defaults_optional(self):
         super()._add_defaults_optional()
         if os.path.isfile('pyproject.toml'):
@@ -116,25 +110,14 @@ class sdist(orig.sdist):
             self.filelist.extend(build_py.get_source_files())
             self._add_data_files(self._safe_data_files(build_py))
 
-    def _add_defaults_build_sub_commands(self):
-        build = self.get_finalized_command("build")
-        missing_cmds = set(build.get_sub_commands()) - _ORIGINAL_SUBCOMMANDS
-        # ^-- the original built-in sub-commands are already handled by default.
-        cmds = (self.get_finalized_command(c) for c in missing_cmds)
-        files = (c.get_source_files() for c in cmds if hasattr(c, "get_source_files"))
-        self.filelist.extend(chain.from_iterable(files))
-
     def _safe_data_files(self, build_py):
         """
-        Since the ``sdist`` class is also used to compute the MANIFEST
-        (via :obj:`setuptools.command.egg_info.manifest_maker`),
-        there might be recursion problems when trying to obtain the list of
-        data_files and ``include_package_data=True`` (which in turn depends on
-        the files included in the MANIFEST).
-
-        To avoid that, ``manifest_maker`` should be able to overwrite this
-        method and avoid recursive attempts to build/analyze the MANIFEST.
+        Extracting data_files from build_py is known to cause
+        infinite recursion errors when `include_package_data`
+        is enabled, so suppress it in that case.
         """
+        if self.distribution.include_package_data:
+            return ()
         return build_py.data_files
 
     def _add_data_files(self, data_files):
@@ -206,3 +189,34 @@ class sdist(orig.sdist):
                 continue
             self.filelist.append(line)
         manifest.close()
+
+    def check_license(self):
+        """Checks if license_file' or 'license_files' is configured and adds any
+        valid paths to 'self.filelist'.
+        """
+
+        files = ordered_set.OrderedSet()
+
+        opts = self.distribution.get_option_dict('metadata')
+
+        # ignore the source of the value
+        _, license_file = opts.get('license_file', (None, None))
+
+        if license_file is None:
+            log.debug("'license_file' option was not specified")
+        else:
+            files.add(license_file)
+
+        try:
+            files.update(self.distribution.metadata.license_files)
+        except TypeError:
+            log.warn("warning: 'license_files' option is malformed")
+
+        for f in files:
+            if not os.path.exists(f):
+                log.warn(
+                    "warning: Failed to find the configured license file '%s'",
+                    f)
+                files.remove(f)
+
+        self.filelist.extend(files)

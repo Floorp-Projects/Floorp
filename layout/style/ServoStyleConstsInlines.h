@@ -965,7 +965,7 @@ Maybe<CSSIntSize> StyleImage::GetIntrinsicSize() const;
 template <>
 inline bool StyleImage::IsImageRequestType() const {
   const auto& finalImage = FinalImage();
-  return finalImage.IsUrl();
+  return finalImage.IsUrl() || finalImage.IsRect();
 }
 
 template <>
@@ -974,6 +974,9 @@ inline const StyleComputedImageUrl* StyleImage::GetImageRequestURLValue()
   const auto& finalImage = FinalImage();
   if (finalImage.IsUrl()) {
     return &finalImage.AsUrl();
+  }
+  if (finalImage.IsRect()) {
+    return &finalImage.AsRect()->url;
   }
   return nullptr;
 }
@@ -996,6 +999,8 @@ template <>
 bool StyleImage::IsSizeAvailable() const;
 template <>
 bool StyleImage::IsComplete() const;
+template <>
+Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const;
 template <>
 void StyleImage::ResolveImage(dom::Document&, const StyleImage*);
 

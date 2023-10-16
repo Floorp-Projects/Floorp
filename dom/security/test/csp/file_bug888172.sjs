@@ -8,16 +8,16 @@ function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.
   // Since it's relative to the cwd of the test runner, we start there and
   // append to get to the actual path of the file.
-  var testHTMLFile = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("CurWorkD", Ci.nsIFile);
+  var testHTMLFile = Components.classes["@mozilla.org/file/directory_service;1"]
+    .getService(Components.interfaces.nsIProperties)
+    .get("CurWorkD", Components.interfaces.nsIFile);
   var dirs = path.split("/");
   for (var i = 0; i < dirs.length; i++) {
     testHTMLFile.append(dirs[i]);
   }
-  var testHTMLFileStream = Cc[
+  var testHTMLFileStream = Components.classes[
     "@mozilla.org/network/file-input-stream;1"
-  ].createInstance(Ci.nsIFileInputStream);
+  ].createInstance(Components.interfaces.nsIFileInputStream);
   testHTMLFileStream.init(testHTMLFile, -1, 0, 0);
   var testHTML = NetUtil.readInputStreamToString(
     testHTMLFileStream,

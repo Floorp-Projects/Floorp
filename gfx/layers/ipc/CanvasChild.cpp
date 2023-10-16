@@ -7,7 +7,6 @@
 #include "CanvasChild.h"
 
 #include "MainThreadUtils.h"
-#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/DrawTargetRecording.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/gfx/Rect.h"
@@ -35,7 +34,8 @@ class RingBufferWriterServices final
     if (!mCanvasChild) {
       return false;
     }
-    return !mCanvasChild->CanSend() || ipc::ProcessChild::ExpectingShutdown();
+    return !mCanvasChild->GetIPCChannel()->CanSend() ||
+           ipc::ProcessChild::ExpectingShutdown();
   }
 
   void ResumeReader() override {
@@ -126,7 +126,9 @@ class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
   RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
 };
 
-CanvasChild::CanvasChild() = default;
+CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
+  aEndpoint.Bind(this);
+}
 
 CanvasChild::~CanvasChild() = default;
 
@@ -146,11 +148,7 @@ ipc::IPCResult CanvasChild::RecvNotifyDeviceChanged() {
 /* static */ bool CanvasChild::mDeactivated = false;
 
 ipc::IPCResult CanvasChild::RecvDeactivate() {
-  RefPtr<CanvasChild> self(this);
   mDeactivated = true;
-  if (auto* cm = gfx::CanvasManagerChild::Get()) {
-    cm->DeactivateCanvas();
-  }
   NotifyCanvasDeviceReset();
   return IPC_OK();
 }
@@ -171,8 +169,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
 
     if (CanSend()) {
       Unused << SendInitTranslator(mTextureType, std::move(handle),
-                                   std::move(readerSem), std::move(writerSem),
-                                   /* aUseIPDLThread */ false);
+                                   std::move(readerSem), std::move(writerSem));
     }
   }
 
@@ -183,10 +180,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
 void CanvasChild::ActorDestroy(ActorDestroyReason aWhy) {
   // Explicitly drop our reference to the recorder, because it holds a reference
   // to us via the ResumeTranslation callback.
-  if (mRecorder) {
-    mRecorder->DetachResources();
-    mRecorder = nullptr;
-  }
+  mRecorder = nullptr;
 }
 
 void CanvasChild::ResumeTranslation() {
@@ -197,7 +191,7 @@ void CanvasChild::ResumeTranslation() {
 
 void CanvasChild::Destroy() {
   if (CanSend()) {
-    Send__delete__(this);
+    Close();
   }
 }
 

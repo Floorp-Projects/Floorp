@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   SearchSERPTelemetryUtils: "resource:///modules/SearchSERPTelemetry.sys.mjs",
 
@@ -1282,6 +1283,16 @@ export let BrowserUsageTelemetry = {
       return;
     }
 
+    let provenanceExtra = {};
+    try {
+      provenanceExtra = await lazy.ProvenanceData.submitProvenanceTelemetry();
+    } catch (ex) {
+      console.warn(
+        "reportInstallationTelemetry - submitProvenanceTelemetry failed",
+        ex
+      );
+    }
+
     const TIMESTAMP_PREF = "app.installation.timestamp";
     const lastInstallTime = Services.prefs.getStringPref(TIMESTAMP_PREF, null);
     const wpm = Cc["@mozilla.org/windows-package-manager;1"].createInstance(
@@ -1410,6 +1421,13 @@ export let BrowserUsageTelemetry = {
       installer_type,
       null,
       extra
+    );
+    Services.telemetry.recordEvent(
+      "installation",
+      "first_seen_prov_ext",
+      installer_type,
+      null,
+      provenanceExtra
     );
   },
 };

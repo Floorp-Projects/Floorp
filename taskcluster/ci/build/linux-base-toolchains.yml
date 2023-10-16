@@ -8,13 +8,6 @@
 ---
 job-defaults:
     worker-type: b-linux-gcp
-    run:
-        extra-config:
-            extra_mozconfig_content:
-                # Builds on automation don't normally build geckodriver,
-                # but to ensure we also successfully build geckodriver with
-                # the MSRV, force it to be built.
-                - ac_add_options --enable-geckodriver
 
 linux64-base-toolchains/opt:
     description: "Linux64 base toolchains Opt"
@@ -53,7 +46,6 @@ linux64-base-toolchains/opt:
             - linux64-node-12
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi-clang-8.0
 
 linux64-base-toolchains/debug:
     description: "Linux64 base toolchains Debug"
@@ -95,7 +87,6 @@ linux64-base-toolchains/debug:
             - linux64-node-12
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi-clang-8.0
 
 linux64-base-toolchains-clang/opt:
     description: "Linux64 base toolchains clang Opt"
@@ -122,7 +113,6 @@ linux64-base-toolchains-clang/opt:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils-2.31.1
             - linux64-clang-base
             - linux64-rust-base
             - linux64-cbindgen
@@ -131,7 +121,6 @@ linux64-base-toolchains-clang/opt:
             - linux64-node-12
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi-clang-8.0
 
 linux64-base-toolchains-clang/debug:
     description: "Linux64 base toolchains clang Debug"
@@ -161,7 +150,6 @@ linux64-base-toolchains-clang/debug:
         tooltool-downloads: public
     fetches:
         toolchain:
-            - linux64-binutils-2.31.1
             - linux64-clang-base
             - linux64-rust-base
             - linux64-cbindgen
@@ -170,4 +158,3 @@ linux64-base-toolchains-clang/debug:
             - linux64-node-12
             - linux64-pkgconf
             - sysroot-x86_64-linux-gnu
-            - sysroot-wasm32-wasi-clang-8.0

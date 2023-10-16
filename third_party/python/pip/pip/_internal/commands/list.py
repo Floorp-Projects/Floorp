@@ -103,10 +103,7 @@ class ListCommand(IndexGroupCommand):
             dest="list_format",
             default="columns",
             choices=("columns", "freeze", "json"),
-            help=(
-                "Select the output format among: columns (default), freeze, or json. "
-                "The 'freeze' format cannot be used with the --outdated option."
-            ),
+            help="Select the output format among: columns (default), freeze, or json",
         )
 
         self.cmd_opts.add_option(
@@ -160,7 +157,7 @@ class ListCommand(IndexGroupCommand):
 
         if options.outdated and options.list_format == "freeze":
             raise CommandError(
-                "List format 'freeze' cannot be used with the --outdated option."
+                "List format 'freeze' can not be used with the --outdated option."
             )
 
         cmdoptions.check_list_path_option(options)

@@ -389,7 +389,7 @@ nsresult nsConsoleService::LogMessageWithMode(
     // avoid failing in XPCShell tests
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     if (mainThread) {
-      SchedulerGroup::Dispatch(r.forget());
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
     }
   }
 

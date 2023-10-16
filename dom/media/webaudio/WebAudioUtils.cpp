@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebAudioUtils.h"
+#include "AudioNodeTrack.h"
 #include "blink/HRTFDatabaseLoader.h"
 
 #include "nsComponentManagerUtils.h"
@@ -13,6 +14,7 @@
 #include "nsIScriptError.h"
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "AudioEventTimeline.h"
 
 #include "mozilla/SchedulerGroup.h"
 
@@ -21,6 +23,14 @@ namespace mozilla {
 LazyLogModule gWebAudioAPILog("WebAudioAPI");
 
 namespace dom {
+
+void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
+                                                     AudioNodeTrack* aDest) {
+  aEvent.SetTimeInTicks(
+      aDest->SecondsToNearestTrackTime(aEvent.Time<double>()));
+  aEvent.mTimeConstant *= aDest->mSampleRate;
+  aEvent.mDuration *= aDest->mSampleRate;
+}
 
 void WebAudioUtils::Shutdown() { WebCore::HRTFDatabaseLoader::shutdown(); }
 
@@ -69,7 +79,7 @@ void WebAudioUtils::LogToDeveloperConsole(uint64_t aWindowID,
     nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
         "dom::WebAudioUtils::LogToDeveloperConsole",
         [aWindowID, aKey] { LogToDeveloperConsole(aWindowID, aKey); });
-    SchedulerGroup::Dispatch(task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
     return;
   }
 

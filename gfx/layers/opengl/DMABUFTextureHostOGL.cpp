@@ -65,8 +65,6 @@ gl::GLContext* DMABUFTextureHostOGL::gl() const { return nullptr; }
 
 void DMABUFTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(mExternalImageId.isSome());
-
   if (!mSurface) {
     return;
   }

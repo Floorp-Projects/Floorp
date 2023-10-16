@@ -177,6 +177,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
       "cookies.sqlite-wal",
     ]);
     let passwords = getFileResource(types.PASSWORDS, [
+      "signons.sqlite",
       "logins.json",
       "key3.db",
       "key4.db",

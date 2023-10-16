@@ -434,8 +434,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
                   }
                 });
 
-            if (streamStats->rtp_stats.first_packet_time ==
-                webrtc::Timestamp::PlusInfinity()) {
+            if (streamStats->rtp_stats.first_packet_time_ms == -1) {
               return;
             }
 

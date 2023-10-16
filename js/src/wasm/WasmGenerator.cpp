@@ -37,7 +37,6 @@
 #include "wasm/WasmGC.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmStubs.h"
-#include "wasm/WasmSummarizeInsn.h"
 
 using namespace js;
 using namespace js::jit;
@@ -57,7 +56,6 @@ bool CompiledCode::swap(MacroAssembler& masm) {
   trapSites.swap(masm.trapSites());
   symbolicAccesses.swap(masm.symbolicAccesses());
   tryNotes.swap(masm.tryNotes());
-  codeRangeUnwindInfos.swap(masm.codeRangeUnwindInfos());
   codeLabels.swap(masm.codeLabels());
   return true;
 }
@@ -698,14 +696,6 @@ bool ModuleGenerator::linkCompiledCode(CompiledCode& code) {
     }
   }
 
-  auto unwindInfoOp = [=](uint32_t, CodeRangeUnwindInfo* i) {
-    i->offsetBy(offsetInModule);
-  };
-  if (!AppendForEach(&metadataTier_->codeRangeUnwindInfos,
-                     code.codeRangeUnwindInfos, unwindInfoOp)) {
-    return false;
-  }
-
   auto tryNoteFilter = [](const TryNote* tn) {
     // Filter out all try notes that were never given a try body. This may
     // happen due to dead code elimination.
@@ -985,12 +975,6 @@ bool ModuleGenerator::finishMetadataTier() {
     }
   }
 
-  last = 0;
-  for (const CodeRangeUnwindInfo& info : metadataTier_->codeRangeUnwindInfos) {
-    MOZ_ASSERT(info.offset() >= last);
-    last = info.offset();
-  }
-
   // Try notes should be sorted so that the end of ranges are in rising order
   // so that the innermost catch handler is chosen.
   last = 0;
@@ -1065,49 +1049,12 @@ UniqueCodeTier ModuleGenerator::finishCodeTier() {
 
   metadataTier_->stackMaps.offsetBy(uintptr_t(segment->base()));
 
-#if defined(DEBUG)
+#ifdef DEBUG
   // Check that each stackmap is associated with a plausible instruction.
   for (size_t i = 0; i < metadataTier_->stackMaps.length(); i++) {
-    MOZ_ASSERT(
-        IsPlausibleStackMapKey(metadataTier_->stackMaps.get(i).nextInsnAddr),
-        "wasm stackmap does not reference a valid insn");
-  }
-#endif
-
-#if defined(DEBUG) && (defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || \
-                       defined(JS_CODEGEN_ARM64) || defined(JS_CODEGEN_ARM))
-  // Check that each trapsite is associated with a plausible instruction.  The
-  // required instruction kind depends on the trapsite kind.
-  //
-  // NOTE: currently only enabled on x86_{32,64} and arm{32,64}.  Ideally it
-  // should be extended to riscv, loongson, mips.
-  //
-  for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
-    const TrapSiteVector& trapSites = metadataTier_->trapSites[trap];
-    for (const TrapSite& trapSite : trapSites) {
-      const uint8_t* insnAddr =
-          ((const uint8_t*)(segment->base())) + uintptr_t(trapSite.pcOffset);
-      // `expected` describes the kind of instruction we expect to see at
-      // `insnAddr`.  Find out what is actually there and check it matches.
-      const TrapMachineInsn expected = trapSite.insn;
-      mozilla::Maybe<TrapMachineInsn> actual =
-          SummarizeTrapInstruction(insnAddr);
-      bool valid = actual.isSome() && actual.value() == expected;
-      // This is useful for diagnosing validation failures.
-      // if (!valid) {
-      //   fprintf(stderr,
-      //           "FAIL: reason=%-22s  expected=%-12s  "
-      //           "pcOffset=%-5u  addr= %p\n",
-      //           NameOfTrap(trap), NameOfTrapMachineInsn(expected),
-      //           trapSite.pcOffset, insnAddr);
-      //   if (actual.isSome()) {
-      //     fprintf(stderr, "FAIL: identified as %s\n",
-      //             actual.isSome() ? NameOfTrapMachineInsn(actual.value())
-      //                             : "(insn not identified)");
-      //   }
-      // }
-      MOZ_ASSERT(valid, "wasm trapsite does not reference a valid insn");
-    }
+    MOZ_ASSERT(IsValidStackMapKey(compilerEnv_->debugEnabled(),
+                                  metadataTier_->stackMaps.get(i).nextInsnAddr),
+               "wasm stackmap does not reference a valid insn");
   }
 #endif
 

@@ -134,11 +134,10 @@ EventListenerManagerBase::EventListenerManagerBase()
 }
 
 EventListenerManager::EventListenerManager(EventTarget* aTarget)
-    : mTarget(aTarget) {
+    : EventListenerManagerBase(), mTarget(aTarget) {
   NS_ASSERTION(aTarget, "unexpected null pointer");
 
   if (mIsMainThreadELM) {
-    mRefCnt.SetIsOnMainThread();
     ++sMainThreadCreatedCount;
   }
 }

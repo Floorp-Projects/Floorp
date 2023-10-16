@@ -49,7 +49,10 @@ module.exports = {
         let { callee } = node;
 
         if (
-          (isIdentifier(callee.object, "ChromeUtils") ||
+          (isMemberExpression(callee.object, "Components", "utils") ||
+            isIdentifier(callee.object, "Cu") ||
+            isMemberExpression(callee.object, "SpecialPowers", "Cu") ||
+            isIdentifier(callee.object, "ChromeUtils") ||
             isMemberExpression(
               callee.object,
               "SpecialPowers",
@@ -67,6 +70,7 @@ module.exports = {
           (isMemberExpression(callee.object, "SpecialPowers", "ChromeUtils") &&
             isIdentifier(callee.property, "defineModuleGetter")) ||
           isMemberExpression(callee, "ChromeUtils", "defineModuleGetter") ||
+          isMemberExpression(callee, "XPCOMUtils", "defineLazyModuleGetter") ||
           isMemberExpression(callee, "XPCOMUtils", "defineLazyModuleGetters")
         ) {
           context.report({

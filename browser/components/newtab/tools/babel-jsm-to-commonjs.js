@@ -234,10 +234,10 @@ module.exports = function plugin(babel) {
       if (
         path.isExpressionStatement() &&
         path.get("expression").isCallExpression() &&
-        ["ChromeUtils"].includes(
+        ["XPCOMUtils", "ChromeUtils"].includes(
           path.get("expression.callee.object.name").node
         ) &&
-        ["defineModuleGetter"].includes(
+        ["defineLazyModuleGetter", "defineModuleGetter"].includes(
           path.get("expression.callee.property.name").node
         )
       ) {

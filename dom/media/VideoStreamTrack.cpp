@@ -31,7 +31,9 @@ void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
   if (Ended()) {
     return;
   }
-  auto output = MakeRefPtr<VideoOutput>(aSink, AbstractThread::MainThread());
+  auto output = MakeRefPtr<VideoOutput>(
+      aSink, nsGlobalWindowInner::Cast(GetParentObject())
+                 ->AbstractMainThreadFor(TaskCategory::Other));
   AddVideoOutput(output);
 }
 

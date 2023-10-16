@@ -162,11 +162,15 @@ function createExpectedQuickSuggestResult(suggest) {
         : undefined,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
-        id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
       },
-      isBlockable: true,
+      isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
       blockL10n: {
-        id: "urlbar-result-menu-dismiss-firefox-suggest",
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
       },
       displayUrl: suggest.url,
       source: "remote-settings",

@@ -15,16 +15,13 @@ SimpleTest.waitForExplicitFinish();
 
   const INACTIVE_CSS_PREF = "devtools.inspector.inactive.css.enabled";
   const CUSTOM_HIGHLIGHT_API = "dom.customHighlightAPI.enabled";
-  const TEXT_WRAP_BALANCE = "layout.css.text-wrap-balance.enabled";
 
   Services.prefs.setBoolPref(INACTIVE_CSS_PREF, true);
   Services.prefs.setBoolPref(CUSTOM_HIGHLIGHT_API, true);
-  Services.prefs.setBoolPref(TEXT_WRAP_BALANCE, true);
 
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref(INACTIVE_CSS_PREF);
     Services.prefs.clearUserPref(CUSTOM_HIGHLIGHT_API);
-    Services.prefs.clearUserPref(TEXT_WRAP_BALANCE);
   });
 
   const FOLDER = "./inactive-property-helper";
@@ -69,7 +66,6 @@ SimpleTest.waitForExplicitFinish();
     "table.mjs",
     "table-cell.mjs",
     "text-overflow.mjs",
-    "text-wrap.mjs",
     "width-height-ruby.mjs",
   ].map(file => `${FOLDER}/${file}`);
 

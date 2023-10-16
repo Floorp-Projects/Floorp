@@ -238,8 +238,6 @@ impl generic::CalcNodeLeaf for Leaf {
                     FontRelativeLength::Cap(..) => SortKey::Cap,
                     FontRelativeLength::Ic(..) => SortKey::Ic,
                     FontRelativeLength::Rem(..) => SortKey::Rem,
-                    FontRelativeLength::Lh(..) => SortKey::Lh,
-                    FontRelativeLength::Rlh(..) => SortKey::Rlh,
                 },
                 NoCalcLength::ViewportPercentage(ref vp) => match *vp {
                     ViewportPercentageLength::Vh(..) => SortKey::Vh,
@@ -863,7 +861,7 @@ impl CalcNode {
 
     /// Tries to simplify this expression into a `<length>` or `<percentage>`
     /// value.
-    pub fn into_length_or_percentage(
+    fn into_length_or_percentage(
         mut self,
         clamping_mode: AllowedNumericType,
     ) -> Result<CalcLengthPercentage, ()> {

@@ -407,6 +407,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.urlbar.showSearchTerms.enabled``: True if to show the search term in the urlbar while on a default search engine results page.
 
+- ``browser.urlbar.suggest.bestmatch``: True if to show best match result is enabled in the urlbar.
+
 - ``browser.urlbar.suggest.quicksuggest.nonsponsored``: True if non-sponsored Firefox Suggest suggestions are enabled in the urlbar.
 
 - ``browser.urlbar.suggest.quicksuggest.sponsored``: True if sponsored Firefox Suggest suggestions are enabled in the urlbar.
@@ -468,8 +470,6 @@ The following is a partial list of `collected preferences <https://searchfox.org
 - ``nimbus.qa.pref-2``: Used to monitor the results of pref-setting test experiments.
 
 - ``signon.firefoxRelay.feature``: User choice regarding Firefox Relay integration with Firefox Password Manager. Can be one of undefined, "available", "offered", "enabled" or "disabled".
-
-- ``dom.popup_allowed_events``: Which events should allow popups. Only exposed with about:config.
 
 attribution
 ~~~~~~~~~~~

@@ -82,7 +82,7 @@ void SharedSurfacesChild::SharedUserData::Destroy(void* aClosure) {
   RefPtr<SharedUserData> data =
       dont_AddRef(static_cast<SharedUserData*>(aClosure));
   if (data->mShared || !data->mKeys.IsEmpty()) {
-    SchedulerGroup::Dispatch(data.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, data.forget());
   }
 }
 
@@ -277,7 +277,8 @@ void SharedSurfacesChild::Share(SourceSurfaceSharedData* aSurface) {
       RefPtr<SourceSurfaceSharedData> mSurface;
     };
 
-    SchedulerGroup::Dispatch(MakeAndAddRef<ShareRunnable>(aSurface));
+    SchedulerGroup::Dispatch(TaskCategory::Other,
+                             MakeAndAddRef<ShareRunnable>(aSurface));
     return;
   }
 
@@ -421,7 +422,7 @@ void SharedSurfacesAnimation::Destroy() {
     nsCOMPtr<nsIRunnable> task =
         NewRunnableMethod("SharedSurfacesAnimation::Destroy", this,
                           &SharedSurfacesAnimation::Destroy);
-    NS_DispatchToMainThread(task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
     return;
   }
 

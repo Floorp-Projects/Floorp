@@ -63,8 +63,10 @@ __all__ = (
 )
 
 
-SERVER_SOFTWARE: str = "Python/{0[0]}.{0[1]} aiohttp/{1}".format(
+SERVER_SOFTWARE = "Python/{0[0]}.{0[1]} aiohttp/{1}".format(
     sys.version_info, __version__
-)
+)  # type: str
 
-RESPONSES: Mapping[int, Tuple[str, str]] = http.server.BaseHTTPRequestHandler.responses
+RESPONSES = (
+    http.server.BaseHTTPRequestHandler.responses
+)  # type: Mapping[int, Tuple[str, str]]

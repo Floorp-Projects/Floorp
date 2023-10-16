@@ -61,37 +61,13 @@ function open_subdialog_and_test_generic_start_state(
       await dialogOpenPromise;
       info("subdialog window is loaded");
 
-      let expectedStyleSheetURLs = subdialog._injectedStyleSheets;
-      let foundStyleSheetURLs = Array.from(
-        subdialog._frame.contentDocument.styleSheets,
-        s => s.href
-      );
-
-      Assert.greaterOrEqual(
-        expectedStyleSheetURLs.length,
-        0,
-        "Should be at least one injected stylesheet."
-      );
-      // We can't test that the injected stylesheets come later if those are
-      // the only ones. If this test fails it indicates the test needs to be
-      // changed somehow.
-      Assert.greater(
-        foundStyleSheetURLs.length,
-        expectedStyleSheetURLs.length,
-        "Should see at least all one additional stylesheet from the document."
-      );
-
-      // The expected stylesheets should be at the end of the list of loaded
-      // stylesheets.
-      foundStyleSheetURLs = foundStyleSheetURLs.slice(
-        foundStyleSheetURLs.length - expectedStyleSheetURLs.length
-      );
-
-      Assert.deepEqual(
-        foundStyleSheetURLs,
-        expectedStyleSheetURLs,
-        "Should have seen the injected stylesheets in the correct order"
-      );
+      let expectedStyleSheetURLs = subdialog._injectedStyleSheets.slice(0);
+      for (let styleSheet of subdialog._frame.contentDocument.styleSheets) {
+        let index = expectedStyleSheetURLs.indexOf(styleSheet.href);
+        if (index >= 0) {
+          expectedStyleSheetURLs.splice(index, 1);
+        }
+      }
 
       Assert.ok(
         !!subdialog._frame.contentWindow,
@@ -107,7 +83,11 @@ function open_subdialog_and_test_generic_start_state(
         "visible",
         "Overlay should be visible"
       );
-
+      Assert.equal(
+        expectedStyleSheetURLs.length,
+        0,
+        "No stylesheets that were expected are missing"
+      );
       return result;
     }
   );

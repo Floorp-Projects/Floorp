@@ -16,8 +16,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
-using namespace mozilla::default_agent;
-
 class WDBACacheTest : public ::testing::Test {
  protected:
   std::wstring mCacheRegKey;

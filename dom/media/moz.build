@@ -30,7 +30,6 @@ with Files("GetUserMedia*"):
 DIRS += [
     "autoplay",
     "doctor",
-    "driftcontrol",
     "eme",
     "encoder",
     "fake-cdm",
@@ -80,16 +79,16 @@ if CONFIG["MOZ_WEBRTC_SIGNALING"]:
         TEST_DIRS += ["webrtc/tests/fuzztests"]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest.toml",
-    "test/mochitest_background_video.toml",
-    "test/mochitest_bugs.toml",
-    "test/mochitest_compat.toml",
-    "test/mochitest_eme.toml",
-    "test/mochitest_media_engine.toml",
-    "test/mochitest_media_recorder.toml",
-    "test/mochitest_seek.toml",
-    "test/mochitest_stream.toml",
-    "webrtc/tests/mochitests/identity/mochitest.toml",
+    "test/mochitest.ini",
+    "test/mochitest_background_video.ini",
+    "test/mochitest_bugs.ini",
+    "test/mochitest_compat.ini",
+    "test/mochitest_eme.ini",
+    "test/mochitest_media_engine.ini",
+    "test/mochitest_media_recorder.ini",
+    "test/mochitest_seek.ini",
+    "test/mochitest_stream.ini",
+    "webrtc/tests/mochitests/identity/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]
@@ -103,10 +102,10 @@ BROWSER_CHROME_MANIFESTS += [
 
 if CONFIG["MOZ_WEBRTC"]:
     MOCHITEST_MANIFESTS += [
-        "webrtc/tests/mochitests/mochitest.toml",
-        "webrtc/tests/mochitests/mochitest_datachannel.toml",
-        "webrtc/tests/mochitests/mochitest_getusermedia.toml",
-        "webrtc/tests/mochitests/mochitest_peerconnection.toml",
+        "webrtc/tests/mochitests/mochitest.ini",
+        "webrtc/tests/mochitests/mochitest_datachannel.ini",
+        "webrtc/tests/mochitests/mochitest_getusermedia.ini",
+        "webrtc/tests/mochitests/mochitest_peerconnection.ini",
     ]
 
     CRASHTEST_MANIFESTS += ["webrtc/tests/crashtests/crashtests.list"]
@@ -131,6 +130,7 @@ EXPORTS += [
     "AudioConfig.h",
     "AudioConverter.h",
     "AudioDeviceInfo.h",
+    "AudioDriftCorrection.h",
     "AudioMixer.h",
     "AudioPacketizer.h",
     "AudioRingBuffer.h",
@@ -151,6 +151,7 @@ EXPORTS += [
     "DecoderTraits.h",
     "DOMMediaStream.h",
     "DriftCompensation.h",
+    "DynamicResampler.h",
     "ExternalEngineStateMachine.h",
     "FileBlockCache.h",
     "ForwardedInputTrack.h",
@@ -194,6 +195,8 @@ EXPORTS += [
     "PrincipalHandle.h",
     "QueueObject.h",
     "ReaderProxy.h",
+    "RLBoxSoundTouch.h",
+    "RLBoxSoundTouchTypes.h",
     "SeekJob.h",
     "SeekTarget.h",
     "SelfRef.h",
@@ -272,6 +275,7 @@ UNIFIED_SOURCES += [
     "CubebInputStream.cpp",
     "DeviceInputTrack.cpp",
     "DOMMediaStream.cpp",
+    "DynamicResampler.cpp",
     "ExternalEngineStateMachine.cpp",
     "FileBlockCache.cpp",
     "FileMediaResource.cpp",
@@ -306,6 +310,7 @@ UNIFIED_SOURCES += [
     "MemoryBlockCache.cpp",
     "QueueObject.cpp",
     "ReaderProxy.cpp",
+    "RLBoxSoundTouch.cpp",
     "SeekJob.cpp",
     "TimeUnits.cpp",
     "Tracing.cpp",
@@ -353,7 +358,7 @@ EXTRA_JS_MODULES.media += [
 ]
 
 LOCAL_INCLUDES += [
-    "!/media/libsoundtouch/src",
+    "!/security/rlbox",
     "/caps",
     "/docshell/base",
     "/dom/base",

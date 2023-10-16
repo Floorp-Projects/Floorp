@@ -584,7 +584,10 @@ inline nsresult NotificationPermissionRequest::DispatchResolvePromise() {
   nsCOMPtr<nsIRunnable> resolver =
       NewRunnableMethod("NotificationPermissionRequest::DispatchResolvePromise",
                         this, &NotificationPermissionRequest::ResolvePromise);
-  return nsGlobalWindowInner::Cast(mWindow.get())->Dispatch(resolver.forget());
+  if (nsIEventTarget* target = mWindow->EventTargetFor(TaskCategory::Other)) {
+    return target->Dispatch(resolver.forget(), nsIEventTarget::DISPATCH_NORMAL);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult NotificationPermissionRequest::ResolvePromise() {
@@ -1486,7 +1489,7 @@ already_AddRefed<Promise> Notification::RequestPermission(
   nsCOMPtr<nsIRunnable> request = new NotificationPermissionRequest(
       principal, window, promise, permissionCallback);
 
-  window->AsGlobal()->Dispatch(request.forget());
+  window->AsGlobal()->Dispatch(TaskCategory::Other, request.forget());
 
   return promise.forget();
 }
@@ -1686,7 +1689,7 @@ already_AddRefed<Promise> Notification::Get(
   RefPtr<NotificationGetRunnable> r =
       new NotificationGetRunnable(origin, aFilter.mTag, callback);
 
-  aRv = aWindow->AsGlobal()->Dispatch(r.forget());
+  aRv = aWindow->AsGlobal()->Dispatch(TaskCategory::Other, r.forget());
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -2316,7 +2319,16 @@ nsresult Notification::DispatchToMainThread(
     return mWorkerPrivate->DispatchToMainThread(std::move(aRunnable));
   }
   AssertIsOnMainThread();
-  return NS_DispatchToCurrentThread(std::move(aRunnable));
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    if (nsIEventTarget* target = global->EventTargetFor(TaskCategory::Other)) {
+      return target->Dispatch(std::move(aRunnable),
+                              nsIEventTarget::DISPATCH_NORMAL);
+    }
+  }
+  nsCOMPtr<nsIEventTarget> mainTarget = GetMainThreadSerialEventTarget();
+  MOZ_ASSERT(mainTarget);
+  return mainTarget->Dispatch(std::move(aRunnable),
+                              nsIEventTarget::DISPATCH_NORMAL);
 }
 
 }  // namespace mozilla::dom

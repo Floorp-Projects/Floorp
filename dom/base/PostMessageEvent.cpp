@@ -302,7 +302,7 @@ void PostMessageEvent::DispatchToTargetThread(ErrorResult& aError) {
     }
   }
 
-  aError = mTargetWindow->Dispatch(event.forget());
+  aError = mTargetWindow->Dispatch(TaskCategory::Other, event.forget());
 }
 
 }  // namespace mozilla::dom

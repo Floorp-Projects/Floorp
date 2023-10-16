@@ -285,11 +285,17 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
     if (!funbytes) {
       return false;
     }
-    sp.printf("%d %s(", num, funbytes.get());
+    if (!sp.printf("%d %s(", num, funbytes.get())) {
+      return false;
+    }
   } else if (fun) {
-    sp.printf("%d anonymous(", num);
+    if (!sp.printf("%d anonymous(", num)) {
+      return false;
+    }
   } else {
-    sp.printf("%d <TOP LEVEL>", num);
+    if (!sp.printf("%d <TOP LEVEL>", num)) {
+      return false;
+    }
   }
 
   if (showArgs && iter.hasArgs()) {
@@ -340,23 +346,28 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
       }
 
       if (value) {
-        sp.printf("%s%s%s%s%s%s", !first ? ", " : "", name ? name : "",
-                  name ? " = " : "", arg.isString() ? "\"" : "", value,
-                  arg.isString() ? "\"" : "");
+        if (!sp.printf("%s%s%s%s%s%s", !first ? ", " : "", name ? name : "",
+                       name ? " = " : "", arg.isString() ? "\"" : "", value,
+                       arg.isString() ? "\"" : "")) {
+          return false;
+        }
 
         first = false;
       } else {
-        sp.put(
-            "    <Failed to get argument while inspecting stack "
-            "frame>\n");
+        if (!sp.put("    <Failed to get argument while inspecting stack "
+                    "frame>\n")) {
+          return false;
+        }
       }
     }
   }
 
   // print filename, line number and column
-  sp.printf("%s [\"%s\":%u:%u]\n", fun ? ")" : "",
-            filename ? filename : "<unknown>", lineno,
-            column.zeroOriginValue());
+  if (!sp.printf("%s [\"%s\":%u:%u]\n", fun ? ")" : "",
+                 filename ? filename : "<unknown>", lineno,
+                 column.zeroOriginValue())) {
+    return false;
+  }
 
   // Note: Right now we don't dump the local variables anymore, because
   // that is hard to support across all the JITs etc.
@@ -376,9 +387,13 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
         if (!thisValBytes) {
           return false;
         }
-        sp.printf("    this = %s\n", thisValBytes.get());
+        if (!sp.printf("    this = %s\n", thisValBytes.get())) {
+          return false;
+        }
       } else {
-        sp.put("    <failed to get 'this' value>\n");
+        if (!sp.put("    <failed to get 'this' value>\n")) {
+          return false;
+        }
       }
     }
   }
@@ -404,9 +419,10 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
           return false;
         }
         cx->clearPendingException();
-        sp.put(
-            "    <Failed to fetch property while inspecting stack "
-            "frame>\n");
+        if (!sp.put("    <Failed to fetch property while inspecting stack "
+                    "frame>\n")) {
+          return false;
+        }
         continue;
       }
 
@@ -429,12 +445,15 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
       }
 
       if (name && value) {
-        sp.printf("    this.%s = %s%s%s\n", name, v.isString() ? "\"" : "",
-                  value, v.isString() ? "\"" : "");
+        if (!sp.printf("    this.%s = %s%s%s\n", name, v.isString() ? "\"" : "",
+                       value, v.isString() ? "\"" : "")) {
+          return false;
+        }
       } else {
-        sp.put(
-            "    <Failed to format values while inspecting stack "
-            "frame>\n");
+        if (!sp.put("    <Failed to format values while inspecting stack "
+                    "frame>\n")) {
+          return false;
+        }
       }
     }
   }
@@ -453,10 +472,15 @@ static bool FormatWasmFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
     }
   }
 
-  sp.printf("%d %s()", num, nameStr ? nameStr.get() : "<wasm-function>");
-  sp.printf(" [\"%s\":wasm-function[%u]:0x%x]\n",
-            iter.filename() ? iter.filename() : "<unknown>",
-            iter.wasmFuncIndex(), iter.wasmBytecodeOffset());
+  if (!sp.printf("%d %s()", num, nameStr ? nameStr.get() : "<wasm-function>")) {
+    return false;
+  }
+
+  if (!sp.printf(" [\"%s\":wasm-function[%u]:0x%x]\n",
+                 iter.filename() ? iter.filename() : "<unknown>",
+                 iter.wasmFuncIndex(), iter.wasmBytecodeOffset())) {
+    return false;
+  }
 
   MOZ_ASSERT(!cx->isExceptionPending());
   return true;
@@ -482,7 +506,9 @@ JS::UniqueChars JS::FormatStackDump(JSContext* cx, bool showArgs,
   }
 
   if (num == 0) {
-    sp.put("JavaScript stack is empty\n");
+    if (!sp.put("JavaScript stack is empty\n")) {
+      return nullptr;
+    }
   }
 
   return sp.release();

@@ -236,11 +236,6 @@ mozilla::ipc::IPCResult GPUChild::RecvNotifySwapChainInfo(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUChild::RecvNotifyDisableRemoteCanvas() {
-  gfxPlatform::DisableRemoteCanvas();
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult GPUChild::RecvFlushMemory(const nsString& aReason) {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {

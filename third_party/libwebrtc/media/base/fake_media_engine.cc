@@ -317,11 +317,12 @@ bool FakeVideoMediaChannel::AddSendStream(const StreamParams& sp) {
 bool FakeVideoMediaChannel::RemoveSendStream(uint32_t ssrc) {
   return RtpHelper<VideoMediaChannel>::RemoveSendStream(ssrc);
 }
-absl::optional<VideoCodec> FakeVideoMediaChannel::GetSendCodec() {
+bool FakeVideoMediaChannel::GetSendCodec(VideoCodec* send_codec) {
   if (send_codecs_.empty()) {
-    return absl::nullopt;
+    return false;
   }
-  return send_codecs_[0];
+  *send_codec = send_codecs_[0];
+  return true;
 }
 bool FakeVideoMediaChannel::SetSink(
     uint32_t ssrc,
@@ -443,7 +444,7 @@ void FakeVideoMediaChannel::GenerateSendKeyFrame(
 FakeVoiceEngine::FakeVoiceEngine() : fail_create_channel_(false) {
   // Add a fake audio codec. Note that the name must not be "" as there are
   // sanity checks against that.
-  SetCodecs({cricket::CreateAudioCodec(101, "fake_audio_codec", 8000, 1)});
+  SetCodecs({AudioCodec(101, "fake_audio_codec", 8000, 0, 1)});
 }
 void FakeVoiceEngine::Init() {}
 rtc::scoped_refptr<webrtc::AudioState> FakeVoiceEngine::GetAudioState() const {
@@ -543,8 +544,8 @@ FakeVideoEngine::FakeVideoEngine()
     : capture_(false), fail_create_channel_(false) {
   // Add a fake video codec. Note that the name must not be "" as there are
   // sanity checks against that.
-  send_codecs_.push_back(cricket::CreateVideoCodec(111, "fake_video_codec"));
-  recv_codecs_.push_back(cricket::CreateVideoCodec(111, "fake_video_codec"));
+  send_codecs_.push_back(VideoCodec(111, "fake_video_codec"));
+  recv_codecs_.push_back(VideoCodec(111, "fake_video_codec"));
 }
 bool FakeVideoEngine::SetOptions(const VideoOptions& options) {
   options_ = options;

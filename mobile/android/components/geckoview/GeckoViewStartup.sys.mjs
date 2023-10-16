@@ -193,7 +193,6 @@ export class GeckoViewStartup {
               "GeckoView:WebExtension:Uninstall",
               "GeckoView:WebExtension:Update",
               "GeckoView:WebExtension:EnableProcessSpawning",
-              "GeckoView:WebExtension:DisableProcessSpawning",
             ],
             observers: [
               "devtools-installed-addon",

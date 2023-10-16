@@ -48,7 +48,6 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
@@ -80,7 +79,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/FileSystemQuotaClientFactory.h"
+#include "mozilla/dom/FileSystemQuotaClient.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/LocalStorageCommon.h"
 #include "mozilla/dom/StorageDBUpdater.h"
@@ -267,8 +266,7 @@ constexpr auto kStorageName = u"storage"_ns;
 #define PERMANENT_DIRECTORY_NAME u"permanent"
 #define TEMPORARY_DIRECTORY_NAME u"temporary"
 #define DEFAULT_DIRECTORY_NAME u"default"
-#define PRIVATE_DIRECTORY_NAME u"private"
-#define TOBEREMOVED_DIRECTORY_NAME u"to-be-removed"
+#define DEFAULT_PRIVATE_DIRECTORY_NAME u"private"
 
 #define WEB_APPS_STORE_FILE_NAME u"webappsstore.sqlite"
 #define LS_ARCHIVE_FILE_NAME u"ls-archive.sqlite"
@@ -2097,13 +2095,9 @@ nsresult QuotaManager::Init() {
       do_Init(mDefaultStoragePath),
       GetPathForStorage(*baseDir, nsLiteralString(DEFAULT_DIRECTORY_NAME)));
 
-  QM_TRY_UNWRAP(
-      do_Init(mPrivateStoragePath),
-      GetPathForStorage(*baseDir, nsLiteralString(PRIVATE_DIRECTORY_NAME)));
-
-  QM_TRY_UNWRAP(
-      do_Init(mToBeRemovedStoragePath),
-      GetPathForStorage(*baseDir, nsLiteralString(TOBEREMOVED_DIRECTORY_NAME)));
+  QM_TRY_UNWRAP(do_Init(mPrivateStoragePath),
+                GetPathForStorage(
+                    *baseDir, nsLiteralString(DEFAULT_PRIVATE_DIRECTORY_NAME)));
 
   QM_TRY_UNWRAP(do_Init(mIOThread),
                 MOZ_TO_RESULT_INVOKE_TYPED(
@@ -3485,24 +3479,6 @@ Result<OriginMetadata, nsresult> QuotaManager::GetOriginMetadata(
 
   return OriginMetadata{std::move(principalMetadata),
                         maybePersistenceType.value()};
-}
-
-Result<Ok, nsresult> QuotaManager::RemoveOriginDirectory(nsIFile& aDirectory) {
-  AssertIsOnIOThread();
-
-  if (!AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownTeardown)) {
-    QM_TRY_RETURN(MOZ_TO_RESULT(aDirectory.Remove(true)));
-  }
-
-  QM_TRY_INSPECT(const auto& toBeRemovedStorageDir,
-                 QM_NewLocalFile(*mToBeRemovedStoragePath));
-
-  QM_TRY_INSPECT(const bool& created, EnsureDirectory(*toBeRemovedStorageDir));
-
-  (void)created;
-
-  QM_TRY_RETURN(MOZ_TO_RESULT(aDirectory.MoveTo(
-      toBeRemovedStorageDir, NSID_TrimBracketsUTF16(nsID::GenerateUUID()))));
 }
 
 template <typename OriginFunc>
@@ -5231,19 +5207,6 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
       innerFunc);
 }
 
-bool QuotaManager::IsTemporaryOriginInitialized(
-    const OriginMetadata& aOriginMetadata) const {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aOriginMetadata.mPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-
-  MutexAutoLock lock(mQuotaMutex);
-
-  RefPtr<OriginInfo> originInfo =
-      LockedGetOriginInfo(aOriginMetadata.mPersistenceType, aOriginMetadata);
-
-  return static_cast<bool>(originInfo);
-}
-
 Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
 QuotaManager::EnsureTemporaryOriginIsInitialized(
     PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata) {
@@ -5286,75 +5249,6 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
       aOriginMetadata.mOrigin, OriginInitialization::TemporaryOrigin,
       "dom::quota::FirstOriginInitializationAttempt::TemporaryOrigin"_ns,
       innerFunc);
-}
-
-RefPtr<BoolPromise> QuotaManager::InitializePersistentClient(
-    const PrincipalInfo& aPrincipalInfo, Client::Type aClientType) {
-  AssertIsOnOwningThread();
-
-  auto initializePersistentClientOp = CreateInitializePersistentClientOp(
-      WrapMovingNotNullUnchecked(this), aPrincipalInfo, aClientType);
-
-  RegisterNormalOriginOp(*initializePersistentClientOp);
-
-  initializePersistentClientOp->RunImmediately();
-
-  return initializePersistentClientOp->OnResults();
-}
-
-Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-QuotaManager::EnsurePersistentClientIsInitialized(
-    const ClientMetadata& aClientMetadata) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aClientMetadata.mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
-  MOZ_ASSERT(Client::IsValidType(aClientMetadata.mClientType));
-  MOZ_DIAGNOSTIC_ASSERT(IsStorageInitializedInternal());
-  MOZ_DIAGNOSTIC_ASSERT(IsOriginInitialized(aClientMetadata.mOrigin));
-
-  QM_TRY_UNWRAP(auto directory, GetOriginDirectory(aClientMetadata));
-
-  QM_TRY(MOZ_TO_RESULT(
-      directory->Append(Client::TypeToString(aClientMetadata.mClientType))));
-
-  QM_TRY_UNWRAP(bool created, EnsureDirectory(*directory));
-
-  return std::pair(std::move(directory), created);
-}
-
-RefPtr<BoolPromise> QuotaManager::InitializeTemporaryClient(
-    PersistenceType aPersistenceType, const PrincipalInfo& aPrincipalInfo,
-    Client::Type aClientType) {
-  AssertIsOnOwningThread();
-
-  auto initializeTemporaryClientOp = CreateInitializeTemporaryClientOp(
-      WrapMovingNotNullUnchecked(this), aPersistenceType, aPrincipalInfo,
-      aClientType);
-
-  RegisterNormalOriginOp(*initializeTemporaryClientOp);
-
-  initializeTemporaryClientOp->RunImmediately();
-
-  return initializeTemporaryClientOp->OnResults();
-}
-
-Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-QuotaManager::EnsureTemporaryClientIsInitialized(
-    const ClientMetadata& aClientMetadata) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aClientMetadata.mPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
-  MOZ_ASSERT(Client::IsValidType(aClientMetadata.mClientType));
-  MOZ_DIAGNOSTIC_ASSERT(IsStorageInitializedInternal());
-  MOZ_DIAGNOSTIC_ASSERT(IsTemporaryStorageInitialized());
-  MOZ_DIAGNOSTIC_ASSERT(IsTemporaryOriginInitialized(aClientMetadata));
-
-  QM_TRY_UNWRAP(auto directory, GetOriginDirectory(aClientMetadata));
-
-  QM_TRY(MOZ_TO_RESULT(
-      directory->Append(Client::TypeToString(aClientMetadata.mClientType))));
-
-  QM_TRY_UNWRAP(bool created, EnsureDirectory(*directory));
-
-  return std::pair(std::move(directory), created);
 }
 
 nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
@@ -5400,52 +5294,6 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   return ExecuteInitialization(
       Initialization::TemporaryStorage,
       "dom::quota::FirstInitializationAttempt::TemporaryStorage"_ns, innerFunc);
-}
-
-RefPtr<BoolPromise> QuotaManager::ClearStoragesForOrigin(
-    const Maybe<PersistenceType>& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo,
-    const Maybe<Client::Type>& aClientType) {
-  AssertIsOnOwningThread();
-
-  auto clearOriginOp =
-      CreateClearOriginOp(WrapMovingNotNullUnchecked(this), aPersistenceType,
-                          aPrincipalInfo, aClientType);
-
-  RegisterNormalOriginOp(*clearOriginOp);
-
-  clearOriginOp->RunImmediately();
-
-  return clearOriginOp->OnResults();
-}
-
-RefPtr<BoolPromise> QuotaManager::ClearStoragesForOriginPrefix(
-    const Maybe<PersistenceType>& aPersistenceType,
-    const PrincipalInfo& aPrincipalInfo) {
-  AssertIsOnOwningThread();
-
-  auto clearStoragesForOriginPrefixOp = CreateClearStoragesForOriginPrefixOp(
-      WrapMovingNotNullUnchecked(this), aPersistenceType, aPrincipalInfo);
-
-  RegisterNormalOriginOp(*clearStoragesForOriginPrefixOp);
-
-  clearStoragesForOriginPrefixOp->RunImmediately();
-
-  return clearStoragesForOriginPrefixOp->OnResults();
-}
-
-RefPtr<BoolPromise> QuotaManager::ClearStoragesForOriginAttributesPattern(
-    const OriginAttributesPattern& aPattern) {
-  AssertIsOnOwningThread();
-
-  auto clearDataOp =
-      CreateClearDataOp(WrapMovingNotNullUnchecked(this), aPattern);
-
-  RegisterNormalOriginOp(*clearDataOp);
-
-  clearDataOp->RunImmediately();
-
-  return clearDataOp->OnResults();
 }
 
 RefPtr<BoolPromise> QuotaManager::ClearPrivateRepository() {
@@ -6150,8 +5998,7 @@ already_AddRefed<GroupInfo> QuotaManager::LockedGetOrCreateGroupInfo(
 }
 
 already_AddRefed<OriginInfo> QuotaManager::LockedGetOriginInfo(
-    PersistenceType aPersistenceType,
-    const OriginMetadata& aOriginMetadata) const {
+    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata) {
   mQuotaMutex.AssertCurrentThreadOwns();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 

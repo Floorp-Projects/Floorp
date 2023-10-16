@@ -588,6 +588,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           uint32_t aVideoBitsPerSecond, uint32_t aAudioBitsPerSecond)
       : mRecorder(aRecorder),
         mMediaStreamTracks(std::move(aMediaStreamTracks)),
+        mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
         mMimeType(SelectMimeType(
             mMediaStreamTracks.Contains(TrackTypeComparator::VIDEO,
                                         TrackTypeComparator()),
@@ -761,7 +762,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     InvokeAsync(mEncoderThread, mEncoder.get(), __func__,
                 &MediaEncoder::RequestData)
         ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
+            mMainThread, __func__,
             [this, self = RefPtr<Session>(this)](
                 const MediaEncoder::BlobPromise::ResolveOrRejectValue& aRrv) {
               if (aRrv.IsReject()) {
@@ -867,14 +868,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       return;
     }
 
-    nsISerialEventTarget* mainThread = GetMainThreadSerialEventTarget();
-    mStartedListener =
-        mEncoder->StartedEvent().Connect(mainThread, this, &Session::OnStarted);
+    mStartedListener = mEncoder->StartedEvent().Connect(mMainThread, this,
+                                                        &Session::OnStarted);
     mDataAvailableListener = mEncoder->DataAvailableEvent().Connect(
-        mainThread, this, &Session::OnDataAvailable);
+        mMainThread, this, &Session::OnDataAvailable);
     mErrorListener =
-        mEncoder->ErrorEvent().Connect(mainThread, this, &Session::OnError);
-    mShutdownListener = mEncoder->ShutdownEvent().Connect(mainThread, this,
+        mEncoder->ErrorEvent().Connect(mMainThread, this, &Session::OnError);
+    mShutdownListener = mEncoder->ShutdownEvent().Connect(mMainThread, this,
                                                           &Session::OnShutdown);
 
     if (mRecorder->mAudioNode) {
@@ -946,7 +946,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     blobPromise
         ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
+            mMainThread, __func__,
             [this, self = RefPtr<Session>(this), rv, needsStartEvent](
                 const MediaEncoder::BlobPromise::ResolveOrRejectValue& aRv) {
               if (mRecorder->mSessions.LastElement() == this) {
@@ -991,17 +991,16 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
               // And finally, Shutdown and destroy the Session
               return Shutdown();
             })
-        ->Then(GetMainThreadSerialEventTarget(), __func__,
-               [this, self = RefPtr<Session>(this)] {
-                 // Guard against the case where we fail to add a blocker due to
-                 // being in XPCOM shutdown. If we're in this state we shouldn't
-                 // try and get a shutdown barrier as we'll fail.
-                 if (!mShutdownBlocker) {
-                   return;
-                 }
-                 MustGetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
-                 mShutdownBlocker = nullptr;
-               });
+        ->Then(mMainThread, __func__, [this, self = RefPtr<Session>(this)] {
+          // Guard against the case where we fail to add a blocker due to being
+          // in XPCOM shutdown. If we're in this state we shouldn't try and get
+          // a shutdown barrier as we'll fail.
+          if (!mShutdownBlocker) {
+            return;
+          }
+          MustGetShutdownBarrier()->RemoveBlocker(mShutdownBlocker);
+          mShutdownBlocker = nullptr;
+        });
   }
 
   void OnStarted() {
@@ -1066,7 +1065,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     if (mEncoder) {
       mShutdownPromise =
           mShutdownPromise
-              ->Then(GetMainThreadSerialEventTarget(), __func__,
+              ->Then(mMainThread, __func__,
                      [this, self = RefPtr<Session>(this)] {
                        mStartedListener.DisconnectIfExists();
                        mDataAvailableListener.DisconnectIfExists();
@@ -1096,7 +1095,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     // Break the cycle reference between Session and MediaRecorder.
     mShutdownPromise = mShutdownPromise->Then(
-        GetMainThreadSerialEventTarget(), __func__,
+        mMainThread, __func__,
         [self = RefPtr<Session>(this)]() {
           self->mRecorder->RemoveSession(self);
           return ShutdownPromise::CreateAndResolve(true, __func__);
@@ -1108,7 +1107,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     if (mEncoderThread) {
       mShutdownPromise = mShutdownPromise->Then(
-          GetMainThreadSerialEventTarget(), __func__,
+          mMainThread, __func__,
           [encoderThread = mEncoderThread]() {
             return encoderThread->BeginShutdown();
           },
@@ -1140,6 +1139,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   // set.
   nsTArray<RefPtr<MediaStreamTrack>> mMediaStreamTracks;
 
+  // Main thread used for MozPromise operations.
+  const RefPtr<nsISerialEventTarget> mMainThread;
   // Runnable thread for reading data from MediaEncoder.
   RefPtr<TaskQueue> mEncoderThread;
   // MediaEncoder pipeline.

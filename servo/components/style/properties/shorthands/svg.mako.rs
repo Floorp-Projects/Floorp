@@ -127,7 +127,6 @@
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
             use crate::properties::longhands::mask_origin::single_value::computed_value::T as Origin;
             use crate::properties::longhands::mask_clip::single_value::computed_value::T as Clip;
-            use style_traits::values::SequenceWriter;
 
             let len = self.mask_image.0.len();
             if len == 0 {
@@ -139,16 +138,6 @@
                 }
             % endfor
 
-            // For each <mask-layer>, we serialize it according to the following order:
-            // <mask-layer> =
-            //   <mask-reference> ||
-            //   <position> [ / <bg-size> ]? ||
-            //   <repeat-style> ||
-            //   <geometry-box> ||
-            //   [ <geometry-box> | no-clip ] ||
-            //   <compositing-operator> ||
-            //   <masking-mode>
-            // https://drafts.fxtf.org/css-masking-1/#the-mask
             for i in 0..len {
                 if i > 0 {
                     dest.write_str(", ")?;
@@ -158,64 +147,46 @@
                     let ${name} = &self.mask_${name}.0[i];
                 % endfor
 
-                let mut has_other = false;
-                % for name in "image mode size repeat composite".split():
-                    let has_${name} =
-                        *${name} != mask_${name}::single_value::get_initial_specified_value();
-                    has_other |= has_${name};
-                % endfor
-                let has_position = *position_x != PositionComponent::zero()
-                    || *position_y != PositionComponent::zero();
-                let has_origin = *origin != Origin::BorderBox;
-                let has_clip = *clip != Clip::BorderBox;
+                image.to_css(dest)?;
 
-                // If all are initial values, we serialize mask-image.
-                if !has_other && !has_position && !has_origin && !has_clip {
-                    return image.to_css(dest);
+                if *mode != mask_mode::single_value::get_initial_specified_value() {
+                    dest.write_char(' ')?;
+                    mode.to_css(dest)?;
                 }
 
-                let mut writer = SequenceWriter::new(dest, " ");
-                // <mask-reference>
-                if has_image {
-                    writer.item(image)?;
-                }
-
-                // <position> [ / <bg-size> ]?
-                if has_position || has_size {
-                    writer.item(&Position {
+                if *position_x != PositionComponent::zero() ||
+                    *position_y != PositionComponent::zero() ||
+                    *size != mask_size::single_value::get_initial_specified_value()
+                {
+                    dest.write_char(' ')?;
+                    Position {
                         horizontal: position_x.clone(),
                         vertical: position_y.clone()
-                    })?;
+                    }.to_css(dest)?;
 
-                    if has_size {
-                        writer.raw_item("/")?;
-                        writer.item(size)?;
+                    if *size != mask_size::single_value::get_initial_specified_value() {
+                        dest.write_str(" / ")?;
+                        size.to_css(dest)?;
                     }
                 }
 
-                // <repeat-style>
-                if has_repeat {
-                    writer.item(repeat)?;
+                if *repeat != mask_repeat::single_value::get_initial_specified_value() {
+                    dest.write_char(' ')?;
+                    repeat.to_css(dest)?;
                 }
 
-                // <geometry-box>
-                if has_origin {
-                    writer.item(origin)?;
+                if *origin != Origin::BorderBox || *clip != Clip::BorderBox {
+                    dest.write_char(' ')?;
+                    origin.to_css(dest)?;
+                    if *clip != From::from(*origin) {
+                        dest.write_char(' ')?;
+                        clip.to_css(dest)?;
+                    }
                 }
 
-                // [ <geometry-box> | no-clip ]
-                if has_clip && *clip != From::from(*origin) {
-                    writer.item(clip)?;
-                }
-
-                // <compositing-operator>
-                if has_composite {
-                    writer.item(composite)?;
-                }
-
-                // <masking-mode>
-                if has_mode {
-                    writer.item(mode)?;
+                if *composite != mask_composite::single_value::get_initial_specified_value() {
+                    dest.write_char(' ')?;
+                    composite.to_css(dest)?;
                 }
             }
 

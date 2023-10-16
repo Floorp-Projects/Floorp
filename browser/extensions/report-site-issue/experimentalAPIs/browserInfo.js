@@ -97,7 +97,6 @@ function getAdditionalPrefs() {
     "gfx.canvas.accelerated.force-enabled": false,
     "gfx.webrender.compositor.force-enabled": false,
     "privacy.resistFingerprinting": false,
-    "privacy.globalprivacycontrol.enabled": false,
   })) {
     prefs[name] = Services.prefs.getBoolPref(name, dflt);
   }
@@ -125,6 +124,7 @@ this.browserInfo = class extends ExtensionAPI {
           for (const [name, dflt] of Object.entries({
             "layers.acceleration.force-enabled": false,
             "gfx.webrender.all": false,
+            "gfx.webrender.blob-images": true,
           })) {
             prefs[name] = Services.prefs.getBoolPref(name, dflt);
           }
@@ -178,7 +178,7 @@ this.browserInfo = class extends ExtensionAPI {
             memoryMb,
           };
 
-          if (AppConstants.platform == "win") {
+          if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
             data.sec = getSecurityAppData();
           }
 

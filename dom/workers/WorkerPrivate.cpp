@@ -2417,16 +2417,48 @@ WorkerPrivate::WorkerPrivate(
       JS::RealmOptions& chromeRealmOptions = mJSSettings.chromeRealmOptions;
       JS::RealmOptions& contentRealmOptions = mJSSettings.contentRealmOptions;
 
-      xpc::InitGlobalObjectOptions(
-          chromeRealmOptions, UsesSystemPrincipal(), mIsSecureContext,
-          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
-          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
-          ShouldResistFingerprinting(RFPTarget::JSLocale));
-      xpc::InitGlobalObjectOptions(
-          contentRealmOptions, UsesSystemPrincipal(), mIsSecureContext,
-          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC),
-          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm),
-          ShouldResistFingerprinting(RFPTarget::JSLocale));
+      JS::RealmBehaviors& chromeRealmBehaviors = chromeRealmOptions.behaviors();
+      JS::RealmBehaviors& contentRealmBehaviors =
+          contentRealmOptions.behaviors();
+
+      bool usesSystemPrincipal = UsesSystemPrincipal();
+
+      // Make timing imprecise in unprivileged code to blunt Spectre timing
+      // attacks.
+      bool clampAndJitterTime = !usesSystemPrincipal;
+      chromeRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+      contentRealmBehaviors.setClampAndJitterTime(clampAndJitterTime);
+
+      JS::RealmCreationOptions& chromeCreationOptions =
+          chromeRealmOptions.creationOptions();
+      JS::RealmCreationOptions& contentCreationOptions =
+          contentRealmOptions.creationOptions();
+
+      // Expose uneval and toSource functions only if this is privileged code.
+      bool toSourceEnabled = usesSystemPrincipal;
+      chromeCreationOptions.setToSourceEnabled(toSourceEnabled);
+      contentCreationOptions.setToSourceEnabled(toSourceEnabled);
+
+      if (mIsSecureContext) {
+        chromeCreationOptions.setSecureContext(true);
+        contentCreationOptions.setSecureContext(true);
+      }
+
+      chromeCreationOptions.setForceUTC(
+          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC));
+      contentCreationOptions.setForceUTC(
+          ShouldResistFingerprinting(RFPTarget::JSDateTimeUTC));
+
+      chromeCreationOptions.setAlwaysUseFdlibm(
+          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
+      contentCreationOptions.setAlwaysUseFdlibm(
+          ShouldResistFingerprinting(RFPTarget::JSMathFdlibm));
+
+      if (ShouldResistFingerprinting(RFPTarget::JSLocale)) {
+        nsCString locale = nsRFPService::GetSpoofedJSLocale();
+        chromeCreationOptions.setLocaleCopyZ(locale.get());
+        contentCreationOptions.setLocaleCopyZ(locale.get());
+      }
 
       // Check if it's a privileged addon executing in order to allow access
       // to SharedArrayBuffer
@@ -2458,12 +2490,10 @@ WorkerPrivate::WorkerPrivate(
       // (because COOP/COEP support isn't enabled, or because COOP/COEP don't
       // act to isolate this worker to a separate process).
       const bool defineSharedArrayBufferConstructor = IsSharedMemoryAllowed();
-      chromeRealmOptions.creationOptions()
-          .setDefineSharedArrayBufferConstructor(
-              defineSharedArrayBufferConstructor);
-      contentRealmOptions.creationOptions()
-          .setDefineSharedArrayBufferConstructor(
-              defineSharedArrayBufferConstructor);
+      chromeCreationOptions.setDefineSharedArrayBufferConstructor(
+          defineSharedArrayBufferConstructor);
+      contentCreationOptions.setDefineSharedArrayBufferConstructor(
+          defineSharedArrayBufferConstructor);
     }
 
     mIsInAutomation = xpc::IsInAutomation();
@@ -5098,7 +5128,8 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
   if (insertedInfo == data->mTimeouts.Elements() &&
       !data->mRunningExpiredTimeouts) {
     if (!data->mTimer) {
-      data->mTimer = NS_NewTimer(GlobalScope()->SerialEventTarget());
+      data->mTimer =
+          NS_NewTimer(GlobalScope()->EventTargetFor(TaskCategory::Timer));
       if (!data->mTimer) {
         aRv.Throw(NS_ERROR_UNEXPECTED);
         return 0;

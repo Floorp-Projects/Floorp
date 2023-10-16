@@ -199,10 +199,7 @@ if (params.dumpDMDAfterTest) {
   TestRunner.dumpDMDAfterTest = true;
 }
 
-// We need to check several things here because mochitest-chrome passes
-// `jsdebugger` and `debugger` directly, but in other tests we're reliant
-// on the `interactiveDebugger` flag being passed along.
-if (params.interactiveDebugger || params.jsdebugger || params.debugger) {
+if (params.interactiveDebugger) {
   TestRunner.interactiveDebugger = true;
 }
 

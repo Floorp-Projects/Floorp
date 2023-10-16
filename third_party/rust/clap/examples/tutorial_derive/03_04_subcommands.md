@@ -29,8 +29,7 @@ $ 03_04_subcommands_derive add bob
 
 ```
 
-When specifying commands with `command: Commands`, they are required.
-Alternatively, you could do `command: Option<Commands>` to make it optional.
+Because we used `command: Commands` instead of `command: Option<Commands>`:
 ```console
 $ 03_04_subcommands_derive
 ? failed
@@ -48,8 +47,7 @@ Options:
 
 ```
 
-Since we specified [`#[command(propagate_version = true)]`][crate::Command::propagate_version],
-the `--version` flag is available in all subcommands:
+Because we added `#[command(propagate_version = true)]`:
 ```console
 $ 03_04_subcommands_derive --version
 clap [..]

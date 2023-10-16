@@ -74,6 +74,8 @@ class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
   bool mCreated;
 };
 
+NS_IMPL_CYCLE_COLLECTION(LockManagerChild, mOwner)
+
 void LockManagerChild::RequestLock(const LockRequest& aRequest,
                                    const LockOptions& aOptions) {
   auto requestActor = MakeRefPtr<LockRequestChild>(aRequest, aOptions.mSignal);

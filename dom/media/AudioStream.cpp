@@ -604,8 +604,7 @@ long AudioStream::DataCallback(void* aBuffer, long aFrames) {
     mCallbacksStarted = true;
   }
 
-  TRACE_AUDIO_CALLBACK_BUDGET("AudioStream real-time budget", aFrames,
-                              mAudioClock.GetInputRate());
+  TRACE_AUDIO_CALLBACK_BUDGET(aFrames, mAudioClock.GetInputRate());
   TRACE("AudioStream::DataCallback");
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
 
@@ -694,7 +693,7 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun,
                                     bool aAudioThreadChanged) {
 #ifdef XP_MACOSX
   if (aAudioThreadChanged) {
-    mCallbackInfoQueue.ResetProducerThreadId();
+    mCallbackInfoQueue.ResetThreadIds();
   }
   // Flush the local items, if any, and then attempt to enqueue the current
   // item. This is only a fallback mechanism, under non-critical load this is

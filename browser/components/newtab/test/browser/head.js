@@ -20,11 +20,10 @@ const { FxAccounts } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { DiscoveryStreamFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
-);
 // Set the content pref to make it available across tests
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
+// Test differently for windows 7 as theme screens are removed.
+const win7Content = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
 // Feature callout constants
 const calloutId = "feature-callout";
 const calloutSelector = `#${calloutId}.featureCallout`;

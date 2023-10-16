@@ -393,13 +393,6 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     }
   }
 
-  if (aOptions.mExtensions.mMinPinLength.WasPassed()) {
-    bool minPinLength = aOptions.mExtensions.mMinPinLength.Value();
-    if (minPinLength) {
-      extensions.AppendElement(WebAuthnExtensionMinPinLength(minPinLength));
-    }
-  }
-
   const auto& selection = aOptions.mAuthenticatorSelection;
   const auto& attachment = selection.mAuthenticatorAttachment;
   const nsString& attestation = aOptions.mAttestation;
@@ -630,12 +623,6 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     return promise.forget();
   }
 
-  // minPinLength is only supported in MakeCredentials
-  if (aOptions.mExtensions.mMinPinLength.WasPassed()) {
-    promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return promise.forget();
-  }
-
   // <https://w3c.github.io/webauthn/#sctn-appid-extension>
   if (aOptions.mExtensions.mAppid.WasPassed()) {
     nsString appId(aOptions.mExtensions.mAppid.Value());
@@ -744,7 +731,6 @@ void WebAuthnManager::FinishMakeCredential(
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
   credential->SetAttestationResponse(attestation);
-  credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {
@@ -798,7 +784,6 @@ void WebAuthnManager::FinishGetAssertion(
   credential->SetType(u"public-key"_ns);
   credential->SetRawId(aResult.KeyHandle());
   credential->SetAssertionResponse(assertion);
-  credential->SetAuthenticatorAttachment(aResult.AuthenticatorAttachment());
 
   // Forward client extension results.
   for (const auto& ext : aResult.Extensions()) {

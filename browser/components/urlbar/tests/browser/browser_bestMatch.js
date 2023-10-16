@@ -1,7 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests best match rows in the view.
+// Tests best match rows in the view. See also:
+//
+// browser_quicksuggest_bestMatch.js
+//   UI test for quick suggest best matches specifically
+// test_quicksuggest_bestMatch.js
+//   Tests triggering quick suggest best matches and things that don't depend on
+//   the view
 
 "use strict";
 
@@ -69,7 +75,12 @@ add_task(async function keySelection() {
 
   await withProvider(result, async () => {
     // Ordered list of class names of the elements that should be selected.
-    let expectedClassNames = ["urlbarView-row-inner", "urlbarView-button-menu"];
+    let expectedClassNames = [
+      "urlbarView-row-inner",
+      UrlbarPrefs.get("resultMenu")
+        ? "urlbarView-button-menu"
+        : "urlbarView-button-help",
+    ];
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
@@ -148,7 +159,9 @@ async function checkBestMatchRow({
     "Row URL is correct"
   );
 
-  let button = row._buttons.get("menu");
+  let button = row._buttons.get(
+    UrlbarPrefs.get("resultMenu") ? "menu" : "help"
+  );
   Assert.equal(
     !!result.payload.helpUrl,
     hasHelpUrl,

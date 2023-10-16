@@ -124,10 +124,7 @@ export var MockFilePicker = {
 
   useDirectory(aPath) {
     var directory = new this.window.Directory(aPath);
-    var file = new lazy.FileUtils.File(aPath);
-    this.returnData = [
-      this.internalFileData({ domDirectory: directory, nsIFile: file }),
-    ];
+    this.returnData = [this.internalFileData({ domDirectory: directory })];
     this.pendingPromises = [];
   },
 

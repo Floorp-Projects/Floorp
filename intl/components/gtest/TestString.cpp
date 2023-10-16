@@ -6,7 +6,6 @@
 #include "mozilla/intl/String.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Try.h"
 
 #include <algorithm>
 

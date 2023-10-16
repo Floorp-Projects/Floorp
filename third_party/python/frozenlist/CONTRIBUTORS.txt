@@ -1,7 +1,0 @@
-- Contributors -
-----------------
-Andrew Svetlov
-Marcin Konowalczyk
-Martijn Pieters
-Pau Freixes
-Paul Colomiets

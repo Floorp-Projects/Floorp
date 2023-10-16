@@ -103,8 +103,6 @@ const GUID& WMFVideoMFTManager::GetMediaSubtypeGUID() {
       return MFVideoFormat_VP90;
     case WMFStreamType::AV1:
       return MFVideoFormat_AV1;
-    case WMFStreamType::HEVC:
-      return MFVideoFormat_HEVC;
     default:
       return GUID_NULL;
   };
@@ -226,8 +224,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   bool useDxva = true;
 
   if (mStreamType == WMFStreamType::H264 &&
-      (mVideoInfo.ImageRect().width < MIN_H264_HW_WIDTH ||
-       mVideoInfo.ImageRect().height < MIN_H264_HW_HEIGHT)) {
+      (mVideoInfo.ImageRect().width <= MIN_H264_HW_WIDTH ||
+       mVideoInfo.ImageRect().height <= MIN_H264_HW_HEIGHT)) {
     useDxva = false;
     mDXVAFailureReason = nsPrintfCString(
         "H264 video resolution too low: %" PRIu32 "x%" PRIu32,
@@ -312,8 +310,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
     }
     if (mStreamType == WMFStreamType::VP9 ||
         mStreamType == WMFStreamType::VP8 ||
-        mStreamType == WMFStreamType::AV1 ||
-        mStreamType == WMFStreamType::HEVC) {
+        mStreamType == WMFStreamType::AV1) {
       return MediaResult(
           NS_ERROR_DOM_MEDIA_FATAL_ERR,
           RESULT_DETAIL("Use VP8/VP9/AV1 MFT only if HW acceleration "
@@ -492,9 +489,6 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
         break;
       case WMFStreamType::AV1:
         flag |= MediaInfoFlag::VIDEO_AV1;
-        break;
-      case WMFStreamType::HEVC:
-        flag |= MediaInfoFlag::VIDEO_HEVC;
         break;
       default:
         break;
@@ -1016,8 +1010,6 @@ nsCString WMFVideoMFTManager::GetCodecName() const {
       return "vp9"_ns;
     case WMFStreamType::AV1:
       return "av1"_ns;
-    case WMFStreamType::HEVC:
-      return "hevc"_ns;
     default:
       return "unknown"_ns;
   };

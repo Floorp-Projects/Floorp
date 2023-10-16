@@ -45,6 +45,8 @@ class TestBrowserThread(threading.Thread):
     "perftest_class, app_name",
     [
         [BrowsertimeDesktop, "firefox"],
+        [BrowsertimeDesktop, "chrome"],
+        [BrowsertimeDesktop, "chromium"],
         [BrowsertimeAndroid, "geckoview"],
     ],
 )

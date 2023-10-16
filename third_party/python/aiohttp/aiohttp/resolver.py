@@ -1,6 +1,6 @@
 import asyncio
 import socket
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, List, Optional
 
 from .abc import AbstractResolver
 from .helpers import get_running_loop
@@ -18,10 +18,8 @@ aiodns_default = False
 
 
 class ThreadedResolver(AbstractResolver):
-    """Threaded resolver.
-
-    Uses an Executor for synchronous getaddrinfo() calls.
-    concurrent.futures.ThreadPoolExecutor is used by default.
+    """Use Executor for synchronous getaddrinfo() calls, which defaults to
+    concurrent.futures.ThreadPoolExecutor.
     """
 
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop] = None) -> None:
@@ -40,24 +38,16 @@ class ThreadedResolver(AbstractResolver):
 
         hosts = []
         for family, _, proto, _, address in infos:
-            if family == socket.AF_INET6:
-                if len(address) < 3:
-                    # IPv6 is not supported by Python build,
-                    # or IPv6 is not enabled in the host
-                    continue
-                if address[3]:  # type: ignore[misc]
-                    # This is essential for link-local IPv6 addresses.
-                    # LL IPv6 is a VERY rare case. Strictly speaking, we should use
-                    # getnameinfo() unconditionally, but performance makes sense.
-                    host, _port = socket.getnameinfo(
-                        address, socket.NI_NUMERICHOST | socket.NI_NUMERICSERV
-                    )
-                    port = int(_port)
-                else:
-                    host, port = address[:2]
-            else:  # IPv4
-                assert family == socket.AF_INET
-                host, port = address  # type: ignore[misc]
+            if family == socket.AF_INET6 and address[3]:  # type: ignore
+                # This is essential for link-local IPv6 addresses.
+                # LL IPv6 is a VERY rare case. Strictly speaking, we should use
+                # getnameinfo() unconditionally, but performance makes sense.
+                host, _port = socket.getnameinfo(
+                    address, socket.NI_NUMERICHOST | socket.NI_NUMERICSERV
+                )
+                port = int(_port)
+            else:
+                host, port = address[:2]
             hosts.append(
                 {
                     "hostname": hostname,
@@ -153,8 +143,7 @@ class AsyncResolver(AbstractResolver):
         return hosts
 
     async def close(self) -> None:
-        self._resolver.cancel()
+        return self._resolver.cancel()
 
 
-_DefaultType = Type[Union[AsyncResolver, ThreadedResolver]]
-DefaultResolver: _DefaultType = AsyncResolver if aiodns_default else ThreadedResolver
+DefaultResolver = AsyncResolver if aiodns_default else ThreadedResolver

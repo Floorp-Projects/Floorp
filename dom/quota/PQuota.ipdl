@@ -96,9 +96,20 @@ struct ClearResetOriginParams
   bool clientTypeIsExplicit;
 };
 
+struct ClearOriginParams
+{
+  ClearResetOriginParams commonParams;
+  bool matchAll;
+};
+
 struct ResetOriginParams
 {
   ClearResetOriginParams commonParams;
+};
+
+struct ClearDataParams
+{
+  OriginAttributesPattern pattern;
 };
 
 struct PersistedParams
@@ -129,7 +140,9 @@ union RequestParams
   InitializePersistentOriginParams;
   InitializeTemporaryOriginParams;
   GetFullOriginMetadataParams;
+  ClearOriginParams;
   ResetOriginParams;
+  ClearDataParams;
   PersistedParams;
   PersistParams;
   EstimateParams;
@@ -152,28 +165,6 @@ parent:
   async PQuotaRequest(RequestParams params);
 
   async InitializeStorage()
-      returns(BoolResponse response);
-
-  async InitializePersistentClient(PrincipalInfo principalInfo,
-                                   Type clientType)
-      returns(BoolResponse response);
-
-  async InitializeTemporaryClient(PersistenceType persistenceType,
-                                  PrincipalInfo principalInfo,
-                                  Type clientType)
-      returns(BoolResponse response);
-
-  async ClearStoragesForOrigin(PersistenceType? persistenceType,
-                               PrincipalInfo principalInfo,
-                               Type? clientType)
-      returns(BoolResponse response);
-
-  async ClearStoragesForOriginPrefix(PersistenceType? persistenceType,
-                                     PrincipalInfo principalInfo)
-      returns(BoolResponse response);
-
-  // This can only be called from some other thread in the parent process!
-  async ClearStoragesForOriginAttributesPattern(OriginAttributesPattern pattern)
       returns(BoolResponse response);
 
   async ClearStoragesForPrivateBrowsing()

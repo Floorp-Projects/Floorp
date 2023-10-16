@@ -113,10 +113,6 @@ search:
       type: boolean
       setPref: browser.search.serpEventTelemetry.enabled
       description: Whether the Glean SERP event telemetry is enabled.
-    serpEventTelemetryCategorizationEnabled:
-      type: boolean
-      setPref: browser.search.serpEventTelemetryCategorization.enabled
-      description: Whether the Glean SERP event telemetry for SERP categorization is enabled.
     trendingEnabled:
       type: boolean
       setPref: browser.urlbar.trending.featureGate
@@ -175,6 +171,16 @@ urlbar:
         will be able to click the "Show less frequently" command for addon
         suggestions. If undefined or zero, the user will be able to click the
         command without any limit.
+    addonsUITreatment:
+      type: string
+      enum:
+        - a
+        - b
+      description: >-
+        Define the UI type for addon suggestions.
+        In case of "a", display rating stars and review volume on the bottom of
+        the suggestion. In case of "b", display a label explaining that the
+        addon suggestion is a recommendation.
     autoFillAdaptiveHistoryEnabled:
       type: boolean
       fallbackPref: browser.urlbar.autoFill.adaptiveHistory.enabled
@@ -186,6 +192,14 @@ urlbar:
     autoFillAdaptiveHistoryUseCountThreshold:
       type: string
       description: This value assumes float expression like "0.47". Threshold for use count of input history that we handle as adaptive history autofill. If the use count is this value or more, it will be a candidate.
+    bestMatchBlockingEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.bestMatch.blockingEnabled
+      description: Whether best match Suggest suggestions can be blocked.
+    bestMatchEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.bestMatch.enabled
+      description: Gate for the best match feature. If false, the best match preferences UI and best match suggestions will not be shown. If true, the preferences UI will be shown, and the user can turn best match suggestions on or off.
     experimentType:
       type: string
       description: The type of the experiment (or rollout). If "best-match", then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). If "modal", the event will be recorded when the user first triggers to show the onbording dialog. If empty, the event will be recorded when the user first triggers any type of Suggest suggestion.
@@ -193,6 +207,10 @@ urlbar:
         - best-match
         - modal
         - ""
+    isBestMatchExperiment:
+      type: boolean
+      description: >-
+        Whether the experiment (or rollout) is related to best match. If true, then the Nimbus exposure event will be recorded when the user first triggers a best match (or would have triggered a best match, for users in the control group). Deprecated, please use `experimentType: "best-match"` instead.
     mdnFeatureGate:
       type: boolean
       setPref: browser.urlbar.mdn.featureGate
@@ -205,12 +223,14 @@ urlbar:
       description: >-
         Comma separated list of client variants to report to the Merino server.
         May impact server behavior.
+    merinoEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.merino.enabled
+      description: Whether Merino is enabled as a quick suggest source
     merinoEndpointURL:
       type: string
       fallbackPref: browser.urlbar.merino.endpointURL
-      description: >-
-        The Merino endpoint URL, not including parameters. An empty string will
-        cause Firefox not to fetch from Merino.
+      description: The Merino endpoint URL, not including parameters.
     merinoProviders:
       type: string
       fallbackPref: browser.urlbar.merino.providers
@@ -248,6 +268,10 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
       description: Whether quick suggest results can be shown in position specified in the suggestions.
+    quickSuggestBlockingEnabled:
+      type: boolean
+      fallbackPref: browser.urlbar.quicksuggest.blockingEnabled
+      description: Whether the usual non-best-match Suggest suggestions can be blocked.
     quickSuggestDataCollectionEnabled:
       type: boolean
       description: Whether data collection should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) data collection, if the user has already toggled that preference.
@@ -279,12 +303,10 @@ urlbar:
     quickSuggestRemoteSettingsDataType:
       type: string
       description: The `type` of the suggestions data in remote settings. If not specified, "data" is used.
-    quickSuggestRustEnabled:
+    quickSuggestRemoteSettingsEnabled:
       type: boolean
-      fallbackPref: browser.urlbar.quicksuggest.rustEnabled
-      description: >-
-        Whether Firefox Suggest will use the new Rust backend instead of the
-        original JS backend.
+      fallbackPref: browser.urlbar.quicksuggest.remoteSettings.enabled
+      description: Whether Remote Settings is enabled as a quick suggest source
     quickSuggestScenario:
       # IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.jsm.
       type: string
@@ -329,14 +351,6 @@ urlbar:
         * "Sponsored" label is shown as the group label.
         * Change the suggested index to 1.
         * Handle as top pick.
-    recentSearchesFeatureGate:
-      type: boolean
-      setPref: browser.urlbar.recentsearches.featureGate
-      description: Gate for the recent searches feature.
-    recentSearchesMaxResults:
-      type: int
-      setPref: browser.urlbar.recentsearches.maxResults
-      description: The maximum number of recent searches to show.
     recordNavigationalSuggestionTelemetry:
       type: boolean
       description: Whether to record navigational suggestion telemetry. Defaults to false.
@@ -503,19 +517,6 @@ moreFromMozilla:
       type: string
       fallbackPref: browser.preferences.moreFromMozilla.template
       description: UI template used to display Mozilla products. Possible values simple, advanced. Default is simple.
-
-windowsLaunchOnLogin:
-  description: "New checkbox in about:preferences startup section to start Firefox on Windows login"
-  owner: omc@mozilla.com
-  hasExposure: true
-  exposureDescription: >-
-    Exposure is sent once per browsing session when the about:preferences URL is
-    first accessed.
-  variables:
-    enabled:
-      type: boolean
-      fallbackPref: browser.startup.windowsLaunchOnLogin.enabled
-      description: Should users see the Windows launch on login checkbox.
 
 abouthomecache:
   description: "The startup about:home cache."
@@ -1540,15 +1541,6 @@ migrationWizard:
       description: True if importing extensions is enabled.
       type: boolean
       setPref: browser.migrate.chrome.extensions.enabled
-    chromeCanRequestPermissions:
-      description: >-
-        True if Chrome-based browsers can request read permissions on
-        platforms where the browser is restricted from reading the contents
-        of a Chrome-based browser's user data directory. In practice, this
-        is only relevant to the Linux platform when the browser is installed
-        as a Snap package.
-      type: boolean
-      setPref: browser.migrate.chrome.get_permissions.enabled
 
 mixedContentUpgrading:
   description: Prefs to control whether we upgrade mixed passive content (images, audio, video) from http to https
@@ -1848,13 +1840,6 @@ cookieBannerHandling:
       description: >-
         Enables use of global CookieBannerRules, which apply to all sites.
         This enables handling of CMPs across sites without the use of site-specific rules.
-    enableGlobalRulesSubFrames:
-      type: boolean
-      setPref: cookiebanners.service.enableGlobalRules.subFrames
-      description: >-
-        Whether global rules are allowed to run in sub-frames. Running query
-        selectors in every sub-frame may negatively impact performance, but is
-        required for some CMPs.
     enableDetectOnly:
       type: boolean
       setPref: cookiebanners.service.detectOnly
@@ -1866,10 +1851,6 @@ cookieBannerHandling:
       type: boolean
       setPref: cookiebanners.ui.desktop.enabled
       description: Enables the cookie banner desktop UI.
-    enablePromo:
-      type: boolean
-      setPref: browser.promo.cookiebanners.enabled
-      description: Enables the cookie banner promo in about:privatebrowsing.
 
 backgroundThreads:
   description: Prefs to control MacOS thread priorities for power savings.
@@ -1893,16 +1874,11 @@ feltPrivacy:
   description: Prefs for Felt Privacy v1 experiments
   owner: cmeador@mozilla.com
   hasExposure: true
-  exposureDescription: Exposure when user opens a private browsing window.
+  exposureDescription: Exposure when user opens a private browsing window. 
   variables:
     feltPrivacy:
       type: boolean
-      setPref: browser.privatebrowsing.felt-privacy-v1
+      setPref: browser.privatebrowsing.felt-privacy-v1 
       description: >-
-        When true, new styles and copy enabled on about:privatebrowsing. When true,
+        When true, new styles and copy enabled on about:privatebrowsing. When true, 
         a toggle for showing or hiding quick suggestions appears in about:preferences.
-    resetPBMAction:
-      type: boolean
-      setPref: browser.privatebrowsing.resetPBM.enabled
-      description: >-
-        Enables the reset PBM feature button and confirmation panel.

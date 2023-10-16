@@ -27,7 +27,6 @@ skip-if = [
 ["browser_permission_delegate_geo.js"]
 
 ["browser_permissions.js"]
-skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_permissions_delegate_vibrate.js"]
 support-files = ["empty.html"]
@@ -41,7 +40,6 @@ support-files = ["dummy.js"]
 ["browser_reservedkey.js"]
 
 ["browser_site_scoped_permissions.js"]
-skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_temporary_permissions.js"]
 support-files = ["../webrtc/get_user_media.html"]

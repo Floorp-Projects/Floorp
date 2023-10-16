@@ -254,11 +254,6 @@ pub const MAP_NORESERVE: ::c_int = 0x00040;
 pub const MAP_POPULATE: ::c_int = 0x08000;
 pub const MAP_NONBLOCK: ::c_int = 0x010000;
 pub const MAP_STACK: ::c_int = 0x020000;
-pub const MAP_HUGETLB: ::c_int = 0x040000;
-pub const MAP_SYNC: ::c_int = 0x080000;
-
-pub const PTRACE_SYSEMU: ::c_int = 0x1d;
-pub const PTRACE_SYSEMU_SINGLESTEP: ::c_int = 0x1e;
 
 pub const SOCK_STREAM: ::c_int = 1;
 pub const SOCK_DGRAM: ::c_int = 2;
@@ -379,6 +374,8 @@ pub const SIG_BLOCK: ::c_int = 0x000000;
 pub const SIG_UNBLOCK: ::c_int = 0x01;
 
 pub const EXTPROC: ::tcflag_t = 0x10000000;
+
+pub const MAP_HUGETLB: ::c_int = 0x040000;
 
 pub const F_GETLK: ::c_int = 12;
 pub const F_GETOWN: ::c_int = 9;

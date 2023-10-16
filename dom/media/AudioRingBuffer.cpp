@@ -14,15 +14,13 @@ namespace mozilla {
 
 /**
  * RingBuffer is used to preallocate a buffer of a specific size in bytes and
- * then to use it for writing and reading values without requiring re-allocation
- * or memory moving. Note that re-allocations can happen if the length of the
- * buffer is explicitly set to something larger than is already allocated.
- * Also note that the total byte size of the buffer modulo the size of the
- * chosen type must be zero. The RingBuffer has been created with audio sample
- * values types in mind which are integer or float. However, it can be used with
- * any trivial type. It is _not_ thread-safe! The constructor can be called on
- * any thread but the reads and write must happen on the same thread, which can
- * be different than the construction thread.
+ * then to use it for writing and reading values without any re-allocation or
+ * memory moving. Please note that the total byte size of the buffer modulo the
+ * size of the chosen type must be zero. The RingBuffer has been created with
+ * audio sample values types in mind which are integer or float. However, it
+ * can be used with any trivial type. It is _not_ thread-safe! The constructor
+ * can be called on any thread but the reads and write must happen on the same
+ * thread, which can be different than the construction thread.
  */
 template <typename T>
 class RingBuffer final {
@@ -31,14 +29,7 @@ class RingBuffer final {
       : mStorage(ConvertToSpan(aMemoryBuffer)),
         mMemoryBuffer(std::move(aMemoryBuffer)) {
     MOZ_ASSERT(std::is_trivial<T>::value);
-  }
-
-  /**
-   * Write `aSamples` number of zeros in the buffer, before any existing data.
-   */
-  uint32_t PrependSilence(uint32_t aSamples) {
-    MOZ_ASSERT(aSamples);
-    return Prepend(Span<T>(), aSamples);
+    MOZ_ASSERT(!mStorage.IsEmpty());
   }
 
   /**
@@ -59,48 +50,12 @@ class RingBuffer final {
 
  private:
   /**
-   * Copy `aSamples` number of elements from `aBuffer` to the beginning of the
-   * RingBuffer. If `aBuffer` is empty prepend `aSamples` of zeros.
-   */
-  uint32_t Prepend(const Span<const T>& aBuffer, uint32_t aSamples) {
-    MOZ_ASSERT(aSamples > 0);
-    MOZ_ASSERT(aBuffer.IsEmpty() || aBuffer.Length() == aSamples);
-
-    if (IsFull()) {
-      return 0;
-    }
-
-    uint32_t toWrite = std::min(AvailableWrite(), aSamples);
-    uint32_t part2 = std::min(mReadIndex, toWrite);
-    uint32_t part1 = toWrite - part2;
-
-    Span<T> part2Buffer = mStorage.Subspan(mReadIndex - part2, part2);
-    Span<T> part1Buffer = mStorage.Subspan(Capacity() - part1, part1);
-
-    if (!aBuffer.IsEmpty()) {
-      Span<const T> fromPart1 = aBuffer.To(part1);
-      Span<const T> fromPart2 = aBuffer.Subspan(part1, part2);
-
-      CopySpan(part1Buffer, fromPart1);
-      CopySpan(part2Buffer, fromPart2);
-    } else {
-      // aBuffer is empty, prepend zeros.
-      PodZero(part1Buffer.Elements(), part1Buffer.Length());
-      PodZero(part2Buffer.Elements(), part2Buffer.Length());
-    }
-
-    mReadIndex = NextIndex(mReadIndex, Capacity() - toWrite);
-
-    return toWrite;
-  }
-
-  /**
    * Copy `aSamples` number of elements from `aBuffer` to the RingBuffer. If
    * `aBuffer` is empty append `aSamples` of zeros.
    */
   uint32_t Write(const Span<const T>& aBuffer, uint32_t aSamples) {
-    MOZ_ASSERT(aSamples > 0);
-    MOZ_ASSERT(aBuffer.IsEmpty() || aBuffer.Length() == aSamples);
+    MOZ_ASSERT(aSamples > 0 &&
+               aBuffer.Length() <= static_cast<uint32_t>(aSamples));
 
     if (IsFull()) {
       return 0;
@@ -265,55 +220,6 @@ class RingBuffer final {
   }
 
   /**
-   * Set the ring buffer to the requested size. NB: In bytes.
-   *
-   * Re-allocates memory if a larger buffer is requested than what is already
-   * allocated.
-   */
-  bool SetLengthBytes(uint32_t aLengthBytes) {
-    MOZ_ASSERT(aLengthBytes % sizeof(T) == 0,
-               "Length in bytes is not a whole number of samples");
-
-    uint32_t lengthSamples = aLengthBytes / sizeof(T);
-    uint32_t oldLengthSamples = Capacity();
-    uint32_t availableRead = AvailableRead();
-    if (!mMemoryBuffer.SetLength(aLengthBytes)) {
-      return false;
-    }
-
-    // mStorage may now have been deallocated.
-    mStorage = ConvertToSpan(mMemoryBuffer);
-    if (mWriteIndex < mReadIndex) {
-      // The old data wrapped around the end of the (old) buffer. It needs to be
-      // moved so it is continuous.
-      const uint32_t toMove = mWriteIndex;
-
-      // The bit that goes between the old and the new end of the buffer.
-      const uint32_t toMove1 =
-          std::min(lengthSamples - oldLengthSamples, toMove);
-      {
-        // [0, toMove1) -> [oldLength, oldLength + toMove1).
-        Span<T> from1 = mStorage.Subspan(0, toMove1);
-        Span<T> to1 = mStorage.Subspan(oldLengthSamples, toMove1);
-        PodMove(to1.Elements(), from1.Elements(), toMove1);
-      }
-
-      // The last bit of data that starts at 0. Could be empty.
-      const uint32_t toMove2 = toMove - toMove1;
-      {
-        // [toMove1, toMove) -> [0, toMove2).
-        Span<T> from2 = mStorage.Subspan(toMove1, toMove2);
-        Span<T> to2 = mStorage.Subspan(0, toMove2);
-        PodMove(to2.Elements(), from2.Elements(), toMove2);
-      }
-
-      mWriteIndex = NextIndex(mReadIndex, availableRead);
-    }
-
-    return true;
-  }
-
-  /**
    * Returns true if the full capacity of the ring buffer is being used. When
    * full any attempt to write more samples to the ring buffer will fail.
    */
@@ -348,11 +254,6 @@ class RingBuffer final {
     return mWriteIndex + Capacity() - mReadIndex;
   }
 
-  /**
-   * The number of samples this ring buffer can hold.
-   */
-  uint32_t Capacity() const { return mStorage.Length(); }
-
  private:
   uint32_t NextIndex(uint32_t aIndex, uint32_t aStep) const {
     MOZ_ASSERT(aStep < Capacity());
@@ -360,8 +261,10 @@ class RingBuffer final {
     return (aIndex + aStep) % Capacity();
   }
 
+  uint32_t Capacity() const { return mStorage.Length(); }
+
   Span<T> ConvertToSpan(const AlignedByteBuffer& aOther) const {
-    MOZ_ASSERT(aOther.Length() % sizeof(T) == 0);
+    MOZ_ASSERT(aOther.Length() >= sizeof(T));
     return Span<T>(reinterpret_cast<T*>(aOther.Data()),
                    aOther.Length() / sizeof(T));
   }
@@ -375,14 +278,12 @@ class RingBuffer final {
   uint32_t mReadIndex = 0;
   uint32_t mWriteIndex = 0;
   /* Points to the mMemoryBuffer. */
-  Span<T> mStorage;
+  const Span<T> mStorage;
   /* The actual allocated memory set from outside. It is set in the ctor and it
    * is not used again. It is here to control the lifetime of the memory. The
    * memory is accessed through the mStorage. The idea is that the memory used
-   * from the RingBuffer can be pre-allocated. Note that a re-allocation will
-   * happen if the length in bytes is set to something larger than is already
-   * allocated. */
-  AlignedByteBuffer mMemoryBuffer;
+   * from the RingBuffer can be pre-allocated. */
+  const AlignedByteBuffer mMemoryBuffer;
 };
 
 /** AudioRingBuffer **/
@@ -398,6 +299,7 @@ class AudioRingBuffer::AudioRingBufferPrivate {
 
 AudioRingBuffer::AudioRingBuffer(uint32_t aSizeInBytes)
     : mPtr(MakeUnique<AudioRingBufferPrivate>()) {
+  MOZ_ASSERT(aSizeInBytes > 0);
   mPtr->mBackingBuffer.emplace(aSizeInBytes);
   MOZ_ASSERT(mPtr->mBackingBuffer);
 }
@@ -448,18 +350,6 @@ uint32_t AudioRingBuffer::Write(const AudioRingBuffer& aBuffer,
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   return mPtr->mFloatRingBuffer->Write(aBuffer.mPtr->mFloatRingBuffer.ref(),
                                        aSamples);
-}
-
-uint32_t AudioRingBuffer::PrependSilence(uint32_t aSamples) {
-  MOZ_ASSERT(mPtr->mSampleFormat == AUDIO_FORMAT_S16 ||
-             mPtr->mSampleFormat == AUDIO_FORMAT_FLOAT32);
-  MOZ_ASSERT(!mPtr->mBackingBuffer);
-  if (mPtr->mSampleFormat == AUDIO_FORMAT_S16) {
-    MOZ_ASSERT(!mPtr->mFloatRingBuffer);
-    return mPtr->mIntRingBuffer->PrependSilence(aSamples);
-  }
-  MOZ_ASSERT(!mPtr->mIntRingBuffer);
-  return mPtr->mFloatRingBuffer->PrependSilence(aSamples);
 }
 
 uint32_t AudioRingBuffer::WriteSilence(uint32_t aSamples) {
@@ -528,31 +418,6 @@ uint32_t AudioRingBuffer::Clear() {
   MOZ_ASSERT(!mPtr->mIntRingBuffer);
   MOZ_ASSERT(mPtr->mFloatRingBuffer);
   return mPtr->mFloatRingBuffer->Clear();
-}
-
-bool AudioRingBuffer::SetLengthBytes(uint32_t aLengthBytes) {
-  if (mPtr->mFloatRingBuffer) {
-    return mPtr->mFloatRingBuffer->SetLengthBytes(aLengthBytes);
-  }
-  if (mPtr->mIntRingBuffer) {
-    return mPtr->mIntRingBuffer->SetLengthBytes(aLengthBytes);
-  }
-  if (mPtr->mBackingBuffer) {
-    return mPtr->mBackingBuffer->SetLength(aLengthBytes);
-  }
-  MOZ_ASSERT_UNREACHABLE("Unexpected");
-  return true;
-}
-
-uint32_t AudioRingBuffer::Capacity() const {
-  if (mPtr->mFloatRingBuffer) {
-    return mPtr->mFloatRingBuffer->Capacity();
-  }
-  if (mPtr->mIntRingBuffer) {
-    return mPtr->mIntRingBuffer->Capacity();
-  }
-  MOZ_ASSERT_UNREACHABLE("Unexpected");
-  return 0;
 }
 
 bool AudioRingBuffer::IsFull() const {

@@ -47,57 +47,6 @@ export const kMatrixContainerTypeInfo = {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
-export const kAccessModeInfo = {
-  read: { read: true, write: false },
-  write: { read: false, write: true },
-  read_write: { read: true, write: true },
-};
-
-export const kAddressSpaceInfo = {
-  storage: {
-    scope: 'module',
-    binding: true,
-    spell: 'must',
-    accessModes: ['read', 'read_write'],
-    spellAccessMode: 'may',
-  },
-  uniform: {
-    scope: 'module',
-    binding: true,
-    spell: 'must',
-    accessModes: ['read'],
-    spellAccessMode: 'never',
-  },
-  private: {
-    scope: 'module',
-    binding: false,
-    spell: 'must',
-    accessModes: ['read_write'],
-    spellAccessMode: 'never',
-  },
-  workgroup: {
-    scope: 'module',
-    binding: false,
-    spell: 'must',
-    accessModes: ['read_write'],
-    spellAccessMode: 'never',
-  },
-  function: {
-    scope: 'function',
-    binding: false,
-    spell: 'may',
-    accessModes: ['read_write'],
-    spellAccessMode: 'never',
-  },
-  handle: {
-    scope: 'module',
-    binding: true,
-    spell: 'never',
-    accessModes: [],
-    spellAccessMode: 'never',
-  },
-};
-
 /** List of texel formats and their shader representation */
 export const TexelFormats = [
   { format: 'rgba8unorm', _shaderType: 'f32' },
@@ -121,7 +70,7 @@ export const TexelFormats = [
 /**
  * Generate a bunch types (vec, mat, sized/unsized array) for testing.
  */
-export function* generateTypes({ addressSpace, baseType, containerType, isAtomic = false }) {
+export function* generateTypes({ storageClass, baseType, containerType, isAtomic = false }) {
   const scalarInfo = kScalarTypeInfo[baseType];
   if (isAtomic) {
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
@@ -129,7 +78,7 @@ export function* generateTypes({ addressSpace, baseType, containerType, isAtomic
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
   // Storage and uniform require host-sharable types.
-  if (addressSpace === 'storage' || addressSpace === 'uniform') {
+  if (storageClass === 'storage' || storageClass === 'uniform') {
     assert(isHostSharable(baseType), 'type ' + baseType.toString() + ' is not host sharable');
   }
 
@@ -179,7 +128,7 @@ export function* generateTypes({ addressSpace, baseType, containerType, isAtomic
         ? {
             alignment: scalarInfo.layout.alignment,
             size:
-              addressSpace === 'uniform'
+              storageClass === 'uniform'
                 ? // Uniform storage class must have array elements aligned to 16.
                   kArrayLength *
                   arrayStride({
@@ -192,7 +141,7 @@ export function* generateTypes({ addressSpace, baseType, containerType, isAtomic
     };
 
     // Sized
-    if (addressSpace === 'uniform') {
+    if (storageClass === 'uniform') {
       yield {
         type: `array<vec4<${scalarType}>,${kArrayLength}>`,
         _kTypeInfo: arrayTypeInfo,
@@ -201,7 +150,7 @@ export function* generateTypes({ addressSpace, baseType, containerType, isAtomic
       yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
     }
     // Unsized
-    if (addressSpace === 'storage') {
+    if (storageClass === 'storage') {
       yield { type: `array<${scalarType}>`, _kTypeInfo: arrayTypeInfo };
     }
   }
@@ -221,8 +170,8 @@ export function* generateTypes({ addressSpace, baseType, containerType, isAtomic
 /** Atomic access requires scalar/array container type and storage/workgroup memory. */
 export function supportsAtomics(p) {
   return (
-    ((p.addressSpace === 'storage' && p.storageMode === 'read_write') ||
-      p.addressSpace === 'workgroup') &&
+    ((p.storageClass === 'storage' && p.storageMode === 'read_write') ||
+      p.storageClass === 'workgroup') &&
     (p.containerType === 'scalar' || p.containerType === 'array')
   );
 }
@@ -236,7 +185,7 @@ export function* supportedScalarTypes(p) {
     if (p.isAtomic && !info.supportsAtomics) continue;
 
     // Storage and uniform require host-sharable types.
-    const isHostShared = p.addressSpace === 'storage' || p.addressSpace === 'uniform';
+    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
     if (isHostShared && info.layout === undefined) continue;
 
     yield scalarType;

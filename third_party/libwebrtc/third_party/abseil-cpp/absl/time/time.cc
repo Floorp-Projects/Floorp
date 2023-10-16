@@ -66,7 +66,6 @@ inline int64_t FloorToUnit(absl::Duration d, absl::Duration unit) {
              : q - 1;
 }
 
-ABSL_INTERNAL_DISABLE_DEPRECATED_DECLARATION_WARNING
 inline absl::Time::Breakdown InfiniteFutureBreakdown() {
   absl::Time::Breakdown bd;
   bd.year = std::numeric_limits<int64_t>::max();
@@ -100,7 +99,6 @@ inline absl::Time::Breakdown InfinitePastBreakdown() {
   bd.zone_abbr = "-00";
   return bd;
 }
-ABSL_INTERNAL_RESTORE_DEPRECATED_DECLARATION_WARNING
 
 inline absl::TimeZone::CivilInfo InfiniteFutureCivilInfo() {
   TimeZone::CivilInfo ci;
@@ -122,7 +120,6 @@ inline absl::TimeZone::CivilInfo InfinitePastCivilInfo() {
   return ci;
 }
 
-ABSL_INTERNAL_DISABLE_DEPRECATED_DECLARATION_WARNING
 inline absl::TimeConversion InfiniteFutureTimeConversion() {
   absl::TimeConversion tc;
   tc.pre = tc.trans = tc.post = absl::InfiniteFuture();
@@ -138,10 +135,9 @@ inline TimeConversion InfinitePastTimeConversion() {
   tc.normalized = true;
   return tc;
 }
-ABSL_INTERNAL_RESTORE_DEPRECATED_DECLARATION_WARNING
 
 // Makes a Time from sec, overflowing to InfiniteFuture/InfinitePast as
-// necessary. If sec is min/max, then consult cs+tz to check for overflow.
+// necessary. If sec is min/max, then consult cs+tz to check for overlow.
 Time MakeTimeWithOverflow(const cctz::time_point<cctz::seconds>& sec,
                           const cctz::civil_second& cs,
                           const cctz::time_zone& tz,
@@ -207,7 +203,6 @@ bool FindTransition(const cctz::time_zone& tz,
 // Time
 //
 
-ABSL_INTERNAL_DISABLE_DEPRECATED_DECLARATION_WARNING
 absl::Time::Breakdown Time::In(absl::TimeZone tz) const {
   if (*this == absl::InfiniteFuture()) return InfiniteFutureBreakdown();
   if (*this == absl::InfinitePast()) return InfinitePastBreakdown();
@@ -232,7 +227,6 @@ absl::Time::Breakdown Time::In(absl::TimeZone tz) const {
   bd.zone_abbr = al.abbr;
   return bd;
 }
-ABSL_INTERNAL_RESTORE_DEPRECATED_DECLARATION_WARNING
 
 //
 // Conversions from/to other time types.
@@ -303,7 +297,7 @@ timespec ToTimespec(Time t) {
   timespec ts;
   absl::Duration d = time_internal::ToUnixDuration(t);
   if (!time_internal::IsInfiniteDuration(d)) {
-    ts.tv_sec = static_cast<decltype(ts.tv_sec)>(time_internal::GetRepHi(d));
+    ts.tv_sec = time_internal::GetRepHi(d);
     if (ts.tv_sec == time_internal::GetRepHi(d)) {  // no time_t narrowing
       ts.tv_nsec = time_internal::GetRepLo(d) / 4;  // floor
       return ts;
@@ -322,7 +316,7 @@ timespec ToTimespec(Time t) {
 timeval ToTimeval(Time t) {
   timeval tv;
   timespec ts = absl::ToTimespec(t);
-  tv.tv_sec = static_cast<decltype(tv.tv_sec)>(ts.tv_sec);
+  tv.tv_sec = ts.tv_sec;
   if (tv.tv_sec != ts.tv_sec) {  // narrowing
     if (ts.tv_sec < 0) {
       tv.tv_sec = std::numeric_limits<decltype(tv.tv_sec)>::min();
@@ -404,7 +398,7 @@ bool TimeZone::PrevTransition(Time t, CivilTransition* trans) const {
 //
 // Conversions involving time zones.
 //
-ABSL_INTERNAL_DISABLE_DEPRECATED_DECLARATION_WARNING
+
 absl::TimeConversion ConvertDateTime(int64_t year, int mon, int day, int hour,
                                      int min, int sec, TimeZone tz) {
   // Avoids years that are too extreme for CivilSecond to normalize.
@@ -436,7 +430,6 @@ absl::TimeConversion ConvertDateTime(int64_t year, int mon, int day, int hour,
   }
   return tc;
 }
-ABSL_INTERNAL_RESTORE_DEPRECATED_DECLARATION_WARNING
 
 absl::Time FromTM(const struct tm& tm, absl::TimeZone tz) {
   civil_year_t tm_year = tm.tm_year;

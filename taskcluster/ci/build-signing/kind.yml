@@ -26,7 +26,6 @@ not-for-build-platforms:
     - macosx64-devedition/opt
     - macosx64/opt
     - macosx64/debug
-    - macosx64-aarch64/debug
 
 jobs:
     build-signing:

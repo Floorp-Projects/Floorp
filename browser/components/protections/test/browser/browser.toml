@@ -16,3 +16,4 @@ support-files = [
 ["browser_protections_telemetry.js"]
 
 ["browser_protections_vpn.js"]
+

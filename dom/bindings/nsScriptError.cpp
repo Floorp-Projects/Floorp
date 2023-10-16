@@ -21,10 +21,16 @@
 #include "mozilla/BasePrincipal.h"
 
 nsScriptErrorBase::nsScriptErrorBase()
-    : mSourceId(0),
+    : mMessage(),
+      mMessageName(),
+      mSourceName(),
+      mCssSelectors(),
+      mSourceId(0),
       mLineNumber(0),
+      mSourceLine(),
       mColumnNumber(0),
       mFlags(0),
+      mCategory(),
       mOuterWindowID(0),
       mInnerWindowID(0),
       mMicroSecondTimeStamp(0),
@@ -467,7 +473,11 @@ bool nsScriptErrorBase::ComputeIsFromChromeContext(
 NS_IMPL_ISUPPORTS(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
 nsScriptErrorNote::nsScriptErrorNote()
-    : mSourceId(0), mLineNumber(0), mColumnNumber(0) {}
+    : mMessage(),
+      mSourceName(),
+      mSourceId(0),
+      mLineNumber(0),
+      mColumnNumber(0) {}
 
 nsScriptErrorNote::~nsScriptErrorNote() = default;
 

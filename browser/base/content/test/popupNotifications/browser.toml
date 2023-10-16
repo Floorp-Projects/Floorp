@@ -34,10 +34,7 @@ skip-if = [
 ]
 
 ["browser_popupNotification_checkbox.js"]
-skip-if = [
-  "(os == 'linux' && (debug || asan))",
-  "a11y_checks", # Bug 1858037 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
-]
+skip-if = ["(os == 'linux' && (debug || asan))"]
 
 ["browser_popupNotification_hide_after_identity_panel.js"]
 skip-if = ["(os == 'linux' && (debug || asan))"]

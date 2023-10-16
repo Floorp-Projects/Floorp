@@ -28,7 +28,7 @@ JSObject* SVGFETurbulenceElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFETurbulenceElement::sNumberInfo[1] = {
-    {nsGkAtoms::seed, 0}};
+    {nsGkAtoms::seed, 0, false}};
 
 SVGElement::NumberPairInfo SVGFETurbulenceElement::sNumberPairInfo[1] = {
     {nsGkAtoms::baseFrequency, 0, 0}};
@@ -160,7 +160,7 @@ nsresult SVGFETurbulenceElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feTurbulence);
   }
 
-  return SVGFETurbulenceElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

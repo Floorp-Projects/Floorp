@@ -38,7 +38,6 @@ UNIFIED_SOURCES += [
     "testDefineGetterSetterNonEnumerable.cpp",
     "testDefineProperty.cpp",
     "testDeflateStringToUTF8Buffer.cpp",
-    "testDeleteProperty.cpp",
     "testDifferentNewTargetInvokeConstructor.cpp",
     "testEmptyWindowIsOmitted.cpp",
     "testErrorCopying.cpp",

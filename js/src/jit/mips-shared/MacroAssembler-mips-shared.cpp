@@ -1825,10 +1825,10 @@ void MacroAssembler::comment(const char* msg) { Assembler::comment(msg); }
 // ===============================================================
 // WebAssembly
 
-FaultingCodeOffset MacroAssembler::wasmTrapInstruction() {
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+CodeOffset MacroAssembler::wasmTrapInstruction() {
+  CodeOffset offset(currentOffset());
   as_teq(zero, zero, WASM_TRAP);
-  return fco;
+  return offset;
 }
 
 void MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input,

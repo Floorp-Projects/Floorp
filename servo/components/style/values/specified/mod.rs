@@ -43,7 +43,7 @@ pub use self::box_::{
     Clear, ContainIntrinsicSize, ContentVisibility, Display, Float, LineClamp, Overflow,
     OverflowAnchor, OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollbarGutter,
     ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType,
-    TouchAction, VerticalAlign, WillChange, Zoom
+    TouchAction, VerticalAlign, WillChange,
 };
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
@@ -57,9 +57,10 @@ pub use self::font::{FontFamily, FontLanguageOverride, FontPalette, FontStyle};
 pub use self::font::{FontFeatureSettings, FontVariantLigatures, FontVariantNumeric};
 pub use self::font::{FontSize, FontSizeAdjust, FontSizeAdjustFactor, FontSizeKeyword, FontStretch, FontSynthesis};
 pub use self::font::{FontVariantAlternates, FontWeight};
-pub use self::font::{FontVariantEastAsian, FontVariationSettings, LineHeight};
+pub use self::font::{FontVariantEastAsian, FontVariationSettings};
 pub use self::font::{MathDepth, MozScriptMinSize, MozScriptSizeMultiplier, XLang, XTextScale};
-pub use self::image::{EndingShape as GradientEndingShape, Gradient, Image, ImageRendering};
+pub use self::image::{EndingShape as GradientEndingShape, Gradient};
+pub use self::image::{Image, ImageRendering, MozImageRect};
 pub use self::length::{AbsoluteLength, CalcLengthPercentage, CharacterWidth};
 pub use self::length::{FontRelativeLength, Length, LengthOrNumber, NonNegativeLengthOrNumber};
 pub use self::length::{LengthOrAuto, LengthPercentage, LengthPercentageOrAuto};
@@ -90,7 +91,7 @@ pub use self::text::HyphenateCharacter;
 pub use self::text::RubyPosition;
 pub use self::text::TextAlignLast;
 pub use self::text::TextUnderlinePosition;
-pub use self::text::{InitialLetter, LetterSpacing, LineBreak, TextAlign};
+pub use self::text::{InitialLetter, LetterSpacing, LineBreak, LineHeight, TextAlign};
 pub use self::text::{OverflowWrap, TextEmphasisPosition, TextEmphasisStyle, WordBreak};
 pub use self::text::{TextAlignKeyword, TextDecorationLine, TextOverflow, WordSpacing};
 pub use self::text::{TextDecorationLength, TextDecorationSkipInk, TextJustify, TextTransform};
@@ -513,12 +514,6 @@ impl NonNegativeNumberOrPercentage {
     #[inline]
     pub fn hundred_percent() -> Self {
         NonNegative(NumberOrPercentage::Percentage(Percentage::hundred()))
-    }
-
-    /// Return a particular number.
-    #[inline]
-    pub fn new_number(n: f32) -> Self {
-        NonNegative(NumberOrPercentage::Number(Number::new(n)))
     }
 }
 
@@ -971,8 +966,10 @@ impl ToCss for Attr {
         serialize_atom_identifier(&self.attribute, dest)?;
 
         if !self.fallback.is_empty() {
-            dest.write_str(", ")?;
+            // Fallback will always be a string value for now, so always wrap in "..."
+            dest.write_str(", \"")?;
             self.fallback.to_css(dest)?;
+            dest.write_char('"')?;
         }
 
         dest.write_char(')')

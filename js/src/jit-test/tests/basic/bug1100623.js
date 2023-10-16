@@ -1,7 +1,4 @@
-// |jit-test| error: baz is null; skip-if: getBuildConfiguration('pbl')
-//
-// (skip if PBL enabled: it doesn't support the decompiler so doesn't give the
-// specific error message)
+// |jit-test| error: baz is null
 
 var document = {getElementById: () => null};
 

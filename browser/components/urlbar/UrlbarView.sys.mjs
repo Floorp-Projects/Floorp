@@ -9,15 +9,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.sys.mjs",
   L10nCache: "resource:///modules/UrlbarUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
-  UrlbarProviderRecentSearches:
-    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
@@ -556,14 +552,6 @@ export class UrlbarView {
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
 
-    // Revoke icon blob URLs that were created while the view was open.
-    if (this.#blobUrlsByResultUrl) {
-      for (let blobUrl of this.#blobUrlsByResultUrl.values()) {
-        URL.revokeObjectURL(blobUrl);
-      }
-      this.#blobUrlsByResultUrl.clear();
-    }
-
     if (this.#isShowingZeroPrefix) {
       if (elementPicked) {
         Services.telemetry.scalarAdd(ZERO_PREFIX_SCALAR_ENGAGEMENT, 1);
@@ -1043,7 +1031,6 @@ export class UrlbarView {
 
   // Private properties and methods below.
   #announceTabToSearchOnSelection;
-  #blobUrlsByResultUrl = null;
   #inputWidthOnLastClose = 0;
   #l10nCache;
   #mainContainer;
@@ -1367,10 +1354,6 @@ export class UrlbarView {
     noWrap.appendChild(action);
     item._elements.set("action", action);
 
-    let userContextBox = this.#createElement("span");
-    noWrap.appendChild(userContextBox);
-    item._elements.set("user-context", userContextBox);
-
     let url = this.#createElement("span");
     url.className = "urlbarView-url";
     item._content.appendChild(url);
@@ -1420,56 +1403,22 @@ export class UrlbarView {
       UrlbarView.dynamicViewTemplatesByName.get(dynamicType);
     if (!viewTemplate) {
       console.error(`No viewTemplate found for ${result.providerName}`);
-      return;
     }
-    let classes = this.#buildViewForDynamicType(
+    this.#buildViewForDynamicType(
       dynamicType,
       item._content,
       item._elements,
       viewTemplate
     );
-    item.toggleAttribute("has-url", classes.has("urlbarView-url"));
-    item.toggleAttribute("has-action", classes.has("urlbarView-action"));
     this.#setRowSelectable(item, item._content.hasAttribute("selectable"));
   }
 
-  /**
-   * Recursively builds a row's DOM for a dynamic result type.
-   *
-   * @param {string} type
-   *   The name of the dynamic type.
-   * @param {Element} parentNode
-   *   The element being recursed into. Pass `row._content`
-   *   (i.e., the row's `.urlbarView-row-inner`) to start with.
-   * @param {Map} elementsByName
-   *   The `row._elements` map.
-   * @param {object} template
-   *   The template object being recursed into. Pass the top-level template
-   *   object to start with.
-   * @param {Set} classes
-   *   The CSS class names of all elements in the row's subtree are recursively
-   *   collected in this set. Don't pass anything to start with so that the
-   *   default argument, a new Set, is used.
-   * @returns {Set}
-   *   The `classes` set, which on return will contain the CSS class names of
-   *   all elements in the row's subtree.
-   */
-  #buildViewForDynamicType(
-    type,
-    parentNode,
-    elementsByName,
-    template,
-    classes = new Set()
-  ) {
+  #buildViewForDynamicType(type, parentNode, elementsByName, template) {
     // Set attributes on parentNode.
     this.#setDynamicAttributes(parentNode, template.attributes);
-
     // Add classes to parentNode's classList.
     if (template.classList) {
       parentNode.classList.add(...template.classList);
-      for (let c of template.classList) {
-        classes.add(c);
-      }
     }
     if (template.overflowable) {
       parentNode.classList.add("urlbarView-overflowable");
@@ -1478,22 +1427,13 @@ export class UrlbarView {
       parentNode.setAttribute("name", template.name);
       elementsByName.set(template.name, parentNode);
     }
-
     // Recurse into children.
     for (let childTemplate of template.children || []) {
       let child = this.#createElement(childTemplate.tag);
       child.classList.add(`urlbarView-dynamic-${type}-${childTemplate.name}`);
       parentNode.appendChild(child);
-      this.#buildViewForDynamicType(
-        type,
-        child,
-        elementsByName,
-        childTemplate,
-        classes
-      );
+      this.#buildViewForDynamicType(type, child, elementsByName, childTemplate);
     }
-
-    return classes;
   }
 
   #createRowContentForRichSuggestion(item, result) {
@@ -1566,7 +1506,23 @@ export class UrlbarView {
       item._buttons.get("tip").textContent = result.payload.buttonText;
     }
 
-    if (this.#getResultMenuCommands(result)) {
+    if (!lazy.UrlbarPrefs.get("resultMenu")) {
+      if (result.payload.isBlockable) {
+        this.#addRowButton(item, {
+          name: "block",
+          command: "dismiss",
+          l10n: result.payload.blockL10n,
+        });
+      }
+      if (result.payload.helpUrl) {
+        this.#addRowButton(item, {
+          name: "help",
+          command: "help",
+          url: result.payload.helpUrl,
+          l10n: result.payload.helpL10n,
+        });
+      }
+    } else if (this.#getResultMenuCommands(result)) {
       this.#addRowButton(item, {
         name: "menu",
         l10n: {
@@ -1623,6 +1579,9 @@ export class UrlbarView {
       // always need updating.
       provider?.getViewTemplate ||
       oldResult.isRichSuggestion != result.isRichSuggestion ||
+      (!lazy.UrlbarPrefs.get("resultMenu") &&
+        (!!result.payload.helpUrl != item._buttons.has("help") ||
+          !!result.payload.isBlockable != item._buttons.has("block"))) ||
       !!this.#getResultMenuCommands(result) != item._buttons.has("menu") ||
       !!oldResult.showFeedbackMenu != !!result.showFeedbackMenu ||
       !lazy.ObjectUtils.deepEqual(
@@ -1703,11 +1662,13 @@ export class UrlbarView {
     }
 
     let favicon = item._elements.get("favicon");
-    favicon.src = this.#iconForResult(result);
-
-    if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
-      let userContextBox = item._elements.get("user-context");
-      this.#setResultUserContextBox(result, userContextBox);
+    if (
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+      result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD
+    ) {
+      favicon.src = this.#iconForResult(result);
+    } else {
+      favicon.src = result.payload.icon || lazy.UrlbarUtils.ICON.DEFAULT;
     }
 
     let title = item._elements.get("title");
@@ -1815,7 +1776,7 @@ export class UrlbarView {
           result.payload.displayUrl = "";
           actionSetter = () => {
             this.#setElementL10n(action, {
-              id: "urlbar-result-action-visit-from-clipboard",
+              id: "urlbar-result-action-visit-from-your-clipboard",
             });
           };
           title.toggleAttribute("is-url", true);
@@ -1861,17 +1822,11 @@ export class UrlbarView {
     item.toggleAttribute("has-url", setURL);
     let url = item._elements.get("url");
     if (setURL) {
-      item.setAttribute("has-url", "true");
-      let displayedUrl = result.payload.displayUrl;
-      let urlHighlights = result.payloadHighlights.displayUrl || [];
-      if (lazy.UrlbarUtils.isTextDirectionRTL(displayedUrl, this.window)) {
-        // Stripping the url prefix may change the initial text directionality,
-        // causing parts of it to jump to the end. To prevent that we insert a
-        // LRM character in place of the prefix.
-        displayedUrl = "\u200e" + displayedUrl;
-        urlHighlights = this.#offsetHighlights(urlHighlights, 1);
-      }
-      this.#addTextContentWithHighlights(url, displayedUrl, urlHighlights);
+      this.#addTextContentWithHighlights(
+        url,
+        result.payload.displayUrl,
+        result.payloadHighlights.displayUrl || []
+      );
       this.#updateOverflowTooltip(url, result.payload.displayUrl);
     } else {
       url.textContent = "";
@@ -1917,54 +1872,21 @@ export class UrlbarView {
   }
 
   #iconForResult(result, iconUrlOverride = null) {
-    if (
-      result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
-      (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-        result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD)
-    ) {
-      return lazy.UrlbarUtils.ICON.HISTORY;
-    }
-
-    if (iconUrlOverride) {
-      return iconUrlOverride;
-    }
-
-    if (result.payload.icon) {
-      return result.payload.icon;
-    }
-    if (result.payload.iconBlob) {
-      // Blob icons are currently limited to Suggest results, which will define
-      // a `payload.originalUrl` if the result URL contains timestamp templates
-      // that are replaced at query time.
-      let resultUrl = result.payload.originalUrl || result.payload.url;
-      if (resultUrl) {
-        let blobUrl = this.#blobUrlsByResultUrl?.get(resultUrl);
-        if (!blobUrl) {
-          blobUrl = URL.createObjectURL(result.payload.iconBlob);
-          // Since most users will not trigger results with blob icons, we
-          // create this map lazily.
-          this.#blobUrlsByResultUrl ||= new Map();
-          this.#blobUrlsByResultUrl.set(resultUrl, blobUrl);
-        }
-        return blobUrl;
-      }
-    }
-
-    if (
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
-      result.payload.trending
-    ) {
-      return lazy.UrlbarUtils.ICON.TRENDING;
-    }
-
-    if (
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD
-    ) {
-      return lazy.UrlbarUtils.ICON.SEARCH_GLASS;
-    }
-
-    return lazy.UrlbarUtils.ICON.DEFAULT;
+    return (
+      (result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
+        (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+          result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD) &&
+        lazy.UrlbarUtils.ICON.HISTORY) ||
+      iconUrlOverride ||
+      result.payload.icon ||
+      (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
+        result.payload.trending &&
+        lazy.UrlbarUtils.ICON.TRENDING) ||
+      ((result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
+        result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD) &&
+        lazy.UrlbarUtils.ICON.SEARCH_GLASS) ||
+      lazy.UrlbarUtils.ICON.DEFAULT
+    );
   }
 
   async #updateRowForDynamicType(item, result) {
@@ -2196,10 +2118,6 @@ export class UrlbarView {
       };
     }
 
-    if (row.result.providerName == lazy.UrlbarProviderRecentSearches.name) {
-      return { id: "urlbar-group-recent-searches" };
-    }
-
     if (
       row.result.isBestMatch &&
       row.result.providerName == lazy.UrlbarProviderQuickSuggest.name
@@ -2344,7 +2262,9 @@ export class UrlbarView {
     let result = row?.result;
     if (updateInput) {
       let urlOverride = null;
-      if (element?.classList?.contains("urlbarView-button")) {
+      if (element?.classList?.contains("urlbarView-button-help")) {
+        urlOverride = result.payload.helpUrl;
+      } else if (element?.classList?.contains("urlbarView-button")) {
         // Clear the input when a button is selected.
         urlOverride = "";
       }
@@ -2578,77 +2498,6 @@ export class UrlbarView {
   }
 
   /**
-   * Offsets all highlight ranges by a given amount.
-   *
-   * @param {Array} highlights The highlights which should be offset.
-   * @param {int} startOffset
-   *    The number by which we want to offset the highlights range starts.
-   * @returns {Array} The offset highlights.
-   */
-  #offsetHighlights(highlights, startOffset) {
-    return highlights.map(highlight => [
-      highlight[0] + startOffset,
-      highlight[1],
-    ]);
-  }
-
-  /**
-   * Sets `result`'s userContext in `userContextNode`'s DOM.
-   *
-   * @param {UrlbarResult} result
-   *   The result for which the userContext is being set.
-   * @param {Element} userContextNode
-   *   The DOM node for the result's userContext.
-   */
-  #setResultUserContextBox(result, userContextNode) {
-    // clear the element
-    while (userContextNode.firstChild) {
-      userContextNode.firstChild.remove();
-    }
-    if (
-      lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
-      result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
-      result.payload.userContextId
-    ) {
-      let userContextBox = this.#createElement("span");
-      userContextBox.classList.add("urlbarView-userContext-indicator");
-      let identity = lazy.ContextualIdentityService.getPublicIdentityFromId(
-        result.payload.userContextId
-      );
-      let label = lazy.ContextualIdentityService.getUserContextLabel(
-        result.payload.userContextId
-      );
-      if (identity) {
-        userContextNode.classList.add("urlbarView-action");
-        let userContextLabel = this.#createElement("label");
-        userContextLabel.classList.add("urlbarView-userContext-label");
-        userContextBox.appendChild(userContextLabel);
-
-        let userContextIcon = this.#createElement("img");
-        userContextIcon.classList.add("urlbarView-userContext-icons");
-        userContextBox.appendChild(userContextIcon);
-
-        if (identity.icon) {
-          userContextIcon.classList.add("identity-icon-" + identity.icon);
-          userContextIcon.src =
-            "resource://usercontext-content/" + identity.icon + ".svg";
-        }
-        if (identity.color) {
-          userContextBox.classList.add("identity-color-" + identity.color);
-        }
-        if (label) {
-          userContextLabel.setAttribute("value", label);
-          userContextLabel.innerText = label;
-        }
-        userContextBox.setAttribute("tooltiptext", label);
-        userContextNode.appendChild(userContextBox);
-      }
-    } else {
-      userContextNode.classList.remove("urlbarView-action");
-    }
-  }
-
-  /**
    * Adds text content to a node, placing substrings that should be highlighted
    * inside <em> nodes.
    *
@@ -2814,12 +2663,19 @@ export class UrlbarView {
       { id: "urlbar-result-action-search-tabs" },
       { id: "urlbar-result-action-switch-tab" },
       { id: "urlbar-result-action-visit" },
-      { id: "urlbar-result-action-visit-from-clipboard" },
+      { id: "urlbar-result-action-visit-from-your-clipboard" },
     ];
 
     if (lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       idArgs.push({ id: "urlbar-group-firefox-suggest" });
-      idArgs.push({ id: "urlbar-group-best-match" });
+      if (
+        (lazy.UrlbarPrefs.get("bestMatchEnabled") &&
+          lazy.UrlbarPrefs.get("suggest.bestmatch")) ||
+        (lazy.UrlbarPrefs.get("weatherFeatureGate") &&
+          lazy.UrlbarPrefs.get("suggest.weather"))
+      ) {
+        idArgs.push({ id: "urlbar-group-best-match" });
+      }
       if (
         lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
         lazy.UrlbarPrefs.get("addonsFeatureGate")
@@ -2995,6 +2851,9 @@ export class UrlbarView {
    *   Array of menu commands available for the result, null if there are none.
    */
   #getResultMenuCommands(result) {
+    if (!lazy.UrlbarPrefs.get("resultMenu")) {
+      return null;
+    }
     if (this.#resultMenuCommands.has(result)) {
       return this.#resultMenuCommands.get(result);
     }
@@ -3311,15 +3170,9 @@ export class UrlbarView {
     this.#mousedownSelectedElement = null;
   }
 
-  #isRelevantOverflowEvent(event) {
-    // We're interested only in the horizontal axis.
-    // 0 - vertical, 1 - horizontal, 2 - both
-    return event.detail != 0;
-  }
-
   on_overflow(event) {
     if (
-      this.#isRelevantOverflowEvent(event) &&
+      event.detail == 1 /* horizontal overflow */ &&
       this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, true);
@@ -3328,7 +3181,7 @@ export class UrlbarView {
 
   on_underflow(event) {
     if (
-      this.#isRelevantOverflowEvent(event) &&
+      event.detail == 1 /* horizontal underflow */ &&
       this.#canElementOverflow(event.target)
     ) {
       this.#setElementOverflowing(event.target, false);

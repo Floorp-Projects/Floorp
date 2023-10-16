@@ -450,8 +450,7 @@ class nsDocShell final : public nsDocLoader,
       const mozilla::Maybe<nsCString>& aOriginalURIString, uint32_t aLoadType,
       bool aIsTopFrame, bool aAllowKeywordFixup, bool aUsePrivateBrowsing,
       bool aNotifyKeywordSearchLoading = false,
-      nsIInputStream** aNewPostData = nullptr,
-      bool* outWasSchemelessInput = nullptr);
+      nsIInputStream** aNewPostData = nullptr);
 
   static already_AddRefed<nsIURI> MaybeFixBadCertDomainErrorURI(
       nsIChannel* aChannel, nsIURI* aUrl);
@@ -719,7 +718,9 @@ class nsDocShell final : public nsDocLoader,
       nsDocShellLoadState* aLoadState);
 
  private:
-  // Returns true if it is the caller's responsibility to ensure
+  // Returns true if would have called FireOnLocationChange,
+  // but did not because aFireOnLocationChange was false on entry.
+  // In this case it is the caller's responsibility to ensure
   // FireOnLocationChange is called.
   // In all other cases false is returned.
   // Either aChannel or aTriggeringPrincipal must be null. If aChannel is
@@ -734,9 +735,9 @@ class nsDocShell final : public nsDocLoader,
   bool OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
                 nsIPrincipal* aTriggeringPrincipal,
                 nsIPrincipal* aPrincipalToInherit,
-                nsIPrincipal* aPartitionedPrincipalToInherit,
-                nsIContentSecurityPolicy* aCsp, bool aAddToGlobalHistory,
-                bool aCloneSHChildren);
+                nsIPrincipal* aPartitionedPrincipalToInehrit,
+                nsIContentSecurityPolicy* aCsp, bool aFireOnLocationChange,
+                bool aAddToGlobalHistory, bool aCloneSHChildren);
 
  public:
   // If wireframe collection is enabled, will attempt to gather the
@@ -978,7 +979,8 @@ class nsDocShell final : public nsDocLoader,
   // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void FirePageHideShowNonRecursive(bool aShow);
 
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable);
+  nsresult Dispatch(mozilla::TaskCategory aCategory,
+                    already_AddRefed<nsIRunnable>&& aRunnable);
 
   void ReattachEditorToWindow(nsISHEntry* aSHEntry);
   void ClearFrameHistory(nsISHEntry* aEntry);

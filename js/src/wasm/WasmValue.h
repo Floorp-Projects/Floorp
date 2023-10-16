@@ -118,8 +118,6 @@ class FuncRef {
   // FuncRef.
   static FuncRef fromAnyRefUnchecked(AnyRef p);
 
-  static FuncRef null() { return FuncRef(nullptr); }
-
   AnyRef toAnyRef() { return AnyRef::fromJSObjectOrNull((JSObject*)value_); }
 
   void* forCompiledCode() const { return value_; }
@@ -172,7 +170,7 @@ class LitVal {
   Cell cell_;
 
  public:
-  LitVal() = default;
+  LitVal() : type_(ValType()), cell_{} {}
 
   explicit LitVal(ValType type) : type_(type) {
     switch (type.kind()) {
@@ -259,7 +257,7 @@ WASM_DECLARE_CACHEABLE_POD(LitVal::Cell);
 
 class MOZ_NON_PARAM Val : public LitVal {
  public:
-  Val() = default;
+  Val() : LitVal() {}
   explicit Val(ValType type) : LitVal(type) {}
   explicit Val(const LitVal& val);
   explicit Val(uint32_t i32) : LitVal(i32) {}

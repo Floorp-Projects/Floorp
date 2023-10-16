@@ -18,12 +18,6 @@ const { SearchTestUtils } = ChromeUtils.importESModule(
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
-const { sinon } = ChromeUtils.importESModule(
-  "resource://testing-common/Sinon.sys.mjs"
-);
-const { DiscoveryStreamFeed } = ChromeUtils.import(
-  "resource://activity-stream/lib/DiscoveryStreamFeed.jsm"
-);
 
 SearchTestUtils.init(this);
 AddonTestUtils.init(this);
@@ -85,16 +79,17 @@ add_setup(async function () {
     })
   );
 
-  const sandbox = sinon.createSandbox();
-  sandbox
-    .stub(DiscoveryStreamFeed.prototype, "generateFeedUrl")
-    .returns("http://example.com/topstories.json");
+  let newConfig = Object.assign(defaultDSConfig, {
+    show_spocs: false,
+    hardcoded_layout: false,
+    layout_endpoint: "http://example.com/ds_layout.json",
+  });
 
   // Configure Activity Stream to query for the layout JSON file that points
   // at the local top stories feed.
   Services.prefs.setCharPref(
     "browser.newtabpage.activity-stream.discoverystream.config",
-    JSON.stringify(defaultDSConfig)
+    JSON.stringify(newConfig)
   );
 
   // We need to allow example.com as a place to get both the layout and the
@@ -228,11 +223,11 @@ add_task(async function test_cache_worker() {
   let root = doc.getElementById("root");
   ok(root.childElementCount, "There are children on the root node");
 
-  // There should be the 1 top story, and 20 placeholders.
+  // There should be the 1 top story, and 2 placeholders.
   equal(
     Array.from(root.querySelectorAll(".ds-card")).length,
-    21,
-    "There are 21 DSCards"
+    3,
+    "There are 3 DSCards"
   );
   let cardHostname = doc.querySelector(
     "[data-section-id='topstories'] .source"
@@ -240,7 +235,7 @@ add_task(async function test_cache_worker() {
   equal(cardHostname, "bbc.com", "Card hostname is bbc.com");
 
   let placeholders = doc.querySelectorAll(".ds-card.placeholder");
-  equal(placeholders.length, 20, "There should be 20 placeholders");
+  equal(placeholders.length, 2, "There should be 2 placeholders");
 });
 
 /**

@@ -115,7 +115,7 @@ function handleStreamRequest(request, response) {
   intervalId = setInterval(tick, TICK_INTERVAL);
 }
 
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 function handleRequest(request, response) {
   dump(
     "server-stream-download.js: processing request for " +

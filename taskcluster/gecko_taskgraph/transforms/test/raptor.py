@@ -131,8 +131,7 @@ def split_raptor_subtests(config, tests):
         # test job for every subtest (i.e. split out each page-load URL into its own job)
         subtests = test["raptor"].pop("subtests", None)
         if not subtests:
-            if "macosx1300" not in test["test-platform"]:
-                yield test
+            yield test
             continue
 
         for chunk_number, subtest in enumerate(subtests):

@@ -63,20 +63,22 @@ if (topLevelDocument) {
   // Because the iframe tests expect no user activation, and because they
   // load asynchronously, we want to first run those tests before simulating
   // clicks on the page.
-  const testsWithoutUserActivation = [
-    sameOriginFramePromise,
-    crossOriginFramePromise,
-    nestedSameOriginFramePromise,
-    nestedCrossOriginFramePromise,
-  ];
-
-  promise_test(async t => {
-    await Promise .all(testsWithoutUserActivation);
-    await RunCallbackWithGesture(() => {
-      return promise_rejects_dom(t, "NotAllowedError", document.requestStorageAccess(),
-      "should reject in insecure context");
-    });
-  },
-  '[' + testPrefix +
-      '] document.requestStorageAccess() should be rejected when called with a user gesture in insecure context');
+  Promise
+      .all([
+        sameOriginFramePromise,
+        crossOriginFramePromise,
+        nestedSameOriginFramePromise,
+        nestedCrossOriginFramePromise,
+      ])
+      .then(() => {
+        promise_test(
+            async t => {
+              await RunCallbackWithGesture(() => {
+                return promise_rejects_dom(t, "NotAllowedError", document.requestStorageAccess(),
+                "should reject in insecure context");
+              });
+            },
+            '[' + testPrefix +
+                '] document.requestStorageAccess() should be rejected when called with a user gesture in insecure context');
+      });
 }

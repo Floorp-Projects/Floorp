@@ -36,10 +36,6 @@ namespace gl {
 class SharedSurface;
 }
 
-namespace webgpu {
-class ExternalTexture;
-}
-
 namespace layers {
 
 class CompositableHost;
@@ -62,55 +58,6 @@ struct RemoteTextureInfoList {
   std::queue<RemoteTextureInfo> mList;
 };
 
-class SharedResourceWrapper {
- public:
-  enum class Tag { SharedSurface, ExternalTexture };
-  const Tag mTag;
-
-  static UniquePtr<SharedResourceWrapper> SharedSurface(
-      const std::shared_ptr<gl::SharedSurface>& aSharedSurface) {
-    return MakeUnique<SharedResourceWrapper>(Tag::SharedSurface,
-                                             aSharedSurface);
-  }
-
-  static UniquePtr<SharedResourceWrapper> ExternalTexture(
-      const std::shared_ptr<webgpu::ExternalTexture>& aExternalTexture) {
-    return MakeUnique<SharedResourceWrapper>(Tag::ExternalTexture,
-                                             aExternalTexture);
-  }
-
-  SharedResourceWrapper(
-      const Tag aTag, const std::shared_ptr<gl::SharedSurface>& aSharedSurface)
-      : mTag(aTag), mSharedSurface(aSharedSurface) {
-    MOZ_ASSERT(mTag == Tag::SharedSurface);
-  }
-  SharedResourceWrapper(
-      const Tag aTag,
-      const std::shared_ptr<webgpu::ExternalTexture>& aExternalTexture)
-      : mTag(aTag), mExternalTexture(aExternalTexture) {
-    MOZ_ASSERT(mTag == Tag::ExternalTexture);
-  }
-
-  const std::shared_ptr<gl::SharedSurface> mSharedSurface;
-  const std::shared_ptr<webgpu::ExternalTexture> mExternalTexture;
-
-  std::shared_ptr<gl::SharedSurface> SharedSurface() {
-    if (mTag == Tag::SharedSurface) {
-      return mSharedSurface;
-    }
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return nullptr;
-  }
-
-  std::shared_ptr<webgpu::ExternalTexture> ExternalTexture() {
-    if (mTag == Tag::ExternalTexture) {
-      return mExternalTexture;
-    }
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    return nullptr;
-  }
-};
-
 /**
  * A class provides API for remote texture owners.
  */
@@ -128,15 +75,8 @@ class RemoteTextureOwnerClient final {
   void NotifyContextLost();
   void PushTexture(const RemoteTextureId aTextureId,
                    const RemoteTextureOwnerId aOwnerId,
-                   UniquePtr<TextureData>&& aTextureData);
-  void PushTexture(const RemoteTextureId aTextureId,
-                   const RemoteTextureOwnerId aOwnerId,
                    UniquePtr<TextureData>&& aTextureData,
                    const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
-  void PushTexture(
-      const RemoteTextureId aTextureId, const RemoteTextureOwnerId aOwnerId,
-      UniquePtr<TextureData>&& aTextureData,
-      const std::shared_ptr<webgpu::ExternalTexture>& aExternalTexture);
   void PushDummyTexture(const RemoteTextureId aTextureId,
                         const RemoteTextureOwnerId aOwnerId);
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
@@ -146,8 +86,6 @@ class RemoteTextureOwnerClient final {
       const RemoteTextureOwnerId aOwnerId, gfx::IntSize aSize,
       gfx::SurfaceFormat aFormat);
   std::shared_ptr<gl::SharedSurface> GetRecycledSharedSurface(
-      const RemoteTextureOwnerId aOwnerId);
-  std::shared_ptr<webgpu::ExternalTexture> GetRecycledExternalTexture(
       const RemoteTextureOwnerId aOwnerId);
 
   const base::ProcessId mForPid;
@@ -182,7 +120,7 @@ class RemoteTextureMap {
                    const base::ProcessId aForPid,
                    UniquePtr<TextureData>&& aTextureData,
                    RefPtr<TextureHost>& aTextureHost,
-                   UniquePtr<SharedResourceWrapper>&& aResourceWrapper);
+                   const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
 
   void GetLatestBufferSnapshot(const RemoteTextureOwnerId aOwnerId,
                                const base::ProcessId aForPid,
@@ -253,7 +191,7 @@ class RemoteTextureMap {
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid,
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  UniquePtr<SharedResourceWrapper> GetRecycledSharedTexture(
+  std::shared_ptr<gl::SharedSurface> GetRecycledSharedSurface(
       const RemoteTextureOwnerId aOwnerId, const base::ProcessId aForPid);
 
   static RefPtr<TextureHost> CreateRemoteTexture(TextureData* aTextureData,
@@ -265,7 +203,7 @@ class RemoteTextureMap {
     TextureDataHolder(const RemoteTextureId aTextureId,
                       RefPtr<TextureHost> aTextureHost,
                       UniquePtr<TextureData>&& aTextureData,
-                      UniquePtr<SharedResourceWrapper>&& aResourceWrapper);
+                      const std::shared_ptr<gl::SharedSurface>& aSharedSurface);
 
     const RemoteTextureId mTextureId;
     // TextureHost of remote texture
@@ -276,7 +214,7 @@ class RemoteTextureMap {
     // Holds BufferTextureData of TextureHost
     UniquePtr<TextureData> mTextureData;
     // Holds gl::SharedSurface of TextureHost
-    UniquePtr<SharedResourceWrapper> mResourceWrapper;
+    std::shared_ptr<gl::SharedSurface> mSharedSurface;
   };
 
   struct RenderingReadyCallbackHolder {
@@ -308,7 +246,7 @@ class RemoteTextureMap {
     // waiting to be released in non-RenderThread.
     std::deque<CompositableTextureHostRef> mReleasingRenderedTextureHosts;
     std::stack<UniquePtr<TextureData>> mRecycledTextures;
-    std::queue<UniquePtr<SharedResourceWrapper>> mRecycledSharedTextures;
+    std::queue<std::shared_ptr<gl::SharedSurface>> mRecycledSharedSurfaces;
   };
 
   // Holds data related to remote texture wrapper

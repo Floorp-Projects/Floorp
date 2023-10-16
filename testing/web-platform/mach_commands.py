@@ -124,23 +124,9 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             kwargs["certutil_binary"] = self.get_binary_path("certutil")
 
         if kwargs["webdriver_binary"] is None:
-            try_paths = [self.get_binary_path("geckodriver", validate_exists=False)]
-            ext = ".exe" if sys.platform in ["win32", "msys", "cygwin"] else ""
-            for build_type in ["release", "debug"]:
-                try_paths.append(
-                    os.path.join(
-                        self.topsrcdir, "target", build_type, f"geckodriver{ext}"
-                    )
-                )
-            found_paths = []
-            for path in try_paths:
-                if os.path.exists(path):
-                    found_paths.append(path)
-
-            if found_paths:
-                # Pick the most recently modified version
-                found_paths.sort(key=os.path.getmtime)
-                kwargs["webdriver_binary"] = found_paths[-1]
+            kwargs["webdriver_binary"] = self.get_binary_path(
+                "geckodriver", validate_exists=False
+            )
 
         if kwargs["install_fonts"] is None:
             kwargs["install_fonts"] = True
@@ -173,16 +159,13 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
 
         kwargs = self.kwargs_common(kwargs)
 
-        # Our existing kwargs corresponds to the wptrunner command line arguments.
-        # `wpt run` extends this with some additional arguments that are consumed by
-        # the frontend. Copy over the default values of these extra arguments so they
-        # are present when we call into that frontend.
-        run_parser = run.create_parser()
-        run_kwargs = run_parser.parse_args([kwargs["product"], kwargs["test_list"]])
-
-        for key, value in vars(run_kwargs).items():
-            if key not in kwargs:
-                kwargs[key] = value
+        # Add additional kwargs consumed by the run frontend. Currently we don't
+        # have a way to set these through mach
+        kwargs["channel"] = None
+        kwargs["prompt"] = True
+        kwargs["install_browser"] = False
+        kwargs["install_webdriver"] = None
+        kwargs["affected"] = None
 
         # Install the deps
         # We do this explicitly to avoid calling pip with options that aren't
@@ -214,7 +197,7 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
         for key, value in list(iteritems(kwargs["test_paths"])):
             meta_suffix = key.strip("/")
             meta_dir = os.path.join(
-                self._here, "products", kwargs["product"].name, meta_suffix
+                self._here, "products", kwargs["product"], meta_suffix
             )
             value["metadata_path"] = meta_dir
             if not os.path.exists(meta_dir):

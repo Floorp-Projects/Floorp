@@ -515,7 +515,7 @@ void EnableLCov() {
   gLCovIsEnabled = true;
 }
 
-LCovRuntime::LCovRuntime() : pid_(getpid()), isEmpty_(true) {}
+LCovRuntime::LCovRuntime() : out_(), pid_(getpid()), isEmpty_(true) {}
 
 LCovRuntime::~LCovRuntime() {
   if (out_.isInitialized()) {

@@ -48,7 +48,7 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
   }
 
   if (gDebugLevel >= DEBUG_VERBOSE) {
-    std::cerr << "Identified host " << host->mHostName << '\n';
+    std::cerr << "Identified host " << host->mHostName << std::endl;
   }
 
   UniqueCERTCertificate delegatorCert(
@@ -84,7 +84,7 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
   if (host->mEnableDelegatedCredentials) {
     if (gDebugLevel >= DEBUG_VERBOSE) {
       std::cerr << "Enabling a delegated credential for host "
-                << host->mHostName << '\n';
+                << host->mHostName << std::endl;
     }
 
     if (PK11_NeedLogin(slot.get())) {

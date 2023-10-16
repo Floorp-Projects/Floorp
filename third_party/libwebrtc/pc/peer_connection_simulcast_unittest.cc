@@ -538,9 +538,9 @@ TEST_F(PeerConnectionSimulcastTests,
   ValidateTransceiverParameters(transceiver, expected_layers);
 }
 
-// Tests that a simulcast answer is rejected if the RID extension is not
-// negotiated.
-TEST_F(PeerConnectionSimulcastTests, NegotiationDoesNotHaveRidExtensionFails) {
+// Tests that simulcast is disabled if the RID extension is not negotiated
+// regardless of if the RIDs and simulcast attribute were negotiated properly.
+TEST_F(PeerConnectionSimulcastTests, NegotiationDoesNotHaveRidExtension) {
   auto local = CreatePeerConnectionWrapper();
   auto remote = CreatePeerConnectionWrapper();
   auto layers = CreateLayers({"1", "2", "3"}, true);
@@ -570,7 +570,8 @@ TEST_F(PeerConnectionSimulcastTests, NegotiationDoesNotHaveRidExtensionFails) {
                                .receive_layers()
                                .GetAllLayers()
                                .size());
-  EXPECT_FALSE(local->SetRemoteDescription(std::move(answer), &err)) << err;
+  EXPECT_TRUE(local->SetRemoteDescription(std::move(answer), &err)) << err;
+  ValidateTransceiverParameters(transceiver, expected_layers);
 }
 
 TEST_F(PeerConnectionSimulcastTests, SimulcastAudioRejected) {

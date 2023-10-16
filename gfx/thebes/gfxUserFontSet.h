@@ -692,7 +692,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   // attempt to load the next resource in the src list.
   void LoadNextSrc();
   void ContinueLoad();
-  void DoLoadNextSrc(bool aIsContinue);
+  void DoLoadNextSrc(bool aForceAsync);
 
   // change the load state
   virtual void SetLoadState(UserFontLoadState aLoadState);

@@ -131,6 +131,11 @@ const CONST_VENDOR = "";
 const CONST_VENDORSUB = "";
 
 const appVersion = parseInt(Services.appinfo.version);
+const rvVersion =
+  parseInt(
+    Services.prefs.getIntPref("network.http.useragent.forceRVOnly", 0),
+    0
+  ) || appVersion;
 const spoofedVersion = AppConstants.platform == "android" ? "115" : appVersion;
 
 const LEGACY_UA_GECKO_TRAIL = "20100101";
@@ -289,19 +294,19 @@ add_setup(async () => {
   DEFAULT_OSCPU.win = DEFAULT_UA_OS.win = await WindowsOscpuPromise;
   defaultUserAgent = `Mozilla/5.0 (${
     DEFAULT_UA_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
+  }; rv:${rvVersion}.0) Gecko/${
     DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
 
   spoofedUserAgentNavigator = `Mozilla/5.0 (${
     SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
+  }; rv:${rvVersion}.0) Gecko/${
     SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
 
   spoofedUserAgentHeader = `Mozilla/5.0 (${
     SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-  }; rv:${appVersion}.0) Gecko/${
+  }; rv:${rvVersion}.0) Gecko/${
     SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
   } Firefox/${appVersion}.0`;
 

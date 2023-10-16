@@ -402,9 +402,6 @@ static bool GetDisplayPortImpl(nsIContent* aContent, nsRect* aResult,
   } else if (isDisplayportSuppressed ||
              nsLayoutUtils::ShouldDisableApzForElement(aContent) ||
              aContent->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
-    // Note: the above conditions should be in sync with the conditions in
-    // WillUseEmptyDisplayPortMargins.
-
     // Make a copy of the margins data but set the margins to empty.
     // Do not create a new DisplayPortMargins object with
     // DisplayPortMargins::Empty(), because that will record the visual
@@ -957,20 +954,6 @@ Maybe<nsRect> DisplayPortUtils::GetRootDisplayportBase(PresShell* aPresShell) {
   }
 
   return Some(baseRect);
-}
-
-bool DisplayPortUtils::WillUseEmptyDisplayPortMargins(nsIContent* aContent) {
-  MOZ_ASSERT(HasDisplayPort(aContent));
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (!frame) {
-    return false;
-  }
-
-  // Note these conditions should be in sync with the conditions where we use
-  // empty margins to calculate display port in GetDisplayPortImpl
-  return aContent->GetProperty(nsGkAtoms::MinimalDisplayPort) ||
-         frame->PresShell()->IsDisplayportSuppressed() ||
-         nsLayoutUtils::ShouldDisableApzForElement(aContent);
 }
 
 }  // namespace mozilla

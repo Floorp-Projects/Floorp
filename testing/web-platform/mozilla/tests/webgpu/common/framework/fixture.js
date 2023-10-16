@@ -10,13 +10,16 @@ export { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 /** The fully-general type for params passed to a test function invocation. */
 
 export class SubcaseBatchState {
-  constructor(
-    recorder,
-    /** The case parameters for this test fixture shared state. Subcase params are not included. */
-    params
-  ) {
-    this.recorder = recorder;
-    this.params = params;
+  constructor(params) {
+    this._params = params;
+  }
+
+  /**
+   * Returns the case parameters for this test fixture shared state. Subcase params
+   * are not included.
+   */
+  get params() {
+    return this._params;
   }
 
   /**
@@ -52,8 +55,8 @@ export class Fixture {
   numOutstandingAsyncExpectations = 0;
   objectsToCleanUp = [];
 
-  static MakeSharedState(recorder, params) {
-    return new SubcaseBatchState(recorder, params);
+  static MakeSharedState(params) {
+    return new SubcaseBatchState(params);
   }
 
   /** @internal */
@@ -238,10 +241,8 @@ export class Fixture {
   }
 
   /**
-   * Expect that the provided function throws (if `true` or `string`) or not (if `false`).
-   * If a string is provided, expect that the throw exception has that name.
-   *
-   * MAINTENANCE_TODO: Change to `string | false` so the exception name is always checked.
+   * Expect that the provided function throws.
+   * If an `expectedName` is provided, expect that the throw exception has that name.
    */
   shouldThrow(expectedError, fn, msg) {
     const m = msg ? ': ' + msg : '';

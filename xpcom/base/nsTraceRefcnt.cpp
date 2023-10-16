@@ -70,7 +70,7 @@
 class MOZ_CAPABILITY("mutex") TraceLogMutex
     : private mozilla::detail::MutexImpl {
  public:
-  explicit TraceLogMutex() = default;
+  explicit TraceLogMutex() : ::mozilla::detail::MutexImpl(){};
 
  private:
   friend class AutoTraceLogLock;

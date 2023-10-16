@@ -1386,30 +1386,27 @@ bool ServoStyleSet::MightHaveNthOfClassDependency(const Element& aElement) {
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorIDDependency(
-    const Element& aElement, nsAtom* aOldID, nsAtom* aNewID,
-    const ServoElementSnapshotTable& aSnapshots) {
+    const Element& aElement, nsAtom* aOldID, nsAtom* aNewID) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
-      mRawData.get(), &aElement, aOldID, aNewID, &aSnapshots);
+      mRawData.get(), &aElement, aOldID, aNewID);
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorClassDependency(
-    const Element& aElement, const ServoElementSnapshotTable& aSnapshots) {
+    const Element& aElement) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
-      mRawData.get(), &aElement, &aSnapshots);
+      mRawData.get(), &aElement, &Snapshots());
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorAttributeDependency(
-    const Element& aElement, nsAtom* aAttribute,
-    const ServoElementSnapshotTable& aSnapshots) {
+    const Element& aElement, nsAtom* aAttribute) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDependency(
-      mRawData.get(), &aElement, aAttribute, &aSnapshots);
+      mRawData.get(), &aElement, aAttribute);
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorStateDependency(
-    const Element& aElement, ElementState aState,
-    const ServoElementSnapshotTable& aSnapshots) {
+    const Element& aElement, ElementState aState) {
   Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
-      mRawData.get(), &aElement, aState.GetInternalValue(), &aSnapshots);
+      mRawData.get(), &aElement, aState.GetInternalValue());
 }
 
 void ServoStyleSet::MaybeInvalidateRelativeSelectorForEmptyDependency(
@@ -1508,12 +1505,6 @@ void ServoStyleSet::RegisterProperty(const PropertyDefinition& aDefinition,
                                             : nullptr);
   switch (result) {
     case Result::SuccessfullyRegistered:
-      if (Element* root = mDocument->GetRootElement()) {
-        if (nsPresContext* pc = GetPresContext()) {
-          pc->RestyleManager()->PostRestyleEvent(
-              root, RestyleHint::RecascadeSubtree(), nsChangeHint(0));
-        }
-      }
       break;
     case Result::InvalidName:
       return aRv.ThrowSyntaxError("Invalid name");

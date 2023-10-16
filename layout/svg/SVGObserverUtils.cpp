@@ -1317,7 +1317,7 @@ static SVGFilterObserverListForCSSProp* GetOrCreateFilterObserverListForCSS(
 }
 
 static SVGObserverUtils::ReferenceState GetAndObserveFilters(
-    SVGFilterObserverList* aObserverList,
+    SVGFilterObserverListForCSSProp* aObserverList,
     nsTArray<SVGFilterFrame*>* aFilterFrames) {
   if (!aObserverList) {
     return SVGObserverUtils::eHasNoRefs;
@@ -1350,13 +1350,6 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
   SVGFilterObserverListForCSSProp* observerList =
       GetOrCreateFilterObserverListForCSS(aFilteredFrame);
   return mozilla::GetAndObserveFilters(observerList, aFilterFrames);
-}
-
-SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveFilters(
-    nsISupports* aObserverList, nsTArray<SVGFilterFrame*>* aFilterFrames) {
-  return mozilla::GetAndObserveFilters(
-      static_cast<SVGFilterObserverListForCanvasContext*>(aObserverList),
-      aFilterFrames);
 }
 
 SVGObserverUtils::ReferenceState SVGObserverUtils::GetFiltersIfObserving(
@@ -1614,9 +1607,6 @@ nsIFrame* SVGObserverUtils::GetAndObserveTemplate(
     nsCOMPtr<nsIURI> targetURI;
     nsContentUtils::NewURIWithDocumentCharset(
         getter_AddRefs(targetURI), href, content->GetUncomposedDoc(), baseURI);
-    if (!targetURI) {
-      return nullptr;
-    }
 
     // There's no clear refererer policy spec about non-CSS SVG resource
     // references.  Bug 1415044 to investigate which referrer we should use.

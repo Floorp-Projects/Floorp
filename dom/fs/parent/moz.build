@@ -16,7 +16,6 @@ EXPORTS.mozilla.dom += [
     "FileSystemManagerParentFactory.h",
     "FileSystemParentTypes.h",
     "FileSystemQuotaClient.h",
-    "FileSystemQuotaClientFactory.h",
     "FileSystemWritableFileStreamParent.h",
 ]
 
@@ -30,7 +29,6 @@ UNIFIED_SOURCES += [
     "FileSystemManagerParent.cpp",
     "FileSystemManagerParentFactory.cpp",
     "FileSystemQuotaClient.cpp",
-    "FileSystemQuotaClientFactory.cpp",
     "FileSystemStreamCallbacks.cpp",
     "FileSystemWritableFileStreamParent.cpp",
     "ResultStatement.cpp",

@@ -75,15 +75,6 @@ void PublicKeyCredential::GetRawId(JSContext* aCx,
   aValue.set(mRawIdCachedObj);
 }
 
-void PublicKeyCredential::GetAuthenticatorAttachment(
-    DOMString& aAuthenticatorAttachment) {
-  if (mAuthenticatorAttachment.isSome()) {
-    aAuthenticatorAttachment.SetKnownLiveString(mAuthenticatorAttachment.ref());
-  } else {
-    aAuthenticatorAttachment.SetNull();
-  }
-}
-
 already_AddRefed<AuthenticatorResponse> PublicKeyCredential::Response() const {
   if (mAttestationResponse) {
     return do_AddRef(mAttestationResponse);
@@ -96,11 +87,6 @@ already_AddRefed<AuthenticatorResponse> PublicKeyCredential::Response() const {
 
 void PublicKeyCredential::SetRawId(const nsTArray<uint8_t>& aBuffer) {
   mRawId.Assign(aBuffer);
-}
-
-void PublicKeyCredential::SetAuthenticatorAttachment(
-    const Maybe<nsString>& aAuthenticatorAttachment) {
-  mAuthenticatorAttachment = aAuthenticatorAttachment;
 }
 
 void PublicKeyCredential::SetAttestationResponse(
@@ -214,10 +200,7 @@ void PublicKeyCredential::ToJSON(JSContext* aCx,
     if (aError.Failed()) {
       return;
     }
-    if (mAuthenticatorAttachment.isSome()) {
-      json.mAuthenticatorAttachment.Construct();
-      json.mAuthenticatorAttachment.Value() = mAuthenticatorAttachment.ref();
-    }
+    // TODO(bug 1810851): authenticatorAttachment
     if (mClientExtensionOutputs.mCredProps.WasPassed()) {
       json.mClientExtensionResults.mCredProps.Construct(
           mClientExtensionOutputs.mCredProps.Value());
@@ -239,10 +222,7 @@ void PublicKeyCredential::ToJSON(JSContext* aCx,
     if (aError.Failed()) {
       return;
     }
-    if (mAuthenticatorAttachment.isSome()) {
-      json.mAuthenticatorAttachment.Construct();
-      json.mAuthenticatorAttachment.Value() = mAuthenticatorAttachment.ref();
-    }
+    // TODO(bug 1810851): authenticatorAttachment
     if (mClientExtensionOutputs.mAppid.WasPassed()) {
       json.mClientExtensionResults.mAppid.Construct(
           mClientExtensionOutputs.mAppid.Value());
@@ -360,10 +340,6 @@ void PublicKeyCredential::ParseCreationOptionsFromJSON(
       aResult.mExtensions.mHmacCreateSecret.Construct(
           aOptions.mExtensions.Value().mHmacCreateSecret.Value());
     }
-    if (aOptions.mExtensions.Value().mMinPinLength.WasPassed()) {
-      aResult.mExtensions.mMinPinLength.Construct(
-          aOptions.mExtensions.Value().mMinPinLength.Value());
-    }
   }
 }
 
@@ -420,10 +396,6 @@ void PublicKeyCredential::ParseRequestOptionsFromJSON(
     if (aOptions.mExtensions.Value().mHmacCreateSecret.WasPassed()) {
       aResult.mExtensions.mHmacCreateSecret.Construct(
           aOptions.mExtensions.Value().mHmacCreateSecret.Value());
-    }
-    if (aOptions.mExtensions.Value().mMinPinLength.WasPassed()) {
-      aResult.mExtensions.mMinPinLength.Construct(
-          aOptions.mExtensions.Value().mMinPinLength.Value());
     }
   }
 }

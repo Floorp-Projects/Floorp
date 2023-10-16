@@ -1,8 +1,10 @@
-document.getElementById("start-button").onclick = () => {
+var startButton = document.getElementById("start-button");
+startButton.onclick = function () {
   document.getElementById("prep").style.display = "none";
   document.getElementById("pick-device").style.display = "block";
 };
-document.getElementById("prompt-button-prep").onclick = () => {
+var promptPrepButton = document.getElementById("prompt-button-prep");
+promptPrepButton.onclick = function () {
   v.remote
     .prompt()
     .then(() => {})

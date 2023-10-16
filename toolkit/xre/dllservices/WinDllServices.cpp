@@ -41,8 +41,10 @@ DllServices* DllServices::Get() {
           return dllSvc.forget();
         }
 
-        SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-            "mozilla::DllServices::Get", std::move(setClearOnShutdown)));
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("mozilla::DllServices::Get",
+                                   std::move(setClearOnShutdown)));
 
         return dllSvc.forget();
       }());

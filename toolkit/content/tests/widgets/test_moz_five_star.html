@@ -52,11 +52,9 @@
           "Rendered title must contain at most one fractional digit"
         );
 
-        let isImage = mozFiveStar.starsWrapperEl.getAttribute("role") == "img"
-          || mozFiveStar.starsWrapperEl.getAttribute("role") == "image";
-
-        ok(
-          isImage,
+        is(
+          mozFiveStar.starsWrapperEl.getAttribute("role"),
+          "image",
           "Rating element is an image for the title to be announced"
         );
       }

@@ -1195,7 +1195,8 @@ bool WebGLContext::PushRemoteTexture(WebGLFramebuffer* fb,
       MOZ_RELEASE_ASSERT(rv, "SwizzleData failed!");
     }
 
-    mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data));
+    mRemoteTextureOwner->PushTexture(textureId, ownerId, std::move(data),
+                                     /* aSharedSurface */ nullptr);
     return true;
   }
 

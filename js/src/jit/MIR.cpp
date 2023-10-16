@@ -6497,10 +6497,9 @@ bool MGuardFunctionScript::congruentTo(const MDefinition* ins) const {
 
 AliasSet MGuardFunctionScript::getAliasSet() const {
   // A JSFunction's BaseScript pointer is immutable. Relazification of
-  // top-level/named self-hosted functions is an exception to this, but we don't
-  // use this guard for those self-hosted functions.
-  // See IRGenerator::emitCalleeGuard.
-  MOZ_ASSERT_IF(flags_.isSelfHostedOrIntrinsic(), flags_.isLambda());
+  // self-hosted functions is an exception to this, but we don't use this
+  // guard for self-hosted functions.
+  MOZ_ASSERT(!flags_.isSelfHostedOrIntrinsic());
   return AliasSet::None();
 }
 

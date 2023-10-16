@@ -32,11 +32,11 @@ with Files("test/crossorigin/*webgl*"):
 # * Adjust failure errata for webgl-conf.
 
 MOCHITEST_MANIFESTS += [
-    "test/crash/mochitest.toml",
-    "test/crossorigin/mochitest.toml",
-    "test/mochitest.toml",
+    "test/crash/mochitest.ini",
+    "test/crossorigin/mochitest.ini",
+    "test/mochitest.ini",
     "test/webgl-conf/generated-mochitest.ini",
-    "test/webgl-mochitest/mochitest.toml",
+    "test/webgl-mochitest/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome/chrome.toml"]

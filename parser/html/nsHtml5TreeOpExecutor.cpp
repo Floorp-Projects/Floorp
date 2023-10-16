@@ -47,12 +47,8 @@
 
 using namespace mozilla;
 
-#ifdef DEBUG
-static LazyLogModule gHtml5TreeOpExecutorLog("Html5TreeOpExecutor");
-#endif  // DEBUG
 static LazyLogModule gCharsetMenuLog("Chardetng");
 
-#define LOG(args) MOZ_LOG(gHtml5TreeOpExecutorLog, LogLevel::Debug, args)
 #define LOGCHARDETNG(args) MOZ_LOG(gCharsetMenuLog, LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor,
@@ -75,7 +71,8 @@ class nsHtml5ExecutorReflusher : public Runnable {
       // Possible early paint pending, reuse the runnable and try to
       // call RunFlushLoop later.
       nsCOMPtr<nsIRunnable> flusher = this;
-      if (NS_SUCCEEDED(doc->Dispatch(flusher.forget()))) {
+      if (NS_SUCCEEDED(
+              doc->Dispatch(TaskCategory::Network, flusher.forget()))) {
         PROFILER_MARKER_UNTYPED("HighPrio blocking parser flushing(2)", DOM);
         return NS_OK;
       }
@@ -414,11 +411,11 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
   printf("TOKENIZER-SAFE SCRIPTS: %d\n", sTokenSafeDocWrites);
   printf("TREEBUILDER-SAFE SCRIPTS: %d\n", sTreeSafeDocWrites);
 #endif
-#ifdef DEBUG
-  LOG(("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize));
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+  printf("MAX NOTIFICATION BATCH LEN: %d\n", sAppendBatchMaxSize);
   if (sAppendBatchExaminations != 0) {
-    LOG(("AVERAGE SLOTS EXAMINED: %d\n",
-         sAppendBatchSlotsExamined / sAppendBatchExaminations));
+    printf("AVERAGE SLOTS EXAMINED: %d\n",
+           sAppendBatchSlotsExamined / sAppendBatchExaminations);
   }
 #endif
   return NS_OK;
@@ -467,7 +464,8 @@ nsresult nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason) {
   if (mParser && mDocument) {  // can mParser ever be null here?
     nsCOMPtr<nsIRunnable> terminator = NewRunnableMethod(
         "nsHtml5Parser::Terminate", GetParser(), &nsHtml5Parser::Terminate);
-    if (NS_FAILED(mDocument->Dispatch(terminator.forget()))) {
+    if (NS_FAILED(
+            mDocument->Dispatch(TaskCategory::Network, terminator.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
   }
@@ -492,7 +490,8 @@ static bool BackgroundFlushCallback(TimeStamp /*aDeadline*/) {
 void nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync() {
   if (mDocument && !mDocument->IsInBackgroundWindow()) {
     nsCOMPtr<nsIRunnable> flusher = new nsHtml5ExecutorReflusher(this);
-    if (NS_FAILED(mDocument->Dispatch(flusher.forget()))) {
+    if (NS_FAILED(
+            mDocument->Dispatch(TaskCategory::Network, flusher.forget()))) {
       NS_WARNING("failed to dispatch executor flush event");
     }
   } else {
@@ -536,13 +535,13 @@ void nsHtml5TreeOpExecutor::FlushSpeculativeLoads() {
 class nsHtml5FlushLoopGuard {
  private:
   RefPtr<nsHtml5TreeOpExecutor> mExecutor;
-#ifdef DEBUG
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
   uint32_t mStartTime;
 #endif
  public:
   explicit nsHtml5FlushLoopGuard(nsHtml5TreeOpExecutor* aExecutor)
       : mExecutor(aExecutor)
-#ifdef DEBUG
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
         ,
         mStartTime(PR_IntervalToMilliseconds(PR_IntervalNow()))
 #endif
@@ -550,15 +549,15 @@ class nsHtml5FlushLoopGuard {
     mExecutor->mRunFlushLoopOnStack = true;
   }
   ~nsHtml5FlushLoopGuard() {
-#ifdef DEBUG
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
     uint32_t timeOffTheEventLoop =
         PR_IntervalToMilliseconds(PR_IntervalNow()) - mStartTime;
     if (timeOffTheEventLoop >
         nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop) {
       nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop = timeOffTheEventLoop;
     }
-    LOG(("Longest time off the event loop: %d\n",
-         nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop));
+    printf("Longest time off the event loop: %d\n",
+           nsHtml5TreeOpExecutor::sLongestTimeOffTheEventLoop);
 #endif
 
     mExecutor->mRunFlushLoopOnStack = false;
@@ -745,9 +744,9 @@ void nsHtml5TreeOpExecutor::RunFlushLoop() {
       StopDeflecting();
       if (nsContentSink::DidProcessATokenImpl() ==
           NS_ERROR_HTMLPARSER_INTERRUPTED) {
-#ifdef DEBUG
-        LOG(("REFLUSH SCHEDULED (after script): %d\n",
-             ++sTimesFlushLoopInterrupted));
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
+        printf("REFLUSH SCHEDULED (after script): %d\n",
+               ++sTimesFlushLoopInterrupted);
 #endif
         nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync();
         return;
@@ -1400,7 +1399,7 @@ void nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP) {
   mDocument->ApplySettingsFromCSP(true);
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchMaxSize = 0;
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchSlotsExamined = 0;
 uint32_t nsHtml5TreeOpExecutor::sAppendBatchExaminations = 0;

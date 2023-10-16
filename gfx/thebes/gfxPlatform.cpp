@@ -22,6 +22,7 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
@@ -218,7 +219,8 @@ class CrashStatsLogForwarder : public mozilla::gfx::LogForwarder {
 };
 
 CrashStatsLogForwarder::CrashStatsLogForwarder(CrashReporter::Annotation aKey)
-    : mCrashCriticalKey(aKey),
+    : mBuffer(),
+      mCrashCriticalKey(aKey),
       mMaxCapacity(0),
       mIndex(-1),
       mMutex("CrashStatsLogForwarder") {}
@@ -573,7 +575,7 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
                       wr::DebugFlags::WINDOW_VISIBILITY_DBG)
   GFX_WEBRENDER_DEBUG(".restrict-blob-size", wr::DebugFlags::RESTRICT_BLOB_SIZE)
 #undef GFX_WEBRENDER_DEBUG
-  gfx::gfxVars::SetWebRenderDebugFlags(flags._0);
+  gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
 }
 
 static void WebRenderQualityPrefChangeCallback(const char* aPref, void*) {
@@ -1307,15 +1309,14 @@ void gfxPlatform::InitLayersIPC() {
 #endif
     if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
       RemoteTextureMap::Init();
+      if (gfxVars::UseCanvasRenderThread()) {
+        gfx::CanvasRenderThread::Start();
+      }
       wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
       image::ImageMemoryReporter::InitForWebRender();
     }
 
     layers::CompositorThreadHolder::Start();
-
-    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-      gfx::CanvasRenderThread::Start();
-    }
   }
 }
 
@@ -1342,10 +1343,8 @@ void gfxPlatform::ShutdownLayersIPC() {
     gfx::CanvasManagerChild::Shutdown();
     layers::CompositorManagerChild::Shutdown();
     layers::ImageBridgeChild::ShutDown();
-    // This could be running on either the Compositor thread, the Renderer
-    // thread, or the dedicated CanvasRender thread, so we need to shutdown
-    // before the former two.
-    gfx::CanvasRenderThread::Shutdown();
+    // This could be running on either the Compositor or the Renderer thread.
+    gfx::CanvasManagerParent::Shutdown();
     // This has to happen after shutting down the child protocols.
     layers::CompositorThreadHolder::Shutdown();
     RemoteTextureMap::Shutdown();
@@ -1363,6 +1362,9 @@ void gfxPlatform::ShutdownLayersIPC() {
           WebRenderBlobTileSizePrefChangeCallback,
           nsDependentCString(
               StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
+    }
+    if (gfx::CanvasRenderThread::Get()) {
+      gfx::CanvasRenderThread::ShutDown();
     }
 #if defined(XP_WIN)
     widget::WinWindowOcclusionTracker::ShutDown();
@@ -2473,24 +2475,8 @@ void gfxPlatform::InitAcceleration() {
         "media.hardware-video-decoding.failed");
     InitGPUProcessPrefs();
 
-    FeatureState& feature = gfxConfig::GetFeature(Feature::REMOTE_CANVAS);
-    feature.SetDefault(StaticPrefs::gfx_canvas_remote_AtStartup(),
-                       FeatureStatus::Disabled, "Disabled via pref");
-
-    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
-        !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) {
-      feature.Disable(FeatureStatus::UnavailableNoGpuProcess,
-                      "Disabled without GPU process",
-                      "FEATURE_REMOTE_CANVAS_NO_GPU_PROCESS"_ns);
-    }
-
-#ifndef XP_WIN
-    gfxConfig::ForceDisable(Feature::REMOTE_CANVAS, FeatureStatus::Blocked,
-                            "Platform not supported",
-                            "FEATURE_REMOTE_CANVAS_NOT_WINDOWS"_ns);
-#endif
-
-    gfxVars::SetRemoteCanvasEnabled(feature.IsEnabled());
+    gfxVars::SetRemoteCanvasEnabled(StaticPrefs::gfx_canvas_remote() &&
+                                    gfxConfig::IsEnabled(Feature::GPU_PROCESS));
   }
 }
 
@@ -3085,8 +3071,7 @@ void gfxPlatform::InitWebGPUConfig() {
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
     if (StaticPrefs::gfx_webgpu_ignore_blocklist_AtStartup()) {
       feature.UserForceEnable(
-          "Ignoring blocklist entry because gfx.webgpu.ignore-blocklist is "
-          "true.");
+          "Ignoring blocklist entry because of gfx.webgpu.force-enabled:true.");
     }
 
     feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
@@ -3830,15 +3815,7 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
 
 /* static */
 void gfxPlatform::DisableGPUProcess() {
-  if (gfxVars::RemoteCanvasEnabled() &&
-      !StaticPrefs::gfx_canvas_remote_allow_in_parent_AtStartup()) {
-    gfxConfig::Disable(
-        Feature::REMOTE_CANVAS, FeatureStatus::UnavailableNoGpuProcess,
-        "Disabled by GPU process disabled",
-        "FEATURE_REMOTE_CANVAS_DISABLED_BY_GPU_PROCESS_DISABLED"_ns);
-    gfxVars::SetRemoteCanvasEnabled(false);
-  }
-
+  gfxVars::SetRemoteCanvasEnabled(false);
   if (kIsAndroid) {
     // On android, enable out-of-process WebGL only when GPU process exists.
     gfxVars::SetAllowWebglOop(false);
@@ -3850,21 +3827,13 @@ void gfxPlatform::DisableGPUProcess() {
   }
 
   RemoteTextureMap::Init();
+  if (gfxVars::UseCanvasRenderThread()) {
+    gfx::CanvasRenderThread::Start();
+  }
   // We need to initialize the parent process to prepare for WebRender if we
   // did not end up disabling it, despite losing the GPU process.
   wr::RenderThread::Start(GPUProcessManager::Get()->AllocateNamespace());
-  gfx::CanvasRenderThread::Start();
   image::ImageMemoryReporter::InitForWebRender();
-}
-
-/* static */ void gfxPlatform::DisableRemoteCanvas() {
-  if (!gfxVars::RemoteCanvasEnabled()) {
-    return;
-  }
-  gfxConfig::ForceDisable(Feature::REMOTE_CANVAS, FeatureStatus::Failed,
-                          "Disabled by runtime error",
-                          "FEATURE_REMOTE_CANVAS_RUNTIME_ERROR"_ns);
-  gfxVars::SetRemoteCanvasEnabled(false);
 }
 
 void gfxPlatform::FetchAndImportContentDeviceData() {

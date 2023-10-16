@@ -51,7 +51,7 @@ class SourceFooter extends PureComponent {
       sourceLoaded: PropTypes.bool.isRequired,
       toggleBlackBox: PropTypes.func.isRequired,
       togglePaneCollapse: PropTypes.func.isRequired,
-      prettyPrintAndSelectSource: PropTypes.func.isRequired,
+      togglePrettyPrint: PropTypes.func.isRequired,
       isSourceOnIgnoreList: PropTypes.bool.isRequired,
     };
   }
@@ -85,7 +85,7 @@ class SourceFooter extends PureComponent {
       selectedSource,
       canPrettyPrint,
       prettyPrintMessage,
-      prettyPrintAndSelectSource,
+      togglePrettyPrint,
       sourceLoaded,
     } = this.props;
 
@@ -112,7 +112,7 @@ class SourceFooter extends PureComponent {
           if (!canPrettyPrint) {
             return;
           }
-          prettyPrintAndSelectSource(selectedSource);
+          togglePrettyPrint(selectedSource.id);
         },
         className: classnames("action", type, {
           active: sourceLoaded && canPrettyPrint,
@@ -308,7 +308,7 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-  prettyPrintAndSelectSource: actions.prettyPrintAndSelectSource,
+  togglePrettyPrint: actions.togglePrettyPrint,
   toggleBlackBox: actions.toggleBlackBox,
   jumpToMappedLocation: actions.jumpToMappedLocation,
   togglePaneCollapse: actions.togglePaneCollapse,

@@ -64,6 +64,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // this value.  See UrlbarProviderPlaces.
   ["autoFill.stddevMultiplier", [0.0, "float"]],
 
+  // Whether best match results can be blocked. This pref is a fallback for the
+  // Nimbus variable `bestMatchBlockingEnabled`.
+  ["bestMatch.blockingEnabled", true],
+
+  // Whether the best match feature is enabled.
+  ["bestMatch.enabled", true],
+
   // Whether to show a link for using the search functionality provided by the
   // active view if the the view utilizes OpenSearch.
   ["contextualSearch.enabled", false],
@@ -97,6 +104,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // "Did you mean to go to 'host'" prompt.
   // 0 - never resolve; 1 - use heuristics (default); 2 - always resolve
   ["dnsResolveSingleWordsAfterSearch", 0],
+
+  // Whether telemetry events should be recorded.
+  ["eventTelemetry.enabled", false],
 
   // Whether we expand the font size when when the urlbar is
   // focused.
@@ -163,6 +173,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Comma-separated list of client variants to send to Merino
   ["merino.clientVariants", ""],
 
+  // Whether Merino is enabled as a quick suggest source.
+  ["merino.enabled", false],
+
   // The Merino endpoint URL, not including parameters.
   ["merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest"],
 
@@ -216,6 +229,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
+  // When `bestMatch.enabled` is true, this controls whether results will
+  // include best matches.
+  ["suggest.bestmatch", true],
+
   // Whether results will include the user's bookmarks.
   ["suggest.bookmark", true],
 
@@ -244,10 +261,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Whether results will include QuickActions in the default search mode.
   ["suggest.quickactions", false],
-
-  // Controls whether searching for open tabs returns tabs from any container
-  // or only from the current container.
-  ["switchTabs.searchAllContainers", false],
 
   // If disabled, QuickActions will not be included in either the default search
   // mode or the QuickActions search mode.
@@ -295,12 +308,12 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // trending suggestions are turned on.
   ["suggest.trending", true],
 
-  // If `browser.urlbar.recentsearches.featureGate` is true, this controls whether
-  // recentsearches are turned on.
-  ["suggest.recentsearches", true],
-
   // JSON'ed array of blocked quick suggest URL digests.
   ["quicksuggest.blockedDigests", ""],
+
+  // Whether the usual non-best-match quick suggest results can be blocked. This
+  // pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
+  ["quicksuggest.blockingEnabled", true],
 
   // Global toggle for whether the quick suggest feature is enabled, i.e.,
   // sponsored and recommended results related to the user's search string.
@@ -342,15 +355,8 @@ const PREF_URLBAR_DEFAULTS = new Map([
   //    `suggest.quicksuggest.sponsored` are true. Previously they were false.
   ["quicksuggest.migrationVersion", 0],
 
-  // Whether Firefox Suggest will use the new Rust backend instead of the
-  // original JS backend.
-  ["quicksuggest.rustEnabled", false],
-
-  // The Suggest Rust backend will ingest remote settings every N seconds as
-  // defined by this pref. Ingestion uses nsIUpdateTimerManager so the interval
-  // will persist across app restarts. The default value is 24 hours, same as
-  // the interval used by the desktop remote settings client.
-  ["quicksuggest.rustIngestIntervalSeconds", 60 * 60 * 24],
+  // Whether Remote Settings is enabled as a quick suggest source.
+  ["quicksuggest.remoteSettings.enabled", true],
 
   // The Firefox Suggest scenario in which the user is enrolled. This is set
   // when the scenario is updated (see `updateFirefoxSuggestScenario`) and is
@@ -376,6 +382,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether quick suggest results can be shown in position specified in the
   // suggestions.
   ["quicksuggest.allowPositionInSuggestions", true],
+
+  // Enable three-dot options button and menu for eligible results.
+  ["resultMenu", true],
 
   // Allow the result menu button to be reached with the Tab key.
   ["resultMenu.keyboardAccessible", true],
@@ -449,15 +458,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Feature gate pref for clipboard suggestions in the urlbar.
   ["clipboard.featureGate", false],
-
-  // Feature gate pref for recent searches being shown in the urlbar.
-  ["recentsearches.featureGate", false],
-
-  // The maximum number of recent searches we will show.
-  ["recentsearches.maxResults", 5],
-
-  // We only show recent searches within the past 31 days by default.
-  ["recentsearches.expirationDays", 31],
 ]);
 
 const PREF_OTHER_DEFAULTS = new Map([
@@ -474,7 +474,9 @@ const PREF_OTHER_DEFAULTS = new Map([
 // defaults are the values of their fallbacks.
 const NIMBUS_DEFAULTS = {
   addonsShowLessFrequentlyCap: 0,
+  addonsUITreatment: "b",
   experimentType: "",
+  isBestMatchExperiment: false,
   pocketShowLessFrequentlyCap: 0,
   quickSuggestRemoteSettingsDataType: "data",
   quickSuggestScoreMap: null,
@@ -580,11 +582,6 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
                 flex: 2,
                 group: lazy.UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
               },
-              {
-                flex: 2,
-                group: lazy.UrlbarUtils.RESULT_GROUP.RECENT_SEARCH,
-              },
-
               {
                 flex: 4,
                 group: lazy.UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,

@@ -1145,7 +1145,7 @@ void vp9_svc_constrain_inter_layer_pred(VP9_COMP *const cpi) {
 void vp9_svc_assert_constraints_pattern(VP9_COMP *const cpi) {
   SVC *const svc = &cpi->svc;
   // For fixed/non-flexible mode, the following constraint are expected,
-  // when inter-layer prediction is on (default).
+  // when inter-layer prediciton is on (default).
   if (svc->temporal_layering_mode != VP9E_TEMPORAL_LAYERING_MODE_BYPASS &&
       svc->disable_inter_layer_pred == INTER_LAYER_PRED_ON &&
       svc->framedrop_mode != LAYER_DROP) {

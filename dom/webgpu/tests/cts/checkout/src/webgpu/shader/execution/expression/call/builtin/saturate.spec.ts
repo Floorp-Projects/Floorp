@@ -10,10 +10,10 @@ Returns clamp(e, 0.0, 1.0). Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
+import { saturateInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,14 +21,14 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('saturate', {
   f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
+    return generateUnaryToF32IntervalCases(
       [
         // Non-clamped values
         ...linearRange(0.0, 1.0, 100),
         ...fullF32Range(),
       ],
       'unfiltered',
-      FP.f32.saturateInterval
+      saturateInterval
     );
   },
 });

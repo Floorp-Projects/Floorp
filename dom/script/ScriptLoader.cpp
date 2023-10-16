@@ -1155,9 +1155,9 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
           NewRunnableMethod("nsIScriptElement::FireErrorEvent", aElement,
                             &nsIScriptElement::FireErrorEvent);
       if (mDocument) {
-        mDocument->Dispatch(runnable.forget());
+        mDocument->Dispatch(TaskCategory::Other, runnable.forget());
       } else {
-        NS_DispatchToCurrentThread(runnable.forget());
+        NS_DispatchToCurrentThread(runnable);
       }
       return false;
     }
@@ -1918,7 +1918,7 @@ using ModuleCompileTask =
 class ScriptDecodeTask final : public CompileOrDecodeTask {
  public:
   explicit ScriptDecodeTask(const JS::TranscodeRange& aRange)
-      : mRange(aRange) {}
+      : CompileOrDecodeTask(), mRange(aRange) {}
 
   nsresult Init(JS::DecodeOptions& aOptions) {
     nsresult rv = InitFrontendContext();
@@ -3042,7 +3042,7 @@ void ScriptLoader::ProcessPendingRequestsAsync() {
         NewRunnableMethod("dom::ScriptLoader::ProcessPendingRequests", this,
                           &ScriptLoader::ProcessPendingRequests);
     if (mDocument) {
-      mDocument->Dispatch(task.forget());
+      mDocument->Dispatch(TaskCategory::Other, task.forget());
     } else {
       NS_DispatchToCurrentThread(task.forget());
     }

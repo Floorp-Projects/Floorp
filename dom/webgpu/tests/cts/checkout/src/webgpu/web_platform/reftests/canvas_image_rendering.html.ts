@@ -1,6 +1,6 @@
 import { runRefTest } from './gpu_ref_test.js';
 
-runRefTest(t => {
+runRefTest(async t => {
   const device = t.device;
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 

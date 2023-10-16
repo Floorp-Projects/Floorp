@@ -134,7 +134,7 @@ void fwht_ref(const Buffer<int16_t> &in, Buffer<tran_low_t> *out, int size,
 
 class TransTestBase : public ::testing::TestWithParam<DctParam> {
  public:
-  void SetUp() override {
+  virtual void SetUp() {
     rnd_.Reset(ACMRandom::DeterministicSeed());
     const int idx = GET_PARAM(0);
     const FuncInfo *func_info = &(GET_PARAM(1)[idx]);
@@ -166,7 +166,7 @@ class TransTestBase : public ::testing::TestWithParam<DctParam> {
     ASSERT_NE(dst_, nullptr);
   }
 
-  void TearDown() override {
+  virtual void TearDown() {
     vpx_free(src_);
     src_ = nullptr;
     vpx_free(dst_);

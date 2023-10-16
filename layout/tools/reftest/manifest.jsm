@@ -35,8 +35,11 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
+const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
+  "@mozilla.org/scriptsecuritymanager;1";
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
   "@mozilla.org/network/protocol;1?name=";
+const NS_XREAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 
 const RE_PROTOCOL = /^\w+:/;
 const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
@@ -44,7 +47,7 @@ const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 function ReadTopManifest(aFileURL, aFilter, aManifestID) {
   var url = g.ioService.newURI(aFileURL);
   if (!url) {
-    throw new Error("Expected a file or http URL for the manifest.");
+    throw "Expected a file or http URL for the manifest.";
   }
 
   g.manifestsLoaded = {};
@@ -53,7 +56,6 @@ function ReadTopManifest(aFileURL, aFilter, aManifestID) {
 
 // Note: If you materially change the reftest manifest parsing,
 // please keep the parser in layout/tools/reftest/__init__.py in sync.
-// eslint-disable-next-line complexity
 function ReadManifest(aURL, aFilter, aManifestID) {
   // Ensure each manifest is only read once. This assumes that manifests that
   // are included with filters will be read via their include before they are
@@ -66,6 +68,10 @@ function ReadManifest(aURL, aFilter, aManifestID) {
   }
   g.manifestsLoaded[aURL.spec] = aFilter[1];
 
+  var secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID].getService(
+    Ci.nsIScriptSecurityManager
+  );
+
   var listURL = aURL;
   var channel = NetUtil.newChannel({
     uri: aURL,
@@ -75,7 +81,7 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     var inputStream = channel.open();
   } catch (e) {
     g.logger.error("failed to open manifest at : " + aURL.spec);
-    throw new Error(e);
+    throw e;
   }
   if (channel instanceof Ci.nsIHttpChannel && channel.responseStatus != 200) {
     g.logger.error("HTTP ERROR : " + channel.responseStatus);
@@ -124,11 +130,11 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
     if (items[0] == "url-prefix") {
       if (items.length != 2) {
-        throw new Error(
+        throw (
           "url-prefix requires one url in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo
+          aURL.spec +
+          " line " +
+          lineNo
         );
       }
       urlprefix = items[1];
@@ -195,12 +201,12 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       } else if ((m = item.match(/^require-or\((.*?)\)$/))) {
         var args = m[1].split(/,/);
         if (args.length != 2) {
-          throw new Error(
+          throw (
             "Error in manifest file " +
-              aURL.spec +
-              " line " +
-              lineNo +
-              ": wrong number of args to require-or"
+            aURL.spec +
+            " line " +
+            lineNo +
+            ": wrong number of args to require-or"
           );
         }
         var [precondition_str, fallback_action] = args;
@@ -242,11 +248,11 @@ function ReadManifest(aURL, aFilter, aManifestID) {
             refPrefSettings
           )
         ) {
-          throw new Error(
+          throw (
             "Error in pref value in manifest file " +
-              aURL.spec +
-              " line " +
-              lineNo
+            aURL.spec +
+            " line " +
+            lineNo
           );
         }
       } else if ((m = item.match(/^fuzzy\((\d+)-(\d+),(\d+)-(\d+)\)$/))) {
@@ -276,13 +282,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         cond = false;
         noAutoFuzz = true;
       } else {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": unexpected item " +
-            item
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": unexpected item " +
+          item
         );
       }
 
@@ -306,21 +312,19 @@ function ReadManifest(aURL, aFilter, aManifestID) {
     if (items.length > origLength) {
       // Implies we broke out of the loop before we finished processing
       // defaults. This means defaults contained an invalid token.
-      throw new Error(
+      throw (
         "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": invalid defaults token '" +
-          items[0] +
-          "'"
+        aURL.spec +
+        " line " +
+        lineNo +
+        ": invalid defaults token '" +
+        items[0] +
+        "'"
       );
     }
 
     if (minAsserts > maxAsserts) {
-      throw new Error(
-        "Bad range in manifest file " + aURL.spec + " line " + lineNo
-      );
+      throw "Bad range in manifest file " + aURL.spec + " line " + lineNo;
     }
 
     var runHttp = false;
@@ -349,28 +353,25 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       }
     }
 
-    var principal = Services.scriptSecurityManager.createContentPrincipal(
-      aURL,
-      {}
-    );
+    var principal = secMan.createContentPrincipal(aURL, {});
 
     if (items[0] == "include") {
       if (items.length != 2) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": incorrect number of arguments to include"
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": incorrect number of arguments to include"
         );
       }
       if (runHttp) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": use of include with http"
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": use of include with http"
         );
       }
 
@@ -381,12 +382,12 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       // is disallowed since it's nonintuitive as to what the intended
       // effect is.
       if (nonSkipUsed) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": include statement with annotation other than 'skip' or 'skip-if'"
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": include statement with annotation other than 'skip' or 'skip-if'"
         );
       } else if (skip) {
         g.logger.info(
@@ -399,19 +400,19 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       } else {
         // poor man's assertion
         if (expected_status != EXPECTED_PASS) {
-          throw new Error(
+          throw (
             "Error in manifest file parsing code: we should never get expected_status=" +
-              expected_status +
-              " when nonSkipUsed=false (from " +
-              aURL.spec +
-              " line " +
-              lineNo +
-              ")"
+            expected_status +
+            " when nonSkipUsed=false (from " +
+            aURL.spec +
+            " line " +
+            lineNo +
+            ")"
           );
         }
 
         var incURI = g.ioService.newURI(items[1], null, listURL);
-        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+        secMan.checkLoadURIWithPrincipal(
           principal,
           incURI,
           Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT
@@ -440,8 +441,8 @@ function ReadManifest(aURL, aFilter, aManifestID) {
           included = included.substring(3);
         }
         // Use a new manifest ID if the included manifest is in a different directory.
-        if (included.length) {
-          if (newManifestID.length) {
+        if (included.length > 0) {
+          if (newManifestID.length > 0) {
             newManifestID = newManifestID + "/" + included;
           } else {
             // parent directory includes may refer to the topsrcdir
@@ -451,51 +452,51 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         ReadManifest(incURI, aFilter, newManifestID);
       }
     } else if (items[0] == TYPE_LOAD || items[0] == TYPE_SCRIPT) {
-      let type = items[0];
+      var type = items[0];
       if (items.length != 2) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": incorrect number of arguments to " +
-            type
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": incorrect number of arguments to " +
+          type
         );
       }
       if (type == TYPE_LOAD && expected_status != EXPECTED_PASS) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": incorrect known failure type for load test"
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": incorrect known failure type for load test"
         );
       }
       AddTestItem(
         {
-          type,
+          type: type,
           expected: expected_status,
           manifest: aURL.spec,
           manifestID: TestIdentifier(aURL.spec, aManifestID),
           allowSilentFail: allow_silent_fail,
-          minAsserts,
-          maxAsserts,
+          minAsserts: minAsserts,
+          maxAsserts: maxAsserts,
           needsFocus: needs_focus,
-          slow,
-          skip,
+          slow: slow,
+          skip: skip,
           prefSettings1: testPrefSettings,
           prefSettings2: refPrefSettings,
           fuzzyMinDelta: fuzzy_delta.min,
           fuzzyMaxDelta: fuzzy_delta.max,
           fuzzyMinPixels: fuzzy_pixels.min,
           fuzzyMaxPixels: fuzzy_pixels.max,
-          runHttp,
-          httpDepth,
+          runHttp: runHttp,
+          httpDepth: httpDepth,
           url1: items[1],
           url2: null,
-          chaosMode,
-          wrCapture,
-          noAutoFuzz,
+          chaosMode: chaosMode,
+          wrCapture: wrCapture,
+          noAutoFuzz: noAutoFuzz,
         },
         aFilter,
         aManifestID
@@ -506,13 +507,13 @@ function ReadManifest(aURL, aFilter, aManifestID) {
       items[0] == TYPE_PRINT
     ) {
       if (items.length != 3) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": incorrect number of arguments to " +
-            items[0]
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": incorrect number of arguments to " +
+          items[0]
         );
       }
 
@@ -521,17 +522,17 @@ function ReadManifest(aURL, aFilter, aManifestID) {
         expected_status == EXPECTED_FUZZY &&
         (fuzzy_delta.min > 0 || fuzzy_pixels.min > 0)
       ) {
-        throw new Error(
+        throw (
           "Error in manifest file " +
-            aURL.spec +
-            " line " +
-            lineNo +
-            ": minimum fuzz must be zero for tests of type " +
-            items[0]
+          aURL.spec +
+          " line " +
+          lineNo +
+          ": minimum fuzz must be zero for tests of type " +
+          items[0]
         );
       }
 
-      let type = items[0];
+      var type = items[0];
       if (g.compareRetainedDisplayLists) {
         type = TYPE_REFTEST_EQUAL;
 
@@ -553,41 +554,41 @@ function ReadManifest(aURL, aFilter, aManifestID) {
 
       AddTestItem(
         {
-          type,
+          type: type,
           expected: expected_status,
           manifest: aURL.spec,
           manifestID: TestIdentifier(aURL.spec, aManifestID),
           allowSilentFail: allow_silent_fail,
-          minAsserts,
-          maxAsserts,
+          minAsserts: minAsserts,
+          maxAsserts: maxAsserts,
           needsFocus: needs_focus,
-          slow,
-          skip,
+          slow: slow,
+          skip: skip,
           prefSettings1: testPrefSettings,
           prefSettings2: refPrefSettings,
           fuzzyMinDelta: fuzzy_delta.min,
           fuzzyMaxDelta: fuzzy_delta.max,
           fuzzyMinPixels: fuzzy_pixels.min,
           fuzzyMaxPixels: fuzzy_pixels.max,
-          runHttp,
-          httpDepth,
+          runHttp: runHttp,
+          httpDepth: httpDepth,
           url1: items[1],
           url2: items[2],
-          chaosMode,
-          wrCapture,
-          noAutoFuzz,
+          chaosMode: chaosMode,
+          wrCapture: wrCapture,
+          noAutoFuzz: noAutoFuzz,
         },
         aFilter,
         aManifestID
       );
     } else {
-      throw new Error(
+      throw (
         "Error in manifest file " +
-          aURL.spec +
-          " line " +
-          lineNo +
-          ": unknown test type " +
-          items[0]
+        aURL.spec +
+        " line " +
+        lineNo +
+        ": unknown test type " +
+        items[0]
       );
     }
   }
@@ -613,18 +614,20 @@ function getStreamContent(inputStream) {
 // Build the sandbox for fails-if(), etc., condition evaluation.
 function BuildConditionSandbox(aURL) {
   var sandbox = new Cu.Sandbox(aURL.spec);
+  var xr = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULRuntime);
+  var appInfo = Cc[NS_XREAPPINFO_CONTRACTID].getService(Ci.nsIXULAppInfo);
   sandbox.isDebugBuild = g.debug.isDebugBuild;
   sandbox.isCoverageBuild = g.isCoverageBuild;
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
 
   sandbox.xulRuntime = Cu.cloneInto(
-    {
-      widgetToolkit: Services.appinfo.widgetToolkit,
-      OS: Services.appinfo.OS,
-      XPCOMABI: Services.appinfo.XPCOMABI,
-    },
+    { widgetToolkit: xr.widgetToolkit, OS: xr.OS, XPCOMABI: xr.XPCOMABI },
     sandbox
   );
 
+  var testRect = g.browser.getBoundingClientRect();
   sandbox.smallScreen = false;
   if (
     g.containingWindow.innerWidth < 800 ||
@@ -669,17 +672,8 @@ function BuildConditionSandbox(aURL) {
     contentBackend == canvasBackend ||
     (contentBackend == "none" && canvasBackend == "cairo");
 
-  try {
-    var windowProtocol = readGfxInfo(gfxInfo, "windowProtocol");
-    sandbox.wayland = windowProtocol == "wayland";
-  } catch (e) {
-    sandbox.wayland = false;
-  }
-
   sandbox.remoteCanvas =
-    Services.prefs.getBoolPref("gfx.canvas.remote") &&
-    sandbox.d2d &&
-    sandbox.gpuProcess;
+    prefs.getBoolPref("gfx.canvas.remote") && sandbox.d2d && sandbox.gpuProcess;
 
   sandbox.layersGPUAccelerated = g.windowUtils.layerManagerType != "Basic";
   sandbox.d3d11 = g.windowUtils.layerManagerType == "Direct3D 11";
@@ -691,13 +685,13 @@ function BuildConditionSandbox(aURL) {
   sandbox.layersOMTC = !!g.windowUtils.layerManagerRemote;
 
   // Shortcuts for widget toolkits.
-  sandbox.Android = Services.appinfo.OS == "Android";
-  sandbox.cocoaWidget = Services.appinfo.widgetToolkit == "cocoa";
-  sandbox.gtkWidget = Services.appinfo.widgetToolkit == "gtk";
-  sandbox.qtWidget = Services.appinfo.widgetToolkit == "qt";
-  sandbox.winWidget = Services.appinfo.widgetToolkit == "windows";
+  sandbox.Android = xr.OS == "Android";
+  sandbox.cocoaWidget = xr.widgetToolkit == "cocoa";
+  sandbox.gtkWidget = xr.widgetToolkit == "gtk";
+  sandbox.qtWidget = xr.widgetToolkit == "qt";
+  sandbox.winWidget = xr.widgetToolkit == "windows";
 
-  sandbox.is64Bit = Services.appinfo.is64Bit;
+  sandbox.is64Bit = xr.is64Bit;
 
   // Use this to annotate reftests that fail in drawSnapshot, but
   // the reason hasn't been investigated (or fixed) yet.
@@ -708,25 +702,25 @@ function BuildConditionSandbox(aURL) {
   sandbox.unsupportedWithDrawSnapshot = g.useDrawSnapshot;
 
   sandbox.retainedDisplayList =
-    Services.prefs.getBoolPref("layout.display-list.retain") &&
-    !sandbox.useDrawSnapshot;
+    prefs.getBoolPref("layout.display-list.retain") && !sandbox.useDrawSnapshot;
 
   // Needed to specifically test the new and old behavior. This will eventually be removed.
   sandbox.retainedDisplayListNew =
     sandbox.retainedDisplayList &&
-    Services.prefs.getBoolPref("layout.display-list.retain.sc");
+    prefs.getBoolPref("layout.display-list.retain.sc");
 
   // GeckoView is currently uniquely identified by "android + e10s" but
   // we might want to make this condition more precise in the future.
   sandbox.geckoview = sandbox.Android && g.browserIsRemote;
 
   // Scrollbars that are semi-transparent. See bug 1169666.
-  sandbox.transparentScrollbars = Services.appinfo.widgetToolkit == "gtk";
+  sandbox.transparentScrollbars = xr.widgetToolkit == "gtk";
 
+  var sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
   if (sandbox.Android) {
     // This is currently used to distinguish Android 4.0.3 (SDK version 15)
     // and later from Android 2.x
-    sandbox.AndroidVersion = Services.sysinfo.getPropertyAsInt32("version");
+    sandbox.AndroidVersion = sysInfo.getPropertyAsInt32("version");
 
     sandbox.emulator = readGfxInfo(gfxInfo, "adapterDeviceID").includes(
       "Android Emulator"
@@ -734,8 +728,7 @@ function BuildConditionSandbox(aURL) {
     sandbox.device = !sandbox.emulator;
   }
 
-  sandbox.MinGW =
-    sandbox.winWidget && Services.sysinfo.getPropertyAsBool("isMinGW");
+  sandbox.MinGW = sandbox.winWidget && sysInfo.getPropertyAsBool("isMinGW");
 
   sandbox.AddressSanitizer = AppConstants.ASAN;
   sandbox.ThreadSanitizer = AppConstants.TSAN;
@@ -778,23 +771,20 @@ function BuildConditionSandbox(aURL) {
     : undefined;
 
   // config specific prefs
-  sandbox.appleSilicon = Services.prefs.getBoolPref(
-    "sandbox.apple_silicon",
-    false
-  );
+  sandbox.appleSilicon = prefs.getBoolPref("sandbox.apple_silicon", false);
 
-  sandbox.gpuProcessForceEnabled = Services.prefs.getBoolPref(
+  sandbox.gpuProcessForceEnabled = prefs.getBoolPref(
     "layers.gpu-process.force-enabled",
     false
   );
 
   sandbox.prefs = Cu.cloneInto(
     {
-      getBoolPref(p) {
-        return Services.prefs.getBoolPref(p);
+      getBoolPref: function (p) {
+        return prefs.getBoolPref(p);
       },
-      getIntPref(p) {
-        return Services.prefs.getIntPref(p);
+      getIntPref: function (p) {
+        return prefs.getIntPref(p);
       },
     },
     sandbox,
@@ -818,7 +808,7 @@ function BuildConditionSandbox(aURL) {
   sandbox.usesRepeatResampling = sandbox.d2d;
 
   // Running in a test-verify session?
-  sandbox.verify = Services.prefs.getBoolPref("reftest.verify", false);
+  sandbox.verify = prefs.getBoolPref("reftest.verify", false);
 
   // Running with a variant enabled?
   sandbox.fission = Services.appinfo.fissionAutostart;
@@ -938,6 +928,10 @@ function ServeTestBase(aURL, depth) {
 }
 
 function CreateUrls(test) {
+  let secMan = Cc[NS_SCRIPTSECURITYMANAGER_CONTRACTID].getService(
+    Ci.nsIScriptSecurityManager
+  );
+
   let manifestURL = g.ioService.newURI(test.manifest);
 
   let testbase = manifestURL;
@@ -945,10 +939,7 @@ function CreateUrls(test) {
     testbase = ServeTestBase(manifestURL, test.httpDepth);
   }
 
-  let testbasePrincipal = Services.scriptSecurityManager.createContentPrincipal(
-    testbase,
-    {}
-  );
+  let testbasePrincipal = secMan.createContentPrincipal(testbase, {});
   Services.perms.addFromPrincipal(
     testbasePrincipal,
     "allowXULXBL",
@@ -964,9 +955,9 @@ function CreateUrls(test) {
     let isChromeOrViewSource =
       testURI.scheme == "chrome" || testURI.scheme == "view-source";
     let principal = isChromeOrViewSource
-      ? Services.scriptSecurityManager.getSystemPrincipal()
-      : Services.scriptSecurityManager.createContentPrincipal(manifestURL, {});
-    Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+      ? secMan.getSystemPrincipal()
+      : secMan.createContentPrincipal(manifestURL, {});
+    secMan.checkLoadURIWithPrincipal(
       principal,
       testURI,
       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT

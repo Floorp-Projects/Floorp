@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 const GLOBAL_CANARY = "use-application-dns.net.";
@@ -52,6 +53,7 @@ export const Heuristics = {
       youtube: safeSearchChecks.youtube,
       zscalerCanary: zscaler,
       canary,
+      modifiedRoots: await modifiedRoots(),
       browserParent: await parentalControls(),
       thirdPartyRoots: await thirdPartyRoots(),
       policy: await enterprisePolicy(),
@@ -133,6 +135,7 @@ export const Heuristics = {
         "youtube",
         "zscalerCanary",
         "canary",
+        "modifiedRoots",
         "browserParent",
         "thirdPartyRoots",
         "policy",
@@ -244,6 +247,20 @@ async function globalCanary() {
       Services.io.hostnameIsLocalIPAddress(Services.io.newURI(`http://${addr}`))
     )
   ) {
+    return "disable_doh";
+  }
+
+  return "enable_doh";
+}
+
+async function modifiedRoots() {
+  // Check for presence of enterprise_roots cert pref. If enabled, disable DoH
+  let rootsEnabled = lazy.Preferences.get(
+    "security.enterprise_roots.enabled",
+    false
+  );
+
+  if (rootsEnabled) {
     return "disable_doh";
   }
 

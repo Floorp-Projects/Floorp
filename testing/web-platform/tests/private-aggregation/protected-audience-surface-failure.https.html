@@ -1,5 +1,4 @@
 <!doctype html>
-<meta name=timeout content=long>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/common/utils.js"></script>
@@ -18,7 +17,7 @@ promise_test(async test => {
     `try {
       privateAggregation.contributeToHistogram(${contribution});
     } catch {
-      forDebuggingOnly.reportAdAuctionWin('${createWritingURL(uuid)}');
+      forDebuggingOnly.reportAdAuctionWin('${createWritingUrl(uuid)}');
     }`},
     /*expectedNumReports=*/ 1);
 }, 'contributeToHistogram() with too large bucket in scoreAd()');
@@ -32,7 +31,7 @@ promise_test(async test => {
     `try {
       privateAggregation.contributeToHistogram(${contribution});
     } catch {
-      sendReportTo('${createWritingURL(uuid)}');
+      sendReportTo('${createWritingUrl(uuid)}');
     }`},
     /*expectedNumReports=*/ 1);
 }, 'contributeToHistogram() with negative bucket in reportResult()');
@@ -47,7 +46,7 @@ promise_test(async test => {
     `try {
       privateAggregation.contributeToHistogram(${contribution});
     } catch {
-      forDebuggingOnly.reportAdAuctionWin('${createWritingURL(uuid)}');
+      forDebuggingOnly.reportAdAuctionWin('${createWritingUrl(uuid)}');
     }`},
     /*expectedNumReports=*/ 1);
 }, 'contributeToHistogram() with non-BigInt bucket in generateBid()');
@@ -61,7 +60,7 @@ promise_test(async test => {
     `try {
       privateAggregation.contributeToHistogram(${contribution});
     } catch {
-      sendReportTo('${createWritingURL(uuid)}');
+      sendReportTo('${createWritingUrl(uuid)}');
     }`},
     /*expectedNumReports=*/ 1);
 }, 'contributeToHistogram() with negative value in reportWin()');

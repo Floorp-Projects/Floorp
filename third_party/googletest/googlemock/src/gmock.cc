@@ -29,8 +29,6 @@
 
 #include "gmock/gmock.h"
 
-#include <string>
-
 #include "gmock/internal/gmock-port.h"
 
 GMOCK_DEFINE_bool_(catch_leaked_mocks, true,

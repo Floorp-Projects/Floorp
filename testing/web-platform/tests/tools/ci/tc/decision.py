@@ -290,7 +290,6 @@ def get_artifact_data(artifact, task_id_map):
 def build_task_graph(event, all_tasks, tasks):
     task_id_map = OrderedDict()
     taskgroup_id = os.environ.get("TASK_ID", taskcluster.slugId())
-    sink_task_depends_on = []
 
     def add_task(task_name, task):
         depends_on_ids = []
@@ -310,11 +309,6 @@ def build_task_graph(event, all_tasks, tasks):
                                             env_extra=env_extra)
         task_id_map[task_name] = (task_id, task_data)
 
-        # The string conversion here is because if we use variables they are
-        # converted to a string, so it's easier to use a string always
-        if str(task.get("required", "True")) != "False" and task_name != "sink-task":
-            sink_task_depends_on.append(task_id)
-
     for task_name, task in tasks.items():
         if task_name == "sink-task":
             # sink-task will be created below at the end of the ordered dict,
@@ -330,9 +324,10 @@ def build_task_graph(event, all_tasks, tasks):
     sink_task = tasks.get("sink-task")
     if sink_task:
         logger.info("Scheduling sink-task")
-        sink_task["command"] += " {}".format(" ".join(sink_task_depends_on))
+        depends_on_ids = [x[0] for x in task_id_map.values()]
+        sink_task["command"] += " {}".format(" ".join(depends_on_ids))
         task_id_map["sink-task"] = create_tc_task(
-            event, sink_task, taskgroup_id, sink_task_depends_on)
+            event, sink_task, taskgroup_id, depends_on_ids)
     else:
         logger.info("sink-task is not scheduled")
 

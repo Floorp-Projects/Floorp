@@ -8,7 +8,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  SuggestionsMap: "resource:///modules/urlbar/private/SuggestBackendJs.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
+  SuggestionsMap:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
@@ -33,6 +36,7 @@ export class PocketSuggestions extends BaseFeature {
 
   get shouldEnable() {
     return (
+      lazy.UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled") &&
       lazy.UrlbarPrefs.get("pocketFeatureGate") &&
       lazy.UrlbarPrefs.get("suggest.pocket") &&
       lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")
@@ -55,16 +59,16 @@ export class PocketSuggestions extends BaseFeature {
   get canShowLessFrequently() {
     let cap =
       lazy.UrlbarPrefs.get("pocketShowLessFrequentlyCap") ||
-      lazy.QuickSuggest.jsBackend.config.show_less_frequently_cap ||
+      lazy.QuickSuggestRemoteSettings.config.show_less_frequently_cap ||
       0;
     return !cap || this.showLessFrequentlyCount < cap;
   }
 
   enable(enabled) {
     if (enabled) {
-      lazy.QuickSuggest.jsBackend.register(this);
+      lazy.QuickSuggestRemoteSettings.register(this);
     } else {
-      lazy.QuickSuggest.jsBackend.unregister(this);
+      lazy.QuickSuggestRemoteSettings.unregister(this);
       this.#lowConfidenceSuggestionsMap.clear();
       this.#highConfidenceSuggestionsMap.clear();
     }
@@ -162,6 +166,11 @@ export class PocketSuggestions extends BaseFeature {
       }
     }
 
+    let isBestMatch =
+      suggestion.is_top_pick &&
+      lazy.UrlbarPrefs.get("bestMatchEnabled") &&
+      lazy.UrlbarPrefs.get("suggest.bestmatch");
+
     let url = new URL(suggestion.url);
     url.searchParams.set("utm_medium", "firefox-desktop");
     url.searchParams.set("utm_source", "firefox-suggest");
@@ -179,10 +188,10 @@ export class PocketSuggestions extends BaseFeature {
           url: url.href,
           originalUrl: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
-          description: suggestion.is_top_pick ? suggestion.description : "",
+          description: isBestMatch ? suggestion.description : "",
           // Use the favicon for non-best matches so the icon exactly matches
           // the Pocket favicon in the user's history and tabs.
-          icon: suggestion.is_top_pick
+          icon: isBestMatch
             ? "chrome://global/skin/icons/pocket.svg"
             : "chrome://global/skin/icons/pocket-favicon.ico",
           shouldShowUrl: true,
@@ -200,7 +209,7 @@ export class PocketSuggestions extends BaseFeature {
       ),
       {
         isRichSuggestion: true,
-        richSuggestionIconSize: suggestion.is_top_pick ? 24 : 16,
+        richSuggestionIconSize: isBestMatch ? 24 : 16,
         showFeedbackMenu: true,
       }
     );

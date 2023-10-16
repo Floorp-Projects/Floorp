@@ -10,7 +10,7 @@ Examples of incorrect code for this rule:
 .. code-block:: js
 
     const { SomeProp } = ChromeUtils.import("resource://gre/modules/Foo.jsm");
-    ChromeUtils.defineLazyModuleGetters(lazy, {
+    XPCOMUtils.defineLazyModuleGetter(lazy, {
       OtherProp: "resource://gre/modules/Foo.jsm",
     });
 

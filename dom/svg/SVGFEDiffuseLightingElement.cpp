@@ -83,7 +83,7 @@ nsresult SVGFEDiffuseLightingElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feDiffuseLighting);
   }
 
-  return SVGFEDiffuseLightingElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 }  // namespace mozilla::dom

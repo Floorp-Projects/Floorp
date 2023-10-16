@@ -140,8 +140,7 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
                                    nscoord aISize, nscoord aBSize,
                                    bool aImpactedByFloats, bool aIsTopOfPage,
                                    WritingMode aWritingMode,
-                                   const nsSize& aContainerSize,
-                                   nscoord aInset) {
+                                   const nsSize& aContainerSize) {
   NS_ASSERTION(nullptr == mRootSpan, "bad linelayout user");
   LAYOUT_WARN_IF_FALSE(aISize != NS_UNCONSTRAINEDSIZE,
                        "have unconstrained width; this should only result from "
@@ -194,9 +193,6 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIStart = aICoord;
   psd->mICoord = aICoord;
   psd->mIEnd = aICoord + aISize;
-  // Set up inset to be used for text-wrap:balance implementation, but only if
-  // the available size is at least 2*inset.
-  psd->mInset = aISize < aInset * 2 ? 0 : aInset;
   mContainerSize = aContainerSize;
 
   mBStartEdge = aBCoord;
@@ -410,7 +406,6 @@ void nsLineLayout::BeginSpan(nsIFrame* aFrame,
   psd->mIStart = aIStart;
   psd->mICoord = aIStart;
   psd->mIEnd = aIEnd;
-  psd->mInset = mCurrentSpan->mInset;
   psd->mBaseline = aBaseline;
 
   nsIFrame* frame = aSpanReflowInput->mFrame;
@@ -806,7 +801,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
                        "have unconstrained width; this should only result from "
                        "very large sizes, not attempts at intrinsic width "
                        "calculation");
-  nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord - psd->mInset;
+  nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord;
 
   // Setup reflow input for reflowing the frame
   Maybe<ReflowInput> reflowInputHolder;
@@ -1894,8 +1889,9 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
 
     // Special-case for a ::first-letter frame, set the line height to
     // the frame block size if the user has left line-height == normal
+    const nsStyleText* styleText = spanFrame->StyleText();
     if (spanFramePFD->mIsLetterFrame && !spanFrame->GetPrevInFlow() &&
-        spanFrame->StyleFont()->mLineHeight.IsNormal()) {
+        styleText->mLineHeight.IsNormal()) {
       logicalBSize = spanFramePFD->mBounds.BSize(lineWM);
     }
 
@@ -1903,8 +1899,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
     psd->mBStartLeading = leading / 2;
     psd->mBEndLeading = leading - psd->mBStartLeading;
     psd->mLogicalBSize = logicalBSize;
-    AdjustLeadings(spanFrame, psd, spanFrame->StyleText(), inflation,
-                   &zeroEffectiveSpanBox);
+    AdjustLeadings(spanFrame, psd, styleText, inflation, &zeroEffectiveSpanBox);
 
     if (zeroEffectiveSpanBox) {
       // When the span-box is to be ignored, zero out the initial
@@ -2200,7 +2195,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
         // Only consider text frames if they're not empty and
         // line-height=normal.
         canUpdate = pfd->mIsNonWhitespaceTextFrame &&
-                    frame->StyleFont()->mLineHeight.IsNormal();
+                    frame->StyleText()->mLineHeight.IsNormal();
       } else {
         canUpdate = !pfd->mIsPlaceholder;
       }

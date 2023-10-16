@@ -6,11 +6,10 @@
 
 #include "APZTestCommon.h"
 
-already_AddRefed<AsyncPanZoomController> TestAPZCTreeManager::NewAPZCInstance(
+AsyncPanZoomController* TestAPZCTreeManager::NewAPZCInstance(
     LayersId aLayersId, GeckoContentController* aController) {
   MockContentControllerDelayed* mcc =
       static_cast<MockContentControllerDelayed*>(aController);
-  return MakeRefPtr<TestAsyncPanZoomController>(
-             aLayersId, mcc, this, AsyncPanZoomController::USE_GESTURE_DETECTOR)
-      .forget();
+  return new TestAsyncPanZoomController(
+      aLayersId, mcc, this, AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }

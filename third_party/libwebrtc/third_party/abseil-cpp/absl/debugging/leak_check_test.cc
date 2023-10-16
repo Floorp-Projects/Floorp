@@ -16,8 +16,8 @@
 
 #include "gtest/gtest.h"
 #include "absl/base/config.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/debugging/leak_check.h"
-#include "absl/log/log.h"
 
 namespace {
 
@@ -26,7 +26,7 @@ TEST(LeakCheckTest, IgnoreLeakSuppressesLeakedMemoryErrors) {
     GTEST_SKIP() << "LeakChecker is not active";
   }
   auto foo = absl::IgnoreLeak(new std::string("some ignored leaked string"));
-  LOG(INFO) << "Ignoring leaked string " << foo;
+  ABSL_RAW_LOG(INFO, "Ignoring leaked string %s", foo->c_str());
 }
 
 TEST(LeakCheckTest, LeakCheckDisablerIgnoresLeak) {
@@ -35,7 +35,7 @@ TEST(LeakCheckTest, LeakCheckDisablerIgnoresLeak) {
   }
   absl::LeakCheckDisabler disabler;
   auto foo = new std::string("some string leaked while checks are disabled");
-  LOG(INFO) << "Ignoring leaked string " << foo;
+  ABSL_RAW_LOG(INFO, "Ignoring leaked string %s", foo->c_str());
 }
 
 }  // namespace

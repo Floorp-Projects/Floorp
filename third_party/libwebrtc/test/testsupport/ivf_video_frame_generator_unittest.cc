@@ -202,7 +202,9 @@ TEST_F(IvfVideoFrameGeneratorTest, Vp9) {
 
 #if defined(WEBRTC_USE_H264)
 TEST_F(IvfVideoFrameGeneratorTest, H264) {
-  CreateTestVideoFile(VideoCodecType::kVideoCodecH264, H264Encoder::Create());
+  CreateTestVideoFile(
+      VideoCodecType::kVideoCodecH264,
+      H264Encoder::Create(cricket::VideoCodec(cricket::kH264CodecName)));
   IvfVideoFrameGenerator generator(file_name_);
   for (size_t i = 0; i < video_frames_.size(); ++i) {
     auto& expected_frame = video_frames_[i];

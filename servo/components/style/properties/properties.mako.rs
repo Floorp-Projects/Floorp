@@ -38,8 +38,7 @@ use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
 use crate::use_counters::UseCounters;
-use crate::values::generics::font::LineHeight;
-use crate::values::specified::length::LineHeightBase;
+use crate::values::generics::text::LineHeight;
 use crate::values::{computed, resolved, serialize_atom_name};
 use crate::values::specified::font::SystemFont;
 use crate::rule_tree::StrongRuleNode;
@@ -363,16 +362,6 @@ impl MallocSizeOf for PropertyDeclaration {
 
 
 impl PropertyDeclaration {
-    /// Dumps the property declaration before crashing.
-    #[cold]
-    #[cfg(debug_assertions)]
-    pub(crate) fn debug_crash(&self, reason: &str) {
-        panic!("{}: {:?}", reason, self);
-    }
-    #[cfg(not(debug_assertions))]
-    #[inline(always)]
-    pub(crate) fn debug_crash(&self, _reason: &str) {}
-
     /// Returns whether this is a variant of the Longhand(Value) type, rather
     /// than one of the special variants in extra_variants.
     fn is_longhand_value(&self) -> bool {
@@ -906,10 +895,6 @@ PRIORITARY_PROPERTIES = set([
     "color-scheme",
     # forced-color-adjust affects whether colors are adjusted.
     "forced-color-adjust",
-    # Zoom affects all absolute lengths.
-    "zoom",
-    # Line height lengths depend on this.
-    "line-height",
 ])
 
 def is_visited_dependent(p):
@@ -1208,7 +1193,6 @@ impl CSSWideKeyword {
 
 bitflags! {
     /// A set of flags for properties.
-    #[derive(Clone, Copy)]
     pub struct PropertyFlags: u16 {
         /// This longhand property applies to ::first-letter.
         const APPLIES_TO_FIRST_LETTER = 1 << 1;
@@ -1445,7 +1429,7 @@ impl LonghandId {
                 0,
             % endfor
         ];
-        PropertyFlags::from_bits_retain(FLAGS[self as usize])
+        PropertyFlags::from_bits_truncate(FLAGS[self as usize])
     }
 
     /// Returns true if the property is one that is ignored when document
@@ -1620,7 +1604,7 @@ impl ShorthandId {
                 0,
             % endfor
         ];
-        PropertyFlags::from_bits_retain(FLAGS[self as usize])
+        PropertyFlags::from_bits_truncate(FLAGS[self as usize])
     }
 
     /// Returns whether this property is a legacy shorthand.
@@ -1724,7 +1708,7 @@ impl UnparsedValue {
         &self,
         longhand_id: LonghandId,
         writing_mode: WritingMode,
-        custom_properties: &crate::custom_properties::ComputedCustomProperties,
+        custom_properties: Option<<&Arc<crate::custom_properties::CustomPropertiesMap>>,
         quirks_mode: QuirksMode,
         stylist: &Stylist,
         shorthand_cache: &'cache mut ShorthandsWithPropertyReferencesCache,
@@ -3014,13 +2998,10 @@ pub struct ComputedValuesInner {
     % for style_struct in data.active_style_structs():
         ${style_struct.ident}: Arc<style_structs::${style_struct.name}>,
     % endfor
-    custom_properties: crate::custom_properties::ComputedCustomProperties,
+    custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
 
     /// The writing mode of this computed values struct.
     pub writing_mode: WritingMode,
-
-    /// The effective zoom value.
-    pub effective_zoom: Zoom,
 
     /// A set of flags we use to store misc information regarding this style.
     pub flags: ComputedValueFlags,
@@ -3087,13 +3068,29 @@ impl ComputedValues {
     }
 
     /// Gets a reference to the custom properties map (if one exists).
-    pub fn custom_properties(&self) -> &crate::custom_properties::ComputedCustomProperties {
-        &self.custom_properties
+    pub fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
+        self.custom_properties.as_ref()
     }
 
     /// Returns whether we have the same custom properties as another style.
+    ///
+    /// This should effectively be just:
+    ///
+    ///   self.custom_properties() == other.custom_properties()
+    ///
+    /// But that's not really the case because IndexMap equality doesn't
+    /// consider ordering, which we have to account for. Also, for the same
+    /// reason, IndexMap equality comparisons are slower than needed.
+    ///
+    /// See https://github.com/bluss/indexmap/issues/153
     pub fn custom_properties_equal(&self, other: &Self) -> bool {
-      self.custom_properties() == other.custom_properties()
+        match (self.custom_properties(), other.custom_properties()) {
+            (Some(l), Some(r)) => {
+                l.len() == r.len() && l.iter().zip(r.iter()).all(|((k1, v1), (k2, v2))| k1 == k2 && v1 == v2)
+            },
+            (None, None) => true,
+            _ => false,
+        }
     }
 
 % for prop in data.longhands:
@@ -3230,9 +3227,8 @@ impl ComputedValues {
     /// Create a new refcounted `ComputedValues`
     pub fn new(
         pseudo: Option<<&PseudoElement>,
-        custom_properties: crate::custom_properties::ComputedCustomProperties,
+        custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
         writing_mode: WritingMode,
-        effective_zoom: computed::Zoom,
         flags: ComputedValueFlags,
         rules: Option<StrongRuleNode>,
         visited_style: Option<Arc<ComputedValues>>,
@@ -3246,7 +3242,6 @@ impl ComputedValues {
                 writing_mode,
                 rules,
                 visited_style,
-                effective_zoom,
                 flags,
             % for style_struct in data.active_style_structs():
                 ${style_struct.ident},
@@ -3271,16 +3266,10 @@ impl ComputedValues {
                 s
             }
             PropertyDeclarationId::Custom(name) => {
-                // FIXME(bug 1273706): This should use a stylist to determine
-                // whether the name corresponds to an inherited custom property
-                // and then choose the inherited/non_inherited map accordingly.
-                let p = &self.custom_properties;
-                let value = p
-                    .inherited
+                self.custom_properties
                     .as_ref()
                     .and_then(|map| map.get(name))
-                    .or_else(|| p.non_inherited.as_ref().and_then(|map| map.get(name)));
-                value.map_or(String::new(), |value| value.to_css_string())
+                    .map_or(String::new(), |value| value.to_css_string())
             }
         }
     }
@@ -3648,7 +3637,7 @@ pub struct StyleBuilder<'a> {
     pub rules: Option<StrongRuleNode>,
 
     /// The computed custom properties.
-    pub custom_properties: crate::custom_properties::ComputedCustomProperties,
+    pub custom_properties: Option<Arc<crate::custom_properties::CustomPropertiesMap>>,
 
     /// The pseudo-element this style will represent.
     pub pseudo: Option<<&'a PseudoElement>,
@@ -3666,9 +3655,6 @@ pub struct StyleBuilder<'a> {
     /// TODO(emilio): Make private.
     pub writing_mode: WritingMode,
 
-    /// The effective zoom.
-    pub effective_zoom: computed::Zoom,
-
     /// Flags for the computed value.
     pub flags: Cell<ComputedValueFlags>,
 
@@ -3683,7 +3669,7 @@ pub struct StyleBuilder<'a> {
 
 impl<'a> StyleBuilder<'a> {
     /// Trivially construct a `StyleBuilder`.
-    pub fn new(
+    pub(super) fn new(
         device: &'a Device,
         stylist: Option<<&'a Stylist>,
         parent_style: Option<<&'a ComputedValues>,
@@ -3695,6 +3681,7 @@ impl<'a> StyleBuilder<'a> {
         let inherited_style = parent_style.unwrap_or(reset_style);
 
         let flags = inherited_style.flags.inherited();
+
         StyleBuilder {
             device,
             stylist,
@@ -3704,9 +3691,8 @@ impl<'a> StyleBuilder<'a> {
             rules,
             modified_reset: false,
             is_root_element,
-            custom_properties: crate::custom_properties::ComputedCustomProperties::default(),
+            custom_properties: None,
             writing_mode: inherited_style.writing_mode,
-            effective_zoom: inherited_style.effective_zoom,
             flags: Cell::new(flags),
             visited_style: None,
             % for style_struct in data.active_style_structs():
@@ -3742,9 +3728,8 @@ impl<'a> StyleBuilder<'a> {
             modified_reset: false,
             is_root_element: false,
             rules: None,
-            custom_properties: style_to_derive_from.custom_properties().clone(),
+            custom_properties: style_to_derive_from.custom_properties().cloned(),
             writing_mode: style_to_derive_from.writing_mode,
-            effective_zoom: style_to_derive_from.effective_zoom,
             flags: Cell::new(style_to_derive_from.flags),
             visited_style: None,
             % for style_struct in data.active_style_structs():
@@ -3863,7 +3848,7 @@ impl<'a> StyleBuilder<'a> {
                 ).build()
             })
         });
-        let custom_properties = if let Some(p) = parent { p.custom_properties().clone() } else { crate::custom_properties::ComputedCustomProperties::default() };
+        let custom_properties = parent.and_then(|p| p.custom_properties().cloned());
         let mut ret = Self::new(
             device,
             stylist,
@@ -3996,7 +3981,6 @@ impl<'a> StyleBuilder<'a> {
             self.pseudo,
             self.custom_properties,
             self.writing_mode,
-            self.effective_zoom,
             self.flags.get(),
             self.rules,
             self.visited_style,
@@ -4007,8 +3991,8 @@ impl<'a> StyleBuilder<'a> {
     }
 
     /// Get the custom properties map if necessary.
-    pub fn custom_properties(&self) -> &crate::custom_properties::ComputedCustomProperties {
-        &self.custom_properties
+    pub fn custom_properties(&self) -> Option<<&Arc<crate::custom_properties::CustomPropertiesMap>> {
+        self.custom_properties.as_ref()
     }
 
     /// Access to various information about our inherited styles.  We don't
@@ -4021,50 +4005,10 @@ impl<'a> StyleBuilder<'a> {
         &self.inherited_style.writing_mode
     }
 
-    /// The effective zoom value that we should multiply absolute lengths by.
-    pub fn effective_zoom(&self) -> computed::Zoom {
-        self.effective_zoom
-    }
-
-    /// The zoom specified on this element.
-    pub fn specified_zoom(&self) -> computed::Zoom {
-        self.get_box().clone_zoom()
-    }
-
-    /// Inherited zoom.
-    pub fn inherited_effective_zoom(&self) -> computed::Zoom {
-        self.inherited_style.effective_zoom
-    }
-
     /// The computed value flags of our parent.
     #[inline]
     pub fn get_parent_flags(&self) -> ComputedValueFlags {
         self.inherited_style.flags
-    }
-
-    /// Calculate the line height, given the currently resolved line-height and font.
-    pub fn calc_line_height(
-        &self,
-        device: &Device,
-        line_height_base: LineHeightBase,
-        writing_mode: WritingMode,
-    ) -> computed::NonNegativeLength {
-        use crate::computed_value_flags::ComputedValueFlags;
-        let (font, flag) = match line_height_base {
-            LineHeightBase::CurrentStyle => (
-                self.get_font(),
-                ComputedValueFlags::DEPENDS_ON_SELF_FONT_METRICS,
-            ),
-            LineHeightBase::InheritedStyle => (
-                self.get_parent_font(),
-                ComputedValueFlags::DEPENDS_ON_INHERITED_FONT_METRICS,
-            ),
-        };
-        let line_height = font.clone_line_height();
-        if matches!(line_height, computed::LineHeight::Normal) {
-            self.add_flags(flag);
-        }
-        device.calc_line_height(&font, writing_mode, None)
     }
 
     /// And access to inherited style structs.
@@ -4115,7 +4059,7 @@ mod lazy_static_module {
                         % endif
                     }),
                 % endfor
-                custom_properties,
+                custom_properties: None,
                 writing_mode: WritingMode::empty(),
                 rules: None,
                 visited_style: None,
@@ -4242,7 +4186,7 @@ macro_rules! longhand_properties_idents {
 }
 
 // Large pages generate tens of thousands of ComputedValues.
-size_of_test!(ComputedValues, 240);
+size_of_test!(ComputedValues, 232);
 // FFI relies on this.
 size_of_test!(Option<Arc<ComputedValues>>, 8);
 

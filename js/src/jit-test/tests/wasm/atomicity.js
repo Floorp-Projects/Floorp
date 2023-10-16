@@ -37,8 +37,9 @@ if (getCoreCount() < NUMAGENTS) {
 // Most of the simulators have poor support for mutual exclusion and are anyway
 // too slow; avoid intermittent failures and timeouts.
 
-if (getBuildConfiguration("arm-simulator") || getBuildConfiguration("arm64-simulator") ||
-    getBuildConfiguration("mips32-simulator") || getBuildConfiguration("mips64-simulator"))
+let conf = getBuildConfiguration();
+if (conf["arm-simulator"] || conf["arm64-simulator"] ||
+    conf["mips-simulator"] || conf["mips64-simulator"])
 {
     if (DEBUG > 0)
         print("Atomicity test disabled on simulator");

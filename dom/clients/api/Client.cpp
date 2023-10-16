@@ -34,8 +34,9 @@ NS_INTERFACE_MAP_END
 void Client::EnsureHandle() {
   NS_ASSERT_OWNINGTHREAD(mozilla::dom::Client);
   if (!mHandle) {
-    mHandle = ClientManager::CreateHandle(ClientInfo(mData->info()),
-                                          mGlobal->SerialEventTarget());
+    mHandle = ClientManager::CreateHandle(
+        ClientInfo(mData->info()),
+        mGlobal->EventTargetFor(TaskCategory::Other));
   }
 }
 
@@ -146,7 +147,7 @@ already_AddRefed<Promise> Client::Focus(CallerType aCallerType,
 
   mHandle->Focus(aCallerType)
       ->Then(
-          mGlobal->SerialEventTarget(), __func__,
+          mGlobal->EventTargetFor(TaskCategory::Other), __func__,
           [ipcClientInfo, holder, outerPromise](const ClientState& aResult) {
             holder->Complete();
             NS_ENSURE_TRUE_VOID(holder->GetParentObject());

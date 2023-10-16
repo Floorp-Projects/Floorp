@@ -2185,22 +2185,22 @@ void MacroAssembler::spectreBoundsCheckPtr(Register index,
 
 // ========================================================================
 // Memory access primitives.
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
-    FloatRegister src, const Address& dest) {
-  return Str(ARMFPRegister(src, 64), toMemOperand(dest));
+void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
+                                                const Address& dest) {
+  Str(ARMFPRegister(src, 64), toMemOperand(dest));
 }
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
-    FloatRegister src, const BaseIndex& dest) {
-  return doBaseIndex(ARMFPRegister(src, 64), dest, vixl::STR_d);
+void MacroAssembler::storeUncanonicalizedDouble(FloatRegister src,
+                                                const BaseIndex& dest) {
+  doBaseIndex(ARMFPRegister(src, 64), dest, vixl::STR_d);
 }
 
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
-    FloatRegister src, const Address& addr) {
-  return Str(ARMFPRegister(src, 32), toMemOperand(addr));
+void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
+                                                 const Address& addr) {
+  Str(ARMFPRegister(src, 32), toMemOperand(addr));
 }
-FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
-    FloatRegister src, const BaseIndex& addr) {
-  return doBaseIndex(ARMFPRegister(src, 32), addr, vixl::STR_s);
+void MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src,
+                                                 const BaseIndex& addr) {
+  doBaseIndex(ARMFPRegister(src, 32), addr, vixl::STR_s);
 }
 
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
@@ -3342,26 +3342,26 @@ void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
 
 // Load
 
-FaultingCodeOffset MacroAssembler::loadUnalignedSimd128(const Address& src,
-                                                        FloatRegister dest) {
-  return Ldr(ARMFPRegister(dest, 128), toMemOperand(src));
+void MacroAssembler::loadUnalignedSimd128(const Address& src,
+                                          FloatRegister dest) {
+  Ldr(ARMFPRegister(dest, 128), toMemOperand(src));
 }
 
-FaultingCodeOffset MacroAssembler::loadUnalignedSimd128(
-    const BaseIndex& address, FloatRegister dest) {
-  return doBaseIndex(ARMFPRegister(dest, 128), address, vixl::LDR_q);
+void MacroAssembler::loadUnalignedSimd128(const BaseIndex& address,
+                                          FloatRegister dest) {
+  doBaseIndex(ARMFPRegister(dest, 128), address, vixl::LDR_q);
 }
 
 // Store
 
-FaultingCodeOffset MacroAssembler::storeUnalignedSimd128(FloatRegister src,
-                                                         const Address& dest) {
-  return Str(ARMFPRegister(src, 128), toMemOperand(dest));
+void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                           const Address& dest) {
+  Str(ARMFPRegister(src, 128), toMemOperand(dest));
 }
 
-FaultingCodeOffset MacroAssembler::storeUnalignedSimd128(
-    FloatRegister src, const BaseIndex& dest) {
-  return doBaseIndex(ARMFPRegister(src, 128), dest, vixl::STR_q);
+void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                           const BaseIndex& dest) {
+  doBaseIndex(ARMFPRegister(src, 128), dest, vixl::STR_q);
 }
 
 // Floating point negation

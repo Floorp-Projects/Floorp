@@ -2,7 +2,7 @@
 Async http client/server framework
 ==================================
 
-.. image:: https://raw.githubusercontent.com/aio-libs/aiohttp/master/docs/aiohttp-plain.svg
+.. image:: https://raw.githubusercontent.com/aio-libs/aiohttp/master/docs/_static/aiohttp-icon-128x128.png
    :height: 64px
    :width: 64px
    :alt: aiohttp logo
@@ -25,13 +25,13 @@ Async http client/server framework
    :target: https://docs.aiohttp.org/
    :alt: Latest Read The Docs
 
-.. image:: https://img.shields.io/matrix/aio-libs:matrix.org?label=Discuss%20on%20Matrix%20at%20%23aio-libs%3Amatrix.org&logo=matrix&server_fqdn=matrix.org&style=flat
-   :target: https://matrix.to/#/%23aio-libs:matrix.org
-   :alt: Matrix Room — #aio-libs:matrix.org
+.. image:: https://img.shields.io/discourse/status?server=https%3A%2F%2Faio-libs.discourse.group
+   :target: https://aio-libs.discourse.group
+   :alt: Discourse status
 
-.. image:: https://img.shields.io/matrix/aio-libs-space:matrix.org?label=Discuss%20on%20Matrix%20at%20%23aio-libs-space%3Amatrix.org&logo=matrix&server_fqdn=matrix.org&style=flat
-   :target: https://matrix.to/#/%23aio-libs-space:matrix.org
-   :alt: Matrix Space — #aio-libs-space:matrix.org
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :target: https://gitter.im/aio-libs/Lobby
+   :alt: Chat on Gitter
 
 
 Key Features
@@ -67,7 +67,8 @@ To get something from the web:
               html = await response.text()
               print("Body:", html[:15], "...")
 
-    asyncio.run(main())
+  loop = asyncio.get_event_loop()
+  loop.run_until_complete(main())
 
 This prints:
 
@@ -160,19 +161,17 @@ Requirements
 - Python >= 3.6
 - async-timeout_
 - attrs_
-- charset-normalizer_
+- chardet_
 - multidict_
 - yarl_
-- frozenlist_
 
 Optionally you may install the cChardet_ and aiodns_ libraries (highly
 recommended for sake of speed).
 
-.. _charset-normalizer: https://pypi.org/project/charset-normalizer
+.. _chardet: https://pypi.python.org/pypi/chardet
 .. _aiodns: https://pypi.python.org/pypi/aiodns
 .. _attrs: https://github.com/python-attrs/attrs
 .. _multidict: https://pypi.python.org/pypi/multidict
-.. _frozenlist: https://pypi.org/project/frozenlist/
 .. _yarl: https://pypi.python.org/pypi/yarl
 .. _async-timeout: https://pypi.python.org/pypi/async_timeout
 .. _cChardet: https://pypi.python.org/pypi/cchardet

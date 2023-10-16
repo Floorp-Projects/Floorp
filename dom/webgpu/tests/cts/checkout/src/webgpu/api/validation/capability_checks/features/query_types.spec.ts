@@ -32,7 +32,7 @@ g.test('createQuerySet')
 
     t.selectDeviceOrSkipTestCase({ requiredFeatures });
   })
-  .fn(t => {
+  .fn(async t => {
     const { type, featureContainsTimestampQuery } = t.params;
 
     const count = 1;
@@ -61,7 +61,7 @@ g.test('writeTimestamp')
 
     t.selectDeviceOrSkipTestCase({ requiredFeatures });
   })
-  .fn(t => {
+  .fn(async t => {
     const { featureContainsTimestampQuery } = t.params;
 
     const querySet = t.device.createQuerySet({

@@ -11,7 +11,7 @@
 
 [package]
 edition = "2021"
-rust-version = "1.65"
+rust-version = "1.60"
 name = "wgpu-hal"
 version = "0.17.0"
 authors = ["wgpu developers"]
@@ -64,7 +64,7 @@ optional = true
 [dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
+rev = "cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -83,11 +83,11 @@ env_logger = "0.10"
 [dev-dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
+rev = "cc87b8f9eb30bb55d0735b89d3df3e099e1a6e7c"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
-version = "0.28.7"
+version = "0.28.6"
 features = ["android-native-activity"]
 
 [features]
@@ -158,15 +158,12 @@ features = [
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
 core-graphics-types = "0.1"
+metal = "0.26.0"
 objc = "0.2.5"
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
 version = "0.1"
 optional = true
-
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.metal]
-git = "https://github.com/gfx-rs/metal-rs/"
-rev = "d24f1a4"
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
 version = "0.37.3"
@@ -186,7 +183,7 @@ features = ["dynamic"]
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.libloading]
-version = ">=0.7, <0.9"
+version = ">=0.7,<0.9"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.renderdoc-sys]
@@ -212,7 +209,7 @@ features = [
 ]
 
 [target."cfg(target_os = \"emscripten\")".dependencies.libloading]
-version = ">=0.7, <0.9"
+version = ">=0.7,<0.9"
 optional = true
 
 [target."cfg(unix)".dependencies]
@@ -228,9 +225,10 @@ features = ["libloading"]
 optional = true
 
 [target."cfg(windows)".dependencies.gpu-allocator]
-version = "0.23"
+version = "0.22"
 features = [
     "d3d12",
+    "windows",
     "public-winapi",
 ]
 optional = true

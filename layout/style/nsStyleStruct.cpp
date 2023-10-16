@@ -193,7 +193,7 @@ void Gecko_LoadData_Drop(StyleLoadData* aData) {
     // We want to dispatch this async to prevent reentrancy issues, as
     // imgRequestProxy going away can destroy documents, etc, see bug 1677555.
     auto task = MakeRefPtr<StyleImageRequestCleanupTask>(*aData);
-    SchedulerGroup::Dispatch(task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   // URIs are safe to refcount from any thread.
@@ -211,7 +211,6 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
       mFontSizeKeyword(aSrc.mFontSizeKeyword),
       mFontPalette(aSrc.mFontPalette),
       mMathDepth(aSrc.mMathDepth),
-      mLineHeight(aSrc.mLineHeight),
       mMathVariant(aSrc.mMathVariant),
       mMathStyle(aSrc.mMathStyle),
       mMinFontSizeRatio(aSrc.mMinFontSizeRatio),
@@ -240,7 +239,6 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mFontSizeKeyword(StyleFontSizeKeyword::Medium),
       mFontPalette(StyleFontPalette::Normal()),
       mMathDepth(0),
-      mLineHeight(StyleLineHeight::Normal()),
       mMathVariant(StyleMathVariant::None),
       mMathStyle(StyleMathStyle::Normal),
       mXTextScale(InitialTextScale(aDocument)),
@@ -267,8 +265,7 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aNewData) const {
       mExplicitLanguage != aNewData.mExplicitLanguage ||
       mMathVariant != aNewData.mMathVariant ||
       mMathStyle != aNewData.mMathStyle ||
-      mMinFontSizeRatio != aNewData.mMinFontSizeRatio ||
-      mLineHeight != aNewData.mLineHeight) {
+      mMinFontSizeRatio != aNewData.mMinFontSizeRatio) {
     return NS_STYLE_HINT_REFLOW;
   }
 
@@ -1440,6 +1437,58 @@ bool StyleGradient::IsOpaque() const {
   return GradientItemsAreOpaque(AsConic().items.AsSpan());
 }
 
+static int32_t ConvertToPixelCoord(const StyleNumberOrPercentage& aCoord,
+                                   int32_t aPercentScale) {
+  double pixelValue;
+  if (aCoord.IsNumber()) {
+    pixelValue = aCoord.AsNumber();
+  } else {
+    MOZ_ASSERT(aCoord.IsPercentage());
+    pixelValue = aCoord.AsPercentage()._0 * aPercentScale;
+  }
+  MOZ_ASSERT(pixelValue >= 0, "we ensured non-negative while parsing");
+  pixelValue = std::min(pixelValue, double(INT32_MAX));  // avoid overflow
+  return NS_lround(pixelValue);
+}
+
+template <>
+Maybe<StyleImage::ActualCropRect> StyleImage::ComputeActualCropRect() const {
+  MOZ_ASSERT(IsRect(),
+             "This function is designed to be used only image-rect images");
+
+  imgRequestProxy* req = GetImageRequest();
+  if (!req) {
+    return Nothing();
+  }
+
+  nsCOMPtr<imgIContainer> imageContainer;
+  req->GetImage(getter_AddRefs(imageContainer));
+  if (!imageContainer) {
+    return Nothing();
+  }
+
+  nsIntSize imageSize;
+  imageContainer->GetWidth(&imageSize.width);
+  imageContainer->GetHeight(&imageSize.height);
+  if (imageSize.width <= 0 || imageSize.height <= 0) {
+    return Nothing();
+  }
+
+  const auto& rect = AsRect();
+
+  int32_t left = ConvertToPixelCoord(rect->left, imageSize.width);
+  int32_t top = ConvertToPixelCoord(rect->top, imageSize.height);
+  int32_t right = ConvertToPixelCoord(rect->right, imageSize.width);
+  int32_t bottom = ConvertToPixelCoord(rect->bottom, imageSize.height);
+
+  // IntersectRect() returns an empty rect if we get negative width or height
+  nsIntRect cropRect(left, top, right - left, bottom - top);
+  nsIntRect imageRect(nsIntPoint(0, 0), imageSize);
+  auto finalRect = imageRect.Intersect(cropRect);
+  bool isEntireImage = finalRect.IsEqualInterior(imageRect);
+  return Some(ActualCropRect{finalRect, isEntireImage});
+}
+
 template <>
 bool StyleImage::IsOpaque() const {
   if (IsImageSet()) {
@@ -1465,7 +1514,19 @@ bool StyleImage::IsOpaque() const {
   GetImageRequest()->GetImage(getter_AddRefs(imageContainer));
   MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
 
-  return imageContainer->WillDrawOpaqueNow();
+  // Check if the crop region of the image is opaque.
+  if (imageContainer->WillDrawOpaqueNow()) {
+    if (!IsRect()) {
+      return true;
+    }
+
+    // Must make sure if the crop rect contains at least a pixel.
+    // XXX Is this optimization worth it? Maybe I should just return false.
+    auto croprect = ComputeActualCropRect();
+    return croprect && !croprect->mRect.IsEmpty();
+  }
+
+  return false;
 }
 
 template <>
@@ -1476,7 +1537,8 @@ bool StyleImage::IsComplete() const {
     case Tag::Gradient:
     case Tag::Element:
       return true;
-    case Tag::Url: {
+    case Tag::Url:
+    case Tag::Rect: {
       if (!IsResolved()) {
         return false;
       }
@@ -1507,7 +1569,8 @@ bool StyleImage::IsSizeAvailable() const {
     case Tag::Gradient:
     case Tag::Element:
       return true;
-    case Tag::Url: {
+    case Tag::Url:
+    case Tag::Rect: {
       imgRequestProxy* req = GetImageRequest();
       if (!req) {
         return false;
@@ -2760,7 +2823,8 @@ void nsStyleContent::TriggerImageLoads(Document& aDoc,
 //
 
 nsStyleTextReset::nsStyleTextReset()
-    : mTextDecorationLine(StyleTextDecorationLine::NONE),
+    : mTextOverflow(),
+      mTextDecorationLine(StyleTextDecorationLine::NONE),
       mTextDecorationStyle(StyleTextDecorationStyle::Solid),
       mUnicodeBidi(StyleUnicodeBidi::Normal),
       mInitialLetterSink(0),
@@ -2847,6 +2911,7 @@ nsStyleText::nsStyleText(const Document& aDocument)
       mTabSize(StyleNonNegativeLengthOrNumber::Number(8.f)),
       mWordSpacing(LengthPercentage::Zero()),
       mLetterSpacing({0.}),
+      mLineHeight(StyleLineHeight::Normal()),
       mTextIndent(LengthPercentage::Zero()),
       mTextUnderlineOffset(LengthPercentageOrAuto::Auto()),
       mTextDecorationSkipInk(StyleTextDecorationSkipInk::Auto),
@@ -2886,6 +2951,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTabSize(aSource.mTabSize),
       mWordSpacing(aSource.mWordSpacing),
       mLetterSpacing(aSource.mLetterSpacing),
+      mLineHeight(aSource.mLineHeight),
       mTextIndent(aSource.mTextIndent),
       mTextUnderlineOffset(aSource.mTextUnderlineOffset),
       mTextDecorationSkipInk(aSource.mTextDecorationSkipInk),
@@ -2894,8 +2960,7 @@ nsStyleText::nsStyleText(const nsStyleText& aSource)
       mTextShadow(aSource.mTextShadow),
       mTextEmphasisStyle(aSource.mTextEmphasisStyle),
       mHyphenateCharacter(aSource.mHyphenateCharacter),
-      mWebkitTextSecurity(aSource.mWebkitTextSecurity),
-      mTextWrap(aSource.mTextWrap) {
+      mWebkitTextSecurity(aSource.mWebkitTextSecurity) {
   MOZ_COUNT_CTOR(nsStyleText);
 }
 
@@ -2923,13 +2988,13 @@ nsChangeHint nsStyleText::CalcDifference(const nsStyleText& aNewData) const {
       (mRubyPosition != aNewData.mRubyPosition) ||
       (mTextSizeAdjust != aNewData.mTextSizeAdjust) ||
       (mLetterSpacing != aNewData.mLetterSpacing) ||
+      (mLineHeight != aNewData.mLineHeight) ||
       (mTextIndent != aNewData.mTextIndent) ||
       (mTextJustify != aNewData.mTextJustify) ||
       (mWordSpacing != aNewData.mWordSpacing) ||
       (mTabSize != aNewData.mTabSize) ||
       (mHyphenateCharacter != aNewData.mHyphenateCharacter) ||
-      (mWebkitTextSecurity != aNewData.mWebkitTextSecurity) ||
-      (mTextWrap != aNewData.mTextWrap)) {
+      (mWebkitTextSecurity != aNewData.mWebkitTextSecurity)) {
     return NS_STYLE_HINT_REFLOW;
   }
 

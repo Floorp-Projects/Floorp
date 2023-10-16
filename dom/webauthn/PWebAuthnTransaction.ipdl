@@ -44,15 +44,10 @@ struct WebAuthnExtensionHmacSecret {
   bool hmacCreateSecret;
 };
 
-struct WebAuthnExtensionMinPinLength {
-  bool minPinLength;
-};
-
 union WebAuthnExtension {
   WebAuthnExtensionAppId;
   WebAuthnExtensionCredProps;
   WebAuthnExtensionHmacSecret;
-  WebAuthnExtensionMinPinLength;
 };
 
 struct WebAuthnExtensionResultAppId {
@@ -109,7 +104,6 @@ struct WebAuthnMakeCredentialResult {
   uint8_t[] KeyHandle;
   nsString[] Transports;
   WebAuthnExtensionResult[] Extensions;
-  nsString? AuthenticatorAttachment;
 };
 
 struct WebAuthnGetAssertionInfo {
@@ -131,7 +125,6 @@ struct WebAuthnGetAssertionResult {
   uint8_t[] AuthenticatorData;
   WebAuthnExtensionResult[] Extensions;
   uint8_t[] UserHandle;
-  nsString? AuthenticatorAttachment;
 };
 
 [ManualDealloc]

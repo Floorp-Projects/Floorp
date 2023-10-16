@@ -30,6 +30,7 @@ add_setup(async () => {
       ["browser.urlbar.suggest.searches", true],
       ["browser.urlbar.trending.featureGate", true],
       ["browser.urlbar.trending.requireSearchMode", false],
+      ["browser.urlbar.eventTelemetry.enabled", true],
       // Bug 1775917: Disable the persisted-search-terms search tip because if
       // not dismissed, it can cause issues with other search tests.
       ["browser.urlbar.tipShownCount.searchTip_persist", 999],
@@ -84,6 +85,24 @@ async function check_results({ featureEnabled = false }) {
   EventUtils.synthesizeKey("KEY_ArrowDown", {}, window);
   EventUtils.synthesizeKey("VK_RETURN", {}, window);
 
+  let event = {
+    category: "urlbar",
+    method: "engagement",
+    object: "enter",
+    value: "typed",
+    extra: {
+      elapsed: val => parseInt(val) > 0,
+      numChars: "0",
+      numWords: "0",
+      selIndex: "0",
+      selType: featureEnabled ? "trending_rich" : "trending",
+      provider: "SearchSuggestions",
+    },
+  };
+
+  TelemetryTestUtils.assertEvents([event], {
+    category: "urlbar",
+  });
   let scalars = TelemetryTestUtils.getProcessScalars("parent", false, true);
   TelemetryTestUtils.assertScalar(scalars, "urlbar.engagement", 1);
 

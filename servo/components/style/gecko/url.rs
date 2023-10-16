@@ -154,7 +154,6 @@ unsafe impl Send for LoadDataKey {}
 
 bitflags! {
     /// Various bits of mutable state that are kept for image loads.
-    #[derive(Debug)]
     #[repr(C)]
     pub struct LoadDataFlags: u8 {
         /// Whether we tried to resolve the uri at least once.

@@ -29,6 +29,12 @@ browser.urlbar.showSearchTerms.enabled (boolean, default: true)
   on a default search engine results page.
   Can be controlled from Search Preferences.
 
+browser.urlbar.suggest.bestmatch (boolean, default: true)
+  When ``browser.urlbar.bestMatch.enabled`` is true, a "Top pick" checkbox
+  corresponding to this pref is shown in Firefox settings. It controls whether
+  results can be shown using the "Top pick" UI treatment. Otherwise the checkbox
+  is hidden and the "Top pick" UI treatment is disabled.
+
 browser.urlbar.suggest.bookmark (boolean, default: true)
   Whether results will include the user's bookmarks.
   Can be controlled from Privacy Preferences.
@@ -96,6 +102,9 @@ browser.urlbar.autoFill.adaptiveHistory.useCountThreshold (float, default: 1.0)
   Threshold for use count of input history that we handle as adaptive history
   autofill. If the use count is this value or more, it will be a candidate.
 
+browser.urlbar.bestMatch.enabled (boolean, default: false)
+  Whether the best match feature is enabled.
+
 browser.urlbar.autoFill.stddevMultiplier (float, default: 0.0)
   Affects the frecency threshold of the autofill algorithm.  The threshold is
   the mean of all origin frecencies, plus one standard deviation multiplied by
@@ -121,6 +130,10 @@ browser.urlbar.dnsResolveSingleWordsAfterSearch (number, default: 0)
   searched for. If the string is resolved as a valid host, show a
   "Did you mean to go to 'host'" prompt.
   Set to 0. 0: Never resolve, 1: Use heuristics, 2. Always resolve.
+
+browser.urlbar.eventTelemetry.enabled (boolean, default: false)
+  Whether telemetry events should be recorded. This is expensive and should only
+  be enabled by experiments with a small population.
 
 browser.urlbar.extension.timeout (integer, default: 400)
   When sending events to extensions, they have this amount of time in
@@ -151,6 +164,9 @@ browser.urlbar.merino.clientVariants (string, default: "")
   for more details. This is intended to be used by experiments, not directly set
   by users.
 
+browser.urlbar.merino.enabled (boolean, default: false)
+  Whether Merino is enabled as a quick suggest source.
+
 browser.urlbar.merino.providers (string, default: "")
   Comma-separated list of providers to request from the Merino server. Merino
   will return suggestions only for these providers. See `Merino API docs`_ for
@@ -169,6 +185,9 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   non-sponsored quick suggest results will be shown. If true, then we look at
   the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
+
+browser.urlbar.quicksuggest.remoteSettings.enabled (boolean, default: true)
+  Whether remote settings is enabled as a quick suggest source.
 
 browser.urlbar.quicksuggest.dataCollection.enabled (boolean, default: false)
   Whether data collection is enabled for quick suggest results.

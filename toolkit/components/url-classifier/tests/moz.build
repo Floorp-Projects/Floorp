@@ -4,10 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
+MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.toml"]
 XPCSHELL_TESTS_MANIFESTS += ["unit/xpcshell.ini"]
-BROWSER_CHROME_MANIFESTS += ["browser/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["browser/browser.ini"]
 
 TESTING_JS_MODULES += [
     "UrlClassifierTestUtils.sys.mjs",

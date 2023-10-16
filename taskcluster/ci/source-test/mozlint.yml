@@ -469,7 +469,6 @@ file-whitespace:
             - '**/*.py'
             - '**/*.rs'
             - '**/*.rst'
-            - '**/*.toml'
             - '**/*.webidl'
             - '**/*.xhtml'
             - 'tools/lint/file-whitespace.yml'
@@ -509,7 +508,6 @@ file-perm:
             - '**/*.rs'
             - '**/*.rst'
             - '**/*.svg'
-            - '**/*.toml'
             - '**/*.ttf'
             - '**/*.wasm'
             - '**/*.webidl'
@@ -536,15 +534,10 @@ perfdocs-verify:
               path: /builds/worker/diff.txt
     when:
         files-changed:
-            - 'devtools/perfdocs/**'
             - 'taskcluster/**'
             - '**/perftest.ini'
             - 'python/mozperftest/**'
-            - 'testing/awsy/**'
-            - 'testing/raptor/**'
-            - 'testing/talos/**'
-            - 'testing/performance/**'
-            - 'testing/perfdocs/**'
+            - 'testing/{,!(web-platform)/{,**/}}*.{ini,rst,yml}'
             - 'tools/lint/perfdocs.yml'
 
 

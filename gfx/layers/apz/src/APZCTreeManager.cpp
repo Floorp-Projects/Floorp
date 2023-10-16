@@ -356,12 +356,11 @@ void APZCTreeManager::NotifyLayerTreeRemoved(LayersId aLayersId) {
   }
 }
 
-already_AddRefed<AsyncPanZoomController> APZCTreeManager::NewAPZCInstance(
+AsyncPanZoomController* APZCTreeManager::NewAPZCInstance(
     LayersId aLayersId, GeckoContentController* aController) {
-  return MakeRefPtr<AsyncPanZoomController>(
-             aLayersId, this, mInputQueue, aController,
-             AsyncPanZoomController::USE_GESTURE_DETECTOR)
-      .forget();
+  return new AsyncPanZoomController(
+      aLayersId, this, mInputQueue, aController,
+      AsyncPanZoomController::USE_GESTURE_DETECTOR);
 }
 
 void APZCTreeManager::SetTestSampleTime(const Maybe<TimeStamp>& aTime) {
@@ -1156,7 +1155,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     return node;
   }
 
-  RefPtr<AsyncPanZoomController> apzc;
+  AsyncPanZoomController* apzc = nullptr;
   // If we get here, aLayer is a scrollable layer and somebody
   // has registered a GeckoContentController for it, so we need to ensure
   // it has an APZC instance to manage its scrolling.
@@ -1174,9 +1173,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     apzc = insertResult.first->second.apzc;
     PrintLayerInfo(aLayer);
   }
-  APZCTM_LOG(
-      "Found APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64 "\n",
-      apzc.get(), aLayer.GetLayer(), uint64_t(guid.mLayersId), guid.mScrollId);
+  APZCTM_LOG("Found APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64
+             "\n",
+             apzc, aLayer.GetLayer(), uint64_t(guid.mLayersId), guid.mScrollId);
 
   // If we haven't encountered a layer already with the same metrics, then we
   // need to do the full reuse-or-make-an-APZC algorithm, which is contained
@@ -1247,10 +1246,9 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       aState.mZoomAnimationId = Nothing();
     }
 
-    APZCTM_LOG("Using APZC %p for layer %p with identifiers %" PRIx64
-               " %" PRId64 "\n",
-               apzc.get(), aLayer.GetLayer(), uint64_t(aLayersId),
-               aMetrics.GetScrollId());
+    APZCTM_LOG(
+        "Using APZC %p for layer %p with identifiers %" PRIx64 " %" PRId64 "\n",
+        apzc, aLayer.GetLayer(), uint64_t(aLayersId), aMetrics.GetScrollId());
 
     apzc->NotifyLayersUpdated(aLayer.Metadata(), aState.mIsFirstPaint,
                               aLayersId == aState.mOriginatingLayersId);

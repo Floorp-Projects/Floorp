@@ -11,7 +11,7 @@ use crate::values::generics::box_::{
     VerticalAlignKeyword,
 };
 use crate::values::specified::length::{LengthPercentage, NonNegativeLength};
-use crate::values::specified::{AllowQuirks, Integer, NonNegativeNumberOrPercentage};
+use crate::values::specified::{AllowQuirks, Integer};
 use crate::values::CustomIdent;
 use cssparser::Parser;
 use num_traits::FromPrimitive;
@@ -157,9 +157,8 @@ impl Display {
     pub const Block: Self =
         Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Flow as u16);
     #[cfg(feature = "gecko")]
-    pub const FlowRoot: Self = Self(
-        ((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::FlowRoot as u16,
-    );
+    pub const FlowRoot: Self =
+        Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::FlowRoot as u16);
     pub const Flex: Self =
         Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Flex as u16);
     pub const InlineFlex: Self =
@@ -559,26 +558,26 @@ impl Parse for Display {
             DisplayKeyword::Full(d) => return Ok(d),
             DisplayKeyword::Outside(o) => {
                 outside = Some(o);
-            },
+            }
             DisplayKeyword::Inside(i) => {
                 inside = Some(i);
             },
             DisplayKeyword::ListItem => {
                 got_list_item = true;
-            },
+            }
         };
 
         while let Ok(kw) = input.try_parse(DisplayKeyword::parse) {
             match kw {
                 DisplayKeyword::ListItem if !got_list_item => {
                     got_list_item = true;
-                },
+                }
                 DisplayKeyword::Outside(o) if outside.is_none() => {
                     outside = Some(o);
-                },
+                }
                 DisplayKeyword::Inside(i) if inside.is_none() => {
                     inside = Some(i);
-                },
+                }
                 _ => return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
             }
         }
@@ -1021,12 +1020,11 @@ impl WillChange {
     }
 }
 
-/// The change bits that we care about.
-#[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
-#[repr(C)]
-pub struct WillChangeBits(u16);
 bitflags! {
-    impl WillChangeBits: u16 {
+    /// The change bits that we care about.
+    #[derive(Default, MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[repr(C)]
+    pub struct WillChangeBits: u16 {
         /// Whether a property which can create a stacking context **on any
         /// box** will change.
         const STACKING_CONTEXT_UNCONDITIONAL = 1 << 0;
@@ -1065,9 +1063,7 @@ fn change_bits_for_longhand(longhand: LonghandId) -> WillChangeBits {
         LonghandId::Rotate |
         LonghandId::Scale |
         LonghandId::OffsetPath => WillChangeBits::TRANSFORM,
-        LonghandId::MozTopLayer | LonghandId::BackdropFilter | LonghandId::Filter => {
-            // -moz-top-layer forces position to be abs-pos or fixed-pos, so it's also ok to make
-            // it use the STACKING_CONTEXT_UNCONDITIONAL flag.
+        LonghandId::BackdropFilter | LonghandId::Filter => {
             WillChangeBits::STACKING_CONTEXT_UNCONDITIONAL | WillChangeBits::FIXPOS_CB_NON_SVG
         },
         LonghandId::MixBlendMode |
@@ -1135,13 +1131,12 @@ impl Parse for WillChange {
     }
 }
 
-/// Values for the `touch-action` property.
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-#[css(bitflags(single = "none,auto,manipulation", mixed = "pan-x,pan-y,pinch-zoom"))]
-#[repr(C)]
-pub struct TouchAction(u8);
 bitflags! {
-    impl TouchAction: u8 {
+    /// Values for the `touch-action` property.
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[css(bitflags(single = "none,auto,manipulation", mixed = "pan-x,pan-y,pinch-zoom"))]
+    #[repr(C)]
+    pub struct TouchAction: u8 {
         /// `none` variant
         const NONE = 1 << 0;
         /// `auto` variant
@@ -1165,13 +1160,12 @@ impl TouchAction {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-#[css(bitflags(single = "none,strict,content", mixed="size,layout,style,paint,inline-size", overlapping_bits))]
-#[repr(C)]
-/// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
-pub struct Contain(u8);
 bitflags! {
-    impl Contain: u8 {
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[css(bitflags(single = "none,strict,content", mixed="size,layout,style,paint,inline-size", overlapping_bits))]
+    #[repr(C)]
+    /// Constants for contain: https://drafts.csswg.org/css-contain/#contain-property
+    pub struct Contain: u8 {
         /// `none` variant, just for convenience.
         const NONE = 0;
         /// `inline-size` variant, turns on single-axis inline size containment
@@ -1491,6 +1485,9 @@ pub enum Appearance {
     /// Menu Popup background.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Menupopup,
+    /// Menu item arrow.
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    Menuarrow,
     /// The meter bar's meter indicator.
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     Meterchunk,
@@ -1857,14 +1854,13 @@ impl Overflow {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
-#[repr(C)]
-#[css(bitflags(single = "auto", mixed = "stable,both-edges", validate_mixed="Self::has_stable"))]
-/// Values for scrollbar-gutter:
-/// <https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property>
-pub struct ScrollbarGutter(u8);
 bitflags! {
-    impl ScrollbarGutter: u8 {
+    #[derive(MallocSizeOf, Parse, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+    #[repr(C)]
+    #[css(bitflags(single = "auto", mixed = "stable,both-edges", validate_mixed="Self::has_stable"))]
+    /// Values for scrollbar-gutter:
+    /// <https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property>
+    pub struct ScrollbarGutter: u8 {
         /// `auto` variant. Just for convenience if there is no flag set.
         const AUTO = 0;
         /// `stable` variant.
@@ -1878,27 +1874,5 @@ impl ScrollbarGutter {
     #[inline]
     fn has_stable(&self) -> bool {
         self.intersects(Self::STABLE)
-    }
-}
-
-/// A specified value for the zoom property.
-#[derive(
-    Clone, Copy, Debug, MallocSizeOf, PartialEq, Parse, SpecifiedValueInfo, ToCss, ToShmem,
-)]
-#[allow(missing_docs)]
-pub enum Zoom {
-    Normal,
-    /// An internal value that resets the effective zoom to 1. Used for scrollbar parts, which
-    /// disregard zoom. We use this name because WebKit has this value exposed to the web.
-    #[parse(condition = "ParserContext::in_ua_sheet")]
-    Document,
-    Value(NonNegativeNumberOrPercentage),
-}
-
-impl Zoom {
-    /// Return a particular number value of the zoom property.
-    #[inline]
-    pub fn new_number(n: f32) -> Self {
-        Self::Value(NonNegativeNumberOrPercentage::new_number(n))
     }
 }

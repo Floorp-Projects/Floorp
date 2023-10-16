@@ -36,9 +36,3 @@ export const setSymbols = memoizeableAction("setSymbols", {
   createKey: location => location.source.id,
   action: (location, thunkArgs) => doSetSymbols(location, thunkArgs),
 });
-
-export function getFunctionSymbols(sourceId, maxResults) {
-  return ({ parserWorker }) => {
-    return parserWorker.getFunctionSymbols(sourceId, maxResults);
-  };
-}

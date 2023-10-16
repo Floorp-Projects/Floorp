@@ -3,7 +3,6 @@
 import json
 import os
 import platform
-import re
 import signal
 import subprocess
 import sys
@@ -605,32 +604,6 @@ class FirefoxOutputHandler(OutputHandler):
                                            command=" ".join(self.command))
 
 
-class GeckodriverOutputHandler(FirefoxOutputHandler):
-    PORT_RE = re.compile(b".*Listening on [^ :]*:(\d+)")
-
-    def __init__(self, logger, command, symbols_path=None, stackfix_dir=None, asan=False,
-                 leak_report_file=None, init_deadline=None):
-        super().__init__(logger, command, symbols_path=symbols_path, stackfix_dir=stackfix_dir, asan=asan,
-                         leak_report_file=leak_report_file)
-        self.port = None
-        self.init_deadline = None
-
-    def after_process_start(self, pid):
-        super().after_process_start(pid)
-        while self.port is None:
-            time.sleep(0.1)
-            if self.init_deadline is not None and time.time() > self.init_deadline:
-                raise TimeoutError("Failed to get geckodriver port within the timeout")
-
-    def __call__(self, line):
-        if self.port is None:
-            m = self.PORT_RE.match(line)
-            if m is not None:
-                self.port = int(m.groups()[0])
-                self.logger.debug(f"Got geckodriver port {self.port}")
-        super().__call__(line)
-
-
 class ProfileCreator:
     def __init__(self, logger, prefs_root, config, test_type, extra_prefs, e10s,
                  disable_fission, debug_test, browser_channel, binary, certutil_binary,
@@ -938,13 +911,12 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
         return env
 
     def create_output_handler(self, cmd):
-        return GeckodriverOutputHandler(self.logger,
-                                        cmd,
-                                        stackfix_dir=self.stackfix_dir,
-                                        symbols_path=self.symbols_path,
-                                        asan=self.asan,
-                                        leak_report_file=self.leak_report_file,
-                                        init_deadline=self.init_deadline)
+        return FirefoxOutputHandler(self.logger,
+                                    cmd,
+                                    stackfix_dir=self.stackfix_dir,
+                                    symbols_path=self.symbols_path,
+                                    asan=self.asan,
+                                    leak_report_file=self.leak_report_file)
 
     def start(self, group_metadata, **kwargs):
         self.leak_report_file = setup_leak_report(self.leak_check, self.profile, self.env)
@@ -988,12 +960,7 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
                 time.sleep(1)
             else:
                 self.logger.debug("WebDriver session didn't end")
-        try:
-            super().stop(force=force)
-        finally:
-            if self._output_handler is not None:
-                self._output_handler.port = None
-            self._port = None
+        super().stop(force=force)
 
     def cleanup(self):
         super().cleanup()
@@ -1007,19 +974,10 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
                 "mozleak_allowed": self.leak_check and test.mozleak_allowed,
                 "mozleak_thresholds": self.leak_check and test.mozleak_threshold}
 
-    @property
-    def port(self):
-        # We read the port from geckodriver on startup
-        if self._port is None:
-            if self._output_handler is None or self._output_handler.port is None:
-                raise ValueError("Can't get geckodriver port before it's started")
-            self._port = self._output_handler.port
-        return self._port
-
     def make_command(self):
         return [self.webdriver_binary,
                 "--host", self.host,
-                "--port", "0"] + self.webdriver_args
+                "--port", str(self.port)] + self.webdriver_args
 
     def executor_browser(self):
         cls, args = super().executor_browser()

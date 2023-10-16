@@ -414,7 +414,7 @@ DNSRequestSender::Cancel(nsresult reason) {
                 host, trrServer, port, type, originAttributes, flags, reason);
           }
         });
-    SchedulerGroup::Dispatch(runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
   return NS_OK;
 }
@@ -423,6 +423,7 @@ void DNSRequestSender::StartRequest() {
   // we can only do IPDL on the main thread
   if (!NS_IsMainThread()) {
     SchedulerGroup::Dispatch(
+        TaskCategory::Other,
         NewRunnableMethod("net::DNSRequestSender::StartRequest", this,
                           &DNSRequestSender::StartRequest));
     return;

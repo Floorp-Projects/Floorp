@@ -868,9 +868,6 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   virtual bool IsSVGAnimationElement() const { return false; }
-  virtual bool IsSVGComponentTransferFunctionElement() const { return false; }
-  virtual bool IsSVGFilterPrimitiveElement() const { return false; }
-  virtual bool IsSVGFilterPrimitiveChildElement() const { return false; }
   virtual bool IsSVGGeometryElement() const { return false; }
   virtual bool IsSVGGraphicsElement() const { return false; }
 
@@ -910,14 +907,6 @@ class nsINode : public mozilla::dom::EventTarget {
     return IsAnyOfHTMLElements(nsGkAtoms::h1, nsGkAtoms::h2, nsGkAtoms::h3,
                                nsGkAtoms::h4, nsGkAtoms::h5, nsGkAtoms::h6);
   }
-
-  /**
-   * Check whether the conditional processing attributes other than
-   * systemLanguage "return true" if they apply to and are specified
-   * on the given SVG element. Returns true if this element should be
-   * rendered, false if it should not.
-   */
-  virtual bool PassesConditionalProcessingTests() const { return true; }
 
   /**
    * Insert a content node before another or at the end.
@@ -2394,8 +2383,6 @@ class nsINode : public mozilla::dom::EventTarget {
   nsSlots* mSlots;
 };
 
-NON_VIRTUAL_ADDREF_RELEASE(nsINode)
-
 inline nsINode* mozilla::dom::EventTarget::GetAsNode() {
   return IsNode() ? AsNode() : nullptr;
 }
@@ -2434,7 +2421,7 @@ inline nsISupports* ToSupports(nsINode* aPointer) { return aPointer; }
 #define NS_IMPL_FROMNODE_GENERIC(_class, _check, _const)                 \
   template <typename T>                                                  \
   static auto FromNode(_const T& aNode)                                  \
-      -> decltype(static_cast<_const _class*>(&aNode)) {                 \
+      ->decltype(static_cast<_const _class*>(&aNode)) {                  \
     return aNode._check ? static_cast<_const _class*>(&aNode) : nullptr; \
   }                                                                      \
   template <typename T>                                                  \
@@ -2447,7 +2434,7 @@ inline nsISupports* ToSupports(nsINode* aPointer) { return aPointer; }
   }                                                                      \
   template <typename T>                                                  \
   static auto FromEventTarget(_const T& aEventTarget)                    \
-      -> decltype(static_cast<_const _class*>(&aEventTarget)) {          \
+      ->decltype(static_cast<_const _class*>(&aEventTarget)) {           \
     return aEventTarget.IsNode() && aEventTarget.AsNode()->_check        \
                ? static_cast<_const _class*>(&aEventTarget)              \
                : nullptr;                                                \

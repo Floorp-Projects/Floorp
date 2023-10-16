@@ -1,4 +1,4 @@
-// META: global=window,worker,shadowrealm
+// META: global=window,worker
 // META: script=third_party/pako/pako_inflate.min.js
 // META: timeout=long
 

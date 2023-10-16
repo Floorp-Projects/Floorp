@@ -216,56 +216,48 @@ async function getGeneratedLocation(location) {
   };
 }
 
-/**
- * Map the breakable positions (line and columns) from generated to original locations.
- *
- * @param {Object} breakpointPositions
- *        List of columns per line refering to the breakable columns per line
- *        for a given source:
- *        {
- *           1: [2, 6], // On line 1, column 2 and 6 are breakable.
- *           ...
- *        }
- * @param {string} sourceId
- *        The ID for the generated source.
- */
-async function getOriginalLocations(breakpointPositions, sourceId) {
-  const map = await getSourceMap(sourceId);
-  if (!map) {
-    return null;
-  }
-  for (const line in breakpointPositions) {
-    const breakableColumnsPerLine = breakpointPositions[line];
-    for (let i = 0; i < breakableColumnsPerLine.length; i++) {
-      const column = breakableColumnsPerLine[i];
-      const mappedLocation = getOriginalLocationSync(map, {
-        sourceId,
-        line: parseInt(line, 10),
-        column,
-      });
-      if (mappedLocation) {
-        // As we replace the `column` with the mappedLocation,
-        // also transfer the generated column so that we can compute both original and generated locations
-        // in the main thread.
-        mappedLocation.generatedColumn = column;
-        breakableColumnsPerLine[i] = mappedLocation;
-      }
+async function getOriginalLocations(locations, options = {}) {
+  const maps = {};
+
+  const results = [];
+  for (const location of locations) {
+    let map = maps[location.sourceId];
+    if (map === undefined) {
+      map = await getSourceMap(location.sourceId);
+      maps[location.sourceId] = map || null;
     }
+
+    results.push(map ? getOriginalLocationSync(map, location, options) : null);
   }
-  return breakpointPositions;
+  return results;
 }
 
-function getOriginalLocationSync(map, location) {
+function getOriginalLocationSync(map, location, { search } = {}) {
   // First check for an exact match
-  const {
-    source: sourceUrl,
-    line,
-    column,
-  } = map.originalPositionFor({
+  let match = map.originalPositionFor({
     line: location.line,
     column: location.column == null ? 0 : location.column,
   });
 
+  // If there is not an exact match, look for a match with a bias at the
+  // current location and then on subsequent lines
+  if (search) {
+    let line = location.line;
+    let column = location.column == null ? 0 : location.column;
+
+    while (match.source === null) {
+      match = map.originalPositionFor({
+        line,
+        column,
+        bias: SourceMapConsumer[search],
+      });
+
+      line += search == "LEAST_UPPER_BOUND" ? 1 : -1;
+      column = search == "LEAST_UPPER_BOUND" ? 0 : Infinity;
+    }
+  }
+
+  const { source: sourceUrl, line, column } = match;
   if (sourceUrl == null) {
     // No url means the location didn't map.
     return null;
@@ -279,7 +271,7 @@ function getOriginalLocationSync(map, location) {
   };
 }
 
-async function getOriginalLocation(location) {
+async function getOriginalLocation(location, options = {}) {
   if (!isGeneratedId(location.sourceId)) {
     return null;
   }
@@ -289,7 +281,7 @@ async function getOriginalLocation(location) {
     return null;
   }
 
-  return getOriginalLocationSync(map, location);
+  return getOriginalLocationSync(map, location, options);
 }
 
 async function getOriginalSourceText(originalSourceId) {

@@ -7,3 +7,4 @@ support-files = ["config_disable_app_update.json"]
 skip-if = ["os == 'win' && msix"] # Updater is disabled in MSIX builds
 
 ["browser_policy_disable_app_update.js"]
+

@@ -46,10 +46,10 @@ var _done = new Promise((resolve) => {
 
 async function addVirtualAuthenticator() {
   let id = await SpecialPowers.spawnChrome([], () => {
-    let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
-      Ci.nsIWebAuthnService
+    let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+      Ci.nsIWebAuthnTransport
     );
-    return webauthnService.addVirtualAuthenticator(
+    return webauthnTransport.addVirtualAuthenticator(
       "ctap2",
       "internal",
       true,
@@ -61,10 +61,10 @@ async function addVirtualAuthenticator() {
 
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.spawnChrome([id], (authenticatorId) => {
-      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
-        Ci.nsIWebAuthnService
+      let webauthnTransport = Cc["@mozilla.org/webauthn/transport;1"].getService(
+        Ci.nsIWebAuthnTransport
       );
-      webauthnService.removeVirtualAuthenticator(authenticatorId);
+      webauthnTransport.removeVirtualAuthenticator(authenticatorId);
     });
   });
 }
@@ -72,7 +72,8 @@ async function addVirtualAuthenticator() {
 add_task(async () => {
   await SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
                                            ["security.webauth.webauthn_enable_softtoken", true],
-                                           ["security.webauth.webauthn_enable_usbtoken", false]]});
+                                           ["security.webauth.webauthn_enable_usbtoken", false],
+                                           ["security.webauth.webauthn_enable_android_fido2", false]]});
   await addVirtualAuthenticator();
 });
 

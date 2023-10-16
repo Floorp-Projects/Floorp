@@ -12,7 +12,9 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
-pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml", locked);
+pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml");
+
+pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
 
 // Show/Hide scrollbars when active/inactive
 pref("ui.useOverlayScrollbars", 1);
@@ -94,6 +96,7 @@ pref("extensions.update.enabled", true);
 pref("extensions.update.interval", 86400);
 pref("extensions.logging.enabled", false);
 pref("extensions.strictCompatibility", false);
+pref("extensions.minCompatibleAppVersion", "11.0");
 
 pref("extensions.update.url", "https://versioncheck.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%&updateType=%UPDATE_TYPE%&compatMode=%COMPATIBILITY_MODE%");
 pref("extensions.update.background.url", "https://versioncheck-bg.addons.mozilla.org/update/VersionCheck.php?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%&updateType=%UPDATE_TYPE%&compatMode=%COMPATIBILITY_MODE%");
@@ -117,6 +120,7 @@ pref("extensions.abuseReport.amWebAPI.enabled", false);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
+pref("privacy.popups.showBrowserMessage", true);
 
 /* disable opening windows with the dialog feature */
 pref("dom.disable_window_open_dialog_feature", true);
@@ -170,6 +174,14 @@ pref("devtools.debugger.unix-domain-socket", "@ANDROID_PACKAGE_NAME@/firefox-deb
 pref("breakpad.reportURL", "https://crash-stats.mozilla.org/report/index/");
 
 pref("app.support.baseURL", "https://support.mozilla.org/1/mobile/%VERSION%/%OS%/%LOCALE%/");
+#if MOZ_UPDATE_CHANNEL == beta
+  pref("app.releaseNotesURL", "https://www.mozilla.com/%LOCALE%/mobile/%VERSION%beta/releasenotes/");
+#else
+  pref("app.releaseNotesURL", "https://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
+#endif
+
+// Enable pinning
+pref("security.cert_pinning.enforcement_level", 1);
 
 /* prefs used by the update timer system (including blocklist pings) */
 pref("app.update.timerFirstInterval", 30000); // milliseconds
@@ -235,6 +247,10 @@ pref("media.gmp-gmpopenh264.autoupdate", false);
 // The download protection UI is not implemented yet (bug 1239094).
 pref("browser.safebrowsing.downloads.enabled", false);
 
+// The application reputation lists are not available on Android.
+pref("urlclassifier.downloadAllowTable", "");
+pref("urlclassifier.downloadBlockTable", "");
+
 // The Potentially Harmful Apps list replaces the malware one on Android.
 pref("urlclassifier.malwareTable", "goog-harmful-proto,goog-unwanted-proto,moztest-harmful-simple,moztest-malware-simple,moztest-unwanted-simple");
 
@@ -253,11 +269,33 @@ pref("devtools.console.stdout.chrome", true);
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
 pref("network.tickle-wifi.enabled", true);
 
+// The mode of home provider syncing.
+// 0: Sync always
+// 1: Sync only when on wifi
+pref("home.sync.updateMode", 0);
+
+// How frequently to check if we should sync home provider data.
+pref("home.sync.checkIntervalSecs", 3600);
+
 // Enable meta-viewport support for font inflation code
 pref("dom.meta-viewport.enabled", true);
 
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
+
+// The default color scheme in reader mode (light, dark, auto)
+// auto = color automatically adjusts according to ambient light level
+// (auto only works on platforms where the 'devicelight' event is enabled)
+// auto doesn't work: https://bugzilla.mozilla.org/show_bug.cgi?id=1472957
+// pref("reader.color_scheme", "auto");
+pref("reader.color_scheme", "light");
+
+// Color scheme values available in reader mode UI.
+// pref("reader.color_scheme.values", "[\"dark\",\"auto\",\"light\"]");
+pref("reader.color_scheme.values", "[\"dark\",\"sepia\",\"light\"]");
+
+// Whether to use a vertical or horizontal toolbar.
+pref("reader.toolbar.vertical", false);
 
 // Telemetry settings.
 // Whether to use the unified telemetry behavior, requires a restart.

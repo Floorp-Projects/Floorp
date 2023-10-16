@@ -17,6 +17,17 @@ ${helpers.predefined_type(
     affects="paint",
 )}
 
+${helpers.predefined_type(
+    "line-height",
+    "LineHeight",
+    "computed::LineHeight::normal()",
+    engines="gecko servo-2013 servo-2020",
+    animation_value_type="LineHeight",
+    spec="https://drafts.csswg.org/css2/visudet.html#propdef-line-height",
+    servo_restyle_damage="reflow",
+    affects="layout",
+)}
+
 // CSS Text Module Level 3
 
 ${helpers.predefined_type(
@@ -425,17 +436,5 @@ ${helpers.single_keyword(
     gecko_enum_prefix="StyleTextSecurity",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-text/#MISSING",
-    affects="layout",
-)}
-
-${helpers.single_keyword(
-    "text-wrap",
-    "auto stable balance",
-    engines="gecko",
-    gecko_pref="layout.css.text-wrap-balance.enabled",
-    has_effect_on_gecko_scrollbars=False,
-    gecko_enum_prefix="StyleTextWrap",
-    animation_value_type="discrete",
-    spec="https://drafts.csswg.org/css-text-4/#text-wrap",
     affects="layout",
 )}

@@ -1,19 +1,19 @@
 var testData = [
-  { desc: "No path", action: "https://example.com/", param: "q" },
+  { desc: "No path", action: "http://example.com/", param: "q" },
   {
     desc: "With path",
-    action: "https://example.com/new-path-here/",
+    action: "http://example.com/new-path-here/",
     param: "q",
   },
   { desc: "No action", action: "", param: "q" },
   {
     desc: "With Query String",
-    action: "https://example.com/search?oe=utf-8",
+    action: "http://example.com/search?oe=utf-8",
     param: "q",
   },
   {
     desc: "With Unicode Query String",
-    action: "https://example.com/searching",
+    action: "http://example.com/searching",
     param: "q",
     testHiddenUnicode: true,
   },
@@ -21,7 +21,7 @@ var testData = [
 
 add_task(async function () {
   const TEST_URL =
-    "https://example.org/browser/browser/components/search/test/browser/test.html";
+    "http://example.org/browser/browser/components/search/test/browser/test.html";
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   let count = 0;

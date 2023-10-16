@@ -17,64 +17,14 @@ add_task(async function testProjectSearchCloseOnNavigation() {
   await selectSource(dbg, "script-switching-01.js");
 
   await openProjectSearch(dbg);
-
-  ok(
-    !findElement(dbg, "projectSearchRefreshButton"),
-    "The refresh button is only visible after having done a search"
-  );
-
-  await doProjectSearch(dbg, "function", 2);
-
-  is(getExpandedResultsCount(dbg), 5);
+  await doProjectSearch(dbg, "first");
 
   is(dbg.selectors.getActiveSearch(), "project");
-
-  const refreshButton = findElement(dbg, "projectSearchRefreshButton");
-  ok(
-    refreshButton,
-    "Refresh button is visible right after search is completed"
-  );
-  ok(
-    !refreshButton.classList.contains("highlight"),
-    "Refresh button is *not* highlighted by default"
-  );
 
   await navigate(dbg, "doc-scripts.html");
 
-  // Project search is still visible after navigation
-  is(dbg.selectors.getActiveSearch(), "project");
-  // With same search results
-  is(getExpandedResultsCount(dbg), 5);
-
-  ok(
-    refreshButton.classList.contains("highlight"),
-    "Refresh button is highlighted after navigation"
-  );
-
-  info("Try to open a discarded source");
-  await clickElement(dbg, "fileMatch");
-
-  info("Wait for the warning popup to be visible");
-  // We are waiting for the popup to be added...
-  await waitFor(() => dbg.win.document.querySelector(".unavailable-source"));
-  // ...and verify that the popup is made visible.
-  await waitFor(() => dbg.win.document.querySelector(".tooltip-visible"));
-  info("Retry to open the discard source, this should hide the popup");
-  await clickElement(dbg, "fileMatch");
-  info("Wait for the popup to be hidden");
-  // Note that .unavailable-source won't be removed from the DOM
-  await waitFor(() => !dbg.win.document.querySelector(".tooltip-visible"));
-
-  info("Refresh results against the new page");
-  refreshButton.click();
-
-  // Wait for the search to be updated against the new page
-  await waitForSearchResults(dbg, 5);
-  is(getExpandedResultsCount(dbg), 29);
-  ok(
-    !refreshButton.classList.contains("highlight"),
-    "Refresh button is no longer highlighted after refreshing the search"
-  );
+  // wait for the project search to close
+  await waitForState(dbg, state => !dbg.selectors.getActiveSearch());
 });
 
 add_task(async function testSimpleProjectSearch() {
@@ -95,7 +45,7 @@ add_task(async function testSimpleProjectSearch() {
   );
 
   const searchTerm = "first";
-  await doProjectSearch(dbg, searchTerm, 1);
+  await doProjectSearch(dbg, searchTerm);
 
   const queryMatch = findElement(dbg, "fileMatch").querySelector(
     ".query-match"
@@ -154,7 +104,7 @@ add_task(async function testExpandSearchResultsToShowMatches() {
   const dbg = await initDebugger("doc-react.html", "App.js");
 
   await openProjectSearch(dbg);
-  await doProjectSearch(dbg, "we", 19);
+  await doProjectSearch(dbg, "we");
 
   is(getExpandedResultsCount(dbg), 159);
 
@@ -199,7 +149,9 @@ add_task(async function testSearchExcludePatterns() {
 
   info("Search across all files");
   await openProjectSearch(dbg);
-  let fileResults = await doProjectSearch(dbg, "console", 5);
+  let fileResults = await doProjectSearch(dbg, "console");
+
+  is(fileResults.length, 5, "5 results were found");
 
   let resultsFromNodeModules = [...fileResults].filter(result =>
     result.innerText.includes("node_modules")

@@ -1160,8 +1160,8 @@ async function invokeWithBreakpoint(
 }
 
 function prettyPrint(dbg) {
-  const source = dbg.selectors.getSelectedSource();
-  return dbg.actions.prettyPrintAndSelectSource(source);
+  const sourceId = dbg.selectors.getSelectedSourceId();
+  return dbg.actions.togglePrettyPrint(sourceId);
 }
 
 async function expandAllScopes(dbg) {
@@ -1666,9 +1666,9 @@ async function assertLogBreakpoint(dbg, line) {
   ok(hasLogClass, `Log breakpoint on line ${line}`);
 }
 
-function assertBreakpointSnippet(dbg, index, expectedSnippet) {
+function assertBreakpointSnippet(dbg, index, snippet) {
   const actualSnippet = findElement(dbg, "breakpointLabel", 2).innerText;
-  is(actualSnippet, expectedSnippet, `Breakpoint ${index} snippet`);
+  is(snippet, actualSnippet, `Breakpoint ${index} snippet`);
 }
 
 const selectors = {
@@ -1780,10 +1780,9 @@ const selectors = {
     ".project-text-search button.regex-match-btn",
   projectSearchModifiersWholeWordMatch:
     ".project-text-search button.whole-word-btn",
-  projectSearchRefreshButton: ".project-text-search button.refresh-btn",
   threadsPaneItems: ".threads-pane .thread",
   threadsPaneItem: i => `.threads-pane .thread:nth-child(${i})`,
-  threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)}.paused`,
+  threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)} .pause-badge`,
   CodeMirrorLines: ".CodeMirror-lines",
   inlinePreviewLabels: ".inline-preview .inline-preview-label",
   inlinePreviewValues: ".inline-preview .inline-preview-value",
@@ -2174,7 +2173,7 @@ async function hoverAtPos(dbg, pos) {
 function hoverToken(tokenEl) {
   info(`Hovering on token "${tokenEl.innerText}"`);
 
-  // This first event helps utils/editor/tokens.js to receive the right mouseover event
+  // This first event helps utils/editor/token-events.js to receive the right mouseover event
   EventUtils.synthesizeMouseAtCenter(
     tokenEl,
     {
@@ -2215,7 +2214,7 @@ async function closePreviewForToken(
 
   // Force "mousing out" from all elements.
   //
-  // This helps utils/editor/tokens.js to receive the right mouseleave event.
+  // This helps utils/editor/token-events.js to receive the right mouseleave event.
   // This is super important as it will then allow re-emitting a tokenenter event if you try to re-preview the same token!
   EventUtils.synthesizeMouseAtCenter(
     tokenEl,
@@ -2782,16 +2781,13 @@ function openProjectSearch(dbg) {
  *
  * @param {Object} dbg
  * @param {String} searchTerm - The test to search for
- * @param {Number} expectedResults - The expected no of results to wait for.
- *                                   This is the number of file results and not the numer of matches in all files.
- *                                   When falsy value is passed, expects no match.
  * @return {Array} List of search results element nodes
  */
-async function doProjectSearch(dbg, searchTerm, expectedResults) {
+async function doProjectSearch(dbg, searchTerm) {
   await clearElement(dbg, "projectSearchSearchInput");
   type(dbg, searchTerm);
   pressKey(dbg, "Enter");
-  return waitForSearchResults(dbg, expectedResults);
+  return waitForSearchResults(dbg);
 }
 
 /**
@@ -2799,30 +2795,16 @@ async function doProjectSearch(dbg, searchTerm, expectedResults) {
  *
  * @param {Object} dbg
  * @param {Number} expectedResults - The expected no of results to wait for
- *                                   This is the number of file results and not the numer of matches in all files.
  * @return (Array) List of search result element nodes
  */
 async function waitForSearchResults(dbg, expectedResults) {
+  await waitForState(dbg, state => state.projectTextSearch.status === "DONE");
   if (expectedResults) {
-    info(`Wait for ${expectedResults} project search results`);
     await waitUntil(
       () =>
         findAllElements(dbg, "projectSearchFileResults").length ==
         expectedResults
     );
-  } else {
-    // If no results are expected, wait for the "no results" message to be displayed.
-    info("Wait for project search to complete with no results");
-    await waitUntil(() => {
-      const projectSearchResult = findElementWithSelector(
-        dbg,
-        ".no-result-msg"
-      );
-      return projectSearchResult
-        ? projectSearchResult.textContent ==
-            DEBUGGER_L10N.getStr("projectTextSearch.noResults")
-        : false;
-    });
   }
   return findAllElements(dbg, "projectSearchFileResults");
 }

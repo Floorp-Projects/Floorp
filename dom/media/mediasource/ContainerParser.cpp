@@ -13,7 +13,7 @@
 #include "MoofParser.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Try.h"
+#include "mozilla/Result.h"
 #include "MediaData.h"
 #include "nsMimeTypes.h"
 #include "AtomType.h"

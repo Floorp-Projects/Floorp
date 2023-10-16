@@ -483,20 +483,16 @@ JSObject* CreateGlobalObject(JSContext* cx, const JSClass* clasp,
 }
 
 void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
-                             bool aIsSystemPrincipal, bool aSecureContext,
-                             bool aForceUTC, bool aAlwaysUseFdlibm,
-                             bool aLocaleEnUS) {
+                             bool aIsSystemPrincipal, bool aForceUTC,
+                             bool aAlwaysUseFdlibm, bool aLocaleEnUS) {
+  bool shouldDiscardSystemSource = ShouldDiscardSystemSource();
+
   if (aIsSystemPrincipal) {
     // Make toSource functions [ChromeOnly]
     aOptions.creationOptions().setToSourceEnabled(true);
     // Make sure [SecureContext] APIs are visible:
     aOptions.creationOptions().setSecureContext(true);
     aOptions.behaviors().setClampAndJitterTime(false);
-    aOptions.behaviors().setDiscardSource(ShouldDiscardSystemSource());
-    MOZ_ASSERT(aSecureContext,
-               "aIsSystemPrincipal should imply aSecureContext");
-  } else {
-    aOptions.creationOptions().setSecureContext(aSecureContext);
   }
 
   aOptions.creationOptions().setForceUTC(aForceUTC);
@@ -504,6 +500,10 @@ void InitGlobalObjectOptions(JS::RealmOptions& aOptions,
   if (aLocaleEnUS) {
     nsCString locale = nsRFPService::GetSpoofedJSLocale();
     aOptions.creationOptions().setLocaleCopyZ(locale.get());
+  }
+
+  if (shouldDiscardSystemSource) {
+    aOptions.behaviors().setDiscardSource(aIsSystemPrincipal);
   }
 }
 
@@ -553,7 +553,6 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
   MOZ_RELEASE_ASSERT(aPrincipal->IsSystemPrincipal());
 
   InitGlobalObjectOptions(aOptions, /* aSystemPrincipal */ true,
-                          /* aSecureContext */ true,
                           /* aForceUTC */ false, /* aAlwaysUseFdlibm */ false,
                           /* aLocaleEnUS */ false);
 

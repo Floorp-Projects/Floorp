@@ -66,7 +66,6 @@ export let RemotePageAccessManager = {
     },
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
-      RPMGetIntPref: ["security.dialog_enable_delay"],
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
       RPMAddMessageListener: ["WWWReachable"],
       RPMTryPingSecureWWWLink: ["*"],
@@ -239,6 +238,7 @@ export let RemotePageAccessManager = {
       RPMRecordTelemetryEvent: ["*"],
     },
     "about:shoppingsidebar": {
+      RPMGetBoolPref: ["browser.shopping.experience2023.ads.enabled"],
       RPMSetPref: [
         "browser.shopping.experience2023.optedIn",
         "browser.shopping.experience2023.active",

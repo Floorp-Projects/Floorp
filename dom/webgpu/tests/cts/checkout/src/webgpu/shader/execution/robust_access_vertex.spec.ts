@@ -61,7 +61,7 @@ it should be added into drawCallTestParameter list.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
-import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
+import { GPUTest } from '../../gpu_test.js';
 
 // Encapsulates a draw call (either indexed or non-indexed)
 class DrawCall {
@@ -273,7 +273,7 @@ const typeInfoMap: { [k: string]: VertexInfo } = {
   },
 };
 
-class F extends TextureTestMixin(GPUTest) {
+class F extends GPUTest {
   generateBufferContents(
     numVertices: number,
     attributesPerBuffer: number,
@@ -514,9 +514,12 @@ class F extends TextureTestMixin(GPUTest) {
     this.device.queue.submit([encoder.finish()]);
 
     // Validate we see green on the left pixel, showing that no failure case is detected
-    this.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
-      { coord: { x: 0, y: 0 }, exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]) },
-    ]);
+    this.expectSinglePixelIn2DTexture(
+      colorAttachment,
+      'rgba8unorm',
+      { x: 0, y: 0 },
+      { exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]), layout: { mipLevel: 0 } }
+    );
   }
 }
 
@@ -548,7 +551,7 @@ g.test('vertex_buffer_access')
         .combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6])
         .unless(p => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
   )
-  .fn(t => {
+  .fn(async t => {
     const p = t.params;
     const typeInfo = typeInfoMap[p.type];
 

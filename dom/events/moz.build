@@ -16,9 +16,8 @@ BROWSER_CHROME_MANIFESTS += [
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/clipboard/mochitest.toml",
-    "test/mochitest.toml",
-    "test/pointerevents/mochitest.toml",
+    "test/mochitest.ini",
+    "test/pointerevents/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [

@@ -1,6 +1,69 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * The interface used for formatting strings with color metadata.
@@ -13,9 +76,10 @@
 export let Colors;
 
 try {
+
   Colors = require('ansi-colors');
 } catch {
-  const passthrough = s => s;
+  const passthrough = (s) => s;
   passthrough.enabled = false;
   passthrough.reset = passthrough;
   passthrough.bold = passthrough;
@@ -61,3 +125,4 @@ try {
   passthrough.bgWhiteBright = passthrough;
   Colors = passthrough;
 }
+//# sourceMappingURL=colors.js.map

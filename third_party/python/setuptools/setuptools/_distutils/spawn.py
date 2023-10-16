@@ -10,12 +10,17 @@ import sys
 import os
 import subprocess
 
-from .errors import DistutilsExecError
-from .debug import DEBUG
-from ._log import log
+from distutils.errors import DistutilsPlatformError, DistutilsExecError
+from distutils.debug import DEBUG
+from distutils import log
 
 
-def spawn(cmd, search_path=1, verbose=0, dry_run=0, env=None):  # noqa: C901
+if sys.platform == 'darwin':
+    _cfg_target = None
+    _cfg_target_split = None
+
+
+def spawn(cmd, search_path=1, verbose=0, dry_run=0, env=None):
     """Run another program, specified as a command list 'cmd', in a new process.
 
     'cmd' is just the argument list for the new process, ie.
@@ -35,7 +40,7 @@ def spawn(cmd, search_path=1, verbose=0, dry_run=0, env=None):  # noqa: C901
     # in, protect our %-formatting code against horrible death
     cmd = list(cmd)
 
-    log.info(subprocess.list2cmdline(cmd))
+    log.info(' '.join(cmd))
     if dry_run:
         return
 
@@ -47,11 +52,24 @@ def spawn(cmd, search_path=1, verbose=0, dry_run=0, env=None):  # noqa: C901
     env = env if env is not None else dict(os.environ)
 
     if sys.platform == 'darwin':
-        from distutils.util import MACOSX_VERSION_VAR, get_macosx_target_ver
-
-        macosx_target_ver = get_macosx_target_ver()
-        if macosx_target_ver:
-            env[MACOSX_VERSION_VAR] = macosx_target_ver
+        global _cfg_target, _cfg_target_split
+        if _cfg_target is None:
+            from distutils import sysconfig
+            _cfg_target = sysconfig.get_config_var(
+                                  'MACOSX_DEPLOYMENT_TARGET') or ''
+            if _cfg_target:
+                _cfg_target_split = [int(x) for x in _cfg_target.split('.')]
+        if _cfg_target:
+            # ensure that the deployment target of build process is not less
+            # than that used when the interpreter was built. This ensures
+            # extension modules are built with correct compatibility values
+            cur_target = os.environ.get('MACOSX_DEPLOYMENT_TARGET', _cfg_target)
+            if _cfg_target_split > [int(x) for x in cur_target.split('.')]:
+                my_msg = ('$MACOSX_DEPLOYMENT_TARGET mismatch: '
+                          'now "%s" but "%s" during configure'
+                                % (cur_target, _cfg_target))
+                raise DistutilsPlatformError(my_msg)
+            env.update(MACOSX_DEPLOYMENT_TARGET=cur_target)
 
     try:
         proc = subprocess.Popen(cmd, env=env)
@@ -61,15 +79,13 @@ def spawn(cmd, search_path=1, verbose=0, dry_run=0, env=None):  # noqa: C901
         if not DEBUG:
             cmd = cmd[0]
         raise DistutilsExecError(
-            "command {!r} failed: {}".format(cmd, exc.args[-1])
-        ) from exc
+            "command %r failed: %s" % (cmd, exc.args[-1])) from exc
 
     if exitcode:
         if not DEBUG:
             cmd = cmd[0]
         raise DistutilsExecError(
-            "command {!r} failed with exit code {}".format(cmd, exitcode)
-        )
+              "command %r failed with exit code %s" % (cmd, exitcode))
 
 
 def find_executable(executable, path=None):

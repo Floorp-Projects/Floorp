@@ -8,7 +8,6 @@
 
 #include "mozHunspellRLBoxHost.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Try.h"
 #include "nsContentUtils.h"
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"

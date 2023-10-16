@@ -11,14 +11,7 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window,
- InstrumentedProps=(cancelVideoFrameCallback,
-                    disablePictureInPicture,
-                    onenterpictureinpicture,
-                    onleavepictureinpicture,
-                    playsInline,
-                    requestPictureInPicture,
-                    requestVideoFrameCallback)]
+[Exposed=Window]
 interface HTMLVideoElement : HTMLMediaElement {
   [HTMLConstructor] constructor();
 

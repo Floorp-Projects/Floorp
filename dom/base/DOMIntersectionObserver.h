@@ -185,7 +185,7 @@ class DOMIntersectionObserver final : public nsISupports,
   Variant<RefPtr<dom::IntersectionCallback>, NativeCallback> mCallback;
   RefPtr<nsINode> mRoot;
   StyleRect<LengthPercentage> mRootMargin;
-  AutoTArray<double, 1> mThresholds;
+  nsTArray<double> mThresholds;
 
   // These hold raw pointers which are explicitly cleared by UnlinkTarget().
   //
@@ -195,7 +195,7 @@ class DOMIntersectionObserver final : public nsISupports,
   nsTHashSet<Element*> mObservationTargetSet;
 
   nsTArray<RefPtr<DOMIntersectionObserverEntry>> mQueuedEntries;
-  bool mConnected = false;
+  bool mConnected;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMIntersectionObserver,

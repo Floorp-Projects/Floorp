@@ -252,13 +252,6 @@ TimeDelta VCMTiming::TargetDelayInternal() const {
                   jitter_delay_ + EstimatedMaxDecodeTime() + render_delay_);
 }
 
-// TODO(crbug.com/webrtc/15197): Centralize delay arithmetic.
-TimeDelta VCMTiming::StatsTargetDelayInternal() const {
-  TimeDelta stats_target_delay =
-      TargetDelayInternal() - (EstimatedMaxDecodeTime() + render_delay_);
-  return std::max(TimeDelta::Zero(), stats_target_delay);
-}
-
 VideoFrame::RenderParameters VCMTiming::RenderParameters() const {
   MutexLock lock(&mutex_);
   return {.use_low_latency_rendering = UseLowLatencyRendering(),
@@ -278,12 +271,12 @@ VCMTiming::VideoDelayTimings VCMTiming::GetTimings() const {
   MutexLock lock(&mutex_);
   return VideoDelayTimings{
       .num_decoded_frames = num_decoded_frames_,
-      .minimum_delay = jitter_delay_,
+      .jitter_delay = jitter_delay_,
       .estimated_max_decode_time = EstimatedMaxDecodeTime(),
       .render_delay = render_delay_,
       .min_playout_delay = min_playout_delay_,
       .max_playout_delay = max_playout_delay_,
-      .target_delay = StatsTargetDelayInternal(),
+      .target_delay = TargetDelayInternal(),
       .current_delay = current_delay_};
 }
 

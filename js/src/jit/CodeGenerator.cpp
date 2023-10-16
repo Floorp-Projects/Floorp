@@ -542,15 +542,6 @@ void CodeGenerator::visitOutOfLineCallVM(
     OutOfLineCallVM<Fn, fn, ArgSeq, StoreOutputTo>* ool) {
   LInstruction* lir = ool->lir();
 
-#ifdef JS_JITSPEW
-  JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
-               lir->opName());
-  if (const char* extra = lir->getExtraName()) {
-    JitSpewCont(JitSpew_Codegen, ":%s", extra);
-  }
-  JitSpewFin(JitSpew_Codegen);
-#endif
-  perfSpewer_.recordInstruction(masm, lir);
   saveLive(lir);
   ool->args().generate(this);
   callVM<Fn, fn>(lir);
@@ -944,26 +935,6 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       callVM<Fn, IonCloseIterIC::update>(lir);
 
       restoreLive(lir);
-
-      masm.jump(ool->rejoin());
-      return;
-    }
-    case CacheKind::OptimizeGetIterator: {
-      auto* optimizeGetIteratorIC = ic->asOptimizeGetIteratorIC();
-
-      saveLive(lir);
-
-      pushArg(optimizeGetIteratorIC->value());
-      icInfo_[cacheInfoIndex].icOffsetForPush = pushArgWithPatch(ImmWord(-1));
-      pushArg(ImmGCPtr(gen->outerInfo().script()));
-
-      using Fn = bool (*)(JSContext*, HandleScript, IonOptimizeGetIteratorIC*,
-                          HandleValue, bool* res);
-      callVM<Fn, IonOptimizeGetIteratorIC::update>(lir);
-
-      StoreRegisterTo(optimizeGetIteratorIC->output()).generate(this);
-      restoreLiveIgnore(
-          lir, StoreRegisterTo(optimizeGetIteratorIC->output()).clobbered());
 
       masm.jump(ool->rejoin());
       return;
@@ -7070,8 +7041,8 @@ struct ScriptCountBlockState {
   ~ScriptCountBlockState() {
     masm.setPrinter(nullptr);
 
-    if (JS::UniqueChars str = printer.release()) {
-      block.setCode(str.get());
+    if (!printer.hadOutOfMemory()) {
+      block.setCode(printer.string());
     }
   }
 };
@@ -9107,15 +9078,13 @@ void CodeGenerator::visitWasmCallIndirectAdjunctSafepoint(
 
 template <typename InstructionWithMaybeTrapSite>
 void EmitSignalNullCheckTrapSite(MacroAssembler& masm,
-                                 InstructionWithMaybeTrapSite* ins,
-                                 FaultingCodeOffset fco,
-                                 wasm::TrapMachineInsn tmi) {
+                                 InstructionWithMaybeTrapSite* ins) {
   if (!ins->maybeTrap()) {
     return;
   }
   wasm::BytecodeOffset trapOffset(ins->maybeTrap()->offset);
   masm.append(wasm::Trap::NullPointerDereference,
-              wasm::TrapSite(tmi, fco, trapOffset));
+              wasm::TrapSite(masm.currentOffset(), trapOffset));
 }
 
 void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
@@ -9125,34 +9094,24 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
   Address addr(container, ins->offset());
   AnyRegister dst = ToAnyRegister(ins->output());
 
-  FaultingCodeOffset fco;
+  EmitSignalNullCheckTrapSite(masm, ins);
   switch (type) {
     case MIRType::Int32:
       switch (wideningOp) {
         case MWideningOp::None:
-          fco = masm.load32(addr, dst.gpr());
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Load32);
+          masm.load32(addr, dst.gpr());
           break;
         case MWideningOp::FromU16:
-          fco = masm.load16ZeroExtend(addr, dst.gpr());
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Load16);
+          masm.load16ZeroExtend(addr, dst.gpr());
           break;
         case MWideningOp::FromS16:
-          fco = masm.load16SignExtend(addr, dst.gpr());
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Load16);
+          masm.load16SignExtend(addr, dst.gpr());
           break;
         case MWideningOp::FromU8:
-          fco = masm.load8ZeroExtend(addr, dst.gpr());
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Load8);
+          masm.load8ZeroExtend(addr, dst.gpr());
           break;
         case MWideningOp::FromS8:
-          fco = masm.load8SignExtend(addr, dst.gpr());
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Load8);
+          masm.load8SignExtend(addr, dst.gpr());
           break;
         default:
           MOZ_CRASH("unexpected widening op in ::visitWasmLoadSlot");
@@ -9160,29 +9119,21 @@ void CodeGenerator::visitWasmLoadSlot(LWasmLoadSlot* ins) {
       break;
     case MIRType::Float32:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      fco = masm.loadFloat32(addr, dst.fpu());
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Load32);
+      masm.loadFloat32(addr, dst.fpu());
       break;
     case MIRType::Double:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      fco = masm.loadDouble(addr, dst.fpu());
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Load64);
+      masm.loadDouble(addr, dst.fpu());
       break;
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      fco = masm.loadPtr(addr, dst.gpr());
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsnForLoadWord());
+      masm.loadPtr(addr, dst.gpr());
       break;
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
-      fco = masm.loadUnalignedSimd128(addr, dst.fpu());
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Load128);
+      masm.loadUnalignedSimd128(addr, dst.fpu());
       break;
 #endif
     default:
@@ -9200,38 +9151,28 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
     MOZ_RELEASE_ASSERT(narrowingOp == MNarrowingOp::None);
   }
 
-  FaultingCodeOffset fco;
+  EmitSignalNullCheckTrapSite(masm, ins);
   switch (type) {
     case MIRType::Int32:
       switch (narrowingOp) {
         case MNarrowingOp::None:
-          fco = masm.store32(src.gpr(), addr);
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Store32);
+          masm.store32(src.gpr(), addr);
           break;
         case MNarrowingOp::To16:
-          fco = masm.store16(src.gpr(), addr);
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Store16);
+          masm.store16(src.gpr(), addr);
           break;
         case MNarrowingOp::To8:
-          fco = masm.store8(src.gpr(), addr);
-          EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                      wasm::TrapMachineInsn::Store8);
+          masm.store8(src.gpr(), addr);
           break;
         default:
           MOZ_CRASH();
       }
       break;
     case MIRType::Float32:
-      fco = masm.storeFloat32(src.fpu(), addr);
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Store32);
+      masm.storeFloat32(src.fpu(), addr);
       break;
     case MIRType::Double:
-      fco = masm.storeDouble(src.fpu(), addr);
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Store64);
+      masm.storeDouble(src.fpu(), addr);
       break;
     case MIRType::Pointer:
       // This could be correct, but it would be a new usage, so check carefully.
@@ -9240,9 +9181,7 @@ void CodeGenerator::visitWasmStoreSlot(LWasmStoreSlot* ins) {
       MOZ_CRASH("Bad type in visitWasmStoreSlot. Use LWasmStoreRef.");
 #ifdef ENABLE_WASM_SIMD
     case MIRType::Simd128:
-      fco = masm.storeUnalignedSimd128(src.fpu(), addr);
-      EmitSignalNullCheckTrapSite(masm, ins, fco,
-                                  wasm::TrapMachineInsn::Store128);
+      masm.storeUnalignedSimd128(src.fpu(), addr);
       break;
 #endif
     default:
@@ -9286,9 +9225,8 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
     masm.bind(&skipPreBarrier);
   }
 
-  FaultingCodeOffset fco = masm.storePtr(value, Address(valueBase, offset));
-  EmitSignalNullCheckTrapSite(masm, ins, fco,
-                              wasm::TrapMachineInsnForStoreWord());
+  EmitSignalNullCheckTrapSite(masm, ins);
+  masm.storePtr(value, Address(valueBase, offset));
   // The postbarrier is handled separately.
 }
 
@@ -9363,37 +9301,16 @@ void CodeGenerator::visitWasmLoadSlotI64(LWasmLoadSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 output = ToOutRegister64(ins);
-  // Either 1 or 2 words.  On a 32-bit target, it is hard to argue that one
-  // transaction will always trap before the other, so it seems safest to
-  // register both of them as potentially trapping.
-#ifdef JS_64BIT
-  FaultingCodeOffset fco = masm.load64(addr, output);
-  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Load64);
-#else
-  FaultingCodeOffsetPair fcop = masm.load64(addr, output);
-  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
-                              wasm::TrapMachineInsn::Load32);
-  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
-                              wasm::TrapMachineInsn::Load32);
-#endif
+  EmitSignalNullCheckTrapSite(masm, ins);
+  masm.load64(addr, output);
 }
 
 void CodeGenerator::visitWasmStoreSlotI64(LWasmStoreSlotI64* ins) {
   Register container = ToRegister(ins->containerRef());
   Address addr(container, ins->offset());
   Register64 value = ToRegister64(ins->value());
-  // Either 1 or 2 words.  As above we register both transactions in the
-  // 2-word case.
-#ifdef JS_64BIT
-  FaultingCodeOffset fco = masm.store64(value, addr);
-  EmitSignalNullCheckTrapSite(masm, ins, fco, wasm::TrapMachineInsn::Store64);
-#else
-  FaultingCodeOffsetPair fcop = masm.store64(value, addr);
-  EmitSignalNullCheckTrapSite(masm, ins, fcop.first,
-                              wasm::TrapMachineInsn::Store32);
-  EmitSignalNullCheckTrapSite(masm, ins, fcop.second,
-                              wasm::TrapMachineInsn::Store32);
-#endif
+  EmitSignalNullCheckTrapSite(masm, ins);
+  masm.store64(value, addr);
 }
 
 void CodeGenerator::visitArrayBufferByteLength(LArrayBufferByteLength* lir) {
@@ -13766,17 +13683,6 @@ void CodeGenerator::visitCloseIterCache(LCloseIterCache* lir) {
   addIC(lir, allocateIC(ic));
 }
 
-void CodeGenerator::visitOptimizeGetIteratorCache(
-    LOptimizeGetIteratorCache* lir) {
-  LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
-  ValueOperand val = ToValue(lir, LOptimizeGetIteratorCache::ValueIndex);
-  Register output = ToRegister(lir->output());
-  Register temp = ToRegister(lir->temp0());
-
-  IonOptimizeGetIteratorIC ic(liveRegs, val, output, temp);
-  addIC(lir, allocateIC(ic));
-}
-
 void CodeGenerator::visitIteratorMore(LIteratorMore* lir) {
   const Register obj = ToRegister(lir->iterator());
   const ValueOperand output = ToOutValue(lir);
@@ -17685,16 +17591,6 @@ void CodeGenerator::visitWasmBoundsCheck64(LWasmBoundsCheck64* ins) {
     masm.wasmBoundsCheck64(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
                            ool->entry());
   }
-}
-
-void CodeGenerator::visitWasmBoundsCheckRange32(LWasmBoundsCheckRange32* ins) {
-  const MWasmBoundsCheckRange32* mir = ins->mir();
-  Register index = ToRegister(ins->index());
-  Register length = ToRegister(ins->length());
-  Register limit = ToRegister(ins->limit());
-  Register tmp = ToRegister(ins->temp0());
-
-  masm.wasmBoundsCheckRange32(index, length, limit, tmp, mir->bytecodeOffset());
 }
 
 void CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins) {

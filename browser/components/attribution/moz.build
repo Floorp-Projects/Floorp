@@ -13,11 +13,26 @@ BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 EXTRA_JS_MODULES += [
     "AttributionCode.sys.mjs",
+    "ProvenanceData.sys.mjs",
 ]
 
 SPHINX_TREES["docs"] = "docs"
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    XPIDL_SOURCES += [
+        "nsIMacAttribution.idl",
+    ]
+
+    XPIDL_MODULE = "attribution"
+
+    EXPORTS += [
+        "nsMacAttribution.h",
+    ]
+
+    SOURCES += [
+        "nsMacAttribution.cpp",
+    ]
+
     FINAL_LIBRARY = "browsercomps"
 
     EXTRA_JS_MODULES += [

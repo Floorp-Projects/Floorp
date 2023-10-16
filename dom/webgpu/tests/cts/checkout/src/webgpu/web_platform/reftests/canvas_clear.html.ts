@@ -1,6 +1,6 @@
 import { runRefTest } from './gpu_ref_test.js';
 
-runRefTest(t => {
+runRefTest(async t => {
   function draw(canvasId: string, format: GPUTextureFormat) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
 

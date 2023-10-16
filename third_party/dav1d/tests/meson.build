@@ -35,7 +35,6 @@ if is_asm_enabled
     checkasm_sources = files(
         'checkasm/checkasm.c',
         'checkasm/msac.c',
-        'checkasm/pal.c',
         'checkasm/refmvs.c',
     )
 

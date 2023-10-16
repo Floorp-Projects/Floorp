@@ -852,7 +852,7 @@ nsCSPContext::SetRequestContextWithDocument(Document* aDocument) {
   mQueueUpMessages = !mInnerWindowID;
   mCallingChannelLoadGroup = aDocument->GetDocumentLoadGroup();
   // set the flag on the document for CSP telemetry
-  mEventTarget = GetMainThreadSerialEventTarget();
+  mEventTarget = aDocument->EventTargetFor(TaskCategory::Other);
 
   MOZ_ASSERT(mLoadingPrincipal, "need a valid requestPrincipal");
   MOZ_ASSERT(mSelfURI, "need mSelfURI to translate 'self' into actual URI");

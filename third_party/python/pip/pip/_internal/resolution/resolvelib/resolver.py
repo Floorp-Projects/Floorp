@@ -88,9 +88,9 @@ class Resolver(BaseResolver):
         )
 
         try:
-            limit_how_complex_resolution_can_be = 200000
+            try_to_avoid_resolution_too_deep = 2000000
             result = self._result = resolver.resolve(
-                collected.requirements, max_rounds=limit_how_complex_resolution_can_be
+                collected.requirements, max_rounds=try_to_avoid_resolution_too_deep
             )
 
         except ResolutionImpossible as e:
@@ -159,9 +159,6 @@ class Resolver(BaseResolver):
 
         reqs = req_set.all_requirements
         self.factory.preparer.prepare_linked_requirements_more(reqs)
-        for req in reqs:
-            req.prepared = True
-            req.needs_more_preparation = False
         return req_set
 
     def get_installation_order(

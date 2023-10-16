@@ -7,10 +7,9 @@ Equivalent tests for setBindGroup and setPipeline are in programmable/state_trac
 Equivalent tests for viewport/scissor/blend/reference are in render/dynamic_state.spec.ts
 `;
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { GPUTest, TextureTestMixin } from '../../../../gpu_test.js';
-import { TexelView } from '../../../../util/texture/texel_view.js';
+import { GPUTest } from '../../../../gpu_test.js';
 
-class VertexAndIndexStateTrackingTest extends TextureTestMixin(GPUTest) {
+class VertexAndIndexStateTrackingTest extends GPUTest {
   GetRenderPipelineForTest(arrayStride) {
     return this.device.createRenderPipeline({
       layout: 'auto',
@@ -85,7 +84,7 @@ g.test('set_index_buffer_without_changing_buffer')
   orders still keeps the correctness of each draw call.
 `
   )
-  .fn(t => {
+  .fn(async t => {
     // Initialize the index buffer with 5 uint16 indices (0, 1, 2, 3, 4).
     const indexBuffer = t.makeBufferWithContents(
       new Uint16Array([0, 1, 2, 3, 4]),
@@ -132,10 +131,9 @@ g.test('set_index_buffer_without_changing_buffer')
 
     const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
-    const outputTextureSize = [kPositions.length - 1, 1, 1];
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
-      size: outputTextureSize,
+      size: [kPositions.length - 1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -174,14 +172,15 @@ g.test('set_index_buffer_without_changing_buffer')
     renderPass.end();
     t.queue.submit([encoder.finish()]);
 
-    t.expectTexelViewComparisonIsOkInTexture(
-      { texture: outputTexture },
-      TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
-        coord.x === 1 ? kColors[kPositions.length - 1] : kColors[coord.x]
-      ),
-
-      outputTextureSize
-    );
+    for (let i = 0; i < kPositions.length - 1; ++i) {
+      const expectedColor = i === 1 ? kColors[kPositions.length - 1] : kColors[i];
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: expectedColor }
+      );
+    }
   });
 
 g.test('set_vertex_buffer_without_changing_buffer')
@@ -193,7 +192,7 @@ g.test('set_vertex_buffer_without_changing_buffer')
     in all 4 output pixels, and check they were drawn correctly.
 `
   )
-  .fn(t => {
+  .fn(async t => {
     const kPositions = [-0.875, -0.625, -0.375, -0.125, 0.125, 0.375, 0.625, 0.875];
     const kColors = [
       new Uint8Array([255, 0, 0, 255]),
@@ -227,10 +226,9 @@ g.test('set_vertex_buffer_without_changing_buffer')
 
     const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
-    const outputTextureSize = [kPositions.length, 1, 1];
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
-      size: outputTextureSize,
+      size: [kPositions.length, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -282,11 +280,14 @@ g.test('set_vertex_buffer_without_changing_buffer')
     renderPass.end();
     t.queue.submit([encoder.finish()]);
 
-    t.expectTexelViewComparisonIsOkInTexture(
-      { texture: outputTexture },
-      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
-      outputTextureSize
-    );
+    for (let i = 0; i < kPositions.length; ++i) {
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: kColors[i] }
+      );
+    }
   });
 
 g.test('change_pipeline_before_and_after_vertex_buffer')
@@ -297,7 +298,7 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
   pipeline.)
 `
   )
-  .fn(t => {
+  .fn(async t => {
     const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, 0.9];
     const kColors = [
       new Uint8Array([255, 0, 0, 255]),
@@ -331,10 +332,9 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
     const renderPipeline2 = t.GetRenderPipelineForTest(t.kVertexAttributeSize * 2);
 
     const kPointsCount = kPositions.length - 1;
-    const outputTextureSize = [kPointsCount, 1, 1];
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
-      size: outputTextureSize,
+      size: [kPointsCount, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -367,14 +367,15 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
 
     t.queue.submit([encoder.finish()]);
 
-    t.expectTexelViewComparisonIsOkInTexture(
-      { texture: outputTexture },
-      TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
-        coord.x === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[coord.x]
-      ),
-
-      outputTextureSize
-    );
+    for (let i = 0; i < kPointsCount; ++i) {
+      const expectedColor = i === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[i];
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: expectedColor }
+      );
+    }
   });
 
 g.test('set_vertex_buffer_but_not_used_in_draw')
@@ -387,7 +388,7 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
     two draw calls work correctly.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const kPositions = new Float32Array([-0.75, -0.25]);
     const kColors = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]);
 
@@ -508,7 +509,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
     });
 
     const kPointsCount = 4;
-    const outputTextureSize = [kPointsCount, 1, 1];
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [kPointsCount, 1, 1],
@@ -546,11 +546,14 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
       kColors.subarray(4),
     ];
 
-    t.expectTexelViewComparisonIsOkInTexture(
-      { texture: outputTexture },
-      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kExpectedColors[coord.x]),
-      outputTextureSize
-    );
+    for (let i = 0; i < kPointsCount; ++i) {
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: kExpectedColors[i] }
+      );
+    }
   });
 
 g.test('set_index_buffer_before_non_indexed_draw')
@@ -559,7 +562,7 @@ g.test('set_index_buffer_before_non_indexed_draw')
   Test that setting / not setting the index buffer does not impact a non-indexed draw.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const kPositions = [-0.75, -0.25, 0.25, 0.75];
     const kColors = [
       new Uint8Array([255, 0, 0, 255]),
@@ -591,7 +594,6 @@ g.test('set_index_buffer_before_non_indexed_draw')
     const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
     const kPointsCount = 4;
-    const outputTextureSize = [kPointsCount, 1, 1];
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [kPointsCount, 1, 1],
@@ -623,9 +625,12 @@ g.test('set_index_buffer_before_non_indexed_draw')
 
     t.queue.submit([encoder.finish()]);
 
-    t.expectTexelViewComparisonIsOkInTexture(
-      { texture: outputTexture },
-      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
-      outputTextureSize
-    );
+    for (let i = 0; i < kPointsCount; ++i) {
+      t.expectSinglePixelIn2DTexture(
+        outputTexture,
+        'rgba8unorm',
+        { x: i, y: 0 },
+        { exp: kColors[i] }
+      );
+    }
   });

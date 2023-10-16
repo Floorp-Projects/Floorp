@@ -51,10 +51,9 @@ var TEST_CASES = [
 
       const context = offscreenCanvas.getContext("2d");
 
-      context.fillStyle = "#EE2222";
+      // Draw a red rectangle
+      context.fillStyle = "red";
       context.fillRect(0, 0, 100, 100);
-      context.fillStyle = "#2222EE";
-      context.fillRect(20, 20, 100, 100);
 
       const imageData = context.getImageData(0, 0, 100, 100);
 
@@ -62,9 +61,9 @@ var TEST_CASES = [
 
       return [imageData.data, imageDataSecond.data];
     },
-    isDataRandomized(name, data1, data2, isCompareOriginal) {
-      let diffCnt = countDifferencesInUint8Arrays(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
+    isDataRandomized(data1, data2, isCompareOriginal) {
+      let diffCnt = compareUint8Arrays(data1, data2);
+      info(`There are ${diffCnt} bits are different.`);
 
       // The Canvas randomization adds at most 512 bits noise to the image data.
       // We compare the image data arrays to see if they are different and the
@@ -90,10 +89,8 @@ var TEST_CASES = [
       const context = offscreenCanvas.getContext("2d");
 
       // Draw a red rectangle
-      context.fillStyle = "#EE2222";
+      context.fillStyle = "red";
       context.fillRect(0, 0, 100, 100);
-      context.fillStyle = "#2222EE";
-      context.fillRect(20, 20, 100, 100);
 
       let blob = await offscreenCanvas.convertToBlob();
 
@@ -117,10 +114,8 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
+    isDataRandomized(data1, data2) {
+      return compareArrayBuffer(data1, data2);
     },
   },
   {
@@ -130,15 +125,16 @@ var TEST_CASES = [
 
       const context = offscreenCanvas.getContext("webgl");
 
+      // Draw a blue rectangle
       context.enable(context.SCISSOR_TEST);
-      context.scissor(0, 0, 100, 100);
-      context.clearColor(1, 0.2, 0.2, 1);
+      context.scissor(0, 150, 150, 150);
+      context.clearColor(1, 0, 0, 1);
       context.clear(context.COLOR_BUFFER_BIT);
-      context.scissor(15, 15, 30, 15);
-      context.clearColor(0.2, 1, 0.2, 1);
+      context.scissor(150, 150, 300, 150);
+      context.clearColor(0, 1, 0, 1);
       context.clear(context.COLOR_BUFFER_BIT);
-      context.scissor(50, 50, 15, 15);
-      context.clearColor(0.2, 0.2, 1, 1);
+      context.scissor(0, 0, 150, 150);
+      context.clearColor(0, 0, 1, 1);
       context.clear(context.COLOR_BUFFER_BIT);
 
       let blob = await offscreenCanvas.convertToBlob();
@@ -163,10 +159,8 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
+    isDataRandomized(data1, data2) {
+      return compareArrayBuffer(data1, data2);
     },
   },
   {
@@ -177,10 +171,8 @@ var TEST_CASES = [
       const context = offscreenCanvas.getContext("2d");
 
       // Draw a red rectangle
-      context.fillStyle = "#EE2222";
+      context.fillStyle = "red";
       context.fillRect(0, 0, 100, 100);
-      context.fillStyle = "#2222EE";
-      context.fillRect(20, 20, 100, 100);
 
       const bitmapCanvas = new OffscreenCanvas(100, 100);
 
@@ -210,10 +202,8 @@ var TEST_CASES = [
 
       return [data, dataSecond];
     },
-    isDataRandomized(name, data1, data2) {
-      let diffCnt = countDifferencesInArrayBuffers(data1, data2);
-      info(`For ${name} there are ${diffCnt} bits are different.`);
-      return diffCnt > 0;
+    isDataRandomized(data1, data2) {
+      return compareArrayBuffer(data1, data2);
     },
   },
 ];
@@ -254,18 +244,16 @@ async function runTest(enabled) {
       test.extractCanvasData
     );
 
-    let result = test.isDataRandomized(test.name, data[0], test.originalData);
+    let result = test.isDataRandomized(data[0], test.originalData);
     is(
       result,
       enabled,
-      `The image data for for '${test.name}' is ${
-        enabled ? "randomized" : "the same"
-      }.`
+      `The image data is ${enabled ? "randomized" : "the same"}.`
     );
 
     ok(
-      !test.isDataRandomized(test.name, data[0], data[1]),
-      `The data for '${test.name}' of first and second access should be the same.`
+      !test.isDataRandomized(data[0], data[1]),
+      "The data of first and second access should be the same."
     );
 
     let privateData = await await runFunctionInWorker(
@@ -274,34 +262,25 @@ async function runTest(enabled) {
     );
 
     // Check if we add noise to canvas data in private windows.
-    result = test.isDataRandomized(
-      test.name,
-      privateData[0],
-      test.originalData,
-      true
-    );
+    result = test.isDataRandomized(privateData[0], test.originalData, true);
     is(
       result,
       enabled,
-      `The private image data for '${test.name}' is ${
-        enabled ? "randomized" : "the same"
-      }.`
+      `The private image data is ${enabled ? "randomized" : "the same"}.`
     );
 
     ok(
-      !test.isDataRandomized(test.name, privateData[0], privateData[1]),
-      `"The data for '${test.name}' of first and second access should be the same.`
+      !test.isDataRandomized(privateData[0], privateData[1]),
+      "The data of first and second access should be the same."
     );
 
     // Make sure the noises are different between normal window and private
     // windows.
-    result = test.isDataRandomized(test.name, privateData[0], data[0]);
+    result = test.isDataRandomized(privateData[0], data[0]);
     is(
       result,
       enabled,
-      `The image data for '${
-        test.name
-      }' between the normal window and the private window are ${
+      `The image data between the normal window and the private window are ${
         enabled ? "different" : "the same"
       }.`
     );

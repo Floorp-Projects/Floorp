@@ -39,7 +39,7 @@ DebuggerNotificationObserver::Constructor(GlobalObject& aGlobal,
 
 DebuggerNotificationObserver::DebuggerNotificationObserver(
     nsIGlobalObject* aOwnerGlobal)
-    : mOwnerGlobal(aOwnerGlobal) {}
+    : mEventListenerCallbacks(), mOwnerGlobal(aOwnerGlobal) {}
 
 JSObject* DebuggerNotificationObserver::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

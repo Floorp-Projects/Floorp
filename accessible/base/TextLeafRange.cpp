@@ -31,12 +31,11 @@
 #include "nsStyleStructInlines.h"
 #include "nsTArray.h"
 #include "nsTextFrame.h"
-#include "nsUnicharUtils.h"
+#include "nsUnicodeProperties.h"
 #include "Pivot.h"
 #include "TextAttrs.h"
 
 using mozilla::intl::WordBreaker;
-using FindWordOptions = mozilla::intl::WordBreaker::FindWordOptions;
 
 namespace mozilla::a11y {
 
@@ -301,7 +300,30 @@ static WordBreakClass GetWordBreakClass(char16_t aChar) {
     default:
       break;
   }
-  return mozilla::IsPunctuationForWordSelect(aChar) ? eWbcPunct : eWbcOther;
+  // Based on ClusterIterator::IsPunctuation in
+  // layout/generic/nsTextFrame.cpp.
+  uint8_t cat = unicode::GetGeneralCategory(aChar);
+  switch (cat) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+      if (aChar == '_' &&
+          !StaticPrefs::layout_word_select_stop_at_underscore()) {
+        return eWbcOther;
+      }
+      [[fallthrough]];
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
+      return eWbcPunct;
+    default:
+      break;
+  }
+  return eWbcOther;
 }
 
 /**
@@ -827,23 +849,11 @@ TextLeafPoint TextLeafPoint::FindPrevWordStartSameAcc(
   if (mOffset == 0) {
     word.mBegin = 0;
   } else if (mOffset == static_cast<int32_t>(text.Length())) {
-    word = WordBreaker::FindWord(
-        text, mOffset - 1,
-        StaticPrefs::layout_word_select_stop_at_punctuation()
-            ? FindWordOptions::StopAtPunctuation
-            : FindWordOptions::None);
+    word = WordBreaker::FindWord(text, mOffset - 1);
   } else {
-    word = WordBreaker::FindWord(
-        text, mOffset,
-        StaticPrefs::layout_word_select_stop_at_punctuation()
-            ? FindWordOptions::StopAtPunctuation
-            : FindWordOptions::None);
+    word = WordBreaker::FindWord(text, mOffset);
   }
-  for (;; word = WordBreaker::FindWord(
-              text, word.mBegin - 1,
-              StaticPrefs::layout_word_select_stop_at_punctuation()
-                  ? FindWordOptions::StopAtPunctuation
-                  : FindWordOptions::None)) {
+  for (;; word = WordBreaker::FindWord(text, word.mBegin - 1)) {
     if (!aIncludeOrigin && static_cast<int32_t>(word.mBegin) == mOffset) {
       // A word possibly starts at the origin, but the caller doesn't want this
       // included.
@@ -900,23 +910,12 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
   }
   // Keep walking forward until we find an acceptable word start.
   intl::WordBreakIteratorUtf16 wordBreakIter(text);
-  int32_t previousPos = wordStart;
   Maybe<uint32_t> nextBreak = wordBreakIter.Seek(wordStart);
   for (;;) {
     if (!nextBreak || *nextBreak == text.Length()) {
       if (lineStart) {
         // A line start always starts a new word.
         return lineStart;
-      }
-      if (StaticPrefs::layout_word_select_stop_at_punctuation()) {
-        // If layout.word_select.stop_at_punctuation is true, we have to look
-        // for punctuation class since it may not break state in UAX#29.
-        for (int32_t i = previousPos + 1;
-             i < static_cast<int32_t>(text.Length()); i++) {
-          if (IsAcceptableWordStart(mAcc, text, i)) {
-            return TextLeafPoint(mAcc, i);
-          }
-        }
       }
       return TextLeafPoint();
     }
@@ -928,17 +927,6 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     if (IsAcceptableWordStart(mAcc, text, wordStart)) {
       break;
     }
-
-    if (StaticPrefs::layout_word_select_stop_at_punctuation()) {
-      // If layout.word_select.stop_at_punctuation is true, we have to look
-      // for punctuation class since it may not break state in UAX#29.
-      for (int32_t i = previousPos + 1; i < wordStart; i++) {
-        if (IsAcceptableWordStart(mAcc, text, i)) {
-          return TextLeafPoint(mAcc, i);
-        }
-      }
-    }
-    previousPos = wordStart;
     nextBreak = wordBreakIter.Next();
   }
   return TextLeafPoint(mAcc, wordStart);

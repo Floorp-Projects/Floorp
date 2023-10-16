@@ -39,9 +39,6 @@ class SVGGraphicsElement : public SVGGraphicsElementBase, public SVGTests {
 
   using nsINode::Clone;
   // Overrides SVGTests.
-  bool PassesConditionalProcessingTests() const final {
-    return SVGTests::PassesConditionalProcessingTests();
-  }
   SVGElement* AsSVGElement() final { return this; }
 
  protected:

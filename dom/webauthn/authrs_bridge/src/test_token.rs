@@ -22,8 +22,8 @@ use authenticator::ctap2::{
     },
     preflight::CheckKeyHandle,
     server::{
-        AuthenticatorAttachment, PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity,
-        RelyingParty,
+        PublicKeyCredentialDescriptor, PublicKeyCredentialUserEntity, RelyingParty,
+        RelyingPartyWrapper,
     },
 };
 use authenticator::errors::{AuthenticatorError, CommandError, HIDError, U2FTokenError};
@@ -32,7 +32,7 @@ use authenticator::{FidoDevice, FidoDeviceIO, FidoProtocol, VirtualFidoDevice};
 use authenticator::{RegisterResult, SignResult, StatusUpdate};
 use base64::Engine;
 use moz_task::RunnableBuilder;
-use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_OK};
+use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_NOT_IMPLEMENTED, NS_OK};
 use nsstring::{nsACString, nsCString};
 use rand::{thread_rng, RngCore};
 use std::cell::{Ref, RefCell};
@@ -57,7 +57,7 @@ struct TestTokenCredential {
     user_handle: Vec<u8>,
     sign_count: AtomicU32,
     is_discoverable_credential: bool,
-    rp: RelyingParty,
+    rp: RelyingPartyWrapper,
 }
 
 impl TestTokenCredential {
@@ -102,7 +102,6 @@ impl TestTokenCredential {
 #[derive(Debug)]
 struct TestToken {
     protocol: FidoProtocol,
-    transport: String,
     versions: Vec<AuthenticatorVersion>,
     has_resident_key: bool,
     has_user_verification: bool,
@@ -118,7 +117,6 @@ struct TestToken {
 impl TestToken {
     fn new(
         versions: Vec<AuthenticatorVersion>,
-        transport: String,
         has_resident_key: bool,
         has_user_verification: bool,
         is_user_consenting: bool,
@@ -129,7 +127,6 @@ impl TestToken {
         Self {
             protocol: FidoProtocol::CTAP2,
             versions,
-            transport,
             has_resident_key,
             has_user_verification,
             is_user_consenting,
@@ -145,7 +142,7 @@ impl TestToken {
         &self,
         id: &[u8],
         privkey: &[u8],
-        rp: &RelyingParty,
+        rp_id: &RelyingPartyWrapper,
         is_discoverable_credential: bool,
         user_handle: &[u8],
         sign_count: u32,
@@ -153,7 +150,7 @@ impl TestToken {
         let c = TestTokenCredential {
             id: id.to_vec(),
             privkey: privkey.to_vec(),
-            rp: rp.clone(),
+            rp: rp_id.clone(),
             is_discoverable_credential,
             user_handle: user_handle.to_vec(),
             sign_count: AtomicU32::new(sign_count),
@@ -368,15 +365,8 @@ impl VirtualFidoDevice for TestToken {
         // (not applicable, we use pinUvAuthParam)
 
         // 9. User presence test
-        if effective_up_opt {
-            if self.is_user_consenting {
-                flags |= AuthenticatorDataFlags::USER_PRESENT;
-            } else {
-                return Err(HIDError::Command(CommandError::StatusCode(
-                    StatusCode::UpRequired,
-                    None,
-                )));
-            }
+        if self.is_user_consenting && effective_up_opt {
+            flags |= AuthenticatorDataFlags::USER_PRESENT;
         }
 
         // 10. Extensions
@@ -391,7 +381,6 @@ impl VirtualFidoDevice for TestToken {
                     let assertion = credential.assert(&req.client_data_hash, flags)?.into();
                     assertions.push(GetAssertionResult {
                         assertion,
-                        attachment: AuthenticatorAttachment::Unknown,
                         extensions: Default::default(),
                     });
                     break;
@@ -404,7 +393,6 @@ impl VirtualFidoDevice for TestToken {
                 let assertion = credential.assert(&req.client_data_hash, flags)?.into();
                 assertions.push(GetAssertionResult {
                     assertion,
-                    attachment: AuthenticatorAttachment::Unknown,
                     extensions: Default::default(),
                 });
             }
@@ -425,7 +413,6 @@ impl VirtualFidoDevice for TestToken {
         Ok(AuthenticatorInfo {
             versions: self.versions.clone(),
             options: AuthenticatorOptions {
-                platform_device: self.transport == "internal",
                 resident_key: self.has_resident_key,
                 pin_uv_auth_token: Some(self.has_user_verification),
                 user_verification: Some(self.has_user_verification),
@@ -519,25 +506,10 @@ impl VirtualFidoDevice for TestToken {
         // 14. User presence test
         if self.is_user_consenting {
             flags |= AuthenticatorDataFlags::USER_PRESENT;
-        } else {
-            return Err(HIDError::Command(CommandError::StatusCode(
-                StatusCode::UpRequired,
-                None,
-            )));
         }
 
         // 15. process extensions
-        let mut extensions = Extension::default();
-        if req.extensions.min_pin_length == Some(true) {
-            // a real authenticator would
-            //  1) return an actual minimum pin length, and
-            //  2) check the RP ID against an allowlist before providing any data
-            extensions.min_pin_length = Some(4);
-        }
-
-        if extensions.has_some() {
-            flags |= AuthenticatorDataFlags::EXTENSION_DATA;
-        }
+        // (not implemented)
 
         // 16. Generate a new credential.
         let (private, public) =
@@ -572,7 +544,7 @@ impl VirtualFidoDevice for TestToken {
                 credential_id: id.to_vec(),
                 credential_public_key: public,
             }),
-            extensions,
+            extensions: Extension::default(),
         };
 
         let mut data = auth_data.to_vec();
@@ -587,10 +559,9 @@ impl VirtualFidoDevice for TestToken {
         });
 
         let result = MakeCredentialsResult {
-            attachment: AuthenticatorAttachment::Unknown,
             att_obj: AttestationObject {
-                att_stmt,
                 auth_data,
+                att_stmt,
             },
             extensions: Default::default(),
         };
@@ -667,7 +638,6 @@ impl TestTokenManager {
     pub fn add_virtual_authenticator(
         &self,
         protocol: AuthenticatorVersion,
-        transport: String,
         has_resident_key: bool,
         has_user_verification: bool,
         is_user_consenting: bool,
@@ -676,7 +646,6 @@ impl TestTokenManager {
         let mut guard = self.state.lock().map_err(|_| NS_ERROR_FAILURE)?;
         let token = TestToken::new(
             vec![protocol],
-            transport,
             has_resident_key,
             has_user_verification,
             is_user_consenting,
@@ -718,11 +687,14 @@ impl TestTokenManager {
             .deref_mut()
             .get_mut(&authenticator_id)
             .ok_or(NS_ERROR_INVALID_ARG)?;
-        let rp = RelyingParty::from(rp_id);
+        let rp = RelyingParty {
+            id: rp_id,
+            name: None,
+        };
         token.insert_credential(
             id,
             privkey,
-            &rp,
+            &RelyingPartyWrapper::Data(rp),
             is_resident_credential,
             user_handle,
             sign_count,
@@ -742,10 +714,15 @@ impl TestTokenManager {
         let mut credentials_parameters = ThinVec::with_capacity(credentials.len());
         for credential in credentials.deref() {
             // CTAP1 credentials are not currently supported here.
+            let rp_id = credential
+                .rp
+                .id()
+                .map(|id| id.clone())
+                .ok_or(NS_ERROR_NOT_IMPLEMENTED)?;
             let credential_parameters = CredentialParameters::allocate(InitCredentialParameters {
                 credential_id: credential.id.clone(),
                 is_resident_credential: credential.is_discoverable_credential,
-                rp_id: credential.rp.id.clone(),
+                rp_id,
                 private_key: credential.privkey.clone(),
                 user_handle: credential.user_handle.clone(),
                 sign_count: credential.sign_count.load(Ordering::Relaxed),

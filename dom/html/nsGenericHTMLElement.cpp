@@ -652,47 +652,45 @@ constexpr PopoverAttributeState ToPopoverAttributeState(
 }  // namespace
 
 void nsGenericHTMLElement::AfterSetPopoverAttr() {
-  auto mapPopoverState = [](const nsAttrValue* value) -> PopoverAttributeState {
-    if (value) {
-      MOZ_ASSERT(value->Type() == nsAttrValue::eEnum);
+  const nsAttrValue* newValue = GetParsedAttr(nsGkAtoms::popover);
+
+  const PopoverAttributeState newState = [&newValue]() {
+    if (newValue) {
+      MOZ_ASSERT(newValue->Type() == nsAttrValue::eEnum);
       const auto popoverAttributeKeyword =
-          static_cast<PopoverAttributeKeyword>(value->GetEnumValue());
+          static_cast<PopoverAttributeKeyword>(newValue->GetEnumValue());
       return ToPopoverAttributeState(popoverAttributeKeyword);
     }
 
     // The missing value default is the no popover state, see
     // <https://html.spec.whatwg.org/multipage/popover.html#attr-popover>.
     return PopoverAttributeState::None;
-  };
-
-  PopoverAttributeState newState =
-      mapPopoverState(GetParsedAttr(nsGkAtoms::popover));
+  }();
 
   const PopoverAttributeState oldState = GetPopoverAttributeState();
 
   if (newState != oldState) {
-    PopoverPseudoStateUpdate(false, true);
+    EnsurePopoverData().SetPopoverAttributeState(newState);
 
-    if (IsPopoverOpen()) {
-      HidePopoverInternal(/* aFocusPreviousElement = */ true,
-                          /* aFireEvents = */ true, IgnoreErrors());
-      // Event handlers could have removed the popover attribute, or changed
-      // its value.
-      // https://github.com/whatwg/html/issues/9034
-      newState = mapPopoverState(GetParsedAttr(nsGkAtoms::popover));
-    }
+    HidePopoverInternal(/* aFocusPreviousElement = */ true,
+                        /* aFireEvents = */ true, IgnoreErrors());
 
-    if (newState == PopoverAttributeState::None) {
-      // HidePopoverInternal above could have removed the popover from the top
-      // layer.
-      if (GetPopoverData()) {
+    // In case `HidePopoverInternal` changed the state, keep the corresponding
+    // changes and don't overwrite anything here.
+    if (newState == GetPopoverAttributeState()) {
+      if (newState == PopoverAttributeState::None) {
+        // `HidePopoverInternal` above didn't remove the element from the top
+        // layer, because in that call, the element's popover attribute state
+        // was already `None`. Revisit this, when the spec is corrected
+        // (bug 1835811).
         OwnerDoc()->RemovePopoverFromTopLayer(*this);
+
+        ClearPopoverData();
+        RemoveStates(ElementState::POPOVER_OPEN);
+      } else {
+        // TODO: what if `HidePopoverInternal` called `ShowPopup()`?
+        PopoverPseudoStateUpdate(false, true);
       }
-      ClearPopoverData();
-      RemoveStates(ElementState::POPOVER_OPEN);
-    } else {
-      // TODO: what if `HidePopoverInternal` called `ShowPopup()`?
-      EnsurePopoverData().SetPopoverAttributeState(newState);
     }
   }
 }
@@ -1258,13 +1256,13 @@ static inline void MapLangAttributeInto(MappedDeclarationsBuilder& aBuilder) {
     const nsAtom* lang = langValue->GetAtomValue();
     if (nsStyleUtil::MatchesLanguagePrefix(lang, u"zh")) {
       aBuilder.SetKeywordValue(eCSSProperty_text_emphasis_position,
-                               StyleTextEmphasisPosition::UNDER._0);
+                               StyleTextEmphasisPosition::UNDER.bits);
     } else if (nsStyleUtil::MatchesLanguagePrefix(lang, u"ja") ||
                nsStyleUtil::MatchesLanguagePrefix(lang, u"mn")) {
       // This branch is currently no part of the spec.
       // See bug 1040668 comment 69 and comment 75.
       aBuilder.SetKeywordValue(eCSSProperty_text_emphasis_position,
-                               StyleTextEmphasisPosition::OVER._0);
+                               StyleTextEmphasisPosition::OVER.bits);
     }
   }
 }
@@ -3167,12 +3165,17 @@ bool nsGenericHTMLElement::PopoverOpen() const {
 bool nsGenericHTMLElement::CheckPopoverValidity(
     PopoverVisibilityState aExpectedState, Document* aExpectedDocument,
     ErrorResult& aRv) {
-  if (GetPopoverAttributeState() == PopoverAttributeState::None) {
+  const PopoverData* data = GetPopoverData();
+  if (!data ||
+      data->GetPopoverAttributeState() == PopoverAttributeState::None) {
+    MOZ_ASSERT(!HasAttr(nsGkAtoms::popover));
     aRv.ThrowNotSupportedError("Element is in the no popover state");
     return false;
   }
 
-  if (GetPopoverData()->GetPopoverVisibilityState() != aExpectedState) {
+  MOZ_ASSERT(HasAttr(nsGkAtoms::popover));
+
+  if (data->GetPopoverVisibilityState() != aExpectedState) {
     return false;
   }
 
@@ -3210,32 +3213,27 @@ void nsGenericHTMLElement::PopoverPseudoStateUpdate(bool aOpen, bool aNotify) {
   SetStates(ElementState::POPOVER_OPEN, aOpen, aNotify);
 }
 
-already_AddRefed<ToggleEvent> nsGenericHTMLElement::CreateToggleEvent(
-    const nsAString& aEventType, const nsAString& aOldState,
-    const nsAString& aNewState, Cancelable aCancelable) {
-  ToggleEventInit init;
-  init.mBubbles = false;
-  init.mOldState = aOldState;
-  init.mNewState = aNewState;
-  init.mCancelable = aCancelable == Cancelable::eYes;
-  RefPtr<ToggleEvent> event = ToggleEvent::Constructor(this, aEventType, init);
-  event->SetTrusted(true);
-  event->SetTarget(this);
-  return event.forget();
-}
-
 bool nsGenericHTMLElement::FireToggleEvent(PopoverVisibilityState aOldState,
                                            PopoverVisibilityState aNewState,
                                            const nsAString& aType) {
   auto stringForState = [](PopoverVisibilityState state) {
     return state == PopoverVisibilityState::Hidden ? u"closed"_ns : u"open"_ns;
   };
-  const auto cancelable = aType == u"beforetoggle"_ns &&
-                                  aNewState == PopoverVisibilityState::Showing
-                              ? Cancelable::eYes
-                              : Cancelable::eNo;
-  RefPtr event = CreateToggleEvent(aType, stringForState(aOldState),
-                                   stringForState(aNewState), cancelable);
+
+  ToggleEventInit init;
+  init.mBubbles = false;
+  init.mOldState = stringForState(aOldState);
+  init.mNewState = stringForState(aNewState);
+  if (aType == u"beforetoggle"_ns &&
+      aNewState == PopoverVisibilityState::Showing) {
+    init.mCancelable = true;
+  } else {
+    init.mCancelable = false;
+  }
+  RefPtr<ToggleEvent> event = ToggleEvent::Constructor(this, aType, init);
+  event->SetTrusted(true);
+  event->SetTarget(this);
+
   EventDispatcher::DispatchDOMEvent(this, nullptr, event, nullptr, nullptr);
   return event->DefaultPrevented();
 }
@@ -3253,7 +3251,8 @@ void nsGenericHTMLElement::QueuePopoverEventTask(
   auto task =
       MakeRefPtr<PopoverToggleEventTask>(do_GetWeakReference(this), aOldState);
   data->SetToggleEventTask(task);
-  OwnerDoc()->Dispatch(task.forget());
+
+  OwnerDoc()->Dispatch(TaskCategory::UI, task.forget());
 }
 
 void nsGenericHTMLElement::RunPopoverToggleEventTask(
@@ -3394,18 +3393,10 @@ void nsGenericHTMLElement::FocusPreviousElementAfterHidingPopover() {
     return;
   }
 
-  // Step 14.2 at
-  // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm
-  // If focusPreviousElement is true and document's focused area of the
-  // document's DOM anchor is a shadow-including inclusive descendant of
-  // element, then run the focusing steps for previouslyFocusedElement;
-  nsIContent* currentFocus = OwnerDoc()->GetUnretargetedFocusedContent();
-  if (currentFocus &&
-      currentFocus->IsShadowIncludingInclusiveDescendantOf(this)) {
-    FocusOptions options;
-    options.mPreventScroll = true;
-    control->Focus(options, CallerType::NonSystem, IgnoreErrors());
-  }
+  // Run the focusing steps for previouslyFocusedElement.
+  FocusOptions options;
+  options.mPreventScroll = true;
+  control->Focus(options, CallerType::NonSystem, IgnoreErrors());
 }
 
 // https://html.spec.whatwg.org/multipage/popover.html#dom-togglepopover

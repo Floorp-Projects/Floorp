@@ -22,7 +22,6 @@ XPIDL_SOURCES += [
     "nsIHttpHeaderVisitor.idl",
     "nsIHttpProtocolHandler.idl",
     "nsIObliviousHttp.idl",
-    "nsIObliviousHttpChannel.idl",
     "nsIRaceCacheWithNetwork.idl",
     "nsITlsHandshakeListener.idl",
     "nsIWellKnownOpportunisticUtils.idl",

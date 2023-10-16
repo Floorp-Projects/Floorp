@@ -21,10 +21,6 @@
 #include <cstring>
 #include <string>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten/console.h>
-#endif
-
 #include "absl/base/attributes.h"
 #include "absl/base/config.h"
 #include "absl/base/internal/atomic_hook.h"
@@ -76,7 +72,7 @@
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
-namespace raw_log_internal {
+namespace raw_logging_internal {
 namespace {
 
 // TODO(gfalcon): We want raw-logging to work on as many platforms as possible.
@@ -93,14 +89,12 @@ constexpr char kTruncated[] = " ... (message truncated)\n";
 bool VADoRawLog(char** buf, int* size, const char* format, va_list ap)
     ABSL_PRINTF_ATTRIBUTE(3, 0);
 bool VADoRawLog(char** buf, int* size, const char* format, va_list ap) {
-  if (*size < 0)
-    return false;
-  int n = vsnprintf(*buf, static_cast<size_t>(*size), format, ap);
+  int n = vsnprintf(*buf, *size, format, ap);
   bool result = true;
   if (n < 0 || n > *size) {
     result = false;
     if (static_cast<size_t>(*size) > sizeof(kTruncated)) {
-      n = *size - static_cast<int>(sizeof(kTruncated));
+      n = *size - sizeof(kTruncated);  // room for truncation message
     } else {
       n = 0;  // no room for truncation message
     }
@@ -122,11 +116,9 @@ constexpr int kLogBufSize = 3000;
 bool DoRawLog(char** buf, int* size, const char* format, ...)
     ABSL_PRINTF_ATTRIBUTE(3, 4);
 bool DoRawLog(char** buf, int* size, const char* format, ...) {
-  if (*size < 0)
-    return false;
   va_list ap;
   va_start(ap, format);
-  int n = vsnprintf(*buf, static_cast<size_t>(*size), format, ap);
+  int n = vsnprintf(*buf, *size, format, ap);
   va_end(ap);
   if (n < 0 || n > *size) return false;
   *size -= n;
@@ -177,7 +169,7 @@ void RawLogVA(absl::LogSeverity severity, const char* file, int line,
     } else {
       DoRawLog(&buf, &size, "%s", kTruncated);
     }
-    AsyncSignalSafeWriteError(buffer, strlen(buffer));
+    AsyncSignalSafeWriteToStderr(buffer, strlen(buffer));
   }
 #else
   static_cast<void>(format);
@@ -205,41 +197,16 @@ void DefaultInternalLog(absl::LogSeverity severity, const char* file, int line,
 
 }  // namespace
 
-void AsyncSignalSafeWriteError(const char* s, size_t len) {
-  if (!len) return;
+void AsyncSignalSafeWriteToStderr(const char* s, size_t len) {
   absl::base_internal::ErrnoSaver errno_saver;
-#if defined(__EMSCRIPTEN__)
-  // In WebAssembly, bypass filesystem emulation via fwrite.
-  if (s[len - 1] == '\n') {
-    // Skip a trailing newline character as emscripten_errn adds one itself.
-    len--;
-  }
-  // emscripten_errn was introduced in 3.1.41 but broken in standalone mode
-  // until 3.1.43.
-#if ABSL_INTERNAL_EMSCRIPTEN_VERSION >= 3001043
-  emscripten_errn(s, len);
-#else
-  char buf[kLogBufSize];
-  if (len >= kLogBufSize) {
-    len = kLogBufSize - 1;
-    constexpr size_t trunc_len = sizeof(kTruncated) - 2;
-    memcpy(buf + len - trunc_len, kTruncated, trunc_len);
-    buf[len] = '\0';
-    len -= trunc_len;
-  } else {
-    buf[len] = '\0';
-  }
-  memcpy(buf, s, len);
-  _emscripten_err(buf);
-#endif
-#elif defined(ABSL_HAVE_SYSCALL_WRITE)
+#if defined(ABSL_HAVE_SYSCALL_WRITE)
   // We prefer calling write via `syscall` to minimize the risk of libc doing
   // something "helpful".
   syscall(SYS_write, STDERR_FILENO, s, len);
 #elif defined(ABSL_HAVE_POSIX_WRITE)
   write(STDERR_FILENO, s, len);
 #elif defined(ABSL_HAVE_RAW_IO)
-  _write(/* stderr */ 2, s, static_cast<unsigned>(len));
+  _write(/* stderr */ 2, s, len);
 #else
   // stderr logging unsupported on this platform
   (void) s;
@@ -277,6 +244,6 @@ void RegisterInternalLogFunction(InternalLogFunction func) {
   internal_log_function.Store(func);
 }
 
-}  // namespace raw_log_internal
+}  // namespace raw_logging_internal
 ABSL_NAMESPACE_END
 }  // namespace absl

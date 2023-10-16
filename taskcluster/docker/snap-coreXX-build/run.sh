@@ -48,7 +48,7 @@ fi
 sudo apt-get update
 
 # shellcheck disable=SC2046
-sudo apt-get install -y $(/usr/bin/python3 /builds/worker/parse.py snapcraft.yaml)
+sudo apt-get install -y $(python3 /builds/worker/parse.py snapcraft.yaml)
 
 # CRAFT_PARTS_PACKAGE_REFRESH required to avoid snapcraft running apt-get update
 # especially for stage-packages
@@ -64,10 +64,7 @@ if [ "${TRY}" = "1" ]; then
 fi
 
 if [ "${DEBUG}" = "1" ]; then
-  {
-    echo "ac_add_options --enable-debug"
-    echo "ac_add_options --disable-install-strip"
-  } >> ${MOZCONFIG}
+  echo "ac_add_options --enable-debug" >> ${MOZCONFIG}
   echo "MOZ_DEBUG=1" >> ${MOZCONFIG}
 
   # No PGO on debug builds
@@ -81,10 +78,3 @@ SNAPCRAFT_BUILD_ENVIRONMENT_CPU=$(nproc) \
 CRAFT_PARTS_PACKAGE_REFRESH=0 \
   snapcraft --destructive-mode --verbose
 cp ./*.snap ./*.debug /builds/worker/artifacts/
-
-# Those are for fetches usage by the test task
-cp ./*.snap /builds/worker/artifacts/firefox.snap
-cp ./*.debug /builds/worker/artifacts/firefox.debug
-
-# Those are for running snap-upstream-test
-cd /builds/worker/checkouts/gecko/taskcluster/docker/snap-coreXX-build/snap-tests/ && zip -r9 /builds/worker/artifacts/snap-tests.zip ./*

@@ -858,7 +858,7 @@ NS_IMPL_ISUPPORTS(BackgroundFileSaverOutputStream, nsIBackgroundFileSaver,
                   nsIOutputStreamCallback)
 
 BackgroundFileSaverOutputStream::BackgroundFileSaverOutputStream()
-    : mAsyncWaitCallback(nullptr) {}
+    : BackgroundFileSaver(), mAsyncWaitCallback(nullptr) {}
 
 bool BackgroundFileSaverOutputStream::HasInfiniteBuffer() { return false; }
 

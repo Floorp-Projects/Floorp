@@ -135,7 +135,7 @@ void MediaTrackList::CreateAndDispatchTrackEventRunner(
       TrackEvent::Constructor(this, aEventName, eventInit);
 
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event.forget());
+      new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
 }
 

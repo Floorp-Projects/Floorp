@@ -62,12 +62,14 @@ VideoCaptureModuleV4L2::VideoCaptureModuleV4L2()
       _deviceId(-1),
       _deviceFd(-1),
       _buffersAllocatedByDevice(-1),
+      _currentWidth(-1),
+      _currentHeight(-1),
+      _currentFrameRate(-1),
       _captureStarted(false),
+      _captureVideoType(VideoType::kI420),
       _pool(NULL) {}
 
 int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   int len = strlen((const char*)deviceUniqueIdUTF8);
   _deviceUniqueId = new (std::nothrow) char[len + 1];
   if (_deviceUniqueId) {
@@ -109,8 +111,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8) {
 }
 
 VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   StopCapture();
   if (_deviceFd != -1)
     close(_deviceFd);
@@ -118,19 +118,15 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
 
 int32_t VideoCaptureModuleV4L2::StartCapture(
     const VideoCaptureCapability& capability) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   if (_captureStarted) {
-    if (capability == _requestedCapability) {
+    if (capability.width == _currentWidth &&
+        capability.height == _currentHeight &&
+        _captureVideoType == capability.videoType) {
       return 0;
     } else {
       StopCapture();
     }
   }
-
-  // Set a baseline of configured parameters. It is updated here during
-  // configuration, then read from the capture thread.
-  configured_capability_ = capability;
 
   MutexLock lock(&capture_lock_);
   // first open /dev/video device
@@ -201,32 +197,32 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   video_fmt.fmt.pix.pixelformat = fmts[fmtsIdx];
 
   if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV)
-    configured_capability_.videoType = VideoType::kYUY2;
+    _captureVideoType = VideoType::kYUY2;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YUV420)
-    configured_capability_.videoType = VideoType::kI420;
+    _captureVideoType = VideoType::kI420;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_YVU420)
-    configured_capability_.videoType = VideoType::kYV12;
+    _captureVideoType = VideoType::kYV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_UYVY)
-    configured_capability_.videoType = VideoType::kUYVY;
+    _captureVideoType = VideoType::kUYVY;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_NV12)
-    configured_capability_.videoType = VideoType::kNV12;
+    _captureVideoType = VideoType::kNV12;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_BGR24)
-    configured_capability_.videoType = VideoType::kRGB24;
+    _captureVideoType = VideoType::kRGB24;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB24)
-    configured_capability_.videoType = VideoType::kBGR24;
+    _captureVideoType = VideoType::kBGR24;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB565)
-    configured_capability_.videoType = VideoType::kRGB565;
+    _captureVideoType = VideoType::kRGB565;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_ABGR32 ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_BGR32)
-    configured_capability_.videoType = VideoType::kARGB;
+    _captureVideoType = VideoType::kARGB;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_ARGB32 ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGB32)
-    configured_capability_.videoType = VideoType::kBGRA;
+    _captureVideoType = VideoType::kBGRA;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_RGBA32)
-    configured_capability_.videoType = VideoType::kABGR;
+    _captureVideoType = VideoType::kABGR;
   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
-    configured_capability_.videoType = VideoType::kMJPEG;
+    _captureVideoType = VideoType::kMJPEG;
   else
     RTC_DCHECK_NOTREACHED();
 
@@ -237,8 +233,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
   }
 
   // initialize current width and height
-  configured_capability_.width = video_fmt.fmt.pix.width;
-  configured_capability_.height = video_fmt.fmt.pix.height;
+  _currentWidth = video_fmt.fmt.pix.width;
+  _currentHeight = video_fmt.fmt.pix.height;
 
   // Trying to set frame rate, before check driver capability.
   bool driver_framerate_support = true;
@@ -260,17 +256,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
       if (ioctl(_deviceFd, VIDIOC_S_PARM, &streamparms) < 0) {
         RTC_LOG(LS_INFO) << "Failed to set the framerate. errno=" << errno;
         driver_framerate_support = false;
+      } else {
+        _currentFrameRate = capability.maxFPS;
       }
     }
   }
   // If driver doesn't support framerate control, need to hardcode.
   // Hardcoding the value based on the frame size.
   if (!driver_framerate_support) {
-    if (configured_capability_.width >= 800 &&
-        configured_capability_.videoType != VideoType::kMJPEG) {
-      configured_capability_.maxFPS = 15;
+    if (_currentWidth >= 800 && _captureVideoType != VideoType::kMJPEG) {
+      _currentFrameRate = 15;
     } else {
-      configured_capability_.maxFPS = 30;
+      _currentFrameRate = 30;
     }
   }
 
@@ -278,17 +275,6 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
     RTC_LOG(LS_INFO) << "failed to allocate video capture buffers";
     return -1;
   }
-
-  // Needed to start UVC camera - from the uvcview application
-  enum v4l2_buf_type type;
-  type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
-    RTC_LOG(LS_INFO) << "Failed to turn on stream";
-    return -1;
-  }
-
-  _requestedCapability = capability;
-  _captureStarted = true;
 
   // start capture thread;
   if (_captureThread.empty()) {
@@ -301,12 +287,20 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
         "CaptureThread",
         rtc::ThreadAttributes().SetPriority(rtc::ThreadPriority::kHigh));
   }
+
+  // Needed to start UVC camera - from the uvcview application
+  enum v4l2_buf_type type;
+  type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl(_deviceFd, VIDIOC_STREAMON, &type) == -1) {
+    RTC_LOG(LS_INFO) << "Failed to turn on stream";
+    return -1;
+  }
+
+  _captureStarted = true;
   return 0;
 }
 
 int32_t VideoCaptureModuleV4L2::StopCapture() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   if (!_captureThread.empty()) {
     {
       MutexLock lock(&capture_lock_);
@@ -323,8 +317,6 @@ int32_t VideoCaptureModuleV4L2::StopCapture() {
     DeAllocateVideoBuffers();
     close(_deviceFd);
     _deviceFd = -1;
-
-    _requestedCapability = configured_capability_ = VideoCaptureCapability();
   }
 
   return 0;
@@ -404,7 +396,6 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
 }
 
 bool VideoCaptureModuleV4L2::CaptureProcess() {
-
   int retVal = 0;
   struct pollfd rSet;
 
@@ -445,10 +436,14 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
           return true;
         }
       }
+      VideoCaptureCapability frameInfo;
+      frameInfo.width = _currentWidth;
+      frameInfo.height = _currentHeight;
+      frameInfo.videoType = _captureVideoType;
 
       // convert to to I420 if needed
       IncomingFrame(reinterpret_cast<uint8_t*>(_pool[buf.index].start),
-                    buf.bytesused, configured_capability_);
+                    buf.bytesused, frameInfo);
       // enqueue the buffer again
       if (ioctl(_deviceFd, VIDIOC_QBUF, &buf) == -1) {
         RTC_LOG(LS_INFO) << "Failed to enqueue capture buffer";
@@ -461,8 +456,10 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
 
 int32_t VideoCaptureModuleV4L2::CaptureSettings(
     VideoCaptureCapability& settings) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-  settings = _requestedCapability;
+  settings.width = _currentWidth;
+  settings.height = _currentHeight;
+  settings.maxFPS = _currentFrameRate;
+  settings.videoType = _captureVideoType;
 
   return 0;
 }

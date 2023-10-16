@@ -40,6 +40,11 @@
 #endif
 #endif
 
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD$");
+#endif
+
 #include <netinet/sctp_os.h>
 #include <netinet/sctp_var.h>
 #include <netinet/sctp_sysctl.h>

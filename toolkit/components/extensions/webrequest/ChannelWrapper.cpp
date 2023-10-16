@@ -20,7 +20,6 @@
 #include "mozilla/Components.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
@@ -86,7 +85,7 @@ static const ClassificationStruct classificationArray[] = {
 namespace {
 class ChannelListHolder : public LinkedList<ChannelWrapper> {
  public:
-  ChannelListHolder() = default;
+  ChannelListHolder() : LinkedList<ChannelWrapper>() {}
 
   ~ChannelListHolder();
 };

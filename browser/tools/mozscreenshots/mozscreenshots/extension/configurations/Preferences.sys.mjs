@@ -73,7 +73,7 @@ let prefHelper = async function (primary, customFn = null) {
       // We're already on the correct pane.
       readyPromise = Promise.resolve();
     } else {
-      readyPromise = new Promise(r => browserWindow.requestAnimationFrame(r));
+      readyPromise = paintPromise(browserWindow);
     }
   } else {
     readyPromise = TestUtils.topicObserved("sync-pane-loaded");

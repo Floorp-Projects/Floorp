@@ -93,9 +93,11 @@ export default class LoginItem extends HTMLElement {
     // TODO: Using the addEventListener to listen for clicks and pass the event handler due to a CSP error.
     // This will be fixed as login-item itself is converted into a lit component. We will then be able to use the onclick
     // prop of login-command-button as seen in the example below (functionality works and passes tests).
-    // this._editButton.onClick = e => this.handleEditEvent(e);
+    // this._editButton.onClick = e => this.handleEditButtonClick(e);
 
-    this._editButton.addEventListener("click", e => this.handleEditEvent(e));
+    this._editButton.addEventListener("click", e =>
+      this.handleEditButtonClick(e)
+    );
 
     this._copyPasswordButton.addEventListener("click", e =>
       this.handleCopyPasswordClick(e)
@@ -106,7 +108,7 @@ export default class LoginItem extends HTMLElement {
     );
 
     this._deleteButton.addEventListener("click", e =>
-      this.handleDeleteEvent(e)
+      this.handleDeleteButtonClick(e)
     );
 
     this._errorMessageLink.addEventListener("click", e =>
@@ -335,13 +337,8 @@ export default class LoginItem extends HTMLElement {
   }
 
   async handleKeydown(e) {
-    // The below handleKeydown will be cleaned up when Bug 1848785 lands.
     if (e.key === "Escape" && this.dataset.editing) {
       this.handleCancelEvent();
-    } else if (e.altKey && e.key === "Enter" && !this.dataset.editing) {
-      this.handleEditEvent();
-    } else if (e.altKey && (e.key === "Backspace" || e.key === "Delete")) {
-      this.handleDeleteEvent();
     }
   }
 
@@ -543,7 +540,7 @@ export default class LoginItem extends HTMLElement {
     });
   }
 
-  async handleDeleteEvent() {
+  async handleDeleteButtonClick() {
     this.showConfirmationDialog("delete", () => {
       document.dispatchEvent(
         new CustomEvent("AboutLoginsDeleteLogin", {
@@ -554,7 +551,7 @@ export default class LoginItem extends HTMLElement {
     });
   }
 
-  async handleEditEvent() {
+  async handleEditButtonClick() {
     let primaryPasswordAuth = await promptForPrimaryPassword(
       "about-logins-edit-login-os-auth-dialog-message"
     );

@@ -445,14 +445,10 @@ nsresult Database::Init() {
         GetProfileChangeTeardownPhase();
     MOZ_ASSERT(shutdownPhase);
     if (shutdownPhase) {
-      nsresult rv = shutdownPhase->AddBlocker(
+      DebugOnly<nsresult> rv = shutdownPhase->AddBlocker(
           static_cast<nsIAsyncShutdownBlocker*>(mClientsShutdown.get()),
           NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
-      if (NS_FAILED(rv)) {
-        // Might occur if we're already shutting down, see bug#1753165
-        PlacesShutdownBlocker::sIsStarted = true;
-        NS_WARNING("Cannot add shutdown blocker for profile-change-teardown");
-      }
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 
@@ -462,14 +458,10 @@ nsresult Database::Init() {
         GetProfileBeforeChangePhase();
     MOZ_ASSERT(shutdownPhase);
     if (shutdownPhase) {
-      nsresult rv = shutdownPhase->AddBlocker(
+      DebugOnly<nsresult> rv = shutdownPhase->AddBlocker(
           static_cast<nsIAsyncShutdownBlocker*>(mConnectionShutdown.get()),
           NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__, u""_ns);
-      if (NS_FAILED(rv)) {
-        // Might occur if we're already shutting down, see bug#1753165
-        PlacesShutdownBlocker::sIsStarted = true;
-        NS_WARNING("Cannot add shutdown blocker for profile-before-change");
-      }
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
 

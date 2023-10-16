@@ -188,17 +188,8 @@ static bool EnvVarAsInt(const char* name, int* valueOut) {
 
 static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
   RootedObject info(cx, JS_NewPlainObject(cx));
   if (!info) {
-    return false;
-  }
-  if (args.length() > 1) {
-    ReportUsageErrorASCII(cx, callee, "Must have zero or one arguments");
-    return false;
-  }
-  if (args.length() == 1 && !args[0].isString()) {
-    ReportUsageErrorASCII(cx, callee, "Argument must be a string");
     return false;
   }
 
@@ -224,43 +215,14 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   }
 #endif
 
-  if (args.length() == 1) {
-    RootedString str(cx, ToString(cx, args[0]));
-    if (!str) {
-      return false;
-    }
-    RootedId id(cx);
-    if (!JS_StringToId(cx, str, &id)) {
-      return false;
-    }
-
-    bool hasProperty;
-    if (JS_HasPropertyById(cx, info, id, &hasProperty) && hasProperty) {
-      // Returning a true/false from GetProperty
-      return GetProperty(cx, info, info, id, args.rval());
-    }
-
-    ReportUsageErrorASCII(cx, callee, "Invalid option name");
-    return false;
-  }
-
   args.rval().setObject(*info);
   return true;
 }
 
 static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
   RootedObject info(cx, JS_NewPlainObject(cx));
   if (!info) {
-    return false;
-  }
-  if (args.length() > 1) {
-    ReportUsageErrorASCII(cx, callee, "Must have zero or one arguments");
-    return false;
-  }
-  if (args.length() == 1 && !args[0].isString()) {
-    ReportUsageErrorASCII(cx, callee, "Argument must be a string");
     return false;
   }
 
@@ -469,15 +431,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  value = BooleanValue(true);
-#else
-  value = BooleanValue(false);
-#endif
-  if (!JS_SetProperty(cx, info, "pbl", value)) {
-    return false;
-  }
-
 #ifdef JS_CODEGEN_LOONG64
   value = BooleanValue(true);
 #else
@@ -624,46 +577,6 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
   value = BooleanValue(false);
 #endif
   if (!JS_SetProperty(cx, info, "fuzzing-defined", value)) {
-    return false;
-  }
-
-  value = Int32Value(JSFatInlineString::MAX_LENGTH_LATIN1);
-  if (!JS_SetProperty(cx, info, "inline-latin1-chars", value)) {
-    return false;
-  }
-
-  value = Int32Value(JSFatInlineString::MAX_LENGTH_TWO_BYTE);
-  if (!JS_SetProperty(cx, info, "inline-two-byte-chars", value)) {
-    return false;
-  }
-
-  value = Int32Value(JSThinInlineString::MAX_LENGTH_LATIN1);
-  if (!JS_SetProperty(cx, info, "thin-inline-latin1-chars", value)) {
-    return false;
-  }
-
-  value = Int32Value(JSThinInlineString::MAX_LENGTH_TWO_BYTE);
-  if (!JS_SetProperty(cx, info, "thin-inline-two-byte-chars", value)) {
-    return false;
-  }
-
-  if (args.length() == 1) {
-    RootedString str(cx, ToString(cx, args[0]));
-    if (!str) {
-      return false;
-    }
-    RootedId id(cx);
-    if (!JS_StringToId(cx, str, &id)) {
-      return false;
-    }
-
-    bool hasProperty;
-    if (JS_HasPropertyById(cx, info, id, &hasProperty) && hasProperty) {
-      // Returning a true/false from GetProperty
-      return GetProperty(cx, info, info, id, args.rval());
-    }
-
-    ReportUsageErrorASCII(cx, callee, "Invalid option name");
     return false;
   }
 
@@ -1346,8 +1259,8 @@ static bool WasmGlobalsEqual(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<WasmGlobalObject*> b(cx,
                               &args.get(1).toObject().as<WasmGlobalObject>());
 
-  if (a->type().kind() != b->type().kind()) {
-    JS_ReportErrorASCII(cx, "globals are of different kind");
+  if (a->type() != b->type()) {
+    JS_ReportErrorASCII(cx, "globals are of different type");
     return false;
   }
 
@@ -1729,7 +1642,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSSprinter sprinter(cx);
+  Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -1740,11 +1653,12 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
   uint8_t* jit_end = nullptr;
 
   if (fun->isAsmJSNative() || fun->isWasmWithJitEntry()) {
-    if (fun->isAsmJSNative()) {
+    if (fun->isAsmJSNative() && !sprinter.jsprintf("; backend=asmjs\n")) {
       return false;
     }
-    sprinter.printf("; backend=asmjs\n");
-    sprinter.printf("; backend=wasm\n");
+    if (!sprinter.jsprintf("; backend=wasm\n")) {
+      return false;
+    }
 
     js::wasm::Instance& inst = fun->wasmInstance();
     const js::wasm::Code& code = inst.code();
@@ -1770,11 +1684,17 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     js::jit::BaselineScript* baseline =
         script->hasBaselineScript() ? script->baselineScript() : nullptr;
     if (ion && ion->method()) {
-      sprinter.printf("; backend=ion\n");
+      if (!sprinter.jsprintf("; backend=ion\n")) {
+        return false;
+      }
+
       jit_begin = ion->method()->raw();
       jit_end = ion->method()->rawEnd();
     } else if (baseline) {
-      sprinter.printf("; backend=baseline\n");
+      if (!sprinter.jsprintf("; backend=baseline\n")) {
+        return false;
+      }
+
       jit_begin = baseline->method()->raw();
       jit_end = baseline->method()->rawEnd();
     }
@@ -1801,7 +1721,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     ReportOutOfMemory(cx);
     return false;
   }
-  sprinter.putString(cx, sresult);
+  sprinter.putString(sresult);
 
   if (args.length() > 1 && args[1].isString()) {
     RootedString str(cx, args[1].toString());
@@ -1829,7 +1749,7 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
     fclose(f);
   }
 
-  JSString* str = sprinter.release(cx);
+  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
   if (!str) {
     return false;
   }
@@ -4647,7 +4567,7 @@ static bool IsAvxPresent(JSContext* cx, unsigned argc, Value* vp) {
 
 class ShellAllocationMetadataBuilder : public AllocationMetadataBuilder {
  public:
-  ShellAllocationMetadataBuilder() = default;
+  ShellAllocationMetadataBuilder() : AllocationMetadataBuilder() {}
 
   virtual JSObject* build(JSContext* cx, HandleObject,
                           AutoEnterOOMUnsafeRegion& oomUnsafe) const override;
@@ -6987,13 +6907,17 @@ static bool GetStringRepresentation(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSSprinter out(cx);
+  Sprinter out(cx, true);
   if (!out.init()) {
     return false;
   }
   str->dumpRepresentation(out, 0);
 
-  JSString* rep = out.release(cx);
+  if (out.hadOutOfMemory()) {
+    return false;
+  }
+
+  JSString* rep = JS_NewStringCopyN(cx, out.string(), out.getOffset());
   if (!rep) {
     return false;
   }
@@ -8847,15 +8771,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Perform a GC and allow relazification of functions. Accepts the same\n"
 "  arguments as gc()."),
 
-    JS_FN_HELP("getBuildConfiguration", GetBuildConfiguration, 1, 0,
-"getBuildConfiguration([option])",
-"  Query the options SpiderMonkey was built with, or return an object\n"
-"  with the options if no argument is given."),
+    JS_FN_HELP("getBuildConfiguration", GetBuildConfiguration, 0, 0,
+"getBuildConfiguration()",
+"  Return an object describing some of the configuration options SpiderMonkey\n"
+"  was built with."),
 
-    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 1, 0,
-"getRealmConfiguration([option])",
-"  Query the runtime options SpiderMonkey is running with, or return an\n."
-"  object with the options if no argument is given."),
+    JS_FN_HELP("getRealmConfiguration", GetRealmConfiguration, 0, 0,
+"getRealmConfiguration()",
+"  Return an object describing some of the runtime options SpiderMonkey\n"
+"  is running with."),
 
     JS_FN_HELP("isLcovEnabled", ::IsLCovEnabled, 0, 0,
 "isLcovEnabled()",

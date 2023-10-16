@@ -91,10 +91,6 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
     ".inspector-badge.interactive[data-custom]"
   );
   ok(customBadge, "[custom] badge is visible");
-  ok(
-    !customBadge.hasAttribute("aria-pressed"),
-    "[custom] badge is not a toggle button"
-  );
 
   info("Click on the `custom` badge and verify that the debugger opens.");
   let onDebuggerReady = toolbox.getPanelWhenReady("jsdebugger");
@@ -103,20 +99,6 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
 
   const debuggerContext = createDebuggerContext(toolbox);
   await waitUntilDebuggerReady(debuggerContext);
-  ok(true, "The debugger was opened when clicking on the custom badge");
-
-  info("Switch to the inspector");
-  await toolbox.selectTool("inspector");
-
-  // Check that the debugger can be opened with the keyboard.
-  info("Press the Enter key and verify that the debugger opens.");
-  customBadge.focus();
-  onDebuggerReady = toolbox.getPanelWhenReady("jsdebugger");
-  EventUtils.synthesizeKey("VK_RETURN", {}, customBadge.ownerGlobal);
-
-  await onDebuggerReady;
-  await waitUntilDebuggerReady(debuggerContext);
-  ok(true, "The debugger was opened via the keyboard");
 
   info("Switch to the inspector");
   await toolbox.selectTool("inspector");
@@ -132,7 +114,6 @@ async function runTest(inspector, toolbox, selector, contentMethod) {
   await onDebuggerReady;
 
   await waitUntilDebuggerReady(debuggerContext);
-  ok(true, "The debugger was opened via the context menu");
 
   info("Switch to the inspector");
   await toolbox.selectTool("inspector");

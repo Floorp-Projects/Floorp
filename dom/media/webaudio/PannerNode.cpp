@@ -65,9 +65,9 @@ class PannerNodeEngine final : public AudioNodeEngine {
         mConeOuterGain(0.),
         mLeftOverData(INT_MIN) {}
 
-  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
-    aEvent.ConvertToTicks(mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
     switch (aIndex) {
       case PannerNode::POSITIONX:
         mPositionX.InsertEvent<int64_t>(aEvent);

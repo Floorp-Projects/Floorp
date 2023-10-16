@@ -63,13 +63,11 @@
 
 #include "wasm/WasmBaselineCompile.h"
 
-#include "wasm/WasmAnyRef.h"
 #include "wasm/WasmBCClass.h"
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCFrame.h"
 #include "wasm/WasmBCRegDefs.h"
 #include "wasm/WasmBCStk.h"
-#include "wasm/WasmValType.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "wasm/WasmBCClass-inl.h"
@@ -304,58 +302,37 @@ void BaseCompiler::tableSwitch(Label* theTable, RegI32 switchValue,
 #endif
 }
 
-// Helpers for accessing the "baseline scratch" areas: all targets
-void BaseCompiler::stashWord(RegPtr instancePtr, size_t index, RegPtr r) {
-  MOZ_ASSERT(r != instancePtr);
-  MOZ_ASSERT(index < Instance::N_BASELINE_SCRATCH_WORDS);
-  masm.storePtr(r,
-                Address(instancePtr, Instance::offsetOfBaselineScratchWords() +
-                                         index * sizeof(uintptr_t)));
-}
-
-void BaseCompiler::unstashWord(RegPtr instancePtr, size_t index, RegPtr r) {
-  MOZ_ASSERT(index < Instance::N_BASELINE_SCRATCH_WORDS);
-  masm.loadPtr(Address(instancePtr, Instance::offsetOfBaselineScratchWords() +
-                                        index * sizeof(uintptr_t)),
-               r);
-}
-
-// Helpers for accessing the "baseline scratch" areas: X86 only
 #ifdef JS_CODEGEN_X86
 void BaseCompiler::stashI64(RegPtr regForInstance, RegI64 r) {
-  static_assert(sizeof(uintptr_t) == 4);
-  MOZ_ASSERT(Instance::sizeOfBaselineScratchWords() >= 8);
+  MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
   MOZ_ASSERT(regForInstance != r.low && regForInstance != r.high);
 #  ifdef RABALDR_PIN_INSTANCE
 #    error "Pinned instance not expected"
 #  endif
   fr.loadInstancePtr(regForInstance);
+  masm.store32(r.low,
+               Address(regForInstance, Instance::offsetOfBaselineScratch()));
   masm.store32(
-      r.low, Address(regForInstance, Instance::offsetOfBaselineScratchWords()));
-  masm.store32(r.high, Address(regForInstance,
-                               Instance::offsetOfBaselineScratchWords() + 4));
+      r.high, Address(regForInstance, Instance::offsetOfBaselineScratch() + 4));
 }
 
 void BaseCompiler::unstashI64(RegPtr regForInstance, RegI64 r) {
-  static_assert(sizeof(uintptr_t) == 4);
-  MOZ_ASSERT(Instance::sizeOfBaselineScratchWords() >= 8);
+  MOZ_ASSERT(Instance::sizeOfBaselineScratch() >= 8);
 #  ifdef RABALDR_PIN_INSTANCE
 #    error "Pinned instance not expected"
 #  endif
   fr.loadInstancePtr(regForInstance);
   if (regForInstance == r.low) {
     masm.load32(
-        Address(regForInstance, Instance::offsetOfBaselineScratchWords() + 4),
+        Address(regForInstance, Instance::offsetOfBaselineScratch() + 4),
         r.high);
-    masm.load32(
-        Address(regForInstance, Instance::offsetOfBaselineScratchWords()),
-        r.low);
+    masm.load32(Address(regForInstance, Instance::offsetOfBaselineScratch()),
+                r.low);
   } else {
+    masm.load32(Address(regForInstance, Instance::offsetOfBaselineScratch()),
+                r.low);
     masm.load32(
-        Address(regForInstance, Instance::offsetOfBaselineScratchWords()),
-        r.low);
-    masm.load32(
-        Address(regForInstance, Instance::offsetOfBaselineScratchWords() + 4),
+        Address(regForInstance, Instance::offsetOfBaselineScratch() + 4),
         r.high);
   }
 }
@@ -1631,7 +1608,7 @@ bool BaseCompiler::callIndirect(uint32_t funcTypeIndex, uint32_t tableIndex,
 #ifndef WASM_HAS_HEAPREG
   OutOfLineCode* nullref = addOutOfLineCode(new (alloc_) OutOfLineAbortingTrap(
       Trap::IndirectCallToNull, bytecodeOffset()));
-  if (!nullref) {
+  if (!oob) {
     return false;
   }
   nullCheckFailed = nullref->entry();
@@ -6696,23 +6673,18 @@ void BaseCompiler::SignalNullCheck::emitNullCheck(BaseCompiler* bc, RegRef rp) {
 }
 
 /* static */
-void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc,
-                                                 FaultingCodeOffset fco,
-                                                 TrapMachineInsn tmi) {
+void BaseCompiler::SignalNullCheck::emitTrapSite(BaseCompiler* bc) {
   wasm::BytecodeOffset trapOffset(bc->bytecodeOffset());
   MacroAssembler& masm = bc->masm;
   masm.append(wasm::Trap::NullPointerDereference,
-              wasm::TrapSite(tmi, fco, trapOffset));
+              wasm::TrapSite(masm.currentOffset(), trapOffset));
 }
 
-template <typename NullCheckPolicy>
 RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
   // `rp` points at a WasmArrayObject.  Return a reg holding the value of its
   // `data_` field.
   RegPtr rdata = needPtr();
-  FaultingCodeOffset fco =
-      masm.loadPtr(Address(rp, WasmArrayObject::offsetOfData()), rdata);
-  NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
+  masm.loadPtr(Address(rp, WasmArrayObject::offsetOfData()), rdata);
   return rdata;
 }
 
@@ -6722,9 +6694,8 @@ RegI32 BaseCompiler::emitGcArrayGetNumElements(RegRef rp) {
   // `numElements_` field.
   STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
   RegI32 numElements = needI32();
-  FaultingCodeOffset fco = masm.load32(
-      Address(rp, WasmArrayObject::offsetOfNumElements()), numElements);
-  NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
+  NullCheckPolicy::emitTrapSite(this);
+  masm.load32(Address(rp, WasmArrayObject::offsetOfNumElements()), numElements);
   return numElements;
 }
 
@@ -6742,64 +6713,56 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::I8: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      FaultingCodeOffset fco;
+      NullCheckPolicy::emitTrapSite(this);
       if (wideningOp == FieldWideningOp::Unsigned) {
-        fco = masm.load8ZeroExtend(src, r);
+        masm.load8ZeroExtend(src, r);
       } else {
-        fco = masm.load8SignExtend(src, r);
+        masm.load8SignExtend(src, r);
       }
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load8);
       pushI32(r);
       break;
     }
     case FieldType::I16: {
       MOZ_ASSERT(wideningOp != FieldWideningOp::None);
       RegI32 r = needI32();
-      FaultingCodeOffset fco;
+      NullCheckPolicy::emitTrapSite(this);
       if (wideningOp == FieldWideningOp::Unsigned) {
-        fco = masm.load16ZeroExtend(src, r);
+        masm.load16ZeroExtend(src, r);
       } else {
-        fco = masm.load16SignExtend(src, r);
+        masm.load16SignExtend(src, r);
       }
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load16);
       pushI32(r);
       break;
     }
     case FieldType::I32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI32 r = needI32();
-      FaultingCodeOffset fco = masm.load32(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
+      NullCheckPolicy::emitTrapSite(this);
+      masm.load32(src, r);
       pushI32(r);
       break;
     }
     case FieldType::I64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegI64 r = needI64();
-#  ifdef JS_64BIT
-      FaultingCodeOffset fco = masm.load64(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load64);
-#  else
-      FaultingCodeOffsetPair fcop = masm.load64(src, r);
-      NullCheckPolicy::emitTrapSite(this, fcop.first, TrapMachineInsn::Load32);
-      NullCheckPolicy::emitTrapSite(this, fcop.second, TrapMachineInsn::Load32);
-#  endif
+      NullCheckPolicy::emitTrapSite(this);
+      masm.load64(src, r);
       pushI64(r);
       break;
     }
     case FieldType::F32: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF32 r = needF32();
-      FaultingCodeOffset fco = masm.loadFloat32(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load32);
+      NullCheckPolicy::emitTrapSite(this);
+      masm.loadFloat32(src, r);
       pushF32(r);
       break;
     }
     case FieldType::F64: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegF64 r = needF64();
-      FaultingCodeOffset fco = masm.loadDouble(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load64);
+      NullCheckPolicy::emitTrapSite(this);
+      masm.loadDouble(src, r);
       pushF64(r);
       break;
     }
@@ -6807,8 +6770,8 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::V128: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegV128 r = needV128();
-      FaultingCodeOffset fco = masm.loadUnalignedSimd128(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Load128);
+      NullCheckPolicy::emitTrapSite(this);
+      masm.loadUnalignedSimd128(src, r);
       pushV128(r);
       break;
     }
@@ -6816,8 +6779,8 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
     case FieldType::Ref: {
       MOZ_ASSERT(wideningOp == FieldWideningOp::None);
       RegRef r = needRef();
-      FaultingCodeOffset fco = masm.loadPtr(src, r);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
+      NullCheckPolicy::emitTrapSite(this);
+      masm.loadPtr(src, r);
       pushRef(r);
       break;
     }
@@ -6829,48 +6792,35 @@ void BaseCompiler::emitGcGet(FieldType type, FieldWideningOp wideningOp,
 
 template <typename T, typename NullCheckPolicy>
 void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
+  NullCheckPolicy::emitTrapSite(this);
   switch (type.kind()) {
     case FieldType::I8: {
-      FaultingCodeOffset fco = masm.store8(value.i32(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store8);
+      masm.store8(value.i32(), dst);
       break;
     }
     case FieldType::I16: {
-      FaultingCodeOffset fco = masm.store16(value.i32(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store16);
+      masm.store16(value.i32(), dst);
       break;
     }
     case FieldType::I32: {
-      FaultingCodeOffset fco = masm.store32(value.i32(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
+      masm.store32(value.i32(), dst);
       break;
     }
     case FieldType::I64: {
-#  ifdef JS_64BIT
-      FaultingCodeOffset fco = masm.store64(value.i64(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
-#  else
-      FaultingCodeOffsetPair fcop = masm.store64(value.i64(), dst);
-      NullCheckPolicy::emitTrapSite(this, fcop.first, TrapMachineInsn::Store32);
-      NullCheckPolicy::emitTrapSite(this, fcop.second,
-                                    TrapMachineInsn::Store32);
-#  endif
+      masm.store64(value.i64(), dst);
       break;
     }
     case FieldType::F32: {
-      FaultingCodeOffset fco = masm.storeFloat32(value.f32(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store32);
+      masm.storeFloat32(value.f32(), dst);
       break;
     }
     case FieldType::F64: {
-      FaultingCodeOffset fco = masm.storeDouble(value.f64(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store64);
+      masm.storeDouble(value.f64(), dst);
       break;
     }
 #  ifdef ENABLE_WASM_SIMD
     case FieldType::V128: {
-      FaultingCodeOffset fco = masm.storeUnalignedSimd128(value.v128(), dst);
-      NullCheckPolicy::emitTrapSite(this, fco, TrapMachineInsn::Store128);
+      masm.storeUnalignedSimd128(value.v128(), dst);
       break;
     }
 #  endif
@@ -7121,9 +7071,9 @@ bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
   RegRef object = popRef();
   if (areaIsOutline) {
     RegPtr outlineBase = needPtr();
-    FaultingCodeOffset fco = masm.loadPtr(
-        Address(object, WasmStructObject::offsetOfOutlineData()), outlineBase);
-    SignalNullCheck::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
+    SignalNullCheck::emitTrapSite(this);
+    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
+                 outlineBase);
     // Load the value
     emitGcGet<Address, NoNullCheck>(fieldType, wideningOp,
                                     Address(outlineBase, areaOffset));
@@ -7180,9 +7130,9 @@ bool BaseCompiler::emitStructSet() {
 
   // Make outlineBase point at the first byte of the relevant area
   if (areaIsOutline) {
-    FaultingCodeOffset fco = masm.loadPtr(
-        Address(object, WasmStructObject::offsetOfOutlineData()), outlineBase);
-    SignalNullCheck::emitTrapSite(this, fco, TrapMachineInsnForLoadWord());
+    SignalNullCheck::emitTrapSite(this);
+    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
+                 outlineBase);
     if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset,
                                       fieldType, value,
                                       PreBarrierKind::Normal)) {
@@ -7236,7 +7186,7 @@ bool BaseCompiler::emitArrayNew() {
   AnyReg value = popAny();
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData(rp);
 
   // Acquire the number of elements
   RegI32 numElements = emitGcArrayGetNumElements<NoNullCheck>(rp);
@@ -7309,7 +7259,7 @@ bool BaseCompiler::emitArrayNewFixed() {
   RegRef rp = popRef();
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData(rp);
 
   // Free the barrier reg if we previously reserved it.
   if (avoidPreBarrierReg) {
@@ -7383,7 +7333,7 @@ bool BaseCompiler::emitArrayNewData() {
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment byte offset and
-  // number of elements (operands to array.new_data), and the type data and
+  // number of elements (operands to array.new_data), and the type index and
   // seg index as pushed above.
   return emitInstanceCall(SASigArrayNewData);
 }
@@ -7403,51 +7353,9 @@ bool BaseCompiler::emitArrayNewElem() {
   pushI32(int32_t(segIndex));
 
   // The call removes 4 items from the stack: the segment element offset and
-  // number of elements (operands to array.new_elem), and the type data and
+  // number of elements (operands to array.new_elem), and the type index and
   // seg index as pushed above.
   return emitInstanceCall(SASigArrayNewElem);
-}
-
-bool BaseCompiler::emitArrayInitData() {
-  uint32_t typeIndex, segIndex;
-  Nothing nothing;
-  if (!iter_.readArrayInitData(&typeIndex, &segIndex, &nothing, &nothing,
-                               &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  pushPtr(loadTypeDefInstanceData(typeIndex));
-  pushI32(int32_t(segIndex));
-
-  // The call removes 6 items from the stack: the array, array index, segment
-  // byte offset, and number of elements (operands to array.init_data), and the
-  // type data and seg index as pushed above.
-  return emitInstanceCall(SASigArrayInitData);
-}
-
-bool BaseCompiler::emitArrayInitElem() {
-  uint32_t typeIndex, segIndex;
-  Nothing nothing;
-  if (!iter_.readArrayInitElem(&typeIndex, &segIndex, &nothing, &nothing,
-                               &nothing, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  pushPtr(loadTypeDefInstanceData(typeIndex));
-  pushI32(int32_t(segIndex));
-
-  // The call removes 6 items from the stack: the array, array index, segment
-  // offset, and number of elements (operands to array.init_elem), and the type
-  // data and seg index as pushed above.
-  return emitInstanceCall(SASigArrayInitElem);
 }
 
 bool BaseCompiler::emitArrayGet(FieldWideningOp wideningOp) {
@@ -7474,7 +7382,7 @@ bool BaseCompiler::emitArrayGet(FieldWideningOp wideningOp) {
   freeI32(numElements);
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData(rp);
 
   // Load the value
   uint32_t shift = arrayType.elementType_.indexingShift();
@@ -7526,7 +7434,7 @@ bool BaseCompiler::emitArraySet() {
   freeI32(numElements);
 
   // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
+  RegPtr rdata = emitGcArrayGetData(rp);
 
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isRefRepr()) {
@@ -7583,266 +7491,41 @@ bool BaseCompiler::emitArrayCopy() {
     return true;
   }
 
-  // The helper needs to know the element size. If copying ref values, the size
-  // is negated to signal to the helper that it needs to do GC barriers and
-  // such.
-  pushI32(elemsAreRefTyped ? -elemSize : elemSize);
+  // readArrayCopy writes the element size in bytes to `elemSize`.  Code
+  // generated here needs to hand it onwards to the instance fn, but also
+  // indicate whether the element type is reftyped, which it does by negating
+  // the size.
+  //
+  // The value stack currently looks like this:
+  //
+  //   (top) [numElements, srcIndex, srcArray, dstIndex, dstArray, ..]
+  //
+  // So push `(possibly negated) elemSize` on it, giving
+  //
+  //   (top) [elemSize, numElements, srcIndex, srcArray, dstIndex, dstArray, ..]
+  //
+  // and generate a call to the helper.
 
-  return emitInstanceCall(SASigArrayCopy);
-}
-
-bool BaseCompiler::emitArrayFill() {
-  AutoCreatedBy acb(masm, "(wasm)BaseCompiler::emitArrayFill");
-  uint32_t typeIndex;
-  Nothing nothing;
-  if (!iter_.readArrayFill(&typeIndex, &nothing, &nothing, &nothing,
-                           &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  const TypeDef& typeDef = moduleEnv_.types->type(typeIndex);
-  const ArrayType& arrayType = typeDef.arrayType();
-  FieldType fieldType = arrayType.elementType_;
-
-  // On x86 (32-bit), we are very short of registers, hence the code
-  // generation scheme is less straightforward than it might otherwise be.
-  //
-  // Comment lines below of the form
-  //
-  //   3: foo bar xyzzy
-  //
-  // mean "at this point there are 3 integer regs in use (not including the
-  // possible 2 needed for `value` in the worst case), and those 3 regs hold
-  // the values for `foo`, `bar` and `xyzzy`.
-  //
-  // On x86, the worst case, we only have 3 int regs available (not including
-  // `value`), thusly:
-  //
-  // - as a basis, we have: eax ebx ecx edx esi edi
-  //
-  // - ebx is "kind of" not available, since it is reserved as a wasm-baseline
-  //   scratch register (called `RabaldrScratchI32` on most targets, but
-  //   acquired below using `ScratchI32(..)`).
-  //
-  // - `value` isn't needed till the initialisation loop itself, hence it
-  //   would seem attractive to spill it across the range-check and setup code
-  //   that precedes the loop.  However, it has variable type and regclass
-  //   (eg, it could be v128 or f32 or f64), which make spilling it somewhat
-  //   complex, so we bite the bullet and just allocate it at the start of the
-  //   routine.
-  //
-  // - Consequently we have the following two cases as worst-cases:
-  //
-  //   * `value` is I64, so uses two registers on x86.
-  //   * `value` is reftyped, using one register, but also making
-  //     PreBarrierReg unavailable.
-  //
-  // - As a result of all of the above, we have only three registers, and
-  //   RabaldrScratchI32, to work with.  And 4 spill-slot words; however ..
-  //
-  // - .. to spill/reload from a spill slot, we need a register to point at
-  //   the instance.  That makes it even worse on x86 since there's no
-  //   reserved instance reg; hence we have to use one of our 3 for it.  This
-  //   is indicated explictly in the code below.
-  //
-  // There are many comment lines indicating the current disposition of the 3
-  // regs.
-  //
-  // This generates somewhat clunky code for the setup and bounds test, but
-  // the actual initialisation loop still has everything in registers, so
-  // should run fast.
-  //
-  // The same scheme is used for all targets.  Hence they all get clunky setup
-  // code.  Considering that this is a baseline compiler and also that the
-  // loop itself is all-in-regs, this seems like a not-bad compromise compared
-  // to having two different implementations for x86 vs everything else.
+  MOZ_ASSERT_IF(elemsAreRefTyped, elemSize == sizeof(void*));
+  MOZ_ASSERT_IF(!elemsAreRefTyped, elemSize == 1 || elemSize == 2 ||
+                                       elemSize == 4 || elemSize == 8 ||
+                                       elemSize == 16);
+  bool avoidPreBarrierReg = elemsAreRefTyped;
 
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
-  if (fieldType.isRefRepr()) {
+  if (avoidPreBarrierReg) {
     needPtr(RegPtr(PreBarrierReg));
   }
 
-  // Set up a pointer to the Instance, so we can do manual spills/reloads
-#  ifdef RABALDR_PIN_INSTANCE
-  RegPtr instancePtr = RegPtr(InstanceReg);
-#  else
-  RegPtr instancePtr = needPtr();
-  fr.loadInstancePtr(instancePtr);
-#  endif
+  // The helper needs to know the element size.
+  pushI32(elemsAreRefTyped ? -elemSize : elemSize);
 
-  // Pull operands off the instance stack and stash the non-Any ones
-  RegI32 numElements = popI32();
-  stashWord(instancePtr, 0, RegPtr(numElements));
-  freeI32(numElements);
-  numElements = RegI32::Invalid();
-
-  AnyReg value = popAny();
-
-  RegI32 index = popI32();
-  stashWord(instancePtr, 1, RegPtr(index));
-  freeI32(index);
-  index = RegI32::Invalid();
-
-  RegRef rp = popRef();
-  stashWord(instancePtr, 2, RegPtr(rp));
-  // 2: instancePtr rp
-
-  // Acquire the actual length of the array
-  RegI32 arrayNumElements = emitGcArrayGetNumElements<SignalNullCheck>(rp);
-  // 3: instancePtr rp arrayNumElements
-
-  // Drop rp
-  freeRef(rp);
-  rp = RegRef::Invalid();
-  // 2: instancePtr arrayNumElements
-
-  // Reload index
-  index = needI32();
-  unstashWord(instancePtr, 1, RegPtr(index));
-  // 3: instancePtr arrayNumElements index
-
-  // Reload numElements into the reg that currently holds instancePtr
-#  ifdef RABALDR_PIN_INSTANCE
-  numElements = needI32();
-#  else
-  numElements = RegI32(instancePtr);
-#  endif
-  unstashWord(instancePtr, 0, RegPtr(numElements));
-  instancePtr = RegPtr::Invalid();
-  // 3: arrayNumElements index numElements
-
-  // Do the bounds check.  For this we will need to get hold of the
-  // wasm-baseline's scratch register.
-  {
-    ScratchI32 scratch(*this);
-    MOZ_ASSERT(RegI32(scratch) != arrayNumElements);
-    MOZ_ASSERT(RegI32(scratch) != index);
-    MOZ_ASSERT(RegI32(scratch) != numElements);
-    masm.wasmBoundsCheckRange32(index, numElements, arrayNumElements, scratch,
-                                bytecodeOffset());
-  }
-  // 3: arrayNumElements index numElements
-
-  // Drop arrayNumElements and numElements
-  freeI32(arrayNumElements);
-  arrayNumElements = RegI32::Invalid();
-  freeI32(numElements);
-  numElements = RegI32::Invalid();
-  // 1: index
-
-  // Re-set-up the instance pointer; we had to ditch it earlier.
-#  ifdef RABALDR_PIN_INSTANCE
-  instancePtr = RegPtr(InstanceReg);
-#  else
-  instancePtr = needPtr();
-  fr.loadInstancePtr(instancePtr);
-#  endif
-  // 2: index instancePtr
-
-  // Reload rp
-  rp = needRef();
-  unstashWord(instancePtr, 2, RegPtr(rp));
-  // 3: index instancePtr rp
-
-  // Drop instancePtr
-#  ifdef RABALDR_PIN_INSTANCE
-  instancePtr = RegPtr::Invalid();
-#  else
-  freePtr(instancePtr);
-  instancePtr = RegPtr::Invalid();
-#  endif
-  // 2: index rp
-
-  // Acquire the data pointer from the object
-  RegPtr rdata = emitGcArrayGetData<NoNullCheck>(rp);
-  // 3: index rp rdata
-
-  // Currently `rdata` points at the start of the array data area.  Move it
-  // forwards by `index` units so as to make it point at the start of the area
-  // to be filled.
-  uint32_t shift = arrayType.elementType_.indexingShift();
-  if (shift > 0) {
-    masm.lshift32(Imm32(shift), index);
-    // `index` is a 32 bit value, so we must zero-extend it to 64 bits before
-    // adding it on to `rdata`.
-#  ifdef JS_64BIT
-    masm.move32To64ZeroExtend(index, widenI32(index));
-#  endif
-  }
-  masm.addPtr(index, rdata);
-  // `index` is not used after this point.
-
-  // 3: index rp rdata
-  // index is now (more or less) meaningless
-  // rdata now points exactly at the start of the fill area
-  // rp points at the array object
-
-  // Drop `index`; we no longer need it.
-  freeI32(index);
-  index = RegI32::Invalid();
-  // 2: rp rdata
-
-  // Re-re-set-up the instance pointer; we had to ditch it earlier.
-#  ifdef RABALDR_PIN_INSTANCE
-  instancePtr = RegPtr(InstanceReg);
-#  else
-  instancePtr = needPtr();
-  fr.loadInstancePtr(instancePtr);
-#  endif
-  // 3: rp rdata instancePtr
-
-  // And reload numElements.
-#  ifdef RABALDR_PIN_INSTANCE
-  numElements = needI32();
-  unstashWord(instancePtr, 0, RegPtr(numElements));
-  instancePtr = RegPtr::Invalid();
-#  else
-  numElements = RegI32(instancePtr);
-  unstashWord(instancePtr, 0, RegPtr(numElements));
-  instancePtr = RegPtr::Invalid();
-#  endif
-  // 3: numElements rp rdata
-
-  // Free the barrier reg after we've allocated all registers
-  if (fieldType.isRefRepr()) {
+  if (avoidPreBarrierReg) {
     freePtr(RegPtr(PreBarrierReg));
   }
 
-  // Perform an initialization loop using `numElements` as the loop variable,
-  // starting at `numElements` and counting down to zero.
-  Label done;
-  Label loop;
-  // Skip initialization if numElements = 0
-  masm.branch32(Assembler::Equal, numElements, Imm32(0), &done);
-  masm.bind(&loop);
-
-  // Move to the next element
-  masm.sub32(Imm32(1), numElements);
-
-  // Assign value to rdata[numElements]. All registers are preserved.
-  if (!emitGcArraySet(rp, rdata, numElements, arrayType, value,
-                      PreBarrierKind::None)) {
-    return false;
-  }
-
-  // Loop back if there are still elements to initialize
-  masm.branch32(Assembler::NotEqual, numElements, Imm32(0), &loop);
-  masm.bind(&done);
-
-  freePtr(rdata);
-  freeRef(rp);
-  freeI32(numElements);
-  freeAny(value);
-  MOZ_ASSERT(index == RegPtr::Invalid());
-  MOZ_ASSERT(instancePtr == RegPtr::Invalid());
-  MOZ_ASSERT(arrayNumElements == RegI32::Invalid());
-
-  return true;
+  return emitInstanceCall(SASigArrayCopy);
 }
 
 bool BaseCompiler::emitRefI31() {
@@ -10239,10 +9922,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayNewData());
           case uint32_t(GcOp::ArrayNewElem):
             CHECK_NEXT(emitArrayNewElem());
-          case uint32_t(GcOp::ArrayInitData):
-            CHECK_NEXT(emitArrayInitData());
-          case uint32_t(GcOp::ArrayInitElem):
-            CHECK_NEXT(emitArrayInitElem());
           case uint32_t(GcOp::ArrayGet):
             CHECK_NEXT(emitArrayGet(FieldWideningOp::None));
           case uint32_t(GcOp::ArrayGetS):
@@ -10255,8 +9934,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitArrayLen());
           case uint32_t(GcOp::ArrayCopy):
             CHECK_NEXT(emitArrayCopy());
-          case uint32_t(GcOp::ArrayFill):
-            CHECK_NEXT(emitArrayFill());
           case uint32_t(GcOp::RefI31):
             CHECK_NEXT(emitRefI31());
           case uint32_t(GcOp::I31GetS):
@@ -11556,8 +11233,6 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
       return false;
     }
 
-    size_t unwindInfoBefore = masm.codeRangeUnwindInfos().length();
-
     // One-pass baseline compilation.
 
     BaseCompiler f(moduleEnv, compilerEnv, func, locals, trapExitLayout,
@@ -11569,11 +11244,8 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
     if (!f.emitFunction()) {
       return false;
     }
-    FuncOffsets offsets(f.finish());
-    bool hasUnwindInfo =
-        unwindInfoBefore != masm.codeRangeUnwindInfos().length();
-    if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode, offsets,
-                                      hasUnwindInfo)) {
+    if (!code->codeRanges.emplaceBack(func.index, func.lineOrBytecode,
+                                      f.finish())) {
       return false;
     }
   }

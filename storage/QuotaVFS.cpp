@@ -4,16 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "QuotaVFS.h"
-
+#include "sqlite3.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
-#include "mozilla/StaticPrefs_storage.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsEscape.h"
-#include "sqlite3.h"
+#include "mozilla/StaticPrefs_storage.h"
 
 #if defined(XP_WIN) || defined(XP_UNIX)
 #  include "mozilla/StaticPrefs_dom.h"
@@ -558,14 +556,15 @@ static const char* QuotaNextSystemCall(sqlite3_vfs* vfs, const char* zName) {
 
 }  // namespace
 
-namespace mozilla::storage::quotavfs {
+namespace mozilla {
+namespace storage {
 
-const char* GetVFSName() { return "quotavfs"; }
+const char* GetQuotaVFSName() { return "quotavfs"; }
 
-UniquePtr<sqlite3_vfs> ConstructVFS(const char* aBaseVFSName) {
+UniquePtr<sqlite3_vfs> ConstructQuotaVFS(const char* aBaseVFSName) {
   MOZ_ASSERT(aBaseVFSName);
 
-  if (sqlite3_vfs_find(GetVFSName()) != nullptr) {
+  if (sqlite3_vfs_find(GetQuotaVFSName()) != nullptr) {
     return nullptr;
   }
   sqlite3_vfs* vfs = sqlite3_vfs_find(aBaseVFSName);
@@ -583,7 +582,7 @@ UniquePtr<sqlite3_vfs> ConstructVFS(const char* aBaseVFSName) {
   qvfs->szOsFile = static_cast<int>(sizeof(QuotaFile) - sizeof(sqlite3_file) +
                                     vfs->szOsFile);
   qvfs->mxPathname = vfs->mxPathname;
-  qvfs->zName = GetVFSName();
+  qvfs->zName = GetQuotaVFSName();
   qvfs->pAppData = vfs;
   qvfs->xOpen = QuotaOpen;
   qvfs->xDelete = QuotaDelete;
@@ -618,4 +617,5 @@ already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile) {
   return result.forget();
 }
 
-}  // namespace mozilla::storage::quotavfs
+}  // namespace storage
+}  // namespace mozilla

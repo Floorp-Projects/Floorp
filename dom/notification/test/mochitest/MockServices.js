@@ -1,3 +1,4 @@
+/* eslint-disable mozilla/use-chromeutils-generateqi */
 var MockServices = (function () {
   "use strict";
 

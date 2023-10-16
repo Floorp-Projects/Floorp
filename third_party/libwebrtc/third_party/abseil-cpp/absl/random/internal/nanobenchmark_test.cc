@@ -14,10 +14,8 @@
 
 #include "absl/random/internal/nanobenchmark.h"
 
-#include "absl/log/check.h"
-#include "absl/log/log.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/strings/numbers.h"
-#include "absl/strings/str_format.h"
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
@@ -38,16 +36,16 @@ void MeasureDiv(const FuncInput (&inputs)[N]) {
   params.max_evals = 6;  // avoid test timeout
   const size_t num_results = Measure(&Div, nullptr, inputs, N, results, params);
   if (num_results == 0) {
-    LOG(WARNING)
-        << "WARNING: Measurement failed, should not happen when using "
-           "PinThreadToCPU unless the region to measure takes > 1 second.";
+    ABSL_RAW_LOG(
+        WARNING,
+        "WARNING: Measurement failed, should not happen when using "
+        "PinThreadToCPU unless the region to measure takes > 1 second.\n");
     return;
   }
   for (size_t i = 0; i < num_results; ++i) {
-    LOG(INFO) << absl::StreamFormat("%5u: %6.2f ticks; MAD=%4.2f%%\n",
-                                    results[i].input, results[i].ticks,
-                                    results[i].variability * 100.0);
-    CHECK_NE(results[i].ticks, 0.0f) << "Zero duration";
+    ABSL_RAW_LOG(INFO, "%5zu: %6.2f ticks; MAD=%4.2f%%\n", results[i].input,
+                 results[i].ticks, results[i].variability * 100.0);
+    ABSL_RAW_CHECK(results[i].ticks != 0.0f, "Zero duration");
   }
 }
 
@@ -56,7 +54,7 @@ void RunAll(const int argc, char* argv[]) {
   int cpu = -1;
   if (argc == 2) {
     if (!absl::SimpleAtoi(argv[1], &cpu)) {
-      LOG(FATAL) << "The optional argument must be a CPU number >= 0.";
+      ABSL_RAW_LOG(FATAL, "The optional argument must be a CPU number >= 0.\n");
     }
   }
   PinThreadToCPU(cpu);

@@ -270,7 +270,7 @@ bitflags::bitflags! {
         /// Supported Platforms:
         /// - Vulkan
         /// - DX12
-        /// - Metal
+        /// - Metal - TODO: Not yet supported on command encoder.
         ///
         /// This is a web and native feature.
         const TIMESTAMP_QUERY = 1 << 1;
@@ -371,7 +371,7 @@ bitflags::bitflags! {
         /// Compressed textures sacrifice some quality in exchange for significantly reduced
         /// bandwidth usage.
         ///
-        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats with Unorm/UnormSrgb channel type.
+        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats.
         /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
         ///
         /// Supported Platforms:
@@ -409,7 +409,7 @@ bitflags::bitflags! {
         /// Compressed textures sacrifice some quality in exchange for significantly reduced
         /// bandwidth usage.
         ///
-        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for ASTC formats with the HDR channel type.
+        /// Support for this feature guarantees availability of [`TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING`] for BCn formats.
         /// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] may enable additional usages.
         ///
         /// Supported Platforms:
@@ -458,9 +458,10 @@ bitflags::bitflags! {
         /// Supported platforms:
         /// - Vulkan
         /// - DX12
-        /// - Metal (AMD & Intel, not Apple GPUs)
         ///
-        /// This is generally not available on tile-based rasterization GPUs.
+        /// This is currently unimplemented on Metal.
+        /// When implemented, it will be supported on Metal on AMD and Intel GPUs, but not Apple GPUs.
+        /// (This is a common limitation of tile-based rasterization GPUs)
         ///
         /// This is a native only feature with a [proposal](https://github.com/gpuweb/gpuweb/blob/0008bd30da2366af88180b511a5d0d0c1dffbc36/proposals/timestamp-query-inside-passes.md) for the web.
         const TIMESTAMP_QUERY_INSIDE_PASSES = 1 << 33;
@@ -737,15 +738,6 @@ bitflags::bitflags! {
         /// This is a native only feature.
         const VERTEX_ATTRIBUTE_64BIT = 1 << 53;
 
-        /// Allows vertex shaders to have outputs which are not consumed
-        /// by the fragment shader.
-        ///
-        /// Supported platforms:
-        /// - Vulkan
-        /// - Metal
-        /// - OpenGL
-        const SHADER_UNUSED_VERTEX_OUTPUT = 1 << 54;
-
         // 54..59 available
 
         // Shader:
@@ -790,17 +782,7 @@ bitflags::bitflags! {
         /// This is a native only feature.
         const SHADER_EARLY_DEPTH_TEST = 1 << 62;
 
-        /// Allows two outputs from a shader to be used for blending.
-        /// Note that dual-source blending doesn't support multiple render targets.
-        ///
-        /// For more info see the OpenGL ES extension GL_EXT_blend_func_extended.
-        ///
-        /// Supported platforms:
-        /// - OpenGL ES (with GL_EXT_blend_func_extended)
-        /// - Metal (with MSL 1.2+)
-        /// - Vulkan (with dualSrcBlend)
-        /// - DX12
-        const DUAL_SOURCE_BLENDING = 1 << 63;
+        // 62..64 available
     }
 }
 
@@ -1568,8 +1550,6 @@ impl TextureViewDimension {
 ///
 /// Corresponds to [WebGPU `GPUBlendFactor`](
 /// https://gpuweb.github.io/gpuweb/#enumdef-gpublendfactor).
-/// Values using S1 requires [`Features::DUAL_SOURCE_BLENDING`] and can only be
-/// used with the first render target.
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(Serialize))]
@@ -1602,29 +1582,6 @@ pub enum BlendFactor {
     Constant = 11,
     /// 1.0 - Constant
     OneMinusConstant = 12,
-    /// S1.component
-    Src1 = 13,
-    /// 1.0 - S1.component
-    OneMinusSrc1 = 14,
-    /// S1.alpha
-    Src1Alpha = 15,
-    /// 1.0 - S1.alpha
-    OneMinusSrc1Alpha = 16,
-}
-
-impl BlendFactor {
-    /// Returns `true` if the blend factor references the second blend source.
-    ///
-    /// Note that the usage of those blend factors require [`Features::DUAL_SOURCE_BLENDING`].
-    pub fn ref_second_blend_source(&self) -> bool {
-        match self {
-            BlendFactor::Src1
-            | BlendFactor::OneMinusSrc1
-            | BlendFactor::Src1Alpha
-            | BlendFactor::OneMinusSrc1Alpha => true,
-            _ => false,
-        }
-    }
 }
 
 /// Alpha blend operation.
@@ -2148,8 +2105,6 @@ pub enum TextureFormat {
     // Packed 32 bit formats
     /// Packed unsigned float with 9 bits mantisa for each RGB component, then a common 5 bits exponent
     Rgb9e5Ufloat,
-    /// Red, green, blue, and alpha channels. 10 bit integer for RGB channels, 2 bit integer for alpha channel. Unsigned in shader.
-    Rgb10a2Uint,
     /// Red, green, blue, and alpha channels. 10 bit integer for RGB channels, 2 bit integer for alpha channel. [0, 1023] ([0, 3] for alpha) converted to/from float [0, 1] in shader.
     Rgb10a2Unorm,
     /// Red, green, and blue channels. 11 bit float with no sign bit for RG channels. 10 bit float with no sign bit for blue channel. Float in shader.
@@ -2410,7 +2365,6 @@ impl<'de> Deserialize<'de> for TextureFormat {
                     "rgba8sint" => TextureFormat::Rgba8Sint,
                     "bgra8unorm" => TextureFormat::Bgra8Unorm,
                     "bgra8unorm-srgb" => TextureFormat::Bgra8UnormSrgb,
-                    "rgb10a2uint" => TextureFormat::Rgb10a2Uint,
                     "rgb10a2unorm" => TextureFormat::Rgb10a2Unorm,
                     "rg11b10ufloat" => TextureFormat::Rg11b10Float,
                     "rg32uint" => TextureFormat::Rg32Uint,
@@ -2537,7 +2491,6 @@ impl Serialize for TextureFormat {
             TextureFormat::Rgba8Sint => "rgba8sint",
             TextureFormat::Bgra8Unorm => "bgra8unorm",
             TextureFormat::Bgra8UnormSrgb => "bgra8unorm-srgb",
-            TextureFormat::Rgb10a2Uint => "rgb10a2uint",
             TextureFormat::Rgb10a2Unorm => "rgb10a2unorm",
             TextureFormat::Rg11b10Float => "rg11b10ufloat",
             TextureFormat::Rg32Uint => "rg32uint",
@@ -2728,7 +2681,6 @@ impl TextureFormat {
             | Self::Bgra8Unorm
             | Self::Bgra8UnormSrgb
             | Self::Rgb9e5Ufloat
-            | Self::Rgb10a2Uint
             | Self::Rgb10a2Unorm
             | Self::Rg11b10Float
             | Self::Rg32Uint
@@ -2827,7 +2779,6 @@ impl TextureFormat {
             | Self::Bgra8Unorm
             | Self::Bgra8UnormSrgb
             | Self::Rgb9e5Ufloat
-            | Self::Rgb10a2Uint
             | Self::Rgb10a2Unorm
             | Self::Rg11b10Float
             | Self::Rg32Uint
@@ -2937,7 +2888,6 @@ impl TextureFormat {
             Self::Rgba8Sint =>            (        msaa,  all_flags),
             Self::Bgra8Unorm =>           (msaa_resolve, attachment),
             Self::Bgra8UnormSrgb =>       (msaa_resolve, attachment),
-            Self::Rgb10a2Uint =>          (        msaa, attachment),
             Self::Rgb10a2Unorm =>         (msaa_resolve, attachment),
             Self::Rg11b10Float =>         (        msaa,   rg11b10f),
             Self::Rg32Uint =>             (        noaa,  all_flags),
@@ -3043,8 +2993,7 @@ impl TextureFormat {
             | Self::Rgba16Uint
             | Self::R32Uint
             | Self::Rg32Uint
-            | Self::Rgba32Uint
-            | Self::Rgb10a2Uint => Some(uint),
+            | Self::Rgba32Uint => Some(uint),
 
             Self::R8Sint
             | Self::Rg8Sint
@@ -3132,9 +3081,7 @@ impl TextureFormat {
             | Self::Rg16Sint
             | Self::Rg16Float => Some(4),
             Self::R32Uint | Self::R32Sint | Self::R32Float => Some(4),
-            Self::Rgb9e5Ufloat | Self::Rgb10a2Uint | Self::Rgb10a2Unorm | Self::Rg11b10Float => {
-                Some(4)
-            }
+            Self::Rgb9e5Ufloat | Self::Rgb10a2Unorm | Self::Rg11b10Float => Some(4),
 
             Self::Rgba16Unorm
             | Self::Rgba16Snorm
@@ -3242,7 +3189,7 @@ impl TextureFormat {
             | Self::Rgba32Float => 4,
 
             Self::Rgb9e5Ufloat | Self::Rg11b10Float => 3,
-            Self::Rgb10a2Uint | Self::Rgb10a2Unorm => 4,
+            Self::Rgb10a2Unorm => 4,
 
             Self::Stencil8 | Self::Depth16Unorm | Self::Depth24Plus | Self::Depth32Float => 1,
 
@@ -3440,10 +3387,6 @@ fn texture_format_serialize() {
     assert_eq!(
         serde_json::to_string(&TextureFormat::Bgra8UnormSrgb).unwrap(),
         "\"bgra8unorm-srgb\"".to_string()
-    );
-    assert_eq!(
-        serde_json::to_string(&TextureFormat::Rgb10a2Uint).unwrap(),
-        "\"rgb10a2uint\"".to_string()
     );
     assert_eq!(
         serde_json::to_string(&TextureFormat::Rgb10a2Unorm).unwrap(),
@@ -3736,10 +3679,6 @@ fn texture_format_deserialize() {
     assert_eq!(
         serde_json::from_str::<TextureFormat>("\"bgra8unorm-srgb\"").unwrap(),
         TextureFormat::Bgra8UnormSrgb
-    );
-    assert_eq!(
-        serde_json::from_str::<TextureFormat>("\"rgb10a2uint\"").unwrap(),
-        TextureFormat::Rgb10a2Uint
     );
     assert_eq!(
         serde_json::from_str::<TextureFormat>("\"rgb10a2unorm\"").unwrap(),
@@ -6147,7 +6086,6 @@ impl<T: Copy> ImageCopyTextureTagged<T> {
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = "trace", derive(serde::Serialize))]
 #[cfg_attr(feature = "replay", derive(serde::Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 pub struct ImageSubresourceRange {
     /// Aspect of the texture. Color textures must be [`TextureAspect::All`][TAA].
     ///
@@ -6492,7 +6430,6 @@ pub enum Gles3MinorVersion {
 }
 
 /// Options for creating an instance.
-#[derive(Debug)]
 pub struct InstanceDescriptor {
     /// Which `Backends` to enable.
     pub backends: Backends,

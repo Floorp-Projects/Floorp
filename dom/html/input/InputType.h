@@ -48,7 +48,7 @@ class InputType {
   virtual ~InputType() = default;
 
   // Float value returned by GetStep() when the step attribute is set to 'any'.
-  static constexpr Decimal kStepAny = Decimal(0_d);
+  static const Decimal kStepAny;
 
   /**
    * Drop the reference to the input element.

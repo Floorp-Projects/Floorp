@@ -365,9 +365,6 @@ macosx1100-64-qr-tests:
     - reftest
     - xpcshell
 
-macosx1100-aarch64-qr-tests:
-    - mochitest-media
-
 macosx1015-64-qr-tests:
     - cppunit
     - crashtest

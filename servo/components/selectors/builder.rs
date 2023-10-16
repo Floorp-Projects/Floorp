@@ -166,12 +166,10 @@ fn split_from_end<T>(s: &[T], at: usize) -> (&[T], &[T]) {
     s.split_at(s.len() - at)
 }
 
-/// Flags that indicate at which point of parsing a selector are we.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ToShmem)]
-pub (crate) struct SelectorFlags(u8);
-
 bitflags! {
-    impl SelectorFlags: u8 {
+    /// Flags that indicate at which point of parsing a selector are we.
+    #[derive(Default, ToShmem)]
+    pub (crate) struct SelectorFlags : u8 {
         const HAS_PSEUDO = 1 << 0;
         const HAS_SLOTTED = 1 << 1;
         const HAS_PART = 1 << 2;
@@ -351,8 +349,7 @@ where
             Component::ExplicitNoNamespace |
             Component::DefaultNamespace(..) |
             Component::Namespace(..) |
-            Component::RelativeSelectorAnchor |
-            Component::Invalid(..) => {
+            Component::RelativeSelectorAnchor => {
                 // Does not affect specificity
             },
         }

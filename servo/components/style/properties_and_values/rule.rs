@@ -7,8 +7,9 @@
 //! https://drafts.css-houdini.org/css-properties-values-api-1/#at-property-rule
 
 use super::{
+    registry::PropertyRegistration,
     syntax::{Descriptor, ParsedDescriptor},
-    value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
+    value::{AllowComputationallyDependent, ComputedValue},
 };
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
 use crate::error_reporting::ContextualParseError;
@@ -18,8 +19,8 @@ use crate::str::CssStringWriter;
 use crate::stylesheets::UrlExtraData;
 use crate::values::serialize_atom_name;
 use cssparser::{
-    AtRuleParser, BasicParseErrorKind, CowRcStr, DeclarationParser, ParseErrorKind, Parser,
-    ParserInput, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
+    AtRuleParser, CowRcStr, DeclarationParser, ParseErrorKind, Parser, ParserInput,
+    QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
 };
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use selectors::parser::SelectorParseErrorKind;
@@ -32,12 +33,12 @@ use to_shmem::{SharedMemoryBuilder, ToShmem};
 ///
 /// Valid `@property` rules result in a registered custom property, as if `registerProperty()` had
 /// been called with equivalent parameters.
-pub fn parse_property_block<'i, 't>(
+pub fn parse_property_block(
     context: &ParserContext,
-    input: &mut Parser<'i, 't>,
+    input: &mut Parser,
     name: PropertyRuleName,
     location: SourceLocation,
-) -> Result<PropertyRuleData, ParseError<'i>> {
+) -> PropertyRuleData {
     let mut rule = PropertyRuleData::empty(name, location);
     let mut parser = PropertyRuleParser {
         context,
@@ -54,22 +55,14 @@ pub fn parse_property_block<'i, 't>(
                 error.kind,
                 ParseErrorKind::Custom(StyleParseErrorKind::PropertySyntaxField(_))
             ) {
-                // If the provided string is not a valid syntax string (if it
-                // returns failure when consume a syntax definition is called on
-                // it), the descriptor is invalid and must be ignored.
                 ContextualParseError::UnsupportedValue(slice, error)
             } else {
-                // Unknown descriptors are invalid and ignored, but do not
-                // invalidate the @property rule.
                 ContextualParseError::UnsupportedPropertyDescriptor(slice, error)
             };
             context.log_css_error(location, error);
         }
     }
-    if rule.validate_registration(context.url_data).is_err() {
-        return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
-    }
-    Ok(rule)
+    rule
 }
 
 struct PropertyRuleParser<'a, 'b: 'a> {
@@ -186,9 +179,9 @@ property_descriptors! {
     "initial-value" initial_value: InitialValue,
 }
 
-/// Errors that can happen when registering a property.
+/// Errors that can happen when turning a property rule into a PropertyRegistration.
 #[allow(missing_docs)]
-pub enum PropertyRegistrationError {
+pub enum ToRegistrationError {
     MissingSyntax,
     MissingInherits,
     NoInitialValue,
@@ -216,7 +209,7 @@ impl PropertyRuleData {
         syntax: &Descriptor,
         initial_value: Option<&InitialValue>,
         url_data: &UrlExtraData,
-    ) -> Result<(), PropertyRegistrationError> {
+    ) -> Result<(), ToRegistrationError> {
         use crate::properties::CSSWideKeyword;
         // If the value of the syntax descriptor is the universal syntax definition, then the
         // initial-value descriptor is optional. If omitted, the initial value of the property is
@@ -229,14 +222,12 @@ impl PropertyRuleData {
         // the following conditions must be met for the @property rule to be valid:
 
         // The initial-value descriptor must be present.
-        let Some(initial) = initial_value else {
-            return Err(PropertyRegistrationError::NoInitialValue)
-        };
+        let Some(initial) = initial_value else { return Err(ToRegistrationError::NoInitialValue) };
 
         // A value that references the environment or other variables is not computationally
         // independent.
         if initial.has_references() {
-            return Err(PropertyRegistrationError::InitialValueNotComputationallyIndependent);
+            return Err(ToRegistrationError::InitialValueNotComputationallyIndependent);
         }
 
         let mut input = ParserInput::new(initial.css_text());
@@ -245,28 +236,33 @@ impl PropertyRuleData {
 
         // The initial-value cannot include CSS-wide keywords.
         if input.try_parse(CSSWideKeyword::parse).is_ok() {
-            return Err(PropertyRegistrationError::InitialValueNotComputationallyIndependent);
+            return Err(ToRegistrationError::InitialValueNotComputationallyIndependent);
         }
 
-        match SpecifiedRegisteredValue::parse(
+        match ComputedValue::parse(
             &mut input,
             syntax,
             url_data,
             AllowComputationallyDependent::No,
         ) {
             Ok(_) => {},
-            Err(_) => return Err(PropertyRegistrationError::InvalidInitialValue),
+            Err(_) => return Err(ToRegistrationError::InvalidInitialValue),
         }
 
         Ok(())
     }
 
     /// Performs relevant rule validity checks.
-    fn validate_registration(
+    ///
+    /// If these don't pass, we shouldn't end up with a property registration.
+    ///
+    /// NOTE(emilio): Currently per spec these should happen at parse-time, but I think that's just
+    /// a spec bug, see https://github.com/w3c/css-houdini-drafts/issues/1098
+    pub fn to_valid_registration(
         &self,
         url_data: &UrlExtraData,
-    ) -> Result<(), PropertyRegistrationError> {
-        use self::PropertyRegistrationError::*;
+    ) -> Result<PropertyRegistration, ToRegistrationError> {
+        use self::ToRegistrationError::*;
 
         // https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor:
         //
@@ -278,9 +274,16 @@ impl PropertyRuleData {
         //
         //     The inherits descriptor is required for the @property rule to be valid; if it’s
         //     missing, the @property rule is invalid.
-        if self.inherits.is_none() { return Err(MissingInherits) };
+        let Some(ref inherits) = self.inherits else { return Err(MissingInherits) };
 
-        Self::validate_initial_value(syntax.descriptor(), self.initial_value.as_ref(), url_data)
+        Self::validate_initial_value(syntax.descriptor(), self.initial_value.as_ref(), url_data)?;
+
+        Ok(PropertyRegistration {
+            syntax: syntax.descriptor().clone(),
+            inherits: *inherits == Inherits::True,
+            initial_value: self.initial_value.clone(),
+            url_data: url_data.clone(),
+        })
     }
 }
 

@@ -18,6 +18,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/TaskCategory.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsIAsyncInputStream.h"
@@ -104,7 +105,8 @@ nsresult FetchStreamReader::Create(JSContext* aCx, nsIGlobalObject* aGlobal,
 }
 
 FetchStreamReader::FetchStreamReader(nsIGlobalObject* aGlobal)
-    : mGlobal(aGlobal), mOwningEventTarget(mGlobal->SerialEventTarget()) {
+    : mGlobal(aGlobal),
+      mOwningEventTarget(mGlobal->EventTargetFor(TaskCategory::Other)) {
   MOZ_ASSERT(aGlobal);
 
   mozilla::HoldJSObjects(this);

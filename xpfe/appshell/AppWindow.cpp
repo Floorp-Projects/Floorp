@@ -20,7 +20,6 @@
 #include "nsQueryObject.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/Try.h"
 
 // Interfaces needed to be included
 #include "nsGlobalWindowOuter.h"

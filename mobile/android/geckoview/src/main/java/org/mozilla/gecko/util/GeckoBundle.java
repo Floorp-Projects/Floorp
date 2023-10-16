@@ -210,31 +210,6 @@ public final class GeckoBundle implements Parcelable {
   }
 
   /**
-   * Returns the value associated with a Double mapping, or null if the mapping does not exist.
-   *
-   * @param key Key to look for.
-   * @return Double value
-   */
-  public Double getDoubleObject(final String key) {
-    return getDoubleObject(key, null);
-  }
-
-  /**
-   * Returns the value associated with a Double mapping, or defaultValue if the mapping does not
-   * exist.
-   *
-   * @param key Key to look for.
-   * @return Double value
-   */
-  public Double getDoubleObject(final String key, final Double defaultValue) {
-    final Object value = mMap.get(key);
-    if (value == null) {
-      return defaultValue;
-    }
-    return ((Number) value).doubleValue();
-  }
-
-  /**
    * Returns the value associated with an int mapping, or defaultValue if the mapping does not
    * exist.
    *

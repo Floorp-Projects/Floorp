@@ -3289,17 +3289,22 @@ void XMLHttpRequestMainThread::SetTimeout(uint32_t aTimeout, ErrorResult& aRv) {
 }
 
 nsIEventTarget* XMLHttpRequestMainThread::GetTimerEventTarget() {
-  if (nsIGlobalObject* global = GetOwnerGlobal()) {
-    return global->SerialEventTarget();
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    return global->EventTargetFor(TaskCategory::Other);
   }
   return nullptr;
 }
 
 nsresult XMLHttpRequestMainThread::DispatchToMainThread(
     already_AddRefed<nsIRunnable> aRunnable) {
-  if (nsIGlobalObject* global = GetOwnerGlobal()) {
-    return global->Dispatch(std::move(aRunnable));
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    nsCOMPtr<nsIEventTarget> target =
+        global->EventTargetFor(TaskCategory::Other);
+    MOZ_ASSERT(target);
+
+    return target->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
   }
+
   return NS_DispatchToMainThread(std::move(aRunnable));
 }
 
@@ -3856,8 +3861,8 @@ void XMLHttpRequestMainThread::MaybeCreateBlobStorage() {
           : MutableBlobStorage::eOnlyInMemory;
 
   nsCOMPtr<nsIEventTarget> eventTarget;
-  if (nsIGlobalObject* global = GetOwnerGlobal()) {
-    eventTarget = global->SerialEventTarget();
+  if (nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal()) {
+    eventTarget = global->EventTargetFor(TaskCategory::Other);
   }
 
   mBlobStorage = new MutableBlobStorage(storageType, eventTarget);

@@ -22,11 +22,10 @@ const testSoftNavigation =
       const eventType = readValue(options.eventType, "click");
       const interactionType = readValue(options.interactionType, 'click');
       const expectLCP = options.validate != 'no-lcp';
-      const eventPrepWork = options.eventPrepWork;
       promise_test(async t => {
         await waitInitialLCP();
         const preClickLcp = await getLcpEntries();
-        setEvent(t, link, pushState, addContent, pushUrl, eventType, eventPrepWork);
+        setEvent(t, link, pushState, addContent, pushUrl, eventType);
         for (let i = 0; i < clicks; ++i) {
           const firstClick = (i === 0);
           let paint_entries_promise =
@@ -91,13 +90,8 @@ const testSoftNavigationNotDetected = options => {
         });
         t.step_timeout(resolve, 1000);
       });
-      if (document.softNavigations) {
-        assert_equals(
-          document.softNavigations, 0, 'Soft Navigation not detected');
-      }
-      const postClickLcp = await getLcpEntries();
       assert_equals(
-          preClickLcp.length, postClickLcp.length, 'No LCP entries accumulated');
+          document.softNavigations, 0, 'Soft Navigation not detected');
     }, options.testName);
   };
 
@@ -147,13 +141,10 @@ const interact =
       }
     }
 
-const setEvent = (t, button, pushState, addContent, pushUrl, eventType, prepWork) => {
+const setEvent = (t, button, pushState, addContent, pushUrl, eventType) => {
   const eventObject =
       (eventType == 'click' || eventType == 'keydown') ? button : window;
   eventObject.addEventListener(eventType, async e => {
-    if (prepWork &&!prepWork(t)) {
-      return;
-    }
     timestamps[counter]["eventStart"] = performance.now();
     // Jump through a task, to ensure task tracking is working properly.
     await new Promise(r => t.step_timeout(r, 0));

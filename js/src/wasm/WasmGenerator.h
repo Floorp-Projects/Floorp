@@ -73,7 +73,6 @@ struct CompiledCode {
   jit::CodeLabelVector codeLabels;
   StackMaps stackMaps;
   TryNoteVector tryNotes;
-  CodeRangeUnwindInfoVector codeRangeUnwindInfos;
 
   [[nodiscard]] bool swap(jit::MacroAssembler& masm);
 
@@ -87,7 +86,6 @@ struct CompiledCode {
     codeLabels.clear();
     stackMaps.clear();
     tryNotes.clear();
-    codeRangeUnwindInfos.clear();
     MOZ_ASSERT(empty());
   }
 
@@ -95,7 +93,7 @@ struct CompiledCode {
     return bytes.empty() && codeRanges.empty() && callSites.empty() &&
            callSiteTargets.empty() && trapSites.empty() &&
            symbolicAccesses.empty() && codeLabels.empty() && tryNotes.empty() &&
-           stackMaps.empty() && codeRangeUnwindInfos.empty();
+           stackMaps.empty();
   }
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

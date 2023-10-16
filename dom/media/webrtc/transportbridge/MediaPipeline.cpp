@@ -262,6 +262,7 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
       mRtpBytesSent(0),
       mRtpBytesReceived(0),
       mPc(aPc),
+      mFilter(),
       mRtpHeaderExtensionMap(new webrtc::RtpHeaderExtensionMap()),
       mPacketDumper(PacketDumper::GetPacketDumper(mPc)) {}
 

@@ -5185,16 +5185,6 @@ void LIRGenerator::visitCloseIterCache(MCloseIterCache* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitOptimizeGetIteratorCache(
-    MOptimizeGetIteratorCache* ins) {
-  MDefinition* value = ins->value();
-  MOZ_ASSERT(value->type() == MIRType::Value);
-
-  auto* lir = new (alloc()) LOptimizeGetIteratorCache(useBox(value), temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitStringLength(MStringLength* ins) {
   MOZ_ASSERT(ins->string()->type() == MIRType::String);
   define(new (alloc()) LStringLength(useRegisterAtStart(ins->string())), ins);
@@ -5567,20 +5557,6 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
       add(lir, ins);
     }
   }
-}
-
-void LIRGenerator::visitWasmBoundsCheckRange32(MWasmBoundsCheckRange32* ins) {
-  MDefinition* index = ins->index();
-  MDefinition* length = ins->length();
-  MDefinition* limit = ins->limit();
-
-  MOZ_ASSERT(index->type() == MIRType::Int32);
-  MOZ_ASSERT(length->type() == MIRType::Int32);
-  MOZ_ASSERT(limit->type() == MIRType::Int32);
-
-  add(new (alloc()) LWasmBoundsCheckRange32(
-          useRegister(index), useRegister(length), useRegister(limit), temp()),
-      ins);
 }
 
 void LIRGenerator::visitWasmAlignmentCheck(MWasmAlignmentCheck* ins) {

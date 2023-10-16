@@ -2362,13 +2362,6 @@
   num_temps: 1
   mir_op: true
 
-- name: OptimizeGetIteratorCache
-  result_type: WordSized
-  operands:
-    value: BoxedValue
-  num_temps: 1
-  mir_op: true
-
 # Read the number of actual arguments.
 - name: ArgumentsLength
   result_type: WordSized
@@ -2899,15 +2892,6 @@
 
 - name: WasmBoundsCheck64
   gen_boilerplate: false
-
-- name: WasmBoundsCheckRange32
-  result_type: WordSized
-  operands:
-    index: WordSized
-    length: WordSized
-    limit: WordSized
-  mir_op: true
-  num_temps: 1
 
 - name: WasmExtendU32Index
   result_type: WordSized

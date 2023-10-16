@@ -9,7 +9,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
-#include "mozilla/Try.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"

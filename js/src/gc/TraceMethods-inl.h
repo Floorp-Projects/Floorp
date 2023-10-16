@@ -108,6 +108,7 @@ void js::GCMarker::eagerlyMarkChildren(JSLinearString* linearStr) {
     }
 
     MOZ_ASSERT(linearStr->JSString::isLinear());
+    MOZ_ASSERT(!linearStr->isPermanentAtom());
     gc::AssertShouldMarkInZone(this, linearStr);
     if (!mark<opts>(static_cast<JSString*>(linearStr))) {
       break;

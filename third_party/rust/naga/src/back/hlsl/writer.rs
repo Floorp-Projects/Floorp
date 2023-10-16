@@ -2352,7 +2352,12 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 }
             }
             Expression::FunctionArgument(pos) => {
-                let key = func_ctx.argument_key(pos);
+                let key = match func_ctx.ty {
+                    back::FunctionType::Function(handle) => NameKey::FunctionArgument(handle, pos),
+                    back::FunctionType::EntryPoint(index) => {
+                        NameKey::EntryPointArgument(index, pos)
+                    }
+                };
                 let name = &self.names[&key];
                 write!(self.out, "{name}")?;
             }

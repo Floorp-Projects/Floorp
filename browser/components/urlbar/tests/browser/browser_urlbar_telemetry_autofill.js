@@ -166,11 +166,6 @@ add_setup(async function () {
   const originalCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
-  // Make sure autofill is tested without upgrading pages to https
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first_schemeless", false]],
-  });
-
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = originalCanRecord;
     await PlacesTestUtils.clearInputHistory();

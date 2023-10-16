@@ -29,8 +29,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/base/macros.h"
-#include "absl/log/log.h"
 #include "absl/numeric/internal/representation.h"
 #include "absl/random/internal/chi_square.h"
 #include "absl/random/internal/distribution_test_util.h"
@@ -115,8 +115,9 @@ TYPED_TEST(ExponentialDistributionTypedTest, SerializeTest) {
       if (sample < sample_min) sample_min = sample;
     }
     if (!std::is_same<TypeParam, long double>::value) {
-      LOG(INFO) << "Range {" << lambda << "}: " << sample_min << ", "
-                << sample_max << ", lambda=" << lambda;
+      ABSL_INTERNAL_LOG(INFO,
+                        absl::StrFormat("Range {%f}: %f, %f, lambda=%f", lambda,
+                                        sample_min, sample_max, lambda));
     }
 
     std::stringstream ss;
@@ -218,16 +219,17 @@ bool ExponentialDistributionTests::SingleZTest(const double p,
   const bool pass = absl::random_internal::Near("z", z, 0.0, max_err);
 
   if (!pass) {
-    // clang-format off
-    LOG(INFO)
-        << "p=" << p << " max_err=" << max_err << "\n"
-           " lambda=" << lambda() << "\n"
-           " mean=" << m.mean << " vs. " << mean() << "\n"
-           " stddev=" << std::sqrt(m.variance) << " vs. " << stddev() << "\n"
-           " skewness=" << m.skewness << " vs. " << skew() << "\n"
-           " kurtosis=" << m.kurtosis << " vs. " << kurtosis() << "\n"
-           " z=" << z << " vs. 0";
-    // clang-format on
+    ABSL_INTERNAL_LOG(
+        INFO, absl::StrFormat("p=%f max_err=%f\n"
+                              " lambda=%f\n"
+                              " mean=%f vs. %f\n"
+                              " stddev=%f vs. %f\n"
+                              " skewness=%f vs. %f\n"
+                              " kurtosis=%f vs. %f\n"
+                              " z=%f vs. 0",
+                              p, max_err, lambda(), m.mean, mean(),
+                              std::sqrt(m.variance), stddev(), m.skewness,
+                              skew(), m.kurtosis, kurtosis(), z));
   }
   return pass;
 }
@@ -272,16 +274,16 @@ double ExponentialDistributionTests::SingleChiSquaredTest() {
   double p = absl::random_internal::ChiSquarePValue(chi_square, dof);
 
   if (chi_square > threshold) {
-    for (size_t i = 0; i < cutoffs.size(); i++) {
-      LOG(INFO) << i << " : (" << cutoffs[i] << ") = " << counts[i];
+    for (int i = 0; i < cutoffs.size(); i++) {
+      ABSL_INTERNAL_LOG(
+          INFO, absl::StrFormat("%d : (%f) = %d", i, cutoffs[i], counts[i]));
     }
 
-    // clang-format off
-    LOG(INFO) << "lambda " << lambda() << "\n"
-                 " expected " << expected << "\n"
-              << kChiSquared << " " << chi_square << " (" << p << ")\n"
-              << kChiSquared << " @ 0.98 = " << threshold;
-    // clang-format on
+    ABSL_INTERNAL_LOG(INFO,
+                      absl::StrCat("lambda ", lambda(), "\n",     //
+                                   " expected ", expected, "\n",  //
+                                   kChiSquared, " ", chi_square, " (", p, ")\n",
+                                   kChiSquared, " @ 0.98 = ", threshold));
   }
   return p;
 }

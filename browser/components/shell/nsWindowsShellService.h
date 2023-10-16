@@ -29,7 +29,9 @@ class nsWindowsShellService : public nsIShellService,
 
  protected:
   nsresult LaunchControlPanelDefaultsSelectionUI();
+  nsresult LaunchControlPanelDefaultPrograms();
   nsresult LaunchModernSettingsDialogDefaultApps();
+  nsresult InvokeHTTPOpenAsVerb();
 };
 
 #endif  // nswindowsshellservice_h____

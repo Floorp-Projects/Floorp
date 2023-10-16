@@ -39,7 +39,6 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryScalarEnums.h"
-#include "mozilla/Try.h"
 
 #include "gfxPlatform.h"
 #include "gfxFont.h"
@@ -507,7 +506,6 @@ static constexpr struct {
     {"browser.theme.content-theme"_ns},
     {"dom.element.popover.enabled"_ns},
     {"mathml.legacy_mathvariant_attribute.disabled"_ns},
-    {"layout.css.always_underline_links"_ns},
 };
 
 // Read values from the user's preferences.
@@ -752,8 +750,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::MozComboboxtext:
     case ColorID::MozButtonhovertext:
     case ColorID::MozButtonactivetext:
-    case ColorID::MozHeaderbartext:
-    case ColorID::MozHeaderbarinactivetext:
     case ColorID::Captiontext:
     case ColorID::Inactivecaptiontext:  // TODO(emilio): Maybe make
                                         // Inactivecaptiontext Graytext?
@@ -823,8 +819,6 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Inactiveborder:
       color = NS_RGB(57, 57, 57);
       break;
-    case ColorID::MozHeaderbar:
-    case ColorID::MozHeaderbarinactive:
     case ColorID::Activecaption:
     case ColorID::Inactivecaption:
       color = NS_RGB(28, 27, 34);
@@ -1380,7 +1374,7 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
 
   StyleColorSchemeFlags style(aFlags);
   if (!style) {
-    style._0 = aDoc.GetColorSchemeBits();
+    style.bits = aDoc.GetColorSchemeBits();
   }
   const bool supportsDark = bool(style & StyleColorSchemeFlags::DARK);
   const bool supportsLight = bool(style & StyleColorSchemeFlags::LIGHT);

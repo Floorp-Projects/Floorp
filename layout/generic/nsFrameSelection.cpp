@@ -150,6 +150,7 @@ PeekOffsetStruct::PeekOffsetStruct(nsSelectionAmount aAmount,
       mDesiredCaretPos(aDesiredCaretPos),
       mWordMovementType(aWordMovementType),
       mOptions(aOptions),
+      mResultContent(),
       mResultFrame(nullptr),
       mContentOffset(0),
       mAttach(CARET_ASSOCIATE_BEFORE) {}

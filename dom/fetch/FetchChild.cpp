@@ -181,7 +181,8 @@ mozilla::ipc::IPCResult FetchChild::RecvOnFlushConsoleReport(
 
         reporter->FlushConsoleReports(workerRef->Private()->GetLoadGroup());
       });
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return IPC_OK();
 }
@@ -244,7 +245,8 @@ mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
       return;
     }
   });
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   if (mCSPEventListener) {
     Unused << NS_WARN_IF(
@@ -303,7 +305,8 @@ mozilla::ipc::IPCResult FetchChild::RecvOnNotifyNetworkMonitorAlternateStack(
         NotifyNetworkMonitorAlternateStack(channel, std::move(stack));
       });
 
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return IPC_OK();
 }

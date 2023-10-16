@@ -633,16 +633,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readArrayNewElem(&unusedUint1, &unusedUint2, &nothing,
                                         &nothing));
           }
-          case uint32_t(GcOp::ArrayInitData): {
-            uint32_t unusedUint1, unusedUint2;
-            CHECK(iter.readArrayInitData(&unusedUint1, &unusedUint2, &nothing,
-                                         &nothing, &nothing, &nothing));
-          }
-          case uint32_t(GcOp::ArrayInitElem): {
-            uint32_t unusedUint1, unusedUint2;
-            CHECK(iter.readArrayInitElem(&unusedUint1, &unusedUint2, &nothing,
-                                         &nothing, &nothing, &nothing));
-          }
           case uint32_t(GcOp::ArrayGet): {
             uint32_t unusedUint1;
             CHECK(iter.readArrayGet(&unusedUint1, FieldWideningOp::None,
@@ -671,11 +661,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             bool unusedBool;
             CHECK(iter.readArrayCopy(&unusedInt, &unusedBool, &nothing,
                                      &nothing, &nothing, &nothing, &nothing));
-          }
-          case uint32_t(GcOp::ArrayFill): {
-            uint32_t unusedTypeIndex;
-            CHECK(iter.readArrayFill(&unusedTypeIndex, &nothing, &nothing,
-                                     &nothing, &nothing));
           }
           case uint32_t(GcOp::RefI31): {
             CHECK(iter.readConversion(ValType::I32,
@@ -2040,7 +2025,8 @@ static bool DecodeTableTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
   Maybe<InitExpr> initExpr;
   if (initExprPresent) {
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, tableElemType, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, tableElemType,
+                                     env->globals.length(), &initializer)) {
       return false;
     }
     initExpr = Some(std::move(initializer));
@@ -2258,7 +2244,6 @@ static bool DecodeImportSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   env->numFuncImports = env->funcs.length();
-  env->numGlobalImports = env->globals.length();
   return true;
 }
 
@@ -2380,7 +2365,7 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
     }
 
     InitExpr initializer;
-    if (!InitExpr::decodeAndValidate(d, env, type, &initializer)) {
+    if (!InitExpr::decodeAndValidate(d, env, type, i, &initializer)) {
       return false;
     }
 
@@ -2658,7 +2643,8 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
     seg.tableIndex = tableIndex;
 
     InitExpr offset;
-    if (!InitExpr::decodeAndValidate(d, env, ValType::I32, &offset)) {
+    if (!InitExpr::decodeAndValidate(d, env, ValType::I32,
+                                     env->globals.length(), &offset)) {
       return false;
     }
     seg.offsetIfActive.emplace(std::move(offset));
@@ -2753,7 +2739,8 @@ static bool DecodeElemSegment(Decoder& d, ModuleEnvironment* env) {
       seg.elemExpressions.count = numElems;
       for (uint32_t i = 0; i < numElems; i++) {
         Maybe<LitVal> unusedLiteral;
-        if (!DecodeConstantExpression(d, env, elemType, &unusedLiteral)) {
+        if (!DecodeConstantExpression(d, env, elemType, env->globals.length(),
+                                      &unusedLiteral)) {
           return false;
         }
       }
@@ -3018,7 +3005,8 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
 
       InitExpr segOffset;
       ValType exprType = ToValType(env->memories[seg.memoryIndex].indexType());
-      if (!InitExpr::decodeAndValidate(d, env, exprType, &segOffset)) {
+      if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
+                                       &segOffset)) {
         return false;
       }
       seg.offsetIfActive.emplace(std::move(segOffset));

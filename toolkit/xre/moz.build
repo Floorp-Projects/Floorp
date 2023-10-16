@@ -12,8 +12,8 @@ with Files("**"):
 if CONFIG["OS_ARCH"] == "WINNT":
     TEST_DIRS += ["test/win"]
 
-MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
-BROWSER_CHROME_MANIFESTS += ["test/browser.toml"]
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
+BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 MARIONETTE_UNIT_MANIFESTS += ["test/marionette/marionette.ini"]
 
@@ -267,6 +267,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     ]
 
 CXXFLAGS += CONFIG["MOZ_DBUS_CFLAGS"]
+CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG["MOZ_GTK3_CFLAGS"]

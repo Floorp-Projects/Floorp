@@ -90,9 +90,13 @@ function _assertGleanTelemetry(telemetryName, expectedExtraList) {
   }
 }
 
-async function ensureQuickSuggestInit({ ...args } = {}) {
+async function ensureQuickSuggestInit({
+  merinoSuggestions = undefined,
+  config = undefined,
+} = {}) {
   return lazy.QuickSuggestTestUtils.ensureQuickSuggestInit({
-    ...args,
+    config,
+    merinoSuggestions,
     remoteSettingsResults: [
       {
         type: "data",

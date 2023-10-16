@@ -418,8 +418,7 @@ var gSearchResultsPane = {
       nodeObject.tagName == "label" ||
       nodeObject.tagName == "description" ||
       nodeObject.tagName == "menulist" ||
-      nodeObject.tagName == "menuitem" ||
-      nodeObject.tagName == "checkbox"
+      nodeObject.tagName == "menuitem"
     ) {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
       for (let node of simpleTextNodes) {

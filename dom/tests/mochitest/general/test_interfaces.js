@@ -1378,8 +1378,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TimeRanges", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "ToggleEvent", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Touch", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "TouchEvent", insecureContext: true },
@@ -1406,8 +1404,6 @@ let interfaceNamesInGlobalScope = [
   { name: "URL", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "URLSearchParams", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "UserActivation", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "UserProximityEvent", insecureContext: true, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -1942,6 +1938,8 @@ let interfaceNamesInGlobalScope = [
   { name: "setResizable", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "setTimeout", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "sizeToContent", insecureContext: true, nightly: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "speechSynthesis", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

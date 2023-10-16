@@ -16,7 +16,8 @@ JSObject* SVGStopElement::WrapNode(JSContext* aCx,
   return SVGStopElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-SVGElement::NumberInfo SVGStopElement::sNumberInfo = {nsGkAtoms::offset, 0};
+SVGElement::NumberInfo SVGStopElement::sNumberInfo = {nsGkAtoms::offset, 0,
+                                                      true};
 
 //----------------------------------------------------------------------
 // Implementation

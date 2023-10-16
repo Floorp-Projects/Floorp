@@ -306,6 +306,8 @@ function oncePerAnimationFrame(fn, { getDocument }) {
  *
  *       render() {
  *         return Tree({
+ *           itemHeight: 20, // px
+ *
  *           getRoots: () => [this.props.root],
  *
  *           getParent: item => item.parent,

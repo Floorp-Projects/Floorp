@@ -6,7 +6,7 @@
 #ifndef JoinSplitNodeDirection_h
 #define JoinSplitNodeDirection_h
 
-#include <ostream>
+#include <iostream>
 
 namespace mozilla {
 

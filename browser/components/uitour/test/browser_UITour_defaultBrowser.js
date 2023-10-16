@@ -15,7 +15,7 @@ MockShellService.prototype = {
   isDefaultBrowser(aStartupCheck, aForAllTypes) {
     return false;
   },
-  setDefaultBrowser(aForAllUsers) {
+  setDefaultBrowser(aClaimAllTypes, aForAllUsers) {
     setDefaultBrowserCalled = true;
   },
   shouldCheckDefaultBrowser: false,

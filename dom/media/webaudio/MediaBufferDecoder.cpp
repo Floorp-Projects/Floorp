@@ -204,7 +204,8 @@ bool MediaDecodeTask::Init() {
   RefPtr<BufferMediaResource> resource =
       new BufferMediaResource(static_cast<uint8_t*>(mBuffer), mLength);
 
-  mMainThread = AbstractThread::MainThread();
+  mMainThread = mDecodeJob.mContext->GetOwnerGlobal()->AbstractMainThreadFor(
+      TaskCategory::Other);
 
   mPSupervisorTaskQueue =
       TaskQueue::Create(GetMediaThreadPool(MediaThreadType::SUPERVISOR),

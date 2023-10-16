@@ -41,17 +41,11 @@ add_task(async function () {
   );
 
   const container = await getContainerForSelector("#top", inspector);
-  const scrollableBage = container.elt.querySelector(".scrollable-badge");
-  is(
-    scrollableBage.getAttribute("aria-pressed"),
-    "false",
-    "Scrollable badge is not pressed by default"
-  );
 
   info(
     "Clicking on the scrollable badge so that the overflow causing elements show up in the markup view."
   );
-  scrollableBage.click();
+  container.editor._scrollableBadge.click();
 
   await waitForContainers(["#child1", "#child3", "#child4"], inspector);
 
@@ -61,11 +55,9 @@ add_task(async function () {
     inspector
   );
 
-  ok(scrollableBage.classList.contains("active"), "Scrollable badge is active");
-  is(
-    scrollableBage.getAttribute("aria-pressed"),
-    "true",
-    "Scrollable badge is pressed"
+  ok(
+    container.editor._scrollableBadge.classList.contains("active"),
+    "Scrollable badge is active"
   );
 
   checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 1, "scalar");
@@ -89,7 +81,7 @@ add_task(async function () {
   info(
     "Clicking on the scrollable badge again so that all the overflow highlight gets removed."
   );
-  scrollableBage.click();
+  container.editor._scrollableBadge.click();
 
   await checkOverflowHighlight(
     [],
@@ -98,53 +90,17 @@ add_task(async function () {
   );
 
   ok(
-    !scrollableBage.classList.contains("active"),
+    !container.editor._scrollableBadge.classList.contains("active"),
     "Scrollable badge is not active"
-  );
-  is(
-    scrollableBage.getAttribute("aria-pressed"),
-    "false",
-    "Scrollable badge is not pressed anymore"
   );
 
   checkTelemetry("devtools.markup.scrollable.badge.clicked", "", 2, "scalar");
 
-  info("Triggering badge with the keyboard");
-  scrollableBage.focus();
-  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.ownerGlobal);
-  await checkOverflowHighlight(
-    ["#child2", "#child3"],
-    ["#child1", "#child4"],
-    inspector
-  );
-  ok(
-    scrollableBage.classList.contains("active"),
-    "badge can be activated with the keyboard"
-  );
-  is(
-    scrollableBage.getAttribute("aria-pressed"),
-    "true",
-    "Scrollable badge is pressed"
-  );
-
-  EventUtils.synthesizeKey("VK_RETURN", {}, scrollableBage.ownerGlobal);
-  await checkOverflowHighlight(
-    [],
-    ["#child1", "#child2", "#child3", "#child4"],
-    inspector
-  );
-  ok(
-    !scrollableBage.classList.contains("active"),
-    "Scrollable badge can be deactivated with the keyboard"
-  );
-  is(
-    scrollableBage.getAttribute("aria-pressed"),
-    "false",
-    "Scrollable badge is not pressed anymore"
-  );
-
   info("Double-click on the scrollable badge");
-  EventUtils.sendMouseEvent({ type: "dblclick" }, scrollableBage);
+  EventUtils.sendMouseEvent(
+    { type: "dblclick" },
+    container.editor._scrollableBadge
+  );
   ok(
     container.expanded,
     "Double clicking on the badge did not collapse the container"

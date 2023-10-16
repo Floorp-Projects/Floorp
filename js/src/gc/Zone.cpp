@@ -167,6 +167,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       allocNurseryStrings_(true),
       allocNurseryBigInts_(true),
       pretenuring(this),
+      compartments_(),
       crossZoneStringWrappers_(this),
       gcEphemeronEdges_(SystemAllocPolicy(), rt->randomHashCodeScrambler()),
       gcNurseryEphemeronEdges_(SystemAllocPolicy(),
@@ -575,9 +576,7 @@ void JS::Zone::checkUniqueIdTableAfterMovingGC() {
 
 js::jit::JitZone* Zone::createJitZone(JSContext* cx) {
   MOZ_ASSERT(!jitZone_);
-#ifndef ENABLE_PORTABLE_BASELINE_INTERP
   MOZ_ASSERT(cx->runtime()->hasJitRuntime());
-#endif
 
   auto jitZone = cx->make_unique<jit::JitZone>(allocNurseryStrings());
   if (!jitZone) {

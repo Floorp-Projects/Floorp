@@ -10,10 +10,9 @@ interface UnknownObject {
  * Base fixture for testing the exposed interface is correct (without actually using WebGPU).
  */
 export class IDLTest extends Fixture {
-  init(): Promise<void> {
+  async init(): Promise<void> {
     // Ensure the GPU provider is initialized
-    getGPU(this.rec);
-    return Promise.resolve();
+    getGPU();
   }
 
   /**

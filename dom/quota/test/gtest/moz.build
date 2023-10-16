@@ -30,7 +30,6 @@ UNIFIED_SOURCES = [
     "TestQuotaManager.cpp",
     "TestResultExtensions.cpp",
     "TestScopedLogExtraInfo.cpp",
-    "TestStorageConnection.cpp",
     "TestTelemetry.cpp",
     "TestUsageInfo.cpp",
 ]

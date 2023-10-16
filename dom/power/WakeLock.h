@@ -62,8 +62,11 @@ class WakeLock final : public nsIDOMEventListener,
   void AttachEventListener();
   void DetachEventListener();
 
-  bool mLocked = false;
-  bool mHidden = true;
+  // Return true if all parts of the given document are regarded as invisible.
+  bool IsDocumentInvisible(const Document& aDocument) const;
+
+  bool mLocked;
+  bool mHidden;
 
   // The ID of the ContentParent on behalf of whom we acquired this lock, or
   // CONTENT_PROCESS_UNKNOWN_ID if this lock was acquired on behalf of the

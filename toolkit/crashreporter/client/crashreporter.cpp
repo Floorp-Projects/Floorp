@@ -99,6 +99,7 @@ static string Unescape(const string& str) {
 }
 
 bool ReadStrings(istream& in, StringTable& strings, bool unescape) {
+  string currentSection;
   while (!in.eof()) {
     string line;
     std::getline(in, line);
@@ -256,7 +257,7 @@ void LogMessage(const std::string& message) {
     time(&tm);
     if (strftime(date, sizeof(date) - 1, "%c", localtime(&tm)) == 0)
       date[0] = '\0';
-    (*gLogStream) << "[" << date << "] " << message << '\n';
+    (*gLogStream) << "[" << date << "] " << message << std::endl;
   }
 }
 

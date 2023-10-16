@@ -78,14 +78,8 @@ namespace InspectorUtils {
 
   Element? containingBlockOf(Element element);
 
-  // If the element is styled as display:block, returns an array of numbers giving
-  // the number of lines in each fragment.
-  // Returns null if the element is not a block.
-  [NewObject] sequence<unsigned long>? getBlockLineCounts(Element element);
-
   [NewObject] NodeList getOverflowingChildrenOfElement(Element element);
   sequence<DOMString> getRegisteredCssHighlights(Document document, optional boolean activeOnly = false);
-  sequence<InspectorCSSPropertyDefinition> getCSSRegisteredProperties(Document document);
 };
 
 dictionary SupportsOptions {
@@ -148,14 +142,6 @@ dictionary InspectorFontFeature {
   required DOMString tag;
   required DOMString script;
   required DOMString languageSystem;
-};
-
-dictionary InspectorCSSPropertyDefinition {
-  required UTF8String name;
-  required UTF8String syntax;
-  required boolean inherits;
-  required UTF8String? initialValue;
-  required boolean fromJS;
 };
 
 [Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",

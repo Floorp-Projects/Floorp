@@ -191,7 +191,6 @@ export class BaseContent extends React.PureComponent {
     };
 
     const pocketRegion = prefs["feeds.system.topstories"];
-    const mayHaveSponsoredStories = prefs["system.showSponsored"];
     const { mayHaveSponsoredTopSites } = prefs;
 
     const outerClassName = [
@@ -224,7 +223,6 @@ export class BaseContent extends React.PureComponent {
           enabledSections={enabledSections}
           pocketRegion={pocketRegion}
           mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
-          mayHaveSponsoredStories={mayHaveSponsoredStories}
           showing={customizeMenuVisible}
         />
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}

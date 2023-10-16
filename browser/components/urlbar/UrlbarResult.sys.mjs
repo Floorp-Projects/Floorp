@@ -13,8 +13,10 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
@@ -250,16 +252,24 @@ export class UrlbarResult {
         lazy.UrlbarUtils.HIGHLIGHT.TYPED,
       ];
       try {
-        payloadInfo.title[0] = new URL(payloadInfo.url[0]).URI.displayHostPort;
+        payloadInfo.title[0] = new URL(payloadInfo.url[0]).host;
       } catch (e) {}
     }
 
     if (payloadInfo.url) {
       // For display purposes we need to unescape the url.
-      payloadInfo.displayUrl = [
-        lazy.UrlbarUtils.prepareUrlForDisplay(payloadInfo.url[0]),
-        payloadInfo.url[1],
-      ];
+      payloadInfo.displayUrl = [...payloadInfo.url];
+      let url = payloadInfo.displayUrl[0];
+      if (url && lazy.UrlbarPrefs.get("trimURLs")) {
+        url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
+        if (url.startsWith("https://")) {
+          url = url.substring(8);
+          if (url.startsWith("www.")) {
+            url = url.substring(4);
+          }
+        }
+      }
+      payloadInfo.displayUrl[0] = lazy.UrlbarUtils.unEscapeURIForUI(url);
     }
 
     // For performance reasons limit excessive string lengths, to reduce the

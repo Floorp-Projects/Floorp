@@ -807,14 +807,13 @@ browserRect.height: ${browserRect.height}`);
     await new Promise((resolve, reject) => {
       const doc = this.parentWindow.document;
       const script = doc.createElement("script");
-      script.type = "module";
-      script.src = "resource://pdf.js/build/pdf.mjs";
+      script.src = "resource://pdf.js/build/pdf.js";
       script.onload = resolve;
       script.onerror = () => reject(new Error("pdfjs load failed"));
       doc.documentElement.appendChild(script);
     });
     this.parentWindow.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      "resource://pdf.js/build/pdf.worker.mjs";
+      "resource://pdf.js/build/pdf.worker.js";
   }
 
   async loadPdf(data) {

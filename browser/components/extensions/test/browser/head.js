@@ -20,7 +20,7 @@
  *          openToolsMenu closeToolsMenu
  *          imageBuffer imageBufferFromDataURI
  *          getInlineOptionsBrowser
- *          getListStyleImage getRawListStyleImage getPanelForNode
+ *          getListStyleImage getPanelForNode
  *          awaitExtensionPanel awaitPopupResize
  *          promiseContentDimensions alterContent
  *          promisePrefChangeObserved openContextMenuInFrame
@@ -146,7 +146,7 @@ function getInlineOptionsBrowser(aboutAddonsBrowser) {
   return contentDocument.getElementById("addon-inline-options");
 }
 
-function getRawListStyleImage(button) {
+function getListStyleImage(button) {
   // Ensure popups are initialized so that the elements are rendered and
   // getComputedStyle works.
   for (
@@ -157,11 +157,10 @@ function getRawListStyleImage(button) {
     popup.ensureInitialized();
   }
 
-  return button.ownerGlobal.getComputedStyle(button).listStyleImage;
-}
+  let style = button.ownerGlobal.getComputedStyle(button);
 
-function getListStyleImage(button) {
-  let match = /url\("([^"]*)"\)/.exec(getRawListStyleImage(button));
+  let match = /^url\("(.*)"\)$/.exec(style.listStyleImage);
+
   return match && match[1];
 }
 

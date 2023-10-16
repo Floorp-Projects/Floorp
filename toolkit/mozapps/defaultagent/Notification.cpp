@@ -38,8 +38,6 @@
 // and we should give up on it
 #define MUTEX_TIMEOUT_MS (10 * 60 * 1000)
 
-namespace mozilla::default_agent {
-
 bool FirefoxInstallIsEnglish();
 
 static bool SetInitialNotificationShown(bool wasShown) {
@@ -260,20 +258,29 @@ static mozilla::WindowsError LaunchFirefoxToHandleDefaultBrowserAgent() {
  * showing the Default Apps page of Settings.
  *
  * @param aAumi The AUMI of the installation to set as default.
+ *
+ * @return Success (SUCCEEDED(hr)) if all associations were set with
+ *         UserChoice and checked successfully.
+ *         Other return codes indicate a failure which causes us to
+ *         fall back to Settings, see return codes of
+ *         SetDefaultBrowserUserChoice().
  */
-static void SetDefaultBrowserFromNotification(const wchar_t* aumi) {
-  nsresult rv = NS_ERROR_FAILURE;
+static HRESULT SetDefaultBrowserFromNotification(const wchar_t* aumi) {
+  // TODO maybe fall back to protocol dialog on Windows 11 (bug 1719832)?
+
+  HRESULT hr = E_FAIL;
   if (GetPrefSetDefaultBrowserUserChoice()) {
-    rv = SetDefaultBrowserUserChoice(aumi);
+    hr = SetDefaultBrowserUserChoice(aumi);
   }
 
-  if (NS_SUCCEEDED(rv)) {
+  if (!FAILED(hr)) {
     mozilla::Unused << LaunchFirefoxToHandleDefaultBrowserAgent();
   } else {
     LOG_ERROR_MESSAGE(L"Failed to SetDefaultBrowserUserChoice: %#X",
                       GetLastError());
     LaunchModernSettingsDialogDefaultApps();
   }
+  return hr;
 }
 
 // This encapsulates the data that needs to be protected by a mutex because it
@@ -674,5 +681,3 @@ void EnsureValidNotificationAction(std::string& actionString) {
     actionString = "no-action";
   }
 }
-
-}  // namespace mozilla::default_agent

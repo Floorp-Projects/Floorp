@@ -180,7 +180,11 @@ function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
 runClipboardCacheTests(false);
 
 // Test get data from clipboard cache.
-runClipboardCacheTests(true);
+// XXX: Linux doesn't yet use nsBaseClipboard, so it doesn't support getting data from
+// clipboard cache, bug 1851817.
+if (!navigator.platform.includes("Linux") && !SpecialPowers.isHeadless) {
+  runClipboardCacheTests(true);
+}
 
 </script>
 </body>

@@ -102,7 +102,7 @@ g.test('requestAdapter')
   )
   .fn(async t => {
     const { powerPreference, forceFallbackAdapter } = t.params;
-    const adapter = await getGPU(t.rec).requestAdapter({
+    const adapter = await getGPU().requestAdapter({
       ...(powerPreference !== undefined && { powerPreference }),
       ...(forceFallbackAdapter !== undefined && { forceFallbackAdapter }),
     });
@@ -118,7 +118,7 @@ g.test('requestAdapter')
 
 g.test('requestAdapter_no_parameters')
   .desc(`request adapter with no parameters`)
-  .fn(async t => {
-    const adapter = await getGPU(t.rec).requestAdapter();
+  .fn(async () => {
+    const adapter = await getGPU().requestAdapter();
     await testAdapter(adapter);
   });

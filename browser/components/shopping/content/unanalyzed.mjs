@@ -28,7 +28,13 @@ class UnanalyzedProductCard extends MozLitElement {
         composed: true,
       })
     );
-    Glean.shopping.surfaceAnalyzeReviewsNoneAvailableClicked.record();
+    this.dispatchEvent(
+      new CustomEvent("ShoppingTelemetryEvent", {
+        bubbles: true,
+        composed: true,
+        detail: "analyzeReviewsNoneAvailableClicked",
+      })
+    );
   }
 
   render() {
@@ -41,9 +47,9 @@ class UnanalyzedProductCard extends MozLitElement {
         <div id="unanalyzed-product-wrapper" slot="content">
           <img id="unanalyzed-product-icon" role="presentation" alt=""></img>
           <div id="unanalyzed-product-message-content">
-            <h2
+            <strong
               data-l10n-id="shopping-unanalyzed-product-header-2"
-            ></h2>
+            ></strong>
             <p data-l10n-id="shopping-unanalyzed-product-message-2"></p>
           </div>
           <button

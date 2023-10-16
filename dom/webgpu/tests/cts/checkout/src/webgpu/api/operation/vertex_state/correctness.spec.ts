@@ -1,5 +1,5 @@
 export const description = `
-TODO: Test more corner case values for Float16 / Float32 (INF, NaN, ...) and reduce the
+TODO: Test more corner case values for Float16 / Float32 (INF, NaN, +-0, ...) and reduce the
 float tolerance.
 `;
 
@@ -173,7 +173,7 @@ fn check(success : bool) {
 }
 
 fn floatsSimilar(a : f32, b : f32, tolerance : f32) -> bool {
-  // Note: -0.0 and 0.0 have different bit patterns, but compare as equal.
+  // TODO do we check for + and - 0?
   return abs(a - b) < tolerance;
 }
 
@@ -306,8 +306,7 @@ struct VSOutputs {
 
     switch (formatInfo.type) {
       case 'float': {
-        // -0.0 and +0.0 have different bit patterns, but compare as equal.
-        const data = [42.42, 0.0, -0.0, 1.0, -1.0, 1000, -18.7, 25.17];
+        const data = [42.42, 0.0, 1.0, -1.0, 1000, -18.7, 25.17];
         const expectedData = new Float32Array(data).buffer;
         const vertexData =
           bitSize === 32
@@ -941,15 +940,13 @@ g.test('max_buffers_and_attribs')
   .params(u => u.combine('format', kVertexFormats))
   .fn(t => {
     const { format } = t.params;
-    // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
-    const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
-    const attributesPerBuffer = Math.ceil(maxVertexAttributes / kMaxVertexBuffers);
+    const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
     let attributesEmitted = 0;
 
     const state: VertexLayoutState<{}, {}> = [];
     for (let i = 0; i < kMaxVertexBuffers; i++) {
       const attributes: GPUVertexAttribute[] = [];
-      for (let j = 0; j < attributesPerBuffer && attributesEmitted < maxVertexAttributes; j++) {
+      for (let j = 0; j < attributesPerBuffer && attributesEmitted < kMaxVertexAttributes; j++) {
         attributes.push({ format, offset: 0, shaderLocation: attributesEmitted });
         attributesEmitted++;
       }
@@ -1082,10 +1079,8 @@ g.test('overlapping_attributes')
   .fn(t => {
     const { format } = t.params;
 
-    // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
-    const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
     const attributes: GPUVertexAttribute[] = [];
-    for (let i = 0; i < maxVertexAttributes; i++) {
+    for (let i = 0; i < kMaxVertexAttributes; i++) {
       attributes.push({ format, offset: 0, shaderLocation: i });
     }
 

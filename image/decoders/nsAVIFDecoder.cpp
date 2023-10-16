@@ -269,12 +269,7 @@ nsAVIFDecoder::DecodeResult AVIFParser::GetImage(AVIFImage& aImage) {
     return AsVariant(status);
   }
 
-  // Ideally has_primary_item and no errors would guarantee primary_image.data
-  // exists but it doesn't so we check it too.
-  if (!image.primary_image.data) {
-    return AsVariant(nsAVIFDecoder::NonDecoderResult::NoSamples);
-  }
-
+  MOZ_ASSERT(image.primary_image.data);
   RefPtr<MediaRawData> colorImage =
       new MediaRawData(image.primary_image.data, image.primary_image.length);
   RefPtr<MediaRawData> alphaImage = nullptr;

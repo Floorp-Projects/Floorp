@@ -1099,17 +1099,11 @@ class AccessibleWalkerActor extends Actor {
    */
   _findAndAttachAccessible(event) {
     const target = event.originalTarget || event.target;
+    const docAcc = this.getRawAccessibleFor(this.rootDoc);
     const win = target.ownerGlobal;
-    // This event might be inside a sub-document, so don't use this.rootDoc.
-    const docAcc = this.getRawAccessibleFor(win.document);
     const zoom = this.isXUL ? 1 : getCurrentZoom(win);
     const scale = this.pixelRatio / zoom;
-    // If the target is inside a pop-up widget, we need to query the pop-up
-    // Accessible, not the DocAccessible. The DocAccessible can't hit test
-    // inside pop-ups.
-    const popup = win.isChromeWindow ? target.closest("panel") : null;
-    const containerAcc = popup ? this.getRawAccessibleFor(popup) : docAcc;
-    const rawAccessible = containerAcc.getDeepestChildAtPointInProcess(
+    const rawAccessible = docAcc.getDeepestChildAtPointInProcess(
       event.screenX * scale,
       event.screenY * scale
     );

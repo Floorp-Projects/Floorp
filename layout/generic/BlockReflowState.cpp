@@ -27,22 +27,24 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-BlockReflowState::BlockReflowState(
-    const ReflowInput& aReflowInput, nsPresContext* aPresContext,
-    nsBlockFrame* aFrame, bool aBStartMarginRoot, bool aBEndMarginRoot,
-    bool aBlockNeedsFloatManager, const nscoord aConsumedBSize,
-    const nscoord aEffectiveContentBoxBSize, const nscoord aInset)
+BlockReflowState::BlockReflowState(const ReflowInput& aReflowInput,
+                                   nsPresContext* aPresContext,
+                                   nsBlockFrame* aFrame, bool aBStartMarginRoot,
+                                   bool aBEndMarginRoot,
+                                   bool aBlockNeedsFloatManager,
+                                   const nscoord aConsumedBSize,
+                                   const nscoord aEffectiveContentBoxBSize)
     : mBlock(aFrame),
       mPresContext(aPresContext),
       mReflowInput(aReflowInput),
       mContentArea(aReflowInput.GetWritingMode()),
-      mInsetForBalance(aInset),
       mPushedFloats(nullptr),
       mOverflowTracker(nullptr),
       mBorderPadding(
           mReflowInput
               .ComputedLogicalBorderPadding(mReflowInput.GetWritingMode())
               .ApplySkipSides(aFrame->PreReflowBlockLevelLogicalSkipSides())),
+      mPrevBEndMargin(),
       mMinLineHeight(aReflowInput.GetLineHeight()),
       mLineNumber(0),
       mTrailingClearFromPIF(StyleClear::None),

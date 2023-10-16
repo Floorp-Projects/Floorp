@@ -30,11 +30,11 @@ namespace {
 const int kNumPixels = 16 * 16;
 class VP8DenoiserTest : public ::testing::TestWithParam<int> {
  public:
-  ~VP8DenoiserTest() override = default;
+  virtual ~VP8DenoiserTest() {}
 
-  void SetUp() override { increase_denoising_ = GetParam(); }
+  virtual void SetUp() { increase_denoising_ = GetParam(); }
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
   int increase_denoising_;

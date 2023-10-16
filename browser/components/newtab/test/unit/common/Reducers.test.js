@@ -955,9 +955,10 @@ describe("Reducers", () => {
     it("should set layout data with DISCOVERY_STREAM_LAYOUT_UPDATE", () => {
       const state = DiscoveryStream(undefined, {
         type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
-        data: { layout: ["test"] },
+        data: { layout: ["test"], lastUpdated: 123 },
       });
       assert.equal(state.layout[0], "test");
+      assert.equal(state.lastUpdated, 123);
     });
     it("should reset layout data with DISCOVERY_STREAM_LAYOUT_RESET", () => {
       const layoutData = { layout: ["test"], lastUpdated: 123 };

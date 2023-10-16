@@ -392,18 +392,6 @@
         {
           "type": "object",
           "properties": {
-            "type": {
-              "type": "string",
-              "enum": ["DECLINE_DEFAULT_PDF_HANDLER"]
-            }
-          },
-          "required": ["type"],
-          "additionalProperties": false,
-          "description": "Message action to decline setting Firefox as the default PDF handler"
-        },
-        {
-          "type": "object",
-          "properties": {
             "data": {
               "type": "object",
               "properties": {

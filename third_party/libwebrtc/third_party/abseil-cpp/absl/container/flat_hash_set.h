@@ -227,11 +227,7 @@ class flat_hash_set
   // iterator erase(const_iterator first, const_iterator last):
   //
   //   Erases the elements in the open interval [`first`, `last`), returning an
-  //   iterator pointing to `last`. The special case of calling
-  //   `erase(begin(), end())` resets the reserved growth such that if
-  //   `reserve(N)` has previously been called and there has been no intervening
-  //   call to `clear()`, then after calling `erase(begin(), end())`, it is safe
-  //   to assume that inserting N elements will not cause a rehash.
+  //   iterator pointing to `last`.
   //
   // size_type erase(const key_type& key):
   //
@@ -347,7 +343,7 @@ class flat_hash_set
   // for the past-the-end iterator, which is invalidated.
   //
   // `swap()` requires that the flat hash set's hashing and key equivalence
-  // functions be Swappable, and are exchanged using unqualified calls to
+  // functions be Swappable, and are exchaged using unqualified calls to
   // non-member `swap()`. If the set's allocator has
   // `std::allocator_traits<allocator_type>::propagate_on_container_swap::value`
   // set to `true`, the allocators are also exchanged using an unqualified call
@@ -476,6 +472,13 @@ struct FlatHashSetPolicy {
   template <class Allocator>
   static void destroy(Allocator* alloc, slot_type* slot) {
     absl::allocator_traits<Allocator>::destroy(*alloc, slot);
+  }
+
+  template <class Allocator>
+  static void transfer(Allocator* alloc, slot_type* new_slot,
+                       slot_type* old_slot) {
+    construct(alloc, new_slot, std::move(*old_slot));
+    destroy(alloc, old_slot);
   }
 
   static T& element(slot_type* slot) { return *slot; }

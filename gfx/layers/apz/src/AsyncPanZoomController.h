@@ -430,7 +430,7 @@ class AsyncPanZoomController {
    */
   bool HasTreeManager(const APZCTreeManager* aTreeManager) const;
 
-  void StartAnimation(already_AddRefed<AsyncPanZoomAnimation> aAnimation);
+  void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
    * Cancels any currently running animation.

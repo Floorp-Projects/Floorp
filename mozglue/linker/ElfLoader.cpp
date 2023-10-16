@@ -46,7 +46,18 @@ static int GetAndroidSDKVersion() {
   return version;
 }
 
-#endif /* ANDROID */
+#  if __ANDROID_API__ < 8
+/* Android API < 8 doesn't provide sigaltstack */
+
+extern "C" {
+
+inline int sigaltstack(const stack_t* ss, stack_t* oss) {
+  return syscall(__NR_sigaltstack, ss, oss);
+}
+
+} /* extern "C" */
+#  endif /* __ANDROID_API__ */
+#endif   /* ANDROID */
 
 #ifdef __ARM_EABI__
 extern "C" MOZ_EXPORT const void* __gnu_Unwind_Find_exidx(void* pc, int* pcount)
@@ -302,6 +313,10 @@ MFBT_API void* __dl_mmap(void* handle, void* addr, size_t length,
 MFBT_API void __dl_munmap(void* handle, void* addr, size_t length) {
   if (!handle) return;
   return reinterpret_cast<LibHandle*>(handle)->MappableMUnmap(addr, length);
+}
+
+MFBT_API bool IsSignalHandlingBroken() {
+  return ElfLoader::Singleton.isSignalHandlingBroken();
 }
 
 namespace {
@@ -1149,7 +1164,10 @@ struct TmpData {
 };
 
 SEGVHandler::SEGVHandler()
-    : initialized(false), registeredHandler(false), signalHandlingSlow(true) {
+    : initialized(false),
+      registeredHandler(false),
+      signalHandlingBroken(true),
+      signalHandlingSlow(true) {
   /* Ensure logging is initialized before the DEBUG_LOG in the test_handler.
    * As this constructor runs before the ElfLoader constructor (by effect
    * of ElfLoader inheriting from this class), this also initializes on behalf
@@ -1166,9 +1184,14 @@ SEGVHandler::SEGVHandler()
   struct sigaction old_action;
   sys_sigaction(SIGSEGV, nullptr, &old_action);
 
-  /* Some devices have a kernel option enabled that makes SIGSEGV handler
+  /* Some devices don't provide useful information to their SIGSEGV handlers,
+   * making it impossible for on-demand decompression to work. To check if
+   * we're on such a device, setup a temporary handler and deliberately
+   * trigger a segfault. The handler will set signalHandlingBroken if the
+   * provided information is bogus.
+   * Some other devices have a kernel option enabled that makes SIGSEGV handler
    * have an overhead so high that it affects how on-demand decompression
-   * performs. The handler will set signalHandlingSlow if the triggered
+   * performs. The handler will also set signalHandlingSlow if the triggered
    * SIGSEGV took too much time. */
   struct sigaction action;
   action.sa_sigaction = &SEGVHandler::test_handler;
@@ -1194,9 +1217,7 @@ void SEGVHandler::FinishInitialization() {
    * going to race with another thread. */
   initialized = true;
 
-  if (signalHandlingSlow) {
-    return;
-  }
+  if (signalHandlingBroken || signalHandlingSlow) return;
 
   typedef int (*sigaction_func)(int, const struct sigaction*,
                                 struct sigaction*);
@@ -1283,9 +1304,13 @@ SEGVHandler::~SEGVHandler() {
 }
 
 /* Test handler for a deliberately triggered SIGSEGV that determines whether
- * the segfault handler is called quickly enough. */
+ * useful information is provided to signal handlers, particularly whether
+ * si_addr is filled in properly, and whether the segfault handler is called
+ * quickly enough. */
 void SEGVHandler::test_handler(int signum, siginfo_t* info, void* context) {
   SEGVHandler& that = ElfLoader::Singleton;
+  if (signum == SIGSEGV && info && info->si_addr == that.stackPtr.get())
+    that.signalHandlingBroken = false;
   mprotect(that.stackPtr, that.stackPtr.GetLength(), PROT_READ | PROT_WRITE);
   TmpData* data = reinterpret_cast<TmpData*>(that.stackPtr.get());
   uint64_t latency = ProcessTimeStamp_Now() - data->crash_timestamp;

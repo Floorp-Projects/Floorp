@@ -94,7 +94,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 HTMLVideoElement::HTMLVideoElement(already_AddRefed<NodeInfo>&& aNodeInfo)
     : HTMLMediaElement(std::move(aNodeInfo)),
       mIsOrientationLocked(false),
-      mVideoWatchManager(this, AbstractThread::MainThread()) {
+      mVideoWatchManager(this, mAbstractMainThread) {
   DecoderDoctorLogger::LogConstruction(this);
 }
 
@@ -579,18 +579,20 @@ void HTMLVideoElement::MaybeBeginCloningVisually() {
         mVisualCloneTarget->GetVideoFrameContainer());
     NotifyDecoderActivityChanges();
     UpdateMediaControlAfterPictureInPictureModeChanged();
+    OwnerDoc()->EnableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
     VideoFrameContainer* container =
         mVisualCloneTarget->GetVideoFrameContainer();
     if (container) {
-      mSecondaryVideoOutput = MakeRefPtr<FirstFrameVideoOutput>(
-          container, AbstractThread::MainThread());
+      mSecondaryVideoOutput =
+          MakeRefPtr<FirstFrameVideoOutput>(container, mAbstractMainThread);
       mVideoWatchManager.Watch(
           mSecondaryVideoOutput->mFirstFrameRendered,
           &HTMLVideoElement::OnSecondaryVideoOutputFirstFrameRendered);
       SetSecondaryMediaStreamRenderer(container, mSecondaryVideoOutput);
     }
     UpdateMediaControlAfterPictureInPictureModeChanged();
+    OwnerDoc()->EnableChildElementInPictureInPictureMode();
   }
 }
 
@@ -600,6 +602,7 @@ void HTMLVideoElement::EndCloningVisually() {
   if (mDecoder) {
     mDecoder->SetSecondaryVideoContainer(nullptr);
     NotifyDecoderActivityChanges();
+    OwnerDoc()->DisableChildElementInPictureInPictureMode();
   } else if (mSrcStream) {
     if (mSecondaryVideoOutput) {
       mVideoWatchManager.Unwatch(
@@ -608,6 +611,7 @@ void HTMLVideoElement::EndCloningVisually() {
       mSecondaryVideoOutput = nullptr;
     }
     SetSecondaryMediaStreamRenderer(nullptr);
+    OwnerDoc()->DisableChildElementInPictureInPictureMode();
   }
 
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
@@ -635,7 +639,7 @@ void HTMLVideoElement::OnSecondaryVideoContainerInstalled(
     return;
   }
 
-  NS_DispatchToCurrentThread(NewRunnableMethod(
+  mMainThreadEventTarget->Dispatch(NewRunnableMethod(
       "Promise::MaybeResolveWithUndefined", mVisualCloneTargetPromise,
       &Promise::MaybeResolveWithUndefined));
   mVisualCloneTargetPromise = nullptr;

@@ -21,6 +21,7 @@
 #define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 500
 
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
+#undef LOG
 #define LOG(args) MOZ_LOG(sGetUserMediaLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
@@ -296,5 +297,3 @@ void MediaEngineWebRTC::Shutdown() {
 }
 
 }  // namespace mozilla
-
-#undef LOG

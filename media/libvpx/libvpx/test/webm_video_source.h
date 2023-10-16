@@ -29,16 +29,16 @@ class WebMVideoSource : public CompressedVideoSource {
         webm_ctx_(new WebmInputContext()), buf_(nullptr), buf_sz_(0), frame_(0),
         end_of_file_(false) {}
 
-  ~WebMVideoSource() override {
+  virtual ~WebMVideoSource() {
     if (vpx_ctx_->file != nullptr) fclose(vpx_ctx_->file);
     webm_free(webm_ctx_);
     delete vpx_ctx_;
     delete webm_ctx_;
   }
 
-  void Init() override {}
+  virtual void Init() {}
 
-  void Begin() override {
+  virtual void Begin() {
     vpx_ctx_->file = OpenTestDataFile(file_name_);
     ASSERT_NE(vpx_ctx_->file, nullptr)
         << "Input file open failed. Filename: " << file_name_;
@@ -48,7 +48,7 @@ class WebMVideoSource : public CompressedVideoSource {
     FillFrame();
   }
 
-  void Next() override {
+  virtual void Next() {
     ++frame_;
     FillFrame();
   }
@@ -74,11 +74,11 @@ class WebMVideoSource : public CompressedVideoSource {
     } while (!webm_ctx_->is_key_frame && !end_of_file_);
   }
 
-  const uint8_t *cxdata() const override {
+  virtual const uint8_t *cxdata() const {
     return end_of_file_ ? nullptr : buf_;
   }
-  size_t frame_size() const override { return buf_sz_; }
-  unsigned int frame_number() const override { return frame_; }
+  virtual size_t frame_size() const { return buf_sz_; }
+  virtual unsigned int frame_number() const { return frame_; }
 
  protected:
   std::string file_name_;

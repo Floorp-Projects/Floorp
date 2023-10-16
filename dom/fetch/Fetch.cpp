@@ -588,10 +588,11 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
 
     RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(
         p, observer, signalImpl, request->MozErrors());
-    RefPtr<FetchDriver> fetch = new FetchDriver(
-        std::move(r), principal, loadGroup, aGlobal->SerialEventTarget(),
-        cookieJarSettings, nullptr,  // PerformanceStorage
-        isTrackingFetch);
+    RefPtr<FetchDriver> fetch =
+        new FetchDriver(std::move(r), principal, loadGroup,
+                        aGlobal->EventTargetFor(TaskCategory::Other),
+                        cookieJarSettings, nullptr,  // PerformanceStorage
+                        isTrackingFetch);
     fetch->SetDocument(doc);
     resolver->SetLoadGroup(loadGroup);
     aRv = fetch->Fetch(signalImpl, resolver);
@@ -1196,7 +1197,7 @@ FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
     MOZ_ASSERT(wp);
     mMainThreadEventTarget = wp->MainThreadEventTarget();
   } else {
-    mMainThreadEventTarget = GetMainThreadSerialEventTarget();
+    mMainThreadEventTarget = aOwner->EventTargetFor(TaskCategory::Other);
   }
 
   MOZ_ASSERT(mMainThreadEventTarget);
@@ -1236,7 +1237,7 @@ template bool FetchBody<Response>::BodyUsed() const;
 template <class Derived>
 void FetchBody<Derived>::SetBodyUsed(JSContext* aCx, ErrorResult& aRv) {
   MOZ_ASSERT(aCx);
-  MOZ_ASSERT(mOwner->SerialEventTarget()->IsOnCurrentThread());
+  MOZ_ASSERT(mOwner->EventTargetFor(TaskCategory::Other)->IsOnCurrentThread());
 
   MOZ_DIAGNOSTIC_ASSERT(!BodyUsed(), "Consuming already used body?");
   if (BodyUsed()) {

@@ -254,9 +254,7 @@ class MediaTypesEnum : public IEnumMediaTypes {
                                         std::next(it));
       }
     } else {
-      RTC_LOG(LS_WARNING) << "Unsupported video type: "
-                          << rtc::ToString(
-                                 static_cast<int>(capability_.videoType))
+      RTC_LOG(LS_WARNING) << "Unsupported video type: " << *it
                           << ", using default preference list.";
     }
   }

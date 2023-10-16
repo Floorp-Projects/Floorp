@@ -5,13 +5,14 @@ the general image_copy tests, or by destroyed,*.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
-import { kBufferUsages, kTextureUsages } from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
 import {
   kDepthStencilFormats,
+  kBufferUsages,
+  kTextureUsages,
   depthStencilBufferTextureCopySupported,
   depthStencilFormatAspectSize,
-} from '../../../format_info.js';
+} from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { align } from '../../../util/math.js';
 import { kBufferCopyAlignment, kBytesPerRowAlignment } from '../../../util/texture/layout.js';
 import { ValidationTest } from '../validation_test.js';
@@ -74,7 +75,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(t => {
+  .fn(async t => {
     const { format, aspect } = t.params;
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
@@ -139,7 +140,7 @@ g.test('depth_stencil_format,copy_buffer_size')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(t => {
+  .fn(async t => {
     const { format, aspect, copyType, copySize } = t.params;
 
     const texture = t.device.createTexture({
@@ -246,7 +247,7 @@ g.test('depth_stencil_format,copy_buffer_offset')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(t => {
+  .fn(async t => {
     const { format, aspect, copyType, offset } = t.params;
 
     const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
@@ -321,7 +322,7 @@ g.test('sample_count')
       .beginSubcases()
       .combine('sampleCount', [1, 4])
   )
-  .fn(t => {
+  .fn(async t => {
     const { sampleCount, copyType } = t.params;
 
     let usage = GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST;
@@ -380,7 +381,7 @@ g.test('texture_buffer_usages')
       .expand('_bufferUsageValid', p => [p.bufferUsage === kRequiredBufferUsage[p.copyType]])
       .filter(p => p._textureUsageValid || p._bufferUsageValid)
   )
-  .fn(t => {
+  .fn(async t => {
     const { copyType, textureUsage, _textureUsageValid, bufferUsage, _bufferUsageValid } = t.params;
 
     const texture = t.device.createTexture({
@@ -425,7 +426,7 @@ g.test('device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(t => {
+  .fn(async t => {
     const { copyType, bufMismatched, texMismatched } = t.params;
 
     const uploadBufferSize = 32;

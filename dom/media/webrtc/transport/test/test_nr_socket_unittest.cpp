@@ -32,7 +32,13 @@ namespace mozilla {
 
 class TestNrSocketTest : public MtransportTest {
  public:
-  TestNrSocketTest() : wait_done_for_main_(false) {}
+  TestNrSocketTest()
+      : MtransportTest(),
+        wait_done_for_main_(false),
+        sts_(),
+        public_addrs_(),
+        private_addrs_(),
+        nats_() {}
 
   void SetUp() override {
     MtransportTest::SetUp();

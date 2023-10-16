@@ -384,7 +384,8 @@ class UserIdleBlocker final : public nsIAsyncShutdownBlocker {
 NS_IMPL_ISUPPORTS(UserIdleBlocker, nsIAsyncShutdownBlocker)
 
 nsUserIdleService::nsUserIdleService()
-    : mIdleObserverCount(0),
+    : mCurrentlySetToTimeoutAt(TimeStamp()),
+      mIdleObserverCount(0),
       mDeltaToNextIdleSwitchInS(UINT32_MAX),
       mLastUserInteraction(TimeStamp::Now()) {
   MOZ_ASSERT(!gIdleService);

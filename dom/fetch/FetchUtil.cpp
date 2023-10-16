@@ -497,7 +497,8 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
     RefPtr<JSStreamConsumer> consumer;
     if (aMaybeWorker) {
       RefPtr<WorkerStreamOwner> owner = WorkerStreamOwner::Create(
-          asyncStream, aMaybeWorker, aGlobal->SerialEventTarget());
+          asyncStream, aMaybeWorker,
+          aGlobal->EventTargetFor(TaskCategory::Other));
       if (!owner) {
         return false;
       }

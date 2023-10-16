@@ -157,7 +157,7 @@ impl super::Validator {
         &self,
         handle: Handle<crate::Expression>,
         gctx: crate::proc::GlobalCtx,
-        mod_info: &ModuleInfo,
+        mod_info: &mut ModuleInfo,
     ) -> Result<(), super::ConstExpressionError> {
         use crate::Expression as E;
 
@@ -492,7 +492,7 @@ impl super::Validator {
                             } => {}
                             _ => return Err(ExpressionError::InvalidSampleLevelBiasType(expr)),
                         }
-                        ShaderStages::FRAGMENT
+                        ShaderStages::all()
                     }
                     crate::SampleLevel::Gradient { x, y } => {
                         match resolver[x] {

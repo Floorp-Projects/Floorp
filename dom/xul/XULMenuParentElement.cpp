@@ -89,7 +89,7 @@ static void ActivateOrDeactivate(XULButtonElement& aButton, bool aActivate) {
   }
 
   nsCOMPtr<nsIRunnable> event = new MenuActivateEvent(&aButton, aActivate);
-  aButton.OwnerDoc()->Dispatch(event.forget());
+  aButton.OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
 }
 
 XULButtonElement* XULMenuParentElement::GetContainingMenu() const {

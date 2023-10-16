@@ -13,7 +13,7 @@ g.test('many')
     `Tests execution of a huge number of render passes using the same GPURenderPipeline. This uses
 a single render pass for every output fragment, with each pass executing a one-vertex draw call.`
   )
-  .fn(t => {
+  .fn(async t => {
     const kSize = 1024;
     const module = t.device.createShaderModule({
       code: `
@@ -73,7 +73,7 @@ g.test('pipeline_churn')
     `Tests execution of a large number of render pipelines, each within its own render pass. Each
 pass does a single draw call, with one pass per output fragment.`
   )
-  .fn(t => {
+  .fn(async t => {
     const kWidth = 64;
     const kHeight = 8;
     const module = t.device.createShaderModule({
@@ -126,8 +126,7 @@ pass does a single draw call, with one pass per output fragment.`
         primitive: { topology: 'point-list' },
         depthStencil: {
           format: 'depth24plus-stencil8',
-          depthCompare: 'always',
-          depthWriteEnabled: false,
+
           // Not really used, but it ensures that each pipeline is unique.
           depthBias: i,
         },
@@ -156,7 +155,7 @@ a single render pass with a single pipeline, and one draw call per fragment of t
 Each draw call is made with a unique bind group 0, with binding 0 referencing a unique uniform
 buffer.`
   )
-  .fn(t => {
+  .fn(async t => {
     const kSize = 128;
     const module = t.device.createShaderModule({
       code: `
@@ -238,7 +237,7 @@ g.test('many_draws')
     `Tests execution of render passes with a huge number of draw calls. This uses a single
 render pass with a single pipeline, and one draw call per fragment of the output texture.`
   )
-  .fn(t => {
+  .fn(async t => {
     const kSize = 4096;
     const module = t.device.createShaderModule({
       code: `
@@ -296,7 +295,7 @@ g.test('huge_draws')
     `Tests execution of several render passes with huge draw calls. Each pass uses a single draw
 call which draws multiple vertices for each fragment of a large output texture.`
   )
-  .fn(t => {
+  .fn(async t => {
     const kSize = 32768;
     const kTextureSize = 4096;
     const kVertsPerFragment = (kSize * kSize) / (kTextureSize * kTextureSize);

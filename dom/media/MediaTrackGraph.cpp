@@ -775,7 +775,8 @@ void MediaTrackGraphImpl::OpenAudioInputImpl(DeviceInputTrack* aTrack) {
         AudioInputChannelCount(nonNative->mDeviceId),
         AudioInputDevicePreference(nonNative->mDeviceId) ==
             AudioInputType::Voice,
-        nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate()));
+        nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate(),
+        StaticPrefs::media_clockdrift_buffering()));
   }
 }
 
@@ -1093,7 +1094,8 @@ void MediaTrackGraphImpl::ReevaluateInputDevice(CubebUtils::AudioDeviceID aID) {
           MakeRefPtr<AudioInputSourceListener>(nonNative),
           nonNative->GenerateSourceId(), aID, AudioInputChannelCount(aID),
           AudioInputDevicePreference(aID) == AudioInputType::Voice,
-          nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate()));
+          nonNative->mPrincipalHandle, nonNative->mSampleRate, GraphRate(),
+          StaticPrefs::media_clockdrift_buffering()));
     }
 
     return;
@@ -3418,14 +3420,22 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
       aGraphDriverRequested, aWindow->WindowID(),
       aWindow->AsGlobal()->ShouldResistFingerprinting(
           RFPTarget::AudioSampleRate),
-      aSampleRate, aOutputDeviceID, GetMainThreadSerialEventTarget());
+      aSampleRate, aOutputDeviceID,
+      aWindow->EventTargetFor(TaskCategory::Other));
 }
 
 MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
-    TrackRate aSampleRate) {
+    TrackRate aSampleRate, nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   nsISerialEventTarget* mainThread = GetMainThreadSerialEventTarget();
+  // aWindow can be null when the document is being unlinked, so this works when
+  // with a generic main thread if that's the case.
+  if (aWindow) {
+    mainThread =
+        aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other);
+  }
+
   // Offline graphs have 0 output channel count: they write the output to a
   // buffer, not an audio output track.
   MediaTrackGraphImpl* graph =

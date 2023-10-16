@@ -15,7 +15,7 @@ namespace mozilla::dom {
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AudioListener, mContext)
 
 AudioListenerEngine::AudioListenerEngine()
-    : mFrontVector(0., 0., -1.), mRightVector(1., 0., 0.) {}
+    : mPosition(), mFrontVector(0., 0., -1.), mRightVector(1., 0., 0.) {}
 
 void AudioListenerEngine::RecvListenerEngineEvent(
     AudioListenerEngine::AudioListenerParameter aParameter,
@@ -46,7 +46,7 @@ const ThreeDPoint& AudioListenerEngine::RightVector() const {
 AudioListener::AudioListener(AudioContext* aContext)
     : mContext(aContext),
       mEngine(new AudioListenerEngine()),
-
+      mPosition(),
       mFrontVector(0., 0., -1.),
       mRightVector(1., 0., 0.) {
   MOZ_ASSERT(aContext);

@@ -14,7 +14,6 @@ dictionary USBDeviceFilter {
 
 dictionary USBDeviceRequestOptions {
   required sequence<USBDeviceFilter> filters;
-  sequence<USBDeviceFilter> exclusionFilters = [];
 };
 
 [Exposed=(Worker,Window), SecureContext]
@@ -232,7 +231,6 @@ interface USBEndpoint {
 
 dictionary USBPermissionDescriptor : PermissionDescriptor {
   sequence<USBDeviceFilter> filters;
-  sequence<USBDeviceFilter> exclusionFilters;
 };
 
 dictionary AllowedUSBDevice {

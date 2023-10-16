@@ -347,7 +347,8 @@ already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
    public:
     QueueDecodeTask(nsImageLoadingContent* aOwner, Promise* aPromise,
                     uint32_t aRequestGeneration)
-        : mOwner(aOwner),
+        : MicroTaskRunnable(),
+          mOwner(aOwner),
           mPromise(aPromise),
           mRequestGeneration(aRequestGeneration) {}
 
@@ -1791,12 +1792,11 @@ bool nsImageLoadingContent::ScriptedImageObserver::CancelRequests() {
 }
 
 Element* nsImageLoadingContent::FindImageMap() {
-  return FindImageMap(AsContent()->AsElement());
-}
+  nsIContent* thisContent = AsContent();
+  Element* thisElement = thisContent->AsElement();
 
-/* static */ Element* nsImageLoadingContent::FindImageMap(Element* aElement) {
   nsAutoString useMap;
-  aElement->GetAttr(nsGkAtoms::usemap, useMap);
+  thisElement->GetAttr(nsGkAtoms::usemap, useMap);
   if (useMap.IsEmpty()) {
     return nullptr;
   }
@@ -1817,15 +1817,15 @@ Element* nsImageLoadingContent::FindImageMap() {
   }
 
   RefPtr<nsContentList> imageMapList;
-  if (aElement->IsInUncomposedDoc()) {
+  if (thisElement->IsInUncomposedDoc()) {
     // Optimize the common case and use document level image map.
-    imageMapList = aElement->OwnerDoc()->ImageMapList();
+    imageMapList = thisElement->OwnerDoc()->ImageMapList();
   } else {
     // Per HTML spec image map should be searched in the element's scope,
     // so using SubtreeRoot() here.
     // Because this is a temporary list, we don't need to make it live.
     imageMapList =
-        new nsContentList(aElement->SubtreeRoot(), kNameSpaceID_XHTML,
+        new nsContentList(thisElement->SubtreeRoot(), kNameSpaceID_XHTML,
                           nsGkAtoms::map, nsGkAtoms::map, true, /* deep */
                           false /* live */);
   }

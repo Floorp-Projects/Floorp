@@ -38,6 +38,7 @@ CubebDeviceEnumerator* CubebDeviceEnumerator::GetInstance() {
         setClearOnShutdown();
       } else {
         SchedulerGroup::Dispatch(
+            TaskCategory::Other,
             NS_NewRunnableFunction("CubebDeviceEnumerator::::GetInstance()",
                                    std::move(setClearOnShutdown)));
       }

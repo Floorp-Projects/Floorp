@@ -196,6 +196,11 @@ add_task(async function test_multistage_aboutwelcome_default() {
 
   await onButtonClick(browser, "button.primary");
 
+  // No 3rd screen to go to for win7.
+  if (win7Content) {
+    return;
+  }
+
   await test_screen_content(
     browser,
     "multistage step 3",
@@ -363,6 +368,9 @@ add_task(async function test_AWMultistage_Primary_Action() {
 });
 
 add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
+  if (win7Content) {
+    return;
+  }
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   const sandbox = sinon.createSandbox();
@@ -429,6 +437,11 @@ add_task(async function test_AWMultistage_Secondary_Open_URL_Action() {
 });
 
 add_task(async function test_AWMultistage_Themes() {
+  // No theme screen to test for win7.
+  if (win7Content) {
+    return;
+  }
+
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 
@@ -575,6 +588,10 @@ add_task(async function test_AWMultistage_can_restore_theme() {
 });
 
 add_task(async function test_AWMultistage_Import() {
+  // No import screen to test for win7.
+  if (win7Content) {
+    return;
+  }
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
 

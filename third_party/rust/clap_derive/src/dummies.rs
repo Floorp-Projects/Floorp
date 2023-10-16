@@ -7,7 +7,6 @@ use quote::quote;
 pub fn parser(name: &Ident) -> proc_macro2::TokenStream {
     let into_app = into_app(name);
     quote!(
-        #[automatically_derived]
         impl clap::Parser for #name {}
         #into_app
     )
@@ -16,7 +15,6 @@ pub fn parser(name: &Ident) -> proc_macro2::TokenStream {
 #[must_use]
 pub fn into_app(name: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        #[automatically_derived]
         impl clap::CommandFactory for #name {
             fn command<'b>() -> clap::Command {
                 unimplemented!()
@@ -31,7 +29,6 @@ pub fn into_app(name: &Ident) -> proc_macro2::TokenStream {
 #[must_use]
 pub fn from_arg_matches(name: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        #[automatically_derived]
         impl clap::FromArgMatches for #name {
             fn from_arg_matches(_m: &clap::ArgMatches) -> ::std::result::Result<Self, clap::Error> {
                 unimplemented!()
@@ -47,7 +44,6 @@ pub fn from_arg_matches(name: &Ident) -> proc_macro2::TokenStream {
 pub fn subcommand(name: &Ident) -> proc_macro2::TokenStream {
     let from_arg_matches = from_arg_matches(name);
     quote! {
-        #[automatically_derived]
         impl clap::Subcommand for #name {
             fn augment_subcommands(_cmd: clap::Command) -> clap::Command {
                 unimplemented!()
@@ -67,7 +63,6 @@ pub fn subcommand(name: &Ident) -> proc_macro2::TokenStream {
 pub fn args(name: &Ident) -> proc_macro2::TokenStream {
     let from_arg_matches = from_arg_matches(name);
     quote! {
-        #[automatically_derived]
         impl clap::Args for #name {
             fn augment_args(_cmd: clap::Command) -> clap::Command {
                 unimplemented!()
@@ -83,7 +78,6 @@ pub fn args(name: &Ident) -> proc_macro2::TokenStream {
 #[must_use]
 pub fn value_enum(name: &Ident) -> proc_macro2::TokenStream {
     quote! {
-        #[automatically_derived]
         impl clap::ValueEnum for #name {
             fn value_variants<'a>() -> &'a [Self]{
                 unimplemented!()

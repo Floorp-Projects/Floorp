@@ -134,7 +134,7 @@ enum class WasmFeatureStage {
   FEATURE(                                                              \
     /* capitalized name   */ FunctionReferences,                        \
     /* lower case name    */ functionReferences,                        \
-    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* stage              */ WasmFeatureStage::Experimental,            \
     /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,          \
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
@@ -145,7 +145,7 @@ enum class WasmFeatureStage {
   FEATURE(                                                              \
     /* capitalized name   */ Gc,                                        \
     /* lower case name    */ gc,                                        \
-    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* stage              */ WasmFeatureStage::Experimental,            \
     /* compile predicate  */ WASM_GC_ENABLED,                           \
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \

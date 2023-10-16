@@ -57,6 +57,9 @@ vendoring:
 
   exclude:
     - "**"
+    - "**/.*"
+    - ".*"
+    - ".*/**"
     - "src/test*"
     - src/hb-ucdn
 

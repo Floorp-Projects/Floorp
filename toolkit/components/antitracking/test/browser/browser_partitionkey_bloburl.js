@@ -6,7 +6,10 @@ const EMPTY_URI =
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.partition.bloburl_per_partition_key", true]],
+    set: [
+      ["privacy.partition.bloburl_per_partition_key", true],
+      ["privacy.partition.bloburl_per_agent_cluster", false],
+    ],
   });
 });
 

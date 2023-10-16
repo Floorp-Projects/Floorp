@@ -32,6 +32,11 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if defined(__FreeBSD__) && !defined(__Userspace__)
+#include <sys/cdefs.h>
+__FBSDID("$FreeBSD$");
+#endif
+
 #ifndef _NETINET_SCTP_VAR_H_
 #define _NETINET_SCTP_VAR_H_
 
@@ -202,7 +207,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 }
 
 #define sctp_sbfree(ctl, stcb, sb, m) { \
-	SCTP_SB_DECR(sb, SCTP_BUF_LEN((m))); \
+	SCTP_SAVE_ATOMIC_DECREMENT(&(sb)->sb_cc, SCTP_BUF_LEN((m))); \
 	SCTP_SAVE_ATOMIC_DECREMENT(&(sb)->sb_mbcnt, MSIZE); \
 	if (((ctl)->do_not_ref_stcb == 0) && stcb) {\
 		SCTP_SAVE_ATOMIC_DECREMENT(&(stcb)->asoc.sb_cc, SCTP_BUF_LEN((m))); \
@@ -214,7 +219,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 }
 
 #define sctp_sballoc(stcb, sb, m) { \
-	SCTP_SB_INCR(sb, SCTP_BUF_LEN((m))); \
+	atomic_add_int(&(sb)->sb_cc,SCTP_BUF_LEN((m))); \
 	atomic_add_int(&(sb)->sb_mbcnt, MSIZE); \
 	if (stcb) { \
 		atomic_add_int(&(stcb)->asoc.sb_cc, SCTP_BUF_LEN((m))); \
@@ -245,7 +250,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 }
 
 #define sctp_sbfree(ctl, stcb, sb, m) { \
-	SCTP_SB_DECR(sb, SCTP_BUF_LEN((m))); \
+	SCTP_SAVE_ATOMIC_DECREMENT(&(sb)->sb_cc, SCTP_BUF_LEN((m))); \
 	SCTP_SAVE_ATOMIC_DECREMENT(&(sb)->sb_mbcnt, MSIZE); \
 	if (((ctl)->do_not_ref_stcb == 0) && stcb) { \
 		SCTP_SAVE_ATOMIC_DECREMENT(&(stcb)->asoc.sb_cc, SCTP_BUF_LEN((m))); \
@@ -254,7 +259,7 @@ extern struct pr_usrreqs sctp_usrreqs;
 }
 
 #define sctp_sballoc(stcb, sb, m) { \
-	SCTP_SB_INCR(sb, SCTP_BUF_LEN((m))); \
+	atomic_add_int(&(sb)->sb_cc, SCTP_BUF_LEN((m))); \
 	atomic_add_int(&(sb)->sb_mbcnt, MSIZE); \
 	if (stcb) { \
 		atomic_add_int(&(stcb)->asoc.sb_cc, SCTP_BUF_LEN((m))); \
@@ -366,11 +371,6 @@ struct sctphdr;
 void sctp_close(struct socket *so);
 #else
 int sctp_detach(struct socket *so);
-#endif
-#if defined(__FreeBSD__) && !defined(__Userspace__)
-void sctp_abort(struct socket *so);
-#else
-int sctp_abort(struct socket *so);
 #endif
 int sctp_disconnect(struct socket *so);
 #if !defined(__Userspace__)

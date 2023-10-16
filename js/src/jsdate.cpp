@@ -24,7 +24,6 @@
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
-#include <cstring>
 #include <iterator>
 #include <math.h>
 #include <string.h>
@@ -1253,7 +1252,6 @@ static constexpr CharsAndAction keywords[] = {
   { "december", 12 },
   // Time zone abbreviations.
   { "gmt", 10000 + 0 },
-  { "z", 10000 + 0 },
   { "ut", 10000 + 0 },
   { "utc", 10000 + 0 },
   { "est", 10000 + 5 * 60 },
@@ -1454,16 +1452,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
           return false;
         }
       } else if (index < length && c != ',' && c > ' ' && c != '-' &&
-                 c != '(' &&
-                 // Allow zulu time e.g. "09/26/1995 16:00Z"
-                 !(hour != -1 && strchr("Zz", c)) &&
-                 // Allow '.' after day of month i.e. DD.Mon.YYYY/Mon.DD.YYYY,
-                 // or after year/month in YYYY/MM/DD
-                 (c != '.' || mday != -1) &&
-                 // Allow month or AM/PM directly after a number
-                 (!IsAsciiAlpha(c) ||
-                  (mon != -1 && !(strchr("AaPp", c) && index < length - 1 &&
-                                  strchr("Mm", s[index + 1]))))) {
+                 c != '(') {
         return false;
       } else if (seenPlusMinus && n < 60) { /* handle GMT-3:30 */
         if (tzOffset < 0) {

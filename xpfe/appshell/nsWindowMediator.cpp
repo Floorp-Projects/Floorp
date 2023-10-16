@@ -40,7 +40,8 @@ nsresult nsWindowMediator::GetDOMWindow(
 }
 
 nsWindowMediator::nsWindowMediator()
-    : mOldestWindow(nullptr),
+    : mEnumeratorList(),
+      mOldestWindow(nullptr),
       mTopmostWindow(nullptr),
       mTimeStamp(0),
       mSortingZOrder(false),

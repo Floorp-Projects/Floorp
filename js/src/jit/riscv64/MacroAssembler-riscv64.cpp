@@ -2122,12 +2122,12 @@ CodeOffset MacroAssembler::nopPatchableToCall() {
   nop();  // jirl
   return CodeOffset(currentOffset());
 }
-FaultingCodeOffset MacroAssembler::wasmTrapInstruction() {
+CodeOffset MacroAssembler::wasmTrapInstruction() {
+  CodeOffset offset(currentOffset());
   BlockTrampolinePoolScope block_trampoline_pool(this, 2);
-  FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
   illegal_trap(kWasmTrapCode);
   ebreak();
-  return fco;
+  return offset;
 }
 size_t MacroAssembler::PushRegsInMaskSizeInBytes(LiveRegisterSet set) {
   return set.gprs().size() * sizeof(intptr_t) + set.fpus().getPushSizeInBytes();
@@ -3469,11 +3469,6 @@ void MacroAssembler::popReturnAddress() { pop(ra); }
 void MacroAssembler::PopStackPtr() {
   loadPtr(Address(StackPointer, 0), StackPointer);
   adjustFrame(-int32_t(sizeof(intptr_t)));
-}
-void MacroAssembler::freeStackTo(uint32_t framePushed) {
-  MOZ_ASSERT(framePushed <= framePushed_);
-  ma_sub64(StackPointer, FramePointer, Imm32(framePushed));
-  framePushed_ = framePushed;
 }
 void MacroAssembler::PushBoxed(FloatRegister reg) {
   subFromStackPtr(Imm32(sizeof(double)));

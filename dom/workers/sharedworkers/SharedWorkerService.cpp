@@ -125,12 +125,14 @@ already_AddRefed<SharedWorkerService> SharedWorkerService::GetOrCreate() {
   if (!sSharedWorkerService) {
     sSharedWorkerService = new SharedWorkerService();
     // ClearOnShutdown can only be called on main thread
-    nsresult rv = SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-        "RegisterSharedWorkerServiceClearOnShutdown", []() {
-          StaticMutexAutoLock lock(sSharedWorkerMutex);
-          MOZ_ASSERT(sSharedWorkerService);
-          ClearOnShutdown(&sSharedWorkerService);
-        }));
+    nsresult rv = SchedulerGroup::Dispatch(
+        TaskCategory::Other,
+        NS_NewRunnableFunction("RegisterSharedWorkerServiceClearOnShutdown",
+                               []() {
+                                 StaticMutexAutoLock lock(sSharedWorkerMutex);
+                                 MOZ_ASSERT(sSharedWorkerService);
+                                 ClearOnShutdown(&sSharedWorkerService);
+                               }));
     Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
@@ -156,7 +158,7 @@ void SharedWorkerService::GetOrCreateWorkerManager(
       new GetOrCreateWorkerManagerRunnable(this, aActor, aData, aWindowID,
                                            aPortIdentifier);
 
-  nsresult rv = SchedulerGroup::Dispatch(r.forget());
+  nsresult rv = SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
   Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 

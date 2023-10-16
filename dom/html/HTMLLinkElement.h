@@ -61,7 +61,7 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
                       nsIPrincipal* aMaybeScriptedPrincipal,
                       nsAttrValue& aResult) override;
 
-  void CreateAndDispatchEvent(const nsAString& aEventName);
+  void CreateAndDispatchEvent(Document* aDoc, const nsAString& aEventName);
 
   // WebIDL
   bool Disabled() const;

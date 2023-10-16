@@ -12,23 +12,14 @@ partial dictionary CredentialRequestOptions {
   IdentityCredentialRequestOptions identity;
 };
 
-enum IdentityCredentialRequestOptionsContext {
-  "signin",
-  "signup",
-  "use",
-  "continue"
-};
-
 dictionary IdentityCredentialRequestOptions {
-  required sequence<IdentityProviderConfig> providers;
-  IdentityCredentialRequestOptionsContext context = "signin";
+  sequence<IdentityProviderConfig> providers;
 };
 
 dictionary IdentityProviderConfig {
   required USVString configURL;
   required USVString clientId;
   USVString nonce;
-  DOMString loginHint;
 };
 
 dictionary IdentityProviderWellKnown {
@@ -61,7 +52,6 @@ dictionary IdentityProviderAccount {
   USVString given_name;
   USVString picture;
   sequence<USVString> approved_clients;
-  sequence<DOMString> login_hints;
 };
 dictionary IdentityProviderAccountList {
   sequence<IdentityProviderAccount> accounts;
@@ -74,15 +64,4 @@ dictionary IdentityProviderToken {
 dictionary IdentityProviderClientMetadata {
   USVString privacy_policy_url;
   USVString terms_of_service_url;
-};
-
-dictionary IdentityUserInfo {
-  USVString email;
-  USVString name;
-  USVString givenName;
-  USVString picture;
-};
-
-[Exposed=Window, SecureContext] interface IdentityProvider {
-    static Promise<sequence<IdentityUserInfo>> getUserInfo(IdentityProviderConfig config);
 };

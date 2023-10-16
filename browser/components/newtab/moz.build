@@ -42,12 +42,12 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "browser-newtab"
 
 EXTRA_JS_MODULES += [
-    "AboutNewTabService.sys.mjs",
+    "AboutNewTabService.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [
-    "aboutwelcome/AboutWelcomeChild.sys.mjs",
-    "aboutwelcome/AboutWelcomeParent.sys.mjs",
+    "aboutwelcome/AboutWelcomeChild.jsm",
+    "aboutwelcome/AboutWelcomeParent.jsm",
     "actors/ASRouterChild.sys.mjs",
     "actors/ASRouterParent.sys.mjs",
 ]

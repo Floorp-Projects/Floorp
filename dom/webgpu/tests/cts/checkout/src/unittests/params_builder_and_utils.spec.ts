@@ -2,7 +2,6 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
-import { TestParams } from '../common/framework/fixture.js';
 import {
   kUnitCaseParamsBuilder,
   CaseSubcaseIterable,
@@ -10,11 +9,7 @@ import {
   builderIterateCasesWithSubcases,
 } from '../common/framework/params_builder.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
-import {
-  mergeParams,
-  mergeParamsChecked,
-  publicParamsEquals,
-} from '../common/internal/params_utils.js';
+import { mergeParams, publicParamsEquals } from '../common/internal/params_utils.js';
 import { assert, objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
@@ -22,12 +17,12 @@ import { UnitTest } from './unit_test.js';
 class ParamsTest extends UnitTest {
   expectParams<CaseP, SubcaseP>(
     act: ParamsBuilderBase<CaseP, SubcaseP>,
-    exp: CaseSubcaseIterable<{}, {}>,
-    caseFilter: TestParams | null = null
+    exp: CaseSubcaseIterable<{}, {}>
   ): void {
-    const a = Array.from(
-      builderIterateCasesWithSubcases(act, caseFilter)
-    ).map(([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]);
+    const a = Array.from(builderIterateCasesWithSubcases(act)).map(([caseP, subcases]) => [
+      caseP,
+      subcases ? Array.from(subcases) : undefined,
+    ]);
     const e = Array.from(exp);
     this.expect(
       objectEquals(a, e),
@@ -48,20 +43,6 @@ g.test('combine').fn(t => {
     [{ hello: 2 }, undefined],
     [{ hello: 3 }, undefined],
   ]);
-  t.expectParams<{ hello: number }, {}>(
-    u.combine('hello', [1, 2, 3]),
-    [
-      [{ hello: 1 }, undefined],
-      [{ hello: 2 }, undefined],
-      [{ hello: 3 }, undefined],
-    ],
-    {}
-  );
-  t.expectParams<{ hello: number }, {}>(
-    u.combine('hello', [1, 2, 3]),
-    [[{ hello: 2 }, undefined]],
-    { hello: 2 }
-  );
   t.expectParams<{ hello: 1 | 2 | 3 }, {}>(u.combine('hello', [1, 2, 3] as const), [
     [{ hello: 1 }, undefined],
     [{ hello: 2 }, undefined],
@@ -70,14 +51,6 @@ g.test('combine').fn(t => {
   t.expectParams<{}, { hello: number }>(u.beginSubcases().combine('hello', [1, 2, 3]), [
     [{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]],
   ]);
-  t.expectParams<{}, { hello: number }>(
-    u.beginSubcases().combine('hello', [1, 2, 3]),
-    [[{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]]],
-    {}
-  );
-  t.expectParams<{}, { hello: number }>(u.beginSubcases().combine('hello', [1, 2, 3]), [], {
-    hello: 2,
-  });
   t.expectParams<{}, { hello: 1 | 2 | 3 }>(u.beginSubcases().combine('hello', [1, 2, 3] as const), [
     [{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]],
   ]);
@@ -233,34 +206,6 @@ g.test('expandP').fn(t => {
       [{ w: 5 }, undefined],
     ]
   );
-  t.expectParams<{ z: number | undefined; w: number | undefined }, {}>(
-    u.expandWithParams(function* () {
-      yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
-      yield { w: 5 };
-    }),
-    [
-      [{ z: 3 }, undefined],
-      [{ z: 4 }, undefined],
-      [{ w: 5 }, undefined],
-    ],
-    {}
-  );
-  t.expectParams<{ z: number | undefined; w: number | undefined }, {}>(
-    u.expandWithParams(function* () {
-      yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
-      yield { w: 5 };
-    }),
-    [[{ z: 4 }, undefined]],
-    { z: 4 }
-  );
-  t.expectParams<{ z: number | undefined; w: number | undefined }, {}>(
-    u.expandWithParams(function* () {
-      yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
-      yield { w: 5 };
-    }),
-    [[{ z: 3 }, undefined]],
-    { z: 3 }
-  );
   t.expectParams<{}, { z: number | undefined; w: number | undefined }>(
     u.beginSubcases().expandWithParams(function* () {
       yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
@@ -269,27 +214,18 @@ g.test('expandP').fn(t => {
     [[{}, [{ z: 3 }, { z: 4 }, { w: 5 }]]]
   );
 
-  t.expectParams<{ x: [] | {} }, {}>(
-    u.expand('x', () => [[], {}] as const),
-    [
-      [{ x: [] }, undefined],
-      [{ x: {} }, undefined],
-    ]
-  );
-  t.expectParams<{ x: [] | {} }, {}>(
-    u.expand('x', () => [[], {}] as const),
-    [[{ x: [] }, undefined]],
-    { x: [] }
-  );
-  t.expectParams<{ x: [] | {} }, {}>(
-    u.expand('x', () => [[], {}] as const),
-    [[{ x: {} }, undefined]],
-    { x: {} }
-  );
-
   // more complex
-  {
-    const p = u
+  t.expectParams<
+    {
+      a: boolean;
+      x: number | undefined;
+      y: number | undefined;
+      z: number | undefined;
+      w: number | undefined;
+    },
+    {}
+  >(
+    u
       .combineWithParams([
         { a: true, x: 1 },
         { a: false, y: 2 },
@@ -301,39 +237,13 @@ g.test('expandP').fn(t => {
         } else {
           yield { w: 5 };
         }
-      });
-    type T = {
-      a: boolean;
-      x: number | undefined;
-      y: number | undefined;
-      z: number | undefined;
-      w: number | undefined;
-    };
-    t.expectParams<T, {}>(p, [
+      }),
+    [
       [{ a: true, x: 1, z: 3 }, undefined],
       [{ a: true, x: 1, z: 4 }, undefined],
       [{ a: false, y: 2, w: 5 }, undefined],
-    ]);
-    t.expectParams<T, {}>(
-      p,
-      [
-        [{ a: true, x: 1, z: 3 }, undefined],
-        [{ a: true, x: 1, z: 4 }, undefined],
-        [{ a: false, y: 2, w: 5 }, undefined],
-      ],
-      {}
-    );
-    t.expectParams<T, {}>(
-      p,
-      [
-        [{ a: true, x: 1, z: 3 }, undefined],
-        [{ a: true, x: 1, z: 4 }, undefined],
-      ],
-      { a: true }
-    );
-    t.expectParams<T, {}>(p, [[{ a: false, y: 2, w: 5 }, undefined]], { a: false });
-  }
-
+    ]
+  );
   t.expectParams<
     { a: boolean; x: number | undefined; y: number | undefined },
     { z: number | undefined; w: number | undefined }
@@ -374,25 +284,6 @@ g.test('expand').fn(t => {
       [{ z: 3 }, undefined],
       [{ z: 4 }, undefined],
     ]
-  );
-  t.expectParams<{ z: number }, {}>(
-    u.expand('z', function* () {
-      yield 3;
-      yield 4;
-    }),
-    [
-      [{ z: 3 }, undefined],
-      [{ z: 4 }, undefined],
-    ],
-    {}
-  );
-  t.expectParams<{ z: number }, {}>(
-    u.expand('z', function* () {
-      yield 3;
-      yield 4;
-    }),
-    [[{ z: 3 }, undefined]],
-    { z: 3 }
   );
   t.expectParams<{}, { z: number }>(
     u.beginSubcases().expand('z', function* () {
@@ -457,9 +348,9 @@ g.test('invalid,shadowing').fn(t => {
           yield { w: 5 };
         }
       });
-    // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
+    // Iterating causes e.g. mergeParams({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
-      Array.from(p.iterateCasesWithSubcases(null));
+      Array.from(p.iterateCasesWithSubcases());
     });
   }
   // Existing SubcaseP is shadowed by a new SubcaseP.
@@ -477,9 +368,9 @@ g.test('invalid,shadowing').fn(t => {
           yield { w: 5 };
         }
       });
-    // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
+    // Iterating causes e.g. mergeParams({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
-      Array.from(p.iterateCasesWithSubcases(null));
+      Array.from(p.iterateCasesWithSubcases());
     });
   }
   // Existing CaseP is shadowed by a new SubcaseP.
@@ -497,7 +388,7 @@ g.test('invalid,shadowing').fn(t => {
           yield { w: 5 };
         }
       });
-    const cases = Array.from(p.iterateCasesWithSubcases(null));
+    const cases = Array.from(p.iterateCasesWithSubcases());
     // Iterating cases is fine...
     for (const [caseP, subcases] of cases) {
       assert(subcases !== undefined);
@@ -505,12 +396,12 @@ g.test('invalid,shadowing').fn(t => {
       for (const subcaseP of subcases) {
         if (caseP.a) {
           assert(subcases !== undefined);
-
-          // Only errors once we try to merge e.g. ({x:1}, {x:3}).
-          mergeParams(caseP, subcaseP);
+          // Only errors once we try to e.g. mergeParams({x:1}, {x:3}).
           t.shouldThrow('Error', () => {
-            mergeParamsChecked(caseP, subcaseP);
+            mergeParams(caseP, subcaseP);
           });
+        } else {
+          mergeParams(caseP, subcaseP);
         }
       }
     }

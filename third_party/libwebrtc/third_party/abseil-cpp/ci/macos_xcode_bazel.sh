@@ -54,9 +54,7 @@ fi
 
 ${BAZEL_BIN} test ... \
   --copt="-DGTEST_REMOVE_LEGACY_TEST_CASEAPI_=1" \
-  --copt="-Werror" \
-  --cxxopt="-std=c++14" \
-  --features=external_include_paths \
+  --copt=-Werror \
   --keep_going \
   --show_timestamps \
   --test_env="TZDIR=${ABSEIL_ROOT}/absl/time/internal/cctz/testdata/zoneinfo" \

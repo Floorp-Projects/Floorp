@@ -13,7 +13,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TextUtils.h"
-#include "mozilla/Try.h"
 
 #include "MainThreadUtils.h"
 #include "nsContentUtils.h"
@@ -45,7 +44,7 @@ NS_IMPL_ISUPPORTS(nsEffectiveTLDService, nsIEffectiveTLDService,
 static nsEffectiveTLDService* gService = nullptr;
 
 nsEffectiveTLDService::nsEffectiveTLDService()
-    : mGraphLock("nsEffectiveTLDService::mGraph") {
+    : mIDNService(), mGraphLock("nsEffectiveTLDService::mGraph") {
   mGraph.emplace(etld_dafsa::kDafsa);
 }
 

@@ -3,15 +3,14 @@ import { TransferredTestCaseResult, LiveTestCaseResult } from '../../internal/lo
 import { TestCaseRecorder } from '../../internal/logging/test_case_recorder.js';
 import { TestQueryWithExpectation } from '../../internal/query/query.js';
 
-import { CTSOptions, kDefaultCTSOptions } from './options.js';
-
 export class TestWorker {
-  private readonly ctsOptions: CTSOptions;
+  private readonly debug: boolean;
   private readonly worker: Worker;
   private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
 
-  constructor(ctsOptions?: CTSOptions) {
-    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: true } };
+  constructor(debug: boolean) {
+    this.debug = debug;
+
     const selfPath = import.meta.url;
     const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
     const workerPath = selfPathDir + '/test_worker-worker.js';
@@ -36,11 +35,7 @@ export class TestWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    this.worker.postMessage({
-      query,
-      expectations,
-      ctsOptions: this.ctsOptions,
-    });
+    this.worker.postMessage({ query, expectations, debug: this.debug });
     const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
       this.resolvers.set(query, resolve);
     });

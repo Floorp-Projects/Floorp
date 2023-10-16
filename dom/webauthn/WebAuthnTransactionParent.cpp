@@ -5,13 +5,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/WebAuthnTransactionParent.h"
+#include "mozilla/dom/WebAuthnController.h"
 #include "mozilla/ipc/PBackgroundParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/StaticPrefs_security.h"
 
-#include "nsIWebAuthnService.h"
 #include "nsThreadUtils.h"
-#include "WebAuthnArgs.h"
+
+#ifdef MOZ_WIDGET_ANDROID
+#  include "mozilla/dom/U2FTokenManager.h"
+#endif
 
 #ifdef XP_WIN
 #  include "WinWebAuthnManager.h"
@@ -36,129 +39,26 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
   }
 #endif
 
-  // If there's an ongoing transaction, abort it.
-  if (mTransactionId.isSome()) {
-    mRegisterPromiseRequest.DisconnectIfExists();
-    mSignPromiseRequest.DisconnectIfExists();
-    Unused << SendAbort(mTransactionId.ref(), NS_ERROR_DOM_ABORT_ERR);
+// Bug 1819414 will reroute requests on Android through WebAuthnController and
+// allow us to remove this.
+#ifdef MOZ_WIDGET_ANDROID
+  bool usingTestToken =
+      StaticPrefs::security_webauth_webauthn_enable_softtoken();
+  bool androidFido2 =
+      StaticPrefs::security_webauth_webauthn_enable_android_fido2();
+
+  if (!usingTestToken && androidFido2) {
+    U2FTokenManager* mgr = U2FTokenManager::Get();
+    if (mgr) {
+      mgr->Register(this, aTransactionId, aTransactionInfo);
+    }
+    return IPC_OK();
   }
-  mTransactionId = Some(aTransactionId);
+#endif
 
-  RefPtr<WebAuthnRegisterPromiseHolder> promiseHolder =
-      new WebAuthnRegisterPromiseHolder(GetCurrentSerialEventTarget());
-
-  PWebAuthnTransactionParent* parent = this;
-  RefPtr<WebAuthnRegisterPromise> promise = promiseHolder->Ensure();
-  promise
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [this, parent, aTransactionId,
-           inputClientData = aTransactionInfo.ClientDataJSON()](
-              const WebAuthnRegisterPromise::ResolveValueType& aValue) {
-            mTransactionId.reset();
-            mRegisterPromiseRequest.Complete();
-            nsCString clientData;
-            nsresult rv = aValue->GetClientDataJSON(clientData);
-            if (rv == NS_ERROR_NOT_AVAILABLE) {
-              clientData = inputClientData;
-            } else if (NS_FAILED(rv)) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> attObj;
-            rv = aValue->GetAttestationObject(attObj);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> credentialId;
-            rv = aValue->GetCredentialId(credentialId);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<nsString> transports;
-            rv = aValue->GetTransports(transports);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            Maybe<nsString> authenticatorAttachment;
-            nsString maybeAuthenticatorAttachment;
-            rv = aValue->GetAuthenticatorAttachment(
-                maybeAuthenticatorAttachment);
-            if (rv != NS_ERROR_NOT_AVAILABLE) {
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPRegisterAbort"_ns, 1);
-                Unused << parent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                return;
-              }
-              authenticatorAttachment = Some(maybeAuthenticatorAttachment);
-            }
-
-            nsTArray<WebAuthnExtensionResult> extensions;
-            bool credPropsRk;
-            rv = aValue->GetCredPropsRk(&credPropsRk);
-            if (rv != NS_ERROR_NOT_AVAILABLE) {
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPRegisterAbort"_ns, 1);
-                Unused << parent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                return;
-              }
-              extensions.AppendElement(
-                  WebAuthnExtensionResultCredProps(credPropsRk));
-            }
-
-            WebAuthnMakeCredentialResult result(
-                clientData, attObj, credentialId, transports, extensions,
-                authenticatorAttachment);
-
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPRegisterFinish"_ns, 1);
-            Unused << parent->SendConfirmRegister(aTransactionId, result);
-          },
-          [this, parent, aTransactionId](
-              const WebAuthnRegisterPromise::RejectValueType aValue) {
-            mTransactionId.reset();
-            mRegisterPromiseRequest.Complete();
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPRegisterAbort"_ns, 1);
-            Unused << parent->SendAbort(aTransactionId, aValue);
-          })
-      ->Track(mRegisterPromiseRequest);
-
-  nsCOMPtr<nsIWebAuthnService> webauthnService(
-      do_GetService("@mozilla.org/webauthn/service;1"));
-
-  uint64_t browsingContextId = aTransactionInfo.BrowsingContextId();
-  RefPtr<WebAuthnRegisterArgs> args(new WebAuthnRegisterArgs(aTransactionInfo));
-
-  nsresult rv = webauthnService->MakeCredential(
-      aTransactionId, browsingContextId, args, promiseHolder);
-  if (NS_FAILED(rv)) {
-    promiseHolder->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+  WebAuthnController* ctrl = WebAuthnController::Get();
+  if (ctrl) {
+    ctrl->Register(this, aTransactionId, aTransactionInfo);
   }
 
   return IPC_OK();
@@ -181,131 +81,25 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
   }
 #endif
 
-  if (mTransactionId.isSome()) {
-    mRegisterPromiseRequest.DisconnectIfExists();
-    mSignPromiseRequest.DisconnectIfExists();
-    Unused << SendAbort(mTransactionId.ref(), NS_ERROR_DOM_ABORT_ERR);
+// Bug 1819414 will reroute requests on Android through WebAuthnController and
+// allow us to remove this.
+#ifdef MOZ_WIDGET_ANDROID
+  bool usingTestToken =
+      StaticPrefs::security_webauth_webauthn_enable_softtoken();
+  bool androidFido2 =
+      StaticPrefs::security_webauth_webauthn_enable_android_fido2();
+
+  if (!usingTestToken && androidFido2) {
+    U2FTokenManager* mgr = U2FTokenManager::Get();
+    if (mgr) {
+      mgr->Sign(this, aTransactionId, aTransactionInfo);
+    }
+    return IPC_OK();
   }
-  mTransactionId = Some(aTransactionId);
+#endif
 
-  RefPtr<WebAuthnSignPromiseHolder> promiseHolder =
-      new WebAuthnSignPromiseHolder(GetCurrentSerialEventTarget());
-
-  PWebAuthnTransactionParent* parent = this;
-  RefPtr<WebAuthnSignPromise> promise = promiseHolder->Ensure();
-  promise
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [this, parent, aTransactionId,
-           inputClientData = aTransactionInfo.ClientDataJSON()](
-              const WebAuthnSignPromise::ResolveValueType& aValue) {
-            mTransactionId.reset();
-            mSignPromiseRequest.Complete();
-
-            nsCString clientData;
-            nsresult rv = aValue->GetClientDataJSON(clientData);
-            if (rv == NS_ERROR_NOT_AVAILABLE) {
-              clientData = inputClientData;
-            } else if (NS_FAILED(rv)) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> credentialId;
-            rv = aValue->GetCredentialId(credentialId);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> signature;
-            rv = aValue->GetSignature(signature);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> authenticatorData;
-            rv = aValue->GetAuthenticatorData(authenticatorData);
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
-              Unused << parent->SendAbort(aTransactionId,
-                                          NS_ERROR_DOM_NOT_ALLOWED_ERR);
-              return;
-            }
-
-            nsTArray<uint8_t> userHandle;
-            Unused << aValue->GetUserHandle(userHandle);  // optional
-
-            Maybe<nsString> authenticatorAttachment;
-            nsString maybeAuthenticatorAttachment;
-            rv = aValue->GetAuthenticatorAttachment(
-                maybeAuthenticatorAttachment);
-            if (rv != NS_ERROR_NOT_AVAILABLE) {
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPSignAbort"_ns, 1);
-                Unused << parent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                return;
-              }
-              authenticatorAttachment = Some(maybeAuthenticatorAttachment);
-            }
-
-            nsTArray<WebAuthnExtensionResult> extensions;
-            bool usedAppId;
-            rv = aValue->GetUsedAppId(&usedAppId);
-            if (rv != NS_ERROR_NOT_AVAILABLE) {
-              if (NS_FAILED(rv)) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPSignAbort"_ns, 1);
-                Unused << parent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                return;
-              }
-              extensions.AppendElement(WebAuthnExtensionResultAppId(usedAppId));
-            }
-
-            WebAuthnGetAssertionResult result(
-                clientData, credentialId, signature, authenticatorData,
-                extensions, userHandle, authenticatorAttachment);
-
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPSignFinish"_ns, 1);
-            Unused << parent->SendConfirmSign(aTransactionId, result);
-          },
-          [this, parent,
-           aTransactionId](const WebAuthnSignPromise::RejectValueType aValue) {
-            mTransactionId.reset();
-            mSignPromiseRequest.Complete();
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPSignAbort"_ns, 1);
-            Unused << parent->SendAbort(aTransactionId, aValue);
-          })
-      ->Track(mSignPromiseRequest);
-
-  RefPtr<WebAuthnSignArgs> args(new WebAuthnSignArgs(aTransactionInfo));
-
-  nsCOMPtr<nsIWebAuthnService> webauthnService(
-      do_GetService("@mozilla.org/webauthn/service;1"));
-  nsresult rv = webauthnService->GetAssertion(
-      aTransactionId, aTransactionInfo.BrowsingContextId(), args,
-      promiseHolder);
-  if (NS_FAILED(rv)) {
-    promiseHolder->Reject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
-  }
+  WebAuthnController* ctrl = WebAuthnController::Get();
+  ctrl->Sign(this, aTransactionId, aTransactionInfo);
 
   return IPC_OK();
 }
@@ -321,22 +115,22 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
       mgr->Cancel(this, aTransactionId);
     }
   }
-  // fall through in case the virtual token was used.
+  // fall through in case WebAuthnController was used.
 #endif
 
-  if (mTransactionId.isNothing() ||
-      !MOZ_IS_VALID(aTransactionId, mTransactionId.ref() == aTransactionId)) {
-    return IPC_OK();
+// Bug 1819414 will reroute requests on Android through WebAuthnController and
+// allow us to remove this.
+#ifdef MOZ_WIDGET_ANDROID
+  U2FTokenManager* mgr = U2FTokenManager::Get();
+  if (mgr) {
+    mgr->Cancel(this, aTransactionId);
   }
+  // fall through in case WebAuthnController was used.
+#endif
 
-  mRegisterPromiseRequest.DisconnectIfExists();
-  mSignPromiseRequest.DisconnectIfExists();
-  mTransactionId.reset();
-
-  nsCOMPtr<nsIWebAuthnService> webauthnService(
-      do_GetService("@mozilla.org/webauthn/service;1"));
-  if (webauthnService) {
-    webauthnService->Reset();
+  WebAuthnController* ctrl = WebAuthnController::Get();
+  if (ctrl) {
+    ctrl->Cancel(this, aTransactionId);
   }
 
   return IPC_OK();
@@ -373,19 +167,22 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
       mgr->MaybeClearTransaction(this);
     }
   }
-  // fall through in case the virtual token was used.
+  // fall through in case WebAuthnController was used.
 #endif
 
-  if (mTransactionId.isSome()) {
-    mRegisterPromiseRequest.DisconnectIfExists();
-    mSignPromiseRequest.DisconnectIfExists();
-    mTransactionId.reset();
+// Bug 1819414 will reroute requests on Android through WebAuthnController and
+// allow us to remove this.
+#ifdef MOZ_WIDGET_ANDROID
+  U2FTokenManager* mgr = U2FTokenManager::Get();
+  if (mgr) {
+    mgr->MaybeClearTransaction(this);
+  }
+  // fall through in case WebAuthnController was used.
+#endif
 
-    nsCOMPtr<nsIWebAuthnService> webauthnService(
-        do_GetService("@mozilla.org/webauthn/service;1"));
-    if (webauthnService) {
-      webauthnService->Reset();
-    }
+  WebAuthnController* ctrl = WebAuthnController::Get();
+  if (ctrl) {
+    ctrl->MaybeClearTransaction(this);
   }
 }
 

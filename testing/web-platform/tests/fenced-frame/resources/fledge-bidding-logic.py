@@ -11,7 +11,7 @@ def main(request, response):
   # Set up response headers.
   headers = [
     ('Content-Type', 'Application/Javascript'),
-    ('Ad-Auction-Allowed', 'true')
+    ('X-Allow-FLEDGE', 'true')
   ]
 
   # Parse URL params.
@@ -37,15 +37,15 @@ def main(request, response):
       '''
     )
 
-  render_obj = 'ad.renderURL'
+  render_obj = 'ad.renderUrl'
   if ad_with_size is not None:
-    render_obj = '{ url: ad.renderURL, width: "100px", height: "50px" }'
+    render_obj = '{ url: ad.renderUrl, width: "100px", height: "50px" }'
 
-  component_render_obj = 'component.renderURL'
+  component_render_obj = 'component.renderUrl'
   if ad_with_size is not None:
     component_render_obj = (
       '''{
-          url: component.renderURL,
+          url: component.renderUrl,
           width: "100px",
           height: "50px"
          }

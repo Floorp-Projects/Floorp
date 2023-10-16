@@ -22,9 +22,6 @@
     -moz-min-font-size-ratio: initial;
     -moz-box-collapse: initial;
 
-    /* We don't want zoom on our ancestors to affect our styles. */
-    zoom: document;
-
     math-depth: initial;
     /* As long as inert implies pointer-events: none as it does now, we're
      * good. */

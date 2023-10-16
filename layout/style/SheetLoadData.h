@@ -51,7 +51,9 @@ class SheetLoadData final
   virtual ~SheetLoadData();
 
  public:
+  // PreloaderBase
   static void PrioritizeAsPreload(nsIChannel* aChannel);
+  void PrioritizeAsPreload() final;
 
   // If this is a deferred load, start it now.
   void StartPendingLoad();
@@ -161,8 +163,7 @@ class SheetLoadData final
   // loop round-trip in that case).
   bool mMustNotify : 1;
 
-  // mWasAlternate is true if the sheet was an alternate
-  // (https://html.spec.whatwg.org/#rel-alternate) when the load data was
+  // mWasAlternate is true if the sheet was an alternate when the load data was
   // created.
   const bool mWasAlternate : 1;
 

@@ -433,9 +433,8 @@ class MOZ_STACK_CLASS
 HTMLBRElement*
 HTMLEditor::HTMLWithContextInserter::GetInvisibleBRElementAtPoint(
     const EditorDOMPoint& aPointToInsert) const {
-  WSRunScanner wsRunScannerAtInsertionPoint(
-      mHTMLEditor.ComputeEditingHost(), aPointToInsert,
-      BlockInlineCheck::UseComputedDisplayStyle);
+  WSRunScanner wsRunScannerAtInsertionPoint(mHTMLEditor.ComputeEditingHost(),
+                                            aPointToInsert);
   if (wsRunScannerAtInsertionPoint.EndsByInvisibleBRElement()) {
     return wsRunScannerAtInsertionPoint.EndReasonBRElementPtr();
   }
@@ -452,7 +451,6 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   if (!HTMLEditUtils::IsTable(aLastInsertedPoint.GetChild())) {
     containerContent = HTMLEditUtils::GetLastLeafContent(
         *aLastInsertedPoint.GetChild(), {LeafNodeType::OnlyEditableLeafNode},
-        BlockInlineCheck::Unused,
         aLastInsertedPoint.GetChild()->GetAsElementOrParentElement());
     if (containerContent) {
       Element* mostDistantInclusiveAncestorTableElement = nullptr;
@@ -496,15 +494,13 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   // Make sure we don't end up with selection collapsed after an invisible
   // `<br>` element.
   Element* editingHost = mHTMLEditor.ComputeEditingHost();
-  WSRunScanner wsRunScannerAtCaret(editingHost, pointToPutCaret,
-                                   BlockInlineCheck::UseComputedDisplayStyle);
+  WSRunScanner wsRunScannerAtCaret(editingHost, pointToPutCaret);
   if (wsRunScannerAtCaret
           .ScanPreviousVisibleNodeOrBlockBoundaryFrom(pointToPutCaret)
           .ReachedInvisibleBRElement()) {
     WSRunScanner wsRunScannerAtStartReason(
         editingHost,
-        EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()),
-        BlockInlineCheck::UseComputedDisplayStyle);
+        EditorDOMPoint(wsRunScannerAtCaret.GetStartReasonContent()));
     WSScanResult backwardScanFromPointToCaretResult =
         wsRunScannerAtStartReason.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
             pointToPutCaret);
@@ -888,8 +884,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
       pointToInsert.IsInContentNode()
           ? HTMLEditUtils::GetInclusiveAncestorElement(
                 *pointToInsert.ContainerAs<nsIContent>(),
-                HTMLEditUtils::ClosestBlockElement,
-                BlockInlineCheck::UseComputedDisplayOutsideStyle)
+                HTMLEditUtils::ClosestBlockElement)
           : nullptr;
 
   EditorDOMPoint lastInsertedPoint;

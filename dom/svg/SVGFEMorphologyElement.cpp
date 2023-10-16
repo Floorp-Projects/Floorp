@@ -116,7 +116,7 @@ nsresult SVGFEMorphologyElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feMorphology);
   }
 
-  return SVGFEMorphologyElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

@@ -687,27 +687,4 @@
               onclick="ToolbarPanelHub.toggleWhatsNewPref(event)"
               data-l10n-id="whatsnew-panel-footer-checkbox"/>
   </panelview>
-
-  <panelview id="reset-pbm-panel" class="PanelUI-subView">
-    <hbox id="reset-pbm-panel-container">
-      <hbox id="reset-pbm-panel-header">
-        <description data-l10n-id="reset-pbm-panel-heading"/>
-      </hbox>
-
-      <description id="reset-pbm-panel-description" data-l10n-id="reset-pbm-panel-description"/>
-      <checkbox id="reset-pbm-panel-checkbox" data-l10n-id="reset-pbm-panel-always-ask-checkbox"/>
-
-      <html:moz-button-group id="reset-pbm-panel-footer" class="panel-footer">
-        <button id="reset-pbm-panel-cancel-button"
-                class="panel-footer-button"
-                data-l10n-id="reset-pbm-panel-cancel-button"
-                oncommand="ResetPBMPanel.onCancel(this)"></button>
-        <button slot="primary"
-                id="reset-pbm-panel-confirm-button"
-                class="panel-footer-button"
-                data-l10n-id="reset-pbm-panel-confirm-button"
-                oncommand="ResetPBMPanel.onConfirm(this)"></button>
-      </html:moz-button-group>
-    </hbox>
-  </panelview>
 </html:template>

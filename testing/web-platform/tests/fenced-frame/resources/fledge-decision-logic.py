@@ -11,7 +11,7 @@ def main(request, response):
   # Set up response headers.
   headers = [
     ('Content-Type', 'Application/Javascript'),
-    ('Ad-Auction-Allowed', 'true')
+    ('X-Allow-FLEDGE', 'true')
   ]
 
   # Parse URL params.

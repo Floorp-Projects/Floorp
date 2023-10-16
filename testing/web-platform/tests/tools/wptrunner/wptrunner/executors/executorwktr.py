@@ -27,9 +27,9 @@ def _read_line(io_queue, deadline=None, encoding=None, errors="strict", raise_cr
         line = io_queue.get(True, deadline - current_time if deadline else None)
         if raise_crash and line.startswith(b"#CRASHED"):
             raise CrashError()
-    except Empty as e:
+    except Empty:
         logger.debug(f"got empty line with {time() - deadline} remaining")
-        raise TimeoutError() from e
+        raise TimeoutError()
 
     return line.decode(encoding, errors) if encoding else line
 

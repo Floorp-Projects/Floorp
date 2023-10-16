@@ -901,16 +901,15 @@ void MacroAssembler::canonicalizeDoubleIfDeterministic(FloatRegister reg) {
 // ========================================================================
 // Memory access primitives.
 template <class T>
-FaultingCodeOffset MacroAssembler::storeDouble(FloatRegister src,
-                                               const T& dest) {
+void MacroAssembler::storeDouble(FloatRegister src, const T& dest) {
   canonicalizeDoubleIfDeterministic(src);
-  return storeUncanonicalizedDouble(src, dest);
+  storeUncanonicalizedDouble(src, dest);
 }
 
-template FaultingCodeOffset MacroAssembler::storeDouble(FloatRegister src,
-                                                        const Address& dest);
-template FaultingCodeOffset MacroAssembler::storeDouble(FloatRegister src,
-                                                        const BaseIndex& dest);
+template void MacroAssembler::storeDouble(FloatRegister src,
+                                          const Address& dest);
+template void MacroAssembler::storeDouble(FloatRegister src,
+                                          const BaseIndex& dest);
 
 template <class T>
 void MacroAssembler::boxDouble(FloatRegister src, const T& dest) {
@@ -918,16 +917,15 @@ void MacroAssembler::boxDouble(FloatRegister src, const T& dest) {
 }
 
 template <class T>
-FaultingCodeOffset MacroAssembler::storeFloat32(FloatRegister src,
-                                                const T& dest) {
+void MacroAssembler::storeFloat32(FloatRegister src, const T& dest) {
   canonicalizeFloatIfDeterministic(src);
-  return storeUncanonicalizedFloat32(src, dest);
+  storeUncanonicalizedFloat32(src, dest);
 }
 
-template FaultingCodeOffset MacroAssembler::storeFloat32(FloatRegister src,
-                                                         const Address& dest);
-template FaultingCodeOffset MacroAssembler::storeFloat32(FloatRegister src,
-                                                         const BaseIndex& dest);
+template void MacroAssembler::storeFloat32(FloatRegister src,
+                                           const Address& dest);
+template void MacroAssembler::storeFloat32(FloatRegister src,
+                                           const BaseIndex& dest);
 
 template <typename T>
 void MacroAssembler::fallibleUnboxInt32(const T& src, Register dest,

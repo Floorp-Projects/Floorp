@@ -47,8 +47,7 @@ Options:
 
 ```
 
-Since we specified [`Command::propagate_version`][crate::Command::propagate_version], the `--version` flag
-is available in all subcommands:
+Because we set [`Command::propagate_version`][crate::Command::propagate_version]:
 ```console
 $ 03_04_subcommands --version
 clap [..]

@@ -16,9 +16,6 @@ const EventEmitter = require("resource://devtools/shared/event-emitter.js");
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const CONTAINER_WIDTH = 500;
 
-const L10N_BUBBLING = L10N.getStr("eventsTooltip.Bubbling");
-const L10N_CAPTURING = L10N.getStr("eventsTooltip.Capturing");
-
 class EventTooltip extends EventEmitter {
   /**
    * Set the content of a provided HTMLTooltip instance to display a list of event
@@ -63,34 +60,24 @@ class EventTooltip extends EventEmitter {
     };
 
     const doc = this._tooltip.doc;
-    this.container = doc.createElementNS(XHTML_NS, "ul");
+    this.container = doc.createElementNS(XHTML_NS, "div");
     this.container.className = "devtools-tooltip-events-container";
 
     const sourceMapURLService = this._toolbox.sourceMapURLService;
 
-    for (let i = 0; i < eventListenerInfos.length; i++) {
-      const listener = eventListenerInfos[i];
-
+    const Bubbling = L10N.getStr("eventsTooltip.Bubbling");
+    const Capturing = L10N.getStr("eventsTooltip.Capturing");
+    for (const listener of eventListenerInfos) {
       // Create this early so we can refer to it from a closure, below.
       const content = doc.createElementNS(XHTML_NS, "div");
-      const codeMirrorContainerId = `cm-${i}`;
-      content.id = codeMirrorContainerId;
 
       // Header
       const header = doc.createElementNS(XHTML_NS, "div");
       header.className = "event-header";
-      header.setAttribute("data-event-type", listener.type);
-
-      const arrow = doc.createElementNS(XHTML_NS, "button");
+      const arrow = doc.createElementNS(XHTML_NS, "span");
       arrow.className = "theme-twisty";
-      arrow.setAttribute("aria-expanded", "false");
-      arrow.setAttribute("aria-owns", codeMirrorContainerId);
-      arrow.setAttribute(
-        "title",
-        L10N.getFormatStr("eventsTooltip.toggleButton.label", listener.type)
-      );
-
       header.appendChild(arrow);
+      this.container.appendChild(header);
 
       if (!listener.hide.type) {
         const eventTypeLabel = doc.createElementNS(XHTML_NS, "span");
@@ -143,12 +130,9 @@ class EventTooltip extends EventEmitter {
       header.appendChild(filename);
 
       if (!listener.hide.debugger) {
-        const debuggerIcon = doc.createElementNS(XHTML_NS, "button");
+        const debuggerIcon = doc.createElementNS(XHTML_NS, "div");
         debuggerIcon.className = "event-tooltip-debugger-icon";
-        const openInDebugger = L10N.getFormatStr(
-          "eventsTooltip.openInDebugger2",
-          listener.type
-        );
+        const openInDebugger = L10N.getStr("eventsTooltip.openInDebugger");
         debuggerIcon.setAttribute("title", openInDebugger);
         header.appendChild(debuggerIcon);
       }
@@ -179,7 +163,7 @@ class EventTooltip extends EventEmitter {
         const capturing = doc.createElementNS(XHTML_NS, "span");
         capturing.className = "event-tooltip-attributes";
 
-        const phase = listener.capturing ? L10N_CAPTURING : L10N_BUBBLING;
+        const phase = listener.capturing ? Capturing : Bubbling;
         capturing.textContent = phase;
         capturing.setAttribute("title", phase);
         attributesBox.appendChild(capturing);
@@ -189,10 +173,6 @@ class EventTooltip extends EventEmitter {
       toggleListenerCheckbox.type = "checkbox";
       toggleListenerCheckbox.className =
         "event-tooltip-listener-toggle-checkbox";
-      toggleListenerCheckbox.setAttribute(
-        "aria-label",
-        L10N.getFormatStr("eventsTooltip.toggleListenerLabel", listener.type)
-      );
       if (listener.eventListenerInfoId) {
         toggleListenerCheckbox.checked = listener.enabled;
         toggleListenerCheckbox.setAttribute(
@@ -221,10 +201,8 @@ class EventTooltip extends EventEmitter {
       });
 
       content.className = "event-tooltip-content-box";
+      this.container.appendChild(content);
 
-      const li = doc.createElementNS(XHTML_NS, "li");
-      li.append(header, content);
-      this.container.appendChild(li);
       this._addContentListeners(header);
     }
 
@@ -258,11 +236,9 @@ class EventTooltip extends EventEmitter {
     const doc = this._tooltip.doc;
     const header = event.currentTarget;
     const content = header.nextElementSibling;
-    const twisty = header.querySelector(".theme-twisty");
 
     if (content.hasAttribute("open")) {
       header.classList.remove("content-expanded");
-      twisty.setAttribute("aria-expanded", false);
       content.removeAttribute("open");
     } else {
       // Close other open events first
@@ -274,8 +250,6 @@ class EventTooltip extends EventEmitter {
       );
       for (const node of openHeaders) {
         node.classList.remove("content-expanded");
-        const nodeTwisty = node.querySelector(".theme-twisty");
-        nodeTwisty.setAttribute("aria-expanded", false);
       }
       for (const node of openContent) {
         node.removeAttribute("open");
@@ -283,7 +257,6 @@ class EventTooltip extends EventEmitter {
 
       header.classList.add("content-expanded");
       content.setAttribute("open", "");
-      twisty.setAttribute("aria-expanded", true);
 
       const eventEditor = this._eventEditors.get(content);
 
@@ -295,13 +268,6 @@ class EventTooltip extends EventEmitter {
 
       const iframe = doc.createElementNS(XHTML_NS, "iframe");
       iframe.classList.add("event-tooltip-editor-frame");
-      iframe.setAttribute(
-        "title",
-        L10N.getFormatStr(
-          "eventsTooltip.codeIframeTitle",
-          header.getAttribute("data-event-type")
-        )
-      );
 
       editor.appendTo(content, iframe).then(() => {
         const tidied = beautify.js(handler, { indent_size: 2 });

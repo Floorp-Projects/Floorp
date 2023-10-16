@@ -170,12 +170,5 @@ bool SharedPlanarYCbCrImage::CreateEmptyBuffer(const PlanarYCbCrData& aData,
   return mBufferSize > 0;
 }
 
-void SharedPlanarYCbCrImage::SetIsDRM(bool aIsDRM) {
-  Image::SetIsDRM(aIsDRM);
-  if (mTextureClient) {
-    mTextureClient->AddFlags(TextureFlags::DRM_SOURCE);
-  }
-}
-
 }  // namespace layers
 }  // namespace mozilla

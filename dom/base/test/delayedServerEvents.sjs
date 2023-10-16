@@ -45,6 +45,12 @@ function handleRequest(request, response) {
 
   resp = response;
 
-  timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.initWithCallback(sendNextString, 500, Ci.nsITimer.TYPE_REPEATING_SLACK);
+  timer = Components.classes["@mozilla.org/timer;1"].createInstance(
+    Components.interfaces.nsITimer
+  );
+  timer.initWithCallback(
+    sendNextString,
+    500,
+    Components.interfaces.nsITimer.TYPE_REPEATING_SLACK
+  );
 }

@@ -207,6 +207,10 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
   // type.
   virtual const char* NodeType() const = 0;
 
+  // This can return nullptr, but only when the AudioNode has been created
+  // during document shutdown.
+  AbstractThread* GetAbstractMainThread() const { return mAbstractMainThread; }
+
   const nsTArray<RefPtr<AudioParam>>& GetAudioParams() const { return mParams; }
 
  private:
@@ -282,6 +286,9 @@ class AudioNode : public DOMEventTargetHelper, public nsSupportsWeakReference {
   // Whether the node just passes through its input.  This is a devtools API
   // that only works for some node types.
   bool mPassThrough;
+  // DocGroup-specifc AbstractThread::MainThread() for MediaTrackGraph
+  // operations.
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 }  // namespace dom

@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 import railroad
 from pip._vendor import pyparsing
 import typing
@@ -18,13 +17,11 @@ import inspect
 
 
 jinja2_template_source = """\
-{% if not embed %}
 <!DOCTYPE html>
 <html>
 <head>
-{% endif %}
     {% if not head %}
-        <style>
+        <style type="text/css">
             .railroad-heading {
                 font-family: monospace;
             }
@@ -32,10 +29,8 @@ jinja2_template_source = """\
     {% else %}
         {{ head | safe }}
     {% endif %}
-{% if not embed %}
 </head>
 <body>
-{% endif %}
 {{ body | safe }}
 {% for diagram in diagrams %}
     <div class="railroad-group">
@@ -46,10 +41,8 @@ jinja2_template_source = """\
         </div>
     </div>
 {% endfor %}
-{% if not embed %}
 </body>
 </html>
-{% endif %}
 """
 
 template = Template(jinja2_template_source)
@@ -134,7 +127,7 @@ class EditablePartial(Generic[T]):
         return self.func(*args, **kwargs)
 
 
-def railroad_to_html(diagrams: List[NamedDiagram], embed=False, **kwargs) -> str:
+def railroad_to_html(diagrams: List[NamedDiagram], **kwargs) -> str:
     """
     Given a list of NamedDiagram, produce a single HTML string that visualises those diagrams
     :params kwargs: kwargs to be passed in to the template
@@ -144,17 +137,13 @@ def railroad_to_html(diagrams: List[NamedDiagram], embed=False, **kwargs) -> str
         if diagram.diagram is None:
             continue
         io = StringIO()
-        try:
-            css = kwargs.get('css')
-            diagram.diagram.writeStandalone(io.write, css=css)
-        except AttributeError:
-            diagram.diagram.writeSvg(io.write)
+        diagram.diagram.writeSvg(io.write)
         title = diagram.name
         if diagram.index == 0:
             title += " (root)"
         data.append({"title": title, "text": "", "svg": io.getvalue()})
 
-    return template.render(diagrams=data, embed=embed, **kwargs)
+    return template.render(diagrams=data, **kwargs)
 
 
 def resolve_partial(partial: "EditablePartial[T]") -> T:
@@ -409,6 +398,7 @@ def _apply_diagram_item_enhancements(fn):
         show_results_names: bool = False,
         show_groups: bool = False,
     ) -> typing.Optional[EditablePartial]:
+
         ret = fn(
             element,
             parent,
@@ -565,11 +555,9 @@ def _to_diagram_element(
         else:
             ret = EditablePartial.from_call(railroad.Group, label="", item="")
     elif isinstance(element, pyparsing.TokenConverter):
-        label = type(element).__name__.lower()
-        if label == "tokenconverter":
-            ret = EditablePartial.from_call(railroad.Sequence, items=[])
-        else:
-            ret = EditablePartial.from_call(AnnotatedItem, label=label, item="")
+        ret = EditablePartial.from_call(
+            AnnotatedItem, label=type(element).__name__.lower(), item=""
+        )
     elif isinstance(element, pyparsing.Opt):
         ret = EditablePartial.from_call(railroad.Optional, item="")
     elif isinstance(element, pyparsing.OneOrMore):
@@ -583,12 +571,10 @@ def _to_diagram_element(
     elif isinstance(element, pyparsing.Empty) and not element.customName:
         # Skip unnamed "Empty" elements
         ret = None
-    elif isinstance(element, pyparsing.ParseElementEnhance):
+    elif len(exprs) > 1:
         ret = EditablePartial.from_call(railroad.Sequence, items=[])
     elif len(exprs) > 0 and not element_results_name:
         ret = EditablePartial.from_call(railroad.Group, item="", label=name)
-    elif len(exprs) > 0:
-        ret = EditablePartial.from_call(railroad.Sequence, items=[])
     else:
         terminal = EditablePartial.from_call(railroad.Terminal, element.defaultName)
         ret = terminal

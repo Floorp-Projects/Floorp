@@ -89,7 +89,8 @@ void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
   if (parent) {
     RefPtr<UnregisterActorRunnable> r =
         new UnregisterActorRunnable(parent.forget());
-    SchedulerGroup::Dispatch(r.forget());
+
+    SchedulerGroup::Dispatch(TaskCategory::Other, r.forget());
   }
 
   if (mController) {

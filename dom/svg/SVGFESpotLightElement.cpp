@@ -20,14 +20,14 @@ JSObject* SVGFESpotLightElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] = {
-    {nsGkAtoms::x, 0},
-    {nsGkAtoms::y, 0},
-    {nsGkAtoms::z, 0},
-    {nsGkAtoms::pointsAtX, 0},
-    {nsGkAtoms::pointsAtY, 0},
-    {nsGkAtoms::pointsAtZ, 0},
-    {nsGkAtoms::specularExponent, 1},
-    {nsGkAtoms::limitingConeAngle, 0}};
+    {nsGkAtoms::x, 0, false},
+    {nsGkAtoms::y, 0, false},
+    {nsGkAtoms::z, 0, false},
+    {nsGkAtoms::pointsAtX, 0, false},
+    {nsGkAtoms::pointsAtY, 0, false},
+    {nsGkAtoms::pointsAtZ, 0, false},
+    {nsGkAtoms::specularExponent, 1, false},
+    {nsGkAtoms::limitingConeAngle, 0, false}};
 
 //----------------------------------------------------------------------
 // nsINode methods
@@ -35,7 +35,7 @@ SVGElement::NumberInfo SVGFESpotLightElement::sNumberInfo[8] = {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFESpotLightElement)
 
 //----------------------------------------------------------------------
-// SVGFilterPrimitiveChildElement methods
+// nsFEUnstyledElement methods
 
 bool SVGFESpotLightElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

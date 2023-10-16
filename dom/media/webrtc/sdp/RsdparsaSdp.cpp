@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Assertions.h"
 #include "nsError.h"
+#include <iostream>
 
 #include "sdp/RsdparsaSdpInc.h"
 #include "sdp/RsdparsaSdpMediaSection.h"

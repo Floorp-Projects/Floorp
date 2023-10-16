@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 
 using namespace mozilla;
-using testing::ContainerEq;
 
 namespace {
 #define DispatchFunction(f) \
@@ -45,6 +44,7 @@ TEST(TestAudioInputSource, StartAndStop)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   const TrackRate sourceRate = 44100;
   const TrackRate targetRate = 48000;
+  const uint32_t bufferingMs = 50;  // ms
 
   auto listener = MakeRefPtr<MockEventListener>();
   EXPECT_CALL(*listener,
@@ -58,7 +58,7 @@ TEST(TestAudioInputSource, StartAndStop)
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
-      sourceRate, targetRate);
+      sourceRate, targetRate, bufferingMs);
   ASSERT_TRUE(ais);
 
   // Make sure start and stop works.
@@ -108,6 +108,7 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   const TrackRate sourceRate = 44100;
   const TrackRate targetRate = 48000;
+  const uint32_t bufferingMs = 50;  // ms
 
   const TrackTime requestFrames = 2 * WEBAUDIO_BLOCK_SIZE;
 
@@ -122,7 +123,7 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
-      sourceRate, targetRate);
+      sourceRate, targetRate, bufferingMs);
   ASSERT_TRUE(ais);
 
   // It's ok to call GetAudioSegment before starting
@@ -153,24 +154,25 @@ TEST(TestAudioInputSource, DataOutputBeforeStartAndAfterStop)
     AudioSegment deinterleaved;
     deinterleaved.AppendFromInterleavedBuffer(record.Elements(), frames,
                                               channels, testPrincipal);
-    AudioDriftCorrection driftCorrector(sourceRate, targetRate, testPrincipal);
+    AudioDriftCorrection driftCorrector(sourceRate, targetRate, bufferingMs,
+                                        testPrincipal);
     AudioSegment expectedSegment = driftCorrector.RequestFrames(
         deinterleaved, static_cast<uint32_t>(requestFrames));
 
-    CopyableTArray<AudioDataValue> expected;
+    nsTArray<AudioDataValue> expected;
     size_t expectedSamples =
         expectedSegment.WriteToInterleavedBuffer(expected, channels);
 
     AudioSegment actualSegment =
         ais->GetAudioSegment(requestFrames, AudioInputSource::Consumer::Same);
     EXPECT_EQ(actualSegment.GetDuration(), requestFrames);
-    CopyableTArray<AudioDataValue> actual;
+    nsTArray<AudioDataValue> actual;
     size_t actualSamples =
         actualSegment.WriteToInterleavedBuffer(actual, channels);
 
     EXPECT_EQ(actualSamples, expectedSamples);
     EXPECT_EQ(actualSamples / channels, static_cast<size_t>(requestFrames));
-    EXPECT_THAT(actual, ContainerEq(expected));
+    EXPECT_EQ(actual, expected);
   }
 
   ais = nullptr;  // Drop the SharedThreadPool here.
@@ -188,6 +190,7 @@ TEST(TestAudioInputSource, ErrorCallback)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   const TrackRate sourceRate = 44100;
   const TrackRate targetRate = 48000;
+  const uint32_t bufferingMs = 50;  // ms
 
   auto listener = MakeRefPtr<MockEventListener>();
   EXPECT_CALL(*listener,
@@ -203,7 +206,7 @@ TEST(TestAudioInputSource, ErrorCallback)
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
-      sourceRate, targetRate);
+      sourceRate, targetRate, bufferingMs);
   ASSERT_TRUE(ais);
 
   DispatchFunction([&] { ais->Start(); });
@@ -235,6 +238,7 @@ TEST(TestAudioInputSource, DeviceChangedCallback)
       MakePrincipalHandle(nsContentUtils::GetSystemPrincipal());
   const TrackRate sourceRate = 44100;
   const TrackRate targetRate = 48000;
+  const uint32_t bufferingMs = 50;  // ms
 
   auto listener = MakeRefPtr<MockEventListener>();
   EXPECT_CALL(*listener, AudioDeviceChanged(sourceId));
@@ -248,7 +252,7 @@ TEST(TestAudioInputSource, DeviceChangedCallback)
 
   RefPtr<AudioInputSource> ais = MakeRefPtr<AudioInputSource>(
       std::move(listener), sourceId, deviceId, channels, true, testPrincipal,
-      sourceRate, targetRate);
+      sourceRate, targetRate, bufferingMs);
   ASSERT_TRUE(ais);
 
   DispatchFunction([&] { ais->Start(); });

@@ -859,9 +859,7 @@ static bool FoldConditional(FoldInfo info, ParseNode** nodePtr) {
     if (nextNode) {
       nextNode = (*nextNode == replacement) ? nodePtr : nullptr;
     }
-    if (!TryReplaceNode(nodePtr, replacement)) {
-      return false;
-    }
+    ReplaceNode(nodePtr, replacement);
   } while (nextNode);
 
   return true;

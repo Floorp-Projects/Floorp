@@ -339,7 +339,12 @@ static TypedArrayObject* NewTypedArrayObject(JSContext* cx,
     return nullptr;
   }
 
-  return NativeObject::create<TypedArrayObject>(cx, allocKind, heap, shape);
+  NativeObject* obj = NativeObject::create(cx, allocKind, heap, shape);
+  if (!obj) {
+    return nullptr;
+  }
+
+  return &obj->as<TypedArrayObject>();
 }
 
 template <typename NativeType>

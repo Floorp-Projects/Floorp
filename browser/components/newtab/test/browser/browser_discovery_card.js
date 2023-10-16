@@ -1,19 +1,19 @@
 // If this fails it could be because of schema changes.
+// `ds_layout.json` defines the newtab page format
 // `topstories.json` defines the stories shown
 test_newtab({
   async before({ pushPrefs }) {
-    sinon
-      .stub(DiscoveryStreamFeed.prototype, "generateFeedUrl")
-      .returns(
-        "https://example.com/browser/browser/components/newtab/test/browser/topstories.json"
-      );
     await pushPrefs([
       "browser.newtabpage.activity-stream.discoverystream.config",
       JSON.stringify({
         api_key_pref: "extensions.pocket.oAuthConsumerKey",
         collapsible: true,
         enabled: true,
+        show_spocs: false,
+        hardcoded_layout: false,
         personalized: true,
+        layout_endpoint:
+          "https://example.com/browser/browser/components/newtab/test/browser/ds_layout.json",
       }),
     ]);
     await pushPrefs([
@@ -40,8 +40,5 @@ test_newtab({
       "bbc",
       `Card publisher is ${cardPublisher} instead of bbc`
     );
-  },
-  async after() {
-    sinon.restore();
   },
 });

@@ -116,13 +116,11 @@ struct EntryPoint {
     spec_constants: Vec<SpecializationConstant>,
     sampling_pairs: FastHashSet<(naga::Handle<Resource>, naga::Handle<Resource>)>,
     workgroup_size: [u32; 3],
-    dual_source_blending: bool,
 }
 
 #[derive(Debug)]
 pub struct Interface {
     limits: wgt::Limits,
-    features: wgt::Features,
     resources: naga::Arena<Resource>,
     entry_points: FastHashMap<(naga::ShaderStage, String), EntryPoint>,
 }
@@ -296,7 +294,6 @@ fn map_storage_format_to_naga(format: wgt::TextureFormat) -> Option<naga::Storag
         Tf::Rgba8Uint => Sf::Rgba8Uint,
         Tf::Rgba8Sint => Sf::Rgba8Sint,
 
-        Tf::Rgb10a2Uint => Sf::Rgb10a2Uint,
         Tf::Rgb10a2Unorm => Sf::Rgb10a2Unorm,
         Tf::Rg11b10Float => Sf::Rg11b10Float,
 
@@ -351,7 +348,6 @@ fn map_storage_format_from_naga(format: naga::StorageFormat) -> wgt::TextureForm
         Sf::Rgba8Uint => Tf::Rgba8Uint,
         Sf::Rgba8Sint => Tf::Rgba8Sint,
 
-        Sf::Rgb10a2Uint => Tf::Rgb10a2Uint,
         Sf::Rgb10a2Unorm => Tf::Rgb10a2Unorm,
         Sf::Rg11b10Float => Tf::Rg11b10Float,
 
@@ -669,7 +665,7 @@ impl NumericType {
             | Tf::Rgb10a2Unorm
             | Tf::Rgba16Float
             | Tf::Rgba32Float => (NumericDimension::Vector(Vs::Quad), Sk::Float),
-            Tf::Rgba8Uint | Tf::Rgba16Uint | Tf::Rgba32Uint | Tf::Rgb10a2Uint => {
+            Tf::Rgba8Uint | Tf::Rgba16Uint | Tf::Rgba32Uint => {
                 (NumericDimension::Vector(Vs::Quad), Sk::Uint)
             }
             Tf::Rgba8Sint | Tf::Rgba16Sint | Tf::Rgba32Sint => {
@@ -834,12 +830,7 @@ impl Interface {
         list.push(varying);
     }
 
-    pub fn new(
-        module: &naga::Module,
-        info: &naga::valid::ModuleInfo,
-        limits: wgt::Limits,
-        features: wgt::Features,
-    ) -> Self {
+    pub fn new(module: &naga::Module, info: &naga::valid::ModuleInfo, limits: wgt::Limits) -> Self {
         let mut resources = naga::Arena::new();
         let mut resource_mapping = FastHashMap::default();
         for (var_handle, var) in module.global_variables.iter() {
@@ -912,7 +903,7 @@ impl Interface {
                 ep.sampling_pairs
                     .insert((resource_mapping[&key.image], resource_mapping[&key.sampler]));
             }
-            ep.dual_source_blending = info.dual_source_blending;
+
             ep.workgroup_size = entry_point.workgroup_size;
 
             entry_points.insert((entry_point.stage, entry_point.name.clone()), ep);
@@ -920,7 +911,6 @@ impl Interface {
 
         Self {
             limits,
-            features,
             resources,
             entry_points,
         }
@@ -1130,12 +1120,7 @@ impl Interface {
         }
 
         // Check all vertex outputs and make sure the fragment shader consumes them.
-        // This requirement is removed if the `SHADER_UNUSED_VERTEX_OUTPUT` feature is enabled.
-        if shader_stage == naga::ShaderStage::Fragment
-            && !self
-                .features
-                .contains(wgt::Features::SHADER_UNUSED_VERTEX_OUTPUT)
-        {
+        if shader_stage == naga::ShaderStage::Fragment {
             for &index in inputs.keys() {
                 // This is a linear scan, but the count should be low enough
                 // that this should be fine.
@@ -1191,16 +1176,5 @@ impl Interface {
             })
             .collect();
         Ok(outputs)
-    }
-
-    pub fn fragment_uses_dual_source_blending(
-        &self,
-        entry_point_name: &str,
-    ) -> Result<bool, StageError> {
-        let pair = (naga::ShaderStage::Fragment, entry_point_name.to_string());
-        self.entry_points
-            .get(&pair)
-            .ok_or(StageError::MissingEntryPoint(pair.1))
-            .map(|ep| ep.dual_source_blending)
     }
 }

@@ -49,16 +49,11 @@ async function testBookmarks(migratorKey, subDirs) {
   }
 
   let target = rootDir.clone();
-
   // Pretend this is the default profile
+  subDirs.push("Default");
   while (subDirs.length) {
     target.append(subDirs.shift());
   }
-
-  let localStatePath = PathUtils.join(target.path, "Local State");
-  await IOUtils.writeJSON(localStatePath, []);
-
-  target.append("Default");
 
   await IOUtils.makeDirectory(target.path, {
     createAncestor: true,
@@ -85,7 +80,6 @@ async function testBookmarks(migratorKey, subDirs) {
   await IOUtils.writeJSON(target.path, bookmarksData);
 
   let migrator = await MigrationUtils.getMigrator(migratorKey);
-  Assert.ok(await migrator.hasPermissions(), "Has permissions");
   // Sanity check for the source.
   Assert.ok(await migrator.isSourceAvailable());
 

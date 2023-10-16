@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_MANIFESTS += [
-    "tests/browserscope/mochitest.toml",
-    "tests/mochitest.toml",
+    "tests/browserscope/mochitest.ini",
+    "tests/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.toml"]
 
-BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser.ini"]
 
 EXPORTS.mozilla += [
     "EditAction.h",

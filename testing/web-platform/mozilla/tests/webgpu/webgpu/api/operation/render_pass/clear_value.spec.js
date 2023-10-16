@@ -9,7 +9,7 @@ import {
   kTextureFormatInfo,
   kDepthStencilFormats,
   depthStencilFormatAspectSize,
-} from '../../../format_info.js';
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -52,14 +52,14 @@ g.test('stencil_clear_value')
       .combine('stencilFormat', kDepthStencilFormats)
       .combine('stencilClearValue', [0, 1, 0xff, 0x100 + 2, 0x10000 + 3])
       .combine('applyStencilClearValueAsStencilReferenceValue', [true, false])
-      .filter(t => !!kTextureFormatInfo[t.stencilFormat].stencil)
+      .filter(t => kTextureFormatInfo[t.stencilFormat].stencil)
   )
   .beforeAllSubcases(t => {
     const { stencilFormat } = t.params;
     const info = kTextureFormatInfo[stencilFormat];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(t => {
+  .fn(async t => {
     const {
       stencilFormat,
       stencilClearValue,
@@ -111,7 +111,6 @@ g.test('stencil_clear_value')
       depthStencil: {
         format: stencilFormat,
         depthCompare: 'always',
-        depthWriteEnabled: false,
         stencilFront: {
           compare: 'equal',
         },
@@ -140,7 +139,6 @@ g.test('stencil_clear_value')
 
     const depthStencilAttachment = {
       view: stencilTexture.createView(),
-      depthClearValue: 0,
       stencilLoadOp: 'clear',
       stencilStoreOp: 'store',
       stencilClearValue,

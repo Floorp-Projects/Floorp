@@ -29,8 +29,6 @@ export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
-const maxDomainsToCategorize = 10;
-
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
   return console.createInstance({
     prefix: "SearchTelemetry",
@@ -45,13 +43,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   true
 );
 
-const CATEGORIZATION_PREF =
-  "browser.search.serpEventTelemetryCategorization.enabled";
-
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "serpEventTelemetryCategorization",
-  CATEGORIZATION_PREF,
+  "browser.search.serpEventTelemetryCategorization.enabled",
   false
 );
 
@@ -1402,7 +1397,7 @@ class ContentHandler {
     if (lazy.serpEventTelemetryCategorization && telemetryState) {
       let provider = item?.info.provider;
       if (provider) {
-        SearchSERPCategorization.maybeCategorizeAndReportDomainsFromProvider(
+        SearchSERPCategorization.categorizeDomainsFromProvider(
           info.nonAdDomains,
           info.adDomains,
           provider
@@ -1421,9 +1416,7 @@ class ContentHandler {
  */
 class DomainCategorizer {
   /**
-   * Categorizes and reports domains extracted from SERPs. Note that we don't
-   * process domains if the domain-to-categories map is empty (if the client
-   * couldn't download Remote Settings attachments, for example).
+   * Categorizes domains extracted from SERPs.
    *
    * @param {Set} nonAdDomains
    *   The non-ad domains extracted from the page.
@@ -1432,31 +1425,15 @@ class DomainCategorizer {
    * @param {string} provider
    *   The provider associated with the page.
    */
-  maybeCategorizeAndReportDomainsFromProvider(
-    nonAdDomains,
-    adDomains,
-    provider
-  ) {
+  categorizeDomainsFromProvider(nonAdDomains, adDomains, provider) {
     for (let domains of [nonAdDomains, adDomains]) {
-      // We don't want to generate and report telemetry if a client was unable
-      // to download the domain-to-categories mapping from Remote Settings.
-      if (SearchSERPDomainToCategoriesMap.empty) {
-        continue;
-      }
       domains = this.processDomains(domains, provider);
-      // Per a request from Data Science, we need to limit the number of domains
-      // categorized to 10 non ad domains and 10 ad domains.
-      domains = new Set([...domains].slice(0, maxDomainsToCategorize));
       let resultsToReport = this.applyCategorizationLogic(domains);
-      this.dummyLogger(
-        domains,
-        resultsToReport,
-        SearchSERPDomainToCategoriesMap.version
-      );
+      this.dummyLogger(domains, resultsToReport);
     }
   }
 
-  // TODO: check with DS to get the final aggregation logic. (Bug 1854196)
+  // TODO: check with DS to get the final aggregation logic.
   /**
    * Applies the logic for reducing extracted domains to a single category for
    * the SERP.
@@ -1528,9 +1505,8 @@ class DomainCategorizer {
   }
 
   // TODO: replace this method once we know where to send the categorized
-  // domains and overall SERP category. (Bug 1854692)
-  dummyLogger(domains, resultsToReport, version) {
-    lazy.logConsole.debug("Version of the attachments:", version);
+  // domains and overall SERP category.
+  dummyLogger(domains, resultsToReport) {
     lazy.logConsole.debug("Domains extracted from SERP:", [...domains]);
     lazy.logConsole.debug(
       "Categorization results to report to Glean:",
@@ -1657,46 +1633,38 @@ class DomainToCategoriesMap {
   #onSettingsSync = null;
 
   /**
-   * Runs at application startup with startup idle tasks. Creates a listener
-   * to changes of the SERP categorization preference. Additionally, if the
-   * SERP categorization preference is enabled, it creates a Remote Settings
-   * client to listen to updates, and populates the map.
+   * Initializes the map with local attachments and creates a listener for
+   * updates to Remote Settings in case the mappings are updated while the
+   * client is on.
    */
   async init() {
-    if (this.#init) {
+    if (!lazy.serpEventTelemetryCategorization || this.#init) {
       return;
     }
 
-    Services.prefs.addObserver(CATEGORIZATION_PREF, this);
     this.#init = true;
 
-    if (lazy.serpEventTelemetryCategorization) {
-      this.#setupClientAndMap();
-    }
+    lazy.logConsole.debug("Domain-to-categories map is initializing.");
+    this.#client = lazy.RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
+
+    this.#onSettingsSync = event => this.#sync(event.data);
+    this.#client.on("sync", this.#onSettingsSync);
+
+    let records = await this.#client.get();
+    await this.#clearAndPopulateMap(records);
   }
 
-  /**
-   * Predominantly a test-only function.
-   */
   uninit() {
-    lazy.logConsole.debug("Un-initialize domain-to-categories map.");
+    lazy.logConsole.debug("Uninitializing domain-to-categories map.");
     if (this.#init) {
-      this.#clearClientAndMap();
-      this.#init = false;
-      Services.prefs.removeObserver(CATEGORIZATION_PREF, this);
-    }
-  }
+      this.#map = null;
+      this.#version = null;
 
-  observe(subject, topic, data) {
-    if (topic != "nsPref:changed") {
-      return;
-    }
-    if (data == CATEGORIZATION_PREF) {
-      if (lazy.serpEventTelemetryCategorization) {
-        this.#setupClientAndMap();
-      } else {
-        this.#clearClientAndMap();
-      }
+      this.#client.off("sync", this.#onSettingsSync);
+      this.#client = null;
+      this.#onSettingsSync = null;
+
+      this.#init = false;
     }
   }
 
@@ -1752,8 +1720,8 @@ class DomainToCategoriesMap {
   }
 
   /**
-   * Unit test-only function, used to override the domainToCategoriesMap so
-   * that tests can set it to easy to test values.
+   * Test-only function, used to override the domainToCategoriesMap so that
+   * unit tests can set it to easy to test values.
    *
    * @param {object} domainToCategoriesMap
    *   An object where the key is a hashed domain and the value is an array
@@ -1761,35 +1729,6 @@ class DomainToCategoriesMap {
    */
   overrideMapForTests(domainToCategoriesMap) {
     this.#map = domainToCategoriesMap;
-  }
-
-  async #setupClientAndMap() {
-    if (this.#client && !this.empty) {
-      return;
-    }
-    lazy.logConsole.debug("Initializing domain-to-categories map.");
-    this.#client = lazy.RemoteSettings(TELEMETRY_CATEGORIZATION_KEY);
-
-    this.#onSettingsSync = event => this.#sync(event.data);
-    this.#client.on("sync", this.#onSettingsSync);
-
-    let records = await this.#client.get();
-    await this.#clearAndPopulateMap(records);
-  }
-
-  #clearClientAndMap() {
-    if (this.#client) {
-      lazy.logConsole.debug("Removing Remote Settings client.");
-      this.#client.off("sync", this.#onSettingsSync);
-      this.#client = null;
-      this.#onSettingsSync = null;
-    }
-
-    if (this.#map) {
-      lazy.logConsole.debug("Clearing domain-to-categories map.");
-      this.#map = null;
-      this.#version = null;
-    }
   }
 
   /**
@@ -1853,6 +1792,13 @@ class DomainToCategoriesMap {
 
     if (!records?.length) {
       lazy.logConsole.debug("No records found for domain-to-categories map.");
+      return;
+    }
+
+    if (!records.length) {
+      lazy.logConsole.error(
+        "No valid attachments available for domain-to-categories map."
+      );
       return;
     }
 
