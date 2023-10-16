@@ -893,7 +893,10 @@ rtc_library("net_helpers") {
     "net_helpers.cc",
     "net_helpers.h",
   ]
-  deps = [ "system:rtc_export" ]
+  deps = [
+    ":net_test_helpers",
+    "system:rtc_export",
+  ]
   if (is_android) {
     deps += [ ":ifaddrs_android" ]
   }
@@ -904,6 +907,26 @@ rtc_library("net_helpers") {
     ]
   }
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+}
+
+rtc_library("net_test_helpers") {
+  # TODO(mbonadei): Enable once net_helpers don't depend
+  # on this target  anymore.
+  # testonly = true
+  sources = [
+    "net_test_helpers.cc",
+    "net_test_helpers.h",
+  ]
+  deps = [ "system:rtc_export" ]
+  if (is_android) {
+    deps += [ ":ifaddrs_android" ]
+  }
+  if (is_win) {
+    deps += [
+      ":win32",
+      "win:windows_version",
+    ]
+  }
 }
 
 rtc_library("async_resolver_interface") {
@@ -1816,6 +1839,7 @@ if (rtc_include_tests) {
         ":logging",
         ":macromagic",
         ":net_helpers",
+        ":net_test_helpers",
         ":null_socket_server",
         ":platform_thread",
         ":rtc_base_tests_utils",
@@ -2081,6 +2105,7 @@ if (rtc_include_tests) {
         ":logging",
         ":macromagic",
         ":net_helpers",
+        ":net_test_helpers",
         ":network",
         ":network_route",
         ":null_socket_server",

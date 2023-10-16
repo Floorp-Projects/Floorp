@@ -202,6 +202,7 @@ if (rtc_include_tests) {
     deps = [
       ":rtc_p2p",
       "../rtc_base:net_helpers",
+      "../rtc_base:net_test_helpers",
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base/memory:always_valid_pointer",
@@ -312,6 +313,7 @@ if (rtc_include_tests) {
       "../rtc_base:mdns_responder_interface",
       "../rtc_base:net_helper",
       "../rtc_base:net_helpers",
+      "../rtc_base:net_test_helpers",
       "../rtc_base:network",
       "../rtc_base:network_constants",
       "../rtc_base:proxy_info",

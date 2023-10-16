@@ -34,6 +34,7 @@
 #include "rtc_base/nat_types.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/net_helpers.h"
+#include "rtc_base/net_test_helpers.h"
 #include "rtc_base/network.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/network_monitor.h"
