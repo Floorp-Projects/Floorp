@@ -24,6 +24,9 @@
 #include "absl/strings/match.h"
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/units/frequency.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/absolute_capture_time_sender.h"
@@ -45,7 +48,8 @@ namespace webrtc {
 
 namespace {
 constexpr size_t kRedForFecHeaderLength = 1;
-constexpr int64_t kMaxUnretransmittableFrameIntervalMs = 33 * 4;
+constexpr TimeDelta kMaxUnretransmittableFrameInterval =
+    TimeDelta::Millis(33 * 4);
 
 void BuildRedPayload(const RtpPacketToSend& media_packet,
                      RtpPacketToSend* red_packet) {
@@ -782,8 +786,7 @@ bool RTPSenderVideo::AllowRetransmission(
   MutexLock lock(&stats_mutex_);
   // Media packet storage.
   if ((retransmission_settings & kConditionallyRetransmitHigherLayers) &&
-      UpdateConditionalRetransmit(temporal_id,
-                                  expected_retransmission_time.ms())) {
+      UpdateConditionalRetransmit(temporal_id, expected_retransmission_time)) {
     retransmission_settings |= kRetransmitHigherLayers;
   }
 
@@ -816,39 +819,37 @@ uint8_t RTPSenderVideo::GetTemporalId(const RTPVideoHeader& header) {
 
 bool RTPSenderVideo::UpdateConditionalRetransmit(
     uint8_t temporal_id,
-    int64_t expected_retransmission_time_ms) {
-  int64_t now_ms = clock_->TimeInMilliseconds();
+    TimeDelta expected_retransmission_time) {
+  Timestamp now = clock_->CurrentTime();
   // Update stats for any temporal layer.
   TemporalLayerStats* current_layer_stats =
       &frame_stats_by_temporal_layer_[temporal_id];
-  current_layer_stats->frame_rate_fp1000s.Update(1, now_ms);
-  int64_t tl_frame_interval = now_ms - current_layer_stats->last_frame_time_ms;
-  current_layer_stats->last_frame_time_ms = now_ms;
+  current_layer_stats->frame_rate.Update(now);
+  TimeDelta tl_frame_interval = now - current_layer_stats->last_frame_time;
+  current_layer_stats->last_frame_time = now;
 
   // Conditional retransmit only applies to upper layers.
   if (temporal_id != kNoTemporalIdx && temporal_id > 0) {
-    if (tl_frame_interval >= kMaxUnretransmittableFrameIntervalMs) {
+    if (tl_frame_interval >= kMaxUnretransmittableFrameInterval) {
       // Too long since a retransmittable frame in this layer, enable NACK
       // protection.
       return true;
     } else {
       // Estimate when the next frame of any lower layer will be sent.
-      const int64_t kUndefined = std::numeric_limits<int64_t>::max();
-      int64_t expected_next_frame_time = kUndefined;
+      Timestamp expected_next_frame_time = Timestamp::PlusInfinity();
       for (int i = temporal_id - 1; i >= 0; --i) {
         TemporalLayerStats* stats = &frame_stats_by_temporal_layer_[i];
-        absl::optional<uint32_t> rate = stats->frame_rate_fp1000s.Rate(now_ms);
-        if (rate) {
-          int64_t tl_next = stats->last_frame_time_ms + 1000000 / *rate;
-          if (tl_next - now_ms > -expected_retransmission_time_ms &&
+        absl::optional<Frequency> rate = stats->frame_rate.Rate(now);
+        if (rate > Frequency::Zero()) {
+          Timestamp tl_next = stats->last_frame_time + 1 / *rate;
+          if (tl_next - now > -expected_retransmission_time &&
               tl_next < expected_next_frame_time) {
             expected_next_frame_time = tl_next;
           }
         }
       }
 
-      if (expected_next_frame_time == kUndefined ||
-          expected_next_frame_time - now_ms > expected_retransmission_time_ms) {
+      if (expected_next_frame_time - now > expected_retransmission_time) {
         // The next frame in a lower layer is expected at a later time (or
         // unable to tell due to lack of data) than a retransmission is
         // estimated to be able to arrive, so allow this packet to be nacked.
