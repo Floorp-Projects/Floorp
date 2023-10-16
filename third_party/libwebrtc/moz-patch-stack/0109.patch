@@ -19,7 +19,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5682fe53745131b57
  2 files changed, 21 insertions(+), 29 deletions(-)
 
 diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index cc0f37f1db..a8a5367952 100644
+index 336e169890..a52a76c262 100644
 --- a/modules/desktop_capture/desktop_capturer.cc
 +++ b/modules/desktop_capture/desktop_capturer.cc
 @@ -90,9 +90,16 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
@@ -31,7 +31,7 @@ index cc0f37f1db..a8a5367952 100644
      const DesktopCaptureOptions& options) {
 -  std::unique_ptr<DesktopCapturer> capturer = CreateRawGenericCapturer(options);
 +#if defined(RTC_ENABLE_WIN_WGC)
-+  if ((options.allow_wgc_capturer() || options.allow_wgc_screen_capturer()) &&
++  if (options.allow_wgc_screen_capturer() &&
 +      IsWgcSupported(CaptureType::kScreen)) {
 +    return WgcCapturerWin::CreateRawScreenCapturer(options);
 +  }
@@ -67,7 +67,7 @@ index cc0f37f1db..a8a5367952 100644
 -std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
 -    const DesktopCaptureOptions& options) {
 -#if defined(RTC_ENABLE_WIN_WGC)
--  if ((options.allow_wgc_capturer() || options.allow_wgc_screen_capturer()) &&
+-  if (options.allow_wgc_screen_capturer() &&
 -      IsWgcSupported(CaptureType::kScreen)) {
 -    return WgcCapturerWin::CreateRawScreenCapturer(options);
 -  }

@@ -69,7 +69,7 @@ bool DesktopCapturer::IsOccluded(const DesktopVector& pos) {
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(RTC_ENABLE_WIN_WGC)
-  if ((options.allow_wgc_capturer() || options.allow_wgc_window_capturer()) &&
+  if (options.allow_wgc_window_capturer() &&
       IsWgcSupported(CaptureType::kWindow)) {
     return WgcCapturerWin::CreateRawWindowCapturer(options);
   }
@@ -93,7 +93,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
     const DesktopCaptureOptions& options) {
 #if defined(RTC_ENABLE_WIN_WGC)
-  if ((options.allow_wgc_capturer() || options.allow_wgc_screen_capturer()) &&
+  if (options.allow_wgc_screen_capturer() &&
       IsWgcSupported(CaptureType::kScreen)) {
     return WgcCapturerWin::CreateRawScreenCapturer(options);
   }
