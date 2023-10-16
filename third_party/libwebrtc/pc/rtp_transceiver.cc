@@ -25,6 +25,7 @@
 #include "api/rtp_parameters.h"
 #include "api/sequence_checker.h"
 #include "media/base/codec.h"
+#include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
 #include "media/base/media_constants.h"
 #include "media/base/media_engine.h"
@@ -219,18 +220,19 @@ RTCError RtpTransceiver::CreateChannel(
       AudioCodecPairId codec_pair_id = AudioCodecPairId::Create();
 
       if (use_split_media_channel) {
-        std::unique_ptr<cricket::VoiceMediaChannel> media_send_channel =
-            absl::WrapUnique(media_engine()->voice().CreateMediaChannel(
-                cricket::MediaChannel::Role::kSend, call_ptr, media_config,
-                audio_options, crypto_options, codec_pair_id));
+        std::unique_ptr<cricket::VoiceMediaSendChannelInterface>
+            media_send_channel = media_engine()->voice().CreateSendChannel(
+                call_ptr, media_config, audio_options, crypto_options,
+                codec_pair_id);
         if (!media_send_channel) {
           // TODO(bugs.webrtc.org/14912): Consider CHECK or reporting failure
           return;
         }
-        std::unique_ptr<cricket::VoiceMediaChannel> media_receive_channel =
-            absl::WrapUnique(media_engine()->voice().CreateMediaChannel(
-                cricket::MediaChannel::Role::kReceive, call_ptr, media_config,
-                audio_options, crypto_options, codec_pair_id));
+        std::unique_ptr<cricket::VoiceMediaReceiveChannelInterface>
+            media_receive_channel =
+                media_engine()->voice().CreateReceiveChannel(
+                    call_ptr, media_config, audio_options, crypto_options,
+                    codec_pair_id);
         if (!media_receive_channel) {
           return;
         }
@@ -272,20 +274,18 @@ RTCError RtpTransceiver::CreateChannel(
       RTC_DCHECK_RUN_ON(context()->worker_thread());
 
       if (use_split_media_channel) {
-        std::unique_ptr<cricket::VideoMediaChannel> media_send_channel =
-            absl::WrapUnique(media_engine()->video().CreateMediaChannel(
-                cricket::MediaChannel::Role::kSend, call_ptr, media_config,
-                video_options, crypto_options,
-                video_bitrate_allocator_factory));
+        std::unique_ptr<cricket::VideoMediaSendChannelInterface>
+            media_send_channel = media_engine()->video().CreateSendChannel(
+                call_ptr, media_config, video_options, crypto_options,
+                video_bitrate_allocator_factory);
         if (!media_send_channel) {
           return;
         }
 
-        std::unique_ptr<cricket::VideoMediaChannel> media_receive_channel =
-            absl::WrapUnique(media_engine()->video().CreateMediaChannel(
-                cricket::MediaChannel::Role::kReceive, call_ptr, media_config,
-                video_options, crypto_options,
-                video_bitrate_allocator_factory));
+        std::unique_ptr<cricket::VideoMediaReceiveChannelInterface>
+            media_receive_channel =
+                media_engine()->video().CreateReceiveChannel(
+                    call_ptr, media_config, video_options, crypto_options);
         if (!media_receive_channel) {
           return;
         }
