@@ -22,6 +22,7 @@
 #include "p2p/base/udp_port.h"
 #include "rtc_base/memory/always_valid_pointer.h"
 #include "rtc_base/net_helpers.h"
+#include "rtc_base/net_test_helpers.h"
 #include "rtc_base/task_queue_for_test.h"
 #include "rtc_base/thread.h"
 
