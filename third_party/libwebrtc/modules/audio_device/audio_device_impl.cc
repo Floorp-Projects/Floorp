@@ -65,11 +65,7 @@ rtc::scoped_refptr<AudioDeviceModule> AudioDeviceModule::Create(
     AudioLayer audio_layer,
     TaskQueueFactory* task_queue_factory) {
   RTC_DLOG(LS_INFO) << __FUNCTION__;
-#if defined(WEBRTC_ANDROID)
-  return CreateAndroidAudioDeviceModule(audio_layer);
-#else
   return AudioDeviceModule::CreateForTest(audio_layer, task_queue_factory);
-#endif
 }
 
 // static
