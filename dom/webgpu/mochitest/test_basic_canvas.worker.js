@@ -3,9 +3,9 @@ self.addEventListener("message", async function (event) {
     const offscreen = event.data.offscreen;
     const context = offscreen.getContext("webgpu");
 
+    const swapChainFormat = navigator.gpu.getPreferredCanvasFormat();
     const adapter = await navigator.gpu.requestAdapter();
     const device = await adapter.requestDevice();
-    const swapChainFormat = context.getPreferredFormat(adapter);
 
     context.configure({
       device,
