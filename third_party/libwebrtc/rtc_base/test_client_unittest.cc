@@ -17,7 +17,6 @@
 #include "rtc_base/async_udp_socket.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/net_helpers.h"
-#include "rtc_base/net_test_helpers.h"
 #include "rtc_base/physical_socket_server.h"
 #include "rtc_base/socket.h"
 #include "rtc_base/test_echo_server.h"
