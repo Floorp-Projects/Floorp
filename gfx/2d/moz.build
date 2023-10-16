@@ -66,6 +66,8 @@ EXPORTS.mozilla.gfx += ["ssse3-scaler.h"]
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
     EXPORTS.mozilla.gfx += [
         "MacIOSurface.h",
+        "ScaledFontBase.h",
+        "ScaledFontMac.h",
         "UnscaledFontMac.h",
     ]
     UNIFIED_SOURCES += [
