@@ -453,24 +453,6 @@ void RTPSenderVideo::AddRtpHeaderExtensions(const RTPVideoHeader& video_header,
   }
 }
 
-bool RTPSenderVideo::SendVideo(
-    int payload_type,
-    absl::optional<VideoCodecType> codec_type,
-    uint32_t rtp_timestamp,
-    int64_t capture_time_ms,
-    rtc::ArrayView<const uint8_t> payload,
-    RTPVideoHeader video_header,
-    absl::optional<int64_t> expected_retransmission_time_ms) {
-  return SendVideo(payload_type, codec_type, rtp_timestamp,
-                   capture_time_ms > 0 ? Timestamp::Millis(capture_time_ms)
-                                       : Timestamp::MinusInfinity(),
-                   payload, payload.size(), video_header,
-                   expected_retransmission_time_ms.has_value()
-                       ? TimeDelta::Millis(*expected_retransmission_time_ms)
-                       : TimeDelta::PlusInfinity(),
-                   /*csrcs=*/{});
-}
-
 bool RTPSenderVideo::SendVideo(int payload_type,
                                absl::optional<VideoCodecType> codec_type,
                                uint32_t rtp_timestamp,
@@ -764,21 +746,6 @@ bool RTPSenderVideo::SendVideo(int payload_type,
   TRACE_EVENT_ASYNC_END1("webrtc", "Video", capture_time.ms_or(0), "timestamp",
                          rtp_timestamp);
   return true;
-}
-
-bool RTPSenderVideo::SendEncodedImage(
-    int payload_type,
-    absl::optional<VideoCodecType> codec_type,
-    uint32_t rtp_timestamp,
-    const EncodedImage& encoded_image,
-    RTPVideoHeader video_header,
-    absl::optional<int64_t> expected_retransmission_time_ms) {
-  return SendEncodedImage(
-      payload_type, codec_type, rtp_timestamp, encoded_image,
-      std::move(video_header),
-      expected_retransmission_time_ms.has_value()
-          ? TimeDelta::Millis(*expected_retransmission_time_ms)
-          : TimeDelta::PlusInfinity());
 }
 
 bool RTPSenderVideo::SendEncodedImage(int payload_type,
