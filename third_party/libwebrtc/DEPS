@@ -35,6 +35,10 @@ vars = {
   'checkout_fuchsia_boot_images': "terminal.qemu-x64",
   'checkout_fuchsia_product_bundles': '"{checkout_fuchsia_boot_images}" != ""',
 
+  # Fetch configuration files required for the 'use_remoteexec' gn arg
+  'download_remoteexec_cfg': False,
+  # RBE instance to use for running remote builds
+  'rbe_instance': 'projects/rbe-webrtc-developer/instances/default_instance',
   # reclient CIPD package version
   'reclient_version': 're_client_version:0.109.0.927890d-gomaip',
 
@@ -2692,6 +2696,21 @@ hooks = [
                 '-vpython-spec', 'src/.vpython3',
                 '-vpython-tool', 'install',
     ],
+  },
+  # Download remote exec cfg files
+  {
+    'name': 'fetch_reclient_cfgs',
+    'pattern': '.',
+    'condition': 'download_remoteexec_cfg',
+    'action': ['python3',
+               'src/buildtools/reclient_cfgs/fetch_reclient_cfgs.py',
+               '--rbe_instance',
+               Var('rbe_instance'),
+               '--reproxy_cfg_template',
+               'reproxy.cfg.template',
+               '--quiet',
+               '--hook',
+               ],
   },
 ]
 
