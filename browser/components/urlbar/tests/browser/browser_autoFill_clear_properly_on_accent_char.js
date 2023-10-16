@@ -148,7 +148,7 @@ add_task(async function modify_autofilled_selection() {
   await UrlbarTestUtils.promiseSearchComplete(window);
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL("https://developer.mozilla.org/j/"),
+    "https://developer.mozilla.org/j/",
     "gURLBar contains correct modified autofilled value"
   );
 });

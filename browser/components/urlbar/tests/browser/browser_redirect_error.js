@@ -108,7 +108,7 @@ function delayed(aIsSelectedTab) {
   );
   is(
     gURLBar.value,
-    UrlbarTestUtils.trimURL(currentURI),
+    currentURI,
     "The URL bar shows the content URI. aIsSelectedTab:" + aIsSelectedTab
   );
 

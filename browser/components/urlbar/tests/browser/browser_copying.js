@@ -11,11 +11,6 @@ function getUrl(hostname, file) {
 }
 
 add_task(async function () {
-  await test_copy_values(trimHttpTests, false);
-  await test_copy_values(trimHttpsTests, true);
-});
-
-async function test_copy_values(testValues, trimHttps) {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
 
   registerCleanupFunction(function () {
@@ -26,13 +21,12 @@ async function test_copy_values(testValues, trimHttps) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.trimURLs", true],
-      ["browser.urlbar.trimHttps", trimHttps],
       // avoid prompting about phishing
       ["network.http.phishy-userpass-length", 32],
     ],
   });
 
-  for (let testCase of testValues) {
+  for (let testCase of tests) {
     if (testCase.setup) {
       await testCase.setup();
     }
@@ -76,9 +70,9 @@ async function test_copy_values(testValues, trimHttps) {
       await testCase.cleanup();
     }
   }
-}
+});
 
-var trimHttpTests = [
+var tests = [
   // pageproxystate="invalid"
   {
     setURL: "http://example.com/",
@@ -377,240 +371,6 @@ var trimHttpTests = [
   },
 ];
 
-var trimHttpsTests = [
-  // pageproxystate="invalid"
-  {
-    setURL: "https://example.com/",
-    expectedURL: "example.com",
-    copyExpected: "example.com",
-  },
-  {
-    copyVal: "<e>xample.com",
-    copyExpected: "e",
-  },
-  {
-    copyVal: "<e>x<a>mple.com",
-    copyExpected: "ea",
-  },
-  {
-    copyVal: "<e><xa>mple.com",
-    copyExpected: "exa",
-  },
-  {
-    copyVal: "<e><xa>mple.co<m>",
-    copyExpected: "exam",
-  },
-  {
-    copyVal: "<e><xample.co><m>",
-    copyExpected: "example.com",
-  },
-
-  // pageproxystate="valid" from this point on (due to the load)
-  {
-    loadURL: "https://example.com/",
-    expectedURL: "example.com",
-    copyExpected: "https://example.com/",
-  },
-  {
-    copyVal: "<example.co>m",
-    copyExpected: "example.co",
-  },
-  {
-    copyVal: "e<x>ample.com",
-    copyExpected: "x",
-  },
-  {
-    copyVal: "<e>xample.com",
-    copyExpected: "e",
-  },
-  {
-    copyVal: "<e>xample.co<m>",
-    copyExpected: "em",
-  },
-  {
-    copyVal: "<exam><ple.com>",
-    copyExpected: "example.com",
-  },
-
-  {
-    loadURL: "https://example.com/foo",
-    expectedURL: "example.com/foo",
-    copyExpected: "https://example.com/foo",
-  },
-  {
-    copyVal: "<example.com>/foo",
-    copyExpected: "https://example.com",
-  },
-  {
-    copyVal: "<example>.com/foo",
-    copyExpected: "example",
-  },
-  // Test that partially selected URL is copied with encoded spaces
-  {
-    loadURL: "https://example.com/%20space/test",
-    expectedURL: "example.com/ space/test",
-    copyExpected: "https://example.com/%20space/test",
-  },
-  {
-    copyVal: "<example.com/ space>/test",
-    copyExpected: "https://example.com/%20space",
-  },
-  {
-    copyVal: "<example.com/ space/test>",
-    copyExpected: "https://example.com/%20space/test",
-  },
-  {
-    loadURL: "https://example.com/%20foo%20bar%20baz/",
-    expectedURL: "example.com/ foo bar baz/",
-    copyExpected: "https://example.com/%20foo%20bar%20baz/",
-  },
-  {
-    copyVal: "<example.com/ foo bar> baz/",
-    copyExpected: "https://example.com/%20foo%20bar",
-  },
-  {
-    copyVal: "example.<com/ foo bar> baz/",
-    copyExpected: "com/ foo bar",
-  },
-  // Test escaping
-  {
-    loadURL: "https://example.com/()%28%29%C3%A9",
-    expectedURL: "example.com/()()\xe9",
-    copyExpected: "https://example.com/()%28%29%C3%A9",
-  },
-  {
-    copyVal: "<example.com/(>)()\xe9",
-    copyExpected: "https://example.com/(",
-  },
-  {
-    copyVal: "e<xample.com/(>)()\xe9",
-    copyExpected: "xample.com/(",
-  },
-
-  {
-    loadURL: "https://example.com/%C3%A9%C3%A9",
-    expectedURL: "example.com/\xe9\xe9",
-    copyExpected: "https://example.com/%C3%A9%C3%A9",
-  },
-  {
-    copyVal: "e<xample.com/\xe9>\xe9",
-    copyExpected: "xample.com/\xe9",
-  },
-  {
-    copyVal: "<example.com/\xe9>\xe9",
-    copyExpected: "https://example.com/%C3%A9",
-  } /*
-  {
-    // Note: it seems BrowserTestUtils.loadURI fails for unicode domains
-    loadURL: "https://sub2.xn--lt-uia.mochi.test:8888/foo",
-    expectedURL: "sub2.ält.mochi.test:8888/foo",
-    copyExpected: "https://sub2.ält.mochi.test:8888/foo",
-  },
-  {
-    copyVal: "s<ub2.ält.mochi.test:8888/f>oo",
-    copyExpected: "ub2.ält.mochi.test:8888/f",
-  },
-  {
-    copyVal: "<sub2.ält.mochi.test:8888/f>oo",
-    copyExpected: "https://sub2.%C3%A4lt.mochi.test:8888/f",
-  },*/,
-
-  {
-    loadURL: "https://example.com/?%C3%B7%C3%B7",
-    expectedURL: "example.com/?\xf7\xf7",
-    copyExpected: "https://example.com/?%C3%B7%C3%B7",
-  },
-  {
-    copyVal: "e<xample.com/?\xf7>\xf7",
-    copyExpected: "xample.com/?\xf7",
-  },
-  {
-    copyVal: "<example.com/?\xf7>\xf7",
-    copyExpected: "https://example.com/?%C3%B7",
-  },
-  {
-    loadURL: "https://example.com/a%20test",
-    expectedURL: "example.com/a test",
-    copyExpected: "https://example.com/a%20test",
-  },
-  {
-    loadURL: "https://example.com/a%E3%80%80test",
-    expectedURL: "example.com/a%E3%80%80test",
-    copyExpected: "https://example.com/a%E3%80%80test",
-  },
-  {
-    loadURL: "https://example.com/a%20%C2%A0test",
-    expectedURL: "example.com/a %C2%A0test",
-    copyExpected: "https://example.com/a%20%C2%A0test",
-  },
-  {
-    loadURL: "https://example.com/%20%20%20",
-    expectedURL: "example.com/%20%20%20",
-    copyExpected: "https://example.com/%20%20%20",
-  },
-  {
-    loadURL: "https://example.com/%E3%80%80%E3%80%80",
-    expectedURL: "example.com/%E3%80%80%E3%80%80",
-    copyExpected: "https://example.com/%E3%80%80%E3%80%80",
-  },
-
-  // Loading of javascript: URI results in previous URI, so if the previous
-  // entry changes, change this one too!
-  {
-    loadURL: "javascript:('%C3%A9%20%25%50')",
-    expectedLoad: "https://example.com/%E3%80%80%E3%80%80",
-    expectedURL: "example.com/%E3%80%80%E3%80%80",
-    copyExpected: "https://example.com/%E3%80%80%E3%80%80",
-  },
-
-  // data: URIs shouldn't be encoded
-  {
-    loadURL: "data:text/html,(%C3%A9%20%25%50)",
-    expectedURL: "data:text/html,(%C3%A9 %25P)",
-    copyExpected: "data:text/html,(%C3%A9 %25P)",
-  },
-  {
-    copyVal: "<data:text/html,(>%C3%A9 %25P)",
-    copyExpected: "data:text/html,(",
-  },
-  {
-    copyVal: "<data:text/html,(%C3%A9 %25P>)",
-    copyExpected: "data:text/html,(%C3%A9 %25P",
-  },
-
-  {
-    async setup() {
-      await SpecialPowers.pushPrefEnv({
-        set: [["browser.urlbar.decodeURLsOnCopy", true]],
-      });
-    },
-    async cleanup() {
-      await SpecialPowers.popPrefEnv();
-    },
-    loadURL:
-      "https://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
-    expectedURL: "example.com/биография",
-    copyExpected: "https://example.com/биография",
-  },
-  {
-    copyVal: "<example.com/би>ография",
-    copyExpected: "https://example.com/%D0%B1%D0%B8",
-  },
-  {
-    async setup() {
-      await SpecialPowers.pushPrefEnv({
-        set: [["browser.urlbar.decodeURLsOnCopy", true]],
-      });
-    },
-    async cleanup() {
-      await SpecialPowers.popPrefEnv();
-    },
-    loadURL: "http://example.com/",
-    expectedURL: "http://example.com",
-    copyExpected: "http://example.com",
-  },
-];
-
 function testCopy(copyVal, targetValue) {
   info("Expecting copy of: " + targetValue);
 
@@ -649,7 +409,7 @@ function testCopy(copyVal, targetValue) {
   } else {
     gURLBar.select();
   }
-  info(`Target Value ${targetValue}`);
+
   return SimpleTest.promiseClipboardChange(targetValue, () =>
     goDoCommand("cmd_copy")
   );
@@ -658,7 +418,6 @@ function testCopy(copyVal, targetValue) {
 add_task(async function includingProtocol() {
   await PlacesUtils.history.clear();
   await PlacesTestUtils.clearInputHistory();
-  SpecialPowers.pushPrefEnv({ set: [["browser.urlbar.trimHttps", true]] });
 
   await PlacesTestUtils.addVisits(["https://example.com/"]);
   await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
