@@ -124,6 +124,17 @@ AudioDeviceModuleImpl::AudioDeviceModuleImpl(
   RTC_DLOG(LS_INFO) << __FUNCTION__;
 }
 
+AudioDeviceModuleImpl::AudioDeviceModuleImpl(
+    AudioLayer audio_layer,
+    std::unique_ptr<AudioDeviceGeneric> audio_device,
+    TaskQueueFactory* task_queue_factory,
+    bool create_detached)
+    : audio_layer_(audio_layer),
+      audio_device_buffer_(task_queue_factory, create_detached),
+      audio_device_(std::move(audio_device)) {
+  RTC_DLOG(LS_INFO) << __FUNCTION__;
+}
+
 int32_t AudioDeviceModuleImpl::CheckPlatform() {
   RTC_DLOG(LS_INFO) << __FUNCTION__;
   // Ensure that the current platform is supported
@@ -143,6 +154,9 @@ int32_t AudioDeviceModuleImpl::CheckPlatform() {
 #elif defined(WEBRTC_MAC)
   platform = kPlatformMac;
   RTC_LOG(LS_INFO) << "current platform is Mac";
+#elif defined(WEBRTC_FUCHSIA)
+  platform = kPlatformFuchsia;
+  RTC_LOG(LS_INFO) << "current platform is Fuchsia";
 #endif
   if (platform == kPlatformNotSupported) {
     RTC_LOG(LS_ERROR)
@@ -156,6 +170,10 @@ int32_t AudioDeviceModuleImpl::CheckPlatform() {
 
 int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects() {
   RTC_LOG(LS_INFO) << __FUNCTION__;
+  if (audio_device_ != nullptr) {
+    RTC_LOG(LS_INFO) << "Reusing provided audio device";
+    return 0;
+  }
 // Dummy ADM implementations if build flags are set.
 #if defined(WEBRTC_DUMMY_AUDIO_BUILD)
   audio_device_.reset(new AudioDeviceDummy());
