@@ -3122,6 +3122,17 @@ TEST_F(WebRtcVideoChannelTest, RecvAbsoluteSendTimeHeaderExtensions) {
   TestSetRecvRtpHeaderExtensions(RtpExtension::kAbsSendTimeUri);
 }
 
+TEST_F(WebRtcVideoChannelTest, FiltersExtensionsPicksTransportSeqNum) {
+  webrtc::test::ScopedKeyValueConfig override_field_trials(
+      field_trials_, "WebRTC-FilterAbsSendTimeExtension/Enabled/");
+  // Enable three redundant extensions.
+  std::vector<std::string> extensions;
+  extensions.push_back(RtpExtension::kAbsSendTimeUri);
+  extensions.push_back(RtpExtension::kTimestampOffsetUri);
+  extensions.push_back(RtpExtension::kTransportSequenceNumberUri);
+  TestExtensionFilter(extensions, RtpExtension::kTransportSequenceNumberUri);
+}
+
 TEST_F(WebRtcVideoChannelTest, FiltersExtensionsPicksAbsSendTime) {
   // Enable two redundant extensions.
   std::vector<std::string> extensions;
