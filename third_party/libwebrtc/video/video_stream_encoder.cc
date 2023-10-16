@@ -1106,8 +1106,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
         // or/and can be provided by encoder. In presence of both set of
         // limits, the final set is derived as their intersection.
         int min_bitrate_bps;
-        if (encoder_config_.simulcast_layers.empty() ||
-            encoder_config_.simulcast_layers[0].min_bitrate_bps <= 0) {
+        if (encoder_config_.simulcast_layers[0].min_bitrate_bps <= 0) {
           min_bitrate_bps = encoder_bitrate_limits->min_bitrate_bps;
         } else {
           min_bitrate_bps = std::max(encoder_bitrate_limits->min_bitrate_bps,
@@ -1115,10 +1114,20 @@ void VideoStreamEncoder::ReconfigureEncoder() {
         }
 
         int max_bitrate_bps;
-        // We don't check encoder_config_.simulcast_layers[0].max_bitrate_bps
-        // here since encoder_config_.max_bitrate_bps is derived from it (as
-        // well as from other inputs).
-        if (encoder_config_.max_bitrate_bps <= 0) {
+        // The API max bitrate comes from both `encoder_config_.max_bitrate_bps`
+        // and `encoder_config_.simulcast_layers[0].max_bitrate_bps`.
+        absl::optional<int> api_max_bitrate_bps;
+        if (encoder_config_.simulcast_layers[0].max_bitrate_bps > 0) {
+          api_max_bitrate_bps =
+              encoder_config_.simulcast_layers[0].max_bitrate_bps;
+        }
+        if (encoder_config_.max_bitrate_bps > 0) {
+          api_max_bitrate_bps = api_max_bitrate_bps.has_value()
+                                    ? std::min(encoder_config_.max_bitrate_bps,
+                                               *api_max_bitrate_bps)
+                                    : encoder_config_.max_bitrate_bps;
+        }
+        if (!api_max_bitrate_bps.has_value()) {
           max_bitrate_bps = encoder_bitrate_limits->max_bitrate_bps;
         } else {
           max_bitrate_bps = std::min(encoder_bitrate_limits->max_bitrate_bps,
@@ -1138,7 +1147,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
               << ", max=" << encoder_bitrate_limits->max_bitrate_bps
               << ") do not intersect with limits set by app"
               << " (min=" << streams.back().min_bitrate_bps
-              << ", max=" << encoder_config_.max_bitrate_bps
+              << ", max=" << api_max_bitrate_bps.value_or(-1)
               << "). The app bitrate limits will be used.";
         }
       }
