@@ -5,13 +5,11 @@
 import bisect
 import json
 import os
-import signal
 import subprocess
 import sys
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozprocess import ProcessHandler
 
 
 def in_sorted_list(l, x):
@@ -68,17 +66,6 @@ def handle_clippy_msg(config, line, log, base_path, files):
         log.debug("Could not parse the output:")
         log.debug("clippy output: {}".format(line))
         return
-
-
-class clippyProcess(ProcessHandler):
-    def __init__(self, *args, **kwargs):
-        kwargs["stream"] = False
-        ProcessHandler.__init__(self, *args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandler.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
 
 
 def lint(paths, config, fix=None, **lintargs):

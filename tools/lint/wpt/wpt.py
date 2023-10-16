@@ -6,10 +6,10 @@
 
 import json
 import os
+import subprocess
 import sys
 
 from mozlint import result
-from mozprocess import ProcessHandler
 
 results = []
 
@@ -40,11 +40,12 @@ def lint(files, config, **kwargs):
     cmd = ["python3", os.path.join(tests_dir, "wpt"), "lint", "--json"] + files
     log.debug("Command: {}".format(" ".join(cmd)))
 
-    proc = ProcessHandler(
-        cmd, env=os.environ, processOutputLine=process_line, universal_newlines=True
+    proc = subprocess.Popen(
+        cmd, env=os.environ, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
-    proc.run()
     try:
+        for line in proc.stdout:
+            process_line(line.rstrip("\r\n"))
         proc.wait()
         if proc.returncode != 0:
             results.append(
