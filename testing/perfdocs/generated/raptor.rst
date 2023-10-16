@@ -47,7 +47,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -306,7 +306,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 2000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -567,7 +567,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -829,7 +829,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -1086,7 +1086,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -1343,6 +1343,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
+   * **expose chrome trace**: true
    * **expose gecko profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
@@ -1600,7 +1601,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, custom-car
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -2281,7 +2282,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **browsertime args**: --browsertime.speedometer_iterations=5
    * **custom data**: true
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **host from parent**: false
@@ -2956,7 +2957,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -3215,7 +3216,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -3472,7 +3473,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -3992,7 +3993,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: false
@@ -4299,7 +4300,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -4557,7 +4558,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -4771,7 +4772,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 8000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -4985,7 +4986,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -5240,7 +5241,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -5456,7 +5457,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -5672,7 +5673,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 4000000
    * **gecko profile interval**: 1
    * **lower is better**: true
@@ -5931,7 +5932,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix,refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -5954,7 +5955,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -5995,7 +5996,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -6197,7 +6198,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -6399,7 +6400,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -6601,7 +6602,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -6803,7 +6804,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -7063,7 +7064,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -7322,7 +7323,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -7524,7 +7525,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -7726,7 +7727,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -7928,7 +7929,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gather cpuTime**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
@@ -8130,7 +8131,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -8347,7 +8348,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -8564,7 +8565,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
@@ -8781,7 +8782,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
-   * **expose gecko profiler**: true
+   * **expose browser profiler**: true
    * **gecko profile entries**: 50000000
    * **gecko profile interval**: 1000
    * **gecko profile threads**: MediaPlayback
