@@ -1979,6 +1979,9 @@ public class WebExtension {
      */
     public final boolean temporary;
 
+    /** The link to the AMO detail page for this extension. See `AddonWrapper.amoListingURL`. */
+    public final @Nullable String amoListingUrl;
+
     /** Override for testing. */
     protected MetaData() {
       icon = null;
@@ -2006,6 +2009,7 @@ public class WebExtension {
       reviewUrl = null;
       updateDate = null;
       downloadUrl = null;
+      amoListingUrl = null;
     }
 
     /* package */ MetaData(final GeckoBundle bundle) {
@@ -2032,6 +2036,7 @@ public class WebExtension {
       reviewUrl = bundle.getString("reviewURL");
       updateDate = bundle.getString("updateDate");
       downloadUrl = bundle.getString("downloadUrl");
+      amoListingUrl = bundle.getString("amoListingURL");
 
       final int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
       if (signedState <= SignedStateFlags.LAST) {

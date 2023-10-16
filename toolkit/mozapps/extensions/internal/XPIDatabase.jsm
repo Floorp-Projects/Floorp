@@ -1580,13 +1580,13 @@ function defineAddonWrapperProperty(name, getter) {
 
 [
   "fullDescription",
-  "developerComments",
   "supportURL",
   "contributionURL",
   "averageRating",
   "reviewCount",
   "reviewURL",
   "weeklyDownloads",
+  "amoListingURL",
 ].forEach(function (aProp) {
   defineAddonWrapperProperty(aProp, function () {
     let addon = addonFor(this);

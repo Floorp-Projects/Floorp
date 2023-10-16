@@ -98,6 +98,7 @@ const GETADDONS_JSON = {
       ],
       summary: "Repository summary",
       description: "Repository description",
+      url: "https://addons.mozilla.org/en-US/firefox/addon/addon2@tests.mozilla.org/",
     },
   ],
 };
@@ -792,11 +793,19 @@ add_task(async function test_metadata() {
   await install.install();
 
   equal(install.addon.fullDescription, "Repository description");
+  equal(
+    install.addon.amoListingURL,
+    "https://addons.mozilla.org/en-US/firefox/addon/addon2@tests.mozilla.org/"
+  );
 
   await promiseRestartManager();
 
   let addon = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   equal(addon.fullDescription, "Repository description");
+  equal(
+    addon.amoListingURL,
+    "https://addons.mozilla.org/en-US/firefox/addon/addon2@tests.mozilla.org/"
+  );
 
   await addon.uninstall();
 });
@@ -813,6 +822,10 @@ add_task(async function test_metadata_again() {
 
   let addon = await AddonManager.getAddonByID("addon2@tests.mozilla.org");
   equal(addon.fullDescription, "Repository description");
+  equal(
+    addon.amoListingURL,
+    "https://addons.mozilla.org/en-US/firefox/addon/addon2@tests.mozilla.org/"
+  );
 
   await addon.uninstall();
 });

@@ -18,7 +18,7 @@ exclude: true
 - Added `DisabledFlags.SIGNATURE` for extensions disabled because they aren't correctly signed. ([bug 1847266]({{bugzilla}}1847266))
 - Added `Builder` pattern constructors for [`ReviewAnalysis`][120.2] and [`Recommendation`][120.3] (part of [bug 1846341]({{bugzilla}}1846341))
 - Added `DisabledFlags.APP_VERSION` for extensions disabled because they aren't compatible with the application version. ([bug 1847266]({{bugzilla}}1847266))
-- Added more metadata to the [WebExtension][120.4] class. ([bug 1850674]({{bugzilla}}1850674))
+- Added more metadata to the [WebExtension][120.4] class. ([bug 1850674]({{bugzilla}}1850674), [bug 1858925]({{bugzilla}}1858925))
 - Added session and translations controller. Includes [`TranslationsController`][120.5], [`TranslationsController.SessionTranslation`][120.6] (notably [translate][120.7]), and a [translations delegate][120.8].
 
 [120.1]: {{javadoc_uri}}/WebExtensionController.html#disableExtensionProcessSpawning
@@ -1449,4 +1449,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 0909ac573b825169118c688f1975adc1f30cc252
+[api-version]: 3615c62a176c6dd0815b7bf28e7b33c378849701
