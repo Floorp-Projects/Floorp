@@ -11,6 +11,7 @@
 #include "media/engine/webrtc_media_engine.h"
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "media/engine/webrtc_media_engine_defaults.h"
@@ -216,23 +217,6 @@ TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantEncrypted2) {
   EXPECT_NE(filtered[1].uri, filtered[2].uri);
 }
 
-TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBwe1) {
-  webrtc::test::ScopedKeyValueConfig trials(
-      "WebRTC-FilterAbsSendTimeExtension/Enabled/");
-  std::vector<RtpExtension> extensions;
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 3));
-  extensions.push_back(RtpExtension(RtpExtension::kTimestampOffsetUri, 9));
-  extensions.push_back(RtpExtension(RtpExtension::kAbsSendTimeUri, 6));
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 1));
-  extensions.push_back(RtpExtension(RtpExtension::kTimestampOffsetUri, 14));
-  std::vector<webrtc::RtpExtension> filtered =
-      FilterRtpExtensions(extensions, SupportedExtensions2, true, trials);
-  EXPECT_EQ(1u, filtered.size());
-  EXPECT_EQ(RtpExtension::kTransportSequenceNumberUri, filtered[0].uri);
-}
-
 TEST(WebRtcMediaEngineTest,
      FilterRtpExtensionsRemoveRedundantBwe1KeepAbsSendTime) {
   std::vector<RtpExtension> extensions;
@@ -249,29 +233,6 @@ TEST(WebRtcMediaEngineTest,
   EXPECT_EQ(2u, filtered.size());
   EXPECT_EQ(RtpExtension::kTransportSequenceNumberUri, filtered[0].uri);
   EXPECT_EQ(RtpExtension::kAbsSendTimeUri, filtered[1].uri);
-}
-
-TEST(WebRtcMediaEngineTest, FilterRtpExtensionsRemoveRedundantBweEncrypted1) {
-  webrtc::test::ScopedKeyValueConfig trials(
-      "WebRTC-FilterAbsSendTimeExtension/Enabled/");
-  std::vector<RtpExtension> extensions;
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 3));
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 4, true));
-  extensions.push_back(RtpExtension(RtpExtension::kTimestampOffsetUri, 9));
-  extensions.push_back(RtpExtension(RtpExtension::kAbsSendTimeUri, 6));
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 1));
-  extensions.push_back(
-      RtpExtension(RtpExtension::kTransportSequenceNumberUri, 2, true));
-  extensions.push_back(RtpExtension(RtpExtension::kTimestampOffsetUri, 14));
-  std::vector<webrtc::RtpExtension> filtered =
-      FilterRtpExtensions(extensions, SupportedExtensions2, true, trials);
-  EXPECT_EQ(2u, filtered.size());
-  EXPECT_EQ(RtpExtension::kTransportSequenceNumberUri, filtered[0].uri);
-  EXPECT_EQ(RtpExtension::kTransportSequenceNumberUri, filtered[1].uri);
-  EXPECT_NE(filtered[0].encrypt, filtered[1].encrypt);
 }
 
 TEST(WebRtcMediaEngineTest,
