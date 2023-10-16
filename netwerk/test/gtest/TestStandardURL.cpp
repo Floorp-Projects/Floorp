@@ -23,7 +23,7 @@ extern nsresult Test_ParseIPv4Number(const nsACString& input, int32_t base,
                                      uint32_t& number, uint32_t maxNumber);
 extern int32_t Test_ValidateIPv4Number(const nsACString& host, int32_t bases[4],
                                        int32_t dotIndex[3], bool& onlyBase10,
-                                       int32_t& length);
+                                       int32_t length);
 TEST(TestStandardURL, Simple)
 {
   nsCOMPtr<nsIURI> url;
