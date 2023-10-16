@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<script>
+let container = document.documentElement;
+for(let i = 0; i < 256; i++) {
+  let div = document.createElement("div");
+  container.appendChild(div);
+  container = div;
+}
+
+let input = document.createElement("input");
+input.type = "radio";
+container.appendChild(input);
+
+let evt = new MouseEvent("click", {
+  bubbles: true,
+  cancelable: true,
+});
+input.dispatchEvent(evt);
+</script>

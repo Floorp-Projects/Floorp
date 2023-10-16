@@ -7,12 +7,11 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_heuristic_tests([
   {
-    description:
-      "All fields are visible (interactivityCheckMode is set to visibility).",
+    description: "All visual fields are considered focusable.",
     prefs: [
       [
         "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
+        "focusability",
       ],
     ],
     fixtureData: `
@@ -21,8 +20,57 @@ add_heuristic_tests([
           <form>
             <input type="text" id="name" autocomplete="name" />
             <input type="text" id="tel" autocomplete="tel" />
-            <input type="text" id="email" autocomplete="email" />
-            <input type="text" id="country" autocomplete="country"/>
+            <input type="text" id="email" autocomplete="email"/>
+            <select id="country" autocomplete="country">
+              <option value="United States">United States</option>
+            </select>
+            <input type="text" id="postal-code" autocomplete="postal-code"/>
+            <input type="text" id="address-line1" autocomplete="address-line1" />
+            <div>
+              <input type="text" id="address-line2" autocomplete="address-line2" />
+            </div>
+          </form>
+          </form>
+        </body>
+        </html>
+      `,
+    expectedResult: [
+      {
+        default: {
+          reason: "autocomplete",
+        },
+        fields: [
+          { fieldName: "name" },
+          { fieldName: "tel" },
+          { fieldName: "email" },
+          { fieldName: "country" },
+          { fieldName: "postal-code" },
+          { fieldName: "address-line1" },
+          { fieldName: "address-line2" },
+        ],
+      },
+    ],
+  },
+  {
+    // ignore opacity (see  Bug 1835852),
+    description:
+      "Invisible fields with style.opacity=0 set are considered focusable.",
+    prefs: [
+      [
+        "extensions.formautofill.heuristics.interactivityCheckMode",
+        "focusability",
+      ],
+    ],
+    fixtureData: `
+        <html>
+        <body>
+          <form>
+            <input type="text" id="name" autocomplete="name" style="opacity:0" />
+            <input type="text" id="tel" autocomplete="tel" />
+            <input type="text" id="email" autocomplete="email" style="opacity:0"/>
+            <select id="country" autocomplete="country">
+              <option value="United States">United States</option>
+            </select>
             <input type="text" id="postal-code" autocomplete="postal-code" />
             <input type="text" id="address-line1" autocomplete="address-line1" />
             <div>
@@ -52,11 +100,11 @@ add_heuristic_tests([
   },
   {
     description:
-      "Some fields are invisible due to css styling (interactivityCheckMode is set to visibility).",
+      "Some fields are considered unfocusable due to their invisibility.",
     prefs: [
       [
         "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
+        "focusability",
       ],
     ],
     fixtureData: `
@@ -91,14 +139,11 @@ add_heuristic_tests([
     ],
   },
   {
-    // hidden, style="display:none" are always considered (when mode visibility)
-    description:
-      "Number of form elements exceeds the threshold (interactivityCheckMode is set to visibility).",
+    description: `Disabled field and field with tabindex="-1" is considered unfocusable`,
     prefs: [
-      ["extensions.formautofill.heuristics.visibilityCheckThreshold", 1],
       [
         "extensions.formautofill.heuristics.interactivityCheckMode",
-        "visibility",
+        "focusability",
       ],
     ],
     fixtureData: `
@@ -108,12 +153,10 @@ add_heuristic_tests([
             <input type="text" id="name" autocomplete="name" />
             <input type="text" id="tel" autocomplete="tel" />
             <input type="text" id="email" autocomplete="email" />
-            <input type="text" id="country" autocomplete="country" disabled />
-            <input type="text" id="postal-code" autocomplete="postal-code" hidden />
-            <input type="text" id="address-line1" autocomplete="address-line1" style="display:none" />
-            <div style="visibility: hidden">
-              <input type="text" id="address-line2" autocomplete="address-line2" />
-            </div>
+            <input type="text" id="country" autocomplete="country" disabled/>
+            <input type="text" id="postal-code" autocomplete="postal-code" tabindex="-1"/>
+            <input type="text" id="address-line1" autocomplete="address-line1" />
+            <input type="text" id="address-line2" autocomplete="address-line2" />
           </form>
         </body>
         </html>
@@ -127,7 +170,7 @@ add_heuristic_tests([
           { fieldName: "name" },
           { fieldName: "tel" },
           { fieldName: "email" },
-          { fieldName: "country" },
+          { fieldName: "address-line1" },
           { fieldName: "address-line2" },
         ],
       },

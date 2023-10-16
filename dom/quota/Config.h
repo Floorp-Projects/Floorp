@@ -33,4 +33,14 @@
 #  define QM_COLLECTING_OPERATION_TELEMETRY
 #endif
 
+/**
+ * The thread ownership checks in CachingDatabaseConnection assumes that the
+ * object lives on a single thread, not any serial event target.
+ * Defining CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP restores the checks.
+ * See bug 1858989.
+ */
+#if 0
+#  define CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP 1
+#endif
+
 #endif  // DOM_QUOTA_CONFIG_H_

@@ -86,7 +86,11 @@ class nsFrameLoaderOwner : public nsISupports {
 
   void AttachFrameLoader(nsFrameLoader* aFrameLoader);
   void DetachFrameLoader(nsFrameLoader* aFrameLoader);
-  void FrameLoaderDestroying(nsFrameLoader* aFrameLoader);
+  // If aDestroyBFCached is true and aFrameLoader is the current frameloader
+  // (mFrameLoader) then this will also call nsFrameLoader::Destroy on all the
+  // other frame loaders in mFrameLoaderList and remove them from the list.
+  void FrameLoaderDestroying(nsFrameLoader* aFrameLoader,
+                             bool aDestroyBFCached);
 
  private:
   bool UseRemoteSubframes();

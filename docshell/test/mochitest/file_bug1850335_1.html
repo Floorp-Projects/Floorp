@@ -1,0 +1,23 @@
+<script>
+addEventListener("load", ({ persisted }) => {
+  document.getElementById("input1").value = "";
+});
+addEventListener("pageshow", ({ persisted }) => {
+  let bc = new BroadcastChannel("bug1850335");
+
+  bc.addEventListener("message", ({ data: { cmd, arg } }) => {
+    if (cmd == "setValue") {
+      document.getElementById("input1").value = arg;
+      bc.postMessage({ value: document.getElementById("input1").value });
+    } else if (cmd == "load") {
+      bc.close();
+      location = arg;
+    } else if (cmd == "close") {
+      close();
+    }
+  });
+
+  bc.postMessage({ persisted, value: document.getElementById("input1").value });
+});
+</script>
+<input type="text" id="input1"></input>

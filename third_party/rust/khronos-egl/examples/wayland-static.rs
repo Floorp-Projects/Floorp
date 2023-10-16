@@ -1,19 +1,15 @@
-extern crate gl;
 extern crate khronos_egl as egl;
-extern crate wayland_client;
-extern crate wayland_egl;
-extern crate wayland_protocols;
 
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::ptr;
-use std::ffi::CStr;
-use gl::types::{GLint, GLuint, GLchar, GLenum, GLboolean, GLvoid};
 use egl::API as egl;
+use gl::types::{GLboolean, GLchar, GLenum, GLint, GLuint, GLvoid};
+use std::ffi::CStr;
+use std::ptr;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 
 use wayland_client::{
 	protocol::{wl_compositor::WlCompositor, wl_surface::WlSurface},
-	DispatchData, Display, EventQueue, Main
+	DispatchData, Display, EventQueue, Main,
 };
 
 use wayland_protocols::xdg_shell::client::{
@@ -66,9 +62,12 @@ fn setup_wayland() -> DisplayConnection {
 }
 
 fn setup_egl(display: &Display) -> egl::Display {
-	let egl_display = egl.get_display(display.get_display_ptr() as *mut std::ffi::c_void).unwrap();
-	egl.initialize(egl_display).unwrap();
+	let egl_display = unsafe {
+		egl.get_display(display.get_display_ptr() as *mut std::ffi::c_void)
+			.unwrap()
+	};
 
+	egl.initialize(egl_display).unwrap();
 	egl_display
 }
 
@@ -83,7 +82,8 @@ fn create_context(display: egl::Display) -> (egl::Context, egl::Config) {
 		egl::NONE,
 	];
 
-	let config = egl.choose_first_config(display, &attributes)
+	let config = egl
+		.choose_first_config(display, &attributes)
 		.expect("unable to choose an EGL configuration")
 		.expect("no EGL configuration found");
 
@@ -97,7 +97,8 @@ fn create_context(display: egl::Display) -> (egl::Context, egl::Config) {
 		egl::NONE,
 	];
 
-	let context = egl.create_context(display, config, None, &context_attributes)
+	let context = egl
+		.create_context(display, config, None, &context_attributes)
 		.expect("unable to create an EGL context");
 
 	(context, config)
@@ -105,7 +106,7 @@ fn create_context(display: egl::Display) -> (egl::Context, egl::Config) {
 
 struct Surface {
 	handle: Main<WlSurface>,
-	initialized: AtomicBool
+	initialized: AtomicBool,
 }
 
 fn create_surface(
@@ -128,45 +129,53 @@ fn create_surface(
 
 	let surface = Arc::new(Surface {
 		handle: wl_surface,
-		initialized: AtomicBool::new(false)
+		initialized: AtomicBool::new(false),
 	});
 
 	let weak_surface = Arc::downgrade(&surface);
 
-	xdg_surface.quick_assign(move |xdg_surface: Main<XdgSurface>, event: xdg_surface::Event, _dd: DispatchData| {
-		use xdg_surface::Event::*;
+	xdg_surface.quick_assign(
+		move |xdg_surface: Main<XdgSurface>, event: xdg_surface::Event, _dd: DispatchData| {
+			use xdg_surface::Event::*;
 
-		match event {
-			Configure { serial } => {
-				if let Some(surface) = weak_surface.upgrade() {
-					if !surface.initialized.swap(true, Ordering::Relaxed) {
-						let wl_egl_surface = wayland_egl::WlEglSurface::new(&surface.handle, width, height);
+			match event {
+				Configure { serial } => {
+					if let Some(surface) = weak_surface.upgrade() {
+						if !surface.initialized.swap(true, Ordering::Relaxed) {
+							let wl_egl_surface =
+								wayland_egl::WlEglSurface::new(&surface.handle, width, height);
 
-						let egl_surface = unsafe {
-							egl.create_window_surface(
+							let egl_surface = unsafe {
+								egl.create_window_surface(
+									egl_display,
+									egl_config,
+									wl_egl_surface.ptr() as egl::NativeWindowType,
+									None,
+								)
+								.expect("unable to create an EGL surface")
+							};
+
+							egl.make_current(
 								egl_display,
-								egl_config,
-								wl_egl_surface.ptr() as egl::NativeWindowType,
-								None,
+								Some(egl_surface),
+								Some(egl_surface),
+								Some(egl_context),
 							)
-							.expect("unable to create an EGL surface")
-						};
-
-						egl.make_current(egl_display, Some(egl_surface), Some(egl_surface), Some(egl_context))
 							.expect("unable to bind the context");
 
-						render();
+							render();
 
-						egl.swap_buffers(egl_display, egl_surface)
-							.expect("unable to post the surface content");
+							egl.swap_buffers(egl_display, egl_surface)
+								.expect("unable to post the surface content");
 
-						xdg_surface.ack_configure(serial);
+							xdg_surface.ack_configure(serial);
+						}
 					}
 				}
-			},
-			_ => (),
-		}
-	});
+				_ => (),
+			}
+		},
+	);
 
 	surface
 }
@@ -195,16 +204,9 @@ fn main() {
 	}
 }
 
-const VERTEX: &'static [GLint; 8] = &[
-	-1, -1,
-	1, -1,
-	1, 1,
-	-1, 1
-];
+const VERTEX: &'static [GLint; 8] = &[-1, -1, 1, -1, 1, 1, -1, 1];
 
-const INDEXES: &'static [GLuint; 4] = &[
-	0, 1, 2, 3
-];
+const INDEXES: &'static [GLuint; 4] = &[0, 1, 2, 3];
 
 const VERTEX_SHADER: &[u8] = b"#version 400
 in vec2 position;
@@ -260,7 +262,7 @@ fn render() {
 			gl::ARRAY_BUFFER,
 			8 * 4,
 			VERTEX.as_ptr() as *const std::ffi::c_void,
-			gl::STATIC_DRAW
+			gl::STATIC_DRAW,
 		);
 		check_gl_errors();
 
@@ -271,9 +273,7 @@ fn render() {
 		check_gl_errors();
 		gl::EnableVertexAttribArray(0);
 		check_gl_errors();
-		gl::VertexAttribPointer(
-			0, 2, gl::INT, gl::FALSE as GLboolean, 0, 0 as *const GLvoid
-		);
+		gl::VertexAttribPointer(0, 2, gl::INT, gl::FALSE as GLboolean, 0, 0 as *const GLvoid);
 		check_gl_errors();
 
 		let mut indexes = 0;
@@ -285,7 +285,7 @@ fn render() {
 			gl::ELEMENT_ARRAY_BUFFER,
 			4 * 4,
 			INDEXES.as_ptr() as *const std::ffi::c_void,
-			gl::STATIC_DRAW
+			gl::STATIC_DRAW,
 		);
 		check_gl_errors();
 
@@ -295,28 +295,28 @@ fn render() {
 }
 
 fn format_error(e: GLenum) -> &'static str {
-	 match e {
-		  gl::NO_ERROR => "No error",
-		  gl::INVALID_ENUM => "Invalid enum",
-		  gl::INVALID_VALUE => "Invalid value",
-		  gl::INVALID_OPERATION => "Invalid operation",
-		  gl::INVALID_FRAMEBUFFER_OPERATION => "Invalid framebuffer operation",
-		  gl::OUT_OF_MEMORY => "Out of memory",
-		  gl::STACK_UNDERFLOW => "Stack underflow",
-		  gl::STACK_OVERFLOW => "Stack overflow",
-		  _ => "Unknown error"
-	 }
+	match e {
+		gl::NO_ERROR => "No error",
+		gl::INVALID_ENUM => "Invalid enum",
+		gl::INVALID_VALUE => "Invalid value",
+		gl::INVALID_OPERATION => "Invalid operation",
+		gl::INVALID_FRAMEBUFFER_OPERATION => "Invalid framebuffer operation",
+		gl::OUT_OF_MEMORY => "Out of memory",
+		gl::STACK_UNDERFLOW => "Stack underflow",
+		gl::STACK_OVERFLOW => "Stack overflow",
+		_ => "Unknown error",
+	}
 }
 
 pub fn check_gl_errors() {
-	 unsafe {
-		  match gl::GetError() {
-				gl::NO_ERROR => (),
-				e => {
-					panic!("OpenGL error: {}", format_error(e))
-				}
-		  }
-	 }
+	unsafe {
+		match gl::GetError() {
+			gl::NO_ERROR => (),
+			e => {
+				panic!("OpenGL error: {}", format_error(e))
+			}
+		}
+	}
 }
 
 unsafe fn check_shader_status(shader: GLuint) {

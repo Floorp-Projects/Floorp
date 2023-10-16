@@ -308,7 +308,7 @@ def setup_browsertime(
 
         existing_body["devDependencies"]["browsertime"] = new_upstream_url
 
-        updated_body = json.dumps(existing_body)
+        updated_body = json.dumps(existing_body, indent=2)
 
         with open(package_json_path, "w") as f:
             f.write(updated_body)
