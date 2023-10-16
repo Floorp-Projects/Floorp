@@ -66,6 +66,7 @@ rtc_library("frame_generator_impl") {
     "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_vp8",
     "../modules/video_coding:webrtc_vp9",
+    "../modules/video_coding/codecs/av1:dav1d_decoder",
     "../rtc_base:checks",
     "../rtc_base:criticalsection",
     "../rtc_base:logging",
