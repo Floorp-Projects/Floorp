@@ -366,10 +366,7 @@ webrtc_root = get_path_info(".", "abspath")
 rtc_common_configs = [ webrtc_root + ":common_config" ]
 
 if (is_mac || is_ios) {
-  if (filter_include(default_compiler_configs,
-                     [ "//build/config/compiler:enable_arc" ]) == []) {
-    rtc_common_configs += [ "//build/config/compiler:enable_arc" ]
-  }
+  rtc_common_configs += [ "//build/config/compiler:enable_arc" ]
 }
 
 # Global public configuration that should be applied to all WebRTC targets. You
