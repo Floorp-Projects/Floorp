@@ -719,7 +719,7 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
         "root frame should always be a container");
   }
 
-  if (PresShell()->AssumeAllFramesVisible() && TrackingVisibility()) {
+  if (TrackingVisibility() && PresShell()->AssumeAllFramesVisible()) {
     IncApproximateVisibleCount();
   }
 
