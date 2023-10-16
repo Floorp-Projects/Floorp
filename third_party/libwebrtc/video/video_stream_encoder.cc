@@ -2131,22 +2131,6 @@ EncodedImage VideoStreamEncoder::AugmentEncodedImage(
   image_copy.SetAtTargetQuality(codec_type == kVideoCodecVP8 &&
                                 image_copy.qp_ <= kVp8SteadyStateQpThreshold);
 
-  // Piggyback ALR experiment group id and simulcast id into the content type.
-  const uint8_t experiment_id =
-      experiment_groups_[videocontenttypehelpers::IsScreenshare(
-          image_copy.content_type_)];
-
-  // TODO(ilnik): This will force content type extension to be present even
-  // for realtime video. At the expense of miniscule overhead we will get
-  // sliced receive statistics.
-  RTC_CHECK(videocontenttypehelpers::SetExperimentId(&image_copy.content_type_,
-                                                     experiment_id));
-  // We count simulcast streams from 1 on the wire. That's why we set simulcast
-  // id in content type to +1 of that is actual simulcast index. This is because
-  // value 0 on the wire is reserved for 'no simulcast stream specified'.
-  RTC_CHECK(videocontenttypehelpers::SetSimulcastId(
-      &image_copy.content_type_, static_cast<uint8_t>(stream_idx + 1)));
-
   return image_copy;
 }
 
