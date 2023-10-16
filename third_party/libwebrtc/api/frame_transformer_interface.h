@@ -70,12 +70,10 @@ class TransformableAudioFrameInterface : public TransformableFrameInterface {
   virtual ~TransformableAudioFrameInterface() = default;
 
   virtual void SetRTPTimestamp(uint32_t timestamp) = 0;
-  // Exposes the frame header, enabling the interface clients to use the
-  // information in the header as needed, for example to compile the list of
-  // csrcs.
-  // TODO(crbug.com/1453226): Deprecate and remove once callers have migrated to
-  // the getters for specific fields.
-  virtual const RTPHeader& GetHeader() const = 0;
+
+  // TODO(crbug.com/1453226): Remove after a few weeks.
+  [[deprecated("Use specific getters instead.")]] virtual const RTPHeader&
+  GetHeader() const = 0;
 
   virtual rtc::ArrayView<const uint32_t> GetContributingSources() const = 0;
 
