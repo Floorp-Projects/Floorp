@@ -857,7 +857,7 @@ TEST_P(WebRtcVoiceEngineTestFake, CreateSendStream) {
   EXPECT_EQ(kSsrcX, config.rtp.ssrc);
   EXPECT_EQ("", config.rtp.c_name);
   EXPECT_EQ(0u, config.rtp.extensions.size());
-  EXPECT_EQ(SendImpl(), config.send_transport);
+  EXPECT_EQ(SendImpl()->transport(), config.send_transport);
 }
 
 // Test that we can add a receive stream and that it has the correct defaults.
@@ -868,7 +868,7 @@ TEST_P(WebRtcVoiceEngineTestFake, CreateRecvStream) {
       GetRecvStreamConfig(kSsrcX);
   EXPECT_EQ(kSsrcX, config.rtp.remote_ssrc);
   EXPECT_EQ(0xFA17FA17, config.rtp.local_ssrc);
-  EXPECT_EQ(ReceiveImpl(), config.rtcp_send_transport);
+  EXPECT_EQ(ReceiveImpl()->transport(), config.rtcp_send_transport);
   EXPECT_EQ("", config.sync_group);
 }
 
@@ -3242,8 +3242,9 @@ TEST_P(WebRtcVoiceEngineTestFake, TestSetDscpOptions) {
 
   // Packets should also self-identify their dscp in PacketOptions.
   const uint8_t kData[10] = {0};
-  EXPECT_TRUE(
-      SendImplFromPointer(channel.get())->SendRtcp(kData, sizeof(kData)));
+  EXPECT_TRUE(SendImplFromPointer(channel.get())
+                  ->transport()
+                  ->SendRtcp(kData, sizeof(kData)));
   EXPECT_EQ(rtc::DSCP_CS1, network_interface.options().dscp);
   channel->SetInterface(nullptr);
 
