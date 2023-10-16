@@ -101,7 +101,7 @@ class RTC_EXPORT ColorSpace {
     kInvalid = 0,
     // Limited Rec. 709 color range with RGB values ranging from 16 to 235.
     kLimited = 1,
-    // Full RGB color range with RGB valees from 0 to 255.
+    // Full RGB color range with RGB values from 0 to 255.
     kFull = 2,
     // Range is defined by MatrixCoefficients/TransferCharacteristics.
     kDerived = 3,
