@@ -43,9 +43,17 @@ class ReviewQualityCheckTelemetryMiddleware : ReviewQualityCheckMiddleware {
             ShoppingSettings.componentOptedOut.set(true)
         }
 
-        is ReviewQualityCheckAction.BottomSheetClosed -> Shopping.surfaceClosed.record()
+        is ReviewQualityCheckAction.BottomSheetClosed -> {
+            Shopping.surfaceClosed.record(
+                Shopping.SurfaceClosedExtra(action.source.sourceName),
+            )
+        }
 
-        is ReviewQualityCheckAction.BottomSheetDisplayed -> Shopping.surfaceDisplayed.record()
+        is ReviewQualityCheckAction.BottomSheetDisplayed -> {
+            Shopping.surfaceDisplayed.record(
+                Shopping.SurfaceDisplayedExtra(action.view.state),
+            )
+        }
 
         is ReviewQualityCheckAction.OpenExplainerLearnMoreLink -> {
             Shopping.surfaceReviewQualityExplainerUrlClicked.record()

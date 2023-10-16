@@ -130,13 +130,17 @@ sealed interface ReviewQualityCheckAction : Action {
 
     /**
      * Triggered when the bottom sheet is closed.
+     *
+     * @property source The source of dismissal.
      */
-    object BottomSheetClosed : TelemetryAction
+    data class BottomSheetClosed(val source: BottomSheetDismissSource) : TelemetryAction
 
     /**
      * Triggered when the bottom sheet is opened.
+     *
+     * @property view The state of the bottom sheet when opened.
      */
-    object BottomSheetDisplayed : TelemetryAction
+    data class BottomSheetDisplayed(val view: BottomSheetViewState) : TelemetryAction
 
     /**
      * Triggered when the user clicks on the "Not now" button from the contextual onboarding card.

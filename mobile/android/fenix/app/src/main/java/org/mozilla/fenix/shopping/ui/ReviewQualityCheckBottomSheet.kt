@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import mozilla.components.lib.state.ext.observeAsState
+import org.mozilla.fenix.shopping.store.BottomSheetDismissSource
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
@@ -29,7 +30,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
 @Composable
 fun ReviewQualityCheckBottomSheet(
     store: ReviewQualityCheckStore,
-    onRequestDismiss: () -> Unit,
+    onRequestDismiss: (source: BottomSheetDismissSource) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val reviewQualityCheckState by store.observeAsState(ReviewQualityCheckState.Initial) { it }
@@ -37,7 +38,9 @@ fun ReviewQualityCheckBottomSheet(
         remember(reviewQualityCheckState) { reviewQualityCheckState is ReviewQualityCheckState.OptedIn }
 
     ReviewQualityCheckScaffold(
-        onRequestDismiss = onRequestDismiss,
+        onRequestDismiss = {
+            onRequestDismiss(BottomSheetDismissSource.HANDLE_CLICKED)
+        },
         modifier = modifier.animateContentSize(),
     ) {
         when (val state = reviewQualityCheckState) {
@@ -48,19 +51,19 @@ fun ReviewQualityCheckBottomSheet(
                         store.dispatch(ReviewQualityCheckAction.OptIn)
                     },
                     onLearnMoreClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenOnboardingLearnMoreLink)
                     },
                     onPrivacyPolicyClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenOnboardingPrivacyPolicyLink)
                     },
                     onTermsOfUseClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenOnboardingTermsLink)
                     },
                     onSecondaryButtonClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.NOT_NOW)
                         store.dispatch(ReviewQualityCheckAction.NotNowClicked)
                     },
                 )
@@ -70,7 +73,7 @@ fun ReviewQualityCheckBottomSheet(
                 ProductReview(
                     state = state,
                     onOptOutClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.OPT_OUT)
                         store.dispatch(ReviewQualityCheckAction.OptOut)
                     },
                     onAnalyzeClick = {
@@ -83,11 +86,11 @@ fun ReviewQualityCheckBottomSheet(
                         store.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation)
                     },
                     onReviewGradeLearnMoreClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenExplainerLearnMoreLink)
                     },
                     onFooterLinkClick = {
-                        onRequestDismiss()
+                        onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenPoweredByLink)
                     },
                     onExpandSettings = {

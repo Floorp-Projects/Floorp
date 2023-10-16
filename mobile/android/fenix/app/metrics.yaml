@@ -10462,12 +10462,21 @@ shopping:
     type: event
     description: |
       The shopping bottom sheet was closed.
+    extra_keys:
+      source:
+        description: |
+          The method used to close the bottom sheet. Possible values are: `sheet_slide`,
+          `link_opened`, `click_outside`, `back_pressed`, `handle_clicked`, `not_now` 
+          or `opt_out`.
+        type: string
     send_in_pings:
       - events
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855150
     data_reviews:
       - https://github.com/mozilla-mobile/firefox-android/pull/3619
+      - https://github.com/mozilla-mobile/firefox-android/pull/4060
       - https://github.com/mozilla-mobile/firefox-android/pull/4039
     data_sensitivity:
       - interaction
@@ -10481,13 +10490,20 @@ shopping:
     type: event
     description: |
       The shopping bottom sheet was displayed.
+    extra_keys:
+      view:
+        description: |
+          State of the bottom sheet. Possible values are: `half` or `full`.
+        type: string
     send_in_pings:
       - events
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1843508
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1855150
     data_reviews:
       - https://github.com/mozilla-mobile/firefox-android/pull/3619
       - https://github.com/mozilla-mobile/firefox-android/pull/4039
+      - https://github.com/mozilla-mobile/firefox-android/pull/4060
     data_sensitivity:
       - interaction
     notification_emails:
