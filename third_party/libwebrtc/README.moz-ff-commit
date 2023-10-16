@@ -24879,3 +24879,6 @@ e21745a78b
 # MOZ_LIBWEBRTC_SRC=/home/pehrsons/dev/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 aad4ae54d4
+# MOZ_LIBWEBRTC_SRC=/home/pehrsons/dev/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+0725072604
