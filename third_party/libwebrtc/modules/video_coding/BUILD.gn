@@ -245,6 +245,7 @@ rtc_library("video_coding") {
     "../../rtc_base:rtc_event",
     "../../rtc_base:rtc_numerics",
     "../../rtc_base:safe_conversions",
+    "../../rtc_base:stringutils",
     "../../rtc_base:threading",
     "../../rtc_base:timeutils",
     "../../rtc_base/experiments:alr_experiment",
