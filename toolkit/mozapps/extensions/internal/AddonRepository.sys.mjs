@@ -245,6 +245,11 @@ AddonSearchResult.prototype = {
   weeklyDownloads: null,
 
   /**
+   * The URL to the AMO detail page of this (listed) add-on
+   */
+  amoListingURL: null,
+
+  /**
    * AddonInstall object generated from the add-on XPI url
    */
   install: null,
@@ -714,6 +719,7 @@ export var AddonRepository = {
     }
     addon.homepageURL = aEntry.homepage;
     addon.supportURL = aEntry.support_url;
+    addon.amoListingURL = aEntry.url;
 
     addon.description = convertHTMLToPlainText(aEntry.summary);
     addon.fullDescription = convertHTMLToPlainText(aEntry.description);

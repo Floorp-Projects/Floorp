@@ -297,6 +297,7 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     policy = await policy.readyPromise;
   }
   const {
+    amoListingURL,
     averageRating,
     blocklistState,
     creator,
@@ -371,6 +372,7 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     isBuiltIn: isBuiltin,
     webExtensionFlags: exportFlags(policy),
     metaData: {
+      amoListingURL,
       averageRating,
       baseURL,
       blocklistState,
