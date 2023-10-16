@@ -2,11 +2,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/toolbox.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/shared/components/NotificationBox.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/framework/components/DebugTargetErrorPage.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/content/framework/components/ChromeDebugToolbar.css" type="text/css"?>
 
 <!DOCTYPE window>
 <window
@@ -16,6 +11,21 @@
   role="application"
 >
   <linkset>
+    <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+    <html:link rel="stylesheet" href="chrome://devtools/skin/toolbox.css" />
+    <html:link
+      rel="stylesheet"
+      href="chrome://devtools/content/shared/components/NotificationBox.css"
+    />
+    <html:link
+      rel="stylesheet"
+      href="chrome://devtools/content/framework/components/DebugTargetErrorPage.css"
+    />
+    <html:link
+      rel="stylesheet"
+      href="chrome://devtools/content/framework/components/ChromeDebugToolbar.css"
+    />
+
     <html:link rel="localization" href="devtools/client/tooltips.ftl" />
   </linkset>
 

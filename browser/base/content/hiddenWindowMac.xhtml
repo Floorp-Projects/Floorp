@@ -6,12 +6,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #define HIDDEN_WINDOW
 
-<?xml-stylesheet href="chrome://browser/skin/webRTC-menubar-indicator.css" type="text/css"?>
-
 <window id="main-window"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         data-l10n-sync="true">
+  <html:link
+    rel="stylesheet"
+    href="chrome://browser/skin/webRTC-menubar-indicator.css"
+  />
 
 #include macWindow.inc.xhtml
 

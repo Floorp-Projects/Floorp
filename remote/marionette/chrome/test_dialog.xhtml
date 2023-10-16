@@ -6,13 +6,13 @@
 <!DOCTYPE testdialog [ <!ENTITY % dialogDTD SYSTEM "chrome://remote/content/marionette/test_dialog.dtd">
 %dialogDTD; ]>
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   title="&testDialog.title;"
 >
+  <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+
   <dialog id="testDialog" buttons="accept,cancel">
     <vbox flex="1" style="min-width: 300px; min-height: 500px">
       <label>&settings.label;</label>
