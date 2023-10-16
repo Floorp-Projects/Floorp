@@ -21,6 +21,7 @@
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/logging.h"
 #include "rtc_tools/video_encoder/encoded_image_file_writer.h"
+#include "test/testsupport/y4m_frame_generator.h"
 
 ABSL_FLAG(std::string,
           video_codec,
@@ -38,6 +39,11 @@ ABSL_FLAG(uint32_t,
           "0: SquareFrameGenerator, 1: SlideGenerator");
 ABSL_FLAG(uint32_t, width, 1280, "Specify width of video encoder");
 ABSL_FLAG(uint32_t, height, 720, "Specify height of video encoder");
+
+ABSL_FLAG(std::string,
+          y4m_input_file,
+          "",
+          "Specify y4m input file of Y4mFrameGenerator");
 
 ABSL_FLAG(std::string,
           ivf_input_file,
@@ -346,9 +352,9 @@ class TestVideoEncoderFactoryWrapper final {
 // A video encode tool supports to specify video codec, scalability mode,
 // resolution, frame rate, bitrate, key frame interval and maximum number of
 // frames. The video encoder supports multiple `FrameGeneratorInterface`
-// implementations: `SquareFrameGenerator`, `SlideFrameGenerator` and
-// `IvfFileFrameGenerator`. All the encoded bitstreams are wrote into ivf output
-// files.
+// implementations: `SquareFrameGenerator`, `SlideFrameGenerator`,
+// `Y4mFrameGenerator` and `IvfFileFrameGenerator`. All the encoded bitstreams
+// are wrote into ivf output files.
 int main(int argc, char* argv[]) {
   absl::SetProgramUsageMessage(
       "A video encode tool.\n"
@@ -363,6 +369,9 @@ int main(int argc, char* argv[]) {
       "--scalability_mode=L3T3_KEY --width=640 --height=360 "
       "--frame_rate_fps=30 "
       "--bitrate_kbps=500\n"
+      "\n"
+      "./video_encoder --y4m_input_file=input.y4m --video_codec=av1 "
+      "--scalability_mode=L1T3\n"
       "\n"
       "./video_encoder --ivf_input_file=input.ivf --video_codec=av1 "
       "--scalability_mode=L1T3\n");
@@ -388,6 +397,7 @@ int main(int argc, char* argv[]) {
 
   uint32_t raw_frame_generator = absl::GetFlag(FLAGS_raw_frame_generator);
 
+  const std::string y4m_input_file = absl::GetFlag(FLAGS_y4m_input_file);
   const std::string ivf_input_file = absl::GetFlag(FLAGS_ivf_input_file);
 
   const uint32_t frame_rate_fps = absl::GetFlag(FLAGS_frame_rate_fps);
@@ -426,8 +436,26 @@ int main(int argc, char* argv[]) {
   }
 
   // Create `FrameGeneratorInterface`.
+  if (!y4m_input_file.empty() && !ivf_input_file.empty()) {
+    RTC_LOG(LS_ERROR)
+        << "Can not specify both '--y4m_input_file' and '--ivf_input_file'";
+    return EXIT_FAILURE;
+  }
+
   std::unique_ptr<webrtc::test::FrameGeneratorInterface> frame_buffer_generator;
-  if (!ivf_input_file.empty()) {
+  if (!y4m_input_file.empty()) {
+    // Use `Y4mFrameGenerator` if specify `--y4m_input_file`.
+    frame_buffer_generator = std::make_unique<webrtc::test::Y4mFrameGenerator>(
+        y4m_input_file, webrtc::test::Y4mFrameGenerator::RepeatMode::kLoop);
+
+    webrtc::test::FrameGeneratorInterface::Resolution resolution =
+        frame_buffer_generator->GetResolution();
+    if (resolution.width != width || resolution.height != height) {
+      frame_buffer_generator->ChangeResolution(width, height);
+    }
+
+    RTC_LOG(LS_INFO) << "Create Y4mFrameGenerator: " << width << "x" << height;
+  } else if (!ivf_input_file.empty()) {
     // Use `IvfFileFrameGenerator` if specify `--ivf_input_file`.
     frame_buffer_generator =
         webrtc::test::CreateFromIvfFileFrameGenerator(ivf_input_file);
