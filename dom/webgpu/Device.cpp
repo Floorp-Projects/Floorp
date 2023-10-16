@@ -114,6 +114,12 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
   return mLostPromise;
 }
 
+void Device::ResolveLost(Maybe<dom::GPUDeviceLostReason> aReason,
+                         const nsAString& aMessage) {
+  // TODO(BJW): rationalize this with all the other stuff that deals with
+  // the mLostPromise.
+}
+
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {
   return Buffer::Create(this, mId, aDesc, aRv);
