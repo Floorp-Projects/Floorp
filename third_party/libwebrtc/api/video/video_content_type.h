@@ -15,6 +15,9 @@
 
 namespace webrtc {
 
+// VideoContentType can take on more values than the two below, therefore care
+// should be taken to avoid using the equality operator to check for screenshare
+// usage. See https://bugs.chromium.org/p/webrtc/issues/detail?id=15381.
 enum class VideoContentType : uint8_t {
   UNSPECIFIED = 0,
   SCREENSHARE = 1,
