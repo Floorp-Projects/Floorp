@@ -944,6 +944,14 @@ class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
   // Enable network condition based codec switching.
   virtual void SetVideoCodecSwitchingEnabled(bool enabled) = 0;
   virtual bool GetStats(VideoMediaSendInfo* stats) = 0;
+  // This fills the "bitrate parts" (rtx, video bitrate) of the
+  // BandwidthEstimationInfo, since that part that isn't possible to get
+  // through webrtc::Call::GetStats, as they are statistics of the send
+  // streams.
+  // TODO(holmer): We should change this so that either BWE graphs doesn't
+  // need access to bitrates of the streams, or change the (RTC)StatsCollector
+  // so that it's getting the send stream stats separately by calling
+  // GetStats(), and merges with BandwidthEstimationInfo by itself.
   virtual void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) = 0;
   // Information queries to support SetReceiverFeedbackParameters
   virtual webrtc::RtcpMode SendCodecRtcpMode() const = 0;

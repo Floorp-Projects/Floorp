@@ -271,15 +271,6 @@ class VideoMediaChannel : public MediaChannel,
                           webrtc::VideoEncoderFactory::EncoderSelectorInterface*
                               encoder_selector) override {}
 
-  // This fills the "bitrate parts" (rtx, video bitrate) of the
-  // BandwidthEstimationInfo, since that part that isn't possible to get
-  // through webrtc::Call::GetStats, as they are statistics of the send
-  // streams.
-  // TODO(holmer): We should change this so that either BWE graphs doesn't
-  // need access to bitrates of the streams, or change the (RTC)StatsCollector
-  // so that it's getting the send stream stats separately by calling
-  // GetStats(), and merges with BandwidthEstimationInfo by itself.
-  void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override = 0;
   // Gets quality stats for the channel.
   virtual bool GetSendStats(VideoMediaSendInfo* info) = 0;
   virtual bool GetReceiveStats(VideoMediaReceiveInfo* info) = 0;
