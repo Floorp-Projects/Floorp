@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unpublished]
+## [6.0.0]
+### Changed
+- `copy_buffers` is now unsafe.
+- `get_display` is now unsafe.
+- `get_platform_display` is now unsafe.
+- `create_platform_window_surface` is now unsafe.
+- `create_platform_pixmap_surface` is now unsafe.
+### Fixed
+- Fix `choose_config` & `get_config` undefined behavior when the input `configs`
+  vector is empty. (Fixes [#21](https://github.com/timothee-haudebourg/khronos-egl/issues/21)).
+- Fix Windows build (Fixes [#23](https://github.com/timothee-haudebourg/khronos-egl/pull/23)).
+
+## [5.0.0]
+### Changed
+- Upgrade dependency `libloading`: ^0.7 -> ^0.8.
+
 ## [4.1.0]
 ### Changed
 - `load_required` and `load` now trying to load `libEGL.so.1` or `libEGL.so`.
