@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test referrer with going back</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    function waitForMessage(bc) {
+      return new Promise(resolve => {
+        bc.addEventListener("message", ({ data }) => { resolve(data); }, { once: true });
+      });
+    }
+
+    async function runTest() {
+      let bc = new BroadcastChannel("bug1850335");
+
+      // Load the first page.
+      let waitForPage1 = waitForMessage(bc);
+      window.open("file_bug1850335_1.html", "_blank", "noopener");
+      let { persisted, value: initial } = await waitForPage1;
+
+      ok(!persisted, "Loaded first page");
+      is(initial, "", "Initial value is empty string");
+
+      // Set the value of the input element in the first page.
+      let waitForValue = waitForMessage(bc);
+      bc.postMessage({ cmd: "setValue", arg: "ok" });
+      let { value: expected }= await waitForValue;
+      is(expected, "ok", "Loaded first page");
+
+      // Load the second page (same origin with the first page).
+      let waitForPage2 = waitForMessage(bc);
+      bc.postMessage({ cmd: "load", arg: "file_bug1850335_2.html" });
+      ({ persisted } = await waitForPage2);
+
+      ok(!persisted, "Loaded second page (same-origin)");
+
+      // Load the third page (cross origin with the first and second pages). The
+      // third page will immediately do |history.back()| to go back to the
+      // second page.
+      waitForPage2 = waitForMessage(bc);
+      const crossOrigin = new URL("file_bug1850335_3.html", `https://example.com${location.pathname}`);
+      bc.postMessage({ cmd: "load", arg: crossOrigin.href });
+      ({ persisted } = await waitForPage2);
+
+      ok(!persisted, "Second page should not be in the BFCache");
+
+      // Go back to the first page.
+      waitForPage1 = waitForMessage(bc);
+      bc.postMessage({ cmd: "back" });
+      let { persisted: fromBFCache, value: result } = await waitForPage1;
+
+      ok(fromBFCache, "Page came from BFCache");
+      is(result, expected, "Value wasn't cleared");
+
+      bc.postMessage({ cmd: "close" });
+
+      bc.close();
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body onload="runTest();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

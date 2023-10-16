@@ -386,12 +386,15 @@ void nsFrameLoaderOwner::DetachFrameLoader(nsFrameLoader* aFrameLoader) {
   }
 }
 
-void nsFrameLoaderOwner::FrameLoaderDestroying(nsFrameLoader* aFrameLoader) {
+void nsFrameLoaderOwner::FrameLoaderDestroying(nsFrameLoader* aFrameLoader,
+                                               bool aDestroyBFCached) {
   if (aFrameLoader == mFrameLoader) {
-    while (!mFrameLoaderList.isEmpty()) {
-      RefPtr<nsFrameLoader> loader = mFrameLoaderList.popFirst();
-      if (loader != mFrameLoader) {
-        loader->Destroy();
+    if (aDestroyBFCached) {
+      while (!mFrameLoaderList.isEmpty()) {
+        RefPtr<nsFrameLoader> loader = mFrameLoaderList.popFirst();
+        if (loader != mFrameLoader) {
+          loader->Destroy();
+        }
       }
     }
   } else {
