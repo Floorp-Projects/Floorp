@@ -646,11 +646,11 @@ void BaseCompiler::load(MemoryAccessDesc* access, AccessCheck* check,
   // 'executeLoad' is the same for the 64-bit and the 32-bit case.
   return executeLoad(access, check, instance, memoryBase, RegI32(ptr.reg), dest,
                      maybeFromI64(temp));
-#  elif defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_RISCV64)
+#  elif defined(JS_CODEGEN_RISCV64)
   // RISCV the 'prepareMemoryAccess' function will make
   // sure that ptr holds a valid 64-bit index value. Thus the code generated in
   // 'executeLoad' is the same for the 64-bit and the 32-bit case.
-  return executeLoad(access, check, instance, RegI32(ptr.reg), dest,
+  return executeLoad(access, check, instance, memoryBase, RegI32(ptr.reg), dest,
                      maybeFromI64(temp));
 #  else
   MOZ_CRASH("Missing platform hook");
@@ -1338,7 +1338,7 @@ static void PopAndAllocate(BaseCompiler* bc, ValType type,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    BaseIndex srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
+                    Address srcAddr, AtomicOp op, RegI32 rv, RegI32 rd,
                     const Temps& temps) {
   bc->masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps.t0, temps.t1,
                              temps.t2, rd);
@@ -1521,7 +1521,7 @@ static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    BaseIndex srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
+                    Address srcAddr, AtomicOp op, RegI64 rv, RegI64 temp,
                     RegI64 rd) {
   bc->masm.wasmAtomicFetchOp64(access, op, rv, srcAddr, temp, rd);
 }
@@ -1724,7 +1724,7 @@ static void PopAndAllocate(BaseCompiler* bc, ValType type,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    BaseIndex srcAddr, RegI32 rv, RegI32 rd,
+                    Address srcAddr, RegI32 rv, RegI32 rd,
                     const Temps& temps) {
   bc->masm.wasmAtomicExchange(access, srcAddr, rv, temps.t0, temps.t1, temps.t2,
                               rd);
@@ -2083,7 +2083,7 @@ static void PopAndAllocate(BaseCompiler* bc, ValType type,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    BaseIndex srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
+                    Address srcAddr, RegI32 rexpect, RegI32 rnew, RegI32 rd,
                     const Temps& temps) {
   bc->masm.wasmCompareExchange(access, srcAddr, rexpect, rnew, temps.t0,
                                temps.t1, temps.t2, rd);
@@ -2320,7 +2320,7 @@ static void PopAndAllocate(BaseCompiler* bc, RegI64* rexpect, RegI64* rnew,
 }
 
 static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
-                    BaseIndex srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
+                    Address srcAddr, RegI64 rexpect, RegI64 rnew, RegI64 rd) {
   bc->masm.wasmCompareExchange64(access, srcAddr, rexpect, rnew, rd);
 }
 
