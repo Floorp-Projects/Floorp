@@ -61,11 +61,7 @@ Typically this is due to changes made in mercurial to files residing
 under third_party/libwebrtc that have not been reflected in
 moz-libwebrtc git repo's patch-stack.
 
-Frequently using 'hg log' on the files listed with 'hg status' will give
-information on commits that need to be added to the patch-stack.  After
-identifying a commit or commit range from mercurial that should be added
-to the git patch-stack, the following commands should help remedy the
-situation:
+The following commands should help remedy the situation:
   ./mach python $SCRIPT_DIR/extract-for-git.py $COMMIT_AFTER_PATCHSTACK_UPDATE::tip
   mv mailbox.patch $MOZ_LIBWEBRTC_SRC
   (cd $MOZ_LIBWEBRTC_SRC && \\
