@@ -1212,20 +1212,6 @@ TEST_F(WebRtcVideoEngineTest, Flexfec03SendCodecEnablesWithFieldTrial) {
   EXPECT_THAT(engine_.send_codecs(), Contains(flexfec));
 }
 
-// Test that FlexFEC is supported as a receive video codec by default.
-// Disabling field trial should prevent advertising FlexFEC receive codec.
-TEST_F(WebRtcVideoEngineTest, Flexfec03ReceiveCodecDisablesWithFieldTrial) {
-  decoder_factory_->AddSupportedVideoCodecType("VP8");
-
-  auto flexfec = Field("name", &VideoCodec::name, "flexfec-03");
-
-  EXPECT_THAT(engine_.recv_codecs(), Contains(flexfec));
-
-  webrtc::test::ScopedKeyValueConfig override_field_trials(
-      field_trials_, "WebRTC-FlexFEC-03-Advertised/Disabled/");
-  EXPECT_THAT(engine_.recv_codecs(), Not(Contains(flexfec)));
-}
-
 // Test that the FlexFEC "codec" gets assigned to the lower payload type range
 TEST_F(WebRtcVideoEngineTest, Flexfec03LowerPayloadTypeRange) {
   encoder_factory_->AddSupportedVideoCodecType("VP8");

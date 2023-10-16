@@ -193,13 +193,9 @@ std::vector<VideoCodec> GetPayloadTypesAndDefaultCodecs(
   supported_formats.push_back(webrtc::SdpVideoFormat(kRedCodecName));
   supported_formats.push_back(webrtc::SdpVideoFormat(kUlpfecCodecName));
 
-  // flexfec-03 is supported as
-  // - receive codec unless WebRTC-FlexFEC-03-Advertised is disabled
-  // - send codec if WebRTC-FlexFEC-03-Advertised is enabled
-  if ((is_decoder_factory &&
-       !IsDisabled(trials, "WebRTC-FlexFEC-03-Advertised")) ||
-      (!is_decoder_factory &&
-       IsEnabled(trials, "WebRTC-FlexFEC-03-Advertised"))) {
+  // flexfec-03 is always supported as receive codec and as send codec
+  // only if WebRTC-FlexFEC-03-Advertised is enabled
+  if (is_decoder_factory || IsEnabled(trials, "WebRTC-FlexFEC-03-Advertised")) {
     webrtc::SdpVideoFormat flexfec_format(kFlexfecCodecName);
     // This value is currently arbitrarily set to 10 seconds. (The unit
     // is microseconds.) This parameter MUST be present in the SDP, but
