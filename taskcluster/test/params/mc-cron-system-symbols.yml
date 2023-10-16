@@ -1,33 +1,32 @@
----
-app_version: 118.0a1
+app_version: 120.0a1
 backstop: true
 base_ref: default
 base_repository: https://hg.mozilla.org/mozilla-unified
-base_rev: b96c0ffb4b796eff3dc03306c87ad7ab13f5d3f3
-build_date: 1691013630
+base_rev: 97d412cf7a31602d9485ebc549b56aed797523e9
+build_date: 1696541217
 build_number: 1
 do_not_optimize: []
 enable_always_target:
-    - docker-image
+  - docker-image
 existing_tasks: {}
 filters:
-    - target_tasks_method
-head_ref: 4e8d25555f9d9253daae12f37e70b494fe6bc018
+  - target_tasks_method
+head_ref: 11b3d438788a84aecc7e53efdda19bb0814e13be
 head_repository: https://hg.mozilla.org/mozilla-central
-head_rev: 4e8d25555f9d9253daae12f37e70b494fe6bc018
+head_rev: 11b3d438788a84aecc7e53efdda19bb0814e13be
 head_tag: ''
 hg_branch: default
 level: '3'
 message: ''
-moz_build_date: '20230802220030'
+moz_build_date: '20231005212657'
 next_version: null
 optimize_strategies: null
 optimize_target_tasks: true
-owner: cron@noreply.mozilla.org
+owner: user@example.com
 phabricator_diff: null
 project: mozilla-central
-pushdate: 1691013630
-pushlog_id: '41073'
+pushdate: 1696541217
+pushlog_id: '41242'
 release_enable_emefree: false
 release_enable_partner_attribution: false
 release_enable_partner_repack: false
@@ -47,4 +46,4 @@ test_manifest_loader: default
 try_mode: null
 try_options: null
 try_task_config: {}
-version: 118.0a1
+version: 120.0a1
