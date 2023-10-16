@@ -19,7 +19,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -55,7 +54,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -94,7 +92,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -130,7 +127,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -169,7 +165,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -205,7 +200,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -244,7 +238,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -280,7 +273,6 @@
           "has_native_resultdb_integration": true
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "android_devices": "1",
@@ -325,7 +317,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -364,7 +355,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -402,7 +392,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "gce": "0",
@@ -438,7 +427,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "gce": "0",
@@ -475,7 +463,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -512,7 +499,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "x86-64",
@@ -550,7 +536,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -587,7 +572,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "cpu": "arm64-64-Apple_M1",
@@ -625,7 +609,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "gce": "0",
@@ -661,7 +644,6 @@
           "result_format": "gtest_json"
         },
         "swarming": {
-          "can_use_on_swarming_builders": true,
           "dimension_sets": [
             {
               "gce": "0",

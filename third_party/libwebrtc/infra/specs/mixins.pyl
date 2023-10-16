@@ -52,13 +52,11 @@
     }
   },
   'fuchsia-gtest-output': {
-    '$mixin_append': {
-      'args': [
-        '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
-        '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
-        '--test-arg=--undefok=test_launcher_summary_output'
-      ]
-    }
+    'args': [
+      '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
+      '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
+      '--test-arg=--undefok=test_launcher_summary_output'
+    ]
   },
   'has_native_resultdb_integration': {
     'resultdb': {
@@ -85,33 +83,27 @@
     }
   },
   'ios_runtime_cache_14_5': {
-    '$mixin_append': {
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_14_5',
-          'path': 'Runtime-ios-14.5'
-        }]
-      }
+    'swarming': {
+      'named_caches': [{
+        'name': 'runtime_ios_14_5',
+        'path': 'Runtime-ios-14.5'
+      }]
     }
   },
   'ios_runtime_cache_15_5': {
-    '$mixin_append': {
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_15_5',
-          'path': 'Runtime-ios-15.5'
-        }]
-      }
+    'swarming': {
+      'named_caches': [{
+        'name': 'runtime_ios_15_5',
+        'path': 'Runtime-ios-15.5'
+      }]
     }
   },
   'ios_runtime_cache_16_2': {
-    '$mixin_append': {
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_16_2',
-          'path': 'Runtime-ios-16.2'
-        }]
-      }
+    'swarming': {
+      'named_caches': [{
+        'name': 'runtime_ios_16_2',
+        'path': 'Runtime-ios-16.2'
+      }]
     }
   },
   'isolate_profile_data': {
@@ -174,21 +166,17 @@
         'location':
         '.',
         'revision':
-        'git_revision:a598cd77abc01089647a79e3cfa3cc8e8ecb5118'
+        'git_revision:0ecab437ae2532a879b1203efc48f54bc6cadb77'
       }]
     }
   },
   'out_dir_arg': {
-    '$mixin_append': {
-      'args': ['--out-dir', '${ISOLATED_OUTDIR}']
-    }
+    'args': ['--out-dir', '${ISOLATED_OUTDIR}']
   },
   'perf-output': {
-    '$mixin_append': {
-      'args': [
-        '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb'
-      ]
-    }
+    'args': [
+      '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb'
+    ]
   },
   'perf-pool': {
     'swarming': {
@@ -219,14 +207,10 @@
       'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'webrtc_perf_tests']
     },
-    '$mixin_append': {
-      'args': ['--nologs']
-    }
+    'args': ['--nologs']
   },
   'quick-perf-tests': {
-    '$mixin_append': {
-      'args': ['--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/', '--nologs']
-    }
+    'args': ['--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/', '--nologs']
   },
   'redfin': {
     'swarming': {
@@ -237,9 +221,7 @@
     }
   },
   'resultdb-gtest-json-format': {
-    '$mixin_append': {
-      'args': ['--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json']
-    },
+    'args': ['--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json'],
     'resultdb': {
       'result_format': 'gtest_json',
       'result_file': '${ISOLATED_OUTDIR}/gtest_output.json'
@@ -286,9 +268,7 @@
     }
   },
   'webrtc-xctest': {
-    '$mixin_append': {
-      'args': ['--xctest']
-    }
+    'args': ['--xctest']
   },
   'win10': {
     'swarming': {
@@ -312,9 +292,7 @@
     }
   },
   'xcode_13_main': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '13c100']
-    },
+    'args': ['--xcode-build-version', '13c100'],
     'swarming': {
       'named_caches': [{
         'name': 'xcode_ios_13c100',
@@ -323,9 +301,7 @@
     }
   },
   'xcode_14_main': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '14c18']
-    },
+    'args': ['--xcode-build-version', '14c18'],
     'swarming': {
       'named_caches': [{
         'name': 'xcode_ios_14c18',
@@ -334,8 +310,6 @@
     }
   },
   'xcode_parallelization': {
-    '$mixin_append': {
-      'args': ['--xcode-parallelization']
-    }
+    'args': ['--xcode-parallelization']
   }
 }

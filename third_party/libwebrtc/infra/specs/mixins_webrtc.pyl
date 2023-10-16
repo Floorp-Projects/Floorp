@@ -38,13 +38,11 @@
   # Hack to use the test-launcher-summary-output flag + emulator folders for gtest-output
   # but it's currently the only way to get the file out of the emulator.
   'fuchsia-gtest-output': {
-    '$mixin_append': {
-      'args': [
-        '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
-        '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
-        '--test-arg=--undefok=test_launcher_summary_output'
-      ],
-    },
+    'args': [
+      '--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json',
+      '--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json',
+      '--test-arg=--undefok=test_launcher_summary_output'
+    ],
   },
   'ios-device-15.7': {
     'swarming': {
@@ -65,13 +63,11 @@
     },
   },
   'ios_runtime_cache_14_5': {
-    '$mixin_append': {
-      'swarming': {
-        'named_caches': [{
-          'name': 'runtime_ios_14_5',
-          'path': 'Runtime-ios-14.5'
-        }]
-      }
+    'swarming': {
+      'named_caches': [{
+        'name': 'runtime_ios_14_5',
+        'path': 'Runtime-ios-14.5'
+      }]
     }
   },
   'limited-capacity': {
@@ -97,11 +93,9 @@
     }
   },
   'perf-output': {
-    '$mixin_append': {
-      'args': [
-        '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb',
-      ],
-    },
+    'args': [
+      '--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb',
+    ],
   },
   'perf-pool': {
     'swarming': {
@@ -129,9 +123,7 @@
       'script': '//tools_webrtc/perf/process_perf_results.py',
       'args': ['--test-suite', 'webrtc_perf_tests'],
     },
-    '$mixin_append': {
-      'args': ['--nologs']
-    }
+    'args': ['--nologs']
   },
   'perf-video-codec-perf-tests': {
     'merge': {
@@ -140,12 +132,10 @@
     },
   },
   'quick-perf-tests': {
-    '$mixin_append': {
-      'args': [
-        '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
-        '--nologs',
-      ],
-    }
+    'args': [
+      '--force_fieldtrials=WebRTC-QuickPerfTest/Enabled/',
+      '--nologs',
+    ],
   },
   'redfin': {
     'swarming': {
@@ -156,11 +146,9 @@
     }
   },
   'resultdb-gtest-json-format': {
-    '$mixin_append': {
-      'args': [
-        '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
-      ],
-    },
+    'args': [
+      '--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json',
+    ],
     'resultdb': {
       'result_format': 'gtest_json',
       'result_file': '${ISOLATED_OUTDIR}/gtest_output.json',
@@ -199,16 +187,12 @@
     },
   },
   'webrtc-xctest': {
-    '$mixin_append': {
-      'args': [
-        '--xctest',
-      ],
-    },
+    'args': [
+      '--xctest',
+    ],
   },
   'xcode_13_main': {
-    '$mixin_append': {
-      'args': ['--xcode-build-version', '13c100']
-    },
+    'args': ['--xcode-build-version', '13c100'],
     'swarming': {
       'named_caches': [{
         'name': 'xcode_ios_13c100',
