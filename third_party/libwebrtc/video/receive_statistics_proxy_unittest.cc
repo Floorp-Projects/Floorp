@@ -524,7 +524,7 @@ TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsIncomingPayloadType) {
 
 TEST_F(ReceiveStatisticsProxyTest, GetStatsReportsDecoderInfo) {
   auto init_stats = statistics_proxy_->GetStats();
-  EXPECT_EQ(init_stats.decoder_implementation_name, "unknown");
+  EXPECT_EQ(init_stats.decoder_implementation_name, absl::nullopt);
   EXPECT_EQ(init_stats.power_efficient_decoder, absl::nullopt);
 
   const VideoDecoder::DecoderInfo decoder_info{

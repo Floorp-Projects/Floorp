@@ -149,7 +149,7 @@ index 3e2a51322f..46015cb0c7 100644
    return ss.str();
  }
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index e7489a6cdf..af23f7942b 100644
+index a1fc204e7c..01ac7e0ba4 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -20,6 +20,7 @@
