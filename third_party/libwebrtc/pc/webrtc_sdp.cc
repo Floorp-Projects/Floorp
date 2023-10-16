@@ -1695,7 +1695,7 @@ void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
   for (const CryptoParams& crypto_params : media_desc->cryptos()) {
     InitAttrLine(kAttributeCrypto, &os);
     os << kSdpDelimiterColon << crypto_params.tag << " "
-       << crypto_params.cipher_suite << " " << crypto_params.key_params;
+       << crypto_params.crypto_suite << " " << crypto_params.key_params;
     if (!crypto_params.session_params.empty()) {
       os << " " << crypto_params.session_params;
     }
