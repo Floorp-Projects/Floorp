@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: urllib3
-Version: 1.26.0
+Version: 1.26.17
 Summary: HTTP library with thread-safe connection pooling, file post, and more.
 Home-page: https://urllib3.readthedocs.io/
 Author: Andrey Petrov
@@ -10,7 +10,6 @@ Project-URL: Documentation, https://urllib3.readthedocs.io/
 Project-URL: Code, https://github.com/urllib3/urllib3
 Project-URL: Issue tracker, https://github.com/urllib3/urllib3/issues
 Keywords: urllib httplib threadsafe filepost http https ssl pooling
-Platform: UNKNOWN
 Classifier: Environment :: Web Environment
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
@@ -19,27 +18,33 @@ Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 2
 Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Topic :: Internet :: WWW/HTTP
 Classifier: Topic :: Software Development :: Libraries
-Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*
 Description-Content-Type: text/x-rst
+License-File: LICENSE.txt
 Provides-Extra: brotli
-Requires-Dist: brotlipy (>=0.6.0) ; extra == 'brotli'
+Requires-Dist: brotlicffi >=0.8.0 ; ((os_name != "nt" or python_version >= "3") and platform_python_implementation != "CPython") and extra == 'brotli'
+Requires-Dist: brotli ==1.0.9 ; (os_name != "nt" and python_version < "3" and platform_python_implementation == "CPython") and extra == 'brotli'
+Requires-Dist: brotlipy >=0.6.0 ; (os_name == "nt" and python_version < "3") and extra == 'brotli'
+Requires-Dist: brotli >=1.0.9 ; (python_version >= "3" and platform_python_implementation == "CPython") and extra == 'brotli'
 Provides-Extra: secure
-Requires-Dist: pyOpenSSL (>=0.14) ; extra == 'secure'
-Requires-Dist: cryptography (>=1.3.4) ; extra == 'secure'
-Requires-Dist: idna (>=2.0.0) ; extra == 'secure'
+Requires-Dist: pyOpenSSL >=0.14 ; extra == 'secure'
+Requires-Dist: cryptography >=1.3.4 ; extra == 'secure'
+Requires-Dist: idna >=2.0.0 ; extra == 'secure'
 Requires-Dist: certifi ; extra == 'secure'
+Requires-Dist: urllib3-secure-extra ; extra == 'secure'
 Requires-Dist: ipaddress ; (python_version == "2.7") and extra == 'secure'
 Provides-Extra: socks
-Requires-Dist: PySocks (!=1.5.7,<2.0,>=1.5.6) ; extra == 'socks'
+Requires-Dist: PySocks !=1.5.7,<2.0,>=1.5.6 ; extra == 'socks'
 
 
 urllib3 is a powerful, *user-friendly* HTTP client for Python. Much of the
@@ -78,8 +83,10 @@ urllib3 can be installed with `pip <https://pip.pypa.io>`_::
 
 Alternatively, you can grab the latest source code from `GitHub <https://github.com/urllib3/urllib3>`_::
 
-    $ git clone git://github.com/urllib3/urllib3.git
-    $ python setup.py install
+    $ git clone https://github.com/urllib3/urllib3.git
+    $ cd urllib3
+    $ git checkout 1.26.x
+    $ pip install .
 
 
 Documentation
@@ -147,6 +154,152 @@ For Enterprise
 
 Changes
 =======
+
+1.26.17 (2023-10-02)
+--------------------
+
+* Added the ``Cookie`` header to the list of headers to strip from requests when redirecting to a different host. As before, different headers can be set via ``Retry.remove_headers_on_redirect``.
+
+
+1.26.16 (2023-05-23)
+--------------------
+
+* Fixed thread-safety issue where accessing a ``PoolManager`` with many distinct origins
+  would cause connection pools to be closed while requests are in progress (`#2954 <https://github.com/urllib3/urllib3/pull/2954>`_)
+
+
+1.26.15 (2023-03-10)
+--------------------
+
+* Fix socket timeout value when ``HTTPConnection`` is reused (`#2645 <https://github.com/urllib3/urllib3/issues/2645>`__)
+* Remove "!" character from the unreserved characters in IPv6 Zone ID parsing
+  (`#2899 <https://github.com/urllib3/urllib3/issues/2899>`__)
+* Fix IDNA handling of '\x80' byte (`#2901 <https://github.com/urllib3/urllib3/issues/2901>`__)
+
+1.26.14 (2023-01-11)
+--------------------
+
+* Fixed parsing of port 0 (zero) returning None, instead of 0. (`#2850 <https://github.com/urllib3/urllib3/issues/2850>`__)
+* Removed deprecated getheaders() calls in contrib module.
+
+1.26.13 (2022-11-23)
+--------------------
+
+* Deprecated the ``HTTPResponse.getheaders()`` and ``HTTPResponse.getheader()`` methods.
+* Fixed an issue where parsing a URL with leading zeroes in the port would be rejected
+  even when the port number after removing the zeroes was valid.
+* Fixed a deprecation warning when using cryptography v39.0.0.
+* Removed the ``<4`` in the ``Requires-Python`` packaging metadata field.
+
+
+1.26.12 (2022-08-22)
+--------------------
+
+* Deprecated the `urllib3[secure]` extra and the `urllib3.contrib.pyopenssl` module.
+  Both will be removed in v2.x. See this `GitHub issue <https://github.com/urllib3/urllib3/issues/2680>`_
+  for justification and info on how to migrate.
+
+
+1.26.11 (2022-07-25)
+--------------------
+
+* Fixed an issue where reading more than 2 GiB in a call to ``HTTPResponse.read`` would
+  raise an ``OverflowError`` on Python 3.9 and earlier.
+
+
+1.26.10 (2022-07-07)
+--------------------
+
+* Removed support for Python 3.5
+* Fixed an issue where a ``ProxyError`` recommending configuring the proxy as HTTP
+  instead of HTTPS could appear even when an HTTPS proxy wasn't configured.
+
+
+1.26.9 (2022-03-16)
+-------------------
+
+* Changed ``urllib3[brotli]`` extra to favor installing Brotli libraries that are still
+  receiving updates like ``brotli`` and ``brotlicffi`` instead of ``brotlipy``.
+  This change does not impact behavior of urllib3, only which dependencies are installed.
+* Fixed a socket leaking when ``HTTPSConnection.connect()`` raises an exception.
+* Fixed ``server_hostname`` being forwarded from ``PoolManager`` to ``HTTPConnectionPool``
+  when requesting an HTTP URL. Should only be forwarded when requesting an HTTPS URL.
+
+
+1.26.8 (2022-01-07)
+-------------------
+
+* Added extra message to ``urllib3.exceptions.ProxyError`` when urllib3 detects that
+  a proxy is configured to use HTTPS but the proxy itself appears to only use HTTP.
+* Added a mention of the size of the connection pool when discarding a connection due to the pool being full.
+* Added explicit support for Python 3.11.
+* Deprecated the ``Retry.MAX_BACKOFF`` class property in favor of ``Retry.DEFAULT_MAX_BACKOFF``
+  to better match the rest of the default parameter names. ``Retry.MAX_BACKOFF`` is removed in v2.0.
+* Changed location of the vendored ``ssl.match_hostname`` function from ``urllib3.packages.ssl_match_hostname``
+  to ``urllib3.util.ssl_match_hostname`` to ensure Python 3.10+ compatibility after being repackaged
+  by downstream distributors.
+* Fixed absolute imports, all imports are now relative.
+
+
+1.26.7 (2021-09-22)
+-------------------
+
+* Fixed a bug with HTTPS hostname verification involving IP addresses and lack
+  of SNI. (Issue #2400)
+* Fixed a bug where IPv6 braces weren't stripped during certificate hostname
+  matching. (Issue #2240)
+
+
+1.26.6 (2021-06-25)
+-------------------
+
+* Deprecated the ``urllib3.contrib.ntlmpool`` module. urllib3 is not able to support
+  it properly due to `reasons listed in this issue <https://github.com/urllib3/urllib3/issues/2282>`_.
+  If you are a user of this module please leave a comment.
+* Changed ``HTTPConnection.request_chunked()`` to not erroneously emit multiple
+  ``Transfer-Encoding`` headers in the case that one is already specified.
+* Fixed typo in deprecation message to recommend ``Retry.DEFAULT_ALLOWED_METHODS``.
+
+
+1.26.5 (2021-05-26)
+-------------------
+
+* Fixed deprecation warnings emitted in Python 3.10.
+* Updated vendored ``six`` library to 1.16.0.
+* Improved performance of URL parser when splitting
+  the authority component.
+
+
+1.26.4 (2021-03-15)
+-------------------
+
+* Changed behavior of the default ``SSLContext`` when connecting to HTTPS proxy
+  during HTTPS requests. The default ``SSLContext`` now sets ``check_hostname=True``.
+
+
+1.26.3 (2021-01-26)
+-------------------
+
+* Fixed bytes and string comparison issue with headers (Pull #2141)
+
+* Changed ``ProxySchemeUnknown`` error message to be
+  more actionable if the user supplies a proxy URL without
+  a scheme. (Pull #2107)
+
+
+1.26.2 (2020-11-12)
+-------------------
+
+* Fixed an issue where ``wrap_socket`` and ``CERT_REQUIRED`` wouldn't
+  be imported properly on Python 2.7.8 and earlier (Pull #2052)
+
+
+1.26.1 (2020-11-11)
+-------------------
+
+* Fixed an issue where two ``User-Agent`` headers would be sent if a
+  ``User-Agent`` header key is passed as ``bytes`` (Pull #2047)
+
 
 1.26.0 (2020-11-10)
 -------------------
@@ -1331,5 +1484,3 @@ Changes
 ----------------
 
 * First release.
-
-
