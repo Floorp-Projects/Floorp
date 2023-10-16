@@ -1,199 +1,38 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 2 Nov 2021 14:35:00 +0000
-Subject: Bug 1729455 - Inject RTCStatsTimestampMakerRealtimeClock into Call
- instances. r=bwc
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Mon, 26 Jul 2021 22:51:00 -0700
+Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
 
-This patch makes libwebrtc use our clock for timestamps.
-It also makes sure there's no use of the libwebrtc realtime clock, other than
-for relative time tracking (like timeouts), and that future libwebrtc updates
-don't introduce unaudited use of it.
-
-Differential Revision: https://phabricator.services.mozilla.com/D127714
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e69945de4ac5c4ca71332e78ad8
+Differential Revision: https://phabricator.services.mozilla.com/D120930
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
 ---
- audio/channel_send.cc                       | 2 +-
- call/call.cc                                | 2 ++
- call/call_factory.cc                        | 4 ++++
- call/degraded_call.cc                       | 2 ++
- modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
- modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
- modules/rtp_rtcp/source/flexfec_receiver.cc | 2 ++
- rtc_base/task_utils/repeating_task.h        | 4 ++--
- system_wrappers/include/clock.h             | 2 +-
- system_wrappers/source/clock.cc             | 2 +-
- 10 files changed, 18 insertions(+), 6 deletions(-)
+ modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 4c1d056cc5..5ee97f290e 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -428,7 +428,7 @@ ChannelSend::ChannelSend(
-       transport_controller->GetRtcpObserver();
-   configuration.transport_feedback_callback =
-       transport_controller->transport_feedback_observer();
--  configuration.clock = (clock ? clock : Clock::GetRealTimeClock());
-+  configuration.clock = clock;
-   configuration.audio = true;
-   configuration.outgoing_transport = rtp_transport;
+diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
+index 13d848dce0..46a46ef51d 100644
+--- a/modules/rtp_rtcp/source/source_tracker.cc
++++ b/modules/rtp_rtcp/source/source_tracker.cc
+@@ -47,7 +47,8 @@ void SourceTracker::OnFrameDeliveredInternal(
+       SourceKey key(RtpSourceType::CSRC, csrc);
+       SourceEntry& entry = UpdateEntry(key);
  
-diff --git a/call/call.cc b/call/call.cc
-index b55492e53f..46c1dd3b9e 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -478,12 +478,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
-   return ss.str();
- }
- 
-+/* Mozilla: Avoid this since it could use GetRealTimeClock().
- Call* Call::Create(const Call::Config& config) {
-   Clock* clock = Clock::GetRealTimeClock();
-   return Create(config, clock,
-                 RtpTransportControllerSendFactory().Create(
-                     config.ExtractTransportConfig(), clock));
- }
-+ */
- 
- Call* Call::Create(const Call::Config& config,
-                    Clock* clock,
-diff --git a/call/call_factory.cc b/call/call_factory.cc
-index 380e80ce12..253f8cd7de 100644
---- a/call/call_factory.cc
-+++ b/call/call_factory.cc
-@@ -95,6 +95,9 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
- 
-   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
- 
-+  RTC_CHECK(false);
-+  return nullptr;
-+  /* Mozilla: Avoid this since it could use GetRealTimeClock().
-   Call* call =
-       Call::Create(config, Clock::GetRealTimeClock(),
-                    config.rtp_transport_controller_send_factory->Create(
-@@ -107,6 +110,7 @@ Call* CallFactory::CreateCall(const Call::Config& config) {
+-      entry.timestamp = now;
++      const auto packet_time = packet_info.receive_time();
++      entry.timestamp = packet_time.ms() ? packet_time : now;
+       entry.audio_level = packet_info.audio_level();
+       entry.absolute_capture_time = packet_info.absolute_capture_time();
+       entry.local_capture_clock_offset =
+@@ -86,6 +87,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
+             .local_capture_clock_offset = entry.local_capture_clock_offset});
    }
  
-   return call;
-+   */
++  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
++    return a.timestamp_ms() > b.timestamp_ms();
++  });
++
+   return sources;
  }
  
- std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
-diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index 3f47fcded0..114be134ab 100644
---- a/call/degraded_call.cc
-+++ b/call/degraded_call.cc
-@@ -129,6 +129,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
-   return true;
- }
- 
-+/* Mozilla: Avoid this since it could use GetRealTimeClock().
- DegradedCall::DegradedCall(
-     std::unique_ptr<Call> call,
-     const std::vector<TimeScopedNetworkConfig>& send_configs,
-@@ -165,6 +166,7 @@ DegradedCall::DegradedCall(
-     }
-   }
- }
-+*/
- 
- DegradedCall::~DegradedCall() {
-   RTC_DCHECK_RUN_ON(call_->worker_thread());
-diff --git a/modules/audio_coding/acm2/acm_receiver.cc b/modules/audio_coding/acm2/acm_receiver.cc
-index a77e472ec1..a5bf88e547 100644
---- a/modules/audio_coding/acm2/acm_receiver.cc
-+++ b/modules/audio_coding/acm2/acm_receiver.cc
-@@ -50,7 +50,7 @@ std::unique_ptr<NetEq> CreateNetEq(
- 
- AcmReceiver::Config::Config(
-     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory)
--    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {
-+    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {
-   // Post-decode VAD is disabled by default in NetEq, however, Audio
-   // Conference Mixer relies on VAD decisions and fails without them.
-   neteq_config.enable_post_decode_vad = true;
-diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
-index a869c8ad41..b6a33882d1 100644
---- a/modules/rtp_rtcp/include/flexfec_receiver.h
-+++ b/modules/rtp_rtcp/include/flexfec_receiver.h
-@@ -30,9 +30,11 @@ class Clock;
- 
- class FlexfecReceiver {
-  public:
-+  /* Mozilla: Avoid this since it could use GetRealTimeClock().
-   FlexfecReceiver(uint32_t ssrc,
-                   uint32_t protected_media_ssrc,
-                   RecoveredPacketReceiver* recovered_packet_receiver);
-+   */
-   FlexfecReceiver(Clock* clock,
-                   uint32_t ssrc,
-                   uint32_t protected_media_ssrc,
-diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
-index 9f30a726b1..fa89d07c62 100644
---- a/modules/rtp_rtcp/source/flexfec_receiver.cc
-+++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
-@@ -31,6 +31,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
- 
- }  // namespace
- 
-+/* Mozilla: Avoid this since it could use GetRealTimeClock().
- FlexfecReceiver::FlexfecReceiver(
-     uint32_t ssrc,
-     uint32_t protected_media_ssrc,
-@@ -39,6 +40,7 @@ FlexfecReceiver::FlexfecReceiver(
-                       ssrc,
-                       protected_media_ssrc,
-                       recovered_packet_receiver) {}
-+ */
- 
- FlexfecReceiver::FlexfecReceiver(
-     Clock* clock,
-diff --git a/rtc_base/task_utils/repeating_task.h b/rtc_base/task_utils/repeating_task.h
-index c45de95ecc..28c691c3de 100644
---- a/rtc_base/task_utils/repeating_task.h
-+++ b/rtc_base/task_utils/repeating_task.h
-@@ -57,7 +57,7 @@ class RepeatingTaskHandle {
-       absl::AnyInvocable<TimeDelta()> closure,
-       TaskQueueBase::DelayPrecision precision =
-           TaskQueueBase::DelayPrecision::kLow,
--      Clock* clock = Clock::GetRealTimeClock(),
-+      Clock* clock = Clock::GetRealTimeClockRaw(),
-       const Location& location = Location::Current());
- 
-   // DelayedStart is equivalent to Start except that the first invocation of the
-@@ -68,7 +68,7 @@ class RepeatingTaskHandle {
-       absl::AnyInvocable<TimeDelta()> closure,
-       TaskQueueBase::DelayPrecision precision =
-           TaskQueueBase::DelayPrecision::kLow,
--      Clock* clock = Clock::GetRealTimeClock(),
-+      Clock* clock = Clock::GetRealTimeClockRaw(),
-       const Location& location = Location::Current());
- 
-   // Stops future invocations of the repeating task closure. Can only be called
-diff --git a/system_wrappers/include/clock.h b/system_wrappers/include/clock.h
-index 60296070cc..214b34c970 100644
---- a/system_wrappers/include/clock.h
-+++ b/system_wrappers/include/clock.h
-@@ -49,7 +49,7 @@ class RTC_EXPORT Clock {
-   }
- 
-   // Returns an instance of the real-time system clock implementation.
--  static Clock* GetRealTimeClock();
-+  static Clock* GetRealTimeClockRaw();
- };
- 
- class SimulatedClock : public Clock {
-diff --git a/system_wrappers/source/clock.cc b/system_wrappers/source/clock.cc
-index 88c99d6a68..f7460b831c 100644
---- a/system_wrappers/source/clock.cc
-+++ b/system_wrappers/source/clock.cc
-@@ -57,7 +57,7 @@ class RealTimeClock : public Clock {
-   }
- };
- 
--Clock* Clock::GetRealTimeClock() {
-+Clock* Clock::GetRealTimeClockRaw() {
-   static Clock* const clock = new RealTimeClock();
-   return clock;
- }
 -- 
-2.37.3
+2.34.1
 

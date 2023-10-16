@@ -1,52 +1,47 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 27 Mar 2018 15:43:00 -0400
-Subject: Bug 1376873 - Disable Mid support in RtpDemuxer; r=mjf
+From: Tommi <tommi@webrtc.org>
+Date: Mon, 26 Jun 2023 21:11:35 +0200
+Subject: (cherry-pick-branch-heads/5845) [M116] Revert mid check in
+ SdpOfferAnswerHandler::CreateDataChannel.
 
-The only use of Mid in the current webrtc.org code is in the unit tests.
-RtpStreamReceiverController only allows adding sinks using SSRCs. Because
-of this, we'll end up dropping packets in the RtpDemuxer with the current
-code as none of our Mids will be recognized.
+This check was added here:
+  https://webrtc-review.googlesource.com/c/src/+/300544
 
-Tip of webrtc.org fully supports using Mids, so we'll be able to enable this
-code again after the next update.
+When createOffer is used before createAnswer, this check would cause
+SetupDataChannelTransport_n to not be called for the remote channel.
 
-Differential Revision: https://phabricator.services.mozilla.com/D7442
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3ba8452e77105c72f6ddbc49cbe5a53dbea1507
+(cherry picked from commit 299cdc9057fb8925f1692ac8c7573f51b7872df6)
+
+Bug: webrtc:15258, chromium:1458937
+Change-Id: Ifdab35d1b0260ff03fef4beff13acf8090d59d8f
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/310460
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40357}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/312123
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5845@{#5}
+Cr-Branched-From: f80cf814353d11a9f22bef5ce5e8868f2c72f0d0-refs/heads/main@{#40319}
 ---
- call/rtp_demuxer.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ pc/sdp_offer_answer.cc | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/call/rtp_demuxer.cc b/call/rtp_demuxer.cc
-index 0b74f2ac0a..5c53f48144 100644
---- a/call/rtp_demuxer.cc
-+++ b/call/rtp_demuxer.cc
-@@ -272,13 +272,17 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-   // RSID and RRID are routed to the same sinks. If an RSID is specified on a
-   // repair packet, it should be ignored and the RRID should be used.
-   std::string packet_mid, packet_rsid;
--  bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-+  //bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-   bool has_rsid = packet.GetExtension<RepairedRtpStreamId>(&packet_rsid);
-   if (!has_rsid) {
-     has_rsid = packet.GetExtension<RtpStreamId>(&packet_rsid);
-   }
-   uint32_t ssrc = packet.Ssrc();
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index 6596d82167..4874444eae 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -5145,11 +5145,7 @@ RTCError SdpOfferAnswerHandler::CreateChannels(const SessionDescription& desc) {
  
-+  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
-+  // supports adding sinks by ssrc, so our mids will never show up in
-+  // known_mids_, causing us to drop packets here.
-+#if 0
-   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
-   // SSRC is known/latched.
-   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
-@@ -352,6 +356,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-     }
-   }
+ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
+   RTC_DCHECK_RUN_ON(signaling_thread());
+-  if (pc_->sctp_mid().has_value()) {
+-    RTC_DCHECK_EQ(mid, *pc_->sctp_mid());
+-    return true;  // data channel already created.
+-  }
+-
++  RTC_DCHECK(!pc_->sctp_mid().has_value() || mid == pc_->sctp_mid().value());
+   RTC_LOG(LS_INFO) << "Creating data channel, mid=" << mid;
  
-+#endif
-   // We trust signaled SSRC more than payload type which is likely to conflict
-   // between streams.
-   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
+   absl::optional<std::string> transport_name =
 -- 
-2.37.3
+2.34.1
 

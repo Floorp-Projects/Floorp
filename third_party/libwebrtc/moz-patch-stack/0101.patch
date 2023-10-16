@@ -1,59 +1,49 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 28 Sep 2023 14:12:00 +0000
-Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
- r=ng,webrtc-reviewers
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Thu, 27 Jul 2023 09:49:00 +0000
+Subject: Bug 1841851 - WebRTC backport: PipeWire capturer: increase buffer
+ size to avoid buffer overflow r=jib,webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D189386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 8fcc6df79daf1810cd4ecdb8d2ef1d361abfdc9c
+
+Differential Revision: https://phabricator.services.mozilla.com/D183355
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/263be02fdeb0c3556e1da296eb18eb3d154eb99e
 ---
- modules/desktop_capture/BUILD.gn                      | 3 +++
- modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
- 2 files changed, 7 insertions(+)
+ .../linux/wayland/shared_screencast_stream.cc               | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index c184e2fbbc..bcea427de7 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -382,6 +382,9 @@ rtc_library("desktop_capture") {
-       "Xrandr",
-       "Xtst",
-     ]
-+    if (build_with_mozilla) {
-+      libs -= [ "Xtst" ]
-+    }
-   }
+diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+index 5b4e23c32d..0c26e7a7d5 100644
+--- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
++++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
+@@ -281,7 +281,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
  
-   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
-diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
-index d690b0e2ba..3f3617b074 100644
---- a/modules/desktop_capture/linux/x11/shared_x_display.cc
-+++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
-@@ -11,7 +11,9 @@
- #include "modules/desktop_capture/linux/x11/shared_x_display.h"
+   that->stream_size_ = DesktopSize(width, height);
  
- #include <X11/Xlib.h>
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- #include <X11/extensions/XTest.h>
-+#endif
+-  uint8_t buffer[1024] = {};
++  uint8_t buffer[2048] = {};
+   auto builder = spa_pod_builder{buffer, sizeof(buffer)};
  
- #include <algorithm>
+   // Setup buffers and meta header for new format.
+@@ -364,7 +364,7 @@ void SharedScreenCastStreamPrivate::OnRenegotiateFormat(void* data, uint64_t) {
+   {
+     PipeWireThreadLoopLock thread_loop_lock(that->pw_main_loop_);
  
-@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
- }
+-    uint8_t buffer[2048] = {};
++    uint8_t buffer[4096] = {};
  
- void SharedXDisplay::IgnoreXServerGrabs() {
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   int test_event_base = 0;
-   int test_error_base = 0;
-   int major = 0;
-@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
-                           &minor)) {
-     XTestGrabControl(display(), true);
-   }
-+#endif
- }
+     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
  
- }  // namespace webrtc
+@@ -482,7 +482,7 @@ bool SharedScreenCastStreamPrivate::StartScreenCastStream(
+ 
+     pw_stream_add_listener(pw_stream_, &spa_stream_listener_,
+                            &pw_stream_events_, this);
+-    uint8_t buffer[2048] = {};
++    uint8_t buffer[4096] = {};
+ 
+     spa_pod_builder builder = spa_pod_builder{buffer, sizeof(buffer)};
+ 
 -- 
-2.37.3
+2.34.1
 

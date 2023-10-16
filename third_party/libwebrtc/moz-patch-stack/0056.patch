@@ -1,32 +1,30 @@
-From: Michael Froman <mjfroman@mac.com>
-Date: Fri, 8 Apr 2022 11:36:36 -0500
-Subject: Bug 1766646 - (fix-b556b08668) avoid InlinedVector method that can
- throw exception
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 28 Oct 2021 18:13:00 +0000
+Subject: Bug 1729367 - P6 - Restore PID recording post cherry-pick;r=mjf
 
+This restores the code from P0, which was removed to make cherry-picking 439ffe462a66ad9fa9a251b265e4ab28c2647d25 and 449a78b1e20ea85b11f967cf3a184ee610ce21c3 easier.
+
+Differential Revision: https://phabricator.services.mozilla.com/D129714
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/72a83cb2e571023cd4150bbdef5be5455ce851f4
 ---
- api/video_codecs/video_encoder.cc | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ modules/desktop_capture/win/window_capture_utils.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/api/video_codecs/video_encoder.cc b/api/video_codecs/video_encoder.cc
-index b0fe078b37..d2de985d5c 100644
---- a/api/video_codecs/video_encoder.cc
-+++ b/api/video_codecs/video_encoder.cc
-@@ -180,7 +180,15 @@ std::string VideoEncoder::EncoderInfo::ToString() const {
-   for (size_t i = 0; i < preferred_pixel_formats.size(); ++i) {
-     if (i > 0)
-       oss << ", ";
-+#if defined(WEBRTC_MOZILLA_BUILD)
-+    // This could assert, as opposed to throw using the form in the
-+    // else, but since we're in a for loop that uses .size() we can
-+    // be fairly sure that this is safe without doing a further
-+    // check to make sure 'i' is in-range.
-+    oss << VideoFrameBufferTypeToString(preferred_pixel_formats[i]);
-+#else
-     oss << VideoFrameBufferTypeToString(preferred_pixel_formats.at(i));
-+#endif
-   }
-   oss << "]";
-   if (is_qp_trusted.has_value()) {
+diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
+index ccfef49bc5..d58c02e17c 100644
+--- a/modules/desktop_capture/win/window_capture_utils.cc
++++ b/modules/desktop_capture/win/window_capture_utils.cc
+@@ -79,6 +79,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
+   DesktopCapturer::Source window;
+   window.id = reinterpret_cast<WindowId>(hwnd);
+ 
++  DWORD pid;
++  GetWindowThreadProcessId(hwnd, &pid);
++  window.pid = static_cast<pid_t>(pid);
++
+   // GetWindowText* are potentially blocking operations if `hwnd` is
+   // owned by the current process. The APIs will send messages to the window's
+   // message loop, and if the message loop is waiting on this operation we will
 -- 
-2.37.3
+2.34.1
 

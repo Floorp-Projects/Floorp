@@ -1,29 +1,43 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 13 Nov 2020 14:34:00 -0500
-Subject: Bug 1654112 - Fully quality AudioLevel::kUri in channel_send.cc. r=ng
+Date: Tue, 11 Feb 2020 17:07:00 +0000
+Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D130082
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7163801a480d607005042292ed9e4fbb892f440d
+Getting the JNI calls here to work requires a good amount of webrtc.org
+machinery. It might be worth setting that up the next time we do an upstream
+merge, but for now, it is a lot simpler to just remove the affected code,
+given that we are not interested in collecting this data anyway.
+
+Differential Revision: https://phabricator.services.mozilla.com/D61860
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
 ---
- audio/channel_send.cc | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index fccd58b76c..e1e44ef7e4 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -620,9 +620,9 @@ void ChannelSend::SetSendAudioLevelIndicationStatus(bool enable, int id) {
-   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   include_audio_level_indication_.store(enable);
-   if (enable) {
--    rtp_rtcp_->RegisterRtpHeaderExtension(AudioLevel::Uri(), id);
-+    rtp_rtcp_->RegisterRtpHeaderExtension(webrtc::AudioLevel::Uri(), id);
-   } else {
--    rtp_rtcp_->DeregisterSendRtpHeaderExtension(AudioLevel::Uri());
-+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(webrtc::AudioLevel::Uri());
+diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
+index 877986134a..c1d2d61a71 100644
+--- a/sdk/android/src/java/org/webrtc/Histogram.java
++++ b/sdk/android/src/java/org/webrtc/Histogram.java
+@@ -27,18 +27,13 @@ class Histogram {
    }
- }
  
+   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
+-    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
++    return new Histogram(0);
+   }
+ 
+   static public Histogram createEnumeration(String name, int max) {
+-    return new Histogram(nativeCreateEnumeration(name, max));
++    return new Histogram(0);
+   }
+ 
+   public void addSample(int sample) {
+-    nativeAddSample(handle, sample);
+   }
+-
+-  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
+-  private static native long nativeCreateEnumeration(String name, int max);
+-  private static native void nativeAddSample(long handle, int sample);
+ }
 -- 
-2.37.3
+2.34.1
 

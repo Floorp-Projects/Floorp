@@ -1,27 +1,27 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Wed, 5 Jul 2023 19:15:00 +0000
-Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
- of encoder_config_.simulcast_layers. r=jib
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 7 Apr 2023 20:28:00 +0000
+Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
 
-Differential Revision: https://phabricator.services.mozilla.com/D182813
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
+Differential Revision: https://phabricator.services.mozilla.com/D174978
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
 ---
- video/video_stream_encoder.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ video/task_queue_frame_decode_scheduler.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
-index c3d855c1c6..eee99f41de 100644
---- a/video/video_stream_encoder.cc
-+++ b/video/video_stream_encoder.cc
-@@ -1395,7 +1395,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
- 
-   bool is_svc = false;
-   bool single_stream_or_non_first_inactive = true;
--  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
-+  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
-     if (encoder_config_.simulcast_layers[i].active) {
-       single_stream_or_non_first_inactive = false;
-       break;
+diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
+index cd109c2932..6dd7b47f17 100644
+--- a/video/task_queue_frame_decode_scheduler.cc
++++ b/video/task_queue_frame_decode_scheduler.cc
+@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+     uint32_t rtp,
+     FrameDecodeTiming::FrameSchedule schedule,
+     FrameReleaseCallback cb) {
+-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
++  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
++  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+   RTC_DCHECK(!scheduled_rtp_.has_value())
+       << "Can not schedule two frames for release at the same time.";
+   RTC_DCHECK(cb);
 -- 
-2.37.3
+2.34.1
 

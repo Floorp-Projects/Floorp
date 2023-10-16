@@ -1,32 +1,57 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Mar 2021 08:53:00 -0600
-Subject: Bug 1654112 - libwebrtc modification: Init some stats that were being
- passed to us uninitialized. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 18 Feb 2021 17:23:00 -0800
+Subject: Bug 1654112 - fix device_info_ds pid and Windows constants includes;
+ r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D108673
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c385bb870413b925af48df97aa1f2b80a26e78d2
+Upstreaming bug 1697385
+
+Differential Revision: https://phabricator.services.mozilla.com/D107899
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/24809d566449907edea49ea47528065ad0f76910
 ---
- call/video_receive_stream.h | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ modules/video_capture/windows/device_info_ds.cc | 3 ++-
+ modules/video_capture/windows/device_info_ds.h  | 6 +++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index af23f7942b..023bdbb2c4 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -152,9 +152,10 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-     RtcpPacketTypeCounter rtcp_packet_type_counts;
-     absl::optional<RtpReceiveStats> rtx_rtp_stats;
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index 9d22f42f4d..f6927281f3 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -172,7 +172,8 @@ int32_t DeviceInfoDS::GetDeviceName(uint32_t deviceNumber,
+                                     char* deviceUniqueIdUTF8,
+                                     uint32_t deviceUniqueIdUTF8Length,
+                                     char* productUniqueIdUTF8,
+-                                    uint32_t productUniqueIdUTF8Length) {
++                                    uint32_t productUniqueIdUTF8Length,
++                                    pid_t* pid) {
+   MutexLock lock(&_apiLock);
+   const int32_t result = GetDeviceInfo(
+       deviceNumber, deviceNameUTF8, deviceNameLength, deviceUniqueIdUTF8,
+diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
+index ed2a726d6f..e6dfaed366 100644
+--- a/modules/video_capture/windows/device_info_ds.h
++++ b/modules/video_capture/windows/device_info_ds.h
+@@ -12,8 +12,11 @@
+ #define MODULES_VIDEO_CAPTURE_MAIN_SOURCE_WINDOWS_DEVICE_INFO_DS_H_
  
--    uint32_t rtcp_sender_packets_sent;
--    uint32_t rtcp_sender_octets_sent;
--    int64_t rtcp_sender_ntp_timestamp_ms;
-+    // Mozilla modification: Init these three.
-+    uint32_t rtcp_sender_packets_sent = 0;
-+    uint32_t rtcp_sender_octets_sent = 0;
-+    int64_t rtcp_sender_ntp_timestamp_ms = 0;
+ #include <dshow.h>
++#include <Ks.h>
++#include <dbt.h>
  
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
+ #include "modules/video_capture/device_info_impl.h"
++#include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_impl.h"
+ 
+ namespace webrtc {
+@@ -47,7 +50,8 @@ class DeviceInfoDS : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8,
+-                        uint32_t productUniqueIdUTF8Length) override;
++                        uint32_t productUniqueIdUTF8Length,
++                        pid_t* pid) override;
+ 
+   /*
+    * Display OS /capture device specific settings dialog
 -- 
-2.37.3
+2.34.1
 

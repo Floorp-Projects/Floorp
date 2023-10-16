@@ -1,31 +1,34 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 4 Jul 2023 08:34:00 +0000
-Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
- pw_stream raw pointer member r=webrtc-reviewers,ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 27 Feb 2023 16:22:00 +0000
+Subject: Bug 1817024 - (fix-fdcfefa708) In PhysicalSocket avoid a non-trivial
+ designated initializer. r=mjf,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
+This fixes a build failure in the base-toolchain job with GCC 7.5.0:
+  In file included from Unified_cpp_threading_gn0.cpp:38:0:
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc: In member function 'int rtc::PhysicalSocket::DoReadFromSocket(void*, size_t, rtc::SocketAddress*, int64_t*)':
+  .../third_party/libwebrtc/rtc_base/physical_socket_server.cc:463:51: sorry, unimplemented: non-trivial designated initializers not supported
+       msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
+                                                   ^
 
-Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
-
-Differential Revision: https://phabricator.services.mozilla.com/D182671
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
+Differential Revision: https://phabricator.services.mozilla.com/D171057
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a282ca40f29b7a5ea76d5b68d
 ---
- modules/video_capture/linux/video_capture_pipewire.h | 2 +-
+ rtc_base/physical_socket_server.cc | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index fe39f1dd92..316fb2449d 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -50,7 +50,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-       RTC_GUARDED_BY(capture_checker_);
-   bool started_ RTC_GUARDED_BY(api_lock_);
- 
--  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_);
-+  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
-   struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
- };
- }  // namespace videocapturemodule
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index 2dfdd9a5df..d0053dd82b 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -462,7 +462,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
+   int received = 0;
+   if (read_scm_timestamp_experiment_) {
+     iovec iov = {.iov_base = buffer, .iov_len = length};
+-    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
++    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
+     if (out_addr) {
+       out_addr->Clear();
+       msg.msg_name = addr;
 -- 
-2.37.3
+2.34.1
 

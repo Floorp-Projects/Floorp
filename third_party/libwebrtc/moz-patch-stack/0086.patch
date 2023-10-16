@@ -1,36 +1,25 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 22 Jun 2023 16:23:00 +0000
-Subject: Bug 1837918 - libwebrtc update broke the build on
- OpenBSD;r=mjf,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 4 Apr 2023 16:34:00 -0500
+Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
+ that gcc is sad about.
 
-Differential Revision: https://phabricator.services.mozilla.com/D181791
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
 ---
- modules/video_capture/video_capture_options.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ modules/audio_processing/audio_processing_impl.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
-index 6f72f7927e..37965305d9 100644
---- a/modules/video_capture/video_capture_options.h
-+++ b/modules/video_capture/video_capture_options.h
-@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
- 
-   void Init(Callback* callback);
- 
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2() const { return allow_v4l2_; }
-   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
- #endif
-@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
- #endif
- 
-  private:
--#if defined(WEBRTC_LINUX)
-+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
-   bool allow_v4l2_ = false;
- #endif
- #if defined(WEBRTC_USE_PIPEWIRE)
+diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
+index c80cc76a3d..c304453388 100644
+--- a/modules/audio_processing/audio_processing_impl.cc
++++ b/modules/audio_processing/audio_processing_impl.cc
+@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+                   },
+               .adaptive_digital_controller =
+                   {
++                      .enabled = false,
+                       .headroom_db = static_cast<float>(headroom_db.Get()),
+                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
+                       .initial_gain_db =
 -- 
-2.37.3
+2.34.1
 

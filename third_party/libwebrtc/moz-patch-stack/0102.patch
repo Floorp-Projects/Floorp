@@ -1,94 +1,77 @@
-From: Dan Baker <dbaker@mozilla.com>
-Date: Mon, 2 Oct 2023 17:17:00 +0000
-Subject: Bug 1851693 - (fix-279a05475d) Revert addition of race checker which
- is causing tsan failurs until better fix is landed upstream.r=pehrsons
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 8 Aug 2023 10:05:00 +0000
+Subject: Bug 1840150 - WebRTC backport: Video capture PipeWire: guard callback
+ to avoid concurrent access r=jib,webrtc-reviewers,mjf
 
-This merely reverses a race checker that is too strict for our use, maintaining the code we had before, so we can fix upstream in the meantime tracked with Bug 1856392.
+This is a simple backport of an WebRTC upstream change.
 
-Differential Revision: https://phabricator.services.mozilla.com/D189396
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e626ce7279e6575e68d0e43de3dfd3ed59b00a75
+Upstream commit: 666d707450eff6cc2946eba8edf67420f87ad11e
+
+Differential Revision: https://phabricator.services.mozilla.com/D184386
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/144cbf240a6b53de6f821bf04bfdb74218fea1a8
 ---
- modules/video_capture/linux/video_capture_v4l2.cc | 7 -------
- modules/video_capture/linux/video_capture_v4l2.h  | 7 +++----
- 2 files changed, 3 insertions(+), 11 deletions(-)
+ modules/video_capture/linux/pipewire_session.cc | 10 +++++++++-
+ modules/video_capture/linux/pipewire_session.h  |  5 ++++-
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
-index d6813b13fd..c887683dc8 100644
---- a/modules/video_capture/linux/video_capture_v4l2.cc
-+++ b/modules/video_capture/linux/video_capture_v4l2.cc
-@@ -110,7 +110,6 @@ int32_t VideoCaptureModuleV4L2::Init(const char* deviceUniqueIdUTF8) {
- 
- VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
-   RTC_DCHECK_RUN_ON(&api_checker_);
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
- 
-   StopCapture();
-   if (_deviceFd != -1)
-@@ -120,7 +119,6 @@ VideoCaptureModuleV4L2::~VideoCaptureModuleV4L2() {
- int32_t VideoCaptureModuleV4L2::StartCapture(
-     const VideoCaptureCapability& capability) {
-   RTC_DCHECK_RUN_ON(&api_checker_);
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
- 
-   if (_captureStarted) {
-     if (capability == _requestedCapability) {
-@@ -318,7 +316,6 @@ int32_t VideoCaptureModuleV4L2::StopCapture() {
-     _captureThread.Finalize();
-   }
- 
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   MutexLock lock(&capture_lock_);
-   if (_captureStarted) {
-     _captureStarted = false;
-@@ -336,7 +333,6 @@ int32_t VideoCaptureModuleV4L2::StopCapture() {
- // critical section protected by the caller
- 
- bool VideoCaptureModuleV4L2::AllocateVideoBuffers() {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   struct v4l2_requestbuffers rbuffer;
-   memset(&rbuffer, 0, sizeof(v4l2_requestbuffers));
- 
-@@ -387,7 +383,6 @@ bool VideoCaptureModuleV4L2::AllocateVideoBuffers() {
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index 2adb1cdb50..3f52b3dd61 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -232,7 +232,10 @@ PipeWireSession::~PipeWireSession() {
  }
  
- bool VideoCaptureModuleV4L2::DeAllocateVideoBuffers() {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   // unmap buffers
-   for (int i = 0; i < _buffersAllocatedByDevice; i++)
-     munmap(_pool[i].start, _pool[i].length);
-@@ -405,12 +400,10 @@ bool VideoCaptureModuleV4L2::DeAllocateVideoBuffers() {
+ void PipeWireSession::Init(VideoCaptureOptions::Callback* callback, int fd) {
+-  callback_ = callback;
++  {
++    webrtc::MutexLock lock(&callback_lock_);
++    callback_ = callback;
++  }
+ 
+   if (fd != kInvalidPipeWireFd) {
+     InitPipeWire(fd);
+@@ -374,6 +377,8 @@ void PipeWireSession::OnRegistryGlobalRemove(void* data, uint32_t id) {
  }
  
- bool VideoCaptureModuleV4L2::CaptureStarted() {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
-   return _captureStarted;
+ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
++  webrtc::MutexLock lock(&callback_lock_);
++
+   if (callback_) {
+     callback_->OnInitialized(status);
+     callback_ = nullptr;
+@@ -381,6 +386,9 @@ void PipeWireSession::Finish(VideoCaptureOptions::Status status) {
  }
  
- bool VideoCaptureModuleV4L2::CaptureProcess() {
--  RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
+ void PipeWireSession::Cleanup() {
++  webrtc::MutexLock lock(&callback_lock_);
++  callback_ = nullptr;
++
+   StopPipeWire();
+ }
  
-   int retVal = 0;
-   struct pollfd rSet;
-diff --git a/modules/video_capture/linux/video_capture_v4l2.h b/modules/video_capture/linux/video_capture_v4l2.h
-index 0191e41876..61358d0325 100644
---- a/modules/video_capture/linux/video_capture_v4l2.h
-+++ b/modules/video_capture/linux/video_capture_v4l2.h
-@@ -45,12 +45,11 @@ class VideoCaptureModuleV4L2 : public VideoCaptureImpl {
-   Mutex capture_lock_ RTC_ACQUIRED_BEFORE(api_lock_);
-   bool quit_ RTC_GUARDED_BY(capture_lock_);
-   int32_t _deviceId RTC_GUARDED_BY(api_checker_);
--  int32_t _deviceFd RTC_GUARDED_BY(capture_checker_);
-+  int32_t _deviceFd;
+diff --git a/modules/video_capture/linux/pipewire_session.h b/modules/video_capture/linux/pipewire_session.h
+index 982b468838..fdc06a6b2a 100644
+--- a/modules/video_capture/linux/pipewire_session.h
++++ b/modules/video_capture/linux/pipewire_session.h
+@@ -24,6 +24,7 @@
+ #include "modules/video_capture/linux/camera_portal.h"
+ #include "modules/video_capture/video_capture.h"
+ #include "modules/video_capture/video_capture_options.h"
++#include "rtc_base/synchronization/mutex.h"
  
-   int32_t _buffersAllocatedByDevice RTC_GUARDED_BY(capture_lock_);
--  VideoCaptureCapability configured_capability_
--      RTC_GUARDED_BY(capture_checker_);
--  bool _captureStarted RTC_GUARDED_BY(capture_checker_);
-+  VideoCaptureCapability configured_capability_;
-+  bool _captureStarted;
-   struct Buffer {
-     void* start;
-     size_t length;
+ namespace webrtc {
+ namespace videocapturemodule {
+@@ -117,7 +118,9 @@ class PipeWireSession : public rtc::RefCountedNonVirtual<PipeWireSession> {
+   void Finish(VideoCaptureOptions::Status status);
+   void Cleanup();
+ 
+-  VideoCaptureOptions::Callback* callback_ = nullptr;
++  webrtc::Mutex callback_lock_;
++  VideoCaptureOptions::Callback* callback_ RTC_GUARDED_BY(&callback_lock_) =
++      nullptr;
+ 
+   VideoCaptureOptions::Status status_;
+ 
 -- 
-2.37.3
+2.34.1
 

@@ -1,25 +1,30 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Tue, 4 Apr 2023 16:34:00 -0500
-Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
- that gcc is sad about.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Thu, 6 Jan 2022 00:16:00 +0000
+Subject: Bug 1748458 - Add TRACE_EVENT for keyframe requests. r=bwc
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
+Differential Revision: https://phabricator.services.mozilla.com/D135113
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d0e8977754507c0820e757fc
 ---
- modules/audio_processing/audio_processing_impl.cc | 1 +
- 1 file changed, 1 insertion(+)
+ video/rtp_video_stream_receiver2.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index c80cc76a3d..c304453388 100644
---- a/modules/audio_processing/audio_processing_impl.cc
-+++ b/modules/audio_processing/audio_processing_impl.cc
-@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
-                   },
-               .adaptive_digital_controller =
-                   {
-+                      .enabled = false,
-                       .headroom_db = static_cast<float>(headroom_db.Get()),
-                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
-                       .initial_gain_db =
+diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
+index 9997fa25e3..738da0758b 100644
+--- a/video/rtp_video_stream_receiver2.cc
++++ b/video/rtp_video_stream_receiver2.cc
+@@ -735,6 +735,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
+ 
+ void RtpVideoStreamReceiver2::RequestKeyFrame() {
+   RTC_DCHECK_RUN_ON(&worker_task_checker_);
++  TRACE_EVENT2("webrtc", "RtpVideoStreamReceiver2::RequestKeyFrame",
++               "remote_ssrc", config_.rtp.remote_ssrc, "method",
++               keyframe_request_method_ == KeyFrameReqMethod::kPliRtcp   ? "PLI"
++               : keyframe_request_method_ == KeyFrameReqMethod::kFirRtcp ? "FIR"
++               : keyframe_request_method_ == KeyFrameReqMethod::kNone ? "None"
++                                                                      : "Other");
+   // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
+   // issued by anything other than the LossNotificationController if it (the
+   // sender) is relying on LNTF alone.
 -- 
-2.37.3
+2.34.1
 

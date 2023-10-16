@@ -1,90 +1,56 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 8 Jul 2020 17:35:00 +0000
-Subject: Bug 1650572 - Check V4L2_CAP_DEVICE_CAPS before accessing
- device_caps; r=ng
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:12:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Windows. r=dminor
 
-The capabilities field is for the physical device, device_caps is for the
-specific /dev/videoX device that has been opened. The device_caps field is
-only populated if V4L2_CAP_DEVICE_CAPS is set, so we should check that, and
-fall back to capabilities if it is not set.
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D82377
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b5acbf536c46a66c939a61bde34ad93b1977a604
+Differential Revision: https://phabricator.services.mozilla.com/D46274
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
 ---
- modules/video_capture/linux/device_info_v4l2.cc | 17 ++++++++++++-----
- modules/video_capture/linux/device_info_v4l2.h  |  3 +++
- 2 files changed, 15 insertions(+), 5 deletions(-)
+ modules/video_capture/windows/device_info_ds.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index a2435bcd4f..cd0ba6e3df 100644
---- a/modules/video_capture/linux/device_info_v4l2.cc
-+++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -220,8 +220,7 @@ uint32_t DeviceInfoV4l2::NumberOfDevices() {
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -252,8 +251,7 @@ int32_t DeviceInfoV4l2::GetDeviceName(uint32_t deviceNumber,
-     snprintf(device, sizeof(device), "/dev/video%d", n);
-     if ((fd = open(device, O_RDONLY)) != -1) {
-       // query device capabilities and make sure this is a video capture device
--      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 ||
--          !(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (ioctl(fd, VIDIOC_QUERYCAP, &cap) < 0 || !IsVideoCaptureDevice(&cap)) {
-         close(fd);
-         continue;
-       }
-@@ -331,7 +329,7 @@ int32_t DeviceInfoV4l2::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
-     struct v4l2_capability cap;
-     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
-       // skip devices without video capture capability
--      if (!(cap.device_caps & V4L2_CAP_VIDEO_CAPTURE)) {
-+      if (!IsVideoCaptureDevice(&cap)) {
-         continue;
-       }
- 
-@@ -393,6 +391,15 @@ bool DeviceInfoV4l2::IsDeviceNameMatches(const char* name,
-   return false;
- }
- 
-+bool DeviceInfoV4l2::IsVideoCaptureDevice(struct v4l2_capability* cap)
-+{
-+  if (cap->capabilities & V4L2_CAP_DEVICE_CAPS) {
-+    return cap->device_caps & V4L2_CAP_VIDEO_CAPTURE;
-+  } else {
-+    return cap->capabilities & V4L2_CAP_VIDEO_CAPTURE;
-+  }
-+}
-+
- int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
-   // set image format
-   struct v4l2_format video_fmt;
-diff --git a/modules/video_capture/linux/device_info_v4l2.h b/modules/video_capture/linux/device_info_v4l2.h
-index 95432a509d..e3c2395f49 100644
---- a/modules/video_capture/linux/device_info_v4l2.h
-+++ b/modules/video_capture/linux/device_info_v4l2.h
-@@ -18,6 +18,8 @@
- #include "rtc_base/platform_thread.h"
- #include <sys/inotify.h>
- 
-+struct v4l2_capability;
-+
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index a7eca19bbf..9d22f42f4d 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -20,7 +20,7 @@
  namespace webrtc {
  namespace videocapturemodule {
- class DeviceInfoV4l2 : public DeviceInfoImpl {
-@@ -49,6 +51,7 @@ class DeviceInfoV4l2 : public DeviceInfoImpl {
  
-  private:
-   bool IsDeviceNameMatches(const char* name, const char* deviceUniqueIdUTF8);
-+  bool IsVideoCaptureDevice(struct v4l2_capability* cap);
+-BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
++BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
+ {
+   if (pHdr == NULL) {
+     return FALSE;
+@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
+     return FALSE;
+   }
+   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+-  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
++  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
+ }
  
- #ifdef WEBRTC_LINUX
-   void HandleEvent(inotify_event* event, int fd);
+ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+     else if (uiMsg == WM_DEVICECHANGE)
+     {
+         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+-        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
++        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
+         {
+             pParent->DeviceChange();
+         }
+@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
+     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
+     di.dbcc_size = sizeof(di);
+     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
+-    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
++    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
+ 
+     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
+                                              DEVICE_NOTIFY_WINDOW_HANDLE);
 -- 
-2.37.3
+2.34.1
 

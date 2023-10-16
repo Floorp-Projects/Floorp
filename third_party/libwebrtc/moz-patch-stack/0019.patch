@@ -1,98 +1,153 @@
-From: Alex Chronopoulos <achronop@gmail.com>
-Date: Wed, 18 Sep 2019 13:16:00 +0000
-Subject: Bug 1572281 - Remove audio device change notifications from video
- capture in Linux. r=dminor
+From: Jan Beich <jbeich@FreeBSD.org>
+Date: Fri, 12 Oct 2018 12:56:00 -0400
+Subject: Bug 1376873 - Unbreak WebRTC 64 build on BSDs. r=dminor f=gaston
 
-Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the Linux part.
+Also includes:
+Bug 1554949 - Fix WebRTC build failure with newer linux kernel. r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D46272
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b794139332691f4fbc98b4bfcfdd7
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a636ecdcb91afb1c5d436bbcbd87da4f10f7df78
 ---
- .../video_capture/linux/device_info_v4l2.cc   | 28 ++-----------------
- 1 file changed, 3 insertions(+), 25 deletions(-)
+ modules/video_capture/linux/device_info_linux.cc   | 6 ++++++
+ modules/video_capture/linux/device_info_v4l2.cc    | 8 +++++++-
+ modules/video_capture/linux/video_capture_linux.cc | 9 ++++++++-
+ rtc_base/byte_order.h                              | 2 ++
+ rtc_base/physical_socket_server.cc                 | 7 +++++--
+ system_wrappers/source/cpu_info.cc                 | 4 ++--
+ 6 files changed, 30 insertions(+), 6 deletions(-)
 
+diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
+index 4f8b7c059b..56da475bf3 100644
+--- a/modules/video_capture/linux/device_info_linux.cc
++++ b/modules/video_capture/linux/device_info_linux.cc
+@@ -16,7 +16,13 @@
+ #include <sys/ioctl.h>
+ #include <unistd.h>
+ // v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
+ #include <linux/videodev2.h>
++#endif
+ 
+ #include <vector>
+ 
 diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
-index 19b32f16b9..f77d791033 100644
+index 7397a10625..19b32f16b9 100644
 --- a/modules/video_capture/linux/device_info_v4l2.cc
 +++ b/modules/video_capture/linux/device_info_v4l2.cc
-@@ -62,7 +62,7 @@ namespace videocapturemodule {
- void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
- {
-     if (event->mask & IN_CREATE) {
--        if (fd == _fd_v4l || fd == _fd_snd) {
-+        if (fd == _fd_v4l) {
-             DeviceChange();
-         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
-             if (_wd_v4l < 0) {
-@@ -74,25 +74,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
-                     DeviceChange();
-                 }
-             }
--            if (_wd_snd < 0) {
--                usleep(5*1000);
--                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
--                if (_wd_snd >= 0) {
--                    DeviceChange();
--                }
--            }
-         }
-     } else if (event->mask & IN_DELETE) {
--        if (fd == _fd_v4l || fd == _fd_snd) {
-+        if (fd == _fd_v4l) {
-             DeviceChange();
-         }
-     } else if (event->mask & IN_DELETE_SELF) {
-         if (fd == _fd_v4l) {
-             inotify_rm_watch(_fd_v4l, _wd_v4l);
-             _wd_v4l = -1;
--        } else if (fd == _fd_snd) {
--            inotify_rm_watch(_fd_snd, _wd_snd);
--            _wd_snd = -1;
-         } else {
-             assert(false);
-         }
-@@ -159,11 +149,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
-                 break;
-             }
-         }
--        if (EventCheck(_fd_snd) > 0) {
--            if (HandleEvents(_fd_snd) < 0) {
--                break;
--            }
--        }
+@@ -18,7 +18,13 @@
+ #include <sys/ioctl.h>
+ #include <unistd.h>
+ // v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
+ #include <linux/videodev2.h>
++#endif
+ 
+ #include <vector>
+ 
+@@ -209,8 +215,8 @@ DeviceInfoV4l2::DeviceInfoV4l2() : DeviceInfoImpl()
+     {
+         _inotifyEventThread->Start();
      }
-     return 0;
- }
-@@ -176,11 +161,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
- void DeviceInfoV4l2::InotifyProcess()
- {
-     _fd_v4l = inotify_init();
--    _fd_snd = inotify_init();
-     _fd_dev = inotify_init();
--    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
-+    if (_fd_v4l >= 0 && _fd_dev >= 0) {
-         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
--        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
-         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
-         ProcessInotifyEvents();
+-}
+ #endif
++}
  
-@@ -188,16 +171,11 @@ void DeviceInfoV4l2::InotifyProcess()
-           inotify_rm_watch(_fd_v4l, _wd_v4l);
-         }
+ int32_t DeviceInfoV4l2::Init() {
+   return 0;
+diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
+index a2ea218a8b..23a8f4f3f3 100644
+--- a/modules/video_capture/linux/video_capture_linux.cc
++++ b/modules/video_capture/linux/video_capture_linux.cc
+@@ -10,7 +10,6 @@
  
--        if (_wd_snd >= 0) {
--          inotify_rm_watch(_fd_snd, _wd_snd);
--        }
--
-         if (_wd_dev >= 0) {
-           inotify_rm_watch(_fd_dev, _wd_dev);
-         }
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <linux/videodev2.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+@@ -18,6 +17,14 @@
+ #include <sys/select.h>
+ #include <time.h>
+ #include <unistd.h>
++// v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
++#include <linux/videodev2.h>
++#endif
  
-         close(_fd_v4l);
--        close(_fd_snd);
-         close(_fd_dev);
-     }
- }
+ #include <new>
+ #include <string>
+diff --git a/rtc_base/byte_order.h b/rtc_base/byte_order.h
+index b8f8ae9f7a..382511daeb 100644
+--- a/rtc_base/byte_order.h
++++ b/rtc_base/byte_order.h
+@@ -90,6 +90,8 @@
+ #error WEBRTC_ARCH_BIG_ENDIAN or WEBRTC_ARCH_LITTLE_ENDIAN must be defined.
+ #endif  // defined(WEBRTC_ARCH_LITTLE_ENDIAN)
+ 
++#elif defined(WEBRTC_BSD) && !defined(__OpenBSD__)
++#include <sys/endian.h>
+ #elif defined(WEBRTC_POSIX)
+ #include <endian.h>
+ #else
+diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
+index d42168249a..33ea941808 100644
+--- a/rtc_base/physical_socket_server.cc
++++ b/rtc_base/physical_socket_server.cc
+@@ -75,7 +75,10 @@ typedef void* SockOptArg;
+ 
+ #endif  // WEBRTC_POSIX
+ 
+-#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(__native_client__)
++#if defined(WEBRTC_POSIX) && !defined(WEBRTC_MAC) && !defined(WEBRTC_BSD) && !defined(__native_client__)
++#if defined(WEBRTC_LINUX)
++#include <linux/sockios.h>
++#endif
+ 
+ int64_t GetSocketRecvTimestamp(int socket) {
+   struct timeval tv_ioctl;
+@@ -643,7 +646,7 @@ int PhysicalSocket::TranslateOption(Option opt, int* slevel, int* sopt) {
+       *slevel = IPPROTO_IP;
+       *sopt = IP_DONTFRAGMENT;
+       break;
+-#elif defined(WEBRTC_MAC) || defined(BSD) || defined(__native_client__)
++#elif defined(WEBRTC_MAC) || defined(WEBRTC_BSD) || defined(__native_client__)
+       RTC_LOG(LS_WARNING) << "Socket::OPT_DONTFRAGMENT not supported.";
+       return -1;
+ #elif defined(WEBRTC_POSIX)
+diff --git a/system_wrappers/source/cpu_info.cc b/system_wrappers/source/cpu_info.cc
+index eff720371a..94aed09c48 100644
+--- a/system_wrappers/source/cpu_info.cc
++++ b/system_wrappers/source/cpu_info.cc
+@@ -12,7 +12,7 @@
+ 
+ #if defined(WEBRTC_WIN)
+ #include <windows.h>
+-#elif defined(WEBRTC_LINUX)
++#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+ #include <unistd.h>
+ #elif defined(WEBRTC_MAC)
+ #include <sys/sysctl.h>
+@@ -30,7 +30,7 @@ static int DetectNumberOfCores() {
+   SYSTEM_INFO si;
+   GetNativeSystemInfo(&si);
+   number_of_cores = static_cast<int>(si.dwNumberOfProcessors);
+-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
++#elif defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_BSD)
+   number_of_cores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
+   if (number_of_cores <= 0) {
+     RTC_LOG(LS_ERROR) << "Failed to get number of cores";
 -- 
-2.37.3
+2.34.1
 

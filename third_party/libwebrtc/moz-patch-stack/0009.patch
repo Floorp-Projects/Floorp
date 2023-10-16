@@ -1,56 +1,46 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Feb 2021 14:27:00 +0000
-Subject: Bug 1654112 - Get OS X build working.
- r=ng,firefox-build-system-reviewers,glandium
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Sat, 13 Feb 2021 04:20:00 -0800
+Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
 
-* Pull in sdk/objc/base and sdk/objc/helpers
-* Add gclient_args.gni to keep build happy.
-* Add a missing include path for libyuv
-* Support .m files in build.
+Upstreaming bug 1697385
 
-Differential Revision: https://phabricator.services.mozilla.com/D105015
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
+Also includes:
+Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+
+Differential Revision: https://phabricator.services.mozilla.com/D107897
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
 ---
- modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
- modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ modules/desktop_capture/desktop_capture_types.h | 4 ++++
+ modules/video_capture/video_capture.h           | 1 +
+ 2 files changed, 5 insertions(+)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 8b9af35193..76fec13a39 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -357,7 +357,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
-   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
-        it != desktop_config_.displays.end();
-        ++it) {
--    screens->push_back({it->id, std::string()});
-+    Source value = {it->id, 0, std::string()};
-+    screens->push_back(value);
-   }
-   return true;
- }
-diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
-index 5d881662ea..989ec7ea54 100644
---- a/modules/desktop_capture/mac/window_list_utils.cc
-+++ b/modules/desktop_capture/mac/window_list_utils.cc
-@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-             // the check in the map. Also skip the window if owner name is
-             // empty too.
-             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
--              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
-+              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
-               RTC_DCHECK(!sources.empty());
-               // Get an iterator on the last valid element in the source list.
-               std::list<DesktopCapturer::Source>::const_iterator last_source =
-@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-                       pid, last_source));
-             }
-           } else {
--            sources.push_back(DesktopCapturer::Source{window_id, title});
-+            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
-             // Once the window with empty title has been removed no other empty
-             // windows are allowed for the same pid.
-             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
+diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
+index 9627076eea..381d1021c4 100644
+--- a/modules/desktop_capture/desktop_capture_types.h
++++ b/modules/desktop_capture/desktop_capture_types.h
+@@ -13,6 +13,10 @@
+ 
+ #include <stdint.h>
+ 
++#ifdef XP_WIN      // Moving this into the global namespace
++typedef int pid_t; // matching what used to be in
++#endif             // video_capture_defines.h
++
+ namespace webrtc {
+ 
+ enum class CaptureType { kWindow, kScreen };
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index e207598d68..58485f28e9 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -13,6 +13,7 @@
+ 
+ #include "api/video/video_rotation.h"
+ #include "api/video/video_sink_interface.h"
++#include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
+ #include "modules/video_capture/video_capture_defines.h"
+ #include <set>
 -- 
-2.37.3
+2.34.1
 

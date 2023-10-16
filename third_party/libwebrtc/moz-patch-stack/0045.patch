@@ -1,76 +1,50 @@
 From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Mar 2021 08:55:00 -0600
-Subject: Bug 1654112 - libwebrtc modification: Surface video RTCP SR stats
- again. r=ng
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-libwebrtc has stopped surfacing these, and Chromium does not support
-these stats at all.
-
-Differential Revision: https://phabricator.services.mozilla.com/D108674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f4b22708a4690753638ca32c
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- video/rtp_video_stream_receiver2.cc | 10 ++++++++++
- video/rtp_video_stream_receiver2.h  |  6 ++++++
- video/video_receive_stream2.cc      |  8 ++++++++
- 3 files changed, 24 insertions(+)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 76395b568e..be36dc8305 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1051,6 +1051,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
-   return absl::nullopt;
- }
- 
-+// Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+// stats at all, and even on the most recent libwebrtc code there does not
-+// seem to be any support for these stats right now. So, we hack this in.
-+void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count,
-+    int64_t* ntp_timestamp_ms) const {
-+  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
-+}
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 +
- void RtpVideoStreamReceiver2::ManageFrame(
-     std::unique_ptr<RtpFrameObject> frame) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index f9ed339c0a..53378e9e9b 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -206,6 +206,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   absl::optional<int64_t> LastReceivedPacketMs() const;
-   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
- 
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
 +
-  private:
-   // Implements RtpVideoFrameReceiver.
-   void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 4a7e7ac577..ee784ef592 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -574,6 +574,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-       }
-     }
-   }
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
 +
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
-+      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
-+      &stats.rtcp_sender_ntp_timestamp_ms);
++#include_next <X11/extensions/Xrandr.h>
 +
-   return stats;
- }
- 
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_
 -- 
-2.37.3
+2.34.1
 

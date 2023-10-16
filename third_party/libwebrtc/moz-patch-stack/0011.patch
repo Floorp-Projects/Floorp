@@ -1,45 +1,49 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 19 Sep 2018 15:06:00 -0400
-Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
+Date: Wed, 18 Nov 2020 13:33:00 -0500
+Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
 
-This fixes a bug in the upstream code introduced when they removed the
-ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
-passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
-causes bad rendering and instabilities.
+This needs some investigation to see why we get this warning when it is not
+present upstream.
 
-Differential Revision: https://phabricator.services.mozilla.com/D7478
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
+Since both were doing the same thing for different compiler chains,
+also includes:
+Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
 ---
- modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ rtc_base/logging.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 66fd0a0ebe..7071776d0a 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -218,12 +218,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index 73a8bf7454..a980fb4ad3 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -48,6 +48,14 @@
+ #ifndef RTC_BASE_LOGGING_H_
+ #define RTC_BASE_LOGGING_H_
  
-+  int dst_width = buffer->width();
-+  int dst_height = buffer->height();
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wvarargs"
 +
-+  // LibYuv expects pre-rotation_mode values for dst.
-+  // Stride values should correspond to the destination values.
-+  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
-+    std::swap(dst_width, dst_height);
-+  }
++#if defined(__clang__)
++#  pragma clang diagnostic push
++#  pragma clang diagnostic ignored "-Wclass-varargs"
++#endif
 +
-   const int conversionResult = libyuv::ConvertToI420(
-       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
-       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
-       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
-       buffer.get()->StrideV(), 0, 0,  // No Cropping
--      width, height, target_width, target_height, rotation_mode,
-+      width, height, dst_width, dst_height, rotation_mode,
-       ConvertVideoType(frameInfo.videoType));
-   if (conversionResult != 0) {
-     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "
+ #include <errno.h>
+ 
+ #include <atomic>
+@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
+ 
+ }  // namespace rtc
+ 
++#pragma GCC diagnostic pop
++#if defined(__clang__)
++#  pragma clang diagnostic pop
++#endif
++
+ #endif  // RTC_BASE_LOGGING_H_
 -- 
-2.37.3
+2.34.1
 

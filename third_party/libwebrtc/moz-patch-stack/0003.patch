@@ -1,37 +1,51 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 17 May 2023 14:41:47 +0200
+Subject: (cherry-pick-branch-heads/5845) [M116] In
+ VideoCaptureDS::{Start|Stop}Capture do not lock
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+Sequence- and RaceCheckers ensure thread safety, and show that these
+locks protect nothing.
+
+(cherry picked from commit dcf600d7a5cdf8da51daf5b6f79df1de05002b13)
+
+Bug: webrtc:15181, chromium:1457919
+Change-Id: I7c26cd9aea5fa72ad9435de5ec1b9135ac22b1e8
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305649
+Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40345}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/310520
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5845@{#3}
+Cr-Branched-From: f80cf814353d11a9f22bef5ce5e8868f2c72f0d0-refs/heads/main@{#40319}
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ modules/video_capture/windows/video_capture_ds.cc | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index ad2303735e..9c2d3b0a39 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
- }
+diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
+index acdf4004f6..37ee0fde01 100644
+--- a/modules/video_capture/windows/video_capture_ds.cc
++++ b/modules/video_capture/windows/video_capture_ds.cc
+@@ -125,7 +125,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
  
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
- }
+ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
+   RTC_DCHECK_RUN_ON(&api_checker_);
+-  MutexLock lock(&api_lock_);
  
-@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+   if (capability != _requestedCapability) {
+     DisconnectGraph();
+@@ -150,7 +149,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
  
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+ int32_t VideoCaptureDS::StopCapture() {
+   RTC_DCHECK_RUN_ON(&api_checker_);
+-  MutexLock lock(&api_lock_);
+ 
+   HRESULT hr = _mediaControl->StopWhenReady();
+   if (FAILED(hr)) {
 -- 
-2.37.3
+2.34.1
 
