@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2f1a0ba74bf71cfa0
  6 files changed, 24 insertions(+), 5 deletions(-)
 
 diff --git a/api/frame_transformer_interface.h b/api/frame_transformer_interface.h
-index 73d27027cc..a5118195b1 100644
+index 8effdcf26d..5ad94a06f5 100644
 --- a/api/frame_transformer_interface.h
 +++ b/api/frame_transformer_interface.h
-@@ -57,6 +57,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
+@@ -59,6 +59,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
   public:
    virtual ~TransformableVideoFrameInterface() = default;
    virtual bool IsKeyFrame() const = 0;
@@ -57,7 +57,7 @@ index af447e95a7..1cbf0b8dc3 100644
                : nullptr) {
    if (frame_transformer_delegate_)
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 29c33f7b0e..5a68019a8b 100644
+index 928c73f5cc..db0d526144 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 @@ -31,7 +31,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
@@ -80,7 +80,7 @@ index 29c33f7b0e..5a68019a8b 100644
      RTC_DCHECK_GE(payload_type_, 0);
      RTC_DCHECK_LE(payload_type_, 127);
    }
-@@ -97,6 +99,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+@@ -99,6 +101,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
    Direction GetDirection() const override { return Direction::kSender; }
  
@@ -89,7 +89,7 @@ index 29c33f7b0e..5a68019a8b 100644
   private:
    rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
    const size_t pre_transform_payload_size_;
-@@ -111,6 +115,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+@@ -113,6 +117,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
    uint32_t ssrc_;
    std::vector<uint32_t> csrcs_;
@@ -97,7 +97,7 @@ index 29c33f7b0e..5a68019a8b 100644
  };
  }  // namespace
  
-@@ -119,11 +124,12 @@ RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
+@@ -121,11 +126,12 @@ RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
      uint32_t ssrc,
      std::vector<uint32_t> csrcs,
@@ -111,7 +111,7 @@ index 29c33f7b0e..5a68019a8b 100644
        transformation_queue_(task_queue_factory->CreateTaskQueue(
            "video_frame_transformer",
            TaskQueueFactory::Priority::NORMAL)) {}
-@@ -142,7 +148,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
+@@ -144,7 +150,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
      absl::optional<int64_t> expected_retransmission_time_ms) {
    frame_transformer_->Transform(std::make_unique<TransformableVideoSenderFrame>(
        encoded_image, video_header, payload_type, codec_type, rtp_timestamp,
@@ -120,7 +120,7 @@ index 29c33f7b0e..5a68019a8b 100644
    return true;
  }
  
-@@ -236,7 +242,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+@@ -238,7 +244,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
        encoded_image, new_header, original->GetPayloadType(), new_header.codec,
        original->GetTimestamp(),
        absl::nullopt,  // expected_retransmission_time_ms
@@ -150,10 +150,10 @@ index ac934eb332..a5bf65d073 100644
    // happen if a hardware encoder was used.
    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 163fcbdf67..b920efadff 100644
+index 5dd316e206..5c6b62d068 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -53,6 +53,11 @@ class TransformableVideoReceiverFrame
+@@ -56,6 +56,11 @@ class TransformableVideoReceiverFrame
      return frame_->FrameType() == VideoFrameType::kVideoFrameKey;
    }
  

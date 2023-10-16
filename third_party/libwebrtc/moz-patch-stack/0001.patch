@@ -34,10 +34,10 @@ Cr-Branched-From: f80cf814353d11a9f22bef5ce5e8868f2c72f0d0-refs/heads/main@{#403
  4 files changed, 28 insertions(+), 13 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index aa5c8dfa28..1e4d0540f0 100644
+index e9359b85da..5db5664147 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-@@ -78,13 +78,15 @@ class TransformableVideoReceiverFrame
+@@ -81,13 +81,15 @@ class TransformableVideoReceiverFrame
  RtpVideoStreamReceiverFrameTransformerDelegate::
      RtpVideoStreamReceiverFrameTransformerDelegate(
          RtpVideoFrameReceiver* receiver,
@@ -54,7 +54,7 @@ index aa5c8dfa28..1e4d0540f0 100644
  
  void RtpVideoStreamReceiverFrameTransformerDelegate::Init() {
    RTC_DCHECK_RUN_ON(&network_sequence_checker_);
-@@ -159,13 +161,14 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
+@@ -162,13 +164,14 @@ void RtpVideoStreamReceiverFrameTransformerDelegate::ManageFrame(
      RTPVideoHeader video_header = RTPVideoHeader::FromMetadata(metadata);
      VideoSendTiming timing;
      rtc::ArrayView<const uint8_t> data = transformed_frame->GetData();
