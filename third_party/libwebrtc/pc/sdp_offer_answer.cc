@@ -109,13 +109,6 @@ const char kSdpWithoutSdesCrypto[] = "Called with SDP without SDES crypto.";
 const char kSessionError[] = "Session error code: ";
 const char kSessionErrorDesc[] = "Session error description: ";
 
-// UMA metric names.
-const char kSimulcastVersionApplyLocalDescription[] =
-    "WebRTC.PeerConnection.Simulcast.ApplyLocalDescription";
-const char kSimulcastVersionApplyRemoteDescription[] =
-    "WebRTC.PeerConnection.Simulcast.ApplyRemoteDescription";
-const char kSimulcastDisabled[] = "WebRTC.PeerConnection.Simulcast.Disabled";
-
 // The length of RTCP CNAMEs.
 static const int kRtcpCnameLength = 16;
 
@@ -199,34 +192,6 @@ std::string GetStreamIdsString(rtc::ArrayView<const std::string> stream_ids) {
   }
   output.append("]");
   return output;
-}
-
-void ReportSimulcastApiVersion(const char* name,
-                               const SessionDescription& session) {
-  bool has_legacy = false;
-  bool has_spec_compliant = false;
-  for (const ContentInfo& content : session.contents()) {
-    if (!content.media_description()) {
-      continue;
-    }
-    has_spec_compliant |= content.media_description()->HasSimulcast();
-    for (const StreamParams& sp : content.media_description()->streams()) {
-      has_legacy |= sp.has_ssrc_group(cricket::kSimSsrcGroupSemantics);
-    }
-  }
-
-  if (has_legacy) {
-    RTC_HISTOGRAM_ENUMERATION(name, kSimulcastApiVersionLegacy,
-                              kSimulcastApiVersionMax);
-  }
-  if (has_spec_compliant) {
-    RTC_HISTOGRAM_ENUMERATION(name, kSimulcastApiVersionSpecCompliant,
-                              kSimulcastApiVersionMax);
-  }
-  if (!has_legacy && !has_spec_compliant) {
-    RTC_HISTOGRAM_ENUMERATION(name, kSimulcastApiVersionNone,
-                              kSimulcastApiVersionMax);
-  }
 }
 
 const ContentInfo* FindTransceiverMSection(
@@ -1671,10 +1636,6 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
   // `local_description()`.
   RTC_DCHECK(local_description());
 
-  // Report statistics about any use of simulcast.
-  ReportSimulcastApiVersion(kSimulcastVersionApplyLocalDescription,
-                            *local_description()->description());
-
   if (!is_caller_) {
     if (remote_description()) {
       // Remote description was applied first, so this PC is the callee.
@@ -1961,10 +1922,6 @@ RTCError SdpOfferAnswerHandler::ReplaceRemoteDescription(
   // `remote_description()`.
   const cricket::SessionDescription* session_desc =
       remote_description()->description();
-
-  // Report statistics about any use of simulcast.
-  ReportSimulcastApiVersion(kSimulcastVersionApplyRemoteDescription,
-                            *session_desc);
 
   // NOTE: This will perform a BlockingCall() to the network thread.
   return transport_controller_s()->SetRemoteDescription(sdp_type, session_desc);
@@ -3842,7 +3799,6 @@ SdpOfferAnswerHandler::AssociateTransceiver(
     if (SimulcastIsRejected(old_local_content, *media_desc,
                             pc_->GetCryptoOptions()
                                 .srtp.enable_encrypted_rtp_header_extensions)) {
-      RTC_HISTOGRAM_BOOLEAN(kSimulcastDisabled, true);
       RTCError error =
           DisableSimulcastInSender(transceiver->internal()->sender_internal());
       if (!error.ok()) {
