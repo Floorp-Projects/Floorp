@@ -207,7 +207,7 @@ index e0b53742a4..5c72412404 100644
  
    delegate1->Init();
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index a01e60f8bb..aceee90313 100644
+index 7634764336..64141e671c 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -336,7 +336,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
