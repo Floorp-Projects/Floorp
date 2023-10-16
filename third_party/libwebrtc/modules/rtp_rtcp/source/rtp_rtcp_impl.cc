@@ -39,7 +39,7 @@ namespace webrtc {
 namespace {
 const int64_t kRtpRtcpRttProcessTimeMs = 1000;
 const int64_t kRtpRtcpBitrateProcessTimeMs = 10;
-const int64_t kDefaultExpectedRetransmissionTimeMs = 125;
+constexpr TimeDelta kDefaultExpectedRetransmissionTime = TimeDelta::Millis(125);
 }  // namespace
 
 ModuleRtpRtcpImpl::RtpSenderContext::RtpSenderContext(
@@ -475,17 +475,17 @@ absl::optional<TimeDelta> ModuleRtpRtcpImpl::LastRtt() const {
   return rtt;
 }
 
-int64_t ModuleRtpRtcpImpl::ExpectedRetransmissionTimeMs() const {
+TimeDelta ModuleRtpRtcpImpl::ExpectedRetransmissionTime() const {
   int64_t expected_retransmission_time_ms = rtt_ms();
   if (expected_retransmission_time_ms > 0) {
-    return expected_retransmission_time_ms;
+    return TimeDelta::Millis(expected_retransmission_time_ms);
   }
   // No rtt available (`kRtpRtcpRttProcessTimeMs` not yet passed?), so try to
   // poll avg_rtt_ms directly from rtcp receiver.
   if (absl::optional<TimeDelta> rtt = rtcp_receiver_.AverageRtt()) {
-    return rtt->ms();
+    return *rtt;
   }
-  return kDefaultExpectedRetransmissionTimeMs;
+  return kDefaultExpectedRetransmissionTime;
 }
 
 // Force a send of an RTCP packet.

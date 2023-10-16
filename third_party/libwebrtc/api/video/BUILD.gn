@@ -156,6 +156,7 @@ rtc_library("encoded_image") {
     "../../rtc_base:checks",
     "../../rtc_base:refcount",
     "../../rtc_base/system:rtc_export",
+    "../units:timestamp",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

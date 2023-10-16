@@ -183,7 +183,7 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   // Get RoundTripTime.
   absl::optional<TimeDelta> LastRtt() const override;
 
-  int64_t ExpectedRetransmissionTimeMs() const override;
+  TimeDelta ExpectedRetransmissionTime() const override;
 
   // Force a send of an RTCP packet.
   // Normal SR and RR are triggered via the task queue that's current when this

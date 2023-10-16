@@ -462,24 +462,27 @@ bool RTPSenderVideo::SendVideo(
     rtc::ArrayView<const uint8_t> payload,
     RTPVideoHeader video_header,
     absl::optional<int64_t> expected_retransmission_time_ms) {
-  return SendVideo(payload_type, codec_type, rtp_timestamp, capture_time_ms,
+  return SendVideo(payload_type, codec_type, rtp_timestamp,
+                   capture_time_ms > 0 ? Timestamp::Millis(capture_time_ms)
+                                       : Timestamp::MinusInfinity(),
                    payload, payload.size(), video_header,
-                   expected_retransmission_time_ms,
+                   expected_retransmission_time_ms.has_value()
+                       ? TimeDelta::Millis(*expected_retransmission_time_ms)
+                       : TimeDelta::PlusInfinity(),
                    /*csrcs=*/{});
 }
 
-bool RTPSenderVideo::SendVideo(
-    int payload_type,
-    absl::optional<VideoCodecType> codec_type,
-    uint32_t rtp_timestamp,
-    int64_t capture_time_ms,
-    rtc::ArrayView<const uint8_t> payload,
-    size_t encoder_output_size,
-    RTPVideoHeader video_header,
-    absl::optional<int64_t> expected_retransmission_time_ms,
-    std::vector<uint32_t> csrcs) {
+bool RTPSenderVideo::SendVideo(int payload_type,
+                               absl::optional<VideoCodecType> codec_type,
+                               uint32_t rtp_timestamp,
+                               Timestamp capture_time,
+                               rtc::ArrayView<const uint8_t> payload,
+                               size_t encoder_output_size,
+                               RTPVideoHeader video_header,
+                               TimeDelta expected_retransmission_time,
+                               std::vector<uint32_t> csrcs) {
   TRACE_EVENT_ASYNC_STEP1(
-      "webrtc", "Video", capture_time_ms, "Send", "type",
+      "webrtc", "Video", capture_time.ms_or(0), "Send", "type",
       std::string(VideoFrameTypeToString(video_header.frame_type)));
   RTC_CHECK_RUNS_SERIALIZED(&send_checker_);
 
@@ -500,11 +503,11 @@ bool RTPSenderVideo::SendVideo(
   }
   const uint8_t temporal_id = GetTemporalId(video_header);
   // TODO(bugs.webrtc.org/10714): retransmission_settings_ should generally be
-  // replaced by expected_retransmission_time_ms.has_value().
+  // replaced by expected_retransmission_time.IsFinite().
   const bool allow_retransmission =
-      expected_retransmission_time_ms.has_value() &&
+      expected_retransmission_time.IsFinite() &&
       AllowRetransmission(temporal_id, retransmission_settings,
-                          *expected_retransmission_time_ms);
+                          expected_retransmission_time);
 
   MaybeUpdateCurrentPlayoutDelay(video_header);
   if (video_header.frame_type == VideoFrameType::kVideoFrameKey) {
@@ -540,11 +543,6 @@ bool RTPSenderVideo::SendVideo(
     packet_capacity -= rtp_sender_->RtxPacketOverhead();
   }
 
-  absl::optional<Timestamp> capture_time;
-  if (capture_time_ms > 0) {
-    capture_time = Timestamp::Millis(capture_time_ms);
-  }
-
   rtp_sender_->SetCsrcs(std::move(csrcs));
 
   std::unique_ptr<RtpPacketToSend> single_packet =
@@ -552,16 +550,16 @@ bool RTPSenderVideo::SendVideo(
   RTC_DCHECK_LE(packet_capacity, single_packet->capacity());
   single_packet->SetPayloadType(payload_type);
   single_packet->SetTimestamp(rtp_timestamp);
-  if (capture_time)
-    single_packet->set_capture_time(*capture_time);
+  if (capture_time.IsFinite())
+    single_packet->set_capture_time(capture_time);
 
   // Construct the absolute capture time extension if not provided.
   if (!video_header.absolute_capture_time.has_value() &&
-      capture_time.has_value()) {
+      capture_time.IsFinite()) {
     video_header.absolute_capture_time.emplace();
     video_header.absolute_capture_time->absolute_capture_timestamp =
         Int64MsToUQ32x32(
-            clock_->ConvertTimestampToNtpTime(*capture_time).ToMs());
+            clock_->ConvertTimestampToNtpTime(capture_time).ToMs());
     video_header.absolute_capture_time->estimated_capture_clock_offset = 0;
   }
 
@@ -764,7 +762,7 @@ bool RTPSenderVideo::SendVideo(
     send_allocation_ = SendVideoLayersAllocation::kDontSend;
   }
 
-  TRACE_EVENT_ASYNC_END1("webrtc", "Video", capture_time_ms, "timestamp",
+  TRACE_EVENT_ASYNC_END1("webrtc", "Video", capture_time.ms_or(0), "timestamp",
                          rtp_timestamp);
   return true;
 }
@@ -776,16 +774,30 @@ bool RTPSenderVideo::SendEncodedImage(
     const EncodedImage& encoded_image,
     RTPVideoHeader video_header,
     absl::optional<int64_t> expected_retransmission_time_ms) {
+  return SendEncodedImage(
+      payload_type, codec_type, rtp_timestamp, encoded_image,
+      std::move(video_header),
+      expected_retransmission_time_ms.has_value()
+          ? TimeDelta::Millis(*expected_retransmission_time_ms)
+          : TimeDelta::PlusInfinity());
+}
+
+bool RTPSenderVideo::SendEncodedImage(int payload_type,
+                                      absl::optional<VideoCodecType> codec_type,
+                                      uint32_t rtp_timestamp,
+                                      const EncodedImage& encoded_image,
+                                      RTPVideoHeader video_header,
+                                      TimeDelta expected_retransmission_time) {
   if (frame_transformer_delegate_) {
     // The frame will be sent async once transformed.
     return frame_transformer_delegate_->TransformFrame(
         payload_type, codec_type, rtp_timestamp, encoded_image, video_header,
-        expected_retransmission_time_ms);
+        expected_retransmission_time);
   }
   return SendVideo(payload_type, codec_type, rtp_timestamp,
-                   encoded_image.capture_time_ms_, encoded_image,
+                   encoded_image.CaptureTime(), encoded_image,
                    encoded_image.size(), video_header,
-                   expected_retransmission_time_ms, rtp_sender_->Csrcs());
+                   expected_retransmission_time, rtp_sender_->Csrcs());
 }
 
 DataRate RTPSenderVideo::PostEncodeOverhead() const {
@@ -798,7 +810,7 @@ DataRate RTPSenderVideo::PostEncodeOverhead() const {
 bool RTPSenderVideo::AllowRetransmission(
     uint8_t temporal_id,
     int32_t retransmission_settings,
-    int64_t expected_retransmission_time_ms) {
+    TimeDelta expected_retransmission_time) {
   if (retransmission_settings == kRetransmitOff)
     return false;
 
@@ -806,7 +818,7 @@ bool RTPSenderVideo::AllowRetransmission(
   // Media packet storage.
   if ((retransmission_settings & kConditionallyRetransmitHigherLayers) &&
       UpdateConditionalRetransmit(temporal_id,
-                                  expected_retransmission_time_ms)) {
+                                  expected_retransmission_time.ms())) {
     retransmission_settings |= kRetransmitHigherLayers;
   }
 

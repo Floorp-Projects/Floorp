@@ -45,7 +45,7 @@ index 158d073b7a..1b053b4802 100644
      return flexfec_ssrc_;
    }
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
-index d2aaefbbb7..8fd911f604 100644
+index dd64064add..52f7b3ec4f 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
 @@ -155,6 +155,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
@@ -57,22 +57,22 @@ index d2aaefbbb7..8fd911f604 100644
                : nullptr) {
    if (frame_transformer_delegate_)
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index 928c73f5cc..db0d526144 100644
+index 140d6419d4..8d872a80e1 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -31,7 +31,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
-       uint32_t rtp_timestamp,
-       absl::optional<int64_t> expected_retransmission_time_ms,
-       uint32_t ssrc,
--      std::vector<uint32_t> csrcs)
-+      std::vector<uint32_t> csrcs,
-+      const std::string& rid)
+@@ -30,7 +30,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+                                 uint32_t rtp_timestamp,
+                                 TimeDelta expected_retransmission_time,
+                                 uint32_t ssrc,
+-                                std::vector<uint32_t> csrcs)
++                                std::vector<uint32_t> csrcs,
++                                const std::string& rid)
        : encoded_data_(encoded_image.GetEncodedData()),
          pre_transform_payload_size_(encoded_image.size()),
          header_(video_header),
-@@ -43,7 +44,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+@@ -42,7 +43,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
          capture_time_identifier_(encoded_image.CaptureTimeIdentifier()),
-         expected_retransmission_time_ms_(expected_retransmission_time_ms),
+         expected_retransmission_time_(expected_retransmission_time),
          ssrc_(ssrc),
 -        csrcs_(csrcs) {
 +        csrcs_(csrcs),
@@ -80,7 +80,7 @@ index 928c73f5cc..db0d526144 100644
      RTC_DCHECK_GE(payload_type_, 0);
      RTC_DCHECK_LE(payload_type_, 127);
    }
-@@ -99,6 +101,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+@@ -98,6 +100,8 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
    Direction GetDirection() const override { return Direction::kSender; }
  
@@ -89,7 +89,7 @@ index 928c73f5cc..db0d526144 100644
   private:
    rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
    const size_t pre_transform_payload_size_;
-@@ -113,6 +117,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+@@ -112,6 +116,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
  
    uint32_t ssrc_;
    std::vector<uint32_t> csrcs_;
@@ -97,7 +97,7 @@ index 928c73f5cc..db0d526144 100644
  };
  }  // namespace
  
-@@ -121,11 +126,12 @@ RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
+@@ -120,11 +125,12 @@ RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
      rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
      uint32_t ssrc,
      std::vector<uint32_t> csrcs,
@@ -111,29 +111,29 @@ index 928c73f5cc..db0d526144 100644
        transformation_queue_(task_queue_factory->CreateTaskQueue(
            "video_frame_transformer",
            TaskQueueFactory::Priority::NORMAL)) {}
-@@ -144,7 +150,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
-     absl::optional<int64_t> expected_retransmission_time_ms) {
+@@ -143,7 +149,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
+     TimeDelta expected_retransmission_time) {
    frame_transformer_->Transform(std::make_unique<TransformableVideoSenderFrame>(
        encoded_image, video_header, payload_type, codec_type, rtp_timestamp,
--      expected_retransmission_time_ms, ssrc_, csrcs_));
-+      expected_retransmission_time_ms, ssrc_, csrcs_, rid_));
+-      expected_retransmission_time, ssrc_, csrcs_));
++      expected_retransmission_time, ssrc_, csrcs_, rid_));
    return true;
  }
  
-@@ -238,7 +244,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+@@ -237,7 +243,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
        encoded_image, new_header, original->GetPayloadType(), new_header.codec,
        original->GetTimestamp(),
-       absl::nullopt,  // expected_retransmission_time_ms
+       /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
 -      original->GetSsrc(), metadata.GetCsrcs());
 +      original->GetSsrc(), metadata.GetCsrcs(), original->GetRid());
  }
  
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
-index ac934eb332..a5bf65d073 100644
+index 8b32b8d7c8..7547785ea0 100644
 --- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
 +++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h
-@@ -58,6 +58,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
+@@ -59,6 +59,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
        rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
        uint32_t ssrc,
        std::vector<uint32_t> csrcs,
@@ -141,7 +141,7 @@ index ac934eb332..a5bf65d073 100644
        TaskQueueFactory* send_transport_queue);
  
    void Init();
-@@ -105,6 +106,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
+@@ -106,6 +107,7 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
    rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
    const uint32_t ssrc_;
    std::vector<uint32_t> csrcs_;
