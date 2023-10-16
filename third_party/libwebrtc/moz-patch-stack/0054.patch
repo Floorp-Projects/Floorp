@@ -18,10 +18,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0300b32b7de70fb89
  5 files changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 84a1c14f96..f1f9b48c75 100644
+index 7a401ac2ba..e139b52bfa 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -212,6 +212,9 @@ config("common_inherited_config") {
+@@ -216,6 +216,9 @@ config("common_inherited_config") {
    if (is_linux || is_chromeos) {
      defines += [ "WEBRTC_LINUX" ]
    }
@@ -74,10 +74,10 @@ index d64ea689bb..c3c6955a7b 100644
  #endif  // defined(WEBRTC_POSIX)
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index d04115c6e1..058437f0dd 100644
+index 1e6dbd3e22..7562ac4c70 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -339,7 +339,7 @@ rtc_opus_dir = "//third_party/opus"
+@@ -344,7 +344,7 @@ rtc_opus_dir = "//third_party/opus"
  
  # Desktop capturer is supported only on Windows, OSX and Linux.
  rtc_desktop_capture_supported =
