@@ -92,32 +92,42 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   // expected_retransmission_time_ms.has_value() -> retransmission allowed.
   // `capture_time_ms` and `clock::CurrentTime` should be using the same epoch.
   // Calls to this method are assumed to be externally serialized.
-  bool SendVideo(int payload_type,
-                 absl::optional<VideoCodecType> codec_type,
-                 uint32_t rtp_timestamp,
-                 int64_t capture_time_ms,
-                 rtc::ArrayView<const uint8_t> payload,
-                 RTPVideoHeader video_header,
-                 absl::optional<int64_t> expected_retransmission_time_ms);
+  [[deprecated("bugs.webrtc.org/13757")]] bool SendVideo(
+      int payload_type,
+      absl::optional<VideoCodecType> codec_type,
+      uint32_t rtp_timestamp,
+      int64_t capture_time_ms,
+      rtc::ArrayView<const uint8_t> payload,
+      RTPVideoHeader video_header,
+      absl::optional<int64_t> expected_retransmission_time_ms);
+
+  // expected_retransmission_time.IsFinite() -> retransmission allowed.
   // `encoder_output_size` is the size of the video frame as it came out of the
   // video encoder, excluding any additional overhead.
   bool SendVideo(int payload_type,
                  absl::optional<VideoCodecType> codec_type,
                  uint32_t rtp_timestamp,
-                 int64_t capture_time_ms,
+                 Timestamp capture_time,
                  rtc::ArrayView<const uint8_t> payload,
                  size_t encoder_output_size,
                  RTPVideoHeader video_header,
-                 absl::optional<int64_t> expected_retransmission_time_ms,
+                 TimeDelta expected_retransmission_time,
                  std::vector<uint32_t> csrcs) override;
 
-  bool SendEncodedImage(
+  [[deprecated("bugs.webrtc.org/13757")]] bool SendEncodedImage(
       int payload_type,
       absl::optional<VideoCodecType> codec_type,
       uint32_t rtp_timestamp,
       const EncodedImage& encoded_image,
       RTPVideoHeader video_header,
       absl::optional<int64_t> expected_retransmission_time_ms);
+
+  bool SendEncodedImage(int payload_type,
+                        absl::optional<VideoCodecType> codec_type,
+                        uint32_t rtp_timestamp,
+                        const EncodedImage& encoded_image,
+                        RTPVideoHeader video_header,
+                        TimeDelta expected_retransmission_time);
 
   // Configures video structures produced by encoder to send using the
   // dependency descriptor rtp header extension. Next call to SendVideo should
@@ -157,7 +167,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   static uint8_t GetTemporalId(const RTPVideoHeader& header);
   bool AllowRetransmission(uint8_t temporal_id,
                            int32_t retransmission_settings,
-                           int64_t expected_retransmission_time_ms);
+                           TimeDelta expected_retransmission_time);
 
  private:
   struct TemporalLayerStats {
