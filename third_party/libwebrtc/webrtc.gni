@@ -211,9 +211,8 @@ declare_args() {
     rtc_apprtcmobile_broadcast_extension = false
   }
 
-  # Determines whether OpenGL is available on iOS/macOS.
-  rtc_ios_macos_use_opengl_rendering =
-      !(is_ios && target_environment == "catalyst")
+  # Determines whether OpenGL is available on iOS.
+  rtc_ios_use_opengl_rendering = is_ios && target_environment != "catalyst"
 
   # When set to false, builtin audio encoder/decoder factories and all the
   # audio codecs they depend on will not be included in libwebrtc.{a|lib}
