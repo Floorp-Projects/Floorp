@@ -74,6 +74,11 @@ sealed interface ReviewQualityCheckState : State {
                 object UnsupportedProductTypeError : Error
 
                 /**
+                 * Denotes a product does not have enough reviews to be analyzed.
+                 */
+                object NotEnoughReviews : Error
+
+                /**
                  * Denotes a generic error has occurred.
                  */
                 object GenericError : Error
@@ -119,11 +124,6 @@ sealed interface ReviewQualityCheckState : State {
                 val highlightsFadeVisible: Boolean =
                     highlights != null && showMoreButtonVisible &&
                         highlights.forCompactMode().entries.first().value.size > 1
-
-                val notEnoughReviewsCardVisible: Boolean =
-                    (reviewGrade == null || adjustedRating == null) &&
-                        analysisStatus != AnalysisStatus.NEEDS_ANALYSIS &&
-                        analysisStatus != AnalysisStatus.REANALYZING
 
                 /**
                  * The status of the product analysis.

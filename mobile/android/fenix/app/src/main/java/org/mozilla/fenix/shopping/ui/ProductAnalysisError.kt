@@ -80,6 +80,14 @@ fun ProductAnalysisError(
                     ReviewQualityCheckInfoType.Info,
                 )
             }
+
+            ProductReviewState.Error.NotEnoughReviews -> {
+                Triple(
+                    R.string.review_quality_check_no_reviews_warning_title,
+                    R.string.review_quality_check_no_reviews_warning_body,
+                    ReviewQualityCheckInfoType.Info,
+                )
+            }
         }
 
         ReviewQualityCheckInfoCard(

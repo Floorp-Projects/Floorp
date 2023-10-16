@@ -372,6 +372,41 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
+    fun `GIVEN reanalysis and status api call succeeds WHEN analysis fetched has grade, rating and highlights as null THEN not enough reviews card is displayed`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(isEnabled = true),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = {
+                            ProductAnalysisTestData.productAnalysis(
+                                grade = null,
+                                adjustedRating = null,
+                                highlights = null,
+                            )
+                        },
+                        reanalysis = AnalysisStatusDto.PENDING,
+                        status = AnalysisStatusDto.COMPLETED,
+                    ),
+                    networkChecker = FakeNetworkChecker(isConnected = true),
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ReanalyzeProduct).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.NotEnoughReviews,
+                productRecommendationsPreference = false,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
     fun `GIVEN that the product was being analysed earlier WHEN needsAnalysis is true THEN state should be restored to reanalysing`() =
         runTest {
             val tested = ReviewQualityCheckStore(

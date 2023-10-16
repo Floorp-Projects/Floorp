@@ -15,10 +15,10 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
  */
-fun GeckoProductAnalysis?.toProductReviewState(): ProductReviewState =
-    this?.toProductReview() ?: ProductReviewState.Error.GenericError
+fun GeckoProductAnalysis?.toProductReviewState(isInitialAnalysis: Boolean = true): ProductReviewState =
+    this?.toProductReview(isInitialAnalysis) ?: ProductReviewState.Error.GenericError
 
-private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
+private fun GeckoProductAnalysis.toProductReview(isInitialAnalysis: Boolean): ProductReviewState =
     if (productId == null) {
         if (needsAnalysis) {
             ProductReviewState.NoAnalysisPresent()
@@ -31,7 +31,11 @@ private fun GeckoProductAnalysis.toProductReview(): ProductReviewState =
         val mappedHighlights = highlights?.toHighlights()?.toSortedMap()
 
         if (mappedGrade == null && mappedRating == null && mappedHighlights == null) {
-            ProductReviewState.NoAnalysisPresent()
+            if (isInitialAnalysis) {
+                ProductReviewState.NoAnalysisPresent()
+            } else {
+                ProductReviewState.Error.NotEnoughReviews
+            }
         } else {
             ProductReviewState.AnalysisPresent(
                 productId = productId!!,

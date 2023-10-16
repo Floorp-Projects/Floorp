@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
-import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
@@ -34,8 +33,6 @@ class ReviewQualityCheckNetworkMiddleware(
     private val appStore: AppStore,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
-
-    private val logger = Logger("ReviewQualityCheckNetworkMiddleware")
 
     override fun invoke(
         context: MiddlewareContext<ReviewQualityCheckState, ReviewQualityCheckAction>,
@@ -112,7 +109,9 @@ class ReviewQualityCheckNetworkMiddleware(
                         }
                     } else {
                         // poll succeeded, update state
-                        store.updateProductReviewState(status.toProductReviewState())
+                        val productAnalysis = reviewQualityCheckService.fetchProductReview()
+                        val productReviewState = productAnalysis.toProductReviewState(false)
+                        store.updateProductReviewState(productReviewState)
                     }
 
                     // remove product from the set of products that are being analysed
@@ -127,20 +126,8 @@ class ReviewQualityCheckNetworkMiddleware(
     private suspend fun pollForAnalysisStatus(): AnalysisStatusDto? =
         retry(
             predicate = { it == AnalysisStatusDto.PENDING || it == AnalysisStatusDto.IN_PROGRESS },
-            block = {
-                logger.debug("Retrying")
-                reviewQualityCheckService.analysisStatus()
-            },
+            block = { reviewQualityCheckService.analysisStatus() },
         )
-
-    private suspend fun AnalysisStatusDto.toProductReviewState(): ProductReviewState =
-        when (this) {
-            AnalysisStatusDto.COMPLETED ->
-                reviewQualityCheckService.fetchProductReview().toProductReviewState()
-
-            AnalysisStatusDto.NOT_ANALYZABLE -> ProductReviewState.Error.UnsupportedProductTypeError
-            else -> ProductReviewState.Error.GenericError
-        }
 
     private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.updateProductReviewState(
         productReviewState: ProductReviewState,
@@ -157,7 +144,6 @@ class ReviewQualityCheckNetworkMiddleware(
             productAnalysis?.needsAnalysis == true &&
             appStore.state.shoppingState.productsInAnalysis.contains(productPageUrl)
         ) {
-            logger.debug("Found product in the set: $productPageUrl")
             dispatch(ReviewQualityCheckAction.ReanalyzeProduct)
         }
     }

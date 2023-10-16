@@ -99,15 +99,6 @@ fun ProductAnalysis(
             }
         }
 
-        if (productAnalysis.notEnoughReviewsCardVisible) {
-            ReviewQualityCheckInfoCard(
-                title = stringResource(id = R.string.review_quality_check_no_reviews_warning_title),
-                description = stringResource(id = R.string.review_quality_check_no_reviews_warning_body),
-                type = ReviewQualityCheckInfoType.Info,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
         if (productAnalysis.reviewGrade != null) {
             ReviewGradeCard(
                 reviewGrade = productAnalysis.reviewGrade,
