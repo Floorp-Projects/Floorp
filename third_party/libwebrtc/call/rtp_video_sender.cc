@@ -498,7 +498,7 @@ void RtpVideoSender::SetActiveModules(const std::vector<bool>& active_modules) {
 void RtpVideoSender::SetActiveModulesLocked(
     const std::vector<bool>& active_modules) {
   RTC_DCHECK_RUN_ON(&transport_checker_);
-  RTC_DCHECK_EQ(rtp_streams_.size(), active_modules.size());
+  RTC_CHECK_EQ(rtp_streams_.size(), active_modules.size());
   active_ = false;
   for (size_t i = 0; i < active_modules.size(); ++i) {
     if (active_modules[i]) {
