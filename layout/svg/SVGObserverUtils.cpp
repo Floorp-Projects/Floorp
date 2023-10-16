@@ -255,8 +255,7 @@ void SVGRenderingObserver::OnNonDOMMutationRenderingChange() {
 }
 
 void SVGRenderingObserver::NotifyEvictedFromRenderingObserverSet() {
-  mInObserverSet = false;  // We've been removed from rendering-obs. set.
-  StopObserving();         // Stop observing mutations too.
+  StopObserving();  // Stop observing mutations.
 }
 
 void SVGRenderingObserver::AttributeChanged(dom::Element* aElement,
