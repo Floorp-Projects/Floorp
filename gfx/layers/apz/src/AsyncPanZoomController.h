@@ -1604,6 +1604,8 @@ class AsyncPanZoomController {
                       ScrollTriggeredByScript aTriggeredByScript,
                       const ScrollOrigin& aOrigin);
 
+  ParentLayerPoint ConvertDestinationToDelta(CSSPoint& aDestination) const;
+
   // Start a smooth-scrolling animation to the given destination, with MSD
   // physics that is suited for scroll-snapping.
   void SmoothMsdScrollTo(CSSSnapDestination&& aDestination,
