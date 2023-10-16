@@ -315,6 +315,23 @@ TEST_F(AudioEncoderCopyRedTest, CheckPayloadSizes3) {
   }
 }
 
+// Checks that packets encoded larger than REDs 1024 maximum are returned as-is.
+TEST_F(AudioEncoderCopyRedTest, VeryLargePacket) {
+  AudioEncoder::EncodedInfo info;
+  info.payload_type = 63;
+  info.encoded_bytes =
+      1111;  // Must be > 1024 which is the maximum size encodable by RED.
+  info.encoded_timestamp = timestamp_;
+
+  EXPECT_CALL(*mock_encoder_, EncodeImpl(_, _, _))
+      .WillOnce(Invoke(MockAudioEncoder::FakeEncoding(info)));
+
+  Encode();
+  ASSERT_EQ(0u, encoded_info_.redundant.size());
+  ASSERT_EQ(info.encoded_bytes, encoded_info_.encoded_bytes);
+  ASSERT_EQ(info.payload_type, encoded_info_.payload_type);
+}
+
 // Checks that the correct timestamps are returned.
 TEST_F(AudioEncoderCopyRedTest, CheckTimestamps) {
   uint32_t primary_timestamp = timestamp_;
