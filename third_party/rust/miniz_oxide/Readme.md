@@ -11,7 +11,7 @@ Using the library with `default-features = false` removes the dependency on `all
 and `collection` crates, making it suitable for systems without an allocator.
 Running without allocation reduces crate functionality:
 
-- The `deflate` module is removed complete
+- The `deflate` module is removed completely
 - Some `inflate` functions which return a `Vec` are removed
 
 miniz_oxide 0.5.x and 0.6.x Requires at least rust 1.40.0 0.3.x requires at least rust 0.36.0.

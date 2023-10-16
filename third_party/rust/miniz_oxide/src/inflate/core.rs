@@ -131,7 +131,7 @@ pub mod inflate_flags {
     ///
     /// If [`TINFL_FLAG_IGNORE_ADLER32`] is specified, it will override this.
     ///
-    /// NOTE: Enabling/disabling this between calls to decompress will result in an incorect
+    /// NOTE: Enabling/disabling this between calls to decompress will result in an incorrect
     /// checksum.
     pub const TINFL_FLAG_COMPUTE_ADLER32: u32 = 8;
 
@@ -261,6 +261,7 @@ impl Default for DecompressorOxide {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[non_exhaustive]
 enum State {
     Start = 0,
     ReadZlibCmf,
@@ -292,6 +293,7 @@ enum State {
     // Failure states.
     BlockTypeUnexpected,
     BadCodeSizeSum,
+    BadDistOrLiteralTableLength,
     BadTotalSymbols,
     BadZlibHeader,
     DistanceOutOfBounds,
@@ -307,6 +309,7 @@ impl State {
         match self {
             BlockTypeUnexpected => true,
             BadCodeSizeSum => true,
+            BadDistOrLiteralTableLength => true,
             BadTotalSymbols => true,
             BadZlibHeader => true,
             DistanceOutOfBounds => true,
@@ -669,6 +672,18 @@ fn start_static_table(r: &mut DecompressorOxide) {
     memset(&mut r.tables[DIST_TABLE].code_size[0..32], 5);
 }
 
+static REVERSED_BITS_LOOKUP: [u32; 1024] = {
+    let mut table = [0; 1024];
+
+    let mut i = 0;
+    while i < 1024 {
+        table[i] = (i as u32).reverse_bits();
+        i += 1;
+    }
+
+    table
+};
+
 fn init_tree(r: &mut DecompressorOxide, l: &mut LocalVars) -> Action {
     loop {
         let table = &mut r.tables[r.block_type as usize];
@@ -706,10 +721,17 @@ fn init_tree(r: &mut DecompressorOxide, l: &mut LocalVars) -> Action {
             let mut cur_code = next_code[code_size as usize];
             next_code[code_size as usize] += 1;
 
-            for _ in 0..code_size {
-                rev_code = (rev_code << 1) | (cur_code & 1);
-                cur_code >>= 1;
-            }
+            let n = cur_code & (u32::MAX >> (32 - code_size));
+
+            let mut rev_code = if n < 1024 {
+                REVERSED_BITS_LOOKUP[n as usize] >> (32 - code_size)
+            } else {
+                for _ in 0..code_size {
+                    rev_code = (rev_code << 1) | (cur_code & 1);
+                    cur_code >>= 1;
+                }
+                rev_code
+            };
 
             if code_size <= FAST_LOOKUP_BITS {
                 let k = (i16::from(code_size) << 9) | symbol_index as i16;
@@ -796,13 +818,38 @@ fn transfer(
     match_len: usize,
     out_buf_size_mask: usize,
 ) {
-    for _ in 0..match_len >> 2 {
-        out_slice[out_pos] = out_slice[source_pos & out_buf_size_mask];
-        out_slice[out_pos + 1] = out_slice[(source_pos + 1) & out_buf_size_mask];
-        out_slice[out_pos + 2] = out_slice[(source_pos + 2) & out_buf_size_mask];
-        out_slice[out_pos + 3] = out_slice[(source_pos + 3) & out_buf_size_mask];
-        source_pos += 4;
-        out_pos += 4;
+    // special case that comes up surprisingly often. in the case that `source_pos`
+    // is 1 less than `out_pos`, we can say that the entire range will be the same
+    // value and optimize this to be a simple `memset`
+    let source_diff = if source_pos > out_pos {
+        source_pos - out_pos
+    } else {
+        out_pos - source_pos
+    };
+    if out_buf_size_mask == usize::MAX && source_diff == 1 && out_pos > source_pos {
+        let init = out_slice[out_pos - 1];
+        let end = (match_len >> 2) * 4 + out_pos;
+
+        out_slice[out_pos..end].fill(init);
+        out_pos = end;
+        source_pos = end - 1;
+    // if the difference between `source_pos` and `out_pos` is greater than 3, we
+    // can do slightly better than the naive case by copying everything at once
+    } else if out_buf_size_mask == usize::MAX && source_diff >= 4 && out_pos > source_pos {
+        for _ in 0..match_len >> 2 {
+            out_slice.copy_within(source_pos..=source_pos + 3, out_pos);
+            source_pos += 4;
+            out_pos += 4;
+        }
+    } else {
+        for _ in 0..match_len >> 2 {
+            out_slice[out_pos] = out_slice[source_pos & out_buf_size_mask];
+            out_slice[out_pos + 1] = out_slice[(source_pos + 1) & out_buf_size_mask];
+            out_slice[out_pos + 2] = out_slice[(source_pos + 2) & out_buf_size_mask];
+            out_slice[out_pos + 3] = out_slice[(source_pos + 3) & out_buf_size_mask];
+            source_pos += 4;
+            out_pos += 4;
+        }
     }
 
     match match_len & 3 {
@@ -1279,7 +1326,18 @@ pub fn decompress(
                 } else {
                     memset(&mut r.tables[HUFFLEN_TABLE].code_size[..], 0);
                     l.counter = 0;
-                    Action::Jump(ReadHufflenTableCodeSize)
+                    // Check that the litlen and distance are within spec.
+                    // litlen table should be <=286 acc to the RFC and
+                    // additionally zlib rejects dist table sizes larger than 30.
+                    // NOTE this the final sizes after adding back predefined values, not
+                    // raw value in the data.
+                    // See miniz_oxide issue #130 and https://github.com/madler/zlib/issues/82.
+                    if r.table_sizes[LITLEN_TABLE] <= 286 && r.table_sizes[DIST_TABLE] <= 30 {
+                        Action::Jump(ReadHufflenTableCodeSize)
+                    }
+                    else {
+                        Action::Jump(BadDistOrLiteralTableLength)
+                    }
                 }
             }),
 
@@ -1634,7 +1692,8 @@ pub fn decompress(
             DoneForever => break TINFLStatus::Done,
 
             // Anything else indicates failure.
-            // BadZlibHeader | BadRawLength | BlockTypeUnexpected | DistanceOutOfBounds |
+            // BadZlibHeader | BadRawLength | BadDistOrLiteralTableLength | BlockTypeUnexpected |
+            // DistanceOutOfBounds |
             // BadTotalSymbols | BadCodeSizeDistPrevLookup | BadCodeSizeSum | InvalidLitlen |
             // InvalidDist | InvalidCodeLen
             _ => break TINFLStatus::Failed,
@@ -1840,14 +1899,15 @@ mod test {
         cr(
             b"M\xff\xffM*\xad\xad\xad\xad\xad\xad\xad\xcd\xcd\xcdM",
             F,
-            State::BadTotalSymbols,
+            State::BadDistOrLiteralTableLength,
             false,
         );
+
         // Bad CLEN (also from inflate library issues)
         cr(
             b"\xdd\xff\xff*M\x94ffffffffff",
             F,
-            State::BadTotalSymbols,
+            State::BadDistOrLiteralTableLength,
             false,
         );
 
@@ -1869,9 +1929,9 @@ mod test {
         // Invalid set of code lengths - TODO Check if this is the correct error for this.
         c(&[4, 0, 0xfe, 0xff], F, State::BadTotalSymbols);
         // Invalid repeat in list of code lengths.
-        // (Try to repeat a non-existant code.)
+        // (Try to repeat a non-existent code.)
         c(&[4, 0, 0x24, 0x49, 0], F, State::BadCodeSizeDistPrevLookup);
-        // Missing end of block code (should we have a separate error for this?) - fails on futher input
+        // Missing end of block code (should we have a separate error for this?) - fails on further input
         //    c(&[4, 0, 0x24, 0xe9, 0xff, 0x6d], F, State::BadTotalSymbols);
         // Invalid set of literals/lengths
         c(

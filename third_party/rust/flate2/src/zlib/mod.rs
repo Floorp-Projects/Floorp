@@ -19,14 +19,14 @@ mod tests {
         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0..v.len())];
-            real.extend(to_write.iter().map(|x| *x));
+            real.extend(to_write.iter().copied());
             w.write_all(to_write).unwrap();
         }
         let result = w.finish().unwrap();
         let mut r = read::ZlibDecoder::new(&result[..]);
         let mut ret = Vec::new();
         r.read_to_end(&mut ret).unwrap();
-        assert!(ret == real);
+        assert_eq!(ret, real);
     }
 
     #[test]
@@ -38,7 +38,7 @@ mod tests {
         let mut r = read::ZlibDecoder::new(&data[..]);
         let mut ret = Vec::new();
         r.read_to_end(&mut ret).unwrap();
-        assert!(ret == b"foo");
+        assert_eq!(ret, b"foo");
     }
 
     #[test]
@@ -48,7 +48,7 @@ mod tests {
         let v = crate::random_bytes().take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
             let to_write = &v[..thread_rng().gen_range(0..v.len())];
-            real.extend(to_write.iter().map(|x| *x));
+            real.extend(to_write.iter().copied());
             w.write_all(to_write).unwrap();
         }
         let mut result = w.finish().unwrap();
@@ -56,13 +56,13 @@ mod tests {
         let result_len = result.len();
 
         for _ in 0..200 {
-            result.extend(v.iter().map(|x| *x));
+            result.extend(v.iter().copied());
         }
 
         let mut r = read::ZlibDecoder::new(&result[..]);
         let mut ret = Vec::new();
         r.read_to_end(&mut ret).unwrap();
-        assert!(ret == real);
+        assert_eq!(ret, real);
         assert_eq!(r.total_in(), result_len as u64);
     }
 
@@ -82,7 +82,7 @@ mod tests {
             write::ZlibEncoder::new(write::ZlibDecoder::new(Vec::new()), Compression::default());
         w.write_all(&v).unwrap();
         let w = w.finish().unwrap().finish().unwrap();
-        assert!(w == v);
+        assert_eq!(w, v);
     }
 
     #[test]

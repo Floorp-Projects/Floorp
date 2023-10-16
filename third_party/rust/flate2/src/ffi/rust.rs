@@ -1,4 +1,4 @@
-//! Implementation for miniz_oxide rust backend.
+//! Implementation for `miniz_oxide` rust backend.
 
 use std::convert::TryInto;
 use std::fmt;

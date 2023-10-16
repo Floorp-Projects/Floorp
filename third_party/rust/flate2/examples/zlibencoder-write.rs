@@ -1,5 +1,3 @@
-extern crate flate2;
-
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
 use std::io::prelude::*;

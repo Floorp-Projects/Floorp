@@ -239,6 +239,13 @@ user-id = 4333
 user-login = "joshtriplett"
 user-name = "Josh Triplett"
 
+[[publisher.flate2]]
+version = "1.0.26"
+when = "2023-04-28"
+user-id = 4333
+user-login = "joshtriplett"
+user-name = "Josh Triplett"
+
 [[publisher.freetype]]
 version = "0.7.0"
 when = "2020-07-14"
@@ -1043,6 +1050,20 @@ who = "Alex Crichton <alex@alexcrichton.com>"
 criteria = "safe-to-deploy"
 delta = "0.7.1 -> 0.8.0"
 notes = "This was a small update to the crate which has to do with Rust language features and compiler versions, no substantial changes."
+
+[[audits.bytecode-alliance.audits.miniz_oxide]]
+who = "Alex Crichton <alex@alexcrichton.com>"
+criteria = "safe-to-deploy"
+version = "0.7.1"
+notes = """
+This crate is a Rust implementation of zlib compression/decompression and has
+been used by default by the Rust standard library for quite some time. It's also
+a default dependency of the popular `backtrace` crate for decompressing debug
+information. This crate forbids unsafe code and does not otherwise access system
+resources. It's originally a port of the `miniz.c` library as well, and given
+its own longevity should be relatively hardened against some of the more common
+compression-related issues.
+"""
 
 [[audits.bytecode-alliance.audits.mio]]
 who = "Alex Crichton <alex@alexcrichton.com>"
