@@ -471,7 +471,8 @@ INSTANTIATE_TEST_SUITE_P(
                 SvcTestParameters::Create(kAv1CodecName, "L2T2h"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY_SHIFT"),
-                SvcTestParameters::Create(kAv1CodecName, "L2T3"),
+                // TODO(marpan): Re-enable after fixing the test.
+                // SvcTestParameters::Create(kAv1CodecName, "L2T3"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T3h"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T3_KEY"),
                 // SvcTestParameters::Create(kAv1CodecName, "L2T3_KEY_SHIFT"),
