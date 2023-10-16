@@ -12,5 +12,5 @@
 
 interface mixin AccessibilityRole {
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString role;
+  attribute DOMString? role;
 };

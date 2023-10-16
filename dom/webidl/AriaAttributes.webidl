@@ -12,125 +12,125 @@
 
 interface mixin AriaAttributes {
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaAtomic;
+  attribute DOMString? ariaAtomic;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaAutoComplete;
+  attribute DOMString? ariaAutoComplete;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaBusy;
+  attribute DOMString? ariaBusy;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaChecked;
+  attribute DOMString? ariaChecked;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaColCount;
+  attribute DOMString? ariaColCount;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaColIndex;
+  attribute DOMString? ariaColIndex;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaColIndexText;
+  attribute DOMString? ariaColIndexText;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaColSpan;
+  attribute DOMString? ariaColSpan;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaCurrent;
+  attribute DOMString? ariaCurrent;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaDescription;
+  attribute DOMString? ariaDescription;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaDisabled;
+  attribute DOMString? ariaDisabled;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaExpanded;
+  attribute DOMString? ariaExpanded;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaHasPopup;
+  attribute DOMString? ariaHasPopup;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaHidden;
+  attribute DOMString? ariaHidden;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaInvalid;
+  attribute DOMString? ariaInvalid;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaKeyShortcuts;
+  attribute DOMString? ariaKeyShortcuts;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaLabel;
+  attribute DOMString? ariaLabel;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaLevel;
+  attribute DOMString? ariaLevel;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaLive;
+  attribute DOMString? ariaLive;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaModal;
+  attribute DOMString? ariaModal;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaMultiLine;
+  attribute DOMString? ariaMultiLine;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaMultiSelectable;
+  attribute DOMString? ariaMultiSelectable;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaOrientation;
+  attribute DOMString? ariaOrientation;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaPlaceholder;
+  attribute DOMString? ariaPlaceholder;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaPosInSet;
+  attribute DOMString? ariaPosInSet;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaPressed;
+  attribute DOMString? ariaPressed;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaReadOnly;
+  attribute DOMString? ariaReadOnly;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRelevant;
+  attribute DOMString? ariaRelevant;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRequired;
+  attribute DOMString? ariaRequired;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRoleDescription;
+  attribute DOMString? ariaRoleDescription;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRowCount;
+  attribute DOMString? ariaRowCount;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRowIndex;
+  attribute DOMString? ariaRowIndex;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRowIndexText;
+  attribute DOMString? ariaRowIndexText;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaRowSpan;
+  attribute DOMString? ariaRowSpan;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaSelected;
+  attribute DOMString? ariaSelected;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaSetSize;
+  attribute DOMString? ariaSetSize;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaSort;
+  attribute DOMString? ariaSort;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaValueMax;
+  attribute DOMString? ariaValueMax;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaValueMin;
+  attribute DOMString? ariaValueMin;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaValueNow;
+  attribute DOMString? ariaValueNow;
 
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
-  attribute DOMString ariaValueText;
+  attribute DOMString? ariaValueText;
 };
