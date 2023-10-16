@@ -1,0 +1,18 @@
+<script>
+addEventListener("pageshow", ({ persisted }) => {
+  window.blockBFCache = new RTCPeerConnection();
+
+  let bc = new BroadcastChannel("bug1850335");
+
+  bc.addEventListener("message", ({ data: { cmd, arg } }) => {
+    bc.close();
+    if (cmd == "load") {
+      location = arg;
+    } else if (cmd == "back") {
+      history.back();
+    }
+  }, { once: true });
+
+  bc.postMessage({ persisted });
+});
+</script>

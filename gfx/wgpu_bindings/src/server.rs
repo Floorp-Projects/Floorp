@@ -87,6 +87,7 @@ pub extern "C" fn wgpu_server_new(
         factory,
         wgt::InstanceDescriptor {
             backends,
+            flags: wgt::InstanceFlags::from_build_config().with_env(),
             dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
             gles_minor_version: wgt::Gles3MinorVersion::Automatic,
         },

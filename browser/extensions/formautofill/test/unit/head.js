@@ -71,6 +71,24 @@ region-name-tw = Taiwan
   L10nRegistry.getInstance().registerSources([mockSource]);
 }
 
+/**
+ * Mock the return value of Services.focus.elementIsFocusable
+ * since a field's focusability can't be tested in a unit test.
+ */
+(function ignoreAFieldsFocusability() {
+  let stub = sinon.stub(Services, "focus").get(() => {
+    return {
+      elementIsFocusable() {
+        return true;
+      },
+    };
+  });
+
+  registerCleanupFunction(() => {
+    stub.restore();
+  });
+})();
+
 do_get_profile();
 
 const EXTENSION_ID = "formautofill@mozilla.org";

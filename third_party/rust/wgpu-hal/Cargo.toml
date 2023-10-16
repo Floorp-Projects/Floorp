@@ -64,7 +64,7 @@ optional = true
 [dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
+rev = "33b75a27d93c6574b11b4dd4492b85b5783d6c52"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -83,7 +83,7 @@ env_logger = "0.10"
 [dev-dependencies.naga]
 version = "0.13.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "6668d0694cc51ee66c71c2ca3a1ab1081956299b"
+rev = "33b75a27d93c6574b11b4dd4492b85b5783d6c52"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
@@ -181,7 +181,7 @@ version = "0.2"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.khronos-egl]
-version = "4.1"
+version = "6"
 features = ["dynamic"]
 optional = true
 
@@ -205,7 +205,7 @@ glutin = "0.29.1"
 android_system_properties = "0.1.1"
 
 [target."cfg(target_os = \"emscripten\")".dependencies.khronos-egl]
-version = "4.1"
+version = "6"
 features = [
     "static",
     "no-pkg-config",

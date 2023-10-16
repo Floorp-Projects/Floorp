@@ -599,6 +599,7 @@ pub enum StorageFormat {
     Rgba8Snorm,
     Rgba8Uint,
     Rgba8Sint,
+    Bgra8Unorm,
 
     // Packed 32-bit formats
     Rgb10a2Uint,
@@ -854,7 +855,9 @@ pub enum TypeInner {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum Literal {
+    /// May not be NaN or infinity.
     F64(f64),
+    /// May not be NaN or infinity.
     F32(f32),
     U32(u32),
     I32(i32),
