@@ -89,7 +89,11 @@ add_task(async function url_with_additional_query_params() {
   BrowserTestUtils.startLoadingURIString(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
 
-  Assert.equal(gURLBar.value, expectedSearchUrl, `URL should be in URL bar`);
+  Assert.equal(
+    gURLBar.value,
+    UrlbarTestUtils.trimURL(expectedSearchUrl),
+    `URL should be in URL bar`
+  );
   Assert.equal(
     gURLBar.getAttribute("pageproxystate"),
     "valid",

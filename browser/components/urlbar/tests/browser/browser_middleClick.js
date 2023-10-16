@@ -63,7 +63,7 @@ add_task(async function test_middleClickOnHomeButton() {
       isLoadInBackground: false,
       startPagePref: "https://example.com",
       expectedURLBarFocus: false,
-      expectedURLBarValue: "https://example.com",
+      expectedURLBarValue: UrlbarTestUtils.trimURL("https://example.com"),
     },
     {
       isMiddleMousePastePrefOn: true,
@@ -77,7 +77,7 @@ add_task(async function test_middleClickOnHomeButton() {
       isLoadInBackground: false,
       startPagePref: "https://example.com",
       expectedURLBarFocus: false,
-      expectedURLBarValue: "https://example.com",
+      expectedURLBarValue: UrlbarTestUtils.trimURL("https://example.com"),
     },
     {
       isMiddleMousePastePrefOn: false,

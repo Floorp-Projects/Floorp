@@ -56,7 +56,7 @@ add_task(async function test_complete_selection() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   Assert.equal(
     gURLBar.value,
-    "example.com/foo",
+    UrlbarTestUtils.trimURL("http://example.com/foo"),
     "Value should have been completed"
   );
 

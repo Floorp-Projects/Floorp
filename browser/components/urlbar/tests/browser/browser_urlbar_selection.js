@@ -122,7 +122,7 @@ add_task(async function leftClickSelectsUrl() {
   Assert.equal(gURLBar.selectionStart, 0, "The entire url should be selected.");
   Assert.equal(
     gURLBar.selectionEnd,
-    exampleUrl.length,
+    UrlbarTestUtils.trimURL(exampleUrl).length,
     "The entire url should be selected."
   );
   gURLBar.blur();
@@ -143,7 +143,7 @@ add_task(async function rightClickSelectsAll() {
   Assert.equal(gURLBar.selectionStart, 0, "The entire URL should be selected.");
   Assert.equal(
     gURLBar.selectionEnd,
-    exampleUrl.length,
+    UrlbarTestUtils.trimURL(exampleUrl).length,
     "The entire URL should be selected."
   );
 
@@ -180,13 +180,13 @@ add_task(async function rightClickSelectsAll() {
   );
   Assert.equal(
     gURLBar.selectionEnd,
-    exampleUrl.length,
+    UrlbarTestUtils.trimURL(exampleUrl).length,
     "The entire URL should be selected after clicking selectAll button."
   );
 
   gURLBar.querySelector("moz-input-box").menupopup.hidePopup();
   gURLBar.blur();
-  checkPrimarySelection(gURLBar.value);
+  checkPrimarySelection(gURLBar._untrimmedValue);
   await SpecialPowers.popPrefEnv();
 });
 
