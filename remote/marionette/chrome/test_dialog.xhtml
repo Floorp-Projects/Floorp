@@ -10,6 +10,7 @@
 
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
   title="&testDialog.title;"
 >
   <dialog id="testDialog" buttons="accept,cancel">
@@ -26,11 +27,7 @@
       <checkbox id="check-box" label="Test Mode 2" />
       <hbox align="center">
         <label id="text-box-label" control="text-box">Name:</label>
-        <input
-          xmlns="http://www.w3.org/1999/xhtml"
-          id="text-box"
-          style="-moz-box-flex: 1"
-        />
+        <html:input id="text-box" style="-moz-box-flex: 1" />
       </hbox>
     </vbox>
   </dialog>
