@@ -43,7 +43,7 @@ FrameGeneratorCapturer::FrameGeneratorCapturer(
     int target_fps,
     TaskQueueFactory& task_queue_factory)
     : clock_(clock),
-      sending_(false),
+      sending_(true),
       sink_wants_observer_(nullptr),
       frame_generator_(std::move(frame_generator)),
       source_fps_(target_fps),
