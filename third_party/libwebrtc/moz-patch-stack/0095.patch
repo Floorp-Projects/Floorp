@@ -1,31 +1,44 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Sat, 12 Aug 2023 18:57:00 +0000
-Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
- ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
+From: Robert Mader <robert.mader@posteo.de>
+Date: Wed, 6 Sep 2023 16:37:00 +0000
+Subject: Bug 1843786 - webrtc: Filter out non-camera nodes,
+ r=webrtc-reviewers,pehrsons,@webrtc-reviewers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-rtc::strcpyn second param should be the size of the destination buffer,
-not the size of the source string.  This has been masked because FormFileName
-helpfully adds a trailing path separator if one is missing.
+This can be helpful in various situations, such as debugging with an
+unrestricted Pipewire socket or for downstream projects like
+B2G/Capyloon. Additionally it will help once we move from the camera
+portal to the more generic device portal.
 
-Differential Revision: https://phabricator.services.mozilla.com/D185862
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
+This is intended to get upstreamed but would be nice to carry downstream
+already.
+
+Original patch by Fabrice Desré <fabrice@desre.org>
+
+Upstream commit: a717c7ada811411e31bd7308168b4dbee5b956fa
+
+Differential Revision: https://phabricator.services.mozilla.com/D183650
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4c2505f533280d9012e28633e410a66b0db95412
 ---
- modules/audio_processing/logging/apm_data_dumper.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_capture/linux/pipewire_session.cc | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
-index 4ab6baad83..76f8b34c0b 100644
---- a/modules/audio_processing/logging/apm_data_dumper.h
-+++ b/modules/audio_processing/logging/apm_data_dumper.h
-@@ -91,7 +91,7 @@ class ApmDataDumper {
-   static void SetOutputDirectory(absl::string_view output_dir) {
- #if WEBRTC_APM_DEBUG_DUMP == 1
-     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
--    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
-+    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
- #endif
-   }
+diff --git a/modules/video_capture/linux/pipewire_session.cc b/modules/video_capture/linux/pipewire_session.cc
+index 3f52b3dd61..4d1b200aca 100644
+--- a/modules/video_capture/linux/pipewire_session.cc
++++ b/modules/video_capture/linux/pipewire_session.cc
+@@ -360,6 +360,10 @@ void PipeWireSession::OnRegistryGlobal(void* data,
+   if (!spa_dict_lookup(props, PW_KEY_NODE_DESCRIPTION))
+     return;
  
++  auto node_role = spa_dict_lookup(props, PW_KEY_MEDIA_ROLE);
++  if (!node_role || strcmp(node_role, "Camera"))
++    return;
++
+   that->nodes_.emplace_back(that, id, props);
+   that->PipeWireSync();
+ }
 -- 
 2.34.1
 

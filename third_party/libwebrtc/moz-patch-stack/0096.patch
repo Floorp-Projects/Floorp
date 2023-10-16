@@ -1,41 +1,74 @@
-From: stransky <stransky@redhat.com>
-Date: Tue, 29 Aug 2023 12:43:00 +0000
-Subject: Bug 1821629 [DMABuf] Don't use DMABuf if it's disabled by Firefox gfx
- config r=ng,webrtc-reviewers
+From: Robert Mader <robert.mader@posteo.de>
+Date: Wed, 6 Sep 2023 16:37:00 +0000
+Subject: Bug 1843786 - webrtc: Implement Pipewire camera rotation support,
+ r=webrtc-reviewers,pehrsons,@webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D172224
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/158a888cad8869a2f0026fa7cfaaa13ecbfcf2ed
+Support the Pipewire videotransform meta via the already existing shared
+infrastructure. This is needed for mobile devices which often have a 90
+degree rotated camera - which is likely the reason there is already
+support in the shared code paths.
+
+Upstream commit: dc4c019c62abefc09e4903abea44bc36f3427452
+
+Differential Revision: https://phabricator.services.mozilla.com/D183652
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1db7a958b945838c64dcfcb638f79b99f729b364
 ---
- .../linux/wayland/shared_screencast_stream.cc            | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ .../linux/video_capture_pipewire.cc           | 28 +++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 0c26e7a7d5..22aa355e44 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -28,6 +28,13 @@
- #include "rtc_base/synchronization/mutex.h"
- #include "rtc_base/time_utils.h"
+diff --git a/modules/video_capture/linux/video_capture_pipewire.cc b/modules/video_capture/linux/video_capture_pipewire.cc
+index 46cfe9bc15..7b79f15a6c 100644
+--- a/modules/video_capture/linux/video_capture_pipewire.cc
++++ b/modules/video_capture/linux/video_capture_pipewire.cc
+@@ -301,6 +301,10 @@ void VideoCaptureModulePipeWire::OnFormatChanged(const struct spa_pod* format) {
+       &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
+       SPA_POD_Id(SPA_META_Header), SPA_PARAM_META_size,
+       SPA_POD_Int(sizeof(struct spa_meta_header)))));
++  params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
++      &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
++      SPA_POD_Id(SPA_META_VideoTransform), SPA_PARAM_META_size,
++      SPA_POD_Int(sizeof(struct spa_meta_videotransform)))));
+   pw_stream_update_params(stream_, params.data(), params.size());
+ }
  
-+// Wrapper for gfxVars::UseDMABuf() as we can't include gfxVars here.
-+// We don't want to use dmabuf of known broken systems.
-+// See FEATURE_DMABUF for details.
-+namespace mozilla::gfx {
-+bool IsDMABufEnabled();
+@@ -341,6 +345,19 @@ void VideoCaptureModulePipeWire::OnStreamProcess(void* data) {
+   that->ProcessBuffers();
+ }
+ 
++static VideoRotation VideorotationFromPipeWireTransform(uint32_t transform) {
++  switch (transform) {
++    case SPA_META_TRANSFORMATION_90:
++      return kVideoRotation_90;
++    case SPA_META_TRANSFORMATION_180:
++      return kVideoRotation_180;
++    case SPA_META_TRANSFORMATION_270:
++      return kVideoRotation_270;
++    default:
++      return kVideoRotation_0;
++  }
 +}
 +
- namespace webrtc {
+ void VideoCaptureModulePipeWire::ProcessBuffers() {
+   RTC_CHECK_RUNS_SERIALIZED(&capture_checker_);
  
- const int kBytesPerPixel = 4;
-@@ -294,7 +301,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
-   that->modifier_ =
-       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-   std::vector<const spa_pod*> params;
--  const int buffer_types = has_modifier
-+  const int buffer_types = has_modifier && mozilla::gfx::IsDMABufEnabled()
-                                ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-                                : (1 << SPA_DATA_MemFd);
+@@ -349,6 +366,17 @@ void VideoCaptureModulePipeWire::ProcessBuffers() {
+     h = static_cast<struct spa_meta_header*>(
+         spa_buffer_find_meta_data(buffer->buffer, SPA_META_Header, sizeof(*h)));
  
++    struct spa_meta_videotransform* videotransform;
++    videotransform =
++        static_cast<struct spa_meta_videotransform*>(spa_buffer_find_meta_data(
++            buffer->buffer, SPA_META_VideoTransform, sizeof(*videotransform)));
++    if (videotransform) {
++      VideoRotation rotation =
++          VideorotationFromPipeWireTransform(videotransform->transform);
++      SetCaptureRotation(rotation);
++      SetApplyRotation(rotation != kVideoRotation_0);
++    }
++
+     if (h->flags & SPA_META_HEADER_FLAG_CORRUPTED) {
+       RTC_LOG(LS_INFO) << "Dropping corruped frame.";
+     } else {
 -- 
 2.34.1
 

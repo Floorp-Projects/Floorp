@@ -1,31 +1,36 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 23 May 2023 06:14:00 +0000
-Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
- r=ng,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Thu, 22 Jun 2023 16:23:00 +0000
+Subject: Bug 1837918 - libwebrtc update broke the build on
+ OpenBSD;r=mjf,webrtc-reviewers
 
-This restores libwebrtc's DesktopCapturer to their upstream state as far as
-the tab capturer is concerned.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174290
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
+Differential Revision: https://phabricator.services.mozilla.com/D181791
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2a6a838b7021bb285f9485c2ceda6ba2543e0d6f
 ---
- modules/desktop_capture/desktop_capturer.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ modules/video_capture/video_capture_options.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index afbf92aff6..aef23ae610 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -179,7 +179,8 @@ class RTC_EXPORT DesktopCapturer {
-   // The return value if `pos` is out of the scope of the source is undefined.
-   virtual bool IsOccluded(const DesktopVector& pos);
+diff --git a/modules/video_capture/video_capture_options.h b/modules/video_capture/video_capture_options.h
+index 6f72f7927e..37965305d9 100644
+--- a/modules/video_capture/video_capture_options.h
++++ b/modules/video_capture/video_capture_options.h
+@@ -55,7 +55,7 @@ class RTC_EXPORT VideoCaptureOptions {
  
--  // Creates a DesktopCapturer instance which targets to capture windows and screens.
-+  // Creates a DesktopCapturer instance which targets to capture windows and
-+  // screens.
-   static std::unique_ptr<DesktopCapturer> CreateGenericCapturer(
-       const DesktopCaptureOptions& options);
+   void Init(Callback* callback);
  
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2() const { return allow_v4l2_; }
+   void set_allow_v4l2(bool allow) { allow_v4l2_ = allow; }
+ #endif
+@@ -68,7 +68,7 @@ class RTC_EXPORT VideoCaptureOptions {
+ #endif
+ 
+  private:
+-#if defined(WEBRTC_LINUX)
++#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+   bool allow_v4l2_ = false;
+ #endif
+ #if defined(WEBRTC_USE_PIPEWIRE)
 -- 
 2.34.1
 
