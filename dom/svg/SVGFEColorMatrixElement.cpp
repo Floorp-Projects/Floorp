@@ -113,7 +113,7 @@ nsresult SVGFEColorMatrixElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feColorMatrix);
   }
 
-  return SVGFEColorMatrixElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

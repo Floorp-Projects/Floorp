@@ -195,7 +195,6 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mIsRemoteFrame(aIsRemoteFrame),
       mWillChangeProcess(false),
       mObservingOwnerContent(false),
-      mHadDetachedFrame(false),
       mTabProcessCrashFired(false) {
   nsCOMPtr<nsFrameLoaderOwner> owner = do_QueryInterface(aOwner);
   owner->AttachFrameLoader(this);
@@ -2952,7 +2951,8 @@ class nsAsyncMessageToChild : public nsSameProcessAsyncMessageBase,
                               public Runnable {
  public:
   explicit nsAsyncMessageToChild(nsFrameLoader* aFrameLoader)
-      : mozilla::Runnable("nsAsyncMessageToChild"),
+      : nsSameProcessAsyncMessageBase(),
+        mozilla::Runnable("nsAsyncMessageToChild"),
         mFrameLoader(aFrameLoader) {}
 
   NS_IMETHOD Run() override {
@@ -3085,15 +3085,15 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
 }
 
-void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame) {
+void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame,
+                                           Document* aContainerDoc) {
   mDetachedSubdocFrame = aDetachedFrame;
-  mHadDetachedFrame = !!aDetachedFrame;
+  mContainerDocWhileDetached = aContainerDoc;
 }
 
-nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(bool* aOutIsSet) const {
-  if (aOutIsSet) {
-    *aOutIsSet = mHadDetachedFrame;
-  }
+nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(
+    Document** aContainerDoc) const {
+  NS_IF_ADDREF(*aContainerDoc = mContainerDocWhileDetached);
   return mDetachedSubdocFrame.GetFrame();
 }
 

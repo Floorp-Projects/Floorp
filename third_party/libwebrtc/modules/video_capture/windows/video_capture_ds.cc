@@ -56,8 +56,6 @@ VideoCaptureDS::~VideoCaptureDS() {
 }
 
 int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   const int32_t nameLength = (int32_t)strlen((char*)deviceUniqueIdUTF8);
   if (nameLength >= kVideoCaptureUniqueNameLength)
     return -1;
@@ -124,8 +122,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
 }
 
 int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   if (capability != _requestedCapability) {
     DisconnectGraph();
 
@@ -148,8 +144,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
 }
 
 int32_t VideoCaptureDS::StopCapture() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   HRESULT hr = _mediaControl->StopWhenReady();
   if (FAILED(hr)) {
     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
@@ -159,8 +153,6 @@ int32_t VideoCaptureDS::StopCapture() {
 }
 
 bool VideoCaptureDS::CaptureStarted() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   OAFilterState state = 0;
   HRESULT hr = _mediaControl->GetState(1000, &state);
   if (hr != S_OK && hr != VFW_S_CANT_CUE) {
@@ -171,15 +163,12 @@ bool VideoCaptureDS::CaptureStarted() {
 }
 
 int32_t VideoCaptureDS::CaptureSettings(VideoCaptureCapability& settings) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
   settings = _requestedCapability;
   return 0;
 }
 
 int32_t VideoCaptureDS::SetCameraOutput(
     const VideoCaptureCapability& requestedCapability) {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   // Get the best matching capability
   VideoCaptureCapability capability;
   int32_t capabilityIndex;
@@ -268,8 +257,6 @@ int32_t VideoCaptureDS::SetCameraOutput(
 }
 
 int32_t VideoCaptureDS::DisconnectGraph() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   HRESULT hr = _mediaControl->Stop();
   hr += _graphBuilder->Disconnect(_outputCapturePin);
   hr += _graphBuilder->Disconnect(_inputSendPin);
@@ -288,8 +275,6 @@ int32_t VideoCaptureDS::DisconnectGraph() {
 }
 
 HRESULT VideoCaptureDS::ConnectDVCamera() {
-  RTC_DCHECK_RUN_ON(&api_checker_);
-
   HRESULT hr = S_OK;
 
   if (!_dvFilter) {

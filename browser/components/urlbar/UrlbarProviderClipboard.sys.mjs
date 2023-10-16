@@ -105,13 +105,16 @@ class ProviderClipboard extends UrlbarProvider {
       {
         url: this.#previousClipboard.value,
         title: this.#previousClipboard.value,
-        icon: "chrome://global/skin/icons/clipboard.svg",
-        isBlockable: true,
-        blockL10n: {
-          id: "urlbar-result-menu-dismiss-firefox-suggest",
-        },
+        icon: "chrome://global/skin/icons/edit-copy.svg",
       }
     );
+
+    if (lazy.UrlbarPrefs.get("resultMenu")) {
+      result.isBlockable = true;
+      result.blockL10n = {
+        id: "urlbar-result-menu-dismiss-firefox-suggest",
+      };
+    }
 
     addCallback(this, result);
   }
@@ -145,10 +148,22 @@ class ProviderClipboard extends UrlbarProvider {
   #handlePossibleCommand(view, result, selType) {
     switch (selType) {
       case RESULT_MENU_COMMANDS.DISMISS:
-        view.controller.removeResult(result);
+        view.onQueryResultRemoved(result.rowIndex);
         this.#previousClipboard.impressionsLeft = 0;
         break;
     }
+  }
+
+  getResultCommands(result) {
+    let commands = [
+      {
+        name: RESULT_MENU_COMMANDS.DISMISS,
+        l10n: {
+          id: "urlbar-result-menu-dismiss-firefox-suggest",
+        },
+      },
+    ];
+    return commands;
   }
 }
 

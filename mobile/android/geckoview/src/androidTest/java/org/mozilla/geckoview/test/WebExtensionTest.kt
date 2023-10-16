@@ -119,10 +119,8 @@ class WebExtensionTest : BaseSessionTest() {
         userDisabled: Boolean = false,
         appDisabled: Boolean = false,
         blocklistDisabled: Boolean = false,
-        signatureDisabled: Boolean = false,
-        appVersionDisabled: Boolean = false,
     ) {
-        val enabled = !userDisabled && !appDisabled && !blocklistDisabled && !signatureDisabled && !appVersionDisabled
+        val enabled = !userDisabled && !appDisabled && !blocklistDisabled
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -153,16 +151,6 @@ class WebExtensionTest : BaseSessionTest() {
             "blocklistDisabled should match",
             extension.metaData.disabledFlags and DisabledFlags.BLOCKLIST > 0,
             equalTo(blocklistDisabled),
-        )
-        assertThat(
-            "signatureDisabled should match",
-            extension.metaData.disabledFlags and DisabledFlags.SIGNATURE > 0,
-            equalTo(signatureDisabled),
-        )
-        assertThat(
-            "appVersionDisabled should match",
-            extension.metaData.disabledFlags and DisabledFlags.APP_VERSION > 0,
-            equalTo(appVersionDisabled),
         )
     }
 
@@ -3200,49 +3188,7 @@ class WebExtensionTest : BaseSessionTest() {
         )
     }
 
-    @Test
-    fun testExtensionProcessCrashThresholdsControlledFromSettings() {
-        var crashThreshold = 1
-        var timeframe = 60000L
-
-        val settings = GeckoRuntimeSettings.Builder()
-            .extensionsProcessCrashThreshold(crashThreshold)
-            .extensionsProcessCrashTimeframe(timeframe)
-            .build()
-
-        assertThat(
-            "extensionProcessCrashThresholdMaxCount should be set to $crashThreshold",
-            settings.extensionsProcessCrashThreshold,
-            equalTo(crashThreshold),
-        )
-
-        assertThat(
-            "extensionsProcessCrashThresholdTimeframeSeconds should be set to $timeframe",
-            settings.extensionsProcessCrashTimeframe,
-            equalTo(timeframe),
-        )
-
-        // Update with setters and check that settings have updated
-        crashThreshold = 5
-        timeframe = 120000L
-        settings.setExtensionsProcessCrashThreshold(crashThreshold)
-        settings.setExtensionsProcessCrashTimeframe(timeframe)
-
-        assertThat(
-            "extensionProcessCrashThresholdMaxCount should be updated to $crashThreshold",
-            settings.extensionsProcessCrashThreshold,
-            equalTo(crashThreshold),
-        )
-
-        assertThat(
-            "extensionsProcessCrashThresholdTimeframeSeconds should be updated to $timeframe",
-            settings.extensionsProcessCrashTimeframe,
-            equalTo(timeframe),
-        )
-    }
-
-    @Test
-    fun testExtensionProcessCrash() {
+    fun extensionProcessCrash() {
         sessionRule.setPrefsUntilTestEnd(
             mapOf(
                 "extensions.webextensions.remote" to true,

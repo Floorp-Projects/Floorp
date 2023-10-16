@@ -160,8 +160,7 @@ void Compatibility::SuppressA11yForClipboardCopy() {
       case 1:
         return true;
       default:
-        // Our workaround for Suggested Actions is needed from Windows 11 22H2
-        return IsWin1122H2OrLater();
+        return NeedsWindows11SuggestedActionsWorkaround();
     }
   }();
 

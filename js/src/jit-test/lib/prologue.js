@@ -26,4 +26,4 @@ for (const name of ["gczeal",
 }
 
 // Set the minimum heap size for parallel marking to zero for testing purposes.
-gcparam('parallelMarkingThresholdMB', 0);
+gcparam('parallelMarkingThresholdKB', 0);

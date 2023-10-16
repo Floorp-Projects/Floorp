@@ -146,7 +146,8 @@ ErrorReporter::~ErrorReporter() {
   // short-term caching.
   if (sSpecCache && sSpecCache->IsInUse() && !sSpecCache->IsPending()) {
     nsCOMPtr<nsIRunnable> runnable(sSpecCache);
-    nsresult rv = SchedulerGroup::Dispatch(runnable.forget());
+    nsresult rv =
+        SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
     if (NS_FAILED(rv)) {
       // Peform the "deferred" cleanup immediately if the dispatch fails.
       sSpecCache->Run();

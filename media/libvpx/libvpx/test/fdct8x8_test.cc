@@ -132,18 +132,9 @@ void idct8x8_64_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
 #endif  // HAVE_SSE2
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
-// Visual Studio 2022 (cl.exe) targeting AArch64 with optimizations enabled
-// produces invalid code in RunExtremalCheck() and RunInvAccuracyCheck().
-// See:
-// https://developercommunity.visualstudio.com/t/1770-preview-1:-Misoptimization-for-AR/10369786
-// TODO(jzern): check the compiler version after a fix for the issue is
-// released.
-#if defined(_MSC_VER) && defined(_M_ARM64) && !defined(__clang__)
-#pragma optimize("", off)
-#endif
 class FwdTrans8x8TestBase {
  public:
-  virtual ~FwdTrans8x8TestBase() = default;
+  virtual ~FwdTrans8x8TestBase() {}
 
  protected:
   virtual void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) = 0;
@@ -532,16 +523,13 @@ class FwdTrans8x8TestBase {
   vpx_bit_depth_t bit_depth_;
   int mask_;
 };
-#if defined(_MSC_VER) && defined(_M_ARM64) && !defined(__clang__)
-#pragma optimize("", on)
-#endif
 
 class FwdTrans8x8DCT : public FwdTrans8x8TestBase,
                        public ::testing::TestWithParam<Dct8x8Param> {
  public:
-  ~FwdTrans8x8DCT() override = default;
+  virtual ~FwdTrans8x8DCT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     tx_type_ = GET_PARAM(2);
@@ -551,13 +539,13 @@ class FwdTrans8x8DCT : public FwdTrans8x8TestBase,
     mask_ = (1 << bit_depth_) - 1;
   }
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) override {
+  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {
     fwd_txfm_(in, out, stride);
   }
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride);
   }
 
@@ -578,9 +566,9 @@ TEST_P(FwdTrans8x8DCT, InvAccuracyCheck) { RunInvAccuracyCheck(); }
 class FwdTrans8x8HT : public FwdTrans8x8TestBase,
                       public ::testing::TestWithParam<Ht8x8Param> {
  public:
-  ~FwdTrans8x8HT() override = default;
+  virtual ~FwdTrans8x8HT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     tx_type_ = GET_PARAM(2);
@@ -590,13 +578,13 @@ class FwdTrans8x8HT : public FwdTrans8x8TestBase,
     mask_ = (1 << bit_depth_) - 1;
   }
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) override {
+  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {
     fwd_txfm_(in, out, stride, tx_type_);
   }
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride, tx_type_);
   }
 
@@ -614,9 +602,9 @@ TEST_P(FwdTrans8x8HT, ExtremalCheck) { RunExtremalCheck(); }
 class InvTrans8x8DCT : public FwdTrans8x8TestBase,
                        public ::testing::TestWithParam<Idct8x8Param> {
  public:
-  ~InvTrans8x8DCT() override = default;
+  virtual ~InvTrans8x8DCT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     ref_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     thresh_ = GET_PARAM(2);
@@ -625,14 +613,13 @@ class InvTrans8x8DCT : public FwdTrans8x8TestBase,
     mask_ = (1 << bit_depth_) - 1;
   }
 
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride);
   }
-  void RunFwdTxfm(int16_t * /*out*/, tran_low_t * /*dst*/,
-                  int /*stride*/) override {}
+  void RunFwdTxfm(int16_t * /*out*/, tran_low_t * /*dst*/, int /*stride*/) {}
 
   IdctFunc ref_txfm_;
   IdctFunc inv_txfm_;

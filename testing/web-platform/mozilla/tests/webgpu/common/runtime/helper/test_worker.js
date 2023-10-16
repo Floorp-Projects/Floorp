@@ -2,13 +2,12 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 
-import { kDefaultCTSOptions } from './options.js';
-
 export class TestWorker {
   resolvers = new Map();
 
-  constructor(ctsOptions) {
-    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: true } };
+  constructor(debug) {
+    this.debug = debug;
+
     const selfPath = import.meta.url;
     const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
     const workerPath = selfPathDir + '/test_worker-worker.js';
@@ -29,11 +28,7 @@ export class TestWorker {
   }
 
   async run(rec, query, expectations = []) {
-    this.worker.postMessage({
-      query,
-      expectations,
-      ctsOptions: this.ctsOptions,
-    });
+    this.worker.postMessage({ query, expectations, debug: this.debug });
     const workerResult = await new Promise(resolve => {
       this.resolvers.set(query, resolve);
     });

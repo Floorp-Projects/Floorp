@@ -24,7 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/log.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/random/internal/chi_square.h"
 #include "absl/random/internal/distribution_test_util.h"
 #include "absl/random/internal/pcg_engine.h"
@@ -108,7 +108,8 @@ TYPED_TEST(LogUniformIntDistributionTypeTest, SerializeTest) {
       if (sample > sample_max) sample_max = sample;
       if (sample < sample_min) sample_min = sample;
     }
-    LOG(INFO) << "Range: " << sample_min << ", " << sample_max;
+    ABSL_INTERNAL_LOG(INFO,
+                      absl::StrCat("Range: ", +sample_min, ", ", +sample_max));
   }
 }
 
@@ -181,14 +182,16 @@ double LogUniformIntChiSquaredTest::ChiSquaredTestImpl() {
   const double p = absl::random_internal::ChiSquarePValue(chi_square, dof);
 
   if (chi_square > threshold) {
-    LOG(INFO) << "values";
+    ABSL_INTERNAL_LOG(INFO, "values");
     for (size_t i = 0; i < buckets.size(); i++) {
-      LOG(INFO) << i << ": " << buckets[i];
+      ABSL_INTERNAL_LOG(INFO, absl::StrCat(i, ": ", buckets[i]));
     }
-    LOG(INFO) << "trials=" << trials << "\n"
-              << kChiSquared << "(data, " << dof << ") = " << chi_square << " ("
-              << p << ")\n"
-              << kChiSquared << " @ 0.98 = " << threshold;
+    ABSL_INTERNAL_LOG(INFO,
+                      absl::StrFormat("trials=%d\n"
+                                      "%s(data, %d) = %f (%f)\n"
+                                      "%s @ 0.98 = %f",
+                                      trials, kChiSquared, dof, chi_square, p,
+                                      kChiSquared, threshold));
   }
   return p;
 }

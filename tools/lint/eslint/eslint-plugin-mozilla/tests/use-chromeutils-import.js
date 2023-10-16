@@ -26,6 +26,12 @@ ruleTester.run("use-chromeutils-import", rule, {
     `ChromeUtils.import("resource://gre/modules/AppConstants.jsm", this);`,
     `ChromeUtils.defineModuleGetter(this, "AppConstants",
                                     "resource://gre/modules/AppConstants.jsm");`,
+    `XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                       "resource://gre/modules/AppConstants.jsm",
+                                       "Foo");`,
+    `XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                       "resource://gre/modules/AppConstants.jsm",
+                                       undefined, preAppConstantsLambda);`,
   ],
   invalid: [
     {
@@ -42,6 +48,13 @@ ruleTester.run("use-chromeutils-import", rule, {
       code: `Components.utils.import("resource://gre/modules/AppConstants.jsm");`,
       output: `ChromeUtils.import("resource://gre/modules/AppConstants.jsm");`,
       errors: callError("useChromeUtilsImport"),
+    },
+    {
+      code: `XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                               "resource://gre/modules/AppConstants.jsm");`,
+      output: `ChromeUtils.defineModuleGetter(this, "AppConstants",
+                                               "resource://gre/modules/AppConstants.jsm");`,
+      errors: callError("useDefineModuleGetter"),
     },
   ],
 });

@@ -9,10 +9,10 @@ Returns a unit vector in the same direction as e.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
+import { normalizeInterval } from '../../../../../util/f32_interval.js';
 import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, generateVectorToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -20,46 +20,22 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('normalize', {
   f32_vec2_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(2),
-      'finite',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(2), 'f32-only', normalizeInterval);
   },
   f32_vec2_non_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(2),
-      'unfiltered',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(2), 'unfiltered', normalizeInterval);
   },
   f32_vec3_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(3),
-      'finite',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(3), 'f32-only', normalizeInterval);
   },
   f32_vec3_non_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(3),
-      'unfiltered',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(3), 'unfiltered', normalizeInterval);
   },
   f32_vec4_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(4),
-      'finite',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(4), 'f32-only', normalizeInterval);
   },
   f32_vec4_non_const: () => {
-    return FP.f32.generateVectorToVectorCases(
-      vectorF32Range(4),
-      'unfiltered',
-      FP.f32.normalizeInterval
-    );
+    return generateVectorToVectorCases(vectorF32Range(4), 'unfiltered', normalizeInterval);
   },
 });
 

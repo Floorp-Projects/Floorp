@@ -34,10 +34,10 @@ namespace vp9 {
 class VP9SubtractBlockTest : public AbstractBench,
                              public ::testing::TestWithParam<SubtractFunc> {
  public:
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void Run() override {
+  virtual void Run() {
     GetParam()(block_height_, block_width_, diff_, block_width_, src_,
                block_width_, pred_, block_width_);
   }
@@ -176,7 +176,7 @@ using Params = std::tuple<BLOCK_SIZE, int, HBDSubtractFunc, HBDSubtractFunc>;
 
 class VPXHBDSubtractBlockTest : public ::testing::TestWithParam<Params> {
  public:
-  void SetUp() override {
+  virtual void SetUp() {
     block_width_ = 4 * num_4x4_blocks_wide_lookup[GET_PARAM(0)];
     block_height_ = 4 * num_4x4_blocks_high_lookup[GET_PARAM(0)];
     bit_depth_ = static_cast<vpx_bit_depth_t>(GET_PARAM(1));
@@ -198,7 +198,7 @@ class VPXHBDSubtractBlockTest : public ::testing::TestWithParam<Params> {
     ASSERT_NE(diff_, nullptr);
   }
 
-  void TearDown() override {
+  virtual void TearDown() {
     vpx_free(CONVERT_TO_SHORTPTR(src_));
     vpx_free(CONVERT_TO_SHORTPTR(pred_));
     vpx_free(diff_);

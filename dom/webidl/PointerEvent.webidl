@@ -26,8 +26,6 @@ interface PointerEvent : MouseEvent
 
   readonly attribute DOMString pointerType;
   readonly attribute boolean isPrimary;
-
-  [Func="mozilla::dom::PointerEvent::EnableGetCoalescedEvents"]
   sequence<PointerEvent> getCoalescedEvents();
   sequence<PointerEvent> getPredictedEvents();
 };

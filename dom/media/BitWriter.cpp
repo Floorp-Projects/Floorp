@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BitWriter.h"
-
-#include <stdint.h>
-
 #include "MediaData.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -94,11 +91,6 @@ void BitWriter::WriteULEB128(uint64_t aValue) {
 void BitWriter::CloseWithRbspTrailing() {
   WriteBit(true);
   WriteBits(0, (8 - mBitIndex) & 7);
-}
-
-void BitWriter::AdvanceBytes(uint32_t aByteOffset) {
-  MOZ_DIAGNOSTIC_ASSERT(mBitIndex == 0);
-  mPosition += aByteOffset;
 }
 
 }  // namespace mozilla

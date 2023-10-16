@@ -122,7 +122,7 @@ LayoutDeviceIntCoord ScrollbarDrawing::GetScrollbarSize(
 bool ScrollbarDrawing::IsScrollbarTrackOpaque(nsIFrame* aFrame) {
   auto trackColor = ComputeScrollbarTrackColor(
       aFrame, *nsLayoutUtils::StyleForScrollbar(aFrame),
-      aFrame->PresContext()->Document()->State(),
+      aFrame->PresContext()->Document()->GetDocumentState(),
       Colors(aFrame, StyleAppearance::ScrollbartrackVertical));
   return trackColor.a == 1.0f;
 }

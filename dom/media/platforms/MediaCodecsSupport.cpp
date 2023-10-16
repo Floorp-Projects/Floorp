@@ -108,27 +108,20 @@ void MCSInfo::GetMediaCodecsSupportedString(
     CODEC_SUPPORT_LOG("Can't get codec support string w/o a MCSInfo instance!");
     return;
   }
-  for (const auto& it : GetAllCodecDefinitions()) {
-    if (it.codec == MediaCodec::SENTINEL) {
-      break;
-    }
-    if (!instance->mHashTableCodec->Get(it.codec, &supportInfo)) {
-      CODEC_SUPPORT_LOG("Can't find codec for MediaCodecsSupported enum: %d",
-                        static_cast<int>(it.codec));
+  for (const auto& it : aSupportedCodecs) {
+    if (!instance->mHashTableMCS->Get(it, &supportInfo)) {
+      CODEC_SUPPORT_LOG("Can't find string for MediaCodecsSupported enum: %d",
+                        static_cast<int>(it));
+      aSupportString.Append("Unknown codec entry found!\n"_ns);
       continue;
     }
+    // Get codec name string and append SW/HW support info
     aSupportString.Append(supportInfo.commonName);
-    bool foundSupport = false;
-    if (aSupportedCodecs.contains(it.swDecodeSupport)) {
+    if (it == supportInfo.swDecodeSupport) {
       aSupportString.Append(" SW"_ns);
-      foundSupport = true;
     }
-    if (aSupportedCodecs.contains(it.hwDecodeSupport)) {
+    if (it == supportInfo.hwDecodeSupport) {
       aSupportString.Append(" HW"_ns);
-      foundSupport = true;
-    }
-    if (!foundSupport) {
-      aSupportString.Append(" NONE"_ns);
     }
     aSupportString.Append("\n"_ns);
   }
@@ -232,9 +225,6 @@ MediaCodec MCSInfo::GetMediaCodecFromMimeType(const nsACString& aMimeType) {
   if (TheoraDecoder::IsTheora(aMimeType)) {
     return MediaCodec::Theora;
   }
-  if (MP4Decoder::IsHEVC(aMimeType)) {
-    return MediaCodec::HEVC;
-  }
 #ifdef MOZ_AV1
   if (AOMDecoder::IsAV1(aMimeType)) {
     return MediaCodec::AV1;
@@ -277,8 +267,8 @@ MediaCodec MCSInfo::GetMediaCodecFromMimeType(const nsACString& aMimeType) {
   return MediaCodec::SENTINEL;
 }
 
-std::array<CodecDefinition, 13> MCSInfo::GetAllCodecDefinitions() {
-  static constexpr std::array<CodecDefinition, 13> codecDefinitions = {
+std::array<CodecDefinition, 12> MCSInfo::GetAllCodecDefinitions() {
+  static constexpr std::array<CodecDefinition, 12> codecDefinitions = {
       {{MediaCodec::H264, "H264", "video/avc",
         MediaCodecsSupport::H264SoftwareDecode,
         MediaCodecsSupport::H264HardwareDecode},
@@ -291,9 +281,6 @@ std::array<CodecDefinition, 13> MCSInfo::GetAllCodecDefinitions() {
        {MediaCodec::AV1, "AV1", "video/av1",
         MediaCodecsSupport::AV1SoftwareDecode,
         MediaCodecsSupport::AV1HardwareDecode},
-       {MediaCodec::HEVC, "HEVC", "video/hevc",
-        MediaCodecsSupport::HEVCSoftwareDecode,
-        MediaCodecsSupport::HEVCHardwareDecode},
        {MediaCodec::Theora, "Theora", "video/theora",
         MediaCodecsSupport::TheoraSoftwareDecode,
         MediaCodecsSupport::TheoraHardwareDecode},

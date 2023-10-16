@@ -1,5 +1,6 @@
 /**
- * @fileoverview Reject use of Cu.import in favor of ChromeUtils.
+ * @fileoverview Reject use of Cu.import and XPCOMUtils.defineLazyModuleGetter
+ *               in favor of ChromeUtils.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,6 +30,9 @@ module.exports = {
     messages: {
       useChromeUtilsImport:
         "Please use ChromeUtils.import instead of Cu.import",
+      useDefineModuleGetter:
+        "Please use ChromeUtils.defineModuleGetter instead of " +
+        "XPCOMUtils.defineLazyModuleGetter",
     },
     schema: [],
     type: "suggestion",
@@ -54,6 +58,22 @@ module.exports = {
             messageId: "useChromeUtilsImport",
             fix(fixer) {
               return fixer.replaceText(callee, "ChromeUtils.import");
+            },
+          });
+        }
+
+        if (
+          isMemberExpression(callee, "XPCOMUtils", "defineLazyModuleGetter") &&
+          node.arguments.length < 4
+        ) {
+          context.report({
+            node,
+            messageId: "useDefineModuleGetter",
+            fix(fixer) {
+              return fixer.replaceText(
+                callee,
+                "ChromeUtils.defineModuleGetter"
+              );
             },
           });
         }

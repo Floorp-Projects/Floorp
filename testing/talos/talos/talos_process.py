@@ -81,7 +81,7 @@ class Reader(object):
 
     def __call__(self, line):
         line = six.ensure_str(line)
-        line = line.strip("\r\n")
+        line = line.strip("\n")
         if line.find("__endTimestamp") != -1:
             self.got_end_timestamp = True
         elif line == "TART: TIMEOUT":

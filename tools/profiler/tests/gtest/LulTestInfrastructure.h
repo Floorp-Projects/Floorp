@@ -262,7 +262,7 @@ class Section {
 
   // A base class destructor should be either public and virtual,
   // or protected and nonvirtual.
-  virtual ~Section() = default;
+  virtual ~Section(){};
 
   // Return the default endianness of this section.
   Endianness endianness() const { return endianness_; }
@@ -533,6 +533,7 @@ class CFISection : public Section {
         address_size_(address_size),
         eh_frame_(eh_frame),
         pointer_encoding_(lul::DW_EH_PE_absptr),
+        encoded_pointer_bases_(),
         entry_length_(NULL),
         in_fde_(false) {
     // The 'start', 'Here', and 'Mark' members of a CFISection all refer

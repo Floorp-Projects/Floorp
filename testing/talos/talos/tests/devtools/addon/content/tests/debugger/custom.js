@@ -29,15 +29,12 @@ const {
   waitForText,
   evalInFrame,
   waitUntil,
-  addBreakpoint,
-  waitForPaused,
-  waitForState,
 } = require("./debugger-helpers");
 
 const IFRAME_BASE_URL =
   "http://damp.top.com/tests/devtools/addon/content/pages/";
 const EXPECTED = {
-  sources: 1134,
+  sources: 107,
   file: "App.js",
   sourceURL: `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/App.js`,
   text: "import React, { Component } from 'react';",
@@ -47,7 +44,6 @@ const EXPECTED = {
 const EXPECTED_FUNCTION = "window.hitBreakpoint()";
 
 const TEST_URL = PAGES_BASE_URL + "custom/debugger/app-build/index.html";
-const MINIFIED_URL = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
 
 module.exports = async function () {
   const tab = await testSetup(TEST_URL, { disableCache: true });
@@ -76,7 +72,7 @@ module.exports = async function () {
   await testProjectSearch(dbg, tab);
   await testPreview(dbg, tab, EXPECTED_FUNCTION);
   await testOpeningLargeMinifiedFile(dbg, tab);
-  await testPrettyPrint(dbg, toolbox);
+  await testPrettyPrint(dbg);
 
   await closeToolboxAndLog("custom.jsdebugger", toolbox);
 
@@ -146,6 +142,8 @@ async function stepDebuggerAndLog(dbg, tab, testFunction) {
 }
 
 async function testProjectSearch(dbg, tab) {
+  const cx = dbg.selectors.getContext(dbg.getState());
+
   dump("Executing project search\n");
   const test = runTest(`custom.jsdebugger.project-search.DAMP`);
   const firstSearchResultTest = runTest(
@@ -153,52 +151,15 @@ async function testProjectSearch(dbg, tab) {
   );
   await dbg.actions.setPrimaryPaneTab("project");
   await dbg.actions.setActiveSearch("project");
-  const searchInput = await waitForDOMElement(
-    dbg.win.document.querySelector("body"),
-    ".project-text-search .search-field input"
-  );
-  searchInput.focus();
-  searchInput.value = "retur";
-  // Only dispatch a true key event for the last character in order to trigger only one search
-  const key = "n";
-  searchInput.dispatchEvent(
-    new dbg.win.KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      view: dbg.win,
-      charCode: key.charCodeAt(0),
-    })
-  );
-  searchInput.dispatchEvent(
-    new dbg.win.KeyboardEvent("keyup", {
-      bubbles: true,
-      cancelable: true,
-      view: dbg.win,
-      charCode: key.charCodeAt(0),
-    })
-  );
-  searchInput.dispatchEvent(
-    new dbg.win.KeyboardEvent("keypress", {
-      bubbles: true,
-      cancelable: true,
-      view: dbg.win,
-      charCode: key.charCodeAt(0),
-    })
-  );
-
+  const complete = dbg.actions.searchSources(cx, "return");
   // Wait till the first search result match is rendered
   await waitForDOMElement(
-    dbg.win.document.querySelector("body"),
-    ".project-text-search .tree-node .result"
+    dbg.win.document.querySelector(".project-text-search"),
+    ".tree-node .result"
   );
   firstSearchResultTest.done();
-  // Then wait for all results to be fetched and the loader spin to hide
-  await waitUntil(() => {
-    return !dbg.win.document.querySelector(
-      ".project-text-search .search-field .loader.spin"
-    );
-  });
-  await dbg.actions.closeActiveSearch();
+  await complete;
+  await dbg.actions.closeProjectSearch(cx);
   test.done();
   await garbageCollect();
 }
@@ -217,33 +178,60 @@ async function testPreview(dbg, tab, testFunction) {
 }
 
 async function testOpeningLargeMinifiedFile(dbg, tab) {
-  const fileFirstMinifiedChars = `(()=>{var e,t,n,r,o={82603`;
+  dump("Add minified.js (large minified file)\n");
+  const file = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/minified.js`;
+
+  const messageManager = tab.linkedBrowser.messageManager;
+
+  // We don't want to impact the other tests from this file, so we add a new big minified
+  // file from the content process instead of having it directly in iframe.html.
+  messageManager.loadFrameScript(
+    `data:application/javascript,(${encodeURIComponent(
+      `function () {
+        const scriptEl = content.document.createElement("script");
+        scriptEl.setAttribute("type", "text/javascript");
+        scriptEl.setAttribute("src", "${file}");
+        content.document.body.append(scriptEl);
+      }`
+    )})()`,
+    true
+  );
+
+  dump("Wait until source is available\n");
+  await waitUntil(() => findSource(dbg, file));
+
+  const fileFirstChars = `(()=>{var e,t,n,r,o={82603`;
 
   dump("Open minified.js (large minified file)\n");
   const fullTest = runTest(
     "custom.jsdebugger.open-large-minified-file.full-selection.DAMP"
   );
   const test = runTest("custom.jsdebugger.open-large-minified-file.DAMP");
-  const onSelected = selectSource(dbg, MINIFIED_URL);
-  await waitForText(dbg, fileFirstMinifiedChars);
+  const onSelected = selectSource(dbg, file);
+  await waitForText(dbg, fileFirstChars);
   test.done();
   await onSelected;
   fullTest.done();
 
-  await dbg.actions.closeTabs([findSource(dbg, MINIFIED_URL)]);
-
-  // Also clear to prevent reselecting this source
-  await dbg.actions.clearSelectedLocation();
+  dbg.actions.closeTabs([file]);
 
   await garbageCollect();
 }
 
-async function testPrettyPrint(dbg, toolbox) {
-  const formattedFileUrl = `${MINIFIED_URL}:formatted`;
-  const filePrettyChars = "82603: (e, t, n) => {\n";
+async function testPrettyPrint(dbg) {
+  // Close all existing tabs to have a clean state
+  const state = dbg.getState();
+  const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
+  await dbg.actions.closeTabs(tabURLs);
+
+  // Disable source map so we can prettyprint main.js
+  await dbg.actions.toggleSourceMapsEnabled(false);
+
+  const fileUrl = `${IFRAME_BASE_URL}custom/debugger/app-build/static/js/main.js`;
+  const formattedFileUrl = `${fileUrl}:formatted`;
 
   dump("Select minified file\n");
-  await selectSource(dbg, MINIFIED_URL);
+  await selectSource(dbg, fileUrl);
 
   dump("Wait until CodeMirror highlighting is done\n");
   const cm = getCM(dbg);
@@ -261,61 +249,11 @@ async function testPrettyPrint(dbg, toolbox) {
   const test = runTest("custom.jsdebugger.pretty-print.DAMP");
   prettyPrintButton.click();
   await waitForSource(dbg, formattedFileUrl);
-  await waitForText(dbg, filePrettyChars);
+  await waitForText(dbg, "!function (n) {\n");
   test.done();
 
-  await addBreakpoint(dbg, 776, formattedFileUrl);
-
-  const onPaused = waitForPaused(dbg);
-  const reloadAndPauseInPrettyPrintedFileTest = runTest(
-    "custom.jsdebugger.pretty-print.reload-and-pause.DAMP"
-  );
-  await reloadDebuggerAndLog("custom.pretty-print", toolbox, {
-    sources: 1105,
-    sourceURL: formattedFileUrl,
-    text: filePrettyChars,
-    threadsCount: EXPECTED.threadsCount,
-  });
-  await onPaused;
-
-  // When reloading, the `togglePrettyPrint` action is called to pretty print the minified source.
-  // This action is quite slow and finishes by ensuring that breakpoints are updated according to
-  // the new pretty printed source.
-  // We have to wait for this, otherwise breakpoints may be added after we remove all breakpoints just after.
-  await waitForState(
-    dbg,
-    function (state) {
-      const breakpoints = dbg.selectors.getBreakpointsAtLine(state, 776);
-      const source = findSource(dbg, formattedFileUrl);
-      // We have to ensure that the breakpoint is specific to the very last source object,
-      // and not the one from the previous page load.
-      return (
-        breakpoints?.length > 0 && breakpoints[0].location.source == source
-      );
-    },
-    "wait for pretty print breakpoint"
-  );
-
-  reloadAndPauseInPrettyPrintedFileTest.done();
-
-  // The previous code waiting for state change isn't quite enough,
-  // we need to spin the event loop once before clearing the breakpoints as
-  // the processing of the new pretty printed source may still create late breakpoints
-  // when it tries to update the breakpoint location on the pretty printed source.
-  await new Promise(r => setTimeout(r, 0));
-
-  await removeBreakpoints(dbg);
-
-  // Clear the selection to avoid the source to be re-pretty printed on next load
-  // Clear the selection before closing the tabs, otherwise closeTabs will reselect a random source.
-  await dbg.actions.clearSelectedLocation();
-
-  // Close tabs and especially the pretty printed one to stop pretty printing it.
-  // Given that it is hard to find the non-pretty printed source via `findSource`
-  // (because bundle and pretty print sources use almost the same URL except ':formatted' for the pretty printed one)
-  // let's close all the tabs.
-  const sources = dbg.selectors.getSourceList(dbg.getState());
-  await dbg.actions.closeTabs(sources);
+  await dbg.actions.toggleSourceMapsEnabled(true);
+  dbg.actions.closeTabs([fileUrl, formattedFileUrl]);
 
   await garbageCollect();
 }

@@ -25,6 +25,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
+#include "nsIURLFormatter.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/dom/Element.h"
@@ -293,6 +294,10 @@ nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
+nsresult nsWindowsShellService::LaunchControlPanelDefaultPrograms() {
+  return ::LaunchControlPanelDefaultPrograms() ? NS_OK : NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsWindowsShellService::CheckAllProgIDsExist(bool* aResult) {
   *aResult = false;
@@ -331,8 +336,36 @@ nsresult nsWindowsShellService::LaunchModernSettingsDialogDefaultApps() {
   return ::LaunchModernSettingsDialogDefaultApps() ? NS_OK : NS_ERROR_FAILURE;
 }
 
+nsresult nsWindowsShellService::InvokeHTTPOpenAsVerb() {
+  nsCOMPtr<nsIURLFormatter> formatter(
+      do_GetService("@mozilla.org/toolkit/URLFormatterService;1"));
+  if (!formatter) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsString urlStr;
+  nsresult rv = formatter->FormatURLPref(u"app.support.baseURL"_ns, urlStr);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!StringBeginsWith(urlStr, u"https://"_ns)) {
+    return NS_ERROR_FAILURE;
+  }
+  urlStr.AppendLiteral("win10-default-browser");
+
+  SHELLEXECUTEINFOW seinfo = {sizeof(SHELLEXECUTEINFOW)};
+  seinfo.lpVerb = L"openas";
+  seinfo.lpFile = urlStr.get();
+  seinfo.nShow = SW_SHOWNORMAL;
+  if (!ShellExecuteExW(&seinfo)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
-nsWindowsShellService::SetDefaultBrowser(bool aForAllUsers) {
+nsWindowsShellService::SetDefaultBrowser(bool aClaimAllTypes,
+                                         bool aForAllUsers) {
   // If running from within a package, don't attempt to set default with
   // the helper, as it will not work and will only confuse our package's
   // virtualized registry.
@@ -351,11 +384,20 @@ nsWindowsShellService::SetDefaultBrowser(bool aForAllUsers) {
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = LaunchModernSettingsDialogDefaultApps();
-    // The above call should never really fail, but just in case
-    // fall back to showing control panel for all defaults
-    if (NS_FAILED(rv)) {
-      rv = LaunchControlPanelDefaultsSelectionUI();
+    if (aClaimAllTypes) {
+      rv = LaunchModernSettingsDialogDefaultApps();
+      // The above call should never really fail, but just in case
+      // fall back to showing the HTTP association screen only.
+      if (NS_FAILED(rv)) {
+        rv = InvokeHTTPOpenAsVerb();
+      }
+    } else {
+      rv = LaunchModernSettingsDialogDefaultApps();
+      // The above call should never really fail, but just in case
+      // fall back to showing control panel for all defaults
+      if (NS_FAILED(rv)) {
+        rv = LaunchControlPanelDefaultsSelectionUI();
+      }
     }
   }
 

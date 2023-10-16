@@ -227,7 +227,7 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
   nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                          gfxFontSrcPrincipal** aPrincipal, bool* aBypassCache);
 
-  void InsertNonRuleFontFace(FontFaceImpl* aFontFace);
+  void InsertNonRuleFontFace(FontFaceImpl* aFontFace, bool& aFontSetModified);
 
   /**
    * Returns whether we have any loading FontFace objects in the FontFaceSet.

@@ -16,7 +16,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <utility>
 
 #include "absl/base/config.h"
 #include "absl/strings/internal/cord_internal.h"
@@ -25,10 +24,11 @@ namespace absl {
 ABSL_NAMESPACE_BEGIN
 namespace cord_internal {
 
-CordRepCrc* CordRepCrc::New(CordRep* child, crc_internal::CrcCordState state) {
-  if (child != nullptr && child->IsCrc()) {
+CordRepCrc* CordRepCrc::New(CordRep* child, uint32_t crc) {
+  assert(child != nullptr);
+  if (child->IsCrc()) {
     if (child->refcount.IsOne()) {
-      child->crc()->crc_cord_state = std::move(state);
+      child->crc()->crc = crc;
       return child->crc();
     }
     CordRep* old = child;
@@ -37,17 +37,15 @@ CordRepCrc* CordRepCrc::New(CordRep* child, crc_internal::CrcCordState state) {
     CordRep::Unref(old);
   }
   auto* new_cordrep = new CordRepCrc;
-  new_cordrep->length = child != nullptr ? child->length : 0;
+  new_cordrep->length = child->length;
   new_cordrep->tag = cord_internal::CRC;
   new_cordrep->child = child;
-  new_cordrep->crc_cord_state = std::move(state);
+  new_cordrep->crc = crc;
   return new_cordrep;
 }
 
 void CordRepCrc::Destroy(CordRepCrc* node) {
-  if (node->child != nullptr) {
-    CordRep::Unref(node->child);
-  }
+  CordRep::Unref(node->child);
   delete node;
 }
 

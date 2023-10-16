@@ -183,7 +183,7 @@ Features to add:
         show_phase("loading");
         var input = ID("fileentry");
         var files = input.files;
-        if (files.length) {
+        if (files.length > 0) {
           // Only handle the first file; don't handle multiple selection.
           // The parts of the log we care about are ASCII-only.  Since we
           // can ignore lines we don't care about, best to read in as
@@ -363,11 +363,10 @@ Features to add:
 
         // Override the build_viewer function invoked at the end of process_log to
         // actually just check the results of parsing.
-        // eslint-disable-next-line no-func-assign
         build_viewer = function() {
           var expected = testcases[current_test].expected;
           var expected_images = testcases[current_test].expected_images;
-          for (let result of gTestItems) {
+          for (var result of gTestItems) {
             for (let type in expected) { // type is "pass", "unexpected" etc.
               if (result[type]) {
                 expected[type]--;
@@ -383,7 +382,7 @@ Features to add:
           }
 
           let total_images = 0;
-          for (let result of gTestItems) {
+          for (var result of gTestItems) {
             total_images += result.images.length;
           }
           if (total_images !== expected_images) {
@@ -439,7 +438,7 @@ Features to add:
                 unexpected: !!state.match(/^TEST-UNEXPECTED/),
                 random: (random == "(EXPECTED RANDOM)" || state == "TEST-KNOWN-INTERMITTENT-FAIL" || state == "TEST-KNOWN-INTERMITTENT-PASS"),
                 skip: (extra == " (SKIP)"),
-                url,
+                url: url,
                 images: [],
                 imageLabels: []
               });
@@ -457,13 +456,13 @@ Features to add:
       }
 
       function build_viewer() {
-        if (!gTestItems.length) {
+        if (gTestItems.length == 0) {
           show_phase("entry");
           return;
         }
 
         var cell = ID("itemlist");
-        while (cell.childNodes.length)
+        while (cell.childNodes.length > 0)
           cell.removeChild(cell.childNodes[cell.childNodes.length - 1]);
 
         var table = document.createElement("table");
@@ -482,14 +481,15 @@ Features to add:
             continue;
 
           var tr = document.createElement("tr");
+          var rowclass = item.pass ? "pass" : "fail";
           var td;
           var text;
 
           td = document.createElement("td");
           text = "";
-          if (item.unexpected) { text += "!"; }
-          if (item.random) { text += "R"; }
-          if (item.skip) { text += "S"; }
+          if (item.unexpected) { text += "!"; rowclass += " unexpected"; }
+          if (item.random) { text += "R"; rowclass += " random"; }
+          if (item.skip) { text += "S"; rowclass += " skip"; }
           td.appendChild(document.createTextNode(text));
           tr.appendChild(td);
 
@@ -499,7 +499,7 @@ Features to add:
           // Only display part of URL after "/mozilla/".
           var match = item.url.match(/\/mozilla\/(.*)/);
           text = document.createTextNode(match ? match[1] : item.url);
-          if (item.images.length) {
+          if (item.images.length > 0) {
             var a = document.createElement("a");
             a.href = "javascript:show_images(" + i + ")";
             a.appendChild(text);
@@ -784,6 +784,7 @@ Features to add:
       }
 
       function show_pixelinfo(x, y, pix1rgb, pix1hex, pix2rgb, pix2hex) {
+        var pixelinfo = ID("pixelinfo");
         ID("coords").textContent = [x, y];
         ID("pix1hex").textContent = pix1hex;
         ID("pix1rgb").textContent = pix1rgb;
@@ -792,9 +793,9 @@ Features to add:
       }
 
       function move_pixel(deltax, deltay) {
-        let coords = ID("coords").textContent.split(',');
-        let x = parseInt(coords[0]);
-        let y = parseInt(coords[1]);
+        coords = ID("coords").textContent.split(',');
+        x = parseInt(coords[0]);
+        y = parseInt(coords[1]);
         if (isNaN(x) || isNaN(y)) {
           return;
         }

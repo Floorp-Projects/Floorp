@@ -374,18 +374,6 @@ const SymbolicAddressSignature SASigArrayNewElem = {
     _FailOnNullPtr,
     5,
     {_PTR, _I32, _I32, _PTR, _I32, _END}};
-const SymbolicAddressSignature SASigArrayInitData = {
-    SymbolicAddress::ArrayInitData,
-    _VOID,
-    _FailOnNegI32,
-    7,
-    {_PTR, _RoN, _I32, _I32, _I32, _PTR, _I32, _END}};
-const SymbolicAddressSignature SASigArrayInitElem = {
-    SymbolicAddress::ArrayInitElem,
-    _VOID,
-    _FailOnNegI32,
-    7,
-    {_PTR, _RoN, _I32, _I32, _I32, _PTR, _I32, _END}};
 const SymbolicAddressSignature SASigArrayCopy = {
     SymbolicAddress::ArrayCopy,
     _VOID,
@@ -1417,18 +1405,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General_GeneralInt32Int32GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewElem));
       return FuncCast(Instance::arrayNewElem, *abiType);
-    case SymbolicAddress::ArrayInitData:
-      *abiType = Args_Int32_GeneralGeneralInt32Int32Int32GeneralInt32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigArrayInitData));
-      return FuncCast(Instance::arrayInitData, *abiType);
-    case SymbolicAddress::ArrayInitElem:
-      *abiType = Args_Int32_GeneralGeneralInt32Int32Int32GeneralInt32;
-      MOZ_ASSERT(*abiType == ToABIType(SASigArrayInitElem));
-      return FuncCast(Instance::arrayInitElem, *abiType);
     case SymbolicAddress::ArrayCopy:
       *abiType = Args_Int32_GeneralGeneralInt32GeneralInt32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayCopy));
       return FuncCast(Instance::arrayCopy, *abiType);
+
     case SymbolicAddress::ExceptionNew:
       *abiType = Args_General2;
       MOZ_ASSERT(*abiType == ToABIType(SASigExceptionNew));
@@ -1614,8 +1595,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ArrayNew_false:
     case SymbolicAddress::ArrayNewData:
     case SymbolicAddress::ArrayNewElem:
-    case SymbolicAddress::ArrayInitData:
-    case SymbolicAddress::ArrayInitElem:
     case SymbolicAddress::ArrayCopy:
 #define OP(op, export, sa_name, abitype, entry, idx) \
   case SymbolicAddress::sa_name:
@@ -1925,7 +1904,6 @@ bool wasm::EnsureBuiltinThunksInitialized() {
   MOZ_ASSERT(masm.callSiteTargets().empty());
   MOZ_ASSERT(masm.trapSites().empty());
   MOZ_ASSERT(masm.tryNotes().empty());
-  MOZ_ASSERT(masm.codeRangeUnwindInfos().empty());
 
   if (!ExecutableAllocator::makeExecutableAndFlushICache(thunks->codeBase,
                                                          thunks->codeSize)) {

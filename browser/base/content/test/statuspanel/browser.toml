@@ -5,3 +5,4 @@ support-files = ["head.js"]
 skip-if = ["verify"]
 
 ["browser_show_statuspanel_twice.js"]
+

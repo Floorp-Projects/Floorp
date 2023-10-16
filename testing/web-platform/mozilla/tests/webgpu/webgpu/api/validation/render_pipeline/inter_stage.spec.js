@@ -80,7 +80,7 @@ g.test('location,mismatch')
       },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, outputs, inputs, _success } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
@@ -98,7 +98,7 @@ g.test('location,superset')
 g.test('location,subset')
   .desc(`Tests that validation should fail when vertex output is a subset of fragment input.`)
   .params(u => u.combine('isAsync', [false, true]))
-  .fn(t => {
+  .fn(async t => {
     const { isAsync } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
@@ -127,7 +127,7 @@ g.test('type')
       { output: 'f32', input: 'vec2<f32>' },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, output, input } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
@@ -157,7 +157,7 @@ g.test('interpolation_type')
       { output: '@interpolate(linear, center)', input: '@interpolate(linear, center)' },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, output, input, _success } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
@@ -192,7 +192,7 @@ g.test('interpolation_sampling')
       { output: '@interpolate(perspective, centroid)', input: '@interpolate(perspective)' },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, output, input, _success } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
@@ -213,7 +213,7 @@ g.test('max_shader_variable_location')
       // User defined variable location = maxInterStageShaderVariables + locationDelta
       .combine('locationDelta', [0, -1, -2])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, locationDelta } = t.params;
     const maxInterStageShaderVariables = t.device.limits.maxInterStageShaderVariables;
     const location = maxInterStageShaderVariables + locationDelta;
@@ -239,7 +239,7 @@ g.test('max_components_count,output')
       { numScalarDelta: -1, topology: 'point-list', _success: true },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, numScalarDelta, topology, _success } = t.params;
 
     const numScalarComponents = t.device.limits.maxInterStageShaderComponents + numScalarDelta;
@@ -283,7 +283,7 @@ g.test('max_components_count,input')
       { numScalarDelta: -2, useExtraBuiltinInputs: true, _success: false },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { isAsync, numScalarDelta, useExtraBuiltinInputs, _success } = t.params;
 
     const numScalarComponents = t.device.limits.maxInterStageShaderComponents + numScalarDelta;

@@ -30,14 +30,6 @@ COMMON_ARGUMENT_GROUPS = {
                 "help": "Push despite a closed try tree",
             },
         ],
-        [
-            ["--push-to-lando"],
-            {
-                "action": "store_true",
-                "default": False,
-                "help": "Submit changes for Lando to push to try.",
-            },
-        ],
     ],
     "preset": [
         [

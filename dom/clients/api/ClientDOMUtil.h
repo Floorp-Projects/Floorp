@@ -23,7 +23,9 @@ void StartClientManagerOp(Func aFunc, const Arg& aArg, nsIGlobalObject* aGlobal,
                           Resolve aResolve, Reject aReject) {
   MOZ_DIAGNOSTIC_ASSERT(aGlobal);
 
-  nsCOMPtr<nsISerialEventTarget> target = aGlobal->SerialEventTarget();
+  nsCOMPtr<nsISerialEventTarget> target =
+      aGlobal->EventTargetFor(TaskCategory::Other);
+
   auto holder =
       MakeRefPtr<DOMMozPromiseRequestHolder<ClientOpPromise>>(aGlobal);
 

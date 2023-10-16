@@ -15,7 +15,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
-  AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
@@ -297,29 +296,23 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     policy = await policy.readyPromise;
   }
   const {
-    averageRating,
-    blocklistState,
     creator,
     description,
-    embedderDisabled,
-    fullDescription,
     homepageURL,
+    signedState,
+    name,
     icons,
-    id,
+    version,
+    optionsURL,
+    optionsType,
+    isRecommended,
+    blocklistState,
+    userDisabled,
+    embedderDisabled,
+    temporarilyInstalled,
     isActive,
     isBuiltin,
-    isCorrectlySigned,
-    isRecommended,
-    name,
-    optionsType,
-    optionsURL,
-    reviewCount,
-    reviewURL,
-    signedState,
-    sourceURI,
-    temporarilyInstalled,
-    userDisabled,
-    version,
+    id,
   } = aAddon;
   let creatorName = null;
   let creatorURL = null;
@@ -340,62 +333,36 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
   if (embedderDisabled) {
     disabledFlags.push("appDisabled");
   }
-  // Add-ons without an `isCorrectlySigned` property are correctly signed as
-  // they aren't the correct type for signing.
-  if (lazy.AddonSettings.REQUIRE_SIGNING && isCorrectlySigned === false) {
-    disabledFlags.push("signatureDisabled");
-  }
-  if (lazy.AddonManager.checkCompatibility && !aAddon.isCompatible) {
-    disabledFlags.push("appVersionDisabled");
-  }
   const baseURL = policy ? policy.getURL() : "";
   const privateBrowsingAllowed = policy ? policy.privateBrowsingAllowed : false;
   const promptPermissions = aPermissions
     ? await filterPromptPermissions(aPermissions.permissions)
     : [];
-
-  let updateDate;
-  try {
-    updateDate = aAddon.updateDate?.toISOString();
-  } catch {
-    // `installDate` is used as a fallback for `updateDate` but only when the
-    // add-on is installed. Before that, `installDate` might be undefined,
-    // which would cause `updateDate` (and `installDate`) to be an "invalid
-    // date".
-    updateDate = null;
-  }
-
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
     isBuiltIn: isBuiltin,
     webExtensionFlags: exportFlags(policy),
     metaData: {
-      averageRating,
-      baseURL,
-      blocklistState,
+      origins: aPermissions ? aPermissions.origins : [],
+      promptPermissions,
+      description,
+      enabled: isActive,
+      temporary: temporarilyInstalled,
+      disabledFlags,
+      version,
       creatorName,
       creatorURL,
-      description,
-      disabledFlags,
-      downloadUrl: sourceURI?.displaySpec,
-      enabled: isActive,
-      fullDescription,
       homepageURL,
-      icons,
-      isRecommended,
       name,
-      openOptionsPageInTab,
       optionsPageURL: optionsURL,
-      origins: aPermissions ? aPermissions.origins : [],
-      privateBrowsingAllowed,
-      promptPermissions,
-      reviewCount,
-      reviewURL,
+      openOptionsPageInTab,
+      isRecommended,
+      blocklistState,
       signedState,
-      temporary: temporarilyInstalled,
-      updateDate,
-      version,
+      icons,
+      baseURL,
+      privateBrowsingAllowed,
     },
   };
 }
@@ -732,7 +699,6 @@ class ExtensionProcessListener {
 
     lazy.EventDispatcher.instance.registerListener(this, [
       "GeckoView:WebExtension:EnableProcessSpawning",
-      "GeckoView:WebExtension:DisableProcessSpawning",
     ]);
   }
 

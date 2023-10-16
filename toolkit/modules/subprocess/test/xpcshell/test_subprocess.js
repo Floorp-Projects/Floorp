@@ -446,7 +446,7 @@ add_task(async function test_subprocess_invalid_json() {
   equal(exitCode, 0, "Got expected exit code");
 });
 
-if (AppConstants.platform == "win") {
+if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
   add_task(async function test_subprocess_inherited_descriptors() {
     let { libc, win32 } = ChromeUtils.importESModule(
       "resource://gre/modules/subprocess/subprocess_win.sys.mjs"

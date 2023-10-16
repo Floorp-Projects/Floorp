@@ -32,7 +32,6 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Try.h"
 #include "mozilla/URLPreloader.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"

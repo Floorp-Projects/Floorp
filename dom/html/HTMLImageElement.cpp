@@ -84,7 +84,8 @@ class ImageLoadTask final : public MicroTaskRunnable {
  public:
   ImageLoadTask(HTMLImageElement* aElement, bool aAlwaysLoad,
                 bool aUseUrgentStartForChannel)
-      : mElement(aElement),
+      : MicroTaskRunnable(),
+        mElement(aElement),
         mAlwaysLoad(aAlwaysLoad),
         mUseUrgentStartForChannel(aUseUrgentStartForChannel) {
     mDocument = aElement->OwnerDoc();

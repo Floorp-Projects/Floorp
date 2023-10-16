@@ -1,9 +1,17 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { mergeParams, mergeParamsChecked } from '../internal/params_utils.js';
-import { comparePublicParamsPaths, Ordering } from '../internal/query/compare.js';
+ **/ import { mergeParams } from '../internal/params_utils.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
-import { assert, mapLazy, objectEquals } from '../util/util.js';
+import { assert, mapLazy } from '../util/util.js';
+
+// ================================================================
+// "Public" ParamsBuilder API / Documentation
+// ================================================================
+
+/**
+ * Provides doc comments for the methods of CaseParamsBuilder and SubcaseParamsBuilder.
+ * (Also enforces rough interface match between them.)
+ */
 
 /**
  * Base class for `CaseParamsBuilder` and `SubcaseParamsBuilder`.
@@ -21,8 +29,8 @@ export class ParamsBuilderBase {
 /**
  * Calls the (normally hidden) `iterateCasesWithSubcases()` method.
  */
-export function builderIterateCasesWithSubcases(builder, caseFilter) {
-  return builder.iterateCasesWithSubcases(caseFilter);
+export function builderIterateCasesWithSubcases(builder) {
+  return builder.iterateCasesWithSubcases();
 }
 
 /**
@@ -34,61 +42,27 @@ export function builderIterateCasesWithSubcases(builder, caseFilter) {
  * This means, for example, that the `unit` passed into `TestBuilder.params()` can be reused.
  */
 export class CaseParamsBuilder extends ParamsBuilderBase {
-  *iterateCasesWithSubcases(caseFilter) {
-    for (const caseP of this.cases(caseFilter)) {
-      if (caseFilter) {
-        // this.cases() only filters out cases which conflict with caseFilter. Now that we have
-        // the final caseP, filter out cases which are missing keys that caseFilter requires.
-        const ordering = comparePublicParamsPaths(caseP, caseFilter);
-        if (ordering === Ordering.StrictSuperset || ordering === Ordering.Unordered) {
-          continue;
-        }
-      }
-
-      yield [caseP, undefined];
+  *iterateCasesWithSubcases() {
+    for (const a of this.cases()) {
+      yield [a, undefined];
     }
   }
 
   [Symbol.iterator]() {
-    return this.cases(null);
+    return this.cases();
   }
 
   /** @inheritDoc */
   expandWithParams(expander) {
-    const baseGenerator = this.cases;
-    return new CaseParamsBuilder(function* (caseFilter) {
-      for (const a of baseGenerator(caseFilter)) {
-        for (const b of expander(a)) {
-          if (caseFilter) {
-            // If the expander generated any key-value pair that conflicts with caseFilter, skip.
-            const kvPairs = Object.entries(b);
-            if (kvPairs.some(([k, v]) => k in caseFilter && !objectEquals(caseFilter[k], v))) {
-              continue;
-            }
-          }
-
-          yield mergeParamsChecked(a, b);
-        }
-      }
-    });
+    const newGenerator = expanderGenerator(this.cases, expander);
+    return new CaseParamsBuilder(() => newGenerator({}));
   }
 
   /** @inheritDoc */
   expand(key, expander) {
-    const baseGenerator = this.cases;
-    return new CaseParamsBuilder(function* (caseFilter) {
-      for (const a of baseGenerator(caseFilter)) {
-        assert(!(key in a), `New key '${key}' already exists in ${JSON.stringify(a)}`);
-
-        for (const v of expander(a)) {
-          // If the expander generated a value for this key that conflicts with caseFilter, skip.
-          if (caseFilter && key in caseFilter) {
-            if (!objectEquals(caseFilter[key], v)) {
-              continue;
-            }
-          }
-          yield { ...a, [key]: v };
-        }
+    return this.expandWithParams(function* (p) {
+      for (const value of expander(p)) {
+        yield { [key]: value };
       }
     });
   }
@@ -115,12 +89,8 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritDoc */
   filter(pred) {
-    const baseGenerator = this.cases;
-    return new CaseParamsBuilder(function* (caseFilter) {
-      for (const a of baseGenerator(caseFilter)) {
-        if (pred(a)) yield a;
-      }
-    });
+    const newGenerator = filterGenerator(this.cases, pred);
+    return new CaseParamsBuilder(() => newGenerator({}));
   }
 
   /** @inheritDoc */
@@ -134,9 +104,12 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
    * generate new subcases instead of new cases.
    */
   beginSubcases() {
-    return new SubcaseParamsBuilder(this.cases, function* () {
-      yield {};
-    });
+    return new SubcaseParamsBuilder(
+      () => this.cases(),
+      function* () {
+        yield {};
+      }
+    );
   }
 }
 
@@ -162,17 +135,8 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
     this.subcases = generator;
   }
 
-  *iterateCasesWithSubcases(caseFilter) {
-    for (const caseP of this.cases(caseFilter)) {
-      if (caseFilter) {
-        // this.cases() only filters out cases which conflict with caseFilter. Now that we have
-        // the final caseP, filter out cases which are missing keys that caseFilter requires.
-        const ordering = comparePublicParamsPaths(caseP, caseFilter);
-        if (ordering === Ordering.StrictSuperset || ordering === Ordering.Unordered) {
-          continue;
-        }
-      }
-
+  *iterateCasesWithSubcases() {
+    for (const caseP of this.cases()) {
       const subcases = Array.from(this.subcases(caseP));
       if (subcases.length) {
         yield [caseP, subcases];
@@ -182,27 +146,15 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritDoc */
   expandWithParams(expander) {
-    const baseGenerator = this.subcases;
-    return new SubcaseParamsBuilder(this.cases, function* (base) {
-      for (const a of baseGenerator(base)) {
-        for (const b of expander(mergeParams(base, a))) {
-          yield mergeParamsChecked(a, b);
-        }
-      }
-    });
+    return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
   }
 
   /** @inheritDoc */
   expand(key, expander) {
-    const baseGenerator = this.subcases;
-    return new SubcaseParamsBuilder(this.cases, function* (base) {
-      for (const a of baseGenerator(base)) {
-        const before = mergeParams(base, a);
-        assert(!(key in before), () => `Key '${key}' already exists in ${JSON.stringify(before)}`);
-
-        for (const v of expander(before)) {
-          yield { ...a, [key]: v };
-        }
+    return this.expandWithParams(function* (p) {
+      for (const value of expander(p)) {
+        // TypeScript doesn't know here that NewPKey is always a single literal string type.
+        yield { [key]: value };
       }
     });
   }
@@ -221,18 +173,33 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritDoc */
   filter(pred) {
-    const baseGenerator = this.subcases;
-    return new SubcaseParamsBuilder(this.cases, function* (base) {
-      for (const a of baseGenerator(base)) {
-        if (pred(mergeParams(base, a))) yield a;
-      }
-    });
+    return new SubcaseParamsBuilder(this.cases, filterGenerator(this.subcases, pred));
   }
 
   /** @inheritDoc */
   unless(pred) {
     return this.filter(x => !pred(x));
   }
+}
+
+function expanderGenerator(baseGenerator, expander) {
+  return function* (base) {
+    for (const a of baseGenerator(base)) {
+      for (const b of expander(mergeParams(base, a))) {
+        yield mergeParams(a, b);
+      }
+    }
+  };
+}
+
+function filterGenerator(baseGenerator, pred) {
+  return function* (base) {
+    for (const a of baseGenerator(base)) {
+      if (pred(mergeParams(base, a))) {
+        yield a;
+      }
+    }
+  };
 }
 
 /** Assert an object is not a Generator (a thing returned from a generator function). */

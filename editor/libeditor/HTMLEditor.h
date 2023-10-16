@@ -1203,15 +1203,13 @@ class HTMLEditor final : public EditorBase,
                        const Element& aEditingHost);
 
   /**
-   * Splits inclusive inline ancestors at both start and end of aRangeItem.  If
-   * this splits at every point, this modifies aRangeItem to point each split
-   * point (typically, at right node).
+   * Splits parent inline nodes at both start and end of aRangeItem.  If this
+   * splits at every point, this modifies aRangeItem to point each split point
+   * (typically, at right node).
    *
    * @param aRangeItem          [in/out] One or two DOM points where should be
    *                            split.  Will be modified to split point if
    *                            they're split.
-   * @param aBlockInlineCheck   [in] Whether this method considers block vs.
-   *                            inline with computed style or the default style.
    * @param aEditingHost        [in] The editing host.
    * @param aAncestorLimiter    [in/optional] If specified, this stops splitting
    *                            ancestors when meets this node.
@@ -1219,9 +1217,8 @@ class HTMLEditor final : public EditorBase,
    *                            it may be unset.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
-  SplitInlineAncestorsAtRangeBoundaries(
-      RangeItem& aRangeItem, BlockInlineCheck aBlockInlineCheck,
-      const Element& aEditingHost,
+  SplitParentInlineElementsAtRangeBoundaries(
+      RangeItem& aRangeItem, const Element& aEditingHost,
       const nsIContent* aAncestorLimiter = nullptr);
 
   /**
@@ -1436,18 +1433,18 @@ class HTMLEditor final : public EditorBase,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
   /**
-   * Split aElementToSplit at two points, before aStartOfMiddleElement and after
-   * aEndOfMiddleElement.  If they are very start or very end of aBlockElement,
-   * this won't create empty block.
+   * SplitRangeOffFromBlock() splits aBlockElement at two points, before
+   * aStartOfMiddleElement and after aEndOfMiddleElement.  If they are very
+   * start or very end of aBlockElement, this won't create empty block.
    *
-   * @param aElementToSplit         An element which will be split.
+   * @param aBlockElement           A block element which will be split.
    * @param aStartOfMiddleElement   Start node of middle block element.
    * @param aEndOfMiddleElement     End node of middle block element.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitRangeOffFromNodeResult, nsresult>
-  SplitRangeOffFromElement(Element& aElementToSplit,
-                           nsIContent& aStartOfMiddleElement,
-                           nsIContent& aEndOfMiddleElement);
+  SplitRangeOffFromBlock(Element& aBlockElement,
+                         nsIContent& aStartOfMiddleElement,
+                         nsIContent& aEndOfMiddleElement);
 
   /**
    * RemoveBlockContainerElementWithTransactionBetween() splits the nodes
@@ -1462,9 +1459,6 @@ class HTMLEditor final : public EditorBase,
    *                                from aBlockContainerElement.
    * @param aEndOfRange             The last node which will be unwrapped from
    *                                aBlockContainerElement.
-   * @param aBlockInlineCheck       Whether this method considers block vs.
-   *                                inline with computed style or the default
-   *                                style.
    * @return                        The left content is new created left
    *                                element of aBlockContainerElement.
    *                                The right content is split element,
@@ -1475,7 +1469,7 @@ class HTMLEditor final : public EditorBase,
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitRangeOffFromNodeResult, nsresult>
   RemoveBlockContainerElementWithTransactionBetween(
       Element& aBlockContainerElement, nsIContent& aStartOfRange,
-      nsIContent& aEndOfRange, BlockInlineCheck aBlockInlineCheck);
+      nsIContent& aEndOfRange);
 
   /**
    * WrapContentsInBlockquoteElementsWithTransaction() inserts at least one
@@ -1510,8 +1504,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveBlockContainerElementsWithTransaction(
-      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-      BlockInlineCheck aBlockInlineCheck);
+      const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   /**
    * CreateOrChangeBlockContainerElement() formats all nodes in aArrayOfContents
@@ -4509,7 +4502,7 @@ class HTMLEditor final : public EditorBase,
   friend class AlignStateAtSelection;  // CollectEditableTargetNodes,
                                        // CollectNonEditableNodes
   friend class AutoRangeArray;  // RangeUpdaterRef, SplitNodeWithTransaction,
-                                // SplitInlineAncestorsAtRangeBoundaries
+                                // SplitParentInlineElementsAtRangeBoundaries
   friend class AutoSelectionSetterAfterTableEdit;  // SetSelectionAfterEdit
   friend class
       AutoSetTemporaryAncestorLimiter;  // InitializeSelectionAncestorLimit

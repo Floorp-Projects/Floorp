@@ -125,7 +125,7 @@ class Image {
   int32_t GetSerial() const { return mSerial; }
 
   bool IsDRM() const { return mIsDRM; }
-  virtual void SetIsDRM(bool aIsDRM) { mIsDRM = aIsDRM; }
+  void SetIsDRM(bool aIsDRM) { mIsDRM = aIsDRM; }
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
 

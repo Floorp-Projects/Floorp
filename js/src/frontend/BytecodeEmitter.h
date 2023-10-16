@@ -19,7 +19,7 @@
 #include <stdint.h>  // uint16_t, uint32_t
 
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/BytecodeSection.h"  // BytecodeSection, PerScriptData, GCThingList
+#include "frontend/BytecodeSection.h"  // BytecodeSection, PerScriptData, CGScopeList
 #include "frontend/DestructuringFlavor.h"  // DestructuringFlavor
 #include "frontend/EitherParser.h"         // EitherParser
 #include "frontend/IteratorKind.h"         // IteratorKind
@@ -519,7 +519,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // encompasses the entire source.
   [[nodiscard]] bool emitScript(ParseNode* body);
 
-  // Calculate the `nslots` value for ImmutableScriptData constructor parameter.
+  // Calculate the `nslots` value for BCEScriptStencil constructor parameter.
   // Fails if it overflows.
   [[nodiscard]] bool getNslots(uint32_t* nslots);
 
@@ -655,7 +655,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitObjLiteralArray(ListNode* array);
 
-  // Is a field value JSOp::Object-compatible?
+  // Is a field value OBJLITERAL-compatible?
   [[nodiscard]] bool isRHSObjLiteralCompatible(ParseNode* value);
 
   [[nodiscard]] bool emitObjLiteralValue(ObjLiteralWriter& writer,
@@ -1035,7 +1035,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitSuperGetElem(PropertyByValue* elem,
                                       bool isCall = false);
 
-  [[nodiscard]] bool emitCalleeAndThis(ParseNode* callee, CallNode* maybeCall,
+  [[nodiscard]] bool emitCalleeAndThis(ParseNode* callee, CallNode* call,
                                        CallOrNewEmitter& cone);
 
   [[nodiscard]] bool emitOptionalCalleeAndThis(ParseNode* callee,

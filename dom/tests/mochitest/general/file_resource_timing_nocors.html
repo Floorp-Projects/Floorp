@@ -56,6 +56,13 @@
   <link rel="stylesheet" type="text/css" href="generateCss.sjs?G"/>
 
 
+  <!-- 5. background-image: -moz-image-rect()
+          [r] http://example.net , generateCss.sjs?N
+          [!]   http://example.net , blue.png
+  -->
+  <link rel="stylesheet" type="text/css" href="http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?N"/>
+
+
   <!-- 6. background-image: url()
        [r] http://example.net , generateCss.sjs?O
        [!]   http://example.net , red.png
@@ -120,6 +127,9 @@ var allResources = {
   "http://mochi.test:8888/tests/dom/tests/mochitest/general/generateCss.sjs?H" : "css",
   "http://example.com/tests/dom/tests/mochitest/general/generateCss.sjs?I" : "css",
   "http://example.org/tests/dom/tests/mochitest/general/generateCss.sjs?K" : "css",
+
+  // 5
+  "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?N" : "link",
 
   // 6
   "http://example.net/tests/dom/tests/mochitest/general/generateCss.sjs?O" : "link",

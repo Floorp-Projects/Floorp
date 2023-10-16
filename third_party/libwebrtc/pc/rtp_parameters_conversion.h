@@ -48,11 +48,13 @@ RTCErrorOr<cricket::FeedbackParam> ToCricketFeedbackParam(
 
 // Verifies that the codec kind is correct, and it has mandatory parameters
 // filled, with values in valid ranges.
-RTCErrorOr<cricket::Codec> ToCricketCodec(const RtpCodecParameters& codec);
+template <typename C>
+RTCErrorOr<C> ToCricketCodec(const RtpCodecParameters& codec);
 
 // Verifies that payload types aren't duplicated, in addition to normal
 // validation.
-RTCErrorOr<std::vector<cricket::Codec>> ToCricketCodecs(
+template <typename C>
+RTCErrorOr<std::vector<C>> ToCricketCodecs(
     const std::vector<RtpCodecParameters>& codecs);
 
 // SSRCs are allowed to be ommitted. This may be used for receive parameters
@@ -80,15 +82,20 @@ absl::optional<RtcpFeedback> ToRtcpFeedback(
 std::vector<RtpEncodingParameters> ToRtpEncodings(
     const cricket::StreamParamsVec& stream_params);
 
-RtpCodecParameters ToRtpCodecParameters(const cricket::Codec& cricket_codec);
-RtpCodecCapability ToRtpCodecCapability(const cricket::Codec& cricket_codec);
+template <typename C>
+RtpCodecParameters ToRtpCodecParameters(const C& cricket_codec);
 
+template <typename C>
+RtpCodecCapability ToRtpCodecCapability(const C& cricket_codec);
+
+template <class C>
 RtpCapabilities ToRtpCapabilities(
-    const std::vector<cricket::Codec>& cricket_codecs,
+    const std::vector<C>& cricket_codecs,
     const cricket::RtpHeaderExtensions& cricket_extensions);
 
+template <class C>
 RtpParameters ToRtpParameters(
-    const std::vector<cricket::Codec>& cricket_codecs,
+    const std::vector<C>& cricket_codecs,
     const cricket::RtpHeaderExtensions& cricket_extensions,
     const cricket::StreamParamsVec& stream_params);
 

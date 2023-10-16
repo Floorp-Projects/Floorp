@@ -52,7 +52,8 @@ export default connect((state, props) => {
   const symbols = getSymbols(state, location);
   const isBlackBoxed = isSourceBlackBoxed(state, location.source);
   // For the tab icon, we don't want to show the pretty icon for the non-pretty tab
-  const hasMatchingPrettyTab = !forTab && hasPrettyTab(state, location.source);
+  const hasMatchingPrettyTab =
+    !forTab && hasPrettyTab(state, location.source.url);
 
   // This is the key function that will compute the icon type,
   // In addition to the "modifier" implemented by each callsite.

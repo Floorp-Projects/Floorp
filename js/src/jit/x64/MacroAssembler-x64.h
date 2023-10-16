@@ -581,19 +581,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
       loadPtr(Address(scratch, 0x0), dest);
     }
   }
-  FaultingCodeOffset loadPtr(const Address& address, Register dest) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void loadPtr(const Address& address, Register dest) {
     movq(Operand(address), dest);
-    return fco;
   }
   void load64(const Address& address, Register dest) {
     movq(Operand(address), dest);
   }
   void loadPtr(const Operand& src, Register dest) { movq(src, dest); }
-  FaultingCodeOffset loadPtr(const BaseIndex& src, Register dest) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void loadPtr(const BaseIndex& src, Register dest) {
     movq(Operand(src), dest);
-    return fco;
   }
   void loadPrivate(const Address& src, Register dest) { loadPtr(src, dest); }
   void load32(AbsoluteAddress address, Register dest) {
@@ -608,15 +604,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void load64(const Operand& address, Register64 dest) {
     movq(address, dest.reg);
   }
-  FaultingCodeOffset load64(const Address& address, Register64 dest) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void load64(const Address& address, Register64 dest) {
     movq(Operand(address), dest.reg);
-    return fco;
   }
-  FaultingCodeOffset load64(const BaseIndex& address, Register64 dest) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void load64(const BaseIndex& address, Register64 dest) {
     movq(Operand(address), dest.reg);
-    return fco;
   }
   template <typename S>
   void load64Unaligned(const S& src, Register64 dest) {
@@ -642,10 +634,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
     movq(imm, scratch);
     movq(scratch, Operand(address));
   }
-  FaultingCodeOffset storePtr(Register src, const Address& address) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void storePtr(Register src, const Address& address) {
     movq(src, Operand(address));
-    return fco;
   }
   void store64(Register src, const Address& address) {
     movq(src, Operand(address));
@@ -653,10 +643,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void store64(Register64 src, const Operand& address) {
     movq(src.reg, address);
   }
-  FaultingCodeOffset storePtr(Register src, const BaseIndex& address) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void storePtr(Register src, const BaseIndex& address) {
     movq(src, Operand(address));
-    return fco;
   }
   void storePtr(Register src, const Operand& dest) { movq(src, dest); }
   void storePtr(Register src, AbsoluteAddress address) {
@@ -686,13 +674,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
       store16(src, Address(scratch, 0x0));
     }
   }
-  FaultingCodeOffset store64(Register64 src, Address address) {
-    FaultingCodeOffset fco = FaultingCodeOffset(currentOffset());
+  void store64(Register64 src, Address address) { storePtr(src.reg, address); }
+  void store64(Register64 src, const BaseIndex& address) {
     storePtr(src.reg, address);
-    return fco;
-  }
-  FaultingCodeOffset store64(Register64 src, const BaseIndex& address) {
-    return storePtr(src.reg, address);
   }
   void store64(Imm64 imm, Address address) {
     storePtr(ImmWord(imm.value), address);

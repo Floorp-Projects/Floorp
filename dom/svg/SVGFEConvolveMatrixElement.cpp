@@ -26,7 +26,7 @@ JSObject* SVGFEConvolveMatrixElement::WrapNode(
 }
 
 SVGElement::NumberInfo SVGFEConvolveMatrixElement::sNumberInfo[2] = {
-    {nsGkAtoms::divisor, 1}, {nsGkAtoms::bias, 0}};
+    {nsGkAtoms::divisor, 1, false}, {nsGkAtoms::bias, 0, false}};
 
 SVGElement::NumberPairInfo SVGFEConvolveMatrixElement::sNumberPairInfo[1] = {
     {nsGkAtoms::kernelUnitLength, 0, 0}};
@@ -227,7 +227,7 @@ nsresult SVGFEConvolveMatrixElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feConvolveMatrix);
   }
 
-  return SVGFEConvolveMatrixElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

@@ -30,7 +30,7 @@ use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZer
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::calc::{CalcUnits, PositivePercentageBasis};
 use crate::values::generics::{calc, NonNegative};
-use crate::values::specified::length::{FontBaseSize, LineHeightBase};
+use crate::values::specified::length::FontBaseSize;
 use crate::values::{specified, CSSFloat};
 use crate::{Zero, ZeroNoPercent};
 use app_units::Au;
@@ -840,7 +840,6 @@ impl specified::CalcLengthPercentage {
         context: &Context,
         zoom_fn: F,
         base_size: FontBaseSize,
-        line_height_base: LineHeightBase,
     ) -> LengthPercentage
     where
         F: Fn(Length) -> Length,
@@ -850,8 +849,7 @@ impl specified::CalcLengthPercentage {
         let node = self.node.map_leaves(|leaf| match *leaf {
             Leaf::Percentage(p) => CalcLengthPercentageLeaf::Percentage(Percentage(p)),
             Leaf::Length(l) => CalcLengthPercentageLeaf::Length({
-                let result =
-                    l.to_computed_value_with_base_size(context, base_size, line_height_base);
+                let result = l.to_computed_value_with_base_size(context, base_size);
                 if l.should_zoom_text() {
                     zoom_fn(result)
                 } else {
@@ -872,14 +870,8 @@ impl specified::CalcLengthPercentage {
         &self,
         context: &Context,
         base_size: FontBaseSize,
-        line_height_base: LineHeightBase,
     ) -> LengthPercentage {
-        self.to_computed_value_with_zoom(
-            context,
-            |abs| context.maybe_zoom_text(abs),
-            base_size,
-            line_height_base,
-        )
+        self.to_computed_value_with_zoom(context, |abs| context.maybe_zoom_text(abs), base_size)
     }
 
     /// Compute the value into pixel length as CSSFloat without context,
@@ -918,14 +910,9 @@ impl specified::CalcLengthPercentage {
         }
     }
 
-    /// Compute the calc using the current font-size and line-height. (and without text-zoom).
+    /// Compute the calc using the current font-size (and without text-zoom).
     pub fn to_computed_value(&self, context: &Context) -> LengthPercentage {
-        self.to_computed_value_with_zoom(
-            context,
-            |abs| abs,
-            FontBaseSize::CurrentStyle,
-            LineHeightBase::CurrentStyle,
-        )
+        self.to_computed_value_with_zoom(context, |abs| abs, FontBaseSize::CurrentStyle)
     }
 
     #[inline]

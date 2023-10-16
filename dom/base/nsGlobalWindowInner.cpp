@@ -84,6 +84,7 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/TimeStamp.h"
@@ -111,6 +112,7 @@
 #include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DebuggerNotificationBinding.h"
 #include "mozilla/dom/DebuggerNotificationManager.h"
+#include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -459,7 +461,7 @@ class nsGlobalWindowObserver final : public nsIObserver,
   }
 
   nsIEventTarget* GetEventTarget() const override {
-    return mWindow ? mWindow->SerialEventTarget() : nullptr;
+    return mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
   }
 
  private:
@@ -925,7 +927,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow,
   mIsInnerWindow = true;
 
   AssertIsOnMainThread();
-  SetIsOnMainThread();
   nsLayoutStatics::AddRef();
 
   // Initialize the PRCList (this).
@@ -1950,7 +1951,8 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   //       the opener, but we probably don't handle that yet.
   if (!mClientSource) {
     mClientSource = ClientManager::CreateSource(
-        ClientType::Window, SerialEventTarget(), foreignPartitionedPrincipal);
+        ClientType::Window, EventTargetFor(TaskCategory::Other),
+        foreignPartitionedPrincipal);
     MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
 
@@ -1988,7 +1990,8 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
     else if (mClientSource->GetController().isSome()) {
       mClientSource.reset();
       mClientSource = ClientManager::CreateSource(
-          ClientType::Window, SerialEventTarget(), foreignPartitionedPrincipal);
+          ClientType::Window, EventTargetFor(TaskCategory::Other),
+          foreignPartitionedPrincipal);
       MOZ_DIAGNOSTIC_ASSERT(mClientSource);
       newClientSource = true;
     }
@@ -4085,7 +4088,7 @@ void nsGlobalWindowInner::NotifyDOMWindowDestroyed(
 void nsGlobalWindowInner::NotifyWindowIDDestroyed(const char* aTopic) {
   nsCOMPtr<nsIRunnable> runnable =
       new WindowDestroyedEvent(this, mWindowID, aTopic);
-  Dispatch(runnable.forget());
+  Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 // static
@@ -4525,7 +4528,7 @@ nsresult nsGlobalWindowInner::DispatchAsyncHashchange(nsIURI* aOldURI,
 
   nsCOMPtr<nsIRunnable> callback =
       new HashchangeCallback(oldWideSpec, newWideSpec, this);
-  return Dispatch(callback.forget());
+  return Dispatch(TaskCategory::Other, callback.forget());
 }
 
 nsresult nsGlobalWindowInner::FireHashchange(const nsAString& aOldURL,
@@ -7346,7 +7349,7 @@ void nsGlobalWindowInner::FireOnNewGlobalObject() {
 
 #if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
 #  pragma message( \
-      "wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)
+          "wrapper failure reason: " MOZ_WINDOWS_WRAPPER_DISABLED_REASON)
 #  error "Never include unwrapped windows.h in this file!"
 #endif
 
@@ -7372,14 +7375,30 @@ void nsGlobalWindowInner::StructuredClone(
 }
 
 nsresult nsGlobalWindowInner::Dispatch(
-    already_AddRefed<nsIRunnable>&& aRunnable) const {
+    TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return NS_DispatchToCurrentThread(std::move(aRunnable));
+  if (GetDocGroup()) {
+    return GetDocGroup()->Dispatch(aCategory, std::move(aRunnable));
+  }
+  return DispatcherTrait::Dispatch(aCategory, std::move(aRunnable));
 }
 
-nsISerialEventTarget* nsGlobalWindowInner::SerialEventTarget() const {
+nsISerialEventTarget* nsGlobalWindowInner::EventTargetFor(
+    TaskCategory aCategory) const {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return GetMainThreadSerialEventTarget();
+  if (GetDocGroup()) {
+    return GetDocGroup()->EventTargetFor(aCategory);
+  }
+  return DispatcherTrait::EventTargetFor(aCategory);
+}
+
+AbstractThread* nsGlobalWindowInner::AbstractMainThreadFor(
+    TaskCategory aCategory) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (GetDocGroup()) {
+    return GetDocGroup()->AbstractMainThreadFor(aCategory);
+  }
+  return DispatcherTrait::AbstractMainThreadFor(aCategory);
 }
 
 Worklet* nsGlobalWindowInner::GetPaintWorklet(ErrorResult& aRv) {

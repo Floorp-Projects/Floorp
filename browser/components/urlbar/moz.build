@@ -38,7 +38,6 @@ EXTRA_JS_MODULES += [
     "UrlbarProviderPrivateSearch.sys.mjs",
     "UrlbarProviderQuickActions.sys.mjs",
     "UrlbarProviderQuickSuggest.sys.mjs",
-    "UrlbarProviderRecentSearches.sys.mjs",
     "UrlbarProviderRemoteTabs.sys.mjs",
     "UrlbarProviderSearchSuggestions.sys.mjs",
     "UrlbarProviderSearchTips.sys.mjs",
@@ -65,8 +64,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
     "private/ImpressionCaps.sys.mjs",
     "private/MDNSuggestions.sys.mjs",
     "private/PocketSuggestions.sys.mjs",
-    "private/SuggestBackendJs.sys.mjs",
-    "private/SuggestBackendRust.sys.mjs",
+    "private/QuickSuggestRemoteSettings.sys.mjs",
     "private/Weather.sys.mjs",
 ]
 
@@ -77,7 +75,6 @@ TESTING_JS_MODULES += [
 ]
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser-tips/browser.toml",
-    "tests/browser-tips/suppress-tips/browser.toml",
     "tests/browser-updateResults/browser.toml",
     "tests/browser/browser.toml",
     "tests/engagementTelemetry/browser/browser.toml",

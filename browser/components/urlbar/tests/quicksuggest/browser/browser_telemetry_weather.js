@@ -81,37 +81,34 @@ add_task(async function () {
         },
       },
     },
-    // click
-    click: {
-      scalars: {
-        [WEATHER_SCALARS.IMPRESSION]: position,
-        [WEATHER_SCALARS.CLICK]: position,
-      },
-      event: {
-        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-        method: "engagement",
-        object: "click",
-        extra: {
-          suggestion_type,
-          match_type,
-          position: position.toString(),
-        },
-      },
-    },
-    commands: [
-      // not relevant
-      {
-        command: [
-          "[data-l10n-id=firefox-suggest-command-dont-show-this]",
-          "not_relevant",
-        ],
+    selectables: {
+      // click
+      "urlbarView-row-inner": {
         scalars: {
           [WEATHER_SCALARS.IMPRESSION]: position,
+          [WEATHER_SCALARS.CLICK]: position,
         },
         event: {
           category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
           method: "engagement",
-          object: "other",
+          object: "click",
+          extra: {
+            suggestion_type,
+            match_type,
+            position: position.toString(),
+          },
+        },
+      },
+      // block
+      "urlbarView-button-block": {
+        scalars: {
+          [WEATHER_SCALARS.IMPRESSION]: position,
+          [WEATHER_SCALARS.BLOCK]: position,
+        },
+        event: {
+          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+          method: "engagement",
+          object: "block",
           extra: {
             suggestion_type,
             match_type,
@@ -120,8 +117,7 @@ add_task(async function () {
         },
       },
       // help
-      {
-        command: "help",
+      "urlbarView-button-help": {
         scalars: {
           [WEATHER_SCALARS.IMPRESSION]: position,
           [WEATHER_SCALARS.HELP]: position,
@@ -137,7 +133,7 @@ add_task(async function () {
           },
         },
       },
-    ],
+    },
   });
 });
 

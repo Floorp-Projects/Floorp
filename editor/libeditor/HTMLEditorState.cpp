@@ -283,14 +283,14 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
            atStartOfSelection.Offset() == atBodyOrDocumentElement.Offset()) {
     editTargetContent = HTMLEditUtils::GetNextContent(
         atStartOfSelection, {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, aHTMLEditor.ComputeEditingHost());
+        aHTMLEditor.ComputeEditingHost());
     if (NS_WARN_IF(!editTargetContent)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
   }
   // Otherwise, use first selected node.
-  // XXX Only for retrieving it, the following block treats all selected
+  // XXX Only for retreiving it, the following block treats all selected
   //     ranges.  `HTMLEditor` should have
   //     `GetFirstSelectionRangeExtendedToHardLineStartAndEnd()`.
   else {
@@ -330,8 +330,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
 
   const RefPtr<dom::Element> maybeNonEditableBlockElement =
       HTMLEditUtils::GetInclusiveAncestorElement(
-          *editTargetContent, HTMLEditUtils::ClosestBlockElement,
-          BlockInlineCheck::UseHTMLDefaultStyle);
+          *editTargetContent, HTMLEditUtils::ClosestBlockElement);
   if (NS_WARN_IF(!maybeNonEditableBlockElement)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -488,10 +487,10 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
   // We need to append descendant format block if block nodes are not format
   // block.  This is so we only have to look "up" the hierarchy to find
   // format nodes, instead of both up and down.
-  for (size_t index : Reversed(IntegerRange(arrayOfContents.Length()))) {
-    OwningNonNull<nsIContent>& content = arrayOfContents[index];
-    if (HTMLEditUtils::IsBlockElement(content,
-                                      BlockInlineCheck::UseHTMLDefaultStyle) &&
+  for (int32_t i = arrayOfContents.Length() - 1; i >= 0; i--) {
+    auto& content = arrayOfContents[i];
+    nsAutoString format;
+    if (HTMLEditUtils::IsBlockElement(content) &&
         !HTMLEditUtils::IsFormatNode(content)) {
       // XXX This RemoveObject() call has already been commented out and
       //     the above comment explained we're trying to replace non-format
@@ -528,10 +527,9 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
       MOZ_ASSERT(content->NodeInfo()->NameAtom());
       paragraphStateOfNode = content->NodeInfo()->NameAtom();
     }
-    // Ignore inline contents since its children have been appended
+    // Ignore non-format block node since its children have been appended
     // the list above so that we'll handle this descendants later.
-    else if (HTMLEditUtils::IsBlockElement(
-                 content, BlockInlineCheck::UseHTMLDefaultStyle)) {
+    else if (HTMLEditUtils::IsBlockElement(content)) {
       continue;
     }
     // If we meet an inline node, let's get its parent format.
@@ -568,8 +566,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
 void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
     dom::Element& aNonFormatBlockElement) {
-  MOZ_ASSERT(HTMLEditUtils::IsBlockElement(
-      aNonFormatBlockElement, BlockInlineCheck::UseHTMLDefaultStyle));
+  MOZ_ASSERT(HTMLEditUtils::IsBlockElement(aNonFormatBlockElement));
   MOZ_ASSERT(!HTMLEditUtils::IsFormatNode(&aNonFormatBlockElement));
 
   // We only need to place any one inline inside this node onto
@@ -579,9 +576,8 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
   bool foundInline = false;
   for (nsIContent* childContent = aNonFormatBlockElement.GetFirstChild();
        childContent; childContent = childContent->GetNextSibling()) {
-    const bool isBlock = HTMLEditUtils::IsBlockElement(
-        *childContent, BlockInlineCheck::UseHTMLDefaultStyle);
-    const bool isFormat = HTMLEditUtils::IsFormatNode(childContent);
+    bool isBlock = HTMLEditUtils::IsBlockElement(*childContent);
+    bool isFormat = HTMLEditUtils::IsFormatNode(childContent);
     // If the child is a non-format block element, let's check its children
     // recursively.
     if (isBlock && !isFormat) {
@@ -631,12 +627,12 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
   }
 
   // Pre-process our list of nodes
-  for (size_t index : Reversed(IntegerRange(aArrayOfContents.Length()))) {
-    OwningNonNull<nsIContent> content = aArrayOfContents[index];
+  for (int32_t i = aArrayOfContents.Length() - 1; i >= 0; i--) {
+    OwningNonNull<nsIContent> content = aArrayOfContents[i];
 
     // Remove all non-editable nodes.  Leave them be.
     if (!EditorUtils::IsEditableContent(content, EditorType::HTML)) {
-      aArrayOfContents.RemoveElementAt(index);
+      aArrayOfContents.RemoveElementAt(i);
       continue;
     }
 
@@ -646,9 +642,9 @@ nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
     if (HTMLEditUtils::IsAnyTableElement(content) ||
         HTMLEditUtils::IsAnyListElement(content) ||
         HTMLEditUtils::IsListItem(content)) {
-      aArrayOfContents.RemoveElementAt(index);
+      aArrayOfContents.RemoveElementAt(i);
       HTMLEditUtils::CollectChildren(
-          content, aArrayOfContents, index,
+          content, aArrayOfContents, i,
           {CollectChildrenOption::CollectListChildren,
            CollectChildrenOption::CollectTableChildren});
     }

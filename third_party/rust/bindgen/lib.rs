@@ -52,9 +52,7 @@ mod regex_set;
 pub use codegen::{
     AliasVariation, EnumVariation, MacroTypeVariation, NonCopyUnionStyle,
 };
-#[cfg(feature = "__cli")]
-pub use features::RUST_TARGET_STRINGS;
-pub use features::{RustTarget, LATEST_STABLE_RUST};
+pub use features::{RustTarget, LATEST_STABLE_RUST, RUST_TARGET_STRINGS};
 pub use ir::annotations::FieldVisibilityKind;
 pub use ir::function::Abi;
 pub use regex_set::RegexSet;
@@ -94,15 +92,15 @@ fn file_is_cpp(name_file: &str) -> bool {
         name_file.ends_with(".h++")
 }
 
-fn args_are_cpp(clang_args: &[Box<str>]) -> bool {
+fn args_are_cpp(clang_args: &[String]) -> bool {
     for w in clang_args.windows(2) {
-        if w[0].as_ref() == "-xc++" || w[1].as_ref() == "-xc++" {
+        if w[0] == "-xc++" || w[1] == "-xc++" {
             return true;
         }
-        if w[0].as_ref() == "-x" && w[1].as_ref() == "c++" {
+        if w[0] == "-x" && w[1] == "c++" {
             return true;
         }
-        if w[0].as_ref() == "-include" && file_is_cpp(w[1].as_ref()) {
+        if w[0] == "-include" && file_is_cpp(&w[1]) {
             return true;
         }
     }
@@ -265,9 +263,9 @@ impl std::fmt::Display for Formatter {
 ///
 /// # Regular expression arguments
 ///
-/// Some [`Builder`] methods, such as `allowlist_*` and `blocklist_*`, allow regular
+/// Some [`Builder`] methods such as the `allowlist_*` and `blocklist_*` methods allow regular
 /// expressions as arguments. These regular expressions will be enclosed in parentheses and
-/// anchored with `^` and `$`. So, if the argument passed is `<regex>`, the regular expression to be
+/// anchored with `^` and `$`. So if the argument passed is `<regex>`, the regular expression to be
 /// stored will be `^(<regex>)$`.
 ///
 /// As a consequence, regular expressions passed to `bindgen` will try to match the whole name of
@@ -275,16 +273,16 @@ impl std::fmt::Display for Formatter {
 /// `prefix`, the `prefix.*` regular expression must be used.
 ///
 /// Certain methods, like [`Builder::allowlist_function`], use regular expressions over function
-/// names. To match C++ methods, prefix the name of the type where they belong, followed by an
-/// underscore. So, if the type `Foo` has a method `bar`, it can be matched with the `Foo_bar`
+/// names. To match C++ methods, prefix the name of the type where they belong followed by an
+/// underscore. So if the type `Foo` has a method `bar`, it can be matched with the `Foo_bar`
 /// regular expression.
 ///
 /// Additionally, Objective-C interfaces can be matched by prefixing the regular expression with
-/// `I`. For example, the `IFoo` regular expression matches the `Foo` interface, and the `IFoo_foo`
+/// `I`. For example, the `IFoo` regular expression matches the `Foo` interface and the `IFoo_foo`
 /// regular expression matches the `foo` method of the `Foo` interface.
 ///
 /// Releases of `bindgen` with a version lesser or equal to `0.62.0` used to accept the wildcard
-/// pattern `*` as a valid regular expression. This behavior has been deprecated, and the `.*`
+/// pattern `*` as a valid regular expression. This behavior has been deprecated and the `.*`
 /// regular expression must be used instead.
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
@@ -319,26 +317,22 @@ impl Builder {
     /// Generate the Rust bindings using the options built up thus far.
     pub fn generate(mut self) -> Result<Bindings, BindgenError> {
         // Add any extra arguments from the environment to the clang command line.
-        self.options.clang_args.extend(
-            get_extra_clang_args(&self.options.parse_callbacks)
-                .into_iter()
-                .map(String::into_boxed_str),
-        );
+        self.options
+            .clang_args
+            .extend(get_extra_clang_args(&self.options.parse_callbacks));
 
         // Transform input headers to arguments on the clang command line.
         self.options.clang_args.extend(
             self.options.input_headers
                 [..self.options.input_headers.len().saturating_sub(1)]
                 .iter()
-                .flat_map(|header| ["-include".into(), header.clone()]),
+                .flat_map(|header| ["-include".into(), header.to_string()]),
         );
 
         let input_unsaved_files =
             std::mem::take(&mut self.options.input_header_contents)
                 .into_iter()
-                .map(|(name, contents)| {
-                    clang::UnsavedFile::new(name.as_ref(), contents.as_ref())
-                })
+                .map(|(name, contents)| clang::UnsavedFile::new(name, contents))
                 .collect::<Vec<_>>();
 
         Bindings::generate(self.options, input_unsaved_files)
@@ -405,7 +399,7 @@ impl Builder {
             .stdout(Stdio::piped());
 
         for a in &self.options.clang_args {
-            cmd.arg(a.as_ref());
+            cmd.arg(a);
         }
 
         for a in get_extra_clang_args(&self.options.parse_callbacks) {
@@ -435,19 +429,18 @@ impl Builder {
 
 impl BindgenOptions {
     fn build(&mut self) {
-        const REGEX_SETS_LEN: usize = 28;
+        const REGEX_SETS_LEN: usize = 27;
 
         let regex_sets: [_; REGEX_SETS_LEN] = [
+            &mut self.allowlisted_vars,
+            &mut self.allowlisted_types,
+            &mut self.allowlisted_functions,
+            &mut self.allowlisted_files,
             &mut self.blocklisted_types,
             &mut self.blocklisted_functions,
             &mut self.blocklisted_items,
             &mut self.blocklisted_files,
             &mut self.opaque_types,
-            &mut self.allowlisted_vars,
-            &mut self.allowlisted_types,
-            &mut self.allowlisted_functions,
-            &mut self.allowlisted_files,
-            &mut self.allowlisted_items,
             &mut self.bitfield_enums,
             &mut self.constified_enums,
             &mut self.constified_enum_modules,
@@ -483,7 +476,6 @@ impl BindgenOptions {
                     "--allowlist-function",
                     "--allowlist-var",
                     "--allowlist-file",
-                    "--allowlist-item",
                     "--bitfield-enum",
                     "--newtype-enum",
                     "--newtype-global-enum",
@@ -576,7 +568,8 @@ impl BindgenOptions {
 }
 
 fn deprecated_target_diagnostic(target: RustTarget, _options: &BindgenOptions) {
-    warn!("The {} Rust target is deprecated. If you have a need to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues", target);
+    let target = String::from(target);
+    warn!("The {} Rust target is deprecated. If you have a good reason to use this target please report it at https://github.com/rust-lang/rust-bindgen/issues", target,);
 
     #[cfg(feature = "experimental")]
     if _options.emit_diagnostics {
@@ -674,16 +667,16 @@ pub(crate) const HOST_TARGET: &str =
 
 // Some architecture triplets are different between rust and libclang, see #1211
 // and duplicates.
-fn rust_to_clang_target(rust_target: &str) -> Box<str> {
+fn rust_to_clang_target(rust_target: &str) -> String {
     if rust_target.starts_with("aarch64-apple-") {
         let mut clang_target = "arm64-apple-".to_owned();
         clang_target
             .push_str(rust_target.strip_prefix("aarch64-apple-").unwrap());
-        return clang_target.into();
+        return clang_target;
     } else if rust_target.starts_with("riscv64gc-") {
         let mut clang_target = "riscv64-".to_owned();
         clang_target.push_str(rust_target.strip_prefix("riscv64gc-").unwrap());
-        return clang_target.into();
+        return clang_target;
     } else if rust_target.ends_with("-espidf") {
         let mut clang_target =
             rust_target.strip_suffix("-espidf").unwrap().to_owned();
@@ -692,32 +685,32 @@ fn rust_to_clang_target(rust_target: &str) -> Box<str> {
             clang_target = "riscv32-".to_owned() +
                 clang_target.strip_prefix("riscv32imc-").unwrap();
         }
-        return clang_target.into();
+        return clang_target;
     } else if rust_target.starts_with("riscv32imc-") {
         let mut clang_target = "riscv32-".to_owned();
         clang_target.push_str(rust_target.strip_prefix("riscv32imc-").unwrap());
-        return clang_target.into();
+        return clang_target;
     } else if rust_target.starts_with("riscv32imac-") {
         let mut clang_target = "riscv32-".to_owned();
         clang_target
             .push_str(rust_target.strip_prefix("riscv32imac-").unwrap());
-        return clang_target.into();
+        return clang_target;
     }
-    rust_target.into()
+    rust_target.to_owned()
 }
 
 /// Returns the effective target, and whether it was explicitly specified on the
 /// clang flags.
-fn find_effective_target(clang_args: &[Box<str>]) -> (Box<str>, bool) {
+fn find_effective_target(clang_args: &[String]) -> (String, bool) {
     let mut args = clang_args.iter();
     while let Some(opt) = args.next() {
         if opt.starts_with("--target=") {
             let mut split = opt.split('=');
             split.next();
-            return (split.next().unwrap().into(), true);
+            return (split.next().unwrap().to_owned(), true);
         }
 
-        if opt.as_ref() == "-target" {
+        if opt == "-target" {
             if let Some(target) = args.next() {
                 return (target.clone(), true);
             }
@@ -762,10 +755,9 @@ impl Bindings {
         // opening libclang.so, it has to be the same architecture and thus the
         // check is fine.
         if !explicit_target && !is_host_build {
-            options.clang_args.insert(
-                0,
-                format!("--target={}", effective_target).into_boxed_str(),
-            );
+            options
+                .clang_args
+                .insert(0, format!("--target={}", effective_target));
         };
 
         fn detect_include_paths(options: &mut BindgenOptions) {
@@ -786,7 +778,7 @@ impl Bindings {
                             return false;
                         }
 
-                        let arg = arg.as_ref();
+                        let arg = &**arg;
 
                         // https://clang.llvm.org/docs/ClangCommandLineReference.html
                         // -isystem and -isystem-after are harmless.
@@ -803,7 +795,7 @@ impl Bindings {
 
                         true
                     })
-                    .map(|arg| arg.clone().into())
+                    .cloned()
                     .collect::<Vec<_>>()
             };
 
@@ -835,8 +827,8 @@ impl Bindings {
             if let Some(search_paths) = search_paths {
                 for path in search_paths.into_iter() {
                     if let Ok(path) = path.into_os_string().into_string() {
-                        options.clang_args.push("-isystem".into());
-                        options.clang_args.push(path.into_boxed_str());
+                        options.clang_args.push("-isystem".to_owned());
+                        options.clang_args.push(path);
                     }
                 }
             }
@@ -856,7 +848,7 @@ impl Bindings {
         }
 
         if let Some(h) = options.input_headers.last() {
-            let path = Path::new(h.as_ref());
+            let path = Path::new(h);
             if let Ok(md) = std::fs::metadata(path) {
                 if md.is_dir() {
                     return Err(BindgenError::FolderAsHeader(path.into()));
@@ -866,7 +858,8 @@ impl Bindings {
                         path.into(),
                     ));
                 }
-                options.clang_args.push(h.clone());
+                let h = h.clone();
+                options.clang_args.push(h);
             } else {
                 return Err(BindgenError::NotExist(path.into()));
             }
@@ -874,9 +867,9 @@ impl Bindings {
 
         for (idx, f) in input_unsaved_files.iter().enumerate() {
             if idx != 0 || !options.input_headers.is_empty() {
-                options.clang_args.push("-include".into());
+                options.clang_args.push("-include".to_owned());
             }
-            options.clang_args.push(f.name.to_str().unwrap().into())
+            options.clang_args.push(f.name.to_str().unwrap().to_owned())
         }
 
         debug!("Fixed-up options: {:?}", options);
@@ -919,10 +912,10 @@ impl Bindings {
     /// Write these bindings as source text to the given `Write`able.
     pub fn write<'a>(&self, mut writer: Box<dyn Write + 'a>) -> io::Result<()> {
         if !self.options.disable_header_comment {
-            let version =
-                option_env!("CARGO_PKG_VERSION").unwrap_or("(unknown version)");
+            let version = option_env!("CARGO_PKG_VERSION");
             let header = format!(
-                "/* automatically generated by rust-bindgen {version} */\n\n",
+                "/* automatically generated by rust-bindgen {} */\n\n",
+                version.unwrap_or("(unknown version)")
             );
             writer.write_all(header.as_bytes())?;
         }
@@ -1251,7 +1244,7 @@ fn commandline_flag_unit_test_function() {
     let bindings = crate::builder();
     let command_line_flags = bindings.command_line_flags();
 
-    let test_cases = [
+    let test_cases = vec![
         "--rust-target",
         "--no-derive-default",
         "--generate",
@@ -1270,7 +1263,7 @@ fn commandline_flag_unit_test_function() {
         .allowlist_function("safe_function");
 
     let command_line_flags = bindings.command_line_flags();
-    let test_cases = [
+    let test_cases = vec![
         "--rust-target",
         "input_header",
         "--no-derive-default",
@@ -1291,24 +1284,21 @@ fn commandline_flag_unit_test_function() {
 
 #[test]
 fn test_rust_to_clang_target() {
-    assert_eq!(
-        rust_to_clang_target("aarch64-apple-ios").as_ref(),
-        "arm64-apple-ios"
-    );
+    assert_eq!(rust_to_clang_target("aarch64-apple-ios"), "arm64-apple-ios");
 }
 
 #[test]
 fn test_rust_to_clang_target_riscv() {
     assert_eq!(
-        rust_to_clang_target("riscv64gc-unknown-linux-gnu").as_ref(),
+        rust_to_clang_target("riscv64gc-unknown-linux-gnu"),
         "riscv64-unknown-linux-gnu"
     );
     assert_eq!(
-        rust_to_clang_target("riscv32imc-unknown-none-elf").as_ref(),
+        rust_to_clang_target("riscv32imc-unknown-none-elf"),
         "riscv32-unknown-none-elf"
     );
     assert_eq!(
-        rust_to_clang_target("riscv32imac-unknown-none-elf").as_ref(),
+        rust_to_clang_target("riscv32imac-unknown-none-elf"),
         "riscv32-unknown-none-elf"
     );
 }
@@ -1316,11 +1306,11 @@ fn test_rust_to_clang_target_riscv() {
 #[test]
 fn test_rust_to_clang_target_espidf() {
     assert_eq!(
-        rust_to_clang_target("riscv32imc-esp-espidf").as_ref(),
+        rust_to_clang_target("riscv32imc-esp-espidf"),
         "riscv32-esp-elf"
     );
     assert_eq!(
-        rust_to_clang_target("xtensa-esp32-espidf").as_ref(),
+        rust_to_clang_target("xtensa-esp32-espidf"),
         "xtensa-esp32-elf"
     );
 }

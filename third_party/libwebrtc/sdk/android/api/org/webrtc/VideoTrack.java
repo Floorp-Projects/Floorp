@@ -65,7 +65,7 @@ public class VideoTrack extends MediaStreamTrack {
   }
 
   /** Returns a pointer to webrtc::VideoTrackInterface. */
-  public long getNativeVideoTrack() {
+  long getNativeVideoTrack() {
     return getNativeMediaStreamTrack();
   }
 

@@ -310,7 +310,7 @@ void idct16x16_10_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
 
 class Trans16x16TestBase {
  public:
-  virtual ~Trans16x16TestBase() = default;
+  virtual ~Trans16x16TestBase() {}
 
  protected:
   virtual void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) = 0;
@@ -728,9 +728,9 @@ class Trans16x16TestBase {
 class Trans16x16DCT : public Trans16x16TestBase,
                       public ::testing::TestWithParam<Dct16x16Param> {
  public:
-  ~Trans16x16DCT() override = default;
+  virtual ~Trans16x16DCT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     tx_type_ = GET_PARAM(2);
@@ -749,13 +749,13 @@ class Trans16x16DCT : public Trans16x16TestBase,
     inv_txfm_ref = idct16x16_ref;
 #endif
   }
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) override {
+  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {
     fwd_txfm_(in, out, stride);
   }
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride);
   }
 
@@ -782,9 +782,9 @@ TEST_P(Trans16x16DCT, DISABLED_Speed) { RunSpeedTest(); }
 class Trans16x16HT : public Trans16x16TestBase,
                      public ::testing::TestWithParam<Ht16x16Param> {
  public:
-  ~Trans16x16HT() override = default;
+  virtual ~Trans16x16HT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     tx_type_ = GET_PARAM(2);
@@ -803,13 +803,13 @@ class Trans16x16HT : public Trans16x16TestBase,
     inv_txfm_ref = iht16x16_ref;
 #endif
   }
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) override {
+  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {
     fwd_txfm_(in, out, stride, tx_type_);
   }
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride, tx_type_);
   }
 
@@ -832,9 +832,9 @@ TEST_P(Trans16x16HT, QuantCheck) {
 class InvTrans16x16DCT : public Trans16x16TestBase,
                          public ::testing::TestWithParam<Idct16x16Param> {
  public:
-  ~InvTrans16x16DCT() override = default;
+  virtual ~InvTrans16x16DCT() {}
 
-  void SetUp() override {
+  virtual void SetUp() {
     ref_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
     thresh_ = GET_PARAM(2);
@@ -842,12 +842,11 @@ class InvTrans16x16DCT : public Trans16x16TestBase,
     pitch_ = 16;
     mask_ = (1 << bit_depth_) - 1;
   }
-  void TearDown() override { libvpx_test::ClearSystemState(); }
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t * /*in*/, tran_low_t * /*out*/,
-                  int /*stride*/) override {}
-  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) override {
+  void RunFwdTxfm(int16_t * /*in*/, tran_low_t * /*out*/, int /*stride*/) {}
+  void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride);
   }
 

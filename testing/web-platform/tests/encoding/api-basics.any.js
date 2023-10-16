@@ -1,4 +1,3 @@
-// META: global=window,dedicatedworker,shadowrealm
 // META: title=Encoding API: Basics
 
 test(function() {

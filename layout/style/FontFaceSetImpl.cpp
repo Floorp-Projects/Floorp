@@ -344,7 +344,8 @@ void FontFaceSetImpl::RemoveLoader(nsFontFaceLoader* aLoader) {
   mLoaders.RemoveEntry(aLoader);
 }
 
-void FontFaceSetImpl::InsertNonRuleFontFace(FontFaceImpl* aFontFace) {
+void FontFaceSetImpl::InsertNonRuleFontFace(FontFaceImpl* aFontFace,
+                                            bool& aFontSetModified) {
   gfxUserFontAttributes attr;
   if (!aFontFace->GetAttributes(attr)) {
     // If there is no family name, this rule cannot contribute a
@@ -364,6 +365,8 @@ void FontFaceSetImpl::InsertNonRuleFontFace(FontFaceImpl* aFontFace) {
     }
     aFontFace->SetUserFontEntry(entry);
   }
+
+  aFontSetModified = true;
   AddUserFontEntry(family, aFontFace->GetUserFontEntry());
 }
 

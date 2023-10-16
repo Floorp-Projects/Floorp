@@ -169,10 +169,6 @@ class HttpTransactionShell : public nsISupports {
   virtual bool GetSupportsHTTP3() = 0;
 
   virtual void SetIsForWebTransport(bool aIsForWebTransport) = 0;
-
-  virtual TimeStamp GetOnStartRequestStartTime() const { return TimeStamp(); }
-  virtual TimeStamp GetDataAvailableStartTime() const { return TimeStamp(); }
-  virtual TimeStamp GetOnStopRequestStartTime() const { return TimeStamp(); }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpTransactionShell, HTTPTRANSACTIONSHELL_IID)

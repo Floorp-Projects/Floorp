@@ -367,8 +367,6 @@ class MOZ_STATIC_CLASS OpToFallbackKindTable {
     setKind(JSOp::Rest, BaselineICFallbackKind::Rest);
 
     setKind(JSOp::CloseIter, BaselineICFallbackKind::CloseIter);
-    setKind(JSOp::OptimizeGetIterator,
-            BaselineICFallbackKind::OptimizeGetIterator);
   }
 };
 
@@ -376,8 +374,7 @@ static constexpr OpToFallbackKindTable FallbackKindTable;
 
 void ICScript::initICEntries(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(cx->zone()->jitZone());
-  MOZ_ASSERT(jit::IsBaselineInterpreterEnabled() ||
-             jit::IsPortableBaselineInterpreterEnabled());
+  MOZ_ASSERT(jit::IsBaselineInterpreterEnabled());
 
   MOZ_ASSERT(numICEntries() == script->numICEntries());
 
@@ -406,9 +403,7 @@ void ICScript::initICEntries(JSContext* cx, JSScript* script) {
                "Unexpected fallback kind for non-JOF_IC op");
 
     BaselineICFallbackKind kind = BaselineICFallbackKind(tableValue);
-    TrampolinePtr stubCode = !jit::IsPortableBaselineInterpreterEnabled()
-                                 ? fallbackCode.addr(kind)
-                                 : TrampolinePtr();
+    TrampolinePtr stubCode = fallbackCode.addr(kind);
 
     // Initialize the ICEntry and ICFallbackStub.
     uint32_t offset = loc.bytecodeToOffset(script);
@@ -451,10 +446,8 @@ static void MaybeNotifyWarp(JSScript* script, ICFallbackStub* stub) {
 }
 
 void ICCacheIRStub::trace(JSTracer* trc) {
-  if (hasJitCode()) {
-    JitCode* stubJitCode = jitCode();
-    TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
-  }
+  JitCode* stubJitCode = jitCode();
+  TraceManuallyBarrieredEdge(trc, &stubJitCode, "baseline-ic-stub-code");
 
   TraceCacheIRStub(trc, this, stubInfo());
 }
@@ -900,12 +893,9 @@ bool DoSetElemFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  if (stack) {
-    // Overwrite the object on the stack (pushed for the decompiler) with the
-    // rhs.
-    MOZ_ASSERT(stack[2] == objv);
-    stack[2] = rhs;
-  }
+  // Overwrite the object on the stack (pushed for the decompiler) with the rhs.
+  MOZ_ASSERT(stack[2] == objv);
+  stack[2] = rhs;
 
   if (attached) {
     return true;
@@ -1410,7 +1400,7 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
   Rooted<PropertyName*> name(cx, script->getName(pc));
   RootedId id(cx, NameToId(name));
 
-  int lhsIndex = stack ? -2 : JSDVG_IGNORE_STACK;
+  int lhsIndex = -2;
   RootedObject obj(cx,
                    ToObjectFromStackForPropertyAccess(cx, lhs, lhsIndex, id));
   if (!obj) {
@@ -1478,11 +1468,9 @@ bool DoSetPropFallback(JSContext* cx, BaselineFrame* frame,
     }
   }
 
-  if (stack) {
-    // Overwrite the LHS on the stack (pushed for the decompiler) with the RHS.
-    MOZ_ASSERT(stack[1] == lhs);
-    stack[1] = rhs;
-  }
+  // Overwrite the LHS on the stack (pushed for the decompiler) with the RHS.
+  MOZ_ASSERT(stack[1] == lhs);
+  stack[1] = rhs;
 
   if (attached) {
     return true;
@@ -2520,40 +2508,6 @@ bool FallbackICCodeCompiler::emit_CloseIter() {
   using Fn =
       bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleObject);
   return tailCallVM<Fn, DoCloseIterFallback>(masm);
-}
-
-//
-// OptimizeGetIterator_Fallback
-//
-
-bool DoOptimizeGetIteratorFallback(JSContext* cx, BaselineFrame* frame,
-                                   ICFallbackStub* stub, HandleValue value,
-                                   MutableHandleValue res) {
-  stub->incrementEnteredCount();
-  MaybeNotifyWarp(frame->outerScript(), stub);
-  FallbackICSpew(cx, stub, "OptimizeGetIterator");
-
-  TryAttachStub<OptimizeGetIteratorIRGenerator>("OptimizeGetIterator", cx,
-                                                frame, stub, value);
-
-  bool result;
-  if (!OptimizeGetIterator(cx, value, &result)) {
-    return false;
-  }
-  res.setBoolean(result);
-  return true;
-}
-
-bool FallbackICCodeCompiler::emit_OptimizeGetIterator() {
-  EmitRestoreTailCallReg(masm);
-
-  masm.pushValue(R0);
-  masm.push(ICStubReg);
-  pushStubPayload(masm, R0.scratchReg());
-
-  using Fn = bool (*)(JSContext*, BaselineFrame*, ICFallbackStub*, HandleValue,
-                      MutableHandleValue);
-  return tailCallVM<Fn, DoOptimizeGetIteratorFallback>(masm);
 }
 
 bool JitRuntime::generateBaselineICFallbackCode(JSContext* cx) {

@@ -32,8 +32,6 @@ add_task(async function test_cookie_banner_service_disabled() {
       testURL: TEST_PAGE_A,
       visible: true,
       expected: "NoClick",
-      expectActorEnabled:
-        serviceMode != Ci.nsICookieBannerService.MODE_DISABLED,
     });
 
     await SpecialPowers.popPrefEnv();
@@ -163,7 +161,6 @@ add_task(async function test_clicking_with_delayed_banner() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
-      ["cookiebanners.bannerClicking.timeoutAfterLoad", 10000],
     ],
   });
 

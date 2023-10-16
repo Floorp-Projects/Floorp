@@ -217,8 +217,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
       mozilla::dom::WindowGlobalChild* aActor);
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD_(void) DeleteCycleCollectable() override;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* cx,
@@ -1186,8 +1185,14 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   static uint32_t GetShortcutsPermission(nsIPrincipal* aPrincipal);
 
   // Dispatch a runnable related to the global.
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final;
-  nsISerialEventTarget* SerialEventTarget() const final;
+  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+
+  virtual nsISerialEventTarget* EventTargetFor(
+      mozilla::TaskCategory aCategory) const override;
+
+  virtual mozilla::AbstractThread* AbstractMainThreadFor(
+      mozilla::TaskCategory aCategory) override;
 
   void DisableIdleCallbackRequests();
   uint32_t LastIdleRequestHandle() const {

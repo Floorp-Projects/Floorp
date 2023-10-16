@@ -19,12 +19,19 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   DefaultBrowserCheck: "resource:///modules/BrowserGlue.sys.mjs",
-  LaterRun: "resource:///modules/LaterRun.sys.mjs",
+  ProfileAge: "resource://gre/modules/ProfileAge.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
+ChromeUtils.defineLazyGetter(lazy, "updateManager", () => {
+  return (
+    Cc["@mozilla.org/updates/update-manager;1"] &&
+    Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager)
+  );
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -80,8 +87,8 @@ const SHOW_TIP_DELAY_MS = 200;
 const SHOW_PERSIST_TIP_DELAY_MS = 1500;
 
 // We won't show a tip if the browser has been updated in the past
-// LAST_UPDATE_THRESHOLD_HOURS.
-const LAST_UPDATE_THRESHOLD_HOURS = 24;
+// LAST_UPDATE_THRESHOLD_MS.
+const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 
 /**
  * A provider that sometimes returns a tip result when the user visits the
@@ -413,13 +420,10 @@ class ProviderSearchTips extends UrlbarProvider {
     // Don't show a tip if the browser has been updated recently.
     // Exception: TIPS.PERSIST should show immediately
     // after the feature is enabled for users.
-    let hoursSinceUpdate = Math.min(
-      lazy.LaterRun.hoursSinceInstall,
-      lazy.LaterRun.hoursSinceUpdate
-    );
+    let date = await lastBrowserUpdateDate();
     if (
       tip != TIPS.PERSIST &&
-      hoursSinceUpdate < LAST_UPDATE_THRESHOLD_HOURS &&
+      Date.now() - date <= LAST_UPDATE_THRESHOLD_MS &&
       !ignoreShowLimits
     ) {
       return;
@@ -588,6 +592,19 @@ async function isDefaultEngineHomepage(urlStr) {
   urlStr = url.hostname.concat(url.pathname);
 
   return homepageMatches.domainPath.test(urlStr);
+}
+
+async function lastBrowserUpdateDate() {
+  // Get the newest update in the update history. This isn't perfect
+  // because these dates are when updates are applied, not when the
+  // user restarts with the update. See bug 1595328.
+  if (lazy.updateManager && lazy.updateManager.getUpdateCount()) {
+    let update = lazy.updateManager.getUpdateAt(0);
+    return update.installDate;
+  }
+  // Fall back to the profile age.
+  let age = await lazy.ProfileAge();
+  return (await age.firstUse) || age.created;
 }
 
 export var UrlbarProviderSearchTips = new ProviderSearchTips();

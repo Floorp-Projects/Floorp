@@ -1,10 +1,10 @@
 import { assert, memcpy } from '../../../common/util/util.js';
 import {
+  EncodableTextureFormat,
   kTextureFormatInfo,
   resolvePerAspectFormat,
   SizedTextureFormat,
-  EncodableTextureFormat,
-} from '../../format_info.js';
+} from '../../capability_info.js';
 import { align } from '../math.js';
 import { reifyExtent3D } from '../unions.js';
 
@@ -107,8 +107,7 @@ export function getTextureSubCopyLayout(
   );
   assert(
     copySize_.width % blockWidth === 0 && copySize_.height % blockHeight === 0,
-    () =>
-      `copySize (${copySize_.width},${copySize_.height}) must be a multiple of the block size (${blockWidth},${blockHeight})`
+    'copySize must be a multiple of the block size'
   );
   const copySizeBlocks = {
     width: copySize_.width / blockWidth,

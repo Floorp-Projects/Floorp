@@ -371,7 +371,6 @@ class Manager::Factory {
           " ("_ns);
 
       for (const auto& manager : sFactory->mManagerList.NonObservingRange()) {
-        data.AppendLiteral("[");
         data.Append(quota::AnonymizedOriginString(
             manager->GetManagerId().QuotaOrigin()));
 
@@ -379,16 +378,8 @@ class Manager::Factory {
 
         data.Append(manager->GetState() == State::Open ? "Open"_ns
                                                        : "Closing"_ns);
-        data.AppendLiteral(", ");
 
-        if (manager->mContext) {
-          manager->mContext->Stringify(data);
-        } else {
-          data.AppendLiteral("No Context");
-        }
         data.AppendLiteral(", ");
-
-        data.AppendLiteral("]");
       }
 
       data.AppendLiteral(" ) ");

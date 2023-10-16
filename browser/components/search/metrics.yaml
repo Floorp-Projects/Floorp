@@ -215,16 +215,9 @@ serp:
       target:
         description: >
           The target component used to trigger the action.
-          Possible values are:
-          `ad_carousel`,
-          `ad_image_row`,
-          `ad_link`,
-          `ad_sidebar`,
-          `ad_sitelink`,
-          `incontent_searchbox`,
-          `non_ads_link`,
-          `refined_search_buttons`,
-          `shopping_tab`.
+          Possible values are `ad_carousel`, `ad_link`, `ad_sitelink`,
+          `ad_sidebar`, `shopping_tab`, `non_ads_link`, or
+          `incontent_searchbox`.
         type: string
 
   ad_impression:
@@ -248,12 +241,11 @@ serp:
         description: >
           Type of components on a SERP. Possible values are:
           `ad_carousel`,
-          `ad_image_row`,
           `ad_link`,
           `ad_sidebar`,
           `ad_sitelink`,
-          `refined_search_buttons`,
-          `shopping_tab`.
+          `refined_search_buttons`
+          `shopping_tab`,
           Defaults to `ad_link`.
         type: string
       ads_loaded:

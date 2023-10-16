@@ -6,23 +6,21 @@ platform-independent data files."""
 # contributed by Bastian Kleineidam
 
 import os
-from ..core import Command
-from ..util import change_root, convert_path
-
+from distutils.core import Command
+from distutils.util import change_root, convert_path
 
 class install_data(Command):
+
     description = "install data files"
 
     user_options = [
-        (
-            'install-dir=',
-            'd',
-            "base directory for installing data files "
-            "(default: installation base dir)",
-        ),
-        ('root=', None, "install everything relative to this alternate root directory"),
+        ('install-dir=', 'd',
+         "base directory for installing data files "
+         "(default: installation base dir)"),
+        ('root=', None,
+         "install everything relative to this alternate root directory"),
         ('force', 'f', "force installation (overwrite existing files)"),
-    ]
+        ]
 
     boolean_options = ['force']
 
@@ -35,12 +33,11 @@ class install_data(Command):
         self.warn_dir = 1
 
     def finalize_options(self):
-        self.set_undefined_options(
-            'install',
-            ('install_data', 'install_dir'),
-            ('root', 'root'),
-            ('force', 'force'),
-        )
+        self.set_undefined_options('install',
+                                   ('install_data', 'install_dir'),
+                                   ('root', 'root'),
+                                   ('force', 'force'),
+                                  )
 
     def run(self):
         self.mkpath(self.install_dir)
@@ -49,10 +46,9 @@ class install_data(Command):
                 # it's a simple file, so copy it
                 f = convert_path(f)
                 if self.warn_dir:
-                    self.warn(
-                        "setup script did not provide a directory for "
-                        "'%s' -- installing right in '%s'" % (f, self.install_dir)
-                    )
+                    self.warn("setup script did not provide a directory for "
+                              "'%s' -- installing right in '%s'" %
+                              (f, self.install_dir))
                 (out, _) = self.copy_file(f, self.install_dir)
                 self.outfiles.append(out)
             else:

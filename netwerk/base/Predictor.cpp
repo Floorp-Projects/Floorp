@@ -1243,7 +1243,8 @@ Predictor::LearnNative(nsIURI* targetURI, nsIURI* sourceURI,
 
     RefPtr<PredictorLearnRunnable> runnable = new PredictorLearnRunnable(
         targetURI, sourceURI, reason, originAttributes);
-    SchedulerGroup::Dispatch(runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
+
     return NS_OK;
   }
 

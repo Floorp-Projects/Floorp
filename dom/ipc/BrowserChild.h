@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChromeFocus.h"
+#include "nsIDOMEventListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWindowProvider.h"
 #include "nsIDocShell.h"
@@ -32,14 +33,16 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/CompositorOptions.h"
-#include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/GeckoContentControllerTypes.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "AudioChannelService.h"
 #include "PuppetWidget.h"
 #include "nsDeque.h"
 #include "nsIRemoteTab.h"
+#include "nsTHashSet.h"
 
 class nsBrowserStatusFilter;
 class nsIDOMWindow;
@@ -88,6 +91,7 @@ class WebProgressData;
 
 class BrowserChildMessageManager : public ContentFrameMessageManager,
                                    public nsIMessageSender,
+                                   public DispatcherTrait,
                                    public nsSupportsWeakReference {
  public:
   explicit BrowserChildMessageManager(BrowserChild* aBrowserChild);
@@ -101,9 +105,10 @@ class BrowserChildMessageManager : public ContentFrameMessageManager,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) override;
-  already_AddRefed<nsIDocShell> GetDocShell(ErrorResult& aError) override;
-  already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
+  virtual Nullable<WindowProxyHolder> GetContent(ErrorResult& aError) override;
+  virtual already_AddRefed<nsIDocShell> GetDocShell(
+      ErrorResult& aError) override;
+  virtual already_AddRefed<nsIEventTarget> GetTabEventTarget() override;
 
   NS_FORWARD_SAFE_NSIMESSAGESENDER(mMessageManager)
 
@@ -112,7 +117,14 @@ class BrowserChildMessageManager : public ContentFrameMessageManager,
   }
 
   // Dispatch a runnable related to the global.
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const;
+  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+
+  virtual nsISerialEventTarget* EventTargetFor(
+      mozilla::TaskCategory aCategory) const override;
+
+  virtual AbstractThread* AbstractMainThreadFor(
+      mozilla::TaskCategory aCategory) override;
 
   RefPtr<BrowserChild> mBrowserChild;
 

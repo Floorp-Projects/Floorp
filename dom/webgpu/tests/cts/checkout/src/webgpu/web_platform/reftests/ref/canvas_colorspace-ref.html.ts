@@ -27,12 +27,7 @@ function createCanvas(colorSpace: PredefinedColorSpace) {
 
 const u = kUnitCaseParamsBuilder
   .combine('alphaMode', kCanvasAlphaModes)
-  .combine('colorSpace', kCanvasColorSpaces)
-  .combine('creation', [
-    'canvas',
-    'transferControlToOffscreen',
-    'transferControlToOffscreenWorker',
-  ]);
+  .combine('colorSpace', kCanvasColorSpaces);
 
 // Generate reference canvases for all combinations from the test.
 // We only need colorSpace to generate the correct reference.

@@ -24,7 +24,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-constexpr Decimal InputType::kStepAny;
+const Decimal InputType::kStepAny = Decimal(0);
 
 /* static */ UniquePtr<InputType, InputType::DoNotDelete> InputType::Create(
     HTMLInputElement* aInputElement, FormControlType aType, void* aMemory) {

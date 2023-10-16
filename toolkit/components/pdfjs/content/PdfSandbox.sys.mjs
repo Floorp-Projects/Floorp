@@ -58,7 +58,7 @@ export class PdfSandbox {
     try {
       // Run the code in the bundle
       Services.scriptloader.loadSubScript(
-        "resource://pdf.js/build/pdf.scripting.mjs",
+        "resource://pdf.js/build/pdf.scripting.js",
         sandbox
       );
 

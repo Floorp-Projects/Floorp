@@ -115,7 +115,10 @@ async function enableEditor(browser, name) {
     null,
     true
   );
-  await clickOn(browser, `#editor${name}`);
+  await SpecialPowers.spawn(browser, [name], async name => {
+    const button = content.document.querySelector(`#editor${name}`);
+    button.click();
+  });
   await editingModePromise;
   await editingStatePromise;
   await TestUtils.waitForTick();

@@ -22,11 +22,13 @@
 
 <script>
 promise_test(async () => {
+  let transitionstartFired = false;
+  target.addEventListener('transitionstart', () => {
+    transitionstartFired = true;
+  });
   await waitForAnimationFrames(2);
   target.classList.add('animated');
-  const anims = document.getAnimations();
-  assert_equals(anims.length, 1,
-                "Did not start a discrete-property transition");
-  assert_equals(anims[0].transitionProperty, 'float');
+  await waitForAnimationFrames(1);
+  assert_true(transitionstartFired);
 }, 'transition:all with transition-behavior:allow-discrete should animate discrete properties.');
 </script>

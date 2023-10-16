@@ -7,5 +7,4 @@ export const globalTestConfig = {
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,
-  compatibility: false,
 };

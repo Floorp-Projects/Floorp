@@ -2,13 +2,7 @@
 tags = "search-telemetry"
 support-files = ["head.js"]
 
-["browser_search_glean_serp_event_telemetry_categorization_enabled_by_nimbus_variable.js"]
-support-files = [
-  "domain_category_mappings.json",
-  "searchTelemetryDomainCategorizationReporting.html",
-]
-
-["browser_search_glean_serp_event_telemetry_enabled_by_nimbus_variable.js"]
+["browser_search_glean_serp_telemetry_enabled_by_nimbus_variable.js"]
 support-files = ["searchTelemetryAd.html"]
 
 ["browser_search_telemetry_abandonment.js"]
@@ -41,10 +35,7 @@ support-files = [
 support-files = ["searchTelemetryDomainExtraction.html"]
 
 ["browser_search_telemetry_domain_categorization_reporting.js"]
-support-files = [
-  "searchTelemetryDomainCategorizationReporting.html",
-  "searchTelemetryDomainCategorizationCapProcessedDomains.html",
-]
+support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
 ["browser_search_telemetry_engagement_cached.js"]
 support-files = [
@@ -114,44 +105,37 @@ support-files = [
 ["browser_search_telemetry_searchbar.js"]
 https_first_disabled = true
 support-files = [
+  "slow_loading_page_with_ads_on_load_event.html",
+  "slow_loading_page_with_ads.html",
+  "slow_loading_page_with_ads.sjs",
   "telemetrySearchSuggestions.sjs",
   "telemetrySearchSuggestions.xml",
 ]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked button.searchbar-engine-one-off-item-engine-0 may not be focusable; richlistitem.autocomplete-richlistitem may be not labeled
 
 ["browser_search_telemetry_shopping.js"]
 support-files = ["searchTelemetryAd_shopping.html"]
 
 ["browser_search_telemetry_sources.js"]
-support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
-
-["browser_search_telemetry_sources_ads.js"]
 support-files = [
   "searchTelemetry.html",
   "searchTelemetryAd.html",
 ]
 
-["browser_search_telemetry_sources_ads_clicks.js"]
+["browser_search_telemetry_sources_ads.js"]
 support-files = [
+  "searchTelemetry.html",
   "searchTelemetryAd.html",
-]
-
-["browser_search_telemetry_sources_ads_data_attributes.js"]
-support-files = [
   "searchTelemetryAd_dataAttributes.html",
   "searchTelemetryAd_dataAttributes_href.html",
   "searchTelemetryAd_dataAttributes_none.html",
-]
-
-["browser_search_telemetry_sources_ads_load_events.js"]
-support-files = [
-  "slow_loading_page_with_ads_on_load_event.html",
-  "slow_loading_page_with_ads.html",
-  "slow_loading_page_with_ads.sjs",
 ]
 
 ["browser_search_telemetry_sources_in_content.js"]
 support-files = ["searchTelemetryAd_searchbox_with_content.html"]
 
 ["browser_search_telemetry_sources_navigation.js"]
-support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
+support-files = [
+  "searchTelemetry.html",
+  "searchTelemetryAd.html",
+]
+

@@ -68,7 +68,7 @@ nsresult FileSystemUtils::DispatchRunnable(
   if (!aGlobal) {
     target = GetMainThreadSerialEventTarget();
   } else {
-    target = aGlobal->SerialEventTarget();
+    target = aGlobal->EventTargetFor(TaskCategory::Other);
   }
 
   MOZ_ASSERT(target);

@@ -261,7 +261,6 @@ pub const MAP_NORESERVE: ::c_int = 0x0400;
 pub const MAP_POPULATE: ::c_int = 0x10000;
 pub const MAP_NONBLOCK: ::c_int = 0x20000;
 pub const MAP_STACK: ::c_int = 0x40000;
-pub const MAP_HUGETLB: ::c_int = 0x80000;
 
 pub const EDEADLK: ::c_int = 45;
 pub const ENAMETOOLONG: ::c_int = 78;
@@ -382,6 +381,8 @@ pub const SIG_BLOCK: ::c_int = 1;
 pub const SIG_UNBLOCK: ::c_int = 2;
 
 pub const EXTPROC: ::tcflag_t = 0o200000;
+
+pub const MAP_HUGETLB: ::c_int = 0x80000;
 
 pub const F_GETLK: ::c_int = 33;
 pub const F_GETOWN: ::c_int = 23;

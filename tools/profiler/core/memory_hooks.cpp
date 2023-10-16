@@ -209,7 +209,7 @@ class InfallibleAllocWithoutHooksPolicy {
 // Define a custom implementation here.
 class Mutex : private ::mozilla::detail::MutexImpl {
  public:
-  Mutex() = default;
+  Mutex() : ::mozilla::detail::MutexImpl() {}
 
   void Lock() { ::mozilla::detail::MutexImpl::lock(); }
   void Unlock() { ::mozilla::detail::MutexImpl::unlock(); }
@@ -247,7 +247,7 @@ class AllocationTracker {
       AllocationSet;
 
  public:
-  AllocationTracker() = default;
+  AllocationTracker() : mAllocations(), mMutex() {}
 
   void AddMemoryAddress(const void* memoryAddress) {
     MutexAutoLock lock(mMutex);

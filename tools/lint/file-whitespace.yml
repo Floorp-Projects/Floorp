@@ -8,6 +8,7 @@ file-whitespace:
         - tools/lint/rst/requirements.txt
         - tools/lint/tox/tox_requirements.txt
         - tools/lint/spell/codespell_requirements.txt
+        - tools/tryselect/selectors/chooser/requirements.txt
     exclude:
         - accessible/tests/crashtests
         - accessible/tests/mochitest
@@ -151,7 +152,6 @@ file-whitespace:
         - .py
         - .rs
         - .rst
-        - .toml
         - .webidl
         - .xhtml
     support-files:

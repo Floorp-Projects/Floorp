@@ -41,20 +41,17 @@ static void PopulateRegsFromContext(Registers& aRegs, CONTEXT* aContext) {
   aRegs.mPC = reinterpret_cast<Address>(aContext->Rip);
   aRegs.mSP = reinterpret_cast<Address>(aContext->Rsp);
   aRegs.mFP = reinterpret_cast<Address>(aContext->Rbp);
-  aRegs.mR10 = reinterpret_cast<Address>(aContext->R10);
-  aRegs.mR12 = reinterpret_cast<Address>(aContext->R12);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_x86)
   aRegs.mPC = reinterpret_cast<Address>(aContext->Eip);
   aRegs.mSP = reinterpret_cast<Address>(aContext->Esp);
   aRegs.mFP = reinterpret_cast<Address>(aContext->Ebp);
-  aRegs.mEcx = reinterpret_cast<Address>(aContext->Ecx);
-  aRegs.mEdx = reinterpret_cast<Address>(aContext->Edx);
+  aRegs.mLR = 0;
 #elif defined(GP_ARCH_arm64)
   aRegs.mPC = reinterpret_cast<Address>(aContext->Pc);
   aRegs.mSP = reinterpret_cast<Address>(aContext->Sp);
   aRegs.mFP = reinterpret_cast<Address>(aContext->Fp);
   aRegs.mLR = reinterpret_cast<Address>(aContext->Lr);
-  aRegs.mR11 = reinterpret_cast<Address>(aContext->X11);
 #else
 #  error "bad arch"
 #endif
@@ -265,7 +262,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
 #if defined(GP_ARCH_amd64)
   context.ContextFlags = CONTEXT_FULL;
 #else
-  context.ContextFlags = CONTEXT_CONTROL | CONTEXT_INTEGER;
+  context.ContextFlags = CONTEXT_CONTROL;
 #endif
   if (!GetThreadContext(profiled_thread, &context)) {
     ResumeThread(profiled_thread);

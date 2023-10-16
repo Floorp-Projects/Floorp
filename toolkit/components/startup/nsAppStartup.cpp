@@ -26,7 +26,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ResultExtensions.h"
-#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 
 #include "GeckoProfiler.h"

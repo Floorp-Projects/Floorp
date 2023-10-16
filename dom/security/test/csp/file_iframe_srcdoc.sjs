@@ -2,7 +2,7 @@
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1073952
 
 "use strict";
-Cu.importGlobalProperties(["URLSearchParams"]);
+Components.utils.importGlobalProperties(["URLSearchParams"]);
 
 const SCRIPT = `
   <script>

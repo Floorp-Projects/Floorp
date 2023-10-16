@@ -103,6 +103,8 @@ urlbar-persistent-storage-notification-anchor =
     .tooltiptext = Store data in Persistent Storage
 urlbar-addons-notification-anchor =
     .tooltiptext = Open add-on installation message panel
+urlbar-tip-help-icon =
+    .title = Get help
 urlbar-search-tips-confirm = Okay, Got It
 urlbar-search-tips-confirm-short = Got it
 # Read out before Urlbar Tip text content so screenreader users know the
@@ -597,7 +599,7 @@ urlbar-result-action-sponsored = Sponsored
 urlbar-result-action-switch-tab = Switch to Tab
 urlbar-result-action-visit = Visit
 # Allows the user to visit a URL that was previously copied to the clipboard.
-urlbar-result-action-visit-from-clipboard = Visit from clipboard
+urlbar-result-action-visit-from-your-clipboard = Visit from your clipboard
 # Directs a user to press the Tab key to perform a search with the specified
 # engine.
 # Variables
@@ -652,12 +654,6 @@ urlbar-group-search-suggestions =
 # A label shown above Quick Actions in the urlbar results.
 urlbar-group-quickactions =
   .label = Quick Actions
-
-# A label shown above the recent searches group in the urlbar results.
-# Variables
-#  $engine (String): the name of the search engine used to search.
-urlbar-group-recent-searches =
-  .label = Recent Searches
 
 ## Reader View toolbar buttons
 
@@ -977,24 +973,6 @@ unified-extensions-button-quarantined =
     .tooltiptext =
         Extensions
         Some extensions are not allowed
-
-## Private browsing reset button
-
-reset-pbm-toolbar-button =
-    .label = End Private Session
-    .tooltiptext = End Private Session
-reset-pbm-panel-heading = End your private session?
-reset-pbm-panel-description = Close all private tabs and delete history, cookies, and all other site data.
-reset-pbm-panel-always-ask-checkbox =
-     .label = Always ask me
-     .accesskey = A
-reset-pbm-panel-cancel-button =
-    .label = Cancel
-    .accesskey = C
-reset-pbm-panel-confirm-button =
-    .label = Delete session data
-    .accesskey = D
-reset-pbm-panel-complete = Private session data deleted
 
 ## Autorefresh blocker
 

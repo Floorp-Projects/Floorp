@@ -25,7 +25,7 @@ SVGElement::StringInfo SVGFEMergeNodeElement::sStringInfo[1] = {
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFEMergeNodeElement)
 
 //----------------------------------------------------------------------
-// SVGFilterPrimitiveChildElement methods
+// nsFEUnstyledElement methods
 
 bool SVGFEMergeNodeElement::AttributeAffectsRendering(
     int32_t aNameSpaceID, nsAtom* aAttribute) const {

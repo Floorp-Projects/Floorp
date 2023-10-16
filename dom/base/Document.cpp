@@ -100,7 +100,6 @@
 #include "mozilla/RelativeTo.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ReverseIterator.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScrollTimelineAnimationTracker.h"
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILTimeContainer.h"
@@ -167,7 +166,6 @@
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventListenerBinding.h"
 #include "mozilla/dom/FailedCertSecurityInfoBinding.h"
@@ -209,7 +207,7 @@
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/ResizeObserver.h"
+#include "mozilla/dom/ResizeObserverController.h"
 #include "mozilla/dom/RustTypes.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGDocument.h"
@@ -1395,7 +1393,6 @@ Document::Document(const char* aContentType)
       mUserHasInteracted(false),
       mHasUserInteractionTimerScheduled(false),
       mShouldResistFingerprinting(false),
-      mCloningForSVGUse(false),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
       mWriteLevel(0),
@@ -2431,12 +2428,14 @@ NS_INTERFACE_TABLE_HEAD(Document)
     NS_INTERFACE_TABLE_ENTRY(Document, nsIScriptObjectPrincipal)
     NS_INTERFACE_TABLE_ENTRY(Document, EventTarget)
     NS_INTERFACE_TABLE_ENTRY(Document, nsISupportsWeakReference)
+    NS_INTERFACE_TABLE_ENTRY(Document, nsIRadioGroupContainer)
   NS_INTERFACE_TABLE_END
   NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(Document)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Document)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(Document, LastRelease())
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(Document)
+NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
+    Document, LastRelease())
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Document)
   if (Element::CanSkip(tmp, aRemovingAllowed)) {
@@ -2504,10 +2503,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptLoader)
 
   DocumentOrShadowRoot::Traverse(tmp, cb);
-
-  if (tmp->mRadioGroupContainer) {
-    RadioGroupContainer::Traverse(tmp->mRadioGroupContainer.get(), cb);
-  }
 
   for (auto& sheets : tmp->mAdditionalSheets) {
     tmp->TraverseStyleSheets(sheets, "mAdditionalSheets[<origin>][i]", cb);
@@ -2707,8 +2702,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
                      "first?");
 
   DocumentOrShadowRoot::Unlink(tmp);
-
-  tmp->mRadioGroupContainer = nullptr;
 
   // Document has a pretty complex destructor, so we're going to
   // assume that *most* cycles you actually want to break somewhere
@@ -4293,8 +4286,29 @@ void Document::AssertDocGroupMatchesKey() const {
 }
 #endif
 
-nsresult Document::Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const {
-  return SchedulerGroup::Dispatch(std::move(aRunnable));
+nsresult Document::Dispatch(TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) {
+  // Note that this method may be called off the main thread.
+  if (mDocGroup) {
+    return mDocGroup->Dispatch(aCategory, std::move(aRunnable));
+  }
+  return DispatcherTrait::Dispatch(aCategory, std::move(aRunnable));
+}
+
+nsISerialEventTarget* Document::EventTargetFor(TaskCategory aCategory) const {
+  if (mDocGroup) {
+    return mDocGroup->EventTargetFor(aCategory);
+  }
+  return DispatcherTrait::EventTargetFor(aCategory);
+}
+
+AbstractThread* Document::AbstractMainThreadFor(
+    mozilla::TaskCategory aCategory) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDocGroup) {
+    return mDocGroup->AbstractMainThreadFor(aCategory);
+  }
+  return DispatcherTrait::AbstractMainThreadFor(aCategory);
 }
 
 void Document::NoteScriptTrackingStatus(const nsACString& aURL,
@@ -7095,6 +7109,10 @@ void Document::DeletePresShell() {
   // no point on it.
   MarkUserFontSetDirty();
 
+  if (mResizeObserverController) {
+    mResizeObserverController->ShellDetachedFromDocument();
+  }
+
   if (IsEditingOn()) {
     TurnEditingOff();
   }
@@ -7400,7 +7418,8 @@ void Document::PostStyleSheetApplicableStateChangeEvent(StyleSheet& aSheet) {
   event->SetTrusted(true);
   event->SetTarget(this);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event.forget(), ChromeOnlyDispatch::eYes);
+      new AsyncEventDispatcher(this, event);
+  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -7419,7 +7438,8 @@ void Document::PostStyleSheetRemovedEvent(StyleSheet& aSheet) {
   event->SetTrusted(true);
   event->SetTarget(this);
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(this, event.forget(), ChromeOnlyDispatch::eYes);
+      new AsyncEventDispatcher(this, event);
+  asyncDispatcher->mOnlyChromeDispatch = ChromeOnlyDispatch::eYes;
   asyncDispatcher->PostDOMEvent();
 }
 
@@ -7657,6 +7677,14 @@ static void NotifyActivityChangedCallback(nsISupports* aSupports) {
 
 void Document::NotifyActivityChanged() {
   EnumerateActivityObservers(NotifyActivityChangedCallback);
+}
+
+bool Document::IsTopLevelWindowInactive() const {
+  if (BrowsingContext* bc = GetBrowsingContext()) {
+    return !bc->GetIsActiveBrowserWindow();
+  }
+
+  return false;
 }
 
 void Document::SetContainer(nsDocShell* aContainer) {
@@ -8215,7 +8243,7 @@ void Document::UnblockDOMContentLoaded() {
     nsCOMPtr<nsIRunnable> ev =
         NewRunnableMethod("Document::DispatchContentLoadedEvents", this,
                           &Document::DispatchContentLoadedEvents);
-    Dispatch(ev.forget());
+    Dispatch(TaskCategory::Other, ev.forget());
   } else {
     DispatchContentLoadedEvents();
   }
@@ -9243,7 +9271,7 @@ void Document::NotifyPossibleTitleChange(bool aBoundTitleElement) {
   RefPtr<nsRunnableMethod<Document, void, false>> event =
       NewNonOwningRunnableMethod("Document::DoNotifyPossibleTitleChange", this,
                                  &Document::DoNotifyPossibleTitleChange);
-  if (NS_WARN_IF(NS_FAILED(Dispatch(do_AddRef(event))))) {
+  if (NS_WARN_IF(NS_FAILED(Dispatch(TaskCategory::Other, do_AddRef(event))))) {
     return;
   }
   mPendingTitleChangeEvent = std::move(event);
@@ -11643,7 +11671,7 @@ class nsUnblockOnloadEvent : public Runnable {
 void Document::PostUnblockOnloadEvent() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> evt = new nsUnblockOnloadEvent(this);
-  nsresult rv = Dispatch(evt.forget());
+  nsresult rv = Dispatch(TaskCategory::Other, evt.forget());
   if (NS_SUCCEEDED(rv)) {
     // Stabilize block count so we don't post more events while this one is up
     ++mOnloadBlockCount;
@@ -12498,35 +12526,34 @@ void Document::ForgetImagePreload(nsIURI* aURI) {
 
 void Document::UpdateDocumentStates(DocumentState aMaybeChangedStates,
                                     bool aNotify) {
-  const DocumentState oldStates = mState;
+  const DocumentState oldStates = mDocumentState;
   if (aMaybeChangedStates.HasAtLeastOneOfStates(
           DocumentState::ALL_LOCALEDIR_BITS)) {
-    mState &= ~DocumentState::ALL_LOCALEDIR_BITS;
+    mDocumentState &= ~DocumentState::ALL_LOCALEDIR_BITS;
     if (IsDocumentRightToLeft()) {
-      mState |= DocumentState::RTL_LOCALE;
+      mDocumentState |= DocumentState::RTL_LOCALE;
     } else {
-      mState |= DocumentState::LTR_LOCALE;
+      mDocumentState |= DocumentState::LTR_LOCALE;
     }
   }
 
   if (aMaybeChangedStates.HasAtLeastOneOfStates(DocumentState::LWTHEME)) {
     if (ComputeDocumentLWTheme()) {
-      mState |= DocumentState::LWTHEME;
+      mDocumentState |= DocumentState::LWTHEME;
     } else {
-      mState &= ~DocumentState::LWTHEME;
+      mDocumentState &= ~DocumentState::LWTHEME;
     }
   }
 
   if (aMaybeChangedStates.HasState(DocumentState::WINDOW_INACTIVE)) {
-    BrowsingContext* bc = GetBrowsingContext();
-    if (!bc || !bc->GetIsActiveBrowserWindow()) {
-      mState |= DocumentState::WINDOW_INACTIVE;
+    if (IsTopLevelWindowInactive()) {
+      mDocumentState |= DocumentState::WINDOW_INACTIVE;
     } else {
-      mState &= ~DocumentState::WINDOW_INACTIVE;
+      mDocumentState &= ~DocumentState::WINDOW_INACTIVE;
     }
   }
 
-  const DocumentState changedStates = oldStates ^ mState;
+  const DocumentState changedStates = oldStates ^ mDocumentState;
   if (aNotify && !changedStates.IsEmpty()) {
     if (PresShell* ps = GetObservingPresShell()) {
       ps->DocumentStatesChanged(changedStates);
@@ -12689,7 +12716,7 @@ void Document::UnsuppressEventHandlingAndFireEvents(bool aFireEvents) {
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ded =
         new nsDelayedEventDispatcher(std::move(documents));
-    Dispatch(ded.forget());
+    Dispatch(TaskCategory::Other, ded.forget());
   } else {
     FireOrClearDelayedEvents(std::move(documents), false);
   }
@@ -13641,9 +13668,6 @@ void Document::ScheduleSVGUseElementShadowTreeUpdate(
 void Document::DoUpdateSVGUseElementShadowTrees() {
   MOZ_ASSERT(!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
 
-  MOZ_ASSERT(!mCloningForSVGUse);
-  mCloningForSVGUse = true;
-
   do {
     const auto useElementsToUpdate = ToTArray<nsTArray<RefPtr<SVGUseElement>>>(
         mSVGUseElementsNeedingShadowTreeUpdate);
@@ -13660,8 +13684,6 @@ void Document::DoUpdateSVGUseElementShadowTrees() {
       useElement->UpdateShadowTree();
     }
   } while (!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
-
-  mCloningForSVGUse = false;
 }
 
 void Document::NotifyMediaFeatureValuesChanged() {
@@ -14117,8 +14139,8 @@ void Document::MaybeWarnAboutZoom() {
   if (mHasWarnedAboutZoom) {
     return;
   }
-  const bool usedZoom = Servo_IsPropertyIdRecordedInUseCounter(
-      mStyleUseCounters.get(), eCSSProperty_zoom);
+  const bool usedZoom = Servo_IsUnknownPropertyRecordedInUseCounter(
+      mStyleUseCounters.get(), CountedUnknownProperty::Zoom);
   if (!usedZoom) {
     return;
   }
@@ -14391,15 +14413,16 @@ void Document::SetFullscreenRoot(Document* aRoot) {
 void Document::HandleEscKey() {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (RefPtr popoverHTMLEl = nsGenericHTMLElement::FromNodeOrNull(element)) {
+    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
+      dialog->QueueCancelDialog();
+      break;
+    }
+    if (RefPtr<nsGenericHTMLElement> popoverHTMLEl =
+            nsGenericHTMLElement::FromNodeOrNull(element)) {
       if (element->IsAutoPopover() && element->IsPopoverOpen()) {
         popoverHTMLEl->HidePopover(IgnoreErrors());
         break;
       }
-    }
-    if (auto* dialog = HTMLDialogElement::FromNodeOrNull(element)) {
-      dialog->QueueCancelDialog();
-      break;
     }
   }
 }
@@ -14445,7 +14468,11 @@ class nsCallExitFullscreen : public Runnable {
 void Document::AsyncExitFullscreen(Document* aDoc) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> exit = new nsCallExitFullscreen(aDoc);
-  NS_DispatchToCurrentThread(exit.forget());
+  if (aDoc) {
+    aDoc->Dispatch(TaskCategory::Other, exit.forget());
+  } else {
+    NS_DispatchToCurrentThread(exit.forget());
+  }
 }
 
 static uint32_t CountFullscreenSubDocuments(Document& aDoc) {
@@ -15445,15 +15472,17 @@ void Document::RequestFullscreenInContentProcess(
   PendingFullscreenChangeList::Add(std::move(aRequest));
   // If we are not the top level process, dispatch an event to make
   // our parent process go fullscreen first.
-  Dispatch(NS_NewRunnableFunction(
-      "Document::RequestFullscreenInContentProcess", [self = RefPtr{this}] {
-        if (!self->HasPendingFullscreenRequests()) {
-          return;
-        }
-        nsContentUtils::DispatchEventOnlyToChrome(
-            self, self, u"MozDOMFullscreen:Request"_ns, CanBubble::eYes,
-            Cancelable::eNo, /* DefaultAction */ nullptr);
-      }));
+  Dispatch(
+      TaskCategory::Other,
+      NS_NewRunnableFunction(
+          "Document::RequestFullscreenInContentProcess", [self = RefPtr{this}] {
+            if (!self->HasPendingFullscreenRequests()) {
+              return;
+            }
+            nsContentUtils::DispatchEventOnlyToChrome(
+                self, self, u"MozDOMFullscreen:Request"_ns, CanBubble::eYes,
+                Cancelable::eNo, /* DefaultAction */ nullptr);
+          }));
 }
 
 void Document::RequestFullscreenInParentProcess(
@@ -15709,7 +15738,7 @@ void Document::PostVisibilityUpdateEvent() {
   nsCOMPtr<nsIRunnable> event = NewRunnableMethod<DispatchVisibilityChange>(
       "Document::UpdateVisibilityState", this, &Document::UpdateVisibilityState,
       DispatchVisibilityChange::Yes);
-  Dispatch(event.forget());
+  Dispatch(TaskCategory::Other, event.forget());
 }
 
 void Document::MaybeActiveMediaComponents() {
@@ -15775,19 +15804,13 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
         mCSSLoader->SizeOfIncludingThis(aWindowSizes.mState.mMallocSizeOf);
   }
 
-  aWindowSizes.mDOMSizes.mDOMResizeObserverControllerSize +=
-      mResizeObservers.ShallowSizeOfExcludingThis(
-          aWindowSizes.mState.mMallocSizeOf);
+  if (mResizeObserverController) {
+    mResizeObserverController->AddSizeOfIncludingThis(aWindowSizes);
+  }
 
   if (mAttributeStyles) {
     aWindowSizes.mDOMSizes.mDOMOtherSize +=
         mAttributeStyles->DOMSizeOfIncludingThis(
-            aWindowSizes.mState.mMallocSizeOf);
-  }
-
-  if (mRadioGroupContainer) {
-    aWindowSizes.mDOMSizes.mDOMOtherSize +=
-        mRadioGroupContainer->SizeOfIncludingThis(
             aWindowSizes.mState.mMallocSizeOf);
   }
 
@@ -16339,7 +16362,7 @@ void Document::ScheduleIntersectionObserverNotification() {
   nsCOMPtr<nsIRunnable> notification =
       NewRunnableMethod("Document::NotifyIntersectionObservers", this,
                         &Document::NotifyIntersectionObservers);
-  Dispatch(notification.forget());
+  Dispatch(TaskCategory::Other, notification.forget());
 }
 
 void Document::NotifyIntersectionObservers() {
@@ -16696,51 +16719,41 @@ void Document::SetUserHasInteracted() {
 }
 
 BrowsingContext* Document::GetBrowsingContext() const {
-  return mDocumentContainer ? mDocumentContainer->GetBrowsingContext()
-                            : nullptr;
+  nsCOMPtr<nsIDocShell> docshell(mDocumentContainer);
+  return docshell ? docshell->GetBrowsingContext() : nullptr;
 }
 
 void Document::NotifyUserGestureActivation() {
-  // https://html.spec.whatwg.org/multipage/interaction.html#activation-notification
-  // 1. "Assert: document is fully active."
-  RefPtr<BrowsingContext> currentBC = GetBrowsingContext();
-  if (!currentBC) {
-    return;
-  }
+  if (RefPtr<BrowsingContext> bc = GetBrowsingContext()) {
+    bc->PreOrderWalk([&](BrowsingContext* aBC) {
+      WindowContext* windowContext = aBC->GetCurrentWindowContext();
+      if (!windowContext) {
+        return;
+      }
 
-  RefPtr<WindowContext> currentWC = GetWindowContext();
-  if (!currentWC) {
-    return;
-  }
+      nsIDocShell* docShell = aBC->GetDocShell();
+      if (!docShell) {
+        return;
+      }
 
-  // 2. "Let windows be « document's relevant global object"
-  // Instead of assembling a list, we just call notify for wanted windows as we
-  // find them
-  currentWC->NotifyUserGestureActivation();
+      Document* document = docShell->GetDocument();
+      if (!document) {
+        return;
+      }
 
-  // 3. "...windows with the active window of each of document's ancestor
-  // navigables."
-  for (WindowContext* wc = currentWC; wc; wc = wc->GetParentWindowContext()) {
-    wc->NotifyUserGestureActivation();
-  }
+      // XXXedgar we probably could just check `IsInProcess()` after fission
+      // enable.
+      if (NodePrincipal()->Equals(document->NodePrincipal())) {
+        windowContext->NotifyUserGestureActivation();
+      }
+    });
 
-  // 4. "windows with the active window of each of document's descendant
-  // navigables, filtered to include only those navigables whose active
-  // document's origin is same origin with document's origin"
-  currentBC->PreOrderWalk([&](BrowsingContext* bc) {
-    WindowContext* wc = bc->GetCurrentWindowContext();
-    if (!wc) {
-      return;
+    for (bc = bc->GetParent(); bc; bc = bc->GetParent()) {
+      if (WindowContext* windowContext = bc->GetCurrentWindowContext()) {
+        windowContext->NotifyUserGestureActivation();
+      }
     }
-
-    // Check same-origin as current document
-    WindowGlobalChild* wgc = wc->GetWindowGlobalChild();
-    if (!wgc || !wgc->IsSameOriginWith(currentWC)) {
-      return;
-    }
-
-    wc->NotifyUserGestureActivation();
-  });
+  }
 }
 
 bool Document::HasBeenUserGestureActivated() {
@@ -17042,24 +17055,24 @@ bool Document::IsExtensionPage() const {
 }
 
 void Document::AddResizeObserver(ResizeObserver& aObserver) {
-  MOZ_ASSERT(!mResizeObservers.Contains(&aObserver));
-  // Insert internal ResizeObservers before scripted ones, since they may have
-  // observable side-effects and we don't want to expose the insertion time.
-  if (aObserver.HasNativeCallback()) {
-    mResizeObservers.InsertElementAt(0, &aObserver);
-  } else {
-    mResizeObservers.AppendElement(&aObserver);
+  if (!mResizeObserverController) {
+    mResizeObserverController = MakeUnique<ResizeObserverController>(this);
   }
+  mResizeObserverController->AddResizeObserver(aObserver);
 }
 
 void Document::RemoveResizeObserver(ResizeObserver& aObserver) {
-  MOZ_ASSERT(mResizeObservers.Contains(&aObserver));
-  mResizeObservers.RemoveElement(&aObserver);
+  MOZ_DIAGNOSTIC_ASSERT(mResizeObserverController, "No controller?");
+  if (MOZ_UNLIKELY(!mResizeObserverController)) {
+    return;
+  }
+  mResizeObserverController->RemoveResizeObserver(aObserver);
 }
 
 PermissionDelegateHandler* Document::GetPermissionDelegateHandler() {
   if (!mPermissionDelegateHandler) {
-    mPermissionDelegateHandler = MakeAndAddRef<PermissionDelegateHandler>(this);
+    mPermissionDelegateHandler =
+        mozilla::MakeAndAddRef<PermissionDelegateHandler>(this);
   }
 
   if (!mPermissionDelegateHandler->Initialize()) {
@@ -17070,127 +17083,11 @@ PermissionDelegateHandler* Document::GetPermissionDelegateHandler() {
 }
 
 void Document::ScheduleResizeObserversNotification() const {
-  if (!mPresShell) {
-    return;
-  }
-  if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
-    rd->EnsureResizeObserverUpdateHappens();
-  }
-}
-
-static void FlushLayoutForWholeBrowsingContextTree(Document& aDoc) {
-  if (BrowsingContext* bc = aDoc.GetBrowsingContext()) {
-    RefPtr<BrowsingContext> top = bc->Top();
-    top->PreOrderWalk([](BrowsingContext* aCur) {
-      if (Document* doc = aCur->GetExtantDocument()) {
-        doc->FlushPendingNotifications(FlushType::Layout);
-      }
-    });
-  } else {
-    // If there is no browsing context, we just flush this document itself.
-    aDoc.FlushPendingNotifications(FlushType::Layout);
-  }
-}
-
-void Document::NotifyResizeObservers() {
-  if (mResizeObservers.IsEmpty()) {
+  if (!mResizeObserverController) {
     return;
   }
 
-  uint32_t shallowestTargetDepth = 0;
-  while (true) {
-    // Flush layout, so that any callback functions' style changes / resizes
-    // get a chance to take effect. The callback functions may do changes in its
-    // sub-documents or ancestors, so flushing layout for the whole browsing
-    // context tree makes sure we don't miss anyone.
-    FlushLayoutForWholeBrowsingContextTree(*this);
-
-    // To avoid infinite resize loop, we only gather all active observations
-    // that have the depth of observed target element more than current
-    // shallowestTargetDepth.
-    GatherAllActiveResizeObservations(shallowestTargetDepth);
-
-    if (!HasAnyActiveResizeObservations()) {
-      break;
-    }
-
-    DebugOnly<uint32_t> oldShallowestTargetDepth = shallowestTargetDepth;
-    shallowestTargetDepth = BroadcastAllActiveResizeObservations();
-    NS_ASSERTION(oldShallowestTargetDepth < shallowestTargetDepth,
-                 "shallowestTargetDepth should be getting strictly deeper");
-  }
-
-  if (HasAnySkippedResizeObservations()) {
-    if (nsCOMPtr<nsPIDOMWindowInner> window = GetInnerWindow()) {
-      // Per spec, we deliver an error if the document has any skipped
-      // observations. Also, we re-register via ScheduleNotification().
-      RootedDictionary<ErrorEventInit> init(RootingCx());
-      init.mMessage.AssignLiteral(
-          "ResizeObserver loop completed with undelivered notifications.");
-      init.mBubbles = false;
-      init.mCancelable = false;
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-      MOZ_ASSERT(sgo);
-      if (NS_WARN_IF(sgo->HandleScriptError(init, &status))) {
-        status = nsEventStatus_eIgnore;
-      }
-    } else {
-      // We don't fire error events at any global for non-window JS on the main
-      // thread.
-    }
-
-    // We need to deliver pending notifications in next cycle.
-    ScheduleResizeObserversNotification();
-  }
-}
-
-void Document::GatherAllActiveResizeObservations(uint32_t aDepth) {
-  for (ResizeObserver* observer : mResizeObservers) {
-    observer->GatherActiveObservations(aDepth);
-  }
-}
-
-uint32_t Document::BroadcastAllActiveResizeObservations() {
-  uint32_t shallowestTargetDepth = std::numeric_limits<uint32_t>::max();
-
-  // Copy the observers as this invokes the callbacks and could register and
-  // unregister observers at will.
-  const auto observers =
-      ToTArray<nsTArray<RefPtr<ResizeObserver>>>(mResizeObservers);
-  for (const auto& observer : observers) {
-    // MOZ_KnownLive because 'observers' is guaranteed to keep it
-    // alive.
-    //
-    // This can go away once
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 is fixed.
-    uint32_t targetDepth =
-        MOZ_KnownLive(observer)->BroadcastActiveObservations();
-    if (targetDepth < shallowestTargetDepth) {
-      shallowestTargetDepth = targetDepth;
-    }
-  }
-
-  return shallowestTargetDepth;
-}
-
-bool Document::HasAnySkippedResizeObservations() const {
-  for (const auto& observer : mResizeObservers) {
-    if (observer->HasSkippedObservations()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool Document::HasAnyActiveResizeObservations() const {
-  for (const auto& observer : mResizeObservers) {
-    if (observer->HasActiveObservations()) {
-      return true;
-    }
-  }
-  return false;
+  mResizeObserverController->ScheduleNotification();
 }
 
 void Document::ClearStaleServoData() {
@@ -17372,26 +17269,22 @@ Document::CreatePermissionGrantPromise(
         p = new StorageAccessAPIHelper::StorageAccessPermissionGrantPromise::
             Private(__func__);
 
-    RefPtr<PWindowGlobalChild::GetStorageAccessPermissionPromise> promise;
+    RefPtr<PWindowGlobalChild::HasStorageAccessPermissionPromise> promise;
     // Test the permission
     MOZ_ASSERT(XRE_IsContentProcess());
 
     WindowGlobalChild* wgc = inner->GetWindowGlobalChild();
     MOZ_ASSERT(wgc);
 
-    promise = wgc->SendGetStorageAccessPermission();
+    promise = wgc->SendHasStorageAccessPermission();
     MOZ_ASSERT(promise);
     promise->Then(
         GetCurrentSerialEventTarget(), __func__,
         [self, p, inner, principal, aHasUserInteraction,
          aRequireUserInteraction, aTopLevelBaseDomain,
-         aFrameOnly](uint32_t aAction) {
-          if (aAction == nsIPermissionManager::ALLOW_ACTION) {
-            p->Resolve(StorageAccessAPIHelper::eAllow, __func__);
-            return;
-          }
-          if (aAction == nsIPermissionManager::DENY_ACTION) {
-            p->Reject(false, __func__);
+         aFrameOnly](bool aGranted) {
+          if (aGranted) {
+            p->Resolve(true, __func__);
             return;
           }
 
@@ -17499,7 +17392,7 @@ Document::CreatePermissionGrantPromise(
                     // If we get here, the auto-decision failed and we need to
                     // wait for the user prompt to complete.
                     sapr->RequestDelayedTask(
-                        GetMainThreadSerialEventTarget(),
+                        inner->EventTargetFor(TaskCategory::Other),
                         ContentPermissionRequestBase::DelayedTaskType::Request);
                   });
         },
@@ -18770,6 +18663,20 @@ void Document::GetConnectedShadowRoots(
   AppendToArray(aOut, mComposedShadowRoots);
 }
 
+bool Document::HasPictureInPictureChildElement() const {
+  return mPictureInPictureChildElementCount > 0;
+}
+
+void Document::EnableChildElementInPictureInPictureMode() {
+  mPictureInPictureChildElementCount++;
+  MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
+}
+
+void Document::DisableChildElementInPictureInPictureMode() {
+  mPictureInPictureChildElementCount--;
+  MOZ_ASSERT(mPictureInPictureChildElementCount >= 0);
+}
+
 void Document::AddMediaElementWithMSE() {
   if (mMediaElementWithMSECount++ == 0) {
     if (WindowGlobalChild* wgc = GetWindowGlobalChild()) {
@@ -18847,13 +18754,6 @@ HighlightRegistry& Document::HighlightRegistry() {
     mHighlightRegistry = MakeRefPtr<class HighlightRegistry>(this);
   }
   return *mHighlightRegistry;
-}
-
-RadioGroupContainer& Document::OwnedRadioGroupContainer() {
-  if (!mRadioGroupContainer) {
-    mRadioGroupContainer = MakeUnique<RadioGroupContainer>();
-  }
-  return *mRadioGroupContainer;
 }
 
 }  // namespace mozilla::dom

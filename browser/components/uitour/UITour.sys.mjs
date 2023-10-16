@@ -1662,7 +1662,7 @@ export var UITour = {
         try {
           let shell = aWindow.getShellService();
           if (shell) {
-            shell.setDefaultBrowser(false);
+            shell.setDefaultBrowser(true, false);
           }
         } catch (e) {}
         break;
@@ -1821,7 +1821,7 @@ export var UITour = {
 
       let canSetDefaultBrowserInBackground = true;
       if (
-        AppConstants.platform == "win" ||
+        AppConstants.isPlatformAndVersionAtLeast("win", "6.2") ||
         AppConstants.isPlatformAndVersionAtLeast("macosx", "10.10")
       ) {
         canSetDefaultBrowserInBackground = false;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
 export const description = `
 Tests for eventualAsyncExpectation and immediateAsyncExpectation.
 `;

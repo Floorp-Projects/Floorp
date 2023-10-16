@@ -5,11 +5,7 @@ var requests = [];
 self.addEventListener('install', e => {
   e.registerRouter([
     {
-      condition: { requestMode: 'no-cors' },
-      source: 'network'
-    },
-    {
-      condition: { urlPattern: '/**/*.txt??*' },
+      condition: {urlPattern: '/**/*.txt??*'},
       // Note: "??*" is for allowing arbitrary query strings.
       // Upon my experiment, the URLPattern needs two '?'s for specifying
       // a coming string as a query.

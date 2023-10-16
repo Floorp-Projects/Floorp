@@ -143,12 +143,6 @@ $(BUILD_PFX)%_avx2.c.o: CFLAGS += -mavx2
 $(BUILD_PFX)%_avx512.c.d: CFLAGS += -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl
 $(BUILD_PFX)%_avx512.c.o: CFLAGS += -mavx512f -mavx512cd -mavx512bw -mavx512dq -mavx512vl
 
-# AARCH64
-$(BUILD_PFX)%_neon_dotprod.c.d: CFLAGS += -march=armv8.2-a+dotprod
-$(BUILD_PFX)%_neon_dotprod.c.o: CFLAGS += -march=armv8.2-a+dotprod
-$(BUILD_PFX)%_neon_i8mm.c.d: CFLAGS += -march=armv8.2-a+dotprod+i8mm
-$(BUILD_PFX)%_neon_i8mm.c.o: CFLAGS += -march=armv8.2-a+dotprod+i8mm
-
 # POWER
 $(BUILD_PFX)%_vsx.c.d: CFLAGS += -maltivec -mvsx
 $(BUILD_PFX)%_vsx.c.o: CFLAGS += -maltivec -mvsx
@@ -310,19 +304,6 @@ $(1):
 	$(qexec)$$(AR) $$(ARFLAGS) $$@ $$^
 endef
 
-# Don't use -Wl,-z,defs with Clang's sanitizers.
-#
-# Clang's AddressSanitizer documentation says "When linking shared libraries,
-# the AddressSanitizer run-time is not linked, so -Wl,-z,defs may cause link
-# errors (don't use it with AddressSanitizer)." See
-# https://clang.llvm.org/docs/AddressSanitizer.html#usage.
-NO_UNDEFINED := -Wl,-z,defs
-ifeq ($(findstring clang,$(CC)),clang)
-    ifneq ($(filter -fsanitize=%,$(LDFLAGS)),)
-        NO_UNDEFINED :=
-    endif
-endif
-
 define so_template
 # Not using a pattern rule here because we don't want to generate empty
 # archives when they are listed as a dependency in files not responsible
@@ -332,8 +313,7 @@ define so_template
 $(1):
 	$(if $(quiet),@echo "    [LD] $$@")
 	$(qexec)$$(LD) -shared $$(LDFLAGS) \
-            $(NO_UNDEFINED) \
-            -Wl,-soname,$$(SONAME) \
+            -Wl,--no-undefined -Wl,-soname,$$(SONAME) \
             -Wl,--version-script,$$(EXPORTS_FILE) -o $$@ \
             $$(filter %.o,$$^) $$(extralibs)
 endef

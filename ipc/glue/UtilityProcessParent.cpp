@@ -162,8 +162,6 @@ void UtilityProcessParent::ActorDestroy(ActorDestroyReason aWhy) {
     if (!dumpID.IsEmpty()) {
       props->SetPropertyAsAString(u"dumpID"_ns, dumpID);
     }
-
-    MaybeTerminateProcess();
   }
 
   nsAutoString pid;

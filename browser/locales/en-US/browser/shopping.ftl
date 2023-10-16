@@ -43,33 +43,27 @@ shopping-letter-grade-tooltip =
 shopping-message-bar-warning-stale-analysis-message-2 = New info to check
 shopping-message-bar-warning-stale-analysis-button = Check now
 
-shopping-message-bar-generic-error =
-  .heading = No info available right now
-  .message = We’re working to resolve the issue. Please check back soon.
+shopping-message-bar-generic-error-title2 = No info available right now
+shopping-message-bar-generic-error-message = We’re working to resolve the issue. Please check back soon.
 
-shopping-message-bar-warning-not-enough-reviews =
-  .heading = Not enough reviews yet
-  .message = When this product has more reviews, we’ll be able to check their quality.
+shopping-message-bar-warning-not-enough-reviews-title = Not enough reviews yet
+shopping-message-bar-warning-not-enough-reviews-message2 = When this product has more reviews, we’ll be able to check their quality.
 
-shopping-message-bar-warning-product-not-available =
-  .heading = Product is not available
-  .message = If you see this product is back in stock, report it and we’ll work on checking the reviews.
-shopping-message-bar-warning-product-not-available-button2 = Report product is in stock
+shopping-message-bar-warning-product-not-available-title = Product is not available
+shopping-message-bar-warning-product-not-available-message2 = If you see this product is back in stock, report it and we’ll work on checking the reviews.
+shopping-message-bar-warning-product-not-available-button = Report this product is back in stock
 
-shopping-message-bar-thanks-for-reporting =
-  .heading = Thanks for reporting!
-  .message = We should have info about this product’s reviews within 24 hours. Please check back.
+shopping-message-bar-thanks-for-reporting-title = Thanks for reporting!
+shopping-message-bar-thanks-for-reporting-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
 
-shopping-message-bar-warning-product-not-available-reported =
-  .heading = Info coming soon
-  .message = We should have info about this product’s reviews within 24 hours. Please check back.
+shopping-message-bar-warning-product-not-available-reported-title2 = Info coming soon
+shopping-message-bar-warning-product-not-available-reported-message2 = We should have info about this product’s reviews within 24 hours. Please check back.
 
 shopping-message-bar-analysis-in-progress-title2 = Checking review quality
 shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
 
-shopping-message-bar-page-not-supported =
-  .heading = We can’t check these reviews
-  .message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
+shopping-message-bar-page-not-supported-title = We can’t check these reviews
+shopping-message-bar-page-not-supported-message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
 
 ## Strings for the product review snippets card
 
@@ -93,8 +87,8 @@ shopping-settings-label =
   .label = Settings
 shopping-settings-recommendations-toggle =
   .label = Show ads in review checker
-shopping-settings-recommendations-learn-more2 =
-  You’ll see occasional ads for relevant products. We only advertise products with reliable reviews. <a data-l10n-name="review-quality-url">Learn more</a>
+shopping-settings-recommendations-learn-more =
+  You’ll see occasional ads for relevant products. All ads must meet our review quality standards. <a data-l10n-name="review-quality-url">Learn more</a>
 shopping-settings-opt-out-button = Turn off review checker
 powered-by-fakespot = Review checker is powered by <a data-l10n-name="fakespot-link">{ -fakespot-brand-full-name }</a>.
 
@@ -178,8 +172,7 @@ shopping-survey-q2-radio-3-label = I don’t know
 shopping-survey-next-button-label = Next
 shopping-survey-submit-button-label = Submit
 shopping-survey-terms-link = Terms of use
-shopping-survey-thanks =
-  .heading = Thanks for your feedback!
+shopping-survey-thanks-message = Thanks for your feedback!
 
 ## Shopping Feature Callout strings.
 ## "price tag" refers to the price tag icon displayed in the address bar to
@@ -202,7 +195,7 @@ shopping-onboarding-headline = Try our trusted guide to product reviews
 #   $currentSite (str) - The current shopping page name
 #   $secondSite (str) - A second shopping page name
 #   $thirdSite (str) - A third shopping page name
-shopping-onboarding-dynamic-subtitle-1 = See how reliable product reviews are on <b>{ $currentSite }</b> before you buy. Review checker, an experimental feature from { -brand-product-name }, is built right into the browser. It works on <b>{ $secondSite }</b> and <b>{ $thirdSite }</b>, too.
+shopping-onboarding-dynamic-subtitle = See how reliable product reviews are on <b>{ $currentSite }</b> before you buy. Review checker, an experimental feature from { -vendor-short-name }, is built right into { -brand-product-name } — and it works on <b>{ $secondSite }</b> and <b>{ $thirdSite }</b>, too.
 
 shopping-onboarding-body = Using the power of { -fakespot-brand-full-name }, we help you avoid biased and inauthentic reviews. Our AI model is always improving to protect you as you shop. <a data-l10n-name="learn_more">Learn more</a>
 shopping-onboarding-opt-in-privacy-policy-and-terms-of-use = By selecting “{ shopping-onboarding-opt-in-button }“ you agree to { -fakespot-brand-full-name }’s <a data-l10n-name="privacy_policy">privacy policy</a> and <a data-l10n-name="terms_of_use">terms of use.</a>

@@ -1,26 +1,22 @@
 // META: script=/resources/testdriver.js
 // META: script=/common/utils.js
 // META: script=resources/fledge-util.js
-// META: script=/common/subset-tests.js
 // META: timeout=long
-// META: variant=?1-5
-// META: variant=?6-10
-// META: variant=?11-last
 
 "use strict;"
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
           '' },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: `],
+      [`${createSellerBeaconUrl(uuid)}, body: `],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -30,19 +26,18 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon().');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
           '',
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});`
-      },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createBidderBeaconURL(uuid)}, body: `],
+      [`${createBidderBeaconUrl(uuid)}, body: `],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -52,18 +47,18 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon().');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
           '' },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: body`],
+      [`${createSellerBeaconUrl(uuid)}, body: body`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -73,18 +68,18 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon(), beacon sent with body.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
           '',
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});` },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createBidderBeaconURL(uuid)}, body: body`],
+      [`${createBidderBeaconUrl(uuid)}, body: body`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -94,19 +89,19 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon(), beacon sent with body.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
           '' },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: body1`,
-      `${createSellerBeaconURL(uuid)}, body: body2`],
+      [`${createSellerBeaconUrl(uuid)}, body: body1`,
+       `${createSellerBeaconUrl(uuid)}, body: body2`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -121,19 +116,19 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon(). reportEvent() called twice.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
           '',
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});` },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createBidderBeaconURL(uuid)}, body: body1`,
-       `${createBidderBeaconURL(uuid)}, body: body2`],
+      [`${createBidderBeaconUrl(uuid)}, body: body1`,
+       `${createBidderBeaconUrl(uuid)}, body: body2`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -148,20 +143,20 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon(). reportEvent() called twice.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-        `registerAdBeacon({beacon1: '${createSellerBeaconURL(uuid, '1')}',
-                             beacon2: '${createSellerBeaconURL(uuid, '2')}'});`,
+          `registerAdBeacon({beacon1: '${createSellerBeaconUrl(uuid, '1')}',
+                             beacon2: '${createSellerBeaconUrl(uuid, '2')}'});`,
         reportWin:
           '' },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid, '1')}, body: body1`,
-       `${createSellerBeaconURL(uuid, '2')}, body: body2`],
+      [`${createSellerBeaconUrl(uuid, '1')}, body: body1`,
+       `${createSellerBeaconUrl(uuid, '2')}, body: body2`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon1",
@@ -176,21 +171,21 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon() with multiple beacons.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
           '',
         reportWin:
-          `registerAdBeacon({beacon1: '${createBidderBeaconURL(uuid, '1')}',
-                             beacon2: '${createBidderBeaconURL(uuid, '2')}'});`
+          `registerAdBeacon({beacon1: '${createBidderBeaconUrl(uuid, '1')}',
+                             beacon2: '${createBidderBeaconUrl(uuid, '2')}'});`
       },
       // expectedReportUrls:
-      [`${createBidderBeaconURL(uuid, '1')}, body: body1`,
-       `${createBidderBeaconURL(uuid, '2')}, body: body2`],
+      [`${createBidderBeaconUrl(uuid, '1')}, body: body1`,
+       `${createBidderBeaconUrl(uuid, '2')}, body: body2`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon1",
@@ -205,19 +200,19 @@ subsetTest(promise_test, async test => {
   );
 }, 'Buyer calls registerAdBeacon() with multiple beacons.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});` },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: body`,
-       `${createBidderBeaconURL(uuid)}, body: body`],
+      [`${createSellerBeaconUrl(uuid)}, body: body`,
+       `${createBidderBeaconUrl(uuid)}, body: body`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -227,19 +222,19 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller and buyer call registerAdBeacon() with shared reportEvent() call.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});` },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: body1`,
-       `${createBidderBeaconURL(uuid)}, body: body2`],
+      [`${createSellerBeaconUrl(uuid)}, body: body1`,
+       `${createBidderBeaconUrl(uuid)}, body: body2`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
             eventType: "beacon",
@@ -254,24 +249,24 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller and buyer call registerAdBeacon() with separate reportEvent() calls.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
           // Multiple registerAdBeacon() call should result in an exception,
           // throwing away all beacons and other types of reports.
-          `sendReportTo('${createSellerReportURL(uuid)}');
-           registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});
-           registerAdBeacon({beacon1: '${createSellerBeaconURL(uuid)}'});`,
+          `sendReportTo('${createSellerReportUrl(uuid)}');
+           registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});
+           registerAdBeacon({beacon1: '${createSellerBeaconUrl(uuid)}'});`,
         reportWinSuccessCondition:
           'sellerSignals === null',
         reportWin:
-          `registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});` },
+          `registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createBidderBeaconURL(uuid)}, body: body`],
+      [`${createBidderBeaconUrl(uuid)}, body: body`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",
@@ -281,22 +276,22 @@ subsetTest(promise_test, async test => {
   );
 }, 'Seller calls registerAdBeacon() multiple times.');
 
-subsetTest(promise_test, async test => {
+promise_test(async test => {
   const uuid = generateUuid(test);
   await runReportTest(
       test, uuid,
       { reportResult:
-          `registerAdBeacon({beacon: '${createSellerBeaconURL(uuid)}'});`,
+          `registerAdBeacon({beacon: '${createSellerBeaconUrl(uuid)}'});`,
         reportWin:
           // Multiple registerAdBeacon() call should result in an exception,
           // throwing away all beacons and other types of reports.
-          `sendReportTo('${createBidderReportURL(uuid)}');
-           registerAdBeacon({beacon: '${createBidderBeaconURL(uuid)}'});
-           registerAdBeacon({beacon1: '${createBidderBeaconURL(uuid)}'});` },
+          `sendReportTo('${createBidderReportUrl(uuid)}');
+           registerAdBeacon({beacon: '${createBidderBeaconUrl(uuid)}'});
+           registerAdBeacon({beacon1: '${createBidderBeaconUrl(uuid)}'});` },
       // expectedReportUrls:
-      [`${createSellerBeaconURL(uuid)}, body: body`],
+      [`${createSellerBeaconUrl(uuid)}, body: body`],
       // renderUrlOverride:
-      createRenderURL(
+      createRenderUrl(
           uuid,
           `window.fence.reportEvent({
               eventType: "beacon",

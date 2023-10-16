@@ -23,7 +23,7 @@ extern mozilla::LazyLogModule gWidgetLog;
 #endif /* MOZ_LOGGING */
 
 /* init methods */
-void moz_container_class_init(MozContainerClass* klass);
+static void moz_container_class_init(MozContainerClass* klass);
 static void moz_container_init(MozContainer* container);
 
 /* widget class methods */
@@ -31,7 +31,7 @@ static void moz_container_map(GtkWidget* widget);
 void moz_container_unmap(GtkWidget* widget);
 static void moz_container_size_allocate(GtkWidget* widget,
                                         GtkAllocation* allocation);
-static void moz_container_realize(GtkWidget* widget);
+void moz_container_realize(GtkWidget* widget);
 
 /* container class methods */
 static void moz_container_remove(GtkContainer* container,
@@ -72,6 +72,13 @@ GType moz_container_get_type(void) {
         (GInstanceInitFunc)moz_container_init,    /* instance_init */
         NULL,                                     /* value_table */
     };
+
+#ifdef MOZ_WAYLAND
+    if (mozilla::widget::GdkIsWaylandDisplay()) {
+      moz_container_info.class_init =
+          (GClassInitFunc)moz_container_wayland_class_init;
+    }
+#endif
 
     moz_container_type =
         g_type_register_static(GTK_TYPE_CONTAINER, "MozContainer",
@@ -125,21 +132,10 @@ void moz_container_class_init(MozContainerClass* klass) {
   GtkContainerClass* container_class = GTK_CONTAINER_CLASS(klass);
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
 
+  widget_class->map = moz_container_map;
   widget_class->realize = moz_container_realize;
+  widget_class->size_allocate = moz_container_size_allocate;
   widget_class->destroy = moz_container_destroy;
-
-#ifdef MOZ_WAYLAND
-  if (mozilla::widget::GdkIsWaylandDisplay()) {
-    widget_class->map = moz_container_wayland_map;
-    widget_class->size_allocate = moz_container_wayland_size_allocate;
-    widget_class->map_event = moz_container_wayland_map_event;
-  } else {
-#endif
-    widget_class->map = moz_container_map;
-    widget_class->size_allocate = moz_container_size_allocate;
-#ifdef MOZ_WAYLAND
-  }
-#endif
 
   container_class->remove = moz_container_remove;
   container_class->forall = moz_container_forall;

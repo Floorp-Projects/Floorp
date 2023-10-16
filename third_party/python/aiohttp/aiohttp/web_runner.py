@@ -12,7 +12,7 @@ from .web_server import Server
 try:
     from ssl import SSLContext
 except ImportError:
-    SSLContext = object  # type: ignore[misc,assignment]
+    SSLContext = object  # type: ignore
 
 
 __all__ = (
@@ -53,7 +53,7 @@ class BaseSite(ABC):
         self._shutdown_timeout = shutdown_timeout
         self._ssl_context = ssl_context
         self._backlog = backlog
-        self._server: Optional[asyncio.AbstractServer] = None
+        self._server = None  # type: Optional[asyncio.AbstractServer]
 
     @property
     @abstractmethod
@@ -171,9 +171,7 @@ class NamedPipeSite(BaseSite):
         self, runner: "BaseRunner", path: str, *, shutdown_timeout: float = 60.0
     ) -> None:
         loop = asyncio.get_event_loop()
-        if not isinstance(
-            loop, asyncio.ProactorEventLoop  # type: ignore[attr-defined]
-        ):
+        if not isinstance(loop, asyncio.ProactorEventLoop):  # type: ignore
             raise RuntimeError(
                 "Named Pipes only available in proactor" "loop under windows"
             )
@@ -189,9 +187,7 @@ class NamedPipeSite(BaseSite):
         loop = asyncio.get_event_loop()
         server = self._runner.server
         assert server is not None
-        _server = await loop.start_serving_pipe(  # type: ignore[attr-defined]
-            server, self._path
-        )
+        _server = await loop.start_serving_pipe(server, self._path)  # type: ignore
         self._server = _server[0]
 
 
@@ -242,8 +238,8 @@ class BaseRunner(ABC):
     def __init__(self, *, handle_signals: bool = False, **kwargs: Any) -> None:
         self._handle_signals = handle_signals
         self._kwargs = kwargs
-        self._server: Optional[Server] = None
-        self._sites: List[BaseSite] = []
+        self._server = None  # type: Optional[Server]
+        self._sites = []  # type: List[BaseSite]
 
     @property
     def server(self) -> Optional[Server]:
@@ -251,7 +247,7 @@ class BaseRunner(ABC):
 
     @property
     def addresses(self) -> List[Any]:
-        ret: List[Any] = []
+        ret = []  # type: List[Any]
         for site in self._sites:
             server = site._server
             if server is not None:
@@ -284,6 +280,10 @@ class BaseRunner(ABC):
 
     async def cleanup(self) -> None:
         loop = asyncio.get_event_loop()
+
+        if self._server is None:
+            # no started yet, do nothing
+            return
 
         # The loop over sites is intentional, an exception on gather()
         # leaves self._sites in unpredictable state.

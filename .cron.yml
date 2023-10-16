@@ -131,6 +131,7 @@ jobs:
       run-on-projects:
           - mozilla-beta
           - mozilla-release
+          - mozilla-esr102
           - mozilla-esr115
           - elm
       # For all non m-c jobs we just run once daily matching the 10 UTC
@@ -204,6 +205,7 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
+          - mozilla-esr102
           - mozilla-esr115
       when:
           by-project:
@@ -217,9 +219,10 @@ jobs:
               mozilla-release:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
-              mozilla-esr115:
+              mozilla-esr102:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
+              mozilla-esr115: []
 
     - name: periodic-update
       job:
@@ -230,6 +233,7 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
+          - mozilla-esr102
           - mozilla-esr115
       when:
           - {weekday: 'Monday', hour: 8, minute: 0}
@@ -385,7 +389,6 @@ jobs:
           type: decision-task
           treeherder-symbol: sp-perftests
           target-tasks-method: sp-perftests
-          include-push-tasks: true
       run-on-projects:
           - mozilla-central
       when:
@@ -395,7 +398,7 @@ jobs:
       job:
           type: decision-task
           treeherder-symbol: snap-upstream
-          target-tasks-method: snap_upstream_tests
+          target-tasks-method: snap_upstream_build
       run-on-projects:
           - mozilla-central
       when:

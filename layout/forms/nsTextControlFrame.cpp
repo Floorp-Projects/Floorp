@@ -46,7 +46,6 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/Try.h"
 #include "nsFrameSelection.h"
 
 #define DEFAULT_COLUMN_WIDTH 20

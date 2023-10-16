@@ -241,19 +241,19 @@ Test that the order of mapping a buffer relative to when commands are recorded t
     let commandBuffer;
 
     const steps = {
-      record: () => {
+      record: async () => {
         commandEncoder.copyBufferToBuffer(buffer, 0, targetBuffer, 0, 4);
       },
       map: async () => {
         await buffer.mapAsync(GPUMapMode.WRITE);
       },
-      unmap: () => {
+      unmap: async () => {
         buffer.unmap();
       },
-      finish: () => {
+      finish: async () => {
         commandBuffer = commandEncoder.finish();
       },
-      submit: () => {
+      submit: async () => {
         t.expectValidationError(() => {
           t.queue.submit([commandBuffer]);
         }, shouldError);

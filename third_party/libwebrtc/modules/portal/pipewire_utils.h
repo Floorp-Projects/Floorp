@@ -15,8 +15,6 @@ struct pw_thread_loop;
 
 namespace webrtc {
 
-constexpr int kInvalidPipeWireFd = -1;
-
 // Prepare PipeWire so that it is ready to be used. If it needs to be dlopen'd
 // this will do so. Note that this does not guarantee a PipeWire server is
 // running nor does it establish a connection to one.

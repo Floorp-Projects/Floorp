@@ -111,10 +111,10 @@ class JsepSessionTest : public JsepSessionTestBase,
 
  protected:
   struct TransportData {
-    std::map<nsCString, std::vector<uint8_t>> mFingerprints;
+    std::map<std::string, std::vector<uint8_t>> mFingerprints;
   };
 
-  void AddDtlsFingerprint(const nsCString& alg, JsepSessionImpl& session,
+  void AddDtlsFingerprint(const std::string& alg, JsepSessionImpl& session,
                           TransportData& tdata) {
     std::vector<uint8_t> fp;
     fp.assign((alg == "sha-1") ? 20 : 32,
@@ -124,8 +124,8 @@ class JsepSessionTest : public JsepSessionTestBase,
   }
 
   void AddTransportData(JsepSessionImpl& session, TransportData& tdata) {
-    AddDtlsFingerprint("sha-1"_ns, session, tdata);
-    AddDtlsFingerprint("sha-256"_ns, session, tdata);
+    AddDtlsFingerprint("sha-1", session, tdata);
+    AddDtlsFingerprint("sha-256", session, tdata);
   }
 
   void CheckTransceiverInvariants(
@@ -1487,12 +1487,12 @@ class JsepSessionTest : public JsepSessionTestBase,
         const SdpFingerprintAttributeList& fps = attrs.GetFingerprint();
         for (auto fp = fps.mFingerprints.begin(); fp != fps.mFingerprints.end();
              ++fp) {
-          nsCString alg_str = "None"_ns;
+          std::string alg_str = "None";
 
           if (fp->hashFunc == SdpFingerprintAttributeList::kSha1) {
-            alg_str = "sha-1"_ns;
+            alg_str = "sha-1";
           } else if (fp->hashFunc == SdpFingerprintAttributeList::kSha256) {
-            alg_str = "sha-256"_ns;
+            alg_str = "sha-256";
           }
           ASSERT_EQ(source.mFingerprints[alg_str], fp->fingerprint);
         }

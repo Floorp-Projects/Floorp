@@ -19,19 +19,11 @@
 #include <optional>
 #include <spawn.h>
 #include <sstream>
-#include <stdexcept>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace fs = std::filesystem;
-
-class CantSwapSections : public std::runtime_error {
- public:
-  CantSwapSections(const char* what) : std::runtime_error(what) {}
-};
 
 template <int bits>
 struct Elf {};
@@ -65,40 +57,6 @@ struct RelR : public Elf<bits> {
   using Elf_Verneed = typename Elf<bits>::Verneed;
   using Elf_Vernaux = typename Elf<bits>::Vernaux;
 
-#define TAG_NAME(t) \
-  { t, #t }
-  class DynInfo {
-   public:
-    using Tag = decltype(Elf_Dyn::d_tag);
-    using Value = decltype(Elf_Dyn::d_un.d_val);
-    bool is_wanted(Tag tag) const { return tag_names.count(tag); }
-    void insert(off_t offset, Tag tag, Value val) {
-      data[tag] = std::make_pair(offset, val);
-    }
-    off_t offset(Tag tag) const { return data.at(tag).first; }
-    bool contains(Tag tag) const { return data.count(tag); }
-    Value& operator[](Tag tag) {
-      if (!is_wanted(tag)) {
-        std::stringstream msg;
-        msg << "Tag 0x" << std::hex << tag << " is not in DynInfo::tag_names";
-        throw std::runtime_error(msg.str());
-      }
-      return data[tag].second;
-    }
-    const char* name(Tag tag) const { return tag_names.at(tag); }
-
-   private:
-    std::unordered_map<Tag, std::pair<off_t, Value>> data;
-
-    const std::unordered_map<Tag, const char*> tag_names = {
-        TAG_NAME(DT_JMPREL),  TAG_NAME(DT_PLTRELSZ), TAG_NAME(DT_RELR),
-        TAG_NAME(DT_RELRENT), TAG_NAME(DT_RELRSZ),   TAG_NAME(DT_RELA),
-        TAG_NAME(DT_RELASZ),  TAG_NAME(DT_RELAENT),  TAG_NAME(DT_REL),
-        TAG_NAME(DT_RELSZ),   TAG_NAME(DT_RELENT),   TAG_NAME(DT_STRTAB),
-        TAG_NAME(DT_STRSZ),   TAG_NAME(DT_VERNEED),  TAG_NAME(DT_VERNEEDNUM),
-    };
-  };
-
   // Translate a virtual address into an offset in the file based on the program
   // headers' PT_LOAD.
   static Elf_Addr get_offset(const std::vector<Elf_Phdr>& phdr, Elf_Addr addr) {
@@ -130,22 +88,6 @@ std::vector<T> read_vector_at(std::istream& in, off_t pos, size_t num) {
   return result;
 }
 
-void write_at(std::ostream& out, off_t pos, const char* buf, size_t len) {
-  out.seekp(pos, std::ios::beg);
-  out.write(buf, len);
-}
-
-template <typename T>
-void write_one_at(std::ostream& out, off_t pos, const T& data) {
-  write_at(out, pos, reinterpret_cast<const char*>(&data), sizeof(T));
-}
-
-template <typename T>
-void write_vector_at(std::ostream& out, off_t pos, const std::vector<T>& vec) {
-  write_at(out, pos, reinterpret_cast<const char*>(&vec.front()),
-           vec.size() * sizeof(T));
-}
-
 template <int bits>
 bool RelR<bits>::hack(std::fstream& f) {
   auto ehdr = read_one_at<Elf_Ehdr>(f, 0);
@@ -162,43 +104,59 @@ bool RelR<bits>::hack(std::fstream& f) {
   if (dyn_phdr->p_filesz % sizeof(Elf_Dyn)) {
     throw std::runtime_error("Invalid ELF?");
   }
+  // Find the location and size of several sections from the .dynamic section
+  // contents:
+  // - SHT_RELR section, which contains the packed-relative-relocs.
+  // - SHT_VERNEED section, which contains the symbol versions needed.
+  // - SHT_STRTAB section, which contains the string table for, among other
+  // things, those symbol versions.
+  // At the same time, we also change DT_RELR* tags to add DT_RELRHACK_BIT.
   auto dyn = read_vector_at<Elf_Dyn>(f, dyn_phdr->p_offset,
                                      dyn_phdr->p_filesz / sizeof(Elf_Dyn));
   off_t dyn_offset = dyn_phdr->p_offset;
-  DynInfo dyn_info;
+  Elf_Addr strtab_off = 0, verneed_off = 0, relr_off = 0;
+  Elf_Off strsz = 0, verneednum = 0, relrsz = 0, relent = 0;
+  std::vector<std::pair<off_t, Elf_Off>> relr_tags;
   for (const auto& d : dyn) {
     if (d.d_tag == DT_NULL) {
       break;
     }
-
-    if (dyn_info.is_wanted(d.d_tag)) {
-      if (dyn_info.contains(d.d_tag)) {
-        std::stringstream msg;
-        msg << dyn_info.name(d.d_tag) << " appears twice?";
-        throw std::runtime_error(msg.str());
-      }
-      dyn_info.insert(dyn_offset, d.d_tag, d.d_un.d_val);
+    switch (d.d_tag) {
+      case DT_RELR:
+      case DT_RELRENT:
+      case DT_RELRSZ:
+        if (d.d_tag == DT_RELR) {
+          if (relr_off) {
+            throw std::runtime_error("DT_RELR appears twice?");
+          }
+          relr_off = get_offset(phdr, d.d_un.d_ptr);
+        } else if (d.d_tag == DT_RELRSZ) {
+          if (relrsz) {
+            throw std::runtime_error("DT_RELRSZ appears twice?");
+          }
+          relrsz = d.d_un.d_val;
+        }
+        relr_tags.push_back({dyn_offset, d.d_tag | DT_RELRHACK_BIT});
+        break;
+      case DT_RELAENT:
+      case DT_RELENT:
+        relent = d.d_un.d_val;
+        break;
+      case DT_STRTAB:
+        strtab_off = get_offset(phdr, d.d_un.d_ptr);
+        break;
+      case DT_STRSZ:
+        strsz = d.d_un.d_val;
+        break;
+      case DT_VERNEED:
+        verneed_off = get_offset(phdr, d.d_un.d_ptr);
+        break;
+      case DT_VERNEEDNUM:
+        verneednum = d.d_un.d_val;
+        break;
     }
     dyn_offset += sizeof(Elf_Dyn);
   }
-
-  // Find the location and size of the SHT_RELR section, which contains the
-  // packed-relative-relocs.
-  Elf_Addr relr_off =
-      dyn_info.contains(DT_RELR) ? get_offset(phdr, dyn_info[DT_RELR]) : 0;
-  Elf_Off relrsz = dyn_info[DT_RELRSZ];
-  const decltype(Elf_Dyn::d_tag) rel_tags[3][2] = {
-      {DT_REL, DT_RELA}, {DT_RELSZ, DT_RELASZ}, {DT_RELENT, DT_RELAENT}};
-  for (const auto& [rel_tag, rela_tag] : rel_tags) {
-    if (dyn_info.contains(rel_tag) && dyn_info.contains(rela_tag)) {
-      std::stringstream msg;
-      msg << "Both " << dyn_info.name(rel_tag) << " and "
-          << dyn_info.name(rela_tag) << " appear?";
-      throw std::runtime_error(msg.str());
-    }
-  }
-  Elf_Off relent =
-      dyn_info.contains(DT_RELENT) ? dyn_info[DT_RELENT] : dyn_info[DT_RELAENT];
 
   // Estimate the size of the unpacked relative relocations corresponding
   // to the SHT_RELR section.
@@ -222,29 +180,21 @@ bool RelR<bits>::hack(std::fstream& f) {
     return false;
   }
 
-  // Change DT_RELR* tags to add DT_RELRHACK_BIT.
-  for (const auto tag : {DT_RELR, DT_RELRSZ, DT_RELRENT}) {
-    write_one_at(f, dyn_info.offset(tag), tag | DT_RELRHACK_BIT);
+  // Apply the PT_DYNAMIC tag changes we've recorded.
+  for (const auto& [offset, tag] : relr_tags) {
+    f.seekg(offset, std::ios::beg);
+    f.write(reinterpret_cast<const char*>(&tag), sizeof(tag));
   }
 
-  bool is_glibc = false;
-
-  if (dyn_info.contains(DT_VERNEEDNUM) && dyn_info.contains(DT_VERNEED) &&
-      dyn_info.contains(DT_STRSZ) && dyn_info.contains(DT_STRTAB)) {
+  if (verneednum && verneed_off && strsz && strtab_off) {
     // Scan SHT_VERNEED for the GLIBC_ABI_DT_RELR version on the libc
     // library.
-    Elf_Addr verneed_off = get_offset(phdr, dyn_info[DT_VERNEED]);
-    Elf_Off verneednum = dyn_info[DT_VERNEEDNUM];
-    // SHT_STRTAB section, which contains the string table for, among other
-    // things, the symbol versions in the SHT_VERNEED section.
-    auto strtab = read_vector_at<char>(f, get_offset(phdr, dyn_info[DT_STRTAB]),
-                                       dyn_info[DT_STRSZ]);
+    auto strtab = read_vector_at<char>(f, strtab_off, strsz);
     // Guarantee a nul character at the end of the string table.
     strtab.push_back(0);
     while (verneednum--) {
       auto verneed = read_one_at<Elf_Verneed>(f, verneed_off);
       if (std::string_view{"libc.so.6"} == &strtab.at(verneed.vn_file)) {
-        is_glibc = true;
         Elf_Addr vernaux_off = verneed_off + verneed.vn_aux;
         Elf_Addr relr = 0;
         Elf_Vernaux reuse;
@@ -272,80 +222,24 @@ bool RelR<bits>::hack(std::fstream& f) {
         // packed relocations don't want to load a binary that has DT_RELR*
         // tags but *not* a dependency on the GLIBC_ABI_DT_RELR version.
         if (relr) {
+          f.seekg(relr, std::ios::beg);
           // Don't overwrite vn_aux.
-          write_at(f, relr, reinterpret_cast<char*>(&reuse),
-                   sizeof(reuse) - sizeof(Elf_Word));
+          f.write(reinterpret_cast<char*>(&reuse),
+                  sizeof(reuse) - sizeof(Elf_Word));
         }
       }
       verneed_off += verneed.vn_next;
     }
   }
-
-  // Location of the .rel.plt section.
-  Elf_Addr jmprel = dyn_info.contains(DT_JMPREL) ? dyn_info[DT_JMPREL] : 0;
-  if (is_glibc) {
-#ifndef MOZ_STDCXX_COMPAT
-    try {
-#endif
-      // ld.so in glibc 2.16 to 2.23 expects .rel.plt to strictly follow
-      // .rel.dyn. (https://sourceware.org/bugzilla/show_bug.cgi?id=14341)
-      // BFD ld places .relr.dyn after .rel.plt, so this works fine, but lld
-      // places it between both sections, which doesn't work out for us. In that
-      // case, we want to swap .relr.dyn and .rel.plt.
-      Elf_Addr rel_end = dyn_info.contains(DT_REL)
-                             ? (dyn_info[DT_REL] + dyn_info[DT_RELSZ])
-                             : (dyn_info[DT_RELA] + dyn_info[DT_RELASZ]);
-      if (dyn_info.contains(DT_JMPREL) && dyn_info[DT_PLTRELSZ] &&
-          dyn_info[DT_JMPREL] != rel_end) {
-        if (dyn_info[DT_RELR] != rel_end) {
-          throw CantSwapSections("RELR section doesn't follow REL/RELA?");
-        }
-        if (dyn_info[DT_JMPREL] != dyn_info[DT_RELR] + dyn_info[DT_RELRSZ]) {
-          throw CantSwapSections("PLT REL/RELA doesn't follow RELR?");
-        }
-        auto plt_rel = read_vector_at<char>(
-            f, get_offset(phdr, dyn_info[DT_JMPREL]), dyn_info[DT_PLTRELSZ]);
-        // Write the content of both sections swapped, and adjust the
-        // corresponding PT_DYNAMIC entries.
-        write_vector_at(f, relr_off, plt_rel);
-        write_vector_at(f, relr_off + plt_rel.size(), relr);
-        dyn_info[DT_JMPREL] = rel_end;
-        dyn_info[DT_RELR] = rel_end + plt_rel.size();
-        for (const auto tag : {DT_JMPREL, DT_RELR}) {
-          write_one_at(f, dyn_info.offset(tag) + sizeof(typename DynInfo::Tag),
-                       dyn_info[tag]);
-        }
-      }
-#ifndef MOZ_STDCXX_COMPAT
-    } catch (const CantSwapSections& err) {
-      // When binary compatibility with older libstdc++/glibc is not enabled, we
-      // only emit a warning about why swapping the sections is not happening.
-      std::cerr << "WARNING: " << err.what() << std::endl;
-    }
-#endif
-  }
-
-  off_t shdr_offset = ehdr.e_shoff;
+  off_t shdr_offset = ehdr.e_shoff + offsetof(Elf_Shdr, sh_type);
   auto shdr = read_vector_at<Elf_Shdr>(f, ehdr.e_shoff, ehdr.e_shnum);
-  for (auto& s : shdr) {
+  for (const auto& s : shdr) {
     // Some tools don't like sections of types they don't know, so change
     // SHT_RELR, which might be unknown on older systems, to SHT_PROGBITS.
     if (s.sh_type == SHT_RELR) {
-      s.sh_type = SHT_PROGBITS;
-      // If DT_RELR has been adjusted to swap with DT_JMPREL, also adjust
-      // the corresponding SHT_RELR section header.
-      if (s.sh_addr != dyn_info[DT_RELR]) {
-        s.sh_offset += dyn_info[DT_RELR] - s.sh_addr;
-        s.sh_addr = dyn_info[DT_RELR];
-      }
-      write_one_at(f, shdr_offset, s);
-    }
-    // If DT_JMPREL has been adjusted to swap with DT_RELR, also adjust
-    // the corresponding section header.
-    if (jmprel && (s.sh_addr == jmprel) && (s.sh_addr != dyn_info[DT_JMPREL])) {
-      s.sh_offset -= s.sh_addr - dyn_info[DT_JMPREL];
-      s.sh_addr = dyn_info[DT_JMPREL];
-      write_one_at(f, shdr_offset, s);
+      Elf_Word progbits = SHT_PROGBITS;
+      f.seekg(shdr_offset, std::ios::beg);
+      f.write(reinterpret_cast<const char*>(&progbits), sizeof(progbits));
     }
     shdr_offset += sizeof(Elf_Shdr);
   }

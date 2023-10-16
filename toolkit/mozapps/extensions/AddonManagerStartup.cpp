@@ -28,7 +28,6 @@
 #include "mozilla/Unused.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Services.h"
-#include "mozilla/Try.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 
 #include "nsAppDirectoryServiceDefs.h"
@@ -479,7 +478,7 @@ Result<bool, nsresult> Addon::UpdateLastModifiedTime() {
 }
 
 InstallLocation::InstallLocation(JSContext* cx, const JS::Value& value)
-    : WrapperBase(cx, value), mAddonsObj(cx) {
+    : WrapperBase(cx, value), mAddonsObj(cx), mAddonsIter() {
   mAddonsObj = GetObject("addons");
   if (!mAddonsObj) {
     mAddonsObj = JS_NewPlainObject(cx);

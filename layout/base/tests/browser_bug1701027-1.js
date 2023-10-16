@@ -91,12 +91,6 @@ add_task(async function () {
     }
   );
 
-  // We intentionally turn off a11y_checks, because the following click
-  // is targeting test content that's not meant to be interactive and
-  // is not expected to be accessible:
-  AccessibilityUtils.setEnv({
-    mustHaveAccessibleRule: false,
-  });
   EventUtils.synthesizeNativeMouseEvent({
     type: "click",
     target: window.document.documentElement,

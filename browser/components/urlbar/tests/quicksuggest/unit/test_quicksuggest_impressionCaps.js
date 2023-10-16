@@ -55,11 +55,15 @@ const EXPECTED_SPONSORED_URLBAR_RESULT = {
     descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+        : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: true,
+    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
     blockL10n: {
-      id: "urlbar-result-menu-dismiss-firefox-suggest",
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-dismiss-firefox-suggest"
+        : "firefox-suggest-urlbar-block",
     },
     source: "remote-settings",
     provider: "AdmWikipedia",
@@ -86,11 +90,15 @@ const EXPECTED_NONSPONSORED_URLBAR_RESULT = {
     sponsoredIabCategory: "5 - Education",
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
-      id: "urlbar-result-menu-learn-more-about-firefox-suggest",
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+        : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: true,
+    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
     blockL10n: {
-      id: "urlbar-result-menu-dismiss-firefox-suggest",
+      id: UrlbarPrefs.get("resultMenu")
+        ? "urlbar-result-menu-dismiss-firefox-suggest"
+        : "firefox-suggest-urlbar-block",
     },
     source: "remote-settings",
     provider: "AdmWikipedia",
@@ -107,6 +115,7 @@ add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.impressionCaps.nonSponsoredEnabled", true);
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("bestMatch.enabled", false);
 
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);

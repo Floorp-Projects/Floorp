@@ -21,6 +21,7 @@ const { actionTypes: at, actionCreators: ac } = ChromeUtils.importESModule(
 );
 
 const CACHE_KEY = "discovery_stream";
+const LAYOUT_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
@@ -45,7 +46,6 @@ const PREF_USER_TOPSITES = "feeds.topsites";
 const PREF_SYSTEM_TOPSITES = "feeds.system.topsites";
 const PREF_SPOCS_CLEAR_ENDPOINT = "discoverystream.endpointSpocsClear";
 const PREF_SHOW_SPONSORED = "showSponsored";
-const PREF_SYSTEM_SHOW_SPONSORED = "system.showSponsored";
 const PREF_SHOW_SPONSORED_TOPSITES = "showSponsoredTopSites";
 // Nimbus variable to enable the SOV feature for sponsored tiles.
 const NIMBUS_VARIABLE_CONTILE_SOV_ENABLED = "topSitesContileSovEnabled";
@@ -84,6 +84,15 @@ class DiscoveryStreamFeed {
     return impressionId;
   }
 
+  finalLayoutEndpoint(url, apiKey) {
+    if (url.includes("$apiKey") && !apiKey) {
+      throw new Error(
+        `Layout Endpoint - An API key was specified but none configured: ${url}`
+      );
+    }
+    return url.replace("$apiKey", apiKey);
+  }
+
   get config() {
     if (this._prefCache.config) {
       return this._prefCache.config;
@@ -92,6 +101,16 @@ class DiscoveryStreamFeed {
       this._prefCache.config = JSON.parse(
         this.store.getState().Prefs.values[PREF_CONFIG]
       );
+      const layoutUrl = this._prefCache.config.layout_endpoint;
+
+      const apiKeyPref = this._prefCache.config.api_key_pref;
+      if (layoutUrl && apiKeyPref) {
+        const apiKey = Services.prefs.getCharPref(apiKeyPref, "");
+        this._prefCache.config.layout_endpoint = this.finalLayoutEndpoint(
+          layoutUrl,
+          apiKey
+        );
+      }
     } catch (e) {
       // istanbul ignore next
       this._prefCache.config = {};
@@ -147,7 +166,7 @@ class DiscoveryStreamFeed {
     // Combine user-set sponsored opt-out with Mozilla-set config
     return (
       this.store.getState().Prefs.values[PREF_SHOW_SPONSORED] &&
-      this.store.getState().Prefs.values[PREF_SYSTEM_SHOW_SPONSORED]
+      this.config.show_spocs
     );
   }
 
@@ -366,9 +385,12 @@ class DiscoveryStreamFeed {
       return null;
     }
 
-    const apiKeyPref = this.config.api_key_pref;
+    const apiKeyPref = this._prefCache.config.api_key_pref;
     const apiKey = Services.prefs.getCharPref(apiKeyPref, "");
 
+    // The server somtimes returns this value already replaced, but we try this for two reasons:
+    // 1. Layout endpoints are not from the server.
+    // 2. Hardcoded layouts don't have this already done for us.
     const endpoint = rawEndpoint
       .replace("$apiKey", apiKey)
       .replace("$locale", this.locale)
@@ -445,8 +467,9 @@ class DiscoveryStreamFeed {
    * @param {boolean} is this check done at initial browser load
    */
   isExpired({ cachedData, key, url, isStartup }) {
-    const { spocs, feeds } = cachedData;
+    const { layout, spocs, feeds } = cachedData;
     const updateTimePerComponent = {
+      layout: LAYOUT_UPDATE_TIME,
       spocs: this.spocsCacheUpdateTime,
       feed: COMPONENT_FEEDS_UPDATE_TIME,
     };
@@ -454,6 +477,12 @@ class DiscoveryStreamFeed {
       ? STARTUP_CACHE_EXPIRE_TIME
       : updateTimePerComponent[key];
     switch (key) {
+      case "layout":
+        // This never needs to expire, as it's not expected to change.
+        if (this.config.hardcoded_layout) {
+          return false;
+        }
+        return !layout || !(Date.now() - layout.lastUpdated < EXPIRATION_TIME);
       case "spocs":
         return !spocs || !(Date.now() - spocs.lastUpdated < EXPIRATION_TIME);
       case "feed":
@@ -472,6 +501,7 @@ class DiscoveryStreamFeed {
     const cachedData = (await this.cache.get()) || {};
     const { feeds } = cachedData;
     return {
+      layout: this.isExpired({ cachedData, key: "layout" }),
       spocs: this.showSpocs && this.isExpired({ cachedData, key: "spocs" }),
       feeds:
         this.showStories &&
@@ -487,7 +517,34 @@ class DiscoveryStreamFeed {
    */
   async checkIfAnyCacheExpired() {
     const expirationPerComponent = await this._checkExpirationPerComponent();
-    return expirationPerComponent.spocs || expirationPerComponent.feeds;
+    return (
+      expirationPerComponent.layout ||
+      expirationPerComponent.spocs ||
+      expirationPerComponent.feeds
+    );
+  }
+
+  async fetchLayout(isStartup) {
+    const cachedData = (await this.cache.get()) || {};
+    let { layout } = cachedData;
+    if (this.isExpired({ cachedData, key: "layout", isStartup })) {
+      const layoutResponse = await this.fetchFromEndpoint(
+        this.config.layout_endpoint
+      );
+      if (layoutResponse && layoutResponse.layout) {
+        layout = {
+          lastUpdated: Date.now(),
+          spocs: layoutResponse.spocs,
+          layout: layoutResponse.layout,
+          status: "success",
+        };
+
+        await this.cache.set("layout", layout);
+      } else {
+        console.error("No response for response.layout prop");
+      }
+    }
+    return layout;
   }
 
   updatePlacements(sendUpdate, layout, isStartup = false) {
@@ -581,123 +638,127 @@ class DiscoveryStreamFeed {
     return gridPositions;
   }
 
-  generateFeedUrl(isBff) {
-    if (isBff) {
-      return `https://${lazy.NimbusFeatures.saveToPocket.getVariable(
-        "bffApi"
-      )}/desktop/v1/recommendations?locale=$locale&region=$region&count=30`;
-    }
-    return FEED_URL;
-  }
-
-  loadLayout(sendUpdate, isStartup) {
-    let layoutData = {};
+  async loadLayout(sendUpdate, isStartup) {
+    let layoutResp = {};
     let url = "";
 
-    const isBasicLayout =
-      this.config.hardcoded_basic_layout ||
-      this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
-      this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
-
-    const sponsoredCollectionsEnabled =
-      this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
-
-    const pocketConfig = this.store.getState().Prefs.values?.pocketConfig || {};
-    const onboardingExperience =
-      this.isBff && pocketConfig.onboardingExperience;
-    const { spocTopsitesPlacementEnabled } = pocketConfig;
-
-    let items = isBasicLayout ? 3 : 21;
-    if (pocketConfig.fourCardLayout || pocketConfig.hybridLayout) {
-      items = isBasicLayout ? 4 : 24;
+    if (!this.config.hardcoded_layout) {
+      layoutResp = await this.fetchLayout(isStartup);
     }
 
-    const prepConfArr = arr => {
-      return arr
-        ?.split(",")
-        .filter(item => item)
-        .map(item => parseInt(item, 10));
-    };
+    if (!layoutResp || !layoutResp.layout) {
+      const isBasicLayout =
+        this.config.hardcoded_basic_layout ||
+        this.store.getState().Prefs.values[PREF_HARDCODED_BASIC_LAYOUT] ||
+        this.store.getState().Prefs.values[PREF_REGION_BASIC_LAYOUT];
 
-    const spocAdTypes = prepConfArr(pocketConfig.spocAdTypes);
-    const spocZoneIds = prepConfArr(pocketConfig.spocZoneIds);
-    const spocTopsitesAdTypes = prepConfArr(pocketConfig.spocTopsitesAdTypes);
-    const spocTopsitesZoneIds = prepConfArr(pocketConfig.spocTopsitesZoneIds);
-    const { spocSiteId } = pocketConfig;
-    let spocPlacementData;
-    let spocTopsitesPlacementData;
-    let spocsUrl;
+      const sponsoredCollectionsEnabled =
+        this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
 
-    if (spocAdTypes?.length && spocZoneIds?.length) {
-      spocPlacementData = {
-        ad_types: spocAdTypes,
-        zone_ids: spocZoneIds,
+      const pocketConfig =
+        this.store.getState().Prefs.values?.pocketConfig || {};
+      const onboardingExperience =
+        this.isBff && pocketConfig.onboardingExperience;
+      const { spocTopsitesPlacementEnabled } = pocketConfig;
+
+      let items = isBasicLayout ? 3 : 21;
+      if (pocketConfig.fourCardLayout || pocketConfig.hybridLayout) {
+        items = isBasicLayout ? 4 : 24;
+      }
+
+      const prepConfArr = arr => {
+        return arr
+          ?.split(",")
+          .filter(item => item)
+          .map(item => parseInt(item, 10));
       };
+
+      const spocAdTypes = prepConfArr(pocketConfig.spocAdTypes);
+      const spocZoneIds = prepConfArr(pocketConfig.spocZoneIds);
+      const spocTopsitesAdTypes = prepConfArr(pocketConfig.spocTopsitesAdTypes);
+      const spocTopsitesZoneIds = prepConfArr(pocketConfig.spocTopsitesZoneIds);
+      const { spocSiteId } = pocketConfig;
+      let spocPlacementData;
+      let spocTopsitesPlacementData;
+      let spocsUrl;
+
+      if (spocAdTypes?.length && spocZoneIds?.length) {
+        spocPlacementData = {
+          ad_types: spocAdTypes,
+          zone_ids: spocZoneIds,
+        };
+      }
+
+      if (spocTopsitesAdTypes?.length && spocTopsitesZoneIds?.length) {
+        spocTopsitesPlacementData = {
+          ad_types: spocTopsitesAdTypes,
+          zone_ids: spocTopsitesZoneIds,
+        };
+      }
+
+      if (spocSiteId) {
+        const newUrl = new URL(SPOCS_URL);
+        newUrl.searchParams.set("site", spocSiteId);
+        spocsUrl = newUrl.href;
+      }
+
+      let feedUrl = FEED_URL;
+
+      if (this.isBff) {
+        feedUrl = `https://${lazy.NimbusFeatures.saveToPocket.getVariable(
+          "bffApi"
+        )}/desktop/v1/recommendations?locale=$locale&region=$region&count=30`;
+      }
+
+      // Set a hardcoded layout if one is needed.
+      // Changing values in this layout in memory object is unnecessary.
+      layoutResp = getHardcodedLayout({
+        spocsUrl,
+        feedUrl,
+        items,
+        sponsoredCollectionsEnabled,
+        spocPlacementData,
+        spocTopsitesPlacementEnabled,
+        spocTopsitesPlacementData,
+        spocPositions: this.parseGridPositions(
+          pocketConfig.spocPositions?.split(`,`)
+        ),
+        spocTopsitesPositions: this.parseGridPositions(
+          pocketConfig.spocTopsitesPositions?.split(`,`)
+        ),
+        widgetPositions: this.parseGridPositions(
+          pocketConfig.widgetPositions?.split(`,`)
+        ),
+        widgetData: [
+          ...(this.locale.startsWith("en-") ? [{ type: "TopicsWidget" }] : []),
+        ],
+        hybridLayout: pocketConfig.hybridLayout,
+        hideCardBackground: pocketConfig.hideCardBackground,
+        fourCardLayout: pocketConfig.fourCardLayout,
+        newFooterSection: pocketConfig.newFooterSection,
+        compactGrid: pocketConfig.compactGrid,
+        // For now essentialReadsHeader and editorsPicksHeader are English only.
+        essentialReadsHeader:
+          this.locale.startsWith("en-") && pocketConfig.essentialReadsHeader,
+        editorsPicksHeader:
+          this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
+        onboardingExperience,
+      });
     }
-
-    if (spocTopsitesAdTypes?.length && spocTopsitesZoneIds?.length) {
-      spocTopsitesPlacementData = {
-        ad_types: spocTopsitesAdTypes,
-        zone_ids: spocTopsitesZoneIds,
-      };
-    }
-
-    if (spocSiteId) {
-      const newUrl = new URL(SPOCS_URL);
-      newUrl.searchParams.set("site", spocSiteId);
-      spocsUrl = newUrl.href;
-    }
-
-    let feedUrl = this.generateFeedUrl(this.isBff);
-
-    // Set layout config.
-    // Changing values in this layout in memory object is unnecessary.
-    layoutData = getHardcodedLayout({
-      spocsUrl,
-      feedUrl,
-      items,
-      sponsoredCollectionsEnabled,
-      spocPlacementData,
-      spocTopsitesPlacementEnabled,
-      spocTopsitesPlacementData,
-      spocPositions: this.parseGridPositions(
-        pocketConfig.spocPositions?.split(`,`)
-      ),
-      spocTopsitesPositions: this.parseGridPositions(
-        pocketConfig.spocTopsitesPositions?.split(`,`)
-      ),
-      widgetPositions: this.parseGridPositions(
-        pocketConfig.widgetPositions?.split(`,`)
-      ),
-      widgetData: [
-        ...(this.locale.startsWith("en-") ? [{ type: "TopicsWidget" }] : []),
-      ],
-      hybridLayout: pocketConfig.hybridLayout,
-      hideCardBackground: pocketConfig.hideCardBackground,
-      fourCardLayout: pocketConfig.fourCardLayout,
-      newFooterSection: pocketConfig.newFooterSection,
-      compactGrid: pocketConfig.compactGrid,
-      // For now essentialReadsHeader and editorsPicksHeader are English only.
-      essentialReadsHeader:
-        this.locale.startsWith("en-") && pocketConfig.essentialReadsHeader,
-      editorsPicksHeader:
-        this.locale.startsWith("en-") && pocketConfig.editorsPicksHeader,
-      onboardingExperience,
-    });
 
     sendUpdate({
       type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
-      data: layoutData,
+      data: layoutResp,
       meta: {
         isStartup,
       },
     });
 
-    if (layoutData.spocs) {
+    if (layoutResp.spocs) {
       url =
         this.store.getState().Prefs.values[PREF_SPOCS_ENDPOINT] ||
         this.config.spocs_endpoint ||
-        layoutData.spocs.url;
+        layoutResp.spocs.url;
 
       const spocsEndpointQuery =
         this.store.getState().Prefs.values[PREF_SPOCS_ENDPOINT_QUERY];
@@ -718,7 +779,7 @@ class DiscoveryStreamFeed {
             isStartup,
           },
         });
-        this.updatePlacements(sendUpdate, layoutData.layout, isStartup);
+        this.updatePlacements(sendUpdate, layoutResp.layout, isStartup);
       }
     }
   }
@@ -995,7 +1056,7 @@ class DiscoveryStreamFeed {
         const headers = new Headers();
         headers.append("content-type", "application/json");
 
-        const apiKeyPref = this.config.api_key_pref;
+        const apiKeyPref = this._prefCache.config.api_key_pref;
         const apiKey = Services.prefs.getCharPref(apiKeyPref, "");
 
         const spocsResponse = await this.fetchFromEndpoint(endpoint, {
@@ -1484,6 +1545,9 @@ class DiscoveryStreamFeed {
   async _maybeUpdateCachedData() {
     const expirationPerComponent = await this._checkExpirationPerComponent();
     // Pass in `store.dispatch` to send the updates only to main
+    if (expirationPerComponent.layout) {
+      await this.loadLayout(this.store.dispatch);
+    }
     if (expirationPerComponent.spocs) {
       await this.loadSpocs(this.store.dispatch);
     }
@@ -1498,7 +1562,7 @@ class DiscoveryStreamFeed {
    *                                      updates in background if false
    * @property {boolean} isStartup - When the function is called at browser startup
    *
-   * Refreshes component feeds, and spocs in order if caches have expired.
+   * Refreshes layout, component feeds, and spocs in order if caches have expired.
    * @param {RefreshAll} options
    */
   async refreshAll(options = {}) {
@@ -1634,7 +1698,7 @@ class DiscoveryStreamFeed {
       ? action => this.store.dispatch(ac.BroadcastToContent(action))
       : this.store.dispatch;
 
-    this.loadLayout(dispatch, isStartup);
+    await this.loadLayout(dispatch, isStartup);
     if (this.showStories || this.showTopsites) {
       const promises = [];
       // We could potentially have either or both sponsored topsites or stories.
@@ -1711,6 +1775,7 @@ class DiscoveryStreamFeed {
   }
 
   async resetContentCache() {
+    await this.cache.set("layout", {});
     await this.cache.set("feeds", {});
     await this.cache.set("spocs", {});
     await this.cache.set("sov", {});

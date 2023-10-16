@@ -22,7 +22,7 @@ class mock_Link : public mozilla::dom::Link {
   typedef void (*Handler)(State);
 
   explicit mock_Link(Handler aHandlerFunction, bool aRunNextTest = true)
-      : mRunNextTest(aRunNextTest) {
+      : mozilla::dom::Link(), mRunNextTest(aRunNextTest) {
     AwaitNewNotification(aHandlerFunction);
   }
 

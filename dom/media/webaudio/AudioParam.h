@@ -50,16 +50,17 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    AudioParamEvent event(AudioTimelineEvent::SetValueCurve, aValues,
-                          aStartTime, aDuration);
-    ValidateAndInsertEvent(event, aRv);
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve, aStartTime,
+                         0.0f, 0.0f, aDuration, aValues.Elements(),
+                         aValues.Length());
+
     return this;
   }
 
   // Intended for use in AudioNode creation, when the setter should not throw.
   void SetInitialValue(float aValue) {
     MOZ_ASSERT(HasSimpleValue(), "Existing events unexpected");
-    AudioParamEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
+    AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
 
     DebugOnly<ErrorResult> rv;
     MOZ_ASSERT(ValidateEvent(event, rv), "This event should be valid");
@@ -70,7 +71,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   }
 
   void SetValue(float aValue, ErrorResult& aRv) {
-    AudioParamEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
+    AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
 
     if (!ValidateEvent(event, aRv)) {
       return;
@@ -88,9 +89,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    AudioParamEvent event(AudioTimelineEvent::SetValueAtTime, aStartTime,
-                          aValue);
-    ValidateAndInsertEvent(event, aRv);
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueAtTime, aStartTime,
+                         aValue);
+
     return this;
   }
 
@@ -101,8 +102,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
-    AudioParamEvent event(AudioTimelineEvent::LinearRamp, aEndTime, aValue);
-    ValidateAndInsertEvent(event, aRv);
+    EventInsertionHelper(aRv, AudioTimelineEvent::LinearRamp, aEndTime, aValue);
     return this;
   }
 
@@ -113,9 +113,8 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aEndTime = std::max(aEndTime, GetParentObject()->CurrentTime());
-    AudioParamEvent event(AudioTimelineEvent::ExponentialRamp, aEndTime,
-                          aValue);
-    ValidateAndInsertEvent(event, aRv);
+    EventInsertionHelper(aRv, AudioTimelineEvent::ExponentialRamp, aEndTime,
+                         aValue);
     return this;
   }
 
@@ -127,9 +126,9 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
       return this;
     }
     aStartTime = std::max(aStartTime, GetParentObject()->CurrentTime());
-    AudioParamEvent event(AudioTimelineEvent::SetTarget, aStartTime, aTarget,
-                          aTimeConstant);
-    ValidateAndInsertEvent(event, aRv);
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetTarget, aStartTime,
+                         aTarget, aTimeConstant);
+
     return this;
   }
 
@@ -144,7 +143,7 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
     // Remove some events on the main thread copy.
     AudioEventTimeline::CancelScheduledValues(aStartTime);
 
-    AudioParamEvent event(AudioTimelineEvent::Cancel, aStartTime, 0.0f);
+    AudioTimelineEvent event(AudioTimelineEvent::Cancel, aStartTime, 0.0f);
 
     SendEventToEngine(event);
 
@@ -201,21 +200,28 @@ class AudioParam final : public nsWrapperCache, public AudioParamTimeline {
   }
 
  private:
-  void ValidateAndInsertEvent(const AudioParamEvent& aEvent, ErrorResult& aRv) {
-    if (!ValidateEvent(aEvent, aRv)) {
+  void EventInsertionHelper(ErrorResult& aRv, AudioTimelineEvent::Type aType,
+                            double aTime, float aValue,
+                            double aTimeConstant = 0.0, double aDuration = 0.0,
+                            const float* aCurve = nullptr,
+                            uint32_t aCurveLength = 0) {
+    AudioTimelineEvent event(aType, aTime, aValue, aTimeConstant, aDuration,
+                             aCurve, aCurveLength);
+
+    if (!ValidateEvent(event, aRv)) {
       return;
     }
 
-    AudioEventTimeline::InsertEvent<double>(aEvent);
+    AudioEventTimeline::InsertEvent<double>(event);
 
-    SendEventToEngine(aEvent);
+    SendEventToEngine(event);
 
     CleanupOldEvents();
   }
 
   void CleanupOldEvents();
 
-  void SendEventToEngine(const AudioParamEvent& aEvent);
+  void SendEventToEngine(const AudioTimelineEvent& aEvent);
 
   void DisconnectFromGraphAndDestroyTrack();
 

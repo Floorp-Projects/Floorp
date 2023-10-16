@@ -463,7 +463,7 @@ class SimpleTextTrackEvent : public Runnable {
 
   void Dispatch() {
     if (nsCOMPtr<nsIGlobalObject> global = mCue->GetOwnerGlobal()) {
-      global->Dispatch(do_AddRef(this));
+      global->Dispatch(TaskCategory::Other, do_AddRef(this));
     } else {
       NS_DispatchToMainThread(do_AddRef(this));
     }
@@ -587,8 +587,10 @@ class TextTrackListInternal {
 void TextTrackManager::DispatchUpdateCueDisplay() {
   if (!mUpdateCueDisplayDispatched && !IsShutdown()) {
     WEBVTT_LOG("DispatchUpdateCueDisplay");
-    if (nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow()) {
+    nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
+    if (win) {
       nsGlobalWindowInner::Cast(win)->Dispatch(
+          TaskCategory::Other,
           NewRunnableMethod("dom::TextTrackManager::UpdateCueDisplay", this,
                             &TextTrackManager::UpdateCueDisplay));
       mUpdateCueDisplayDispatched = true;
@@ -603,8 +605,10 @@ void TextTrackManager::DispatchTimeMarchesOn() {
   // executing call upon completion will check queue for further 'work'.
   if (!mTimeMarchesOnDispatched && !IsShutdown()) {
     WEBVTT_LOG("DispatchTimeMarchesOn");
-    if (nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow()) {
+    nsPIDOMWindowInner* win = mMediaElement->OwnerDoc()->GetInnerWindow();
+    if (win) {
       nsGlobalWindowInner::Cast(win)->Dispatch(
+          TaskCategory::Other,
           NewRunnableMethod("dom::TextTrackManager::TimeMarchesOn", this,
                             &TextTrackManager::TimeMarchesOn));
       mTimeMarchesOnDispatched = true;

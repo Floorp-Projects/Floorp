@@ -1,13 +1,6 @@
 // META: script=/resources/testdriver.js
 // META: script=/common/utils.js
 // META: script=resources/fledge-util.js
-// META: script=/common/subset-tests.js
-// META: timeout=long
-// META: variant=?1-5
-// META: variant=?6-10
-// META: variant=?11-15
-// META: variant=?16-20
-// META: variant=?21-last
 
 "use strict;"
 
@@ -50,7 +43,7 @@ const makeTest = ({
   // Expectation for a promise error.
   expectPromiseError,
 }) => {
-  subsetTest(promise_test, async test => {
+  promise_test(async test => {
     let waitPromiseError, dontExpectPromiseError;
     if (expectPromiseError) {
       waitPromiseError = interceptUnhandledRejection();

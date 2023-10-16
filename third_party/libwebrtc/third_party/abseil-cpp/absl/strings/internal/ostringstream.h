@@ -16,13 +16,11 @@
 #define ABSL_STRINGS_INTERNAL_OSTRINGSTREAM_H_
 
 #include <cassert>
-#include <ios>
 #include <ostream>
 #include <streambuf>
 #include <string>
-#include <utility>
 
-#include "absl/base/config.h"
+#include "absl/base/port.h"
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
@@ -62,49 +60,26 @@ namespace strings_internal {
 //   strm << 3.14;
 //
 // Note: flush() has no effect. No reason to call it.
-class OStringStream final : public std::ostream {
+class OStringStream : private std::basic_streambuf<char>, public std::ostream {
  public:
   // The argument can be null, in which case you'll need to call str(p) with a
   // non-null argument before you can write to the stream.
   //
   // The destructor of OStringStream doesn't use the std::string. It's OK to
   // destroy the std::string before the stream.
-  explicit OStringStream(std::string* str)
-      : std::ostream(&buf_), buf_(str) {}
-  OStringStream(OStringStream&& that)
-      : std::ostream(std::move(static_cast<std::ostream&>(that))),
-        buf_(that.buf_) {
-    rdbuf(&buf_);
-  }
-  OStringStream& operator=(OStringStream&& that) {
-    std::ostream::operator=(std::move(static_cast<std::ostream&>(that)));
-    buf_ = that.buf_;
-    rdbuf(&buf_);
-    return *this;
-  }
+  explicit OStringStream(std::string* s) : std::ostream(this), s_(s) {}
 
-  std::string* str() { return buf_.str(); }
-  const std::string* str() const { return buf_.str(); }
-  void str(std::string* str) { buf_.str(str); }
+  std::string* str() { return s_; }
+  const std::string* str() const { return s_; }
+  void str(std::string* s) { s_ = s; }
 
  private:
-  class Streambuf final : public std::streambuf {
-   public:
-    explicit Streambuf(std::string* str) : str_(str) {}
-    Streambuf(const Streambuf&) = default;
-    Streambuf& operator=(const Streambuf&) = default;
+  using Buf = std::basic_streambuf<char>;
 
-    std::string* str() { return str_; }
-    const std::string* str() const { return str_; }
-    void str(std::string* str) { str_ = str; }
+  Buf::int_type overflow(int c) override;
+  std::streamsize xsputn(const char* s, std::streamsize n) override;
 
-   protected:
-    int_type overflow(int c) override;
-    std::streamsize xsputn(const char* s, std::streamsize n) override;
-
-   private:
-    std::string* str_;
-  } buf_;
+  std::string* s_;
 };
 
 }  // namespace strings_internal

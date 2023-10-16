@@ -161,6 +161,11 @@ class MochitestRunner(MozbuildObject):
             manifest.tests.extend(tests)
             options.manifestFile = manifest
 
+        # Firefox for Android doesn't use e10s
+        if options.app is not None and "geckoview" not in options.app:
+            options.e10s = False
+            print("using e10s=False for non-geckoview app")
+
         return runtestsremote.run_test_harness(parser, options)
 
     def run_geckoview_junit_test(self, context, **kwargs):
@@ -402,20 +407,6 @@ def run_mochitest_general(
         # sys.executable is used to start the websocketprocessbridge, though for some
         # reason it doesn't get set when calling `activate_this.py` in the virtualenv.
         sys.executable = command_context.virtualenv_manager.python_path
-
-    if ("browser-chrome", "a11y") in suites and sys.platform == "win32":
-        # Only Windows a11y browser tests need this.
-        req = os.path.join(
-            "accessible",
-            "tests",
-            "browser",
-            "windows",
-            "a11y_setup_requirements.txt",
-        )
-        command_context.virtualenv_manager.activate()
-        command_context.virtualenv_manager.install_pip_requirements(
-            req, require_hashes=False
-        )
 
     # This is a hack to introduce an option in mach to not send
     # filtered tests to the mochitest harness. Mochitest harness will read

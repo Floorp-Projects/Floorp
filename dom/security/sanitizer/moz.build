@@ -9,7 +9,7 @@ with Files("**"):
 
 # TEST_DIRS += [ 'tests' ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.toml"]
+MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
 
 
 EXPORTS.mozilla.dom += [

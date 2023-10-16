@@ -37,7 +37,7 @@ class DebuggerNotificationManager final : public nsISupports {
   }
 
   explicit DebuggerNotificationManager(nsIGlobalObject* aDebuggeeGlobal)
-      : mDebuggeeGlobal(aDebuggeeGlobal) {}
+      : mDebuggeeGlobal(aDebuggeeGlobal), mNotificationObservers() {}
 
   bool Attach(DebuggerNotificationObserver* aObserver);
   bool Detach(DebuggerNotificationObserver* aObserver);

@@ -12,8 +12,6 @@ ChromeUtils.defineESModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
   TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
-  WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -413,19 +411,6 @@ var gMainPane = {
       "command",
       gMainPane.onBrowserRestoreSessionChange
     );
-    if (AppConstants.platform == "win") {
-      setEventListener(
-        "windowsLaunchOnLogin",
-        "command",
-        gMainPane.onWindowsLaunchOnLoginChange
-      );
-      NimbusFeatures.windowsLaunchOnLogin.recordExposureEvent({
-        once: true,
-      });
-      if (NimbusFeatures.windowsLaunchOnLogin.getVariable("enabled")) {
-        document.getElementById("windowsLaunchOnLoginBox").hidden = false;
-      }
-    }
     gMainPane.updateBrowserStartupUI =
       gMainPane.updateBrowserStartupUI.bind(gMainPane);
     Preferences.get("browser.privatebrowsing.autostart").on(
@@ -502,10 +487,11 @@ var gMainPane = {
       document.getElementById("dataMigrationGroup").remove();
     }
 
-    // For media control toggle button, we support it on Windows, macOS and
+    // For media control toggle button, we support it on Windows 8.1+ (NT6.3),
+    // MacOs 10.4+ (darwin8.0, but we already don't support that) and
     // gtk-based Linux.
     if (
-      AppConstants.platform == "win" ||
+      AppConstants.isPlatformAndVersionAtLeast("win", "6.3") ||
       AppConstants.platform == "macosx" ||
       AppConstants.MOZ_WIDGET_GTK
     ) {
@@ -649,31 +635,6 @@ var gMainPane = {
       }
 
       if (AppConstants.platform == "win") {
-        // Check for a launch on login registry key
-        // This accounts for if a user manually changes it in the registry
-        // Disabling in Task Manager works outside of just deleting the registry key
-        // in HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run
-        // but it is not possible to change it back to enabled as the disabled value is just a random
-        // hexadecimal number
-        let launchOnLoginCheckbox = document.getElementById(
-          "windowsLaunchOnLogin"
-        );
-        let registryName = WindowsLaunchOnLogin.getLaunchOnLoginRegistryName();
-        WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
-          try {
-            // Reflect registry key value in about:preferences
-            launchOnLoginCheckbox.checked = wrk.hasValue(registryName);
-          } catch (e) {
-            // We should only end up here if we fail to open the registry
-            console.error("Failed to open Windows registry", e);
-          }
-        });
-
-        let approvedByWindows = WindowsLaunchOnLogin.getLaunchOnLoginApproved();
-        launchOnLoginCheckbox.disabled = !approvedByWindows;
-        document.getElementById("windowsLaunchOnLoginDisabledBox").hidden =
-          approvedByWindows;
-
         // On Windows, the Application Update setting is an installation-
         // specific preference, not a profile-specific one. Show a warning to
         // inform users of this.
@@ -1664,23 +1625,6 @@ var gMainPane = {
     startupPref.value = newValue;
   },
 
-  onWindowsLaunchOnLoginChange(event) {
-    if (AppConstants.platform !== "win") {
-      return;
-    }
-    if (event.target.checked) {
-      // windowsLaunchOnLogin has been checked: create registry key
-      WindowsLaunchOnLogin.createLaunchOnLoginRegistryKey();
-      Services.prefs.setBoolPref(
-        "browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt",
-        true
-      );
-    } else {
-      // windowsLaunchOnLogin has been unchecked: delete registry key
-      WindowsLaunchOnLogin.removeLaunchOnLoginRegistryKey();
-    }
-  },
-
   // TABS
 
   /*
@@ -1780,7 +1724,7 @@ var gMainPane = {
         return;
       }
       try {
-        shellSvc.setDefaultBrowser(false);
+        shellSvc.setDefaultBrowser(true, false);
       } catch (ex) {
         console.error(ex);
         return;

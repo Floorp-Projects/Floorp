@@ -43,6 +43,8 @@ if (!this.runTest) {
     enableStorageTesting();
     enableTesting();
 
+    Cu.importGlobalProperties(["indexedDB", "File", "Blob", "FileReader"]);
+
     // In order to support converting tests to using async functions from using
     // generator functions, we detect async functions by checking the name of
     // function's constructor.
@@ -170,27 +172,6 @@ function initTemporaryOrigin(persistence, principal, callback) {
   return request;
 }
 
-function initPersistentClient(principal, client, callback) {
-  let request = SpecialPowers._getQuotaManager().initializePersistentClient(
-    principal,
-    client
-  );
-  request.callback = callback;
-
-  return request;
-}
-
-function initTemporaryClient(persistence, principal, client, callback) {
-  let request = SpecialPowers._getQuotaManager().initializeTemporaryClient(
-    persistence,
-    principal,
-    client
-  );
-  request.callback = callback;
-
-  return request;
-}
-
 function getFullOriginMetadata(persistence, principal, callback) {
   const request = SpecialPowers._getQuotaManager().getFullOriginMetadata(
     persistence,
@@ -214,16 +195,6 @@ function clearClient(principal, persistence, client, callback) {
 
 function clearOrigin(principal, persistence, callback) {
   let request = SpecialPowers._getQuotaManager().clearStoragesForPrincipal(
-    principal,
-    persistence
-  );
-  request.callback = callback;
-
-  return request;
-}
-
-function clearOriginsByPrefix(principal, persistence, callback) {
-  let request = SpecialPowers._getQuotaManager().clearStoragesForOriginPrefix(
     principal,
     persistence
   );
@@ -378,7 +349,7 @@ function installPackages(packageRelativePaths) {
 // test package definition and a shared package definition. The shared package
 // definition should contain unknown stuff which needs to be properly handled
 // in all situations.
-function verifyStorage(packageDefinitionRelativePaths, key, sharedKey) {
+function verifyStorage(packageDefinitionRelativePaths, key) {
   if (packageDefinitionRelativePaths.length != 2) {
     throw new Error("Unsupported number of package definition relative paths");
   }
@@ -618,7 +589,7 @@ function verifyStorage(packageDefinitionRelativePaths, key, sharedKey) {
   );
   const sharedEntries = getEntriesFromPackageDefinition(
     packageDefinitionRelativePaths[1],
-    sharedKey ? sharedKey : key
+    key
   );
 
   addSharedEntries(expectedEntries, sharedEntries, key);

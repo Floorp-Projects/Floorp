@@ -303,8 +303,6 @@ browsertime-benchmark:
                         custom-car: []
                         chromium: []
                         safari: []  # Bug 1848400 safari perma-fails on osx1300
-                        chrome:
-                            - [speedometer, sp]
                         default:
                             - [speedometer, sp]
                             - [speedometer3, sp3]
@@ -316,8 +314,6 @@ browsertime-benchmark:
                             - [jetstream2, js2]
                             - [matrix-react-bench, mrb]
                             - [motionmark-animometer, mm-a]
-                            - [motionmark-animometer-ramp, mm-ar]
-                            - [motionmark-htmlsuite-ramp, mm-hr]
                             - [motionmark-htmlsuite, mm-h]
                             - [speedometer, sp]
                             - [speedometer3, sp3]
@@ -333,8 +329,6 @@ browsertime-benchmark:
                             # - [matrix-react-bench, mrb] Perma fails on osx 10.15.x machines (Bug 1807754)
                             - [motionmark-animometer, mm-a]
                             - [motionmark-htmlsuite, mm-h]
-                            - [motionmark-animometer-ramp, mm-ar]
-                            - [motionmark-htmlsuite-ramp, mm-hr]
                             - [speedometer, sp]
                             # - [speedometer3, sp3] Perma fails on osx 10.15.x machines (Bug 1809535)
                             - [stylebench, sb]
@@ -344,8 +338,6 @@ browsertime-benchmark:
                         custom-car:
                             - [speedometer, sp]
                             - [speedometer3, sp3]
-                            - [motionmark-animometer-ramp, mm-ar]
-                            - [motionmark-htmlsuite-ramp, mm-hr]
                         default:
                             - ares6
                             - [assorted-dom, dom]
@@ -353,8 +345,6 @@ browsertime-benchmark:
                             - [matrix-react-bench, mrb]
                             - [motionmark-animometer, mm-a]
                             - [motionmark-htmlsuite, mm-h]
-                            - [motionmark-animometer-ramp, mm-ar]
-                            - [motionmark-htmlsuite-ramp, mm-hr]
                             - [speedometer, sp]
                             - [speedometer3, sp3]
                             - [stylebench, sb]
@@ -426,23 +416,13 @@ browsertime-benchmark:
             jetstream2: 8000
             matrix-react-bench: 1500
             motionmark-htmlsuite: 1500
-            motionmark-htmlsuite-ramp: 3000
-            motionmark-animometer-ramp: 2100
             unity-webgl: 1500
-            speedometer3:
-                by-test-platform:
-                    macosx1300.*shippable.*: 4200
-                    default: 2100
+            speedometer3: 2100
             speedometer: 2100
             default: 900
     mozharness:
         extra-options:
-            by-test-platform:
-                macosx1300.*shippable.*:
-                    - --extra-profiler-run
-                    - --page-timeout=900000
-                default:
-                    - --extra-profiler-run
+            - --extra-profiler-run
 
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks

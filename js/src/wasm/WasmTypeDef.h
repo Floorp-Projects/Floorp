@@ -111,7 +111,7 @@ class FuncType {
   }
 
  public:
-  FuncType() = default;
+  FuncType() : args_(), results_() {}
   FuncType(ValTypeVector&& args, ValTypeVector&& results)
       : args_(std::move(args)), results_(std::move(results)) {}
 
@@ -298,7 +298,7 @@ class StructType {
   OutlineTraceOffsetVector outlineTraceOffsets_;
 
  public:
-  StructType() : size_(0) {}
+  StructType() : fields_(), size_(0) {}
 
   explicit StructType(StructFieldVector&& fields)
       : fields_(std::move(fields)), size_(0) {}
@@ -634,7 +634,7 @@ class TypeDef {
         superTypeVector_(nullptr),
         superTypeDef_(nullptr),
         subTypingDepth_(0),
-        isFinal_(true),
+        isFinal_(false),
         kind_(TypeDefKind::None) {
     setRecGroup(recGroup);
   }

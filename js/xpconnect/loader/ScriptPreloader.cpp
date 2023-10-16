@@ -24,7 +24,6 @@
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/TaskController.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Try.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"

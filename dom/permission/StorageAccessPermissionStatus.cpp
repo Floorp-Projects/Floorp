@@ -12,7 +12,6 @@
 #include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/PermissionStatus.h"
 #include "mozilla/dom/PermissionStatusBinding.h"
-#include "nsIPermissionManager.h"
 
 namespace mozilla::dom {
 
@@ -58,13 +57,12 @@ StorageAccessPermissionStatus::UpdateState() {
   }
 
   RefPtr<StorageAccessPermissionStatus> self(this);
-  return wgc->SendGetStorageAccessPermission()->Then(
+  return wgc->SendHasStorageAccessPermission()->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [self](uint32_t aAction) {
-        if (aAction == nsIPermissionManager::ALLOW_ACTION) {
+      [self](bool aGranted) {
+        if (aGranted) {
           self->mState = PermissionState::Granted;
         } else {
-          // We never reveal PermissionState::Denied here
           self->mState = PermissionState::Prompt;
         }
         return SimplePromise::CreateAndResolve(NS_OK, __func__);

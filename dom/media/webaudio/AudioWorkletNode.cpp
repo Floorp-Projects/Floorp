@@ -77,9 +77,9 @@ class WorkletNodeEngine final : public AudioNodeEngine {
                           UniqueMessagePortId& aPortIdentifier,
                           AudioNodeTrack* aTrack);
 
-  void RecvTimelineEvent(uint32_t aIndex, AudioParamEvent& aEvent) override {
+  void RecvTimelineEvent(uint32_t aIndex, AudioTimelineEvent& aEvent) override {
     MOZ_ASSERT(mDestination);
-    aEvent.ConvertToTicks(mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent, mDestination);
 
     if (aIndex < mParamTimelines.Length()) {
       mParamTimelines[aIndex].mTimeline.InsertEvent<int64_t>(aEvent);

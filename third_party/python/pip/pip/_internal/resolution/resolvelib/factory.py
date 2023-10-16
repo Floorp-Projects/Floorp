@@ -535,7 +535,7 @@ class Factory:
         hash mismatches. Furthermore, cached wheels at present have
         nondeterministic contents due to file modification times.
         """
-        if self._wheel_cache is None:
+        if self._wheel_cache is None or self.preparer.require_hashes:
             return None
         return self._wheel_cache.get_cache_entry(
             link=link,
@@ -632,6 +632,7 @@ class Factory:
         e: "ResolutionImpossible[Requirement, Candidate]",
         constraints: Dict[str, Constraint],
     ) -> InstallationError:
+
         assert e.causes, "Installation error reported with no cause"
 
         # If one of the things we can't solve is "we need Python X.Y",

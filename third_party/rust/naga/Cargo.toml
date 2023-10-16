@@ -130,7 +130,6 @@ arbitrary = [
     "indexmap/arbitrary",
 ]
 clone = []
-compact = []
 default = []
 deserialize = [
     "serde",

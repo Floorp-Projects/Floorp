@@ -31,7 +31,6 @@ only-for-build-platforms:
     - macosx64-devedition/opt
     - macosx64/opt
     - macosx64/debug
-    - macosx64-aarch64/debug
     - win32-shippable/opt
     - win32-devedition/opt
     - win32/opt
@@ -85,12 +84,8 @@ jobs:
                         - repackage/win64_signed.py
         package-formats:
             by-build-platform:
-                macosx64\b.*:
-                    by-build-type:
-                        # Debug builds can't be attributable
-                        debug: [dmg, mar, pkg]
-                        default: [dmg-attrib, mar, pkg]
                 linux.*: [mar]
+                macosx64\b.*: [mar, dmg, pkg]
                 win32\b.*: [mar, installer]
                 win64\b.*: [mar, installer]
         fetches:

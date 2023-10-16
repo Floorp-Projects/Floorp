@@ -6,6 +6,8 @@
 
 #include "RTCStatsIdGenerator.h"
 
+#include <iostream>
+
 #include "mozilla/RandomNum.h"
 #include "RTCStatsReport.h"
 #include "WebrtcGlobal.h"

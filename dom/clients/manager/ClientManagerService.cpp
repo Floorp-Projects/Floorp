@@ -102,7 +102,8 @@ RefPtr<GenericPromise> OnShutdown() {
         }
       });
 
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return ref;
 }
@@ -610,7 +611,8 @@ RefPtr<ClientOpPromise> ClaimOnMainThread(
         scopeExit.release();
       });
 
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
   return promise;
 }

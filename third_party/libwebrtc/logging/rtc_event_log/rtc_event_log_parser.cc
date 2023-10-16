@@ -2405,14 +2405,12 @@ std::vector<LoggedPacketInfo> ParsedRtcEventLog::GetPacketInfos(
 
   RtcEventProcessor process;
   for (const auto& rtp_packets : rtp_packets_by_ssrc(direction)) {
-    process.AddEvents(rtp_packets.packet_view, rtp_handler, direction);
+    process.AddEvents(rtp_packets.packet_view, rtp_handler);
   }
   if (direction == PacketDirection::kOutgoingPacket) {
-    process.AddEvents(incoming_transport_feedback_, feedback_handler,
-                      PacketDirection::kIncomingPacket);
+    process.AddEvents(incoming_transport_feedback_, feedback_handler);
   } else {
-    process.AddEvents(outgoing_transport_feedback_, feedback_handler,
-                      PacketDirection::kOutgoingPacket);
+    process.AddEvents(outgoing_transport_feedback_, feedback_handler);
   }
   process.ProcessEventsInOrder();
   return packets;

@@ -23,6 +23,21 @@ promise_test(t => {
   return endAfterEventLoopTurn();
 }, 'Test VideoEncoder construction');
 
+promise_test(t => {
+  let encoder = new VideoEncoder(getDefaultCodecInit(t));
+
+  let unsupportedCodecsList = [
+    'bogus',                    // Non existent codec
+    'vorbis',                   // Audio codec
+    'vp9',                      // Ambiguous codec
+    'video/webm; codecs="vp9"'  // Codec with mime type
+  ]
+
+  testConfigurations(encoder, defaultConfig, unsupportedCodecsList);
+
+  return endAfterEventLoopTurn();
+}, 'Test VideoEncoder.configure()');
+
 promise_test(async t => {
   let output_chunks = [];
   let codecInit = getDefaultCodecInit(t);
@@ -206,12 +221,8 @@ promise_test(async t => {
 
 promise_test(async t => {
   let output_chunks = [];
-  const codecInit = {
-    output: chunk => output_chunks.push(chunk),
-  };
-  const error = new Promise(resolve => codecInit.error = e => {
-    resolve(e);
-  });
+  let codecInit = getDefaultCodecInit(t);
+  codecInit.output = chunk => output_chunks.push(chunk);
 
   let encoder = new VideoEncoder(codecInit);
 
@@ -242,21 +253,24 @@ promise_test(async t => {
   output_chunks = [];
 
   let frame3 = createFrame(640, 480, 66666);
+  let frame4 = createFrame(640, 480, 100000);
 
   encoder.encode(frame3);
 
+  // Verify that a failed call to configure does not change the encoder's state.
   let badConfig = { ...defaultConfig };
-  badConfig.codec = '';
+  badConfig.codec = 'bogus';
+  assert_throws_dom('NotSupportedError', () => encoder.configure(badConfig));
+
+  delete badConfig['codec'];
   assert_throws_js(TypeError, () => encoder.configure(badConfig));
 
-  badConfig.codec = 'bogus';
-  encoder.configure(badConfig);
-  let e = await error;
-  assert_true(e instanceof DOMException);
-  assert_equals(e.name, 'NotSupportedError');
-  assert_equals(encoder.state, 'closed', 'state');
+  encoder.encode(frame4);
 
-  // We may or may not have received frame3 before closing.
+  await encoder.flush();
+
+  assert_equals(output_chunks[0].timestamp, frame3.timestamp);
+  assert_equals(output_chunks[1].timestamp, frame4.timestamp);
 }, 'Test successful encode() after re-configure().');
 
 promise_test(async t => {

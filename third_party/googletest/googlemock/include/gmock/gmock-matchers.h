@@ -240,7 +240,7 @@
 //
 // To learn more about using these macros, please search for 'MATCHER'
 // on
-// https://github.com/google/googletest/blob/main/docs/gmock_cook_book.md
+// https://github.com/google/googletest/blob/master/docs/gmock_cook_book.md
 //
 // This file also implements some commonly used argument matchers.  More
 // matchers can be defined by the user implementing the
@@ -257,10 +257,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <exception>
-#include <functional>
 #include <initializer_list>
-#include <ios>
 #include <iterator>
 #include <limits>
 #include <memory>
@@ -564,7 +561,7 @@ namespace internal {
 // If the explanation is not empty, prints it to the ostream.
 inline void PrintIfNotEmpty(const std::string& explanation,
                             ::std::ostream* os) {
-  if (!explanation.empty() && os != nullptr) {
+  if (explanation != "" && os != nullptr) {
     *os << ", " << explanation;
   }
 }
@@ -1201,27 +1198,27 @@ class PairMatchBase {
   };
 };
 
-class Eq2Matcher : public PairMatchBase<Eq2Matcher, std::equal_to<>> {
+class Eq2Matcher : public PairMatchBase<Eq2Matcher, AnyEq> {
  public:
   static const char* Desc() { return "an equal pair"; }
 };
-class Ne2Matcher : public PairMatchBase<Ne2Matcher, std::not_equal_to<>> {
+class Ne2Matcher : public PairMatchBase<Ne2Matcher, AnyNe> {
  public:
   static const char* Desc() { return "an unequal pair"; }
 };
-class Lt2Matcher : public PairMatchBase<Lt2Matcher, std::less<>> {
+class Lt2Matcher : public PairMatchBase<Lt2Matcher, AnyLt> {
  public:
   static const char* Desc() { return "a pair where the first < the second"; }
 };
-class Gt2Matcher : public PairMatchBase<Gt2Matcher, std::greater<>> {
+class Gt2Matcher : public PairMatchBase<Gt2Matcher, AnyGt> {
  public:
   static const char* Desc() { return "a pair where the first > the second"; }
 };
-class Le2Matcher : public PairMatchBase<Le2Matcher, std::less_equal<>> {
+class Le2Matcher : public PairMatchBase<Le2Matcher, AnyLe> {
  public:
   static const char* Desc() { return "a pair where the first <= the second"; }
 };
-class Ge2Matcher : public PairMatchBase<Ge2Matcher, std::greater_equal<>> {
+class Ge2Matcher : public PairMatchBase<Ge2Matcher, AnyGe> {
  public:
   static const char* Desc() { return "a pair where the first >= the second"; }
 };
@@ -1475,7 +1472,6 @@ class SomeOfArrayMatcher {
   operator Matcher<U>() const {  // NOLINT
     using RawU = typename std::decay<U>::type;
     std::vector<Matcher<RawU>> matchers;
-    matchers.reserve(matchers_.size());
     for (const auto& matcher : matchers_) {
       matchers.push_back(MatcherCast<RawU>(matcher));
     }
@@ -2313,11 +2309,11 @@ class SizeIsMatcher {
         : size_matcher_(MatcherCast<SizeType>(size_matcher)) {}
 
     void DescribeTo(::std::ostream* os) const override {
-      *os << "has a size that ";
+      *os << "size ";
       size_matcher_.DescribeTo(os);
     }
     void DescribeNegationTo(::std::ostream* os) const override {
-      *os << "has a size that ";
+      *os << "size ";
       size_matcher_.DescribeNegationTo(os);
     }
 
@@ -2967,7 +2963,7 @@ class KeyMatcherImpl : public MatcherInterface<PairType> {
     const bool match = inner_matcher_.MatchAndExplain(
         pair_getters::First(key_value, Rank0()), &inner_listener);
     const std::string explanation = inner_listener.str();
-    if (!explanation.empty()) {
+    if (explanation != "") {
       *listener << "whose first field is a value " << explanation;
     }
     return match;
@@ -3114,12 +3110,12 @@ class PairMatcherImpl : public MatcherInterface<PairType> {
                       const std::string& second_explanation,
                       MatchResultListener* listener) const {
     *listener << "whose both fields match";
-    if (!first_explanation.empty()) {
+    if (first_explanation != "") {
       *listener << ", where the first field is a value " << first_explanation;
     }
-    if (!second_explanation.empty()) {
+    if (second_explanation != "") {
       *listener << ", ";
-      if (!first_explanation.empty()) {
+      if (first_explanation != "") {
         *listener << "and ";
       } else {
         *listener << "where ";
@@ -3243,16 +3239,6 @@ template <typename T>
 auto UnpackStructImpl(const T& t, MakeIndexSequence<17>, char) {
   const auto& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = t;
   return std::tie(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q);
-}
-template <typename T>
-auto UnpackStructImpl(const T& t, MakeIndexSequence<18>, char) {
-  const auto& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r] = t;
-  return std::tie(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r);
-}
-template <typename T>
-auto UnpackStructImpl(const T& t, MakeIndexSequence<19>, char) {
-  const auto& [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s] = t;
-  return std::tie(a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s);
 }
 #endif  // defined(__cpp_structured_bindings)
 
@@ -3647,6 +3633,23 @@ class UnorderedElementsAreMatcherImpl
     MatchMatrix matrix =
         AnalyzeElements(stl_container.begin(), stl_container.end(),
                         &element_printouts, listener);
+
+    if (matrix.LhsSize() == 0 && matrix.RhsSize() == 0) {
+      return true;
+    }
+
+    if (match_flags() == UnorderedMatcherRequire::ExactMatch) {
+      if (matrix.LhsSize() != matrix.RhsSize()) {
+        // The element count doesn't match.  If the container is empty,
+        // there's no need to explain anything as Google Mock already
+        // prints the empty container. Otherwise we just need to show
+        // how many elements there actually are.
+        if (matrix.LhsSize() != 0 && listener->IsInterested()) {
+          *listener << "which has " << Elements(matrix.LhsSize());
+        }
+        return false;
+      }
+    }
 
     return VerifyMatchMatrix(element_printouts, matrix, listener) &&
            FindPairing(matrix, listener);
@@ -4102,12 +4105,7 @@ class ArgsMatcherImpl : public MatcherInterface<ArgsTuple> {
     const char* sep = "";
     // Workaround spurious C4189 on MSVC<=15.7 when k is empty.
     (void)sep;
-    // The static_cast to void is needed to silence Clang's -Wcomma warning.
-    // This pattern looks suspiciously like we may have mismatched parentheses
-    // and may have been trying to use the first operation of the comma operator
-    // as a member of the array, so Clang warns that we may have made a mistake.
-    const char* dummy[] = {
-        "", (static_cast<void>(*os << sep << "#" << k), sep = ", ")...};
+    const char* dummy[] = {"", (static_cast<void>(*os << sep << "#" << k), sep = ", ")...};
     (void)dummy;
     *os << ") ";
   }
@@ -5474,12 +5472,7 @@ PolymorphicMatcher<internal::ExceptionMatcherImpl<Err>> ThrowsMessage(
       }                                                                        \
     };                                                                         \
   };                                                                           \
-  inline name##Matcher GMOCK_INTERNAL_WARNING_PUSH()                           \
-      GMOCK_INTERNAL_WARNING_CLANG(ignored, "-Wunused-function")               \
-          GMOCK_INTERNAL_WARNING_CLANG(ignored, "-Wunused-member-function")    \
-              name GMOCK_INTERNAL_WARNING_POP()() {                            \
-    return {};                                                                 \
-  }                                                                            \
+  GTEST_ATTRIBUTE_UNUSED_ inline name##Matcher name() { return {}; }           \
   template <typename arg_type>                                                 \
   bool name##Matcher::gmock_Impl<arg_type>::MatchAndExplain(                   \
       const arg_type& arg,                                                     \
@@ -5545,8 +5538,7 @@ PolymorphicMatcher<internal::ExceptionMatcherImpl<Err>> ThrowsMessage(
                                                                                \
      private:                                                                  \
       ::std::string FormatDescription(bool negation) const {                   \
-        ::std::string gmock_description;                                       \
-        gmock_description = (description);                                     \
+        ::std::string gmock_description = (description);                       \
         if (!gmock_description.empty()) {                                      \
           return gmock_description;                                            \
         }                                                                      \

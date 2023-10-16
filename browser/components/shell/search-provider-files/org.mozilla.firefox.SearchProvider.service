@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.mozilla.firefox.SearchProvider
-Exec=/usr/bin/firefox

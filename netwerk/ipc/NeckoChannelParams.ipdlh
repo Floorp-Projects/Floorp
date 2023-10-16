@@ -133,7 +133,6 @@ struct LoadInfoArgs
   RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;
   RedirectHistoryEntryInfo[]  redirectChain;
   bool                        hasInjectedCookieForCookieBannerHandling;
-  bool                        wasSchemelessInput;
 
   /**
    * ClientInfo structure representing the window or worker that triggered

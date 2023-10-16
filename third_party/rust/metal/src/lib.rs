@@ -548,7 +548,6 @@ impl MetalLayerRef {
 
 mod accelerator_structure;
 mod argument;
-mod blitpass;
 mod buffer;
 mod capturedescriptor;
 mod capturemanager;
@@ -579,7 +578,6 @@ mod vertexdescriptor;
 pub use {
     accelerator_structure::*,
     argument::*,
-    blitpass::*,
     buffer::*,
     counters::*,
     computepass::*,

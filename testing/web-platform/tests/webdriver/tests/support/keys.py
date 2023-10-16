@@ -441,7 +441,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("META", OrderedDict(
             [
-                ("code", "MetaLeft"),
+                ("code", "OSLeft"),
                 ("ctrl", False),
                 ("key", "Meta"),
                 ("location", 1),
@@ -749,7 +749,7 @@ ALL_EVENTS = OrderedDict(
         )),
         ("R_META", OrderedDict(
             [
-                ("code", "MetaRight"),
+                ("code", "OSRight"),
                 ("ctrl", False),
                 ("key", "Meta"),
                 ("location", 2),

@@ -2875,19 +2875,11 @@ ServerHandler.prototype = {
         // If you update the list of imports, please update the list in
         // tools/lint/eslint/eslint-plugin-mozilla/lib/environments/sjs.js
         // as well.
-        var s = Cu.Sandbox(Cu.getGlobalForObject({}), {
-          wantGlobalProperties: [
-            "atob",
-            "btoa",
-            "ChromeUtils",
-            "IOUtils",
-            "PathUtils",
-            "TextEncoder",
-            "URLSearchParams",
-            "URL",
-          ],
-        });
+        var s = Cu.Sandbox(Cu.getGlobalForObject({}));
         s.importFunction(dump, "dump");
+        s.importFunction(atob, "atob");
+        s.importFunction(btoa, "btoa");
+        s.importFunction(ChromeUtils, "ChromeUtils");
         s.importFunction(Services, "Services");
 
         // Define a basic key-value state-preservation API across requests, with

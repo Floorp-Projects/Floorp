@@ -3,9 +3,10 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export * from "./source-documents";
+export * from "./get-token-location";
 export * from "./source-search";
 export * from "../ui";
-export * from "./tokens";
+export { onMouseOver } from "./token-events";
 
 import { createEditor } from "./create-editor";
 
@@ -224,4 +225,14 @@ export function getCursorLine(codeMirror) {
 
 export function getCursorColumn(codeMirror) {
   return codeMirror.getCursor().ch;
+}
+
+export function getTokenEnd(codeMirror, line, column) {
+  const token = codeMirror.getTokenAt({
+    line,
+    ch: column + 1,
+  });
+  const tokenString = token.string;
+
+  return tokenString === "{" || tokenString === "[" ? null : token.end;
 }

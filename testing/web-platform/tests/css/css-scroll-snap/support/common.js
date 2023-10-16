@@ -70,35 +70,33 @@ function waitForWheelEvent(eventTarget) {
   return waitForEvent(eventTarget, 'wheel');
 }
 
-function waitForScrollStop(eventTarget) {
-  const TIMEOUT_IN_MS = 200;
+// Return a Promise which will be resolved where there's no scroll event
+// observed during 15 frames.
+//
+// TODO: This function should be written with `scrollend` event.
+function waitForScrollEnd(eventTarget) {
+  const MAX_UNCHANGED_FRAMES = 15;
 
   return new Promise(resolve => {
-    let lastScrollEventTime = performance.now();
+    let unchanged_frames = 0;
+    let lastScrollEventTime;
 
     const scrollListener = () => {
-      lastScrollEventTime = performance.now();
+      lastScrollEventTime = document.timeline.currentTime;
     };
     eventTarget.addEventListener('scroll', scrollListener);
 
-    const tick = () => {
-      if (performance.now() - lastScrollEventTime > TIMEOUT_IN_MS) {
+    const animationFrame = () => {
+      if (lastScrollEventTime == document.timeline.currentTime) {
+        unchanged_frames = 0;
+      } else if (++unchanged_frames >= MAX_UNCHANGED_FRAMES) {
         eventTarget.removeEventListener('scroll', scrollListener);
         resolve();
         return;
       }
-      requestAnimationFrame(tick); // wait another frame
+      requestAnimationFrame(animationFrame); // wait another frame
     }
-    requestAnimationFrame(tick);
-  });
-}
-
-function waitForScrollEnd(eventTarget) {
-  if (window.onscrollend !== undefined) {
-    return waitForScrollendEventNoTimeout(eventTarget);
-  }
-  return waitForScrollEvent(eventTarget).then(() => {
-    return waitForScrollStop(eventTarget);
+    requestAnimationFrame(animationFrame);
   });
 }
 

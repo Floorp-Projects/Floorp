@@ -160,6 +160,8 @@ system_headers = [
     'curses.h',
     'cxxabi.h',
     'DateTimeUtils.h',
+    'dbus/dbus-glib.h',
+    'dbus/dbus-glib-lowlevel.h',
     'dbus/dbus.h',
     'ddeml.h',
     'Debug.h',

@@ -12,9 +12,10 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
 
+import { FAKESPOT_BASE_URL } from "chrome://global/content/shopping/ProductConfig.mjs";
+
 class ShoppingSettings extends MozLitElement {
   static properties = {
-    adsEnabled: { type: Boolean },
     adsEnabledByUser: { type: Boolean },
   };
 
@@ -23,8 +24,6 @@ class ShoppingSettings extends MozLitElement {
       recommendationsToggleEl: "#shopping-settings-recommendations-toggle",
       optOutButtonEl: "#shopping-settings-opt-out-button",
       shoppingCardEl: "shopping-card",
-      adsLearnMoreLinkEl: "#shopping-ads-learn-more-link",
-      fakespotLearnMoreLinkEl: "#powered-by-fakespot-link",
     };
   }
 
@@ -46,15 +45,22 @@ class ShoppingSettings extends MozLitElement {
 
   fakespotLinkClicked(e) {
     if (e.target.localName == "a" && e.button == 0) {
-      Glean.shopping.surfacePoweredByFakespotLinkClicked.record();
+      this.dispatchEvent(
+        new CustomEvent("ShoppingTelemetryEvent", {
+          composed: true,
+          bubbles: true,
+          detail: "surfacePoweredByFakespotLinkClicked",
+        })
+      );
     }
   }
 
   render() {
     // Whether we show recommendations at all (including offering a user
     // control for them) is controlled via a nimbus-enabled pref.
-    let canShowRecommendationToggle = this.adsEnabled;
-
+    let canShowRecommendationToggle = RPMGetBoolPref(
+      "browser.shopping.experience2023.ads.enabled"
+    );
     let toggleMarkup = canShowRecommendationToggle
       ? html`
         <moz-toggle
@@ -64,13 +70,10 @@ class ShoppingSettings extends MozLitElement {
           data-l10n-attrs="label"
           @toggle=${this.onToggleRecommendations}>
         </moz-toggle/>
-        <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more2">
+        <span id="shopping-ads-learn-more" data-l10n-id="shopping-settings-recommendations-learn-more">
           <a
-            id="shopping-ads-learn-more-link"
-            target="_blank"
-            href="${window.RPMGetFormatURLPref(
-              "app.support.baseURL"
-            )}review-checker-review-quality?utm_campaign=learn-more&utm_medium=inproduct&utm_term=core-sidebar#w_ads_for_relevant_products"
+            is="moz-support-link"
+            support-page="todo"
             data-l10n-name="review-quality-url"
           ></a>
         </span>`
@@ -102,10 +105,9 @@ class ShoppingSettings extends MozLitElement {
         @click=${this.fakespotLinkClicked}
       >
         <a
-          id="powered-by-fakespot-link"
           data-l10n-name="fakespot-link"
           target="_blank"
-          href="https://www.fakespot.com/our-mission?utm_source=review-checker&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sidebar"
+          href="${FAKESPOT_BASE_URL}our-mission?utm_source=review-checker&utm_campaign=fakespot-by-mozilla&utm_medium=inproduct&utm_term=core-sidebar"
         ></a>
       </p>
     `;

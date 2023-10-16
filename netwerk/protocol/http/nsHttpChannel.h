@@ -386,6 +386,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   // proxy specific methods
   [[nodiscard]] nsresult ProxyFailover();
   [[nodiscard]] nsresult AsyncDoReplaceWithProxy(nsIProxyInfo*);
+  [[nodiscard]] nsresult ContinueDoReplaceWithProxy(nsresult);
   [[nodiscard]] nsresult ResolveProxy();
 
   // cache specific methods
@@ -527,9 +528,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // resolve in firing a ServiceWorker FetchEvent.
   [[nodiscard]] nsresult RedirectToInterceptedChannel();
 
-  // Start an internal redirect to a new channel for auth retry
-  [[nodiscard]] nsresult RedirectToNewChannelForAuthRetry();
-
   // Determines and sets content type in the cache entry. It's called when
   // writing a new entry. The content type is used in cache internally only.
   void SetCachedContentType();
@@ -572,7 +570,6 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   nsCOMPtr<nsIRequest> mTransactionPump;
   RefPtr<HttpTransactionShell> mTransaction;
-  RefPtr<HttpTransactionShell> mTransactionSticky;
 
   uint64_t mLogicalOffset{0};
 
@@ -703,8 +700,7 @@ class nsHttpChannel final : public HttpBaseChannel,
     // Only set to true when we receive an HTTPSSVC record before the
     // transaction is created.
     (uint32_t, HTTPSSVCTelemetryReported, 1),
-    (uint32_t, EchConfigUsed, 1),
-    (uint32_t, AuthRedirectedChannel, 1)
+    (uint32_t, EchConfigUsed, 1)
   ))
   // clang-format on
 
@@ -801,8 +797,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsresult LogConsoleError(const char* aTag);
 
   void SetHTTPSSVCRecord(already_AddRefed<nsIDNSHTTPSSVCRecord>&& aRecord);
-
-  void RecordOnStartTelemetry(nsresult aStatus, bool aIsNavigation);
 
   // Timer used to delay the network request, or to trigger the network
   // request if retrieving the cache entry takes too long.

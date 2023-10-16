@@ -499,7 +499,7 @@ onload = function() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', input_url_html);
     xhr.onload = this.step_func_done(function() {
-      assert_equals(xhr.response, expected_current);
+      assert_equals(xhr.response, expected_utf8);
     });
     xhr.send();
   }, 'XMLHttpRequest#open()');

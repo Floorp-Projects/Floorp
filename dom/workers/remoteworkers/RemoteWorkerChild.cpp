@@ -179,7 +179,8 @@ void RemoteWorkerChild::ActorDestroy(ActorDestroyReason) {
     RefPtr<nsIRunnable> runnable =
         NewRunnableMethod("RequestWorkerCancellation", this,
                           &RemoteWorkerChild::RequestWorkerCancellation);
-    MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(runnable.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget()));
   }
 }
 
@@ -201,7 +202,8 @@ void RemoteWorkerChild::ExecWorker(const RemoteWorkerData& aData) {
         Unused << NS_WARN_IF(NS_FAILED(rv));
       });
 
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
 nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
@@ -443,7 +445,8 @@ void RemoteWorkerChild::InitializeOnWorker() {
   nsCOMPtr<nsIRunnable> r =
       NewRunnableMethod("TransitionStateToRunning", this,
                         &RemoteWorkerChild::TransitionStateToRunning);
-  MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+  MOZ_ALWAYS_SUCCEEDS(
+      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 }
 
 RefPtr<GenericNonExclusivePromise> RemoteWorkerChild::GetTerminationPromise() {
@@ -834,7 +837,8 @@ class RemoteWorkerChild::SharedWorkerOp : public RemoteWorkerChild::Op {
           self->StartOnMainThread(owner);
         });
 
-    MOZ_ALWAYS_SUCCEEDS(SchedulerGroup::Dispatch(r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
 
 #ifdef DEBUG
     mStarted = true;

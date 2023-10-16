@@ -737,7 +737,8 @@ void nsHTMLDocument::GetFormsAndFormControls(nsContentList** aFormList,
 
     holder = new ContentListHolder(this, htmlForms, htmlFormControls);
     RefPtr<ContentListHolder> runnable = holder;
-    if (NS_SUCCEEDED(Dispatch(runnable.forget()))) {
+    if (NS_SUCCEEDED(
+            Dispatch(TaskCategory::GarbageCollection, runnable.forget()))) {
       mContentListHolder = holder;
     }
   }

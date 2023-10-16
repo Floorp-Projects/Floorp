@@ -36,7 +36,14 @@ async function assertCacheExistsAndIsEmpty() {
 
 add_task(async function test_write_error() {
   const sandbox = sinon.createSandbox();
-  await MacAttribution.setAttributionString("__MOZCUSTOM__content%3Dcontent");
+  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+    Ci.nsIMacAttributionService
+  );
+  attributionSvc.setReferrerUrl(
+    MacAttribution.applicationPath,
+    "https://example.com?content=content",
+    true
+  );
 
   await AttributionCode.deleteFileAsync();
   AttributionCode._clearCache();
@@ -78,9 +85,51 @@ add_task(async function test_write_error() {
   }
 });
 
-add_task(async function test_blank_attribution() {
-  // Ensure no attribution information is present
-  await MacAttribution.delAttributionString();
+add_task(async function test_unusual_referrer() {
+  // This referrer URL looks malformed, but the malformed bits are dropped, so
+  // it's actually ok.  This is what allows extraneous bits like `fbclid` tags
+  // to be ignored.
+  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+    Ci.nsIMacAttributionService
+  );
+  attributionSvc.setReferrerUrl(
+    MacAttribution.applicationPath,
+    "https://example.com?content=&=campaign",
+    true
+  );
+
+  await AttributionCode.deleteFileAsync();
+  AttributionCode._clearCache();
+
+  const histogram = Services.telemetry.getHistogramById(
+    "BROWSER_ATTRIBUTION_ERRORS"
+  );
+  try {
+    // Clear any existing telemetry
+    histogram.clear();
+
+    // Try to read the attribution code
+    await AttributionCode.getAttrDataAsync();
+
+    let result = await AttributionCode.getAttrDataAsync();
+    Assert.deepEqual(result, {}, "Should be able to get empty result");
+
+    Assert.deepEqual({}, histogram.snapshot().values || {});
+
+    await assertCacheExistsAndIsEmpty();
+  } finally {
+    await AttributionCode.deleteFileAsync();
+    AttributionCode._clearCache();
+    histogram.clear();
+  }
+});
+
+add_task(async function test_blank_referrer() {
+  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+    Ci.nsIMacAttributionService
+  );
+  attributionSvc.setReferrerUrl(MacAttribution.applicationPath, "", true);
+
   await AttributionCode.deleteFileAsync();
   AttributionCode._clearCache();
 
@@ -106,7 +155,7 @@ add_task(async function test_blank_attribution() {
   }
 });
 
-add_task(async function test_no_attribution() {
+add_task(async function test_no_referrer() {
   const sandbox = sinon.createSandbox();
   let newApplicationPath = MacAttribution.applicationPath + ".test";
   sandbox.stub(MacAttribution, "applicationPath").get(() => newApplicationPath);
@@ -135,5 +184,65 @@ add_task(async function test_no_attribution() {
     AttributionCode._clearCache();
     histogram.clear();
     sandbox.restore();
+  }
+});
+
+add_task(async function test_broken_referrer() {
+  let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+    Ci.nsIMacAttributionService
+  );
+  attributionSvc.setReferrerUrl(
+    MacAttribution.applicationPath,
+    "https://example.com?content=content",
+    true
+  );
+
+  // This uses macOS internals to change the GUID so that it will look like the
+  // application has quarantine data but nothing will be pressent in the
+  // quarantine database.  This shouldn't happen in the wild.
+  function generateQuarantineGUID() {
+    let str = Services.uuid.generateUUID().toString().toUpperCase();
+    // Strip {}.
+    return str.substring(1, str.length - 1);
+  }
+
+  // These magic constants are macOS GateKeeper flags.
+  let string = [
+    "01c1",
+    "5991b778",
+    "Safari.app",
+    generateQuarantineGUID(),
+  ].join(";");
+  let bytes = new TextEncoder().encode(string);
+  await IOUtils.setMacXAttr(
+    MacAttribution.applicationPath,
+    "com.apple.quarantine",
+    bytes
+  );
+
+  await AttributionCode.deleteFileAsync();
+  AttributionCode._clearCache();
+
+  const histogram = Services.telemetry.getHistogramById(
+    "BROWSER_ATTRIBUTION_ERRORS"
+  );
+  try {
+    // Clear any existing telemetry
+    histogram.clear();
+
+    // Try to read the attribution code
+    await AttributionCode.getAttrDataAsync();
+
+    let result = await AttributionCode.getAttrDataAsync();
+    Assert.deepEqual(result, {}, "Should be able to get empty result");
+
+    TelemetryTestUtils.assertHistogram(histogram, INDEX_QUARANTINE_ERROR, 1);
+    histogram.clear();
+
+    await assertCacheExistsAndIsEmpty();
+  } finally {
+    await AttributionCode.deleteFileAsync();
+    AttributionCode._clearCache();
+    histogram.clear();
   }
 });

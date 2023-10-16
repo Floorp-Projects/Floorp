@@ -129,8 +129,7 @@ impl crate::StorageFormat {
             | Self::Rgba16Uint
             | Self::R32Uint
             | Self::Rg32Uint
-            | Self::Rgba32Uint
-            | Self::Rgb10a2Uint => "uint4",
+            | Self::Rgba32Uint => "uint4",
             Self::Rgba8Sint
             | Self::Rgba16Sint
             | Self::R32Sint

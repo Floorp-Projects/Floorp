@@ -18,7 +18,7 @@ use cssparser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind
 use cssparser::{CowRcStr, Delimiter, SourceLocation};
 use cssparser::{Parser as CssParser, ToCss, Token};
 use precomputed_hash::PrecomputedHash;
-use servo_arc::{Arc, ThinArc, UniqueArc};
+use servo_arc::{ThinArc, UniqueArc};
 use smallvec::SmallVec;
 use std::borrow::{Borrow, Cow};
 use std::fmt::{self, Debug};
@@ -77,7 +77,6 @@ fn to_ascii_lowercase(s: &str) -> Cow<str> {
 
 bitflags! {
     /// Flags that indicate at which point of parsing a selector are we.
-    #[derive(Copy, Clone)]
     struct SelectorParsingState: u8 {
         /// Whether we should avoid adding default namespaces to selectors that
         /// aren't type or universal selectors.
@@ -371,7 +370,6 @@ impl SelectorKey {
 }
 
 /// Whether or not we're using forgiving parsing mode
-#[derive(PartialEq)]
 enum ForgivingParsing {
     /// Discard the entire selector list upon encountering any invalid selector.
     /// This is the default behavior for almost all of CSS.
@@ -444,27 +442,34 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
         P: Parser<'i, Impl = Impl>,
     {
         let mut values = SmallVec::new();
-        let forgiving = recovery == ForgivingParsing::Yes && parser.allow_forgiving_selectors();
         loop {
-            let selector = input.parse_until_before(Delimiter::Comma, |input| {
-                let start = input.position();
-                let mut selector = parse_selector(parser, input, state, parse_relative);
-                if forgiving && (selector.is_err() || input.expect_exhausted().is_err()) {
-                    input.expect_no_error_token()?;
-                    selector = Ok(Selector::new_invalid(input.slice_from(start)));
+            let selector = input.parse_until_before(Delimiter::Comma, |i| {
+                parse_selector(parser, i, state, parse_relative)
+            });
+
+            let was_ok = selector.is_ok();
+            match selector {
+                Ok(selector) => values.push(selector),
+                Err(err) => match recovery {
+                    ForgivingParsing::No => return Err(err),
+                    ForgivingParsing::Yes => {
+                        if !parser.allow_forgiving_selectors() {
+                            return Err(err);
+                        }
+                    },
+                },
+            }
+
+            loop {
+                match input.next() {
+                    Err(_) => return Ok(SelectorList(values)),
+                    Ok(&Token::Comma) => break,
+                    Ok(_) => {
+                        debug_assert!(!was_ok, "Shouldn't have got a selector if getting here");
+                    },
                 }
-                selector
-            })?;
-
-            values.push(selector);
-
-            match input.next() {
-                Ok(&Token::Comma) => {},
-                Ok(_) => unreachable!(),
-                Err(_) => break,
             }
         }
-        Ok(SelectorList(values))
     }
 
     /// Replaces the parent selector in all the items of the selector list.
@@ -1039,7 +1044,6 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                     Combinator(..) |
                     Host(None) |
                     Part(..) |
-                    Invalid(..) |
                     RelativeSelectorAnchor => component.clone(),
                     ParentSelector => {
                         specificity += parent_specificity;
@@ -1162,65 +1166,6 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         }
 
         true
-    }
-
-    /// Parse a selector, without any pseudo-element.
-    #[inline]
-    pub fn parse<'i, 't, P>(
-        parser: &P,
-        input: &mut CssParser<'i, 't>,
-    ) -> Result<Self, ParseError<'i, P::Error>>
-    where
-        P: Parser<'i, Impl = Impl>,
-    {
-        parse_selector(
-            parser,
-            input,
-            SelectorParsingState::empty(),
-            ParseRelative::No,
-        )
-    }
-
-    pub fn new_invalid(s: &str) -> Self {
-        fn check_for_parent(input: &mut CssParser, has_parent: &mut bool) {
-            while let Ok(t) = input.next() {
-                match *t {
-                    Token::Function(_) |
-                    Token::ParenthesisBlock |
-                    Token::CurlyBracketBlock |
-                    Token::SquareBracketBlock => {
-                        let _ = input.parse_nested_block(|i| -> Result<(), ParseError<'_, BasicParseError>> {
-                            check_for_parent(i, has_parent);
-                            Ok(())
-                        });
-                    },
-                    Token::Delim('&') => {
-                        *has_parent = true;
-                    }
-                    _ => {},
-                }
-                if *has_parent {
-                    break;
-                }
-            }
-        }
-        let mut has_parent = false;
-        {
-            let mut parser = cssparser::ParserInput::new(s);
-            let mut parser = CssParser::new(&mut parser);
-            check_for_parent(&mut parser, &mut has_parent);
-        }
-        Self(ThinArc::from_header_and_iter(
-            SpecificityAndFlags {
-                specificity: 0,
-                flags: if has_parent {
-                    SelectorFlags::HAS_PARENT
-                } else {
-                    SelectorFlags::empty()
-                },
-            },
-            std::iter::once(Component::Invalid(Arc::new(String::from(s.trim()))))
-        ))
     }
 }
 
@@ -1722,7 +1667,6 @@ pub struct RelativeSelector<Impl: SelectorImpl> {
 
 bitflags! {
     /// Composition of combinators in a given selector, not traversing selectors of pseudoclasses.
-    #[derive(Clone, Debug, Eq, PartialEq)]
     struct CombinatorComposition: u8 {
         const DESCENDANTS = 1 << 0;
         const SIBLINGS = 1 << 1;
@@ -1885,8 +1829,6 @@ pub enum Component<Impl: SelectorImpl> {
     ///
     /// Same comment as above re. the argument.
     Has(Box<[RelativeSelector<Impl>]>),
-    /// An invalid selector inside :is() / :where().
-    Invalid(Arc<String>),
     /// An implementation-dependent pseudo-element selector.
     PseudoElement(#[shmem(field_bound)] Impl::PseudoElement),
 
@@ -2349,7 +2291,9 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                 dest.write_char('[')?;
                 local_name.to_css(dest)?;
                 operator.to_css(dest)?;
+                dest.write_char('"')?;
                 value.to_css(dest)?;
+                dest.write_char('"')?;
                 match case_sensitivity {
                     ParsedCaseSensitivity::CaseSensitive |
                     ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {},
@@ -2425,7 +2369,6 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                 dest.write_str(")")
             },
             NonTSPseudoClass(ref pseudo) => pseudo.to_css(dest),
-            Invalid(ref css) => dest.write_str(css),
             RelativeSelectorAnchor => Ok(()),
         }
     }
@@ -2454,7 +2397,9 @@ impl<Impl: SelectorImpl> ToCss for AttrSelectorWithOptionalNamespace<Impl> {
                 ref value,
             } => {
                 operator.to_css(dest)?;
+                dest.write_char('"')?;
                 value.to_css(dest)?;
+                dest.write_char('"')?;
                 match case_sensitivity {
                     ParsedCaseSensitivity::CaseSensitive |
                     ParsedCaseSensitivity::AsciiCaseInsensitiveIfInHtmlElementInHtmlDocument => {},
@@ -2573,6 +2518,25 @@ fn try_parse_combinator<'i, 't, P, Impl>(input: &mut CssParser<'i, 't>) -> Resul
                 }
             },
         }
+    }
+}
+
+impl<Impl: SelectorImpl> Selector<Impl> {
+    /// Parse a selector, without any pseudo-element.
+    #[inline]
+    pub fn parse<'i, 't, P>(
+        parser: &P,
+        input: &mut CssParser<'i, 't>,
+    ) -> Result<Self, ParseError<'i, P::Error>>
+    where
+        P: Parser<'i, Impl = Impl>,
+    {
+        parse_selector(
+            parser,
+            input,
+            SelectorParsingState::empty(),
+            ParseRelative::No,
+        )
     }
 }
 
@@ -3526,9 +3490,7 @@ pub mod tests {
         {
             use std::fmt::Write;
 
-            dest.write_char('"')?;
-            write!(cssparser::CssStringWriter::new(dest), "{}", &self.0)?;
-            dest.write_char('"')
+            write!(cssparser::CssStringWriter::new(dest), "{}", &self.0)
         }
     }
 
@@ -4240,7 +4202,7 @@ pub mod tests {
 
         assert!(parse("foo:where()").is_ok());
         assert!(parse("foo:where(div, foo, .bar baz)").is_ok());
-        assert!(parse("foo:where(::before)").is_ok());
+        assert!(parse_expected("foo:where(::before)", Some("foo:where()")).is_ok());
     }
 
     #[test]

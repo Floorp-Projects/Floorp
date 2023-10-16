@@ -17,7 +17,7 @@ nsresult NS_NewSVGFEDropShadowElement(
 
 namespace mozilla::dom {
 
-using SVGFEDropShadowElementBase = SVGFilterPrimitiveElement;
+using SVGFEDropShadowElementBase = SVGFE;
 
 class SVGFEDropShadowElement final : public SVGFEDropShadowElementBase {
   friend nsresult(::NS_NewSVGFEDropShadowElement(

@@ -44,7 +44,6 @@
 
 #include "mozilla/ipc/ProcessUtils.h"
 #include "nsDebugImpl.h"
-#include "nsIObserverService.h"
 #include "nsIXULRuntime.h"
 #include "nsThreadManager.h"
 

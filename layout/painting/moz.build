@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     "DisplayListClipState.cpp",
     "DottedCornerFinder.cpp",
     "HitTestInfo.cpp",
+    "MaskLayerImageCache.cpp",
     "nsCSSRendering.cpp",
     "nsCSSRenderingBorders.cpp",
     "nsCSSRenderingGradients.cpp",

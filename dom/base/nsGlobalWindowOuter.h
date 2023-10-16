@@ -208,8 +208,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   void ReallyCloseWindow();
 
   // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD_(void) DeleteCycleCollectable() override;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* cx,
@@ -983,8 +982,14 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   }
 
   // Dispatch a runnable related to the global.
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&&) const final;
-  nsISerialEventTarget* SerialEventTarget() const final;
+  virtual nsresult Dispatch(mozilla::TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) override;
+
+  virtual nsISerialEventTarget* EventTargetFor(
+      mozilla::TaskCategory aCategory) const override;
+
+  virtual mozilla::AbstractThread* AbstractMainThreadFor(
+      mozilla::TaskCategory aCategory) override;
 
  protected:
   nsresult ProcessWidgetFullscreenRequest(FullscreenReason aReason,

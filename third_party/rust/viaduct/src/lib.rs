@@ -236,7 +236,8 @@ pub struct Response {
     pub status: u16,
     /// The headers returned with this response.
     pub headers: Headers,
-    /// The body of the response.
+    /// The body of the response. Note that responses with binary bodies are
+    /// currently unsupported.
     pub body: Vec<u8>,
 }
 

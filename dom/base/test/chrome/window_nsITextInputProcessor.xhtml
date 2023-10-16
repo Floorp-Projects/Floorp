@@ -207,10 +207,10 @@ function runBeginInputTransactionMethodTests()
   var events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
-    input.removeEventListener(aEvent.type, arguments.callee);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransaction(window, simpleCallback),
        description + "TIP2 shouldn't be able to begin input transaction from compositionstart event handler during TIP1.startComposition();");
-  });
+  }, false);
   TIP1.beginInputTransaction(window, simpleCallback);
   TIP1.startComposition();
   is(events.length, 1,
@@ -452,10 +452,10 @@ function runBeginInputTransactionMethodTests()
   var events = [];
   input.addEventListener("compositionstart", function (aEvent) {
     events.push(aEvent);
-    input.removeEventListener(aEvent.type, arguments.callee);
+    input.removeEventListener(aEvent.type, arguments.callee, false);
     ok(!TIP2.beginInputTransactionForTests(window),
        description + "TIP2 shouldn't be able to begin input transaction for tests from compositionstart event handler during TIP1.startComposition();");
-  });
+  }, false);
   TIP1.beginInputTransactionForTests(window);
   TIP1.startComposition();
   is(events.length, 1,
@@ -1671,9 +1671,9 @@ function runCompositionTests()
     events.push({ "type": aEvent.type, "data": aEvent.data });
   }
 
-  window.addEventListener("compositionstart", handler);
-  window.addEventListener("compositionupdate", handler);
-  window.addEventListener("compositionend", handler);
+  window.addEventListener("compositionstart", handler, false);
+  window.addEventListener("compositionupdate", handler, false);
+  window.addEventListener("compositionend", handler, false);
 
   input.value = "";
   input.focus();
@@ -1890,9 +1890,9 @@ function runCompositionTests()
   is(input.value, "FOobarbuzzboo!",
      description + "committing text directly should append the committing text to the focused editor");
 
-  window.removeEventListener("compositionstart", handler);
-  window.removeEventListener("compositionupdate", handler);
-  window.removeEventListener("compositionend", handler);
+  window.removeEventListener("compositionstart", handler, false);
+  window.removeEventListener("compositionupdate", handler, false);
+  window.removeEventListener("compositionend", handler, false);
 }
 
 function runCompositionWithKeyEventTests()
@@ -1915,12 +1915,12 @@ function runCompositionWithKeyEventTests()
     events.push(aEvent);
   }
 
-  window.addEventListener("compositionstart", handler);
-  window.addEventListener("compositionupdate", handler);
-  window.addEventListener("compositionend", handler);
-  window.addEventListener("keydown", handler);
-  window.addEventListener("keypress", handler);
-  window.addEventListener("keyup", handler);
+  window.addEventListener("compositionstart", handler, false);
+  window.addEventListener("compositionupdate", handler, false);
+  window.addEventListener("compositionend", handler, false);
+  window.addEventListener("keydown", handler, false);
+  window.addEventListener("keypress", handler, false);
+  window.addEventListener("keyup", handler, false);
 
   input.value = "";
   input.focus();
@@ -2271,12 +2271,12 @@ function runCompositionWithKeyEventTests()
 
   Services.prefs.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
-  window.removeEventListener("compositionstart", handler);
-  window.removeEventListener("compositionupdate", handler);
-  window.removeEventListener("compositionend", handler);
-  window.removeEventListener("keydown", handler);
-  window.removeEventListener("keypress", handler);
-  window.removeEventListener("keyup", handler);
+  window.removeEventListener("compositionstart", handler, false);
+  window.removeEventListener("compositionupdate", handler, false);
+  window.removeEventListener("compositionend", handler, false);
+  window.removeEventListener("keydown", handler, false);
+  window.removeEventListener("keypress", handler, false);
+  window.removeEventListener("keyup", handler, false);
 }
 
 function runConsumingKeydownBeforeCompositionTests()
@@ -2302,12 +2302,12 @@ function runConsumingKeydownBeforeCompositionTests()
     }
   }
 
-  window.addEventListener("compositionstart", handler);
-  window.addEventListener("compositionupdate", handler);
-  window.addEventListener("compositionend", handler);
-  window.addEventListener("keydown", handler);
-  window.addEventListener("keypress", handler);
-  window.addEventListener("keyup", handler);
+  window.addEventListener("compositionstart", handler, false);
+  window.addEventListener("compositionupdate", handler, false);
+  window.addEventListener("compositionend", handler, false);
+  window.addEventListener("keydown", handler, false);
+  window.addEventListener("keypress", handler, false);
+  window.addEventListener("keyup", handler, false);
 
   input.value = "";
   input.focus();
@@ -2436,12 +2436,12 @@ function runConsumingKeydownBeforeCompositionTests()
 
   Services.prefs.clearUserPref("dom.keyboardevent.dispatch_during_composition");
 
-  window.removeEventListener("compositionstart", handler);
-  window.removeEventListener("compositionupdate", handler);
-  window.removeEventListener("compositionend", handler);
-  window.removeEventListener("keydown", handler);
-  window.removeEventListener("keypress", handler);
-  window.removeEventListener("keyup", handler);
+  window.removeEventListener("compositionstart", handler, false);
+  window.removeEventListener("compositionupdate", handler, false);
+  window.removeEventListener("compositionend", handler, false);
+  window.removeEventListener("keydown", handler, false);
+  window.removeEventListener("keypress", handler, false);
+  window.removeEventListener("keyup", handler, false);
 }
 
 async function runKeyTests()
@@ -2520,9 +2520,9 @@ async function runKeyTests()
     }
   }
 
-  window.addEventListener("keydown", handler);
-  window.addEventListener("keypress", handler);
-  window.addEventListener("keyup", handler);
+  window.addEventListener("keydown", handler, false);
+  window.addEventListener("keypress", handler, false);
+  window.addEventListener("keyup", handler, false);
 
   input.value = "";
   input.focus();
@@ -3641,9 +3641,9 @@ async function runKeyTests()
   TIP.keyup(shiftVirtual);
   checkTIPModifiers("TIP should keep modifier's physical key state", TIP, [ ]);
 
-  window.removeEventListener("keydown", handler);
-  window.removeEventListener("keypress", handler);
-  window.removeEventListener("keyup", handler);
+  window.removeEventListener("keydown", handler, false);
+  window.removeEventListener("keypress", handler, false);
+  window.removeEventListener("keyup", handler, false);
 }
 
 function runErrorTests()

@@ -309,10 +309,14 @@ class Nursery {
 
   size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const;
 
+  // The number of bytes from the start position to the end of the nursery.
+  // pass maxChunkCount(), allocatedChunkCount() or chunkCountLimit()
+  // to calculate the nursery size, current lazy-allocated size or nursery
+  // limit respectively.
+  size_t spaceToEnd(unsigned chunkCount) const;
+
   size_t capacity() const { return capacity_; }
-  size_t committed() const {
-    return std::min(capacity_, allocatedChunkCount() * gc::ChunkSize);
-  }
+  size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space both include chunk headers for that part of the
   // nursery.
@@ -405,8 +409,6 @@ class Nursery {
     return mallocedBlockCache_.sizeOfExcludingThis(mallocSizeOf);
   }
 
-  mozilla::TimeStamp lastCollectionEndTime() const;
-
  private:
   // Fields used during allocation fast path are grouped first:
 
@@ -429,8 +431,8 @@ class Nursery {
   // These fields refer to the beginning of the nursery. They're normally 0
   // and chunk(0).start() respectively. Except when a generational GC zeal
   // mode is active, then they may be arbitrary (see Nursery::clear()).
-  uint32_t startChunk_;
-  uintptr_t startPosition_;
+  uint32_t currentStartChunk_;
+  uintptr_t currentStartPosition_;
 
   // The current nursery capacity measured in bytes. It may grow up to this
   // value without a collection, allocating chunks on demand. This limit may be
@@ -568,9 +570,11 @@ class Nursery {
 
   NurseryChunk& chunk(unsigned index) const { return *chunks_[index]; }
 
-  // Set the allocation position to the start of a chunk. This sets
-  // currentChunk_, position_ and currentEnd_ values as appropriate.
-  void moveToStartOfChunk(unsigned chunkno);
+  // Set the current chunk. This updates the currentChunk_, position_ and
+  // currentEnd_ values as appropriate. It'll also poison the chunk, either a
+  // portion of the chunk if it is already the current chunk, or the whole chunk
+  // if fullPoison is true or it is not the current chunk.
+  void setCurrentChunk(unsigned chunkno);
 
   bool initFirstChunk(AutoLockGCBgAlloc& lock);
 
@@ -579,10 +583,10 @@ class Nursery {
   void poisonAndInitCurrentChunk(size_t extent = gc::ChunkSize);
 
   void setCurrentEnd();
-  void setStartToCurrentPosition();
+  void setStartPosition();
 
   // Allocate the next chunk, or the first chunk for initialization.
-  // Callers will probably want to call moveToStartOfChunk(0) next.
+  // Callers will probably want to call setCurrentChunk(0) next.
   [[nodiscard]] bool allocateNextChunk(unsigned chunkno,
                                        AutoLockGCBgAlloc& lock);
 
@@ -610,7 +614,8 @@ class Nursery {
   void* tryAllocate(size_t size) {
     MOZ_ASSERT(isEnabled());
     MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT_IF(currentChunk_ == startChunk_, position() >= startPosition_);
+    MOZ_ASSERT_IF(currentChunk_ == currentStartChunk_,
+                  position() >= currentStartPosition_);
     MOZ_ASSERT(size % gc::CellAlignBytes == 0);
     MOZ_ASSERT(position() % gc::CellAlignBytes == 0);
 
@@ -694,10 +699,11 @@ class Nursery {
   void maybeClearProfileDurations();
   void startProfile(ProfileKey key);
   void endProfile(ProfileKey key);
-  static void printProfileDurations(const ProfileDurations& times,
+  static bool printProfileDurations(const ProfileDurations& times,
                                     Sprinter& sprinter);
 
   mozilla::TimeStamp collectionStartTime() const;
+  mozilla::TimeStamp lastCollectionEndTime() const;
 
   friend class gc::GCRuntime;
   friend class gc::TenuringTracer;

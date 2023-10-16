@@ -15,8 +15,6 @@
 #include "api/video/color_space.h"
 #include "api/video/video_rotation.h"
 #include "common_video/test/utilities.h"
-#include "media/base/codec.h"
-#include "media/base/media_constants.h"
 #include "media/engine/internal_decoder_factory.h"
 #include "media/engine/internal_encoder_factory.h"
 #include "modules/video_coding/codecs/h264/include/h264.h"
@@ -247,7 +245,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(EndToEndTestH264, SendsAndReceivesH264) {
   test::FunctionVideoEncoderFactory encoder_factory(
-      []() { return H264Encoder::Create(); });
+      []() { return H264Encoder::Create(cricket::VideoCodec("H264")); });
   test::FunctionVideoDecoderFactory decoder_factory(
       []() { return H264Decoder::Create(); });
   CodecObserver test(500, kVideoRotation_0, absl::nullopt, "H264",
@@ -257,7 +255,7 @@ TEST_P(EndToEndTestH264, SendsAndReceivesH264) {
 
 TEST_P(EndToEndTestH264, SendsAndReceivesH264VideoRotation90) {
   test::FunctionVideoEncoderFactory encoder_factory(
-      []() { return H264Encoder::Create(); });
+      []() { return H264Encoder::Create(cricket::VideoCodec("H264")); });
   test::FunctionVideoDecoderFactory decoder_factory(
       []() { return H264Decoder::Create(); });
   CodecObserver test(5, kVideoRotation_90, absl::nullopt, "H264",
@@ -266,8 +264,7 @@ TEST_P(EndToEndTestH264, SendsAndReceivesH264VideoRotation90) {
 }
 
 TEST_P(EndToEndTestH264, SendsAndReceivesH264PacketizationMode0) {
-  cricket::VideoCodec codec =
-      cricket::CreateVideoCodec(cricket::kH264CodecName);
+  cricket::VideoCodec codec = cricket::VideoCodec("H264");
   codec.SetParam(cricket::kH264FmtpPacketizationMode, "0");
   test::FunctionVideoEncoderFactory encoder_factory(
       [codec]() { return H264Encoder::Create(codec); });
@@ -279,8 +276,7 @@ TEST_P(EndToEndTestH264, SendsAndReceivesH264PacketizationMode0) {
 }
 
 TEST_P(EndToEndTestH264, SendsAndReceivesH264PacketizationMode1) {
-  cricket::VideoCodec codec =
-      cricket::CreateVideoCodec(cricket::kH264CodecName);
+  cricket::VideoCodec codec = cricket::VideoCodec("H264");
   codec.SetParam(cricket::kH264FmtpPacketizationMode, "1");
   test::FunctionVideoEncoderFactory encoder_factory(
       [codec]() { return H264Encoder::Create(codec); });

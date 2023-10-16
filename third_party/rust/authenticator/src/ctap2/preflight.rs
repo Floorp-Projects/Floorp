@@ -3,7 +3,7 @@ use super::commands::get_assertion::{GetAssertion, GetAssertionExtensions, GetAs
 use super::commands::{PinUvAuthCommand, RequestCtap1, Retryable};
 use crate::consts::{PARAMETER_SIZE, U2F_AUTHENTICATE, U2F_CHECK_IS_REGISTERED};
 use crate::crypto::PinUvAuthToken;
-use crate::ctap2::server::{PublicKeyCredentialDescriptor, RelyingParty};
+use crate::ctap2::server::{PublicKeyCredentialDescriptor, RelyingPartyWrapper};
 use crate::errors::AuthenticatorError;
 use crate::transport::errors::{ApduErrorStatus, HIDError};
 use crate::transport::{FidoDevice, FidoProtocol, VirtualFidoDevice};
@@ -19,7 +19,7 @@ use sha2::{Digest, Sha256};
 pub struct CheckKeyHandle<'assertion> {
     pub key_handle: &'assertion [u8],
     pub client_data_hash: &'assertion [u8],
-    pub rp: &'assertion RelyingParty,
+    pub rp: &'assertion RelyingPartyWrapper,
 }
 
 impl<'assertion> RequestCtap1 for CheckKeyHandle<'assertion> {
@@ -44,9 +44,8 @@ impl<'assertion> RequestCtap1 for CheckKeyHandle<'assertion> {
         Ok((apdu, ()))
     }
 
-    fn handle_response_ctap1<Dev: FidoDevice>(
+    fn handle_response_ctap1(
         &self,
-        _dev: &mut Dev,
         status: Result<(), ApduErrorStatus>,
         _input: &[u8],
         _add_info: &Self::AdditionalInfo,
@@ -82,7 +81,7 @@ impl<'assertion> RequestCtap1 for CheckKeyHandle<'assertion> {
 pub(crate) fn do_credential_list_filtering_ctap1<Dev: FidoDevice>(
     dev: &mut Dev,
     cred_list: &[PublicKeyCredentialDescriptor],
-    rp: &RelyingParty,
+    rp: &RelyingPartyWrapper,
     client_data_hash: &ClientDataHash,
 ) -> Option<PublicKeyCredentialDescriptor> {
     let key_handle = cred_list
@@ -113,7 +112,7 @@ pub(crate) fn do_credential_list_filtering_ctap1<Dev: FidoDevice>(
 pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
     dev: &mut Dev,
     cred_list: &[PublicKeyCredentialDescriptor],
-    rp: &RelyingParty,
+    rp: &RelyingPartyWrapper,
     pin_uv_auth_token: Option<PinUvAuthToken>,
 ) -> Result<Vec<PublicKeyCredentialDescriptor>, AuthenticatorError> {
     let info = dev
@@ -191,7 +190,7 @@ pub(crate) fn do_credential_list_filtering_ctap2<Dev: FidoDevice>(
 pub(crate) fn silently_discover_credentials<Dev: FidoDevice>(
     dev: &mut Dev,
     cred_list: &[PublicKeyCredentialDescriptor],
-    rp: &RelyingParty,
+    rp: &RelyingPartyWrapper,
     client_data_hash: &ClientDataHash,
 ) -> Vec<PublicKeyCredentialDescriptor> {
     if dev.get_protocol() == FidoProtocol::CTAP2 {

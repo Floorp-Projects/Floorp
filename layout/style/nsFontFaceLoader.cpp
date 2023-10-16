@@ -101,10 +101,16 @@ void nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader) {
   }
 
   if (loadTimeout > 0) {
-    NS_NewTimerWithFuncCallback(getter_AddRefs(mLoadTimer), LoadTimerCallback,
-                                static_cast<void*>(this), loadTimeout,
-                                nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback",
-                                GetMainThreadSerialEventTarget());
+    nsIEventTarget* target;
+    auto* doc = mFontFaceSet->GetDocument();
+    if (doc) {
+      target = doc->EventTargetFor(TaskCategory::Other);
+    } else {
+      target = GetMainThreadSerialEventTarget();
+    }
+    NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mLoadTimer), LoadTimerCallback, static_cast<void*>(this),
+        loadTimeout, nsITimer::TYPE_ONE_SHOT, "LoadTimerCallback", target);
   } else {
     mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
   }

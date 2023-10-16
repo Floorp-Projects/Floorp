@@ -75,7 +75,7 @@ Test various validation behaviors when a resolveTarget is provided.
     { resolveTargetHeight: 4, _valid: false },
     { resolveTargetWidth: 4, _valid: false },
   ] as const)
-  .fn(t => {
+  .fn(async t => {
     const {
       colorAttachmentFormat = 'rgba8unorm',
       resolveTargetFormat = 'rgba8unorm',

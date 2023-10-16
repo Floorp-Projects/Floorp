@@ -183,6 +183,7 @@ nsCOMPtr<nsIThread> EnsureMTA::GetPersistentMTAThread() {
         }
 
         SchedulerGroup::Dispatch(
+            TaskCategory::Other,
             NS_NewRunnableFunction("mscom::EnsureMTA::GetPersistentMTAThread",
                                    std::move(setClearOnShutdown)));
 

@@ -25,11 +25,6 @@ window.addEventListener("message", function(aEvent) {
     reflow.getBoundingClientRect();
     reflow.style.display = "block";
     reflow.getBoundingClientRect();
-
-    // Now wait a bit to see if there is any unexpected events fired.
-    requestAnimationFrame(
-      () => parent.postMessage({ eventType: "reflowed" }, "*")
-    );
   }
 });
 

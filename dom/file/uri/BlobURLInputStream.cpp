@@ -383,6 +383,12 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     return;
   }
 
+  Maybe<nsID> agentClusterId;
+  Maybe<ClientInfo> clientInfo = loadInfo->GetClientInfo();
+  if (clientInfo.isSome()) {
+    agentClusterId = clientInfo->AgentClusterId();
+  }
+
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
 
@@ -397,8 +403,8 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
     if (!BlobURLProtocolHandler::GetDataEntry(
             mBlobURLSpec, getter_AddRefs(blobImpl), loadingPrincipal,
             triggeringPrincipal, loadInfo->GetOriginAttributes(),
-            loadInfo->GetInnerWindowID(), NS_ConvertUTF16toUTF8(partKey),
-            true /* AlsoIfRevoked */)) {
+            loadInfo->GetInnerWindowID(), agentClusterId,
+            NS_ConvertUTF16toUTF8(partKey), true /* AlsoIfRevoked */)) {
       NS_WARNING("Failed to get data entry principal. URL revoked?");
       return;
     }
@@ -431,7 +437,7 @@ void BlobURLInputStream::RetrieveBlobData(const MutexAutoLock& aProofOfLock) {
       ->SendBlobURLDataRequest(
           mBlobURLSpec, triggeringPrincipal, loadingPrincipal,
           loadInfo->GetOriginAttributes(), loadInfo->GetInnerWindowID(),
-          NS_ConvertUTF16toUTF8(partKey))
+          agentClusterId, NS_ConvertUTF16toUTF8(partKey))
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self](const BlobURLDataRequestResult& aResult) {

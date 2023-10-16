@@ -21,6 +21,8 @@ vendoring:
   tracking: commit
 
   exclude:
+    - ".*"
+    - "*"
     - "**"
 
   include:

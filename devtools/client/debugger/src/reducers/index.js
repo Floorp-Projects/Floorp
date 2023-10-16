@@ -18,6 +18,9 @@ import pendingBreakpoints from "./pending-breakpoints";
 import pause, { initialPauseState } from "./pause";
 import ui, { initialUIState } from "./ui";
 import ast, { initialASTState } from "./ast";
+import projectTextSearch, {
+  initialProjectTextSearchState,
+} from "./project-text-search";
 import quickOpen, { initialQuickOpenState } from "./quick-open";
 import sourcesTree, { initialSourcesTreeState } from "./sources-tree";
 import threads, { initialThreadsState } from "./threads";
@@ -46,6 +49,7 @@ export function initialState() {
     pause: initialPauseState(),
     ui: initialUIState(),
     ast: initialASTState(),
+    projectTextSearch: initialProjectTextSearchState(),
     quickOpen: initialQuickOpenState(),
     sourcesTree: initialSourcesTreeState(),
     threads: initialThreadsState(),
@@ -67,6 +71,7 @@ export default {
   pause,
   ui,
   ast,
+  projectTextSearch,
   quickOpen,
   sourcesTree,
   threads,

@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SpecialSystemDirectory.h"
-#include "mozilla/Try.h"
 #include "nsString.h"
 #include "nsDependentString.h"
 #include "nsIXULAppInfo.h"

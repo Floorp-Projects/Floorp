@@ -241,7 +241,7 @@ describe("ASRouter", () => {
       return features;
     }, {});
     globals.set({
-      // Testing framework doesn't know how to `defineLazyModuleGetters` so we're
+      // Testing framework doesn't know how to `defineLazyModuleGetter` so we're
       // importing these modules into the global scope ourselves.
       GroupsConfigurationProvider: { getMessages: () => Promise.resolve([]) },
       ASRouterPreferences,
@@ -2035,35 +2035,33 @@ describe("ASRouter", () => {
   });
 
   describe("forceAttribution", () => {
-    let setAttributionString;
+    let setReferrerUrl;
     beforeEach(() => {
-      setAttributionString = sandbox.spy(Router, "setAttributionString");
+      setReferrerUrl = sinon.spy();
+      global.Cc["@mozilla.org/mac-attribution;1"] = {
+        getService: () => ({ setReferrerUrl }),
+      };
+
       sandbox.stub(global.Services.env, "set");
-    });
-    afterEach(() => {
-      sandbox.reset();
     });
     it("should double encode on windows", async () => {
       sandbox.stub(fakeAttributionCode, "writeAttributionFile");
 
       Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-      assert.notCalled(setAttributionString);
+      assert.notCalled(setReferrerUrl);
       assert.calledWithMatch(
         fakeAttributionCode.writeAttributionFile,
         "foo%3DFOO!%26bar%3DBAR%253F"
       );
     });
-    it("should set attribution string on mac", async () => {
+    it("should set referrer on mac", async () => {
       sandbox.stub(global.AppConstants, "platform").value("macosx");
 
       Router.forceAttribution({ foo: "FOO!", eh: "NOPE", bar: "BAR?" });
 
-      assert.calledOnce(setAttributionString);
-      assert.calledWithMatch(
-        setAttributionString,
-        "foo%3DFOO!%26bar%3DBAR%253F"
-      );
+      assert.calledOnce(setReferrerUrl);
+      assert.calledWithMatch(setReferrerUrl, "", "?foo=FOO!&bar=BAR%3F");
     });
   });
 

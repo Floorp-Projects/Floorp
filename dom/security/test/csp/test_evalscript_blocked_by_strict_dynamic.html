@@ -22,7 +22,6 @@ SimpleTest.waitForExplicitFinish();
 
 // start the test
 try {
-  // eslint-disable-next-line no-eval
   eval("1");
   ok(false, "eval should be blocked by CSP");
 }

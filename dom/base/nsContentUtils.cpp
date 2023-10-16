@@ -122,6 +122,7 @@
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
@@ -824,8 +825,7 @@ nsresult nsContentUtils::Init() {
 
   Element::InitCCCallbacks();
 
-  RefPtr<nsRFPService> rfpService = nsRFPService::GetOrCreate();
-  MOZ_ASSERT(rfpService);
+  Unused << nsRFPService::GetOrCreate();
 
   if (XRE_IsParentProcess()) {
     AsyncPrecreateStringBundles();
@@ -6506,13 +6506,12 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult) {
 /* static */
 nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
                                                           nsACString& aOrigin) {
-  nsresult rv;
   MOZ_ASSERT(aURI, "missing uri");
 
   // For Blob URI, the path is the URL of the owning page.
   if (aURI->SchemeIs(BLOBURI_SCHEME)) {
     nsAutoCString path;
-    rv = aURI->GetPathQueryRef(path);
+    nsresult rv = aURI->GetPathQueryRef(path);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
@@ -6525,30 +6524,13 @@ nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
     return GetWebExposedOriginSerialization(uri, aOrigin);
   }
 
-  nsAutoCString scheme;
-  aURI->GetScheme(scheme);
-
-  // If the protocol doesn't have URI_HAS_WEB_EXPOSED_ORIGIN, then
-  // return "null" as the origin serialization.
-  // We make an exception for "ftp" since we don't have a protocol handler
-  // for this scheme
-  uint32_t flags = 0;
-  nsCOMPtr<nsIIOService> io = mozilla::components::IO::Service(&rv);
-  if (!scheme.Equals("ftp") && NS_SUCCEEDED(rv) &&
-      NS_SUCCEEDED(io->GetProtocolFlags(scheme.get(), &flags))) {
-    if (!(flags & nsIProtocolHandler::URI_HAS_WEB_EXPOSED_ORIGIN)) {
-      aOrigin.AssignLiteral("null");
-      return NS_OK;
-    }
-  }
-
   aOrigin.Truncate();
 
   nsCOMPtr<nsIURI> uri = NS_GetInnermostURI(aURI);
   NS_ENSURE_TRUE(uri, NS_ERROR_UNEXPECTED);
 
   nsAutoCString host;
-  rv = uri->GetAsciiHost(host);
+  nsresult rv = uri->GetAsciiHost(host);
 
   if (NS_SUCCEEDED(rv) && !host.IsEmpty()) {
     nsAutoCString userPass;
@@ -10454,6 +10436,27 @@ uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
   }
 
   return nsIObjectLoadingContent::TYPE_NULL;
+}
+
+/* static */
+already_AddRefed<nsISerialEventTarget> nsContentUtils::GetEventTargetByLoadInfo(
+    nsILoadInfo* aLoadInfo, TaskCategory aCategory) {
+  if (NS_WARN_IF(!aLoadInfo)) {
+    return nullptr;
+  }
+
+  RefPtr<Document> doc;
+  aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsISerialEventTarget> target;
+  if (doc) {
+    if (DocGroup* group = doc->GetDocGroup()) {
+      target = group->EventTargetFor(aCategory);
+    }
+  } else {
+    target = GetMainThreadSerialEventTarget();
+  }
+
+  return target.forget();
 }
 
 /* static */

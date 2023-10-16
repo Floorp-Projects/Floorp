@@ -417,10 +417,7 @@ void nsAvailableMemoryWatcher::OnMemoryPressureChangedInternal(
 
   // End the memory pressure reponse if the new level is not high enough.
   if ((mLevel >= mResponseLevel) && (aNewLevel < mResponseLevel)) {
-    {
-      MutexAutoLock lock(mMutex);
-      RecordTelemetryEventOnHighMemory(lock);
-    }
+    RecordTelemetryEventOnHighMemory();
     StopPolling();
     MP_LOG("Issuing MemoryPressureState::NoPressure");
     NS_NotifyOfMemoryPressure(MemoryPressureState::NoPressure);
@@ -482,9 +479,6 @@ nsAvailableMemoryWatcher::Notify(nsITimer* aTimer) {
 // NS_ERROR_NOT_AVAILABLE indicates the tab unloader did not unload any tabs.
 NS_IMETHODIMP
 nsAvailableMemoryWatcher::OnUnloadAttemptCompleted(nsresult aResult) {
-  // On MacOS we don't access these members offthread; however we do on other
-  // OSes and so they are guarded by the mutex.
-  MutexAutoLock lock(mMutex);
   switch (aResult) {
     // A tab was unloaded successfully.
     case NS_OK:
@@ -584,10 +578,7 @@ void nsAvailableMemoryWatcher::OnPrefChange() {
 
   // Do we need to turn off polling?
   if (IsPolling() && (newResponseLevel > mLevel)) {
-    {
-      MutexAutoLock lock(mMutex);
-      RecordTelemetryEventOnHighMemory(lock);
-    }
+    RecordTelemetryEventOnHighMemory();
     StopPolling();
     MP_LOG("Issuing MemoryPressureState::NoPressure");
     NS_NotifyOfMemoryPressure(MemoryPressureState::NoPressure);

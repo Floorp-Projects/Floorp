@@ -241,12 +241,10 @@ module = wasmEvalText(`(module
 assertEq(Number(module.imported), 42);
 assertEq(Number(module.defined), 1337);
 
-if (!wasmGcEnabled()) {
-  // Initializer expressions can reference an imported immutable global.
-  wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
-  wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
-  wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
-}
+// Initializer expressions can reference an imported immutable global.
+wasmFailValidateText(`(module (global f32 (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global (mut f32) (f32.const 13.37)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
+wasmFailValidateText(`(module (global (mut i32) (i32.const 0)) (global i32 (global.get 0)))`, /must reference a global immutable import/);
 
 wasmFailValidateText(`(module (import "globals" "a" (global f32)) (global i32 (global.get 0)))`, /type mismatch/);
 
@@ -367,7 +365,7 @@ wasmAssert(`(module
         let s = "";
         for ( let i in x )
             s = s + i + ",";
-        if (getBuildConfiguration("release_or_beta")) {
+        if (getBuildConfiguration().release_or_beta) {
             assertEq(s, "valueOf,value,");
         } else {
             assertEq(s, "type,valueOf,value,");

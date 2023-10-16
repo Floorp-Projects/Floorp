@@ -4,7 +4,7 @@
 import { runRefTest } from './gpu_ref_test.js';
 
 export function run(format, alphaMode, writeCanvasMethod) {
-  runRefTest(t => {
+  runRefTest(async t => {
     const module = t.device.createShaderModule({
       code: `
 struct VertexOutput {

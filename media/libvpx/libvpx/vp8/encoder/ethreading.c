@@ -402,7 +402,7 @@ static void setup_mbby_copy(MACROBLOCK *mbdst, MACROBLOCK *mbsrc) {
     zd->subpixel_predict8x8 = xd->subpixel_predict8x8;
     zd->subpixel_predict16x16 = xd->subpixel_predict16x16;
     zd->segmentation_enabled = xd->segmentation_enabled;
-    zd->mb_segment_abs_delta = xd->mb_segment_abs_delta;
+    zd->mb_segement_abs_delta = xd->mb_segement_abs_delta;
     memcpy(zd->segment_feature_data, xd->segment_feature_data,
            sizeof(xd->segment_feature_data));
 

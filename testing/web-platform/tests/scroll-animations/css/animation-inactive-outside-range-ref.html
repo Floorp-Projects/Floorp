@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="help" src="https://drafts.csswg.org/scroll-animations-1/">
 <script src="/web-animations/testcommon.js"></script>
-<script src="/common/reftest-wait.js"></script>
 <style>
   .scroller {
     height: 200px;
@@ -75,7 +74,7 @@
   }
 </style>
 </head>
-<body onload="run()">
+<body>
   <p>None of the activity indicators should be active all of the animations are outside of their active range.</p>
   <div class="scroller">
     <div class="anim after"><div class="indicator">After cover phase: <div><div></div></div></div></div>
@@ -88,13 +87,7 @@
   </div>
 </body>
 <script>
-  async function run() {
-    // Ensure we don't take the screenshot while paint-holding.
-    await waitForCompositorReady();
-    let scroller = document.querySelector('.scroller');
-    scroller.scrollTo(0, 200);
-    await waitForNextFrame();
-    takeScreenshot();
-  }
+  let scroller = document.querySelector('.scroller');
+  scroller.scrollTo(0, 200);
 </script>
 </html>

@@ -507,8 +507,10 @@ static sandbox::ResultCode AllowProxyLoadFromBinDir(
       if (NS_IsMainThread()) {
         setClearOnShutdown();
       } else {
-        SchedulerGroup::Dispatch(NS_NewRunnableFunction(
-            "InitSignedPolicyRulesToBypassCig", std::move(setClearOnShutdown)));
+        SchedulerGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("InitSignedPolicyRulesToBypassCig",
+                                   std::move(setClearOnShutdown)));
       }
     }
 

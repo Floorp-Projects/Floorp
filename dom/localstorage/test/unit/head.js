@@ -125,9 +125,11 @@ function clearOriginsByPattern(pattern) {
 }
 
 function clearOriginsByPrefix(principal, persistence) {
-  let request = Services.qms.clearStoragesForOriginPrefix(
+  let request = Services.qms.clearStoragesForPrincipal(
     principal,
-    persistence
+    persistence,
+    null,
+    true
   );
 
   return request;

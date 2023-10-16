@@ -93,18 +93,11 @@ class ShoppingCard extends MozLitElement {
   }
 
   onCardToggle() {
-    const action = this.detailsEl.open ? "expanded" : "collapsed";
-    let l10nId = this.getAttribute("data-l10n-id");
-    switch (l10nId) {
-      case "shopping-settings-label":
-        Glean.shopping.surfaceSettingsExpandClicked.record({ action });
-        break;
-      case "shopping-analysis-explainer-label":
-        Glean.shopping.surfaceShowQualityExplainerClicked.record({
-          action,
-        });
-        break;
-    }
+    const buttonAction = this.detailsEl.open ? "expanded" : "collapsed";
+    this.recordChevronButtonGleanEvent([
+      this.getAttribute("data-l10n-id"),
+      buttonAction,
+    ]);
   }
 
   handleShowMoreButtonClick(e) {
@@ -121,9 +114,13 @@ class ShoppingCard extends MozLitElement {
       this._isExpanded;
 
     let action = this._isExpanded ? "expanded" : "collapsed";
-    Glean.shopping.surfaceShowMoreReviewsButtonClicked.record({
-      action,
-    });
+    this.dispatchEvent(
+      new CustomEvent("ShoppingTelemetryEvent", {
+        composed: true,
+        bubbles: true,
+        detail: ["surfaceShowMoreReviewsButtonClicked", action],
+      })
+    );
   }
 
   handleChevronButtonClick() {
@@ -144,6 +141,15 @@ class ShoppingCard extends MozLitElement {
         ${this.cardTemplate()}
       </article>
     `;
+  }
+
+  recordChevronButtonGleanEvent(details) {
+    let event = new CustomEvent("ShoppingTelemetryEvent", {
+      composed: true,
+      bubbles: true,
+      detail: details,
+    });
+    this.dispatchEvent(event);
   }
 }
 customElements.define("shopping-card", ShoppingCard);

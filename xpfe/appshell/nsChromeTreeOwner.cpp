@@ -17,7 +17,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsIWebProgress.h"
 #include "nsIWidget.h"
-#include "mozilla/Try.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;

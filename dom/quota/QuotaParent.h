@@ -25,8 +25,6 @@ class Quota final : public PQuotaParent {
  private:
   ~Quota();
 
-  bool TrustParams() const;
-
   bool VerifyRequestParams(const UsageRequestParams& aParams) const;
 
   bool VerifyRequestParams(const RequestParams& aParams) const;
@@ -54,29 +52,6 @@ class Quota final : public PQuotaParent {
 
   virtual mozilla::ipc::IPCResult RecvInitializeStorage(
       InitializeStorageResolver&& aResolver) override;
-
-  virtual mozilla::ipc::IPCResult RecvInitializePersistentClient(
-      const PrincipalInfo& aPrincipalInfo, const Type& aClientType,
-      InitializePersistentClientResolver&& aResolve) override;
-
-  virtual mozilla::ipc::IPCResult RecvInitializeTemporaryClient(
-      const PersistenceType& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo, const Type& aClientType,
-      InitializeTemporaryClientResolver&& aResolve) override;
-
-  virtual mozilla::ipc::IPCResult RecvClearStoragesForOrigin(
-      const Maybe<PersistenceType>& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo, const Maybe<Type>& aClientType,
-      ClearStoragesForOriginResolver&& aResolve) override;
-
-  virtual mozilla::ipc::IPCResult RecvClearStoragesForOriginPrefix(
-      const Maybe<PersistenceType>& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo,
-      ClearStoragesForOriginPrefixResolver&& aResolve) override;
-
-  virtual mozilla::ipc::IPCResult RecvClearStoragesForOriginAttributesPattern(
-      const OriginAttributesPattern& aPattern,
-      ClearStoragesForOriginAttributesPatternResolver&& aResolver) override;
 
   virtual mozilla::ipc::IPCResult RecvClearStoragesForPrivateBrowsing(
       ClearStoragesForPrivateBrowsingResolver&& aResolver) override;

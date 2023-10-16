@@ -40,6 +40,9 @@ vendoring:
   skip-vendoring-steps: ['update-moz-build'] 
   exclude:
     - '**'
+    - '**/.*'
+    - '**/.*/**'
+    - '**/.*/**/.*'
 
   include:
     - src/gbm/main/gbm.h

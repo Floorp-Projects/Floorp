@@ -42,7 +42,6 @@ libdav1d_sources = files(
     'mem.c',
     'msac.c',
     'obu.c',
-    'pal.c',
     'picture.c',
     'qm.c',
     'ref.c',
@@ -168,7 +167,6 @@ if is_asm_enabled
         libdav1d_sources_asm = files(
             'x86/cpuid.asm',
             'x86/msac.asm',
-            'x86/pal.asm',
             'x86/refmvs.asm',
             'x86/itx_avx512.asm',
             'x86/cdef_avx2.asm',

@@ -164,7 +164,6 @@ class ProviderInputHistory extends UrlbarProvider {
             url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
             title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
             icon: UrlbarUtils.getIconForUrl(url),
-            userContextId: queryContext.userContextId || 0,
           })
         );
         addCallback(this, result);

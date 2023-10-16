@@ -1,8 +1,9 @@
 """Http related parsers and protocol."""
 
 import asyncio
+import collections
 import zlib
-from typing import Any, Awaitable, Callable, NamedTuple, Optional, Union  # noqa
+from typing import Any, Awaitable, Callable, Optional, Union  # noqa
 
 from multidict import CIMultiDict
 
@@ -12,18 +13,12 @@ from .helpers import NO_EXTENSIONS
 
 __all__ = ("StreamWriter", "HttpVersion", "HttpVersion10", "HttpVersion11")
 
-
-class HttpVersion(NamedTuple):
-    major: int
-    minor: int
-
-
+HttpVersion = collections.namedtuple("HttpVersion", ["major", "minor"])
 HttpVersion10 = HttpVersion(1, 0)
 HttpVersion11 = HttpVersion(1, 1)
 
 
 _T_OnChunkSent = Optional[Callable[[bytes], Awaitable[None]]]
-_T_OnHeadersSent = Optional[Callable[["CIMultiDict[str]"], Awaitable[None]]]
 
 
 class StreamWriter(AbstractStreamWriter):
@@ -32,9 +27,9 @@ class StreamWriter(AbstractStreamWriter):
         protocol: BaseProtocol,
         loop: asyncio.AbstractEventLoop,
         on_chunk_sent: _T_OnChunkSent = None,
-        on_headers_sent: _T_OnHeadersSent = None,
     ) -> None:
         self._protocol = protocol
+        self._transport = protocol.transport
 
         self.loop = loop
         self.length = None
@@ -43,15 +38,14 @@ class StreamWriter(AbstractStreamWriter):
         self.output_size = 0
 
         self._eof = False
-        self._compress: Any = None
+        self._compress = None  # type: Any
         self._drain_waiter = None
 
-        self._on_chunk_sent: _T_OnChunkSent = on_chunk_sent
-        self._on_headers_sent: _T_OnHeadersSent = on_headers_sent
+        self._on_chunk_sent = on_chunk_sent  # type: _T_OnChunkSent
 
     @property
     def transport(self) -> Optional[asyncio.Transport]:
-        return self._protocol.transport
+        return self._transport
 
     @property
     def protocol(self) -> BaseProtocol:
@@ -60,20 +54,18 @@ class StreamWriter(AbstractStreamWriter):
     def enable_chunking(self) -> None:
         self.chunked = True
 
-    def enable_compression(
-        self, encoding: str = "deflate", strategy: int = zlib.Z_DEFAULT_STRATEGY
-    ) -> None:
+    def enable_compression(self, encoding: str = "deflate") -> None:
         zlib_mode = 16 + zlib.MAX_WBITS if encoding == "gzip" else zlib.MAX_WBITS
-        self._compress = zlib.compressobj(wbits=zlib_mode, strategy=strategy)
+        self._compress = zlib.compressobj(wbits=zlib_mode)
 
     def _write(self, chunk: bytes) -> None:
         size = len(chunk)
         self.buffer_size += size
         self.output_size += size
-        transport = self.transport
-        if not self._protocol.connected or transport is None or transport.is_closing():
+
+        if self._transport is None or self._transport.is_closing():
             raise ConnectionResetError("Cannot write to closing transport")
-        transport.write(chunk)
+        self._transport.write(chunk)
 
     async def write(
         self, chunk: bytes, *, drain: bool = True, LIMIT: int = 0x10000
@@ -122,9 +114,6 @@ class StreamWriter(AbstractStreamWriter):
         self, status_line: str, headers: "CIMultiDict[str]"
     ) -> None:
         """Write request/response status and headers."""
-        if self._on_headers_sent is not None:
-            await self._on_headers_sent(headers)
-
         # status + headers
         buf = _serialize_headers(status_line, headers)
         self._write(buf)
@@ -158,6 +147,7 @@ class StreamWriter(AbstractStreamWriter):
         await self.drain()
 
         self._eof = True
+        self._transport = None
 
     async def drain(self) -> None:
         """Flush the write buffer.
@@ -171,25 +161,19 @@ class StreamWriter(AbstractStreamWriter):
             await self._protocol._drain_helper()
 
 
-def _safe_header(string: str) -> str:
-    if "\r" in string or "\n" in string:
-        raise ValueError(
-            "Newline or carriage return detected in headers. "
-            "Potential header injection attack."
-        )
-    return string
-
-
 def _py_serialize_headers(status_line: str, headers: "CIMultiDict[str]") -> bytes:
-    headers_gen = (_safe_header(k) + ": " + _safe_header(v) for k, v in headers.items())
-    line = status_line + "\r\n" + "\r\n".join(headers_gen) + "\r\n\r\n"
-    return line.encode("utf-8")
+    line = (
+        status_line
+        + "\r\n"
+        + "".join([k + ": " + v + "\r\n" for k, v in headers.items()])
+    )
+    return line.encode("utf-8") + b"\r\n"
 
 
 _serialize_headers = _py_serialize_headers
 
 try:
-    import aiohttp._http_writer as _http_writer  # type: ignore[import]
+    import aiohttp._http_writer as _http_writer  # type: ignore
 
     _c_serialize_headers = _http_writer._serialize_headers
     if not NO_EXTENSIONS:

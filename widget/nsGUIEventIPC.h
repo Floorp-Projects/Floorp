@@ -887,11 +887,11 @@ struct ParamTraits<mozilla::WritingMode> {
   using paramType = mozilla::WritingMode;
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mWritingMode._0);
+    WriteParam(aWriter, aParam.mWritingMode.bits);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
-    return ReadParam(aReader, &aResult->mWritingMode._0);
+    return ReadParam(aReader, &aResult->mWritingMode.bits);
   }
 };
 

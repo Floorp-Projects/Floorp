@@ -440,7 +440,8 @@ bool nsNativeTheme::QueueAnimatedContentForRefresh(nsIContent* aContent,
     }
 
     if (XRE_IsContentProcess() && NS_IsMainThread()) {
-      mAnimatedContentTimer->SetTarget(GetMainThreadSerialEventTarget());
+      mAnimatedContentTimer->SetTarget(
+          aContent->OwnerDoc()->EventTargetFor(TaskCategory::Other));
     }
     rv = mAnimatedContentTimer->InitWithCallback(this, timeout,
                                                  nsITimer::TYPE_ONE_SHOT);
@@ -572,5 +573,6 @@ bool nsNativeTheme::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
                                             StyleAppearance aAppearance) {
   return IsWidgetScrollbarPart(aAppearance) ||
          aAppearance == StyleAppearance::FocusOutline ||
+         aAppearance == StyleAppearance::Menuarrow ||
          (aFrame && aFrame->StyleUI()->mMozTheme == StyleMozTheme::NonNative);
 }

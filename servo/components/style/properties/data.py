@@ -554,7 +554,6 @@ class Longhand(Property):
                 "XSpan",
                 "XTextScale",
                 "ZIndex",
-                "Zoom",
             }
         if self.name == "overflow-y":
             return True
@@ -806,7 +805,6 @@ def _remove_common_first_line_and_first_letter_properties(props, engine):
     props.remove("text-align")
     props.remove("text-justify")
     props.remove("white-space")
-    props.remove("text-wrap")
     props.remove("word-break")
     props.remove("text-indent")
 
@@ -909,7 +907,6 @@ class PropertyRestrictions:
         props = PropertyRestrictions.first_line(data)
         props.add("opacity")
         props.add("white-space")
-        props.add("text-wrap")
         props.add("text-overflow")
         props.add("text-align")
         props.add("text-justify")
@@ -921,7 +918,6 @@ class PropertyRestrictions:
         return set(
             [
                 "white-space",
-                "text-wrap",
                 "color",
                 "text-combine-upright",
                 "text-transform",
@@ -946,7 +942,6 @@ class PropertyRestrictions:
                 "visibility",
                 "text-shadow",
                 "white-space",
-                "text-wrap",
                 "text-combine-upright",
                 "ruby-position",
                 # XXX Should these really apply to cue?

@@ -29,10 +29,7 @@
         --node-description-fg-color: #gray;
         --node-hover-bg-color: rgba(0, 0, 0, 0.1);
 
-        --button-bg-color: #eee;
-        --button-hover-bg-color: #ccc;
-        --button-image-filter: none;
-
+        --testcaselogbtn-bg-color: #eee;
         --subtree-border-color: #ddd;
         --subtree-hover-left-border-color: #000;
         --multicase-border-color: #55f;
@@ -42,13 +39,14 @@
         --testcase-data-status-fail-bg-color: #fdd;
         --testcase-data-status-warn-bg-color: #ffb;
         --testcase-data-status-pass-bg-color: #cfc;
-        --testcase-data-status-skip-bg-color: #aaf;
+        --testcase-data-status-skip-bg-color: #eee;
 
         --testcase-logs-bg-color: #white;
         --testcase-log-odd-bg-color: #fff;
         --testcase-log-even-bg-color: #f8f8f8;
         --testcase-log-text-fg-color: #666;
         --testcase-log-text-first-line-fg-color: #000;
+        --button-image-filter: none;
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -61,10 +59,7 @@
           --node-description-fg-color: #aaa;
           --node-hover-bg-color: rgba(255, 255, 255, 0.1);
 
-          --button-image-filter: invert(100%);
-          --button-bg-color: #666;
-          --button-hover-bg-color: #888;
-
+          --testcaselogbtn-bg-color: #666;
           --subtree-border-color: #444;
           --subtree-hover-left-border-color: #FFF;
           --multicase-border-color: #338;
@@ -74,13 +69,14 @@
           --testcase-data-status-fail-bg-color: #400;
           --testcase-data-status-warn-bg-color: #660;
           --testcase-data-status-pass-bg-color: #040;
-          --testcase-data-status-skip-bg-color: #446;
+          --testcase-data-status-skip-bg-color: #444;
 
           --testcase-logs-bg-color: #black;
           --testcase-log-odd-bg-color: #000;
           --testcase-log-even-bg-color: #080808;
           --testcase-log-text-fg-color: #aaa;
           --testcase-log-text-first-line-fg-color: #fff;
+          --button-image-filter: invert(100%);
         }
       }
       body {
@@ -100,12 +96,6 @@
       input[type=button],
       button {
         cursor: pointer;
-        background-color: var(--button-bg-color);
-      }
-      input[type=button]:hover,
-      button:hover,
-      a.nodelink:hover {
-        background-color: var(--button-hover-bg-color);
       }
       .logo {
         height: 1.2em;
@@ -184,8 +174,7 @@
       .leafrun,
       .nodelink,
       .collapsebtn,
-      .testcaselogbtn,
-      .copybtn {
+      .testcaselogbtn {
         display: inline-flex;
         flex-shrink: 0;
         flex-grow: 0;
@@ -194,7 +183,7 @@
         text-decoration: none;
         vertical-align: top;
         color: var(--fg-color);
-        background-color: var(--button-bg-color);
+        background-color: var(--testcaselogbtn-bg-color);
         background-repeat: no-repeat;
         background-position: center;
         border: 1px solid var(--border-color);
@@ -203,8 +192,7 @@
       .leafrun::before,
       .nodelink::before,
       .collapsebtn::before,
-      .testcaselogbtn::before,
-      .copybtn::before {
+      .testcaselogbtn::before {
         content: "";
         width: 100%;
         height: 100%;
@@ -217,8 +205,7 @@
         .leafrun,
         .nodelink,
         .collapsebtn,
-        .testcaselogbtn,
-        .copybtn {
+        .testcaselogbtn {
           flex-basis: 24px;
           border-radius: 4px;
           width: 24px;
@@ -230,8 +217,7 @@
         .leafrun,
         .nodelink,
         .collapsebtn,
-        .testcaselogbtn,
-        .copybtn {
+        .testcaselogbtn {
           flex-basis: 36px;
           border-radius: 6px;
           width: 36px;
@@ -246,9 +232,6 @@
       }
       .nodelink::before {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+P+BoUGAYesFhj4BhvsFDPYNDHwMCMTAAACqJwbp3VgbrAAAAABJRU5ErkJggg==);
-      }
-      .copybtn::before {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACVJREFUCNdjYGBgqGdgcGRgcGBg8H/A4KEAQhkKDBxgxP8AKA8AVNUEx41Lj8MAAAAASUVORK5CYII=);
       }
       .nodetitle {
         display: inline;
@@ -295,14 +278,8 @@
       .subtree[data-status='pass'] {
         background: linear-gradient(90deg, var(--testcase-data-status-pass-bg-color), var(--testcase-data-status-pass-bg-color) 16px, var(--bg-color) 16px);
       }
-      .subtree[data-status='skip'] {
-        background: linear-gradient(90deg, var(--testcase-data-status-skip-bg-color), var(--testcase-data-status-skip-bg-color) 16px, var(--bg-color) 16px);
-      }
       .subtree[data-status='pass']::before {
         content: "✔"
-      }
-      .subtree[data-status='skip']::before {
-        content: "○"
       }
       .subtree[data-status='passfail']::before {
         content: "✔/⛔"

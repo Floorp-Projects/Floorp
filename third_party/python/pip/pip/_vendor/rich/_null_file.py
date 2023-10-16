@@ -3,6 +3,20 @@ from typing import IO, Iterable, Iterator, List, Optional, Type
 
 
 class NullFile(IO[str]):
+
+    # TODO: "mode", "name" and "closed" are only required for Python 3.6.
+
+    @property
+    def mode(self) -> str:
+        return ""
+
+    @property
+    def name(self) -> str:
+        return "NullFile"
+
+    def closed(self) -> bool:
+        return False
+
     def close(self) -> None:
         pass
 

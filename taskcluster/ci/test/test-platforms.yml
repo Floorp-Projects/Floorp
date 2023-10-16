@@ -315,12 +315,6 @@ macosx1100-64-qr/debug:
     test-sets:
         - macosx1100-64-jittests
 
-macosx1100-64-aarch64-qr/debug:
-    build-platform: macosx64-aarch64/debug
-    build-signing-label: repackage-macosx64-aarch64/debug
-    test-sets:
-        - macosx1100-aarch64-qr-tests
-
 macosx1100-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     build-signing-label: repackage-macosx64-shippable/opt

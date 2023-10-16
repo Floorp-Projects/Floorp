@@ -24,11 +24,11 @@ def main(request, response):
         response.headers.set(b"Content-Type", b"application/javascript")
 
     if error == b"bad-allow-fledge":
-        response.headers.set(b"Ad-Auction-Allowed", b"sometimes")
+        response.headers.set(b"X-Allow-FLEDGE", b"sometimes")
     elif error == b"fledge-not-allowed":
-        response.headers.set(b"Ad-Auction-Allowed", b"false")
+        response.headers.set(b"X-Allow-FLEDGE", b"false")
     elif error != b"no-allow-fledge":
-        response.headers.set(b"Ad-Auction-Allowed", b"true")
+        response.headers.set(b"X-Allow-FLEDGE", b"true")
 
     body = b''
     if error == b"no-body":
@@ -41,7 +41,7 @@ def main(request, response):
               {{GET[generateBid]}};
               return {
                 'bid': 9,
-                'render': interestGroup.ads[0].renderURL
+                'render': interestGroup.ads[0].renderUrl
               };
             }"""
     bid = request.GET.first(b"bid", None)
@@ -54,3 +54,4 @@ def main(request, response):
               {{GET[reportWin]}};
             }"""
     return body
+

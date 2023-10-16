@@ -297,11 +297,7 @@ def setup_browsertime(config, tasks):
             "by-test-platform": {
                 "android.*": ["browsertime", "linux64-geckodriver", "linux64-node-16"],
                 "linux.*": ["browsertime", "linux64-geckodriver", "linux64-node-16"],
-                "macosx.*": [
-                    "browsertime",
-                    "macosx64-geckodriver",
-                    "macosx64-node-16",
-                ],
+                "macosx.*": ["browsertime", "macosx64-geckodriver", "macosx64-node-16"],
                 "windows.*aarch64.*": [
                     "browsertime",
                     "win32-geckodriver",
@@ -329,37 +325,35 @@ def setup_browsertime(config, tasks):
 
         cd_fetches = {
             "android.*": [
+                "linux64-chromedriver-115",
                 "linux64-chromedriver-116",
                 "linux64-chromedriver-117",
-                "linux64-chromedriver-118",
             ],
             "linux.*": [
+                "linux64-chromedriver-115",
                 "linux64-chromedriver-116",
                 "linux64-chromedriver-117",
-                "linux64-chromedriver-118",
             ],
             "macosx.*": [
-                "mac-arm-chromedriver-115",
-                "mac-arm-chromedriver-117",
-                "mac-arm-chromedriver-118",
+                "mac64-chromedriver-109",
+                "mac64-chromedriver-115",
                 "mac64-chromedriver-116",
                 "mac64-chromedriver-117",
-                "mac64-chromedriver-118",
             ],
             "windows.*aarch64.*": [
+                "win32-chromedriver-115",
                 "win32-chromedriver-116",
                 "win32-chromedriver-117",
-                "win32-chromedriver-118",
             ],
             "windows.*-32.*": [
+                "win32-chromedriver-115",
                 "win32-chromedriver-116",
                 "win32-chromedriver-117",
-                "win32-chromedriver-118",
             ],
             "windows.*-64.*": [
+                "win32-chromedriver-115",
                 "win32-chromedriver-116",
                 "win32-chromedriver-117",
-                "win32-chromedriver-118",
             ],
         }
 
@@ -870,9 +864,6 @@ def set_test_setting(config, tasks):
 
             if parts[0] == "wayland":
                 display = parts.pop(0)
-
-            if parts and parts[0] == "aarch64":
-                arch = parts.pop(0)
 
         # It's not always possible to glean the exact architecture used from
         # the task, so sometimes this will just be set to "32" or "64".

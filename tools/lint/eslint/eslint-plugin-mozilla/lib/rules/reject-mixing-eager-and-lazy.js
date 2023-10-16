@@ -90,7 +90,10 @@ module.exports = {
           );
         }
 
-        if (callerSource === "ChromeUtils.defineModuleGetter") {
+        if (
+          callerSource === "XPCOMUtils.defineLazyModuleGetter" ||
+          callerSource === "ChromeUtils.defineModuleGetter"
+        ) {
           if (node.arguments.length < 3) {
             return;
           }

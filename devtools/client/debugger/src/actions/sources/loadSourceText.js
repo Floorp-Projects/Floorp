@@ -14,7 +14,7 @@ import {
 } from "../../selectors";
 import { addBreakpoint } from "../breakpoints";
 
-import { prettyPrintSourceTextContent } from "./prettyPrint";
+import { prettyPrintSource } from "./prettyPrint";
 import { isFulfilled, fulfilled } from "../../utils/async-value";
 
 import { isPretty } from "../../utils/source";
@@ -58,7 +58,7 @@ async function loadOriginalSource(
       })
     );
 
-    return prettyPrintSourceTextContent(
+    return prettyPrintSource(
       sourceMapLoader,
       prettyPrintWorker,
       generatedSource,

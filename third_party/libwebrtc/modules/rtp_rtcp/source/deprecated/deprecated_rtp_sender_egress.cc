@@ -434,12 +434,14 @@ bool DEPRECATED_RtpSenderEgress::SendPacketToNetwork(
 }
 
 void DEPRECATED_RtpSenderEgress::UpdateRtpStats(const RtpPacketToSend& packet) {
-  Timestamp now = clock_->CurrentTime();
+  int64_t now_ms = clock_->TimeInMilliseconds();
 
   StreamDataCounters* counters =
       packet.Ssrc() == rtx_ssrc_ ? &rtx_rtp_stats_ : &rtp_stats_;
 
-  counters->MaybeSetFirstPacketTime(now);
+  if (counters->first_packet_time_ms == -1) {
+    counters->first_packet_time_ms = now_ms;
+  }
 
   if (packet.packet_type() == RtpPacketMediaType::kForwardErrorCorrection) {
     counters->fec.AddPacket(packet);
@@ -452,7 +454,7 @@ void DEPRECATED_RtpSenderEgress::UpdateRtpStats(const RtpPacketToSend& packet) {
 
   RTC_DCHECK(packet.packet_type().has_value());
   send_rates_[static_cast<size_t>(*packet.packet_type())].Update(packet.size(),
-                                                                 now.ms());
+                                                                 now_ms);
 
   if (rtp_stats_callback_) {
     rtp_stats_callback_->DataCountersUpdated(*counters, packet.Ssrc());

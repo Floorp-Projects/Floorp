@@ -1407,6 +1407,7 @@ def x11_libs(webrtc):
             "xdamage",
             "xfixes",
             "xi",
+            "xtst",
         ]
     return libs
 
@@ -1498,9 +1499,14 @@ with only_when("--enable-compile-environment"):
         if enable and enable != ("relr",):
             return enable
 
-    @depends("--enable-elf-hack", when=has_elfhack)
-    def may_enable_relrhack(enable):
-        if enable and enable != ("legacy",):
+    @depends("--enable-elf-hack", "MOZ_AUTOMATION", when=has_elfhack)
+    def may_enable_relrhack(enable, automation):
+        # For now, only enable relrhack when explicitly given with
+        # --enable-elf-hack=relr. On automation, we automatically
+        # enable it when possible.
+        if automation and enable and enable != ("legacy",):
+            return enable
+        if enable == ("relr",):
             return enable
 
     @depends(
@@ -2579,7 +2585,7 @@ def wasm_sandboxing_libraries():
 @depends(dependable(wasm_sandboxing_libraries), build_project)
 def default_wasm_sandboxing_libraries(libraries, build_project):
     if build_project != "tools/rusttests":
-        non_default_libs = {}
+        non_default_libs = {"soundtouch"}
 
         return tuple(l for l in libraries if l not in non_default_libs)
 
@@ -2747,35 +2753,6 @@ def wasm_sandboxing_config_defines():
 
 
 wasm_sandboxing_config_defines()
-
-
-with only_when(compile_environment & wasm_sandboxing.hunspell):
-    clock_in_wasi_sysroot = wasm_cc.try_run(
-        header="#include <time.h>",
-        body="clock();",
-        check_msg="for clock() in wasi sysroot",
-        flags=depends(wasi_sysroot_flags)(
-            lambda sysroot_flags: ["-Werror"] + sysroot_flags
-        ),
-    )
-
-    wasi_emulated_clock = wasm_cc.try_run(
-        header="#include <time.h>",
-        body="clock();",
-        check_msg="for emulated clock() in wasi sysroot",
-        flags=depends(wasi_sysroot_flags)(
-            lambda sysroot_flags: [
-                "-Werror",
-                "-D_WASI_EMULATED_PROCESS_CLOCKS",
-                "-lwasi-emulated-process-clocks",
-            ]
-            + sysroot_flags
-        ),
-        when=depends(clock_in_wasi_sysroot)(lambda x: not x),
-        onerror=lambda: die("Can't find clock() in wasi sysroot."),
-    )
-
-    set_config("MOZ_WASI_EMULATED_CLOCK", True, when=wasi_emulated_clock)
 
 
 # new Notification Store implementation
@@ -3176,6 +3153,7 @@ with only_when(toolkit_gtk):
 
     with only_when("--enable-dbus"):
         pkg_check_modules("MOZ_DBUS", "dbus-1 >= 0.60")
+        pkg_check_modules("MOZ_DBUS_GLIB", "dbus-glib-1 >= 0.60")
 
         set_config("MOZ_ENABLE_DBUS", True)
         set_define("MOZ_ENABLE_DBUS", True)

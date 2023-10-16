@@ -34,42 +34,40 @@ impl Colorizer {
 impl Colorizer {
     #[cfg(feature = "color")]
     pub(crate) fn print(&self) -> std::io::Result<()> {
+        use termcolor::{BufferWriter, ColorChoice as DepColorChoice};
+
         let color_when = match self.color_when {
-            ColorChoice::Always => anstream::ColorChoice::Always,
-            ColorChoice::Auto => anstream::ColorChoice::Auto,
-            ColorChoice::Never => anstream::ColorChoice::Never,
+            ColorChoice::Always => DepColorChoice::Always,
+            ColorChoice::Auto if is_a_tty(self.stream) => DepColorChoice::Auto,
+            _ => DepColorChoice::Never,
         };
 
-        let mut stdout;
-        let mut stderr;
-        let writer: &mut dyn std::io::Write = match self.stream {
-            Stream::Stderr => {
-                stderr = anstream::AutoStream::new(std::io::stderr().lock(), color_when);
-                &mut stderr
-            }
-            Stream::Stdout => {
-                stdout = anstream::AutoStream::new(std::io::stdout().lock(), color_when);
-                &mut stdout
-            }
+        let writer = match self.stream {
+            Stream::Stderr => BufferWriter::stderr(color_when),
+            Stream::Stdout => BufferWriter::stdout(color_when),
         };
 
-        self.content.write_to(writer)
+        let mut buffer = writer.buffer();
+        ok!(self.content.write_colored(&mut buffer));
+        writer.print(&buffer)
     }
 
     #[cfg(not(feature = "color"))]
     pub(crate) fn print(&self) -> std::io::Result<()> {
+        use std::io::Write;
+
         // [e]println can't be used here because it panics
         // if something went wrong. We don't want that.
         match self.stream {
             Stream::Stdout => {
                 let stdout = std::io::stdout();
                 let mut stdout = stdout.lock();
-                self.content.write_to(&mut stdout)
+                write!(stdout, "{}", self)
             }
             Stream::Stderr => {
                 let stderr = std::io::stderr();
                 let mut stderr = stderr.lock();
-                self.content.write_to(&mut stderr)
+                write!(stderr, "{}", self)
             }
         }
     }
@@ -79,5 +77,14 @@ impl Colorizer {
 impl std::fmt::Display for Colorizer {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         self.content.fmt(f)
+    }
+}
+
+#[cfg(feature = "color")]
+fn is_a_tty(stream: Stream) -> bool {
+    use is_terminal::IsTerminal;
+    match stream {
+        Stream::Stdout => std::io::stdout().is_terminal(),
+        Stream::Stderr => std::io::stderr().is_terminal(),
     }
 }

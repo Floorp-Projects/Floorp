@@ -235,7 +235,7 @@ function allValidUsages(validUsages, emptyIsValid, mandatoryUsages) {
         }
     });
 
-    if (emptyIsValid && validUsages.length !== 0) {
+    if (emptyIsValid) {
         okaySubsets.push([]);
     }
 

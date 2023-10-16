@@ -13,7 +13,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIWebAuthnAttObj.h"
+#include "nsIWebAuthnController.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla::dom {

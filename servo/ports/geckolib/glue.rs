@@ -11,7 +11,7 @@ use dom::{DocumentState, ElementState};
 use malloc_size_of::MallocSizeOfOps;
 use nsstring::{nsCString, nsString};
 use selectors::matching::{ElementSelectorFlags, MatchingForInvalidation, SelectorCaches};
-use selectors::{Element, OpaqueElement};
+use selectors::Element;
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
 use style::invalidation::element::element_wrapper::{ElementWrapper, ElementSnapshot};
@@ -26,7 +26,6 @@ use style::color::{AbsoluteColor, ColorSpace};
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
-use style::custom_properties::ComputedCustomProperties;
 use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
@@ -112,7 +111,6 @@ use style::properties::{ComputedValues, CountedUnknownProperty, Importance, NonC
 use style::properties::{LonghandId, LonghandIdSet, PropertyDeclarationBlock, PropertyId};
 use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
-use style::properties_and_values::registry::PropertyRegistration;
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::StrongRuleNode;
@@ -305,7 +303,7 @@ pub extern "C" fn Servo_TraverseSubtree(
     snapshots: *const ServoElementSnapshotTable,
     raw_flags: ServoTraversalFlags,
 ) -> bool {
-    let traversal_flags = TraversalFlags::from_bits_retain(raw_flags);
+    let traversal_flags = TraversalFlags::from_bits_truncate(raw_flags);
     debug_assert!(!snapshots.is_null());
 
     let element = GeckoElement(root);
@@ -2855,7 +2853,7 @@ pub extern "C" fn Servo_PageRule_SetSelectorText(
 
 #[no_mangle]
 pub extern "C" fn Servo_PropertyRule_GetName(rule: &PropertyRule, result: &mut nsACString) {
-    write!(result, "--{}", rule.name.0).unwrap();
+    rule.name.to_css(&mut CssWriter::new(result)).unwrap()
 }
 
 #[no_mangle]
@@ -4120,14 +4118,19 @@ fn get_pseudo_style(
                 inherited_styles.is_none() ||
                     ptr::eq(inherited_styles.unwrap(), &**styles.primary())
             );
-            let originating_element_style = styles.primary();
+            let base = if pseudo.inherits_from_default_values() {
+                stylist.device().default_computed_values_arc()
+            } else {
+                styles.primary()
+            };
             let guards = StylesheetGuards::same(guard);
             stylist.lazily_compute_pseudo_element_style(
                 &guards,
                 element,
                 &pseudo,
                 rule_inclusion,
-                originating_element_style,
+                styles.primary(),
+                base,
                 is_probe,
                 matching_func,
             )
@@ -4264,9 +4267,6 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     // Similarly, -x-lang can influence the font-family fallback we have for the initial
     // font-family so remove it as well.
     differing_properties.remove(LonghandId::FontFamily);
-    // We reset font-size to an explicit pixel value, and thus it can get affected by our inherited
-    // effective zoom. But we don't care about it for the same reason as above.
-    differing_properties.remove(LonghandId::FontSize);
 
     // Ignore any difference in pref-controlled, inherited properties.  These properties may or may
     // not be set by the 'all' declaration in scrollbars.css, depending on whether the pref was
@@ -5170,7 +5170,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         Clear => get_from_computed::<Clear>(value),
         VerticalAlign => VerticalAlign::Keyword(VerticalAlignKeyword::from_u32(value).unwrap()),
         TextAlign => get_from_computed::<TextAlign>(value),
-        TextEmphasisPosition => TextEmphasisPosition::from_bits_retain(value as u8),
+        TextEmphasisPosition => TextEmphasisPosition::from_bits_truncate(value as u8),
         FontSize => {
             // We rely on Gecko passing in font-size values (0...7) here.
             longhands::font_size::SpecifiedValue::from_html_size(value as u8)
@@ -6068,7 +6068,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
 
     let mut raw_custom_properties_block; // To make the raw block alive in the scope.
     for (index, keyframe) in keyframes.iter().enumerate() {
-        let mut custom_properties = ComputedCustomProperties::default();
+        let mut custom_properties = None;
         for property in keyframe.mPropertyValues.iter() {
             // Find the block for custom properties first.
             if property.mProperty == nsCSSPropertyID::eCSSPropertyExtra_variable {
@@ -6141,11 +6141,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             let iter = guard.to_animation_value_iter(
                 &mut context,
                 &default_values,
-                if custom_properties.is_empty() {
-                    None
-                } else {
-                    Some(&custom_properties)
-                }
+                custom_properties.as_ref(),
             );
 
             for value in iter {
@@ -6806,7 +6802,7 @@ fn relative_selector_invalidated_at(element: GeckoElement, result: &Invalidation
 
 fn add_relative_selector_attribute_dependency<'a>(
     element: &GeckoElement<'a>,
-    scope: &Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     attribute: &AtomIdent,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -6853,7 +6849,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
     element: &RawGeckoElement,
     old_id: *mut nsAtom,
     new_id: *mut nsAtom,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
@@ -6862,7 +6857,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -6904,7 +6898,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -6939,7 +6932,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDepende
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
     local_name: *mut nsAtom,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let data = raw_data.borrow();
     let element = GeckoElement(element);
@@ -6950,7 +6942,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorAttributeDepende
             let invalidator = RelativeSelectorInvalidator {
                 element,
                 quirks_mode,
-                snapshot_table: Some(snapshots),
                 invalidated: relative_selector_invalidated_at,
                 sibling_traversal_map: SiblingTraversalMap::default(),
                 _marker: std::marker::PhantomData,
@@ -6977,7 +6968,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     raw_data: &PerDocumentStyleData,
     element: &RawGeckoElement,
     state: u64,
-    snapshots: &ServoElementSnapshotTable,
 ) {
     let element = GeckoElement(element);
 
@@ -6991,7 +6981,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: Some(snapshots),
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7008,7 +6997,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
                     if !dependency.state.intersects(state) {
                         return true;
                     }
-                    collector.add_dependency(&dependency.dep, *element, scope);
+                    collector.add_dependency(&dependency.dep, *element, *scope);
                     true
                 });
         },
@@ -7024,7 +7013,6 @@ fn invalidate_relative_selector_prev_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: prev_sibling,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
         _marker: std::marker::PhantomData,
@@ -7046,7 +7034,6 @@ fn invalidate_relative_selector_next_sibling_side_effect(
     let invalidator = RelativeSelectorInvalidator {
         element: next_sibling,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map,
         _marker: std::marker::PhantomData,
@@ -7070,7 +7057,6 @@ fn invalidate_relative_selector_ts_dependency(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7092,7 +7078,7 @@ fn invalidate_relative_selector_ts_dependency(
                         if !dependency.state.intersects(state) {
                             return true;
                         }
-                        collector.add_dependency(&dependency.dep, *element, scope);
+                        collector.add_dependency(&dependency.dep, *element, *scope);
                         true
                     },
                 );
@@ -7166,19 +7152,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     // Either way, there must be siblings to both sides of the element being inserted
     // to consider it.
     match (element.prev_sibling_element(), element.next_sibling_element()) {
-        (Some(prev_sibling), Some(next_sibling)) => 'sibling: {
-            // If the prev sibling is not on the sibling search path, skip.
-            if prev_sibling
-                .relative_selector_search_direction()
-                .map_or(true, |direction| {
-                    !direction.intersects(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
-                })
-            {
-                break 'sibling;
-            }
-            element.apply_selector_flags(
-                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
-            );
+        (Some(prev_sibling), Some(next_sibling)) => {
             invalidate_relative_selector_prev_sibling_side_effect(
                 prev_sibling,
                 quirks_mode,
@@ -7207,7 +7181,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
         _marker: std::marker::PhantomData,
@@ -7243,7 +7216,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(
         let invalidator = RelativeSelectorInvalidator {
             element: e,
             quirks_mode,
-            snapshot_table: None,
             sibling_traversal_map: SiblingTraversalMap::default(),
             invalidated: relative_selector_invalidated_at,
             _marker: std::marker::PhantomData,
@@ -7298,7 +7270,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     let invalidator = RelativeSelectorInvalidator {
         element,
         quirks_mode,
-        snapshot_table: None,
         sibling_traversal_map: SiblingTraversalMap::new(element, prev_sibling, next_sibling),
         invalidated: relative_selector_invalidated_at,
         _marker: std::marker::PhantomData,
@@ -7319,7 +7290,7 @@ pub extern "C" fn Servo_StyleSet_HasStateDependency(
 ) -> bool {
     let element = GeckoElement(element);
 
-    let state = ElementState::from_bits_retain(state);
+    let state = ElementState::from_bits_truncate(state);
     let data = raw_data.borrow();
 
     data.stylist
@@ -7334,7 +7305,7 @@ pub extern "C" fn Servo_StyleSet_HasNthOfStateDependency(
 ) -> bool {
     let element = GeckoElement(element);
 
-    let state = ElementState::from_bits_retain(state);
+    let state = ElementState::from_bits_truncate(state);
     let data = raw_data.borrow();
 
     data.stylist
@@ -7353,7 +7324,7 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
     raw_data: &PerDocumentStyleData,
     state: u64,
 ) -> bool {
-    let state = DocumentState::from_bits_retain(state);
+    let state = DocumentState::from_bits_truncate(state);
     let data = raw_data.borrow();
 
     data.stylist.has_document_state_dependency(state)
@@ -7418,35 +7389,30 @@ pub unsafe extern "C" fn Servo_GetResolvedValue(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     computed_values: &ComputedValues,
-    raw_style_set: &PerDocumentStyleData,
     name: &nsACString,
     value: &mut nsACString,
 ) -> bool {
-    let doc_data = raw_style_set.borrow();
-    let name = Atom::from(name.as_str_unchecked());
-    let stylist = &doc_data.stylist;
-    let custom_registration = stylist.get_custom_property_registration(&name);
-    let computed_value = if custom_registration.map_or(true, |r| r.inherits) {
-        computed_values.custom_properties.inherited.as_ref().and_then(|m| m.get(&name))
-    } else {
-        computed_values.custom_properties.non_inherited.as_ref().and_then(|m| m.get(&name))
+    let custom_properties = match computed_values.custom_properties() {
+        Some(p) => p,
+        None => return false,
     };
 
-    if let Some(v) = computed_value {
-        v.to_css(&mut CssWriter::new(value)).unwrap();
-        true
-    } else {
-        false
-    }
+    let name = Atom::from(name.as_str_unchecked());
+    let computed_value = match custom_properties.get(&name) {
+        Some(v) => v,
+        None => return false,
+    };
+
+    computed_value.to_css(&mut CssWriter::new(value)).unwrap();
+    true
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_GetCustomPropertiesCount(computed_values: &ComputedValues) -> u32 {
-    // Just expose the custom property items from custom_properties.inherited
-    // and custom_properties.non_inherited.
-    let properties = computed_values.custom_properties();
-    (properties.inherited.as_ref().map_or(0, |m| m.len()) +
-        properties.non_inherited.as_ref().map_or(0, |m| m.len())) as u32
+    match computed_values.custom_properties() {
+        Some(p) => p.len() as u32,
+        None => 0,
+    }
 }
 
 #[no_mangle]
@@ -7454,10 +7420,17 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
     computed_values: &ComputedValues,
     index: u32,
 ) -> *mut nsAtom {
-    match &computed_values.custom_properties.property_at(index as usize) {
-        Some((name, _value)) => name.as_ptr(),
-        None => ptr::null_mut(),
-    }
+    let custom_properties = match computed_values.custom_properties() {
+        Some(p) => p,
+        None => return ptr::null_mut(),
+    };
+
+    let property_name = match custom_properties.get_index(index as usize) {
+        Some((key, _value)) => key,
+        None => return ptr::null_mut(),
+    };
+
+    property_name.as_ptr()
 }
 
 #[no_mangle]
@@ -7469,7 +7442,7 @@ fn relative_selector_dependencies_for_id<'a>(
     old_id: *const nsAtom,
     new_id: *const nsAtom,
     element: &GeckoElement<'a>,
-    scope: Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     quirks_mode: QuirksMode,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -7480,7 +7453,7 @@ fn relative_selector_dependencies_for_id<'a>(
                 match invalidation_map.map.id_to_selector.get(atom, quirks_mode) {
                     Some(v) => {
                         for dependency in v {
-                            collector.add_dependency(dependency, *element, scope);
+                            collector.add_dependency(dependency, *element, *scope);
                         }
                     },
                     None => (),
@@ -7493,7 +7466,7 @@ fn relative_selector_dependencies_for_id<'a>(
 fn relative_selector_dependencies_for_class<'a>(
     classes_changed: &SmallVec<[Atom; 8]>,
     element: &GeckoElement<'a>,
-    scope: Option<OpaqueElement>,
+    scope: &Option<GeckoElement<'a>>,
     quirks_mode: QuirksMode,
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
@@ -7506,7 +7479,7 @@ fn relative_selector_dependencies_for_class<'a>(
         {
             Some(v) => {
                 for dependency in v {
-                    collector.add_dependency(dependency, *element, scope);
+                    collector.add_dependency(dependency, *element, *scope);
                 }
             },
             None => (),
@@ -7532,7 +7505,6 @@ fn process_relative_selector_invalidations(
         quirks_mode,
         invalidated: relative_selector_invalidated_at,
         sibling_traversal_map: SiblingTraversalMap::default(),
-        snapshot_table: Some(snapshot_table),
         _marker: std::marker::PhantomData,
     };
 
@@ -7562,7 +7534,7 @@ fn process_relative_selector_invalidations(
                     if !dependency.state.intersects(states) {
                         return true;
                     }
-                    collector.add_dependency(&dependency.dep, *element, scope);
+                    collector.add_dependency(&dependency.dep, *element, *scope);
                     true
                 });
         },
@@ -8118,7 +8090,7 @@ pub unsafe extern "C" fn Servo_InvalidateStyleForDocStateChanges(
     let root = GeckoElement(root);
     let mut processor = DocumentStateInvalidationProcessor::new(
         iter,
-        DocumentState::from_bits_retain(states_changed),
+        DocumentState::from_bits_truncate(states_changed),
         &mut selector_caches,
         root.as_node().owner_doc().quirks_mode(),
     );
@@ -8550,7 +8522,8 @@ pub extern "C" fn Servo_RegisterCustomProperty(
 ) -> RegisterCustomPropertyResult {
     use self::RegisterCustomPropertyResult::*;
     use style::custom_properties::SpecifiedValue;
-    use style::properties_and_values::rule::{PropertyRuleData, PropertyRegistrationError};
+    use style::properties_and_values::registry::PropertyRegistration;
+    use style::properties_and_values::rule::{PropertyRuleData, ToRegistrationError};
     use style::properties_and_values::syntax::Descriptor;
 
     let mut per_doc_data = per_doc_data.borrow_mut();
@@ -8593,11 +8566,11 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref(), url_data)
     {
         return match error {
-            PropertyRegistrationError::MissingInherits |
-            PropertyRegistrationError::MissingSyntax => unreachable!(),
-            PropertyRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
-            PropertyRegistrationError::InvalidInitialValue => InvalidInitialValue,
-            PropertyRegistrationError::NoInitialValue=> NoInitialValue,
+            ToRegistrationError::MissingInherits |
+            ToRegistrationError::MissingSyntax => unreachable!(),
+            ToRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
+            ToRegistrationError::InvalidInitialValue => InvalidInitialValue,
+            ToRegistrationError::NoInitialValue=> NoInitialValue,
         }
     }
 
@@ -8614,84 +8587,5 @@ pub extern "C" fn Servo_RegisterCustomProperty(
             },
         );
 
-    per_doc_data.stylist.rebuild_initial_values_for_custom_properties();
-
     SuccessfullyRegistered
-}
-
-#[repr(C)]
-pub struct PropDef {
-    // The name of the property.
-    pub name: Atom,
-    // The syntax of the property.
-    pub syntax: nsCString,
-    // Whether the property inherits.
-    pub inherits: bool,
-    pub has_initial_value: bool,
-    pub initial_value: nsCString,
-    // True if the property was set with CSS.registerProperty
-    pub from_js: bool,
-}
-
-
-impl PropDef {
-    /// Creates a PropDef from a name and a PropertyRegistration.
-    pub fn new(
-        name: Atom,
-        property_registration: PropertyRegistration,
-        from_js: bool
-    ) -> Self {
-        let syntax = property_registration.syntax.to_css_nscstring();
-        let initial_value = property_registration.initial_value.to_css_nscstring();
-
-        PropDef {
-            name,
-            syntax,
-            inherits: property_registration.inherits,
-            has_initial_value: property_registration.initial_value.is_some(),
-            initial_value,
-            from_js
-        }
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn Servo_GetRegisteredCustomProperties(
-    per_doc_data: &PerDocumentStyleData,
-    custom_properties: &mut ThinVec<PropDef>,
-) {
-    let stylist = &per_doc_data.borrow().stylist;
-
-    custom_properties.extend(
-        stylist
-            .custom_property_script_registry()
-            .get_all()
-            .iter()
-            .map(|(name, property_registration)|
-                PropDef::new(
-                    name.clone(),
-                    property_registration.clone(),
-                    /* from_js */
-                    true
-                )
-            )
-    );
-
-    for (cascade_data, _origin) in stylist.iter_origins() {
-        custom_properties.extend(
-            cascade_data
-                .custom_property_registrations()
-                .iter()
-                .map(|(name, value)| {
-                    let property_registration = &value.last().unwrap().0;
-
-                    PropDef::new(
-                        name.clone(),
-                        property_registration.clone(),
-                        /* from_js */
-                        false
-                    )
-                })
-        )
-    }
 }

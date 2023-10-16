@@ -13,7 +13,6 @@
     "adServerAttributes",
     "components",
     "nonAdsLinkRegexps",
-    "shoppingTab",
-    "domainExtraction"
+    "shoppingTab"
   ]
 }

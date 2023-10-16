@@ -27,7 +27,7 @@ g.test('command_buffer,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(t => {
+  .fn(async t => {
     const { cb0Mismatched, cb1Mismatched } = t.params;
     const mismatched = cb0Mismatched || cb1Mismatched;
 

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WinWebAuthnManager_h
 #define mozilla_dom_WinWebAuthnManager_h
 
+#include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
 #include "mozilla/Tainting.h"
 

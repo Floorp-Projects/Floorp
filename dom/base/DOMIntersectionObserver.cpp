@@ -81,7 +81,8 @@ DOMIntersectionObserver::DOMIntersectionObserver(
     dom::IntersectionCallback& aCb)
     : mOwner(aOwner),
       mDocument(mOwner->GetExtantDoc()),
-      mCallback(RefPtr<dom::IntersectionCallback>(&aCb)) {}
+      mCallback(RefPtr<dom::IntersectionCallback>(&aCb)),
+      mConnected(false) {}
 
 already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
     const GlobalObject& aGlobal, dom::IntersectionCallback& aCb,
@@ -127,9 +128,6 @@ already_AddRefed<DOMIntersectionObserver> DOMIntersectionObserver::Constructor(
       observer->mThresholds.AppendElement(thresh);
     }
     observer->mThresholds.Sort();
-    if (observer->mThresholds.IsEmpty()) {
-      observer->mThresholds.AppendElement(0.0);
-    }
   } else {
     double thresh = aOptions.mThreshold.GetAsDouble();
     if (thresh < 0.0 || thresh > 1.0) {
@@ -176,7 +174,8 @@ DOMIntersectionObserver::DOMIntersectionObserver(Document& aDocument,
                                                  NativeCallback aCallback)
     : mOwner(aDocument.GetInnerWindow()),
       mDocument(&aDocument),
-      mCallback(aCallback) {}
+      mCallback(aCallback),
+      mConnected(false) {}
 
 already_AddRefed<DOMIntersectionObserver>
 DOMIntersectionObserver::CreateLazyLoadObserver(Document& aDocument) {

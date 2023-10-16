@@ -11,9 +11,6 @@ const EXPECTED_RESULT_INDEX = 1;
 // Allow more time for TV runs.
 requestLongerTimeout(5);
 
-// TODO: Firefox no longer uses `rating` and `number_of_ratings` but they are
-// still present in Merino and RS suggestions, so they are included here for
-// greater accuracy. We should remove them from Merino, RS, and tests.
 const TEST_MERINO_SUGGESTIONS = [
   {
     provider: "amo",
@@ -79,7 +76,10 @@ const TEST_MERINO_SUGGESTIONS = [
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.quicksuggest.enabled", true]],
+    set: [
+      ["browser.urlbar.quicksuggest.enabled", true],
+      ["browser.urlbar.quicksuggest.remoteSettings.enabled", false],
+    ],
   });
 
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
@@ -90,6 +90,9 @@ add_setup(async function () {
 });
 
 add_task(async function basic() {
+  // Treatment B (no stars) should be the default.
+  Assert.equal(UrlbarPrefs.get("addonsUITreatment"), "b");
+
   for (const merinoSuggestion of TEST_MERINO_SUGGESTIONS) {
     MerinoTestUtils.server.response.body.suggestions = [merinoSuggestion];
 
@@ -104,26 +107,38 @@ add_task(async function basic() {
       1
     );
     const row = element.row;
-    const icon = row.querySelector(".urlbarView-favicon");
+    const icon = row.querySelector(".urlbarView-dynamic-addons-icon");
     Assert.equal(icon.src, merinoSuggestion.icon);
-    const url = row.querySelector(".urlbarView-url");
+    const url = row.querySelector(".urlbarView-dynamic-addons-url");
     const expectedUrl = makeExpectedUrl(merinoSuggestion.url);
-    const displayUrl = expectedUrl.replace(/^https:\/\//, "");
-    Assert.equal(url.textContent, displayUrl);
-    const title = row.querySelector(".urlbarView-title");
+    Assert.equal(url.textContent, expectedUrl);
+    const title = row.querySelector(".urlbarView-dynamic-addons-title");
     Assert.equal(title.textContent, merinoSuggestion.title);
-    const description = row.querySelector(".urlbarView-row-body-description");
-    Assert.equal(description.textContent, merinoSuggestion.description);
-    const bottom = row.querySelector(".urlbarView-row-body-bottom");
-    Assert.equal(bottom.textContent, "Recommended");
-    Assert.ok(
-      BrowserTestUtils.is_visible(
-        row.querySelector(".urlbarView-title-separator")
-      ),
-      "The title separator should be visible"
+    const description = row.querySelector(
+      ".urlbarView-dynamic-addons-description"
     );
+    Assert.equal(description.textContent, merinoSuggestion.description);
+    const ratingContainer = row.querySelector(
+      ".urlbarView-dynamic-addons-ratingContainer"
+    );
+    Assert.ok(BrowserTestUtils.is_hidden(ratingContainer));
+    const reviews = row.querySelector(".urlbarView-dynamic-addons-reviews");
+    Assert.equal(reviews.textContent, "Recommended");
 
-    Assert.equal(result.suggestedIndex, 1);
+    const isTopPick = merinoSuggestion.is_top_pick ?? true;
+    if (isTopPick) {
+      Assert.equal(result.suggestedIndex, 1);
+    } else if (merinoSuggestion.is_sponsored) {
+      Assert.equal(
+        result.suggestedIndex,
+        UrlbarPrefs.get("quickSuggestSponsoredIndex")
+      );
+    } else {
+      Assert.equal(
+        result.suggestedIndex,
+        UrlbarPrefs.get("quickSuggestNonSponsoredIndex")
+      );
+    }
 
     const onLoad = BrowserTestUtils.browserLoaded(
       gBrowser.selectedBrowser,
@@ -136,6 +151,77 @@ add_task(async function basic() {
 
     await PlacesUtils.history.clear();
   }
+});
+
+add_task(async function ratings() {
+  const testRating = [
+    "0",
+    "0.24",
+    "0.25",
+    "0.74",
+    "0.75",
+    "1",
+    "1.24",
+    "1.25",
+    "1.74",
+    "1.75",
+    "2",
+    "2.24",
+    "2.25",
+    "2.74",
+    "2.75",
+    "3",
+    "3.24",
+    "3.25",
+    "3.74",
+    "3.75",
+    "4",
+    "4.24",
+    "4.25",
+    "4.74",
+    "4.75",
+    "5",
+  ];
+  const baseMerinoSuggestion = JSON.parse(
+    JSON.stringify(TEST_MERINO_SUGGESTIONS[0])
+  );
+
+  const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    addonsUITreatment: "a",
+  });
+
+  for (const rating of testRating) {
+    baseMerinoSuggestion.custom_details.amo.rating = rating;
+    MerinoTestUtils.server.response.body.suggestions = [baseMerinoSuggestion];
+
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "only match the Merino suggestion",
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+
+    const ratingElements = element.row.querySelectorAll(
+      ".urlbarView-dynamic-addons-rating"
+    );
+    Assert.equal(ratingElements.length, 5);
+
+    for (let i = 0; i < ratingElements.length; i++) {
+      const ratingElement = ratingElements[i];
+
+      const distanceToFull = Number(rating) - i;
+      let fill = "full";
+      if (distanceToFull < 0.25) {
+        fill = "empty";
+      } else if (distanceToFull < 0.75) {
+        fill = "half";
+      }
+      Assert.equal(ratingElement.getAttribute("fill"), fill);
+    }
+  }
+
+  await cleanUpNimbus();
 });
 
 add_task(async function disable() {
@@ -248,19 +334,38 @@ add_task(async function notRelevant() {
   await doDismissTest("not_relevant", false);
 });
 
-// Tests the row/group label.
 add_task(async function rowLabel() {
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "only match the Merino suggestion",
-  });
-  Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+  // Addon suggestions should be shown as a best match regardless of
+  // `browser.urlbar.bestMatch.enabled`, as long as `suggestion.is_top_pick` is
+  // either true or undefined.
+  const testCases = [
+    {
+      bestMatch: true,
+      expected: "Firefox extension",
+    },
+    {
+      bestMatch: false,
+      expected: "Firefox extension",
+    },
+  ];
 
-  const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
-  const row = element.row;
-  Assert.equal(row.getAttribute("label"), "Firefox extension");
+  for (const { bestMatch, expected } of testCases) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.urlbar.bestMatch.enabled", bestMatch]],
+    });
 
-  await UrlbarTestUtils.promisePopupClose(window);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "only match the Merino suggestion",
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const { element } = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+    const row = element.row;
+    Assert.equal(row.getAttribute("label"), expected);
+
+    await SpecialPowers.popPrefEnv();
+  }
 });
 
 async function doShowLessFrequently({ input, expected, keepViewOpen = false }) {
@@ -270,16 +375,25 @@ async function doShowLessFrequently({ input, expected, keepViewOpen = false }) {
   });
 
   if (!expected.isSuggestionShown) {
-    Assert.ok(
-      !(await getAddonResultDetails()),
-      "Addons suggestion should be absent"
-    );
+    for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+      const details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+      Assert.notEqual(
+        details.result.payload.dynamicType,
+        "addons",
+        `Addons suggestion should be absent (checking index ${i})`
+      );
+    }
+
     return;
   }
 
-  const details = await getAddonResultDetails();
-  Assert.ok(
-    details,
+  const details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    EXPECTED_RESULT_INDEX
+  );
+  Assert.equal(
+    details.result.payload.dynamicType,
+    "addons",
     `Addons suggestion should be present at expected index after ${input} search`
   );
 
@@ -325,8 +439,15 @@ async function doDismissTest(command, allDismissed) {
   });
 
   const resultCount = UrlbarTestUtils.getResultCount(window);
-  let details = await getAddonResultDetails();
-  Assert.ok(details, "Addons suggestion should be present");
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    EXPECTED_RESULT_INDEX
+  );
+  Assert.equal(
+    details.result.payload.dynamicType,
+    "addons",
+    "Addons suggestion should be present"
+  );
 
   // Sanity check.
   Assert.ok(UrlbarPrefs.get("suggest.addons"));
@@ -409,7 +530,7 @@ async function doDismissTest(command, allDismissed) {
     details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     Assert.ok(
       details.type != UrlbarUtils.RESULT_TYPE.TIP &&
-        !isAddonResult(details.result),
+        details.result.payload.dynamicType !== "addons",
       "Tip result and addon result should not be present"
     );
   }
@@ -425,18 +546,4 @@ function makeExpectedUrl(originalUrl) {
   url.searchParams.set("utm_medium", "firefox-desktop");
   url.searchParams.set("utm_source", "firefox-suggest");
   return url.href;
-}
-
-async function getAddonResultDetails() {
-  for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
-    const details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
-    if (isAddonResult(details.result)) {
-      return details;
-    }
-  }
-  return null;
-}
-
-function isAddonResult(result) {
-  return ["AddonSuggestions", "amo"].includes(result.payload.provider);
 }

@@ -16,4 +16,4 @@ function g(i) {
 
 f();
 gczeal(11,3);
-g(1000);
+g(5000);

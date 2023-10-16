@@ -17,7 +17,6 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/DisplayPortUtils.h"
-#include "mozilla/EventForwards.h"
 #include "mozilla/dom/CSSAnimation.h"
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/ContentVisibilityAutoStateChangeEvent.h"
@@ -37,15 +36,12 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_print.h"
-#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGTextFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/SVGUtils.h"
-#include "mozilla/TextControlElement.h"
 #include "mozilla/ToString.h"
-#include "mozilla/Try.h"
 #include "mozilla/ViewportUtils.h"
 
 #include "nsCOMPtr.h"
@@ -2139,17 +2135,12 @@ nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
 const nsAtom* nsIFrame::ComputePageValue() const {
   const nsAtom* value = nsGkAtoms::_empty;
   const nsIFrame* frame = this;
-  // Find what CSS page name value this frame's subtree has, if any.
-  // Starting with this frame, check if a page name other than auto is present,
-  // and record it if so. Then, if the current frame is a container frame, find
-  // the first non-placeholder child and repeat.
-  // This will find the most deeply nested first in-flow child of this frame's
-  // subtree, and return its page name (with auto resolved if applicable, and
-  // subtrees with no page-names returning the empty atom rather than null).
   do {
-    if (const nsAtom* maybePageName = frame->GetStylePageName()) {
-      value = maybePageName;
+    // If this has a non-auto start value, track that instead.
+    if (const nsAtom* const startValue = frame->GetStartPageValue()) {
+      value = startValue;
     }
+    MOZ_ASSERT(value, "Should not have a NULL page value.");
     // Get the next frame to read from.
     const nsIFrame* firstNonPlaceholderFrame = nullptr;
     // If this is a container frame, inspect its in-flow children.
@@ -4425,16 +4416,13 @@ nsresult nsIFrame::HandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  // When secondary buttion is down, we need to move selection to make users
-  // possible to paste something at click point quickly.
   // When middle button is down, we need to just move selection and focus at
   // the clicked point.  Note that even if middle click paste is not enabled,
   // Chrome moves selection at middle mouse button down.  So, we should follow
   // the behavior for the compatibility.
   if (aEvent->mMessage == eMouseDown) {
     WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
-    if (mouseEvent && (mouseEvent->mButton == MouseButton::eSecondary ||
-                       mouseEvent->mButton == MouseButton::eMiddle)) {
+    if (mouseEvent && mouseEvent->mButton == MouseButton::eMiddle) {
       if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
         return NS_OK;
       }
@@ -4647,6 +4635,8 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aMouseEvent);
   MOZ_ASSERT(aMouseEvent->mMessage == eMouseDown);
+  MOZ_ASSERT(aMouseEvent->mButton == MouseButton::ePrimary ||
+             aMouseEvent->mButton == MouseButton::eMiddle);
   MOZ_ASSERT(aEventStatus);
   MOZ_ASSERT(nsEventStatus_eConsumeNoDefault != *aEventStatus);
 
@@ -4755,12 +4745,6 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   if (!offsets.content) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (aMouseEvent->mButton == MouseButton::eSecondary &&
-      !MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
-          *frameselection, *aMouseEvent, *offsets.content)) {
-    return NS_OK;
   }
 
   if (aMouseEvent->mMessage == eMouseDown &&
@@ -4892,51 +4876,6 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
   }
 
   return NS_OK;
-}
-
-bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
-    const nsFrameSelection& aFrameSelection,
-    WidgetMouseEvent& aSecondaryButtonEvent,
-    const nsIContent& aContentAtEventPoint) const {
-  MOZ_ASSERT(aSecondaryButtonEvent.mButton == MouseButton::eSecondary);
-
-  if (StaticPrefs::
-          ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection()) {
-    if (Selection* selection =
-            aFrameSelection.GetSelection(SelectionType::eNormal)) {
-      if (selection->IsCollapsed()) {
-        // If selection is collapsed, it may be allowed to move caret, let's
-        // check other things.
-      } else if (nsIContent* ancestorLimiter =
-                     selection->GetAncestorLimiter()) {
-        // If currently selection is limited in an editing host, we should not
-        // collapse selection if the clicked point is in the ancestor limiter.
-        // Otherwise, this mouse click moves focus from the editing host to
-        // different one or blur the editing host.  In this case, we need to
-        // update selection because keeping current selection in the editing
-        // host looks like it's not blurred.
-        return !aContentAtEventPoint.IsInclusiveDescendantOf(ancestorLimiter);
-      }
-      // If currently selection is not limited in an editing host, we should
-      // collapse selection only when this click moves focus to an editing host
-      // because we need to update selection in this case.
-      else if (!aContentAtEventPoint.IsEditable()) {
-        return false;
-      }
-    }
-  }
-
-  return !StaticPrefs::
-             ui_mouse_right_click_collapse_selection_stop_if_non_editable_node() ||
-         // The user does not want to collapse selection into non-editable
-         // content by a right button click.
-         aContentAtEventPoint.IsEditable() ||
-         // Treat clicking in a text control as always clicked on editable
-         // content because we want a hack only for clicking in normal text
-         // nodes which is outside any editing hosts.
-         aContentAtEventPoint.IsTextControlElement() ||
-         TextControlElement::FromNodeOrNull(
-             aContentAtEventPoint.GetClosestNativeAnonymousSubtreeRoot());
 }
 
 nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
@@ -7094,7 +7033,7 @@ void nsIFrame::UpdateIsRelevantContent(
   // "This event is dispatched by posting a task at the time when the state
   // change occurs."
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-      new AsyncEventDispatcher(element, event.forget());
+      new AsyncEventDispatcher(element, event.get());
   DebugOnly<nsresult> rv = asyncDispatcher->PostDOMEvent();
   NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncEventDispatcher failed to dispatch");
 }
@@ -8296,23 +8235,6 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
     aTo += ToString(pseudoType).c_str();
   }
   aTo += "]";
-
-  auto contentVisibility = StyleDisplay()->ContentVisibility(*this);
-  if (contentVisibility != StyleContentVisibility::Visible) {
-    aTo += nsPrintfCString(" [content-visibility=");
-    if (contentVisibility == StyleContentVisibility::Auto) {
-      aTo += "auto, "_ns;
-    } else if (contentVisibility == StyleContentVisibility::Hidden) {
-      aTo += "hiden, "_ns;
-    }
-
-    if (HidesContent()) {
-      aTo += "HidesContent=hidden"_ns;
-    } else {
-      aTo += "HidesContent=visibile"_ns;
-    }
-    aTo += "]";
-  }
 
   if (IsFrameModified()) {
     aTo += nsPrintfCString(" modified");

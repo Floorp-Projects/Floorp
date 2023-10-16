@@ -21,10 +21,10 @@ JSObject* SVGFECompositeElement::WrapNode(JSContext* aCx,
 }
 
 SVGElement::NumberInfo SVGFECompositeElement::sNumberInfo[4] = {
-    {nsGkAtoms::k1, 0},
-    {nsGkAtoms::k2, 0},
-    {nsGkAtoms::k3, 0},
-    {nsGkAtoms::k4, 0}};
+    {nsGkAtoms::k1, 0, false},
+    {nsGkAtoms::k2, 0, false},
+    {nsGkAtoms::k3, 0, false},
+    {nsGkAtoms::k4, 0, false}};
 
 SVGEnumMapping SVGFECompositeElement::sOperatorMap[] = {
     {nsGkAtoms::over, SVG_FECOMPOSITE_OPERATOR_OVER},
@@ -124,7 +124,7 @@ nsresult SVGFECompositeElement::BindToTree(BindContext& aCtx,
     aCtx.OwnerDoc().SetUseCounter(eUseCounter_custom_feComposite);
   }
 
-  return SVGFECompositeElementBase::BindToTree(aCtx, aParent);
+  return SVGFE::BindToTree(aCtx, aParent);
 }
 
 //----------------------------------------------------------------------

@@ -52,7 +52,6 @@ class nsPIDOMWindowOuter;
 namespace mozilla {
 
 class OriginAttributes;
-class OriginAttributesPattern;
 
 namespace ipc {
 
@@ -262,8 +261,6 @@ class QuotaManager final : public BackgroundThreadObject {
 
   Result<OriginMetadata, nsresult> GetOriginMetadata(nsIFile* aDirectory);
 
-  Result<Ok, nsresult> RemoveOriginDirectory(nsIFile& aDirectory);
-
   RefPtr<UniversalDirectoryLockPromise> OpenStorageDirectory(
       const Nullable<PersistenceType>& aPersistenceType,
       const OriginScope& aOriginScope,
@@ -350,45 +347,13 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsurePersistentOriginIsInitialized(const OriginMetadata& aOriginMetadata);
 
-  bool IsTemporaryOriginInitialized(
-      const OriginMetadata& aOriginMetadata) const;
-
   // Returns a pair of an nsIFile object referring to the directory, and a bool
   // indicating whether the directory was newly created.
   Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
   EnsureTemporaryOriginIsInitialized(PersistenceType aPersistenceType,
                                      const OriginMetadata& aOriginMetadata);
 
-  RefPtr<BoolPromise> InitializePersistentClient(
-      const PrincipalInfo& aPrincipalInfo, Client::Type aClientType);
-
-  // Returns a pair of an nsIFile object referring to the directory, and a bool
-  // indicating whether the directory was newly created.
-  Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-  EnsurePersistentClientIsInitialized(const ClientMetadata& aClientMetadata);
-
-  RefPtr<BoolPromise> InitializeTemporaryClient(
-      PersistenceType aPersistenceType, const PrincipalInfo& aPrincipalInfo,
-      Client::Type aClientType);
-
-  // Returns a pair of an nsIFile object referring to the directory, and a bool
-  // indicating whether the directory was newly created.
-  Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
-  EnsureTemporaryClientIsInitialized(const ClientMetadata& aClientMetadata);
-
   nsresult EnsureTemporaryStorageIsInitialized();
-
-  RefPtr<BoolPromise> ClearStoragesForOrigin(
-      const Maybe<PersistenceType>& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo,
-      const Maybe<Client::Type>& aClientType);
-
-  RefPtr<BoolPromise> ClearStoragesForOriginPrefix(
-      const Maybe<PersistenceType>& aPersistenceType,
-      const PrincipalInfo& aPrincipalInfo);
-
-  RefPtr<BoolPromise> ClearStoragesForOriginAttributesPattern(
-      const OriginAttributesPattern& aPattern);
 
   RefPtr<BoolPromise> ClearPrivateRepository();
 
@@ -558,8 +523,7 @@ class QuotaManager final : public BackgroundThreadObject {
       const nsACString& aGroup);
 
   already_AddRefed<OriginInfo> LockedGetOriginInfo(
-      PersistenceType aPersistenceType,
-      const OriginMetadata& aOriginMetadata) const;
+      PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata);
 
   nsresult UpgradeFromIndexedDBDirectoryToPersistentStorageDirectory(
       nsIFile* aIndexedDBDir);
@@ -770,7 +734,6 @@ class QuotaManager final : public BackgroundThreadObject {
   LazyInitializedOnce<const nsString> mTemporaryStoragePath;
   LazyInitializedOnce<const nsString> mDefaultStoragePath;
   LazyInitializedOnce<const nsString> mPrivateStoragePath;
-  LazyInitializedOnce<const nsString> mToBeRemovedStoragePath;
 
   uint64_t mTemporaryStorageLimit;
   uint64_t mTemporaryStorageUsage;

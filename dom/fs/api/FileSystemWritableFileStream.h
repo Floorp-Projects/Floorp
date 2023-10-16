@@ -44,15 +44,21 @@ class FileSystemThreadSafeStreamOwner;
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
+  /* IsExclusive is true to enable move */
+  using CreatePromise =
+      MozPromise<already_AddRefed<FileSystemWritableFileStream>, nsresult,
+                 /* IsExclusive */ true>;
+
   using WriteDataPromise =
       MozPromise<Maybe<int64_t>, CopyableErrorResult, /* IsExclusive */ true>;
 
-  static Result<RefPtr<FileSystemWritableFileStream>, nsresult> Create(
+  static RefPtr<CreatePromise> Create(
       const nsCOMPtr<nsIGlobalObject>& aGlobal,
       RefPtr<FileSystemManager>& aManager,
-      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
-      const fs::FileSystemEntryMetadata& aMetadata);
+      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+      fs::FileSystemEntryMetadata&& aMetadata,
+      RefPtr<StrongWorkerRef> aBuildWorkerRef);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
@@ -100,13 +106,12 @@ class FileSystemWritableFileStream final : public WritableStream {
  private:
   class CloseHandler;
 
-  FileSystemWritableFileStream(
-      const nsCOMPtr<nsIGlobalObject>& aGlobal,
-      RefPtr<FileSystemManager>& aManager,
-      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
-      RefPtr<FileSystemWritableFileStreamChild> aActor,
-      already_AddRefed<TaskQueue> aTaskQueue,
-      const fs::FileSystemEntryMetadata& aMetadata);
+  FileSystemWritableFileStream(const nsCOMPtr<nsIGlobalObject>& aGlobal,
+                               RefPtr<FileSystemManager>& aManager,
+                               RefPtr<FileSystemWritableFileStreamChild> aActor,
+                               already_AddRefed<TaskQueue> aTaskQueue,
+                               nsCOMPtr<nsIRandomAccessStream> aStream,
+                               fs::FileSystemEntryMetadata&& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
 
@@ -118,14 +123,9 @@ class FileSystemWritableFileStream final : public WritableStream {
   template <typename T>
   RefPtr<Int64Promise> Write(const T& aData, const Maybe<uint64_t> aPosition);
 
-  RefPtr<Int64Promise> WriteImpl(nsCOMPtr<nsIInputStream> aInputStream,
-                                 const Maybe<uint64_t> aPosition);
-
   RefPtr<BoolPromise> Seek(uint64_t aPosition);
 
   RefPtr<BoolPromise> Truncate(uint64_t aSize);
-
-  nsresult EnsureStream();
 
   void NoteFinishedCommand();
 
@@ -140,8 +140,6 @@ class FileSystemWritableFileStream final : public WritableStream {
   RefPtr<fs::FileSystemThreadSafeStreamOwner> mStreamOwner;
 
   RefPtr<StrongWorkerRef> mWorkerRef;
-
-  mozilla::ipc::RandomAccessStreamParams mStreamParams;
 
   fs::FileSystemEntryMetadata mMetadata;
 

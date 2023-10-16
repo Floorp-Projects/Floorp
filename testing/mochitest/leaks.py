@@ -342,7 +342,7 @@ class LSANLeaks(object):
             "    #\d+ 0x[0-9a-f]+ \(([^+]+)\+0x[0-9a-f]+\)"
         )
 
-    def log(self, line, path=""):
+    def log(self, line):
         if re.match(self.startRegExp, line):
             self.inReport = True
             return
@@ -359,13 +359,13 @@ class LSANLeaks(object):
             return
 
         if line.startswith("Direct leak") or line.startswith("Indirect leak"):
-            self._finishStack(path)
+            self._finishStack()
             self.recordMoreFrames = True
             self.currStack = []
             return
 
         if line.startswith("SUMMARY: AddressSanitizer"):
-            self._finishStack(path)
+            self._finishStack()
             self.inReport = False
             return
 
@@ -420,23 +420,18 @@ class LSANLeaks(object):
                 "in testing/mozbase/mozrunner/mozrunner/utils.py"
             )
 
-        frames = list(self.foundFrames)
-        frames.sort()
-        for f in frames:
-            if self.scope:
-                f = "%s | %s" % (f, self.scope)
-            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer leak at " + f)
+        for f in self.foundFrames:
+            self.logger.error("TEST-UNEXPECTED-FAIL | LeakSanitizer | leak at " + f)
             failures += 1
 
         return failures
 
-    def _finishStack(self, path=""):
+    def _finishStack(self):
         if self.recordMoreFrames and len(self.currStack) == 0:
             self.currStack = ["unknown stack"]
         if self.currStack:
             self.foundFrames.add(", ".join(self.currStack))
             self.currStack = None
-            self.scope = path
         self.recordMoreFrames = False
         self.numRecordedFrames = 0
 

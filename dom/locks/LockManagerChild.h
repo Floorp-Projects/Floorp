@@ -18,7 +18,8 @@ struct LockRequest;
 
 class LockManagerChild final : public PLockManagerChild {
  public:
-  NS_INLINE_DECL_REFCOUNTING(LockManagerChild)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(LockManagerChild)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(LockManagerChild)
 
   static void NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
                                         bool aCreated);

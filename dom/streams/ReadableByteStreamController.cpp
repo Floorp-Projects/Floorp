@@ -793,7 +793,7 @@ void ReadableByteStreamControllerEnqueue(
 
   // Step 6.
   if (JS::IsDetachedArrayBufferObject(buffer)) {
-    aRv.ThrowTypeError("Detached Array Buffer");
+    aRv.ThrowTypeError("Detatched Array Buffer");
     return;
   }
 

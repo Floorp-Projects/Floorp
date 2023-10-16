@@ -53,7 +53,7 @@ class Preview extends PureComponent {
     codeMirrorWrapper.addEventListener("mousedown", this.onMouseDown);
   }
 
-  // Note that these events are emitted by utils/editor/tokens.js
+  // Note that these events are emitted by utils/editor/token-events.js
   onTokenEnter = async ({ target, tokenPos }) => {
     // Use a temporary object to uniquely identify the asynchronous processing of this user event
     // and bail out if we started hovering another token.
@@ -74,7 +74,7 @@ class Preview extends PureComponent {
       preview = await getExceptionPreview(target, tokenPos, editor.codeMirror);
     }
 
-    if (!preview && this.props.isPaused && !this.state.selecting) {
+    if (this.props.isPaused && !this.state.selecting) {
       preview = await getPreview(target, tokenPos, editor.codeMirror);
     }
 

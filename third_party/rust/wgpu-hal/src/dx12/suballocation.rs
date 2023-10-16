@@ -49,9 +49,8 @@ mod placed {
         let device = raw.as_ptr();
 
         match gpu_allocator::d3d12::Allocator::new(&gpu_allocator::d3d12::AllocatorCreateDesc {
-            device: gpu_allocator::d3d12::ID3D12DeviceVersion::Device(device.as_windows().clone()),
+            device: device.as_windows().clone(),
             debug_settings: Default::default(),
-            allocation_sizes: gpu_allocator::AllocationSizes::default(),
         }) {
             Ok(allocator) => Ok(Some(Mutex::new(GpuAllocatorWrapper { allocator }))),
             Err(e) => {
@@ -214,7 +213,6 @@ mod placed {
                     log::error!("DX12 gpu-allocator: Internal Error: {}", e);
                     Self::Lost
                 }
-                gpu_allocator::AllocationError::BarrierLayoutNeedsDevice10 => todo!(),
             }
         }
     }

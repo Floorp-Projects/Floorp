@@ -10,10 +10,10 @@ with Files("**"):
 DIRS += ["input"]
 
 MOCHITEST_MANIFESTS += [
-    "test/dialog/mochitest.toml",
-    "test/forms/mochitest.toml",
-    "test/forms/without_selectionchange/mochitest.toml",
-    "test/mochitest.toml",
+    "test/dialog/mochitest.ini",
+    "test/forms/mochitest.ini",
+    "test/forms/without_selectionchange/mochitest.ini",
+    "test/mochitest.ini",
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
@@ -30,6 +30,7 @@ EXPORTS += [
     "nsIConstraintValidation.h",
     "nsIFormControl.h",
     "nsIHTMLCollection.h",
+    "nsIRadioGroupContainer.h",
     "nsIRadioVisitor.h",
 ]
 

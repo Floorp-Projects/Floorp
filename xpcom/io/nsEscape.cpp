@@ -269,15 +269,9 @@ static constexpr std::array<uint32_t, 256> BuildEscapeChars() {
 
   // Extra characters which aren't escaped in particular escape modes.
   AddUnescapedChars(".", esc_Scheme, table);
-  // Note that behavior of esc_Username and esc_Password is the same, so these
-  // could be merged (in the URL spec, both reference the "userinfo encode set"
-  // https://url.spec.whatwg.org/#userinfo-percent-encode-set, so the same
-  // behavior is expected.)
-  // Leaving separate for now to minimize risk, as these are also IDL-exposed
-  // as separate constants.
-  AddUnescapedChars("'.", esc_Username, table);
-  AddUnescapedChars("'.", esc_Password, table);
-  AddUnescapedChars(".", esc_Host, table);  // Same as esc_Scheme
+  // esc_Username has no additional unescaped characters.
+  AddUnescapedChars("|", esc_Password, table);
+  AddUnescapedChars(".", esc_Host, table);
   AddUnescapedChars("'./:;=@[]|", esc_Directory, table);
   AddUnescapedChars("'.:;=@[]|", esc_FileBaseName, table);
   AddUnescapedChars("':;=@[]|", esc_FileExtension, table);
@@ -298,6 +292,35 @@ static bool dontNeedEscape(uint16_t aChar, uint32_t aFlags) {
   return aChar < EscapeChars.size() ? (EscapeChars[(size_t)aChar] & aFlags)
                                     : false;
 }
+
+// Temporary static assert to make sure that the rewrite to using
+// `BuildEscapeChars` didn't change the final array in memory.
+// It will be removed in Bug 1750945.
+
+static_assert([]() constexpr {
+  constexpr uint32_t OldEscapeChars[256] =
+      // clang-format off
+//     0      1      2      3      4      5      6      7      8      9      A      B      C      D      E      F
+{
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,  // 0x
+       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,     0,  // 1x
+       0,132095,     0,131584,132095,     0,132095,131696,132095,132095,132095,132095,132095,132095,132025,131856,  // 2x   !"#$%&'()*+,-./
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132080,132080,     0,132080,     0,131840,  // 3x  0123456789:;<=>?
+  132080,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,  // 4x  @ABCDEFGHIJKLMNO
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132080,   896,132080,   896,132095,  // 5x  PQRSTUVWXYZ[\]^_
+     384,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,  // 6x  `abcdefghijklmno
+  132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,132095,   896,  1012,   896,132095,     0,  // 7x  pqrstuvwxyz{|}~ DEL
+       0                                                                                                            // 80 to FF are zero
+};
+  // clang-format on
+
+  for (size_t i = 0; i < EscapeChars.size(); ++i) {
+    if (OldEscapeChars[i] != EscapeChars[i]) {
+      return false;
+    }
+  }
+  return true;
+}());
 
 //----------------------------------------------------------------------------------------
 

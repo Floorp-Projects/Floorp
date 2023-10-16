@@ -728,7 +728,8 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   // 5.1 Parse aText into rules.
   // 5.2 Load import rules, throw NetworkError if failed.
   // 5.3 Set sheet's rules to new rules.
-  nsISerialEventTarget* target = GetMainThreadSerialEventTarget();
+  nsCOMPtr<nsISerialEventTarget> target =
+      mConstructorDocument->EventTargetFor(TaskCategory::Other);
   loadData->mIsBeingParsed = true;
   MOZ_ASSERT(!mReplacePromise);
   mReplacePromise = promise;

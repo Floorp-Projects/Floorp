@@ -28,7 +28,6 @@ pub static RECOMMENDED_SELECTOR_BLOOM_FILTER_SIZE: usize = 4096;
 bitflags! {
     /// Set of flags that are set on either the element or its parent (depending
     /// on the flag) if the element could potentially match a selector.
-    #[derive(Clone, Copy)]
     pub struct ElementSelectorFlags: usize {
         /// When a child is added or removed from the parent, all the children
         /// must be restyled, because they may match :nth-last-child,
@@ -74,8 +73,8 @@ bitflags! {
 
         // The element is reached by a relative selector search in both sibling and ancestor directions.
         const RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING =
-            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING.bits() |
-            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR.bits();
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING.bits |
+            Self::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR.bits;
     }
 }
 
@@ -646,37 +645,6 @@ enum Rightmost {
     No,
 }
 
-fn host_for_part<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
-where
-    E: Element,
-{
-    let scope = context.current_host;
-    let mut curr = element.containing_shadow_host()?;
-    if scope == Some(curr.opaque()) {
-        return Some(curr);
-    }
-    loop {
-        let parent = curr.containing_shadow_host();
-        if parent.as_ref().map(|h| h.opaque()) == scope {
-            return Some(curr);
-        }
-        curr = parent?;
-    }
-}
-
-fn assigned_slot<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E>
-where
-    E: Element,
-{
-    debug_assert!(element.assigned_slot().map_or(true, |s| s.is_html_slot_element()));
-    let scope = context.current_host?;
-    let mut current_slot = element.assigned_slot()?;
-    while current_slot.containing_shadow_host().unwrap().opaque() != scope {
-        current_slot = current_slot.assigned_slot()?;
-    }
-    Some(current_slot)
-}
-
 #[inline(always)]
 fn next_element_for_combinator<E>(
     element: &E,
@@ -721,8 +689,18 @@ where
 
             element.containing_shadow_host()
         },
-        Combinator::Part => host_for_part(element, context),
-        Combinator::SlotAssignment => assigned_slot(element, context),
+        Combinator::Part => element.containing_shadow_host(),
+        Combinator::SlotAssignment => {
+            debug_assert!(element
+                .assigned_slot()
+                .map_or(true, |s| s.is_html_slot_element()));
+            let scope = context.current_host?;
+            let mut current_slot = element.assigned_slot()?;
+            while current_slot.containing_shadow_host().unwrap().opaque() != scope {
+                current_slot = current_slot.assigned_slot()?;
+            }
+            Some(current_slot)
+        },
         Combinator::PseudoElement => element.pseudo_element_originating_element(),
     }
 }
@@ -1100,7 +1078,6 @@ where
             );
             anchor.map_or(false, |a| a == element.opaque())
         },
-        Component::Invalid(..) => false,
     }
 }
 

@@ -658,7 +658,14 @@ void nsCaret::ResetBlinking() {
   if (mBlinkTimer) {
     mBlinkTimer->Cancel();
   } else {
-    mBlinkTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
+    nsIEventTarget* target = nullptr;
+    if (RefPtr<PresShell> presShell = do_QueryReferent(mPresShell)) {
+      if (nsCOMPtr<Document> doc = presShell->GetDocument()) {
+        target = doc->EventTargetFor(TaskCategory::Other);
+      }
+    }
+
+    mBlinkTimer = NS_NewTimer(target);
     if (!mBlinkTimer) {
       return;
     }

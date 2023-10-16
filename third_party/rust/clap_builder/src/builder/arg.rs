@@ -17,9 +17,7 @@ use crate::builder::OsStr;
 use crate::builder::PossibleValue;
 use crate::builder::Str;
 use crate::builder::StyledStr;
-use crate::builder::Styles;
 use crate::builder::ValueRange;
-use crate::util::AnyValueId;
 use crate::ArgAction;
 use crate::Id;
 use crate::ValueHint;
@@ -470,7 +468,7 @@ impl Arg {
     ///
     /// [`Command`] will [`panic!`] if indexes are skipped (such as defining `index(1)` and `index(3)`
     /// but not `index(2)`, or a positional argument is defined as multiple and is not the highest
-    /// index (debug builds)
+    /// index
     ///
     /// # Examples
     ///
@@ -858,15 +856,21 @@ impl Arg {
 
     #[inline]
     #[must_use]
-    pub(crate) fn setting(mut self, setting: ArgSettings) -> Self {
-        self.settings.set(setting);
+    pub(crate) fn setting<F>(mut self, setting: F) -> Self
+    where
+        F: Into<ArgFlags>,
+    {
+        self.settings.insert(setting.into());
         self
     }
 
     #[inline]
     #[must_use]
-    pub(crate) fn unset_setting(mut self, setting: ArgSettings) -> Self {
-        self.settings.unset(setting);
+    pub(crate) fn unset_setting<F>(mut self, setting: F) -> Self
+    where
+        F: Into<ArgFlags>,
+    {
+        self.settings.remove(setting.into());
         self
     }
 }
@@ -1650,7 +1654,7 @@ impl Arg {
     /// at runtime, nor were the conditions met for `Arg::default_value_if`, the `Arg::default_value`
     /// will be applied.
     ///
-    /// Like with command-line values, this will be split by [`Arg::value_delimiter`].
+    /// **NOTE:** This implicitly sets [`Arg::action(ArgAction::Set)`].
     ///
     /// # Examples
     ///
@@ -1748,8 +1752,6 @@ impl Arg {
     /// [`.num_args(0..N)`][Arg::num_args] and the
     /// [`.require_equals(true)`][Arg::require_equals] configuration option. These are required in
     /// order to unambiguously determine what, if any, value was supplied for the argument.
-    ///
-    /// Like with command-line values, this will be split by [`Arg::value_delimiter`].
     ///
     /// # Examples
     ///
@@ -1896,8 +1898,6 @@ impl Arg {
     /// - When [`Arg::action(ArgAction::Set)`] is set,
     ///   [`ArgMatches::get_one`][crate::ArgMatches::get_one] will
     ///   return the default specified.
-    ///
-    /// Like with command-line values, this will be split by [`Arg::value_delimiter`].
     ///
     /// # Examples
     ///
@@ -2175,15 +2175,12 @@ impl Arg {
 
     /// Allows custom ordering of args within the help message.
     ///
-    /// `Arg`s with a lower value will be displayed first in the help message.
-    /// Those with the same display order will be sorted.
+    /// Args with a lower value will be displayed first in the help message. This is helpful when
+    /// one would like to emphasise frequently used args, or prioritize those towards the top of
+    /// the list. Args with duplicate display orders will be displayed in the order they are
+    /// defined.
     ///
-    /// `Arg`s are automatically assigned a display order based on the order they are added to the
-    /// [`Command`][crate::Command].
-    /// Overriding this is helpful when the order arguments are added in isn't the same as the
-    /// display order, whether in one-off cases or to automatically sort arguments.
-    ///
-    /// To change, see [`Command::next_display_order`][crate::Command::next_display_order].
+    /// **NOTE:** The default is 999 for all arguments.
     ///
     /// **NOTE:** This setting is ignored for [positional arguments] which are always displayed in
     /// [index] order.
@@ -2195,23 +2192,22 @@ impl Arg {
     /// # use clap_builder as clap;
     /// # use clap::{Command, Arg, ArgAction};
     /// let m = Command::new("prog")
-    ///     .arg(Arg::new("boat")
-    ///         .short('b')
-    ///         .long("boat")
+    ///     .arg(Arg::new("a") // Typically args are grouped alphabetically by name.
+    ///                              // Args without a display_order have a value of 999 and are
+    ///                              // displayed alphabetically with all other 999 valued args.
+    ///         .long("long-option")
+    ///         .short('o')
     ///         .action(ArgAction::Set)
-    ///         .display_order(0)  // Sort
     ///         .help("Some help and text"))
-    ///     .arg(Arg::new("airplane")
-    ///         .short('a')
-    ///         .long("airplane")
+    ///     .arg(Arg::new("b")
+    ///         .long("other-option")
+    ///         .short('O')
     ///         .action(ArgAction::Set)
-    ///         .display_order(0)  // Sort
+    ///         .display_order(1)   // In order to force this arg to appear *first*
+    ///                             // all we have to do is give it a value lower than 999.
+    ///                             // Any other args with a value of 1 will be displayed
+    ///                             // alphabetically with this one...then 2 values, then 3, etc.
     ///         .help("I should be first!"))
-    ///     .arg(Arg::new("custom-help")
-    ///         .short('?')
-    ///         .action(ArgAction::Help)
-    ///         .display_order(100)  // Don't sort
-    ///         .help("Alt help"))
     ///     .get_matches_from(vec![
     ///         "prog", "--help"
     ///     ]);
@@ -2226,10 +2222,10 @@ impl Arg {
     /// Usage: cust-ord [OPTIONS]
     ///
     /// Options:
-    ///     -a, --airplane <airplane>    I should be first!
-    ///     -b, --boat <boar>            Some help and text
-    ///     -h, --help                   Print help information
-    ///     -?                           Alt help
+    ///     -h, --help                Print help information
+    ///     -V, --version             Print version information
+    ///     -O, --other-option <b>    I should be first!
+    ///     -o, --long-option <a>     Some help and text
     /// ```
     /// [positional arguments]: Arg::index()
     /// [index]: Arg::index()
@@ -2740,7 +2736,7 @@ impl Arg {
     /// and `Arg::default_value_if`, and the user **did not** provide this arg at runtime, nor were
     /// the conditions met for `Arg::default_value_if`, the `Arg::default_value` will be applied.
     ///
-    /// Like with command-line values, this will be split by [`Arg::value_delimiter`].
+    /// **NOTE:** This implicitly sets [`Arg::action(ArgAction::Set)`].
     ///
     /// # Examples
     ///
@@ -2880,8 +2876,6 @@ impl Arg {
     ///
     /// **NOTE**: The conditions are stored in order and evaluated in the same order. I.e. the first
     /// if multiple conditions are true, the first one found will be applied and the ultimate value.
-    ///
-    /// Like with command-line values, this will be split by [`Arg::value_delimiter`].
     ///
     /// # Examples
     ///
@@ -4010,7 +4004,7 @@ impl Arg {
         self.value_hint.unwrap_or_else(|| {
             if self.is_takes_value_set() {
                 let type_id = self.get_value_parser().type_id();
-                if type_id == AnyValueId::of::<std::path::PathBuf>() {
+                if type_id == crate::parser::AnyValueId::of::<std::path::PathBuf>() {
                     ValueHint::AnyPath
                 } else {
                     ValueHint::default()
@@ -4111,7 +4105,7 @@ impl Arg {
     /// let value_parser = cmd.get_arguments()
     ///     .find(|a| a.get_id() == "port").unwrap()
     ///     .get_value_parser();
-    /// println!("{value_parser:?}");
+    /// println!("{:?}", value_parser);
     /// ```
     pub fn get_value_parser(&self) -> &super::ValueParser {
         if let Some(value_parser) = self.value_parser.as_ref() {
@@ -4276,74 +4270,49 @@ impl Arg {
         }
     }
 
-    pub(crate) fn stylized(&self, styles: &Styles, required: Option<bool>) -> StyledStr {
-        use std::fmt::Write as _;
-        let literal = styles.get_literal();
-
+    pub(crate) fn stylized(&self, required: Option<bool>) -> StyledStr {
         let mut styled = StyledStr::new();
         // Write the name such --long or -l
         if let Some(l) = self.get_long() {
-            let _ = write!(
-                styled,
-                "{}--{l}{}",
-                literal.render(),
-                literal.render_reset()
-            );
+            styled.literal("--");
+            styled.literal(l);
         } else if let Some(s) = self.get_short() {
-            let _ = write!(styled, "{}-{s}{}", literal.render(), literal.render_reset());
+            styled.literal("-");
+            styled.literal(s);
         }
-        styled.push_styled(&self.stylize_arg_suffix(styles, required));
+        styled.extend(self.stylize_arg_suffix(required).into_iter());
         styled
     }
 
-    pub(crate) fn stylize_arg_suffix(&self, styles: &Styles, required: Option<bool>) -> StyledStr {
-        use std::fmt::Write as _;
-        let literal = styles.get_literal();
-        let placeholder = styles.get_placeholder();
+    pub(crate) fn stylize_arg_suffix(&self, required: Option<bool>) -> StyledStr {
         let mut styled = StyledStr::new();
 
         let mut need_closing_bracket = false;
         if self.is_takes_value_set() && !self.is_positional() {
             let is_optional_val = self.get_min_vals() == 0;
-            let (style, start) = if self.is_require_equals_set() {
+            if self.is_require_equals_set() {
                 if is_optional_val {
                     need_closing_bracket = true;
-                    (placeholder, "[=")
+                    styled.placeholder("[=");
                 } else {
-                    (literal, "=")
+                    styled.literal("=");
                 }
             } else if is_optional_val {
                 need_closing_bracket = true;
-                (placeholder, " [")
+                styled.placeholder(" [");
             } else {
-                (placeholder, " ")
-            };
-            let _ = write!(styled, "{}{start}{}", style.render(), style.render_reset());
+                styled.placeholder(" ");
+            }
         }
         if self.is_takes_value_set() || self.is_positional() {
             let required = required.unwrap_or_else(|| self.is_required_set());
             let arg_val = self.render_arg_val(required);
-            let _ = write!(
-                styled,
-                "{}{arg_val}{}",
-                placeholder.render(),
-                placeholder.render_reset()
-            );
+            styled.placeholder(arg_val);
         } else if matches!(*self.get_action(), ArgAction::Count) {
-            let _ = write!(
-                styled,
-                "{}...{}",
-                placeholder.render(),
-                placeholder.render_reset()
-            );
+            styled.placeholder("...");
         }
         if need_closing_bracket {
-            let _ = write!(
-                styled,
-                "{}]{}",
-                placeholder.render(),
-                placeholder.render_reset()
-            );
+            styled.placeholder("]");
         }
 
         styled
@@ -4431,8 +4400,7 @@ impl Eq for Arg {}
 
 impl Display for Arg {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let plain = Styles::plain();
-        self.stylized(&plain, None).fmt(f)
+        self.stylized(None).fmt(f)
     }
 }
 
@@ -4793,6 +4761,17 @@ mod test {
             .index(1)
             .value_names(["file1", "file2"])
             .required(true);
+        p._build();
+
+        assert_eq!(p.to_string(), "<file1> <file2>");
+    }
+
+    #[test]
+    fn positional_display_val_names_req() {
+        let mut p = Arg::new("pos")
+            .index(1)
+            .required(true)
+            .value_names(["file1", "file2"]);
         p._build();
 
         assert_eq!(p.to_string(), "<file1> <file2>");

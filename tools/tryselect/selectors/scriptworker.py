@@ -113,7 +113,6 @@ def run(
     dry_run=False,
     message="{msg}",
     closed_tree=False,
-    push_to_lando=False,
 ):
     if task_type == "list":
         print_available_task_types()
@@ -175,5 +174,4 @@ def run(
         closed_tree=closed_tree,
         try_task_config=task_config,
         files_to_change=files_to_change,
-        push_to_lando=push_to_lando,
     )

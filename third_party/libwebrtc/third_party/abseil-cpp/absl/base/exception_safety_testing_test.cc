@@ -148,7 +148,7 @@ TEST(ThrowingValueTest, ThrowingBitwiseOps) {
   ThrowingValue<> bomb1, bomb2;
 
   TestOp([&bomb1]() { ~bomb1; });
-  TestOp([&]() { bomb1 & bomb2; });
+  TestOp([&]() { bomb1& bomb2; });
   TestOp([&]() { bomb1 | bomb2; });
   TestOp([&]() { bomb1 ^ bomb2; });
 }
@@ -332,16 +332,13 @@ TEST(ThrowingValueTest, NonThrowingPlacementDelete) {
   constexpr int kArrayLen = 2;
   // We intentionally create extra space to store the tag allocated by placement
   // new[].
-  constexpr size_t kExtraSpaceLen = sizeof(size_t) * 2;
+  constexpr int kStorageLen = 4;
 
   alignas(ThrowingValue<>) unsigned char buf[sizeof(ThrowingValue<>)];
   alignas(ThrowingValue<>) unsigned char
-      array_buf[kExtraSpaceLen + sizeof(ThrowingValue<>[kArrayLen])];
+      array_buf[sizeof(ThrowingValue<>[kStorageLen])];
   auto* placed = new (&buf) ThrowingValue<>(1);
   auto placed_array = new (&array_buf) ThrowingValue<>[kArrayLen];
-  auto* placed_array_end = reinterpret_cast<unsigned char*>(placed_array) +
-                           sizeof(ThrowingValue<>[kArrayLen]);
-  EXPECT_LE(placed_array_end, array_buf + sizeof(array_buf));
 
   SetCountdown();
   ExpectNoThrow([placed, &buf]() {

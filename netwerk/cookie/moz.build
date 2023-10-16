@@ -50,11 +50,11 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.toml",
+    "test/browser/browser.ini",
 ]
 
 MOCHITEST_MANIFESTS += [
-    "test/mochitest/mochitest.toml",
+    "test/mochitest/mochitest.ini",
 ]
 
 IPDL_SOURCES = [

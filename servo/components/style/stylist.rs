@@ -8,7 +8,6 @@ use crate::applicable_declarations::{
     ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
 };
 use crate::context::{CascadeInputs, QuirksMode};
-use crate::custom_properties::{CustomPropertiesMap, ComputedCustomProperties};
 use crate::dom::TElement;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
@@ -23,7 +22,6 @@ use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
-use crate::properties_and_values::rule::Inherits;
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
@@ -549,9 +547,6 @@ pub struct Stylist {
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#dom-window-registeredpropertyset-slot>
     script_custom_properties: CustomPropertyScriptRegistry,
 
-    /// Initial values for registered custom properties.
-    initial_values_for_custom_properties: ComputedCustomProperties,
-
     /// The total number of times the stylist has been rebuilt.
     num_rebuilds: usize,
 }
@@ -658,7 +653,6 @@ impl Stylist {
             author_styles_enabled: AuthorStylesEnabled::Yes,
             rule_tree: RuleTree::new(),
             script_custom_properties: Default::default(),
-            initial_values_for_custom_properties: Default::default(),
             num_rebuilds: 0,
         }
     }
@@ -701,58 +695,6 @@ impl Stylist {
         None
     }
 
-    /// Returns custom properties with their registered initial values.
-    pub fn get_custom_property_initial_values(&self) -> &ComputedCustomProperties {
-        &self.initial_values_for_custom_properties
-    }
-
-    /// Rebuild custom properties with their registered initial values.
-    /// https://drafts.css-houdini.org/css-properties-values-api-1/#determining-registration
-    pub fn rebuild_initial_values_for_custom_properties(&mut self) {
-        let mut seen_names = PrecomputedHashSet::default();
-        let mut inherited_map = CustomPropertiesMap::default();
-        let mut non_inherited_map = CustomPropertiesMap::default();
-        for (k, v) in self.custom_property_script_registry().properties().iter() {
-            seen_names.insert(k.clone());
-            if let Some(value) = &v.initial_value {
-                let map = if v.inherits {
-                    &mut inherited_map
-                } else {
-                    &mut non_inherited_map
-                };
-                map.insert(k.clone(), value.clone());
-            }
-        }
-        for (data, _) in self.iter_origins() {
-            for (k, v) in data.custom_property_registrations.iter() {
-                if seen_names.insert(k.clone()) {
-                    let last_value = &v.last().unwrap().0;
-                    if let Some(ref value) = last_value.initial_value {
-                        let map = if last_value.inherits {
-                            &mut inherited_map
-                        } else {
-                            &mut non_inherited_map
-                        };
-                        map.insert(k.clone(), value.clone());
-                    }
-                }
-            }
-        }
-        self.initial_values_for_custom_properties = ComputedCustomProperties {
-            inherited: if inherited_map.is_empty() {
-                None
-            } else {
-                inherited_map.shrink_to_fit();
-                Some(Arc::new(inherited_map))
-            },
-            non_inherited: if non_inherited_map.is_empty() {
-                None
-            } else {
-                non_inherited_map.shrink_to_fit();
-                Some(Arc::new(non_inherited_map))
-            },
-        }
-    }
 
     /// Rebuilds (if needed) the CascadeData given a sheet collection.
     pub fn rebuild_author_data<S>(
@@ -851,8 +793,6 @@ impl Stylist {
         self.cascade_data
             .rebuild(&self.device, self.quirks_mode, flusher, guards)
             .unwrap_or_else(|_| warn!("OOM in Stylist::flush"));
-
-        self.rebuild_initial_values_for_custom_properties();
 
         had_invalidations
     }
@@ -1076,6 +1016,7 @@ impl Stylist {
         pseudo: &PseudoElement,
         rule_inclusion: RuleInclusion,
         originating_element_style: &ComputedValues,
+        parent_style: &Arc<ComputedValues>,
         is_probe: bool,
         matching_fn: Option<&dyn Fn(&PseudoElement) -> bool>,
     ) -> Option<Arc<ComputedValues>>
@@ -1086,6 +1027,7 @@ impl Stylist {
             guards,
             element,
             originating_element_style,
+            parent_style,
             pseudo,
             is_probe,
             rule_inclusion,
@@ -1097,7 +1039,7 @@ impl Stylist {
             pseudo,
             guards,
             Some(originating_element_style),
-            Some(originating_element_style),
+            Some(parent_style),
             Some(element),
         ))
     }
@@ -1219,6 +1161,7 @@ impl Stylist {
         guards: &StylesheetGuards,
         element: E,
         originating_element_style: &ComputedValues,
+        parent_style: &Arc<ComputedValues>,
         pseudo: &PseudoElement,
         is_probe: bool,
         rule_inclusion: RuleInclusion,
@@ -1269,7 +1212,7 @@ impl Stylist {
         let rules = self.rule_tree.compute_rule_node(&mut declarations, guards);
 
         let mut visited_rules = None;
-        if originating_element_style.visited_style().is_some() {
+        if parent_style.visited_style().is_some() {
             let mut declarations = ApplicableDeclarationList::new();
             let mut selector_caches = SelectorCaches::default();
 
@@ -2947,18 +2890,13 @@ impl CascadeData {
                 },
                 CssRule::Property(ref rule) => {
                     let url_data = stylesheet.contents().url_data.read();
-                    // FIXME(emilio, bug 1858160): Simplify storage.
-                    let registration = PropertyRegistration {
-                        syntax: rule.syntax.as_ref().unwrap().descriptor().clone(),
-                        inherits: rule.inherits == Some(Inherits::True),
-                        initial_value: rule.initial_value.clone(),
-                        url_data: url_data.clone(),
-                    };
-                    self.custom_property_registrations.try_insert(
-                        rule.name.0.clone(),
-                        registration,
-                        containing_rule_state.layer_id,
-                    )?;
+                    if let Ok(registration) = rule.to_valid_registration(&url_data) {
+                        self.custom_property_registrations.try_insert(
+                            rule.name.0.clone(),
+                            registration,
+                            containing_rule_state.layer_id,
+                        )?;
+                    }
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {
@@ -3297,11 +3235,6 @@ impl CascadeData {
         }
 
         true
-    }
-
-    /// Returns the custom properties map.
-    pub fn custom_property_registrations(&self) -> &LayerOrderedMap<PropertyRegistration> {
-        &self.custom_property_registrations
     }
 
     /// Clears the cascade data, but not the invalidation data.

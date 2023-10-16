@@ -53,7 +53,11 @@ class Span(NamedTuple):
     """Style associated with the span."""
 
     def __repr__(self) -> str:
-        return f"Span({self.start}, {self.end}, {self.style!r})"
+        return (
+            f"Span({self.start}, {self.end}, {self.style!r})"
+            if (isinstance(self.style, Style) and self.style._meta)
+            else f"Span({self.start}, {self.end}, {repr(self.style)})"
+        )
 
     def __bool__(self) -> bool:
         return self.end > self.start
@@ -1200,7 +1204,7 @@ class Text(JupyterMixin):
             width (int): Maximum characters in a line.
 
         Returns:
-            Lines: Lines container.
+            Lines: List of lines.
         """
         lines: Lines = Lines()
         append = lines.append

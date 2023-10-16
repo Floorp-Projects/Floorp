@@ -174,7 +174,8 @@ nsThebesFontEnumerator::EnumerateFontsAsync(
     generic.SetIsVoid(true);
   }
 
-  nsCOMPtr<nsIEventTarget> target = global->SerialEventTarget();
+  nsCOMPtr<nsIEventTarget> target =
+      global->EventTargetFor(mozilla::TaskCategory::Other);
   nsCOMPtr<nsIRunnable> runnable = new EnumerateFontsTask(
       langGroupAtom, generic, std::move(enumerateFontsPromise), target);
   thread->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL);

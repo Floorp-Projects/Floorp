@@ -5,9 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["OnRefTestLoad", "OnRefTestUnload"];
 
-// These are globals defined when this file is loaded directly into reftest.xhtml.
-/* globals window, document, pdfjsLib */
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
@@ -15,7 +12,10 @@ const {
   XHTML_NS,
   XUL_NS,
 
+  IO_SERVICE_CONTRACTID,
   DEBUG_CONTRACTID,
+  NS_DIRECTORY_SERVICE_CONTRACTID,
+  NS_OBSERVER_SERVICE_CONTRACTID,
 
   TYPE_REFTEST_EQUAL,
   TYPE_REFTEST_NOTEQUAL,
@@ -104,9 +104,10 @@ function TestBuffer(str) {
 }
 
 function isAndroidDevice() {
+  var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   // This is the best we can do for now; maybe in the future we'll have
   // more correct detection of this case.
-  return Services.appinfo.OS == "Android" && g.browserIsRemote;
+  return xr.OS == "Android" && g.browserIsRemote;
 }
 
 function FlushTestBuffer() {
@@ -138,7 +139,7 @@ function LogWidgetLayersFailure() {
 }
 
 function AllocateCanvas() {
-  if (g.recycledCanvases.length) {
+  if (g.recycledCanvases.length > 0) {
     return g.recycledCanvases.shift();
   }
 
@@ -157,27 +158,39 @@ function ReleaseCanvas(canvas) {
   }
 }
 
+function IDForEventTarget(event) {
+  try {
+    return "'" + event.target.getAttribute("id") + "'";
+  } catch (ex) {
+    return "<unknown>";
+  }
+}
+
 function OnRefTestLoad(win) {
-  g.crashDumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  g.crashDumpDir = Cc[NS_DIRECTORY_SERVICE_CONTRACTID].getService(
+    Ci.nsIProperties
+  ).get("ProfD", Ci.nsIFile);
   g.crashDumpDir.append("minidumps");
 
-  g.pendingCrashDumpDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
+  g.pendingCrashDumpDir = Cc[NS_DIRECTORY_SERVICE_CONTRACTID].getService(
+    Ci.nsIProperties
+  ).get("UAppData", Ci.nsIFile);
   g.pendingCrashDumpDir.append("Crash Reports");
   g.pendingCrashDumpDir.append("pending");
 
   g.browserIsRemote = Services.appinfo.browserTabsRemoteAutostart;
   g.browserIsFission = Services.appinfo.fissionAutostart;
 
-  g.browserIsIframe = Services.prefs.getBoolPref(
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  g.browserIsIframe = prefs.getBoolPref(
     "reftest.browser.iframe.enabled",
     false
   );
-  g.useDrawSnapshot = Services.prefs.getBoolPref(
-    "reftest.use-draw-snapshot",
-    false
-  );
+  g.useDrawSnapshot = prefs.getBoolPref("reftest.use-draw-snapshot", false);
 
-  g.logLevel = Services.prefs.getStringPref("reftest.logLevel", "info");
+  g.logLevel = prefs.getStringPref("reftest.logLevel", "info");
 
   if (win === undefined || win == null) {
     win = window;
@@ -226,26 +239,36 @@ function OnRefTestLoad(win) {
 }
 
 function InitAndStartRefTests() {
+  /* These prefs are optional, so we don't need to spit an error to the log */
   try {
-    Services.prefs.setBoolPref("android.widget_paints_background", false);
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+      Ci.nsIPrefBranch
+    );
+  } catch (e) {
+    logger.error("EXCEPTION: " + e);
+  }
+
+  try {
+    prefs.setBoolPref("android.widget_paints_background", false);
   } catch (e) {}
 
   // If fission is enabled, then also put data: URIs in the default web process,
   // since most reftests run in the file process, and this will make data:
   // <iframe>s OOP.
   if (g.browserIsFission) {
-    Services.prefs.setBoolPref(
-      "browser.tabs.remote.dataUriInDefaultWebProcess",
-      true
-    );
+    prefs.setBoolPref("browser.tabs.remote.dataUriInDefaultWebProcess", true);
   }
 
   /* set the g.loadTimeout */
-  g.loadTimeout = Services.prefs.getIntPref("reftest.timeout", 5 * 60 * 1000);
+  try {
+    g.loadTimeout = prefs.getIntPref("reftest.timeout");
+  } catch (e) {
+    g.loadTimeout = 5 * 60 * 1000; //5 minutes as per bug 479518
+  }
 
   /* Get the logfile for android tests */
   try {
-    var logFile = Services.prefs.getStringPref("reftest.logFile");
+    var logFile = prefs.getStringPref("reftest.logFile");
     if (logFile) {
       var f = FileUtils.File(logFile);
       var out = FileUtils.openFileOutputStream(
@@ -259,41 +282,37 @@ function InitAndStartRefTests() {
     }
   } catch (e) {}
 
-  g.remote = Services.prefs.getBoolPref("reftest.remote", false);
+  g.remote = prefs.getBoolPref("reftest.remote", false);
 
-  g.ignoreWindowSize = Services.prefs.getBoolPref(
-    "reftest.ignoreWindowSize",
-    false
-  );
+  g.ignoreWindowSize = prefs.getBoolPref("reftest.ignoreWindowSize", false);
 
   /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
   try {
-    g.totalChunks = Services.prefs.getIntPref("reftest.totalChunks");
-    g.thisChunk = Services.prefs.getIntPref("reftest.thisChunk");
+    g.totalChunks = prefs.getIntPref("reftest.totalChunks");
+    g.thisChunk = prefs.getIntPref("reftest.thisChunk");
   } catch (e) {
     g.totalChunks = 0;
     g.thisChunk = 0;
   }
 
-  g.focusFilterMode = Services.prefs.getStringPref(
-    "reftest.focusFilterMode",
-    ""
-  );
+  try {
+    g.focusFilterMode = prefs.getStringPref("reftest.focusFilterMode");
+  } catch (e) {}
 
-  g.isCoverageBuild = Services.prefs.getBoolPref(
-    "reftest.isCoverageBuild",
-    false
-  );
+  try {
+    g.isCoverageBuild = prefs.getBoolPref("reftest.isCoverageBuild");
+  } catch (e) {}
 
-  g.compareRetainedDisplayLists = Services.prefs.getBoolPref(
-    "reftest.compareRetainedDisplayLists",
-    false
-  );
+  try {
+    g.compareRetainedDisplayLists = prefs.getBoolPref(
+      "reftest.compareRetainedDisplayLists"
+    );
+  } catch (e) {}
 
   try {
     // We have to set print.always_print_silent or a print dialog would
     // appear for each print operation, which would interrupt the test run.
-    Services.prefs.setBoolPref("print.always_print_silent", true);
+    prefs.setBoolPref("print.always_print_silent", true);
   } catch (e) {
     /* uh oh, print reftests may not work... */
     logger.warning("Failed to set silent printing pref, EXCEPTION: " + e);
@@ -301,10 +320,10 @@ function InitAndStartRefTests() {
 
   g.windowUtils = g.containingWindow.windowUtils;
   if (!g.windowUtils || !g.windowUtils.compareCanvases) {
-    throw new Error("nsIDOMWindowUtils inteface missing");
+    throw "nsIDOMWindowUtils inteface missing";
   }
 
-  g.ioService = Services.io;
+  g.ioService = Cc[IO_SERVICE_CONTRACTID].getService(Ci.nsIIOService);
   g.debug = Cc[DEBUG_CONTRACTID].getService(Ci.nsIDebug2);
 
   RegisterProcessCrashObservers();
@@ -327,7 +346,8 @@ function InitAndStartRefTests() {
 
   // Focus the content browser.
   if (g.focusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
-    if (Services.focus.activeWindow != g.containingWindow) {
+    var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+    if (fm.activeWindow != g.containingWindow) {
       Focus();
     }
     g.browser.addEventListener("focus", ReadTests, true);
@@ -387,6 +407,9 @@ function ReadTests() {
     }
 
     g.urls = [];
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+      Ci.nsIPrefBranch
+    );
 
     /* There are three modes implemented here:
      * 1) reftest.manifests
@@ -401,12 +424,9 @@ function ReadTests() {
      * The latter two modes are used to pass test data back and forth
      * with python harness.
      */
-    let manifests = Services.prefs.getStringPref("reftest.manifests", null);
-    let dumpTests = Services.prefs.getStringPref(
-      "reftest.manifests.dumpTests",
-      null
-    );
-    let testList = Services.prefs.getStringPref("reftest.tests", null);
+    let manifests = prefs.getStringPref("reftest.manifests", null);
+    let dumpTests = prefs.getStringPref("reftest.manifests.dumpTests", null);
+    let testList = prefs.getStringPref("reftest.tests", null);
 
     if ((testList && manifests) || !(testList || manifests)) {
       logger.error(
@@ -419,7 +439,7 @@ function ReadTests() {
 
     if (testList) {
       logger.debug("Reading test objects from: " + testList);
-      IOUtils.readJSON(testList)
+      let promise = IOUtils.readJSON(testList)
         .then(function onSuccess(json) {
           g.urls = json.map(CreateUrls);
           StartTests();
@@ -497,18 +517,24 @@ function ReadTests() {
 }
 
 function StartTests() {
-  g.noCanvasCache = Services.prefs.getIntPref("reftest.nocache", false);
+  /* These prefs are optional, so we don't need to spit an error to the log */
+  try {
+    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+      Ci.nsIPrefBranch
+    );
+  } catch (e) {
+    logger.error("EXCEPTION: " + e);
+  }
 
-  g.shuffle = Services.prefs.getBoolPref("reftest.shuffle", false);
+  g.noCanvasCache = prefs.getIntPref("reftest.nocache", false);
 
-  g.runUntilFailure = Services.prefs.getBoolPref(
-    "reftest.runUntilFailure",
-    false
-  );
+  g.shuffle = prefs.getBoolPref("reftest.shuffle", false);
 
-  g.verify = Services.prefs.getBoolPref("reftest.verify", false);
+  g.runUntilFailure = prefs.getBoolPref("reftest.runUntilFailure", false);
 
-  g.cleanupPendingCrashes = Services.prefs.getBoolPref(
+  g.verify = prefs.getBoolPref("reftest.verify", false);
+
+  g.cleanupPendingCrashes = prefs.getBoolPref(
     "reftest.cleanupPendingCrashes",
     false
   );
@@ -521,10 +547,10 @@ function StartTests() {
   // When we repeat this function is called again, so really only want to set
   // g.repeat once.
   if (g.repeat == null) {
-    g.repeat = Services.prefs.getIntPref("reftest.repeat", 0);
+    g.repeat = prefs.getIntPref("reftest.repeat", 0);
   }
 
-  g.runSlowTests = Services.prefs.getIntPref("reftest.skipslowtests", false);
+  g.runSlowTests = prefs.getIntPref("reftest.skipslowtests", false);
 
   if (g.shuffle) {
     g.noCanvasCache = true;
@@ -535,7 +561,7 @@ function StartTests() {
 
     // Filter tests which will be skipped to get a more even distribution when chunking
     // tURLs is a temporary array containing all active tests
-    var tURLs = [];
+    var tURLs = new Array();
     for (var i = 0; i < g.urls.length; ++i) {
       if (g.urls[i].skip) {
         continue;
@@ -595,7 +621,7 @@ function StartTests() {
         }
         ids[test.manifestID].push(test.identifier);
       });
-      var suite = Services.prefs.getStringPref("reftest.suite", "reftest");
+      var suite = prefs.getStringPref("reftest.suite", "reftest");
       logger.suiteStart(ids, suite, {
         skipped: g.urls.length - numActiveTests,
       });
@@ -608,7 +634,7 @@ function StartTests() {
 
     g.totalTests = g.urls.length;
     if (!g.totalTests && !g.verify && !g.repeat) {
-      throw new Error("No tests to run");
+      throw "No tests to run";
     }
 
     g.uriCanvases = {};
@@ -654,10 +680,10 @@ function BuildUseCounts() {
       !url.skip &&
       (url.type == TYPE_REFTEST_EQUAL || url.type == TYPE_REFTEST_NOTEQUAL)
     ) {
-      if (!url.prefSettings1.length) {
+      if (url.prefSettings1.length == 0) {
         AddURIUseCount(g.urls[i].url1);
       }
-      if (!url.prefSettings2.length) {
+      if (url.prefSettings2.length == 0) {
         AddURIUseCount(g.urls[i].url2);
       }
     }
@@ -666,7 +692,8 @@ function BuildUseCounts() {
 
 // Return true iff this window is focused when this function returns.
 function Focus() {
-  Services.focus.focusedWindow = g.containingWindow;
+  var fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
+  fm.focusedWindow = g.containingWindow;
 
   try {
     var dock = Cc["@mozilla.org/widget/macdocksupport;1"].getService(
@@ -690,7 +717,7 @@ async function StartCurrentTest() {
   g.testLog = [];
 
   // make sure we don't run tests that are expected to kill the browser
-  while (g.urls.length) {
+  while (g.urls.length > 0) {
     var test = g.urls[0];
     logger.testStart(test.identifier);
     if (test.skip) {
@@ -713,12 +740,12 @@ async function StartCurrentTest() {
   }
 
   if (
-    (!g.urls.length && g.repeat == 0) ||
+    (g.urls.length == 0 && g.repeat == 0) ||
     (g.runUntilFailure && HasUnexpectedResult())
   ) {
     await RestoreChangedPreferences();
     DoneTests();
-  } else if (!g.urls.length && g.repeat > 0) {
+  } else if (g.urls.length == 0 && g.repeat > 0) {
     // Repeat
     g.repeat--;
     ReadTests();
@@ -797,19 +824,23 @@ async function StartCurrentURI(aURLTargetType) {
 
   await RestoreChangedPreferences();
 
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+
   const prefSettings =
     g.urls[0][isStartingRef ? "prefSettings2" : "prefSettings1"];
 
   var prefsRequireRefresh = false;
 
-  if (prefSettings.length) {
+  if (prefSettings.length > 0) {
     var badPref = undefined;
     try {
       prefSettings.forEach(function (ps) {
         let prefExists = false;
         try {
-          let prefType = Services.prefs.getPrefType(ps.name);
-          prefExists = prefType != Services.prefs.PREF_INVALID;
+          let prefType = prefs.getPrefType(ps.name);
+          prefExists = prefType != prefs.PREF_INVALID;
         } catch (e) {}
         if (!prefExists) {
           logger.info("Pref " + ps.name + " not found, will be added");
@@ -818,30 +849,28 @@ async function StartCurrentURI(aURLTargetType) {
         let oldVal = undefined;
         if (prefExists) {
           if (ps.type == PREF_BOOLEAN) {
-            // eslint-disable-next-line mozilla/use-default-preference-values
             try {
-              oldVal = Services.prefs.getBoolPref(ps.name);
+              oldVal = prefs.getBoolPref(ps.name);
             } catch (e) {
               badPref = "boolean preference '" + ps.name + "'";
-              throw new Error("bad pref");
+              throw "bad pref";
             }
           } else if (ps.type == PREF_STRING) {
             try {
-              oldVal = Services.prefs.getStringPref(ps.name);
+              oldVal = prefs.getStringPref(ps.name);
             } catch (e) {
               badPref = "string preference '" + ps.name + "'";
-              throw new Error("bad pref");
+              throw "bad pref";
             }
           } else if (ps.type == PREF_INTEGER) {
-            // eslint-disable-next-line mozilla/use-default-preference-values
             try {
-              oldVal = Services.prefs.getIntPref(ps.name);
+              oldVal = prefs.getIntPref(ps.name);
             } catch (e) {
               badPref = "integer preference '" + ps.name + "'";
-              throw new Error("bad pref");
+              throw "bad pref";
             }
           } else {
-            throw new Error("internal error - unknown preference type");
+            throw "internal error - unknown preference type";
           }
         }
         if (!prefExists || oldVal != ps.value) {
@@ -856,18 +885,18 @@ async function StartCurrentURI(aURLTargetType) {
           });
           var value = ps.value;
           if (ps.type == PREF_BOOLEAN) {
-            Services.prefs.setBoolPref(ps.name, value);
+            prefs.setBoolPref(ps.name, value);
           } else if (ps.type == PREF_STRING) {
-            Services.prefs.setStringPref(ps.name, value);
+            prefs.setStringPref(ps.name, value);
             value = '"' + value + '"';
           } else if (ps.type == PREF_INTEGER) {
-            Services.prefs.setIntPref(ps.name, value);
+            prefs.setIntPref(ps.name, value);
           }
           logger.info("SET PREFERENCE pref(" + ps.name + "," + value + ")");
         }
       });
     } catch (e) {
-      if (e.message == "bad pref") {
+      if (e == "bad pref") {
         var test = g.urls[0];
         if (test.expected == EXPECTED_FAIL) {
           logger.testEnd(
@@ -897,7 +926,7 @@ async function StartCurrentURI(aURLTargetType) {
   }
 
   if (
-    !prefSettings.length &&
+    prefSettings.length == 0 &&
     g.uriCanvases[g.currentURL] &&
     (g.urls[0].type == TYPE_REFTEST_EQUAL ||
       g.urls[0].type == TYPE_REFTEST_NOTEQUAL) &&
@@ -968,7 +997,10 @@ function DoneTests() {
           g.logFile.close();
           g.logFile = null;
         }
-        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(
+          Ci.nsIAppStartup
+        );
+        appStartup.quit(Ci.nsIAppStartup.eForceQuit);
       }
       if (g.server) {
         g.server.stop(onStopped);
@@ -989,7 +1021,7 @@ function UpdateCanvasCache(url, canvas) {
   } else if (g.uriUseCounts[spec] > 0) {
     g.uriCanvases[spec] = canvas;
   } else {
-    throw new Error("Use counts were computed incorrectly");
+    throw "Use counts were computed incorrectly";
   }
 }
 
@@ -1127,7 +1159,6 @@ async function UpdateWholeCurrentCanvasForInvalidation() {
   await DoDrawWindow(ctx, 0, 0, g.currentCanvas.width, g.currentCanvas.height);
 }
 
-// eslint-disable-next-line complexity
 function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
   TestBuffer("RecordResult fired");
 
@@ -1209,7 +1240,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
               let failureResults = results.filter(function (result) {
                 return !result.passed;
               });
-              if (failureResults.length) {
+              if (failureResults.length > 0) {
                 // We got an expected failure. Let's get rid of the
                 // passes from the results so we don't trigger
                 // TEST_UNEXPECTED_PASS logging for those.
@@ -1236,17 +1267,17 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
         });
         break;
       default:
-        throw new Error("Unexpected state.");
+        throw "Unexpected state.";
     }
     return;
   }
   if (g.urls[0].type == TYPE_SCRIPT) {
-    let expected = g.urls[0].expected;
+    var expected = g.urls[0].expected;
 
     if (errorMsg) {
       // Force an unexpected failure to alert the test author to fix the test.
       expected = EXPECTED_PASS;
-    } else if (!typeSpecificResults.length) {
+    } else if (typeSpecificResults.length == 0) {
       // This failure may be due to a JavaScript Engine bug causing
       // early termination of the test. If we do not allow silent
       // failure, report an error.
@@ -1319,7 +1350,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
   const prefSettings =
     g.urls[0][isRecordingRef ? "prefSettings2" : "prefSettings1"];
 
-  if (!prefSettings.length && g.uriCanvases[g.currentURL]) {
+  if (prefSettings.length == 0 && g.uriCanvases[g.currentURL]) {
     g.currentCanvas = g.uriCanvases[g.currentURL];
   }
   if (g.currentCanvas == null) {
@@ -1354,7 +1385,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       var fuzz_exceeded = false;
 
       // what is expected on this platform (PASS, FAIL, RANDOM, or FUZZY)
-      let expected = g.urls[0].expected;
+      var expected = g.urls[0].expected;
 
       differences = g.windowUtils.compareCanvases(
         g.canvas1,
@@ -1387,7 +1418,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       equal = differences == 0;
 
       if (maxDifference.value > 0 && equal) {
-        throw new Error("Inconsistent result from compareCanvases.");
+        throw "Inconsistent result from compareCanvases.";
       }
 
       if (expected == EXPECTED_FUZZY) {
@@ -1433,7 +1464,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
         // branch, 'equal' must be false so let's assert that to guard
         // against logic errors.
         if (equal) {
-          throw new Error("Logic error in reftest.jsm fuzzy test handling!");
+          throw "Logic error in reftest.jsm fuzzy test handling!";
         }
         output = { s: ["PASS", "FAIL"], n: "UnexpectedPass" };
       } else {
@@ -1494,8 +1525,8 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
           if (!equal) {
             extra.max_difference = maxDifference.value;
             extra.differences = differences;
-            let image1 = g.canvas1.toDataURL();
-            let image2 = g.canvas2.toDataURL();
+            var image1 = g.canvas1.toDataURL();
+            var image2 = g.canvas2.toDataURL();
             extra.reftest_screenshots = [
               {
                 url: g.urls[0].identifier[0],
@@ -1510,7 +1541,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
             extra.image1 = image1;
             extra.image2 = image2;
           } else {
-            let image1 = g.canvas1.toDataURL();
+            var image1 = g.canvas1.toDataURL();
             extra.reftest_screenshots = [
               {
                 url: g.urls[0].identifier[0],
@@ -1534,10 +1565,10 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
           ReleaseCanvas(g.canvas1);
           ReleaseCanvas(g.canvas2);
         } else {
-          if (!g.urls[0].prefSettings1.length) {
+          if (g.urls[0].prefSettings1.length == 0) {
             UpdateCanvasCache(g.urls[0].url1, g.canvas1);
           }
-          if (!g.urls[0].prefSettings2.length) {
+          if (g.urls[0].prefSettings2.length == 0) {
             UpdateCanvasCache(g.urls[0].url2, g.canvas2);
           }
         }
@@ -1554,7 +1585,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults) {
       FinishTestItem();
       break;
     default:
-      throw new Error("Unexpected state.");
+      throw "Unexpected state.";
   }
 }
 
@@ -1722,6 +1753,9 @@ async function RestoreChangedPreferences() {
   if (!g.prefsToRestore.length) {
     return;
   }
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
   var requiresRefresh = false;
   g.prefsToRestore.reverse();
   g.prefsToRestore.forEach(function (ps) {
@@ -1729,16 +1763,16 @@ async function RestoreChangedPreferences() {
     if (ps.prefExisted) {
       var value = ps.value;
       if (ps.type == PREF_BOOLEAN) {
-        Services.prefs.setBoolPref(ps.name, value);
+        prefs.setBoolPref(ps.name, value);
       } else if (ps.type == PREF_STRING) {
-        Services.prefs.setStringPref(ps.name, value);
+        prefs.setStringPref(ps.name, value);
         value = '"' + value + '"';
       } else if (ps.type == PREF_INTEGER) {
-        Services.prefs.setIntPref(ps.name, value);
+        prefs.setIntPref(ps.name, value);
       }
       logger.info("RESTORE PREFERENCE pref(" + ps.name + "," + value + ")");
     } else {
-      Services.prefs.clearUserPref(ps.name);
+      prefs.clearUserPref(ps.name);
       logger.info(
         "RESTORE PREFERENCE pref(" +
           ps.name +
@@ -1994,7 +2028,10 @@ function RecvStartPrint(isPrintSelection, printRange) {
       .flat();
   }
 
-  ps.printInColor = Services.prefs.getBoolPref("print.print_in_color", true);
+  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
+    Ci.nsIPrefBranch
+  );
+  ps.printInColor = prefs.getBoolPref("print.print_in_color", true);
 
   g.browser.browsingContext
     .print(ps)
@@ -2042,7 +2079,7 @@ function OnProcessCrashed(subject, topic, data) {
     g.expectedCrashDumpFiles.push(id + ".extra");
   }
 
-  if (additionalDumps && additionalDumps.length) {
+  if (additionalDumps && additionalDumps.length != 0) {
     for (const name of additionalDumps.split(",")) {
       g.expectedCrashDumpFiles.push(id + "-" + name + ".dmp");
     }
@@ -2050,7 +2087,8 @@ function OnProcessCrashed(subject, topic, data) {
 }
 
 function RegisterProcessCrashObservers() {
-  Services.obs.addObserver(OnProcessCrashed, "ipc:content-shutdown");
+  var os = Cc[NS_OBSERVER_SERVICE_CONTRACTID].getService(Ci.nsIObserverService);
+  os.addObserver(OnProcessCrashed, "ipc:content-shutdown");
 }
 
 function RecvExpectProcessCrash() {
@@ -2063,24 +2101,24 @@ function SendClear() {
 
 function SendLoadScriptTest(uri, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadScriptTest", {
-    uri,
-    timeout,
+    uri: uri,
+    timeout: timeout,
   });
 }
 
 function SendLoadPrintTest(uri, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadPrintTest", {
-    uri,
-    timeout,
+    uri: uri,
+    timeout: timeout,
   });
 }
 
 function SendLoadTest(type, uri, uriTargetType, timeout) {
   g.browserMessageManager.sendAsyncMessage("reftest:LoadTest", {
-    type,
-    uri,
-    uriTargetType,
-    timeout,
+    type: type,
+    uri: uri,
+    uriTargetType: uriTargetType,
+    timeout: timeout,
   });
 }
 
@@ -2109,8 +2147,7 @@ function pdfjsHasLoadedPromise() {
     pdfjsHasLoaded = new Promise((resolve, reject) => {
       let doc = g.containingWindow.document;
       const script = doc.createElement("script");
-      script.type = "module";
-      script.src = "resource://pdf.js/build/pdf.mjs";
+      script.src = "resource://pdf.js/build/pdf.js";
       script.onload = resolve;
       script.onerror = () => reject(new Error("PDF.js script load failed."));
       doc.documentElement.appendChild(script);
@@ -2124,10 +2161,10 @@ function readPdf(path, callback) {
   IOUtils.read(path).then(
     function (data) {
       pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "resource://pdf.js/build/pdf.worker.mjs";
+        "resource://pdf.js/build/pdf.worker.js";
       pdfjsLib
         .getDocument({
-          data,
+          data: data,
         })
         .promise.then(
           function (pdf) {
@@ -2137,6 +2174,7 @@ function readPdf(path, callback) {
             callback(new Error(`Couldn't parse ${path}, exception: ${e}`));
           }
         );
+      return;
     },
     function (e) {
       callback(new Error(`Couldn't read PDF ${path}, exception: ${e}`));
@@ -2232,8 +2270,8 @@ function comparePdfs(pathToTestPdf, pathToRefPdf, callback) {
                       }
                     }
                     resolve({
-                      passed,
-                      description,
+                      passed: passed,
+                      description: description,
                     });
                   },
                   reject);

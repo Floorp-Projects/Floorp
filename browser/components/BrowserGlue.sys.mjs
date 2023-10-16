@@ -61,6 +61,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PluginManager: "resource:///actors/PluginParent.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.sys.mjs",
+  ProvenanceData: "resource:///modules/ProvenanceData.sys.mjs",
   PublicSuffixList:
     "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
@@ -68,7 +69,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSecuritySettings:
     "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  ResetPBMPanel: "resource:///modules/ResetPBMPanel.sys.mjs",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
   SaveToPocket: "chrome://pocket/content/SaveToPocket.sys.mjs",
@@ -158,9 +158,6 @@ const PRIVATE_BROWSING_BINARY = "private_browsing.exe";
 const PRIVATE_BROWSING_EXE_ICON_INDEX = 1;
 const PREF_PRIVATE_BROWSING_SHORTCUT_CREATED =
   "browser.privacySegmentation.createdShortcut";
-// Whether this launch was initiated by the OS.  A launch-on-login will contain
-// the "os-autostart" flag in the initial launch command line.
-let gThisInstanceIsLaunchOnLogin = false;
 
 /**
  * Fission-compatible JSProcess implementations.
@@ -389,10 +386,10 @@ let JSWINDOWACTORS = {
 
   AboutWelcomeShopping: {
     parent: {
-      esModuleURI: "resource:///actors/AboutWelcomeParent.sys.mjs",
+      moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
     },
     child: {
-      esModuleURI: "resource:///actors/AboutWelcomeChild.sys.mjs",
+      moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
       events: {
         Update: {},
       },
@@ -403,10 +400,10 @@ let JSWINDOWACTORS = {
 
   AboutWelcome: {
     parent: {
-      esModuleURI: "resource:///actors/AboutWelcomeParent.sys.mjs",
+      moduleURI: "resource:///actors/AboutWelcomeParent.jsm",
     },
     child: {
-      esModuleURI: "resource:///actors/AboutWelcomeChild.sys.mjs",
+      moduleURI: "resource:///actors/AboutWelcomeChild.jsm",
       events: {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.
@@ -770,6 +767,7 @@ let JSWINDOWACTORS = {
         // This is added so the actor instantiates immediately and makes
         // methods available to the page js on load.
         DOMDocElementInserted: {},
+        ShoppingTelemetryEvent: { wantUntrusted: true },
         ReportProductAvailable: { wantUntrusted: true },
       },
     },
@@ -1234,10 +1232,6 @@ BrowserGlue.prototype = {
         break;
       case "app-startup":
         this._earlyBlankFirstPaint(subject);
-        gThisInstanceIsLaunchOnLogin = subject.handleFlag(
-          "os-autostart",
-          false
-        );
         break;
     }
   },
@@ -1399,8 +1393,6 @@ BrowserGlue.prototype = {
     }
 
     lazy.SaveToPocket.init();
-
-    lazy.ResetPBMPanel.init();
 
     AboutHomeStartupCache.init();
 
@@ -2584,9 +2576,7 @@ BrowserGlue.prototype = {
           }
 
           if (!classification) {
-            if (gThisInstanceIsLaunchOnLogin) {
-              classification = "Autostart";
-            } else if (shortcut) {
+            if (shortcut) {
               classification = "OtherShortcut";
             } else {
               classification = "Other";
@@ -3000,6 +2990,14 @@ BrowserGlue.prototype = {
         name: "start-orb-javascript-oracle",
         task: () => {
           ChromeUtils.ensureJSOracleStarted();
+        },
+      },
+
+      {
+        name: "report-attribution-provenance-telemetry",
+        condition: lazy.TelemetryUtils.isTelemetryEnabled,
+        task: async () => {
+          await lazy.ProvenanceData.submitProvenanceTelemetry();
         },
       },
 
@@ -3654,7 +3652,7 @@ BrowserGlue.prototype = {
   _migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 141;
+    const UI_VERSION = 140;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -4234,13 +4232,6 @@ BrowserGlue.prototype = {
     if (currentUIVersion < 140) {
       // Remove browser.fixup.alternate.enabled pref in Bug 1850902.
       Services.prefs.clearUserPref("browser.fixup.alternate.enabled");
-    }
-
-    if (currentUIVersion < 141) {
-      for (const filename of ["signons.sqlite", "signons.sqlite.corrupt"]) {
-        const filePath = PathUtils.join(PathUtils.profileDir, filename);
-        IOUtils.remove(filePath, { ignoreAbsent: true }).catch(console.error);
-      }
     }
 
     // Update the migration version.

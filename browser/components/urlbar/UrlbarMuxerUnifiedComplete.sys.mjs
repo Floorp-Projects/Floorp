@@ -29,24 +29,6 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 );
 
 /**
- * Constructs the map key by joining the url with the userContextId if
- * 'browser.urlbar.switchTabs.searchAllContainers' is set to true.
- * Otherwise, just the url is used.
- *
- * @param   {UrlbarResult} result The result object.
- * @returns {string} map key
- */
-function makeMapKeyForTabResult(result) {
-  return UrlbarUtils.tupleString(
-    result.payload.url,
-    lazy.UrlbarPrefs.get("switchTabs.searchAllContainers") &&
-      result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH
-      ? result.payload.userContextId
-      : undefined
-  );
-}
-
-/**
  * Class used to create a muxer.
  * The muxer receives and sorts results in a UrlbarQueryContext.
  */
@@ -868,7 +850,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // Discard switch-to-tab results that dupes another switch-to-tab result.
     if (
       result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
-      state.addedSwitchTabUrls.has(makeMapKeyForTabResult(result))
+      state.addedSwitchTabUrls.has(result.payload.url)
     ) {
       return false;
     }
@@ -1100,10 +1082,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       result.payload.url &&
       (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH ||
         (result.type == UrlbarUtils.RESULT_TYPE.REMOTE_TAB &&
-          !state.urlToTabResultType.has(makeMapKeyForTabResult(result))))
+          !state.urlToTabResultType.has(result.payload.url)))
     ) {
       // url => result type
-      state.urlToTabResultType.set(makeMapKeyForTabResult(result), result.type);
+      state.urlToTabResultType.set(result.payload.url, result.type);
     }
 
     // If we find results other than the heuristic, "Search in Private
@@ -1218,7 +1200,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
     // Keep track of which switch tabs we've added to dedupe switch tabs.
     if (result.type == UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
-      state.addedSwitchTabUrls.add(makeMapKeyForTabResult(result));
+      state.addedSwitchTabUrls.add(result.payload.url);
     }
   }
 

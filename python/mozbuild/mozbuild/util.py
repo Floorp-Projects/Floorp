@@ -143,13 +143,6 @@ class ReadOnlyDict(dict):
 
         return ReadOnlyDict(**result)
 
-    def __reduce__(self, *args, **kwargs):
-        """
-        Support for `pickle`.
-        """
-
-        return (self.__class__, (dict(self),))
-
 
 class undefined_default(object):
     """Represents an undefined argument value that isn't None."""

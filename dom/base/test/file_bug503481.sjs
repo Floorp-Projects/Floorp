@@ -1,6 +1,6 @@
 // 'timer' is global to avoid getting GCed which would cancel the timer
 var timer;
-const nsITimer = Ci.nsITimer;
+const nsITimer = Components.interfaces.nsITimer;
 
 function attemptUnblock(s) {
   try {
@@ -12,7 +12,7 @@ function attemptUnblock(s) {
     setObjectState("bug503481_" + s, null);
   } catch (e) {
     dump("unable to unblock " + s + "retrying in half a second\n");
-    timer = Cc["@mozilla.org/timer;1"].createInstance(nsITimer);
+    timer = Components.classes["@mozilla.org/timer;1"].createInstance(nsITimer);
     timer.initWithCallback(
       function () {
         attemptUnblock(s);

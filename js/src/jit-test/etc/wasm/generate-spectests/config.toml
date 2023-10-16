@@ -35,7 +35,7 @@ excluded_tests = [
 name = "spec"
 url = "https://github.com/WebAssembly/spec"
 excluded_tests = []
-directive = "; test-also=--no-avx; skip-variant-if: --no-avx, !getBuildConfiguration('x86') && !getBuildConfiguration('x64') || getBuildConfiguration('simulator')"
+directive = "; test-also=--no-avx; skip-variant-if: --no-avx, !getBuildConfiguration().x86 && !getBuildConfiguration().x64 || getBuildConfiguration().simulator"
 
 [[repos]]
 name = "threads"
@@ -113,7 +113,7 @@ name = "extended-const"
 url = "https://github.com/WebAssembly/extended-const"
 branch = "main"
 parent = "spec"
-directive = "; --wasm-extended-const; --no-wasm-gc; skip-if: !wasmExtendedConstEnabled()"
+directive = "; --wasm-extended-const; skip-if: !wasmExtendedConstEnabled()"
 excluded_tests = [
   # Changed order of operands
   "relaxed_fma_fms.wast",
@@ -138,16 +138,4 @@ directive = "; --wasm-multi-memory; skip-if: !wasmMultiMemoryEnabled()"
 excluded_tests = [
   # Empty test fails parsing
   "memory_copy1.wast",
-]
-
-[[repos]]
-name = "gc"
-url = "https://github.com/WebAssembly/gc"
-branch = "main"
-parent = "function-references"
-directive = "; --wasm-gc; skip-if: !wasmGcEnabled()"
-excluded_tests = [
-  # tail call tests that snuck in
-  "return_call.wast",
-  "return_call_indirect.wast",
 ]

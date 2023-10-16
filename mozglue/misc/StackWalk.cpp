@@ -182,16 +182,13 @@ static void PrintError(const char* aPrefix) {
   LocalFree(lpMsgBuf);
 }
 
-static bool EnsureDbgHelpInitialized() {
-  static bool sInitialized = []() {
-    // We ensure that the critical section is always initialized only once,
-    // which avoids undefined behavior.
-    ::InitializeCriticalSection(&gDbgHelpCS);
-    auto success = static_cast<bool>(::LoadLibraryW(L"dbghelp.dll"));
-    MOZ_ASSERT(success);
-    return success;
-  }();
-  return sInitialized;
+static void InitializeDbgHelpCriticalSection() {
+  static bool initialized = false;
+  if (initialized) {
+    return;
+  }
+  ::InitializeCriticalSection(&gDbgHelpCS);
+  initialized = true;
 }
 
 // Wrapper around a reference to a CONTEXT, to simplify access to main
@@ -255,11 +252,7 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
                                  const void* aFirstFramePC, uint32_t aMaxFrames,
                                  void* aClosure, HANDLE aThread,
                                  CONTEXT* aContext) {
-#  if defined(_M_IX86)
-  if (!EnsureDbgHelpInitialized()) {
-    return;
-  }
-#  endif
+  InitializeDbgHelpCriticalSection();
 
   HANDLE targetThread = aThread;
   bool walkCallingThread;
@@ -312,7 +305,9 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
   if (sStackWalkSuppressions) {
     return;
   }
+#  endif
 
+#  if defined(_M_AMD64) || defined(_M_ARM64)
   bool firstFrame = true;
 #  endif
 
@@ -329,12 +324,15 @@ static void DoMozStackWalkThread(MozWalkStackCallback aCallback,
     // 32-bit frame unwinding.
     // Debug routines are not threadsafe, so grab the lock.
     EnterCriticalSection(&gDbgHelpCS);
-    BOOL ok =
-        StackWalk64(IMAGE_FILE_MACHINE_I386, ::GetCurrentProcess(),
-                    targetThread, &frame64, context.CONTEXTPtr(), nullptr,
-                    SymFunctionTableAccess64,  // function table access routine
-                    SymGetModuleBase64,        // module base routine
-                    0);
+    BOOL ok = StackWalk64(
+#    if defined _M_IX86
+        IMAGE_FILE_MACHINE_I386,
+#    endif
+        ::GetCurrentProcess(), targetThread, &frame64, context.CONTEXTPtr(),
+        nullptr,
+        SymFunctionTableAccess64,  // function table access routine
+        SymGetModuleBase64,        // module base routine
+        0);
     LeaveCriticalSection(&gDbgHelpCS);
 
     if (ok) {
@@ -553,25 +551,25 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr,
 }
 
 static bool EnsureSymInitialized() {
-  static bool sInitialized = []() {
-    if (!EnsureDbgHelpInitialized()) {
-      return false;
-    }
+  static bool gInitialized = false;
+  bool retStat;
 
-    EnterCriticalSection(&gDbgHelpCS);
-    SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
-    bool success = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
-    /* XXX At some point we need to arrange to call SymCleanup */
-    LeaveCriticalSection(&gDbgHelpCS);
+  if (gInitialized) {
+    return gInitialized;
+  }
 
-    if (!success) {
-      PrintError("SymInitialize");
-    }
+  InitializeDbgHelpCriticalSection();
 
-    MOZ_ASSERT(success);
-    return success;
-  }();
-  return sInitialized;
+  SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
+  retStat = SymInitialize(GetCurrentProcess(), nullptr, TRUE);
+  if (!retStat) {
+    PrintError("SymInitialize");
+  }
+
+  gInitialized = retStat;
+  /* XXX At some point we need to arrange to call SymCleanup */
+
+  return retStat;
 }
 
 MFBT_API bool MozDescribeCodeAddress(void* aPC,

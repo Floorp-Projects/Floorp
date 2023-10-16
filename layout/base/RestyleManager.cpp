@@ -773,10 +773,8 @@ static nsIFrame* GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame) {
 // and returns false.
 static bool RecomputePosition(nsIFrame* aFrame) {
   // It's pointless to move around frames that have never been reflowed or
-  // are dirty (i.e. they will be reflowed), or aren't affected by position
-  // styles.
-  if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-                              NS_FRAME_SVG_LAYOUT)) {
+  // are dirty (i.e. they will be reflowed).
+  if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)) {
     return true;
   }
 
@@ -3647,14 +3645,13 @@ void RestyleManager::MaybeRestyleForRelativeSelectorAttribute(
     auto* const oldAtom = aOldValue->Type() == nsAttrValue::eAtom
                               ? aOldValue->GetAtomValue()
                               : nullptr;
-    styleSet.MaybeInvalidateRelativeSelectorIDDependency(
-        *aElement, oldAtom, aElement->GetID(), Snapshots());
+    styleSet.MaybeInvalidateRelativeSelectorIDDependency(*aElement, oldAtom,
+                                                         aElement->GetID());
   } else if (aAttribute == nsGkAtoms::_class) {
-    styleSet.MaybeInvalidateRelativeSelectorClassDependency(*aElement,
-                                                            Snapshots());
+    styleSet.MaybeInvalidateRelativeSelectorClassDependency(*aElement);
   } else {
-    styleSet.MaybeInvalidateRelativeSelectorAttributeDependency(
-        *aElement, aAttribute, Snapshots());
+    styleSet.MaybeInvalidateRelativeSelectorAttributeDependency(*aElement,
+                                                                aAttribute);
   }
 }
 
@@ -3663,8 +3660,8 @@ void RestyleManager::MaybeRestyleForRelativeSelectorState(
   if (!aElement->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
     return;
   }
-  aStyleSet.MaybeInvalidateRelativeSelectorStateDependency(
-      *aElement, aChangedBits, Snapshots());
+  aStyleSet.MaybeInvalidateRelativeSelectorStateDependency(*aElement,
+                                                           aChangedBits);
 }
 
 void RestyleManager::ReparentComputedStyleForFirstLine(nsIFrame* aFrame) {

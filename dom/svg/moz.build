@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "SVG")
 
-MOCHITEST_MANIFESTS += ["test/mochitest.toml"]
+MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
 EXPORTS.mozilla += [
     "SVGAnimatedClass.h",

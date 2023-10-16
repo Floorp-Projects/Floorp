@@ -24,7 +24,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGObserverUtils.h"  // for SVGRenderingObserver
-#include "mozilla/SVGUtils.h"
 
 #include "nsIStreamListener.h"
 #include "nsMimeTypes.h"
@@ -64,7 +63,8 @@ class SVGRootRenderingObserver final : public SVGRenderingObserver {
 
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage* aVectorImage)
-      : mDocWrapper(aDocWrapper),
+      : SVGRenderingObserver(),
+        mDocWrapper(aDocWrapper),
         mVectorImage(aVectorImage),
         mHonoringInvalidations(true) {
     MOZ_ASSERT(mDocWrapper, "Need a non-null SVG document wrapper");
@@ -454,14 +454,12 @@ VectorImage::GetWidth(int32_t* aWidth) {
   MOZ_ASSERT(rootElem,
              "Should have a root SVG elem, since we finished "
              "loading without errors");
-  LengthPercentage rootElemWidth = rootElem->GetIntrinsicWidth();
-
-  if (!rootElemWidth.IsLength()) {
+  int32_t rootElemWidth = rootElem->GetIntrinsicWidth();
+  if (rootElemWidth < 0) {
     *aWidth = 0;
     return NS_ERROR_FAILURE;
   }
-
-  *aWidth = SVGUtils::ClampToInt(rootElemWidth.AsLength().ToCSSPixels());
+  *aWidth = rootElemWidth;
   return NS_OK;
 }
 
@@ -551,14 +549,12 @@ VectorImage::GetHeight(int32_t* aHeight) {
   MOZ_ASSERT(rootElem,
              "Should have a root SVG elem, since we finished "
              "loading without errors");
-  LengthPercentage rootElemHeight = rootElem->GetIntrinsicHeight();
-
-  if (!rootElemHeight.IsLength()) {
+  int32_t rootElemHeight = rootElem->GetIntrinsicHeight();
+  if (rootElemHeight < 0) {
     *aHeight = 0;
     return NS_ERROR_FAILURE;
   }
-
-  *aHeight = SVGUtils::ClampToInt(rootElemHeight.AsLength().ToCSSPixels());
+  *aHeight = rootElemHeight;
   return NS_OK;
 }
 
@@ -667,16 +663,14 @@ VectorImage::GetFrame(uint32_t aWhichFrame, uint32_t aFlags) {
   MOZ_ASSERT(svgElem,
              "Should have a root SVG elem, since we finished "
              "loading without errors");
-  LengthPercentage width = svgElem->GetIntrinsicWidth();
-  LengthPercentage height = svgElem->GetIntrinsicHeight();
-  if (!width.IsLength() || !height.IsLength()) {
-    // The SVG is lacking a definite size for its width or height, so we do not
-    // know how big of a surface to generate. Hence, we just bail.
+  nsIntSize imageIntSize(svgElem->GetIntrinsicWidth(),
+                         svgElem->GetIntrinsicHeight());
+
+  if (imageIntSize.IsEmpty()) {
+    // We'll get here if our SVG doc has a percent-valued or negative width or
+    // height.
     return nullptr;
   }
-
-  nsIntSize imageIntSize(SVGUtils::ClampToInt(width.AsLength().ToCSSPixels()),
-                         SVGUtils::ClampToInt(height.AsLength().ToCSSPixels()));
 
   return GetFrameAtSize(imageIntSize, aWhichFrame, aFlags);
 }

@@ -76,10 +76,6 @@ export function getSearchOptions(state, searchKey) {
   return state.ui.mutableSearchOptions[searchKey];
 }
 
-export function getProjectSearchQuery(state) {
-  return state.ui.projectSearchQuery;
-}
-
 export function getHideIgnoredSources(state) {
   return state.ui.hideIgnoredSources;
 }

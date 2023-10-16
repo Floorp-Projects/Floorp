@@ -2171,9 +2171,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     const values = definition.split("at");
     let radius = values[0] ? values[0].trim() : "closest-side";
     const { width, height } = this.currentDimensions;
-    // This defaults to center if omitted.
-    const position = values[1] || "50% 50%";
-    const center = splitCoords(position).map(
+    const center = splitCoords(values[1]).map(
       this.convertCoordsToPercent.bind(this)
     );
 
@@ -2260,9 +2258,7 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     }
 
     const values = definition.split("at");
-    // This defaults to center if omitted.
-    const position = values[1] || "50% 50%";
-    const center = splitCoords(position).map(
+    const center = splitCoords(values[1]).map(
       this.convertCoordsToPercent.bind(this)
     );
 

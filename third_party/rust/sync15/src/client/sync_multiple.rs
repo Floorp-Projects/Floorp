@@ -15,6 +15,7 @@ use crate::telemetry;
 use crate::KeyBundle;
 use interrupt_support::Interruptee;
 use std::collections::HashMap;
+use std::mem;
 use std::result;
 use std::time::{Duration, SystemTime};
 
@@ -354,7 +355,7 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
         client_info: &ClientInfo,
         pgs: &mut PersistedGlobalState,
     ) -> result::Result<GlobalState, Error> {
-        let last_state = self.mem_cached_state.last_global_state.take();
+        let last_state = mem::replace(&mut self.mem_cached_state.last_global_state, None);
 
         let mut state_machine = SetupStateMachine::for_full_sync(
             &client_info.client,
@@ -422,7 +423,8 @@ impl<'info, 'res, 'pgs, 'mcs> SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
     }
 
     fn prepare_client_info(&mut self) -> result::Result<ClientInfo, Error> {
-        let mut client_info = match self.mem_cached_state.last_client_info.take() {
+        let mut client_info = match mem::replace(&mut self.mem_cached_state.last_client_info, None)
+        {
             Some(client_info) => {
                 // if our storage_init has changed it probably means the user has
                 // changed, courtesy of the 'kid' in the structure. Thus, we can't

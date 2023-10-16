@@ -756,6 +756,56 @@ aboutpreferences:
       - "gijs@mozilla.com"
     expiry_version: never
 
+urlbar:
+  engagement:
+    objects: ["click", "enter", "paste_go", "drop_go"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar engagement, that is when the user picks a
+      search result.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136, 1671404, 1466103]
+    notification_emails:
+      - "fx-search-telemetry@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: engagement time in milliseconds.
+      numChars: number of input characters.
+      numWords: number of words in the input.
+      selIndex: index of the selected result in the urlbar panel, or -1.
+      selType: >
+        type of the selected result in the urlbar panel. One of:
+          "autofill", "visit", "bookmark", "bookmark_adaptive", "history",
+          "history_adaptive", "keyword", "search", "searchsuggestion",
+          "searchsuggestion_rich", "switchtab", "remotetab", "extension",
+          "oneoff", "keywordoffer", "canonized", "tip", "tiphelp",
+          "formhistory", "tabtosearch", "quicksuggest", "weather",
+          "clipboard", "dynamic-wikipedia", "navigational", "none"
+      provider: The name of the provider that presented the result.
+  abandonment:
+    objects: ["blur"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar search abandon, that is when the user starts
+      an interaction but then blurs the urlbar.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136]
+    notification_emails:
+      - "fx-search-telemetry@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: abandonement time in milliseconds.
+      numChars: number of input characters.
+      numWords: number of words in the input.
+
 normandy:
   enroll:
     objects: ["preference_study", "addon_study", "preference_rollout", "addon_rollout", "nimbus_experiment"]
@@ -2303,7 +2353,7 @@ devtools.main:
     release_channel_collection: opt-out
     expiry_version: never
     extra_keys:
-      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL, WI-FI, or Offline.
+      mode: No throttling, GPRS, Regular 2G, Good 2G, Regular 3G, Good 3G, Regular 4G / LTE, DSL or WI-FI.
       session_id: The toolbox session start time e.g. 13963.
   tool_timer:
     objects: ["animationinspector", "compatibilityview", "computedview", "changesview", "fontinspector", "layoutview", "ruleview"]
@@ -3466,6 +3516,55 @@ installation:
       - application-update-telemetry-alerts@mozilla.com
       - rtestard@mozilla.com
     expiry_version: never
+  first_seen_prov_ext:
+    description: >
+      This is an extension of the `installation.first_seen` event. It will always be recorded at
+      the same time as that event, so an event ping that contains one will generally contain the
+      other (the exception being if the event ping splits between the two and one of the two pings
+      fails to be received properly, which should be exceedingly rare). The reason for this event
+      to exist is that we want to include more than 10 `extra_keys`, but the limit is 10. The
+      specific extra keys that we want to include are related to provenance data (see Bug 1814968).
+    objects:
+      - full # if the full installer was run directly
+      - stub # if the stub installer was used
+      - msix # if the installation was done through an MSIX package
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    products: ["firefox"]
+    operating_systems: ["windows"]
+    extra_keys:
+      data_exists: >
+        Will be "true" if the "zoneIdProvenanceData" file is present in the installation directory
+        and we were able to successfully read it. This key is only present on platforms that
+        support provenance data.
+      file_system: >
+        The file system that the installer resided on at installation time. Possible values are:
+        "NTFS", "FAT32", "other". In error cases, it can also be "missing", "error" or
+        "readIniError". This key is only present if `data_exists` is "true".
+      ads_exists: >
+        Will always be false if `data_exists` is false. Will be "true" if the provenance data
+        indicates that the :Zone.Identifier Alternate Data Stream existed on the installer.
+      security_zone: >
+        The zone identifier in the installer's :Zone.Identifier ADS. Possible values are integers
+        between 0 and 4, inclusive (encoded as strings). In error cases, it can also be
+        "unexpected", "missing", "error", or "readIniError". This key is only present if
+        `ads_exists` is "true".
+      refer_url_exist: >
+        Will be "true" if the zone identifier ADS contained a referrer URL. Will be false if a
+        referrer URL is specified, but it isn't a valid URL. Only sent if `ads_exists` is "true".
+      refer_url_moz: >
+        Will be "true" if the referrer URL from the zone identifier ADS appeared to be a Mozilla
+        URL. Only sent if `refer_url_exist` is "true".
+      host_url_exist: >
+        Will be "true" if the zone identifier ADS contained a host URL. Will be false if a host URL
+        is specified, but it isn't a valid URL. Only sent if `ads_exists` is "true".
+      host_url_moz: >
+        Will be "true" if the host URL from the zone identifier ADS appeared to be a Mozilla URL.
+        Only sent if `host_url_exists` is "true".
+    bug_numbers: [1814968, 1821189]
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    expiry_version: "121"
 
 contextservices.quicksuggest:
   data_collect_toggled:
@@ -3970,23 +4069,6 @@ firefoxview_next:
       - main
     bug_numbers:
       - 1842616
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  browser_context_menu:
-    objects: ["tabs"]
-    description: >
-      Recorded when a browser context menu selection is made in Firefox View
-    extra_keys:
-      menu_action: The menu action the user has selected for a given tab
-      page: The short page name used as the location hash when selecting the Firefox View tab
-    notification_emails:
-      - firefoxview@mozilla.com
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1851197
     expiry_version: "never"
     release_channel_collection: opt-out
   entered:

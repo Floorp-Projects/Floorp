@@ -57,12 +57,10 @@ add_task(async function () {
     await waitForRequestData(store, ["eventTimings"]);
 
     const requestItem = getSortedRequests(store.getState()).at(-1);
-    if (requestItem.eventTimings) {
-      ok(
-        requestItem.eventTimings.timings.receive > 1000,
-        `Request was properly throttled for profile ${profile.id}`
-      );
-    }
+    ok(
+      requestItem.eventTimings.timings.receive > 1000,
+      `Request was properly throttled for profile ${profile.id}`
+    );
   }
 
   await teardown(monitor);

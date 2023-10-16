@@ -1,27 +1,20 @@
 import { Cacheable, dataCache } from '../../../../common/framework/data_cache.js';
-import { unreachable } from '../../../../common/util/util.js';
-import {
-  SerializedComparator,
-  deserializeComparator,
-  serializeComparator,
-} from '../../../util/compare.js';
+import { SerializedComparator, deserializeComparator } from '../../../util/compare.js';
 import {
   Scalar,
   Vector,
   serializeValue,
   SerializedValue,
   deserializeValue,
-  Matrix,
 } from '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
-  FPInterval,
-  SerializedFPInterval,
-  serializeFPInterval,
-} from '../../../util/floating_point.js';
-import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
+  deserializeF32Interval,
+  F32Interval,
+  SerializedF32Interval,
+  serializeF32Interval,
+} from '../../../util/f32_interval.js';
 
-import { Case, CaseList, Expectation, isComparator } from './expression.js';
+import { Case, CaseList, Expectation } from './expression.js';
 
 /**
  * SerializedExpectationValue holds the serialized form of an Expectation when
@@ -34,36 +27,23 @@ type SerializedExpectationValue = {
 };
 
 /**
- * SerializedExpectationInterval holds the serialized form of an Expectation when
+ * SerializedExpectationValue holds the serialized form of an Expectation when
  * the Expectation is an Interval
  * This form can be safely encoded to JSON.
  */
 type SerializedExpectationInterval = {
   kind: 'interval';
-  value: SerializedFPInterval;
+  value: SerializedF32Interval;
 };
 
 /**
- * SerializedExpectationIntervals holds the serialized form of an Expectation when
+ * SerializedExpectationValue holds the serialized form of an Expectation when
  * the Expectation is a list of Intervals
  * This form can be safely encoded to JSON.
  */
 type SerializedExpectationIntervals = {
   kind: 'intervals';
-  value: SerializedFPInterval[];
-};
-
-/**
- * SerializedExpectation2DIntervalArray holds the serialized form of an
- * Expectation when the Expectation is a 2d array of Intervals. The array is
- * flattened to a 1D array for storage.
- * This form can be safely encoded to JSON.
- */
-type SerializedExpectation2DIntervalArray = {
-  kind: '2d-interval-array';
-  cols: number;
-  rows: number;
-  value: SerializedFPInterval[];
+  value: SerializedF32Interval[];
 };
 
 /**
@@ -84,37 +64,34 @@ export type SerializedExpectation =
   | SerializedExpectationValue
   | SerializedExpectationInterval
   | SerializedExpectationIntervals
-  | SerializedExpectation2DIntervalArray
   | SerializedExpectationComparator;
 
 /** serializeExpectation() converts an Expectation to a SerializedExpectation */
 export function serializeExpectation(e: Expectation): SerializedExpectation {
-  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
+  if (e instanceof Scalar || e instanceof Vector) {
     return { kind: 'value', value: serializeValue(e) };
   }
-  if (e instanceof FPInterval) {
-    return { kind: 'interval', value: serializeFPInterval(e) };
+  if (e instanceof F32Interval) {
+    return { kind: 'interval', value: serializeF32Interval(e) };
   }
   if (e instanceof Array) {
-    if (e[0] instanceof Array) {
-      e = e as FPInterval[][];
-      const cols = e.length;
-      const rows = e[0].length;
-      return {
-        kind: '2d-interval-array',
-        cols,
-        rows,
-        value: flatten2DArray(e).map(serializeFPInterval),
-      };
-    } else {
-      e = e as FPInterval[];
-      return { kind: 'intervals', value: e.map(serializeFPInterval) };
+    return { kind: 'intervals', value: e.map(i => serializeF32Interval(i)) };
+  }
+  if (e instanceof Function) {
+    const comp = (e as unknown) as SerializedComparator;
+    if (comp !== undefined) {
+      // if blocks used to refine the type of comp.kind, otherwise it is
+      // actually the union of the string values
+      if (comp.kind === 'anyOf') {
+        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
+      }
+      if (comp.kind === 'skipUndefined') {
+        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
+      }
     }
+    throw 'cannot serialize comparator';
   }
-  if (isComparator(e)) {
-    return { kind: 'comparator', value: serializeComparator(e) };
-  }
-  unreachable(`cannot serialize Expectation ${e}`);
+  throw 'cannot serialize expectation';
 }
 
 /** deserializeExpectation() converts a SerializedExpectation to a Expectation */
@@ -123,11 +100,9 @@ export function deserializeExpectation(data: SerializedExpectation): Expectation
     case 'value':
       return deserializeValue(data.value);
     case 'interval':
-      return deserializeFPInterval(data.value);
+      return deserializeF32Interval(data.value);
     case 'intervals':
-      return data.value.map(deserializeFPInterval);
-    case '2d-interval-array':
-      return unflatten2DArray(data.value.map(deserializeFPInterval), data.cols, data.rows);
+      return data.value.map(i => deserializeF32Interval(i));
     case 'comparator':
       return deserializeComparator(data.value);
   }

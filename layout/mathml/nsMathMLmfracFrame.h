@@ -94,6 +94,7 @@ class nsMathMLmfracFrame final : public nsMathMLContainerFrame {
   explicit nsMathMLmfracFrame(ComputedStyle* aStyle,
                               nsPresContext* aPresContext)
       : nsMathMLContainerFrame(aStyle, aPresContext, kClassID),
+        mLineRect(),
         mSlashChar(nullptr),
         mLineThickness(0) {}
   virtual ~nsMathMLmfracFrame();

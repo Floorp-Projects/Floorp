@@ -10,18 +10,9 @@
     --button-primary-hover-bgcolor: light-dark(rgb(2, 80, 187), rgb(128, 235, 255));
     --button-primary-active-bgcolor: light-dark(rgb(5, 62, 148), rgb(170, 242, 255));
     --button-primary-color: light-dark(rgb(251, 251, 254), rgb(43, 42, 51));
-    --button-bgcolor: light-dark(
-      rgba(207, 207, 216, .33),
-      rgba(0, 0, 0, .33)
-    );
-    --button-hover-bgcolor: light-dark(
-      rgba(207, 207, 216, .66),
-      rgba(207, 207, 216, .20)
-    );
-    --button-active-bgcolor: light-dark(
-      rgb(207, 207, 216),
-      rgba(207, 207, 216, .40)
-    );
+    --button-bgcolor: light-dark(rgba(207, 207, 216, .33), rgb(43, 42, 51));
+    --button-hover-bgcolor: light-dark(rgba(207, 207, 216, .66), rgb(82, 82, 94));
+    --button-active-bgcolor: light-dark(rgb(207, 207, 216), rgb(91, 91, 102));
     --button-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
 
     --focus-outline-color: var(--button-primary-bgcolor);
@@ -49,6 +40,16 @@
       color-mix(in srgb, currentColor 14%, transparent)
     );
 
+    --panel-item-hover-bgcolor: light-dark(
+      rgba(207, 207, 216, .66),
+      color-mix(in srgb, currentColor 9%, transparent)
+    );
+    --panel-item-active-bgcolor: light-dark(
+      rgb(207, 207, 216),
+      color-mix(in srgb, currentColor 25%, transparent)
+    );
+    --panel-shortcut-color: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
+
     --input-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --input-bgcolor: light-dark(rgb(255, 255, 255), #42414d);
     --input-border-color: light-dark(color-mix(in srgb, currentColor 41%, transparent), #8f8f9d);
@@ -57,11 +58,6 @@
     --tab-icon-overlay-stroke: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
     --tab-icon-overlay-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
-
-    --toolbox-non-lwt-bgcolor: light-dark(rgb(240, 240, 244), rgb(28, 27, 34));
-    --toolbox-non-lwt-textcolor: light-dark(rgba(21, 20, 26), rgba(251, 251, 254));
-    --toolbox-non-lwt-bgcolor-inactive: var(--toolbox-non-lwt-bgcolor);
-    --toolbox-non-lwt-textcolor-inactive: var(--toolbox-non-lwt-textcolor);
 
     --toolbar-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --toolbar-non-lwt-bgcolor: light-dark(#f9f9fb, rgb(43, 42, 51));

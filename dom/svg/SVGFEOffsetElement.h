@@ -16,7 +16,7 @@ nsresult NS_NewSVGFEOffsetElement(
 
 namespace mozilla::dom {
 
-using SVGFEOffsetElementBase = SVGFilterPrimitiveElement;
+using SVGFEOffsetElementBase = SVGFE;
 
 class SVGFEOffsetElement final : public SVGFEOffsetElementBase {
   friend nsresult(::NS_NewSVGFEOffsetElement(

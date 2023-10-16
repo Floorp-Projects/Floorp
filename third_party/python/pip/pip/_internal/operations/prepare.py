@@ -179,10 +179,7 @@ def unpack_url(
 
 
 def _check_download_dir(
-    link: Link,
-    download_dir: str,
-    hashes: Optional[Hashes],
-    warn_on_hash_mismatch: bool = True,
+    link: Link, download_dir: str, hashes: Optional[Hashes]
 ) -> Optional[str]:
     """Check download_dir for previously downloaded file with correct hash
     If a correct file is found return its path else None
@@ -198,11 +195,10 @@ def _check_download_dir(
         try:
             hashes.check_against_path(download_path)
         except HashMismatch:
-            if warn_on_hash_mismatch:
-                logger.warning(
-                    "Previously-downloaded file %s has bad hash. Re-downloading.",
-                    download_path,
-                )
+            logger.warning(
+                "Previously-downloaded file %s has bad hash. Re-downloading.",
+                download_path,
+            )
             os.unlink(download_path)
             return None
     return download_path
@@ -226,7 +222,6 @@ class RequirementPreparer:
         use_user_site: bool,
         lazy_wheel: bool,
         verbosity: int,
-        legacy_resolver: bool,
     ) -> None:
         super().__init__()
 
@@ -260,9 +255,6 @@ class RequirementPreparer:
         # How verbose should underlying tooling be?
         self.verbosity = verbosity
 
-        # Are we using the legacy resolver?
-        self.legacy_resolver = legacy_resolver
-
         # Memoized downloaded files, as mapping of url: path.
         self._downloaded: Dict[str, str] = {}
 
@@ -271,28 +263,18 @@ class RequirementPreparer:
 
     def _log_preparing_link(self, req: InstallRequirement) -> None:
         """Provide context for the requirement being prepared."""
-        if req.link.is_file and not req.is_wheel_from_cache:
+        if req.link.is_file and not req.original_link_is_in_wheel_cache:
             message = "Processing %s"
             information = str(display_path(req.link.file_path))
         else:
             message = "Collecting %s"
             information = str(req.req or req)
 
-        # If we used req.req, inject requirement source if available (this
-        # would already be included if we used req directly)
-        if req.req and req.comes_from:
-            if isinstance(req.comes_from, str):
-                comes_from: Optional[str] = req.comes_from
-            else:
-                comes_from = req.comes_from.from_path()
-            if comes_from:
-                information += f" (from {comes_from})"
-
         if (message, information) != self._previous_requirement_header:
             self._previous_requirement_header = (message, information)
             logger.info(message, information)
 
-        if req.is_wheel_from_cache:
+        if req.original_link_is_in_wheel_cache:
             with indent_log():
                 logger.info("Using cached %s", req.link.filename)
 
@@ -356,7 +338,7 @@ class RequirementPreparer:
         # a surprising hash mismatch in the future.
         # file:/// URLs aren't pinnable, so don't complain about them
         # not being pinned.
-        if not req.is_direct and not req.is_pinned:
+        if req.original_link is None and not req.is_pinned:
             raise HashUnpinned()
 
         # If known-good hashes are missing for this requirement,
@@ -369,11 +351,6 @@ class RequirementPreparer:
         self,
         req: InstallRequirement,
     ) -> Optional[BaseDistribution]:
-        if self.legacy_resolver:
-            logger.debug(
-                "Metadata-only fetching is not used in the legacy resolver",
-            )
-            return None
         if self.require_hashes:
             logger.debug(
                 "Metadata-only fetching is not used as hash checking is required",
@@ -419,7 +396,7 @@ class RequirementPreparer:
         #     NB: raw_name will fall back to the name from the install requirement if
         #     the Name: field is not present, but it's noted in the raw_name docstring
         #     that that should NEVER happen anyway.
-        if canonicalize_name(metadata_dist.raw_name) != canonicalize_name(req.req.name):
+        if metadata_dist.raw_name != req.req.name:
             raise MetadataInconsistent(
                 req, "Name", req.req.name, metadata_dist.raw_name
             )
@@ -480,19 +457,6 @@ class RequirementPreparer:
             logger.debug("Downloading link %s to %s", link, filepath)
             req = links_to_fully_download[link]
             req.local_file_path = filepath
-            # TODO: This needs fixing for sdists
-            # This is an emergency fix for #11847, which reports that
-            # distributions get downloaded twice when metadata is loaded
-            # from a PEP 658 standalone metadata file. Setting _downloaded
-            # fixes this for wheels, but breaks the sdist case (tests
-            # test_download_metadata). As PyPI is currently only serving
-            # metadata for wheels, this is not an immediate issue.
-            # Fixing the problem properly looks like it will require a
-            # complete refactoring of the `prepare_linked_requirements_more`
-            # logic, and I haven't a clue where to start on that, so for now
-            # I have fixed the issue *just* for wheels.
-            if req.is_wheel:
-                self._downloaded[req.link.url] = filepath
 
         # This step is necessary to ensure all lazy wheels are processed
         # successfully by the 'download', 'wheel', and 'install' commands.
@@ -511,18 +475,7 @@ class RequirementPreparer:
             file_path = None
             if self.download_dir is not None and req.link.is_wheel:
                 hashes = self._get_linked_req_hashes(req)
-                file_path = _check_download_dir(
-                    req.link,
-                    self.download_dir,
-                    hashes,
-                    # When a locally built wheel has been found in cache, we don't warn
-                    # about re-downloading when the already downloaded wheel hash does
-                    # not match. This is because the hash must be checked against the
-                    # original link, not the cached link. It that case the already
-                    # downloaded file will be removed and re-fetched from cache (which
-                    # implies a hash check against the cache entry's origin.json).
-                    warn_on_hash_mismatch=not req.is_wheel_from_cache,
-                )
+                file_path = _check_download_dir(req.link, self.download_dir, hashes)
 
             if file_path is not None:
                 # The file is already available, so mark it as downloaded
@@ -573,34 +526,8 @@ class RequirementPreparer:
         assert req.link
         link = req.link
 
-        hashes = self._get_linked_req_hashes(req)
-
-        if hashes and req.is_wheel_from_cache:
-            assert req.download_info is not None
-            assert link.is_wheel
-            assert link.is_file
-            # We need to verify hashes, and we have found the requirement in the cache
-            # of locally built wheels.
-            if (
-                isinstance(req.download_info.info, ArchiveInfo)
-                and req.download_info.info.hashes
-                and hashes.has_one_of(req.download_info.info.hashes)
-            ):
-                # At this point we know the requirement was built from a hashable source
-                # artifact, and we verified that the cache entry's hash of the original
-                # artifact matches one of the hashes we expect. We don't verify hashes
-                # against the cached wheel, because the wheel is not the original.
-                hashes = None
-            else:
-                logger.warning(
-                    "The hashes of the source archive found in cache entry "
-                    "don't match, ignoring cached built wheel "
-                    "and re-downloading source."
-                )
-                req.link = req.cached_wheel_source_link
-                link = req.link
-
         self._ensure_link_req_src_dir(req, parallel_builds)
+        hashes = self._get_linked_req_hashes(req)
 
         if link.is_existing_dir():
             local_file = None
@@ -634,15 +561,12 @@ class RequirementPreparer:
             # Make sure we have a hash in download_info. If we got it as part of the
             # URL, it will have been verified and we can rely on it. Otherwise we
             # compute it from the downloaded file.
-            # FIXME: https://github.com/pypa/pip/issues/11943
             if (
                 isinstance(req.download_info.info, ArchiveInfo)
-                and not req.download_info.info.hashes
+                and not req.download_info.info.hash
                 and local_file
             ):
                 hash = hash_file(local_file.path)[0].hexdigest()
-                # We populate info.hash for backward compatibility.
-                # This will automatically populate info.hashes.
                 req.download_info.info.hash = f"sha256={hash}"
 
         # For use in later processing,

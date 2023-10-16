@@ -19,7 +19,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/ScriptPreloader.h"
-#include "mozilla/Try.h"
 
 using namespace mozilla::loader;
 
@@ -39,7 +38,7 @@ static inline void AlignTo(size_t* aOffset, size_t aAlign) {
   }
 }
 
-SharedMap::SharedMap() = default;
+SharedMap::SharedMap() : DOMEventTargetHelper() {}
 
 SharedMap::SharedMap(nsIGlobalObject* aGlobal, const FileDescriptor& aMapFile,
                      size_t aMapSize, nsTArray<RefPtr<BlobImpl>>&& aBlobs)
@@ -240,7 +239,7 @@ void SharedMap::MaybeRebuild() const {
   Unused << const_cast<SharedMap*>(this)->MaybeRebuild();
 }
 
-WritableSharedMap::WritableSharedMap() {
+WritableSharedMap::WritableSharedMap() : SharedMap() {
   mWritable = true;
   // Serialize the initial empty contents of the map immediately so that we
   // always have a file descriptor to send to callers of CloneMapFile().

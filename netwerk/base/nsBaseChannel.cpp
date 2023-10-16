@@ -948,7 +948,8 @@ NS_IMETHODIMP nsBaseChannel::GetCanceled(bool* aCanceled) {
 }
 
 void nsBaseChannel::SetupNeckoTarget() {
-  mNeckoTarget = GetMainThreadSerialEventTarget();
+  mNeckoTarget =
+      nsContentUtils::GetEventTargetByLoadInfo(mLoadInfo, TaskCategory::Other);
 }
 
 nsBaseChannel::ContentRange::ContentRange(const nsACString& aRangeHeader,

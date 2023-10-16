@@ -15,6 +15,7 @@
 #include "EditorDOMPoint.h"
 #include "EditorForwards.h"
 #include "EditorUtils.h"  // for CaretPoint
+#include "HTMLEditHelpers.h"
 #include "JoinSplitNodeDirection.h"
 
 #include "mozilla/AlreadyAddRefed.h"
@@ -38,41 +39,6 @@
 class nsISimpleEnumerator;
 
 namespace mozilla {
-
-enum class BlockInlineCheck : uint8_t {
-  // BlockInlineCheck is not expected by the root caller.
-  Unused,
-  // Refer only the HTML default style at considering whether block or inline.
-  // All non-HTML elements are treated as inline.
-  UseHTMLDefaultStyle,
-  // Refer the element's computed style of display-outside at considering
-  // whether block or inline.
-  // FYI: If editor.block_inline_check.use_computed_style pref is set to false,
-  // this is same as HTMLDefaultStyle.
-  UseComputedDisplayOutsideStyle,
-  // Refer the element's computed style of display at considering whether block
-  // or inline.  I.e., this is a good value to look for any block boundary.
-  // E.g., this is proper value when:
-  // * Checking visibility of collapsible white-spaces or <br>
-  // * Looking for whether a padding <br> is required
-  // * Looking for a caret position
-  // FYI: If editor.block_inline_check.use_computed_style pref is set to false,
-  // this is same as HTMLDefaultStyle.
-  UseComputedDisplayStyle,
-};
-
-/**
- * Even if the caller wants block boundary caused by display-inline: flow-root
- * like inline-block, because it's required only when scanning from in it.
- * I.e., if scanning needs to go to siblings, we don't want to treat
- * inline-block siblings as inline.
- */
-[[nodiscard]] inline BlockInlineCheck IgnoreInsideBlockBoundary(
-    BlockInlineCheck aBlockInlineCheck) {
-  return aBlockInlineCheck == BlockInlineCheck::UseComputedDisplayStyle
-             ? BlockInlineCheck::UseComputedDisplayOutsideStyle
-             : aBlockInlineCheck;
-}
 
 enum class WithTransaction { No, Yes };
 inline std::ostream& operator<<(std::ostream& aStream,
@@ -189,13 +155,15 @@ class MOZ_STACK_CLASS MoveNodeResult final : public CaretPoint {
  private:
   explicit MoveNodeResult(const EditorDOMPoint& aNextInsertionPoint,
                           bool aHandled)
-      : mNextInsertionPoint(aNextInsertionPoint),
+      : CaretPoint(),
+        mNextInsertionPoint(aNextInsertionPoint),
         mHandled(aHandled && aNextInsertionPoint.IsSet()) {
     AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
         mNextInsertionPoint);
   }
   explicit MoveNodeResult(EditorDOMPoint&& aNextInsertionPoint, bool aHandled)
-      : mNextInsertionPoint(std::move(aNextInsertionPoint)),
+      : CaretPoint(),
+        mNextInsertionPoint(std::move(aNextInsertionPoint)),
         mHandled(aHandled && mNextInsertionPoint.IsSet()) {
     AutoEditorDOMPointChildInvalidator computeOffsetAndForgetChild(
         mNextInsertionPoint);
@@ -671,7 +639,8 @@ class MOZ_STACK_CLASS SplitRangeOffFromNodeResult final : public CaretPoint {
   SplitRangeOffFromNodeResult(nsIContent* aLeftContent,
                               nsIContent* aMiddleContent,
                               nsIContent* aRightContent)
-      : mLeftContent(aLeftContent),
+      : CaretPoint(),
+        mLeftContent(aLeftContent),
         mMiddleContent(aMiddleContent),
         mRightContent(aRightContent) {}
 
@@ -749,7 +718,8 @@ class MOZ_STACK_CLASS SplitRangeOffResult final : public CaretPoint {
   SplitRangeOffResult(EditorDOMRange&& aTrackedRange,
                       SplitNodeResult&& aSplitNodeResultAtStart,
                       SplitNodeResult&& aSplitNodeResultAtEnd)
-      : mRange(std::move(aTrackedRange)),
+      : CaretPoint(),
+        mRange(std::move(aTrackedRange)),
         mHandled(aSplitNodeResultAtStart.Handled() ||
                  aSplitNodeResultAtEnd.Handled()) {
     MOZ_ASSERT(mRange.StartRef().IsSet());

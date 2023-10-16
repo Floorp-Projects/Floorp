@@ -65,7 +65,7 @@ LOCAL_INCLUDES += [
 ]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
-MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
 FINAL_LIBRARY = "xul"
 

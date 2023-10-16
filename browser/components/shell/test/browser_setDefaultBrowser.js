@@ -8,13 +8,19 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-const setDefaultBrowserUserChoiceStub = () => {
-  throw Components.Exception("", Cr.NS_ERROR_WDBA_NO_PROGID);
-};
+const _handleWDBAResultStub = sinon
+  .stub(ShellService, "_handleWDBAResult")
+  .callsFake(async () => {
+    throw new Error("from _handleWDBAResultStub");
+  });
 
-const defaultAgentStub = sinon
-  .stub(ShellService, "defaultAgent")
-  .value({ setDefaultBrowserUserChoice: setDefaultBrowserUserChoiceStub });
+const _callExternalDefaultBrowserAgentStub = sinon
+  .stub(ShellService, "_callExternalDefaultBrowserAgent")
+  .callsFake(async () => ({
+    async wait() {
+      return { exitCode: 0 };
+    },
+  }));
 
 const _userChoiceImpossibleTelemetryResultStub = sinon
   .stub(ShellService, "_userChoiceImpossibleTelemetryResult")
@@ -29,7 +35,8 @@ const shellStub = sinon
   .value({ setDefaultBrowser: setDefaultStub });
 
 registerCleanupFunction(() => {
-  defaultAgentStub.restore();
+  _handleWDBAResultStub.restore();
+  _callExternalDefaultBrowserAgentStub.restore();
   _userChoiceImpossibleTelemetryResultStub.restore();
   userChoiceStub.restore();
   shellStub.restore();
@@ -129,13 +136,10 @@ add_task(async function ensure_fallback() {
 
   Assert.ok(userChoiceStub.called, "Set default with user choice called");
 
-  let message = "";
-  await userChoicePromise.catch(err => (message = err.message || ""));
+  let thrown = false;
+  await userChoicePromise.catch(() => (thrown = true));
 
-  Assert.ok(
-    message.includes("ErrExeProgID"),
-    "Set default with user choice threw an expected error"
-  );
+  Assert.ok(thrown, "Set default with user choice threw an error");
   Assert.ok(setDefaultStub.called, "Fallbacked to plain set default");
 
   await doCleanup();

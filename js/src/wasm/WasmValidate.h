@@ -59,7 +59,6 @@ struct ModuleEnvironment {
   MutableTypeContext types;
   FuncDescVector funcs;
   uint32_t numFuncImports;
-  uint32_t numGlobalImports;
   GlobalDescVector globals;
   TagDescVector tags;
   TableDescVector tables;
@@ -98,7 +97,6 @@ struct ModuleEnvironment {
       : kind(kind),
         features(features),
         numFuncImports(0),
-        numGlobalImports(0),
         funcImportsOffsetStart(UINT32_MAX),
         typeDefsOffsetStart(UINT32_MAX),
         memoriesOffsetStart(UINT32_MAX),

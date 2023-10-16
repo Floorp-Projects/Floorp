@@ -9,9 +9,6 @@ use super::*;
 
 use std::ops::Range;
 
-/// See <https://developer.apple.com/documentation/metal/mtlcounterdontsample>
-pub const COUNTER_DONT_SAMPLE: NSUInteger = NSUInteger::MAX; // #define MTLCounterDontSample ((NSUInteger)-1)
-
 /// See <https://developer.apple.com/documentation/metal/mtlprimitivetype>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -1218,22 +1215,6 @@ impl RenderCommandEncoderRef {
             ]
         }
     }
-
-    /// See: <https://developer.apple.com/documentation/metal/mtlrendercommandencoder/3194379-samplecountersinbuffer>
-    pub fn sample_counters_in_buffer(
-        &self,
-        sample_buffer: &CounterSampleBufferRef,
-        sample_index: NSUInteger,
-        with_barrier: bool,
-    ) {
-        unsafe {
-            msg_send![self,
-                sampleCountersInBuffer: sample_buffer
-                atSampleIndex: sample_index
-                withBarrier: with_barrier
-            ]
-        }
-    }
 }
 
 /// See <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/>
@@ -1413,45 +1394,6 @@ impl BlitCommandEncoderRef {
 
     pub fn wait_for_fence(&self, fence: &FenceRef) {
         unsafe { msg_send![self, waitForFence: fence] }
-    }
-
-    pub fn copy_indirect_command_buffer(
-        &self,
-        source: &IndirectCommandBufferRef,
-        source_range: NSRange,
-        destination: &IndirectCommandBufferRef,
-        destination_index: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                copyIndirectCommandBuffer: source
-                sourceRange: source_range
-                destination: destination
-                destinationIndex: destination_index
-            ]
-        }
-    }
-
-    pub fn reset_commands_in_buffer(&self, buffer: &IndirectCommandBufferRef, range: NSRange) {
-        unsafe {
-            msg_send![self,
-                resetCommandsInBuffer: buffer
-                withRange: range
-            ]
-        }
-    }
-
-    pub fn optimize_indirect_command_buffer(
-        &self,
-        buffer: &IndirectCommandBufferRef,
-        range: NSRange,
-    ) {
-        unsafe {
-            msg_send![self,
-                optimizeIndirectCommandBuffer: buffer
-                withRange: range
-            ]
-        }
     }
 
     /// See: <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/3194348-samplecountersinbuffer>
@@ -1917,35 +1859,6 @@ impl ArgumentEncoderRef {
 
     pub fn constant_data(&self, at_index: NSUInteger) -> *mut std::ffi::c_void {
         unsafe { msg_send![self, constantDataAtIndex: at_index] }
-    }
-
-    pub fn set_indirect_command_buffer(
-        &self,
-        at_index: NSUInteger,
-        buffer: &IndirectCommandBufferRef,
-    ) {
-        unsafe {
-            msg_send![self,
-                setIndirectCommandBuffer: buffer
-                atIndex: at_index
-            ]
-        }
-    }
-
-    pub fn set_indirect_command_buffers(
-        &self,
-        start_index: NSUInteger,
-        data: &[&IndirectCommandBufferRef],
-    ) {
-        unsafe {
-            msg_send![self,
-                setIndirectCommandBuffers: data.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
     }
 
     pub fn new_argument_encoder_for_buffer(&self, index: NSUInteger) -> ArgumentEncoder {

@@ -1,3 +1,6 @@
+# The following comment should be removed at some point in the future.
+# mypy: strict-optional=False
+
 import contextlib
 import errno
 import getpass
@@ -29,7 +32,6 @@ from typing import (
     Tuple,
     Type,
     TypeVar,
-    Union,
     cast,
 )
 
@@ -124,15 +126,10 @@ def get_prog() -> str:
 # Tenacity raises RetryError by default, explicitly raise the original exception
 @retry(reraise=True, stop=stop_after_delay(3), wait=wait_fixed(0.5))
 def rmtree(dir: str, ignore_errors: bool = False) -> None:
-    if sys.version_info >= (3, 12):
-        shutil.rmtree(dir, ignore_errors=ignore_errors, onexc=rmtree_errorhandler)
-    else:
-        shutil.rmtree(dir, ignore_errors=ignore_errors, onerror=rmtree_errorhandler)
+    shutil.rmtree(dir, ignore_errors=ignore_errors, onerror=rmtree_errorhandler)
 
 
-def rmtree_errorhandler(
-    func: Callable[..., Any], path: str, exc_info: Union[ExcInfo, BaseException]
-) -> None:
+def rmtree_errorhandler(func: Callable[..., Any], path: str, exc_info: ExcInfo) -> None:
     """On Windows, the files in .svn are read-only, so when rmtree() tries to
     remove them, an exception is thrown.  We catch that here, remove the
     read-only attribute, and hopefully continue without problems."""
@@ -341,18 +338,17 @@ def write_output(msg: Any, *args: Any) -> None:
 
 
 class StreamWrapper(StringIO):
-    orig_stream: TextIO
+    orig_stream: TextIO = None
 
     @classmethod
     def from_stream(cls, orig_stream: TextIO) -> "StreamWrapper":
-        ret = cls()
-        ret.orig_stream = orig_stream
-        return ret
+        cls.orig_stream = orig_stream
+        return cls()
 
     # compileall.compile_dir() needs stdout.encoding to print to stdout
-    # type ignore is because TextIOBase.encoding is writeable
+    # https://github.com/python/mypy/issues/4125
     @property
-    def encoding(self) -> str:  # type: ignore
+    def encoding(self):  # type: ignore
         return self.orig_stream.encoding
 
 
@@ -420,7 +416,7 @@ def build_url_from_netloc(netloc: str, scheme: str = "https") -> str:
     return f"{scheme}://{netloc}"
 
 
-def parse_netloc(netloc: str) -> Tuple[Optional[str], Optional[int]]:
+def parse_netloc(netloc: str) -> Tuple[str, Optional[int]]:
     """
     Return the host-port pair from a netloc.
     """
@@ -508,9 +504,7 @@ def _redact_netloc(netloc: str) -> Tuple[str]:
     return (redact_netloc(netloc),)
 
 
-def split_auth_netloc_from_url(
-    url: str,
-) -> Tuple[str, str, Tuple[Optional[str], Optional[str]]]:
+def split_auth_netloc_from_url(url: str) -> Tuple[str, str, Tuple[str, str]]:
     """
     Parse a url into separate netloc, auth, and url with no auth.
 
@@ -620,6 +614,18 @@ def hash_file(path: str, blocksize: int = 1 << 20) -> Tuple[Any, int]:
     return h, length
 
 
+def is_wheel_installed() -> bool:
+    """
+    Return whether the wheel package is installed.
+    """
+    try:
+        import wheel  # noqa: F401
+    except ImportError:
+        return False
+
+    return True
+
+
 def pairwise(iterable: Iterable[Any]) -> Iterator[Tuple[Any, Any]]:
     """
     Return paired elements.
@@ -663,7 +669,7 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
     def build_wheel(
         self,
         wheel_directory: str,
-        config_settings: Optional[Dict[str, Union[str, List[str]]]] = None,
+        config_settings: Optional[Dict[str, str]] = None,
         metadata_directory: Optional[str] = None,
     ) -> str:
         cs = self.config_holder.config_settings
@@ -672,9 +678,7 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
         )
 
     def build_sdist(
-        self,
-        sdist_directory: str,
-        config_settings: Optional[Dict[str, Union[str, List[str]]]] = None,
+        self, sdist_directory: str, config_settings: Optional[Dict[str, str]] = None
     ) -> str:
         cs = self.config_holder.config_settings
         return super().build_sdist(sdist_directory, config_settings=cs)
@@ -682,7 +686,7 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
     def build_editable(
         self,
         wheel_directory: str,
-        config_settings: Optional[Dict[str, Union[str, List[str]]]] = None,
+        config_settings: Optional[Dict[str, str]] = None,
         metadata_directory: Optional[str] = None,
     ) -> str:
         cs = self.config_holder.config_settings
@@ -691,19 +695,19 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
         )
 
     def get_requires_for_build_wheel(
-        self, config_settings: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, config_settings: Optional[Dict[str, str]] = None
     ) -> List[str]:
         cs = self.config_holder.config_settings
         return super().get_requires_for_build_wheel(config_settings=cs)
 
     def get_requires_for_build_sdist(
-        self, config_settings: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, config_settings: Optional[Dict[str, str]] = None
     ) -> List[str]:
         cs = self.config_holder.config_settings
         return super().get_requires_for_build_sdist(config_settings=cs)
 
     def get_requires_for_build_editable(
-        self, config_settings: Optional[Dict[str, Union[str, List[str]]]] = None
+        self, config_settings: Optional[Dict[str, str]] = None
     ) -> List[str]:
         cs = self.config_holder.config_settings
         return super().get_requires_for_build_editable(config_settings=cs)
@@ -711,7 +715,7 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
     def prepare_metadata_for_build_wheel(
         self,
         metadata_directory: str,
-        config_settings: Optional[Dict[str, Union[str, List[str]]]] = None,
+        config_settings: Optional[Dict[str, str]] = None,
         _allow_fallback: bool = True,
     ) -> str:
         cs = self.config_holder.config_settings
@@ -724,7 +728,7 @@ class ConfiguredBuildBackendHookCaller(BuildBackendHookCaller):
     def prepare_metadata_for_build_editable(
         self,
         metadata_directory: str,
-        config_settings: Optional[Dict[str, Union[str, List[str]]]] = None,
+        config_settings: Optional[Dict[str, str]] = None,
         _allow_fallback: bool = True,
     ) -> str:
         cs = self.config_holder.config_settings

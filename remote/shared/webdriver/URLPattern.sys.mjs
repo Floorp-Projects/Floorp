@@ -63,7 +63,8 @@ const DEFAULT_PORTS = {
 /**
  * Check if a given URL pattern is compatible with the provided URL.
  *
- * Implements https://w3c.github.io/webdriver-bidi/#match-url-pattern
+ * Implements https://pr-preview.s3.amazonaws.com/w3c/webdriver-bidi/pull/429.html#match-url-pattern
+ * TODO: when PR is merged, replace with https://w3c.github.io/webdriver-bidi/#match-url-pattern
  *
  * @param {ParsedURLPattern} urlPattern
  *     The URL pattern to match.
@@ -95,11 +96,8 @@ export function matchURLPattern(urlPattern, url) {
     return false;
   }
 
-  if (urlPattern.search !== null) {
-    const urlQuery = parsedURL.query === null ? "" : parsedURL.query;
-    if (urlPattern.search != urlQuery) {
-      return false;
-    }
+  if (urlPattern.search !== null && urlPattern.search != parsedURL.query) {
+    return false;
   }
 
   return true;
@@ -109,7 +107,8 @@ export function matchURLPattern(urlPattern, url) {
  * Parse a URLPattern into a parsed pattern object which can be used to match
  * URLs using `matchURLPattern`.
  *
- * Implements https://w3c.github.io/webdriver-bidi/#parse-url-pattern
+ * Implements https://pr-preview.s3.amazonaws.com/w3c/webdriver-bidi/pull/429.html#parse-url-pattern
+ * TODO: when PR is merged, replace with https://w3c.github.io/webdriver-bidi/#parse-url-pattern
  *
  * @param {URLPattern} pattern
  *     The pattern to parse.
@@ -130,9 +129,6 @@ export function parseURLPattern(pattern) {
 
   let hasProtocol = true;
   let hasHostname = true;
-  let hasPort = true;
-  let hasPathname = true;
-  let hasSearch = true;
 
   let patternUrl;
   switch (pattern.type) {
@@ -162,20 +158,14 @@ export function parseURLPattern(pattern) {
 
       if ("port" in pattern) {
         patternUrl += parsePort(pattern.port);
-      } else {
-        hasPort = false;
       }
 
       if ("pathname" in pattern) {
         patternUrl += parsePathname(pattern.pathname);
-      } else {
-        hasPathname = false;
       }
 
       if ("search" in pattern) {
         patternUrl += parseSearch(pattern.search);
-      } else {
-        hasSearch = false;
       }
       break;
     case URLPatternType.String:
@@ -215,10 +205,9 @@ export function parseURLPattern(pattern) {
   return {
     protocol: hasProtocol ? parsedURL.scheme : null,
     hostname: hasHostname ? parsedURL.host : null,
-    port: hasPort ? serializePort(parsedURL) : null,
-    pathname:
-      hasPathname && parsedURL.path.length ? serializePath(parsedURL) : null,
-    search: hasSearch ? parsedURL.query || "" : null,
+    port: serializePort(parsedURL),
+    pathname: parsedURL.path.length ? serializePath(parsedURL) : null,
+    search: parsedURL.query,
   };
 }
 

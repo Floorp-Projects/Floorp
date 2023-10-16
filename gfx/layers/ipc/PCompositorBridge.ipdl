@@ -12,6 +12,7 @@ include PCompositorBridgeTypes;
 include protocol PAPZ;
 include protocol PAPZCTreeManager;
 include protocol PBrowser;
+include protocol PCanvas;
 include protocol PCompositorManager;
 include protocol PCompositorWidget;
 include protocol PTexture;
@@ -186,6 +187,9 @@ parent:
     returns (float[] intervals);
 
   async PTexture(SurfaceDescriptor aSharedData, ReadLockDescriptor aReadLock, LayersBackend aBackend, TextureFlags aTextureFlags, LayersId id, uint64_t aSerial, MaybeExternalImageId aExternalImageId);
+
+  async InitPCanvasParent(Endpoint<PCanvasParent> aEndpoint);
+  async ReleasePCanvasParent();
 
   sync SyncWithCompositor();
 

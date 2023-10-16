@@ -10,7 +10,6 @@
 #include "gtest/gtest.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/SpinEventLoopUntil.h"
-#include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/ForwardDecls.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
@@ -41,7 +40,7 @@ class QuotaManagerDependencyFixture : public testing::Test {
         std::bind(std::forward<Invokable>(aInvokable),
                   std::forward<Args>(aArgs)...);
     InvokeAsync(BackgroundTargetStrongRef(), __func__,
-                [boundTask = std::move(boundTask)]() mutable {
+                [boundTask = std::move(boundTask)] {
                   boundTask();
                   return BoolPromise::CreateAndResolve(true, __func__);
                 })
@@ -66,7 +65,7 @@ class QuotaManagerDependencyFixture : public testing::Test {
         std::bind(std::forward<Invokable>(aInvokable),
                   std::forward<Args>(aArgs)...);
     InvokeAsync(quotaManager->IOThread(), __func__,
-                [boundTask = std::move(boundTask)]() mutable {
+                [boundTask = std::move(boundTask)]() {
                   boundTask();
                   return BoolPromise::CreateAndResolve(true, __func__);
                 })
@@ -76,43 +75,6 @@ class QuotaManagerDependencyFixture : public testing::Test {
                });
 
     SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-  }
-
-  template <class Task>
-  static void PerformClientDirectoryTest(const ClientMetadata& aClientMetadata,
-                                         Task&& aTask) {
-    PerformOnBackgroundThread([clientMetadata = aClientMetadata,
-                               task = std::forward<Task>(aTask)]() mutable {
-      RefPtr<ClientDirectoryLock> directoryLock;
-
-      QuotaManager* quotaManager = QuotaManager::Get();
-      ASSERT_TRUE(quotaManager);
-
-      bool done = false;
-
-      quotaManager->OpenClientDirectory(clientMetadata)
-          ->Then(
-              GetCurrentSerialEventTarget(), __func__,
-              [&directoryLock,
-               &done](RefPtr<ClientDirectoryLock> aResolveValue) {
-                directoryLock = std::move(aResolveValue);
-
-                done = true;
-              },
-              [&done](const nsresult aRejectValue) {
-                ASSERT_TRUE(false);
-
-                done = true;
-              });
-
-      SpinEventLoopUntil("Promise is fulfilled"_ns, [&done]() { return done; });
-
-      ASSERT_TRUE(directoryLock);
-
-      PerformOnIOThread(std::move(task), directoryLock->Id());
-
-      directoryLock = nullptr;
-    });
   }
 
   static const nsCOMPtr<nsISerialEventTarget>& BackgroundTargetStrongRef() {

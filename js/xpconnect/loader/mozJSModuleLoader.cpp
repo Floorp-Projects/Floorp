@@ -65,7 +65,6 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Try.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/ScriptSettings.h"

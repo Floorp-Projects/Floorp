@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-// The file provides the IsStrictlyBaseOfAndConvertibleToSTLContainer type
+// Thie file provides the IsStrictlyBaseOfAndConvertibleToSTLContainer type
 // trait metafunction to assist in working with the _GLIBCXX_DEBUG debug
 // wrappers of STL containers.
 //

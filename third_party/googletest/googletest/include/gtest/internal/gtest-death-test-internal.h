@@ -42,7 +42,6 @@
 #include <stdio.h>
 
 #include <memory>
-#include <string>
 
 #include "gtest/gtest-matchers.h"
 #include "gtest/internal/gtest-internal.h"
@@ -57,7 +56,7 @@ const char kDeathTestStyleFlag[] = "death_test_style";
 const char kDeathTestUseFork[] = "death_test_use_fork";
 const char kInternalRunDeathTestFlag[] = "internal_run_death_test";
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
 
 GTEST_DISABLE_MSC_WARNINGS_PUSH_(4251 \
 /* class A needs to have dll-interface to be used by clients of class B */)
@@ -88,7 +87,7 @@ class GTEST_API_ DeathTest {
   static bool Create(const char* statement, Matcher<const std::string&> matcher,
                      const char* file, int line, DeathTest** test);
   DeathTest();
-  virtual ~DeathTest() = default;
+  virtual ~DeathTest() {}
 
   // A helper class that aborts a death test when it's deleted.
   class ReturnSentinel {
@@ -100,7 +99,7 @@ class GTEST_API_ DeathTest {
     DeathTest* const test_;
     ReturnSentinel(const ReturnSentinel&) = delete;
     ReturnSentinel& operator=(const ReturnSentinel&) = delete;
-  };
+  } GTEST_ATTRIBUTE_UNUSED_;
 
   // An enumeration of possible roles that may be taken when a death
   // test is encountered.  EXECUTE means that the death test logic should
@@ -153,7 +152,7 @@ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
 // Factory interface for death tests.  May be mocked out for testing.
 class DeathTestFactory {
  public:
-  virtual ~DeathTestFactory() = default;
+  virtual ~DeathTestFactory() {}
   virtual bool Create(const char* statement,
                       Matcher<const std::string&> matcher, const char* file,
                       int line, DeathTest** test) = 0;
@@ -238,7 +237,7 @@ inline Matcher<const ::std::string&> MakeDeathTestMatcher(
           }                                                                    \
           break;                                                               \
         case ::testing::internal::DeathTest::EXECUTE_TEST: {                   \
-          const ::testing::internal::DeathTest::ReturnSentinel gtest_sentinel( \
+          ::testing::internal::DeathTest::ReturnSentinel gtest_sentinel(       \
               gtest_dt);                                                       \
           GTEST_EXECUTE_DEATH_TEST_STATEMENT_(statement, gtest_dt);            \
           gtest_dt->Abort(::testing::internal::DeathTest::TEST_DID_NOT_DIE);   \

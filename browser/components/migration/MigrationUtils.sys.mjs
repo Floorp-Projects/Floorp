@@ -13,24 +13,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
+  WindowsRegistry: "resource://gre/modules/WindowsRegistry.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
   MigrationWizardConstants:
     "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "gCanGetPermissionsOnPlatformPromise",
-  () => {
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    return fp.isModeSupported(Ci.nsIFilePicker.modeGetFolder);
-  }
-);
-
 var gMigrators = null;
 var gFileMigrators = null;
 var gProfileStartup = null;
 var gL10n = null;
+var gPreviousDefaultBrowserKey = "";
 var gHasOpenedLegacyWizard = false;
 
 let gForceExitSpinResolve = false;
@@ -155,7 +148,6 @@ class MigrationUtils {
           "MigrationWizard:RequestSafariPermissions": { wantUntrusted: true },
           "MigrationWizard:SelectSafariPasswordFile": { wantUntrusted: true },
           "MigrationWizard:OpenAboutAddons": { wantUntrusted: true },
-          "MigrationWizard:GetPermissions": { wantUntrusted: true },
         },
       },
 
@@ -169,20 +161,6 @@ class MigrationUtils {
         "chrome://browser/content/spotlight.html",
         "about:firefoxview-next",
       ],
-    });
-
-    XPCOMUtils.defineLazyGetter(this, "IS_LINUX_SNAP_PACKAGE", () => {
-      if (
-        AppConstants.platform != "linux" ||
-        !Cc["@mozilla.org/gio-service;1"]
-      ) {
-        return false;
-      }
-
-      let gIOSvc = Cc["@mozilla.org/gio-service;1"].getService(
-        Ci.nsIGIOService
-      );
-      return gIOSvc.isRunningUnderSnap;
     });
   }
 
@@ -425,13 +403,18 @@ class MigrationUtils {
 
   /**
    * Returns the migrator for the given source, if any data is available
-   * for this source, or if permissions are required in order to read
-   * data from this source. Returns null otherwise.
+   * for this source, or null otherwise.
+   *
+   * If null is returned,  either no data can be imported for the given migrator,
+   * or aMigratorKey is invalid  (e.g. ie on mac, or mosaic everywhere).  This
+   * method should be used rather than direct getService for future compatibility
+   * (see bug 718280).
    *
    * @param {string} aKey
    *   Internal name of the migration source. See `availableMigratorKeys`
    *   for supported values by OS.
-   * @returns {Promise<MigratorBase|null>}
+   *
+   * @returns {MigratorBase}
    *   A profile migrator implementing nsIBrowserProfileMigrator, if it can
    *   import any data, null otherwise.
    */
@@ -443,18 +426,7 @@ class MigrationUtils {
     }
 
     try {
-      if (!migrator) {
-        return null;
-      }
-
-      if (
-        (await migrator.isSourceAvailable()) ||
-        (!(await migrator.hasPermissions()) && migrator.canGetPermissions())
-      ) {
-        return migrator;
-      }
-
-      return null;
+      return migrator && (await migrator.isSourceAvailable()) ? migrator : null;
     } catch (ex) {
       console.error(ex);
       return null;
@@ -528,6 +500,51 @@ class MigrationUtils {
       console.error("Could not detect default browser: ", ex);
     }
 
+    // "firefox" is the least useful entry here, and might just be because we've set
+    // ourselves as the default (on Windows 7 and below). In that case, check if we
+    // have a registry key that tells us where to go:
+    if (
+      key == "firefox" &&
+      AppConstants.isPlatformAndVersionAtMost("win", "6.2")
+    ) {
+      // Because we remove the registry key, reading the registry key only works once.
+      // We save the value for subsequent calls to avoid hard-to-trace bugs when multiple
+      // consumers ask for this key.
+      if (gPreviousDefaultBrowserKey) {
+        key = gPreviousDefaultBrowserKey;
+      } else {
+        // We didn't have a saved value, so check the registry.
+        const kRegPath = "Software\\Mozilla\\Firefox";
+        let oldDefault = lazy.WindowsRegistry.readRegKey(
+          Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+          kRegPath,
+          "OldDefaultBrowserCommand"
+        );
+        if (oldDefault) {
+          // Remove the key:
+          lazy.WindowsRegistry.removeRegKey(
+            Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+            kRegPath,
+            "OldDefaultBrowserCommand"
+          );
+          try {
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(
+              Ci.nsILocalFileWin
+            );
+            file.initWithCommandLine(oldDefault);
+            key =
+              APP_DESC_TO_KEY[file.getVersionInfoField("FileDescription")] ||
+              key;
+            // Save the value for future callers.
+            gPreviousDefaultBrowserKey = key;
+          } catch (ex) {
+            console.error(
+              "Could not convert old default browser value to description."
+            );
+          }
+        }
+      }
+    }
     return key;
   }
 
@@ -1241,18 +1258,6 @@ class MigrationUtils {
 
   get HISTORY_MAX_AGE_IN_MILLISECONDS() {
     return this.HISTORY_MAX_AGE_IN_DAYS * 24 * 60 * 60 * 1000;
-  }
-
-  /**
-   * Determines whether or not the underlying platform supports creating
-   * native file pickers that can do folder selection, which is a
-   * pre-requisite for getting read-access permissions for data from other
-   * browsers that we can import from.
-   *
-   * @returns {Promise<boolean>}
-   */
-  canGetPermissionsOnPlatform() {
-    return lazy.gCanGetPermissionsOnPlatformPromise;
   }
 }
 

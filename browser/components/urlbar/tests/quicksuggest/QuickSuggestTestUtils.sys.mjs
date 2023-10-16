@@ -15,11 +15,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+  QuickSuggestRemoteSettings:
+    "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-  Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
-  SuggestionProvider: "resource://gre/modules/RustSuggest.sys.mjs",
-  SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
@@ -78,6 +77,13 @@ Object.defineProperty(lazy, "MerinoTestUtils", {
 });
 
 const DEFAULT_CONFIG = {};
+
+const BEST_MATCH_CONFIG = {
+  best_match: {
+    blocked_suggestion_ids: [],
+    min_search_string_length: 4,
+  },
+};
 
 const DEFAULT_PING_PAYLOADS = {
   [CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK]: {
@@ -161,18 +167,18 @@ class MockRemoteSettings {
   }
 
   async sync() {
-    if (!lazy.QuickSuggest.jsBackend.rs) {
+    if (!lazy.QuickSuggestRemoteSettings.rs) {
       // There are no registered features that use remote settings.
       return;
     }
 
     // Observe config-set event to recognize that the config is synced.
     const onConfigSync = new Promise(resolve => {
-      lazy.QuickSuggest.jsBackend.emitter.once("config-set", resolve);
+      lazy.QuickSuggestRemoteSettings.emitter.once("config-set", resolve);
     });
 
     // Make a stub for each feature to recognize that the features are synced.
-    const features = lazy.QuickSuggest.jsBackend.features;
+    const features = lazy.QuickSuggestRemoteSettings.features;
     const onFeatureSyncs = features.map(feature => {
       return new Promise(resolve => {
         const stub = this.#sandbox
@@ -222,102 +228,6 @@ class MockRemoteSettings {
 }
 
 /**
- * Mock `RustSuggest` implementation.
- *
- * @param {object} options
- *   Options object
- * @param {Array} options.data
- *   Mock remote settings records.
- */
-export class MockRustSuggest {
-  constructor({ data = [] }) {
-    this.#data = data;
-
-    this.#sandbox = lazy.sinon.createSandbox();
-    this.#sandbox.stub(lazy.SuggestStore, "init").returns(this);
-  }
-
-  /**
-   * Updates the mock data.
-   *
-   * @param {object} options
-   *   Options object
-   * @param {Array} options.data
-   *   Mock remote settings records.
-   */
-  async update({ data }) {
-    this.#data = data;
-  }
-
-  cleanup() {
-    this.#sandbox.restore();
-  }
-
-  // `RustSuggest` methods below.
-
-  ingest() {
-    // Unlike the real Rust component, ingest isn't necessary here since our
-    // `query()` implementation has immediate access to the mock data. This
-    // makes it easier for tests because they don't need to wait for ingest
-    // every time they change the data.
-    return Promise.resolve();
-  }
-
-  interrupt() {}
-
-  clear() {}
-
-  async query(query) {
-    let records = this.#data.filter(record => record.type == "data");
-    let suggestions = records
-      .map(record => record.attachment)
-      .flat()
-      .filter(suggestion => suggestion.keywords.includes(query.keyword));
-
-    let matchedSuggestions = [];
-    for (let suggestion of suggestions) {
-      let isSponsored = suggestion.hasOwnProperty("is_sponsored")
-        ? suggestion.is_sponsored
-        : suggestion.iab_category == "22 - Shopping";
-      // TODO: Generalize this and support the other providers.
-      if (
-        (isSponsored &&
-          query.providers.includes(lazy.SuggestionProvider.AMP)) ||
-        (!isSponsored &&
-          query.providers.includes(lazy.SuggestionProvider.WIKIPEDIA))
-      ) {
-        matchedSuggestions.push(
-          isSponsored
-            ? new lazy.Suggestion.Amp(
-                suggestion.title,
-                suggestion.url,
-                suggestion.url, // rawUrl
-                [], // icon
-                query.keyword, // fullKeyword
-                suggestion.id, // blockId
-                suggestion.advertiser,
-                suggestion.iab_category,
-                suggestion.impression_url,
-                suggestion.click_url,
-                suggestion.click_url // rawClickUrl
-              )
-            : new lazy.Suggestion.Wikipedia(
-                suggestion.title,
-                suggestion.url,
-                [], // icon
-                query.keyword // fullKeyword
-              )
-        );
-      }
-    }
-    return matchedSuggestions;
-  }
-
-  #data = null;
-  #sandbox = null;
-}
-
-/**
  * Test utils for quick suggest.
  */
 class _QuickSuggestTestUtils {
@@ -362,6 +272,11 @@ class _QuickSuggestTestUtils {
     return Cu.cloneInto(DEFAULT_CONFIG, this);
   }
 
+  get BEST_MATCH_CONFIG() {
+    // Return a clone so callers can modify it.
+    return Cu.cloneInto(BEST_MATCH_CONFIG, this);
+  }
+
   /**
    * Waits for quick suggest initialization to finish, ensures its data will not
    * be updated again during the test, and also optionally sets it up with mock
@@ -380,46 +295,26 @@ class _QuickSuggestTestUtils {
    *   Merino without using this function by using `MerinoTestUtils` directly.
    * @param {object} options.config
    *   The quick suggest configuration object.
-   * @param {object} options.rustEnabled
-   *   Whether the Rust backend should be enabled. If false, the JS backend will
-   *   be used. (There's no way to tell this function not to change the backend.
-   *   If you need that, please modify this function to support it!)
    * @returns {Function}
-   *   An async cleanup function. This function is automatically registered as
-   *   a cleanup function, so you only need to call it if your test needs to
-   *   clean up quick suggest before it ends, for example if you have a small
-   *   number of tasks that need quick suggest and it's not enabled throughout
-   *   your test. The cleanup function is idempotent so there's no harm in
-   *   calling it more than once. Be sure to `await` it.
+   *   A cleanup function. You only need to call this function if you're in a
+   *   browser chrome test and you did not also call `init`. You can ignore it
+   *   otherwise.
    */
   async ensureQuickSuggestInit({
     remoteSettingsResults,
     merinoSuggestions = null,
     config = DEFAULT_CONFIG,
-    rustEnabled = false,
   } = {}) {
     this.#mockRemoteSettings = new MockRemoteSettings({
       config,
-      data: remoteSettingsResults,
-    });
-    this.#mockRustSuggest = new MockRustSuggest({
       data: remoteSettingsResults,
     });
 
     this.info?.("ensureQuickSuggestInit calling QuickSuggest.init()");
     lazy.QuickSuggest.init();
 
-    // Set the Rust pref. This must happen after setting up `MockRustSuggest`.
-    // Otherwise the real Rust component will be used and the Rust remote
-    // settings client will try to access the real remote settings server on
-    // ingestion.
-    lazy.UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
-    if (!rustEnabled) {
-      // Sync with current data.
-      this.info?.("ensureQuickSuggestInit syncing MockRemoteSettings");
-      await this.#mockRemoteSettings.sync();
-      this.info?.("ensureQuickSuggestInit done syncing MockRemoteSettings");
-    }
+    // Sync with current data.
+    await this.#mockRemoteSettings.sync();
 
     // Set up Merino.
     if (merinoSuggestions) {
@@ -430,41 +325,17 @@ class _QuickSuggestTestUtils {
       this.info?.("ensureQuickSuggestInit done setting up Merino server");
     }
 
-    let cleanupCalled = false;
     let cleanup = async () => {
-      if (!cleanupCalled) {
-        cleanupCalled = true;
-        await this.#uninitQuickSuggest(!!merinoSuggestions);
+      this.info?.("ensureQuickSuggestInit starting cleanup");
+      this.#mockRemoteSettings.cleanup();
+      if (merinoSuggestions) {
+        lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
       }
+      this.info?.("ensureQuickSuggestInit finished cleanup");
     };
     this.registerCleanupFunction?.(cleanup);
 
     return cleanup;
-  }
-
-  async #uninitQuickSuggest(clearDataCollectionEnabled) {
-    this.info?.("uninitQuickSuggest started");
-
-    // Reset the Rust enabled status. If the JS backend becomes enabled now, it
-    // will re-sync all features. Wait for that to finish *before* cleaning up
-    // MockRemoteSettings. This will ensure that all activity has stopped before
-    // this function returns.
-    let rustEnabled = lazy.UrlbarPrefs.get("quicksuggest.rustEnabled");
-    lazy.UrlbarPrefs.clear("quicksuggest.rustEnabled");
-    if (rustEnabled && !lazy.UrlbarPrefs.get("quicksuggest.rustEnabled")) {
-      this.info?.("uninitQuickSuggest syncing MockRemoteSettings");
-      await this.#mockRemoteSettings.sync();
-      this.info?.("uninitQuickSuggest done syncing MockRemoteSettings");
-    }
-
-    this.#mockRemoteSettings.cleanup();
-    this.#mockRustSuggest.cleanup();
-
-    if (clearDataCollectionEnabled) {
-      lazy.UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
-    }
-
-    this.info?.("uninitQuickSuggest done");
   }
 
   /**
@@ -477,7 +348,6 @@ class _QuickSuggestTestUtils {
    */
   async setRemoteSettingsResults(data) {
     await this.#mockRemoteSettings.update({ data });
-    this.#mockRustSuggest.update({ data });
   }
 
   /**
@@ -505,7 +375,7 @@ class _QuickSuggestTestUtils {
    * @see {@link setConfig}
    */
   async withConfig({ config, callback }) {
-    let original = lazy.QuickSuggest.jsBackend.config;
+    let original = lazy.QuickSuggestRemoteSettings.config;
     await this.setConfig(config);
     await callback();
     await this.setConfig(original);
@@ -641,10 +511,30 @@ class _QuickSuggestTestUtils {
       "Result helpURL"
     );
 
-    this.Assert.ok(
-      row._buttons.get("menu"),
-      "The menu button should be present"
-    );
+    if (lazy.UrlbarPrefs.get("resultMenu")) {
+      this.Assert.ok(
+        row._buttons.get("menu"),
+        "The menu button should be present"
+      );
+    } else {
+      let helpButton = row._buttons.get("help");
+      this.Assert.ok(helpButton, "The help button should be present");
+
+      let blockButton = row._buttons.get("block");
+      if (!isBestMatch) {
+        this.Assert.equal(
+          !!blockButton,
+          lazy.UrlbarPrefs.get("quickSuggestBlockingEnabled"),
+          "The block button is present iff quick suggest blocking is enabled"
+        );
+      } else {
+        this.Assert.equal(
+          !!blockButton,
+          lazy.UrlbarPrefs.get("bestMatchBlockingEnabled"),
+          "The block button is present iff best match blocking is enabled"
+        );
+      }
+    }
 
     return details;
   }
@@ -1127,7 +1017,6 @@ class _QuickSuggestTestUtils {
   }
 
   #mockRemoteSettings = null;
-  #mockRustSuggest = null;
 }
 
 export var QuickSuggestTestUtils = new _QuickSuggestTestUtils();

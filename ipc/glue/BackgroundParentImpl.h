@@ -18,8 +18,6 @@ class BackgroundParentImpl : public PBackgroundParent {
   BackgroundParentImpl();
   virtual ~BackgroundParentImpl();
 
-  void ProcessingError(Result aCode, const char* aReason) override;
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   PBackgroundTestParent* AllocPBackgroundTestParent(

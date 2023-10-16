@@ -9,7 +9,6 @@
 
 #include "js/loader/ModuleLoaderBase.h"
 #include "mozilla/BasePrincipal.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/StorageAccess.h"
 #include "nsISupports.h"
 #include "nsWeakReference.h"
@@ -67,13 +66,6 @@ class BackstagePass final : public nsIGlobalObject,
   void InitModuleLoader(ModuleLoaderBase* aModuleLoader) {
     MOZ_ASSERT(!mModuleLoader);
     mModuleLoader = aModuleLoader;
-  }
-
-  nsISerialEventTarget* SerialEventTarget() const final {
-    return mozilla::GetMainThreadSerialEventTarget();
-  }
-  nsresult Dispatch(already_AddRefed<nsIRunnable>&& aRunnable) const final {
-    return mozilla::SchedulerGroup::Dispatch(std::move(aRunnable));
   }
 
   bool ShouldResistFingerprinting(RFPTarget aTarget) const override {

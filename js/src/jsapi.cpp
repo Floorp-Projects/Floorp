@@ -1304,17 +1304,6 @@ JS_PUBLIC_API void JS::MaybeRunNurseryCollection(JSRuntime* rt,
   }
 }
 
-JS_PUBLIC_API void JS::RunNurseryCollection(
-    JSRuntime* rt, JS::GCReason reason,
-    mozilla::TimeDuration aSinceLastMinorGC) {
-  gc::GCRuntime& gc = rt->gc;
-  if (!gc.nursery().lastCollectionEndTime() ||
-      (mozilla::TimeStamp::Now() - gc.nursery().lastCollectionEndTime() >
-       aSinceLastMinorGC)) {
-    gc.minorGC(reason);
-  }
-}
-
 JS_PUBLIC_API void JS_GC(JSContext* cx, JS::GCReason reason) {
   AssertHeapIsIdle();
   JS::PrepareForFullGC(cx);
@@ -2366,7 +2355,8 @@ void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
   noScriptRval = rhs.noScriptRval;
 }
 
-JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx) {}
+JS::OwningCompileOptions::OwningCompileOptions(JSContext* cx)
+    : ReadOnlyCompileOptions() {}
 
 void JS::OwningCompileOptions::release() {
   // OwningCompileOptions always owns these, so these casts are okay.
@@ -2458,7 +2448,7 @@ bool JS::OwningCompileOptions::copy(JS::FrontendContext* fc,
   return copyImpl(fc, rhs);
 }
 
-JS::CompileOptions::CompileOptions(JSContext* cx) {
+JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   prefableOptions_ = cx->options().compileOptions();
 
   if (cx->options().asmJSOption() == AsmJSOption::Enabled) {
@@ -3955,7 +3945,7 @@ void JSErrorBase::freeMessage() {
   message_ = JS::ConstUTF8CharsZ();
 }
 
-JSErrorNotes::JSErrorNotes() = default;
+JSErrorNotes::JSErrorNotes() : notes_() {}
 
 JSErrorNotes::~JSErrorNotes() = default;
 
@@ -4161,22 +4151,6 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
                                                  uint32_t value) {
   JSRuntime* rt = cx->runtime();
   switch (opt) {
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-    case JSJITCOMPILER_PORTABLE_BASELINE_ENABLE:
-      if (value == 1) {
-        jit::JitOptions.portableBaselineInterpreter = true;
-      } else if (value == 0) {
-        jit::JitOptions.portableBaselineInterpreter = false;
-      }
-      break;
-    case JSJITCOMPILER_PORTABLE_BASELINE_WARMUP_THRESHOLD:
-      if (value == uint32_t(-1)) {
-        jit::DefaultJitOptions defaultValues;
-        value = defaultValues.portableBaselineInterpreterWarmUpThreshold;
-      }
-      jit::JitOptions.portableBaselineInterpreterWarmUpThreshold = value;
-      break;
-#endif
     case JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER:
       if (value == uint32_t(-1)) {
         jit::DefaultJitOptions defaultValues;
@@ -4448,18 +4422,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       return false;
   }
 #else
-  switch (opt) {
-#  ifdef ENABLE_PORTABLE_BASELINE_INTERP
-    case JSJITCOMPILER_PORTABLE_BASELINE_ENABLE:
-      *valueOut = jit::JitOptions.portableBaselineInterpreter;
-      break;
-    case JSJITCOMPILER_PORTABLE_BASELINE_WARMUP_THRESHOLD:
-      *valueOut = jit::JitOptions.portableBaselineInterpreterWarmUpThreshold;
-      break;
-#  endif
-    default:
-      *valueOut = 0;
-  }
+  *valueOut = 0;
 #endif
   return true;
 }

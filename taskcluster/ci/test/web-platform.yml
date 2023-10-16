@@ -218,16 +218,11 @@ web-platform-tests-webgpu:
     # (though we're working on reducing this!)
     # Devs would love ~10-15m runs, but we don't want to be more than
     # 50% overhead, so let's aim for 15m (20m debug)
-    chunks:
-        by-test-platform:
-            linux2204.*-64.*: 15
-            windows.*-64.*/opt.*: 15
-            windows.*-64.*/debug.*: 20
-            default: 10
+    chunks: 10
     max-run-time:
         by-test-platform:
-            .*/debug: 5400  # 90m
-            default: 3200  # 60m
+            .*/debug: 1800  # 30m
+            default: 1200  # 20m
     variants: []  # We don't need sw or nofis testing.
     run-on-projects:
         by-test-platform:
@@ -465,6 +460,7 @@ web-platform-tests-crashtest:
                 by-test-platform:
                     android.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
+                    .*wayland.*: []
                     default: built-projects
     tier: default
 

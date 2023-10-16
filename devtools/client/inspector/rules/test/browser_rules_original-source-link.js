@@ -8,10 +8,8 @@
 
 const TESTCASE_URI = URL_ROOT_SSL + "doc_sourcemaps.html";
 const PREF = "devtools.source-map.client-service.enabled";
-const SCSS_FILENAME = "doc_sourcemaps.scss";
-const SCSS_LOC_LINE = 4;
-const CSS_FILENAME = "doc_sourcemaps.css";
-const CSS_LOC_LINE = 1;
+const SCSS_LOC = "doc_sourcemaps.scss:4";
+const CSS_LOC = "doc_sourcemaps.css:1";
 
 add_task(async function () {
   info("Setting the " + PREF + " pref to true");
@@ -23,11 +21,11 @@ add_task(async function () {
   info("Selecting the test node");
   await selectNode("div", inspector);
 
-  await verifyStyleSheetLink(view, SCSS_FILENAME, SCSS_LOC_LINE);
+  await verifyLinkText(SCSS_LOC, view);
 
   info("Setting the " + PREF + " pref to false");
   Services.prefs.setBoolPref(PREF, false);
-  await verifyStyleSheetLink(view, CSS_FILENAME, CSS_LOC_LINE);
+  await verifyLinkText(CSS_LOC, view);
 
   info("Setting the " + PREF + " pref to true again");
   Services.prefs.setBoolPref(PREF, true);
@@ -81,38 +79,15 @@ function waitForOriginalStyleSheetEditorSelection(toolbox) {
   });
 }
 
-async function verifyStyleSheetLink(view, fileName, lineNumber) {
-  const expectedLocation = `${fileName}:${lineNumber}`;
-  const expectedUrl = URL_ROOT_SSL + fileName;
-  const expectedTitle = URL_ROOT_SSL + expectedLocation;
-
-  info("Verifying that the rule-view stylesheet link is " + expectedLocation);
+function verifyLinkText(text, view) {
+  info("Verifying that the rule-view stylesheet link is " + text);
   const label = getRuleViewLinkByIndex(view, 1).querySelector(
     ".ruleview-rule-source-label"
   );
-  await waitForSuccess(function () {
+  return waitForSuccess(function () {
     return (
-      label.textContent == expectedLocation &&
-      label.getAttribute("title") === expectedTitle
+      label.textContent == text &&
+      label.getAttribute("title") === URL_ROOT_SSL + text
     );
-  }, "Link text changed to display correct location: " + expectedLocation);
-
-  const copyLocationMenuItem = openStyleContextMenuAndGetAllItems(
-    view,
-    label
-  ).find(
-    item =>
-      item.label ===
-      STYLE_INSPECTOR_L10N.getStr("styleinspector.contextmenu.copyLocation")
-  );
-
-  try {
-    await waitForClipboardPromise(
-      () => copyLocationMenuItem.click(),
-      () => SpecialPowers.getClipboardData("text/plain") === expectedUrl
-    );
-    ok(true, "Expected URL was copied to clipboard");
-  } catch (e) {
-    ok(false, `Clipboard text does not match expected "${expectedUrl}" url`);
-  }
+  }, "Link text changed to display correct location: " + text);
 }

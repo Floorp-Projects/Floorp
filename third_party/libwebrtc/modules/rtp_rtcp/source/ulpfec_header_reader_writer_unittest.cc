@@ -59,11 +59,8 @@ std::unique_ptr<Packet> WriteHeader(const uint8_t* packet_mask,
   for (size_t i = 0; i < written_packet->data.size(); ++i) {
     data[i] = i;  // Actual content doesn't matter.
   }
-  const FecHeaderWriter::ProtectedStream protected_streams[] = {
-      {.ssrc = kMediaSsrc,
-       .seq_num_base = kMediaStartSeqNum,
-       .packet_mask = {packet_mask, packet_mask_size}}};
-  writer.FinalizeFecHeader(protected_streams, *written_packet);
+  writer.FinalizeFecHeader(kMediaSsrc, kMediaStartSeqNum, packet_mask,
+                           packet_mask_size, written_packet.get());
   return written_packet;
 }
 
@@ -163,11 +160,8 @@ TEST(UlpfecHeaderWriterTest, FinalizesSmallHeader) {
   }
 
   UlpfecHeaderWriter writer;
-  const FecHeaderWriter::ProtectedStream protected_streams[] = {
-      {.ssrc = kMediaSsrc,
-       .seq_num_base = kMediaStartSeqNum,
-       .packet_mask = {packet_mask.get(), packet_mask_size}}};
-  writer.FinalizeFecHeader(protected_streams, written_packet);
+  writer.FinalizeFecHeader(kMediaSsrc, kMediaStartSeqNum, packet_mask.get(),
+                           packet_mask_size, &written_packet);
 
   const uint8_t* packet = written_packet.data.cdata();
   EXPECT_EQ(0x00, packet[0] & 0x80);  // E bit.
@@ -191,11 +185,8 @@ TEST(UlpfecHeaderWriterTest, FinalizesLargeHeader) {
   }
 
   UlpfecHeaderWriter writer;
-  const FecHeaderWriter::ProtectedStream protected_streams[] = {
-      {.ssrc = kMediaSsrc,
-       .seq_num_base = kMediaStartSeqNum,
-       .packet_mask = {packet_mask.get(), packet_mask_size}}};
-  writer.FinalizeFecHeader(protected_streams, written_packet);
+  writer.FinalizeFecHeader(kMediaSsrc, kMediaStartSeqNum, packet_mask.get(),
+                           packet_mask_size, &written_packet);
 
   const uint8_t* packet = written_packet.data.cdata();
   EXPECT_EQ(0x00, packet[0] & 0x80);  // E bit.

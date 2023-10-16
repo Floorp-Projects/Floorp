@@ -117,16 +117,6 @@ function _EU_maybeWrap(o) {
 }
 
 function _EU_maybeUnwrap(o) {
-  var haveWrap = false;
-  try {
-    haveWrap = SpecialPowers.unwrap != undefined;
-  } catch (e) {
-    // Just leave it false.
-  }
-  if (!haveWrap) {
-    // Not much we can do here.
-    return o;
-  }
   var c = Object.getOwnPropertyDescriptor(window, "Components");
   return c && c.value && !c.writable ? o : SpecialPowers.unwrap(o);
 }
@@ -263,6 +253,10 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
 
   if (typeof aTarget == "string") {
     aTarget = aWindow.document.getElementById(aTarget);
+  }
+
+  if (aEvent.type === "click" && this.AccessibilityUtils) {
+    this.AccessibilityUtils.assertCanBeClicked(aTarget);
   }
 
   var event = aWindow.document.createEvent("MouseEvent");
@@ -579,90 +573,6 @@ function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow) {
   );
 }
 
-/**
- * Return the drag service.  Note that if we're in the headless mode, this
- * may return null because the service may be never instantiated (e.g., on
- * Linux).
- */
-function getDragService() {
-  try {
-    return _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(
-      _EU_Ci.nsIDragService
-    );
-  } catch (e) {
-    // If we're in the headless mode, the drag service may be never
-    // instantiated.  In this case, an exception is thrown.  Let's ignore
-    // any exceptions since without the drag service, nobody can create a
-    // drag session.
-    return null;
-  }
-}
-
-/**
- * End drag session if there is.
- *
- * TODO: This should synthesize "drop" if necessary.
- *
- * @param left          X offset in the viewport
- * @param top           Y offset in the viewport
- * @param aEvent        The event data, the modifiers are applied to the
- *                      "dragend" event.
- * @param aWindow       The window.
- * @return              true if handled.  In this case, the caller should not
- *                      synthesize DOM events basically.
- */
-function _maybeEndDragSession(left, top, aEvent, aWindow) {
-  const dragService = getDragService();
-  const dragSession = dragService?.getCurrentSession();
-  if (!dragSession) {
-    return false;
-  }
-  // FIXME: If dragSession.dragAction is not
-  // nsIDragService.DRAGDROP_ACTION_NONE nor aEvent.type is not `keydown`, we
-  // need to synthesize a "drop" event or call setDragEndPointForTests here to
-  // set proper left/top to `dragend` event.
-  try {
-    dragService.endDragSession(false, _parseModifiers(aEvent, aWindow));
-  } catch (e) {}
-  return true;
-}
-
-function _maybeSynthesizeDragOver(left, top, aEvent, aWindow) {
-  const dragSession = getDragService()?.getCurrentSession();
-  if (!dragSession) {
-    return false;
-  }
-  const target = aWindow.document.elementFromPoint(left, top);
-  if (target) {
-    sendDragEvent(
-      createDragEventObject(
-        "dragover",
-        target,
-        aWindow,
-        dragSession.dataTransfer,
-        {
-          accelKey: aEvent.accelKey,
-          altKey: aEvent.altKey,
-          altGrKey: aEvent.altGrKey,
-          ctrlKey: aEvent.ctrlKey,
-          metaKey: aEvent.metaKey,
-          shiftKey: aEvent.shiftKey,
-          capsLockKey: aEvent.capsLockKey,
-          fnKey: aEvent.fnKey,
-          fnLockKey: aEvent.fnLockKey,
-          numLockKey: aEvent.numLockKey,
-          scrollLockKey: aEvent.scrollLockKey,
-          symbolKey: aEvent.symbolKey,
-          symbolLockKey: aEvent.symbolLockKey,
-        }
-      ),
-      target,
-      aWindow
-    );
-  }
-  return true;
-}
-
 /*
  * Synthesize a mouse event at a particular point in aWindow.
  *
@@ -677,18 +587,6 @@ function _maybeSynthesizeDragOver(left, top, aEvent, aWindow) {
  * aWindow is optional, and defaults to the current window object.
  */
 function synthesizeMouseAtPoint(left, top, aEvent, aWindow = window) {
-  if (aEvent.allowToHandleDragDrop) {
-    if (aEvent.type == "mouseup" || !aEvent.type) {
-      if (_maybeEndDragSession(left, top, aEvent, aWindow)) {
-        return false;
-      }
-    } else if (aEvent.type == "mousemove") {
-      if (_maybeSynthesizeDragOver(left, top, aEvent, aWindow)) {
-        return false;
-      }
-    }
-  }
-
   var utils = _getDOMWindowUtils(aWindow);
   var defaultPrevented = false;
 
@@ -1500,32 +1398,7 @@ function synthesizeAndWaitNativeMouseMove(
  *
  */
 function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback) {
-  const event = aEvent === undefined || aEvent === null ? {} : aEvent;
-  let dispatchKeydown =
-    !("type" in event) || event.type === "keydown" || !event.type;
-  const dispatchKeyup =
-    !("type" in event) || event.type === "keyup" || !event.type;
-
-  if (dispatchKeydown && aKey == "KEY_Escape") {
-    let eventForKeydown = Object.assign({}, JSON.parse(JSON.stringify(event)));
-    eventForKeydown.type = "keydown";
-    if (
-      _maybeEndDragSession(
-        // TODO: We should set the last dragover point instead
-        0,
-        0,
-        eventForKeydown,
-        aWindow
-      )
-    ) {
-      if (!dispatchKeyup) {
-        return;
-      }
-      // We don't need to dispatch only keydown event because it's consumed by
-      // the drag session.
-      dispatchKeydown = false;
-    }
-  }
+  var event = aEvent === undefined || aEvent === null ? {} : aEvent;
 
   var TIP = _getTIP(aWindow, aCallback);
   if (!TIP) {
@@ -1535,6 +1408,10 @@ function synthesizeKey(aKey, aEvent = undefined, aWindow = window, aCallback) {
   var modifiers = _emulateToActivateModifiers(TIP, event, aWindow);
   var keyEventDict = _createKeyboardEventDictionary(aKey, event, TIP, aWindow);
   var keyEvent = new KeyboardEvent("", keyEventDict.dictionary);
+  var dispatchKeydown =
+    !("type" in event) || event.type === "keydown" || !event.type;
+  var dispatchKeyup =
+    !("type" in event) || event.type === "keyup" || !event.type;
 
   try {
     if (dispatchKeydown) {
@@ -3106,14 +2983,7 @@ function synthesizeDropAfterDragOver(
     );
     sendDragEvent(event, aDestElement, aDestWindow);
   }
-  // Don't run accessibility checks for this click, since we're not actually
-  // clicking. It's just generated as part of the drop.
-  // this.AccessibilityUtils might not be set if this isn't a browser test or
-  // if a browser test has loaded its own copy of EventUtils for some reason.
-  // In the latter case, the test probably shouldn't do that.
-  this.AccessibilityUtils?.suppressClickHandling(true);
   synthesizeMouse(aDestElement, 2, 2, { type: "mouseup" }, aDestWindow);
-  this.AccessibilityUtils?.suppressClickHandling(false);
 
   return effect;
 }

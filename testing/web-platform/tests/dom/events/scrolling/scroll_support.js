@@ -20,6 +20,10 @@ async function waitForScrollendEventNoTimeout(target) {
   });
 }
 
+async function waitForOverscrollEvent(test, target, timeoutMs = 500) {
+  return waitForEvent("overscroll", test, target, timeoutMs);
+}
+
 async function waitForPointercancelEvent(test, target, timeoutMs = 500) {
   return waitForEvent("pointercancel", test, target, timeoutMs);
 }

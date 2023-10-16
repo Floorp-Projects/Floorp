@@ -1,4 +1,4 @@
-__version__ = "3.8.5"
+__version__ = "3.7.4.post0"
 
 from typing import Tuple
 
@@ -38,7 +38,7 @@ from .client import (
 )
 from .cookiejar import CookieJar as CookieJar, DummyCookieJar as DummyCookieJar
 from .formdata import FormData as FormData
-from .helpers import BasicAuth, ChainMapProxy, ETag
+from .helpers import BasicAuth as BasicAuth, ChainMapProxy as ChainMapProxy
 from .http import (
     HttpVersion as HttpVersion,
     HttpVersion10 as HttpVersion10,
@@ -78,6 +78,7 @@ from .resolver import (
     DefaultResolver as DefaultResolver,
     ThreadedResolver as ThreadedResolver,
 )
+from .signals import Signal as Signal
 from .streams import (
     EMPTY_PAYLOAD as EMPTY_PAYLOAD,
     DataQueue as DataQueue,
@@ -146,7 +147,6 @@ __all__: Tuple[str, ...] = (
     # helpers
     "BasicAuth",
     "ChainMapProxy",
-    "ETag",
     # http
     "HttpVersion",
     "HttpVersion10",
@@ -183,7 +183,8 @@ __all__: Tuple[str, ...] = (
     "AsyncResolver",
     "DefaultResolver",
     "ThreadedResolver",
-    # streams
+    # signals
+    "Signal",
     "DataQueue",
     "EMPTY_PAYLOAD",
     "EofStream",

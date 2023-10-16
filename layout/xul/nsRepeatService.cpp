@@ -48,7 +48,7 @@ void nsRepeatService::Start(Callback aCallback, void* aCallbackData,
   mCallbackData = aCallbackData;
   mCallbackName = aCallbackName;
 
-  mRepeatTimer = NS_NewTimer(GetMainThreadSerialEventTarget());
+  mRepeatTimer = NS_NewTimer(aDocument->EventTargetFor(TaskCategory::Other));
 
   if (mRepeatTimer) {
     InitTimerCallback(aInitialDelay);

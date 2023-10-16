@@ -5,7 +5,8 @@ use std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 /// the same size and representation as `Handle<T>`.
 type Index = NonZeroU32;
 
-use crate::{FastIndexSet, Span};
+use crate::Span;
+use indexmap::set::IndexSet;
 
 #[derive(Clone, Copy, Debug, thiserror::Error, PartialEq)]
 #[error("Handle {index} of {kind} is either not present, or inaccessible yet")]
@@ -191,29 +192,10 @@ impl<T> Iterator for Range<T> {
 }
 
 impl<T> Range<T> {
-    /// Return a range enclosing handles `first` through `last`, inclusive.
     pub fn new_from_bounds(first: Handle<T>, last: Handle<T>) -> Self {
         Self {
             inner: (first.index() as u32)..(last.index() as u32 + 1),
             marker: Default::default(),
-        }
-    }
-
-    /// Return the first and last handles included in `self`.
-    ///
-    /// If `self` is an empty range, there are no handles included, so
-    /// return `None`.
-    pub fn first_and_last(&self) -> Option<(Handle<T>, Handle<T>)> {
-        if self.inner.start < self.inner.end {
-            Some((
-                // `Range::new_from_bounds` expects a 1-based, start- and
-                // end-inclusive range, but `self.inner` is a zero-based,
-                // end-exclusive range.
-                Handle::new(Index::new(self.inner.start + 1).unwrap()),
-                Handle::new(Index::new(self.inner.end).unwrap()),
-            ))
-        } else {
-            None
         }
     }
 }
@@ -400,19 +382,6 @@ impl<T> Arena<T> {
             Ok(())
         }
     }
-
-    #[cfg(feature = "compact")]
-    pub(crate) fn retain_mut<P>(&mut self, mut predicate: P)
-    where
-        P: FnMut(Handle<T>, &mut T) -> bool,
-    {
-        let mut index = 0;
-        self.data.retain_mut(|elt| {
-            index += 1;
-            let handle = Handle::new(Index::new(index).unwrap());
-            predicate(handle, elt)
-        })
-    }
 }
 
 #[cfg(feature = "deserialize")]
@@ -515,11 +484,11 @@ mod tests {
 /// `UniqueArena` is `HashSet`-like.
 #[cfg_attr(feature = "clone", derive(Clone))]
 pub struct UniqueArena<T> {
-    set: FastIndexSet<T>,
+    set: IndexSet<T>,
 
     /// Spans for the elements, indexed by handle.
     ///
-    /// The length of this vector is always equal to `set.len()`. `FastIndexSet`
+    /// The length of this vector is always equal to `set.len()`. `IndexSet`
     /// promises that its elements "are indexed in a compact range, without
     /// holes in the range 0..set.len()", so we can always use the indices
     /// returned by insertion as indices into this vector.
@@ -531,7 +500,7 @@ impl<T> UniqueArena<T> {
     /// Create a new arena with no initial capacity allocated.
     pub fn new() -> Self {
         UniqueArena {
-            set: FastIndexSet::default(),
+            set: IndexSet::new(),
             #[cfg(feature = "span")]
             span_info: Vec::new(),
         }
@@ -573,44 +542,6 @@ impl<T> UniqueArena<T> {
         {
             let _ = handle;
             Span::default()
-        }
-    }
-
-    #[cfg(feature = "compact")]
-    pub(crate) fn drain_all(&mut self) -> UniqueArenaDrain<T> {
-        UniqueArenaDrain {
-            inner_elts: self.set.drain(..),
-            #[cfg(feature = "span")]
-            inner_spans: self.span_info.drain(..),
-            index: Index::new(1).unwrap(),
-        }
-    }
-}
-
-#[cfg(feature = "compact")]
-pub(crate) struct UniqueArenaDrain<'a, T> {
-    inner_elts: indexmap::set::Drain<'a, T>,
-    #[cfg(feature = "span")]
-    inner_spans: std::vec::Drain<'a, Span>,
-    index: Index,
-}
-
-#[cfg(feature = "compact")]
-impl<'a, T> Iterator for UniqueArenaDrain<'a, T> {
-    type Item = (Handle<T>, T, Span);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.inner_elts.next() {
-            Some(elt) => {
-                let handle = Handle::new(self.index);
-                self.index = self.index.checked_add(1).unwrap();
-                #[cfg(feature = "span")]
-                let span = self.inner_spans.next().unwrap();
-                #[cfg(not(feature = "span"))]
-                let span = Span::default();
-                Some((handle, elt, span))
-            }
-            None => None,
         }
     }
 }
@@ -740,7 +671,7 @@ where
     where
         D: serde::Deserializer<'de>,
     {
-        let set = FastIndexSet::deserialize(deserializer)?;
+        let set = IndexSet::deserialize(deserializer)?;
         #[cfg(feature = "span")]
         let span_info = std::iter::repeat(Span::default()).take(set.len()).collect();
 

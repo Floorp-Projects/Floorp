@@ -393,7 +393,6 @@ def run(
     dry_run=False,
     message="{msg}",
     closed_tree=False,
-    push_to_lando=False,
 ):
     setup_globals()
     download_coverage_mapping(vcs.base_ref)
@@ -445,5 +444,4 @@ def run(
         stage_changes=stage_changes,
         dry_run=dry_run,
         closed_tree=closed_tree,
-        push_to_lando=push_to_lando,
     )

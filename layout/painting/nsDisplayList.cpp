@@ -3746,7 +3746,8 @@ bool nsDisplayThemedBackground::CreateWebRenderCommands(
 }
 
 bool nsDisplayThemedBackground::IsWindowActive() const {
-  return !mFrame->PresContext()->Document()->IsTopLevelWindowInactive();
+  DocumentState docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
+  return !docState.HasState(DocumentState::WINDOW_INACTIVE);
 }
 
 void nsDisplayThemedBackground::ComputeInvalidationRegion(
@@ -6170,9 +6171,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
       mRotate(aFrame->StyleDisplay()->mRotate),
       mScale(aFrame->StyleDisplay()->mScale),
       mTransform(aFrame->StyleDisplay()->mTransform),
-      mMotion(aFrame->StyleDisplay()->mOffsetPath.IsNone()
-                  ? Nothing()
-                  : MotionPathUtils::ResolveMotionPath(aFrame, aRefBox)),
+      mMotion(MotionPathUtils::ResolveMotionPath(aFrame, aRefBox)),
       mToTransformOrigin(
           GetDeltaToTransformOrigin(aFrame, aRefBox, aAppUnitsPerPixel)) {}
 
@@ -8023,7 +8022,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
 
   auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
   const nsRect refBox =
-      nsLayoutUtils::ComputeClipPathGeometryBox(frame, clipPath.AsShape()._1);
+      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
 
   wr::WrClipId clipId{};
 
@@ -8104,7 +8103,7 @@ static void FillPolygonDataForDisplayItem(
   const auto& clipPath = style->mClipPath;
   const auto& shape = *clipPath.AsShape()._0;
   const nsRect refBox =
-      nsLayoutUtils::ComputeClipPathGeometryBox(frame, clipPath.AsShape()._1);
+      nsLayoutUtils::ComputeGeometryBox(frame, clipPath.AsShape()._1);
 
   // We only fill polygon data for polygons that are below a complexity
   // limit.

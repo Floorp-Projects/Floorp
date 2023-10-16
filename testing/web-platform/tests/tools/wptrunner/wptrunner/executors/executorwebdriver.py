@@ -91,9 +91,7 @@ addEventListener("__test_restart", e => {e.preventDefault(); callback(true)})"""
             except (socket.timeout, error.NoSuchWindowException, error.UnknownErrorException, OSError):
                 break
             except Exception:
-                message = "Uncaught exception in WebDriverBaseProtocolPart.wait:\n"
-                message += traceback.format_exc()
-                self.logger.error(message)
+                self.logger.error(traceback.format_exc())
                 break
         return False
 
@@ -687,7 +685,7 @@ class WebDriverCrashtestExecutor(CrashtestExecutor):
     def __init__(self, logger, browser, server_config, timeout_multiplier=1,
                  screenshot_cache=None, close_after_done=True,
                  debug_info=None, capabilities=None, **kwargs):
-        """WebDriver-based executor for crashtests"""
+        """WebDriver-based executor for reftests"""
         CrashtestExecutor.__init__(self,
                                    logger,
                                    browser,

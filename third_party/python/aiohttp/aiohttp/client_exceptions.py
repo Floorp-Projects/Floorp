@@ -4,7 +4,6 @@ import asyncio
 import warnings
 from typing import TYPE_CHECKING, Any, Optional, Tuple, Union
 
-from .http_parser import RawResponseMessage
 from .typedefs import LooseHeaders
 
 try:
@@ -12,7 +11,7 @@ try:
 
     SSLContext = ssl.SSLContext
 except ImportError:  # pragma: no cover
-    ssl = SSLContext = None  # type: ignore[assignment]
+    ssl = SSLContext = None  # type: ignore
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -100,7 +99,7 @@ class ClientResponseError(ClientError):
             args += f", message={self.message!r}"
         if self.headers is not None:
             args += f", headers={self.headers!r}"
-        return f"{type(self).__name__}({args})"
+        return "{}({})".format(type(self).__name__, args)
 
     @property
     def code(self) -> int:
@@ -154,7 +153,7 @@ class ClientConnectorError(ClientOSError):
     """Client connector error.
 
     Raised in :class:`aiohttp.connector.TCPConnector` if
-        a connection can not be established.
+        connection to proxy can not be established.
     """
 
     def __init__(self, connection_key: ConnectionKey, os_error: OSError) -> None:
@@ -196,29 +195,6 @@ class ClientProxyConnectionError(ClientConnectorError):
     """
 
 
-class UnixClientConnectorError(ClientConnectorError):
-    """Unix connector error.
-
-    Raised in :py:class:`aiohttp.connector.UnixConnector`
-    if connection to unix socket can not be established.
-    """
-
-    def __init__(
-        self, path: str, connection_key: ConnectionKey, os_error: OSError
-    ) -> None:
-        self._path = path
-        super().__init__(connection_key, os_error)
-
-    @property
-    def path(self) -> str:
-        return self._path
-
-    def __str__(self) -> str:
-        return "Cannot connect to unix socket {0.path} ssl:{1} [{2}]".format(
-            self, self.ssl if self.ssl is not None else "default", self.strerror
-        )
-
-
 class ServerConnectionError(ClientConnectionError):
     """Server connection errors."""
 
@@ -226,7 +202,7 @@ class ServerConnectionError(ClientConnectionError):
 class ServerDisconnectedError(ServerConnectionError):
     """Server disconnected."""
 
-    def __init__(self, message: Union[RawResponseMessage, str, None] = None) -> None:
+    def __init__(self, message: Optional[str] = None) -> None:
         if message is None:
             message = "Server disconnected"
 
@@ -262,8 +238,7 @@ class InvalidURL(ClientError, ValueError):
     """Invalid URL.
 
     URL used for fetching is malformed, e.g. it doesn't contains host
-    part.
-    """
+    part."""
 
     # Derive from ValueError for backward compatibility
 
@@ -304,11 +279,11 @@ else:  # pragma: no cover
     ssl_error_bases = (ClientSSLError,)
 
 
-class ClientConnectorSSLError(*ssl_error_bases):  # type: ignore[misc]
+class ClientConnectorSSLError(*ssl_error_bases):  # type: ignore
     """Response ssl error."""
 
 
-class ClientConnectorCertificateError(*cert_errors_bases):  # type: ignore[misc]
+class ClientConnectorCertificateError(*cert_errors_bases):  # type: ignore
     """Response certificate error."""
 
     def __init__(

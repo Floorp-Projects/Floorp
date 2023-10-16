@@ -171,7 +171,8 @@ class DllServices : public detail::DllServicesBase {
         NewRunnableMethod<StoreCopyPassByRRef<EnhancedModuleLoadInfo>>(
             "DllServices::NotifyDllLoad", this, &DllServices::NotifyDllLoad,
             std::move(aModLoadInfo)));
-    SchedulerGroup::Dispatch(runnable.forget());
+
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
 
   void DispatchModuleLoadBacklogNotification(
@@ -181,7 +182,7 @@ class DllServices : public detail::DllServicesBase {
             "DllServices::NotifyModuleLoadBacklog", this,
             &DllServices::NotifyModuleLoadBacklog, std::move(aEvents)));
 
-    SchedulerGroup::Dispatch(runnable.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, runnable.forget());
   }
 
 #  if defined(DEBUG)

@@ -23,7 +23,9 @@ vendoring:
   tracking: tag
 
   exclude:
+    - "*"
     - "**"
+    - ".*"
 
   include:
     - lib/envelope.h

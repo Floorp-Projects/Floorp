@@ -138,6 +138,185 @@ a11y:
     record_in_processes:
       - 'main'
 
+attribution.provenance:
+  data_exists:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will be true if the "zoneIdProvenanceData" file is present in the
+      installation directory and we were able to successfully read it.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  file_system:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      The file system that the installer resided on at installation time.
+      Possible values are: "NTFS", "FAT32", "other".
+      In error cases, it can also be "missing", "error" or "readIniError".
+      Only sent if attribution.provenance.zone_id.data_exists is true.
+    keyed: false
+    expires: "121"
+    kind: string
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  ads_exists:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will always be false if attribution.provenance.zone_id.data_exists is
+      false. Will be true if the provenance data indicates that the
+      :Zone.Identifier Alternate Data Stream existed on the installer.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  security_zone:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      The zone identifier in the installer's :Zone.Identifier ADS.
+      Possible values are integers between 0 and 4, inclusive.
+      In error cases, it can also be "unexpected", "missing", "error", or
+      "readIniError".
+      Only sent if attribution.provenance.zone_id.ads_exists is true.
+    keyed: false
+    expires: "121"
+    kind: string
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  referrer_url_exists:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will be true if the zone identifier ADS contained a referrer URL. Will be
+      false if a referrer URL is specified, but it isn't a valid URL.
+      Only sent if attribution.provenance.zone_id.ads_exists is true.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  referrer_url_is_mozilla:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will be true if the referrer URL from the zone identifier ADS appeared to
+      be a Mozilla URL.
+      Only sent if attribution.provenance.zone_id.referrer_url_exists is true.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  host_url_exists:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will be true if the zone identifier ADS contained a host URL. Will be
+      false if a host URL is specified, but it isn't a valid URL.
+      Only sent if attribution.provenance.zone_id.ads_exists is true.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
+  host_url_is_mozilla:
+    bug_numbers:
+      - 1815023
+      - 1570652
+    description: >
+      Will be true if the host URL from the zone identifier ADS appeared to be a
+      Mozilla URL.
+      Only sent if attribution.provenance.zone_id.host_url_exists is true.
+    keyed: false
+    expires: "121"
+    kind: boolean
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    record_into_store:
+      - main
+      - new-profile
+
 # The following section contains the browser engagement scalars.
 browser.engagement:
   max_concurrent_tab_count:
@@ -2740,22 +2919,6 @@ media:
       - 'main'
       - 'content'
 
-  device_hardware_decoding_support:
-    bug_numbers:
-      - 1850594
-    description: >
-      Record the hardware decoding availability on devices, the key is the name of video codec, eg. h264, av1.
-    expires: never
-    kind: boolean
-    keyed: true
-    notification_emails:
-      - media-alerts@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'gpu'
-
 # The following section contains content process base counters.
 dom.contentprocess:
   buildID_mismatch:
@@ -3937,15 +4100,13 @@ gfx.canvas.remote:
       - 1672582
       - 1706844
       - 1739290
-      - 1852144
     description: >
       Number of times remote canvas 2D has been deactivated due to device creation failure.
     kind: uint
-    expires: "130"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
-      - aosmond@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -3958,15 +4119,13 @@ gfx.canvas.remote:
       - 1672582
       - 1706844
       - 1739290
-      - 1852144
     description: >
       Number of times remote canvas 2D has been deactivated due to a stream read failure.
     kind: uint
-    expires: "130"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
-      - aosmond@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4311,7 +4470,7 @@ apz:
       - 1836870
     description: >
       Count of overshoot events, where the user reverses scrollwheel direction soon after the last scrollwheel input.
-    expires: "126"
+    expires: "121"
     kind: uint
     notification_emails:
       - botond@mozilla.com
@@ -7388,7 +7547,7 @@ urlbar.picked:
         - 'firefox'
       record_in_processes:
         - main
-
+    
     clipboard:
       bug_numbers:
         - 1842247
@@ -7552,22 +7711,6 @@ urlbar.picked:
     quicksuggest:
       bug_numbers:
         - 1761059
-      description: >
-        Counts how many times this result type was picked at a given index.
-      expires: never
-      kind: uint
-      keyed: true
-      notification_emails:
-        - fx-search-telemetry@mozilla.com
-      release_channel_collection: opt-out
-      products:
-        - 'firefox'
-      record_in_processes:
-        - main
-
-    recent_search:
-      bug_numbers:
-        - 1852848
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never
@@ -8575,6 +8718,23 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  impression_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has viewed non-sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar. The
+      key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   impression_sponsored:
     bug_numbers:
       - 1800993
@@ -8582,6 +8742,23 @@ contextual.services.quicksuggest:
       A keyed uint recording how many times the user has viewed sponsored Firefox
       Suggest (a.k.a. Quick Suggest) results in the urlbar. The key is the 1-based
       index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  impression_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has viewed sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar. The
+      key is the 1-based index of each result.
     expires: never
     kind: uint
     keyed: true
@@ -8722,12 +8899,47 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  click_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on
+      non-sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar (not including the help button). The key is the 1-based index of
+      each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   click_sponsored:
     bug_numbers:
       - 1800993
     description: >
       A keyed uint recording how many times the user has clicked on sponsored
       Firefox Suggests (a.k.a. Quick Suggest) results in the urlbar (not
+      including the help button). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  click_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on sponsored
+      Firefox Suggest best match (a.k.a. top pick) results in the urlbar (not
       including the help button). The key is the 1-based index of each result.
     expires: never
     kind: uint
@@ -8792,6 +9004,24 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  help_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on the help
+      button in non-sponsored Firefox Suggest best match (a.k.a. top pick)
+      results in the urlbar (not including the help button). The key is the
+      1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   help_sponsored:
     bug_numbers:
       - 1800993
@@ -8799,6 +9029,24 @@ contextual.services.quicksuggest:
       A keyed uint recording how many times the user has clicked on the help
       button in sponsored Firefox Suggests (a.k.a. Quick Suggest) results in
       the urlbar. The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  help_sponsored_bestmatch:
+    bug_numbers:
+      - 1752953
+    description: >
+      A keyed uint recording how many times the user has clicked on the help
+      button in sponsored Firefox Suggest best match (a.k.a. top pick) results
+      in the urlbar (not including the help button). The key is the 1-based
+      index of each result.
     expires: never
     kind: uint
     keyed: true
@@ -8860,6 +9108,23 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  block_nonsponsored_bestmatch:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      non-sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar. The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
   block_sponsored:
     bug_numbers:
       - 1761059
@@ -8867,6 +9132,23 @@ contextual.services.quicksuggest:
       A keyed uint recording how many times the user has blocked/dismissed
       sponsored Firefox Suggest results in the urlbar, including best matches
       (a.k.a. top picks). The key is the 1-based index of each result.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  block_sponsored_bestmatch:
+    bug_numbers:
+      - 1761059
+    description: >
+      A keyed uint recording how many times the user has blocked/dismissed
+      sponsored Firefox Suggest best match (a.k.a. top pick) results in the
+      urlbar. The key is the 1-based index of each result.
     expires: never
     kind: uint
     keyed: true

@@ -884,20 +884,11 @@ this.browserAction = class extends ExtensionAPIPersistent {
       return IconDetails.escapeUrl(icon);
     };
 
-    let getStyle = (name, icon1x, icon2x) => {
+    let getStyle = (name, icon) => {
       return `
-        --webextension-${name}: image-set(
-          url("${getIcon(icon1x, "default")}"),
-          url("${getIcon(icon2x, "default")}") 2x
-        );
-        --webextension-${name}-light: image-set(
-          url("${getIcon(icon1x, "light")}"),
-          url("${getIcon(icon2x, "light")}") 2x
-        );
-        --webextension-${name}-dark: image-set(
-          url("${getIcon(icon1x, "dark")}"),
-          url("${getIcon(icon2x, "dark")}") 2x
-        );
+        --webextension-${name}: url("${getIcon(icon, "default")}");
+        --webextension-${name}-light: url("${getIcon(icon, "light")}");
+        --webextension-${name}-dark: url("${getIcon(icon, "dark")}");
       `;
     };
 
@@ -906,8 +897,10 @@ this.browserAction = class extends ExtensionAPIPersistent {
     let icon64 = IconDetails.getPreferredIcon(icons, this.extension, 64).icon;
 
     return `
-        ${getStyle("menupanel-image", icon32, icon64)}
-        ${getStyle("toolbar-image", icon16, icon32)}
+        ${getStyle("menupanel-image", icon32)}
+        ${getStyle("menupanel-image-2x", icon64)}
+        ${getStyle("toolbar-image", icon16)}
+        ${getStyle("toolbar-image-2x", icon32)}
       `;
   }
 

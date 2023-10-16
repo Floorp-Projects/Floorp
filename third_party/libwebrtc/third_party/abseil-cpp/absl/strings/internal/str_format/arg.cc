@@ -77,7 +77,7 @@ class IntDigits {
       v >>= 3;
     } while (v);
     start_ = p;
-    size_ = static_cast<size_t>(storage_ + sizeof(storage_) - p);
+    size_ = storage_ + sizeof(storage_) - p;
   }
 
   // Print the signed or unsigned integer as decimal.
@@ -86,8 +86,7 @@ class IntDigits {
   void PrintAsDec(T v) {
     static_assert(std::is_integral<T>::value, "");
     start_ = storage_;
-    size_ = static_cast<size_t>(numbers_internal::FastIntToBuffer(v, storage_) -
-                                storage_);
+    size_ = numbers_internal::FastIntToBuffer(v, storage_) - storage_;
   }
 
   void PrintAsDec(int128 v) {
@@ -106,7 +105,7 @@ class IntDigits {
     char *p = storage_ + sizeof(storage_);
     do {
       p -= 2;
-      numbers_internal::PutTwoDigits(static_cast<uint32_t>(v % 100), p);
+      numbers_internal::PutTwoDigits(static_cast<size_t>(v % 100), p);
       v /= 100;
     } while (v);
     if (p[0] == '0') {
@@ -116,7 +115,7 @@ class IntDigits {
     if (add_neg) {
       *--p = '-';
     }
-    size_ = static_cast<size_t>(storage_ + sizeof(storage_) - p);
+    size_ = storage_ + sizeof(storage_) - p;
     start_ = p;
   }
 
@@ -139,7 +138,7 @@ class IntDigits {
       ++p;
     }
     start_ = p;
-    size_ = static_cast<size_t>(storage_ + sizeof(storage_) - p);
+    size_ = storage_ + sizeof(storage_) - p;
   }
 
   // Print the unsigned integer as hex using uppercase.
@@ -155,7 +154,7 @@ class IntDigits {
       v >>= 4;
     } while (v);
     start_ = p;
-    size_ = static_cast<size_t>(storage_ + sizeof(storage_) - p);
+    size_ = storage_ + sizeof(storage_) - p;
   }
 
   // The printed value including the '-' sign if available.
@@ -209,12 +208,10 @@ string_view SignColumn(bool neg, const FormatConversionSpecImpl conv) {
   return {};
 }
 
-bool ConvertCharImpl(char v,
-                     const FormatConversionSpecImpl conv,
-                     FormatSinkImpl* sink) {
+bool ConvertCharImpl(unsigned char v, const FormatConversionSpecImpl conv,
+                     FormatSinkImpl *sink) {
   size_t fill = 0;
-  if (conv.width() >= 0)
-    fill = static_cast<size_t>(conv.width());
+  if (conv.width() >= 0) fill = conv.width();
   ReducePadding(1, &fill);
   if (!conv.has_left_flag()) sink->Append(fill, ' ');
   sink->Append(1, v);
@@ -228,8 +225,7 @@ bool ConvertIntImplInnerSlow(const IntDigits &as_digits,
   // Print as a sequence of Substrings:
   //   [left_spaces][sign][base_indicator][zeroes][formatted][right_spaces]
   size_t fill = 0;
-  if (conv.width() >= 0)
-    fill = static_cast<size_t>(conv.width());
+  if (conv.width() >= 0) fill = conv.width();
 
   string_view formatted = as_digits.without_neg_or_zero();
   ReducePadding(formatted, &fill);
@@ -240,9 +236,10 @@ bool ConvertIntImplInnerSlow(const IntDigits &as_digits,
   string_view base_indicator = BaseIndicator(as_digits, conv);
   ReducePadding(base_indicator, &fill);
 
-  bool precision_specified = conv.precision() >= 0;
-  size_t precision =
-      precision_specified ? static_cast<size_t>(conv.precision()) : size_t{1};
+  int precision = conv.precision();
+  bool precision_specified = precision >= 0;
+  if (!precision_specified)
+    precision = 1;
 
   if (conv.has_alt_flag() &&
       conv.conversion_char() == FormatConversionCharInternal::o) {
@@ -250,7 +247,7 @@ bool ConvertIntImplInnerSlow(const IntDigits &as_digits,
     //   "For o conversion, it increases the precision (if necessary) to
     //   force the first digit of the result to be zero."
     if (formatted.empty() || *formatted.begin() != '0') {
-      size_t needed = formatted.size() + 1;
+      int needed = static_cast<int>(formatted.size()) + 1;
       precision = std::max(precision, needed);
     }
   }
@@ -279,38 +276,8 @@ bool ConvertIntImplInnerSlow(const IntDigits &as_digits,
 }
 
 template <typename T>
-bool ConvertFloatArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
-  if (conv.conversion_char() == FormatConversionCharInternal::v) {
-    conv.set_conversion_char(FormatConversionCharInternal::g);
-  }
-
-  return FormatConversionCharIsFloat(conv.conversion_char()) &&
-         ConvertFloatImpl(v, conv, sink);
-}
-
-inline bool ConvertStringArg(string_view v, const FormatConversionSpecImpl conv,
-                             FormatSinkImpl *sink) {
-  if (conv.is_basic()) {
-    sink->Append(v);
-    return true;
-  }
-  return sink->PutPaddedString(v, conv.width(), conv.precision(),
-                               conv.has_left_flag());
-}
-
-}  // namespace
-
-bool ConvertBoolArg(bool v, FormatSinkImpl *sink) {
-  if (v) {
-    sink->Append("true");
-  } else {
-    sink->Append("false");
-  }
-  return true;
-}
-
-template <typename T>
-bool ConvertIntArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
+bool ConvertIntArg(T v, const FormatConversionSpecImpl conv,
+                   FormatSinkImpl *sink) {
   using U = typename MakeUnsigned<T>::type;
   IntDigits as_digits;
 
@@ -320,7 +287,7 @@ bool ConvertIntArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
   // FormatConversionChar is declared, but not defined.
   switch (static_cast<uint8_t>(conv.conversion_char())) {
     case static_cast<uint8_t>(FormatConversionCharInternal::c):
-      return ConvertCharImpl(static_cast<char>(v), conv, sink);
+      return ConvertCharImpl(static_cast<unsigned char>(v), conv, sink);
 
     case static_cast<uint8_t>(FormatConversionCharInternal::o):
       as_digits.PrintAsOct(static_cast<U>(v));
@@ -339,7 +306,6 @@ bool ConvertIntArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
 
     case static_cast<uint8_t>(FormatConversionCharInternal::d):
     case static_cast<uint8_t>(FormatConversionCharInternal::i):
-    case static_cast<uint8_t>(FormatConversionCharInternal::v):
       as_digits.PrintAsDec(v);
       break;
 
@@ -354,7 +320,7 @@ bool ConvertIntArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
       return ConvertFloatImpl(static_cast<double>(v), conv, sink);
 
     default:
-      ABSL_ASSUME(false);
+       ABSL_ASSUME(false);
   }
 
   if (conv.is_basic()) {
@@ -364,37 +330,24 @@ bool ConvertIntArg(T v, FormatConversionSpecImpl conv, FormatSinkImpl *sink) {
   return ConvertIntImplInnerSlow(as_digits, conv, sink);
 }
 
-template bool ConvertIntArg<char>(char v, FormatConversionSpecImpl conv,
-                                  FormatSinkImpl *sink);
-template bool ConvertIntArg<signed char>(signed char v,
-                                         FormatConversionSpecImpl conv,
-                                         FormatSinkImpl *sink);
-template bool ConvertIntArg<unsigned char>(unsigned char v,
-                                           FormatConversionSpecImpl conv,
-                                           FormatSinkImpl *sink);
-template bool ConvertIntArg<short>(short v,  // NOLINT
-                                   FormatConversionSpecImpl conv,
-                                   FormatSinkImpl *sink);
-template bool ConvertIntArg<unsigned short>(unsigned short v,  // NOLINT
-                                            FormatConversionSpecImpl conv,
-                                            FormatSinkImpl *sink);
-template bool ConvertIntArg<int>(int v, FormatConversionSpecImpl conv,
-                                 FormatSinkImpl *sink);
-template bool ConvertIntArg<unsigned int>(unsigned int v,
-                                          FormatConversionSpecImpl conv,
-                                          FormatSinkImpl *sink);
-template bool ConvertIntArg<long>(long v,  // NOLINT
-                                  FormatConversionSpecImpl conv,
-                                  FormatSinkImpl *sink);
-template bool ConvertIntArg<unsigned long>(unsigned long v,  // NOLINT
-                                           FormatConversionSpecImpl conv,
-                                           FormatSinkImpl *sink);
-template bool ConvertIntArg<long long>(long long v,  // NOLINT
-                                       FormatConversionSpecImpl conv,
-                                       FormatSinkImpl *sink);
-template bool ConvertIntArg<unsigned long long>(unsigned long long v,  // NOLINT
-                                                FormatConversionSpecImpl conv,
-                                                FormatSinkImpl *sink);
+template <typename T>
+bool ConvertFloatArg(T v, const FormatConversionSpecImpl conv,
+                     FormatSinkImpl *sink) {
+  return FormatConversionCharIsFloat(conv.conversion_char()) &&
+         ConvertFloatImpl(v, conv, sink);
+}
+
+inline bool ConvertStringArg(string_view v, const FormatConversionSpecImpl conv,
+                             FormatSinkImpl *sink) {
+  if (conv.is_basic()) {
+    sink->Append(v);
+    return true;
+  }
+  return sink->PutPaddedString(v, conv.width(), conv.precision(),
+                               conv.has_left_flag());
+}
+
+}  // namespace
 
 // ==================== Strings ====================
 StringConvertResult FormatConvertImpl(const std::string &v,
@@ -422,7 +375,7 @@ FormatConvertImpl(const char *v, const FormatConversionSpecImpl conv,
     len = std::strlen(v);
   } else {
     // If precision is set, we look for the NUL-terminator on the valid range.
-    len = static_cast<size_t>(std::find(v, v + conv.precision(), '\0') - v);
+    len = std::find(v, v + conv.precision(), '\0') - v;
   }
   return {ConvertStringArg(string_view(v, len), conv, sink)};
 }
@@ -457,12 +410,11 @@ FloatingConvertResult FormatConvertImpl(long double v,
 }
 
 // ==================== Chars ====================
-CharConvertResult FormatConvertImpl(char v, const FormatConversionSpecImpl conv,
-                                    FormatSinkImpl *sink) {
+IntegralConvertResult FormatConvertImpl(char v,
+                                        const FormatConversionSpecImpl conv,
+                                        FormatSinkImpl *sink) {
   return {ConvertIntArg(v, conv, sink)};
 }
-
-// ==================== Ints ====================
 IntegralConvertResult FormatConvertImpl(signed char v,
                                         const FormatConversionSpecImpl conv,
                                         FormatSinkImpl *sink) {
@@ -473,6 +425,8 @@ IntegralConvertResult FormatConvertImpl(unsigned char v,
                                         FormatSinkImpl *sink) {
   return {ConvertIntArg(v, conv, sink)};
 }
+
+// ==================== Ints ====================
 IntegralConvertResult FormatConvertImpl(short v,  // NOLINT
                                         const FormatConversionSpecImpl conv,
                                         FormatSinkImpl *sink) {

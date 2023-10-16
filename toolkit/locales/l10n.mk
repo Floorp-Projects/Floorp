@@ -93,7 +93,9 @@ else
 	find $(UNPACKED_INSTALLER) -maxdepth 1 -print0 | xargs -0 $(RM) -r
 endif
 	$(NSINSTALL) -D $(UNPACKED_INSTALLER)
-	$(call INNER_UNMAKE_PACKAGE,$(UNPACKED_INSTALLER))
+	cd $(UNPACKED_INSTALLER) && \
+	  $(INNER_UNMAKE_PACKAGE)
+
 
 unpack: $(UNPACKED_INSTALLER)
 ifeq ($(OS_ARCH), WINNT)
@@ -134,7 +136,8 @@ ifeq (WINNT,$(OS_ARCH))
 endif
 
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
-	$(call MAKE_PACKAGE,$(DIST)/l10n-stage)
+	(cd $(DIST)/l10n-stage; \
+	  $(MAKE_PACKAGE))
 # packaging done, undo l10n stuff
 ifneq (en,$(LPROJ_ROOT))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -214,8 +217,8 @@ package-langpack-%: XPI_NAME=locale-$*
 package-langpack-%: AB_CD=$*
 package-langpack-%:
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	$(call py_action,langpack_manifest $(AB_CD),--locales $(AB_CD) --app-version $(MOZ_APP_VERSION) --max-app-ver $(MOZ_APP_MAXVERSION) --app-name '$(MOZ_APP_DISPLAYNAME)' --l10n-basedir '$(L10NBASEDIR)' --metadata $(LANGPACK_METADATA) --langpack-eid '$(MOZ_LANGPACK_EID)' --input $(DIST)/xpi-stage/locale-$(AB_CD))
-	$(call py_action,zip $(PKG_LANGPACK_BASENAME).xpi,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.manifest -x **/*.js -x **/*.ini $(LANGPACK_FILE) $(PKG_ZIP_DIRS) manifest.json)
+	$(call py_action,langpack_manifest,--locales $(AB_CD) --app-version $(MOZ_APP_VERSION) --max-app-ver $(MOZ_APP_MAXVERSION) --app-name '$(MOZ_APP_DISPLAYNAME)' --l10n-basedir '$(L10NBASEDIR)' --metadata $(LANGPACK_METADATA) --langpack-eid '$(MOZ_LANGPACK_EID)' --input $(DIST)/xpi-stage/locale-$(AB_CD))
+	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) -x **/*.manifest -x **/*.js -x **/*.ini $(LANGPACK_FILE) $(PKG_ZIP_DIRS) manifest.json)
 
 # This variable is to allow the wget-en-US target to know which ftp server to download from
 ifndef EN_US_BINARY_URL 

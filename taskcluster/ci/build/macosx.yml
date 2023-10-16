@@ -52,39 +52,6 @@ macosx64/debug:
             - macosx64-sdk
             - sysroot-wasm32-wasi
 
-macosx64-aarch64/debug:
-    description: "MacOS X Aarch64 Cross-compile"
-    index:
-        job-name: macosx64-aarch64-debug
-    attributes:
-        enable-build-signing: true
-        enable-full-crashsymbols: true
-    treeherder:
-        platform: osx-cross-aarch64/debug
-        symbol: B
-        tier: 1
-    worker:
-        max-run-time: 5400
-        env:
-            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
-            PERFHERDER_EXTRA_OPTIONS: aarch64
-    run:
-        config:
-            - builds/releng_base_firefox.py
-            - builds/releng_base_mac_64_cross_builds.py
-        custom-build-variant-cfg: cross-debug
-        mozconfig-variant: debug
-        extra-config:
-            extra_mozconfig_content:
-                - ac_add_options --target=aarch64-apple-darwin
-    use-sccache: true
-    fetches:
-        toolchain:
-            - linux64-clang
-            - linux64-sccache
-            - macosx64-sdk
-            - sysroot-wasm32-wasi
-
 macosx64-non-unified/plain:
     description: "MacOS X x64 Hybrid Cross-compile"
     index:
@@ -213,8 +180,8 @@ macosx64-aarch64-asan-fuzzing/opt:
         # The gtest libxul contains libFuzzer targets
         skip-verify-test-packaging: true
     treeherder:
-        platform: osx-cross-aarch64/asan
-        symbol: Bof
+        platform: osx-cross/asan
+        symbol: Bofaarch64
     worker:
         max-run-time: 5400
         env:
@@ -248,8 +215,8 @@ macosx64-aarch64-fuzzing/debug:
         # The gtest libxul contains libFuzzer targets
         skip-verify-test-packaging: true
     treeherder:
-        platform: osx-cross-aarch64/debug
-        symbol: Bf
+        platform: osx-cross/debug
+        symbol: Bfaarch64
     worker:
         max-run-time: 5400
         env:
@@ -554,7 +521,7 @@ macosx64-x64-add-on-devel/opt:
         job-name: macosx64-x64-add-on-devel
     treeherder:
         platform: osx-cross-add-on-devel/opt
-        symbol: Bx
+        symbol: Bx64
         tier: 2
     worker:
         max-run-time: 3600
@@ -580,8 +547,8 @@ macosx64-aarch64-add-on-devel/opt:
     index:
         job-name: macosx64-aarch64-add-on-devel
     treeherder:
-        platform: osx-cross-aarch64-add-on-devel/opt
-        symbol: B
+        platform: osx-cross-add-on-devel/opt
+        symbol: Ba64
         tier: 2
     worker:
         max-run-time: 3600

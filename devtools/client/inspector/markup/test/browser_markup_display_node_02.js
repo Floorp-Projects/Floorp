@@ -33,7 +33,6 @@ const TEST_DATA = [
     before: {
       textContent: "grid",
       visible: true,
-      interactive: true,
     },
     async changeStyle() {
       await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
@@ -60,27 +59,6 @@ const TEST_DATA = [
     after: {
       textContent: "grid",
       visible: true,
-      interactive: true,
-    },
-  },
-  {
-    desc: "Showing a 'contents' node by changing its style property",
-    selector: "#grid",
-    before: {
-      textContent: "grid",
-      visible: true,
-      interactive: true,
-    },
-    async changeStyle() {
-      await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-        const node = content.document.getElementById("grid");
-        node.style.display = "contents";
-      });
-    },
-    after: {
-      textContent: "contents",
-      visible: true,
-      interactive: false,
     },
   },
   {
@@ -98,7 +76,6 @@ const TEST_DATA = [
     after: {
       textContent: "grid",
       visible: true,
-      interactive: true,
     },
   },
   {
@@ -115,7 +92,6 @@ const TEST_DATA = [
     after: {
       textContent: "flex",
       visible: true,
-      interactive: true,
     },
   },
 ];
@@ -139,7 +115,7 @@ async function runTestData(
   const container = await getContainerForSelector(selector, inspector);
 
   const beforeBadge = container.elt.querySelector(
-    ".inspector-badge[data-display]"
+    ".inspector-badge.interactive[data-display]"
   );
   is(
     !!beforeBadge,
@@ -152,7 +128,6 @@ async function runTestData(
       before.textContent,
       `Got the correct before display type for ${selector}: ${beforeBadge.textContent}`
     );
-    checkBadgeInteractiveState(beforeBadge, before.interactive, selector);
   }
 
   info("Listening for the display-change event");
@@ -173,7 +148,7 @@ async function runTestData(
   ok(foundContainer, "Container is part of the list of changed nodes");
 
   const afterBadge = container.elt.querySelector(
-    ".inspector-badge[data-display]"
+    ".inspector-badge.interactive[data-display]"
   );
   is(
     !!afterBadge,
@@ -185,32 +160,6 @@ async function runTestData(
       afterBadge.textContent,
       after.textContent,
       `Got the correct after display type for ${selector}: ${afterBadge.textContent}`
-    );
-
-    checkBadgeInteractiveState(afterBadge, after.interactive, selector);
-  }
-}
-
-function checkBadgeInteractiveState(badgeEl, interactive, selector) {
-  if (interactive) {
-    ok(
-      !badgeEl.hasAttribute("role"),
-      `${badgeEl.textContent} badge for ${selector} does not override the default role`
-    );
-    is(
-      badgeEl.getAttribute("aria-pressed"),
-      "false",
-      `${badgeEl.textContent} badge for ${selector} has the expected aria-pressed attribute`
-    );
-  } else {
-    is(
-      badgeEl.getAttribute("role"),
-      "presentation",
-      `${badgeEl.textContent} badge for ${selector} is not interactive`
-    );
-    ok(
-      !badgeEl.hasAttribute("aria-pressed"),
-      `${badgeEl.textContent} badge for ${selector} does not have an aria-pressed attribute`
     );
   }
 }

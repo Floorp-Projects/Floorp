@@ -1,6 +1,6 @@
-from ._importlib import metadata
+import pkg_resources
 
 try:
-    __version__ = metadata.version('setuptools') or '0.dev0+unknown'
+    __version__ = pkg_resources.get_distribution('setuptools').version
 except Exception:
-    __version__ = '0.dev0+unknown'
+    __version__ = 'unknown'

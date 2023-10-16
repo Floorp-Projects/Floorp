@@ -14,7 +14,6 @@
 #include "nsUnicharUtils.h"
 #include "mozilla/dom/MimeType.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/Try.h"
 
 using namespace mozilla;
 

@@ -26,7 +26,7 @@ async function doExposureTest({
   });
 
   await SpecialPowers.popPrefEnv();
-  await cleanupQuickSuggest();
+  cleanupQuickSuggest();
 }
 
 async function defaultSelect(query) {

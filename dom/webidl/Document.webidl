@@ -38,35 +38,7 @@ dictionary ElementCreationOptions {
 };
 
 /* https://dom.spec.whatwg.org/#interface-document */
-[Exposed=Window,
- InstrumentedProps=(caretRangeFromPoint,
-                    exitPictureInPicture,
-                    featurePolicy,
-                    onbeforecopy,
-                    onbeforecut,
-                    onbeforepaste,
-                    oncancel,
-                    onfreeze,
-                    onmousewheel,
-                    onresume,
-                    onsearch,
-                    onwebkitfullscreenchange,
-                    onwebkitfullscreenerror,
-                    pictureInPictureElement,
-                    pictureInPictureEnabled,
-                    registerElement,
-                    wasDiscarded,
-                    webkitCancelFullScreen,
-                    webkitCurrentFullScreenElement,
-                    webkitExitFullscreen,
-                    webkitFullscreenElement,
-                    webkitFullscreenEnabled,
-                    webkitHidden,
-                    webkitIsFullScreen,
-                    webkitVisibilityState,
-                    xmlEncoding,
-                    xmlStandalone,
-                    xmlVersion)]
+[Exposed=Window]
 interface Document : Node {
   [Throws]
   constructor();

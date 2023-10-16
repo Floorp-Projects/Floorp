@@ -104,18 +104,13 @@
      *     when this event occurs, e.g. "pageshow",
      *     (@see window.addEventListener). This only makes sense for
      *     window-based executors, not worker-based.
-     * @param {string} [options.status] If supplied, the executor will pass
-     *     this value in the "status" parameter to the executor. The default
-     *     executor will default to a status code of 200, if the parameter is
-     *     not supplied.
      */
     constructor(
-        {origin, scripts = [], headers = [], startOn, status} = {}) {
+        {origin, scripts = [], headers = [], startOn} = {}) {
       this.origin = origin;
       this.scripts = scripts;
       this.headers = headers;
       this.startOn = startOn;
-      this.status = status;
     }
 
     /**
@@ -148,10 +143,6 @@
       if (extraConfig.startOn) {
         startOn = extraConfig.startOn;
       }
-      let status = this.status;
-      if (extraConfig.status) {
-        status = extraConfig.status;
-      }
       const headers = this.headers.concat(extraConfig.headers);
       const scripts = this.scripts.concat(extraConfig.scripts);
       return new RemoteContextConfig({
@@ -159,7 +150,6 @@
         headers,
         scripts,
         startOn,
-        status
       });
     }
   }
@@ -228,10 +218,6 @@
 
       if (config.startOn) {
         url.searchParams.append('startOn', config.startOn);
-      }
-
-      if (config.status) {
-        url.searchParams.append('status', config.status);
       }
 
       if (executorCreator) {

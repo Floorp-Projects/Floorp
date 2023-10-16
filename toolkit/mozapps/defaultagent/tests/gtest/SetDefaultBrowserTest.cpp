@@ -11,8 +11,6 @@
 
 #include "SetDefaultBrowser.h"
 
-using namespace mozilla::default_agent;
-
 TEST(SetDefaultBrowserUserChoice, Hash)
 {
   // Hashes set by System Settings on 64-bit Windows 10 Pro 20H2 (19042.928).

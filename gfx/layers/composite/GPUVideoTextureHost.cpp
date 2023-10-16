@@ -136,16 +136,12 @@ void GPUVideoTextureHost::CreateRenderTexture(
 }
 
 void GPUVideoTextureHost::MaybeDestroyRenderTexture() {
-  if (mExternalImageId.isNothing()) {
+  if (mExternalImageId.isNothing() || !mWrappedTextureHost) {
     // RenderTextureHost was not created
     return;
   }
-
-  if (mExternalImageId.isSome() && mWrappedTextureHost) {
-    // When GPUVideoTextureHost created RenderTextureHost, delete it here.
-    TextureHost::DestroyRenderTexture(mExternalImageId.ref());
-  }
-  mExternalImageId = Nothing();
+  // When GPUVideoTextureHost created RenderTextureHost, delete it here.
+  TextureHost::DestroyRenderTexture(mExternalImageId.ref());
 }
 
 uint32_t GPUVideoTextureHost::NumSubTextures() {

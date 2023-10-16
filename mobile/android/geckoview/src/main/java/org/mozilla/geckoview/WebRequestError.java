@@ -232,7 +232,7 @@ public class WebRequestError extends Exception {
 
   @Override
   public boolean equals(final Object other) {
-    if (!(other instanceof WebRequestError)) {
+    if (other == null || !(other instanceof WebRequestError)) {
       return false;
     }
 

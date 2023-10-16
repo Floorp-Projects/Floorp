@@ -371,7 +371,13 @@ void EventListenerService::NotifyAboutMainThreadListenerChangeInternal(
     nsCOMPtr<nsIRunnable> runnable =
         NewRunnableMethod("EventListenerService::NotifyPendingChanges", this,
                           &EventListenerService::NotifyPendingChanges);
-    NS_DispatchToCurrentThread(runnable.forget());
+    if (nsCOMPtr<nsIGlobalObject> global = aTarget->GetOwnerGlobal()) {
+      global->Dispatch(TaskCategory::Other, runnable.forget());
+    } else if (nsINode* node = nsINode::FromEventTarget(aTarget)) {
+      node->OwnerDoc()->Dispatch(TaskCategory::Other, runnable.forget());
+    } else {
+      NS_DispatchToCurrentThread(runnable);
+    }
   }
 
   RefPtr<EventListenerChange> changes =

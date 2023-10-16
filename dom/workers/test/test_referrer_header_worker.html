@@ -25,7 +25,6 @@
 
     function test() {
       function messageListener(event) {
-        // eslint-disable-next-line no-eval
         eval(event.data);
       }
       window.addEventListener("message", messageListener);

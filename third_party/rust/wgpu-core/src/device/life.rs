@@ -776,7 +776,7 @@ impl<A: HalApi> LifetimeTracker<A> {
                     if bgl.multi_ref_count.dec_and_check_empty() {
                         // If This layout points to a compatible one, go over the latter
                         // to decrement the ref count and potentially destroy it.
-                        bgl_to_check = bgl.as_duplicate();
+                        bgl_to_check = bgl.compatible_layout;
 
                         log::debug!("Bind group layout {:?} will be destroyed", id);
                         #[cfg(feature = "trace")]
@@ -786,9 +786,7 @@ impl<A: HalApi> LifetimeTracker<A> {
                         if let Some(lay) =
                             hub.bind_group_layouts.unregister_locked(id.0, &mut *guard)
                         {
-                            if let Some(inner) = lay.into_inner() {
-                                self.free_resources.bind_group_layouts.push(inner.raw);
-                            }
+                            self.free_resources.bind_group_layouts.push(lay.raw);
                         }
                     }
                 }

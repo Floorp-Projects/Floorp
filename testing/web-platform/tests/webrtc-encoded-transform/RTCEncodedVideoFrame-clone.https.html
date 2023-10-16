@@ -54,7 +54,7 @@ promise_test(async t => {
 
   for (let i = 0; i < numFramesToSend; i++) {
     const result = await senderReader.read();
-    senderWriter.write(structuredClone(result.value));
+    senderWriter.write(result.value.clone());
   }
   return framesReceivedCorrectly;
 }, "Cloning before sending works");

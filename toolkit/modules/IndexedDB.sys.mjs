@@ -11,6 +11,7 @@
  * IDBRequest-based IndexedDB methods and classes.
  */
 
+/* exported IndexedDB */
 /**
  * Wraps the given request object, and returns a Promise which resolves when
  * the requests succeeds or rejects when it fails.

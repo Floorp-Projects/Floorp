@@ -79,8 +79,13 @@ static void record_value(const char* format, ...) {
   }
 }
 
-#define record_error(str_, ...) record_value("ERROR\n" str_, ##__VA_ARGS__)
-#define record_warning(str_, ...) record_value("WARNING\n" str_, ##__VA_ARGS__)
+[[maybe_unused]] static void record_error(const char* str) {
+  record_value("ERROR\n%s\n", str);
+}
+
+[[maybe_unused]] static void record_warning(const char* str) {
+  record_value("WARNING\n%s\n", str);
+}
 
 static void record_flush() {
   if (!test_buf) {

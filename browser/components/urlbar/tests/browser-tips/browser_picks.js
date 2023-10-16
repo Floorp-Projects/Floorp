@@ -14,6 +14,10 @@ add_setup(async function () {
     window.windowUtils.disableNonTestMouseEvents(false);
   });
   Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.eventTelemetry.enabled", true]],
+  });
 });
 
 add_task(async function enter_mainButton_url() {
@@ -129,7 +133,9 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   let mainButton = row._buttons.get("0");
-  let target = helpUrl ? row._buttons.get("menu") : mainButton;
+  let target = helpUrl
+    ? row._buttons.get(UrlbarPrefs.get("resultMenu") ? "menu" : "help")
+    : mainButton;
 
   // If we're picking the tip with the keyboard, TAB to select the proper
   // target.
@@ -149,7 +155,7 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   }
   await UrlbarTestUtils.promisePopupClose(window, () => {
-    if (helpUrl) {
+    if (helpUrl && UrlbarPrefs.get("resultMenu")) {
       UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
         openByMouse: click,
         resultIndex: 0,
@@ -171,6 +177,21 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
     helpUrl ? "test-help" : "test-picked",
     1
   );
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "urlbar",
+        method: "engagement",
+        object:
+          click && !(helpUrl && UrlbarPrefs.get("resultMenu"))
+            ? "click"
+            : "enter",
+        value: "typed",
+      },
+    ],
+    { category: "urlbar" }
+  );
+
   // Done.
   UrlbarProvidersManager.unregisterProvider(provider);
   if (tab) {
@@ -193,7 +214,9 @@ function makeTipResult({ buttonUrl, helpUrl }) {
       ],
       helpUrl,
       helpL10n: {
-        id: "urlbar-result-menu-tip-get-help",
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-tip-get-help"
+          : "urlbar-tip-help-icon",
       },
     }
   );

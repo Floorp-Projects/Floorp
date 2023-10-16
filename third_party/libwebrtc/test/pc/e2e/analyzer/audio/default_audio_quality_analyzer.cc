@@ -42,7 +42,8 @@ void DefaultAudioQualityAnalyzer::OnStatsReports(
   auto stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
 
   for (auto& stat : stats) {
-    if (!stat->kind.is_defined() || !(*stat->kind == "audio")) {
+    if (!stat->kind.is_defined() ||
+        !(*stat->kind == RTCMediaStreamTrackKind::kAudio)) {
       continue;
     }
 

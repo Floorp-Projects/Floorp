@@ -16,7 +16,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/log.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/random/internal/platform.h"
 #include "absl/random/internal/randen_detect.h"
 #include "absl/random/internal/randen_traits.h"
@@ -67,32 +67,32 @@ TEST(RandenHwAesTest, Default) {
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
 
-  LOG(INFO) << "ABSL_HAVE_ACCELERATED_AES=" << ABSL_HAVE_ACCELERATED_AES;
-  LOG(INFO) << "ABSL_RANDOM_INTERNAL_AES_DISPATCH="
-            << ABSL_RANDOM_INTERNAL_AES_DISPATCH;
+  ABSL_RAW_LOG(INFO, "ABSL_HAVE_ACCELERATED_AES=%d", ABSL_HAVE_ACCELERATED_AES);
+  ABSL_RAW_LOG(INFO, "ABSL_RANDOM_INTERNAL_AES_DISPATCH=%d",
+               ABSL_RANDOM_INTERNAL_AES_DISPATCH);
 
 #if defined(ABSL_ARCH_X86_64)
-  LOG(INFO) << "ABSL_ARCH_X86_64";
+  ABSL_RAW_LOG(INFO, "ABSL_ARCH_X86_64");
 #elif defined(ABSL_ARCH_X86_32)
-  LOG(INFO) << "ABSL_ARCH_X86_32";
+  ABSL_RAW_LOG(INFO, "ABSL_ARCH_X86_32");
 #elif defined(ABSL_ARCH_AARCH64)
-  LOG(INFO) << "ABSL_ARCH_AARCH64";
+  ABSL_RAW_LOG(INFO, "ABSL_ARCH_AARCH64");
 #elif defined(ABSL_ARCH_ARM)
-  LOG(INFO) << "ABSL_ARCH_ARM";
+  ABSL_RAW_LOG(INFO, "ABSL_ARCH_ARM");
 #elif defined(ABSL_ARCH_PPC)
-  LOG(INFO) << "ABSL_ARCH_PPC";
+  ABSL_RAW_LOG(INFO, "ABSL_ARCH_PPC");
 #else
-  LOG(INFO) << "ARCH Unknown";
+  ABSL_RAW_LOG(INFO, "ARCH Unknown");
 #endif
 
   int x = absl::random_internal::HasRandenHwAesImplementation();
-  LOG(INFO) << "HasRandenHwAesImplementation = " << x;
+  ABSL_RAW_LOG(INFO, "HasRandenHwAesImplementation = %d", x);
 
   int y = absl::random_internal::CPUSupportsRandenHwAes();
-  LOG(INFO) << "CPUSupportsRandenHwAes = " << x;
+  ABSL_RAW_LOG(INFO, "CPUSupportsRandenHwAes = %d", x);
 
   if (!x || !y) {
-    LOG(INFO) << "Skipping Randen HWAES tests.";
+    ABSL_RAW_LOG(INFO, "Skipping Randen HWAES tests.");
     return 0;
   }
   return RUN_ALL_TESTS();

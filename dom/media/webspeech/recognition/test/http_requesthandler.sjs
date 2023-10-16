@@ -3,10 +3,10 @@ const CC = Components.Constructor;
 // Context structure - we need to set this up properly to pass to setObjectState
 const ctx = {
   QueryInterface(iid) {
-    if (iid.equals(Ci.nsISupports)) {
+    if (iid.equals(Components.interfaces.nsISupports)) {
       return this;
     }
-    throw Components.Exception("", Cr.NS_ERROR_NO_INTERFACE);
+    throw Components.Exception("", Components.results.NS_ERROR_NO_INTERFACE);
   },
 };
 

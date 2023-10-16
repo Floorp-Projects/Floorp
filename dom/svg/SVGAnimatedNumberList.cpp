@@ -11,7 +11,6 @@
 #include "DOMSVGAnimatedNumberList.h"
 #include "SVGNumberListSMILType.h"
 #include "mozilla/SMILValue.h"
-#include "mozilla/Try.h"
 #include "mozilla/dom/SVGElement.h"
 
 using namespace mozilla::dom;

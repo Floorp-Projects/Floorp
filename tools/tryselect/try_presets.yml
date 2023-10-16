@@ -112,19 +112,6 @@ geckodriver:
         - "'platform 'wdspec 'debug 'nofis"
         - "'browsertime 'amazon 'shippable 'firefox 'nofis"
 
-layout:
-    selector: fuzzy
-    description: >-
-        Runs the tests most relevant to layout.
-        This preset can be filtered down further to limit it to
-        a specific platform or build configuration. For example:
-        |mach try --preset layout -xq "linux64 'opt"|
-    query:
-        # Most mochitest + reftest + crashtest + wpt
-        - "!asan !tsan !jsreftest !shippable !webgl !condprof !media !webgpu 'mochitest | 'web-platform | 'crashtest | 'reftest"
-        # Style system unit tests
-        - "'rusttests"
-
 media-full:
     selector: fuzzy
     description: >-
@@ -234,25 +221,6 @@ sm-all:
         - "!android !asan !shippable 'xpcshell"
         - "!android !asan !shippable 'jsreftest"
         - "!shippable !android 'jittest"  # macosx64 jittests
-
-webextensions:
-    selector: fuzzy
-    description: <-
-        Runs most of the unit tests of WebExtension code across all desktop
-        platforms and Android, including mochitests, xpcshell and test-verify.
-        GeckoView JUnit tests are NOT run.
-    paths:  # must be duplicate of test_paths, see bug 1556445
-        - browser/components/extensions/test/
-        - mobile/android/components/extensions/test/
-        - toolkit/components/extensions/test/
-        - toolkit/mozapps/extensions/test/
-    test_paths:  # must be duplicate of paths, see bug 1556445
-        - browser/components/extensions/test/
-        - mobile/android/components/extensions/test/
-        - toolkit/components/extensions/test/
-        - toolkit/mozapps/extensions/test/
-    query:
-        - "'64-qr/ | 'windows11-64-2009-qr !wpt !gpu !msix"
 
 webgpu:
     selector: fuzzy

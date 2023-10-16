@@ -165,7 +165,7 @@ namespace soundtouch
 #define SETTING_INITIAL_LATENCY             8
 
 
-class SoundTouch : public FIFOProcessor
+class SOUNDTOUCH_API SoundTouch : public FIFOProcessor
 {
 private:
     /// Rate transposer class instance

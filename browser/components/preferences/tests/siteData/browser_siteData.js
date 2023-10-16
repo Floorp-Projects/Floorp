@@ -60,7 +60,12 @@ add_task(async function () {
       Services.scriptSecurityManager.createContentPrincipalFromOrigin(
         TEST_QUOTA_USAGE_ORIGIN
       );
-    let request = Services.qms.clearStoragesForOriginPrefix(principal);
+    let request = Services.qms.clearStoragesForPrincipal(
+      principal,
+      null,
+      null,
+      true
+    );
     request.callback = resolve;
   });
 

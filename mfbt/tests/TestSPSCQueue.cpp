@@ -161,79 +161,25 @@ const size_t ENQUEUE_SIZE = RING_BUFFER_SIZE / 2;
 
 void TestResetAPI() {
   SPSCQueue<float> ring(RING_BUFFER_SIZE);
-  std::thread p([&ring] {
+  std::thread t([&ring] {
     std::unique_ptr<float[]> inBuffer(new float[ENQUEUE_SIZE]);
     int rv = ring.Enqueue(inBuffer.get(), ENQUEUE_SIZE);
     MOZ_RELEASE_ASSERT(rv > 0);
   });
 
-  p.join();
+  t.join();
 
-  std::thread c([&ring] {
-    std::unique_ptr<float[]> outBuffer(new float[ENQUEUE_SIZE]);
-    int rv = ring.Dequeue(outBuffer.get(), ENQUEUE_SIZE);
-    MOZ_RELEASE_ASSERT(rv > 0);
-  });
+  ring.ResetThreadIds();
 
-  c.join();
-
-  // Enqueue with a different thread. We reset the thread ID in the ring buffer,
-  // this should work.
-  std::thread p2([&ring] {
-    ring.ResetProducerThreadId();
+  // Enqueue with a different thread. We have reset the thread ID
+  // in the ring buffer, this should work.
+  std::thread t2([&ring] {
     std::unique_ptr<float[]> inBuffer(new float[ENQUEUE_SIZE]);
     int rv = ring.Enqueue(inBuffer.get(), ENQUEUE_SIZE);
     MOZ_RELEASE_ASSERT(rv > 0);
   });
 
-  p2.join();
-
-  // Dequeue with a different thread. We reset the thread ID in the ring buffer,
-  // this should work.
-  std::thread c2([&ring] {
-    ring.ResetConsumerThreadId();
-    std::unique_ptr<float[]> outBuffer(new float[ENQUEUE_SIZE]);
-    int rv = ring.Dequeue(outBuffer.get(), ENQUEUE_SIZE);
-    MOZ_RELEASE_ASSERT(rv > 0);
-  });
-
-  c2.join();
-
-  // Similarly, but do the Enqueues without a Dequeue in between, since a
-  // Dequeue could affect memory ordering.
-  std::thread p4;
-  std::thread p3([&] {
-    ring.ResetProducerThreadId();
-    std::unique_ptr<float[]> inBuffer(new float[ENQUEUE_SIZE]);
-    int rv = ring.Enqueue(inBuffer.get(), ENQUEUE_SIZE);
-    MOZ_RELEASE_ASSERT(rv > 0);
-    p4 = std::thread([&ring] {
-      ring.ResetProducerThreadId();
-      std::unique_ptr<float[]> inBuffer(new float[ENQUEUE_SIZE]);
-      int rv = ring.Enqueue(inBuffer.get(), ENQUEUE_SIZE);
-      MOZ_RELEASE_ASSERT(rv > 0);
-    });
-  });
-
-  p3.join();
-  p4.join();
-
-  std::thread c4;
-  std::thread c3([&] {
-    ring.ResetConsumerThreadId();
-    std::unique_ptr<float[]> outBuffer(new float[ENQUEUE_SIZE]);
-    int rv = ring.Dequeue(outBuffer.get(), ENQUEUE_SIZE);
-    MOZ_RELEASE_ASSERT(rv > 0);
-    c4 = std::thread([&ring] {
-      ring.ResetConsumerThreadId();
-      std::unique_ptr<float[]> outBuffer(new float[ENQUEUE_SIZE]);
-      int rv = ring.Dequeue(outBuffer.get(), ENQUEUE_SIZE);
-      MOZ_RELEASE_ASSERT(rv > 0);
-    });
-  });
-
-  c3.join();
-  c4.join();
+  t2.join();
 }
 
 void TestMove() {

@@ -1485,14 +1485,15 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
 
   RefPtr<CaretStateChangedEvent> event = CaretStateChangedEvent::Constructor(
       doc, u"mozcaretstatechanged"_ns, init);
+
   event->SetTrusted(true);
+  event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   AC_LOG("%s: reason %" PRIu32 ", collapsed %d, caretVisible %" PRIu32,
          __FUNCTION__, static_cast<uint32_t>(init.mReason), init.mCollapsed,
          static_cast<uint32_t>(init.mCaretVisible));
 
-  (new AsyncEventDispatcher(doc, event.forget(), ChromeOnlyDispatch::eYes))
-      ->PostDOMEvent();
+  (new AsyncEventDispatcher(doc, event))->PostDOMEvent();
 }
 
 AccessibleCaretManager::Carets::Carets(UniquePtr<AccessibleCaret> aFirst,

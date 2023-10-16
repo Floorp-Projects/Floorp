@@ -80,7 +80,7 @@ g.test('subresources,color_attachments')
       .combine('inSamePass', [true, false])
       .unless(t => t.inSamePass && t.level0 !== t.level1)
   )
-  .fn(t => {
+  .fn(async t => {
     const { layer0, level0, layer1, level1, inSamePass } = t.params;
 
     const texture = t.device.createTexture({
@@ -151,7 +151,7 @@ g.test('subresources,color_attachment_and_bind_group')
       .unless(t => t.bgUsage === 'storage' && t.bgLevelCount > 1)
       .combine('inSamePass', [true, false])
   )
-  .fn(t => {
+  .fn(async t => {
     const {
       colorAttachmentLevel,
       colorAttachmentLayer,
@@ -257,12 +257,11 @@ g.test('subresources,depth_stencil_attachment_and_bind_group')
         { bgLayer: 1, bgLayerCount: 1 },
         { bgLayer: 1, bgLayerCount: 2 },
       ])
-      .beginSubcases()
       .combine('dsReadOnly', [true, false])
       .combine('bgAspect', ['depth-only', 'stencil-only'])
       .combine('inSamePass', [true, false])
   )
-  .fn(t => {
+  .fn(async t => {
     const {
       dsLevel,
       dsLayer,
@@ -302,11 +301,11 @@ g.test('subresources,depth_stencil_attachment_and_bind_group')
     const depthStencilAttachment = {
       view: attachmentView,
       depthReadOnly: dsReadOnly,
-      depthLoadOp: dsReadOnly ? undefined : 'load',
-      depthStoreOp: dsReadOnly ? undefined : 'store',
+      depthLoadOp: 'load',
+      depthStoreOp: 'store',
       stencilReadOnly: dsReadOnly,
-      stencilLoadOp: dsReadOnly ? undefined : 'load',
-      stencilStoreOp: dsReadOnly ? undefined : 'store',
+      stencilLoadOp: 'load',
+      stencilStoreOp: 'store',
     };
 
     const encoder = t.device.createCommandEncoder();
@@ -396,7 +395,7 @@ g.test('subresources,multiple_bind_groups')
       )
       .combine('inSamePass', [true, false])
   )
-  .fn(t => {
+  .fn(async t => {
     const { bg0Levels, bg0Layers, bg1Levels, bg1Layers, bgUsage0, bgUsage1, inSamePass } = t.params;
 
     const texture = t.device.createTexture({
@@ -503,7 +502,7 @@ g.test('subresources,depth_stencil_texture_in_bind_groups')
       .combine('aspect1', ['depth-only', 'stencil-only'])
       .combine('inSamePass', [true, false])
   )
-  .fn(t => {
+  .fn(async t => {
     const {
       view0Levels,
       view0Layers,

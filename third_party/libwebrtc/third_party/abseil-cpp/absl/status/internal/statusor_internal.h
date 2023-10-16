@@ -69,8 +69,11 @@ using IsConstructibleOrConvertibleOrAssignableFromStatusOr =
 template <typename T, typename U>
 struct IsDirectInitializationAmbiguous
     : public absl::conditional_t<
-          std::is_same<absl::remove_cvref_t<U>, U>::value, std::false_type,
-          IsDirectInitializationAmbiguous<T, absl::remove_cvref_t<U>>> {};
+          std::is_same<absl::remove_cv_t<absl::remove_reference_t<U>>,
+                       U>::value,
+          std::false_type,
+          IsDirectInitializationAmbiguous<
+              T, absl::remove_cv_t<absl::remove_reference_t<U>>>> {};
 
 template <typename T, typename V>
 struct IsDirectInitializationAmbiguous<T, absl::StatusOr<V>>
@@ -81,11 +84,14 @@ struct IsDirectInitializationAmbiguous<T, absl::StatusOr<V>>
 template <typename T, typename U>
 using IsDirectInitializationValid = absl::disjunction<
     // Short circuits if T is basically U.
-    std::is_same<T, absl::remove_cvref_t<U>>,
+    std::is_same<T, absl::remove_cv_t<absl::remove_reference_t<U>>>,
     absl::negation<absl::disjunction<
-        std::is_same<absl::StatusOr<T>, absl::remove_cvref_t<U>>,
-        std::is_same<absl::Status, absl::remove_cvref_t<U>>,
-        std::is_same<absl::in_place_t, absl::remove_cvref_t<U>>,
+        std::is_same<absl::StatusOr<T>,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
+        std::is_same<absl::Status,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
+        std::is_same<absl::in_place_t,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
         IsDirectInitializationAmbiguous<T, U>>>>;
 
 // This trait detects whether `StatusOr<T>::operator=(U&&)` is ambiguous, which
@@ -101,8 +107,11 @@ using IsDirectInitializationValid = absl::disjunction<
 template <typename T, typename U>
 struct IsForwardingAssignmentAmbiguous
     : public absl::conditional_t<
-          std::is_same<absl::remove_cvref_t<U>, U>::value, std::false_type,
-          IsForwardingAssignmentAmbiguous<T, absl::remove_cvref_t<U>>> {};
+          std::is_same<absl::remove_cv_t<absl::remove_reference_t<U>>,
+                       U>::value,
+          std::false_type,
+          IsForwardingAssignmentAmbiguous<
+              T, absl::remove_cv_t<absl::remove_reference_t<U>>>> {};
 
 template <typename T, typename U>
 struct IsForwardingAssignmentAmbiguous<T, absl::StatusOr<U>>
@@ -113,11 +122,14 @@ struct IsForwardingAssignmentAmbiguous<T, absl::StatusOr<U>>
 template <typename T, typename U>
 using IsForwardingAssignmentValid = absl::disjunction<
     // Short circuits if T is basically U.
-    std::is_same<T, absl::remove_cvref_t<U>>,
+    std::is_same<T, absl::remove_cv_t<absl::remove_reference_t<U>>>,
     absl::negation<absl::disjunction<
-        std::is_same<absl::StatusOr<T>, absl::remove_cvref_t<U>>,
-        std::is_same<absl::Status, absl::remove_cvref_t<U>>,
-        std::is_same<absl::in_place_t, absl::remove_cvref_t<U>>,
+        std::is_same<absl::StatusOr<T>,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
+        std::is_same<absl::Status,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
+        std::is_same<absl::in_place_t,
+                     absl::remove_cv_t<absl::remove_reference_t<U>>>,
         IsForwardingAssignmentAmbiguous<T, U>>>>;
 
 class Helper {

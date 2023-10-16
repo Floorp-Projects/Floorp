@@ -23,7 +23,7 @@ NS_DECLARE_FRAME_PROPERTY_DELETABLE(StickyScrollContainerProperty,
                                     StickyScrollContainer)
 
 StickyScrollContainer::StickyScrollContainer(nsIScrollableFrame* aScrollFrame)
-    : mScrollFrame(aScrollFrame) {
+    : mScrollFrame(aScrollFrame), mScrollPosition() {
   mScrollFrame->AddScrollPositionListener(this);
 }
 
@@ -142,10 +142,9 @@ void StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame) {
   }
 }
 
-static constexpr nscoord gUnboundedNegative = nscoord_MIN / 2;
-static constexpr nscoord gUnboundedExtent = nscoord_MAX;
-static constexpr nscoord gUnboundedPositive =
-    gUnboundedNegative + gUnboundedExtent;
+static nscoord gUnboundedNegative = nscoord_MIN / 2;
+static nscoord gUnboundedExtent = nscoord_MAX;
+static nscoord gUnboundedPositive = gUnboundedNegative + gUnboundedExtent;
 
 void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
                                                 nsRect* aStick,

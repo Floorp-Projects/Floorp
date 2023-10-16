@@ -6,8 +6,8 @@
 
 DIRS += ["browser"]
 
-BROWSER_CHROME_MANIFESTS += ["xpinstall/browser.toml"]
-MOCHITEST_MANIFESTS += ["mochitest/mochitest.toml"]
+BROWSER_CHROME_MANIFESTS += ["xpinstall/browser.ini"]
+MOCHITEST_MANIFESTS += ["mochitest/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["mochitest/chrome.toml"]
 
 XPCSHELL_TESTS_MANIFESTS += [

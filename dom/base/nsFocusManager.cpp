@@ -70,7 +70,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/Unused.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
-#include "mozilla/Try.h"
 #include "mozilla/widget/IMEData.h"
 #include <algorithm>
 
@@ -3222,17 +3221,13 @@ nsresult nsFocusManager::GetSelectionLocation(Document* aDocument,
     nsIFrame* startFrame = start->GetPrimaryFrame();
     // Yes, indeed we were at the end of the last node
     nsCOMPtr<nsIFrameEnumerator> frameTraversal;
-    nsIFrame* limiter =
-        domSelection && domSelection->GetAncestorLimiter()
-            ? domSelection->GetAncestorLimiter()->GetPrimaryFrame()
-            : nullptr;
     MOZ_TRY(NS_NewFrameTraversal(getter_AddRefs(frameTraversal), presContext,
                                  startFrame, eLeaf,
                                  false,  // aVisual
                                  false,  // aLockInScrollView
                                  true,   // aFollowOOFs
-                                 false,  // aSkipPopupChecks
-                                 limiter));
+                                 false   // aSkipPopupChecks
+                                 ));
 
     nsIFrame* newCaretFrame = nullptr;
     nsIContent* newCaretContent = start;

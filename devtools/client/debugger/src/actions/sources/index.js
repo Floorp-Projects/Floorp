@@ -8,7 +8,7 @@ export * from "./loadSourceText";
 export * from "./newSources";
 export * from "./prettyPrint";
 export * from "./select";
-export * from "./symbols";
+export { setSymbols } from "./symbols";
 
 export function setOverrideSource(source, path) {
   return ({ client, dispatch }) => {

@@ -213,13 +213,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // platform-specific font families.
   typedef nsTArray<FontFamily> PrefFontList;
 
-  // Return the global font-list singleton, or NULL if aMustInitialize is false
-  // and it has not yet been fully initialized.
-  static gfxPlatformFontList* PlatformFontList(bool aMustInitialize = true) {
-    if (!aMustInitialize &&
-        !(sPlatformFontList && sPlatformFontList->IsInitialized())) {
-      return nullptr;
-    }
+  static gfxPlatformFontList* PlatformFontList() {
     // If there is a font-list initialization thread, we need to let it run
     // to completion before the font list can be used for anything else.
     if (sInitFontListThread) {
@@ -332,8 +326,11 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,
       FindFamiliesFlags aFlags, gfxFontStyle* aStyle = nullptr,
-      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0);
-
+      nsAtom* aLanguage = nullptr, gfxFloat aDevToCssSize = 1.0) {
+    AutoLock lock(mLock);
+    return FindAndAddFamiliesLocked(aPresContext, aGeneric, aFamily, aOutput,
+                                    aFlags, aStyle, aLanguage, aDevToCssSize);
+  }
   virtual bool FindAndAddFamiliesLocked(
       nsPresContext* aPresContext, mozilla::StyleGenericFontFamily aGeneric,
       const nsACString& aFamily, nsTArray<FamilyAndGeneric>* aOutput,

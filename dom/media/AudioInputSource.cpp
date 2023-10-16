@@ -8,7 +8,6 @@
 
 #include "CallbackThreadRegistry.h"
 #include "GraphDriver.h"
-#include "Tracing.h"
 
 namespace mozilla {
 
@@ -45,7 +44,8 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
                                    CubebUtils::AudioDeviceID aDeviceId,
                                    uint32_t aChannelCount, bool aIsVoice,
                                    const PrincipalHandle& aPrincipalHandle,
-                                   TrackRate aSourceRate, TrackRate aTargetRate)
+                                   TrackRate aSourceRate, TrackRate aTargetRate,
+                                   uint32_t aBufferMs)
     : mId(aSourceId),
       mDeviceId(aDeviceId),
       mChannelCount(aChannelCount),
@@ -57,7 +57,8 @@ AudioInputSource::AudioInputSource(RefPtr<EventListener>&& aListener,
       mEventListener(std::move(aListener)),
       mTaskThread(CUBEB_TASK_THREAD),
       mDriftCorrector(static_cast<uint32_t>(aSourceRate),
-                      static_cast<uint32_t>(aTargetRate), aPrincipalHandle) {
+                      static_cast<uint32_t>(aTargetRate), aBufferMs,
+                      aPrincipalHandle) {
   MOZ_ASSERT(mChannelCount > 0);
   MOZ_ASSERT(mEventListener);
 }
@@ -69,6 +70,9 @@ void AudioInputSource::Start() {
   // operations to the task thread.
   MOZ_ASSERT(mTaskThread);
 
+  // mSPSCQueue will have a new consumer.
+  mSPSCQueue.ResetConsumerThreadId();
+
   LOG("AudioInputSource %p, start", this);
   MOZ_ALWAYS_SUCCEEDS(mTaskThread->Dispatch(
       NS_NewRunnableFunction(__func__, [self = RefPtr(this)]() mutable {
@@ -79,15 +83,6 @@ void AudioInputSource::Start() {
           LOGE("AudioInputSource %p, cannot create an audio input stream!",
                self.get());
           return;
-        }
-
-        if (uint32_t latency = 0;
-            self->mStream->Latency(&latency) == CUBEB_OK) {
-          Data data(LatencyChangeData{media::TimeUnit(latency, self->mRate)});
-          if (self->mSPSCQueue.Enqueue(data) == 0) {
-            LOGE("AudioInputSource %p, failed to enqueue latency change",
-                 self.get());
-          }
         }
         if (int r = self->mStream->Start(); r != CUBEB_OK) {
           LOGE(
@@ -133,30 +128,17 @@ AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
   }
 
   AudioSegment raw;
-  Maybe<media::TimeUnit> latency;
   while (mSPSCQueue.AvailableRead()) {
-    Data data;
-    DebugOnly<int> reads = mSPSCQueue.Dequeue(&data, 1);
+    AudioChunk chunk;
+    DebugOnly<int> reads = mSPSCQueue.Dequeue(&chunk, 1);
     MOZ_ASSERT(reads);
-    MOZ_ASSERT(!data.is<Empty>());
-    if (data.is<AudioChunk>()) {
-      raw.AppendAndConsumeChunk(std::move(data.as<AudioChunk>()));
-    } else if (data.is<LatencyChangeData>()) {
-      latency = Some(data.as<LatencyChangeData>().mLatency);
-    }
+    raw.AppendAndConsumeChunk(std::move(chunk));
   }
 
-  if (latency) {
-    mDriftCorrector.SetSourceLatency(*latency);
-  }
   return mDriftCorrector.RequestFrames(raw, static_cast<uint32_t>(aDuration));
 }
 
 long AudioInputSource::DataCallback(const void* aBuffer, long aFrames) {
-  TRACE_AUDIO_CALLBACK_BUDGET("AudioInputSource real-time budget", aFrames,
-                              mRate);
-  TRACE("AudioInputSource::DataCallback");
-
   const AudioDataValue* source =
       reinterpret_cast<const AudioDataValue*>(aBuffer);
 
@@ -177,8 +159,7 @@ long AudioInputSource::DataCallback(const void* aBuffer, long aFrames) {
     }
   }
 
-  Data data(c);
-  int writes = mSPSCQueue.Enqueue(data);
+  int writes = mSPSCQueue.Enqueue(c);
   if (writes == 0) {
     LOGW("AudioInputSource %p, buffer is full. Dropping %ld frames", this,
          aFrames);

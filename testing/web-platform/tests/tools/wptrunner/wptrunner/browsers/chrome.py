@@ -31,18 +31,6 @@ __wptrunner__ = {"product": "chrome",
                  "timeout_multiplier": "get_timeout_multiplier",}
 
 
-def debug_args(debug_info):
-    if debug_info.interactive:
-        # Keep in sync with:
-        # https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/tools/debug_renderer
-        return [
-            "--no-sandbox",
-            "--disable-hang-monitor",
-            "--wait-for-debugger-on-navigation",
-        ]
-    return []
-
-
 def check_args(**kwargs):
     require_arg(kwargs, "webdriver_binary")
 
@@ -160,8 +148,6 @@ def env_extras(**kwargs):
 
 
 def env_options():
-    # TODO(crbug.com/1440021): Support text-based debuggers for `chrome` through
-    # `chromedriver`.
     return {"server_host": "127.0.0.1"}
 
 

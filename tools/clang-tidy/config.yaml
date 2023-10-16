@@ -19,7 +19,7 @@ platforms:
 # Minimum clang-tidy version that is required for all the following checkers
 # to work properly.
 # This is also used by 'mach clang-format'
-package_version: "17.0.2"
+package_version: "16.0.6"
 clang_checkers:
   - name: -*
     publish: !!bool no
@@ -62,8 +62,6 @@ clang_checkers:
   - name: bugprone-suspicious-string-compare
     reliability: high
   - name: bugprone-swapped-arguments
-    reliability: high
-  - name: bugprone-switch-missing-default-case
     reliability: high
   - name: bugprone-too-small-loop-variable
     reliability: high
@@ -188,11 +186,6 @@ clang_checkers:
     reliability: high
   - name: mozilla-*
     reliability: high
-  - name: performance-avoid-endl
-    reliability: high
-    # enable from clang 18
-    #  - name: performance-enum-size
-    #    reliability: high
   - name: performance-faster-string-find
     reliability: high
   - name: performance-for-range-copy
@@ -275,8 +268,6 @@ clang_checkers:
   - name: readability-qualified-auto
     reliability: high
   - name: readability-redundant-control-flow
-    reliability: high
-  - name: readability-redundant-member-init
     reliability: high
   - name: readability-redundant-preprocessor
     reliability: high

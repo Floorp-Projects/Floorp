@@ -30,6 +30,8 @@ vendoring:
   vendor-directory: third_party/libsrtp/src
 
   exclude:
+    - ".*"
+    - ".github"
     - "**"
 
   include:

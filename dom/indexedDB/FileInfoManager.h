@@ -71,9 +71,7 @@ class FileInfoManager : public FileInfoManagerBase {
     mFileInfos.Remove(aId);
   }
 
-  // After calling this method, callers should not call any more methods on this
-  // class.
-  virtual nsresult Invalidate() {
+  nsresult Invalidate() {
     AutoLockType lock(FileManager::Mutex());
 
     FileInfoManagerBase::Invalidate();

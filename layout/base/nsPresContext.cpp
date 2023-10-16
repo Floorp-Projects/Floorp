@@ -615,6 +615,18 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     changeHint |= NS_STYLE_HINT_REFLOW;
   }
 
+  // We will end up calling InvalidatePreferenceSheets one from each pres
+  // context, but all it's doing is clearing its cached sheet pointers, so it
+  // won't be wastefully recreating the sheet multiple times.
+  //
+  // The first pres context that flushes will be the one to cause the
+  // reconstruction of the pref style sheet via the UpdatePreferenceStyles call
+  // in FlushPendingNotifications.
+  if (GlobalStyleSheetCache::AffectedByPref(prefName)) {
+    restyleHint |= RestyleHint::RestyleSubtree();
+    GlobalStyleSheetCache::InvalidatePreferenceSheets();
+  }
+
   if (PreferenceSheet::AffectedByPref(prefName)) {
     restyleHint |= RestyleHint::RestyleSubtree();
     PreferenceSheet::Refresh();
@@ -1853,7 +1865,7 @@ void nsPresContext::UIResolutionChanged() {
     nsCOMPtr<nsIRunnable> ev =
         NewRunnableMethod("nsPresContext::UIResolutionChangedInternal", this,
                           &nsPresContext::UIResolutionChangedInternal);
-    nsresult rv = Document()->Dispatch(ev.forget());
+    nsresult rv = Document()->Dispatch(TaskCategory::Other, ev.forget());
     if (NS_SUCCEEDED(rv)) {
       mPendingUIResolutionChanged = true;
     }
@@ -2549,7 +2561,7 @@ already_AddRefed<nsITimer> nsPresContext::CreateTimer(
   nsCOMPtr<nsITimer> timer;
   NS_NewTimerWithFuncCallback(getter_AddRefs(timer), aCallback, this, aDelay,
                               nsITimer::TYPE_ONE_SHOT, aName,
-                              GetMainThreadSerialEventTarget());
+                              Document()->EventTargetFor(TaskCategory::Other));
   return timer.forget();
 }
 
@@ -3067,7 +3079,8 @@ nsRootPresContext::nsRootPresContext(dom::Document* aDocument,
 void nsRootPresContext::AddWillPaintObserver(nsIRunnable* aRunnable) {
   if (!mWillPaintFallbackEvent.IsPending()) {
     mWillPaintFallbackEvent = new RunWillPaintObservers(this);
-    Document()->Dispatch(do_AddRef(mWillPaintFallbackEvent));
+    Document()->Dispatch(TaskCategory::Other,
+                         do_AddRef(mWillPaintFallbackEvent));
   }
   mWillPaintObservers.AppendElement(aRunnable);
 }

@@ -49,6 +49,11 @@ class GlobalStyleSheetCache final : public nsIObserver,
 
   StyleSheet* GetUserContentSheet();
   StyleSheet* GetUserChromeSheet();
+  StyleSheet* ChromePreferenceSheet();
+  StyleSheet* ContentPreferenceSheet();
+
+  static void InvalidatePreferenceSheets();
+  static bool AffectedByPref(const nsACString&);
 
   static void Shutdown();
 
@@ -106,6 +111,8 @@ class GlobalStyleSheetCache final : public nsIObserver,
   void LoadSheetFromSharedMemory(const char* aURL, RefPtr<StyleSheet>* aSheet,
                                  css::SheetParsingMode, Header*,
                                  UserAgentStyleSheetID);
+  void BuildPreferenceSheet(RefPtr<StyleSheet>* aSheet,
+                            const PreferenceSheet::Prefs&);
 
   static StaticRefPtr<GlobalStyleSheetCache> gStyleCache;
   static StaticRefPtr<css::Loader> gCSSLoader;
@@ -116,6 +123,8 @@ class GlobalStyleSheetCache final : public nsIObserver,
 #include "mozilla/UserAgentStyleSheetList.h"
 #undef STYLE_SHEET
 
+  RefPtr<StyleSheet> mChromePreferenceSheet;
+  RefPtr<StyleSheet> mContentPreferenceSheet;
   RefPtr<StyleSheet> mUserChromeSheet;
   RefPtr<StyleSheet> mUserContentSheet;
 

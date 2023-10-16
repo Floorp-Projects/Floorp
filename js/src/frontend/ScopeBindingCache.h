@@ -14,7 +14,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "frontend/NameAnalysisTypes.h"  // NameLocation
-#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex, ParserAtomsTable
+#include "frontend/ParserAtom.h"  // TaggedPArserAtomIndex, ParserAtomsTable
 
 #include "js/Utility.h"  // AutoEnterOOMUnsafeRegion
 

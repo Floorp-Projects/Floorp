@@ -498,6 +498,7 @@ const TEST_GLOBAL = {
       updateGlobalOrObject(object)[name] = f();
     },
     defineLazyGlobalGetters: updateGlobalOrObject,
+    defineLazyModuleGetter: updateGlobalOrObject,
     defineLazyModuleGetters: updateGlobalOrObject,
     defineLazyServiceGetter: updateGlobalOrObject,
     defineLazyServiceGetters: updateGlobalOrObject,

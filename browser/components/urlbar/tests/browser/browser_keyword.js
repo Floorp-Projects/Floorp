@@ -83,7 +83,7 @@ add_task(async function test_display_keyword_without_query() {
   );
   Assert.equal(
     result.displayed.title,
-    "example.com/browser/browser/components/urlbar/tests/browser/print_postdata.sjs?q=",
+    "https://example.com/browser/browser/components/urlbar/tests/browser/print_postdata.sjs?q=",
     "Node should contain the url of the bookmark"
   );
   let [action] = await document.l10n.formatValues([

@@ -5,15 +5,16 @@ Validation for attachment compatibility between render passes, bundles, and pipe
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kTextureSampleCounts, kMaxColorAttachments } from '../../../capability_info.js';
 import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
   kUnsizedDepthStencilFormats,
+  kTextureSampleCounts,
+  kMaxColorAttachments,
   kTextureFormatInfo,
-  filterFormatsByFeature,
   getFeaturesForFormats,
-} from '../../../format_info.js';
+  filterFormatsByFeature,
+} from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);
@@ -153,9 +154,10 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-const kColorAttachmentFormats = kRegularTextureFormats.filter(
-  format => !!kTextureFormatInfo[format].colorRender
-);
+const kColorAttachmentFormats = kRegularTextureFormats.filter(format => {
+  const info = kTextureFormatInfo[format];
+  return info.color && info.renderable;
+});
 
 g.test('render_pass_and_bundle,color_format')
   .desc('Test that color attachment formats in render passes and bundles must match.')
@@ -166,9 +168,6 @@ g.test('render_pass_and_bundle,color_format')
   )
   .fn(t => {
     const { passFormat, bundleFormat } = t.params;
-
-    t.skipIfTextureFormatNotSupported(passFormat, bundleFormat);
-
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: [bundleFormat],
     });
@@ -271,7 +270,7 @@ g.test('render_pass_and_bundle,depth_format')
     const { passFeature, bundleFeature } = t.params;
     t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
   })
-  .fn(t => {
+  .fn(async t => {
     const { passFormat, bundleFormat } = t.params;
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -354,9 +353,6 @@ Test that color attachment formats in render passes or bundles match the pipelin
   )
   .fn(t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
-
-    t.skipIfTextureFormatNotSupported(encoderFormat, pipelineFormat);
-
     const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
@@ -456,14 +452,12 @@ Test that the depth attachment format in render passes or bundles match the pipe
     const { encoderFormatFeature, pipelineFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
   })
-  .fn(t => {
+  .fn(async t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
 
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm', writeMask: 0 }],
-      pipelineFormat !== undefined
-        ? { format: pipelineFormat, depthCompare: 'always', depthWriteEnabled: false }
-        : undefined
+      pipelineFormat !== undefined ? { format: pipelineFormat } : undefined
     );
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
@@ -529,7 +523,7 @@ Test that the depth stencil read only state in render passes or bundles is compa
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(t => {
+  .fn(async t => {
     const {
       encoderType,
       format,
@@ -549,7 +543,6 @@ Test that the depth stencil read only state in render passes or bundles is compa
         : {
             format,
             depthWriteEnabled,
-            depthCompare: 'always',
             stencilWriteMask,
             stencilFront,
             stencilBack,
@@ -626,9 +619,7 @@ Test that the sample count in render passes or bundles match the pipeline sample
 
     const pipeline = t.createRenderPipeline(
       colorFormats.map(format => ({ format, writeMask: 0 })),
-      depthStencilFormat
-        ? { format: depthStencilFormat, depthWriteEnabled: false, depthCompare: 'always' }
-        : undefined,
+      depthStencilFormat ? { format: depthStencilFormat } : undefined,
       pipelineSampleCount
     );
 

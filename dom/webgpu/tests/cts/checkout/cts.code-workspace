@@ -34,8 +34,7 @@
     // Configure VSCode to use the right style when automatically adding imports on autocomplete.
     "typescript.preferences.importModuleSpecifier": "relative",
     "typescript.preferences.importModuleSpecifierEnding": "js",
-    "typescript.preferences.quoteStyle": "single",
-    "typescript.tsdk": "cts/node_modules/typescript/lib"
+    "typescript.preferences.quoteStyle": "single"
   },
   "tasks": {
     "version": "2.0.0",

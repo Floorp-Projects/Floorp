@@ -68,7 +68,7 @@ add_task(async function () {
         // Check for shorthands.
         { name: "CSS_PROPERTY_Padding" },
         // Check for aliases.
-        { name: "CSS_PROPERTY_MozAppearance" },
+        { name: "CSS_PROPERTY_MozTransform" },
         // Check for counted unknown properties.
         { name: "CSS_PROPERTY_WebkitPaddingStart" },
       ],

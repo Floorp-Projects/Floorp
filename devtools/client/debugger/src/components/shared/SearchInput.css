@@ -17,6 +17,7 @@
   flex-shrink: 0;
   min-height: 24px;
   width: 100%;
+  background-color: var(--theme-toolbar-background);
 }
 
 .search-field .img.search {
@@ -73,6 +74,7 @@
   flex-shrink: 0;
   min-height: 24px;
   width: 100%;
+  background-color: var(--theme-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
   margin-top: 1px;
 }
@@ -86,7 +88,7 @@
   padding-top: 5px;
   padding-bottom: 3px;
   align-self: stretch;
-  background-color: var(--theme-accordion-header-background);
+  background-color: var(--theme-body-background);
   font-size: 12px;
 }
 
@@ -193,6 +195,7 @@
   flex-shrink: 0;
   justify-content: flex-end;
   align-items: center;
+  background-color: var(--theme-toolbar-background);
   padding: 0;
 }
 

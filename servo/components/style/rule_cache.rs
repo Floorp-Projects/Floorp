@@ -10,7 +10,7 @@ use crate::properties::{ComputedValues, StyleBuilder};
 use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
 use crate::shared_lock::StylesheetGuards;
-use crate::values::computed::{NonNegativeLength, Zoom};
+use crate::values::computed::NonNegativeLength;
 use fxhash::FxHashMap;
 use servo_arc::Arc;
 use smallvec::SmallVec;
@@ -20,7 +20,6 @@ use smallvec::SmallVec;
 pub struct RuleCacheConditions {
     uncacheable: bool,
     font_size: Option<NonNegativeLength>,
-    line_height: Option<NonNegativeLength>,
     writing_mode: Option<WritingMode>,
 }
 
@@ -29,12 +28,6 @@ impl RuleCacheConditions {
     pub fn set_font_size_dependency(&mut self, font_size: NonNegativeLength) {
         debug_assert!(self.font_size.map_or(true, |f| f == font_size));
         self.font_size = Some(font_size);
-    }
-
-    /// Sets the style as depending in the line-height value.
-    pub fn set_line_height_dependency(&mut self, line_height: NonNegativeLength) {
-        debug_assert!(self.line_height.map_or(true, |l| l == line_height));
-        self.line_height = Some(line_height);
     }
 
     /// Sets the style as uncacheable.
@@ -52,35 +45,15 @@ impl RuleCacheConditions {
     fn cacheable(&self) -> bool {
         !self.uncacheable
     }
-}
 
-#[derive(Debug)]
-struct CachedConditions {
-    font_size: Option<NonNegativeLength>,
-    line_height: Option<NonNegativeLength>,
-    writing_mode: Option<WritingMode>,
-    zoom: Zoom,
-}
-
-impl CachedConditions {
     /// Returns whether `style` matches the conditions.
     fn matches(&self, style: &StyleBuilder) -> bool {
-        if style.effective_zoom != self.zoom {
+        if self.uncacheable {
             return false;
         }
 
         if let Some(fs) = self.font_size {
             if style.get_font().clone_font_size().computed_size != fs {
-                return false;
-            }
-        }
-
-        if let Some(lh) = self.line_height {
-            let new_line_height =
-                style
-                    .device
-                    .calc_line_height(&style.get_font(), style.writing_mode, None);
-            if new_line_height != lh {
                 return false;
             }
         }
@@ -98,7 +71,7 @@ impl CachedConditions {
 /// A TLS cache from rules matched to computed values.
 pub struct RuleCache {
     // FIXME(emilio): Consider using LRUCache or something like that?
-    map: FxHashMap<StrongRuleNode, SmallVec<[(CachedConditions, Arc<ComputedValues>); 1]>>,
+    map: FxHashMap<StrongRuleNode, SmallVec<[(RuleCacheConditions, Arc<ComputedValues>); 1]>>,
 }
 
 impl RuleCache {
@@ -204,16 +177,11 @@ impl RuleCache {
             "Inserting cached reset style with conditions {:?}",
             conditions
         );
-        let cached_conditions = CachedConditions {
-            writing_mode: conditions.writing_mode,
-            font_size: conditions.font_size,
-            line_height: conditions.line_height,
-            zoom: style.effective_zoom,
-        };
         self.map
             .entry(rules)
-            .or_default()
-            .push((cached_conditions, style.clone()));
+            .or_insert_with(SmallVec::new)
+            .push((conditions.clone(), style.clone()));
+
         true
     }
 }

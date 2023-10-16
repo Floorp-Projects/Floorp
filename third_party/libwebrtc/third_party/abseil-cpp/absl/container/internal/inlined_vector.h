@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_H_
-#define ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_H_
+#ifndef ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_INTERNAL_H_
+#define ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_INTERNAL_H_
 
 #include <algorithm>
 #include <cstddef>
@@ -77,9 +77,11 @@ using IsAtLeastForwardIterator = std::is_convertible<
     std::forward_iterator_tag>;
 
 template <typename A>
-using IsMoveAssignOk = std::is_move_assignable<ValueType<A>>;
-template <typename A>
-using IsSwapOk = absl::type_traits_internal::IsSwappable<ValueType<A>>;
+using IsMemcpyOk =
+    absl::conjunction<std::is_same<A, std::allocator<ValueType<A>>>,
+                      absl::is_trivially_copy_constructible<ValueType<A>>,
+                      absl::is_trivially_copy_assignable<ValueType<A>>,
+                      absl::is_trivially_destructible<ValueType<A>>>;
 
 template <typename T>
 struct TypeIdentity {
@@ -118,8 +120,8 @@ struct DestroyAdapter<A, /* IsTriviallyDestructible */ true> {
 
 template <typename A>
 struct Allocation {
-  Pointer<A> data = nullptr;
-  SizeType<A> capacity = 0;
+  Pointer<A> data;
+  SizeType<A> capacity;
 };
 
 template <typename A,
@@ -295,45 +297,6 @@ class ConstructionTransaction {
 template <typename T, size_t N, typename A>
 class Storage {
  public:
-  struct MemcpyPolicy {};
-  struct ElementwiseAssignPolicy {};
-  struct ElementwiseSwapPolicy {};
-  struct ElementwiseConstructPolicy {};
-
-  using MoveAssignmentPolicy = absl::conditional_t<
-      // Fast path: if the value type can be trivially move assigned and
-      // destroyed, and we know the allocator doesn't do anything fancy, then
-      // it's safe for us to simply adopt the contents of the storage for
-      // `other` and remove its own reference to them. It's as if we had
-      // individually move-assigned each value and then destroyed the original.
-      absl::conjunction<absl::is_trivially_move_assignable<ValueType<A>>,
-                        absl::is_trivially_destructible<ValueType<A>>,
-                        std::is_same<A, std::allocator<ValueType<A>>>>::value,
-      MemcpyPolicy,
-      // Otherwise we use move assignment if possible. If not, we simulate
-      // move assignment using move construction.
-      //
-      // Note that this is in contrast to e.g. std::vector and std::optional,
-      // which are themselves not move-assignable when their contained type is
-      // not.
-      absl::conditional_t<IsMoveAssignOk<A>::value, ElementwiseAssignPolicy,
-                          ElementwiseConstructPolicy>>;
-
-  // The policy to be used specifically when swapping inlined elements.
-  using SwapInlinedElementsPolicy = absl::conditional_t<
-      // Fast path: if the value type can be trivially move constructed/assigned
-      // and destroyed, and we know the allocator doesn't do anything fancy,
-      // then it's safe for us to simply swap the bytes in the inline storage.
-      // It's as if we had move-constructed a temporary vector, move-assigned
-      // one to the other, then move-assigned the first from the temporary.
-      absl::conjunction<absl::is_trivially_move_constructible<ValueType<A>>,
-                        absl::is_trivially_move_assignable<ValueType<A>>,
-                        absl::is_trivially_destructible<ValueType<A>>,
-                        std::is_same<A, std::allocator<ValueType<A>>>>::value,
-      MemcpyPolicy,
-      absl::conditional_t<IsSwapOk<A>::value, ElementwiseSwapPolicy,
-                          ElementwiseConstructPolicy>>;
-
   static SizeType<A> NextCapacity(SizeType<A> current_capacity) {
     return current_capacity * 2;
   }
@@ -353,21 +316,14 @@ class Storage {
       : metadata_(allocator, /* size and is_allocated */ 0u) {}
 
   ~Storage() {
-    // Fast path: if we are empty and not allocated, there's nothing to do.
     if (GetSizeAndIsAllocated() == 0) {
-      return;
-    }
-
-    // Fast path: if no destructors need to be run and we know the allocator
-    // doesn't do anything fancy, then all we need to do is deallocate (and
-    // maybe not even that).
-    if (absl::is_trivially_destructible<ValueType<A>>::value &&
-        std::is_same<A, std::allocator<ValueType<A>>>::value) {
+      // Empty and not allocated; nothing to do.
+    } else if (IsMemcpyOk<A>::value) {
+      // No destructors need to be run; just deallocate if necessary.
       DeallocateIfAllocated();
-      return;
+    } else {
+      DestroyContents();
     }
-
-    DestroyContents();
   }
 
   // ---------------------------------------------------------------------------
@@ -390,27 +346,21 @@ class Storage {
     return data_.allocated.allocated_data;
   }
 
-  // ABSL_ATTRIBUTE_NO_SANITIZE_CFI is used because the memory pointed to may be
-  // uninitialized, a common pattern in allocate()+construct() APIs.
-  // https://clang.llvm.org/docs/ControlFlowIntegrity.html#bad-cast-checking
-  // NOTE: When this was written, LLVM documentation did not explicitly
-  // mention that casting `char*` and using `reinterpret_cast` qualifies
-  // as a bad cast.
-  ABSL_ATTRIBUTE_NO_SANITIZE_CFI Pointer<A> GetInlinedData() {
-    return reinterpret_cast<Pointer<A>>(data_.inlined.inlined_data);
+  Pointer<A> GetInlinedData() {
+    return reinterpret_cast<Pointer<A>>(
+        std::addressof(data_.inlined.inlined_data[0]));
   }
 
-  ABSL_ATTRIBUTE_NO_SANITIZE_CFI ConstPointer<A> GetInlinedData() const {
-    return reinterpret_cast<ConstPointer<A>>(data_.inlined.inlined_data);
+  ConstPointer<A> GetInlinedData() const {
+    return reinterpret_cast<ConstPointer<A>>(
+        std::addressof(data_.inlined.inlined_data[0]));
   }
 
   SizeType<A> GetAllocatedCapacity() const {
     return data_.allocated.allocated_capacity;
   }
 
-  SizeType<A> GetInlinedCapacity() const {
-    return static_cast<SizeType<A>>(kOptimalInlinedSize);
-  }
+  SizeType<A> GetInlinedCapacity() const { return static_cast<SizeType<A>>(N); }
 
   StorageView<A> MakeStorageView() {
     return GetIsAllocated() ? StorageView<A>{GetAllocatedData(), GetSize(),
@@ -490,32 +440,8 @@ class Storage {
   }
 
   void MemcpyFrom(const Storage& other_storage) {
-    // Assumption check: it doesn't make sense to memcpy inlined elements unless
-    // we know the allocator doesn't do anything fancy, and one of the following
-    // holds:
-    //
-    //  *  The elements are trivially relocatable.
-    //
-    //  *  It's possible to trivially assign the elements and then destroy the
-    //     source.
-    //
-    //  *  It's possible to trivially copy construct/assign the elements.
-    //
-    {
-      using V = ValueType<A>;
-      ABSL_HARDENING_ASSERT(
-          other_storage.GetIsAllocated() ||
-          (std::is_same<A, std::allocator<V>>::value &&
-           (
-               // First case above
-               absl::is_trivially_relocatable<V>::value ||
-               // Second case above
-               (absl::is_trivially_move_assignable<V>::value &&
-                absl::is_trivially_destructible<V>::value) ||
-               // Third case above
-               (absl::is_trivially_copy_constructible<V>::value ||
-                absl::is_trivially_copy_assignable<V>::value))));
-    }
+    ABSL_HARDENING_ASSERT(IsMemcpyOk<A>::value ||
+                          other_storage.GetIsAllocated());
 
     GetSizeAndIsAllocated() = other_storage.GetSizeAndIsAllocated();
     data_ = other_storage.data_;
@@ -538,28 +464,14 @@ class Storage {
     SizeType<A> allocated_capacity;
   };
 
-  // `kOptimalInlinedSize` is an automatically adjusted inlined capacity of the
-  // `InlinedVector`. Sometimes, it is possible to increase the capacity (from
-  // the user requested `N`) without increasing the size of the `InlinedVector`.
-  static constexpr size_t kOptimalInlinedSize =
-      (std::max)(N, sizeof(Allocated) / sizeof(ValueType<A>));
-
   struct Inlined {
-    alignas(ValueType<A>) char inlined_data[sizeof(
-        ValueType<A>[kOptimalInlinedSize])];
+    alignas(ValueType<A>) char inlined_data[sizeof(ValueType<A>[N])];
   };
 
   union Data {
     Allocated allocated;
     Inlined inlined;
   };
-
-  void SwapN(ElementwiseSwapPolicy, Storage* other, SizeType<A> n);
-  void SwapN(ElementwiseConstructPolicy, Storage* other, SizeType<A> n);
-
-  void SwapInlinedElements(MemcpyPolicy, Storage* other);
-  template <typename NotMemcpyPolicy>
-  void SwapInlinedElements(NotMemcpyPolicy, Storage* other);
 
   template <typename... Args>
   ABSL_ATTRIBUTE_NOINLINE Reference<A> EmplaceBackSlow(Args&&... args);
@@ -595,19 +507,13 @@ void Storage<T, N, A>::InitFrom(const Storage& other) {
     dst = allocation.data;
     src = other.GetAllocatedData();
   }
-
-  // Fast path: if the value type is trivially copy constructible and we know
-  // the allocator doesn't do anything fancy, then we know it is legal for us to
-  // simply memcpy the other vector's elements.
-  if (absl::is_trivially_copy_constructible<ValueType<A>>::value &&
-      std::is_same<A, std::allocator<ValueType<A>>>::value) {
+  if (IsMemcpyOk<A>::value) {
     std::memcpy(reinterpret_cast<char*>(dst),
                 reinterpret_cast<const char*>(src), n * sizeof(ValueType<A>));
   } else {
     auto values = IteratorValueAdapter<A, ConstPointer<A>>(src);
     ConstructElements<A>(GetAllocator(), dst, values, n);
   }
-
   GetSizeAndIsAllocated() = other.GetSizeAndIsAllocated();
 }
 
@@ -735,8 +641,8 @@ auto Storage<T, N, A>::Insert(ConstIterator<A> pos, ValueAdapter values,
                               SizeType<A> insert_count) -> Iterator<A> {
   StorageView<A> storage_view = MakeStorageView();
 
-  auto insert_index = static_cast<SizeType<A>>(
-      std::distance(ConstIterator<A>(storage_view.data), pos));
+  SizeType<A> insert_index =
+      std::distance(ConstIterator<A>(storage_view.data), pos);
   SizeType<A> insert_end_index = insert_index + insert_count;
   SizeType<A> new_size = storage_view.size + insert_count;
 
@@ -878,9 +784,9 @@ auto Storage<T, N, A>::Erase(ConstIterator<A> from, ConstIterator<A> to)
     -> Iterator<A> {
   StorageView<A> storage_view = MakeStorageView();
 
-  auto erase_size = static_cast<SizeType<A>>(std::distance(from, to));
-  auto erase_index = static_cast<SizeType<A>>(
-      std::distance(ConstIterator<A>(storage_view.data), from));
+  SizeType<A> erase_size = std::distance(from, to);
+  SizeType<A> erase_index =
+      std::distance(ConstIterator<A>(storage_view.data), from);
   SizeType<A> erase_end_index = erase_index + erase_size;
 
   IteratorValueAdapter<A, MoveIterator<A>> move_values(
@@ -980,7 +886,26 @@ auto Storage<T, N, A>::Swap(Storage* other_storage_ptr) -> void {
   if (GetIsAllocated() && other_storage_ptr->GetIsAllocated()) {
     swap(data_.allocated, other_storage_ptr->data_.allocated);
   } else if (!GetIsAllocated() && !other_storage_ptr->GetIsAllocated()) {
-    SwapInlinedElements(SwapInlinedElementsPolicy{}, other_storage_ptr);
+    Storage* small_ptr = this;
+    Storage* large_ptr = other_storage_ptr;
+    if (small_ptr->GetSize() > large_ptr->GetSize()) swap(small_ptr, large_ptr);
+
+    for (SizeType<A> i = 0; i < small_ptr->GetSize(); ++i) {
+      swap(small_ptr->GetInlinedData()[i], large_ptr->GetInlinedData()[i]);
+    }
+
+    IteratorValueAdapter<A, MoveIterator<A>> move_values(
+        MoveIterator<A>(large_ptr->GetInlinedData() + small_ptr->GetSize()));
+
+    ConstructElements<A>(large_ptr->GetAllocator(),
+                         small_ptr->GetInlinedData() + small_ptr->GetSize(),
+                         move_values,
+                         large_ptr->GetSize() - small_ptr->GetSize());
+
+    DestroyAdapter<A>::DestroyElements(
+        large_ptr->GetAllocator(),
+        large_ptr->GetInlinedData() + small_ptr->GetSize(),
+        large_ptr->GetSize() - small_ptr->GetSize());
   } else {
     Storage* allocated_ptr = this;
     Storage* inlined_ptr = other_storage_ptr;
@@ -1016,68 +941,6 @@ auto Storage<T, N, A>::Swap(Storage* other_storage_ptr) -> void {
   swap(GetAllocator(), other_storage_ptr->GetAllocator());
 }
 
-template <typename T, size_t N, typename A>
-void Storage<T, N, A>::SwapN(ElementwiseSwapPolicy, Storage* other,
-                             SizeType<A> n) {
-  std::swap_ranges(GetInlinedData(), GetInlinedData() + n,
-                   other->GetInlinedData());
-}
-
-template <typename T, size_t N, typename A>
-void Storage<T, N, A>::SwapN(ElementwiseConstructPolicy, Storage* other,
-                             SizeType<A> n) {
-  Pointer<A> a = GetInlinedData();
-  Pointer<A> b = other->GetInlinedData();
-  // see note on allocators in `SwapInlinedElements`.
-  A& allocator_a = GetAllocator();
-  A& allocator_b = other->GetAllocator();
-  for (SizeType<A> i = 0; i < n; ++i, ++a, ++b) {
-    ValueType<A> tmp(std::move(*a));
-
-    AllocatorTraits<A>::destroy(allocator_a, a);
-    AllocatorTraits<A>::construct(allocator_b, a, std::move(*b));
-
-    AllocatorTraits<A>::destroy(allocator_b, b);
-    AllocatorTraits<A>::construct(allocator_a, b, std::move(tmp));
-  }
-}
-
-template <typename T, size_t N, typename A>
-void Storage<T, N, A>::SwapInlinedElements(MemcpyPolicy, Storage* other) {
-  Data tmp = data_;
-  data_ = other->data_;
-  other->data_ = tmp;
-}
-
-template <typename T, size_t N, typename A>
-template <typename NotMemcpyPolicy>
-void Storage<T, N, A>::SwapInlinedElements(NotMemcpyPolicy policy,
-                                           Storage* other) {
-  // Note: `destroy` needs to use pre-swap allocator while `construct` -
-  // post-swap allocator. Allocators will be swapped later on outside of
-  // `SwapInlinedElements`.
-  Storage* small_ptr = this;
-  Storage* large_ptr = other;
-  if (small_ptr->GetSize() > large_ptr->GetSize()) {
-    std::swap(small_ptr, large_ptr);
-  }
-
-  auto small_size = small_ptr->GetSize();
-  auto diff = large_ptr->GetSize() - small_size;
-  SwapN(policy, other, small_size);
-
-  IteratorValueAdapter<A, MoveIterator<A>> move_values(
-      MoveIterator<A>(large_ptr->GetInlinedData() + small_size));
-
-  ConstructElements<A>(large_ptr->GetAllocator(),
-                       small_ptr->GetInlinedData() + small_size, move_values,
-                       diff);
-
-  DestroyAdapter<A>::DestroyElements(large_ptr->GetAllocator(),
-                                     large_ptr->GetInlinedData() + small_size,
-                                     diff);
-}
-
 // End ignore "array-bounds"
 #if !defined(__clang__) && defined(__GNUC__)
 #pragma GCC diagnostic pop
@@ -1087,4 +950,4 @@ void Storage<T, N, A>::SwapInlinedElements(NotMemcpyPolicy policy,
 ABSL_NAMESPACE_END
 }  // namespace absl
 
-#endif  // ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_H_
+#endif  // ABSL_CONTAINER_INTERNAL_INLINED_VECTOR_INTERNAL_H_

@@ -45,7 +45,6 @@ namespace js {
 class AutoAllocInAtomsZone;
 class AutoMaybeLeaveAtomsZone;
 class AutoRealm;
-struct PortableBaselineStack;
 
 namespace jit {
 class ICScript;
@@ -399,11 +398,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::InterpreterStack& interpreterStack() {
     return runtime()->interpreterStack();
   }
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  js::PortableBaselineStack& portableBaselineStack() {
-    return runtime()->portableBaselineStack();
-  }
-#endif
 
  private:
   // Base address of the native stack for the current thread.

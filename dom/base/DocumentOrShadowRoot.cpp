@@ -18,6 +18,7 @@
 #include "nsTHashtable.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
+#include "nsIRadioVisitor.h"
 #include "nsIFormControl.h"
 #include "nsLayoutUtils.h"
 #include "nsNameSpaceManager.h"
@@ -667,6 +668,8 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
   for (auto iter = tmp->mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
     iter.Get()->Traverse(&cb);
   }
+
+  RadioGroupManager::Traverse(tmp, cb);
 }
 
 void DocumentOrShadowRoot::UnlinkStyleSheets(
@@ -688,6 +691,7 @@ void DocumentOrShadowRoot::Unlink(DocumentOrShadowRoot* tmp) {
   });
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAdoptedStyleSheets);
   tmp->mIdentifierMap.Clear();
+  RadioGroupManager::Unlink(tmp);
 }
 
 }  // namespace mozilla::dom

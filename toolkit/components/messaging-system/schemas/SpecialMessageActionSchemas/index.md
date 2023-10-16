@@ -286,15 +286,6 @@ Windows only.
 }
 ```
 
-### `DECLINE_DEFAULT_PDF_HANDLER`
-
-Action for declining to set the default PDF handler to Firefox on the user's
-system. Prevents the user from being asked again about this.
-
-Windows only.
-
-- args: (none)
-
 ### `SHOW_SPOTLIGHT`
 
 Action for opening a spotlight tab or window modal using the content passed to the dialog.
@@ -312,31 +303,13 @@ Action for setting various browser prefs
 Prefs that can be changed with this action are:
 
 - `browser.dataFeatureRecommendations.enabled`
-- `browser.migrate.content-modal.about-welcome-behavior`
-- `browser.migrate.content-modal.enabled`
-- `browser.migrate.content-modal.import-all.enabled`
-- `browser.migrate.preferences-entrypoint.enabled`
-- `browser.shopping.experience2023.active`
-- `browser.shopping.experience2023.optedIn`
-- `browser.shopping.experience2023.survey.optedInTime`
-- `browser.shopping.experience2023.survey.hasSeen`
-- `browser.shopping.experience2023.survey.pdpVisits`
-- `browser.startup.homepage`
-- `browser.startup.windowsLaunchOnLogin.disableLaunchOnLoginPrompt`
 - `browser.privateWindowSeparation.enabled`
-- `browser.firefox-view.feature-tour`
-- `browser.pdfjs.feature-tour`
-- `browser.newtab.feature-tour`
+- `browser.startup.homepage`
 - `cookiebanners.service.mode`
 - `cookiebanners.service.mode.privateBrowsing`
-- `cookiebanners.service.detectOnly`
-- `messaging-system.askForFeedback`
 
-Any pref that begins with `messaging-system-action.` is also allowed.
-Alternatively, if the pref is not present in the list above and does not begin
-with `messaging-system-action.`, it will be created and prepended with
-`messaging-system-action.`. For example, `example.pref` will be created as
-`messaging-system-action.example.pref`.
+Alternatively, if a pref is set with this action and is not present in the list
+above, it will be created and prepended with `messaging-system-action.`.
 
 * args:
 ```ts

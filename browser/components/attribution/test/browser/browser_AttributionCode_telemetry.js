@@ -7,10 +7,15 @@ const { AttributionIOUtils } = ChromeUtils.importESModule(
 
 add_task(async function test_parse_error() {
   if (AppConstants.platform == "macosx") {
+    // On macOS, the underlying data is the OS-level quarantine
+    // database.  We need to start from nothing to isolate the cache.
     const { MacAttribution } = ChromeUtils.importESModule(
       "resource:///modules/MacAttribution.sys.mjs"
     );
-    MacAttribution.setAttributionString("");
+    let attributionSvc = Cc["@mozilla.org/mac-attribution;1"].getService(
+      Ci.nsIMacAttributionService
+    );
+    attributionSvc.setReferrerUrl(MacAttribution.applicationPath, "", true);
   }
 
   registerCleanupFunction(async () => {

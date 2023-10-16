@@ -3,20 +3,25 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import {
+  ANALYSIS_API,
   ANALYSIS_RESPONSE_SCHEMA,
   ANALYSIS_REQUEST_SCHEMA,
+  ANALYZE_API,
   ANALYZE_RESPONSE_SCHEMA,
   ANALYZE_REQUEST_SCHEMA,
+  ANALYSIS_STATUS_API,
   ANALYSIS_STATUS_RESPONSE_SCHEMA,
   ANALYSIS_STATUS_REQUEST_SCHEMA,
+  RECOMMENDATIONS_API,
   RECOMMENDATIONS_RESPONSE_SCHEMA,
   RECOMMENDATIONS_REQUEST_SCHEMA,
+  ATTRIBUTION_API,
   ATTRIBUTION_RESPONSE_SCHEMA,
   ATTRIBUTION_REQUEST_SCHEMA,
+  REPORTING_API,
   REPORTING_RESPONSE_SCHEMA,
   REPORTING_REQUEST_SCHEMA,
   ProductConfig,
-  ShoppingEnvironment,
 } from "chrome://global/content/shopping/ProductConfig.mjs";
 
 let { XPCOMUtils } = ChromeUtils.importESModule(
@@ -241,7 +246,7 @@ export class ShoppingProduct {
   async requestAnalysis(
     product = this.product,
     options = {
-      url: ShoppingEnvironment.ANALYSIS_API,
+      url: ANALYSIS_API,
       requestSchema: ANALYSIS_REQUEST_SCHEMA,
       responseSchema: ANALYSIS_RESPONSE_SCHEMA,
     }
@@ -280,7 +285,7 @@ export class ShoppingProduct {
   async requestRecommendations(
     product = this.product,
     options = {
-      url: ShoppingEnvironment.RECOMMENDATIONS_API,
+      url: RECOMMENDATIONS_API,
       requestSchema: RECOMMENDATIONS_REQUEST_SCHEMA,
       responseSchema: RECOMMENDATIONS_RESPONSE_SCHEMA,
     }
@@ -701,7 +706,7 @@ export class ShoppingProduct {
    *  Parsed JSON API result or null.
    */
   async requestCreateAnalysis(product = this.product, options = {}) {
-    let url = options?.url || ShoppingEnvironment.ANALYZE_API;
+    let url = options?.url || ANALYZE_API;
     let requestSchema = options?.requestSchema || ANALYZE_REQUEST_SCHEMA;
     let responseSchema = options?.responseSchema || ANALYZE_RESPONSE_SCHEMA;
 
@@ -735,7 +740,7 @@ export class ShoppingProduct {
    *  Parsed JSON API result or null.
    */
   async requestAnalysisCreationStatus(product = this.product, options = {}) {
-    let url = options?.url || ShoppingEnvironment.ANALYSIS_STATUS_API;
+    let url = options?.url || ANALYSIS_STATUS_API;
     let requestSchema =
       options?.requestSchema || ANALYSIS_STATUS_REQUEST_SCHEMA;
     let responseSchema =
@@ -779,7 +784,7 @@ export class ShoppingProduct {
     aid,
     source = "firefox_sidebar",
     options = {
-      url: ShoppingEnvironment.ATTRIBUTION_API,
+      url: ATTRIBUTION_API,
       requestSchema: ATTRIBUTION_REQUEST_SCHEMA,
       responseSchema: ATTRIBUTION_RESPONSE_SCHEMA,
     }
@@ -832,7 +837,7 @@ export class ShoppingProduct {
       return null;
     }
 
-    let url = options?.url || ShoppingEnvironment.REPORTING_API;
+    let url = options?.url || REPORTING_API;
     let requestSchema = options?.requestSchema || REPORTING_REQUEST_SCHEMA;
     let responseSchema = options?.responseSchema || REPORTING_RESPONSE_SCHEMA;
 

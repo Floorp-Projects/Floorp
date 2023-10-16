@@ -156,7 +156,8 @@ class faviconAsyncLoader : public AsyncStatementCallback, public nsICancelable {
     nsresult rv;
 
     nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
-    nsISerialEventTarget* target = GetMainThreadSerialEventTarget();
+    nsCOMPtr<nsISerialEventTarget> target =
+        nsContentUtils::GetEventTargetByLoadInfo(loadInfo, TaskCategory::Other);
     if (!mData.IsEmpty()) {
       nsCOMPtr<nsIInputStream> stream;
       rv = NS_NewCStringInputStream(getter_AddRefs(stream), mData);

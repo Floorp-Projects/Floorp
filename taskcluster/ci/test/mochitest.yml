@@ -64,7 +64,6 @@ mochitest-plain:
         - headless+socketprocess_networking
         - http3
         - http2
-        - geckoview-fission-isolate-high-value
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -125,28 +124,27 @@ mochitest-plain:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
                     default: []
-            geckoview-fission-isolate-high-value:
-                by-test-platform:
-                    android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    android-em.*: built-projects
-                    default: []
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
+                    .*wayland.*: []
                     default: built-projects
     chunks:
         by-test-platform:
-            android.*/debug: 10
+            android-em-7.*: 4
             linux.*/debug: 16
+            linux.*64-asan/opt: 10
             linux.*64-tsan-qr/opt: 20
-            .*(asan|ccov).*: 10
+            linux.*64-.*cov/opt: 10
+            windows.*-ccov.*/.*: 10
+            macosx.*64-ccov.*/.*: 10
             default: 5
     instance-size:
         by-test-platform:
             linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
             default: default
-    max-run-time: 3600
+    max-run-time: 5400
     allow-software-gl-layers: false
     mozharness:
         mochitest-flavor: plain
@@ -265,22 +263,15 @@ mochitest-browser-chrome:
                     default: default
             default: default
     chunks:
-        by-variant:
-            msix:
-                by-test-platform:
-                    .*/debug: 12
-                    default: 7
-            default:
-                by-test-platform:
-                    linux.*-qr/debug: 16
-                    linux.*64-asan-qr/opt: 16
-                    linux.*64-tsan-qr/opt: 32
-                    macosx.*64-qr/debug: 12
-                    macosx.*64-qr/opt: 8
-                    windows.*-ccov.*/.*: 14
-                    windows.*-asan-qr/opt: 14
-                    windows.*32-qr/debug: 12
-                    default: 8
+        by-test-platform:
+            linux.*-qr/debug: 16
+            linux.*64-asan-qr/opt: 16
+            linux.*64-tsan-qr/opt: 32
+            macosx.*64/debug: 16
+            windows.*-ccov.*/.*: 14
+            windows.*-asan-qr/opt: 14
+            windows.*32-qr/debug: 12
+            default: 7
     max-run-time:
         by-variant:
             msix: 5400
@@ -335,7 +326,6 @@ mochitest-browser-a11y:
     chunks:
         by-test-platform:
             .*tsan.*: 2
-            .*asan.*: 2
             default: 1
     instance-size: default
     allow-software-gl-layers: false
@@ -561,6 +551,7 @@ mochitest-plain-gpu:
             default:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
+                    .*-wayland/debug: []
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
@@ -632,7 +623,6 @@ mochitest-media:
             linux.*64-tsan-qr/opt: 7200
             default: 5400
     variants:
-        - media-gpu
         - no-fission
         - socketprocess+no-fission
         - socketprocess
@@ -648,7 +638,7 @@ mochitest-media:
                     android.*: []
                     windows.*ccov.*: []
                     linux.*64(-shippable|-asan|-tsan)?-qr/opt: ['autoland', 'mozilla-central']
-                    macosx.*-64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    macosx.*64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows1.*(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows.*-asan-qr/opt: ['autoland', 'mozilla-central']
                     default: []
@@ -699,12 +689,6 @@ mochitest-media:
                     windows11-64-2009-qr/opt: ['autoland']
                     windows11-64-2009-qr/debug: ['autoland']
                     default: []
-            media-gpu:
-                by-test-platform:
-                    (macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central', 'mozilla-beta']
-                    default: []
-                    # TODO : add Android, it hasn't supported 'tags'
-                    # TODO : add Linux, it would crash on gfxFeature.cpp:180
             default:
                 by-test-platform:
                     android-hw.*/opt: []
@@ -718,7 +702,6 @@ mochitest-media:
     chunks:
         by-variant:
             wmf-media-engine: 1
-            media-gpu: 1
             default:
                 by-test-platform:
                     (android|macos).*/opt: 1
@@ -1080,6 +1063,7 @@ mochitest-remote:
             default:
                 by-test-platform:
                     android.*: []
+                    .*wayland.*: []
                     default: built-projects
     tier: default
     max-run-time: 5400

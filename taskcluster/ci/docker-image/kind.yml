@@ -235,7 +235,7 @@ jobs:
         symbol: I(flatpak)
     webrender:
         symbol: I(webrender)
-        parent: debian12-base
+        parent: debian11-base
     condprof:
         symbol: I(condprof)
         parent: ubuntu1804-test

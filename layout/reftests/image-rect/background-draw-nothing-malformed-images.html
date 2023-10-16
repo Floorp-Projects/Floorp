@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+
+    Tests if some unusual source images do not cause a crash.
+-->
+<html>
+  <head>
+    <title>Testcases: -moz-image-rect() [bug 113577]</title>
+    <style>
+      div.wrapper {
+        width: 32px;
+        height: 32px;
+        margin: 10px;
+        background-color: red;
+      }
+      div.wrapper div {
+        width: 32px;
+        height: 32px;
+        background: no-repeat;
+      }
+      #test1 {
+        background-image: -moz-image-rect(url(missing.png), 0, 16, 16, 0);
+      }
+      #test2 {
+        background-image: -moz-image-rect(url(#), 0, 16, 16, 0);
+      }
+      #test3 {
+        background-image: -moz-image-rect(url(../backgrounds/malformed.png), 0, 16, 16, 0);
+      }
+      #test4 {
+        background-image: -moz-image-rect(url(../backgrounds/transparent-32x32.png), 0, 16, 16, 0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper"><div id="test1"></div></div>
+    <div class="wrapper"><div id="test2"></div></div>
+    <div class="wrapper"><div id="test3"></div></div>
+    <div class="wrapper"><div id="test4"></div></div>
+  </body>
+</html>

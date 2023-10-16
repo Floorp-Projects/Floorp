@@ -7,13 +7,14 @@ TODO: review for completeness
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kMaxColorAttachments, kQueryTypes } from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
 import {
   kDepthStencilFormats,
+  kMaxColorAttachments,
+  kQueryTypes,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
-} from '../../../format_info.js';
+} from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
@@ -116,7 +117,7 @@ g.test('color_attachments,empty')
       ])
       .combine('hasDepthStencilAttachment', [false, true])
   )
-  .fn(t => {
+  .fn(async t => {
     const { colorAttachments, hasDepthStencilAttachment } = t.params;
 
     let isEmptyColorTargets = true;
@@ -148,12 +149,12 @@ g.test('color_attachments,limits,maxColorAttachments')
     { colorAttachmentsCount: 8, _success: true }, // Control case
     { colorAttachmentsCount: 9, _success: false }, // Out of bounds
   ])
-  .fn(t => {
+  .fn(async t => {
     const { colorAttachmentsCount, _success } = t.params;
 
     const colorAttachments = [];
     for (let i = 0; i < colorAttachmentsCount; i++) {
-      const colorTexture = t.createTexture({ format: 'r8unorm' });
+      const colorTexture = t.createTexture();
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
 
@@ -176,21 +177,18 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
         range(kMaxColorAttachments, i => i + 1)
       )
   )
-  .beforeAllSubcases(t => {
-    t.skipIfTextureFormatNotSupported(t.params.format);
-  })
-  .fn(t => {
+  .fn(async t => {
     const { format, attachmentCount } = t.params;
     const info = kTextureFormatInfo[format];
 
     const colorAttachments = [];
     for (let i = 0; i < attachmentCount; i++) {
-      const colorTexture = t.createTexture({ format });
+      const colorTexture = t.createTexture();
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
-      info.colorRender === undefined ||
-      info.colorRender.byteCost * attachmentCount >
+      info.renderTargetPixelByteCost === undefined ||
+      info.renderTargetPixelByteCost * attachmentCount >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.tryRenderPass(!shouldError, { colorAttachments });
@@ -212,16 +210,16 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
       {
         formats: ['r8unorm', 'r32float', 'rgba8unorm', 'rgba32float', 'r8unorm'],
 
-        _success: false,
+        _success: true,
       },
       {
         formats: ['r32float', 'rgba8unorm', 'rgba32float', 'r8unorm', 'r8unorm'],
 
-        _success: true,
+        _success: false,
       },
     ])
   )
-  .fn(t => {
+  .fn(async t => {
     const { formats, _success } = t.params;
 
     const colorAttachments = [];
@@ -241,7 +239,7 @@ g.test('attachments,same_size')
     - Fail if the depth stencil attachment has a different size.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const colorTexture1x1A = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
     const colorTexture1x1B = t.createTexture({ width: 1, height: 1, format: 'rgba8unorm' });
     const colorTexture2x2 = t.createTexture({ width: 2, height: 2, format: 'rgba8unorm' });
@@ -297,7 +295,7 @@ g.test('attachments,same_size')
 
 g.test('attachments,color_depth_mismatch')
   .desc(`Test that attachments match whether they are used for color or depth stencil.`)
-  .fn(t => {
+  .fn(async t => {
     const colorTexture = t.createTexture({ format: 'rgba8unorm' });
     const depthStencilTexture = t.createTexture({ format: 'depth24plus-stencil8' });
 
@@ -334,7 +332,7 @@ g.test('attachments,layer_count')
     { arrayLayerCount: 1, baseArrayLayer: 0, _success: true },
     { arrayLayerCount: 1, baseArrayLayer: 9, _success: true },
   ])
-  .fn(t => {
+  .fn(async t => {
     const { arrayLayerCount, baseArrayLayer, _success } = t.params;
 
     const ARRAY_LAYER_COUNT = 10;
@@ -411,7 +409,7 @@ g.test('attachments,mip_level_count')
     { mipLevelCount: 1, baseMipLevel: 0, _success: true },
     { mipLevelCount: 1, baseMipLevel: 3, _success: true },
   ])
-  .fn(t => {
+  .fn(async t => {
     const { mipLevelCount, baseMipLevel, _success } = t.params;
 
     const ARRAY_LAYER_COUNT = 1;
@@ -480,7 +478,7 @@ g.test('color_attachments,non_multisampled')
   Test that setting a resolve target is invalid if the color attachments is non multisampled.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const colorTexture = t.createTexture({ sampleCount: 1 });
     const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
 
@@ -507,7 +505,7 @@ g.test('color_attachments,sample_count')
     - Fail if using multiple color attachments with different sample counts.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const colorTexture = t.createTexture({ sampleCount: 1 });
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
 
@@ -537,7 +535,7 @@ g.test('resolveTarget,sample_count')
   Test that using multisampled resolve target is invalid for color attachments.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const multisampledResolveTargetTexture = t.createTexture({ sampleCount: 4 });
 
@@ -558,7 +556,7 @@ g.test('resolveTarget,array_layer_count')
   attachments.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ arrayLayerCount: 2 });
 
@@ -579,7 +577,7 @@ g.test('resolveTarget,mipmap_level_count')
   color attachments.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ mipLevelCount: 2 });
 
@@ -606,7 +604,7 @@ g.test('resolveTarget,usage')
     { usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.STORAGE },
     { usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TEXTURE_BINDING },
   ])
-  .fn(t => {
+  .fn(async t => {
     const { usage } = t.params;
 
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
@@ -625,7 +623,7 @@ g.test('resolveTarget,usage')
 
 g.test('resolveTarget,error_state')
   .desc(`Test that a resolve target that has a error is invalid for color attachments.`)
-  .fn(t => {
+  .fn(async t => {
     const ARRAY_LAYER_COUNT = 1;
 
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
@@ -654,7 +652,7 @@ g.test('resolveTarget,single_sample_count')
   valid.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ sampleCount: 1 });
 
@@ -670,7 +668,7 @@ g.test('resolveTarget,single_sample_count')
 
 g.test('resolveTarget,different_format')
   .desc(`Test that a resolve target that has a different format is invalid.`)
-  .fn(t => {
+  .fn(async t => {
     const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({ format: 'bgra8unorm' });
 
@@ -690,7 +688,7 @@ g.test('resolveTarget,different_size')
   Test that a resolve target that has a different size with the color attachment is invalid.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const size = 16;
     const multisampledColorTexture = t.createTexture({ width: size, height: size, sampleCount: 4 });
     const resolveTargetTexture = t.createTexture({
@@ -735,7 +733,7 @@ g.test('depth_stencil_attachment,sample_counts_mismatch')
   attachment is invalid.
   `
   )
-  .fn(t => {
+  .fn(async t => {
     const multisampledDepthStencilTexture = t.createTexture({
       sampleCount: 4,
       format: 'depth24plus-stencil8',
@@ -787,104 +785,77 @@ g.test('depth_stencil_attachment,sample_counts_mismatch')
     }
   });
 
-g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadOnly')
+g.test('depth_stencil_attachment')
   .desc(
     `
   Test GPURenderPassDepthStencilAttachment Usage:
-    - if the format has a depth aspect:
-      - if depthReadOnly is true
-        - depthLoadOp and depthStoreOp must not be provided
-      - else:
-        - depthLoadOp and depthStoreOp must be provided
-    - if the format has a stencil aspect:
-      - if stencilReadOnly is true
-        - stencilLoadOp and stencilStoreOp must not be provided
-      - else:
-        - stencilLoadOp and stencilStoreOp must be provided
+    - depthReadOnly and stencilReadOnly must match if the format is a combined depth-stencil format.
+    - depthLoadOp and depthStoreOp must be provided iff the format has a depth aspect and
+      depthReadOnly is not true.
+    - stencilLoadOp and stencilStoreOp must be provided iff the format has a stencil aspect and
+      stencilReadOnly is not true.
   `
   )
   .params(u =>
-    u
+    u //
       .combine('format', kDepthStencilFormats)
-      .beginSubcases() // Note: It's easier to debug if you comment this line out as you can then run an individual case.
-      .combine('depthReadOnly', [undefined, true, false])
-      .combine('depthLoadOp', [undefined, 'clear', 'load'])
-      .combine('depthStoreOp', [undefined, 'discard', 'store'])
-      .combine('stencilReadOnly', [undefined, true, false])
-      .combine('stencilLoadOp', [undefined, 'clear', 'load'])
-      .combine('stencilStoreOp', [undefined, 'discard', 'store'])
+      .beginSubcases()
+      .combine('depthReadOnly', [false, true])
+      .combine('stencilReadOnly', [false, true])
+      .combine('setDepthLoadStoreOp', [false, true])
+      .combine('setStencilLoadStoreOp', [false, true])
   )
   .beforeAllSubcases(t => {
-    const info = kTextureFormatInfo[t.params.format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(t => {
+  .fn(async t => {
     const {
       format,
       depthReadOnly,
-      depthLoadOp,
-      depthStoreOp,
       stencilReadOnly,
-      stencilLoadOp,
-      stencilStoreOp,
+      setDepthLoadStoreOp,
+      setStencilLoadStoreOp,
     } = t.params;
 
-    const depthAttachment = t.trackForCleanup(
-      t.device.createTexture({
-        format,
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-    );
-
-    const depthAttachmentView = depthAttachment.createView();
-
-    const encoder = t.device.createCommandEncoder();
-
-    // If depthLoadOp is "clear", depthClearValue must be provided and must be between 0.0 and 1.0,
-    // and it will be ignored if depthLoadOp is not "clear".
-    const depthClearValue = depthLoadOp === 'clear' ? 0 : undefined;
-    const renderPassDescriptor = {
-      colorAttachments: [],
-      depthStencilAttachment: {
-        view: depthAttachmentView,
-        depthLoadOp,
-        depthStoreOp,
-        depthReadOnly,
-        stencilLoadOp,
-        stencilStoreOp,
-        stencilReadOnly,
-        depthClearValue,
-      },
-    };
-    const pass = encoder.beginRenderPass(renderPassDescriptor);
-    pass.end();
-
+    let isValid = true;
     const info = kTextureFormatInfo[format];
-    const hasDepthSettings = !!depthLoadOp && !!depthStoreOp && !depthReadOnly;
-    const hasStencilSettings = !!stencilLoadOp && !!stencilStoreOp && !stencilReadOnly;
-    const hasDepth = info.depth;
-    const hasStencil = info.stencil;
+    if (info.depth && info.stencil) {
+      isValid &&= depthReadOnly === stencilReadOnly;
+    }
 
-    const goodAspectCombo =
-      (hasDepth && hasStencil ? !depthReadOnly === !stencilReadOnly : true) &&
-      (hasDepthSettings ? hasDepth : true) &&
-      (hasStencilSettings ? hasStencil : true);
+    if (info.depth && !depthReadOnly) {
+      isValid &&= setDepthLoadStoreOp;
+    } else {
+      isValid &&= !setDepthLoadStoreOp;
+    }
 
-    const hasBothDepthOps = !!depthLoadOp && !!depthStoreOp;
-    const hasBothStencilOps = !!stencilLoadOp && !!stencilStoreOp;
-    const hasNeitherDepthOps = !depthLoadOp && !depthStoreOp;
-    const hasNeitherStencilOps = !stencilLoadOp && !stencilStoreOp;
+    if (info.stencil && !stencilReadOnly) {
+      isValid &&= setStencilLoadStoreOp;
+    } else {
+      isValid &&= !setStencilLoadStoreOp;
+    }
 
-    const goodDepthCombo = hasDepth && !depthReadOnly ? hasBothDepthOps : hasNeitherDepthOps;
-    const goodStencilCombo =
-      hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
+    const depthStencilAttachment = {
+      view: t.createTexture({ format }).createView(),
+      depthReadOnly,
+      stencilReadOnly,
+    };
 
-    const shouldError = !goodAspectCombo || !goodDepthCombo || !goodStencilCombo;
+    if (setDepthLoadStoreOp) {
+      depthStencilAttachment.depthLoadOp = 'clear';
+      depthStencilAttachment.depthStoreOp = 'store';
+    }
+    if (setStencilLoadStoreOp) {
+      depthStencilAttachment.stencilLoadOp = 'clear';
+      depthStencilAttachment.stencilStoreOp = 'store';
+    }
 
-    t.expectValidationError(() => {
-      encoder.finish();
-    }, shouldError);
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(t.createTexture())],
+      depthStencilAttachment,
+    };
+
+    t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('depth_stencil_attachment,depth_clear_value')
@@ -897,7 +868,13 @@ g.test('depth_stencil_attachment,depth_clear_value')
   .params(u =>
     u
       .combine('depthLoadOp', ['load', 'clear', undefined])
-      .combine('depthClearValue', [undefined, -1.0, 0.0, 0.5, 1.0, 1.5])
+      .combineWithParams([
+        { depthClearValue: -1.0 },
+        { depthClearValue: 0.0 },
+        { depthClearValue: 0.5 },
+        { depthClearValue: 1.0 },
+        { depthClearValue: 1.5 },
+      ])
   )
   .fn(t => {
     const { depthLoadOp, depthClearValue } = t.params;
@@ -917,12 +894,9 @@ g.test('depth_stencil_attachment,depth_clear_value')
       depthStencilAttachment,
     };
 
-    // We can not check for out of range because NaN is not out of range.
-    // So (v < 0.0 || v > 1.0) would return false when depthClearValue is undefined (NaN)
-    const isDepthValueInRange = depthClearValue >= 0.0 && depthClearValue <= 1.0;
-    const isInvalid = depthLoadOp === 'clear' && !isDepthValueInRange;
+    const isValid = !(depthLoadOp === 'clear' && (depthClearValue < 0.0 || depthClearValue > 1.0));
 
-    t.tryRenderPass(!isInvalid, descriptor);
+    t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('resolveTarget,format_supports_resolve')
@@ -937,20 +911,15 @@ g.test('resolveTarget,format_supports_resolve')
       .combine('format', kRenderableColorTextureFormats)
       .filter(t => kTextureFormatInfo[t.format].multisample)
   )
-  .beforeAllSubcases(t => {
-    t.skipIfTextureFormatNotSupported(t.params.format);
-  })
-  .fn(t => {
+  .fn(async t => {
     const { format } = t.params;
-    const info = kTextureFormatInfo[format];
-
     const multisampledColorTexture = t.createTexture({ format, sampleCount: 4 });
     const resolveTarget = t.createTexture({ format });
 
     const colorAttachment = t.getColorAttachment(multisampledColorTexture);
     colorAttachment.resolveTarget = resolveTarget.createView();
 
-    t.tryRenderPass(!!info.colorRender?.resolve, {
+    t.tryRenderPass(kTextureFormatInfo[format].resolve, {
       colorAttachments: [colorAttachment],
     });
   });
@@ -964,64 +933,147 @@ g.test('timestampWrites,query_set_type')
   )
   .params(u =>
     u //
-      .combine('queryType', kQueryTypes)
+      .combine('queryTypeA', kQueryTypes)
+      .combine('queryTypeB', kQueryTypes)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(t => {
-    const { queryType } = t.params;
+  .fn(async t => {
+    const { queryTypeA, queryTypeB } = t.params;
 
-    const timestampWrites = {
-      querySet: t.device.createQuerySet({ type: queryType, count: 2 }),
-      beginningOfPassWriteIndex: 0,
-      endOfPassWriteIndex: 1,
+    const timestampWriteA = {
+      querySet: t.device.createQuerySet({ type: queryTypeA, count: 1 }),
+      queryIndex: 0,
+      location: 'beginning',
     };
 
-    const isValid = queryType === 'timestamp';
+    const timestampWriteB = {
+      querySet: t.device.createQuerySet({ type: queryTypeB, count: 1 }),
+      queryIndex: 0,
+      location: 'end',
+    };
+
+    const isValid = queryTypeA === 'timestamp' && queryTypeB === 'timestamp';
 
     const colorTexture = t.createTexture();
     const descriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites,
+      timestampWrites: [timestampWriteA, timestampWriteB],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
+
+g.test('timestamp_writes_location')
+  .desc('Test that entries in timestampWrites do not have the same location.')
+  .params(u =>
+    u //
+      .combine('locationA', ['beginning', 'end'])
+      .combine('locationB', ['beginning', 'end'])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { locationA, locationB } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: 'timestamp',
+      count: 2,
+    });
+
+    const timestampWriteA = {
+      querySet,
+      queryIndex: 0,
+      location: locationA,
+    };
+
+    const timestampWriteB = {
+      querySet,
+      queryIndex: 1,
+      location: locationB,
+    };
+
+    const isValid = locationA !== locationB;
+
+    const colorTexture = t.createTexture({ format: 'rgba8unorm' });
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWriteA, timestampWriteB],
     };
 
     t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('timestampWrite,query_index')
-  .desc(
-    `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
-         query indexes are unique.`
-  )
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3])
-      .combine('endOfPassWriteIndex', [undefined, 0, 1, 2, 3])
-  )
+  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`)
+  .params(u => u.combine('queryIndex', [0, 1, 2, 3]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(t => {
-    const { beginningOfPassWriteIndex, endOfPassWriteIndex } = t.params;
+  .fn(async t => {
+    const { queryIndex } = t.params;
 
     const querySetCount = 2;
 
-    const timestampWrites = {
+    const timestampWrite = {
       querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
-      beginningOfPassWriteIndex,
-      endOfPassWriteIndex,
+      queryIndex,
+      location: 'beginning',
     };
 
-    const isValid =
-      beginningOfPassWriteIndex !== endOfPassWriteIndex &&
-      (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
-      (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount);
+    const isValid = queryIndex < querySetCount;
 
     const colorTexture = t.createTexture();
     const descriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites,
+      timestampWrites: [timestampWrite],
+    };
+
+    t.tryRenderPass(isValid, descriptor);
+  });
+
+g.test('timestampWrite,same_query_index')
+  .desc(
+    `
+  Test that timestampWrites is invalid if each entry has the same queryIndex in the same querySet.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('queryIndexA', [0, 1])
+      .combine('queryIndexB', [0, 1])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase(['timestamp-query']);
+  })
+  .fn(async t => {
+    const { queryIndexA, queryIndexB } = t.params;
+
+    const querySet = t.device.createQuerySet({
+      type: 'timestamp',
+      count: 2,
+    });
+
+    const timestampWriteA = {
+      querySet,
+      queryIndex: queryIndexA,
+      location: 'beginning',
+    };
+
+    const timestampWriteB = {
+      querySet,
+      queryIndex: queryIndexB,
+      location: 'end',
+    };
+
+    const isValid = queryIndexA !== queryIndexB;
+
+    const colorTexture = t.createTexture();
+    const descriptor = {
+      colorAttachments: [t.getColorAttachment(colorTexture)],
+      timestampWrites: [timestampWriteA, timestampWriteB],
     };
 
     t.tryRenderPass(isValid, descriptor);
@@ -1035,7 +1087,7 @@ g.test('occlusionQuerySet,query_set_type')
       t.selectDeviceOrSkipTestCase(['timestamp-query']);
     }
   })
-  .fn(t => {
+  .fn(async t => {
     const { queryType } = t.params;
 
     const querySet = t.device.createQuerySet({

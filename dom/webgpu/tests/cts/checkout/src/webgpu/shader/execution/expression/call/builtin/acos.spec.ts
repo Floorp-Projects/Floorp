@@ -9,38 +9,27 @@ Returns the arc cosine of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { linearRange, fullF32Range, fullF16Range } from '../../../../../util/math.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { acosInterval } from '../../../../../util/f32_interval.js';
+import { linearRange, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const f32_inputs = [
+const inputs = [
   ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
   ...fullF32Range(),
 ];
 
-const f16_inputs = [
-  ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-  ...fullF16Range(),
-];
-
 export const d = makeCaseCache('acos', {
   f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'finite', FP.f32.acosInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', acosInterval);
   },
   f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'unfiltered', FP.f32.acosInterval);
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'finite', FP.f16.acosInterval);
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'unfiltered', FP.f16.acosInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', acosInterval);
   },
 });
 
@@ -69,10 +58,4 @@ g.test('f16')
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
-  .fn(async t => {
-    const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
-    await run(t, builtin('acos'), [TypeF16], TypeF16, t.params, cases);
-  });
+  .unimplemented();

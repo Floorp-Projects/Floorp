@@ -66,7 +66,8 @@ class imgRequestProxy : public mozilla::PreloaderBase,
 
   // Callers to Init or ChangeOwner are required to call NotifyListener after
   // (although not immediately after) doing so.
-  nsresult Init(imgRequest* aOwner, nsILoadGroup* aLoadGroup, nsIURI* aURI,
+  nsresult Init(imgRequest* aOwner, nsILoadGroup* aLoadGroup,
+                Document* aLoadingDocument, nsIURI* aURI,
                 imgINotificationObserver* aObserver);
 
   nsresult ChangeOwner(imgRequest* aNewOwner);  // this will change mOwner.
@@ -114,6 +115,8 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   // stylesheets can be shared across documents properly, see bug 1800979.
   void SetCancelable(bool);
 
+  already_AddRefed<nsIEventTarget> GetEventTarget() const override;
+
   // Removes all animation consumers that were created with
   // IncrementAnimationConsumers. This is necessary since we need
   // to do it before the proxy itself is destroyed. See
@@ -128,6 +131,10 @@ class imgRequestProxy : public mozilla::PreloaderBase,
       Document* aLoadingDocument);
 
   imgRequest* GetOwner() const;
+
+  // PreloaderBase
+  // We are using the default image loader prioritization for preloads.
+  virtual void PrioritizeAsPreload() override {}
 
  protected:
   friend class mozilla::image::ProgressTracker;
@@ -190,7 +197,7 @@ class imgRequestProxy : public mozilla::PreloaderBase,
  private:
   friend class imgCacheValidator;
 
-  void AddToOwner();
+  void AddToOwner(Document* aLoadingDocument);
   void RemoveFromOwner(nsresult aStatus);
 
   nsresult DispatchWithTargetIfAvailable(already_AddRefed<nsIRunnable> aEvent);
@@ -207,6 +214,7 @@ class imgRequestProxy : public mozilla::PreloaderBase,
       "they are destroyed") mListener;
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsCOMPtr<nsIEventTarget> mEventTarget;
 
   nsLoadFlags mLoadFlags;
   uint32_t mLockCount;
@@ -223,6 +231,7 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   bool mPendingNotify : 1;
   bool mValidating : 1;
   bool mHadListener : 1;
+  bool mHadDispatch : 1;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(imgRequestProxy, NS_IMGREQUESTPROXY_CID)

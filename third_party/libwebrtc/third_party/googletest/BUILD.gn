@@ -6,9 +6,3 @@ config("gmock_config") {
 
 config("gtest_config") {
 }
-
-source_set("gtest") {
-}
-
-source_set("gmock") {
-}

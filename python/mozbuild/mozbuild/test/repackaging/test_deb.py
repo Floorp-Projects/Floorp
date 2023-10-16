@@ -33,6 +33,7 @@ _APPLICATION_INI_CONTENT_DATA = {
     "vendor": "Mozilla",
     "remoting_name": "firefox-nightly-try",
     "build_id": "20230222000000",
+    "timestamp": datetime.datetime(2023, 2, 22),
 }
 
 
@@ -128,21 +129,19 @@ def test_extract_application_ini_data_from_directory():
 def test_get_build_variables(
     version, build_number, package_name_suffix, description_suffix, expected
 ):
-    application_ini_data = deb._parse_application_ini_data(
-        {
-            "name": "Firefox",
-            "display_name": "Firefox",
-            "vendor": "Mozilla",
-            "remoting_name": "firefox-nightly-try",
-            "build_id": "20230222000000",
-        },
-        version,
-        build_number,
-    )
-
+    application_ini_data = {
+        "name": "Firefox",
+        "display_name": "Firefox",
+        "vendor": "Mozilla",
+        "remoting_name": "firefox-nightly-try",
+        "build_id": "20230222000000",
+        "timestamp": datetime.datetime(2023, 2, 22),
+    }
     assert deb._get_build_variables(
         application_ini_data,
         "x86",
+        version,
+        build_number,
         depends="${shlibs:Depends},",
         package_name_suffix=package_name_suffix,
         description_suffix=description_suffix,
@@ -300,13 +299,14 @@ Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
 
 def test_generate_deb_desktop_entry_file_text(monkeypatch):
     def responsive(url):
-        assert "zh-TW" in url
-        return Mock(
-            **{
-                "status_code": 200,
-                "text": ZH_TW_FTL,
-            }
-        )
+        if "zh-TW" in url:
+            return Mock(
+                **{
+                    "status_code": 200,
+                    "text": ZH_TW_FTL,
+                }
+            )
+        return Mock(**{"status_code": 404})
 
     monkeypatch.setattr(deb.requests, "get", responsive)
 
@@ -336,12 +336,6 @@ def test_generate_deb_desktop_entry_file_text(monkeypatch):
         return Mock(**{"format_value": format_value})
 
     fluent_resource_loader = Mock()
-
-    monkeypatch.setattr(
-        deb.json,
-        "load",
-        lambda f: {"zh-TW": {"platforms": ["linux"], "revision": "default"}},
-    )
 
     desktop_entry_file_text = deb._generate_browser_desktop_entry_file_text(
         log,
@@ -551,64 +545,6 @@ def test_extract_langpack_metadata():
             zip.writestr("manifest.json", json.dumps(_MANIFEST_JSON_DATA))
 
         assert deb._extract_langpack_metadata(langpack_path) == _MANIFEST_JSON_DATA
-
-
-@pytest.mark.parametrize(
-    "version, build_number, expected",
-    (
-        (
-            "112.0a1",
-            1,
-            {
-                "build_id": "20230222000000",
-                "deb_pkg_version": "112.0a1~20230222000000",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-        (
-            "112.0b1",
-            1,
-            {
-                "build_id": "20230222000000",
-                "deb_pkg_version": "112.0b1~build1",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-        (
-            "112.0",
-            2,
-            {
-                "build_id": "20230222000000",
-                "deb_pkg_version": "112.0~build2",
-                "display_name": "Firefox Nightly",
-                "name": "Firefox",
-                "remoting_name": "firefox-nightly-try",
-                "timestamp": datetime.datetime(2023, 2, 22, 0, 0),
-                "vendor": "Mozilla",
-            },
-        ),
-    ),
-)
-def test_load_application_ini_data(version, build_number, expected):
-    with tempfile.TemporaryDirectory() as d:
-        tar_path = os.path.join(d, "input.tar")
-        with tarfile.open(tar_path, "w") as tar:
-            application_ini_path = os.path.join(d, "application.ini")
-            with open(application_ini_path, "w") as application_ini_file:
-                application_ini_file.write(_APPLICATION_INI_CONTENT)
-            tar.add(application_ini_path)
-        application_ini_data = deb._load_application_ini_data(
-            tar_path, version, build_number
-        )
-        assert application_ini_data == expected
 
 
 if __name__ == "__main__":

@@ -69,6 +69,12 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
     return;
   }
 
+  is(
+    typeof hostname,
+    "string",
+    "checkAutoCompleteResults: hostname must be a string"
+  );
+
   isnot(
     actualValues.length,
     0,
@@ -1095,13 +1101,13 @@ this.LoginManager = new Proxy(
 );
 
 /**
- * Set the inner html of the content div and ensure it gets reset after current
+ * Set innerHTML of the content div and ensure it gets reset after current
  * task finishes.
  * Returns the first child node of the newly created content div for convenient
  * access of the newly created dom node.
  *
  * @param {String} html
- *        string of dom content or dom element to be inserted into content element
+ *        string of dom content to be created
  */
 function setContentForTask(html) {
   const content = document.querySelector("#content");
@@ -1110,14 +1116,9 @@ function setContentForTask(html) {
     // eslint-disable-next-line no-unsanitized/property
     () => (content.innerHTML = innerHTMLBefore)
   );
-  if (html.content?.cloneNode) {
-    const clone = html.content.cloneNode(true);
-    content.replaceChildren(clone);
-  } else {
-    // eslint-disable-next-line no-unsanitized/property
-    content.innerHTML = html;
-  }
-  return content.firstElementChild;
+  // eslint-disable-next-line no-unsanitized/property
+  content.innerHTML = html;
+  return content.firstChild;
 }
 
 /*

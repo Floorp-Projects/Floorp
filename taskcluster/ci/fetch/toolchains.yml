@@ -164,7 +164,7 @@ zlib-1.3:
     description: zlib 1.3 source code
     fetch:
         type: static-url
-        url: https://zlib.net/fossils/zlib-1.3.tar.gz
+        url: https://zlib.net/zlib-1.3.tar.gz
         sha256: ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
         size: 1495873
         gpg-signature:
@@ -249,7 +249,7 @@ libdmg-hfsplus:
     fetch:
         type: git
         repo: https://github.com/mozilla/libdmg-hfsplus/
-        revision: a0a959bd25370c1c0a00c9ec525e3e78285adbf9
+        revision: 2ee327795680101d36f9700bd0fb618362237718
 
 hfsplus-tools:
     description: hfstools-plus source code
@@ -293,7 +293,7 @@ grcov:
     fetch:
         type: git
         repo: https://github.com/mozilla/grcov
-        revision: 322fc39acacd75aca0ff1c0a1ec2a3e91f04011c
+        revision: 6ccd61964a0ab60d193394f18c0986eb37d14b9e
 
 sccache:
     description: sccache source code
@@ -315,7 +315,7 @@ mingw-w64:
     fetch:
         type: git
         repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
-        revision: 319de5d6e83f23171aea3257b2bd1435d6dbfe89
+        revision: 024035cfd9059ebd39d95ab22b009ef3b88b4040
 
 mingw-w64-trunk:
     description: mingw-w64 master branch source code
@@ -354,12 +354,19 @@ clang-14:
         repo: https://github.com/llvm/llvm-project
         revision: 4bc1d0b51c8e488d78ab69c8b19cfbcd1f7db6a4
 
-clang-17:
-    description: clang 17.0.2 source code
+clang-16:
+    description: clang 16.0.6 source code
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: b2417f51dbbd7435eb3aaf203de24de6754da50e
+        revision: 7cbf1a2591520c2491aa35339f227775f4d3adf6
+
+clang-17:
+    description: clang 17.0.1 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: e19b7dc36bc047b9eb72078d034596be766da350
 
 clang-trunk:
     description: clang main branch source code
@@ -620,7 +627,7 @@ symbol-scrapers:
     fetch:
         type: git
         repo: http://github.com/mozilla/symbol-scrapers
-        revision: bd9758512c8ee9a55584e675f17a577617369585
+        revision: fc55e98c63fe21b2fc4aa29dd74dcea0869c1bec
 
 cpython-3.8.10:
     description: cpython 3.8.10 source code

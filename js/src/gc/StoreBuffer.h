@@ -79,8 +79,6 @@ class StoreBuffer {
   /* The size at which other store buffers are about to overflow. */
   static const size_t BufferOverflowThresholdBytes = 128 * 1024;
 
-  enum class PutResult { OK, AboutToOverflow };
-
   /*
    * This buffer holds only a single type of edge. Using this buffer is more
    * efficient than the generic buffer when many writes will be to the same
@@ -96,12 +94,17 @@ class StoreBuffer {
      * A one element cache in front of the canonical set to speed up
      * temporary instances of HeapPtr.
      */
-    T last_ = T();
+    T last_;
+
+    StoreBuffer* owner_;
+
+    JS::GCReason gcReason_;
 
     /* Maximum number of entries before we request a minor GC. */
     const static size_t MaxEntries = BufferOverflowThresholdBytes / sizeof(T);
 
-    MonoTypeBuffer() = default;
+    explicit MonoTypeBuffer(StoreBuffer* owner, JS::GCReason reason)
+        : last_(T()), owner_(owner), gcReason_(reason) {}
 
     MonoTypeBuffer(const MonoTypeBuffer& other) = delete;
     MonoTypeBuffer& operator=(const MonoTypeBuffer& other) = delete;
@@ -112,10 +115,9 @@ class StoreBuffer {
     }
 
     /* Add one item to the buffer. */
-    PutResult put(const T& t) {
-      PutResult r = sinkStore();
+    void put(const T& t) {
+      sinkStore();
       last_ = t;
-      return r;
     }
 
     /* Remove an item from the store buffer. */
@@ -129,7 +131,7 @@ class StoreBuffer {
     }
 
     /* Move any buffered stores to the canonical store set. */
-    PutResult sinkStore() {
+    void sinkStore() {
       if (last_) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!stores_.put(last_)) {
@@ -138,15 +140,13 @@ class StoreBuffer {
       }
       last_ = T();
 
-      if (stores_.count() > MaxEntries) {
-        return PutResult::AboutToOverflow;
+      if (MOZ_UNLIKELY(stores_.count() > MaxEntries)) {
+        owner_->setAboutToOverflow(gcReason_);
       }
-
-      return PutResult::OK;
     }
 
     /* Trace the source of all edges in the store buffer. */
-    void trace(TenuringTracer& mover, StoreBuffer* owner);
+    void trace(TenuringTracer& mover);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
       return stores_.shallowSizeOfExcludingThis(mallocSizeOf);
@@ -160,8 +160,9 @@ class StoreBuffer {
     ArenaCellSet* stringHead_ = nullptr;
     ArenaCellSet* nonStringHead_ = nullptr;
     const Cell* last_ = nullptr;
+    StoreBuffer* owner_;
 
-    WholeCellBuffer() = default;
+    explicit WholeCellBuffer(StoreBuffer* owner) : owner_(owner) {}
 
     WholeCellBuffer(const WholeCellBuffer& other) = delete;
     WholeCellBuffer& operator=(const WholeCellBuffer& other) = delete;
@@ -175,7 +176,7 @@ class StoreBuffer {
              storage_->used() > BufferOverflowThresholdBytes;
     }
 
-    void trace(TenuringTracer& mover, StoreBuffer* owner);
+    void trace(TenuringTracer& mover);
 
     inline void put(const Cell* cell);
     inline void putDontCheckLast(const Cell* cell);
@@ -198,8 +199,10 @@ class StoreBuffer {
 
   struct GenericBuffer {
     UniquePtr<LifoAlloc> storage_;
+    StoreBuffer* owner_;
 
-    GenericBuffer() = default;
+    explicit GenericBuffer(StoreBuffer* owner)
+        : storage_(nullptr), owner_(owner) {}
 
     GenericBuffer(const GenericBuffer& other) = delete;
     GenericBuffer& operator=(const GenericBuffer& other) = delete;
@@ -218,10 +221,10 @@ class StoreBuffer {
     }
 
     /* Trace all generic edges. */
-    void trace(JSTracer* trc, StoreBuffer* owner);
+    void trace(JSTracer* trc);
 
     template <typename T>
-    PutResult put(const T& t) {
+    void put(const T& t) {
       MOZ_ASSERT(storage_);
 
       /* Ensure T is derived from BufferableRef. */
@@ -241,10 +244,8 @@ class StoreBuffer {
       }
 
       if (isAboutToOverflow()) {
-        return PutResult::AboutToOverflow;
+        owner_->setAboutToOverflow(JS::GCReason::FULL_GENERIC_BUFFER);
       }
-
-      return PutResult::OK;
     }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
@@ -440,29 +441,19 @@ class StoreBuffer {
     if (!isEnabled()) {
       return;
     }
-
     mozilla::ReentrancyGuard g(*this);
-
     buffer.unput(edge);
   }
 
   template <typename Buffer, typename Edge>
-  void put(Buffer& buffer, const Edge& edge, JS::GCReason overflowReason) {
+  void put(Buffer& buffer, const Edge& edge) {
     checkAccess();
     if (!isEnabled()) {
       return;
     }
-
     mozilla::ReentrancyGuard g(*this);
-
-    if (!edge.maybeInRememberedSet(nursery_)) {
-      return;
-    }
-
-    PutResult r = buffer.put(edge);
-
-    if (MOZ_UNLIKELY(r == PutResult::AboutToOverflow)) {
-      setAboutToOverflow(overflowReason);
+    if (edge.maybeInRememberedSet(nursery_)) {
+      buffer.put(edge);
     }
   }
 
@@ -515,27 +506,16 @@ class StoreBuffer {
   }
 
   /* Insert a single edge into the buffer/remembered set. */
-  void putValue(JS::Value* vp) {
-    put(bufferVal, ValueEdge(vp), JS::GCReason::FULL_VALUE_BUFFER);
-  }
+  void putValue(JS::Value* vp) { put(bufferVal, ValueEdge(vp)); }
   void unputValue(JS::Value* vp) { unput(bufferVal, ValueEdge(vp)); }
 
-  void putCell(JSString** strp) {
-    put(bufStrCell, StringPtrEdge(strp),
-        JS::GCReason::FULL_CELL_PTR_STR_BUFFER);
-  }
+  void putCell(JSString** strp) { put(bufStrCell, StringPtrEdge(strp)); }
   void unputCell(JSString** strp) { unput(bufStrCell, StringPtrEdge(strp)); }
 
-  void putCell(JS::BigInt** bip) {
-    put(bufBigIntCell, BigIntPtrEdge(bip),
-        JS::GCReason::FULL_CELL_PTR_BIGINT_BUFFER);
-  }
+  void putCell(JS::BigInt** bip) { put(bufBigIntCell, BigIntPtrEdge(bip)); }
   void unputCell(JS::BigInt** bip) { unput(bufBigIntCell, BigIntPtrEdge(bip)); }
 
-  void putCell(JSObject** strp) {
-    put(bufObjCell, ObjectPtrEdge(strp),
-        JS::GCReason::FULL_CELL_PTR_OBJ_BUFFER);
-  }
+  void putCell(JSObject** strp) { put(bufObjCell, ObjectPtrEdge(strp)); }
   void unputCell(JSObject** strp) { unput(bufObjCell, ObjectPtrEdge(strp)); }
 
   void putSlot(NativeObject* obj, int kind, uint32_t start, uint32_t count) {
@@ -543,13 +523,12 @@ class StoreBuffer {
     if (bufferSlot.last_.overlaps(edge)) {
       bufferSlot.last_.merge(edge);
     } else {
-      put(bufferSlot, edge, JS::GCReason::FULL_SLOT_BUFFER);
+      put(bufferSlot, edge);
     }
   }
 
   void putWasmAnyRef(wasm::AnyRef* vp) {
-    put(bufferWasmAnyRef, WasmAnyRefEdge(vp),
-        JS::GCReason::FULL_WASM_ANYREF_BUFFER);
+    put(bufferWasmAnyRef, WasmAnyRefEdge(vp));
   }
   void unputWasmAnyRef(wasm::AnyRef* vp) {
     unput(bufferWasmAnyRef, WasmAnyRefEdge(vp));
@@ -564,26 +543,24 @@ class StoreBuffer {
   /* Insert an entry into the generic buffer. */
   template <typename T>
   void putGeneric(const T& t) {
-    put(bufferGeneric, t, JS::GCReason::FULL_GENERIC_BUFFER);
+    put(bufferGeneric, t);
   }
 
   void setMayHavePointersToDeadCells() { mayHavePointersToDeadCells_ = true; }
 
   /* Methods to trace the source of all edges in the store buffer. */
-  void traceValues(TenuringTracer& mover) { bufferVal.trace(mover, this); }
+  void traceValues(TenuringTracer& mover) { bufferVal.trace(mover); }
   void traceCells(TenuringTracer& mover) {
-    bufStrCell.trace(mover, this);
-    bufBigIntCell.trace(mover, this);
-    bufObjCell.trace(mover, this);
+    bufStrCell.trace(mover);
+    bufBigIntCell.trace(mover);
+    bufObjCell.trace(mover);
   }
-  void traceSlots(TenuringTracer& mover) { bufferSlot.trace(mover, this); }
+  void traceSlots(TenuringTracer& mover) { bufferSlot.trace(mover); }
   void traceWasmAnyRefs(TenuringTracer& mover) {
-    bufferWasmAnyRef.trace(mover, this);
+    bufferWasmAnyRef.trace(mover);
   }
-  void traceWholeCells(TenuringTracer& mover) {
-    bufferWholeCell.trace(mover, this);
-  }
-  void traceGenericEntries(JSTracer* trc) { bufferGeneric.trace(trc, this); }
+  void traceWholeCells(TenuringTracer& mover) { bufferWholeCell.trace(mover); }
+  void traceGenericEntries(JSTracer* trc) { bufferGeneric.trace(trc); }
 
   /* For use by our owned buffers and for testing. */
   void setAboutToOverflow(JS::GCReason);

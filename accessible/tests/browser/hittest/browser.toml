@@ -22,3 +22,4 @@ prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 ["browser_test_zoom.js"]
 
 ["browser_test_zoom_text.js"]
+

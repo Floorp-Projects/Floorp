@@ -181,7 +181,7 @@ impl<E> WithSpan<E> {
     }
 
     /// Iterator over stored [`SpanContext`]s.
-    pub fn spans(&self) -> impl ExactSizeIterator<Item = &SpanContext> {
+    pub fn spans(&self) -> impl Iterator<Item = &SpanContext> + ExactSizeIterator {
         #[cfg(feature = "span")]
         return self.spans.iter();
         #[cfg(not(feature = "span"))]

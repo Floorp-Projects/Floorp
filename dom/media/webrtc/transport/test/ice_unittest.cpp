@@ -115,7 +115,7 @@ static std::string Resolve(const std::string& fqdn, int address_family) {
 
 class StunTest : public MtransportTest {
  public:
-  StunTest() = default;
+  StunTest() : MtransportTest() {}
 
   void SetUp() override {
     MtransportTest::SetUp();
@@ -353,6 +353,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       : name_(name),
         ice_ctx_(NrIceCtx::Create(name)),
         offerer_(offerer),
+        candidates_(),
         stream_counter_(0),
         shutting_down_(false),
         gathering_complete_(false),
@@ -362,6 +363,7 @@ class IceTestPeer : public sigslot::has_slots<> {
         ice_reached_checking_(false),
         received_(0),
         sent_(0),
+        fake_resolver_(),
         dns_resolver_(new NrIceResolver()),
         remote_(nullptr),
         candidate_filter_(nullptr),

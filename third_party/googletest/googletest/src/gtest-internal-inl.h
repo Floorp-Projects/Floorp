@@ -44,7 +44,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -55,7 +54,7 @@
 #include <netdb.h>      // NOLINT
 #endif
 
-#ifdef GTEST_OS_WINDOWS
+#if GTEST_OS_WINDOWS
 #include <windows.h>  // NOLINT
 #endif                // GTEST_OS_WINDOWS
 
@@ -92,8 +91,7 @@ GTEST_API_ TimeInMillis GetTimeInMillis();
 // Returns true if and only if Google Test should use colors in the output.
 GTEST_API_ bool ShouldUseColor(bool stdout_is_tty);
 
-// Formats the given time in milliseconds as seconds. If the input is an exact N
-// seconds, the output has a trailing decimal point (e.g., "N." instead of "N").
+// Formats the given time in milliseconds as seconds.
 GTEST_API_ std::string FormatTimeInMillisAsSeconds(TimeInMillis ms);
 
 // Converts the given time in milliseconds to a date string in the ISO 8601
@@ -214,7 +212,7 @@ class GTestFlagSaver {
   int32_t stack_trace_depth_;
   std::string stream_result_to_;
   bool throw_on_failure_;
-};
+} GTEST_ATTRIBUTE_UNUSED_;
 
 // Converts a Unicode code point to a narrow string in UTF-8 encoding.
 // code_point parameter is of type UInt32 because wchar_t may not be
@@ -312,7 +310,7 @@ void ShuffleRange(internal::Random* random, int begin, int end,
       << begin << ", " << size << "].";
 
   // Fisher-Yates shuffle, from
-  // https://en.wikipedia.org/wiki/Fisher-Yates_shuffle
+  // http://en.wikipedia.org/wiki/Fisher-Yates_shuffle
   for (int range_width = end - begin; range_width >= 2; range_width--) {
     const int last_in_range = begin + range_width - 1;
     const int selected =
@@ -384,13 +382,13 @@ class GTEST_API_ UnitTestOptions {
   static bool FilterMatchesTest(const std::string& test_suite_name,
                                 const std::string& test_name);
 
-#ifdef GTEST_OS_WINDOWS
+#if GTEST_OS_WINDOWS
   // Function for supporting the gtest_catch_exception flag.
 
-  // Returns EXCEPTION_EXECUTE_HANDLER if given SEH exception was handled, or
-  // EXCEPTION_CONTINUE_SEARCH otherwise.
+  // Returns EXCEPTION_EXECUTE_HANDLER if Google Test should handle the
+  // given SEH exception, or EXCEPTION_CONTINUE_SEARCH otherwise.
   // This function is useful as an __except condition.
-  static int GTestProcessSEH(DWORD seh_code, const char* location);
+  static int GTestShouldProcessSEH(DWORD exception_code);
 #endif  // GTEST_OS_WINDOWS
 
   // Returns true if "name" matches the ':' separated list of glob-style
@@ -398,17 +396,15 @@ class GTEST_API_ UnitTestOptions {
   static bool MatchesFilter(const std::string& name, const char* filter);
 };
 
-#if GTEST_HAS_FILE_SYSTEM
 // Returns the current application's name, removing directory path if that
 // is present.  Used by UnitTestOptions::GetOutputFile.
 GTEST_API_ FilePath GetCurrentExecutableName();
-#endif  // GTEST_HAS_FILE_SYSTEM
 
 // The role interface for getting the OS stack trace as a string.
 class OsStackTraceGetterInterface {
  public:
-  OsStackTraceGetterInterface() = default;
-  virtual ~OsStackTraceGetterInterface() = default;
+  OsStackTraceGetterInterface() {}
+  virtual ~OsStackTraceGetterInterface() {}
 
   // Returns the current OS stack trace as an std::string.  Parameters:
   //
@@ -436,13 +432,13 @@ class OsStackTraceGetterInterface {
 // A working implementation of the OsStackTraceGetterInterface interface.
 class OsStackTraceGetter : public OsStackTraceGetterInterface {
  public:
-  OsStackTraceGetter() = default;
+  OsStackTraceGetter() {}
 
   std::string CurrentStackTrace(int max_depth, int skip_count) override;
   void UponLeavingGTest() override;
 
  private:
-#ifdef GTEST_HAS_ABSL
+#if GTEST_HAS_ABSL
   Mutex mutex_;  // Protects all internal state.
 
   // We save the stack frame below the frame that calls user code.
@@ -511,9 +507,9 @@ class GTEST_API_ UnitTestImpl {
   virtual ~UnitTestImpl();
 
   // There are two different ways to register your own TestPartResultReporter.
-  // You can register your own reporter to listen either only for test results
+  // You can register your own repoter to listen either only for test results
   // from the current thread or for results from all threads.
-  // By default, each per-thread test result reporter just passes a new
+  // By default, each per-thread test result repoter just passes a new
   // TestPartResult to the global test result reporter, which registers the
   // test part result for the currently running test.
 
@@ -672,7 +668,7 @@ class GTEST_API_ UnitTestImpl {
   void AddTestInfo(internal::SetUpTestSuiteFunc set_up_tc,
                    internal::TearDownTestSuiteFunc tear_down_tc,
                    TestInfo* test_info) {
-#if GTEST_HAS_FILE_SYSTEM
+#if GTEST_HAS_DEATH_TEST
     // In order to support thread-safe death tests, we need to
     // remember the original working directory when the test program
     // was first invoked.  We cannot do this in RUN_ALL_TESTS(), as
@@ -685,7 +681,7 @@ class GTEST_API_ UnitTestImpl {
       GTEST_CHECK_(!original_working_dir_.IsEmpty())
           << "Failed to get the current working directory.";
     }
-#endif  // GTEST_HAS_FILE_SYSTEM
+#endif  // GTEST_HAS_DEATH_TEST
 
     GetTestSuite(test_info->test_suite_name(), test_info->type_param(),
                  set_up_tc, tear_down_tc)
@@ -778,7 +774,7 @@ class GTEST_API_ UnitTestImpl {
     return gtest_trace_stack_.get();
   }
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
   void InitDeathTestSubprocessControlInfo() {
     internal_run_death_test_flag_.reset(ParseInternalRunDeathTestFlag());
   }
@@ -844,11 +840,9 @@ class GTEST_API_ UnitTestImpl {
   // The UnitTest object that owns this implementation object.
   UnitTest* const parent_;
 
-#if GTEST_HAS_FILE_SYSTEM
   // The working directory when the first TEST() or TEST_F() was
   // executed.
   internal::FilePath original_working_dir_;
-#endif  // GTEST_HAS_FILE_SYSTEM
 
   // The default test part result reporters.
   DefaultGlobalTestPartResultReporter default_global_test_part_result_reporter_;
@@ -856,7 +850,7 @@ class GTEST_API_ UnitTestImpl {
       default_per_thread_test_part_result_reporter_;
 
   // Points to (but doesn't own) the global test part result reporter.
-  TestPartResultReporterInterface* global_test_part_result_reporter_;
+  TestPartResultReporterInterface* global_test_part_result_repoter_;
 
   // Protects read and write access to global_test_part_result_reporter_.
   internal::Mutex global_test_part_result_reporter_mutex_;
@@ -943,7 +937,7 @@ class GTEST_API_ UnitTestImpl {
   // How long the test took to run, in milliseconds.
   TimeInMillis elapsed_time_;
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
   // The decomposed components of the gtest_internal_run_death_test flag,
   // parsed when RUN_ALL_TESTS is called.
   std::unique_ptr<InternalRunDeathTestFlag> internal_run_death_test_flag_;
@@ -967,7 +961,7 @@ inline UnitTestImpl* GetUnitTestImpl() {
   return UnitTest::GetInstance()->impl();
 }
 
-#ifdef GTEST_USES_SIMPLE_RE
+#if GTEST_USES_SIMPLE_RE
 
 // Internal helper functions for implementing the simple regular
 // expression matcher.
@@ -993,7 +987,7 @@ GTEST_API_ bool MatchRegexAnywhere(const char* regex, const char* str);
 GTEST_API_ void ParseGoogleTestFlagsOnly(int* argc, char** argv);
 GTEST_API_ void ParseGoogleTestFlagsOnly(int* argc, wchar_t** argv);
 
-#ifdef GTEST_HAS_DEATH_TEST
+#if GTEST_HAS_DEATH_TEST
 
 // Returns the message describing the last system error, regardless of the
 // platform.
@@ -1064,7 +1058,7 @@ class StreamingListener : public EmptyTestEventListener {
   // Abstract base class for writing strings to a socket.
   class AbstractSocketWriter {
    public:
-    virtual ~AbstractSocketWriter() = default;
+    virtual ~AbstractSocketWriter() {}
 
     // Sends a string to the socket.
     virtual void Send(const std::string& message) = 0;

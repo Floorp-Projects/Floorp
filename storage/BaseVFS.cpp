@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BaseVFS.h"
-
 #include <string.h>
 #include "sqlite3.h"
 #include "mozilla/net/IOActivityMonitor.h"
@@ -196,13 +194,13 @@ int BaseOpen(sqlite3_vfs* vfs, const char* zName, sqlite3_file* pFile,
 
 }  // namespace
 
-namespace mozilla::storage::basevfs {
+namespace mozilla::storage {
 
-const char* GetVFSName(bool exclusive) {
+const char* GetBaseVFSName(bool exclusive) {
   return exclusive ? "base-vfs-excl" : "base-vfs";
 }
 
-UniquePtr<sqlite3_vfs> ConstructVFS(bool exclusive) {
+UniquePtr<sqlite3_vfs> ConstructBaseVFS(bool exclusive) {
 #if defined(XP_WIN)
 #  define EXPECTED_VFS "win32"
 #  define EXPECTED_VFS_EXCL "win32"
@@ -211,7 +209,7 @@ UniquePtr<sqlite3_vfs> ConstructVFS(bool exclusive) {
 #  define EXPECTED_VFS_EXCL "unix-excl"
 #endif
 
-  if (sqlite3_vfs_find(GetVFSName(exclusive))) {
+  if (sqlite3_vfs_find(GetBaseVFSName(exclusive))) {
     return nullptr;
   }
 
@@ -239,7 +237,7 @@ UniquePtr<sqlite3_vfs> ConstructVFS(bool exclusive) {
       origVfs->szOsFile + static_cast<int>(sizeof(BaseFile)), /* szOsFile */
       origVfs->mxPathname,                                    /* mxPathname */
       nullptr,                                                /* pNext */
-      GetVFSName(exclusive),                                  /* zName */
+      GetBaseVFSName(exclusive),                              /* zName */
       origVfs,                                                /* pAppData */
       BaseOpen,                                               /* xOpen */
       origVfs->xDelete,                                       /* xDelete */
@@ -262,4 +260,4 @@ UniquePtr<sqlite3_vfs> ConstructVFS(bool exclusive) {
   return MakeUnique<sqlite3_vfs>(vfs);
 }
 
-}  // namespace mozilla::storage::basevfs
+}  // namespace mozilla::storage

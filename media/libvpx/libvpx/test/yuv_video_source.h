@@ -35,12 +35,12 @@ class YUVVideoSource : public VideoSource {
     SetSize(width, height, format);
   }
 
-  ~YUVVideoSource() override {
+  virtual ~YUVVideoSource() {
     vpx_img_free(img_);
     if (input_file_) fclose(input_file_);
   }
 
-  void Begin() override {
+  virtual void Begin() {
     if (input_file_) fclose(input_file_);
     input_file_ = OpenTestDataFile(file_name_);
     ASSERT_NE(input_file_, nullptr)
@@ -53,28 +53,28 @@ class YUVVideoSource : public VideoSource {
     FillFrame();
   }
 
-  void Next() override {
+  virtual void Next() {
     ++frame_;
     FillFrame();
   }
 
-  vpx_image_t *img() const override {
+  virtual vpx_image_t *img() const {
     return (frame_ < limit_) ? img_ : nullptr;
   }
 
   // Models a stream where Timebase = 1/FPS, so pts == frame.
-  vpx_codec_pts_t pts() const override { return frame_; }
+  virtual vpx_codec_pts_t pts() const { return frame_; }
 
-  unsigned long duration() const override { return 1; }
+  virtual unsigned long duration() const { return 1; }
 
-  vpx_rational_t timebase() const override {
+  virtual vpx_rational_t timebase() const {
     const vpx_rational_t t = { framerate_denominator_, framerate_numerator_ };
     return t;
   }
 
-  unsigned int frame() const override { return frame_; }
+  virtual unsigned int frame() const { return frame_; }
 
-  unsigned int limit() const override { return limit_; }
+  virtual unsigned int limit() const { return limit_; }
 
   virtual void SetSize(unsigned int width, unsigned int height,
                        vpx_img_fmt format) {

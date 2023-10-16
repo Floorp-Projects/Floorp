@@ -18,9 +18,7 @@ add_setup(async function setup() {
   // When search service fails, we want the promise rejection to be uncaught
   // so we can continue running the test. 2147500037 is the exception message
   // for Cr.NS_ERROR_FAILURE.
-  PromiseTestUtils.expectUncaughtRejection(
-    /Fake error during search service initialization./
-  );
+  PromiseTestUtils.expectUncaughtRejection(/2147500037/);
 
   registerCleanupFunction(async () => {
     searchService.willThrowErrorDuringInitInTest = false;

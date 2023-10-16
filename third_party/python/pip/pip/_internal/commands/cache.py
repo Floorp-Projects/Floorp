@@ -37,6 +37,7 @@ class CacheCommand(Command):
     """
 
     def add_options(self) -> None:
+
         self.cmd_opts.add_option(
             "--format",
             action="store",

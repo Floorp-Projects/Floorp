@@ -1152,12 +1152,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   void NotifyTargetUserActivation(WidgetEvent* aEvent,
                                   nsIContent* aTargetContent);
 
-  /**
-   * https://html.spec.whatwg.org/multipage/popover.html#light-dismiss-open-popovers.
-   */
-  MOZ_CAN_RUN_SCRIPT void LightDismissOpenPopovers(WidgetEvent* aEvent,
-                                                   nsIContent* aTargetContent);
-
   already_AddRefed<EventStateManager> ESMFromContentOrThis(
       nsIContent* aContent);
 
@@ -1216,7 +1210,6 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsCOMPtr<nsIContent> mHoverContent;
   static nsCOMPtr<nsIContent> sDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
-  nsCOMPtr<nsINode> mPopoverPointerDownTarget;
 
   nsPresContext* mPresContext;      // Not refcnted
   RefPtr<dom::Document> mDocument;  // Doesn't necessarily need to be owner

@@ -120,6 +120,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "ReportProductAvailable":
         this.reportProductAvailable();
         break;
+      case "ShoppingTelemetryEvent":
+        this.submitShoppingEvent(event.detail);
+        break;
     }
   }
 
@@ -146,8 +149,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     this.sendToContent("adsEnabledByUserChanged", {
       adsEnabledByUser: this.userHasAdsEnabled,
     });
-
-    this.requestRecommendations(this.#productURI);
   }
 
   getProductURI() {
@@ -268,8 +269,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
       }
 
       this.sendToContent("Update", {
-        adsEnabled: this.canFetchAndShowAd,
-        adsEnabledByUser: this.userHasAdsEnabled,
         showOnboarding: false,
         data,
         productUrl: this.#productURI.spec,
@@ -281,10 +280,40 @@ export class ShoppingSidebarChild extends RemotePageChild {
       }
 
       if (!isPolledRequest && !data.grade) {
-        Glean.shopping.surfaceNoReviewReliabilityAvailable.record();
+        this.contentWindow.document.dispatchEvent(
+          new CustomEvent("ShoppingTelemetryEvent", {
+            bubbles: true,
+            composed: true,
+            detail: "noReviewReliabilityAvailable",
+          })
+        );
       }
 
-      this.requestRecommendations(uri);
+      if (!this.canFetchAndShowAd || !this.userHasAdsEnabled) {
+        return;
+      }
+
+      this.#product.requestRecommendations().then(recommendationData => {
+        // Check if the product URI or opt in changed while we waited.
+        if (
+          uri != this.#productURI ||
+          !this.canFetchAndShowData ||
+          !this.canFetchAndShowAd ||
+          !this.userHasAdsEnabled
+        ) {
+          return;
+        }
+
+        this.sendToContent("Update", {
+          adsEnabled: this.canFetchAndShowAd,
+          adsEnabledByUser: this.userHasAdsEnabled,
+          showOnboarding: false,
+          data,
+          productUrl: this.#productURI.spec,
+          recommendationData,
+          isAnalysisInProgress,
+        });
+      });
     } else {
       // Don't bother continuing if the user has opted out.
       if (lazy.optedIn == 2) {
@@ -309,38 +338,6 @@ export class ShoppingSidebarChild extends RemotePageChild {
     }
   }
 
-  /**
-   * Request recommended products for a given uri and send the recommendations
-   * to the content if recommendations are enabled.
-   *
-   * @param {nsIURI} uri The uri of the current product page
-   */
-  async requestRecommendations(uri) {
-    if (
-      !uri.equalsExceptRef(this.#productURI) ||
-      !this.canFetchAndShowData ||
-      !this.canFetchAndShowAd ||
-      !this.userHasAdsEnabled
-    ) {
-      return;
-    }
-
-    let recommendationData = await this.#product.requestRecommendations();
-    // Check if the product URI or opt in changed while we waited.
-    if (
-      !uri.equalsExceptRef(this.#productURI) ||
-      !this.canFetchAndShowData ||
-      !this.canFetchAndShowAd ||
-      !this.userHasAdsEnabled
-    ) {
-      return;
-    }
-
-    this.sendToContent("UpdateRecommendations", {
-      recommendationData,
-    });
-  }
-
   sendToContent(eventName, detail) {
     if (this._destroyed) {
       return;
@@ -355,5 +352,65 @@ export class ShoppingSidebarChild extends RemotePageChild {
 
   async reportProductAvailable() {
     await this.#product.sendReport();
+  }
+
+  /**
+   * Helper to handle telemetry events.
+   *
+   * @param {string | Array} message
+   *        Which Glean event to record too. If an array is used, the first
+   *        element should be the message and the second the additional detail
+   *        to record.
+   */
+  submitShoppingEvent(message) {
+    // We are currently working through an actor to record Glean events and
+    // this function is where we will direct a custom actor event into the
+    // correct Glean event. However, this is an unpleasant solution and one
+    // that should not be replicated. Please reference bug 1848708 for more
+    // detail about why.
+    let details;
+    if (Array.isArray(message)) {
+      details = message[1];
+      message = message[0];
+    }
+    switch (message) {
+      case "shopping-settings-label":
+        Glean.shopping.surfaceSettingsExpandClicked.record({ action: details });
+        break;
+      case "shopping-analysis-explainer-label":
+        Glean.shopping.surfaceShowQualityExplainerClicked.record({
+          action: details,
+        });
+        break;
+      case "reanalyzeClicked":
+        Glean.shopping.surfaceReanalyzeClicked.record();
+        break;
+      case "surfaceClosed":
+        Glean.shopping.surfaceClosed.record({ source: details });
+        break;
+      case "surfaceShowMoreReviewsButtonClicked":
+        Glean.shopping.surfaceShowMoreReviewsButtonClicked.record({
+          action: details,
+        });
+        break;
+      case "analyzeReviewsNoneAvailableClicked":
+        Glean.shopping.surfaceAnalyzeReviewsNoneAvailableClicked.record();
+        break;
+      case "surfaceReactivatedButtonClicked":
+        Glean.shopping.surfaceReactivatedButtonClicked.record();
+        break;
+      case "surfaceReviewQualityExplainerURLClicked":
+        Glean.shopping.surfaceShowQualityExplainerUrlClicked.record();
+        break;
+      case "noReviewReliabilityAvailable":
+        Glean.shopping.surfaceNoReviewReliabilityAvailable.record();
+        break;
+      case "surfacePoweredByFakespotLinkClicked":
+        Glean.shopping.surfacePoweredByFakespotLinkClicked.record();
+        break;
+      case "staleAnalysisShown":
+        Glean.shopping.surfaceStaleAnalysisShown.record();
+        break;
+    }
   }
 }

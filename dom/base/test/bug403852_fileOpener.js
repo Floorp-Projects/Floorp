@@ -1,6 +1,5 @@
 /* eslint-env mozilla/chrome-script */
 
-// eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["File"]);
 
 var testFile = Cc["@mozilla.org/file/directory_service;1"]

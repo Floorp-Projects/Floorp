@@ -15,7 +15,7 @@ g.test('all_usages')
     u //
       .combine('usage', kBufferUsages)
   )
-  .fn(t => {
+  .fn(async t => {
     const { usage } = t.params;
     const buf = t.device.createBuffer({
       size: 4,
@@ -27,7 +27,7 @@ g.test('all_usages')
 
 g.test('error_buffer')
   .desc('Test that error buffers may be destroyed without generating validation errors.')
-  .fn(t => {
+  .fn(async t => {
     const buf = t.getErrorBuffer();
     buf.destroy();
   });
@@ -47,7 +47,7 @@ g.test('twice')
         { size: 4, usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ },
       ])
   )
-  .fn(t => {
+  .fn(async t => {
     const buf = t.device.createBuffer(t.params);
 
     buf.destroy();

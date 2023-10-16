@@ -44,57 +44,54 @@ VideoOptions::VideoOptions()
     : content_hint(VideoTrackInterface::ContentHint::kNone) {}
 VideoOptions::~VideoOptions() = default;
 
-MediaChannelUtil::MediaChannelUtil(TaskQueueBase* network_thread,
-                                   bool enable_dscp)
-    : enable_dscp_(enable_dscp),
-      network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
-      network_thread_(network_thread) {}
-
 MediaChannel::MediaChannel(Role role,
                            TaskQueueBase* network_thread,
                            bool enable_dscp)
-    : MediaChannelUtil(network_thread, enable_dscp), role_(role) {}
+    : role_(role),
+      enable_dscp_(enable_dscp),
+      network_safety_(PendingTaskSafetyFlag::CreateDetachedInactive()),
+      network_thread_(network_thread) {}
 
-MediaChannelUtil::~MediaChannelUtil() {
+MediaChannel::~MediaChannel() {
   RTC_DCHECK(!network_interface_);
 }
 
-void MediaChannelUtil::SetInterface(MediaChannelNetworkInterface* iface) {
+void MediaChannel::SetInterface(MediaChannelNetworkInterface* iface) {
   RTC_DCHECK_RUN_ON(network_thread_);
   iface ? network_safety_->SetAlive() : network_safety_->SetNotAlive();
   network_interface_ = iface;
   UpdateDscp();
 }
 
-int MediaChannelUtil::GetRtpSendTimeExtnId() const {
+int MediaChannel::GetRtpSendTimeExtnId() const {
   return -1;
 }
 
-void MediaChannelUtil::SetFrameEncryptor(
+void MediaChannel::SetFrameEncryptor(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameEncryptorInterface> frame_encryptor) {
   // Placeholder should be pure virtual once internal supports it.
 }
 
-void MediaChannelUtil::SetFrameDecryptor(
+void MediaChannel::SetFrameDecryptor(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameDecryptorInterface> frame_decryptor) {
   // Placeholder should be pure virtual once internal supports it.
 }
 
-bool MediaChannelUtil::SendPacket(rtc::CopyOnWriteBuffer* packet,
-                                  const rtc::PacketOptions& options) {
+bool MediaChannel::SendPacket(rtc::CopyOnWriteBuffer* packet,
+                              const rtc::PacketOptions& options) {
   return DoSendPacket(packet, false, options);
 }
 
-bool MediaChannelUtil::SendRtcp(rtc::CopyOnWriteBuffer* packet,
-                                const rtc::PacketOptions& options) {
+bool MediaChannel::SendRtcp(rtc::CopyOnWriteBuffer* packet,
+                            const rtc::PacketOptions& options) {
   return DoSendPacket(packet, true, options);
 }
 
-int MediaChannelUtil::SetOption(MediaChannelNetworkInterface::SocketType type,
-                                rtc::Socket::Option opt,
-                                int option) {
+int MediaChannel::SetOption(MediaChannelNetworkInterface::SocketType type,
+                            rtc::Socket::Option opt,
+                            int option) {
   RTC_DCHECK_RUN_ON(network_thread_);
   return SetOptionLocked(type, opt, option);
 }
@@ -103,48 +100,47 @@ int MediaChannelUtil::SetOption(MediaChannelNetworkInterface::SocketType type,
 // Set to true if it's allowed to mix one- and two-byte RTP header extensions
 // in the same stream. The setter and getter must only be called from
 // worker_thread.
-void MediaChannelUtil::SetExtmapAllowMixed(bool extmap_allow_mixed) {
+void MediaChannel::SetExtmapAllowMixed(bool extmap_allow_mixed) {
   extmap_allow_mixed_ = extmap_allow_mixed;
 }
 
-bool MediaChannelUtil::ExtmapAllowMixed() const {
+bool MediaChannel::ExtmapAllowMixed() const {
   return extmap_allow_mixed_;
 }
 
-bool MediaChannelUtil::HasNetworkInterface() const {
+bool MediaChannel::HasNetworkInterface() const {
   RTC_DCHECK_RUN_ON(network_thread_);
   return network_interface_ != nullptr;
 }
 
-void MediaChannelUtil::SetEncoderToPacketizerFrameTransformer(
+void MediaChannel::SetEncoderToPacketizerFrameTransformer(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {}
 
-void MediaChannelUtil::SetDepacketizerToDecoderFrameTransformer(
+void MediaChannel::SetDepacketizerToDecoderFrameTransformer(
     uint32_t ssrc,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer) {}
 
-int MediaChannelUtil::SetOptionLocked(
-    MediaChannelNetworkInterface::SocketType type,
-    rtc::Socket::Option opt,
-    int option) {
+int MediaChannel::SetOptionLocked(MediaChannelNetworkInterface::SocketType type,
+                                  rtc::Socket::Option opt,
+                                  int option) {
   if (!network_interface_)
     return -1;
   return network_interface_->SetOption(type, opt, option);
 }
 
-bool MediaChannelUtil::DscpEnabled() const {
+bool MediaChannel::DscpEnabled() const {
   return enable_dscp_;
 }
 
 // This is the DSCP value used for both RTP and RTCP channels if DSCP is
 // enabled. It can be changed at any time via `SetPreferredDscp`.
-rtc::DiffServCodePoint MediaChannelUtil::PreferredDscp() const {
+rtc::DiffServCodePoint MediaChannel::PreferredDscp() const {
   RTC_DCHECK_RUN_ON(network_thread_);
   return preferred_dscp_;
 }
 
-void MediaChannelUtil::SetPreferredDscp(rtc::DiffServCodePoint new_dscp) {
+void MediaChannel::SetPreferredDscp(rtc::DiffServCodePoint new_dscp) {
   if (!network_thread_->IsCurrent()) {
     // This is currently the common path as the derived channel classes
     // get called on the worker thread. There are still some tests though
@@ -162,11 +158,11 @@ void MediaChannelUtil::SetPreferredDscp(rtc::DiffServCodePoint new_dscp) {
   UpdateDscp();
 }
 
-rtc::scoped_refptr<PendingTaskSafetyFlag> MediaChannelUtil::network_safety() {
+rtc::scoped_refptr<PendingTaskSafetyFlag> MediaChannel::network_safety() {
   return network_safety_;
 }
 
-void MediaChannelUtil::UpdateDscp() {
+void MediaChannel::UpdateDscp() {
   rtc::DiffServCodePoint value =
       enable_dscp_ ? preferred_dscp_ : rtc::DSCP_DEFAULT;
   int ret = SetOptionLocked(MediaChannelNetworkInterface::ST_RTP,
@@ -176,9 +172,9 @@ void MediaChannelUtil::UpdateDscp() {
                     rtc::Socket::OPT_DSCP, value);
 }
 
-bool MediaChannelUtil::DoSendPacket(rtc::CopyOnWriteBuffer* packet,
-                                    bool rtcp,
-                                    const rtc::PacketOptions& options) {
+bool MediaChannel::DoSendPacket(rtc::CopyOnWriteBuffer* packet,
+                                bool rtcp,
+                                const rtc::PacketOptions& options) {
   RTC_DCHECK_RUN_ON(network_thread_);
   if (!network_interface_)
     return false;
@@ -187,9 +183,9 @@ bool MediaChannelUtil::DoSendPacket(rtc::CopyOnWriteBuffer* packet,
                  : network_interface_->SendRtcp(packet, options);
 }
 
-void MediaChannelUtil::SendRtp(const uint8_t* data,
-                               size_t len,
-                               const webrtc::PacketOptions& options) {
+void MediaChannel::SendRtp(const uint8_t* data,
+                           size_t len,
+                           const webrtc::PacketOptions& options) {
   auto send =
       [this, packet_id = options.packet_id,
        included_in_feedback = options.included_in_feedback,
@@ -222,7 +218,7 @@ void MediaChannelUtil::SendRtp(const uint8_t* data,
   }
 }
 
-void MediaChannelUtil::SendRtcp(const uint8_t* data, size_t len) {
+void MediaChannel::SendRtcp(const uint8_t* data, size_t len) {
   auto send = [this, packet = rtc::CopyOnWriteBuffer(
                          data, len, kMaxRtpPacketLen)]() mutable {
     rtc::PacketOptions rtc_options;

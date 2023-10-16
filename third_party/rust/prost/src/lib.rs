@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/prost/0.12.1")]
+#![doc(html_root_url = "https://docs.rs/prost/0.11.9")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![doc = include_str!("../README.md")]
 
@@ -11,7 +11,6 @@ pub use bytes;
 
 mod error;
 mod message;
-mod name;
 mod types;
 
 #[doc(hidden)]
@@ -19,7 +18,6 @@ pub mod encoding;
 
 pub use crate::error::{DecodeError, EncodeError};
 pub use crate::message::Message;
-pub use crate::name::Name;
 
 use bytes::{Buf, BufMut};
 

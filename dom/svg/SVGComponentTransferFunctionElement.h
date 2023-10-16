@@ -12,11 +12,18 @@
 #include "SVGAnimatedNumberList.h"
 #include "mozilla/dom/SVGFilters.h"
 
+#define NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID \
+  {                                                       \
+    0xafab106d, 0xbc18, 0x4f7f, {                         \
+      0x9e, 0x29, 0xfe, 0xb4, 0xb0, 0x16, 0x5f, 0xf4      \
+    }                                                     \
+  }
+
 namespace mozilla::dom {
 
 class DOMSVGAnimatedNumberList;
 
-using SVGComponentTransferFunctionElementBase = SVGFilterPrimitiveChildElement;
+using SVGComponentTransferFunctionElementBase = SVGFEUnstyledElement;
 
 class SVGComponentTransferFunctionElement
     : public SVGComponentTransferFunctionElementBase {
@@ -30,10 +37,11 @@ class SVGComponentTransferFunctionElement
  public:
   using ComponentTransferAttributes = gfx::ComponentTransferAttributes;
 
-  NS_IMPL_FROMNODE_HELPER(SVGComponentTransferFunctionElement,
-                          IsSVGComponentTransferFunctionElement())
+  // interfaces:
+  NS_DECLARE_STATIC_IID_ACCESSOR(
+      NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
 
-  bool IsSVGComponentTransferFunctionElement() const final { return true; }
+  NS_DECL_ISUPPORTS_INHERITED
 
   bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                  nsAtom* aAttribute) const override;
@@ -72,6 +80,9 @@ class SVGComponentTransferFunctionElement
   static SVGEnumMapping sTypeMap[];
   static EnumInfo sEnumInfo[1];
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(SVGComponentTransferFunctionElement,
+                              NS_SVG_FE_COMPONENT_TRANSFER_FUNCTION_ELEMENT_CID)
 
 }  // namespace mozilla::dom
 

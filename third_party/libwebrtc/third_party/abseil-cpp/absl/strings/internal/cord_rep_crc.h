@@ -20,7 +20,6 @@
 
 #include "absl/base/config.h"
 #include "absl/base/optimization.h"
-#include "absl/crc/internal/crc_cord_state.h"
 #include "absl/strings/internal/cord_internal.h"
 
 namespace absl {
@@ -35,14 +34,14 @@ namespace cord_internal {
 // the contained checksum is the user's responsibility.
 struct CordRepCrc : public CordRep {
   CordRep* child;
-  absl::crc_internal::CrcCordState crc_cord_state;
+  uint32_t crc;
 
   // Consumes `child` and returns a CordRepCrc prefixed tree containing `child`.
   // If the specified `child` is itself a CordRepCrc node, then this method
-  // either replaces the existing node, or directly updates the crc state in it
+  // either replaces the existing node, or directly updates the crc value in it
   // depending on the node being shared or not, i.e.: refcount.IsOne().
-  // `child` must only be null if the Cord is empty. Never returns null.
-  static CordRepCrc* New(CordRep* child, crc_internal::CrcCordState state);
+  // `child` must not be null. Never returns null.
+  static CordRepCrc* New(CordRep* child, uint32_t crc);
 
   // Destroys (deletes) the provided node. `node` must not be null.
   static void Destroy(CordRepCrc* node);

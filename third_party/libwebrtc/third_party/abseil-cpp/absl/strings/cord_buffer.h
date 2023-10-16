@@ -160,6 +160,7 @@ class CordBuffer {
   // for more information on buffer capacities and intended usage.
   static CordBuffer CreateWithDefaultLimit(size_t capacity);
 
+
   // CordBuffer::CreateWithCustomLimit()
   //
   // Creates a CordBuffer instance of the desired `capacity` rounded to an
@@ -329,13 +330,14 @@ class CordBuffer {
 
     // Returns the available area of the internal SSO data
     absl::Span<char> short_available() {
-      const size_t length = short_length();
+      assert(is_short());
+      const size_t length = (short_rep.raw_size >> 1);
       return absl::Span<char>(short_rep.data + length,
                               kInlineCapacity - length);
     }
 
     // Returns the available area of the internal SSO data
-    absl::Span<char> long_available() const {
+    absl::Span<char> long_available() {
       assert(!is_short());
       const size_t length = long_rep.rep->length;
       return absl::Span<char>(long_rep.rep->Data() + length,
@@ -345,7 +347,7 @@ class CordBuffer {
     // Returns the length of the internal SSO data.
     size_t short_length() const {
       assert(is_short());
-      return static_cast<size_t>(short_rep.raw_size >> 1);
+      return short_rep.raw_size >> 1;
     }
 
     // Sets the length of the internal SSO data.
@@ -410,12 +412,8 @@ class CordBuffer {
 
   // Power2 functions
   static bool IsPow2(size_t size) { return absl::has_single_bit(size); }
-  static size_t Log2Floor(size_t size) {
-    return static_cast<size_t>(absl::bit_width(size) - 1);
-  }
-  static size_t Log2Ceil(size_t size) {
-    return static_cast<size_t>(absl::bit_width(size - 1));
-  }
+  static size_t Log2Floor(size_t size) { return absl::bit_width(size) - 1; }
+  static size_t Log2Ceil(size_t size) { return absl::bit_width(size - 1); }
 
   // Implementation of `CreateWithCustomLimit()`.
   // This implementation allows for future memory allocation hints to
@@ -459,7 +457,9 @@ inline constexpr size_t CordBuffer::MaximumPayload() {
 }
 
 inline constexpr size_t CordBuffer::MaximumPayload(size_t block_size) {
-  return (std::min)(kCustomLimit, block_size) - cord_internal::kFlatOverhead;
+  // TODO(absl-team): Use std::min when C++11 support is dropped.
+  return (kCustomLimit < block_size ? kCustomLimit : block_size) -
+         cord_internal::kFlatOverhead;
 }
 
 inline CordBuffer CordBuffer::CreateWithDefaultLimit(size_t capacity) {

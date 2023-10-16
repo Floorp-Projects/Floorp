@@ -3391,7 +3391,7 @@ static bool PCToLine(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSSprinter sprinter(cx);
+  Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -3407,7 +3407,7 @@ static bool Notes(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  JSString* str = sprinter.release(cx);
+  JSString* str = JS_NewStringCopyZ(cx, sprinter.string());
   if (!str) {
     return false;
   }
@@ -3450,7 +3450,7 @@ struct DisassembleOptionParser {
 } /* anonymous namespace */
 
 static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
-                                  StringPrinter* sp) {
+                                  Sprinter* sprinter) {
   CallArgs args = CallArgsFromVp(argc, vp);
   DisassembleOptionParser p(args.length(), args.array());
   if (!p.parse(cx)) {
@@ -3462,7 +3462,7 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
     RootedScript script(cx, GetTopScript(cx));
     if (script) {
       JSAutoRealm ar(cx, script);
-      if (!JSScript::dump(cx, script, p.options, sp)) {
+      if (!JSScript::dump(cx, script, p.options, sprinter)) {
         return false;
       }
     }
@@ -3483,18 +3483,18 @@ static bool DisassembleToSprinter(JSContext* cx, unsigned argc, Value* vp,
         return false;
       }
 
-      if (!JSScript::dump(cx, script, p.options, sp)) {
+      if (!JSScript::dump(cx, script, p.options, sprinter)) {
         return false;
       }
     }
   }
 
-  return true;
+  return !sprinter->hadOutOfMemory();
 }
 
 static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSSprinter sprinter(cx);
+  Sprinter sprinter(cx);
   if (!sprinter.init()) {
     return false;
   }
@@ -3502,7 +3502,16 @@ static bool DisassembleToString(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JSString* str = sprinter.release(cx);
+  const char* chars = sprinter.string();
+  size_t len;
+  JS::UniqueTwoByteChars buf(
+      JS::LossyUTF8CharsToNewTwoByteCharsZ(
+          cx, JS::UTF8Chars(chars, strlen(chars)), &len, js::MallocArena)
+          .get());
+  if (!buf) {
+    return false;
+  }
+  JSString* str = JS_NewUCStringCopyN(cx, buf.get(), len);
   if (!str) {
     return false;
   }
@@ -3526,11 +3535,7 @@ static bool Disassemble(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::UniqueChars str = sprinter.release();
-  if (!str) {
-    return false;
-  }
-  fprintf(gOutFile->fp, "%s\n", str.get());
+  fprintf(gOutFile->fp, "%s\n", sprinter.string());
   args.rval().setUndefined();
   return true;
 }
@@ -3588,11 +3593,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  JS::UniqueChars chars = sprinter.release();
-  if (!chars) {
-    return false;
-  }
-  fprintf(gOutFile->fp, "%s\n", chars.get());
+  fprintf(gOutFile->fp, "%s\n", sprinter.string());
 
   args.rval().setUndefined();
   return true;
@@ -3655,11 +3656,15 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       if (line2 < line1) {
         if (bupline != line2) {
           bupline = line2;
-          sprinter.printf("%s %3u: BACKUP\n", sep, line2);
+          if (!sprinter.jsprintf("%s %3u: BACKUP\n", sep, line2)) {
+            return false;
+          }
         }
       } else {
         if (bupline && line1 == line2) {
-          sprinter.printf("%s %3u: RESTORE\n", sep, line2);
+          if (!sprinter.jsprintf("%s %3u: RESTORE\n", sep, line2)) {
+            return false;
+          }
         }
         bupline = 0;
         while (line1 < line2) {
@@ -3669,7 +3674,9 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
             return false;
           }
           line1++;
-          sprinter.printf("%s %3u: %s", sep, line1, linebuf);
+          if (!sprinter.jsprintf("%s %3u: %s", sep, line1, linebuf)) {
+            return false;
+          }
         }
       }
 
@@ -3682,11 +3689,7 @@ static bool DisassWithSrc(JSContext* cx, unsigned argc, Value* vp) {
       pc += len;
     }
 
-    JS::UniqueChars str = sprinter.release();
-    if (!str) {
-      return false;
-    }
-    fprintf(gOutFile->fp, "%s\n", str.get());
+    fprintf(gOutFile->fp, "%s\n", sprinter.string());
   }
 
   args.rval().setUndefined();
@@ -4825,38 +4828,6 @@ static bool InterruptRegexp(JSContext* cx, unsigned argc, Value* vp) {
                               args.rval());
 }
 #endif
-
-static bool CheckRegExpSyntax(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  RootedObject callee(cx, &args.callee());
-
-  if (args.length() != 1) {
-    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments.");
-    return false;
-  }
-  if (!args[0].isString()) {
-    ReportUsageErrorASCII(cx, callee, "First argument must be a string.");
-    return false;
-  }
-
-  RootedString string(cx, args[0].toString());
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, string)) {
-    return false;
-  }
-
-  const char16_t* chars = stableChars.twoByteRange().begin().get();
-  size_t length = string->length();
-
-  Rooted<JS::Value> error(cx);
-  if (!JS::CheckRegExpSyntax(cx, chars, length, JS::RegExpFlag::NoFlags,
-                             &error)) {
-    return false;
-  }
-
-  args.rval().set(error);
-  return true;
-}
 
 static bool SetJitCompilerOption(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -7235,7 +7206,6 @@ static void SingleStepCallback(void* arg, jit::Simulator* sim, void* pc) {
   state.sp = (void*)sim->get_register(jit::Simulator::sp);
   state.lr = (void*)sim->get_register(jit::Simulator::lr);
   state.fp = (void*)sim->get_register(jit::Simulator::fp);
-  state.tempFP = (void*)sim->get_register(jit::Simulator::r7);
 #  elif defined(JS_SIMULATOR_MIPS64) || defined(JS_SIMULATOR_MIPS32)
   state.sp = (void*)sim->getRegister(jit::Simulator::sp);
   state.lr = (void*)sim->getRegister(jit::Simulator::ra);
@@ -9328,14 +9298,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "interruptRegexp(<regexp>, <string>)",
 "  Interrrupt the execution of regular expression.\n"),
 #endif
-    JS_FN_HELP("checkRegExpSyntax", CheckRegExpSyntax, 1, 0,
-"checkRegExpSyntax(<string>)",
-"  Return undefined if the string parses as a RegExp. If the string does not\n"
-"  parse correctly, return the SyntaxError that occurred."),
-
     JS_FN_HELP("enableLastWarning", EnableLastWarning, 0, 0,
 "enableLastWarning()",
 "  Enable storing the last warning."),
+
     JS_FN_HELP("disableLastWarning", DisableLastWarning, 0, 0,
 "disableLastWarning()",
 "  Disable storing the last warning."),
@@ -11792,14 +11758,6 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler") ||
       !op.addBoolOption('\0', "baseline-eager",
                         "Always baseline-compile methods") ||
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-      !op.addBoolOption('\0', "portable-baseline-eager",
-                        "Always use the porbale baseline interpreter") ||
-      !op.addBoolOption('\0', "portable-baseline",
-                        "Enable Portable Baseline Interpreter (default)") ||
-      !op.addBoolOption('\0', "no-portable-baseline",
-                        "Disable Portable Baseline Interpreter") ||
-#endif
       !op.addIntOption(
           '\0', "baseline-warmup-threshold", "COUNT",
           "Wait for COUNT calls or iterations before baseline-compiling "
@@ -12598,18 +12556,6 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
   if (op.getBoolOption("baseline-eager")) {
     jit::JitOptions.setEagerBaselineCompilation();
   }
-
-#ifdef ENABLE_PORTABLE_BASELINE_INTERP
-  if (op.getBoolOption("portable-baseline-eager")) {
-    jit::JitOptions.setEagerPortableBaselineInterpreter();
-  }
-  if (op.getBoolOption("portable-baseline")) {
-    jit::JitOptions.portableBaselineInterpreter = true;
-  }
-  if (op.getBoolOption("no-portable-baseline")) {
-    jit::JitOptions.portableBaselineInterpreter = false;
-  }
-#endif
 
   if (op.getBoolOption("blinterp")) {
     jit::JitOptions.baselineInterpreter = true;

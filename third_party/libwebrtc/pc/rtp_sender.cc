@@ -20,7 +20,6 @@
 #include "api/audio_options.h"
 #include "api/media_stream_interface.h"
 #include "api/priority.h"
-#include "api/rtc_error.h"
 #include "media/base/media_engine.h"
 #include "pc/legacy_stats_collector_interface.h"
 #include "rtc_base/checks.h"
@@ -877,18 +876,15 @@ void VideoRtpSender::ClearSend() {
 }
 
 RTCError VideoRtpSender::CheckSVCParameters(const RtpParameters& parameters) {
-  absl::optional<cricket::VideoCodec> send_codec =
-      video_media_channel()->GetSendCodec();
+  cricket::VideoCodec codec;
+  video_media_channel()->GetSendCodec(&codec);
 
   // Match the currently used codec against the codec preferences to gather
   // the SVC capabilities.
   std::vector<cricket::VideoCodec> codecs;
-  if (send_codec) {
-    for (const auto& codec_preference : video_codec_preferences_) {
-      if (send_codec->Matches(codec_preference)) {
-        codecs.push_back(codec_preference);
-        break;
-      }
+  for (const auto& codec_preference : video_codec_preferences_) {
+    if (codec.Matches(codec_preference)) {
+      codecs.push_back(codec_preference);
     }
   }
 

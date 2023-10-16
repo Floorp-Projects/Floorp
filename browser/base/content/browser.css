@@ -43,6 +43,28 @@ body {
   min-height: 0;
 }
 
+/* These live here because image loads don't go through otherwise,
+ * see bug 1855151 */
+#navigator-toolbox:-moz-lwtheme {
+  background-image: var(--lwt-additional-images);
+  background-repeat: var(--lwt-background-tiling);
+  background-position: var(--lwt-background-alignment);
+  background-color: var(--lwt-accent-color);
+  color: inherit;
+
+  &:-moz-window-inactive {
+    background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+  }
+
+  /* When a theme defines both theme_frame and additional_backgrounds, show
+     the latter atop the former. */
+  :root[lwtheme-image] & {
+    background-image: var(--lwt-header-image), var(--lwt-additional-images);
+    background-repeat: no-repeat, var(--lwt-background-tiling);
+    background-position: right top, var(--lwt-background-alignment);
+  }
+}
+
 /* We set large flex on both containers to allow the devtools toolbox to
  * set a flex value itself. We don't want the toolbox to actually take up free
  * space, but we do want it to collapse when the window shrinks, and with
@@ -374,31 +396,64 @@ toolbarpaletteitem {
   width: 16px;
 }
 
-.webextension-browser-action {
-  list-style-image: var(--webextension-toolbar-image, inherit);
+@media not all and (min-resolution: 1.1dppx) {
+  .webextension-browser-action {
+    list-style-image: var(--webextension-toolbar-image, inherit);
+  }
 
-  toolbar[brighttext] & {
+  toolbar[brighttext] .webextension-browser-action {
     list-style-image: var(--webextension-toolbar-image-light, inherit);
   }
-  toolbar:not([brighttext]) &:-moz-lwtheme {
+
+  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
     list-style-image: var(--webextension-toolbar-image-dark, inherit);
   }
-  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > & {
+
+  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
     list-style-image: var(--webextension-menupanel-image, inherit);
-    /* TODO: This feels a bit odd, why do we have three images? It feels we
-     * should probably have only two (light/dark), and choose based on
-     * prefers-color-scheme + lwt-popup */
-    :root[lwt-popup="dark"] & {
-      list-style-image: var(--webextension-menupanel-image-light, inherit);
-    }
-    :root[lwt-popup="light"] & {
-      list-style-image: var(--webextension-menupanel-image-dark, inherit);
-    }
+  }
+
+  :root[lwt-popup-brighttext] toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
+    list-style-image: var(--webextension-menupanel-image-light, inherit);
+  }
+
+  :root:not([lwt-popup-brighttext]) toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action:-moz-lwtheme  {
+    list-style-image: var(--webextension-menupanel-image-dark, inherit);
+  }
+
+  .webextension-menuitem {
+    list-style-image: var(--webextension-menuitem-image, inherit) !important;
   }
 }
 
-.webextension-menuitem {
-  list-style-image: var(--webextension-menuitem-image, inherit) !important;
+@media (min-resolution: 1.1dppx) {
+  .webextension-browser-action {
+    list-style-image: var(--webextension-toolbar-image-2x, inherit);
+  }
+
+  toolbar[brighttext] .webextension-browser-action {
+    list-style-image: var(--webextension-toolbar-image-2x-light, inherit);
+  }
+
+  toolbar:not([brighttext]) .webextension-browser-action:-moz-lwtheme {
+    list-style-image: var(--webextension-toolbar-image-2x-dark, inherit);
+  }
+
+  toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
+    list-style-image: var(--webextension-menupanel-image-2x, inherit);
+  }
+
+  :root[lwt-popup-brighttext] toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action {
+    list-style-image: var(--webextension-menupanel-image-2x-light, inherit);
+  }
+
+  :root:not([lwt-popup-brighttext]) toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > .webextension-browser-action:-moz-lwtheme {
+    list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
+  }
+
+  .webextension-menuitem {
+    list-style-image: var(--webextension-menuitem-image-2x, inherit) !important;
+  }
 }
 
 toolbarpaletteitem[removable="false"] {
@@ -406,7 +461,9 @@ toolbarpaletteitem[removable="false"] {
 }
 
 @media not (-moz-platform: macos) {
-  toolbarpaletteitem:is([place="palette"], [place="panel"], [place="toolbar"]) {
+  toolbarpaletteitem[place="palette"],
+  toolbarpaletteitem[place="panel"],
+  toolbarpaletteitem[place="toolbar"] {
     -moz-user-focus: normal;
   }
 }
@@ -1285,9 +1342,19 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
 }
 
 /* Page action buttons */
-.pageAction-panel-button > .toolbarbutton-icon,
+.pageAction-panel-button > .toolbarbutton-icon {
+  list-style-image: var(--pageAction-image-16px, inherit);
+}
 .urlbar-page-action {
-  list-style-image: var(--pageAction-image, inherit);
+  list-style-image: var(--pageAction-image-16px, inherit);
+}
+@media (min-resolution: 1.1dppx) {
+  .pageAction-panel-button > .toolbarbutton-icon {
+    list-style-image: var(--pageAction-image-32px, inherit);
+  }
+  .urlbar-page-action {
+    list-style-image: var(--pageAction-image-32px, inherit);
+  }
 }
 
 /* Print pending */
@@ -1385,6 +1452,12 @@ printpreview-pagination:focus-within,
   fill: currentColor;
   width: 16px;
   height: 16px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
+    list-style-image: var(--webextension-menuitem-image-2x, inherit);
+  }
 }
 
 toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {

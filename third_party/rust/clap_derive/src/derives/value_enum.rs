@@ -51,13 +51,7 @@ pub fn gen_for_enum(
     let to_possible_value = gen_to_possible_value(item, &lits);
 
     Ok(quote! {
-        #[allow(
-            dead_code,
-            unreachable_code,
-            unused_variables,
-            unused_braces,
-            unused_qualifications,
-        )]
+        #[allow(dead_code, unreachable_code, unused_variables, unused_braces)]
         #[allow(
             clippy::style,
             clippy::complexity,
@@ -70,7 +64,6 @@ pub fn gen_for_enum(
             clippy::suspicious_else_formatting,
             clippy::almost_swapped,
         )]
-        #[automatically_derived]
         impl clap::ValueEnum for #item_name {
             #value_variants
             #to_possible_value

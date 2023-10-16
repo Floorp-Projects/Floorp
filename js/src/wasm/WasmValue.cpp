@@ -859,10 +859,6 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
 
 /* static */
 wasm::FuncRef wasm::FuncRef::fromAnyRefUnchecked(AnyRef p) {
-  if (p.isNull()) {
-    return FuncRef::null();
-  }
-
   MOZ_ASSERT(p.isJSObject() && p.toJSObject().is<JSFunction>());
   return FuncRef(&p.toJSObject().as<JSFunction>());
 }

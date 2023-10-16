@@ -40,7 +40,7 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
   var localeData = PluralRules.localeData;
 
   // Step 10.
-  var r = ResolveLocale(
+  const r = ResolveLocale(
     "PluralRules",
     lazyPluralRulesData.requestedLocales,
     lazyPluralRulesData.opt,
@@ -182,10 +182,10 @@ function InitializePluralRules(pluralRules, locales, options) {
   // Note that lazy data is only installed as a final step of initialization,
   // so every PluralRules lazy data object has *all* these properties, never a
   // subset of them.
-  var lazyPluralRulesData = std_Object_create(null);
+  const lazyPluralRulesData = std_Object_create(null);
 
   // Step 1.
-  var requestedLocales = CanonicalizeLocaleList(locales);
+  let requestedLocales = CanonicalizeLocaleList(locales);
   lazyPluralRulesData.requestedLocales = requestedLocales;
 
   // Step 2. (Inlined call to CoerceOptionsToObject.)
@@ -196,11 +196,11 @@ function InitializePluralRules(pluralRules, locales, options) {
   }
 
   // Step 3.
-  var opt = new_Record();
+  let opt = new_Record();
   lazyPluralRulesData.opt = opt;
 
   // Steps 4-5.
-  var matcher = GetOption(
+  let matcher = GetOption(
     options,
     "localeMatcher",
     "string",
@@ -210,7 +210,7 @@ function InitializePluralRules(pluralRules, locales, options) {
   opt.localeMatcher = matcher;
 
   // Steps 6-7.
-  var type = GetOption(
+  const type = GetOption(
     options,
     "type",
     "string",
@@ -245,7 +245,7 @@ function Intl_PluralRules_supportedLocalesOf(locales /*, options*/) {
   var availableLocales = "PluralRules";
 
   // Step 2.
-  var requestedLocales = CanonicalizeLocaleList(locales);
+  let requestedLocales = CanonicalizeLocaleList(locales);
 
   // Step 3.
   return SupportedLocales(availableLocales, requestedLocales, options);
@@ -262,7 +262,7 @@ function Intl_PluralRules_supportedLocalesOf(locales /*, options*/) {
  */
 function Intl_PluralRules_select(value) {
   // Step 1.
-  var pluralRules = this;
+  let pluralRules = this;
 
   // Step 2.
   if (
@@ -278,7 +278,7 @@ function Intl_PluralRules_select(value) {
   }
 
   // Step 3.
-  var n = ToNumber(value);
+  let n = ToNumber(value);
 
   // Ensure the PluralRules internals are resolved.
   getPluralRulesInternals(pluralRules);

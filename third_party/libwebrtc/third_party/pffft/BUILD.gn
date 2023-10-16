@@ -1,10 +1,10 @@
-# Copyright 2019 The Chromium Authors
+# Copyright 2019 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 import("//build/config/arm.gni")
-import("//testing/libfuzzer/fuzzer_test.gni")
-import("//testing/test.gni")
+#import("//testing/libfuzzer/fuzzer_test.gni")
+#import("//testing/test.gni")
 
 config("common_config") {
   cflags = [ "-Wno-shadow" ]
@@ -19,8 +19,7 @@ config("common_config") {
   # PFFFT doesn't support SIMD on some cpus, so build a scalar version.
   if ((target_cpu == "arm" && !arm_use_neon) || target_cpu == "mipsel" ||
       target_cpu == "mips64el" || target_cpu == "ppc64" ||
-      target_cpu == "riscv64" || target_cpu == "s390x" ||
-      target_cpu == "loong64") {
+      target_cpu == "s390x") {
     defines = [ "PFFFT_SIMD_DISABLE" ]
   }
 }

@@ -14,7 +14,7 @@ nsresult NS_NewSVGFEFloodElement(
 
 namespace mozilla::dom {
 
-using SVGFEFloodElementBase = SVGFilterPrimitiveElement;
+using SVGFEFloodElementBase = SVGFE;
 
 class SVGFEFloodElement final : public SVGFEFloodElementBase {
   friend nsresult(::NS_NewSVGFEFloodElement(

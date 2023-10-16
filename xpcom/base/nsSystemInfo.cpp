@@ -15,7 +15,6 @@
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/Try.h"
 #include "jsapi.h"
 #include "js/PropertyAndElement.h"  // JS_SetProperty
 #include "mozilla/dom/Promise.h"

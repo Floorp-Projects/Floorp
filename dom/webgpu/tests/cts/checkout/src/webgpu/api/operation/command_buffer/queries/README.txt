@@ -1,4 +1,5 @@
 TODO: test the behavior of creating/using/resolving queries.
+- occlusion
 - pipeline statistics
   TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.
 - timestamp

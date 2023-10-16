@@ -381,11 +381,11 @@ assertEq(tbl.get(0).foo, 42);
     assertErrorMessage(() => wasmEvalText(`(module
         (elem $e externref (ref.func 0))
         (func)
-    )`), WebAssembly.CompileError, /expression has type (funcref|\(ref 0\)) but expected externref/);
+    )`), WebAssembly.CompileError, /expression has type funcref but expected externref/);
 }
 
-// non-GC: mutable globals are rejected (global.get is constant only if the global is constant)
-if (!wasmGcEnabled()) {
+// mutable globals are rejected (global.get is constant only if the global is constant)
+{
     assertErrorMessage(() => {
         wasmEvalText(`(module
             (global (import "test" "g1") (mut externref))

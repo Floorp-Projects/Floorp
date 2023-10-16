@@ -49,7 +49,7 @@ g.test('while_mapped')
 
     let device = t.device;
     if (deviceDestroy) {
-      const adapter = await getGPU(t.rec).requestAdapter();
+      const adapter = await getGPU().requestAdapter();
       assert(adapter !== null);
       device = await adapter.requestDevice();
     }

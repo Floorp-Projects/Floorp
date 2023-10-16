@@ -45,7 +45,10 @@ inline StyleColor StyleColor::FromColor(nscolor aColor) {
 
 template <>
 inline StyleColor StyleColor::Transparent() {
-  return StyleColor::Absolute(StyleAbsoluteColor::TRANSPARENT_BLACK);
+#pragma push_macro("TRANSPARENT")
+#undef TRANSPARENT
+  return StyleColor::Absolute(StyleAbsoluteColor::TRANSPARENT);
+#pragma pop_macro("TRANSPARENT")
 }
 
 template <>

@@ -142,6 +142,11 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   }
   virtual bool IsRemote() const { return false; }
 
+  virtual UniquePtr<SurfaceDescriptor> LookupSurfaceDescriptorForClientTexture(
+      const int64_t aTextureId) {
+    MOZ_CRASH("Should only be called on ContentCompositorBridgeParent.");
+  }
+
   virtual void NotifyMemoryPressure() {}
   virtual void AccumulateMemoryReport(wr::MemoryReport*) {}
 
@@ -207,6 +212,9 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const uint32_t& startIndex, nsTArray<float>* intervals) = 0;
   virtual mozilla::ipc::IPCResult RecvCheckContentOnlyTDR(
       const uint32_t& sequenceNum, bool* isContentOnlyTDR) = 0;
+  virtual mozilla::ipc::IPCResult RecvInitPCanvasParent(
+      Endpoint<PCanvasParent>&& aEndpoint) = 0;
+  virtual mozilla::ipc::IPCResult RecvReleasePCanvasParent() = 0;
 
   bool mCanSend;
 
@@ -317,6 +325,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;
   bool DeallocPTextureParent(PTextureParent* actor) override;
+
+  mozilla::ipc::IPCResult RecvInitPCanvasParent(
+      Endpoint<PCanvasParent>&& aEndpoint) final;
+
+  mozilla::ipc::IPCResult RecvReleasePCanvasParent() final;
 
   bool IsSameProcess() const override;
 

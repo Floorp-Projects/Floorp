@@ -9,7 +9,7 @@
 
 "use strict";
 
-const { DEFAULT_SUGGESTION_SCORE } = UrlbarProviderQuickSuggest;
+const { DEFAULT_SUGGESTION_SCORE } = QuickSuggestRemoteSettings;
 
 const REMOTE_SETTINGS_RECORDS = [
   {
@@ -472,7 +472,7 @@ add_task(async function sponsoredWith_addonWith_addonWins_both() {
 });
 
 add_task(async function merino_sponsored_addon_sponsoredWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -494,11 +494,11 @@ add_task(async function merino_sponsored_addon_sponsoredWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
 });
 
 add_task(async function merino_sponsored_addon_addonWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -519,11 +519,11 @@ add_task(async function merino_sponsored_addon_addonWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
 });
 
 add_task(async function merino_sponsored_unknown_sponsoredWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -545,11 +545,11 @@ add_task(async function merino_sponsored_unknown_sponsoredWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
 });
 
 add_task(async function merino_sponsored_unknown_unknownWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  UrlbarPrefs.set("quicksuggest.remoteSettings.enabled", false);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -569,7 +569,7 @@ add_task(async function merino_sponsored_unknown_unknownWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  UrlbarPrefs.clear("quicksuggest.remoteSettings.enabled");
 });
 
 add_task(async function stringValue() {
@@ -749,7 +749,7 @@ function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
   url.searchParams.set("utm_source", "firefox-suggest");
 
   return {
-    type: UrlbarUtils.RESULT_TYPE.URL,
+    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     isBestMatch: true,
@@ -757,14 +757,24 @@ function makeExpectedAddonResult({ suggestion, source = "remote-settings" }) {
       source,
       provider: source == "remote-settings" ? "AddonSuggestions" : "amo",
       telemetryType: "amo",
+      dynamicType: "addons",
       title: suggestion.title,
       url: url.href,
       originalUrl: suggestion.url,
       displayUrl: url.href.replace(/^https:\/\//, ""),
-      shouldShowUrl: true,
       icon: suggestion.icon,
       description: suggestion.description,
-      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
+      rating: Number(
+        source == "remote-settings"
+          ? suggestion.rating
+          : suggestion.custom_details.amo.rating
+      ),
+      reviews: Number(
+        source == "remote-settings"
+          ? suggestion.number_of_ratings
+          : suggestion.custom_details.amo.number_of_ratings
+      ),
+      shouldNavigate: true,
       helpUrl: QuickSuggest.HELP_URL,
     },
   };

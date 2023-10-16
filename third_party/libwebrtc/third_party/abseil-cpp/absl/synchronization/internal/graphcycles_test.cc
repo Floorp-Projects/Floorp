@@ -21,9 +21,8 @@
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "absl/base/internal/raw_logging.h"
 #include "absl/base/macros.h"
-#include "absl/log/check.h"
-#include "absl/log/log.h"
 
 namespace absl {
 ABSL_NAMESPACE_BEGIN
@@ -66,51 +65,51 @@ static bool IsReachable(Edges *edges, int from, int to,
 }
 
 static void PrintEdges(Edges *edges) {
-  LOG(INFO) << "EDGES (" << edges->size() << ")";
+  ABSL_RAW_LOG(INFO, "EDGES (%zu)", edges->size());
   for (const auto &edge : *edges) {
     int a = edge.from;
     int b = edge.to;
-    LOG(INFO) << a << " " << b;
+    ABSL_RAW_LOG(INFO, "%d %d", a, b);
   }
-  LOG(INFO) << "---";
+  ABSL_RAW_LOG(INFO, "---");
 }
 
 static void PrintGCEdges(Nodes *nodes, const IdMap &id, GraphCycles *gc) {
-  LOG(INFO) << "GC EDGES";
+  ABSL_RAW_LOG(INFO, "GC EDGES");
   for (int a : *nodes) {
     for (int b : *nodes) {
       if (gc->HasEdge(Get(id, a), Get(id, b))) {
-        LOG(INFO) << a << " " << b;
+        ABSL_RAW_LOG(INFO, "%d %d", a, b);
       }
     }
   }
-  LOG(INFO) << "---";
+  ABSL_RAW_LOG(INFO, "---");
 }
 
 static void PrintTransitiveClosure(Nodes *nodes, Edges *edges) {
-  LOG(INFO) << "Transitive closure";
+  ABSL_RAW_LOG(INFO, "Transitive closure");
   for (int a : *nodes) {
     for (int b : *nodes) {
       std::unordered_set<int> seen;
       if (IsReachable(edges, a, b, &seen)) {
-        LOG(INFO) << a << " " << b;
+        ABSL_RAW_LOG(INFO, "%d %d", a, b);
       }
     }
   }
-  LOG(INFO) << "---";
+  ABSL_RAW_LOG(INFO, "---");
 }
 
 static void PrintGCTransitiveClosure(Nodes *nodes, const IdMap &id,
                                      GraphCycles *gc) {
-  LOG(INFO) << "GC Transitive closure";
+  ABSL_RAW_LOG(INFO, "GC Transitive closure");
   for (int a : *nodes) {
     for (int b : *nodes) {
       if (gc->IsReachable(Get(id, a), Get(id, b))) {
-        LOG(INFO) << a << " " << b;
+        ABSL_RAW_LOG(INFO, "%d %d", a, b);
       }
     }
   }
-  LOG(INFO) << "---";
+  ABSL_RAW_LOG(INFO, "---");
 }
 
 static void CheckTransitiveClosure(Nodes *nodes, Edges *edges, const IdMap &id,
@@ -126,8 +125,9 @@ static void CheckTransitiveClosure(Nodes *nodes, Edges *edges, const IdMap &id,
         PrintGCEdges(nodes, id, gc);
         PrintTransitiveClosure(nodes, edges);
         PrintGCTransitiveClosure(nodes, id, gc);
-        LOG(FATAL) << "gc_reachable " << gc_reachable << " reachable "
-                   << reachable << " a " << a << " b " << b;
+        ABSL_RAW_LOG(FATAL, "gc_reachable %s reachable %s a %d b %d",
+                     gc_reachable ? "true" : "false",
+                     reachable ? "true" : "false", a, b);
       }
     }
   }
@@ -142,7 +142,7 @@ static void CheckEdges(Nodes *nodes, Edges *edges, const IdMap &id,
     if (!gc->HasEdge(Get(id, a), Get(id, b))) {
       PrintEdges(edges);
       PrintGCEdges(nodes, id, gc);
-      LOG(FATAL) << "!gc->HasEdge(" << a << ", " << b << ")";
+      ABSL_RAW_LOG(FATAL, "!gc->HasEdge(%d, %d)", a, b);
     }
   }
   for (const auto &a : *nodes) {
@@ -155,12 +155,13 @@ static void CheckEdges(Nodes *nodes, Edges *edges, const IdMap &id,
   if (count != edges->size()) {
     PrintEdges(edges);
     PrintGCEdges(nodes, id, gc);
-    LOG(FATAL) << "edges->size() " << edges->size() << "  count " << count;
+    ABSL_RAW_LOG(FATAL, "edges->size() %zu  count %d", edges->size(), count);
   }
 }
 
 static void CheckInvariants(const GraphCycles &gc) {
-  CHECK(gc.CheckInvariants()) << "CheckInvariants";
+  if (ABSL_PREDICT_FALSE(!gc.CheckInvariants()))
+    ABSL_RAW_LOG(FATAL, "CheckInvariants");
 }
 
 // Returns the index of a randomly chosen node in *nodes.
@@ -308,7 +309,7 @@ TEST(GraphCycles, RandomizedTest) {
       break;
 
     default:
-      LOG(FATAL) << "op " << op;
+      ABSL_RAW_LOG(FATAL, "op %d", op);
     }
 
     // Very rarely, test graph expansion by adding then removing many nodes.

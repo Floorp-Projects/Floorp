@@ -1398,6 +1398,7 @@ fuzzy(0-5,0-50) == 526463-1.html 526463-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
 == 528038-2.html 528038-2-ref.html
+== 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 fuzzy-if(Android,0-2,0-48) fuzzy-if(cocoaWidget&&swgl,0-1,0-3) == 531200-1.html 531200-1-ref.html
 == 531371-1.html 531371-1-ref.html
@@ -2097,13 +2098,7 @@ skip-if(Android) == 1727172-1.xhtml 1727172-1-ref.html
 == 1727016-1.html 1727016-1-ref.html
 != 1730314-1.html 1730314-1-ref.html
 fuzzy(0-3,0-3) fuzzy-if(Android,0-3,0-1901) fuzzy-if(winWidget,0-154,0-118) == 1738700-1.html 1738700-1-ref.html
-
-# Have to skip android because it doesn't set up example.org as a local host,
-# so the test crashes there.
-fuzzy(255-255,171000-171000) skip-if(Android) HTTP == 1743533-1.html 1743533-1-notref.html # do not decrease the fuzz! this is a not equal test, the high fuzz minimum is to ensure they differ by enough.
-fuzzy(255-255,171000-171000) skip-if(Android) HTTP == 1743533-2.html 1743533-1-notref.html # do not decrease the fuzz! this is a not equal test, the high fuzz minimum is to ensure they differ by enough.
-fuzzy(0-128,0-17172) skip-if(Android) HTTP == 1743533-1.html 1743533-2.html # Fuzzy is only needed because scrollbars and fragmentation are different between fission and non-fission iframes, otherwise this should pass exactly. It's pretty close.
-
+skip-if(Android||!browserIsFission) fuzzy(255-255,171000-171000) HTTP == 1743533-1.html 1743533-1-ref.html # do not decrease the fuzz! this is a not equal test, the high fuzz minimum is to ensure they differ by enough.
 == 1743560-1.html 1743560-1-ref.html
 == 1743851-1.html 1743851-1-ref.html
 pref(image.downscale-during-decode.enabled,true) == 1744468-1.html 1744468-1-ref.html # do not increase fuzz without looking, the test should be smoothly downscaled, not pixelated

@@ -775,7 +775,7 @@ class SSLTunnel:
             self.log.error(
                 "INFO | runtests.py | expected to find ssltunnel at %s" % ssltunnel
             )
-            sys.exit(1)
+            exit(1)
 
         env = test_environment(xrePath=self.xrePath, log=self.log)
         env["LD_LIBRARY_PATH"] = self.xrePath
@@ -1149,7 +1149,7 @@ class MochitestDesktop(object):
                 self.urlOpts.append("dumpAboutMemoryAfterTest=true")
             if options.dumpDMDAfterTest:
                 self.urlOpts.append("dumpDMDAfterTest=true")
-            if options.debugger or options.jsdebugger:
+            if options.debugger:
                 self.urlOpts.append("interactiveDebugger=true")
             if options.jscov_dir_prefix:
                 self.urlOpts.append("jscovDirPrefix=%s" % options.jscov_dir_prefix)
@@ -1830,8 +1830,7 @@ toolbar#nav-bar {
             ):
                 manifest_key = "{}:{}".format(test["ancestor_manifest"], manifest_key)
 
-            manifest_key = manifest_key.replace("\\", "/")
-            self.tests_by_manifest[manifest_key].append(tp)
+            self.tests_by_manifest[manifest_key.replace("\\", "/")].append(tp)
             self.args_by_manifest[manifest_key].add(test.get("args"))
             self.prefs_by_manifest[manifest_key].add(test.get("prefs"))
             self.env_vars_by_manifest[manifest_key].add(test.get("environment"))
@@ -1985,13 +1984,13 @@ toolbar#nav-bar {
         d["runFailures"] = False
         if options.runFailures:
             d["runFailures"] = True
+        content = json.dumps(d)
 
         shutil.copy(
             os.path.join(SCRIPT_DIR, "ignorePrefs.json"),
             os.path.join(options.profilePath, "ignorePrefs.json"),
         )
         d["ignorePrefsFile"] = "ignorePrefs.json"
-        content = json.dumps(d)
 
         with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
             config.write(content)
@@ -2861,7 +2860,6 @@ toolbar#nav-bar {
 
             # create mozrunner instance and start the system under test process
             self.lastTestSeen = self.test_name
-            self.lastManifest = currentManifest
             startTime = datetime.now()
 
             runner_cls = mozrunner.runners.get(
@@ -3373,9 +3371,6 @@ toolbar#nav-bar {
                         "media.wmf.media-engine.channel-decoder.enabled", False
                     )
                 ),
-                "mda_gpu": self.extraPrefs.get(
-                    "media.hardware-video-decoding.force-enabled", False
-                ),
                 "xorigin": options.xOriginTests,
                 "condprof": options.conditionedProfile,
                 "msix": "WindowsApps" in options.app,
@@ -3421,7 +3416,7 @@ toolbar#nav-bar {
             return result
 
         # code for --run-by-manifest
-        manifests = set(t["manifest"].replace("\\", "/") for t in tests)
+        manifests = set(t["manifest"] for t in tests)
         result = 0
 
         origPrefs = self.extraPrefs.copy()
@@ -3645,7 +3640,7 @@ toolbar#nav-bar {
             # then again to actually run mochitest
             if options.timeout:
                 timeout = options.timeout + 30
-            elif options.debugger or options.jsdebugger or not options.autorun:
+            elif options.debugger or not options.autorun:
                 timeout = None
             else:
                 # We generally want the JS harness or marionette to handle
@@ -3800,7 +3795,6 @@ toolbar#nav-bar {
                 ignore_missing_leaks=ignoreMissingLeaks,
                 log=self.log,
                 stack_fixer=get_stack_fixer_function(utilityPath, options.symbolsPath),
-                scope=manifestToFilter,
             )
 
         self.log.info("runtests.py | Running tests: end.")
@@ -3935,12 +3929,11 @@ toolbar#nav-bar {
 
             for message in messages:
                 # Passing the message to the handlers
-                msg = message
                 for handler in self.outputHandlers():
-                    msg = handler(msg)
+                    message = handler(message)
 
                 # Processing the message by the logger
-                self.harness.message_logger.process_message(msg)
+                self.harness.message_logger.process_message(message)
 
         __call__ = processOutputLine
 
@@ -3972,7 +3965,7 @@ toolbar#nav-bar {
                 numFailures, errorMessages = self.shutdownLeaks.process()
                 self.harness.countfail += numFailures
                 for message in errorMessages:
-                    msg = {
+                    message = {
                         "action": "test_end",
                         "status": "FAIL",
                         "expected": "PASS",
@@ -3983,7 +3976,7 @@ toolbar#nav-bar {
                         "test": message["test"],
                         "message": message["msg"],
                     }
-                    self.harness.message_logger.process_message(msg)
+                    self.harness.message_logger.process_message(message)
 
             if self.lsanLeaks:
                 self.harness.countfail += self.lsanLeaks.process()
@@ -4082,10 +4075,7 @@ toolbar#nav-bar {
                     if message["action"] == "log"
                     else message["data"]
                 )
-                if "(finished)" in self.harness.lastTestSeen:
-                    self.lsanLeaks.log(line, self.harness.lastManifest)
-                else:
-                    self.lsanLeaks.log(line, self.harness.lastTestSeen)
+                self.lsanLeaks.log(line)
             return message
 
         def trackShutdownLeaks(self, message):

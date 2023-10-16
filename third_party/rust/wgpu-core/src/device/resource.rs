@@ -1,10 +1,7 @@
 #[cfg(feature = "trace")]
 use crate::device::trace;
 use crate::{
-    binding_model::{
-        self, get_bind_group_layout, try_get_bind_group_layout, BglOrDuplicate,
-        BindGroupLayoutInner,
-    },
+    binding_model::{self, get_bind_group_layout, try_get_bind_group_layout},
     command, conv,
     device::life::WaitIdleError,
     device::{
@@ -74,19 +71,6 @@ pub struct Device<A: HalApi> {
     pub(super) command_allocator: Mutex<CommandAllocator<A>>,
     pub(crate) active_submission_index: SubmissionIndex,
     pub(super) fence: A::Fence,
-
-    /// Is this device valid? Valid is closely associated with "lose the device",
-    /// which can be triggered by various methods, including at the end of device
-    /// destroy, and by any GPU errors that cause us to no longer trust the state
-    /// of the device. Ideally we would like to fold valid into the storage of
-    /// the device itself (for example as an Error enum), but unfortunately we
-    /// need to continue to be able to retrieve the device in poll_devices to
-    /// determine if it can be dropped. If our internal accesses of devices were
-    /// done through ref-counted references and external accesses checked for
-    /// Error enums, we wouldn't need this. For now, we need it. All the call
-    /// sites where we check it are areas that should be revisited if we start
-    /// using ref-counted references for internal access.
-    pub(crate) valid: bool,
 
     /// All live resources allocated with this [`Device`].
     ///
@@ -205,7 +189,6 @@ impl<A: HalApi> Device<A> {
             command_allocator: Mutex::new(com_alloc),
             active_submission_index: 0,
             fence,
-            valid: true,
             trackers: Mutex::new(Tracker::new()),
             life_tracker: Mutex::new(life::LifetimeTracker::new()),
             temp_suspected: life::SuspectedResources::default(),
@@ -229,10 +212,6 @@ impl<A: HalApi> Device<A> {
             downlevel,
             pending_writes,
         })
-    }
-
-    pub fn is_valid(&self) -> bool {
-        self.valid
     }
 
     pub(super) fn lock_life<'this, 'token: 'this>(
@@ -1297,10 +1276,6 @@ impl<A: HalApi> Device<A> {
                 .flags
                 .contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING),
         );
-        caps.set(
-            Caps::DUAL_SOURCE_BLENDING,
-            self.features.contains(wgt::Features::DUAL_SOURCE_BLENDING),
-        );
 
         let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), caps)
             .validate(&module)
@@ -1311,8 +1286,7 @@ impl<A: HalApi> Device<A> {
                     inner: Box::new(inner),
                 })
             })?;
-        let interface =
-            validation::Interface::new(&module, &info, self.limits.clone(), self.features);
+        let interface = validation::Interface::new(&module, &info, self.limits.clone());
         let hal_shader = hal::ShaderInput::Naga(hal::NagaShader { module, info });
 
         let hal_desc = hal::ShaderModuleDescriptor {
@@ -1395,9 +1369,8 @@ impl<A: HalApi> Device<A> {
             .iter(self_id.backend())
             .find(|&(_, bgl)| {
                 bgl.device_id.value.0 == self_id
-                    && bgl
-                        .as_inner()
-                        .map_or(false, |inner| inner.entries == *entry_map)
+                    && bgl.compatible_layout.is_none()
+                    && bgl.entries == *entry_map
             })
             .map(|(id, value)| {
                 value.multi_ref_count.inc();
@@ -1412,12 +1385,7 @@ impl<A: HalApi> Device<A> {
         pipeline_layout
             .bind_group_layout_ids
             .iter()
-            .map(|&id| {
-                &get_bind_group_layout(bgl_guard, id)
-                    .1
-                    .assume_deduplicated()
-                    .entries
-            })
+            .map(|&id| &bgl_guard[id].entries)
             .collect()
     }
 
@@ -1436,9 +1404,7 @@ impl<A: HalApi> Device<A> {
             .iter()
             .enumerate()
             .map(|(group_index, &bgl_id)| pipeline::LateSizedBufferGroup {
-                shader_sizes: get_bind_group_layout(bgl_guard, bgl_id)
-                    .1
-                    .assume_deduplicated()
+                shader_sizes: bgl_guard[bgl_id]
                     .entries
                     .values()
                     .filter_map(|entry| match entry.ty {
@@ -1650,27 +1616,25 @@ impl<A: HalApi> Device<A> {
             .map_err(binding_model::CreateBindGroupLayoutError::TooManyBindings)?;
 
         Ok(binding_model::BindGroupLayout {
+            raw,
             device_id: Stored {
                 value: id::Valid(self_id),
                 ref_count: self.life_guard.add_ref(),
             },
             multi_ref_count: MultiRefCount::new(),
-            inner: BglOrDuplicate::Inner(BindGroupLayoutInner {
-                raw,
-                dynamic_count: entry_map
-                    .values()
-                    .filter(|b| b.ty.has_dynamic_offset())
-                    .count(),
-                count_validator,
-                entries: entry_map,
-                #[cfg(debug_assertions)]
-                label: label.unwrap_or("").to_string(),
-            }),
+            dynamic_count: entry_map
+                .values()
+                .filter(|b| b.ty.has_dynamic_offset())
+                .count(),
+            count_validator,
+            entries: entry_map,
+            #[cfg(debug_assertions)]
+            label: label.unwrap_or("").to_string(),
+            compatible_layout: None,
         })
     }
 
     fn create_buffer_binding<'a>(
-        device_id: id::DeviceId,
         bb: &binding_model::BufferBinding,
         binding: u32,
         decl: &wgt::BindGroupLayoutEntry,
@@ -1728,11 +1692,6 @@ impl<A: HalApi> Device<A> {
             .buffers
             .add_single(storage, bb.buffer_id, internal_use)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))?;
-
-        if buffer.device_id.value.0 != device_id {
-            return Err(DeviceError::WrongDevice.into());
-        }
-
         check_buffer_usage(buffer.usage, pub_usage)?;
         let raw_buffer = buffer
             .raw
@@ -1803,7 +1762,6 @@ impl<A: HalApi> Device<A> {
     }
 
     fn create_texture_binding(
-        device_id: id::DeviceId,
         view: &resource::TextureView<A>,
         texture_guard: &Storage<resource::Texture<A>, id::TextureId>,
         internal_use: hal::TextureUses,
@@ -1825,11 +1783,6 @@ impl<A: HalApi> Device<A> {
             .ok_or(binding_model::CreateBindGroupError::InvalidTexture(
                 view.parent_id.value.0,
             ))?;
-
-        if texture.device_id.value.0 != device_id {
-            return Err(DeviceError::WrongDevice.into());
-        }
-
         check_texture_usage(texture.desc.usage, pub_usage)?;
 
         used_texture_ranges.push(TextureInitTrackerAction {
@@ -1847,8 +1800,6 @@ impl<A: HalApi> Device<A> {
         Ok(())
     }
 
-    // This function expects the provided bind group layout to be resolved
-    // (not passing a duplicate) beforehand.
     pub(super) fn create_bind_group<G: GlobalIdentityHandlerFactory>(
         &self,
         self_id: id::DeviceId,
@@ -1863,7 +1814,7 @@ impl<A: HalApi> Device<A> {
             // Check that the number of entries in the descriptor matches
             // the number of entries in the layout.
             let actual = desc.entries.len();
-            let expected = layout.assume_deduplicated().entries.len();
+            let expected = layout.entries.len();
             if actual != expected {
                 return Err(Error::BindingsNumMismatch { expected, actual });
             }
@@ -1894,14 +1845,12 @@ impl<A: HalApi> Device<A> {
             let binding = entry.binding;
             // Find the corresponding declaration in the layout
             let decl = layout
-                .assume_deduplicated()
                 .entries
                 .get(&binding)
                 .ok_or(Error::MissingBindingDeclaration(binding))?;
             let (res_index, count) = match entry.resource {
                 Br::Buffer(ref bb) => {
                     let bb = Self::create_buffer_binding(
-                        self_id,
                         bb,
                         binding,
                         decl,
@@ -1924,7 +1873,6 @@ impl<A: HalApi> Device<A> {
                     let res_index = hal_buffers.len();
                     for bb in bindings_array.iter() {
                         let bb = Self::create_buffer_binding(
-                            self_id,
                             bb,
                             binding,
                             decl,
@@ -1946,10 +1894,6 @@ impl<A: HalApi> Device<A> {
                                 .samplers
                                 .add_single(&*sampler_guard, id)
                                 .ok_or(Error::InvalidSampler(id))?;
-
-                            if sampler.device_id.value.0 != self_id {
-                                return Err(DeviceError::WrongDevice.into());
-                            }
 
                             // Allowed sampler values for filtering and comparison
                             let (allowed_filtering, allowed_comparison) = match ty {
@@ -1999,11 +1943,6 @@ impl<A: HalApi> Device<A> {
                             .samplers
                             .add_single(&*sampler_guard, id)
                             .ok_or(Error::InvalidSampler(id))?;
-
-                        if sampler.device_id.value.0 != self_id {
-                            return Err(DeviceError::WrongDevice.into());
-                        }
-
                         hal_samplers.push(&sampler.raw);
                     }
 
@@ -2021,7 +1960,6 @@ impl<A: HalApi> Device<A> {
                         "SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture",
                     )?;
                     Self::create_texture_binding(
-                        self_id,
                         view,
                         &texture_guard,
                         internal_use,
@@ -2050,7 +1988,6 @@ impl<A: HalApi> Device<A> {
                             Self::texture_use_parameters(binding, decl, view,
                                                          "SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray")?;
                         Self::create_texture_binding(
-                            self_id,
                             view,
                             &texture_guard,
                             internal_use,
@@ -2084,11 +2021,9 @@ impl<A: HalApi> Device<A> {
             }
         }
 
-        let layout_inner = layout.assume_deduplicated();
-
         let hal_desc = hal::BindGroupDescriptor {
             label: desc.label.borrow_option(),
-            layout: &layout_inner.raw,
+            layout: &layout.raw,
             entries: &hal_entries,
             buffers: &hal_buffers,
             samplers: &hal_samplers,
@@ -2116,7 +2051,7 @@ impl<A: HalApi> Device<A> {
             used_texture_ranges,
             dynamic_binding_info,
             // collect in the order of BGL iteration
-            late_buffer_binding_sizes: layout_inner
+            late_buffer_binding_sizes: layout
                 .entries
                 .keys()
                 .flat_map(|binding| late_buffer_binding_sizes.get(binding).cloned())
@@ -2346,15 +2281,10 @@ impl<A: HalApi> Device<A> {
 
         // validate total resource counts
         for &id in desc.bind_group_layouts.iter() {
-            let Some(bind_group_layout) = try_get_bind_group_layout(bgl_guard, id) else {
-                return Err(Error::InvalidBindGroupLayout(id));
-            };
-
-            if bind_group_layout.device_id.value.0 != self_id {
-                return Err(DeviceError::WrongDevice.into());
-            }
-
-            count_validator.merge(&bind_group_layout.assume_deduplicated().count_validator);
+            let bind_group_layout = bgl_guard
+                .get(id)
+                .map_err(|_| Error::InvalidBindGroupLayout(id))?;
+            count_validator.merge(&bind_group_layout.count_validator);
         }
         count_validator
             .validate(&self.limits)
@@ -2363,12 +2293,7 @@ impl<A: HalApi> Device<A> {
         let bgl_vec = desc
             .bind_group_layouts
             .iter()
-            .map(|&id| {
-                &try_get_bind_group_layout(bgl_guard, id)
-                    .unwrap()
-                    .assume_deduplicated()
-                    .raw
-            })
+            .map(|&id| &try_get_bind_group_layout(bgl_guard, id).unwrap().raw)
             .collect::<Vec<_>>();
         let hal_desc = hal::PipelineLayoutDescriptor {
             label: desc.label.borrow_option(),
@@ -2487,10 +2412,6 @@ impl<A: HalApi> Device<A> {
             .get(desc.stage.module)
             .map_err(|_| validation::StageError::InvalidModule)?;
 
-        if shader_module.device_id.value.0 != self_id {
-            return Err(DeviceError::WrongDevice.into());
-        }
-
         {
             let flag = wgt::ShaderStages::COMPUTE;
             let provided_layouts = match desc.layout {
@@ -2533,10 +2454,6 @@ impl<A: HalApi> Device<A> {
         let layout = pipeline_layout_guard
             .get(pipeline_layout_id)
             .map_err(|_| pipeline::CreateComputePipelineError::InvalidLayout)?;
-
-        if layout.device_id.value.0 != self_id {
-            return Err(DeviceError::WrongDevice.into());
-        }
 
         let late_sized_buffer_groups =
             Device::make_late_sized_buffer_groups(&shader_binding_sizes, layout, &*bgl_guard);
@@ -2643,8 +2560,6 @@ impl<A: HalApi> Device<A> {
         let mut vertex_steps = Vec::with_capacity(desc.vertex.buffers.len());
         let mut vertex_buffers = Vec::with_capacity(desc.vertex.buffers.len());
         let mut total_attributes = 0;
-        let mut shader_expects_dual_source_blending = false;
-        let mut pipeline_expects_dual_source_blending = false;
         for (i, vb_state) in desc.vertex.buffers.iter().enumerate() {
             vertex_steps.push(pipeline::VertexStep {
                 stride: vb_state.array_stride,
@@ -2785,25 +2700,7 @@ impl<A: HalApi> Device<A> {
                     {
                         break Some(pipeline::ColorStateError::FormatNotMultisampled(cs.format));
                     }
-                    if let Some(blend_mode) = cs.blend {
-                        for factor in [
-                            blend_mode.color.src_factor,
-                            blend_mode.color.dst_factor,
-                            blend_mode.alpha.src_factor,
-                            blend_mode.alpha.dst_factor,
-                        ] {
-                            if factor.ref_second_blend_source() {
-                                self.require_features(wgt::Features::DUAL_SOURCE_BLENDING)?;
-                                if i == 0 {
-                                    pipeline_expects_dual_source_blending = true;
-                                    break;
-                                } else {
-                                    return Err(crate::pipeline::CreateRenderPipelineError
-                            ::BlendFactorOnUnsupportedTarget { factor, target: i as u32 });
-                                }
-                            }
-                        }
-                    }
+
                     break None;
                 };
                 if let Some(e) = error {
@@ -2881,20 +2778,11 @@ impl<A: HalApi> Device<A> {
                 }
             })?;
 
-            if shader_module.device_id.value.0 != self_id {
-                return Err(DeviceError::WrongDevice.into());
-            }
-
             let provided_layouts = match desc.layout {
                 Some(pipeline_layout_id) => {
                     let pipeline_layout = pipeline_layout_guard
                         .get(pipeline_layout_id)
                         .map_err(|_| pipeline::CreateRenderPipelineError::InvalidLayout)?;
-
-                    if pipeline_layout.device_id.value.0 != self_id {
-                        return Err(DeviceError::WrongDevice.into());
-                    }
-
                     Some(Device::get_introspection_bind_group_layouts(
                         pipeline_layout,
                         &*bgl_guard,
@@ -2969,15 +2857,6 @@ impl<A: HalApi> Device<A> {
                     }
                 }
 
-                if let Some(ref interface) = shader_module.interface {
-                    shader_expects_dual_source_blending = interface
-                        .fragment_uses_dual_source_blending(&fragment.stage.entry_point)
-                        .map_err(|error| pipeline::CreateRenderPipelineError::Stage {
-                            stage: flag,
-                            error,
-                        })?;
-                }
-
                 Some(hal::ProgrammableStage {
                     module: &shader_module.raw,
                     entry_point: fragment.stage.entry_point.as_ref(),
@@ -2985,17 +2864,6 @@ impl<A: HalApi> Device<A> {
             }
             None => None,
         };
-
-        if !pipeline_expects_dual_source_blending && shader_expects_dual_source_blending {
-            return Err(
-                pipeline::CreateRenderPipelineError::ShaderExpectsPipelineToUseDualSourceBlending,
-            );
-        }
-        if pipeline_expects_dual_source_blending && !shader_expects_dual_source_blending {
-            return Err(
-                pipeline::CreateRenderPipelineError::PipelineExpectsShaderToUseDualSourceBlending,
-            );
-        }
 
         if validated_stages.contains(wgt::ShaderStages::FRAGMENT) {
             for (i, output) in io.iter() {
@@ -3241,27 +3109,6 @@ impl<A: HalApi> Device<A> {
             life_guard: LifeGuard::new(""),
             desc: desc.map_label(|_| ()),
         })
-    }
-
-    pub(crate) fn lose(&mut self, _reason: Option<&str>) {
-        // Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
-
-        // Mark the device explicitly as invalid. This is checked in various
-        // places to prevent new work from being submitted.
-        self.valid = false;
-
-        // The following steps remain in "lose the device":
-        // 1) Resolve the GPUDevice device.lost promise.
-
-        // TODO: triggger this passively or actively, and supply the reason.
-
-        // 2) Complete any outstanding mapAsync() steps.
-        // 3) Complete any outstanding onSubmittedWorkDone() steps.
-
-        // These parts are passively accomplished by setting valid to false,
-        // since that will prevent any new work from being added to the queues.
-        // Future calls to poll_devices will continue to check the work queues
-        // until they are cleared, and then drop the device.
     }
 }
 

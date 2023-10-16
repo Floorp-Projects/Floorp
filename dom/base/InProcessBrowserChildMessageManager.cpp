@@ -66,7 +66,7 @@ class nsAsyncMessageToParent : public nsSameProcessAsyncMessageBase,
  public:
   explicit nsAsyncMessageToParent(
       InProcessBrowserChildMessageManager* aBrowserChild)
-      : mBrowserChild(aBrowserChild) {}
+      : nsSameProcessAsyncMessageBase(), mBrowserChild(aBrowserChild) {}
 
   virtual nsresult HandleMessage() override {
     RefPtr<nsFrameLoader> fl = mBrowserChild->GetFrameLoader();

@@ -370,7 +370,7 @@ void HTMLTrackElement::LoadResource(RefPtr<WebVTTListener>&& aWebVTTListener) {
         }
         mChannel = channel;
       });
-  doc->Dispatch(runnable.forget());
+  doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 nsresult HTMLTrackElement::BindToTree(BindContext& aContext, nsINode& aParent) {
@@ -460,7 +460,7 @@ void HTMLTrackElement::DispatchTrackRunnable(const nsString& aEventName) {
   nsCOMPtr<nsIRunnable> runnable = NewRunnableMethod<const nsString>(
       "dom::HTMLTrackElement::DispatchTrustedEvent", this,
       &HTMLTrackElement::DispatchTrustedEvent, aEventName);
-  doc->Dispatch(runnable.forget());
+  doc->Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 void HTMLTrackElement::DispatchTrustedEvent(const nsAString& aName) {

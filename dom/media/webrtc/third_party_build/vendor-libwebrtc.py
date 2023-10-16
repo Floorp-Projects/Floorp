@@ -14,6 +14,7 @@ import requests
 
 THIRDPARTY_USED_IN_FIREFOX = [
     "abseil-cpp",
+    "google_benchmark",
     "pffft",
     "rnnoise",
 ]
@@ -373,16 +374,12 @@ def unpack(target):
                     os.path.join(LIBWEBRTC_DIR, "build", path),
                 )
     elif target == "third_party":
-        # Only delete the THIRDPARTY_USED_IN_FIREFOX paths from
-        # LIBWEBRTC_DIR/third_party to avoid deleting directories that
-        # we use to trampoline to libraries already in mozilla's tree.
-        for path in THIRDPARTY_USED_IN_FIREFOX:
-            try:
-                shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "third_party", path))
-            except FileNotFoundError:
-                pass
-            except NotADirectoryError:
-                pass
+        try:
+            shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "third_party"))
+        except FileNotFoundError:
+            pass
+        except NotADirectoryError:
+            pass
 
         if os.path.exists(os.path.join(target_path, THIRDPARTY_USED_IN_FIREFOX[0])):
             for path in THIRDPARTY_USED_IN_FIREFOX:

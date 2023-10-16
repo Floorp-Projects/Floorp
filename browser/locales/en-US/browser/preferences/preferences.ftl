@@ -16,13 +16,6 @@ global-privacy-control-description =
     .label = Tell websites not to sell or share my data
     .accesskey = s
 
-non-technical-privacy-header = Website Privacy Preferences
-
-# Do not translate.
-# "Global Privacy Control" or "GPC" are a web platform feature name and abbreviation
-# included to facilitate power-user search of the about:preferences page.
-global-privacy-control-search = Global Privacy Control (GPC)
-
 settings-page-title = Settings
 
 # This is used to determine the width of the search field in about:preferences,
@@ -156,11 +149,6 @@ set-as-my-default-browser =
 startup-restore-windows-and-tabs =
     .label = Open previous windows and tabs
     .accesskey = s
-
-windows-launch-on-login =
-    .label = Open { -brand-short-name } automatically when your computer starts up
-    .accesskey = O
-windows-launch-on-login-disabled = This preference has been disabled in Windows. To change, visit <a data-l10n-name="startup-link">Startup Apps</a> in System settings.
 
 startup-restore-warn-on-quit =
     .label = Warn you when quitting the browser
@@ -1188,13 +1176,13 @@ sitedata-cookies-exceptions =
     .label = Manage Exceptions…
     .accesskey = x
 
-## Privacy Section - Cookie Banner Blocking
+## Privacy Section - Cookie Banner Handling
 
-cookie-banner-blocker-header = Cookie Banner Blocker
-cookie-banner-blocker-description = When a site asks if they can use cookies in private browsing mode, { -brand-short-name } automatically refuses for you. Only on supported sites.
+cookie-banner-handling-header = Cookie Banner Reduction
+cookie-banner-handling-description = { -brand-short-name } automatically tries to reject cookie requests on cookie banners on supported sites.
 cookie-banner-learn-more = Learn More
-cookie-banner-blocker-checkbox-label =
-    .label = Automatically refuse cookie banners
+forms-handle-cookie-banners =
+    .label = Reduce Cookie Banners
 
 ## Privacy Section - Address Bar
 
@@ -1227,9 +1215,6 @@ addressbar-locbar-engines-option =
 addressbar-locbar-quickactions-option =
     .label = Quick actions
     .accesskey = Q
-addressbar-locbar-recentsearches-option =
-    .label = Recent Searches
-    .accesskey = R
 
 addressbar-suggestions-settings = Change preferences for search engine suggestions
 
@@ -1491,10 +1476,6 @@ certs-view =
 certs-devices =
     .label = Security Devices…
     .accesskey = D
-
-certs-thirdparty-toggle =
-    .label = Allow { -brand-short-name } to automatically trust third-party root certificates you install
-    .accesskey = t
 
 space-alert-over-5gb-settings-button =
     .label = Open Settings

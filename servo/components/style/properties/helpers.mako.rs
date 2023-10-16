@@ -434,15 +434,15 @@
             context.for_non_inherited_property = ${"false" if property.style_struct.inherited else "true"};
             let specified_value = match *declaration {
                 PropertyDeclaration::${property.camel_case}(ref value) => value,
-                PropertyDeclaration::CSSWideKeyword(ref wk) => {
-                    debug_assert_eq!(wk.id, LonghandId::${property.camel_case});
-                    match wk.keyword {
+                PropertyDeclaration::CSSWideKeyword(ref declaration) => {
+                    debug_assert_eq!(declaration.id, LonghandId::${property.camel_case});
+                    match declaration.keyword {
                         % if not property.style_struct.inherited:
                         CSSWideKeyword::Unset |
                         % endif
                         CSSWideKeyword::Initial => {
                             % if not property.style_struct.inherited:
-                                declaration.debug_crash("Unexpected initial or unset for non-inherited property");
+                                debug_assert!(false, "Should be handled in apply_properties");
                             % else:
                                 context.builder.reset_${property.ident}();
                             % endif
@@ -452,27 +452,21 @@
                         % endif
                         CSSWideKeyword::Inherit => {
                             % if property.style_struct.inherited:
-                                declaration.debug_crash("Unexpected inherit or unset for inherited property");
+                                debug_assert!(false, "Should be handled in apply_properties");
                             % else:
                                 context.rule_cache_conditions.borrow_mut().set_uncacheable();
                                 context.builder.inherit_${property.ident}();
                             % endif
                         }
                         CSSWideKeyword::RevertLayer |
-                        CSSWideKeyword::Revert => {
-                            declaration.debug_crash("Found revert/revert-layer not deal with");
-                        },
+                        CSSWideKeyword::Revert => unreachable!("Should never get here"),
                     }
                     return;
-                },
+                }
                 PropertyDeclaration::WithVariables(..) => {
-                    declaration.debug_crash("Found variables not substituted");
-                    return;
-                },
-                _ => {
-                    declaration.debug_crash("Entered the wrong cascade_property implementation");
-                    return;
-                },
+                    panic!("variables should already have been substituted")
+                }
+                _ => panic!("entered the wrong cascade_property() implementation"),
             };
 
             % if property.ident in SYSTEM_FONT_LONGHANDS and engine == "gecko":

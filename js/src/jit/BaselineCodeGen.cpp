@@ -97,7 +97,8 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, TempAllocator& alloc,
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
-    : BaselineCodeGen(cx, alloc, /* HandlerArgs = */ alloc, script) {
+    : BaselineCodeGen(cx, alloc, /* HandlerArgs = */ alloc, script),
+      profilerPushToggleOffset_() {
 #ifdef JS_CODEGEN_NONE
   MOZ_CRASH();
 #endif
@@ -5323,18 +5324,6 @@ bool BaselineCodeGen<Handler>::emit_CloseIter() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_OptimizeGetIterator() {
-  frame.popRegsAndSync(1);
-
-  if (!emitNextIC()) {
-    return false;
-  }
-
-  frame.push(R0);
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_IsGenClosing() {
   return emitIsMagicValue();
 }
@@ -5846,9 +5835,7 @@ bool BaselineCodeGen<Handler>::emit_Resume() {
   masm.loadFunctionArgCount(callee, scratch2);
 
   static_assert(sizeof(Value) == 8);
-#ifndef JS_CODEGEN_NONE
   static_assert(JitStackAlignment == 16 || JitStackAlignment == 8);
-#endif
   // If JitStackValueAlignment == 1, then we were already correctly aligned on
   // entry, as guaranteed by the assertStackAlignment at the entry to this
   // function.

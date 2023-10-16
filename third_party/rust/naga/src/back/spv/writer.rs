@@ -1016,26 +1016,11 @@ impl Writer {
                     ref members,
                     span: _,
                 } => {
-                    let mut has_runtime_array = false;
                     let mut member_ids = Vec::with_capacity(members.len());
                     for (index, member) in members.iter().enumerate() {
-                        let member_ty = &arena[member.ty];
-                        match member_ty.inner {
-                            crate::TypeInner::Array {
-                                base: _,
-                                size: crate::ArraySize::Dynamic,
-                                stride: _,
-                            } => {
-                                has_runtime_array = true;
-                            }
-                            _ => (),
-                        }
                         self.decorate_struct_member(id, index, member, arena)?;
                         let member_id = self.get_type_id(LookupType::Handle(member.ty));
                         member_ids.push(member_id);
-                    }
-                    if has_runtime_array {
-                        self.decorate(id, Decoration::Block, &[]);
                     }
                     Instruction::type_struct(id, member_ids.as_slice())
                 }
@@ -1514,20 +1499,8 @@ impl Writer {
                     // vertex
                     Bi::BaseInstance => BuiltIn::BaseInstance,
                     Bi::BaseVertex => BuiltIn::BaseVertex,
-                    Bi::ClipDistance => {
-                        self.require_any(
-                            "`clip_distance` built-in",
-                            &[spirv::Capability::ClipDistance],
-                        )?;
-                        BuiltIn::ClipDistance
-                    }
-                    Bi::CullDistance => {
-                        self.require_any(
-                            "`cull_distance` built-in",
-                            &[spirv::Capability::CullDistance],
-                        )?;
-                        BuiltIn::CullDistance
-                    }
+                    Bi::ClipDistance => BuiltIn::ClipDistance,
+                    Bi::CullDistance => BuiltIn::CullDistance,
                     Bi::InstanceIndex => BuiltIn::InstanceIndex,
                     Bi::PointSize => BuiltIn::PointSize,
                     Bi::VertexIndex => BuiltIn::VertexIndex,
@@ -1648,6 +1621,7 @@ impl Writer {
                             space: global_variable.space,
                         }))
                 }
+            } else {
             }
         };
 
@@ -1682,17 +1656,16 @@ impl Writer {
         } else {
             // This is a global variable in the Storage address space. The only
             // way it could have `global_needs_wrapper() == false` is if it has
-            // a runtime-sized or binding array.
-            // Runtime-sized arrays were decorated when iterating through struct content.
-            // Now binding arrays require Block decorating.
+            // a runtime-sized array. In this case, we need to decorate it with
+            // Block.
             if let crate::AddressSpace::Storage { .. } = global_variable.space {
-                match ir_module.types[global_variable.ty].inner {
+                let decorated_id = match ir_module.types[global_variable.ty].inner {
                     crate::TypeInner::BindingArray { base, .. } => {
-                        let decorated_id = self.get_type_id(LookupType::Handle(base));
-                        self.decorate(decorated_id, Decoration::Block, &[]);
+                        self.get_type_id(LookupType::Handle(base))
                     }
-                    _ => (),
+                    _ => inner_type_id,
                 };
+                self.decorate(decorated_id, Decoration::Block, &[]);
             }
             if substitute_inner_type_lookup.is_some() {
                 inner_type_id
@@ -1852,10 +1825,8 @@ impl Writer {
         if self.flags.contains(WriterFlags::DEBUG) {
             if let Some(debug_info) = debug_info.as_ref() {
                 let source_file_id = self.id_gen.next();
-                self.debugs.push(Instruction::string(
-                    &debug_info.file_name.display().to_string(),
-                    source_file_id,
-                ));
+                self.debugs
+                    .push(Instruction::string(debug_info.file_name, source_file_id));
 
                 debug_info_inner = Some(DebugInfoInner {
                     source_code: debug_info.source_code,

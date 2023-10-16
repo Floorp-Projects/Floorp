@@ -40,7 +40,7 @@ use function::*;
 use crate::{
     arena::{Arena, Handle, UniqueArena},
     proc::{Alignment, Layouter},
-    FastHashMap, FastHashSet, FastIndexMap,
+    FastHashMap, FastHashSet,
 };
 
 use num_traits::cast::FromPrimitive;
@@ -596,7 +596,11 @@ pub struct Frontend<I> {
     /// use that target block id.
     ///
     /// Used to preserve allocations between instruction parsing.
-    switch_cases: FastIndexMap<spirv::Word, (BodyIndex, Vec<i32>)>,
+    switch_cases: indexmap::IndexMap<
+        spirv::Word,
+        (BodyIndex, Vec<i32>),
+        std::hash::BuildHasherDefault<rustc_hash::FxHasher>,
+    >,
 
     /// Tracks access to gl_PerVertex's builtins, it is used to cull unused builtins since initializing those can
     /// affect performance and the mere presence of some of these builtins might cause backends to error since they
@@ -637,7 +641,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             dummy_functions: Arena::new(),
             function_call_graph: GraphMap::new(),
             options: options.clone(),
-            switch_cases: FastIndexMap::default(),
+            switch_cases: indexmap::IndexMap::default(),
             gl_per_vertex_builtin_access: FastHashSet::default(),
         }
     }

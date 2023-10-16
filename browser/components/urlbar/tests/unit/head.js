@@ -507,14 +507,9 @@ function makeOmniboxResult(
  *   The page title.
  * @param {string} [options.iconUri]
  *   A URI for the page icon.
- * @param {number} [options.userContextId]
- *   A id of the userContext in which the tab is located.
  * @returns {UrlbarResult}
  */
-function makeTabSwitchResult(
-  queryContext,
-  { uri, title, iconUri, userContextId }
-) {
+function makeTabSwitchResult(queryContext, { uri, title, iconUri }) {
   return new UrlbarResult(
     UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
     UrlbarUtils.RESULT_SOURCE.TABS,
@@ -523,7 +518,6 @@ function makeTabSwitchResult(
       title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
       // Check against undefined so consumers can pass in the empty string.
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-      userContextId: [userContextId || 0],
     })
   );
 }

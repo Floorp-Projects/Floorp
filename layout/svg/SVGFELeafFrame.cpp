@@ -79,7 +79,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFELeafFrame)
 #ifdef DEBUG
 void SVGFELeafFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                           nsIFrame* aPrevInFlow) {
-  NS_ASSERTION(aContent->IsSVGFilterPrimitiveElement(),
+  nsCOMPtr<SVGFE> filterPrimitive = do_QueryInterface(aContent);
+  NS_ASSERTION(filterPrimitive,
                "Trying to construct an SVGFELeafFrame for a "
                "content element that doesn't support the right interfaces");
 
@@ -90,8 +91,7 @@ void SVGFELeafFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 nsresult SVGFELeafFrame::AttributeChanged(int32_t aNameSpaceID,
                                           nsAtom* aAttribute,
                                           int32_t aModType) {
-  auto* element =
-      static_cast<mozilla::dom::SVGFilterPrimitiveElement*>(GetContent());
+  auto* element = static_cast<mozilla::dom::SVGFE*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(
         GetParent()->IsSVGFilterFrame(),

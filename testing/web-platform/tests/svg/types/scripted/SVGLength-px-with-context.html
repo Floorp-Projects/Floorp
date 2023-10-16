@@ -26,11 +26,11 @@ setup(function() {
 
   function calculateXHeight() {
     // Crude hack to calculate the x-height
-    let divElement = document.createElement("div");
+    var divElement = document.createElement("div");
     divElement.setAttribute("style", "height: 1ex; font-size: 12px; font-family: Ahem;");
-    let pElement = document.querySelector("p");
+    var pElement = document.querySelector("p");
     pElement.appendChild(divElement);
-    let xHeight = divElement.offsetHeight;
+    var xHeight = divElement.offsetHeight;
     pElement.removeChild(divElement);
     return xHeight;
   }
@@ -48,7 +48,7 @@ test(function() {
 test(function() {
   length.valueAsString = "3px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PERCENTAGE);
-  let referenceValue = 3 / svgWidth * 100;
+  var referenceValue = 3 / svgWidth * 100;
   assert_equals(length.valueAsString, referenceValue + "%");
   assert_equals(length.valueInSpecifiedUnits, referenceValue);
   assert_equals(length.value, 3);
@@ -56,23 +56,9 @@ test(function() {
 }, document.title + ", percentage");
 
 test(function() {
-  let svgElement = document.getElementsByTagName("svg")[0];
-  let viewBox = svgElement.getAttribute("viewBox");
-  svgElement.removeAttribute("viewBox");
-  length.valueAsString = "50%";
-  let referenceValue = svgWidth / 2;
-  assert_equals(length.value, referenceValue);
-  svgElement.width.baseVal.value = 300;
-  referenceValue = svgElement.width.baseVal.value / 2;
-  assert_equals(length.value, referenceValue);
-  svgElement.width.baseVal.value = 150;
-  svgElement.setAttribute("viewBox", viewBox);
-}, document.title + ", changing percentage basis");
-
-test(function() {
   length.valueAsString = "6px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_EMS);
-  let referenceValue = 6 / fontSize;
+  var referenceValue = 6 / fontSize;
   assert_equals(length.valueAsString, referenceValue + "em");
   assert_equals(length.valueInSpecifiedUnits, referenceValue);
   assert_equals(length.value, 6);
@@ -82,7 +68,7 @@ test(function() {
 test(function() {
   length.valueAsString = "2px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_EXS);
-  let referenceValue = 2 / xHeight;
+  var referenceValue = 2 / xHeight;
   // Don't check valueAsString here, it's unreliable across browsers.
   assert_approx_equals(length.valueInSpecifiedUnits, referenceValue, 0.1);
   assert_approx_equals(length.value, 2.0, 0.1);
@@ -103,7 +89,7 @@ test(function() {
 test(function() {
   length.valueAsString = "48px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_CM);
-  let referenceValue = 48 * 2.54 / cssPixelsPerInch;
+  var referenceValue = 48 * 2.54 / cssPixelsPerInch;
   assert_equals(length.valueAsString, referenceValue.toFixed(2) + "cm");
   assert_approx_equals(length.valueInSpecifiedUnits, referenceValue, 0.001);
   assert_equals(length.value, 48);
@@ -113,7 +99,7 @@ test(function() {
 test(function() {
   length.valueAsString = "48px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_MM);
-  let referenceValue = 48 * 25.4 / cssPixelsPerInch;
+  var referenceValue = 48 * 25.4 / cssPixelsPerInch;
   assert_equals(length.valueAsString, referenceValue.toFixed(1) + "mm");
   assert_approx_equals(length.valueInSpecifiedUnits, referenceValue, 0.001);
   assert_equals(length.value, 48);
@@ -123,7 +109,7 @@ test(function() {
 test(function() {
   length.valueAsString = "48px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_IN);
-  let referenceValue = 48 / cssPixelsPerInch;
+  var referenceValue = 48 / cssPixelsPerInch;
   assert_equals(length.valueAsString, referenceValue + "in");
   assert_equals(length.valueInSpecifiedUnits, referenceValue);
   assert_equals(length.value, 48);
@@ -133,7 +119,7 @@ test(function() {
 test(function() {
   length.valueAsString = "4px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PT);
-  let referenceValue = 4 / cssPixelsPerInch * 72;
+  var referenceValue = 4 / cssPixelsPerInch * 72;
   assert_equals(length.valueAsString, referenceValue + "pt");
   assert_equals(length.valueInSpecifiedUnits, referenceValue);
   assert_equals(length.value, 4);
@@ -143,7 +129,7 @@ test(function() {
 test(function() {
   length.valueAsString = "16px";
   length.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PC);
-  let referenceValue = 16 / cssPixelsPerInch * 6;
+  var referenceValue = 16 / cssPixelsPerInch * 6;
   // Don't check valueAsString here, it's unreliable across browsers.
   assert_equals(length.valueInSpecifiedUnits, referenceValue);
   assert_equals(length.value, 16);

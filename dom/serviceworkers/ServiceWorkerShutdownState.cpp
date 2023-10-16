@@ -112,7 +112,8 @@ void ReportServiceWorkerShutdownProgress(uint32_t aShutdownStateId,
   if (NS_IsMainThread()) {
     MOZ_ALWAYS_SUCCEEDS(r->Run());
   } else {
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(r.forget()));
+    MOZ_ALWAYS_SUCCEEDS(
+        SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
   }
 }
 

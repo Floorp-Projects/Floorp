@@ -18,7 +18,6 @@ use std::{
 
 // Internal
 use crate::builder::StyledStr;
-use crate::builder::Styles;
 use crate::output::fmt::Colorizer;
 use crate::output::fmt::Stream;
 use crate::parser::features::suggestions;
@@ -70,7 +69,6 @@ struct ErrorInner {
     message: Option<Message>,
     source: Option<Box<dyn error::Error + Send + Sync>>,
     help_flag: Option<&'static str>,
-    styles: Styles,
     color_when: ColorChoice,
     color_help_when: ColorChoice,
     backtrace: Option<Backtrace>,
@@ -134,7 +132,6 @@ impl<F: ErrorFormatter> Error<F> {
                 message: None,
                 source: None,
                 help_flag: None,
-                styles: Styles::plain(),
                 color_when: ColorChoice::Never,
                 color_help_when: ColorChoice::Never,
                 backtrace: Backtrace::new(),
@@ -147,8 +144,7 @@ impl<F: ErrorFormatter> Error<F> {
     ///
     /// Generally, this is used with [`Error::new`]
     pub fn with_cmd(self, cmd: &Command) -> Self {
-        self.set_styles(cmd.get_styles().clone())
-            .set_color(cmd.get_color())
+        self.set_color(cmd.get_color())
             .set_colored_help(cmd.color_help())
             .set_help_flag(format::get_help_flag(cmd))
     }
@@ -214,26 +210,21 @@ impl<F: ErrorFormatter> Error<F> {
         }
     }
 
-    /// Returns the exit code that `.exit` will exit the process with.
-    ///
-    /// When the error's kind would print to `stderr` this returns `2`,
-    /// else it returns `0`.
-    pub fn exit_code(&self) -> i32 {
-        if self.use_stderr() {
-            USAGE_CODE
-        } else {
-            SUCCESS_CODE
-        }
-    }
-
     /// Prints the error and exits.
     ///
     /// Depending on the error kind, this either prints to `stderr` and exits with a status of `2`
     /// or prints to `stdout` and exits with a status of `0`.
     pub fn exit(&self) -> ! {
+        if self.use_stderr() {
+            // Swallow broken pipe errors
+            let _ = self.print();
+
+            safe_exit(USAGE_CODE);
+        }
+
         // Swallow broken pipe errors
         let _ = self.print();
-        safe_exit(self.exit_code())
+        safe_exit(SUCCESS_CODE)
     }
 
     /// Prints formatted and colored error to `stdout` or `stderr` according to its error kind
@@ -280,7 +271,7 @@ impl<F: ErrorFormatter> Error<F> {
     ///     },
     ///     Err(err) => {
     ///         let err = err.render();
-    ///         println!("{err}");
+    ///         println!("{}", err);
     ///         // do_something
     ///     },
     /// };
@@ -301,11 +292,6 @@ impl<F: ErrorFormatter> Error<F> {
 
     pub(crate) fn set_source(mut self, source: Box<dyn error::Error + Send + Sync>) -> Self {
         self.inner.source = Some(source);
-        self
-    }
-
-    pub(crate) fn set_styles(mut self, styles: Styles) -> Self {
-        self.inner.styles = styles;
         self
     }
 
@@ -446,30 +432,20 @@ impl<F: ErrorFormatter> Error<F> {
         subcmd: String,
         did_you_mean: Vec<String>,
         name: String,
-        suggested_trailing_arg: bool,
         usage: Option<StyledStr>,
     ) -> Self {
-        use std::fmt::Write as _;
-        let styles = cmd.get_styles();
-        let invalid = &styles.get_invalid();
-        let valid = &styles.get_valid();
         let mut err = Self::new(ErrorKind::InvalidSubcommand).with_cmd(cmd);
 
         #[cfg(feature = "error-context")]
         {
-            let mut suggestions = vec![];
-            if suggested_trailing_arg {
-                let mut styled_suggestion = StyledStr::new();
-                let _ = write!(
-                    styled_suggestion,
-                    "to pass '{}{subcmd}{}' as a value, use '{}{name} -- {subcmd}{}'",
-                    invalid.render(),
-                    invalid.render_reset(),
-                    valid.render(),
-                    valid.render_reset()
-                );
-                suggestions.push(styled_suggestion);
-            }
+            let mut styled_suggestion = StyledStr::new();
+            styled_suggestion.none("to pass '");
+            styled_suggestion.warning(&subcmd);
+            styled_suggestion.none("' as a value, use '");
+            styled_suggestion.good(name);
+            styled_suggestion.good(" -- ");
+            styled_suggestion.good(&subcmd);
+            styled_suggestion.none("'");
 
             err = err.extend_context_unchecked([
                 (ContextKind::InvalidSubcommand, ContextValue::String(subcmd)),
@@ -479,7 +455,7 @@ impl<F: ErrorFormatter> Error<F> {
                 ),
                 (
                     ContextKind::Suggested,
-                    ContextValue::StyledStrs(suggestions),
+                    ContextValue::StyledStrs(vec![styled_suggestion]),
                 ),
             ]);
             if let Some(usage) = usage {
@@ -685,10 +661,6 @@ impl<F: ErrorFormatter> Error<F> {
         suggested_trailing_arg: bool,
         usage: Option<StyledStr>,
     ) -> Self {
-        use std::fmt::Write as _;
-        let styles = cmd.get_styles();
-        let invalid = &styles.get_invalid();
-        let valid = &styles.get_valid();
         let mut err = Self::new(ErrorKind::UnknownArgument).with_cmd(cmd);
 
         #[cfg(feature = "error-context")]
@@ -696,14 +668,12 @@ impl<F: ErrorFormatter> Error<F> {
             let mut suggestions = vec![];
             if suggested_trailing_arg {
                 let mut styled_suggestion = StyledStr::new();
-                let _ = write!(
-                    styled_suggestion,
-                    "to pass '{}{arg}{}' as a value, use '{}-- {arg}{}'",
-                    invalid.render(),
-                    invalid.render_reset(),
-                    valid.render(),
-                    valid.render_reset()
-                );
+                styled_suggestion.none("to pass '");
+                styled_suggestion.warning(&arg);
+                styled_suggestion.none("' as a value, use '");
+                styled_suggestion.good("-- ");
+                styled_suggestion.good(&arg);
+                styled_suggestion.none("'");
                 suggestions.push(styled_suggestion);
             }
 
@@ -716,18 +686,18 @@ impl<F: ErrorFormatter> Error<F> {
             match did_you_mean {
                 Some((flag, Some(sub))) => {
                     let mut styled_suggestion = StyledStr::new();
-                    let _ = write!(
-                        styled_suggestion,
-                        "'{}{sub} {flag}{}' exists",
-                        valid.render(),
-                        valid.render_reset()
-                    );
+                    styled_suggestion.none("'");
+                    styled_suggestion.good(sub);
+                    styled_suggestion.none(" ");
+                    styled_suggestion.good("--");
+                    styled_suggestion.good(flag);
+                    styled_suggestion.none("' exists");
                     suggestions.push(styled_suggestion);
                 }
                 Some((flag, None)) => {
                     err = err.insert_context_unchecked(
                         ContextKind::SuggestedArg,
-                        ContextValue::String(flag),
+                        ContextValue::String(format!("--{flag}")),
                     );
                 }
                 None => {}
@@ -748,23 +718,16 @@ impl<F: ErrorFormatter> Error<F> {
         arg: String,
         usage: Option<StyledStr>,
     ) -> Self {
-        use std::fmt::Write as _;
-        let styles = cmd.get_styles();
-        let invalid = &styles.get_invalid();
-        let valid = &styles.get_valid();
         let mut err = Self::new(ErrorKind::UnknownArgument).with_cmd(cmd);
 
         #[cfg(feature = "error-context")]
         {
             let mut styled_suggestion = StyledStr::new();
-            let _ = write!(
-                styled_suggestion,
-                "subcommand '{}{arg}{}' exists; to use it, remove the '{}--{}' before it",
-                valid.render(),
-                valid.render_reset(),
-                invalid.render(),
-                invalid.render_reset()
-            );
+            styled_suggestion.none("subcommand '");
+            styled_suggestion.good(&arg);
+            styled_suggestion.none("' exists; to use it, remove the '");
+            styled_suggestion.warning("--");
+            styled_suggestion.none("' before it");
 
             err = err.extend_context_unchecked([
                 (ContextKind::InvalidArg, ContextValue::String(arg)),
@@ -784,7 +747,7 @@ impl<F: ErrorFormatter> Error<F> {
 
     fn formatted(&self) -> Cow<'_, StyledStr> {
         if let Some(message) = self.inner.message.as_ref() {
-            message.formatted(&self.inner.styles)
+            message.formatted()
         } else {
             let styled = F::format_error(self);
             Cow::Owned(styled)
@@ -843,12 +806,7 @@ impl Message {
                 let mut message = String::new();
                 std::mem::swap(s, &mut message);
 
-                let styled = format::format_error_message(
-                    &message,
-                    cmd.get_styles(),
-                    Some(cmd),
-                    usage.as_ref(),
-                );
+                let styled = format::format_error_message(&message, Some(cmd), usage);
 
                 *self = Self::Formatted(styled);
             }
@@ -856,10 +814,10 @@ impl Message {
         }
     }
 
-    fn formatted(&self, styles: &Styles) -> Cow<StyledStr> {
+    fn formatted(&self) -> Cow<StyledStr> {
         match self {
             Message::Raw(s) => {
-                let styled = format::format_error_message(s, styles, None, None);
+                let styled = format::format_error_message(s, None, None);
 
                 Cow::Owned(styled)
             }

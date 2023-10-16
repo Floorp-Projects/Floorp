@@ -209,7 +209,7 @@ class TimerEventAllocator {
 
  public:
   TimerEventAllocator()
-      : mFirstFree(nullptr), mMonitor("TimerEventAllocator") {}
+      : mPool(), mFirstFree(nullptr), mMonitor("TimerEventAllocator") {}
 
   ~TimerEventAllocator() = default;
 
@@ -1064,11 +1064,11 @@ TimeStamp TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault,
       }
 
       if (aSearchBound == 0) {
-        // Couldn't find any non-low priority timers for the current thread.
-        // Return a compromise between a very short and a long idle time.
-        TimeStamp fallbackDeadline =
-            TimeStamp::Now() + TimeDuration::FromMilliseconds(16);
-        return fallbackDeadline < aDefault ? fallbackDeadline : aDefault;
+        // Return the currently highest timeout when we reach the bound.
+        // This won't give accurate information if we stop before finding
+        // any timer for the current thread, but at least won't report too
+        // long idle period.
+        return timer->mTimeout;
       }
 
       --aSearchBound;

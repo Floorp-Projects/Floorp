@@ -23,7 +23,6 @@ types.addDictType("target-configuration.configuration", {
   reloadOnTouchSimulationToggle: "nullable:boolean",
   restoreFocus: "nullable:boolean",
   serviceWorkersTestingEnabled: "nullable:boolean",
-  setTabOffline: "nullable:boolean",
   touchEventsOverride: "nullable:string",
 });
 

@@ -345,9 +345,8 @@ TEST(IOStreamStateSaver, RoundTripLongDoubles) {
     }
 
     // Avoid undefined behavior (overflow/underflow).
-    if (dd <= static_cast<long double>(std::numeric_limits<int64_t>::max()) &&
-        dd >=
-            static_cast<long double>(std::numeric_limits<int64_t>::lowest())) {
+    if (dd <= std::numeric_limits<int64_t>::max() &&
+        dd >= std::numeric_limits<int64_t>::lowest()) {
       int64_t x = static_cast<int64_t>(dd);
       EXPECT_EQ(x, StreamRoundTrip<int64_t>(x));
     }

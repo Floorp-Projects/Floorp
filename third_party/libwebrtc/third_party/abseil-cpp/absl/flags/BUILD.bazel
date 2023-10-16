@@ -53,7 +53,6 @@ cc_library(
     linkopts = ABSL_DEFAULT_LINKOPTS,
     visibility = [
         "//absl/flags:__pkg__",
-        "//absl/log:__pkg__",
     ],
     deps = [
         ":path_util",
@@ -99,7 +98,6 @@ cc_library(
         "//absl/base:config",
         "//absl/base:core_headers",
         "//absl/base:log_severity",
-        "//absl/numeric:int128",
         "//absl/strings",
         "//absl/strings:str_format",
         "//absl/types:optional",
@@ -266,8 +264,8 @@ cc_library(
         ":reflection",
         "//absl/base:config",
         "//absl/base:core_headers",
+        "//absl/container:flat_hash_map",
         "//absl/strings",
-        "//absl/synchronization",
     ],
 )
 
@@ -285,7 +283,6 @@ cc_library(
         ":usage_internal",
         "//absl/base:config",
         "//absl/base:core_headers",
-        "//absl/base:raw_logging_internal",
         "//absl/strings",
         "//absl/synchronization",
     ],
@@ -311,7 +308,6 @@ cc_library(
         ":reflection",
         ":usage",
         ":usage_internal",
-        "//absl/algorithm:container",
         "//absl/base:config",
         "//absl/base:core_headers",
         "//absl/strings",
@@ -331,8 +327,6 @@ cc_test(
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = [
-        "no_test:os:android",
-        "no_test:os:ios",
         "no_test_android",
         "no_test_ios",
         "no_test_wasm",
@@ -374,8 +368,6 @@ cc_test(
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = [
-        "no_test:os:android",
-        "no_test:os:ios",
         "no_test_android",
         "no_test_ios",
         "no_test_wasm",
@@ -388,7 +380,6 @@ cc_test(
         ":reflection",
         "//absl/base:core_headers",
         "//absl/base:malloc_internal",
-        "//absl/numeric:int128",
         "//absl/strings",
         "//absl/time",
         "@com_google_googletest//:gtest_main",
@@ -443,8 +434,6 @@ cc_test(
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = [
-        "no_test:os:android",
-        "no_test:os:ios",
         "no_test_android",
         "no_test_ios",
         "no_test_wasm",
@@ -454,8 +443,8 @@ cc_test(
         ":parse",
         ":reflection",
         ":usage_internal",
+        "//absl/base:raw_logging_internal",
         "//absl/base:scoped_set_env",
-        "//absl/log",
         "//absl/strings",
         "//absl/types:span",
         "@com_google_googletest//:gtest_main",
@@ -501,8 +490,6 @@ cc_test(
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = [
-        "no_test:os:android",
-        "no_test:os:ios",
         "no_test_android",
         "no_test_ios",
         "no_test_wasm",
@@ -565,8 +552,6 @@ cc_test(
     copts = ABSL_TEST_COPTS,
     linkopts = ABSL_DEFAULT_LINKOPTS,
     tags = [
-        "no_test:os:android",
-        "no_test:os:ios",
         "no_test_android",
         "no_test_ios",
         "no_test_wasm",

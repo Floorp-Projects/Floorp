@@ -76,7 +76,7 @@ class AnalyserNodeEngine final : public AudioNodeEngine {
 
     RefPtr<TransferBuffer> transfer =
         new TransferBuffer(aTrack, aInput.AsAudioChunk());
-    AbstractThread::MainThread()->Dispatch(transfer.forget());
+    mAbstractMainThread->Dispatch(transfer.forget());
   }
 
   virtual bool IsActive() const override { return mChunksToProcess != 0; }

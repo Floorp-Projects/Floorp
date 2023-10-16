@@ -111,7 +111,7 @@ void GVAutoplayPermissionRequest::CreateRequest(nsGlobalWindowInner* aWindow,
   } else {
     LOG("Dispatch async request");
     request->RequestDelayedTask(
-        aWindow->SerialEventTarget(),
+        aWindow->EventTargetFor(TaskCategory::Other),
         GVAutoplayPermissionRequest::DelayedTaskType::Request);
   }
 }

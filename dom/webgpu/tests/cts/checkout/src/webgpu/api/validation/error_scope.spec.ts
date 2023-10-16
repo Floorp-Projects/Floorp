@@ -12,6 +12,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { getGPU } from '../../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kErrorScopeFilters, kGeneratableErrorScopeFilters } from '../../capability_info.js';
+import { kMaxUnsignedLongLongValue } from '../../constants.js';
 
 class ErrorScopeTests extends Fixture {
   _device: GPUDevice | undefined = undefined;
@@ -23,7 +24,7 @@ class ErrorScopeTests extends Fixture {
 
   async init(): Promise<void> {
     await super.init();
-    const gpu = getGPU(this.rec);
+    const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
     const device = await adapter.requestDevice();
@@ -37,27 +38,18 @@ class ErrorScopeTests extends Fixture {
   generateError(filter: GPUErrorFilter): void {
     switch (filter) {
       case 'out-of-memory':
-        this.trackForCleanup(
-          this.device.createTexture({
-            // One of the largest formats. With the base limits, the texture will be 256 GiB.
-            format: 'rgba32float',
-            usage: GPUTextureUsage.COPY_DST,
-            size: [
-              this.device.limits.maxTextureDimension2D,
-              this.device.limits.maxTextureDimension2D,
-              this.device.limits.maxTextureArrayLayers,
-            ],
-          })
-        );
+        // Generating an out-of-memory error by allocating a massive buffer.
+        this.device.createBuffer({
+          size: kMaxUnsignedLongLongValue, // Unrealistically massive buffer size
+          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+        });
         break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.
-        this.trackForCleanup(
-          this.device.createBuffer({
-            size: 1024,
-            usage: 0xffff, // Invalid GPUBufferUsage
-          })
-        );
+        this.device.createBuffer({
+          size: 1024,
+          usage: 0xffff, // Invalid GPUBufferUsage
+        });
         break;
     }
     // MAINTENANCE_TODO: This is a workaround for Chromium not flushing. Remove when not needed.
@@ -144,7 +136,7 @@ g.test('empty')
 Tests that popping an empty error scope stack should reject.
     `
   )
-  .fn(t => {
+  .fn(async t => {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);
   });
@@ -248,7 +240,7 @@ Tests that sibling error scopes need to be balanced.
     }
 
     {
-      // Trying to pop an additional non-existing scope should reject.
+      // Trying to pop an additional non-exisiting scope should reject.
       const promise = t.device.popErrorScope();
       t.shouldReject('OperationError', promise);
     }
@@ -284,7 +276,7 @@ Tests that nested error scopes need to be balanced.
     t.expect(errors.every(e => e === null));
 
     {
-      // Trying to pop an additional non-existing scope should reject.
+      // Trying to pop an additional non-exisiting scope should reject.
       const promise = t.device.popErrorScope();
       t.shouldReject('OperationError', promise);
     }

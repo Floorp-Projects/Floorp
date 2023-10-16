@@ -6,11 +6,6 @@
 #ifndef DBusRemoteClient_h__
 #define DBusRemoteClient_h__
 
-#ifdef MOZ_ENABLE_DBUS
-#  include <gio/gio.h>
-#  include "mozilla/RefPtr.h"
-#  include "mozilla/GRefPtr.h"
-#endif
 #include "nsRemoteClient.h"
 #include "mozilla/DBusHelpers.h"
 #include "mozilla/RefPtr.h"
@@ -22,7 +17,7 @@ class nsDBusRemoteClient : public nsRemoteClient {
   nsDBusRemoteClient();
   ~nsDBusRemoteClient();
 
-  nsresult Init() override { return NS_OK; };
+  nsresult Init() override;
   nsresult SendCommandLine(const char* aProgram, const char* aProfile,
                            int32_t argc, char** argv, const char* aStartupToken,
                            char** aResponse, bool* aSucceeded) override;
@@ -33,6 +28,7 @@ class nsDBusRemoteClient : public nsRemoteClient {
                                 nsCString& aDestinationName);
   nsresult DoSendDBusCommandLine(const char* aProgram, const char* aProfile,
                                  const char* aBuffer, int aLength);
+  RefPtr<DBusConnection> mConnection;
 };
 
 #endif  // DBusRemoteClient_h__

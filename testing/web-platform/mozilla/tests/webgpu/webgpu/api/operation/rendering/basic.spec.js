@@ -10,7 +10,7 @@ import { checkElementsEqual } from '../../../util/check_contents.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('clear').fn(t => {
+g.test('clear').fn(async t => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -46,7 +46,7 @@ g.test('clear').fn(t => {
   t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
 });
 
-g.test('fullscreen_quad').fn(t => {
+g.test('fullscreen_quad').fn(async t => {
   const dst = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,

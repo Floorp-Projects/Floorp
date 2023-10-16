@@ -11,9 +11,6 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
 });
 
-// TODO: Firefox no longer uses `rating` and `number_of_ratings` but they are
-// still present in Merino and RS suggestions, so they are included here for
-// greater accuracy. We should remove them from Merino, RS, and tests.
 const MERINO_SUGGESTIONS = [
   {
     provider: "amo",
@@ -118,6 +115,7 @@ add_task(async function quickSuggestPrefsDisabled() {
         makeExpectedResult({
           suggestion: MERINO_SUGGESTIONS[0],
           source: "merino",
+          isTopPick: true,
         }),
       ],
     });
@@ -152,6 +150,7 @@ add_task(async function addonSuggestionsSpecificPrefDisabled() {
         makeExpectedResult({
           suggestion: MERINO_SUGGESTIONS[0],
           source: "merino",
+          isTopPick: true,
         }),
       ],
     });
@@ -199,6 +198,7 @@ add_task(async function nimbus() {
       makeExpectedResult({
         suggestion: MERINO_SUGGESTIONS[0],
         source: "merino",
+        isTopPick: true,
       }),
     ],
   });
@@ -237,6 +237,7 @@ add_task(async function hideIfAlreadyInstalled() {
       makeExpectedResult({
         suggestion: MERINO_SUGGESTIONS[0],
         source: "merino",
+        isTopPick: true,
       }),
     ],
   });
@@ -287,6 +288,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -294,6 +296,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -309,6 +312,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -316,6 +320,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -323,6 +328,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -330,6 +336,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -337,6 +344,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -344,6 +352,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -351,6 +360,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -358,6 +368,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -365,6 +376,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -372,6 +384,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -379,6 +392,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -386,6 +400,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -393,6 +408,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[1],
         source: "remote-settings",
+        isTopPick: false,
       }),
     },
     {
@@ -400,6 +416,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[1],
         source: "remote-settings",
+        isTopPick: false,
       }),
     },
     {
@@ -407,6 +424,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[2],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -414,6 +432,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[2],
         source: "remote-settings",
+        isTopPick: true,
       }),
     },
     {
@@ -421,6 +440,7 @@ add_task(async function remoteSettings() {
       expected: makeExpectedResult({
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[3],
         source: "remote-settings",
+        isTopPick: true,
         setUtmParams: false,
       }),
     },
@@ -457,6 +477,7 @@ add_task(async function merinoIsTopPick() {
       makeExpectedResult({
         suggestion,
         source: "merino",
+        isTopPick: false,
       }),
     ],
   });
@@ -473,6 +494,7 @@ add_task(async function merinoIsTopPick() {
       makeExpectedResult({
         suggestion,
         source: "merino",
+        isTopPick: true,
       }),
     ],
   });
@@ -487,17 +509,29 @@ add_task(async function showLessFrequently() {
     expectedResult: makeExpectedResult({
       suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
       source: "remote-settings",
+      isTopPick: true,
     }),
     keyword: "two words",
   });
 });
 
-function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
+function makeExpectedResult({
+  suggestion,
+  source,
+  isTopPick,
+  setUtmParams = true,
+}) {
   let provider;
+  let rating;
+  let number_of_ratings;
   if (source === "remote-settings") {
     provider = "AddonSuggestions";
+    rating = suggestion.rating;
+    number_of_ratings = suggestion.number_of_ratings;
   } else {
     provider = "amo";
+    rating = suggestion.custom_details.amo.rating;
+    number_of_ratings = suggestion.custom_details.amo.number_of_ratings;
   }
 
   let url;
@@ -511,21 +545,23 @@ function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
   }
 
   return {
-    isBestMatch: true,
-    suggestedIndex: 1,
-    type: UrlbarUtils.RESULT_TYPE.URL,
+    isBestMatch: isTopPick,
+    suggestedIndex: isTopPick ? 1 : -1,
+    type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
       telemetryType: "amo",
+      dynamicType: "addons",
       title: suggestion.title,
       url,
       originalUrl: suggestion.url,
       displayUrl: url.replace(/^https:\/\//, ""),
-      shouldShowUrl: true,
       icon: suggestion.icon,
       description: suggestion.description,
-      bottomTextL10n: { id: "firefox-suggest-addons-recommended" },
+      rating: Number(rating),
+      reviews: Number(number_of_ratings),
+      shouldNavigate: true,
       helpUrl: QuickSuggest.HELP_URL,
       source,
       provider,

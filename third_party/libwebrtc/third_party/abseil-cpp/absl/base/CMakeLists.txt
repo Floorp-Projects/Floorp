@@ -49,37 +49,9 @@ absl_cc_library(
   SRCS
     "log_severity.cc"
   DEPS
-    absl::config
     absl::core_headers
   COPTS
     ${ABSL_DEFAULT_COPTS}
-)
-
-absl_cc_library(
-  NAME
-    nullability
-  HDRS
-    "nullability.h"
-  SRCS
-    "internal/nullability_impl.h"
-  DEPS
-    absl::core_headers
-    absl::type_traits
-  COPTS
-    ${ABSL_DEFAULT_COPTS}
-)
-
-absl_cc_test(
-  NAME
-    nullability_test
-  SRCS
-    "nullability_test.cc"
-  COPTS
-    ${ABSL_TEST_COPTS}
-  DEPS
-    absl::core_headers
-    absl::nullability
-    GTest::gtest_main
 )
 
 # Internal-only target, do not depend on directly.
@@ -137,6 +109,8 @@ absl_cc_library(
     dynamic_annotations
   HDRS
     "dynamic_annotations.h"
+  SRCS
+    "internal/dynamic_annotations.h"
   COPTS
     ${ABSL_DEFAULT_COPTS}
   DEPS
@@ -154,6 +128,7 @@ absl_cc_library(
     "optimization.h"
     "port.h"
     "thread_annotations.h"
+    "internal/thread_annotations.h"
   COPTS
     ${ABSL_DEFAULT_COPTS}
   DEPS
@@ -206,7 +181,6 @@ absl_cc_library(
     "call_once.h"
     "casts.h"
     "internal/cycleclock.h"
-    "internal/cycleclock_config.h"
     "internal/low_level_scheduling.h"
     "internal/per_thread_tls.h"
     "internal/spinlock.h"
@@ -214,7 +188,6 @@ absl_cc_library(
     "internal/thread_identity.h"
     "internal/tsan_mutex_interface.h"
     "internal/unscaledcycleclock.h"
-    "internal/unscaledcycleclock_config.h"
   SRCS
     "internal/cycleclock.cc"
     "internal/spinlock.cc"
@@ -226,7 +199,7 @@ absl_cc_library(
   LINKOPTS
     ${ABSL_DEFAULT_LINKOPTS}
     $<$<BOOL:${LIBRT}>:-lrt>
-    $<$<BOOL:${MINGW}>:-ladvapi32>
+    $<$<BOOL:${MINGW}>:"advapi32">
   DEPS
     absl::atomic_hook
     absl::base_internal
@@ -670,25 +643,25 @@ absl_cc_test(
     GTest::gtest_main
 )
 
+# Internal-only target, do not depend on directly.
 absl_cc_library(
   NAME
     prefetch
   HDRS
-    "prefetch.h"
+    "internal/prefetch.h"
   COPTS
     ${ABSL_DEFAULT_COPTS}
   LINKOPTS
     ${ABSL_DEFAULT_LINKOPTS}
   DEPS
     absl::config
-    absl::core_headers
 )
 
 absl_cc_test(
   NAME
     prefetch_test
   SRCS
-    "prefetch_test.cc"
+    "internal/prefetch_test.cc"
   COPTS
     ${ABSL_TEST_COPTS}
   DEPS

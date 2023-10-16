@@ -181,12 +181,10 @@ impl Default for GlyphOptions {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Copy, PartialEq, Eq, Clone, PartialOrd, Ord, Hash, Deserialize, MallocSizeOf, Serialize, PeekPoke)]
-pub struct FontInstanceFlags(u32);
-
 bitflags! {
-    impl FontInstanceFlags: u32 {
+    #[repr(C)]
+    #[derive(Deserialize, MallocSizeOf, Serialize, PeekPoke)]
+    pub struct FontInstanceFlags: u32 {
         // Common flags
         // Use native synthetic bold, if supported.
         const SYNTHETIC_BOLD    = 1 << 1;

@@ -24,17 +24,16 @@
 #unanalyzed-product-message-content {
   display: flex;
   flex-direction: column;
-  line-height: 1.5;
+}
 
-  > h2 {
-    font-size: inherit;
-  }
-
-  > p {
-    margin-block: 0.25rem;
-  }
+#unanalyzed-product-message-content > p {
+  margin-block: 0.25rem;
 }
 
 #unanalyzed-product-analysis-button {
   width: 100%;
+}
+
+#unanalyzed-product-message-content {
+  line-height: 150%;
 }

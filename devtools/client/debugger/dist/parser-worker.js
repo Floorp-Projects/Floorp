@@ -41974,27 +41974,13 @@
       return symbols;
     }
 
-    function getFunctionSymbols(sourceId, maxResults) {
-      const symbols = getInternalSymbols(sourceId);
-      if (!symbols) {
-        return [];
-      }
-      let { functions } = symbols;
-      // Avoid transferring more symbols than necessary
-      if (maxResults && functions.length > maxResults) {
-        functions = functions.slice(0, maxResults);
-      }
-      // The Outline & the Quick open panels do not need anonymous functions
-      return functions.filter(fn => fn.name !== "anonymous");
-    }
-
     // This is only called from the main thread and we return a subset of attributes
     function getSymbols(sourceId) {
       const symbols = getInternalSymbols(sourceId);
       return {
         // This is used in the main thread by:
         // - Outline panel
-        // - The `getFunctionSymbols` function
+        // - Quick Open
         // - The mapping of frame function names
         // And within the worker by `findOutOfScopeLocations`
         functions: symbols.functions,
@@ -42210,28 +42196,12 @@
       const { global, lexical } = createGlobalScope(ast, sourceId);
 
       const state = {
-        // The id for the source that scope list is generated for
         sourceId,
-
-        // A map of any free variables(variables which are used within the current scope but not
-        // declared within the scope). This changes when a new scope is created.
         freeVariables: new Map(),
-
-        // A stack of all the free variables created across all the scopes that have
-        // been created.
         freeVariableStack: [],
-
         inType: null,
-
-        // The current scope, a new scope is potentially created on a visit to each node
-        // depending in the criteria. Initially set to the lexical global scope which is the
-        // child to the global scope.
         scope: lexical,
-
-        // A stack of all the existing scopes, this is mainly used retrieve the parent scope
-        // (which is the last scope push onto the stack) on exiting a visited node.
         scopeStack: [],
-
         declarationBindingIds: new Set(),
       };
       lib$3.traverse(ast, scopeCollectionVisitor, state);
@@ -42282,39 +42252,20 @@
       }));
     }
 
-    /**
-     * Create a new scope object and link the scope to it parent.
-     *
-     * @param {String} type - scope type
-     * @param {String} displayName - The scope display name
-     * @param {Object} parent - The parent object scope
-     * @param {Object} loc - The start and end postions (line/columns) of the scope
-     * @returns {Object} The newly created scope
-     */
     function createTempScope(type, displayName, parent, loc) {
-      const scope = {
+      const result = {
         type,
         displayName,
         parent,
-
-        // A list of all the child scopes
         children: [],
         loc,
-
-        // All the bindings defined in this scope
-        // bindings = [binding, ...]
-        // binding = { type: "", refs: []}
         bindings: Object.create(null),
       };
-
       if (parent) {
-        parent.children.push(scope);
+        parent.children.push(result);
       }
-      return scope;
+      return result;
     }
-
-    // Sets a new current scope and creates a new map to store the free variables
-    // that may exist in this scope.
     function pushTempScope(state, type, displayName, loc) {
       const scope = createTempScope(type, displayName, state.scope, loc);
 
@@ -42329,7 +42280,6 @@
       return node ? node.type === type : false;
     }
 
-    // Walks up the scope tree to the top most variable scope
     function getVarScope(scope) {
       let s = scope;
       while (s.type !== "function" && s.type !== "module") {
@@ -42455,8 +42405,6 @@
       return isNode(node, "VariableDeclaration") && isLetOrConst(node);
     }
 
-    // Creates the global scopes for this source, the overall global scope
-    // and a lexical global scope.
     function createGlobalScope(ast, sourceId) {
       const global = createTempScope("object", "Global", null, {
         start: fromBabelLocation(ast.loc.start, sourceId),
@@ -42494,7 +42442,6 @@
           };
         } else if (lib$3.isFunction(node)) {
           let { scope } = state;
-
           if (lib$3.isFunctionExpression(node) && isNode(node.id, "Identifier")) {
             scope = pushTempScope(state, "block", "Function Expression", {
               start: fromBabelLocation(node.loc.start, state.sourceId),
@@ -42539,7 +42486,6 @@
                 refs,
               };
             } else {
-              // Add the binding to the ancestor scope
               getVarScope(scope).bindings[node.id.name] = {
                 type: "var",
                 refs,
@@ -43943,7 +43889,6 @@
       findOutOfScopeLocations,
       findBestMatchExpression,
       getSymbols,
-      getFunctionSymbols,
       getScopes,
       clearSources: clearAllHelpersForSources,
       hasSyntaxError,

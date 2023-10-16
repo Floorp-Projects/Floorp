@@ -160,14 +160,6 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
                 backend,
             } = gfx_select!(id => global.adapter_get_info(id)).unwrap();
 
-            if static_prefs::pref!("dom.webgpu.testing.assert-hardware-adapter") {
-                let is_hardware = match device_type {
-                    wgt::DeviceType::IntegratedGpu | wgt::DeviceType::DiscreteGpu => true,
-                    _ => false,
-                };
-                assert!(is_hardware, "Expected a hardware gpu adapter, got {:?}", device_type);
-            }
-
             let info = AdapterInformation {
                 id,
                 limits: restrict_limits(gfx_select!(id => global.adapter_limits(id)).unwrap()),
@@ -471,7 +463,6 @@ impl Global {
         mut error_buf: ErrorBuffer,
     ) {
         match action {
-            #[allow(unused_variables)]
             DeviceAction::CreateTexture(id, desc, swap_chain_id) => {
                 let max = MAX_TEXTURE_EXTENT;
                 if desc.size.width > max
@@ -571,6 +562,10 @@ impl Global {
                         }
                         return;
                     }
+                }
+
+                if swap_chain_id.is_some() && self_id.backend() != wgt::Backend::Dx12 {
+                    debug_assert!(false, "Unexpected to be called");
                 }
 
                 let (_, error) = self.device_create_texture::<A>(self_id, &desc, id);

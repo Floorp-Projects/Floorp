@@ -6,12 +6,11 @@ import ssl
 
 import aiohttp
 from aiohttp import web
-from aiohttp.abc import AbstractResolver
 from aiohttp.resolver import DefaultResolver
 from aiohttp.test_utils import unused_port
 
 
-class FakeResolver(AbstractResolver):
+class FakeResolver:
     _LOCAL_HOST = {0: "127.0.0.1", socket.AF_INET: "127.0.0.1", socket.AF_INET6: "::1"}
 
     def __init__(self, fakes, *, loop):
@@ -35,9 +34,6 @@ class FakeResolver(AbstractResolver):
         else:
             return await self._resolver.resolve(host, port, family)
 
-    async def close(self) -> None:
-        self._resolver.close()
-
 
 class FakeFacebook:
     def __init__(self, *, loop):
@@ -49,7 +45,7 @@ class FakeFacebook:
                 web.get("/v2.7/me/friends", self.on_my_friends),
             ]
         )
-        self.runner = web.AppRunner(self.app)
+        self.runner = None
         here = pathlib.Path(__file__)
         ssl_cert = here.parent / "server.crt"
         ssl_key = here.parent / "server.key"

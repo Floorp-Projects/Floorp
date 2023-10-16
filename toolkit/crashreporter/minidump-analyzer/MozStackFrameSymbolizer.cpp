@@ -11,6 +11,7 @@
 
 #  include "processor/cfi_frame_info.h"
 
+#  include <iostream>
 #  include <sstream>
 #  include <fstream>
 

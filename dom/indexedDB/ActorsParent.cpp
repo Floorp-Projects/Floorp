@@ -86,6 +86,7 @@
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/SpinEventLoopUntil.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TaskCategory.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -1317,7 +1318,7 @@ class ConnectionPool final {
   class ConnectionRunnable;
   class CloseConnectionRunnable;
   struct DatabaseInfo;
-  struct DatabaseCompleteCallback;
+  struct DatabasesCompleteCallback;
   class FinishCallbackWrapper;
   class IdleConnectionRunnable;
 
@@ -1477,7 +1478,7 @@ class ConnectionPool final {
   nsClassHashtable<nsUint64HashKey, TransactionInfo> mTransactions;
   nsTArray<NotNull<TransactionInfo*>> mQueuedTransactions;
 
-  nsTArray<UniquePtr<DatabaseCompleteCallback>> mCompleteCallbacks;
+  nsTArray<UniquePtr<DatabasesCompleteCallback>> mCompleteCallbacks;
 
   uint64_t mNextTransactionId;
   uint32_t mTotalThreadCount;
@@ -1508,8 +1509,8 @@ class ConnectionPool final {
     Unused << CloseDatabaseWhenIdleInternal(aDatabaseId);
   }
 
-  void WaitForDatabaseToComplete(const nsCString& aDatabaseId,
-                                 nsIRunnable* aCallback);
+  void WaitForDatabasesToComplete(nsTArray<nsCString>&& aDatabaseIds,
+                                  nsIRunnable* aCallback);
 
   void Shutdown();
 
@@ -1543,7 +1544,7 @@ class ConnectionPool final {
 
   void NoteClosedDatabase(DatabaseInfo& aDatabaseInfo);
 
-  bool MaybeFireCallback(DatabaseCompleteCallback* aCallback);
+  bool MaybeFireCallback(DatabasesCompleteCallback* aCallback);
 
   void PerformIdleDatabaseMaintenance(DatabaseInfo& aDatabaseInfo);
 
@@ -1612,14 +1613,14 @@ struct ConnectionPool::DatabaseInfo final {
   bool mClosing;
 
 #ifdef DEBUG
-  nsISerialEventTarget* mDEBUGConnectionEventTarget;
+  PRThread* mDEBUGConnectionThread;
 #endif
 
   DatabaseInfo(ConnectionPool* aConnectionPool, const nsACString& aDatabaseId);
 
   void AssertIsOnConnectionThread() const {
-    MOZ_ASSERT(mDEBUGConnectionEventTarget);
-    MOZ_ASSERT(GetCurrentSerialEventTarget() == mDEBUGConnectionEventTarget);
+    MOZ_ASSERT(mDEBUGConnectionThread);
+    MOZ_ASSERT(PR_GetCurrentThread() == mDEBUGConnectionThread);
   }
 
   uint64_t TotalTransactionCount() const {
@@ -1633,17 +1634,17 @@ struct ConnectionPool::DatabaseInfo final {
   DatabaseInfo& operator=(const DatabaseInfo&) = delete;
 };
 
-struct ConnectionPool::DatabaseCompleteCallback final {
-  friend class DefaultDelete<DatabaseCompleteCallback>;
+struct ConnectionPool::DatabasesCompleteCallback final {
+  friend class DefaultDelete<DatabasesCompleteCallback>;
 
-  nsCString mDatabaseId;
+  nsTArray<nsCString> mDatabaseIds;
   nsCOMPtr<nsIRunnable> mCallback;
 
-  DatabaseCompleteCallback(const nsCString& aDatabaseIds,
-                           nsIRunnable* aCallback);
+  DatabasesCompleteCallback(nsTArray<nsCString>&& aDatabaseIds,
+                            nsIRunnable* aCallback);
 
  private:
-  ~DatabaseCompleteCallback();
+  ~DatabasesCompleteCallback();
 };
 
 class NS_NO_VTABLE ConnectionPool::FinishCallback : public nsIRunnable {
@@ -4063,11 +4064,9 @@ constexpr IDBCursorType ToKeyOnlyType(const IDBCursorType aType) {
              aType == IDBCursorType::Index || aType == IDBCursorType::IndexKey);
   switch (aType) {
     case IDBCursorType::ObjectStore:
-      [[fallthrough]];
     case IDBCursorType::ObjectStoreKey:
       return IDBCursorType::ObjectStoreKey;
     case IDBCursorType::Index:
-      [[fallthrough]];
     case IDBCursorType::IndexKey:
       return IDBCursorType::IndexKey;
   }
@@ -6412,7 +6411,8 @@ class DeserializeIndexValueHelper final : public Runnable {
     MonitorAutoLock lock(mMonitor);
 
     RefPtr<Runnable> self = this;
-    QM_TRY(MOZ_TO_RESULT(SchedulerGroup::Dispatch(self.forget())));
+    QM_TRY(MOZ_TO_RESULT(
+        SchedulerGroup::Dispatch(TaskCategory::Other, self.forget())));
 
     lock.Wait();
     return mStatus;
@@ -7642,7 +7642,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
     return dbInfo->mConnection;
   }
 
-  MOZ_ASSERT(!dbInfo->mDEBUGConnectionEventTarget);
+  MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
 
   QM_TRY_UNWRAP(
       MovingNotNull<nsCOMPtr<mozIStorageConnection>> storageConnection,
@@ -7661,7 +7661,7 @@ ConnectionPool::GetOrCreateConnection(const Database& aDatabase) {
                  NS_ConvertUTF16toUTF8(aDatabase.FilePath()).get()));
 
 #ifdef DEBUG
-  dbInfo->mDEBUGConnectionEventTarget = GetCurrentSerialEventTarget();
+  dbInfo->mDEBUGConnectionThread = PR_GetCurrentThread();
 #endif
 
   return connection;
@@ -7799,21 +7799,31 @@ void ConnectionPool::Finish(uint64_t aTransactionId,
 #endif
 }
 
-void ConnectionPool::WaitForDatabaseToComplete(const nsCString& aDatabaseId,
-                                               nsIRunnable* aCallback) {
+void ConnectionPool::WaitForDatabasesToComplete(
+    nsTArray<nsCString>&& aDatabaseIds, nsIRunnable* aCallback) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(!aDatabaseId.IsEmpty());
+  MOZ_ASSERT(!aDatabaseIds.IsEmpty());
   MOZ_ASSERT(aCallback);
 
-  AUTO_PROFILER_LABEL("ConnectionPool::WaitForDatabaseToComplete", DOM);
+  AUTO_PROFILER_LABEL("ConnectionPool::WaitForDatabasesToComplete", DOM);
 
-  if (!CloseDatabaseWhenIdleInternal(aDatabaseId)) {
+  bool mayRunCallbackImmediately = true;
+
+  for (const nsACString& databaseId : aDatabaseIds) {
+    MOZ_ASSERT(!databaseId.IsEmpty());
+
+    if (CloseDatabaseWhenIdleInternal(databaseId)) {
+      mayRunCallbackImmediately = false;
+    }
+  }
+
+  if (mayRunCallbackImmediately) {
     Unused << aCallback->Run();
     return;
   }
 
-  mCompleteCallbacks.EmplaceBack(
-      MakeUnique<DatabaseCompleteCallback>(aDatabaseId, aCallback));
+  mCompleteCallbacks.EmplaceBack(MakeUnique<DatabasesCompleteCallback>(
+      std::move(aDatabaseIds), aCallback));
 }
 
 void ConnectionPool::Shutdown() {
@@ -8335,15 +8345,21 @@ void ConnectionPool::NoteClosedDatabase(DatabaseInfo& aDatabaseInfo) {
   }
 }
 
-bool ConnectionPool::MaybeFireCallback(DatabaseCompleteCallback* aCallback) {
+bool ConnectionPool::MaybeFireCallback(DatabasesCompleteCallback* aCallback) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aCallback);
-  MOZ_ASSERT(!aCallback->mDatabaseId.IsEmpty());
+  MOZ_ASSERT(!aCallback->mDatabaseIds.IsEmpty());
   MOZ_ASSERT(aCallback->mCallback);
 
   AUTO_PROFILER_LABEL("ConnectionPool::MaybeFireCallback", DOM);
 
-  if (mDatabases.Get(aCallback->mDatabaseId)) {
+  if (std::any_of(aCallback->mDatabaseIds.begin(),
+                  aCallback->mDatabaseIds.end(),
+                  [&databases = mDatabases](const auto& databaseId) {
+                    MOZ_ASSERT(!databaseId.IsEmpty());
+
+                    return databases.Get(databaseId);
+                  })) {
     return false;
   }
 
@@ -8483,7 +8499,7 @@ ConnectionPool::CloseConnectionRunnable::Run() {
       mDatabaseInfo.mConnection = nullptr;
 
 #ifdef DEBUG
-      mDatabaseInfo.mDEBUGConnectionEventTarget = nullptr;
+      mDatabaseInfo.mDEBUGConnectionThread = nullptr;
 #endif
     }
 
@@ -8509,7 +8525,7 @@ ConnectionPool::DatabaseInfo::DatabaseInfo(ConnectionPool* aConnectionPool,
       mClosing(false)
 #ifdef DEBUG
       ,
-      mDEBUGConnectionEventTarget(nullptr)
+      mDEBUGConnectionThread(nullptr)
 #endif
 {
   AssertIsOnBackgroundThread();
@@ -8531,20 +8547,20 @@ ConnectionPool::DatabaseInfo::~DatabaseInfo() {
   MOZ_COUNT_DTOR(ConnectionPool::DatabaseInfo);
 }
 
-ConnectionPool::DatabaseCompleteCallback::DatabaseCompleteCallback(
-    const nsCString& aDatabaseId, nsIRunnable* aCallback)
-    : mDatabaseId(aDatabaseId), mCallback(aCallback) {
+ConnectionPool::DatabasesCompleteCallback::DatabasesCompleteCallback(
+    nsTArray<nsCString>&& aDatabaseIds, nsIRunnable* aCallback)
+    : mDatabaseIds(std::move(aDatabaseIds)), mCallback(aCallback) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mDatabaseId.IsEmpty());
+  MOZ_ASSERT(!mDatabaseIds.IsEmpty());
   MOZ_ASSERT(aCallback);
 
-  MOZ_COUNT_CTOR(ConnectionPool::DatabaseCompleteCallback);
+  MOZ_COUNT_CTOR(ConnectionPool::DatabasesCompleteCallback);
 }
 
-ConnectionPool::DatabaseCompleteCallback::~DatabaseCompleteCallback() {
+ConnectionPool::DatabasesCompleteCallback::~DatabasesCompleteCallback() {
   AssertIsOnBackgroundThread();
 
-  MOZ_COUNT_DTOR(ConnectionPool::DatabaseCompleteCallback);
+  MOZ_COUNT_DTOR(ConnectionPool::DatabasesCompleteCallback);
 }
 
 ConnectionPool::FinishCallbackWrapper::FinishCallbackWrapper(
@@ -9123,8 +9139,8 @@ void WaitForTransactionsHelper::MaybeWaitForTransactions() {
   if (connectionPool) {
     mState = State::WaitingForTransactions;
 
-    connectionPool->WaitForDatabaseToComplete(mDatabaseId, this);
-
+    connectionPool->WaitForDatabasesToComplete(nsTArray<nsCString>{mDatabaseId},
+                                               this);
     return;
   }
 
@@ -11940,14 +11956,6 @@ nsresult DatabaseFileManager::SyncDeleteFile(nsIFile& aFile,
                                   Idempotency::No)));
 
   QM_TRY(MOZ_TO_RESULT(aJournalFile.Remove(false)));
-
-  return NS_OK;
-}
-
-nsresult DatabaseFileManager::Invalidate() {
-  mCipherKeyManager.Invalidate();
-
-  QM_TRY(MOZ_TO_RESULT(FileInfoManager::Invalidate()));
 
   return NS_OK;
 }

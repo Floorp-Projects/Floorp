@@ -127,7 +127,10 @@ class TestPromiseListener : public PromiseNativeHandler,
                             public WaitablePromiseListener {
  public:
   TestPromiseListener()
-      : mIsDone(std::make_shared<bool>(false)), mOnSuccess(), mOnError() {
+      : mIsDone(std::make_shared<bool>(false)),
+        mTimer(),
+        mOnSuccess(),
+        mOnError() {
     ClearDone();
   }
 

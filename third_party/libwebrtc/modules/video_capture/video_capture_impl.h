@@ -19,14 +19,12 @@
 #include <stdint.h>
 
 #include "api/scoped_refptr.h"
-#include "api/sequence_checker.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_rotation.h"
 #include "api/video/video_sink_interface.h"
 #include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_config.h"
 #include "modules/video_capture/video_capture_defines.h"
-#include "rtc_base/race_checker.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/rtc_export.h"
 
@@ -90,47 +88,38 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
   VideoCaptureImpl();
   ~VideoCaptureImpl() override;
 
-  // Calls to the public API must happen on a single thread.
-  SequenceChecker api_checker_;
-  // RaceChecker for members that can be accessed on the API thread while
-  // capture is not happening, and on a callback thread otherwise.
-  rtc::RaceChecker capture_checker_;
-  // current Device unique name;
-  char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
-
   // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
-  Mutex api_lock_;
-  // Should be set by platform dependent code in StartCapture.
-  VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
+  int32_t DeliverCapturedFrame(VideoFrame& captureFrame);
 
+  char* _deviceUniqueId;  // current Device unique name;
+  Mutex api_lock_;
+  VideoCaptureCapability _requestedCapability;  // Should be set by platform
+                                                // dependent code in
+                                                // StartCapture.
  private:
   void UpdateFrameCount();
   uint32_t CalculateFrameRate(int64_t now_ns);
   void DeliverRawFrame(uint8_t* videoFrame,
                        size_t videoFrameLength,
                        const VideoCaptureCapability& frameInfo,
-                       int64_t captureTime)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
+                       int64_t captureTime);
 
   // last time the module process function was called.
-  int64_t _lastProcessTimeNanos RTC_GUARDED_BY(capture_checker_);
+  int64_t _lastProcessTimeNanos;
   // last time the frame rate callback function was called.
-  int64_t _lastFrameRateCallbackTimeNanos RTC_GUARDED_BY(capture_checker_);
+  int64_t _lastFrameRateCallbackTimeNanos;
 
-  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks RTC_GUARDED_BY(api_lock_);
-  RawVideoSinkInterface* _rawDataCallBack RTC_GUARDED_BY(api_lock_);
+  std::set<rtc::VideoSinkInterface<VideoFrame>*> _dataCallBacks;
+  RawVideoSinkInterface* _rawDataCallBack;
 
-  int64_t _lastProcessFrameTimeNanos RTC_GUARDED_BY(capture_checker_);
+  int64_t _lastProcessFrameTimeNanos;
   // timestamp for local captured frames
-  int64_t _incomingFrameTimesNanos[kFrameRateCountHistorySize] RTC_GUARDED_BY(
-      capture_checker_);
-  // Set if the frame should be rotated by the capture module.
-  VideoRotation _rotateFrame RTC_GUARDED_BY(api_lock_);
+  int64_t _incomingFrameTimesNanos[kFrameRateCountHistorySize];
+  VideoRotation _rotateFrame;  // Set if the frame should be rotated by the
+                               // capture module.
 
   // Indicate whether rotation should be applied before delivered externally.
-  bool apply_rotation_ RTC_GUARDED_BY(api_lock_);
+  bool apply_rotation_;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

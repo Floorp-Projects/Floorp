@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { button, div, span } from "react-dom-factories";
+import { div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../../utils/connect";
 import actions from "../../actions";
@@ -11,9 +11,15 @@ import actions from "../../actions";
 import { getEditor } from "../../utils/editor";
 import { searchKeys } from "../../constants";
 
+import { statusType } from "../../reducers/project-text-search";
 import { getRelativePath } from "../../utils/sources-tree/utils";
 import { getFormattedSourceId } from "../../utils/source";
-import { getProjectSearchQuery, getNavigateCounter } from "../../selectors";
+import {
+  getProjectSearchResults,
+  getProjectSearchStatus,
+  getProjectSearchQuery,
+  getContext,
+} from "../../selectors";
 
 import SearchInput from "../shared/SearchInput";
 import AccessibleImage from "../shared/AccessibleImage";
@@ -21,22 +27,8 @@ import AccessibleImage from "../shared/AccessibleImage";
 const { PluralForm } = require("devtools/shared/plural-form");
 const classnames = require("devtools/client/shared/classnames.js");
 const Tree = require("devtools/client/shared/components/Tree");
-const { debounce } = require("devtools/shared/debounce");
-const { throttle } = require("devtools/shared/throttle");
-
-const {
-  HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
 
 import "./ProjectSearch.css";
-
-export const statusType = {
-  initial: "INITIAL",
-  fetching: "FETCHING",
-  cancelled: "CANCELLED",
-  done: "DONE",
-  error: "ERROR",
-};
 
 function getFilePath(item, index) {
   return item.type === "RESULT"
@@ -49,33 +41,23 @@ function getFilePath(item, index) {
 export class ProjectSearch extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
-      // We may restore a previous state when changing tabs in the primary panes,
-      // or when restoring primary panes from collapse.
-      query: this.props.query || "",
-
+      inputValue: this.props.query || "",
       inputFocused: false,
       focusedItem: null,
       expanded: new Set(),
-      results: [],
-      navigateCounter: null,
-      status: statusType.done,
     };
-    // Use throttle for updating results in order to prevent delaying showing result until the end of the search
-    this.onUpdatedResults = throttle(this.onUpdatedResults.bind(this), 100);
-    // Use debounce for input processing in order to wait for the end of user input edition before triggerring the search
-    this.doSearch = debounce(this.doSearch.bind(this), 100);
-    this.doSearch();
   }
 
   static get propTypes() {
     return {
+      clearSearch: PropTypes.func.isRequired,
       doSearchForHighlight: PropTypes.func.isRequired,
       query: PropTypes.string.isRequired,
       results: PropTypes.array.isRequired,
       searchSources: PropTypes.func.isRequired,
-      selectSpecificLocationOrSameUrl: PropTypes.func.isRequired,
+      selectSpecificLocation: PropTypes.func.isRequired,
+      setActiveSearch: PropTypes.func.isRequired,
       status: PropTypes.oneOf([
         "INITIAL",
         "FETCHING",
@@ -88,77 +70,33 @@ export class ProjectSearch extends Component {
     };
   }
 
-  async doSearch() {
-    // Cancel any previous async ongoing search
-    if (this.searchAbortController) {
-      this.searchAbortController.abort();
-    }
-
-    if (!this.state.query) {
-      this.setState({ status: statusType.done });
-      return;
-    }
-
-    this.setState({
-      status: statusType.fetching,
-      results: [],
-      navigateCounter: this.props.navigateCounter,
-    });
-
-    // Setup an AbortController whose main goal is to be able to cancel the asynchronous
-    // operation done by the `searchSources` action.
-    // This allows allows the React Component to receive partial updates
-    // to render results as they are available.
-    this.searchAbortController = new AbortController();
-
-    await this.props.searchSources(
-      this.state.query,
-      this.onUpdatedResults,
-      this.searchAbortController.signal
-    );
+  componentDidMount() {
+    const { shortcuts } = this.context;
+    shortcuts.on("Enter", this.onEnterPress);
   }
 
-  onUpdatedResults(results, done, signal) {
-    // debounce may delay the execution after this search has been cancelled
-    if (signal.aborted) {
-      return;
-    }
-
-    this.setState({
-      results,
-      status: done ? statusType.done : statusType.fetching,
-    });
+  componentWillUnmount() {
+    const { shortcuts } = this.context;
+    shortcuts.off("Enter", this.onEnterPress);
   }
 
-  selectMatchItem = async matchItem => {
-    const foundMatchingSource =
-      await this.props.selectSpecificLocationOrSameUrl(matchItem.location);
-    // When we reload, or if the source's target has been destroyed,
-    // we may no longer have the source available in the reducer.
-    // In such case `selectSpecificLocationOrSameUrl` will return false.
-    if (!foundMatchingSource) {
-      // When going over results via the key arrows and Enter, we may display many tooltips at once.
-      if (this.tooltip) {
-        this.tooltip.hide();
-      }
-      // Go down to line-number otherwise HTMLTooltip's call to getBoundingClientRect would return (0, 0) position for the tooltip
-      const element = document.querySelector(
-        ".project-text-search .tree-node.focused .result .line-number"
-      );
-      const tooltip = new HTMLTooltip(element.ownerDocument, {
-        className: "unavailable-source",
-        type: "arrow",
-      });
-      tooltip.panel.textContent = L10N.getStr(
-        "projectTextSearch.sourceNoLongerAvailable"
-      );
-      tooltip.setContentSize({ height: "auto" });
-      tooltip.show(element);
-      this.tooltip = tooltip;
-      return;
+  componentDidUpdate(prevProps) {
+    // If the query changes in redux, also change it in the UI
+    if (prevProps.query !== this.props.query) {
+      this.setState({ inputValue: this.props.query });
     }
+  }
+
+  doSearch(searchTerm) {
+    if (searchTerm) {
+      this.props.searchSources(this.props.cx, searchTerm);
+    }
+  }
+
+  selectMatchItem = matchItem => {
+    this.props.selectSpecificLocation(matchItem.location);
     this.props.doSearchForHighlight(
-      this.state.query,
+      this.state.inputValue,
       getEditor(),
       matchItem.location.line,
       matchItem.location.column
@@ -197,7 +135,7 @@ export class ProjectSearch extends Component {
   };
 
   getResultCount = () =>
-    this.state.results.reduce((count, file) => count + file.matches.length, 0);
+    this.props.results.reduce((count, file) => count + file.matches.length, 0);
 
   onKeyDown = e => {
     if (e.key === "Escape") {
@@ -207,18 +145,22 @@ export class ProjectSearch extends Component {
     e.stopPropagation();
 
     this.setState({ focusedItem: null });
-    this.doSearch();
+    this.doSearch(this.state.inputValue);
   };
 
   onHistoryScroll = query => {
-    this.setState({ query });
-    this.doSearch();
+    this.setState({
+      inputValue: query,
+    });
   };
 
-  // This can be called by Tree when manually selecting node via arrow keys and Enter.
-  onActivate = item => {
-    if (item && item.type === "MATCH") {
-      this.selectMatchItem(item);
+  onEnterPress = () => {
+    // This is to select a match from the search result.
+    if (!this.state.focusedItem || this.state.inputFocused) {
+      return;
+    }
+    if (this.state.focusedItem.type === "MATCH") {
+      this.selectMatchItem(this.state.focusedItem);
     }
   };
 
@@ -232,8 +174,11 @@ export class ProjectSearch extends Component {
 
   inputOnChange = e => {
     const inputValue = e.target.value;
-    this.setState({ query: inputValue });
-    this.doSearch();
+    const { cx, clearSearch } = this.props;
+    this.setState({ inputValue });
+    if (inputValue === "") {
+      clearSearch(cx);
+    }
   };
 
   renderFile = (file, focused, expanded) => {
@@ -277,7 +222,7 @@ export class ProjectSearch extends Component {
         className: classnames("result", {
           focused,
         }),
-        onClick: () => this.selectMatchItem(match),
+        onClick: () => setTimeout(() => this.selectMatchItem(match), 50),
       },
       span(
         {
@@ -297,54 +242,16 @@ export class ProjectSearch extends Component {
     return this.renderMatch(item, focused);
   };
 
-  renderRefreshButton() {
-    if (!this.state.query) {
-      return null;
-    }
-
-    // Highlight the refresh button when the current search results
-    // are based on the previous document. doSearch will save the "navigate counter"
-    // into state, while props will report the current "navigate counter".
-    // The "navigate counter" is incremented each time we navigate to a new page.
-    const highlight =
-      this.state.navigateCounter != null &&
-      this.state.navigateCounter != this.props.navigateCounter;
-    return button(
-      {
-        className: classnames("refresh-btn devtools-button", {
-          highlight,
-        }),
-        title: highlight
-          ? L10N.getStr("projectTextSearch.refreshButtonTooltipOnNavigation")
-          : L10N.getStr("projectTextSearch.refreshButtonTooltip"),
-        onClick: this.doSearch,
-      },
-      React.createElement(AccessibleImage, {
-        className: "refresh",
-      })
-    );
-  }
-
-  renderResultsToolbar() {
-    if (!this.state.query) {
-      return null;
-    }
-    return div(
-      { className: "project-search-results-toolbar" },
-      span({ className: "results-count" }, this.renderSummary()),
-      this.renderRefreshButton()
-    );
-  }
-
-  renderResults() {
-    const { status, results } = this.state;
-    if (!this.state.query) {
+  renderResults = () => {
+    const { status, results } = this.props;
+    if (!this.props.query) {
       return null;
     }
     if (results.length) {
       return React.createElement(Tree, {
         getRoots: () => results,
         getChildren: file => file.matches || [],
+        itemHeight: 24,
         autoExpandAll: true,
         autoExpandDepth: 1,
         autoExpandNodeChildrenLimit: 100,
@@ -353,7 +260,6 @@ export class ProjectSearch extends Component {
         renderItem: this.renderItem,
         focused: this.state.focusedItem,
         onFocus: this.onFocus,
-        onActivate: this.onActivate,
         isExpanded: item => {
           return this.state.expanded.has(item);
         },
@@ -384,32 +290,30 @@ export class ProjectSearch extends Component {
       },
       msg
     );
-  }
+  };
 
   renderSummary = () => {
-    if (this.state.query === "") {
-      return "";
+    if (this.props.query !== "") {
+      const resultsSummaryString = L10N.getStr("sourceSearch.resultsSummary2");
+      const count = this.getResultCount();
+      return PluralForm.get(count, resultsSummaryString).replace("#1", count);
     }
-    const resultsSummaryString = L10N.getStr("sourceSearch.resultsSummary2");
-    const count = this.getResultCount();
-    if (count === 0) {
-      return "";
-    }
-    return PluralForm.get(count, resultsSummaryString).replace("#1", count);
+    return "";
   };
 
   shouldShowErrorEmoji() {
-    return !this.getResultCount() && this.state.status === statusType.done;
+    return !this.getResultCount() && this.props.status === statusType.done;
   }
 
   renderInput() {
-    const { status } = this.state;
+    const { status } = this.props;
     return React.createElement(SearchInput, {
-      query: this.state.query,
+      query: this.state.inputValue,
       count: this.getResultCount(),
       placeholder: L10N.getStr("projectTextSearch.placeholder"),
       size: "small",
       showErrorEmoji: this.shouldShowErrorEmoji(),
+      summaryMsg: this.renderSummary(),
       isLoading: status === statusType.fetching,
       onChange: this.inputOnChange,
       onFocus: () =>
@@ -433,7 +337,7 @@ export class ProjectSearch extends Component {
       ref: "searchInput",
       showSearchModifiers: true,
       searchKey: searchKeys.PROJECT_SEARCH,
-      onToggleSearchModifier: this.doSearch,
+      onToggleSearchModifier: () => this.doSearch(this.state.inputValue),
     });
   }
 
@@ -452,7 +356,6 @@ export class ProjectSearch extends Component {
           },
           this.renderInput()
         ),
-        this.renderResultsToolbar(),
         this.renderResults()
       )
     );
@@ -464,12 +367,16 @@ ProjectSearch.contextTypes = {
 };
 
 const mapStateToProps = state => ({
+  cx: getContext(state),
+  results: getProjectSearchResults(state),
   query: getProjectSearchQuery(state),
-  navigateCounter: getNavigateCounter(state),
+  status: getProjectSearchStatus(state),
 });
 
 export default connect(mapStateToProps, {
   searchSources: actions.searchSources,
-  selectSpecificLocationOrSameUrl: actions.selectSpecificLocationOrSameUrl,
+  clearSearch: actions.clearSearch,
+  selectSpecificLocation: actions.selectSpecificLocation,
+  setActiveSearch: actions.setActiveSearch,
   doSearchForHighlight: actions.doSearchForHighlight,
 })(ProjectSearch);

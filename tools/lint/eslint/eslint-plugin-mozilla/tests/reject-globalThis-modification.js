@@ -72,6 +72,11 @@ ruleTester.run("reject-globalThis-modification", rule, {
     });
 `),
     invalidCall(`
+    XPCOMUtils.defineLazyModuleGetter(
+      globalThis, "AppConstants", "resource://gre/modules/AppConstants.jsm"
+    );
+`),
+    invalidCall(`
     XPCOMUtils.defineLazyModuleGetters(globalThis, {
       AppConstants: "resource://gre/modules/AppConstants.jsm",
     });

@@ -27,7 +27,7 @@ using namespace mozilla::gfx;
 namespace mozilla::dom {
 
 SVGElement::NumberInfo SVGGeometryElement::sNumberInfo = {nsGkAtoms::pathLength,
-                                                          0};
+                                                          0, false};
 
 //----------------------------------------------------------------------
 // Implementation

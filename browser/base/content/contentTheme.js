@@ -97,15 +97,18 @@
         processColor(rgbaChannels, element) {
           if (!rgbaChannels) {
             element.removeAttribute("lwt-sidebar");
+            element.removeAttribute("lwt-sidebar-brighttext");
             return null;
           }
 
-          // TODO(emilio): Can we share this code somehow with LightWeightThemeConsumer?
+          element.setAttribute("lwt-sidebar", "true");
           const { r, g, b, a } = rgbaChannels;
-          element.setAttribute(
-            "lwt-sidebar",
-            _isTextColorDark(r, g, b) ? "light" : "dark"
-          );
+          if (!_isTextColorDark(r, g, b)) {
+            element.setAttribute("lwt-sidebar-brighttext", "true");
+          } else {
+            element.removeAttribute("lwt-sidebar-brighttext");
+          }
+
           return `rgba(${r}, ${g}, ${b}, ${a})`;
         },
       },

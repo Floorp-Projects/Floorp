@@ -586,7 +586,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Move the stack pointer to the specified position. It assumes the SP
   // register is not valid -- it uses FP to set the position.
   void freeStackTo(uint32_t framePushed)
-      DEFINED_ON(x86_shared, arm, arm64, loong64, mips64, riscv64);
+      DEFINED_ON(x86_shared, arm, arm64, loong64, mips64);
 
   // Warning: This method does not update the framePushed() counter.
   void freeStack(Register amount);
@@ -2185,40 +2185,38 @@ class MacroAssembler : public MacroAssemblerSpecific {
  public:
   // ========================================================================
   // Memory access primitives.
-  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
-                                                       const Address& dest)
+  inline void storeUncanonicalizedDouble(FloatRegister src, const Address& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
-                                                       const BaseIndex& dest)
+  inline void storeUncanonicalizedDouble(FloatRegister src,
+                                         const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline FaultingCodeOffset storeUncanonicalizedDouble(FloatRegister src,
-                                                       const Operand& dest)
+  inline void storeUncanonicalizedDouble(FloatRegister src, const Operand& dest)
       DEFINED_ON(x86_shared);
 
   template <class T>
-  inline FaultingCodeOffset storeDouble(FloatRegister src, const T& dest);
+  inline void storeDouble(FloatRegister src, const T& dest);
 
   template <class T>
   inline void boxDouble(FloatRegister src, const T& dest);
 
   using MacroAssemblerSpecific::boxDouble;
 
-  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
-                                                        const Address& dest)
+  inline void storeUncanonicalizedFloat32(FloatRegister src,
+                                          const Address& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
-                                                        const BaseIndex& dest)
+  inline void storeUncanonicalizedFloat32(FloatRegister src,
+                                          const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm, arm64, mips32, mips64, loong64, riscv64,
                  wasm32);
-  inline FaultingCodeOffset storeUncanonicalizedFloat32(FloatRegister src,
-                                                        const Operand& dest)
+  inline void storeUncanonicalizedFloat32(FloatRegister src,
+                                          const Operand& dest)
       DEFINED_ON(x86_shared);
 
   template <class T>
-  inline FaultingCodeOffset storeFloat32(FloatRegister src, const T& dest);
+  inline void storeFloat32(FloatRegister src, const T& dest);
 
   template <typename T>
   void storeUnboxedValue(const ConstantOrRegister& value, MIRType valueType,
@@ -3173,22 +3171,18 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void loadUnalignedSimd128(const Operand& src, FloatRegister dest)
       DEFINED_ON(x86_shared);
 
-  inline FaultingCodeOffset loadUnalignedSimd128(const Address& src,
-                                                 FloatRegister dest)
+  inline void loadUnalignedSimd128(const Address& src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline FaultingCodeOffset loadUnalignedSimd128(const BaseIndex& src,
-                                                 FloatRegister dest)
+  inline void loadUnalignedSimd128(const BaseIndex& src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
   // Store
 
-  inline FaultingCodeOffset storeUnalignedSimd128(FloatRegister src,
-                                                  const Address& dest)
+  inline void storeUnalignedSimd128(FloatRegister src, const Address& dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline FaultingCodeOffset storeUnalignedSimd128(FloatRegister src,
-                                                  const BaseIndex& dest)
+  inline void storeUnalignedSimd128(FloatRegister src, const BaseIndex& dest)
       DEFINED_ON(x86_shared, arm64);
 
   // Floating point negation
@@ -3638,7 +3632,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // ========================================================================
   // wasm support
 
-  FaultingCodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
+  CodeOffset wasmTrapInstruction() PER_SHARED_ARCH;
 
   void wasmTrap(wasm::Trap trap, wasm::BytecodeOffset bytecodeOffset);
 
@@ -3906,16 +3900,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            const ABIArg& instanceArg,
                                            wasm::SymbolicAddress builtin,
                                            wasm::FailureMode failureMode);
-
-  // Performs a bounds check for ranged wasm operations like memory.fill or
-  // array.fill. This handles the bizarre edge case in the wasm spec where a
-  // write to index N is valid as long as the length is zero - despite the index
-  // itself being out of bounds.
-  //
-  // `length` and `limit` will be unchanged.
-  void wasmBoundsCheckRange32(Register index, Register length, Register limit,
-                              Register tmp,
-                              wasm::BytecodeOffset bytecodeOffset);
 
   // Perform a subtype check that `ref` is a subtype of `type`, branching to
   // `label` depending on `onSuccess`. `type` must be in the `any` hierarchy.

@@ -80,6 +80,8 @@ describe("DiscoveryStreamFeed", () => {
         values: {
           [CONFIG_PREF_NAME]: JSON.stringify({
             enabled: false,
+            show_spocs: false,
+            layout_endpoint: DUMMY_ENDPOINT,
           }),
           [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
           "discoverystream.enabled": true,
@@ -87,7 +89,6 @@ describe("DiscoveryStreamFeed", () => {
           "feeds.system.topstories": true,
           "discoverystream.spocs.personalized": true,
           "discoverystream.recs.personalized": true,
-          "system.showSponsored": false,
         },
       },
     });
@@ -311,11 +312,87 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#loadLayout", () => {
-    it("should use local basic layout with hardcoded_basic_layout being true", async () => {
-      feed.config.hardcoded_basic_layout = true;
+    it("should fetch data and populate the cache if it is empty", async () => {
+      const resp = { layout: ["foo", "bar"] };
+      const fakeCache = {};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      fetchStub.resolves({ ok: true, json: () => Promise.resolve(resp) });
 
       await feed.loadLayout(feed.store.dispatch);
 
+      assert.calledOnce(fetchStub);
+      assert.equal(feed.cache.set.firstCall.args[0], "layout");
+      assert.deepEqual(feed.cache.set.firstCall.args[1].layout, resp.layout);
+    });
+    it("should fetch data and populate the cache if the cached data is older than 30 mins", async () => {
+      const resp = { layout: ["foo", "bar"] };
+      const fakeCache = {
+        layout: { layout: ["hello"], lastUpdated: Date.now() },
+      };
+
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      fetchStub.resolves({ ok: true, json: () => Promise.resolve(resp) });
+
+      clock.tick(THIRTY_MINUTES + 1);
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.calledOnce(fetchStub);
+      assert.equal(feed.cache.set.firstCall.args[0], "layout");
+      assert.deepEqual(feed.cache.set.firstCall.args[1].layout, resp.layout);
+    });
+    it("should use the cached data and not fetch if the cached data is less than 30 mins old", async () => {
+      const fakeCache = {
+        layout: { layout: ["hello"], lastUpdated: Date.now() },
+      };
+
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      clock.tick(THIRTY_MINUTES - 1);
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.notCalled(fetchStub);
+      assert.notCalled(feed.cache.set);
+    });
+    it("should set spocs_endpoint from layout", async () => {
+      const resp = { layout: ["foo", "bar"], spocs: { url: "foo.com" } };
+      const fakeCache = {};
+      sandbox.stub(feed.cache, "get").returns(Promise.resolve(fakeCache));
+      sandbox.stub(feed.cache, "set").returns(Promise.resolve());
+
+      fetchStub.resolves({ ok: true, json: () => Promise.resolve(resp) });
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.equal(
+        feed.store.getState().DiscoveryStream.spocs.spocs_endpoint,
+        "foo.com"
+      );
+    });
+    it("should use local layout with hardcoded_layout being true", async () => {
+      feed.config.hardcoded_layout = true;
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.notCalled(feed.fetchLayout);
+      assert.equal(
+        feed.store.getState().DiscoveryStream.spocs.spocs_endpoint,
+        "https://spocs.getpocket.com/spocs"
+      );
+    });
+    it("should use local basic layout with hardcoded_layout and hardcoded_basic_layout being true", async () => {
+      feed.config.hardcoded_layout = true;
+      feed.config.hardcoded_basic_layout = true;
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.notCalled(feed.fetchLayout);
       assert.equal(
         feed.store.getState().DiscoveryStream.spocs.spocs_endpoint,
         "https://spocs.getpocket.com/spocs"
@@ -324,19 +401,22 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(layout[0].components[2].properties.items, 3);
     });
     it("should use 1 row layout if specified", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
+              show_spocs: false,
+              layout_endpoint: DUMMY_ENDPOINT,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": true,
-            "system.showSponsored": false,
           },
         },
       });
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
 
       await feed.loadLayout(feed.store.dispatch);
 
@@ -344,19 +424,22 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(layout[0].components[2].properties.items, 3);
     });
     it("should use 7 row layout if specified", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
+              show_spocs: false,
+              layout_endpoint: DUMMY_ENDPOINT,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": false,
-            "system.showSponsored": false,
           },
         },
       });
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
 
       await feed.loadLayout(feed.store.dispatch);
 
@@ -373,23 +456,28 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs2"
       );
     });
-    it("should use local basic layout with FF pref hardcoded_basic_layout", async () => {
+    it("should use local basic layout with hardcoded_layout and FF pref hardcoded_basic_layout", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
+              show_spocs: false,
+              layout_endpoint: DUMMY_ENDPOINT,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.hardcoded-basic-layout": true,
-            "system.showSponsored": false,
           },
         },
       });
 
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
       await feed.loadLayout(feed.store.dispatch);
 
+      assert.notCalled(feed.fetchLayout);
       assert.equal(
         feed.store.getState().DiscoveryStream.spocs.spocs_endpoint,
         "https://spocs.getpocket.com/spocs"
@@ -403,12 +491,13 @@ describe("DiscoveryStreamFeed", () => {
           values: {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
+              show_spocs: false,
+              layout_endpoint: DUMMY_ENDPOINT,
             }),
             [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
             "discoverystream.enabled": true,
             "discoverystream.spocs-endpoint":
               "https://spocs.getpocket.com/spocs2",
-            "system.showSponsored": false,
           },
         },
       });
@@ -420,7 +509,21 @@ describe("DiscoveryStreamFeed", () => {
         "https://spocs.getpocket.com/spocs2"
       );
     });
+    it("should fetch local layout for invalid layout endpoint or when fetch layout fails", async () => {
+      feed.config.hardcoded_layout = false;
+      fetchStub.resolves({ ok: false });
+
+      await feed.loadLayout(feed.store.dispatch, true);
+
+      assert.calledOnce(fetchStub);
+      assert.equal(
+        feed.store.getState().DiscoveryStream.spocs.spocs_endpoint,
+        "https://spocs.getpocket.com/spocs"
+      );
+    });
     it("should return enough stories to fill a four card layout", async () => {
+      feed.config.hardcoded_layout = true;
+
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
@@ -429,12 +532,15 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
 
+      sandbox.stub(feed, "fetchLayout").returns(Promise.resolve(""));
+
       await feed.loadLayout(feed.store.dispatch);
 
       const { layout } = feed.store.getState().DiscoveryStream;
       assert.equal(layout[0].components[2].properties.items, 24);
     });
     it("should create a layout with spoc and widget positions", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
@@ -459,6 +565,7 @@ describe("DiscoveryStreamFeed", () => {
       ]);
     });
     it("should create a layout with spoc position data", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
@@ -480,6 +587,7 @@ describe("DiscoveryStreamFeed", () => {
       );
     });
     it("should create a layout with spoc topsite position data", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
@@ -502,6 +610,7 @@ describe("DiscoveryStreamFeed", () => {
       );
     });
     it("should create a layout with proper spoc url with a site id", async () => {
+      feed.config.hardcoded_layout = true;
       feed.store = createStore(combineReducers(reducers), {
         Prefs: {
           values: {
@@ -525,9 +634,10 @@ describe("DiscoveryStreamFeed", () => {
     it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS", () => {
       sandbox.spy(feed.store, "dispatch");
       feed.store.getState = () => ({
-        Prefs: {
-          values: { showSponsored: true, "system.showSponsored": true },
-        },
+        Prefs: { values: { showSponsored: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
       });
       const fakeComponents = {
         components: [
@@ -549,13 +659,10 @@ describe("DiscoveryStreamFeed", () => {
     it("should dispatch DISCOVERY_STREAM_SPOCS_PLACEMENTS with prefs array", () => {
       sandbox.spy(feed.store, "dispatch");
       feed.store.getState = () => ({
-        Prefs: {
-          values: {
-            showSponsored: true,
-            withPref: true,
-            "system.showSponsored": true,
-          },
-        },
+        Prefs: { values: { showSponsored: true, withPref: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
       });
       const fakeComponents = {
         components: [
@@ -603,6 +710,97 @@ describe("DiscoveryStreamFeed", () => {
       feed.placementsForEach(item => items.push(item.name));
 
       assert.deepEqual(items, ["first", "second"]);
+    });
+  });
+
+  describe("#loadLayoutEndPointUsingPref", () => {
+    it("should return endpoint if valid key", async () => {
+      const endpoint = feed.finalLayoutEndpoint(
+        "https://somedomain.org/stories?consumer_key=$apiKey",
+        "test_key_val"
+      );
+      assert.equal(
+        "https://somedomain.org/stories?consumer_key=test_key_val",
+        endpoint
+      );
+    });
+
+    it("should throw error if key is empty", async () => {
+      assert.throws(() => {
+        feed.finalLayoutEndpoint(
+          "https://somedomain.org/stories?consumer_key=$apiKey",
+          ""
+        );
+      });
+    });
+
+    it("should return url if $apiKey is missing in layout_endpoint", async () => {
+      const endpoint = feed.finalLayoutEndpoint(
+        "https://somedomain.org/stories?consumer_key=",
+        "test_key_val"
+      );
+      assert.equal("https://somedomain.org/stories?consumer_key=", endpoint);
+    });
+
+    it("should update config layout_endpoint based on api_key_pref value", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              api_key_pref: "test_api_key_pref",
+              enabled: true,
+              layout_endpoint:
+                "https://somedomain.org/stories?consumer_key=$apiKey",
+            }),
+          },
+        },
+      });
+      sandbox
+        .stub(global.Services.prefs, "getCharPref")
+        .returns("test_api_key_val");
+      assert.equal(
+        "https://somedomain.org/stories?consumer_key=test_api_key_val",
+        feed.config.layout_endpoint
+      );
+    });
+
+    it("should not update config layout_endpoint if api_key_pref missing", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              enabled: true,
+              layout_endpoint:
+                "https://somedomain.org/stories?consumer_key=1234",
+            }),
+          },
+        },
+      });
+      sandbox
+        .stub(global.Services.prefs, "getCharPref")
+        .returns("test_api_key_val");
+      assert.notCalled(global.Services.prefs.getCharPref);
+      assert.equal(
+        "https://somedomain.org/stories?consumer_key=1234",
+        feed.config.layout_endpoint
+      );
+    });
+
+    it("should not set config layout_endpoint if layout_endpoint missing in prefs", async () => {
+      feed.store.getState = () => ({
+        Prefs: {
+          values: {
+            [CONFIG_PREF_NAME]: JSON.stringify({
+              enabled: true,
+            }),
+          },
+        },
+      });
+      sandbox
+        .stub(global.Services.prefs, "getCharPref")
+        .returns("test_api_key_val");
+      assert.notCalled(global.Services.prefs.getCharPref);
+      assert.isUndefined(feed.config.layout_endpoint);
     });
   });
 
@@ -1260,27 +1458,30 @@ describe("DiscoveryStreamFeed", () => {
   describe("#showSponsoredStories", () => {
     it("should return false from showSponsoredStories if user pref showSponsored is false", async () => {
       feed.store.getState = () => ({
-        Prefs: {
-          values: { showSponsored: false, "system.showSponsored": true },
-        },
+        Prefs: { values: { showSponsored: false } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
       });
 
       assert.isFalse(feed.showSponsoredStories);
     });
-    it("should return false from showSponsoredStories if DiscoveryStream pref system.showSponsored is false", async () => {
+    it("should return false from showSponsoredStories if DiscoveryStream pref show_spocs is false", async () => {
       feed.store.getState = () => ({
-        Prefs: {
-          values: { showSponsored: true, "system.showSponsored": false },
-        },
+        Prefs: { values: { showSponsored: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: false }),
       });
 
       assert.isFalse(feed.showSponsoredStories);
     });
     it("should return true from showSponsoredStories if both prefs are true", async () => {
       feed.store.getState = () => ({
-        Prefs: {
-          values: { showSponsored: true, "system.showSponsored": true },
-        },
+        Prefs: { values: { showSponsored: true } },
+      });
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
       });
 
       assert.isTrue(feed.showSponsoredStories);
@@ -1389,6 +1590,9 @@ describe("DiscoveryStreamFeed", () => {
     let DiscoveryStream;
     let Prefs;
     beforeEach(() => {
+      Object.defineProperty(feed, "config", {
+        get: () => ({ show_spocs: true }),
+      });
       DiscoveryStream = {
         layout: [],
         spocs: {
@@ -1403,7 +1607,6 @@ describe("DiscoveryStreamFeed", () => {
           "feeds.system.topsites": true,
           showSponsoredTopSites: true,
           showSponsored: true,
-          "system.showSponsored": true,
         },
       };
       defaultState = {
@@ -1547,20 +1750,22 @@ describe("DiscoveryStreamFeed", () => {
   });
 
   describe("#resetCache", () => {
-    it("should set .feeds .spocs .sov and .personalization to {}", async () => {
+    it("should set .layout, .feeds .spocs and .personalization to {}", async () => {
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.resetCache();
 
-      assert.callCount(feed.cache.set, 4);
+      assert.callCount(feed.cache.set, 5);
       const firstCall = feed.cache.set.getCall(0);
       const secondCall = feed.cache.set.getCall(1);
       const thirdCall = feed.cache.set.getCall(2);
       const fourthCall = feed.cache.set.getCall(3);
-      assert.deepEqual(firstCall.args, ["feeds", {}]);
-      assert.deepEqual(secondCall.args, ["spocs", {}]);
-      assert.deepEqual(thirdCall.args, ["sov", {}]);
-      assert.deepEqual(fourthCall.args, ["personalization", {}]);
+      const fifthCall = feed.cache.set.getCall(4);
+      assert.deepEqual(firstCall.args, ["layout", {}]);
+      assert.deepEqual(secondCall.args, ["feeds", {}]);
+      assert.deepEqual(thirdCall.args, ["spocs", {}]);
+      assert.deepEqual(fourthCall.args, ["sov", {}]);
+      assert.deepEqual(fifthCall.args, ["personalization", {}]);
     });
   });
 
@@ -2395,7 +2600,7 @@ describe("DiscoveryStreamFeed", () => {
 
       await feed.onAction({
         type: at.DISCOVERY_STREAM_CONFIG_SET_VALUE,
-        data: { name: "api_key_pref", value: "foo" },
+        data: { name: "layout_endpoint", value: "foo.com" },
       });
 
       assert.calledWithMatch(feed.store.dispatch, {
@@ -2404,7 +2609,7 @@ describe("DiscoveryStreamFeed", () => {
           value: JSON.stringify({
             enabled: true,
             other: "value",
-            api_key_pref: "foo",
+            layout_endpoint: "foo.com",
           }),
         },
         type: at.SET_PREF,
@@ -2539,12 +2744,14 @@ describe("DiscoveryStreamFeed", () => {
     it("should update state.DiscoveryStream.config when the pref changes", async () => {
       setPref(CONFIG_PREF_NAME, {
         enabled: true,
-        api_key_pref: "foo",
+        show_spocs: false,
+        layout_endpoint: "foo",
       });
 
       assert.deepEqual(feed.store.getState().DiscoveryStream.config, {
         enabled: true,
-        api_key_pref: "foo",
+        show_spocs: false,
+        layout_endpoint: "foo",
       });
     });
     it("should fire loadSpocs is showSponsored pref changes", async () => {
@@ -2805,33 +3012,47 @@ describe("DiscoveryStreamFeed", () => {
         feed.isExpired({}, "foo");
       });
     });
-    it("should return false for spocs on startup for content under 1 week", () => {
-      const spocs = { lastUpdated: Date.now() };
+    it("should return false for layout on startup for content under 1 week", () => {
+      const layout = { lastUpdated: Date.now() };
       const result = feed.isExpired({
-        cachedData: { spocs },
-        key: "spocs",
+        cachedData: { layout },
+        key: "layout",
         isStartup: true,
       });
 
       assert.isFalse(result);
     });
-    it("should return true for spocs for isStartup=false after 30 mins", () => {
-      const spocs = { lastUpdated: Date.now() };
+    it("should return true for layout for isStartup=false after 30 mins", () => {
+      const layout = { lastUpdated: Date.now() };
       clock.tick(THIRTY_MINUTES + 1);
-      const result = feed.isExpired({ cachedData: { spocs }, key: "spocs" });
+      const result = feed.isExpired({ cachedData: { layout }, key: "layout" });
 
       assert.isTrue(result);
     });
-    it("should return true for spocs on startup for content over 1 week", () => {
-      const spocs = { lastUpdated: Date.now() };
+    it("should return true for layout on startup for content over 1 week", () => {
+      const layout = { lastUpdated: Date.now() };
       clock.tick(ONE_WEEK + 1);
       const result = feed.isExpired({
-        cachedData: { spocs },
-        key: "spocs",
+        cachedData: { layout },
+        key: "layout",
         isStartup: true,
       });
 
       assert.isTrue(result);
+    });
+    it("should return false for hardcoded layout on startup for content over 1 week", () => {
+      feed._prefCache.config = {
+        hardcoded_layout: true,
+      };
+      const layout = { lastUpdated: Date.now() };
+      clock.tick(ONE_WEEK + 1);
+      const result = feed.isExpired({
+        cachedData: { layout },
+        key: "layout",
+        isStartup: true,
+      });
+
+      assert.isFalse(result);
     });
   });
 
@@ -2839,6 +3060,7 @@ describe("DiscoveryStreamFeed", () => {
     let cache;
     beforeEach(() => {
       cache = {
+        layout: { lastUpdated: Date.now() },
         feeds: { "foo.com": { lastUpdated: Date.now() } },
         spocs: { lastUpdated: Date.now() },
       };
@@ -2850,6 +3072,20 @@ describe("DiscoveryStreamFeed", () => {
       const result = await feed.checkIfAnyCacheExpired();
       assert.isFalse(result);
     });
+
+    it("should return true if .layout is missing", async () => {
+      delete cache.layout;
+      assert.isTrue(await feed.checkIfAnyCacheExpired());
+    });
+    it("should return true if .layout is expired", async () => {
+      clock.tick(THIRTY_MINUTES + 1);
+      // Update other caches we aren't testing
+      cache.feeds["foo.com"].lastUpdate = Date.now();
+      cache.spocs.lastUpdate = Date.now();
+
+      assert.isTrue(await feed.checkIfAnyCacheExpired());
+    });
+
     it("should return true if .spocs is missing", async () => {
       delete cache.spocs;
       assert.isTrue(await feed.checkIfAnyCacheExpired());
@@ -2857,7 +3093,7 @@ describe("DiscoveryStreamFeed", () => {
     it("should return true if .spocs is expired", async () => {
       clock.tick(THIRTY_MINUTES + 1);
       // Update other caches we aren't testing
-      cache.spocs.lastUpdated = Date.now();
+      cache.layout.lastUpdated = Date.now();
       cache.feeds["foo.com"].lastUpdate = Date.now();
 
       assert.isTrue(await feed.checkIfAnyCacheExpired());
@@ -2874,6 +3110,7 @@ describe("DiscoveryStreamFeed", () => {
     it("should return true if data for .feeds[url] is expired", async () => {
       clock.tick(THIRTY_MINUTES + 1);
       // Update other caches we aren't testing
+      cache.layout.lastUpdated = Date.now();
       cache.spocs.lastUpdate = Date.now();
       assert.isTrue(await feed.checkIfAnyCacheExpired());
     });
@@ -2933,6 +3170,24 @@ describe("DiscoveryStreamFeed", () => {
         feed._maybeUpdateCachedData.restore();
         sandbox.stub(feed.cache, "set").resolves();
       });
+      it("should refresh layout on startup if it was served from cache", async () => {
+        feed.loadLayout.restore();
+        sandbox
+          .stub(feed.cache, "get")
+          .resolves({ layout: { lastUpdated: Date.now(), layout: {} } });
+        sandbox.stub(feed, "fetchFromEndpoint").resolves({ layout: {} });
+        clock.tick(THIRTY_MINUTES + 1);
+
+        await feed.refreshAll({ isStartup: true });
+
+        assert.calledOnce(feed.fetchFromEndpoint);
+        // Once from cache, once to update the store
+        assert.calledTwice(feed.store.dispatch);
+        assert.equal(
+          feed.store.dispatch.firstCall.args[0].type,
+          at.DISCOVERY_STREAM_LAYOUT_UPDATE
+        );
+      });
       it("should not refresh layout on startup if it is under THIRTY_MINUTES", async () => {
         feed.loadLayout.restore();
         sandbox
@@ -2950,10 +3205,12 @@ describe("DiscoveryStreamFeed", () => {
         sandbox
           .stub(feed.cache, "get")
           .resolves({ spocs: { lastUpdated: Date.now() } });
+        sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
         clock.tick(THIRTY_MINUTES + 1);
 
         await feed.refreshAll({ isStartup: true });
 
+        assert.calledOnce(feed.fetchFromEndpoint);
         // Once from cache, once to update the store
         assert.calledTwice(feed.store.dispatch);
         assert.equal(

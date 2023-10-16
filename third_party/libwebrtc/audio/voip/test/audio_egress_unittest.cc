@@ -13,8 +13,6 @@
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/call/transport.h"
 #include "api/task_queue/default_task_queue_factory.h"
-#include "api/units/time_delta.h"
-#include "api/units/timestamp.h"
 #include "modules/audio_mixer/sine_wave_generator.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
@@ -24,7 +22,6 @@
 #include "test/gtest.h"
 #include "test/mock_transport.h"
 #include "test/run_loop.h"
-#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 namespace {
@@ -60,18 +57,18 @@ class AudioEgressTest : public ::testing::Test {
   static constexpr uint32_t kRemoteSsrc = 0xDEADBEEF;
   const SdpAudioFormat kPcmuFormat = {"pcmu", 8000, 1};
 
-  AudioEgressTest() : wave_generator_(1000.0, kAudioLevel) {
+  AudioEgressTest()
+      : fake_clock_(kStartTime), wave_generator_(1000.0, kAudioLevel) {
+    task_queue_factory_ = CreateDefaultTaskQueueFactory();
     encoder_factory_ = CreateBuiltinAudioEncoderFactory();
   }
 
   // Prepare test on audio egress by using PCMu codec with specific
   // sequence number and its status to be running.
   void SetUp() override {
-    rtp_rtcp_ =
-        CreateRtpStack(time_controller_.GetClock(), &transport_, kRemoteSsrc);
-    egress_ = std::make_unique<AudioEgress>(
-        rtp_rtcp_.get(), time_controller_.GetClock(),
-        time_controller_.GetTaskQueueFactory());
+    rtp_rtcp_ = CreateRtpStack(&fake_clock_, &transport_, kRemoteSsrc);
+    egress_ = std::make_unique<AudioEgress>(rtp_rtcp_.get(), &fake_clock_,
+                                            task_queue_factory_.get());
     constexpr int kPcmuPayload = 0;
     egress_->SetEncoder(kPcmuPayload, kPcmuFormat,
                         encoder_factory_->MakeAudioEncoder(
@@ -103,10 +100,14 @@ class AudioEgressTest : public ::testing::Test {
     return frame;
   }
 
-  GlobalSimulatedTimeController time_controller_{Timestamp::Micros(kStartTime)};
+  test::RunLoop run_loop_;
+  // SimulatedClock doesn't directly affect this testcase as the the
+  // AudioFrame's timestamp is driven by GetAudioFrame.
+  SimulatedClock fake_clock_;
   NiceMock<MockTransport> transport_;
   SineWaveGenerator wave_generator_;
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_rtcp_;
+  std::unique_ptr<TaskQueueFactory> task_queue_factory_;
   rtc::scoped_refptr<AudioEncoderFactory> encoder_factory_;
   std::unique_ptr<AudioEgress> egress_;
 };
@@ -137,7 +138,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithMute) {
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 
   event.Wait(TimeDelta::Seconds(1));
@@ -173,7 +174,7 @@ TEST_F(AudioEgressTest, ProcessAudioWithSineWave) {
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 
   event.Wait(TimeDelta::Seconds(1));
@@ -207,7 +208,7 @@ TEST_F(AudioEgressTest, SkipAudioEncodingAfterStopSend) {
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 
   event.Wait(TimeDelta::Seconds(1));
@@ -221,7 +222,7 @@ TEST_F(AudioEgressTest, SkipAudioEncodingAfterStopSend) {
   // result in crahses or sanitizer errors due to remaining data.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 }
 
@@ -283,7 +284,7 @@ TEST_F(AudioEgressTest, SendDTMF) {
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 
   event.Wait(TimeDelta::Seconds(1));
@@ -308,7 +309,7 @@ TEST_F(AudioEgressTest, TestAudioInputLevelAndEnergyDuration) {
   // Two 10 ms audio frames will result in rtp packet with ptime 20.
   for (size_t i = 0; i < kExpected * 2; i++) {
     egress_->SendAudioData(GetAudioFrame(i));
-    time_controller_.AdvanceTime(TimeDelta::Millis(10));
+    fake_clock_.AdvanceTimeMilliseconds(10);
   }
 
   event.Wait(/*give_up_after=*/TimeDelta::Seconds(1));

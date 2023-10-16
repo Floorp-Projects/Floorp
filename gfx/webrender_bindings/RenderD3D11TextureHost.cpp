@@ -14,7 +14,6 @@
 #include "ScopedGLHelpers.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/layers/GpuProcessD3D11TextureMap.h"
 #include "mozilla/layers/TextureD3D11.h"
 
 namespace mozilla {
@@ -169,12 +168,9 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2DWithGL() {
     auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
     if (textureMap) {
       RefPtr<ID3D11Texture2D> texture;
-      textureMap->WaitTextureReady(mGpuProcessTextureId.ref());
       mTexture = textureMap->GetTexture(mGpuProcessTextureId.ref());
       if (mTexture) {
         return true;
-      } else {
-        gfxCriticalNote << "GpuProcessTextureId is not valid";
       }
     }
     return false;

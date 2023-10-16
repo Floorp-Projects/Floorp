@@ -22,12 +22,11 @@
 #include <cstring>
 #include <fstream>
 
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include "absl/base/internal/raw_logging.h"
 #include "absl/debugging/stacktrace.h"
 #include "absl/debugging/symbolize.h"
-#include "absl/log/check.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 
@@ -88,7 +87,7 @@ std::string GetTmpDir() {
 // This function runs in a fork()ed process on most systems.
 void InstallHandlerWithWriteToFileAndRaise(const char* file, int signo) {
   error_file = fopen(file, "w");
-  CHECK_NE(error_file, nullptr) << "Failed create error_file";
+  ABSL_RAW_CHECK(error_file != nullptr, "Failed create error_file");
   absl::FailureSignalHandlerOptions options;
   options.writerfn = WriteToErrorFile;
   absl::InstallFailureSignalHandler(options);

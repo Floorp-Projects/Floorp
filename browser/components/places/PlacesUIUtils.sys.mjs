@@ -378,7 +378,7 @@ class BookmarkState {
   async _createBookmark() {
     await lazy.PlacesTransactions.batch(async () => {
       this._guid = await lazy.PlacesTransactions.NewBookmark({
-        parentGuid: this.parentGuid,
+        parentGuid: this._newState.parentGuid ?? this._originalState.parentGuid,
         tags: this._newState.tags,
         title: this._newState.title ?? this._originalState.title,
         url: this._newState.uri ?? this._originalState.uri,
@@ -402,16 +402,12 @@ class BookmarkState {
    */
   async _createFolder() {
     this._guid = await lazy.PlacesTransactions.NewFolder({
-      parentGuid: this.parentGuid,
+      parentGuid: this._newState.parentGuid ?? this._originalState.parentGuid,
       title: this._newState.title ?? this._originalState.title,
       children: this._children,
       index: this._originalState.index,
     }).transact();
     return this._guid;
-  }
-
-  get parentGuid() {
-    return this._newState.parentGuid ?? this._originalState.parentGuid;
   }
 
   /**

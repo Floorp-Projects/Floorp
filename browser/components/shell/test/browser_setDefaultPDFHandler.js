@@ -8,21 +8,20 @@ ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
-const setDefaultBrowserUserChoiceStub = sinon.stub();
-const setDefaultExtensionHandlersUserChoiceStub = sinon.stub();
-
-const defaultAgentStub = sinon.stub(ShellService, "defaultAgent").value({
-  setDefaultBrowserUserChoice: setDefaultBrowserUserChoiceStub,
-  setDefaultExtensionHandlersUserChoice:
-    setDefaultExtensionHandlersUserChoiceStub,
-});
-
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "XreDirProvider",
   "@mozilla.org/xre/directory-provider;1",
   "nsIXREDirProvider"
 );
+
+const _callExternalDefaultBrowserAgentStub = sinon
+  .stub(ShellService, "_callExternalDefaultBrowserAgent")
+  .callsFake(async () => ({
+    async wait() {
+      return { exitCode: 0 };
+    },
+  }));
 
 const _userChoiceImpossibleTelemetryResultStub = sinon
   .stub(ShellService, "_userChoiceImpossibleTelemetryResult")
@@ -38,7 +37,7 @@ const shellStub = sinon.stub(ShellService, "shellService").value({
 });
 
 registerCleanupFunction(() => {
-  defaultAgentStub.restore();
+  _callExternalDefaultBrowserAgentStub.restore();
   _userChoiceImpossibleTelemetryResultStub.restore();
   shellStub.restore();
 
@@ -49,8 +48,11 @@ add_task(async function ready() {
   await ExperimentAPI.ready();
 });
 
-// Everything here is Windows.
-Assert.ok(AppConstants.platform == "win", "Platform is Windows");
+// Everything here is Windows 10+.
+Assert.ok(
+  AppConstants.isPlatformAndVersionAtLeast("win", "10"),
+  "Windows version 10+"
+);
 
 add_task(async function remoteEnableWithPDF() {
   let doCleanup = await ExperimentFakes.enrollWithRollout({
@@ -72,14 +74,20 @@ add_task(async function remoteEnableWithPDF() {
     true
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  _callExternalDefaultBrowserAgentStub.resetHistory();
   ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
-  Assert.deepEqual(setDefaultBrowserUserChoiceStub.firstCall.args, [
-    aumi,
-    [".pdf", "FirefoxPDF"],
+  Assert.ok(_callExternalDefaultBrowserAgentStub.called);
+  Assert.deepEqual(_callExternalDefaultBrowserAgentStub.firstCall.args, [
+    {
+      arguments: [
+        "set-default-browser-user-choice",
+        aumi,
+        ".pdf",
+        "FirefoxPDF",
+      ],
+    },
   ]);
 
   await doCleanup();
@@ -117,13 +125,22 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
   for (let progId of ["", "MSEdgePDF"]) {
     queryCurrentDefaultHandlerForStub.callsFake(() => progId);
 
-    setDefaultBrowserUserChoiceStub.resetHistory();
+    _callExternalDefaultBrowserAgentStub.resetHistory();
     ShellService.setDefaultBrowser();
 
-    Assert.ok(setDefaultBrowserUserChoiceStub.called);
+    Assert.ok(_callExternalDefaultBrowserAgentStub.called);
     Assert.deepEqual(
-      setDefaultBrowserUserChoiceStub.firstCall.args,
-      [aumi, [".pdf", "FirefoxPDF"]],
+      _callExternalDefaultBrowserAgentStub.firstCall.args,
+      [
+        {
+          arguments: [
+            "set-default-browser-user-choice",
+            aumi,
+            ".pdf",
+            "FirefoxPDF",
+          ],
+        },
+      ],
       `Will take default from missing association or known browser with ProgID '${progId}'`
     );
   }
@@ -131,13 +148,13 @@ add_task(async function remoteEnableWithPDF_testOnlyReplaceBrowsers() {
   // But not from a non-browser.
   queryCurrentDefaultHandlerForStub.callsFake(() => "Acrobat.Document.DC");
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  _callExternalDefaultBrowserAgentStub.resetHistory();
   ShellService.setDefaultBrowser();
 
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
+  Assert.ok(_callExternalDefaultBrowserAgentStub.called);
   Assert.deepEqual(
-    setDefaultBrowserUserChoiceStub.firstCall.args,
-    [aumi, []],
+    _callExternalDefaultBrowserAgentStub.firstCall.args,
+    [{ arguments: ["set-default-browser-user-choice", aumi] }],
     `Will not take default from non-browser`
   );
 
@@ -163,12 +180,14 @@ add_task(async function remoteEnableWithoutPDF() {
     false
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  _callExternalDefaultBrowserAgentStub.resetHistory();
   ShellService.setDefaultBrowser();
 
   const aumi = XreDirProvider.getInstallHash();
-  Assert.ok(setDefaultBrowserUserChoiceStub.called);
-  Assert.deepEqual(setDefaultBrowserUserChoiceStub.firstCall.args, [aumi, []]);
+  Assert.ok(_callExternalDefaultBrowserAgentStub.called);
+  Assert.deepEqual(_callExternalDefaultBrowserAgentStub.firstCall.args, [
+    { arguments: ["set-default-browser-user-choice", aumi] },
+  ]);
 
   await doCleanup();
 });
@@ -192,10 +211,10 @@ add_task(async function remoteDisable() {
     true
   );
 
-  setDefaultBrowserUserChoiceStub.resetHistory();
+  _callExternalDefaultBrowserAgentStub.resetHistory();
   ShellService.setDefaultBrowser();
 
-  Assert.ok(setDefaultBrowserUserChoiceStub.notCalled);
+  Assert.ok(_callExternalDefaultBrowserAgentStub.notCalled);
   Assert.ok(setDefaultStub.called);
 
   await doCleanup();
@@ -205,7 +224,12 @@ add_task(async function test_setAsDefaultPDFHandler_knownBrowser() {
   const sandbox = sinon.createSandbox();
 
   const aumi = XreDirProvider.getInstallHash();
-  const expectedArguments = [aumi, [".pdf", "FirefoxPDF"]];
+  const expectedArguments = [
+    "set-default-extension-handlers-user-choice",
+    aumi,
+    ".pdf",
+    "FirefoxPDF",
+  ];
 
   try {
     const pdfHandlerResult = { registered: true, knownBrowser: true };
@@ -216,51 +240,51 @@ add_task(async function test_setAsDefaultPDFHandler_knownBrowser() {
     info("Testing setAsDefaultPDFHandler(true) when knownBrowser = true");
     ShellService.setAsDefaultPDFHandler(true);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      _callExternalDefaultBrowserAgentStub.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
-      expectedArguments,
+      _callExternalDefaultBrowserAgentStub.firstCall.args,
+      [{ arguments: expectedArguments }],
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    _callExternalDefaultBrowserAgentStub.resetHistory();
 
     info("Testing setAsDefaultPDFHandler(false) when knownBrowser = true");
     ShellService.setAsDefaultPDFHandler(false);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      _callExternalDefaultBrowserAgentStub.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
-      expectedArguments,
+      _callExternalDefaultBrowserAgentStub.firstCall.args,
+      [{ arguments: expectedArguments }],
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    _callExternalDefaultBrowserAgentStub.resetHistory();
 
     pdfHandlerResult.knownBrowser = false;
 
     info("Testing setAsDefaultPDFHandler(true) when knownBrowser = false");
     ShellService.setAsDefaultPDFHandler(true);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.notCalled,
+      _callExternalDefaultBrowserAgentStub.notCalled,
       "Did not call default browser agent"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    _callExternalDefaultBrowserAgentStub.resetHistory();
 
     info("Testing setAsDefaultPDFHandler(false) when knownBrowser = false");
     ShellService.setAsDefaultPDFHandler(false);
     Assert.ok(
-      setDefaultExtensionHandlersUserChoiceStub.called,
+      _callExternalDefaultBrowserAgentStub.called,
       "Called default browser agent"
     );
     Assert.deepEqual(
-      setDefaultExtensionHandlersUserChoiceStub.firstCall.args,
-      expectedArguments,
+      _callExternalDefaultBrowserAgentStub.firstCall.args,
+      [{ arguments: expectedArguments }],
       "Called default browser agent with expected arguments"
     );
-    setDefaultExtensionHandlersUserChoiceStub.resetHistory();
+    _callExternalDefaultBrowserAgentStub.resetHistory();
   } finally {
     sandbox.restore();
   }

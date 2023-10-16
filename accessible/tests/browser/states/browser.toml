@@ -20,3 +20,4 @@ https_first_disabled = true
 
 ["browser_test_visibility_2.js"]
 https_first_disabled = true
+

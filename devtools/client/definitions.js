@@ -518,7 +518,6 @@ exports.ToolboxButtons = [
       }
       return ResponsiveUIManager.isActiveForTab(localTab);
     },
-    isToggle: true,
     setup(toolbox, onChange) {
       ResponsiveUIManager.on("on", onChange);
       ResponsiveUIManager.on("off", onChange);
@@ -630,7 +629,6 @@ function createHighlightButton(highlighters, id) {
         inspectorFront.getKnownHighlighter(name)?.isShown()
       );
     },
-    isToggle: true,
   };
 }
 

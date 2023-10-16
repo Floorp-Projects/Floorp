@@ -45,74 +45,6 @@ bool TrapSiteVectorArray::empty() const {
   return true;
 }
 
-#ifdef DEBUG
-const char* js::wasm::NameOfTrap(Trap trap) {
-  switch (trap) {
-    case Trap::Unreachable:
-      return "Unreachable";
-    case Trap::IntegerOverflow:
-      return "IntegerOverflow";
-    case Trap::InvalidConversionToInteger:
-      return "InvalidConversionToInteger";
-    case Trap::IntegerDivideByZero:
-      return "IntegerDivideByZero";
-    case Trap::OutOfBounds:
-      return "OutOfBounds";
-    case Trap::UnalignedAccess:
-      return "UnalignedAccess";
-    case Trap::IndirectCallToNull:
-      return "IndirectCallToNull";
-    case Trap::IndirectCallBadSig:
-      return "IndirectCallBadSig";
-    case Trap::NullPointerDereference:
-      return "NullPointerDereference";
-    case Trap::BadCast:
-      return "BadCast";
-    case Trap::StackOverflow:
-      return "StackOverflow";
-    case Trap::CheckInterrupt:
-      return "CheckInterrupt";
-    case Trap::ThrowReported:
-      return "ThrowReported";
-    case Trap::Limit:
-      return "Limit";
-    default:
-      return "NameOfTrap:unknown";
-  }
-}
-
-const char* js::wasm::NameOfTrapMachineInsn(TrapMachineInsn tmi) {
-  switch (tmi) {
-    case TrapMachineInsn::OfficialUD:
-      return "OfficialUD";
-    case TrapMachineInsn::Load8:
-      return "Load8";
-    case TrapMachineInsn::Load16:
-      return "Load16";
-    case TrapMachineInsn::Load32:
-      return "Load32";
-    case TrapMachineInsn::Load64:
-      return "Load64";
-    case TrapMachineInsn::Load128:
-      return "Load128";
-    case TrapMachineInsn::Store8:
-      return "Store8";
-    case TrapMachineInsn::Store16:
-      return "Store16";
-    case TrapMachineInsn::Store32:
-      return "Store32";
-    case TrapMachineInsn::Store64:
-      return "Store64";
-    case TrapMachineInsn::Store128:
-      return "Store128";
-    case TrapMachineInsn::Atomic:
-      return "Atomic";
-    default:
-      return "NameOfTrapMachineInsn::unknown";
-  }
-}
-#endif  // DEBUG
-
 void TrapSiteVectorArray::clear() {
   for (Trap trap : MakeEnumeratedRange(Trap::Limit)) {
     (*this)[trap].clear();
@@ -170,7 +102,6 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, Offsets offsets)
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
-  u.func.hasUnwindInfo_ = false;
   MOZ_ASSERT(isEntry());
   MOZ_ASSERT(begin_ <= end_);
 }
@@ -200,11 +131,10 @@ CodeRange::CodeRange(Kind kind, uint32_t funcIndex, CallableOffsets offsets)
   u.func.lineOrBytecode_ = 0;
   u.func.beginToUncheckedCallEntry_ = 0;
   u.func.beginToTierEntry_ = 0;
-  u.func.hasUnwindInfo_ = false;
 }
 
 CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
-                     FuncOffsets offsets, bool hasUnwindInfo)
+                     FuncOffsets offsets)
     : begin_(offsets.begin),
       ret_(offsets.ret),
       end_(offsets.end),
@@ -217,7 +147,6 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode,
   u.func.lineOrBytecode_ = funcLineOrBytecode;
   u.func.beginToUncheckedCallEntry_ = offsets.uncheckedCallEntry - begin_;
   u.func.beginToTierEntry_ = offsets.tierEntry - begin_;
-  u.func.hasUnwindInfo_ = hasUnwindInfo;
 }
 
 const CodeRange* wasm::LookupInSorted(const CodeRangeVector& codeRanges,

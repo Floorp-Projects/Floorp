@@ -187,7 +187,7 @@ macosx64-custom-car:
     treeherder:
         symbol: TM(custom-car)
     worker:
-        max-run-time: 30000
+        max-run-time: 28800
     run:
         script: build-custom-car.sh
         arguments: [
@@ -209,8 +209,7 @@ macosx64-custom-car:
         toolchain-artifact: public/build/car_macosx.tar.zst
     fetches:
         toolchain:
-            - MacOSX14.0.sdk
-            - macosx64-python-3.8
+            - MacOSX13.3.sdk
 
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"

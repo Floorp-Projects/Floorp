@@ -9,9 +9,7 @@ pub enum RetrievalError {
     #[error("The process handle/PID was invalid")]
     InvalidProcessHandle,
     #[error("Could not find the address of the annotations vector")]
-    AnnotationTableNotFound(#[from] FindAnnotationsAddressError),
-    #[error("Corrupt or wrong annotation table")]
-    InvalidAnnotationTable,
+    AnnotationVectorNotFound(#[from] FindAnnotationsAddressError),
     #[error("The data read from the target process is invalid")]
     InvalidData,
     #[cfg(any(target_os = "linux", target_os = "android"))]

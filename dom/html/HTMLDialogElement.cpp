@@ -156,9 +156,11 @@ int32_t HTMLDialogElement::TabIndexDefault() { return 0; }
 
 void HTMLDialogElement::QueueCancelDialog() {
   // queues an element task on the user interaction task source
-  OwnerDoc()->Dispatch(
-      NewRunnableMethod("HTMLDialogElement::RunCancelDialogSteps", this,
-                        &HTMLDialogElement::RunCancelDialogSteps));
+  OwnerDoc()
+      ->EventTargetFor(TaskCategory::UI)
+      ->Dispatch(NewRunnableMethod("HTMLDialogElement::RunCancelDialogSteps",
+                                   this,
+                                   &HTMLDialogElement::RunCancelDialogSteps));
 }
 
 void HTMLDialogElement::RunCancelDialogSteps() {

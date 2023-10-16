@@ -28,7 +28,7 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
   }
 
  protected:
-  ~DatarateTestVP9() override = default;
+  virtual ~DatarateTestVP9() {}
 
   virtual void ResetModel() {
     last_pts_ = 0;
@@ -113,8 +113,8 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
     return layer_id;
   }
 
-  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                          ::libvpx_test::Encoder *encoder) override {
+  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                                  ::libvpx_test::Encoder *encoder) {
     if (video->frame() == 0) {
       encoder->Control(VP8E_SET_CPUUSED, set_cpu_used_);
       encoder->Control(VP9E_SET_AQ_MODE, aq_mode_);
@@ -164,7 +164,7 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
     duration_ = 0;
   }
 
-  void FramePktHook(const vpx_codec_cx_pkt_t *pkt) override {
+  virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
     // Time since last timestamp = duration.
     vpx_codec_pts_t duration = pkt->data.frame.pts - last_pts_;
 
@@ -202,7 +202,7 @@ class DatarateTestVP9 : public ::libvpx_test::EncoderTest {
     ++tot_frame_number_;
   }
 
-  void EndPassHook() override {
+  virtual void EndPassHook() {
     for (int layer = 0; layer < static_cast<int>(cfg_.ts_number_layers);
          ++layer) {
       duration_ = (last_pts_ + 1) * timebase_;
@@ -243,7 +243,7 @@ class DatarateTestVP9RealTimeMultiBR
   DatarateTestVP9RealTimeMultiBR() : DatarateTestVP9(GET_PARAM(0)) {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     set_cpu_used_ = GET_PARAM(1);
@@ -259,7 +259,7 @@ class DatarateTestVP9LargeVBR
   DatarateTestVP9LargeVBR() : DatarateTestVP9(GET_PARAM(0)) {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     set_cpu_used_ = GET_PARAM(1);
@@ -579,10 +579,10 @@ class DatarateTestVP9RealTime : public DatarateTestVP9,
                                 public ::libvpx_test::CodecTestWithParam<int> {
  public:
   DatarateTestVP9RealTime() : DatarateTestVP9(GET_PARAM(0)) {}
-  ~DatarateTestVP9RealTime() override = default;
+  virtual ~DatarateTestVP9RealTime() {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     set_cpu_used_ = GET_PARAM(1);
@@ -731,10 +731,10 @@ class DatarateTestVP9RealTimeDeltaQUV
       public ::libvpx_test::CodecTestWith2Params<int, int> {
  public:
   DatarateTestVP9RealTimeDeltaQUV() : DatarateTestVP9(GET_PARAM(0)) {}
-  ~DatarateTestVP9RealTimeDeltaQUV() override = default;
+  virtual ~DatarateTestVP9RealTimeDeltaQUV() {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     set_cpu_used_ = GET_PARAM(1);
@@ -779,7 +779,7 @@ class DatarateTestVP9PostEncodeDrop
   DatarateTestVP9PostEncodeDrop() : DatarateTestVP9(GET_PARAM(0)) {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     set_cpu_used_ = GET_PARAM(1);
@@ -819,17 +819,17 @@ class DatarateTestVP9FrameQp
       public ::testing::TestWithParam<const libvpx_test::CodecFactory *> {
  public:
   DatarateTestVP9FrameQp() : DatarateTestVP9(GetParam()), frame_(0) {}
-  ~DatarateTestVP9FrameQp() override = default;
+  virtual ~DatarateTestVP9FrameQp() {}
 
  protected:
-  void SetUp() override {
+  virtual void SetUp() {
     InitializeConfig();
     SetMode(::libvpx_test::kRealTime);
     ResetModel();
   }
 
-  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
-                          ::libvpx_test::Encoder *encoder) override {
+  virtual void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                                  ::libvpx_test::Encoder *encoder) {
     set_cpu_used_ = 7;
     DatarateTestVP9::PreEncodeFrameHook(video, encoder);
     frame_qp_ = static_cast<int>(rnd_.RandRange(64));
@@ -837,7 +837,7 @@ class DatarateTestVP9FrameQp
     frame_++;
   }
 
-  void PostEncodeFrameHook(::libvpx_test::Encoder *encoder) override {
+  virtual void PostEncodeFrameHook(::libvpx_test::Encoder *encoder) {
     int qp = 0;
     vpx_svc_layer_id_t layer_id;
     if (frame_ >= total_frame_) return;
@@ -847,8 +847,8 @@ class DatarateTestVP9FrameQp
     temporal_layer_id_ = layer_id.temporal_layer_id;
   }
 
-  void MismatchHook(const vpx_image_t * /*img1*/,
-                    const vpx_image_t * /*img2*/) override {
+  virtual void MismatchHook(const vpx_image_t * /*img1*/,
+                            const vpx_image_t * /*img2*/) {
     if (frame_ >= total_frame_) return;
     ASSERT_TRUE(cfg_.temporal_layering_mode ==
                     VP9E_TEMPORAL_LAYERING_MODE_0212 &&
@@ -945,7 +945,7 @@ TEST_P(DatarateTestVP9FrameQp, VP9SetFrameQp3TemporalLayersFixedMode) {
 // Params: speed setting.
 class DatarateTestVP9RealTimeDenoiser : public DatarateTestVP9RealTime {
  public:
-  ~DatarateTestVP9RealTimeDenoiser() override = default;
+  virtual ~DatarateTestVP9RealTimeDenoiser() {}
 };
 
 // Check basic datarate targeting, for a single bitrate, when denoiser is on.

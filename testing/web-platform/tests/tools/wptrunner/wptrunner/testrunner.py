@@ -120,9 +120,7 @@ class TestRunner:
         try:
             return self.executor.run_test(test)
         except Exception:
-            message = "TestRunner.run_test caught an exception:\n"
-            message += traceback.format_exc()
-            self.logger.error(message)
+            self.logger.error(traceback.format_exc())
             raise
 
     def wait(self):
@@ -213,9 +211,10 @@ class BrowserManager:
             self.browser.start(group_metadata=group_metadata, **self.browser_settings)
             self.browser_pid = self.browser.pid
         except Exception:
-            self.logger.error(f"Failure during init:\n{traceback.format_exc()}")
+            self.logger.warning("Failure during init %s" % traceback.format_exc())
             if self.init_timer is not None:
                 self.init_timer.cancel()
+            self.logger.error(traceback.format_exc())
             succeeded = False
         else:
             succeeded = True
@@ -400,28 +399,10 @@ class TestRunnerManager(threading.Thread):
                 self.state = new_state
                 self.logger.debug(f"new state: {self.state.__class__.__name__}")
         except Exception:
-            message = "Uncaught exception in TestRunnerManager.run:\n"
-            message += traceback.format_exc()
-            self.logger.critical(message)
+            self.logger.error(traceback.format_exc())
             raise
         finally:
             self.logger.debug("TestRunnerManager main loop terminating, starting cleanup")
-
-            skipped_tests = []
-            while True:
-                _, _, test, _, _ = self.get_next_test()
-                if test is None:
-                    break
-                skipped_tests.append(test)
-
-            if skipped_tests:
-                self.logger.critical(
-                    f"Tests left in the queue: {skipped_tests[0].id!r} "
-                    f"and {len(skipped_tests) - 1} others"
-                )
-                for test in skipped_tests[1:]:
-                    self.logger.debug("Test left in the queue: {test[0].id!r}")
-
             force_stop = (not isinstance(self.state, RunnerManagerState.stop) or
                           self.state.force_stop)
             self.stop_runner(force=force_stop)
@@ -786,10 +767,7 @@ class TestRunnerManager(threading.Thread):
             subsuite, test_type, test, test_group, group_metadata = self.get_next_test()
             if test is None:
                 return RunnerManagerState.stop(force_stop)
-            if subsuite != self.state.subsuite:
-                self.logger.info(f"Restarting browser for new subsuite:{subsuite}")
-                restart = True
-            elif test_type != self.state.test_type:
+            if test_type != self.state.test_type:
                 self.logger.info(f"Restarting browser for new test type:{test_type}")
                 restart = True
             elif self.restart_on_new_group and test_group is not self.state.test_group:

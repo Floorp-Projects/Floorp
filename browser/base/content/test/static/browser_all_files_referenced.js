@@ -70,9 +70,6 @@ var gExceptionPaths = [
 
   // Localization file added programatically in FeatureCallout.sys.mjs
   "resource://app/localization/en-US/browser/featureCallout.ftl",
-
-  // CSS files are referenced inside JS in an html template
-  "chrome://browser/content/aboutlogins/components/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
@@ -103,6 +100,7 @@ if (AppConstants.NIGHTLY_BUILD) {
 // bug number to remove or use the file if it is indeed currently unreferenced.
 var allowlist = [
   // toolkit/components/pdfjs/content/PdfStreamConverter.sys.mjs
+  { file: "chrome://pdf.js/locale/chrome.properties" },
   { file: "chrome://pdf.js/locale/viewer.properties" },
 
   // security/manager/pki/resources/content/device_manager.js
@@ -200,7 +198,7 @@ var allowlist = [
   },
 
   // Files from upstream library
-  { file: "resource://pdf.js/web/debugger.mjs" },
+  { file: "resource://pdf.js/web/debugger.js" },
   { file: "resource://pdf.js/web/debugger.css" },
 
   // Starting from here, files in the allowlist are bugs that need fixing.
@@ -277,6 +275,10 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
+
+  // Bug 1851255: RustSuggest.sys.mjs is currently unused while pending
+  // integration into urlbar.
+  { file: "resource://gre/modules/RustSuggest.sys.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

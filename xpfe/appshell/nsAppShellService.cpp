@@ -33,7 +33,6 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
-#include "mozilla/Try.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Document.h"

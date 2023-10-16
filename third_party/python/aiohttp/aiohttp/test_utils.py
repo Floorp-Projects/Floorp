@@ -2,41 +2,35 @@
 
 import asyncio
 import contextlib
+import functools
 import gc
 import inspect
-import ipaddress
 import os
 import socket
 import sys
-import warnings
+import unittest
 from abc import ABC, abstractmethod
 from types import TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Iterator,
-    List,
-    Optional,
-    Type,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Iterator, List, Optional, Type, Union
 from unittest import mock
 
-from aiosignal import Signal
 from multidict import CIMultiDict, CIMultiDictProxy
 from yarl import URL
 
 import aiohttp
-from aiohttp.client import _RequestContextManager, _WSRequestContextManager
+from aiohttp.client import (
+    ClientResponse,
+    _RequestContextManager,
+    _WSRequestContextManager,
+)
 
 from . import ClientSession, hdrs
 from .abc import AbstractCookieJar
 from .client_reqrep import ClientResponse
 from .client_ws import ClientWebSocketResponse
-from .helpers import PY_38, sentinel
+from .helpers import sentinel
 from .http import HttpVersion, RawRequestMessage
+from .signals import Signal
 from .web import (
     Application,
     AppRunner,
@@ -54,24 +48,16 @@ if TYPE_CHECKING:  # pragma: no cover
 else:
     SSLContext = None
 
-if PY_38:
-    from unittest import IsolatedAsyncioTestCase as TestCase
-else:
-    from asynctest import TestCase  # type: ignore[no-redef]
 
 REUSE_ADDRESS = os.name == "posix" and sys.platform != "cygwin"
 
 
-def get_unused_port_socket(
-    host: str, family: socket.AddressFamily = socket.AF_INET
-) -> socket.socket:
-    return get_port_socket(host, 0, family)
+def get_unused_port_socket(host: str) -> socket.socket:
+    return get_port_socket(host, 0)
 
 
-def get_port_socket(
-    host: str, port: int, family: socket.AddressFamily
-) -> socket.socket:
-    s = socket.socket(family, socket.SOCK_STREAM)
+def get_port_socket(host: str, port: int) -> socket.socket:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     if REUSE_ADDRESS:
         # Windows has different semantics for SO_REUSEADDR,
         # so don't set it. Ref:
@@ -85,7 +71,7 @@ def unused_port() -> int:
     """Return a port that is unused on the current host."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
-        return cast(int, s.getsockname()[1])
+        return s.getsockname()[1]
 
 
 class BaseTestServer(ABC):
@@ -99,20 +85,16 @@ class BaseTestServer(ABC):
         host: str = "127.0.0.1",
         port: Optional[int] = None,
         skip_url_asserts: bool = False,
-        socket_factory: Callable[
-            [str, int, socket.AddressFamily], socket.socket
-        ] = get_port_socket,
         **kwargs: Any,
     ) -> None:
         self._loop = loop
-        self.runner: Optional[BaseRunner] = None
-        self._root: Optional[URL] = None
+        self.runner = None  # type: Optional[BaseRunner]
+        self._root = None  # type: Optional[URL]
         self.host = host
         self.port = port
         self._closed = False
         self.scheme = scheme
         self.skip_url_asserts = skip_url_asserts
-        self.socket_factory = socket_factory
 
     async def start_server(
         self, loop: Optional[asyncio.AbstractEventLoop] = None, **kwargs: Any
@@ -125,12 +107,7 @@ class BaseTestServer(ABC):
         await self.runner.setup()
         if not self.port:
             self.port = 0
-        try:
-            version = ipaddress.ip_address(self.host).version
-        except ValueError:
-            version = 4
-        family = socket.AF_INET6 if version == 6 else socket.AF_INET
-        _sock = self.socket_factory(self.host, self.port, family)
+        _sock = get_port_socket(self.host, self.port)
         self.host, self.port = _sock.getsockname()[:2]
         site = SockSite(self.runner, sock=_sock, ssl_context=self._ssl)
         await site.start()
@@ -284,8 +261,8 @@ class TestClient:
             cookie_jar = aiohttp.CookieJar(unsafe=True, loop=loop)
         self._session = ClientSession(loop=loop, cookie_jar=cookie_jar, **kwargs)
         self._closed = False
-        self._responses: List[ClientResponse] = []
-        self._websockets: List[ClientWebSocketResponse] = []
+        self._responses = []  # type: List[ClientResponse]
+        self._websockets = []  # type: List[ClientWebSocketResponse]
 
     async def start_server(self) -> None:
         await self._server.start_server(loop=self._loop)
@@ -303,8 +280,8 @@ class TestClient:
         return self._server
 
     @property
-    def app(self) -> Optional[Application]:
-        return cast(Optional[Application], getattr(self._server, "app", None))
+    def app(self) -> Application:
+        return getattr(self._server, "app", None)
 
     @property
     def session(self) -> ClientSession:
@@ -423,8 +400,9 @@ class TestClient:
         await self.close()
 
 
-class AioHTTPTestCase(TestCase):
-    """A base class to allow for unittest web applications using aiohttp.
+class AioHTTPTestCase(unittest.TestCase):
+    """A base class to allow for unittest web applications using
+    aiohttp.
 
     Provides the following:
 
@@ -439,49 +417,43 @@ class AioHTTPTestCase(TestCase):
     """
 
     async def get_application(self) -> Application:
-        """Get application.
-
+        """
         This method should be overridden
         to return the aiohttp.web.Application
         object to test.
+
         """
         return self.get_app()
 
     def get_app(self) -> Application:
         """Obsolete method used to constructing web application.
 
-        Use .get_application() coroutine instead.
+        Use .get_application() coroutine instead
+
         """
         raise RuntimeError("Did you forget to define get_application()?")
 
     def setUp(self) -> None:
-        if not PY_38:
-            asyncio.get_event_loop().run_until_complete(self.asyncSetUp())
+        self.loop = setup_test_loop()
 
-    async def asyncSetUp(self) -> None:
-        try:
-            self.loop = asyncio.get_running_loop()
-        except (AttributeError, RuntimeError):  # AttributeError->py36
-            self.loop = asyncio.get_event_loop_policy().get_event_loop()
+        self.app = self.loop.run_until_complete(self.get_application())
+        self.server = self.loop.run_until_complete(self.get_server(self.app))
+        self.client = self.loop.run_until_complete(self.get_client(self.server))
 
-        return await self.setUpAsync()
+        self.loop.run_until_complete(self.client.start_server())
+
+        self.loop.run_until_complete(self.setUpAsync())
 
     async def setUpAsync(self) -> None:
-        self.app = await self.get_application()
-        self.server = await self.get_server(self.app)
-        self.client = await self.get_client(self.server)
-
-        await self.client.start_server()
+        pass
 
     def tearDown(self) -> None:
-        if not PY_38:
-            self.loop.run_until_complete(self.asyncTearDown())
-
-    async def asyncTearDown(self) -> None:
-        return await self.tearDownAsync()
+        self.loop.run_until_complete(self.tearDownAsync())
+        self.loop.run_until_complete(self.client.close())
+        teardown_test_loop(self.loop)
 
     async def tearDownAsync(self) -> None:
-        await self.client.close()
+        pass
 
     async def get_server(self, app: Application) -> TestServer:
         """Return a TestServer instance."""
@@ -493,17 +465,18 @@ class AioHTTPTestCase(TestCase):
 
 
 def unittest_run_loop(func: Any, *args: Any, **kwargs: Any) -> Any:
-    """
-    A decorator dedicated to use with asynchronous AioHTTPTestCase test methods.
+    """A decorator dedicated to use with asynchronous methods of an
+    AioHTTPTestCase.
 
-    In 3.8+, this does nothing.
+    Handles executing an asynchronous function, using
+    the self.loop of the AioHTTPTestCase.
     """
-    warnings.warn(
-        "Decorator `@unittest_run_loop` is no longer needed in aiohttp 3.8+",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return func
+
+    @functools.wraps(func, *args, **kwargs)
+    def new_func(self: Any, *inner_args: Any, **inner_kwargs: Any) -> Any:
+        return self.loop.run_until_complete(func(self, *inner_args, **inner_kwargs))
+
+    return new_func
 
 
 _LOOP_FACTORY = Callable[[], asyncio.AbstractEventLoop]
@@ -525,7 +498,8 @@ def loop_context(
 def setup_test_loop(
     loop_factory: _LOOP_FACTORY = asyncio.new_event_loop,
 ) -> asyncio.AbstractEventLoop:
-    """Create and return an asyncio.BaseEventLoop instance.
+    """Create and return an asyncio.BaseEventLoop
+    instance.
 
     The caller should also call teardown_test_loop,
     once they are done with the loop.
@@ -540,16 +514,7 @@ def setup_test_loop(
     asyncio.set_event_loop(loop)
     if sys.platform != "win32" and not skip_watcher:
         policy = asyncio.get_event_loop_policy()
-        watcher: asyncio.AbstractChildWatcher
-        try:  # Python >= 3.8
-            # Refs:
-            # * https://github.com/pytest-dev/pytest-xdist/issues/620
-            # * https://stackoverflow.com/a/58614689/595220
-            # * https://bugs.python.org/issue35621
-            # * https://github.com/python/cpython/pull/14344
-            watcher = asyncio.ThreadedChildWatcher()
-        except AttributeError:  # Python < 3.8
-            watcher = asyncio.SafeChildWatcher()
+        watcher = asyncio.SafeChildWatcher()
         watcher.attach_loop(loop)
         with contextlib.suppress(NotImplementedError):
             policy.set_child_watcher(watcher)
@@ -557,7 +522,10 @@ def setup_test_loop(
 
 
 def teardown_test_loop(loop: asyncio.AbstractEventLoop, fast: bool = False) -> None:
-    """Teardown and cleanup an event_loop created by setup_test_loop."""
+    """Teardown and cleanup an event_loop created
+    by setup_test_loop.
+
+    """
     closed = loop.is_closed()
     if not closed:
         loop.call_soon(loop.stop)
@@ -577,7 +545,7 @@ def _create_app_mock() -> mock.MagicMock:
     def set_dict(app: Any, key: str, value: Any) -> None:
         app.__app_dict[key] = value
 
-    app = mock.MagicMock(spec=Application)
+    app = mock.MagicMock()
     app.__app_dict = {}
     app.__getitem__ = get_dict
     app.__setitem__ = set_dict
@@ -615,14 +583,16 @@ def make_mocked_request(
     transport: Any = sentinel,
     payload: Any = sentinel,
     sslcontext: Optional[SSLContext] = None,
-    client_max_size: int = 1024**2,
+    client_max_size: int = 1024 ** 2,
     loop: Any = ...,
 ) -> Request:
     """Creates mocked web.Request testing purposes.
 
     Useful in unit tests, when spinning full web server is overkill or
     specific conditions and errors are hard to trigger.
+
     """
+
     task = mock.Mock()
     if loop is ...:
         loop = mock.Mock()
@@ -649,7 +619,7 @@ def make_mocked_request(
         headers,
         raw_hdrs,
         closing,
-        None,
+        False,
         False,
         chunked,
         URL(path),

@@ -148,7 +148,7 @@ def format_taskgraph(options, parameters, logfile=None):
     if isinstance(parameters, str):
         parameters = parameters_loader(
             parameters,
-            overrides={"target-kinds": options.get("target_kinds")},
+            overrides={"target-kind": options.get("target_kind")},
             strict=False,
         )
 
@@ -327,11 +327,8 @@ def generate_taskgraph(options, parameters, logdir):
     "This is mainly useful with '--diff' to filter out expected differences.",
 )
 @argument(
-    "-k",
     "--target-kind",
-    dest="target_kinds",
-    action="append",
-    default=[],
+    default=None,
     help="only return tasks that are of the given kind, or their dependencies.",
 )
 @argument(
@@ -399,7 +396,7 @@ def show_taskgraph(options):
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
         overrides = {
-            "target-kinds": options.get("target_kinds"),
+            "target-kind": options.get("target_kind"),
         }
         parameters = [
             parameters_loader(None, strict=False, overrides=overrides)

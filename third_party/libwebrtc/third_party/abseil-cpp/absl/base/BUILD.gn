@@ -1,4 +1,4 @@
-# Copyright 2018 The Chromium Authors
+# Copyright 2018 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -13,10 +13,12 @@ absl_source_set("atomic_hook") {
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("errno_saver") {
   public = [ "internal/errno_saver.h" ]
   public_deps = [ ":config" ]
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
+}
 }
 
 absl_source_set("log_severity") {
@@ -28,15 +30,6 @@ absl_source_set("log_severity") {
   ]
 }
 
-absl_source_set("nullability") {
-  sources = [ "internal/nullability_impl.h" ]
-  public = [ "nullability.h" ]
-  deps = [
-    ":core_headers",
-    "//third_party/abseil-cpp/absl/meta:type_traits",
-  ]
-}
-
 absl_source_set("raw_logging_internal") {
   sources = [ "internal/raw_logging.cc" ]
   public = [ "internal/raw_logging.h" ]
@@ -44,15 +37,13 @@ absl_source_set("raw_logging_internal") {
     ":atomic_hook",
     ":config",
     ":core_headers",
-    ":errno_saver",
+#    ":errno_saver",
     ":log_severity",
   ]
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
-  if (moz_webrtc_build) {
-    public_deps -= [ ":errno_saver" ]
-  }
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("spinlock_wait") {
   sources = [
     "internal/spinlock_akaros.inc",
@@ -69,6 +60,7 @@ absl_source_set("spinlock_wait") {
   ]
   visibility = [ "//third_party/abseil-cpp/absl/base:*" ]
 }
+}
 
 absl_source_set("config") {
   public = [
@@ -78,18 +70,7 @@ absl_source_set("config") {
   ]
 }
 
-absl_source_set("cycleclock_internal") {
-  public = [
-    "internal/cycleclock_config.h",
-    "internal/unscaledcycleclock_config.h",
-  ]
-  visibility = [ "//third_party/abseil-cpp/absl/*" ]
-  deps = [
-    ":base_internal",
-    ":config",
-  ]
-}
-
+if (!moz_webrtc_build) {
 absl_source_set("dynamic_annotations") {
   public = [ "dynamic_annotations.h" ]
 
@@ -100,6 +81,7 @@ absl_source_set("dynamic_annotations") {
     ":config",
     ":core_headers",
   ]
+}
 }
 
 absl_source_set("core_headers") {
@@ -114,6 +96,7 @@ absl_source_set("core_headers") {
   public_deps = [ ":config" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("malloc_internal") {
   sources = [ "internal/low_level_alloc.cc" ]
   public = [
@@ -128,6 +111,7 @@ absl_source_set("malloc_internal") {
     ":dynamic_annotations",
     ":raw_logging_internal",
   ]
+}
 }
 
 absl_source_set("base_internal") {
@@ -145,6 +129,7 @@ absl_source_set("base_internal") {
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("base") {
   sources = [
     "internal/cycleclock.cc",
@@ -174,13 +159,13 @@ absl_source_set("base") {
     ":base_internal",
     ":config",
     ":core_headers",
-    ":cycleclock_internal",
     ":dynamic_annotations",
     ":log_severity",
     ":raw_logging_internal",
     ":spinlock_wait",
     "//third_party/abseil-cpp/absl/meta:type_traits",
   ]
+}
 }
 
 absl_source_set("throw_delegate") {
@@ -193,6 +178,7 @@ absl_source_set("throw_delegate") {
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
 }
 
+if (!moz_webrtc_build) {
 absl_source_set("exception_testing") {
   testonly = true
   public = [ "internal/exception_testing.h" ]
@@ -275,9 +261,6 @@ absl_source_set("strerror") {
     ":errno_saver",
   ]
   visibility = [ "//third_party/abseil-cpp/absl/*" ]
-  if (moz_webrtc_build) {
-    deps -= [ ":errno_saver" ]
-  }
 }
 
 absl_source_set("fast_type_id") {
@@ -287,32 +270,29 @@ absl_source_set("fast_type_id") {
 }
 
 absl_source_set("prefetch") {
-  public = [
-    "prefetch.h",
-  ]
+  public = [ "internal/prefetch.h" ]
+  deps = [ ":config" ]
+  visibility = [ "//third_party/abseil-cpp/absl/*" ]
+}
+
+absl_source_set("prefetch_test") {
+  testonly = true
+  sources = [ "internal/prefetch_test.cc" ]
   deps = [
-    ":config",
-    ":core_headers",
+    ":prefetch",
+    "//third_party/googletest:gtest",
   ]
 }
 
-absl_test("prefetch_test") {
-  sources = [ "prefetch_test.cc" ]
-  deps = [ ":prefetch" ]
-}
-
-absl_test("config_test") {
+if (false) {
+absl_source_set("config_test") {
+  testonly = true
   sources = [ "config_test.cc" ]
   deps = [
     ":config",
     "//third_party/abseil-cpp/absl/synchronization:thread_pool",
+    "//third_party/googletest:gtest",
   ]
 }
-
-absl_test("nullability_test") {
-  sources = [ "nullability_test.cc" ]
-  deps = [
-    ":core_headers",
-    ":nullability",
-  ]
+}
 }

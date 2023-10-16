@@ -93,6 +93,8 @@ class Breakpoint extends PureComponent {
 
   addBreakpoint(props) {
     const { breakpoint, editor, selectedSource } = props;
+    const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
+
     // Hidden Breakpoints are never rendered on the client
     if (breakpoint.options.hidden) {
       return;
@@ -102,13 +104,9 @@ class Breakpoint extends PureComponent {
       return;
     }
 
-    const doc = getDocument(selectedSource.id);
-    if (!doc) {
-      return;
-    }
-
-    const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
-    const line = toEditorLine(selectedSource.id, selectedLocation.line);
+    const sourceId = selectedSource.id;
+    const line = toEditorLine(sourceId, selectedLocation.line);
+    const doc = getDocument(sourceId);
 
     doc.setGutterMarker(line, "breakpoints", this.makeMarker());
 
@@ -134,13 +132,15 @@ class Breakpoint extends PureComponent {
       return;
     }
 
-    const doc = getDocument(selectedSource.id);
+    const sourceId = selectedSource.id;
+    const doc = getDocument(sourceId);
+
     if (!doc) {
       return;
     }
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
-    const line = toEditorLine(selectedSource.id, selectedLocation.line);
+    const line = toEditorLine(sourceId, selectedLocation.line);
 
     doc.setGutterMarker(line, "breakpoints", null);
     doc.removeLineClass(line, "wrap", "new-breakpoint");

@@ -282,7 +282,6 @@ include = [
   "PiecewiseLinearFunction",
   "BeforeFlag",
   "XTextScale",
-  "Zoom",
 ]
 item_types = ["enums", "structs", "unions", "typedefs", "functions", "constants"]
 renaming_overrides_prefixing = true
@@ -297,7 +296,6 @@ renaming_overrides_prefixing = true
 "nsSimpleContentList" = "nsSimpleContentList"
 "nsACString" = "nsACString"
 "nsAString" = "nsAString"
-"nsCString" = "nsCString"
 "nsString" = "nsString"
 "CopyableTArray" = "CopyableTArray"
 "nsTArray" = "nsTArray"
@@ -898,6 +896,13 @@ renaming_overrides_prefixing = true
   // pixel within its bounds opaquely, and the bounds contains at least a pixel.
   bool IsOpaque() const;
 
+  struct ActualCropRect {
+    nsIntRect mRect; // in image pixels
+    bool mIsEntireImage;
+  };
+
+  Maybe<ActualCropRect> ComputeActualCropRect() const;
+
   // Resolves the underlying image request if any.
   void ResolveImage(dom::Document&, const StyleGenericImage* aOld);
 
@@ -939,14 +944,13 @@ renaming_overrides_prefixing = true
 
 "FontWeight" = """
  SERVO_FIXED_POINT_HELPERS(StyleFontWeight, uint16_t, StyleFONT_WEIGHT_FRACTION_BITS);
- bool IsNormal() const { return *this == NORMAL; }
 
  inline bool IsBold() const;
 """
 
 "FontStyle" = """
  SERVO_FIXED_POINT_HELPERS(StyleFontStyle, int16_t, StyleFONT_STYLE_FRACTION_BITS);
- bool IsNormal() const { return *this == NORMAL; }
+
  inline bool IsItalic() const;
  inline bool IsOblique() const;
  inline float ObliqueAngle() const;  // Only for use when IsOblique() is true
@@ -956,11 +960,6 @@ renaming_overrides_prefixing = true
 
 "FontStretch" = """
  SERVO_FIXED_POINT_HELPERS(StyleFontStretch, uint16_t, StyleFONT_STRETCH_FRACTION_BITS);
- bool IsNormal() const { return *this == NORMAL; }
-"""
-
-"Zoom" = """
- SERVO_FIXED_POINT_HELPERS(StyleZoom, uint16_t, StyleZOOM_FRACTION_BITS);
 """
 
 "AnimationName" = """

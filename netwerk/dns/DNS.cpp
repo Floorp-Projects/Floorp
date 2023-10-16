@@ -414,6 +414,7 @@ AddrInfo::AddrInfo(const nsACString& host, DNSResolverType aResolverType,
                    uint32_t aTTL)
     : ttl(aTTL),
       mHostName(host),
+      mCanonicalName(),
       mResolverType(aResolverType),
       mTRRType(aTRRType),
       mAddresses(std::move(addresses)) {}

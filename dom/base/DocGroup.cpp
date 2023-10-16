@@ -50,7 +50,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 /* static */
 already_AddRefed<DocGroup> DocGroup::Create(
     BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey) {
-  return do_AddRef(new DocGroup(aBrowsingContextGroup, aKey));
+  RefPtr<DocGroup> docGroup = new DocGroup(aBrowsingContextGroup, aKey);
+  docGroup->mEventTarget = mozilla::GetMainThreadSerialEventTarget();
+  return docGroup.forget();
 }
 
 /* static */
@@ -127,6 +129,34 @@ DocGroup::~DocGroup() {
     FlushIframePostMessageQueue();
   }
 }
+
+nsresult DocGroup::Dispatch(TaskCategory aCategory,
+                            already_AddRefed<nsIRunnable>&& aRunnable) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  return SchedulerGroup::Dispatch(aCategory, std::move(aRunnable));
+}
+
+nsISerialEventTarget* DocGroup::EventTargetFor(TaskCategory aCategory) const {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mDocuments.IsEmpty());
+
+  // Here we have the same event target for every TaskCategory. The
+  // reason for that is that currently TaskCategory isn't used, and
+  // it's unsure if it ever will be (See Bug 1624819).
+  return mEventTarget;
+}
+
+AbstractThread* DocGroup::AbstractMainThreadFor(TaskCategory aCategory) {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mDocuments.IsEmpty());
+
+  // Here we have the same thread for every TaskCategory. The reason
+  // for that is that currently TaskCategory isn't used, and it's
+  // unsure if it ever will be (See Bug 1624819).
+  return AbstractThread::MainThread();
+}
+
 void DocGroup::SignalSlotChange(HTMLSlotElement& aSlot) {
   MOZ_ASSERT(!mSignalSlotList.Contains(&aSlot));
   mSignalSlotList.AppendElement(&aSlot);
@@ -188,7 +218,7 @@ void DocGroup::TryFlushIframePostMessages(uint64_t aWindowId) {
 void DocGroup::FlushIframePostMessageQueue() {
   nsCOMPtr<nsIRunnable> event;
   while ((event = mIframePostMessageQueue->GetEvent())) {
-    SchedulerGroup::Dispatch(event.forget());
+    Dispatch(TaskCategory::Other, event.forget());
   }
 }
 

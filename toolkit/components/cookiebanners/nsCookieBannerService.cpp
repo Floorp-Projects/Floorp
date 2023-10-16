@@ -424,13 +424,9 @@ nsresult nsCookieBannerService::GetClickRulesForDomainInternal(
       aDomain, aIsTopLevel, getter_AddRefs(ruleForDomain), aReportTelemetry);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool useGlobalSubFrameRules =
-      StaticPrefs::cookiebanners_service_enableGlobalRules_subFrames();
-
   // Extract click rule from an nsICookieBannerRule and if found append it to
   // the array returned.
-  auto appendClickRule = [&](const nsCOMPtr<nsICookieBannerRule>& bannerRule,
-                             bool isGlobal) {
+  auto appendClickRule = [&](const nsCOMPtr<nsICookieBannerRule>& bannerRule) {
     nsCOMPtr<nsIClickRule> clickRule;
     rv = bannerRule->GetClickRule(getter_AddRefs(clickRule));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -450,33 +446,17 @@ nsresult nsCookieBannerService::GetClickRulesForDomainInternal(
         (runContext == nsIClickRule::RUN_TOP && aIsTopLevel) ||
         (runContext == nsIClickRule::RUN_CHILD && !aIsTopLevel);
 
-    if (!runContextMatchesRule) {
-      return NS_OK;
+    if (runContextMatchesRule) {
+      aRules.AppendElement(clickRule);
     }
 
-    // If global sub-frame rules are disabled skip adding them.
-    if (!useGlobalSubFrameRules && isGlobal && !aIsTopLevel) {
-      if (MOZ_LOG_TEST(gCookieBannerLog, LogLevel::Debug)) {
-        nsAutoCString ruleId;
-        rv = bannerRule->GetId(ruleId);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        MOZ_LOG(gCookieBannerLog, LogLevel::Debug,
-                ("%s. Skip adding global sub-frame rule: %s.", __FUNCTION__,
-                 ruleId.get()));
-      }
-
-      return NS_OK;
-    }
-
-    aRules.AppendElement(clickRule);
     return NS_OK;
   };
 
   // If there is a domain-specific rule it takes precedence over the global
   // rules.
   if (ruleForDomain) {
-    return appendClickRule(ruleForDomain, false);
+    return appendClickRule(ruleForDomain);
   }
 
   if (!StaticPrefs::cookiebanners_service_enableGlobalRules()) {
@@ -486,7 +466,7 @@ nsresult nsCookieBannerService::GetClickRulesForDomainInternal(
 
   // Append all global click rules.
   for (nsICookieBannerRule* globalRule : mGlobalRules.Values()) {
-    rv = appendClickRule(globalRule, true);
+    rv = appendClickRule(globalRule);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

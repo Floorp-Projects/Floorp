@@ -20,12 +20,17 @@ typedef struct SpeexResamplerState_ SpeexResamplerState;
 
 namespace mozilla {
 
+class AudioNodeTrack;
+
 extern LazyLogModule gWebAudioAPILog;
 #define WEB_AUDIO_API_LOG(...) \
   MOZ_LOG(gWebAudioAPILog, LogLevel::Debug, (__VA_ARGS__))
 
-namespace dom::WebAudioUtils {
+namespace dom {
 
+struct AudioTimelineEvent;
+
+namespace WebAudioUtils {
 // 32 is the minimum required by the spec for createBuffer() and
 // createScriptProcessor() and matches what is used by Blink.  The limit
 // protects against large memory allocations.
@@ -37,6 +42,18 @@ const uint32_t MaxSampleRate = 192000;
 
 inline bool FuzzyEqual(float v1, float v2) { return fabsf(v1 - v2) < 1e-7f; }
 inline bool FuzzyEqual(double v1, double v2) { return fabs(v1 - v2) < 1e-7; }
+
+/**
+ * Converts an AudioTimelineEvent's floating point time values to tick values
+ * with respect to a destination AudioNodeTrack.
+ *
+ * This needs to be called for each AudioTimelineEvent that gets sent to an
+ * AudioNodeEngine, on the engine side where the AudioTimlineEvent is
+ * received.  This means that such engines need to be aware of their
+ * destination tracks as well.
+ */
+void ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
+                                      AudioNodeTrack* aDest);
 
 /**
  * Converts a linear value to decibels.  Returns aMinDecibels if the linear
@@ -51,6 +68,13 @@ inline float ConvertLinearToDecibels(float aLinearValue, float aMinDecibels) {
  */
 inline float ConvertDecibelsToLinear(float aDecibels) {
   return fdlibm_powf(10.0f, 0.05f * aDecibels);
+}
+
+/**
+ * Converts a decibel to a linear value.
+ */
+inline float ConvertDecibelToLinear(float aDecibel) {
+  return fdlibm_powf(10.0f, 0.05f * aDecibel);
 }
 
 inline void FixNaN(double& aDouble) {
@@ -178,7 +202,9 @@ int SpeexResamplerProcess(SpeexResamplerState* aResampler, uint32_t aChannel,
 
 void LogToDeveloperConsole(uint64_t aWindowID, const char* aKey);
 
-}  // namespace dom::WebAudioUtils
+}  // namespace WebAudioUtils
+
+}  // namespace dom
 }  // namespace mozilla
 
 #endif

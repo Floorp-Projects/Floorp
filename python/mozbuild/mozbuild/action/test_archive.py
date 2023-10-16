@@ -287,13 +287,6 @@ ARCHIVE_FILES = {
             "pattern": "specialpowers/**",
             "dest": "mochitest/extensions",
         },
-        # Needed by Windows a11y browser tests.
-        {
-            "source": buildconfig.topobjdir,
-            "base": "accessible/interfaces/ia2",
-            "pattern": "IA2Typelib.tlb",
-            "dest": "mochitest",
-        },
     ],
     "mozharness": [
         {

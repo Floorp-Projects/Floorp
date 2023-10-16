@@ -6,12 +6,13 @@ Tests render results with different depth bias values like 'positive', 'negative
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
 import {
-  kTextureFormatInfo,
   DepthStencilFormat,
   EncodableTextureFormat,
-} from '../../../format_info.js';
-import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
+  kTextureFormatInfo,
+} from '../../../capability_info.js';
+import { GPUTest } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
+import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 enum QuadAngle {
   Flat,
@@ -29,7 +30,7 @@ enum QuadAngle {
 // depthBias = 0.25 / (2 ** (-2 - 23)) = 8388608.
 const kPointTwoFiveBiasForPointTwoFiveZOnFloat = 8388608;
 
-class DepthBiasTest extends TextureTestMixin(GPUTest) {
+class DepthBiasTest extends GPUTest {
   runDepthBiasTestInternal(
     depthFormat: DepthStencilFormat,
     {
@@ -87,23 +88,19 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
         unreachable();
     }
 
-    const renderTarget = this.trackForCleanup(
-      this.device.createTexture({
-        format: renderTargetFormat,
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-    );
+    const renderTarget = this.device.createTexture({
+      format: renderTargetFormat,
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
 
-    const depthTexture = this.trackForCleanup(
-      this.device.createTexture({
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        format: depthFormat,
-        sampleCount: 1,
-        mipLevelCount: 1,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-      })
-    );
+    const depthTexture = this.device.createTexture({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: depthFormat,
+      sampleCount: 1,
+      mipLevelCount: 1,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+    });
 
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: depthTexture.createView(),
@@ -166,7 +163,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
       _expectedDepth: number;
     }
   ) {
-    const { depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
+    const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
       quadAngle,
       bias,
       biasSlopeScale,
@@ -176,7 +173,17 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
 
     const expColor = { Depth: _expectedDepth };
     const expTexelView = TexelView.fromTexelsAsColors(depthFormat, coords => expColor);
-    this.expectTexelViewComparisonIsOkInTexture({ texture: depthTexture }, expTexelView, [1, 1]);
+
+    const result = textureContentIsOKByT2B(
+      this,
+      { texture: depthTexture },
+      [1, 1],
+      { expTexelView },
+      { maxDiffULPsForFloatFormat: 1 }
+    );
+    this.eventualExpectOK(result);
+    this.trackForCleanup(renderTarget);
+    this.trackForCleanup(depthTexture);
   }
 
   runDepthBiasTestFor24BitFormat(
@@ -195,7 +202,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
       _expectedColor: Float32Array;
     }
   ) {
-    const { renderTarget } = this.runDepthBiasTestInternal(depthFormat, {
+    const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
       quadAngle,
       bias,
       biasSlopeScale,
@@ -211,7 +218,17 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
       A: _expectedColor[3],
     };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
-    this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
+
+    const result = textureContentIsOKByT2B(
+      this,
+      { texture: renderTarget },
+      [1, 1],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    this.eventualExpectOK(result);
+    this.trackForCleanup(renderTarget);
+    this.trackForCleanup(depthTexture);
   }
 
   createRenderPipelineForTest(
@@ -304,7 +321,7 @@ g.test('depth_bias')
         },
       ] as const)
   )
-  .fn(t => {
+  .fn(async t => {
     t.runDepthBiasTest('depth32float', t.params);
   });
 
@@ -346,7 +363,7 @@ g.test('depth_bias_24bit_format')
         },
       ] as const)
   )
-  .fn(t => {
+  .fn(async t => {
     const { format } = t.params;
     t.runDepthBiasTestFor24BitFormat(format, t.params);
   });

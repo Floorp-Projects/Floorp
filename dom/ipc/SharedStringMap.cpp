@@ -10,7 +10,6 @@
 #include "ScriptPreloader-inl.h"
 
 #include "mozilla/BinarySearch.h"
-#include "mozilla/Try.h"
 #include "mozilla/ipc/FileDescriptor.h"
 
 using namespace mozilla::loader;

@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Remote Protocol", "WebDriver BiDi")
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser.toml",
+    "test/browser/browser.ini",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]

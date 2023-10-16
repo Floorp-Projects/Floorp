@@ -22,22 +22,19 @@
 // NOTE2: Keep this file in sync with:
 //        `dom/worklet/tests/worklet_audioWorklet_WASM_features.js`.
 
-let release_or_beta = getBuildConfiguration("release_or_beta");
+let { release_or_beta } = getBuildConfiguration();
 let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
   [
-    'tail-calls',
-    wasmTailCallsEnabled(),
-    `(module (func (return_call 0)))`
+    'function-references',
+    wasmFunctionReferencesEnabled(),
+    `(module (func (param (ref extern))))`
   ],
   [
-    'relaxed-simd',
-    wasmRelaxedSimdEnabled(),
-    `(module (func (result v128)
-      unreachable
-      i16x8.relaxed_laneselect
-    ))`
+    'gc',
+    wasmGcEnabled(),
+    `(module (type $s (struct)) (func (param (ref null $s))))`
   ],
 ];
 

@@ -262,9 +262,7 @@
          * occurs.
          *
          * If ``element`` is from a different browsing context, the
-         * command will be run in that context. The test must not depend
-         * on the ``window.name`` property being unset on the target
-         * window.
+         * command will be run in that context.
          *
          * To send special keys, send the respective key's codepoint,
          * as defined by `WebDriver
@@ -419,9 +417,8 @@
         /**
          * Sets the state of a permission
          *
-         * This function causes permission requests and queries for the status
-         * of a certain permission type (e.g. "push", or "background-fetch") to
-         * always return ``state``.
+         * This function simulates a user setting a permission into a
+         * particular state.
          *
          * Matches the `Set Permission
          * <https://w3c.github.io/permissions/#set-permission-command>`_
@@ -433,10 +430,8 @@
          *
          * @param {PermissionDescriptor} descriptor - a `PermissionDescriptor
          *                              <https://w3c.github.io/permissions/#dom-permissiondescriptor>`_
-         *                              or derived object.
-         * @param {PermissionState} state - a `PermissionState
-         *                          <https://w3c.github.io/permissions/#dom-permissionstate>`_
-         *                          value.
+         *                              dictionary.
+         * @param {String} state - the state of the permission
          * @param {WindowProxy} context - Browsing context in which
          *                                to run the call, or null for the current
          *                                browsing context.
@@ -699,24 +694,6 @@
         },
 
         /**
-         * Accepts a FedCM "Confirm IDP login" dialog.
-         *
-         * Matches the `Confirm IDP Login
-         * <https://fedidcg.github.io/FedCM/#webdriver-confirmidplogin>`_
-         * WebDriver command.
-         *
-         * @param {WindowProxy} context - Browsing context in which
-         *                                to run the call, or null for the current
-         *                                browsing context.
-         *
-         * @returns {Promise} Fulfilled after the IDP login has started,
-         *                    or rejected in case the WebDriver command errors
-         */
-        confirm_idp_login: function(context=null) {
-          return window.test_driver_internal.confirm_idp_login(context);
-        },
-
-        /**
          * Selects an account from the Federated Credential Management dialog
          *
          * Matches the `Select account
@@ -952,10 +929,6 @@
 
         async cancel_fedcm_dialog(context=null) {
             throw new Error("cancel_fedcm_dialog() is not implemented by testdriver-vendor.js");
-        },
-
-        async confirm_idp_login(context=null) {
-            throw new Error("confirm_idp_login() is not implemented by testdriver-vendor.js");
         },
 
         async select_fedcm_account(account_index, context=null) {

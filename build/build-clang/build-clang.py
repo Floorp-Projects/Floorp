@@ -218,11 +218,11 @@ def build_one_stage(
             "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
             "-DCMAKE_ASM_COMPILER=%s" % slashify_path(asm[0]),
             "-DCMAKE_AR=%s" % slashify_path(ar),
-            "-DCMAKE_C_FLAGS_INIT=%s" % " ".join(cc[1:]),
-            "-DCMAKE_CXX_FLAGS_INIT=%s" % " ".join(cxx[1:]),
-            "-DCMAKE_ASM_FLAGS_INIT=%s" % " ".join(asm[1:]),
-            "-DCMAKE_EXE_LINKER_FLAGS_INIT=%s" % " ".join(ldflags),
-            "-DCMAKE_SHARED_LINKER_FLAGS_INIT=%s" % " ".join(ldflags),
+            "-DCMAKE_C_FLAGS=%s" % " ".join(cc[1:]),
+            "-DCMAKE_CXX_FLAGS=%s" % " ".join(cxx[1:]),
+            "-DCMAKE_ASM_FLAGS=%s" % " ".join(asm[1:]),
+            "-DCMAKE_EXE_LINKER_FLAGS=%s" % " ".join(ldflags),
+            "-DCMAKE_SHARED_LINKER_FLAGS=%s" % " ".join(ldflags),
             "-DCMAKE_BUILD_TYPE=%s" % build_type,
             "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
             "-DLLVM_TARGETS_TO_BUILD=%s" % machine_targets,
@@ -268,7 +268,7 @@ def build_one_stage(
             cmake_args += ["-DLLVM_ENABLE_TERMINFO=OFF"]
         if is_windows(target):
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
-            cmake_args.insert(-1, "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded")
+            cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
             if is_cross_compile(target):
                 cmake_args += [
                     f"-DCMAKE_TOOLCHAIN_FILE={src_dir}/cmake/platforms/WinMsvc.cmake",

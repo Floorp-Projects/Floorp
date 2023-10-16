@@ -117,14 +117,13 @@ class _FactoryIterableView(object):
 
     def __init__(self, factory):
         self._factory = factory
-        self._iterable = None
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, list(self))
+        return "{}({})".format(type(self).__name__, list(self._factory()))
 
     def __bool__(self):
         try:
-            next(iter(self))
+            next(self._factory())
         except StopIteration:
             return False
         return True
@@ -132,11 +131,7 @@ class _FactoryIterableView(object):
     __nonzero__ = __bool__  # XXX: Python 2.
 
     def __iter__(self):
-        iterable = (
-            self._factory() if self._iterable is None else self._iterable
-        )
-        self._iterable, current = itertools.tee(iterable)
-        return current
+        return self._factory()
 
 
 class _SequenceIterableView(object):

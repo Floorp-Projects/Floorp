@@ -268,18 +268,13 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
   if (avcodec_register_all) {
     avcodec_register_all();
   }
-  int logLevel = 0;
-  const char* ffmpegLogLevel = getenv("MOZ_AV_LOG_LEVEL");
-  if (ffmpegLogLevel && *ffmpegLogLevel) {
-    logLevel = atoi(ffmpegLogLevel);
-  } else if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Debug) ||
-             MOZ_LOG_TEST(sFFmpegAudioLog, LogLevel::Debug)) {
-    logLevel = AV_LOG_WARNING;
-  } else if (MOZ_LOG_TEST(sFFmpegVideoLog, LogLevel::Info) ||
-             MOZ_LOG_TEST(sFFmpegAudioLog, LogLevel::Info)) {
-    logLevel = AV_LOG_INFO;
+  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+    av_log_set_level(AV_LOG_WARNING);
+  } else if (MOZ_LOG_TEST(sPDMLog, LogLevel::Info)) {
+    av_log_set_level(AV_LOG_INFO);
+  } else {
+    av_log_set_level(0);
   }
-  av_log_set_level(logLevel);
   return LinkResult::Success;
 }
 

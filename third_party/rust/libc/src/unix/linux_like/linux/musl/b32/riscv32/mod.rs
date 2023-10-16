@@ -184,6 +184,22 @@ s! {
         __pad1: ::c_ulong,
         __pad2: ::c_ulong,
     }
+
+    pub struct flock {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off_t,
+        pub l_len: ::off_t,
+        pub l_pid: ::pid_t,
+    }
+
+    pub struct flock64 {
+        pub l_type: ::c_short,
+        pub l_whence: ::c_short,
+        pub l_start: ::off64_t,
+        pub l_len: ::off64_t,
+        pub l_pid: ::pid_t,
+    }
 }
 
 //pub const RLIM_INFINITY: ::rlim_t = !0;
@@ -350,7 +366,6 @@ pub const TIOCM_DSR: ::c_int = 256;
 
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
-pub const __SIZEOF_PTHREAD_BARRIERATTR_T: usize = 4;
 pub const O_DIRECT: ::c_int = 16384;
 pub const O_DIRECTORY: ::c_int = 65536;
 pub const O_NOFOLLOW: ::c_int = 131072;
@@ -489,7 +504,6 @@ pub const TIOCSWINSZ: ::c_int = 21524;
 pub const FIONREAD: ::c_int = 21531;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
-pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 32;
 
 pub const SYS_read: ::c_long = 63;
 pub const SYS_write: ::c_long = 64;

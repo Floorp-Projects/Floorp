@@ -6,3 +6,5 @@ prefs = [
 
 ["../browser_startup_images.js"]
 skip-if = ["!debug"]
+
+

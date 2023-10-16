@@ -11,10 +11,10 @@ Returns e1 * e2 + e3. Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
+import { fmaInterval } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,21 +22,21 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('fma', {
   f32_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
+    return generateTernaryToF32IntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      'finite',
-      FP.f32.fmaInterval
+      'f32-only',
+      fmaInterval
     );
   },
   f32_non_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
+    return generateTernaryToF32IntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
       'unfiltered',
-      FP.f32.fmaInterval
+      fmaInterval
     );
   },
 });

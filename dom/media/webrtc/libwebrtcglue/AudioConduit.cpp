@@ -156,6 +156,7 @@ WebrtcAudioConduit::WebrtcAudioConduit(
     : mCall(std::move(aCall)),
       mSendTransport(this),
       mRecvTransport(this),
+      mRecvStreamConfig(),
       mRecvStream(nullptr),
       mSendStreamConfig(&mSendTransport),
       mSendStream(nullptr),

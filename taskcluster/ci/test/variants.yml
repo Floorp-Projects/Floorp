@@ -72,7 +72,7 @@ geckoview-no-fission:
                 - "--disable-fission"
 
 geckoview-fission:
-    description: "{description} with fission enabled and default isolation strategy"
+    description: "{description} with fission enabled"
     component: "GeckoView::Sandboxing"
     expiration: "2024-03-01"
     when:
@@ -80,18 +80,12 @@ geckoview-fission:
     suffix: "fis"
     mozinfo: "fission"
 
-geckoview-fission-isolate-high-value:
-    description: "{description} with fission enabled and isolation strategy isolateHighValue"
-    component: "GeckoView::Sandboxing"
-    expiration: "2024-03-01"
-    when:
-        <<: *gv_e10s_filter
-    suffix: "fis-hv"
-    mozinfo: "fission-high-value"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=fission.webContentIsolationStrategy=2"
+fission:
+    description: "{description} with fission enabled"
+    component: "Core::DOM: Content Processes"
+    expiration: "never"
+    suffix: "fis"
+    mozinfo: "fission"
 
 no-fission:
     description: "{description} without fission enabled"
@@ -273,19 +267,6 @@ wmf-media-engine:
                 - "--tag=media-engine-compatible"
                 - "--setpref=media.wmf.media-engine.enabled=1"
                 - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"
-
-media-gpu:
-    description: "{description} for running media tests on the GPU worker"
-    component: "Core::Audio/Video: Playback"
-    expiration: "2024-04-21"
-    suffix: "mda-gpu"
-    mozinfo: "mda_gpu"
-    merge:
-        virtualization: virtual-with-gpu
-        mozharness:
-            extra-options:
-                - "--tag=media-gpu"
-                - "--setpref=media.hardware-video-decoding.force-enabled=true"
 
 msix:
     description: "{description} from msix packages"

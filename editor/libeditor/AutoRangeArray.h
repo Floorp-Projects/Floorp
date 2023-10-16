@@ -10,8 +10,7 @@
 #include "EditorBase.h"      // for EditorBase
 #include "EditorDOMPoint.h"  // for EditorDOMPoint, EditorDOMRange, etc
 #include "EditorForwards.h"
-#include "HTMLEditHelpers.h"  // for BlockInlineCheck
-#include "SelectionState.h"   // for SelectionState
+#include "SelectionState.h"  // for SelectionState
 
 #include "mozilla/ErrorResult.h"        // for ErrorResult
 #include "mozilla/IntegerRange.h"       // for IntegerRange
@@ -423,8 +422,6 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    * range.  Finally, updates ranges to keep edit target ranges as expected.
    *
    * @param aHTMLEditor         The HTMLEditor which will handle the splittings.
-   * @param aBlockInlineCheck   Considering block vs inline with whether the
-   *                            computed style or the HTML default style.
    * @param aElement            The editing host.
    * @param aAncestorLimiter    A content node which you don't want this to
    *                            split it.
@@ -433,8 +430,7 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
-      HTMLEditor& aHTMLEditor, BlockInlineCheck aBlockInlineCheck,
-      const dom::Element& aEditingHost,
+      HTMLEditor& aHTMLEditor, const dom::Element& aEditingHost,
       const nsIContent* aAncestorLimiter = nullptr);
 
   /**

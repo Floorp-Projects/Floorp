@@ -64,9 +64,4 @@ function checkPickerMode(toolbox, isOn) {
     isOn,
     "The picker mode is correct"
   );
-  is(
-    pickerButton.getAttribute("aria-pressed"),
-    isOn ? "true" : "false",
-    "The picker mode is correct"
-  );
 }

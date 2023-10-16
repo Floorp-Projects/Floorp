@@ -798,7 +798,3 @@ Injects attribution information into localized installers.
 snap-upstream-build
 -------------------
 Perform a Firefox Snap build using upstream tooling
-
-snap-upstream-test
--------------------
-Test a Firefox Snap built using upstream tooling

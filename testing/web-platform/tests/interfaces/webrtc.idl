@@ -289,8 +289,7 @@ interface RTCRtpSender {
   readonly attribute MediaStreamTrack? track;
   readonly attribute RTCDtlsTransport? transport;
   static RTCRtpCapabilities? getCapabilities(DOMString kind);
-  Promise<undefined> setParameters(RTCRtpSendParameters parameters,
-      optional RTCSetParameterOptions setParameterOptions = {});
+  Promise<undefined> setParameters(RTCRtpSendParameters parameters);
   RTCRtpSendParameters getParameters();
   Promise<undefined> replaceTrack(MediaStreamTrack? withTrack);
   undefined setStreams(MediaStream... streams);
@@ -354,9 +353,6 @@ dictionary RTCRtpCodecCapability : RTCRtpCodec {
 
 dictionary RTCRtpHeaderExtensionCapability {
   required DOMString uri;
-};
-
-dictionary RTCSetParameterOptions {
 };
 
 [Exposed=Window]

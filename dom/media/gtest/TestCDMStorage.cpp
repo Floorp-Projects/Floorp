@@ -194,7 +194,7 @@ static void ClearCDMStorage(already_AddRefed<nsIRunnable> aContinuation,
                             nsIThread* aTarget, PRTime aSince = -1) {
   RefPtr<ClearCDMStorageTask> task(
       new ClearCDMStorageTask(std::move(aContinuation), aTarget, aSince));
-  SchedulerGroup::Dispatch(task.forget());
+  SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
 }
 
 static void SimulatePBModeExit() {
@@ -504,9 +504,11 @@ class CDMStorageTest {
     // Collect nodeIds that are expected to remain for later comparison.
     EnumerateCDMStorageDir("id"_ns, NodeIdCollector(siteInfo.get()));
     // Invoke "Forget this site" on the main thread.
-    SchedulerGroup::Dispatch(NewRunnableMethod<UniquePtr<NodeInfo>&&>(
-        "CDMStorageTest::TestForgetThisSite_Forget", this,
-        &CDMStorageTest::TestForgetThisSite_Forget, std::move(siteInfo)));
+    SchedulerGroup::Dispatch(
+        TaskCategory::Other,
+        NewRunnableMethod<UniquePtr<NodeInfo>&&>(
+            "CDMStorageTest::TestForgetThisSite_Forget", this,
+            &CDMStorageTest::TestForgetThisSite_Forget, std::move(siteInfo)));
   }
 
   void TestForgetThisSite_Forget(UniquePtr<NodeInfo>&& aSiteInfo) {
@@ -667,9 +669,12 @@ class CDMStorageTest {
     // Collect nodeIds that are expected to remain for later comparison.
     EnumerateCDMStorageDir("id"_ns, BaseDomainNodeIdCollector(siteInfo.get()));
     // Invoke "ForgetThisBaseDomain" on the main thread.
-    SchedulerGroup::Dispatch(NewRunnableMethod<UniquePtr<BaseDomainNodeInfo>&&>(
-        "CDMStorageTest::TestForgetThisBaseDomain_Forget", this,
-        &CDMStorageTest::TestForgetThisBaseDomain_Forget, std::move(siteInfo)));
+    SchedulerGroup::Dispatch(
+        TaskCategory::Other,
+        NewRunnableMethod<UniquePtr<BaseDomainNodeInfo>&&>(
+            "CDMStorageTest::TestForgetThisBaseDomain_Forget", this,
+            &CDMStorageTest::TestForgetThisBaseDomain_Forget,
+            std::move(siteInfo)));
   }
 
   void TestForgetThisBaseDomain_Forget(
@@ -1088,7 +1093,7 @@ class CDMStorageTest {
         NewRunnableMethod("CDMStorageTest::Shutdown", this,
                           &CDMStorageTest::Shutdown),
         std::move(aContinuation), mNodeId));
-    SchedulerGroup::Dispatch(task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void Shutdown() {
@@ -1106,7 +1111,7 @@ class CDMStorageTest {
     Shutdown();
     nsCOMPtr<nsIRunnable> task = NewRunnableMethod(
         "CDMStorageTest::Dummy", this, &CDMStorageTest::Dummy);
-    SchedulerGroup::Dispatch(task.forget());
+    SchedulerGroup::Dispatch(TaskCategory::Other, task.forget());
   }
 
   void SessionMessage(const nsACString& aSessionId, uint32_t aMessageType,
@@ -1267,13 +1272,11 @@ TEST(GeckoMediaPlugins, CDMStorageGetNodeId)
   runner->DoTest(&CDMStorageTest::TestGetNodeId);
 }
 
-#if !defined(XP_WIN) || !defined(ASAN)
 TEST(GeckoMediaPlugins, CDMStorageBasic)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestBasicStorage);
 }
-#endif
 
 TEST(GeckoMediaPlugins, CDMStorageForgetThisSite)
 {

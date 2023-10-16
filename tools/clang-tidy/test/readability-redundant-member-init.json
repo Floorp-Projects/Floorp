@@ -1,8 +1,0 @@
-[
-  [
-    "warning",
-    "initializer for member 'f' is redundant",
-    "readability-redundant-member-init"
-  ],
-  { "reliability": "high" }
-]

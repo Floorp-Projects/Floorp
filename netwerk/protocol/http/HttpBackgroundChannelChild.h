@@ -57,23 +57,21 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                                const bool& aUseResponseHead,
                                const nsHttpHeaderArray& aRequestHeaders,
                                const HttpChannelOnStartRequestArgs& aArgs,
-                               const HttpChannelAltDataStream& aAltData,
-                               const TimeStamp& aOnStartRequestStart);
+                               const HttpChannelAltDataStream& aAltData);
 
   IPCResult RecvOnTransportAndData(const nsresult& aChannelStatus,
                                    const nsresult& aTransportStatus,
                                    const uint64_t& aOffset,
                                    const uint32_t& aCount,
                                    const nsACString& aData,
-                                   const bool& aDataFromSocketProcess,
-                                   const TimeStamp& aOnDataAvailableStart);
+                                   const bool& aDataFromSocketProcess);
 
   IPCResult RecvOnStopRequest(
       const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
       const TimeStamp& aLastActiveTabOptHit,
       const nsHttpHeaderArray& aResponseTrailers,
       nsTArray<ConsoleReportCollected>&& aConsoleReports,
-      const bool& aFromSocketProcess, const TimeStamp& aOnStopRequestStart);
+      const bool& aFromSocketProcess);
 
   IPCResult RecvOnConsoleReport(
       nsTArray<ConsoleReportCollected>&& aConsoleReports);

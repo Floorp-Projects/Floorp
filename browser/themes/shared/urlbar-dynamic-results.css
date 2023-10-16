@@ -60,6 +60,18 @@
   }
 }
 
+.urlbarView-row[dynamicType=onboardTabToSearch][selected] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-dynamic-onboardTabToSearch-text-container > .urlbarView-dynamic-onboardTabToSearch-first-row-container > .urlbarView-action {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .urlbarView-results:not([wrap]) > .urlbarView-row > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-dynamic-onboardTabToSearch-text-container > .urlbarView-dynamic-onboardTabToSearch-first-row-container > .urlbarView-action[slide-in] {
+    animation-name: urlbarView-action-slide-in;
+    animation-duration: 350ms;
+    animation-timing-function: var(--animation-easing-function);
+  }
+}
+
 /* Description text. */
 .urlbarView-dynamic-onboardTabToSearch-description {
   margin-block-start: 2px;
@@ -109,8 +121,6 @@
 }
 
 .urlbarView-quickaction-button {
-  font-size: var(--urlbarView-small-font-size);
-  font-weight: var(--font-weight-bold);
   box-shadow: 0 0 1px rgba(128, 128, 142, 0.9), 0 0 4px rgba(128, 128, 142, 0.5);
   border-radius: 4px;
   display: flex;
@@ -122,7 +132,7 @@
   min-width: 16px;
 
   &[disabled] {
-    opacity: var(--toolbarbutton-disabled-opacity);
+    opacity: .4;
   }
 
   &:hover:not([disabled]):not([selected]) {
@@ -137,13 +147,14 @@
   > .urlbarView-label {
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: .8em;
+    font-weight: 500;
   }
 
   > .urlbarView-favicon {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-inline: 0 .5em;
 
     > .urlbarView-favicon-img {
       width: 16px;
@@ -176,6 +187,10 @@
 
 /**
  * Weather
+ *
+ * All em units used below are based on the spec where 1em is 13px.
+ * Thus using 13px as a base to calculate the other relative em sizes, either
+ * a bigger or smaller ratio to 13px.
  */
 .urlbarView-dynamic-weather-currentConditions {
   color: var(--urlbar-box-text-color);
@@ -192,13 +207,20 @@
 }
 
 .urlbarView-dynamic-weather-currently {
-  font-size: var(--urlbarView-small-font-size);
+  font-size: 0.85em;
   margin-bottom: 0.53em;
 }
 
 .urlbarView-dynamic-weather-temperature {
   margin-inline-end: 0.3em;
   font-weight: 600;
+  /* The units from the spec:
+     - 1em is 13px
+     - temperature is 18px
+     - We need to figure out the temperature in units of em.
+     - 18px / 13px = 1.385em
+     Therefore, the temperature is 1.385em units.
+  */
   font-size: 1.385em;
   vertical-align: middle;
 }
@@ -346,7 +368,7 @@
 }
 
 .urlbarView-dynamic-weather-middle {
-  font-size: var(--urlbarView-small-font-size);
+  font-size: 0.85em;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -381,10 +403,108 @@
 }
 
 .urlbarView-dynamic-weather-bottom {
-  font-size: var(--urlbarView-small-font-size);
+  font-size: 0.85em;
   margin-top: 0.40em;
+  opacity: 0.6;
+}
 
-  .urlbarView-row[dynamicType=weather]:not([selected]) > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary > & {
-    opacity: 0.6;
+.urlbarView-row[dynamicType=weather][selected] > .urlbarView-row-inner > .urlbarView-dynamic-weather-summary {
+  > .urlbarView-dynamic-weather-top > .urlbarView-url {
+      color: inherit;
+    }
+
+  > .urlbarView-dynamic-weather-bottom {
+    opacity: 1;
   }
+}
+
+/**
+ * Add-ons
+ */
+
+.urlbarView-dynamic-addons-content {
+  display: grid;
+  grid-template-areas: "icon header"
+                       "icon description"
+                       "icon footer";
+  align-items: center;
+  padding: 5px 4px;
+}
+
+.urlbarView-dynamic-addons-icon {
+  grid-area: icon;
+  width: 24px;
+  height: 24px;
+  padding: calc((60px - 24px) / 2);
+  background-color: var(--urlbar-box-focus-bgcolor);
+  border-radius: 2px;
+  margin-inline-end: calc(/* .urlbarView-row-inner padding-inline */ var(--urlbarView-item-inline-padding) + /* .urlbarView-dynamic-addons-content padding */ 4px);
+  .urlbarView-row:is([selected], :hover) > .urlbarView-row-inner > .urlbarView-dynamic-addons-content > & {
+    background-color: var(--urlbarView-result-button-selected-background-color);
+  }
+}
+
+.urlbarView-dynamic-addons-header {
+  grid-area: header;
+  display: flex;
+  align-items: baseline;
+  overflow: hidden;
+}
+
+.urlbarView-dynamic-addons-description {
+  grid-area: description;
+  font-size: 0.85em;
+  color: var(--text-color-deemphasized);
+  margin-block: 2px 9px;
+  max-width: 80ch;
+  white-space: normal;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-y: hidden;
+}
+
+.urlbarView-dynamic-addons-footer {
+  grid-area: footer;
+  display: flex;
+  align-items: center;
+}
+
+.urlbarView-dynamic-addons-ratingContainer {
+  width: calc(16px * 5);
+  height: 16px;
+  margin-inline-end: 9px;
+
+  .urlbarView-dynamic-addons-content[treatment=b] > .urlbarView-dynamic-addons-footer > & {
+    display: none;
+  }
+}
+
+.urlbarView-dynamic-addons-rating {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  fill: currentColor;
+  -moz-context-properties: fill;
+}
+
+.urlbarView-dynamic-addons-rating[fill="empty"] {
+  background-image: url("chrome://global/skin/icons/rating-star.svg#empty");
+}
+.urlbarView-dynamic-addons-rating[fill="half"] {
+  background-image: url("chrome://global/skin/icons/rating-star.svg#half");
+}
+.urlbarView-dynamic-addons-rating[fill="half"]:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+.urlbarView-dynamic-addons-rating[fill="full"] {
+  background-image: url("chrome://global/skin/icons/rating-star.svg#full");
+}
+
+.urlbarView-dynamic-addons-reviews {
+  font-size: 0.85em;
+  color: var(--text-color-deemphasized);
 }

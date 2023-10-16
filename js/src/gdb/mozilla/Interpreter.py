@@ -53,11 +53,12 @@ class InterpreterRegs(object):
 
 @pretty_printer("js::AbstractFramePtr")
 class AbstractFramePtr(object):
-    Tag_InterpreterFrame = 0x0
-    Tag_BaselineFrame = 0x1
-    Tag_RematerializedFrame = 0x2
-    Tag_WasmDebugFrame = 0x3
-    TagMask = 0x3
+    Tag_ScriptFrameIterData = 0x0
+    Tag_InterpreterFrame = 0x1
+    Tag_BaselineFrame = 0x2
+    Tag_RematerializedFrame = 0x3
+    Tag_WasmDebugFrame = 0x4
+    TagMask = 0x7
 
     def __init__(self, value, cache):
         self.value = value
@@ -70,6 +71,9 @@ class AbstractFramePtr(object):
         ptr = self.value["ptr_"]
         tag = ptr & AbstractFramePtr.TagMask
         ptr = ptr & ~AbstractFramePtr.TagMask
+        if tag == AbstractFramePtr.Tag_ScriptFrameIterData:
+            label = "js::ScriptFrameIter::Data"
+            ptr = ptr.cast(self.itc.tScriptFrameIterData.pointer())
         if tag == AbstractFramePtr.Tag_InterpreterFrame:
             label = "js::InterpreterFrame"
             ptr = ptr.cast(self.itc.tInterpreterFrame.pointer())

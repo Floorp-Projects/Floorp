@@ -4,7 +4,6 @@
 ShaderModule CompilationInfo tests.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../common/util/data_tables.js';
 import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -69,71 +68,26 @@ const kInvalidShaderSources = [
 
 const kAllShaderSources = [...kValidShaderSources, ...kInvalidShaderSources];
 
-// This is the source the sourcemap refers to.
-const kOriginalSource = new Array(20)
-  .fill(0)
-  .map((_, i) => `original line ${i}`)
-  .join('\n');
-
-const kSourceMaps = {
-  none: undefined,
-  empty: {},
-  // A valid source map. It maps `unknown` on lines 4 and line 5 to
-  // `wasUnknown` from lines 20, 21 respectively
-  valid: {
-    version: 3,
-    sources: ['myCode'],
-    sourcesContent: [kOriginalSource],
-    names: ['myMain', 'wasUnknown'],
-    mappings: ';kBAYkCA,OACd;SAElB;gBAKOC;gBACAA',
-  },
-  // not a valid sourcemap
-  invalid: {
-    version: -123,
-    notAnything: {},
-  },
-  // The correct format but this data is for lines 11,12 even
-  // though the source only has 5 or 6 lines
-  nonMatching: {
-    version: 3,
-    sources: ['myCode'],
-    sourcesContent: [kOriginalSource],
-    names: ['myMain'],
-    mappings: ';;;;;;;;;;kBAYkCA,OACd;SAElB',
-  },
-};
-const kSourceMapsKeys = keysOf(kSourceMaps);
-
-g.test('getCompilationInfo_returns')
+g.test('compilationInfo_returns')
   .desc(
     `
-    Test that getCompilationInfo() can be called on any ShaderModule.
-
-    Note: sourcemaps are not used in the WebGPU API. We are only testing that
-    browser that happen to use them don't fail or crash if the sourcemap is
-    bad or invalid.
-
+    Test that compilationInfo() can be called on any ShaderModule.
     - Test for both valid and invalid shader modules.
     - Test for shader modules containing only ASCII and those containing unicode characters.
     - Test that the compilation info for valid shader modules contains no errors.
     - Test that the compilation info for invalid shader modules contains at least one error.`
   )
-  .params(u =>
-    u.combineWithParams(kAllShaderSources).beginSubcases().combine('sourceMapName', kSourceMapsKeys)
-  )
+  .paramsSimple(kAllShaderSources)
   .fn(async t => {
-    const { _code, valid, sourceMapName } = t.params;
+    const { _code, valid } = t.params;
 
     const shaderModule = t.expectGPUError(
       'validation',
-      () => {
-        const sourceMap = kSourceMaps[sourceMapName];
-        return t.device.createShaderModule({ code: _code, ...(sourceMap && { sourceMap }) });
-      },
+      () => t.device.createShaderModule({ code: _code }),
       !valid
     );
 
-    const info = await shaderModule.getCompilationInfo();
+    const info = await shaderModule.compilationInfo();
 
     t.expect(
       info instanceof GPUCompilationInfo,
@@ -160,29 +114,18 @@ g.test('line_number_and_position')
     `
     Test that line numbers reported by compilationInfo either point at an appropriate line and
     position or at 0:0, indicating an unknown position.
-
-    Note: sourcemaps are not used in the WebGPU API. We are only testing that
-    browser that happen to use them don't fail or crash if the sourcemap is
-    bad or invalid.
-
     - Test for invalid shader modules containing containing at least one error.
     - Test for shader modules containing only ASCII and those containing unicode characters.`
   )
-  .params(u =>
-    u
-      .combineWithParams(kInvalidShaderSources)
-      .beginSubcases()
-      .combine('sourceMapName', kSourceMapsKeys)
-  )
+  .paramsSimple(kInvalidShaderSources)
   .fn(async t => {
-    const { _code, _errorLine, sourceMapName } = t.params;
+    const { _code, _errorLine } = t.params;
 
-    const shaderModule = t.expectGPUError('validation', () => {
-      const sourceMap = kSourceMaps[sourceMapName];
-      return t.device.createShaderModule({ code: _code, ...(sourceMap && { sourceMap }) });
-    });
+    const shaderModule = t.expectGPUError('validation', () =>
+      t.device.createShaderModule({ code: _code })
+    );
 
-    const info = await shaderModule.getCompilationInfo();
+    const info = await shaderModule.compilationInfo();
 
     let foundAppropriateError = false;
     for (const message of info.messages) {
@@ -213,30 +156,20 @@ g.test('line_number_and_position')
 g.test('offset_and_length')
   .desc(
     `Test that message offsets and lengths are valid and align with any reported lineNum and linePos.
-
-     Note: sourcemaps are not used in the WebGPU API. We are only testing that
-     browser that happen to use them don't fail or crash if the sourcemap is
-     bad or invalid.
-
     - Test for valid and invalid shader modules.
     - Test for shader modules containing only ASCII and those containing unicode characters.`
   )
-  .params(u =>
-    u.combineWithParams(kAllShaderSources).beginSubcases().combine('sourceMapName', kSourceMapsKeys)
-  )
+  .paramsSimple(kAllShaderSources)
   .fn(async t => {
-    const { _code, valid, sourceMapName } = t.params;
+    const { _code, valid } = t.params;
 
     const shaderModule = t.expectGPUError(
       'validation',
-      () => {
-        const sourceMap = kSourceMaps[sourceMapName];
-        return t.device.createShaderModule({ code: _code, ...(sourceMap && { sourceMap }) });
-      },
+      () => t.device.createShaderModule({ code: _code }),
       !valid
     );
 
-    const info = await shaderModule.getCompilationInfo();
+    const info = await shaderModule.compilationInfo();
 
     for (const message of info.messages) {
       // Any offsets and lengths should reference valid spans of the shader code.

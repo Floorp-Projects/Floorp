@@ -74,12 +74,9 @@ using StringWrapperMap =
     NurseryAwareHashMap<JSString*, JSString*, ZoneAllocPolicy,
                         DuplicatesPossible>;
 
-// Cache for NewMaybeExternalString. It has cache entries for both the
-// Latin1 JSInlineString path and JSExternalString.
 class MOZ_NON_TEMPORARY_CLASS ExternalStringCache {
   static const size_t NumEntries = 4;
-  mozilla::Array<JSExternalString*, NumEntries> externalEntries_;
-  mozilla::Array<JSInlineString*, NumEntries> inlineEntries_;
+  mozilla::Array<JSString*, NumEntries> entries_;
 
  public:
   ExternalStringCache() { purge(); }
@@ -87,18 +84,10 @@ class MOZ_NON_TEMPORARY_CLASS ExternalStringCache {
   ExternalStringCache(const ExternalStringCache&) = delete;
   void operator=(const ExternalStringCache&) = delete;
 
-  void purge() {
-    externalEntries_ = {};
-    inlineEntries_ = {};
-  }
+  void purge() { mozilla::PodArrayZero(entries_); }
 
-  MOZ_ALWAYS_INLINE JSExternalString* lookupExternal(const char16_t* chars,
-                                                     size_t len) const;
-  MOZ_ALWAYS_INLINE void putExternal(JSExternalString* s);
-
-  MOZ_ALWAYS_INLINE JSInlineString* lookupInline(const char16_t* chars,
-                                                 size_t len) const;
-  MOZ_ALWAYS_INLINE void putInline(JSInlineString* s);
+  MOZ_ALWAYS_INLINE JSString* lookup(const char16_t* chars, size_t len) const;
+  MOZ_ALWAYS_INLINE void put(JSString* s);
 };
 
 class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {

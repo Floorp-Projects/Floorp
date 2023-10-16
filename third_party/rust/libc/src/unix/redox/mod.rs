@@ -47,10 +47,6 @@ pub type speed_t = u32;
 pub type suseconds_t = ::c_int;
 pub type tcflag_t = u32;
 pub type time_t = ::c_longlong;
-pub type id_t = ::c_uint;
-pub type pid_t = usize;
-pub type uid_t = u32;
-pub type gid_t = u32;
 
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
@@ -259,12 +255,6 @@ s! {
         pub tm_gmtoff: ::c_long,
         pub tm_zone: *const ::c_char,
     }
-
-    pub struct ucred {
-        pub pid: pid_t,
-        pub uid: uid_t,
-        pub gid: gid_t,
-    }
 }
 
 pub const UTSLENGTH: usize = 65;
@@ -287,10 +277,6 @@ pub const PATH_MAX: ::c_int = 4096;
 pub const F_GETLK: ::c_int = 5;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
-pub const F_ULOCK: ::c_int = 0;
-pub const F_LOCK: ::c_int = 1;
-pub const F_TLOCK: ::c_int = 2;
-pub const F_TEST: ::c_int = 3;
 
 // FIXME: relibc {
 pub const RTLD_DEFAULT: *mut ::c_void = 0i64 as *mut ::c_void;
@@ -473,15 +459,6 @@ pub const O_SYMLINK: ::c_int = 0x4000_0000;
 // FIXME: Fix negative values missing from includes
 pub const O_NOFOLLOW: ::c_int = -0x8000_0000;
 
-// locale.h
-pub const LC_ALL: ::c_int = 0;
-pub const LC_COLLATE: ::c_int = 1;
-pub const LC_CTYPE: ::c_int = 2;
-pub const LC_MESSAGES: ::c_int = 3;
-pub const LC_MONETARY: ::c_int = 4;
-pub const LC_NUMERIC: ::c_int = 5;
-pub const LC_TIME: ::c_int = 6;
-
 // netdb.h
 pub const AI_PASSIVE: ::c_int = 0x0001;
 pub const AI_CANONNAME: ::c_int = 0x0002;
@@ -525,7 +502,6 @@ pub const IP_MULTICAST_TTL: ::c_int = 33;
 pub const IP_MULTICAST_LOOP: ::c_int = 34;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 35;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 36;
-pub const IPPROTO_RAW: ::c_int = 255;
 // }
 
 // netinet/tcp.h
@@ -541,10 +517,6 @@ pub const POLLOUT: ::c_short = 0x004;
 pub const POLLERR: ::c_short = 0x008;
 pub const POLLHUP: ::c_short = 0x010;
 pub const POLLNVAL: ::c_short = 0x020;
-pub const POLLRDNORM: ::c_short = 0x040;
-pub const POLLRDBAND: ::c_short = 0x080;
-pub const POLLWRNORM: ::c_short = 0x100;
-pub const POLLWRBAND: ::c_short = 0x200;
 
 // pthread.h
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
@@ -1011,29 +983,6 @@ extern "C" {
 
     // unistd.h
     pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
-    pub fn getdtablesize() -> ::c_int;
-
-    // grp.h
-    pub fn getgrgid_r(
-        gid: ::gid_t,
-        grp: *mut ::group,
-        buf: *mut ::c_char,
-        buflen: ::size_t,
-        result: *mut *mut ::group,
-    ) -> ::c_int;
-    pub fn getgrnam_r(
-        name: *const ::c_char,
-        grp: *mut ::group,
-        buf: *mut ::c_char,
-        buflen: ::size_t,
-        result: *mut *mut ::group,
-    ) -> ::c_int;
-    pub fn getgrouplist(
-        user: *const ::c_char,
-        group: ::gid_t,
-        groups: *mut ::gid_t,
-        ngroups: *mut ::c_int,
-    ) -> ::c_int;
 
     // malloc.h
     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
@@ -1067,16 +1016,6 @@ extern "C" {
     ) -> ::c_int;
 
     // pwd.h
-    pub fn getpwent() -> *mut passwd;
-    pub fn setpwent();
-    pub fn endpwent();
-    pub fn getpwnam_r(
-        name: *const ::c_char,
-        pwd: *mut passwd,
-        buf: *mut ::c_char,
-        buflen: ::size_t,
-        result: *mut *mut passwd,
-    ) -> ::c_int;
     pub fn getpwuid_r(
         uid: ::uid_t,
         pwd: *mut passwd,
@@ -1093,19 +1032,6 @@ extern "C" {
     ) -> ::c_int;
     pub fn pthread_cancel(thread: ::pthread_t) -> ::c_int;
     pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
-    pub fn sigtimedwait(
-        set: *const sigset_t,
-        sig: *mut siginfo_t,
-        timeout: *const ::timespec,
-    ) -> ::c_int;
-    pub fn sigwait(set: *const sigset_t, sig: *mut ::c_int) -> ::c_int;
-
-    // stdlib.h
-    pub fn reallocarray(ptr: *mut ::c_void, nmemb: ::size_t, size: ::size_t) -> *mut ::c_void;
-
-    // string.h
-    pub fn strlcat(dst: *mut ::c_char, src: *const ::c_char, siz: ::size_t) -> ::size_t;
-    pub fn strlcpy(dst: *mut ::c_char, src: *const ::c_char, siz: ::size_t) -> ::size_t;
 
     // sys/epoll.h
     pub fn epoll_create(size: ::c_int) -> ::c_int;
@@ -1157,18 +1083,6 @@ extern "C" {
     // time.h
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::timezone) -> ::c_int;
     pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
-
-    // strings.h
-    pub fn explicit_bzero(p: *mut ::c_void, len: ::size_t);
-
-    pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
-    pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
-
-    pub fn getsubopt(
-        optionp: *mut *mut c_char,
-        tokens: *const *mut c_char,
-        valuep: *mut *mut c_char,
-    ) -> ::c_int;
 }
 
 cfg_if! {

@@ -1,7 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests quick suggest dismissals ("blocks").
+// Tests blocking quick suggest results, including best matches. See also:
+//
+// browser_bestMatch.js
+//   Includes tests for blocking best match rows independent of quick suggest,
+//   especially the superficial UI part that should be common to all types of
+//   best matches
 
 "use strict";
 
@@ -43,6 +48,13 @@ const REMOTE_SETTINGS_RESULTS = [
 let spy;
 
 add_setup(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.bestMatch.blockingEnabled", true],
+      ["browser.urlbar.quicksuggest.blockingEnabled", true],
+    ],
+  });
+
   ({ spy } = QuickSuggestTestUtils.createTelemetryPingSpy());
 
   await PlacesUtils.history.clear();
@@ -62,21 +74,29 @@ add_setup(async function () {
         attachment: REMOTE_SETTINGS_RESULTS,
       },
     ],
+    config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
   });
 });
 
 /**
- * Adds a test task that runs the given callback for each result in
- * `REMOTE_SETTINGS_RESULTS`.
+ * Adds a test task that runs the given callback with combinations of the
+ * following:
+ *
+ * - Best match disabled and enabled
+ * - Each result in `REMOTE_SETTINGS_RESULTS`
  *
  * @param {Function} fn
- *   The callback function. It's passed: `{ suggestion }`
+ *   The callback function. It's passed: `{ isBestMatch, suggestion }`
  */
 function add_combo_task(fn) {
   let taskFn = async () => {
-    for (let result of REMOTE_SETTINGS_RESULTS) {
-      info(`Running ${fn.name}: ${JSON.stringify({ result })}`);
-      await fn({ result });
+    for (let isBestMatch of [false, true]) {
+      UrlbarPrefs.set("bestMatch.enabled", isBestMatch);
+      for (let result of REMOTE_SETTINGS_RESULTS) {
+        info(`Running ${fn.name}: ${JSON.stringify({ isBestMatch, result })}`);
+        await fn({ isBestMatch, result });
+      }
+      UrlbarPrefs.clear("bestMatch.enabled");
     }
   };
   Object.defineProperty(taskFn, "name", { value: fn.name });
@@ -84,34 +104,51 @@ function add_combo_task(fn) {
 }
 
 // Picks the block button with the keyboard.
-add_combo_task(async function basic_keyboard({ result }) {
+add_combo_task(async function basic_keyboard({ result, isBestMatch }) {
   await doBasicBlockTest({
     result,
+    isBestMatch,
     block: async () => {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-        resultIndex: 1,
-      });
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+        });
+      } else {
+        // TAB twice to select the block button: once to select the main
+        // part of the row, once to select the block button.
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+        EventUtils.synthesizeKey("KEY_Enter");
+      }
     },
   });
 });
 
 // Picks the block button with the mouse.
-add_combo_task(async function basic_mouse({ result }) {
+add_combo_task(async function basic_mouse({ result, isBestMatch }) {
   await doBasicBlockTest({
     result,
+    isBestMatch,
     block: async () => {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-        resultIndex: 1,
-        openByMouse: true,
-      });
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+          openByMouse: true,
+        });
+      } else {
+        EventUtils.synthesizeMouseAtCenter(
+          UrlbarTestUtils.getButtonForResultIndex(window, "block", 1),
+          {}
+        );
+      }
     },
   });
 });
 
 // Uses the key shortcut to block a suggestion.
-add_combo_task(async function basic_keyShortcut({ result }) {
+add_combo_task(async function basic_keyShortcut({ result, isBestMatch }) {
   await doBasicBlockTest({
     result,
+    isBestMatch,
     block: () => {
       // Arrow down once to select the row.
       EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -120,12 +157,12 @@ add_combo_task(async function basic_keyShortcut({ result }) {
   });
 });
 
-async function doBasicBlockTest({ result, block }) {
+async function doBasicBlockTest({ result, isBestMatch, block }) {
   spy.resetHistory();
   let index = 2;
-  let suggested_index = -1;
-  let suggested_index_relative_to_group = true;
-  let match_type = "firefox-suggest";
+  let suggested_index = isBestMatch ? 1 : -1;
+  let suggested_index_relative_to_group = !isBestMatch;
+  let match_type = isBestMatch ? "best-match" : "firefox-suggest";
 
   let pingsSubmitted = 0;
   GleanPings.quickSuggest.testBeforeNextSubmit(() => {
@@ -179,6 +216,7 @@ async function doBasicBlockTest({ result, block }) {
   let isSponsored = result.keywords[0] == "sponsored";
   await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
+    isBestMatch,
     isSponsored,
     originalUrl: result.url,
   });
@@ -215,6 +253,21 @@ async function doBasicBlockTest({ result, block }) {
   } else {
     scalars[TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED] = index;
     scalars[TELEMETRY_SCALARS.BLOCK_NONSPONSORED] = index;
+  }
+  if (isBestMatch) {
+    if (isSponsored) {
+      scalars = {
+        ...scalars,
+        [TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH]: index,
+      };
+    } else {
+      scalars = {
+        ...scalars,
+        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: index,
+        [TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH]: index,
+      };
+    }
   }
   QuickSuggestTestUtils.assertScalars(scalars);
 
@@ -264,41 +317,176 @@ async function doBasicBlockTest({ result, block }) {
 
 // Blocks multiple suggestions one after the other.
 add_task(async function blockMultiple() {
-  for (let i = 0; i < REMOTE_SETTINGS_RESULTS.length; i++) {
-    // Do a search that triggers the i'th suggestion.
-    let { keywords, url } = REMOTE_SETTINGS_RESULTS[i];
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: keywords[0],
-    });
-    await QuickSuggestTestUtils.assertIsQuickSuggest({
-      window,
-      originalUrl: url,
-      isSponsored: keywords[0] == "sponsored",
-    });
+  for (let isBestMatch of [false, true]) {
+    UrlbarPrefs.set("bestMatch.enabled", isBestMatch);
+    info(`Testing with best match enabled: ${isBestMatch}`);
 
-    // Block it.
-    await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-      resultIndex: 1,
-    });
-    Assert.ok(
-      await QuickSuggest.blockedSuggestions.has(url),
-      "Suggestion is blocked after picking block button"
-    );
+    for (let i = 0; i < REMOTE_SETTINGS_RESULTS.length; i++) {
+      // Do a search that triggers the i'th suggestion.
+      let { keywords, url } = REMOTE_SETTINGS_RESULTS[i];
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        value: keywords[0],
+      });
+      await QuickSuggestTestUtils.assertIsQuickSuggest({
+        window,
+        isBestMatch,
+        originalUrl: url,
+        isSponsored: keywords[0] == "sponsored",
+      });
 
-    // Make sure all previous suggestions remain blocked and no other
-    // suggestions are blocked yet.
-    for (let j = 0; j < REMOTE_SETTINGS_RESULTS.length; j++) {
-      Assert.equal(
-        await QuickSuggest.blockedSuggestions.has(
-          REMOTE_SETTINGS_RESULTS[j].url
-        ),
-        j <= i,
-        `Suggestion at index ${j} is blocked or not as expected`
+      // Block it.
+      if (UrlbarPrefs.get("resultMenu")) {
+        await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
+          resultIndex: 1,
+        });
+      } else {
+        EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+        EventUtils.synthesizeKey("KEY_Enter");
+      }
+      Assert.ok(
+        await QuickSuggest.blockedSuggestions.has(url),
+        "Suggestion is blocked after picking block button"
+      );
+
+      // Make sure all previous suggestions remain blocked and no other
+      // suggestions are blocked yet.
+      for (let j = 0; j < REMOTE_SETTINGS_RESULTS.length; j++) {
+        Assert.equal(
+          await QuickSuggest.blockedSuggestions.has(
+            REMOTE_SETTINGS_RESULTS[j].url
+          ),
+          j <= i,
+          `Suggestion at index ${j} is blocked or not as expected`
+        );
+      }
+    }
+
+    await UrlbarTestUtils.promisePopupClose(window);
+    await QuickSuggest.blockedSuggestions.clear();
+    UrlbarPrefs.clear("bestMatch.enabled");
+  }
+});
+
+// Tests with blocking disabled for both best matches and non-best-matches.
+add_combo_task(async function disabled_both({ result, isBestMatch }) {
+  await doDisabledTest({
+    result,
+    isBestMatch,
+    quickSuggestBlockingEnabled: false,
+    bestMatchBlockingEnabled: false,
+  });
+});
+
+// Tests with blocking disabled only for non-best-matches.
+add_combo_task(async function disabled_quickSuggest({ result, isBestMatch }) {
+  await doDisabledTest({
+    result,
+    isBestMatch,
+    quickSuggestBlockingEnabled: false,
+    bestMatchBlockingEnabled: true,
+  });
+});
+
+// Tests with blocking disabled only for best matches.
+add_combo_task(async function disabled_bestMatch({ result, isBestMatch }) {
+  await doDisabledTest({
+    result,
+    isBestMatch,
+    quickSuggestBlockingEnabled: true,
+    bestMatchBlockingEnabled: false,
+  });
+});
+
+async function doDisabledTest({
+  result,
+  isBestMatch,
+  bestMatchBlockingEnabled,
+  quickSuggestBlockingEnabled,
+}) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.bestMatch.blockingEnabled", bestMatchBlockingEnabled],
+      [
+        "browser.urlbar.quicksuggest.blockingEnabled",
+        quickSuggestBlockingEnabled,
+      ],
+    ],
+  });
+
+  // Do a search to show a suggestion.
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: result.keywords[0],
+  });
+  let expectedResultCount = 2;
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    expectedResultCount,
+    "Two rows are present after searching (heuristic + suggestion)"
+  );
+  let details = await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
+    isBestMatch,
+    originalUrl: result.url,
+    isSponsored: result.keywords[0] == "sponsored",
+  });
+
+  // Arrow down to select the suggestion and press the key shortcut to block.
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  EventUtils.synthesizeKey("KEY_Delete", { shiftKey: true });
+  Assert.ok(
+    UrlbarTestUtils.isPopupOpen(window),
+    "View remains open after trying to block result"
+  );
+
+  if (
+    (isBestMatch && !bestMatchBlockingEnabled) ||
+    (!isBestMatch && !quickSuggestBlockingEnabled)
+  ) {
+    // Blocking is disabled. The key shortcut shouldn't have done anything.
+    if (!UrlbarPrefs.get("resultMenu")) {
+      Assert.ok(
+        !details.element.row._buttons.get("block"),
+        "Block button is not present"
       );
     }
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      expectedResultCount,
+      "Same number of results after key shortcut"
+    );
+    await QuickSuggestTestUtils.assertIsQuickSuggest({
+      window,
+      isBestMatch,
+      originalUrl: result.url,
+      isSponsored: result.keywords[0] == "sponsored",
+    });
+    Assert.ok(
+      !(await QuickSuggest.blockedSuggestions.has(result.url)),
+      "Suggestion is not blocked"
+    );
+  } else {
+    // Blocking is enabled. The suggestion should have been blocked.
+    if (!UrlbarPrefs.get("resultMenu")) {
+      Assert.ok(
+        details.element.row._buttons.get("block"),
+        "Block button is present"
+      );
+    }
+    Assert.equal(
+      UrlbarTestUtils.getResultCount(window),
+      1,
+      "Only one row after blocking suggestion"
+    );
+    await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
+    Assert.ok(
+      await QuickSuggest.blockedSuggestions.has(result.url),
+      "Suggestion is blocked"
+    );
+    await QuickSuggest.blockedSuggestions.clear();
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await QuickSuggest.blockedSuggestions.clear();
-});
+  await SpecialPowers.popPrefEnv();
+}

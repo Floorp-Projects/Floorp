@@ -2296,7 +2296,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **subtest unit**: ms
    * **test script**: speedometer3.js
    * **test summary**: flatten
-   * **test url**: `<http://\<host\>:\<port\>/index.html>`__
+   * **test url**: `<http://\<host\>:\<port\>/InteractiveRunner.html>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -2499,6 +2499,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-benchmark-chrome-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅
@@ -2632,7 +2637,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    * **subtest unit**: ms
    * **test script**: speedometer3.js
    * **test summary**: flatten
-   * **test url**: `<http://\<host\>:\<port\>/index.html>`__
+   * **test url**: `<http://\<host\>:\<port\>/InteractiveRunner.html>`__
    * **type**: benchmark
    * **unit**: score
    * **Test Task**:
@@ -2835,6 +2840,11 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
+      * - **browsertime-benchmark-chrome-speedometer3**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
       * - **browsertime-benchmark-firefox-speedometer3**
         - ✅
         - ✅

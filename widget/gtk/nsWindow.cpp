@@ -277,7 +277,8 @@ namespace mozilla {
 #ifdef MOZ_X11
 class CurrentX11TimeGetter {
  public:
-  explicit CurrentX11TimeGetter(GdkWindow* aWindow) : mWindow(aWindow) {}
+  explicit CurrentX11TimeGetter(GdkWindow* aWindow)
+      : mWindow(aWindow), mAsyncUpdateStart() {}
 
   guint32 GetCurrentTime() const { return gdk_x11_get_server_time(mWindow); }
 
@@ -976,7 +977,6 @@ void nsWindow::Show(bool aState) {
 #endif
 
   NativeShow(aState);
-  RefreshWindowClass();
 }
 
 void nsWindow::ResizeInt(const Maybe<LayoutDeviceIntPoint>& aMove,
@@ -3458,7 +3458,7 @@ nsresult nsWindow::SetTitle(const nsAString& aTitle) {
   if (!mShell) return NS_OK;
 
     // convert the string into utf8 and set the title.
-#define UTF8_FOLLOWBYTE(ch) (((ch) & 0xC0) == 0x80)
+#define UTF8_FOLLOWBYTE(ch) (((ch)&0xC0) == 0x80)
   NS_ConvertUTF16toUTF8 titleUTF8(aTitle);
   if (titleUTF8.Length() > NS_WINDOW_TITLE_MAX_LENGTH) {
     // Truncate overlong titles (bug 167315). Make sure we chop after a
@@ -4685,7 +4685,7 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
     case 7:
       NS_WARNING("We're not supporting legacy horizontal scroll event");
       return;
-    // Map buttons 8-9(10) to back/forward
+    // Map buttons 8-9 to back/forward
     case 8:
       if (!Preferences::GetBool("mousebutton.4th.enabled", true)) {
         return;
@@ -4693,7 +4693,6 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
       DispatchCommandEvent(nsGkAtoms::Back);
       return;
     case 9:
-    case 10:
       if (!Preferences::GetBool("mousebutton.5th.enabled", true)) {
         return;
       }
@@ -6422,17 +6421,6 @@ void nsWindow::RefreshWindowClass(void) {
     XFree(class_hint);
   }
 #endif /* MOZ_X11 */
-
-#ifdef MOZ_WAYLAND
-  static auto sGdkWaylandWindowSetApplicationId =
-      (void (*)(GdkWindow*, const char*))dlsym(
-          RTLD_DEFAULT, "gdk_wayland_window_set_application_id");
-
-  if (GdkIsWaylandDisplay() && sGdkWaylandWindowSetApplicationId &&
-      !mGtkWindowAppClass.IsEmpty()) {
-    sGdkWaylandWindowSetApplicationId(gdkWindow, mGtkWindowAppClass.get());
-  }
-#endif /* MOZ_WAYLAND */
 }
 
 void nsWindow::SetWindowClass(const nsAString& xulWinType,

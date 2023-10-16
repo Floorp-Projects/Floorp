@@ -72,8 +72,6 @@ gfx::ColorRange MacIOSurfaceTextureHostOGL::GetColorRange() const {
 
 void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  MOZ_ASSERT(mExternalImageId.isSome());
-
   RefPtr<wr::RenderTextureHost> texture =
       new wr::RenderMacIOSurfaceTextureHost(GetMacIOSurface());
 

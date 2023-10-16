@@ -55,8 +55,6 @@ class WebRenderTextureHost : public TextureHost {
   const char* Name() override { return "WebRenderTextureHost"; }
 #endif
 
-  void MaybeDestroyRenderTexture() override;
-
   WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
   RemoteTextureHostWrapper* AsRemoteTextureHostWrapper() override {

@@ -325,7 +325,11 @@
       stroke: transparent;
 
       &:is([pinned], [sharing]):hover {
-        background-color: var(--tab-icon-overlay-stroke, light-dark(white, black));
+        background-color: var(--tab-icon-overlay-stroke, white);
+
+        #TabsToolbar[brighttext] & {
+          background-color: var(--tab-icon-overlay-stroke, black);
+        }
       }
     }
 
@@ -334,8 +338,13 @@
       inset-inline-end: -6px;
       z-index: 1; /* Overlay tab title */
       padding: 2px;
-      stroke: var(--tab-icon-overlay-stroke, light-dark(white, black));
-      color: var(--tab-icon-overlay-fill, light-dark(black, white));
+      stroke: var(--tab-icon-overlay-stroke, white);
+      color: var(--tab-icon-overlay-fill, black);
+
+      #TabsToolbar[brighttext] & {
+        stroke: var(--tab-icon-overlay-stroke, black);
+        color: var(--tab-icon-overlay-fill, white);
+      }
     }
   }
 
@@ -770,8 +779,7 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
         url("chrome://browser/skin/tabbrowser/tab-loading@2x.png") 2x
       );
 
-      /* FIXME: This should probably also apply in regular dark mode? */
-      :root[lwt-popup="dark"] &[progress]:not([selected]) {
+      :root[lwt-popup-brighttext] &[progress]:not([selected]) {
         list-style-image: image-set(
           url("chrome://browser/skin/tabbrowser/tab-loading-inverted.png"),
           url("chrome://browser/skin/tabbrowser/tab-loading-inverted@2x.png") 2x

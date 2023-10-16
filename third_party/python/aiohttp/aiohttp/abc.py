@@ -135,9 +135,6 @@ else:
     IterableBase = Iterable
 
 
-ClearCookiePredicate = Callable[["Morsel[str]"], bool]
-
-
 class AbstractCookieJar(Sized, IterableBase):
     """Abstract Cookie Jar."""
 
@@ -145,12 +142,8 @@ class AbstractCookieJar(Sized, IterableBase):
         self._loop = get_running_loop(loop)
 
     @abstractmethod
-    def clear(self, predicate: Optional[ClearCookiePredicate] = None) -> None:
-        """Clear all cookies if no predicate is passed."""
-
-    @abstractmethod
-    def clear_domain(self, domain: str) -> None:
-        """Clear all cookies for domain and all subdomains."""
+    def clear(self) -> None:
+        """Clear all cookies."""
 
     @abstractmethod
     def update_cookies(self, cookies: LooseCookies, response_url: URL = URL()) -> None:
@@ -166,7 +159,7 @@ class AbstractStreamWriter(ABC):
 
     buffer_size = 0
     output_size = 0
-    length: Optional[int] = 0
+    length = 0  # type: Optional[int]
 
     @abstractmethod
     async def write(self, chunk: bytes) -> None:

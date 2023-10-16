@@ -108,10 +108,9 @@ add_task(async function test_support_toolbar_field_brighttext() {
     hexToCSS("#000000"),
     "Color has been set"
   );
-  Assert.equal(
-    root.getAttribute("lwt-toolbar-field"),
-    "light",
-    "Should be light"
+  Assert.ok(
+    !root.hasAttribute("lwt-toolbar-field-brighttext"),
+    "Brighttext attribute should not be set"
   );
 
   await extension.unload();
@@ -136,16 +135,15 @@ add_task(async function test_support_toolbar_field_brighttext() {
     hexToCSS("#ffffff"),
     "Color has been set"
   );
-  Assert.equal(
-    root.getAttribute("lwt-toolbar-field"),
-    "dark",
-    "Should be dark"
+  Assert.ok(
+    root.hasAttribute("lwt-toolbar-field-brighttext"),
+    "Brighttext attribute should be set"
   );
 
   await extension.unload();
 });
 
-// Verifies that we apply the lwt-toolbar-field="dark" attribute when
+// Verifies that we apply the lwt-toolbar-field-brighttext attribute when
 // toolbar fields are dark text on a dark background.
 add_task(async function test_support_toolbar_field_brighttext_dark_on_dark() {
   let root = document.documentElement;
@@ -176,10 +174,9 @@ add_task(async function test_support_toolbar_field_brighttext_dark_on_dark() {
     hexToCSS("#111111"),
     "Color has been set"
   );
-  Assert.equal(
-    root.getAttribute("lwt-toolbar-field"),
-    "dark",
-    "toolbar-field color-scheme should be dark"
+  Assert.ok(
+    root.hasAttribute("lwt-toolbar-field-brighttext"),
+    "Brighttext attribute should be set"
   );
 
   await extension.unload();
