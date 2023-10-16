@@ -330,39 +330,7 @@ if (!build_with_mozilla) { # See Bug 1820869.
       "include/audio_device_data_observer.h",
     ]
     if (is_android) {
-      sources += [
-        "android/audio_common.h",
-        "android/audio_device_template.h",
-        "android/audio_manager.cc",
-        "android/audio_manager.h",
-        "android/audio_record_jni.cc",
-        "android/audio_record_jni.h",
-        "android/audio_track_jni.cc",
-        "android/audio_track_jni.h",
-        "android/build_info.cc",
-        "android/build_info.h",
-        "android/opensles_common.cc",
-        "android/opensles_common.h",
-        "android/opensles_player.cc",
-        "android/opensles_player.h",
-        "android/opensles_recorder.cc",
-        "android/opensles_recorder.h",
-      ]
-      libs = [
-        "log",
-        "OpenSLES",
-      ]
-      if (rtc_enable_android_aaudio) {
-        sources += [
-          "android/aaudio_player.cc",
-          "android/aaudio_player.h",
-          "android/aaudio_recorder.cc",
-          "android/aaudio_recorder.h",
-          "android/aaudio_wrapper.cc",
-          "android/aaudio_wrapper.h",
-        ]
-        libs += [ "aaudio" ]
-      }
+      deps += [ "../../sdk/android:native_api_audio_device_module" ]
 
       if (build_with_mozilla) {
         include_dirs += [
@@ -536,12 +504,6 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
       ]
     }
     if (is_android) {
-      sources += [
-        "android/audio_device_unittest.cc",
-        "android/audio_manager_unittest.cc",
-        "android/ensure_initialized.cc",
-        "android/ensure_initialized.h",
-      ]
       deps += [
         "../../sdk/android:internal_jni",
         "../../sdk/android:libjingle_peerconnection_java",
@@ -553,22 +515,5 @@ if (rtc_include_tests && !build_with_chromium && !build_with_mozilla) {
     if (!rtc_include_internal_audio_device) {
       defines = [ "WEBRTC_DUMMY_AUDIO_BUILD" ]
     }
-  }
-}
-
-if ((!build_with_chromium && !build_with_mozilla) && is_android) {
-  rtc_android_library("audio_device_java") {
-    sources = [
-      "android/java/src/org/webrtc/voiceengine/BuildInfo.java",
-      "android/java/src/org/webrtc/voiceengine/WebRtcAudioEffects.java",
-      "android/java/src/org/webrtc/voiceengine/WebRtcAudioManager.java",
-      "android/java/src/org/webrtc/voiceengine/WebRtcAudioRecord.java",
-      "android/java/src/org/webrtc/voiceengine/WebRtcAudioTrack.java",
-      "android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java",
-    ]
-    deps = [
-      "../../rtc_base:base_java",
-      "//third_party/androidx:androidx_annotation_annotation_java",
-    ]
   }
 }

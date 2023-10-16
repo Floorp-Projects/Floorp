@@ -1070,7 +1070,6 @@ if (rtc_include_tests) {
       deps += [
         ":android_codec_factory_helper",
         "../../sdk/android:hwcodecs_java",
-        "//modules/audio_device:audio_device_java",
         "//sdk/android:native_test_jni_onload",
         "//testing/android/native_test:native_test_support",
       ]

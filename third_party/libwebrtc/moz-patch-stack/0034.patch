@@ -74,7 +74,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08567f4539a12b542
  media/base/media_channel.h                    |  4 --
  media/base/media_channel_impl.cc              | 13 ------
  modules/audio_coding/BUILD.gn                 |  2 +-
- modules/audio_device/BUILD.gn                 | 19 +++++---
+ modules/audio_device/BUILD.gn                 | 17 +++++--
  modules/audio_processing/aec3/BUILD.gn        | 13 +++---
  .../aec3/adaptive_fir_filter_avx2.cc          |  2 +-
  .../audio_processing/agc2/rnn_vad/BUILD.gn    |  2 +-
@@ -87,7 +87,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/08567f4539a12b542
  test/BUILD.gn                                 | 10 +++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 32 ++++++++-----
- 31 files changed, 312 insertions(+), 100 deletions(-)
+ 31 files changed, 311 insertions(+), 99 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -735,7 +735,7 @@ index 1420aa6385..143a6eca41 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 3fe6f1dded..74ca17101c 100644
+index ee71f46e15..62a5d5a06f 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -791,7 +791,7 @@ index 3fe6f1dded..74ca17101c 100644
      ]
    }
  
-@@ -442,6 +447,7 @@ rtc_library("audio_device_impl") {
+@@ -410,6 +415,7 @@ rtc_library("audio_device_impl") {
      sources += [ "dummy/file_audio_device_factory.h" ]
    }
  }
@@ -799,7 +799,7 @@ index 3fe6f1dded..74ca17101c 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -459,6 +465,7 @@ if (is_mac) {
+@@ -427,6 +433,7 @@ if (is_mac) {
    }
  }
  
@@ -807,7 +807,7 @@ index 3fe6f1dded..74ca17101c 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -475,8 +482,10 @@ rtc_source_set("mock_audio_device") {
+@@ -443,8 +450,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
@@ -819,15 +819,6 @@ index 3fe6f1dded..74ca17101c 100644
    rtc_library("audio_device_unittests") {
      testonly = true
  
-@@ -547,7 +556,7 @@ if (rtc_include_tests && !build_with_chromium) {
-   }
- }
- 
--if (!build_with_chromium && is_android) {
-+if ((!build_with_chromium && !build_with_mozilla) && is_android) {
-   rtc_android_library("audio_device_java") {
-     sources = [
-       "android/java/src/org/webrtc/voiceengine/BuildInfo.java",
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
 index f5eb5d5951..3e11a245a1 100644
 --- a/modules/audio_processing/aec3/BUILD.gn

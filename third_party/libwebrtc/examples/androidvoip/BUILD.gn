@@ -24,7 +24,6 @@ if (is_android) {
 
     deps = [
       ":resources",
-      "//modules/audio_device:audio_device_java",
       "//rtc_base:base_java",
       "//sdk/android:base_java",
       "//sdk/android:java_audio_device_module_java",

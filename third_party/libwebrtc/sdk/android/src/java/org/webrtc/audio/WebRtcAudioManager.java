@@ -55,11 +55,13 @@ class WebRtcAudioManager {
         : getMinInputFrameSize(sampleRate, numberOfInputChannels);
   }
 
-  private static boolean isLowLatencyOutputSupported(Context context) {
+  @CalledByNative
+  static boolean isLowLatencyOutputSupported(Context context) {
     return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUDIO_LOW_LATENCY);
   }
 
-  private static boolean isLowLatencyInputSupported(Context context) {
+  @CalledByNative
+  static boolean isLowLatencyInputSupported(Context context) {
     // TODO(henrika): investigate if some sort of device list is needed here
     // as well. The NDK doc states that: "As of API level 21, lower latency
     // audio input is supported on select devices. To take advantage of this

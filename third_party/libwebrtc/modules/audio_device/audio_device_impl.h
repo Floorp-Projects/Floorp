@@ -24,7 +24,6 @@
 namespace webrtc {
 
 class AudioDeviceGeneric;
-class AudioManager;
 
 class AudioDeviceModuleImpl : public AudioDeviceModuleForTest {
  public:
@@ -145,12 +144,6 @@ class AudioDeviceModuleImpl : public AudioDeviceModuleForTest {
   int GetRecordAudioParameters(AudioParameters* params) const override;
 #endif  // WEBRTC_IOS
 
-#if defined(WEBRTC_ANDROID)
-  // Only use this acccessor for test purposes on Android.
-  AudioManager* GetAndroidAudioManagerForTest() {
-    return audio_manager_android_.get();
-  }
-#endif
   AudioDeviceBuffer* GetAudioDeviceBuffer() { return &audio_device_buffer_; }
 
   int RestartPlayoutInternally() override { return -1; }
@@ -165,10 +158,6 @@ class AudioDeviceModuleImpl : public AudioDeviceModuleForTest {
   AudioLayer audio_layer_;
   PlatformType platform_type_ = kPlatformNotSupported;
   bool initialized_ = false;
-#if defined(WEBRTC_ANDROID)
-  // Should be declared first to ensure that it outlives other resources.
-  std::unique_ptr<AudioManager> audio_manager_android_;
-#endif
   AudioDeviceBuffer audio_device_buffer_;
   std::unique_ptr<AudioDeviceGeneric> audio_device_;
 };
