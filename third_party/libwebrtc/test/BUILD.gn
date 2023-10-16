@@ -256,6 +256,7 @@ if (!build_with_chromium) {
         "../api:media_stream_interface",
         "../api:scoped_refptr",
         "../modules/video_capture:video_capture_module",
+        "../rtc_base:logging",
         "../rtc_base:threading",
         "../sdk:base_objc",
         "../sdk:native_api",
