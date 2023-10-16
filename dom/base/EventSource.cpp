@@ -713,8 +713,8 @@ EventSourceImpl::OnStartRequest(nsIRequest* aRequest) {
 
   if (NS_FAILED(status)) {
     // EventSource::OnStopRequest will evaluate if it shall either reestablish
-    // or fail the connection
-    return NS_ERROR_ABORT;
+    // or fail the connection, based on the status.
+    return status;
   }
 
   uint32_t httpStatus;

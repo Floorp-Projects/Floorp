@@ -147,3 +147,5 @@ skip-if = ["verify"]
 ["browser_user_input_handling_delay_reload_ticks.js"]
 
 ["browser_xml_toggle.js"]
+
+["browser_event_source_reconnect_after_disconnect.js"]
