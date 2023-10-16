@@ -294,6 +294,150 @@ class DiscardRenderer final : public TestAudioDeviceModule::Renderer {
   const int num_channels_;
 };
 
+class RawFileReader final : public TestAudioDeviceModule::Capturer {
+ public:
+  RawFileReader(absl::string_view input_file_name,
+                int sampling_frequency_in_hz,
+                int num_channels,
+                bool repeat)
+      : input_file_name_(input_file_name),
+        sampling_frequency_in_hz_(sampling_frequency_in_hz),
+        num_channels_(num_channels),
+        repeat_(repeat),
+        read_buffer_(
+            TestAudioDeviceModule::SamplesPerFrame(sampling_frequency_in_hz) *
+                num_channels * 2,
+            0) {
+    input_file_ = FileWrapper::OpenReadOnly(input_file_name_);
+    RTC_CHECK(input_file_.is_open())
+        << "Failed to open audio input file: " << input_file_name_;
+  }
+
+  ~RawFileReader() override { input_file_.Close(); }
+
+  int SamplingFrequency() const override { return sampling_frequency_in_hz_; }
+
+  int NumChannels() const override { return num_channels_; }
+
+  bool Capture(rtc::BufferT<int16_t>* buffer) override {
+    buffer->SetData(
+        TestAudioDeviceModule::SamplesPerFrame(SamplingFrequency()) *
+            NumChannels(),
+        [&](rtc::ArrayView<int16_t> data) {
+          rtc::ArrayView<int8_t> read_buffer_view = ReadBufferView();
+          size_t size = data.size() * 2;
+          size_t read = input_file_.Read(read_buffer_view.data(), size);
+          if (read < size && repeat_) {
+            do {
+              input_file_.Rewind();
+              size_t delta = input_file_.Read(
+                  read_buffer_view.subview(read).data(), size - read);
+              RTC_CHECK_GT(delta, 0) << "No new data to read from file";
+              read += delta;
+            } while (read < size);
+          }
+          memcpy(data.data(), read_buffer_view.data(), size);
+          return read / 2;
+        });
+    return buffer->size() > 0;
+  }
+
+ private:
+  rtc::ArrayView<int8_t> ReadBufferView() { return read_buffer_; }
+
+  const std::string input_file_name_;
+  const int sampling_frequency_in_hz_;
+  const int num_channels_;
+  const bool repeat_;
+  FileWrapper input_file_;
+  std::vector<int8_t> read_buffer_;
+};
+
+class RawFileWriter : public TestAudioDeviceModule::Renderer {
+ public:
+  RawFileWriter(absl::string_view output_file_name,
+                int sampling_frequency_in_hz,
+                int num_channels)
+      : output_file_name_(output_file_name),
+        sampling_frequency_in_hz_(sampling_frequency_in_hz),
+        num_channels_(num_channels),
+        silent_audio_(
+            TestAudioDeviceModule::SamplesPerFrame(sampling_frequency_in_hz) *
+                num_channels * 2,
+            0),
+        write_buffer_(
+            TestAudioDeviceModule::SamplesPerFrame(sampling_frequency_in_hz) *
+                num_channels * 2,
+            0),
+        started_writing_(false),
+        trailing_zeros_(0) {
+    output_file_ = FileWrapper::OpenWriteOnly(output_file_name_);
+    RTC_CHECK(output_file_.is_open())
+        << "Failed to open playout file" << output_file_name_;
+  }
+  ~RawFileWriter() override { output_file_.Close(); }
+
+  int SamplingFrequency() const override { return sampling_frequency_in_hz_; }
+
+  int NumChannels() const override { return num_channels_; }
+
+  bool Render(rtc::ArrayView<const int16_t> data) override {
+    const int16_t kAmplitudeThreshold = 5;
+
+    const int16_t* begin = data.begin();
+    const int16_t* end = data.end();
+    if (!started_writing_) {
+      // Cut off silence at the beginning.
+      while (begin < end) {
+        if (std::abs(*begin) > kAmplitudeThreshold) {
+          started_writing_ = true;
+          break;
+        }
+        ++begin;
+      }
+    }
+    if (started_writing_) {
+      // Cut off silence at the end.
+      while (begin < end) {
+        if (*(end - 1) != 0) {
+          break;
+        }
+        --end;
+      }
+      if (begin < end) {
+        // If it turns out that the silence was not final, need to write all the
+        // skipped zeros and continue writing audio.
+        while (trailing_zeros_ > 0) {
+          const size_t zeros_to_write =
+              std::min(trailing_zeros_, silent_audio_.size());
+          output_file_.Write(silent_audio_.data(), zeros_to_write * 2);
+          trailing_zeros_ -= zeros_to_write;
+        }
+        WriteInt16(begin, end);
+      }
+      // Save the number of zeros we skipped in case this needs to be restored.
+      trailing_zeros_ += data.end() - end;
+    }
+    return true;
+  }
+
+ private:
+  void WriteInt16(const int16_t* begin, const int16_t* end) {
+    int size = (end - begin) * sizeof(int16_t);
+    memcpy(write_buffer_.data(), begin, size);
+    output_file_.Write(write_buffer_.data(), size);
+  }
+
+  const std::string output_file_name_;
+  const int sampling_frequency_in_hz_;
+  const int num_channels_;
+  FileWrapper output_file_;
+  std::vector<int8_t> silent_audio_;
+  std::vector<int8_t> write_buffer_;
+  bool started_writing_;
+  size_t trailing_zeros_;
+};
+
 }  // namespace
 
 size_t TestAudioDeviceModule::SamplesPerFrame(int sampling_frequency_in_hz) {
@@ -374,6 +518,23 @@ TestAudioDeviceModule::CreateBoundedWavFileWriter(absl::string_view filename,
                                                   int num_channels) {
   return std::make_unique<BoundedWavFileWriter>(
       filename, sampling_frequency_in_hz, num_channels);
+}
+
+std::unique_ptr<TestAudioDeviceModule::Capturer>
+TestAudioDeviceModule::CreateRawFileReader(absl::string_view filename,
+                                           int sampling_frequency_in_hz,
+                                           int num_channels,
+                                           bool repeat) {
+  return std::make_unique<RawFileReader>(filename, sampling_frequency_in_hz,
+                                         num_channels, repeat);
+}
+
+std::unique_ptr<TestAudioDeviceModule::Renderer>
+TestAudioDeviceModule::CreateRawFileWriter(absl::string_view filename,
+                                           int sampling_frequency_in_hz,
+                                           int num_channels) {
+  return std::make_unique<RawFileWriter>(filename, sampling_frequency_in_hz,
+                                         num_channels);
 }
 
 }  // namespace webrtc

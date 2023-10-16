@@ -34,9 +34,8 @@
 namespace webrtc {
 namespace {
 
-void RunTest(const std::vector<int16_t>& input_samples,
-             const std::vector<int16_t>& expected_samples,
-             size_t samples_per_frame) {
+void RunWavTest(const std::vector<int16_t>& input_samples,
+                const std::vector<int16_t>& expected_samples) {
   const ::testing::TestInfo* const test_info =
       ::testing::UnitTest::GetInstance()->current_test_info();
 
@@ -79,7 +78,7 @@ TEST(BoundedWavFileWriterTest, NoSilence) {
       75,   1234,  243,    -1231, -22222, 0,    3,      88,
       1222, -1213, -13222, -7,    -3525,  5787, -25247, 8};
   static const std::vector<int16_t> kExpectedSamples = kInputSamples;
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, SomeStartSilence) {
@@ -87,7 +86,7 @@ TEST(BoundedWavFileWriterTest, SomeStartSilence) {
       0, 0, 0, 0, 3, 0, 0, 0, 0, 3, -13222, -7, -3525, 5787, -25247, 8};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 10,
                                                      kInputSamples.end());
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, NegativeStartSilence) {
@@ -95,7 +94,7 @@ TEST(BoundedWavFileWriterTest, NegativeStartSilence) {
       0, -4, -6, 0, 3, 0, 0, 0, 0, 3, -13222, -7, -3525, 5787, -25247, 8};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 2,
                                                      kInputSamples.end());
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, SomeEndSilence) {
@@ -103,7 +102,7 @@ TEST(BoundedWavFileWriterTest, SomeEndSilence) {
       75, 1234, 243, -1231, -22222, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
                                                      kInputSamples.end() - 9);
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, DoubleEndSilence) {
@@ -112,7 +111,7 @@ TEST(BoundedWavFileWriterTest, DoubleEndSilence) {
       0,  -1213, -13222, -7,    -3525,  5787, 0, 0};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
                                                      kInputSamples.end() - 2);
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, DoubleSilence) {
@@ -120,7 +119,7 @@ TEST(BoundedWavFileWriterTest, DoubleSilence) {
                                                      -3525, 5787,  0,      0};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 1,
                                                      kInputSamples.end() - 2);
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(BoundedWavFileWriterTest, EndSilenceCutoff) {
@@ -128,7 +127,7 @@ TEST(BoundedWavFileWriterTest, EndSilenceCutoff) {
       75, 1234, 243, -1231, -22222, 0, 1, 0, 0, 0, 0};
   static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
                                                      kInputSamples.end() - 4);
-  RunTest(kInputSamples, kExpectedSamples, 8);
+  RunWavTest(kInputSamples, kExpectedSamples);
 }
 
 TEST(WavFileReaderTest, RepeatedTrueWithSingleFrameFileReadTwice) {
@@ -146,7 +145,7 @@ TEST(WavFileReaderTest, RepeatedTrueWithSingleFrameFileReadTwice) {
   EXPECT_EQ(TestAudioDeviceModule::SamplesPerFrame(kSampleRate),
             kSamplesPerFrame);
 
-  // Create wav file to read.
+  // Create raw file to read.
   {
     std::unique_ptr<TestAudioDeviceModule::Renderer> writer =
         TestAudioDeviceModule::CreateWavFileWriter(output_filename, 800);
@@ -161,6 +160,154 @@ TEST(WavFileReaderTest, RepeatedTrueWithSingleFrameFileReadTwice) {
   {
     std::unique_ptr<TestAudioDeviceModule::Capturer> reader =
         TestAudioDeviceModule::CreateWavFileReader(output_filename, true);
+    rtc::BufferT<int16_t> buffer(kExpectedSamples.size());
+    EXPECT_TRUE(reader->Capture(&buffer));
+    EXPECT_EQ(kExpectedSamples, buffer);
+    EXPECT_TRUE(reader->Capture(&buffer));
+    EXPECT_EQ(kExpectedSamples, buffer);
+  }
+
+  remove(output_filename.c_str());
+}
+
+void RunRawTestNoRepeat(const std::vector<int16_t>& input_samples,
+                        const std::vector<int16_t>& expected_samples) {
+  const ::testing::TestInfo* const test_info =
+      ::testing::UnitTest::GetInstance()->current_test_info();
+
+  const std::string output_filename = test::OutputPath() + "RawFileTest_" +
+                                      test_info->name() + "_" +
+                                      std::to_string(std::rand()) + ".raw";
+
+  static const size_t kSamplesPerFrame = 8;
+  static const int kSampleRate = kSamplesPerFrame * 100;
+  EXPECT_EQ(TestAudioDeviceModule::SamplesPerFrame(kSampleRate),
+            kSamplesPerFrame);
+
+  // Test through file name API.
+  {
+    std::unique_ptr<TestAudioDeviceModule::Renderer> writer =
+        TestAudioDeviceModule::CreateRawFileWriter(
+            output_filename, /*sampling_frequency_in_hz=*/800);
+
+    for (size_t i = 0; i < input_samples.size(); i += kSamplesPerFrame) {
+      EXPECT_TRUE(writer->Render(rtc::ArrayView<const int16_t>(
+          &input_samples[i],
+          std::min(kSamplesPerFrame, input_samples.size() - i))));
+    }
+  }
+
+  {
+    std::unique_ptr<TestAudioDeviceModule::Capturer> reader =
+        TestAudioDeviceModule::CreateRawFileReader(
+            output_filename, /*sampling_frequency_in_hz=*/800,
+            /*num_channels=*/2, /*repeat=*/false);
+    rtc::BufferT<int16_t> buffer(expected_samples.size());
+    rtc::BufferT<int16_t> expected_buffer(expected_samples.size());
+    expected_buffer.SetData(expected_samples);
+    EXPECT_TRUE(reader->Capture(&buffer));
+    EXPECT_EQ(expected_buffer, buffer);
+    EXPECT_FALSE(reader->Capture(&buffer));
+    EXPECT_TRUE(buffer.empty());
+  }
+
+  remove(output_filename.c_str());
+}
+
+TEST(RawFileWriterTest, NoSilence) {
+  static const std::vector<int16_t> kInputSamples = {
+      75,   1234,  243,    -1231, -22222, 0,    3,      88,
+      1222, -1213, -13222, -7,    -3525,  5787, -25247, 8};
+  static const std::vector<int16_t> kExpectedSamples = kInputSamples;
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, SomeStartSilence) {
+  static const std::vector<int16_t> kInputSamples = {
+      0, 0, 0, 0, 3, 0, 0, 0, 0, 3, -13222, -7, -3525, 5787, -25247, 8};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 10,
+                                                     kInputSamples.end());
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, NegativeStartSilence) {
+  static const std::vector<int16_t> kInputSamples = {
+      0, -4, -6, 0, 3, 0, 0, 0, 0, 3, -13222, -7, -3525, 5787, -25247, 8};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 2,
+                                                     kInputSamples.end());
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, SomeEndSilence) {
+  static const std::vector<int16_t> kInputSamples = {
+      75, 1234, 243, -1231, -22222, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
+                                                     kInputSamples.end() - 9);
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, DoubleEndSilence) {
+  static const std::vector<int16_t> kInputSamples = {
+      75, 1234,  243,    -1231, -22222, 0,    0, 0,
+      0,  -1213, -13222, -7,    -3525,  5787, 0, 0};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
+                                                     kInputSamples.end() - 2);
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, DoubleSilence) {
+  static const std::vector<int16_t> kInputSamples = {0,     -1213, -13222, -7,
+                                                     -3525, 5787,  0,      0};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin() + 1,
+                                                     kInputSamples.end() - 2);
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, EndSilenceCutoff) {
+  static const std::vector<int16_t> kInputSamples = {
+      75, 1234, 243, -1231, -22222, 0, 1, 0, 0, 0, 0};
+  static const std::vector<int16_t> kExpectedSamples(kInputSamples.begin(),
+                                                     kInputSamples.end() - 4);
+  RunRawTestNoRepeat(kInputSamples, kExpectedSamples);
+}
+
+TEST(RawFileWriterTest, Repeat) {
+  static const std::vector<int16_t> kInputSamples = {
+      75,   1234,  243,    -1231, -22222, 0,    3,      88,
+      1222, -1213, -13222, -7,    -3525,  5787, -25247, 8};
+  static const rtc::BufferT<int16_t> kExpectedSamples(kInputSamples.data(),
+                                                      kInputSamples.size());
+
+  const ::testing::TestInfo* const test_info =
+      ::testing::UnitTest::GetInstance()->current_test_info();
+
+  const std::string output_filename = test::OutputPath() + "RawFileTest_" +
+                                      test_info->name() + "_" +
+                                      std::to_string(std::rand()) + ".raw";
+
+  static const size_t kSamplesPerFrame = 8;
+  static const int kSampleRate = kSamplesPerFrame * 100;
+  EXPECT_EQ(TestAudioDeviceModule::SamplesPerFrame(kSampleRate),
+            kSamplesPerFrame);
+
+  // Test through file name API.
+  {
+    std::unique_ptr<TestAudioDeviceModule::Renderer> writer =
+        TestAudioDeviceModule::CreateRawFileWriter(
+            output_filename, /*sampling_frequency_in_hz=*/800);
+
+    for (size_t i = 0; i < kInputSamples.size(); i += kSamplesPerFrame) {
+      EXPECT_TRUE(writer->Render(rtc::ArrayView<const int16_t>(
+          &kInputSamples[i],
+          std::min(kSamplesPerFrame, kInputSamples.size() - i))));
+    }
+  }
+
+  {
+    std::unique_ptr<TestAudioDeviceModule::Capturer> reader =
+        TestAudioDeviceModule::CreateRawFileReader(
+            output_filename, /*sampling_frequency_in_hz=*/800,
+            /*num_channels=*/2, /*repeat=*/true);
     rtc::BufferT<int16_t> buffer(kExpectedSamples.size());
     EXPECT_TRUE(reader->Capture(&buffer));
     EXPECT_EQ(kExpectedSamples, buffer);
