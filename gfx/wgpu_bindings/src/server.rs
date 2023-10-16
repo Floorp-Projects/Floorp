@@ -227,6 +227,11 @@ pub extern "C" fn wgpu_server_adapter_drop(global: &Global, adapter_id: id::Adap
 }
 
 #[no_mangle]
+pub extern "C" fn wgpu_server_device_destroy(global: &Global, self_id: id::DeviceId) {
+    gfx_select!(self_id => global.device_destroy(self_id))
+}
+
+#[no_mangle]
 pub extern "C" fn wgpu_server_device_drop(global: &Global, self_id: id::DeviceId) {
     gfx_select!(self_id => global.device_drop(self_id))
 }

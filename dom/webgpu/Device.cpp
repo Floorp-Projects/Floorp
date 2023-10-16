@@ -97,6 +97,10 @@ void Device::GenerateValidationError(const nsCString& aMessage) {
                              aMessage);
 }
 
+void Device::TrackBuffer(Buffer* aBuffer) { mTrackedBuffers.Insert(aBuffer); }
+
+void Device::UntrackBuffer(Buffer* aBuffer) { mTrackedBuffers.Remove(aBuffer); }
+
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
@@ -358,7 +362,21 @@ bool Device::CheckNewWarning(const nsACString& aMessage) {
 }
 
 void Device::Destroy() {
-  // TODO
+  if (IsLost()) {
+    return;
+  }
+
+  // Unmap all buffers from this device, as specified by
+  // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
+  dom::AutoJSAPI jsapi;
+  if (jsapi.Init(GetOwnerGlobal())) {
+    IgnoredErrorResult rv;
+    for (const auto& buffer : mTrackedBuffers) {
+      buffer->Unmap(jsapi.cx(), rv);
+    }
+  }
+
+  mBridge->SendDeviceDestroy(mId);
 }
 
 void Device::PushErrorScope(const dom::GPUErrorFilter& aFilter) {

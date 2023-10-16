@@ -103,6 +103,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   void CleanupUnregisteredInParent();
 
   void GenerateValidationError(const nsCString& aMessage);
+  void TrackBuffer(Buffer* aBuffer);
+  void UntrackBuffer(Buffer* aBuffer);
 
   bool IsLost() const;
   bool IsBridgeAlive() const;
@@ -117,6 +119,7 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<dom::Promise> mLostPromise;
   RefPtr<Queue> mQueue;
   nsTHashSet<nsCString> mKnownWarnings;
+  nsTHashSet<Buffer*> mTrackedBuffers;
 
  public:
   void GetLabel(nsAString& aValue) const;

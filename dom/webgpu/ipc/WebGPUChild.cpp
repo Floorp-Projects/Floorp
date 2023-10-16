@@ -1191,7 +1191,7 @@ void WebGPUChild::RegisterDevice(Device* const aDevice) {
 void WebGPUChild::UnregisterDevice(RawId aId) {
   mDeviceMap.erase(aId);
   if (IsOpen()) {
-    SendDeviceDestroy(aId);
+    SendDeviceDrop(aId);
   }
 }
 
