@@ -246,6 +246,11 @@ declare_args() {
   #  "warn": RTC_LOGs a message with LS_WARNING severity if the field trial
   #          hasn't been registered.
   rtc_strict_field_trials = ""
+
+  # If different from "", symbols exported with RTC_OBJC_EXPORT will be prefixed
+  # with this string.
+  # See the definition of RTC_OBJC_TYPE_PREFIX in the code.
+  rtc_objc_prefix = ""
 }
 
 if (!build_with_mozilla) {
