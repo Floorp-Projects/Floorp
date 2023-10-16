@@ -1049,7 +1049,7 @@ var gMainPane = {
         const supportedLanguages =
           await TranslationsParent.getSupportedLanguages();
         const languageList =
-          TranslationsState.getLanguageList(supportedLanguages);
+          TranslationsParent.getLanguageList(supportedLanguages);
         const downloadPhases = await TranslationsState.createDownloadPhases(
           languageList
         );
@@ -1065,38 +1065,6 @@ var gMainPane = {
           languageList,
           downloadPhases
         );
-      }
-
-      /**
-       * Create a unique list of languages, sorted by the display name.
-       *
-       * @param {Object} supportedLanguages
-       * @returns {Array<{ langTag: string, displayName: string}}
-       */
-      static getLanguageList(supportedLanguages) {
-        const displayNames = new Map();
-        for (const languages of [
-          supportedLanguages.fromLanguages,
-          supportedLanguages.toLanguages,
-        ]) {
-          for (const { langTag, displayName } of languages) {
-            displayNames.set(langTag, displayName);
-          }
-        }
-
-        let appLangTag = new Intl.Locale(Services.locale.appLocaleAsBCP47)
-          .language;
-
-        // Don't offer to download the app's language.
-        displayNames.delete(appLangTag);
-
-        // Sort the list of languages by the display names.
-        return [...displayNames.entries()]
-          .map(([langTag, displayName]) => ({
-            langTag,
-            displayName,
-          }))
-          .sort((a, b) => a.displayName.localeCompare(b.displayName));
       }
 
       /**
