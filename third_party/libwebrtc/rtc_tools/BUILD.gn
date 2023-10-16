@@ -444,6 +444,7 @@ if (!build_with_chromium) {
       "//modules/video_coding/codecs/av1:av1_svc_config",
       "//modules/video_coding/svc:scalability_mode_util",
       "//rtc_base:logging",
+      "//test:y4m_frame_generator",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
       "//third_party/abseil-cpp/absl/flags:usage",
