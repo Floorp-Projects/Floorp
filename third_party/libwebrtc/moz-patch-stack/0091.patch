@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/46fb51c90709be64c
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/webrtc.gni b/webrtc.gni
-index 058437f0dd..9c9b191199 100644
+index ae3f99cb67..e30bc6b9bb 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -289,7 +289,7 @@ declare_args() {
+@@ -290,7 +290,7 @@ declare_args() {
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.

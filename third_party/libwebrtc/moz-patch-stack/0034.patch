@@ -1319,7 +1319,7 @@ index 54291e46bb..7bcecad957 100644
      "../api/adaptation:resource_adaptation_api",
      "../api/task_queue:pending_task_safety_flag",
 diff --git a/webrtc.gni b/webrtc.gni
-index d4e16a7cf3..a3e5a4889d 100644
+index 928a59104b..c25caf85e0 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1391,7 +1391,7 @@ index d4e16a7cf3..a3e5a4889d 100644
    # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
    # and NDK r16 or above.
    rtc_enable_android_aaudio = false
-@@ -259,7 +266,7 @@ declare_args() {
+@@ -260,7 +267,7 @@ declare_args() {
    rtc_build_json = !build_with_mozilla
    rtc_build_libsrtp = !build_with_mozilla
    rtc_build_libvpx = !build_with_mozilla
@@ -1400,7 +1400,7 @@ index d4e16a7cf3..a3e5a4889d 100644
    rtc_build_opus = !build_with_mozilla
    rtc_build_ssl = !build_with_mozilla
  
-@@ -278,7 +285,7 @@ declare_args() {
+@@ -279,7 +286,7 @@ declare_args() {
  
    # Chromium uses its own IO handling, so the internal ADM is only built for
    # standalone WebRTC.
@@ -1409,7 +1409,7 @@ index d4e16a7cf3..a3e5a4889d 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -322,6 +329,9 @@ declare_args() {
+@@ -323,6 +330,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1419,7 +1419,7 @@ index d4e16a7cf3..a3e5a4889d 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1117,7 +1127,7 @@ if (is_mac || is_ios) {
+@@ -1118,7 +1128,7 @@ if (is_mac || is_ios) {
    }
  }
  
