@@ -224,7 +224,10 @@ class TestEncoder : public VideoCodecTester::Encoder,
   }
 
   void Encode(const VideoFrame& frame, EncodeCallback callback) override {
-    callbacks_[frame.timestamp()] = std::move(callback);
+    {
+      MutexLock lock(&mutex_);
+      callbacks_[frame.timestamp()] = std::move(callback);
+    }
 
     if (auto fs = frame_settings_.find(frame_num_);
         fs != frame_settings_.begin() && fs != frame_settings_.end()) {
@@ -251,6 +254,7 @@ class TestEncoder : public VideoCodecTester::Encoder,
  protected:
   Result OnEncodedImage(const EncodedImage& encoded_image,
                         const CodecSpecificInfo* codec_specific_info) override {
+    MutexLock lock(&mutex_);
     auto cb = callbacks_.find(encoded_image.Timestamp());
     RTC_CHECK(cb != callbacks_.end());
     cb->second(encoded_image);
@@ -322,7 +326,8 @@ class TestEncoder : public VideoCodecTester::Encoder,
   const std::string codec_type_;
   const std::map<int, EncodingSettings>& frame_settings_;
   int frame_num_;
-  std::map<uint32_t, EncodeCallback> callbacks_;
+  std::map<uint32_t, EncodeCallback> callbacks_ RTC_GUARDED_BY(mutex_);
+  Mutex mutex_;
 };
 
 class TestDecoder : public VideoCodecTester::Decoder,
@@ -345,7 +350,11 @@ class TestDecoder : public VideoCodecTester::Decoder,
   }
 
   void Decode(const EncodedImage& frame, DecodeCallback callback) override {
-    callbacks_[frame.Timestamp()] = std::move(callback);
+    {
+      MutexLock lock(&mutex_);
+      callbacks_[frame.Timestamp()] = std::move(callback);
+    }
+
     decoder_->Decode(frame, /*missing_frames=*/false,
                      /*render_time_ms=*/0);
   }
@@ -361,6 +370,7 @@ class TestDecoder : public VideoCodecTester::Decoder,
 
  protected:
   int Decoded(VideoFrame& decoded_frame) override {
+    MutexLock lock(&mutex_);
     auto cb = callbacks_.find(decoded_frame.timestamp());
     RTC_CHECK(cb != callbacks_.end());
     cb->second(decoded_frame);
@@ -371,7 +381,8 @@ class TestDecoder : public VideoCodecTester::Decoder,
 
   std::unique_ptr<VideoDecoder> decoder_;
   const std::string codec_type_;
-  std::map<uint32_t, DecodeCallback> callbacks_;
+  std::map<uint32_t, DecodeCallback> callbacks_ RTC_GUARDED_BY(mutex_);
+  Mutex mutex_;
 };
 
 std::unique_ptr<TestRawVideoSource> CreateVideoSource(
