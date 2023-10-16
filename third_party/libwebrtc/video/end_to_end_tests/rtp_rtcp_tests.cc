@@ -339,7 +339,6 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
             ->SendRtcp(packet.data(), packet.size());
       }
       CreateFrameGeneratorCapturer(30, 1280, 720);
-      StartVideoSources();
     });
 
     observer.ResetExpectedSsrcs(1);
