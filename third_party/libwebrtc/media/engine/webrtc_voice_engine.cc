@@ -49,6 +49,7 @@
 #include "call/rtp_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "media/base/audio_source.h"
+#include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
 #include "media/engine/adm_helpers.h"
@@ -1328,6 +1329,13 @@ bool WebRtcVoiceSendChannel::SetSendParameters(
     return false;
   }
   return SetOptions(params.options);
+}
+
+absl::optional<Codec> WebRtcVoiceSendChannel::GetSendCodec() const {
+  if (send_codec_spec_) {
+    return CreateAudioCodec(send_codec_spec_->format);
+  }
+  return absl::nullopt;
 }
 
 // Utility function called from SetSendParameters() to extract current send

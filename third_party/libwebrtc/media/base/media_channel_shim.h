@@ -87,6 +87,9 @@ class VoiceMediaShimChannel : public VoiceMediaChannel {
   cricket::MediaType media_type() const override { return MEDIA_TYPE_AUDIO; }
 
   // Implementation of MediaSendChannelInterface
+  absl::optional<Codec> GetSendCodec() const override {
+    return send_impl()->GetSendCodec();
+  }
   void OnPacketSent(const rtc::SentPacket& sent_packet) override {
     send_impl()->OnPacketSent(sent_packet);
   }
@@ -385,7 +388,7 @@ class VideoMediaShimChannel : public VideoMediaChannel {
   bool SetSendParameters(const VideoSendParameters& params) override {
     return send_impl()->SetSendParameters(params);
   }
-  absl::optional<VideoCodec> GetSendCodec() override {
+  absl::optional<Codec> GetSendCodec() const override {
     return send_impl()->GetSendCodec();
   }
   bool SetSend(bool send) override { return send_impl()->SetSend(send); }

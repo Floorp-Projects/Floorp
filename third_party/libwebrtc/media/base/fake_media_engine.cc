@@ -74,6 +74,12 @@ const std::vector<AudioCodec>& FakeVoiceMediaChannel::send_codecs() const {
 const std::vector<AudioCodec>& FakeVoiceMediaChannel::codecs() const {
   return send_codecs();
 }
+absl::optional<Codec> FakeVoiceMediaChannel::GetSendCodec() const {
+  if (!send_codecs_.empty()) {
+    return send_codecs_.front();
+  }
+  return absl::nullopt;
+}
 const std::vector<FakeVoiceMediaChannel::DtmfInfo>&
 FakeVoiceMediaChannel::dtmf_info_queue() const {
   return dtmf_info_queue_;
@@ -317,7 +323,7 @@ bool FakeVideoMediaChannel::AddSendStream(const StreamParams& sp) {
 bool FakeVideoMediaChannel::RemoveSendStream(uint32_t ssrc) {
   return RtpHelper<VideoMediaChannel>::RemoveSendStream(ssrc);
 }
-absl::optional<VideoCodec> FakeVideoMediaChannel::GetSendCodec() {
+absl::optional<Codec> FakeVideoMediaChannel::GetSendCodec() const {
   if (send_codecs_.empty()) {
     return absl::nullopt;
   }
