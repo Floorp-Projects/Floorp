@@ -15,6 +15,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/memory/memory.h"
+#include "absl/types/optional.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
@@ -365,7 +366,7 @@ void RtcpTransceiverImpl::HandleReportBlocks(
       Timestamp::Millis(now_ntp.ToMs() - rtc::kNtpJan1970Millisecs);
 
   for (const rtcp::ReportBlock& block : rtcp_report_blocks) {
-    std::optional<TimeDelta> rtt;
+    absl::optional<TimeDelta> rtt;
     if (block.last_sr() != 0) {
       rtt = CompactNtpRttToTimeDelta(
           receive_time_ntp - block.delay_since_last_sr() - block.last_sr());
