@@ -69,19 +69,6 @@ namespace {
 // See `WebRtcVideoSendChannel::kDefaultQpMax`.
 constexpr unsigned int kDefaultQpMax = 56;
 
-const char* FrameTypeToString(const VideoFrameType& frame_type) {
-  switch (frame_type) {
-    case VideoFrameType::kEmptyFrame:
-      return "empty";
-    case VideoFrameType::kVideoFrameKey:
-      return "key";
-    case VideoFrameType::kVideoFrameDelta:
-      return "delta";
-  }
-  RTC_CHECK_NOTREACHED();
-  return "";
-}
-
 [[maybe_unused]] const char* InterLayerPredModeToString(
     const InterLayerPredMode& inter_layer_pred_mode) {
   switch (inter_layer_pred_mode) {
@@ -100,7 +87,7 @@ std::string ToString(const EncodedImage& encoded_image) {
   char buffer[1024];
   rtc::SimpleStringBuilder ss(buffer);
 
-  ss << FrameTypeToString(encoded_image._frameType)
+  ss << VideoFrameTypeToString(encoded_image._frameType)
      << ", size=" << encoded_image.size() << ", qp=" << encoded_image.qp_
      << ", timestamp=" << encoded_image.Timestamp();
 

@@ -94,20 +94,6 @@ bool IsBaseLayer(const RTPVideoHeader& video_header) {
   return true;
 }
 
-[[maybe_unused]] const char* FrameTypeToString(VideoFrameType frame_type) {
-  switch (frame_type) {
-    case VideoFrameType::kEmptyFrame:
-      return "empty";
-    case VideoFrameType::kVideoFrameKey:
-      return "video_key";
-    case VideoFrameType::kVideoFrameDelta:
-      return "video_delta";
-    default:
-      RTC_DCHECK_NOTREACHED();
-      return "";
-  }
-}
-
 bool IsNoopDelay(const VideoPlayoutDelay& delay) {
   return delay.min_ms == -1 && delay.max_ms == -1;
 }
@@ -492,8 +478,9 @@ bool RTPSenderVideo::SendVideo(
     RTPVideoHeader video_header,
     absl::optional<int64_t> expected_retransmission_time_ms,
     std::vector<uint32_t> csrcs) {
-  TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", capture_time_ms, "Send", "type",
-                          FrameTypeToString(video_header.frame_type));
+  TRACE_EVENT_ASYNC_STEP1(
+      "webrtc", "Video", capture_time_ms, "Send", "type",
+      std::string(VideoFrameTypeToString(video_header.frame_type)));
   RTC_CHECK_RUNS_SERIALIZED(&send_checker_);
 
   if (video_header.frame_type == VideoFrameType::kEmptyFrame)
