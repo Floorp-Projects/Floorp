@@ -1,4 +1,4 @@
-use crate::runtime::task::RawTask;
+use crate::runtime::task::{Header, RawTask};
 
 use std::fmt;
 use std::future::Future;
@@ -10,8 +10,10 @@ use std::task::{Context, Poll, Waker};
 cfg_rt! {
     /// An owned permission to join on a task (await its termination).
     ///
-    /// This can be thought of as the equivalent of [`std::thread::JoinHandle`] for
-    /// a task rather than a thread.
+    /// This can be thought of as the equivalent of [`std::thread::JoinHandle`]
+    /// for a Tokio task rather than a thread. Note that the background task
+    /// associated with this `JoinHandle` started running immediately when you
+    /// called spawn, even if you have not yet awaited the `JoinHandle`.
     ///
     /// A `JoinHandle` *detaches* the associated task when it is dropped, which
     /// means that there is no longer any handle to the task, and no way to `join`
@@ -19,6 +21,15 @@ cfg_rt! {
     ///
     /// This `struct` is created by the [`task::spawn`] and [`task::spawn_blocking`]
     /// functions.
+    ///
+    /// # Cancel safety
+    ///
+    /// The `&mut JoinHandle<T>` type is cancel safe. If it is used as the event
+    /// in a `tokio::select!` statement and some other branch completes first,
+    /// then it is guaranteed that the output of the task is not lost.
+    ///
+    /// If a `JoinHandle` is dropped, then the task continues running in the
+    /// background and its return value is lost.
     ///
     /// # Examples
     ///
@@ -143,7 +154,7 @@ cfg_rt! {
     /// [`std::thread::JoinHandle`]: std::thread::JoinHandle
     /// [`JoinError`]: crate::task::JoinError
     pub struct JoinHandle<T> {
-        raw: Option<RawTask>,
+        raw: RawTask,
         _p: PhantomData<T>,
     }
 }
@@ -157,7 +168,7 @@ impl<T> RefUnwindSafe for JoinHandle<T> {}
 impl<T> JoinHandle<T> {
     pub(super) fn new(raw: RawTask) -> JoinHandle<T> {
         JoinHandle {
-            raw: Some(raw),
+            raw,
             _p: PhantomData,
         }
     }
@@ -171,44 +182,128 @@ impl<T> JoinHandle<T> {
     /// ```rust
     /// use tokio::time;
     ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///    let mut handles = Vec::new();
+    /// # #[tokio::main(flavor = "current_thread", start_paused = true)]
+    /// # async fn main() {
+    /// let mut handles = Vec::new();
     ///
-    ///    handles.push(tokio::spawn(async {
-    ///       time::sleep(time::Duration::from_secs(10)).await;
-    ///       true
-    ///    }));
+    /// handles.push(tokio::spawn(async {
+    ///    time::sleep(time::Duration::from_secs(10)).await;
+    ///    true
+    /// }));
     ///
-    ///    handles.push(tokio::spawn(async {
-    ///       time::sleep(time::Duration::from_secs(10)).await;
-    ///       false
-    ///    }));
+    /// handles.push(tokio::spawn(async {
+    ///    time::sleep(time::Duration::from_secs(10)).await;
+    ///    false
+    /// }));
     ///
-    ///    for handle in &handles {
-    ///        handle.abort();
-    ///    }
-    ///
-    ///    for handle in handles {
-    ///        assert!(handle.await.unwrap_err().is_cancelled());
-    ///    }
+    /// for handle in &handles {
+    ///     handle.abort();
     /// }
+    ///
+    /// for handle in handles {
+    ///     assert!(handle.await.unwrap_err().is_cancelled());
+    /// }
+    /// # }
     /// ```
     /// [cancelled]: method@super::error::JoinError::is_cancelled
     pub fn abort(&self) {
-        if let Some(raw) = self.raw {
-            raw.remote_abort();
-        }
+        self.raw.remote_abort();
+    }
+
+    /// Checks if the task associated with this `JoinHandle` has finished.
+    ///
+    /// Please note that this method can return `false` even if [`abort`] has been
+    /// called on the task. This is because the cancellation process may take
+    /// some time, and this method does not return `true` until it has
+    /// completed.
+    ///
+    /// ```rust
+    /// use tokio::time;
+    ///
+    /// # #[tokio::main(flavor = "current_thread", start_paused = true)]
+    /// # async fn main() {
+    /// let handle1 = tokio::spawn(async {
+    ///     // do some stuff here
+    /// });
+    /// let handle2 = tokio::spawn(async {
+    ///     // do some other stuff here
+    ///     time::sleep(time::Duration::from_secs(10)).await;
+    /// });
+    /// // Wait for the task to finish
+    /// handle2.abort();
+    /// time::sleep(time::Duration::from_secs(1)).await;
+    /// assert!(handle1.is_finished());
+    /// assert!(handle2.is_finished());
+    /// # }
+    /// ```
+    /// [`abort`]: method@JoinHandle::abort
+    pub fn is_finished(&self) -> bool {
+        let state = self.raw.header().state.load();
+        state.is_complete()
     }
 
     /// Set the waker that is notified when the task completes.
     pub(crate) fn set_join_waker(&mut self, waker: &Waker) {
-        if let Some(raw) = self.raw {
-            if raw.try_set_join_waker(waker) {
-                // In this case the task has already completed. We wake the waker immediately.
-                waker.wake_by_ref();
-            }
+        if self.raw.try_set_join_waker(waker) {
+            // In this case the task has already completed. We wake the waker immediately.
+            waker.wake_by_ref();
         }
+    }
+
+    /// Returns a new `AbortHandle` that can be used to remotely abort this task.
+    ///
+    /// Awaiting a task cancelled by the `AbortHandle` might complete as usual if the task was
+    /// already completed at the time it was cancelled, but most likely it
+    /// will fail with a [cancelled] `JoinError`.
+    ///
+    /// ```rust
+    /// use tokio::{time, task};
+    ///
+    /// # #[tokio::main(flavor = "current_thread", start_paused = true)]
+    /// # async fn main() {
+    /// let mut handles = Vec::new();
+    ///
+    /// handles.push(tokio::spawn(async {
+    ///    time::sleep(time::Duration::from_secs(10)).await;
+    ///    true
+    /// }));
+    ///
+    /// handles.push(tokio::spawn(async {
+    ///    time::sleep(time::Duration::from_secs(10)).await;
+    ///    false
+    /// }));
+    ///
+    /// let abort_handles: Vec<task::AbortHandle> = handles.iter().map(|h| h.abort_handle()).collect();
+    ///
+    /// for handle in abort_handles {
+    ///     handle.abort();
+    /// }
+    ///
+    /// for handle in handles {
+    ///     assert!(handle.await.unwrap_err().is_cancelled());
+    /// }
+    /// # }
+    /// ```
+    /// [cancelled]: method@super::error::JoinError::is_cancelled
+    pub fn abort_handle(&self) -> super::AbortHandle {
+        self.raw.ref_inc();
+        super::AbortHandle::new(self.raw)
+    }
+
+    /// Returns a [task ID] that uniquely identifies this task relative to other
+    /// currently spawned tasks.
+    ///
+    /// **Note**: This is an [unstable API][unstable]. The public API of this type
+    /// may break in 1.x releases. See [the documentation on unstable
+    /// features][unstable] for details.
+    ///
+    /// [task ID]: crate::task::Id
+    /// [unstable]: crate#unstable-features
+    #[cfg(tokio_unstable)]
+    #[cfg_attr(docsrs, doc(cfg(tokio_unstable)))]
+    pub fn id(&self) -> super::Id {
+        // Safety: The header pointer is valid.
+        unsafe { Header::get_id(self.raw.header_ptr()) }
     }
 }
 
@@ -218,17 +313,11 @@ impl<T> Future for JoinHandle<T> {
     type Output = super::Result<T>;
 
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        ready!(crate::trace::trace_leaf(cx));
         let mut ret = Poll::Pending;
 
         // Keep track of task budget
-        let coop = ready!(crate::coop::poll_proceed(cx));
-
-        // Raw should always be set. If it is not, this is due to polling after
-        // completion
-        let raw = self
-            .raw
-            .as_ref()
-            .expect("polling after `JoinHandle` already completed");
+        let coop = ready!(crate::runtime::coop::poll_proceed(cx));
 
         // Try to read the task output. If the task is not yet complete, the
         // waker is stored and is notified once the task does complete.
@@ -242,7 +331,8 @@ impl<T> Future for JoinHandle<T> {
         //
         // The type of `T` must match the task's output type.
         unsafe {
-            raw.try_read_output(&mut ret as *mut _ as *mut (), cx.waker());
+            self.raw
+                .try_read_output(&mut ret as *mut _ as *mut (), cx.waker());
         }
 
         if ret.is_ready() {
@@ -255,13 +345,11 @@ impl<T> Future for JoinHandle<T> {
 
 impl<T> Drop for JoinHandle<T> {
     fn drop(&mut self) {
-        if let Some(raw) = self.raw.take() {
-            if raw.header().state.drop_join_handle_fast().is_ok() {
-                return;
-            }
-
-            raw.drop_join_handle_slow();
+        if self.raw.state().drop_join_handle_fast().is_ok() {
+            return;
         }
+
+        self.raw.drop_join_handle_slow();
     }
 }
 
@@ -270,6 +358,9 @@ where
     T: fmt::Debug,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt.debug_struct("JoinHandle").finish()
+        // Safety: The header pointer is valid.
+        let id_ptr = unsafe { Header::get_id_ptr(self.raw.header_ptr()) };
+        let id = unsafe { id_ptr.as_ref() };
+        fmt.debug_struct("JoinHandle").field("id", id).finish()
     }
 }

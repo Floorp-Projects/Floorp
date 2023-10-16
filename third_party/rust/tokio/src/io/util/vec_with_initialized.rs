@@ -1,19 +1,18 @@
 use crate::io::ReadBuf;
 use std::mem::MaybeUninit;
 
-mod private {
-    pub trait Sealed {}
+/// Something that looks like a `Vec<u8>`.
+///
+/// # Safety
+///
+/// The implementor must guarantee that the vector returned by the
+/// `as_mut` and `as_mut` methods do not change from one call to
+/// another.
+pub(crate) unsafe trait VecU8: AsRef<Vec<u8>> + AsMut<Vec<u8>> {}
 
-    impl Sealed for Vec<u8> {}
-    impl Sealed for &mut Vec<u8> {}
-}
+unsafe impl VecU8 for Vec<u8> {}
+unsafe impl VecU8 for &mut Vec<u8> {}
 
-/// A sealed trait that constrains the generic type parameter in `VecWithInitialized<V>`.  That struct's safety relies
-/// on certain invariants upheld by `Vec<u8>`.
-pub(crate) trait VecU8: AsMut<Vec<u8>> + private::Sealed {}
-
-impl VecU8 for Vec<u8> {}
-impl VecU8 for &mut Vec<u8> {}
 /// This struct wraps a `Vec<u8>` or `&mut Vec<u8>`, combining it with a
 /// `num_initialized`, which keeps track of the number of initialized bytes
 /// in the unused capacity.
@@ -29,6 +28,7 @@ pub(crate) struct VecWithInitialized<V> {
     // The number of initialized bytes in the vector.
     // Always between `vec.len()` and `vec.capacity()`.
     num_initialized: usize,
+    starting_capacity: usize,
 }
 
 impl VecWithInitialized<Vec<u8>> {
@@ -48,6 +48,7 @@ where
         // to its length are initialized.
         Self {
             num_initialized: vec.as_mut().len(),
+            starting_capacity: vec.as_ref().capacity(),
             vec,
         }
     }
@@ -64,8 +65,8 @@ where
     }
 
     #[cfg(feature = "io-util")]
-    pub(crate) fn is_empty(&mut self) -> bool {
-        self.vec.as_mut().is_empty()
+    pub(crate) fn is_empty(&self) -> bool {
+        self.vec.as_ref().is_empty()
     }
 
     pub(crate) fn get_read_buf<'a>(&'a mut self) -> ReadBuf<'a> {
@@ -111,6 +112,15 @@ where
             self.num_initialized = parts.initialized;
             vec.set_len(parts.len);
         }
+    }
+
+    // Returns a boolean telling the caller to try reading into a small local buffer first if true.
+    // Doing so would avoid overallocating when vec is filled to capacity and we reached EOF.
+    pub(crate) fn try_small_read_first(&self, num_bytes: usize) -> bool {
+        let vec = self.vec.as_ref();
+        vec.capacity() - vec.len() < num_bytes
+            && self.starting_capacity == vec.capacity()
+            && self.starting_capacity >= num_bytes
     }
 }
 

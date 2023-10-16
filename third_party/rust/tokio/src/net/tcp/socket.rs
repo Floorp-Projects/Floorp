@@ -4,11 +4,17 @@ use std::fmt;
 use std::io;
 use std::net::SocketAddr;
 
+#[cfg(all(unix, not(tokio_no_as_fd)))]
+use std::os::unix::io::{AsFd, BorrowedFd};
 #[cfg(unix)]
 use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
-#[cfg(windows)]
-use std::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
 use std::time::Duration;
+
+cfg_windows! {
+    use crate::os::windows::io::{AsRawSocket, FromRawSocket, IntoRawSocket, RawSocket};
+    #[cfg(not(tokio_no_as_fd))]
+    use crate::os::windows::io::{AsSocket, BorrowedSocket};
+}
 
 cfg_net! {
     /// A TCP socket that has not yet been converted to a `TcpStream` or
@@ -398,6 +404,134 @@ impl TcpSocket {
         self.inner.linger()
     }
 
+    /// Sets the value of the `TCP_NODELAY` option on this socket.
+    ///
+    /// If set, this option disables the Nagle algorithm. This means that segments are always
+    /// sent as soon as possible, even if there is only a small amount of data. When not set,
+    /// data is buffered until there is a sufficient amount to send out, thereby avoiding
+    /// the frequent sending of small packets.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use tokio::net::TcpSocket;
+    ///
+    /// # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
+    /// let socket = TcpSocket::new_v4()?;
+    ///
+    /// println!("{:?}", socket.nodelay()?);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn set_nodelay(&self, nodelay: bool) -> io::Result<()> {
+        self.inner.set_nodelay(nodelay)
+    }
+
+    /// Gets the value of the `TCP_NODELAY` option on this socket.
+    ///
+    /// For more information about this option, see [`set_nodelay`].
+    ///
+    /// [`set_nodelay`]: TcpSocket::set_nodelay
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use tokio::net::TcpSocket;
+    ///
+    /// # async fn dox() -> Result<(), Box<dyn std::error::Error>> {
+    /// let stream = TcpSocket::new_v4()?;
+    ///
+    /// stream.set_nodelay(true)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn nodelay(&self) -> io::Result<bool> {
+        self.inner.nodelay()
+    }
+
+    /// Gets the value of the `IP_TOS` option for this socket.
+    ///
+    /// For more information about this option, see [`set_tos`].
+    ///
+    /// **NOTE:** On Windows, `IP_TOS` is only supported on [Windows 8+ or
+    /// Windows Server 2012+.](https://docs.microsoft.com/en-us/windows/win32/winsock/ipproto-ip-socket-options)
+    ///
+    /// [`set_tos`]: Self::set_tos
+    // https://docs.rs/socket2/0.4.2/src/socket2/socket.rs.html#1178
+    #[cfg(not(any(
+        target_os = "fuchsia",
+        target_os = "redox",
+        target_os = "solaris",
+        target_os = "illumos",
+    )))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(not(any(
+            target_os = "fuchsia",
+            target_os = "redox",
+            target_os = "solaris",
+            target_os = "illumos",
+        ))))
+    )]
+    pub fn tos(&self) -> io::Result<u32> {
+        self.inner.tos()
+    }
+
+    /// Sets the value for the `IP_TOS` option on this socket.
+    ///
+    /// This value sets the type-of-service field that is used in every packet
+    /// sent from this socket.
+    ///
+    /// **NOTE:** On Windows, `IP_TOS` is only supported on [Windows 8+ or
+    /// Windows Server 2012+.](https://docs.microsoft.com/en-us/windows/win32/winsock/ipproto-ip-socket-options)
+    // https://docs.rs/socket2/0.4.2/src/socket2/socket.rs.html#1178
+    #[cfg(not(any(
+        target_os = "fuchsia",
+        target_os = "redox",
+        target_os = "solaris",
+        target_os = "illumos",
+    )))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(not(any(
+            target_os = "fuchsia",
+            target_os = "redox",
+            target_os = "solaris",
+            target_os = "illumos",
+        ))))
+    )]
+    pub fn set_tos(&self, tos: u32) -> io::Result<()> {
+        self.inner.set_tos(tos)
+    }
+
+    /// Gets the value for the `SO_BINDTODEVICE` option on this socket
+    ///
+    /// This value gets the socket binded device's interface name.
+    #[cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux",))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(any(target_os = "android", target_os = "fuchsia", target_os = "linux",)))
+    )]
+    pub fn device(&self) -> io::Result<Option<Vec<u8>>> {
+        self.inner.device()
+    }
+
+    /// Sets the value for the `SO_BINDTODEVICE` option on this socket
+    ///
+    /// If a socket is bound to an interface, only packets received from that
+    /// particular interface are processed by the socket. Note that this only
+    /// works for some socket types, particularly `AF_INET` sockets.
+    ///
+    /// If `interface` is `None` or an empty string it removes the binding.
+    #[cfg(all(any(target_os = "android", target_os = "fuchsia", target_os = "linux")))]
+    #[cfg_attr(
+        docsrs,
+        doc(cfg(all(any(target_os = "android", target_os = "fuchsia", target_os = "linux"))))
+    )]
+    pub fn bind_device(&self, interface: Option<&[u8]>) -> io::Result<()> {
+        self.inner.bind_device(interface)
+    }
+
     /// Gets the local address of this socket.
     ///
     /// Will fail on windows if called before `bind`.
@@ -422,6 +556,11 @@ impl TcpSocket {
     /// ```
     pub fn local_addr(&self) -> io::Result<SocketAddr> {
         self.inner.local_addr().and_then(convert_address)
+    }
+
+    /// Returns the value of the `SO_ERROR` option.
+    pub fn take_error(&self) -> io::Result<Option<io::Error>> {
+        self.inner.take_error()
     }
 
     /// Binds the socket to the given address.
@@ -582,6 +721,15 @@ impl TcpSocket {
     /// [`std::net::TcpStream`]: struct@std::net::TcpStream
     /// [`socket2`]: https://docs.rs/socket2/
     ///
+    /// # Notes
+    ///
+    /// The caller is responsible for ensuring that the socket is in
+    /// non-blocking mode. Otherwise all I/O operations on the socket
+    /// will block the thread, which will cause unexpected behavior.
+    /// Non-blocking mode can be set using [`set_nonblocking`].
+    ///
+    /// [`set_nonblocking`]: std::net::TcpStream::set_nonblocking
+    ///
     /// # Examples
     ///
     /// ```
@@ -590,8 +738,8 @@ impl TcpSocket {
     ///
     /// #[tokio::main]
     /// async fn main() -> std::io::Result<()> {
-    ///
     ///     let socket2_socket = Socket::new(Domain::IPV4, Type::STREAM, None)?;
+    ///     socket2_socket.set_nonblocking(true)?;
     ///
     ///     let socket = TcpSocket::from_std_stream(socket2_socket.into());
     ///
@@ -640,6 +788,13 @@ impl AsRawFd for TcpSocket {
     }
 }
 
+#[cfg(all(unix, not(tokio_no_as_fd)))]
+impl AsFd for TcpSocket {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
+    }
+}
+
 #[cfg(unix)]
 impl FromRawFd for TcpSocket {
     /// Converts a `RawFd` to a `TcpSocket`.
@@ -661,30 +816,36 @@ impl IntoRawFd for TcpSocket {
     }
 }
 
-#[cfg(windows)]
-impl IntoRawSocket for TcpSocket {
-    fn into_raw_socket(self) -> RawSocket {
-        self.inner.into_raw_socket()
+cfg_windows! {
+    impl IntoRawSocket for TcpSocket {
+        fn into_raw_socket(self) -> RawSocket {
+            self.inner.into_raw_socket()
+        }
     }
-}
 
-#[cfg(windows)]
-impl AsRawSocket for TcpSocket {
-    fn as_raw_socket(&self) -> RawSocket {
-        self.inner.as_raw_socket()
+    impl AsRawSocket for TcpSocket {
+        fn as_raw_socket(&self) -> RawSocket {
+            self.inner.as_raw_socket()
+        }
     }
-}
 
-#[cfg(windows)]
-impl FromRawSocket for TcpSocket {
-    /// Converts a `RawSocket` to a `TcpStream`.
-    ///
-    /// # Notes
-    ///
-    /// The caller is responsible for ensuring that the socket is in
-    /// non-blocking mode.
-    unsafe fn from_raw_socket(socket: RawSocket) -> TcpSocket {
-        let inner = socket2::Socket::from_raw_socket(socket);
-        TcpSocket { inner }
+    #[cfg(not(tokio_no_as_fd))]
+    impl AsSocket for TcpSocket {
+        fn as_socket(&self) -> BorrowedSocket<'_> {
+            unsafe { BorrowedSocket::borrow_raw(self.as_raw_socket()) }
+        }
+    }
+
+    impl FromRawSocket for TcpSocket {
+        /// Converts a `RawSocket` to a `TcpStream`.
+        ///
+        /// # Notes
+        ///
+        /// The caller is responsible for ensuring that the socket is in
+        /// non-blocking mode.
+        unsafe fn from_raw_socket(socket: RawSocket) -> TcpSocket {
+            let inner = socket2::Socket::from_raw_socket(socket);
+            TcpSocket { inner }
+        }
     }
 }

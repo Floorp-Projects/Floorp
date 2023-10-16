@@ -231,12 +231,12 @@ fn flush_while_idle() {
 #[cfg_attr(miri, ignore)] // takes a really long time with miri
 fn read_with_buffer_larger_than_max() {
     // Chunks
-    let chunk_a = 16 * 1024;
+    let chunk_a = crate::io::blocking::MAX_BUF;
     let chunk_b = chunk_a * 2;
     let chunk_c = chunk_a * 3;
     let chunk_d = chunk_a * 4;
 
-    assert_eq!(chunk_d / 1024, 64);
+    assert_eq!(chunk_d / 1024 / 1024, 8);
 
     let mut data = vec![];
     for i in 0..(chunk_d - 1) {
@@ -303,12 +303,12 @@ fn read_with_buffer_larger_than_max() {
 #[cfg_attr(miri, ignore)] // takes a really long time with miri
 fn write_with_buffer_larger_than_max() {
     // Chunks
-    let chunk_a = 16 * 1024;
+    let chunk_a = crate::io::blocking::MAX_BUF;
     let chunk_b = chunk_a * 2;
     let chunk_c = chunk_a * 3;
     let chunk_d = chunk_a * 4;
 
-    assert_eq!(chunk_d / 1024, 64);
+    assert_eq!(chunk_d / 1024 / 1024, 8);
 
     let mut data = vec![];
     for i in 0..(chunk_d - 1) {
@@ -954,4 +954,25 @@ fn partial_read_set_len_ok() {
 
     assert_eq!(n, FOO.len());
     assert_eq!(&buf[..n], FOO);
+}
+
+#[test]
+fn busy_file_seek_error() {
+    let mut file = MockFile::default();
+    let mut seq = Sequence::new();
+    file.expect_inner_write()
+        .once()
+        .in_sequence(&mut seq)
+        .returning(|_| Err(io::ErrorKind::Other.into()));
+
+    let mut file = crate::io::BufReader::new(File::from_std(file));
+    {
+        let mut t = task::spawn(file.write(HELLO));
+        assert_ready_ok!(t.poll());
+    }
+
+    pool::run_one();
+
+    let mut t = task::spawn(file.seek(SeekFrom::Start(0)));
+    assert_ready_err!(t.poll());
 }

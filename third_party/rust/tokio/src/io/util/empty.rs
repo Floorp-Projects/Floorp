@@ -53,6 +53,7 @@ impl AsyncRead for Empty {
         cx: &mut Context<'_>,
         _: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
+        ready!(crate::trace::trace_leaf(cx));
         ready!(poll_proceed_and_make_progress(cx));
         Poll::Ready(Ok(()))
     }
@@ -61,6 +62,7 @@ impl AsyncRead for Empty {
 impl AsyncBufRead for Empty {
     #[inline]
     fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<&[u8]>> {
+        ready!(crate::trace::trace_leaf(cx));
         ready!(poll_proceed_and_make_progress(cx));
         Poll::Ready(Ok(&[]))
     }
@@ -77,7 +79,7 @@ impl fmt::Debug for Empty {
 
 cfg_coop! {
     fn poll_proceed_and_make_progress(cx: &mut Context<'_>) -> Poll<()> {
-        let coop = ready!(crate::coop::poll_proceed(cx));
+        let coop = ready!(crate::runtime::coop::poll_proceed(cx));
         coop.made_progress();
         Poll::Ready(())
     }
