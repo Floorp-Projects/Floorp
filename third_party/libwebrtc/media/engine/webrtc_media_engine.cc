@@ -178,14 +178,20 @@ std::vector<webrtc::RtpExtension> FilterRtpExtensions(
         });
     result.erase(it, result.end());
 
-    // Keep just the highest priority BWE related extension and do not send
-    // toffset if transport-cc or abs-send-time have been negotiated.
-    // abs-send-time is sent even if transport-cc is negotiated for logging
-    // purposes.
-    static const char* const kBweExtensionPriorities[] = {
-        webrtc::RtpExtension::kAbsSendTimeUri,
-        webrtc::RtpExtension::kTimestampOffsetUri};
-    DiscardRedundantExtensions(&result, kBweExtensionPriorities);
+    // Keep just the highest priority extension of any in the following lists.
+    if (absl::StartsWith(trials.Lookup("WebRTC-FilterAbsSendTimeExtension"),
+                         "Enabled")) {
+      static const char* const kBweExtensionPriorities[] = {
+          webrtc::RtpExtension::kTransportSequenceNumberUri,
+          webrtc::RtpExtension::kAbsSendTimeUri,
+          webrtc::RtpExtension::kTimestampOffsetUri};
+      DiscardRedundantExtensions(&result, kBweExtensionPriorities);
+    } else {
+      static const char* const kBweExtensionPriorities[] = {
+          webrtc::RtpExtension::kAbsSendTimeUri,
+          webrtc::RtpExtension::kTimestampOffsetUri};
+      DiscardRedundantExtensions(&result, kBweExtensionPriorities);
+    }
   }
   return result;
 }
