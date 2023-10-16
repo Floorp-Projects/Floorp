@@ -1529,7 +1529,6 @@ impl<W: Write> Writer<W> {
                     Mf::Pow => Function::Regular("pow"),
                     // geometry
                     Mf::Dot => Function::Regular("dot"),
-                    Mf::Outer => Function::Regular("outerProduct"),
                     Mf::Cross => Function::Regular("cross"),
                     Mf::Distance => Function::Regular("distance"),
                     Mf::Length => Function::Regular("length"),
@@ -1568,7 +1567,7 @@ impl<W: Write> Writer<W> {
                     Mf::Unpack2x16snorm => Function::Regular("unpack2x16snorm"),
                     Mf::Unpack2x16unorm => Function::Regular("unpack2x16unorm"),
                     Mf::Unpack2x16float => Function::Regular("unpack2x16float"),
-                    Mf::Inverse => {
+                    Mf::Inverse | Mf::Outer => {
                         return Err(Error::UnsupportedMathFunction(fun));
                     }
                 };
@@ -1830,6 +1829,7 @@ const fn storage_format_str(format: crate::StorageFormat) -> &'static str {
         Sf::Rgba8Snorm => "rgba8snorm",
         Sf::Rgba8Uint => "rgba8uint",
         Sf::Rgba8Sint => "rgba8sint",
+        Sf::Bgra8Unorm => "bgra8unorm",
         Sf::Rgb10a2Uint => "rgb10a2uint",
         Sf::Rgb10a2Unorm => "rgb10a2unorm",
         Sf::Rg11b10Float => "rg11b10float",
