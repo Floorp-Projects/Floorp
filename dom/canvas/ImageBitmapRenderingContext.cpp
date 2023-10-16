@@ -80,6 +80,18 @@ void ImageBitmapRenderingContext::TransferFromImageBitmap(
       return;
     }
 
+    // Note that this is reentrant and will call back into SetDimensions.
+    if (mCanvasElement) {
+      mCanvasElement->SetSize(mImage->GetSize(), aRv);
+    } else if (mOffscreenCanvas) {
+      mOffscreenCanvas->SetSize(mImage->GetSize(), aRv);
+    }
+
+    if (NS_WARN_IF(aRv.Failed())) {
+      mImage = nullptr;
+      return;
+    }
+
     if (aImageBitmap->IsWriteOnly()) {
       if (mCanvasElement) {
         mCanvasElement->SetWriteOnly();
@@ -96,6 +108,16 @@ NS_IMETHODIMP
 ImageBitmapRenderingContext::SetDimensions(int32_t aWidth, int32_t aHeight) {
   mWidth = aWidth;
   mHeight = aHeight;
+
+  if (mOffscreenCanvas) {
+    OffscreenCanvasDisplayData data;
+    data.mSize = {mWidth, mHeight};
+    data.mIsOpaque = GetIsOpaque();
+    data.mIsAlphaPremult = true;
+    data.mDoPaintCallbacks = false;
+    mOffscreenCanvas->UpdateDisplayData(data);
+  }
+
   return NS_OK;
 }
 

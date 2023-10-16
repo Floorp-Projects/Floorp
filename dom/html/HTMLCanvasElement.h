@@ -176,6 +176,11 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   nsIntSize GetSize();
 
   /**
+   * Set the size in pixels of this canvas element.
+   */
+  void SetSize(const nsIntSize& aSize, ErrorResult& aRv);
+
+  /**
    * Determine whether the canvas is write-only.
    */
   bool IsWriteOnly() const;
