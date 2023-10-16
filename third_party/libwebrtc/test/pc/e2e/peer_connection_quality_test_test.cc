@@ -129,7 +129,7 @@ TEST_F(PeerConnectionE2EQualityTestTest, OutputVideoIsDumpedWhenRequested) {
 
   auto frame_reader = test::CreateY4mFrameReader(
       test::JoinFilename(test_directory_, "alice_video_bob_320x180_15.y4m"));
-  EXPECT_THAT(frame_reader->num_frames(), Eq(31));  // 2 seconds 15 fps + 1
+  EXPECT_THAT(frame_reader->num_frames(), Eq(30));  // 2 seconds 15 fps
 
   ExpectOutputFilesCount(1);
 }
