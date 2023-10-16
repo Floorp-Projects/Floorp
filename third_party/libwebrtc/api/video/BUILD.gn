@@ -28,6 +28,7 @@ rtc_library("video_rtp_headers") {
 
   deps = [
     "..:array_view",
+    "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:safe_conversions",
     "../../rtc_base:stringutils",
