@@ -6477,7 +6477,7 @@
     mirror: once
 -   name: gfx.video.convert-yuv-to-nv12.image-host-win
     type: RelaxedAtomicBool
-    value: @IS_EARLY_BETA_OR_EARLIER@
+    value: true
     mirror: always
 #endif
 
