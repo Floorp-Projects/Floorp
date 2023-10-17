@@ -3148,14 +3148,6 @@
       // insertion.
       for (var i = 0; i < tabDataList.length; i++) {
 
-        // Vetical tab has a bug. 3 closed tabs are restored when Floorp is started.
-        // Destroy 3 tabs for now.
-        let bugOccured = Services.prefs.getBoolPref("floorp.tabs.verticaltab.getTabBug", false);
-        if (Services.prefs.getIntPref("floorp.tabbar.style") == 2 && i < 3 && tabDataList.length > 3 && bugOccured) {
-          console.info("Floorp: Vertical tab has a bug. 3 closed tabs are restored when Floorp is started. Destroy 3 tabs for now.");
-          continue;
-        }
-
         let tabData = tabDataList[i];
 
         let userContextId = tabData.userContextId;
@@ -3941,6 +3933,8 @@
         prewarmed,
       } = {}
     ) {
+      console.log("removeTab", aTab, aTab.linkedBrowser.currentURI.spec);
+
       if (UserInteraction.running("browser.tabs.opening", window)) {
         UserInteraction.finish("browser.tabs.opening", window);
       }
@@ -4031,13 +4025,15 @@
               false,
               "Giving up waiting for the tab closing animation to finish (bug 608589)"
             );
-            tabbrowser._endRemoveTab(tab);
           }
         },
         3000,
         aTab,
         this
       );
+
+      // Force to close & Make do not save history of the tab.
+      tabbrowser._endRemoveTab(tab);
     },
 
     _hasBeforeUnload(aTab) {
@@ -4263,6 +4259,8 @@
       if (!aTab || !aTab._endRemoveArgs) {
         return;
       }
+
+      console.log("_endRemoveTab", aTab, aTab.linkedBrowser.currentURI.spec);
 
       var [aCloseWindow, aNewTab] = aTab._endRemoveArgs;
       aTab._endRemoveArgs = null;
@@ -5932,19 +5930,6 @@
 
         let filter = this._tabFilters.get(tab);
         if (filter) {
-          //Floorp Injection
-          try {
-            browser.webProgress.removeProgressListener(filter);
-          } catch (e) {
-            Services.prefs.setBoolPref(
-              "floorp.tabs.verticaltab.getTabBug",
-              true
-            );
-            Services.console.logStringMessage(
-              "Floorp Injection: " + e.toString()
-            );
-          }
-
           let listener = this._tabListeners.get(tab);
           if (listener) {
             filter.removeProgressListener(listener);
