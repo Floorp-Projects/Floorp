@@ -1227,9 +1227,9 @@ addressbar-locbar-engines-option =
 addressbar-locbar-quickactions-option =
     .label = Quick actions
     .accesskey = Q
-addressbar-locbar-recentsearches-option =
-    .label = Recent Searches
-    .accesskey = R
+addressbar-locbar-showrecentsearches-option =
+    .label = Show recent searches
+    .accesskey = r
 
 addressbar-suggestions-settings = Change preferences for search engine suggestions
 
