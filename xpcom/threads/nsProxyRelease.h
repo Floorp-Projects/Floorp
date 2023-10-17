@@ -233,11 +233,9 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
   // off-main-thread. But some consumers need to use the same pointer for
   // multiple classes, some of which are main-thread-only and some of which
   // aren't. So we allow them to explicitly disable this strict checking.
-  nsMainThreadPtrHolder(const char* aName, T* aPtr, bool aStrict = true,
-                        nsIEventTarget* aMainThreadEventTarget = nullptr)
+  nsMainThreadPtrHolder(const char* aName, T* aPtr, bool aStrict = true)
       : mRawPtr(aPtr),
-        mStrict(aStrict),
-        mMainThreadEventTarget(aMainThreadEventTarget)
+        mStrict(aStrict)
 #ifndef RELEASE_OR_BETA
         ,
         mName(aName)
@@ -249,11 +247,9 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
     NS_IF_ADDREF(mRawPtr);
   }
   nsMainThreadPtrHolder(const char* aName, already_AddRefed<T> aPtr,
-                        bool aStrict = true,
-                        nsIEventTarget* aMainThreadEventTarget = nullptr)
+                        bool aStrict = true)
       : mRawPtr(aPtr.take()),
-        mStrict(aStrict),
-        mMainThreadEventTarget(aMainThreadEventTarget)
+        mStrict(aStrict)
 #ifndef RELEASE_OR_BETA
         ,
         mName(aName)
@@ -274,17 +270,13 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
     if (NS_IsMainThread()) {
       NS_IF_RELEASE(mRawPtr);
     } else if (mRawPtr) {
-      if (!mMainThreadEventTarget) {
-        mMainThreadEventTarget = do_GetMainThread();
-      }
-      MOZ_ASSERT(mMainThreadEventTarget);
-      NS_ProxyRelease(
+      NS_ReleaseOnMainThread(
 #ifdef RELEASE_OR_BETA
           nullptr,
 #else
           mName,
 #endif
-          mMainThreadEventTarget, dont_AddRef(mRawPtr));
+          dont_AddRef(mRawPtr));
     }
   }
 
@@ -311,8 +303,6 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
 
   // Whether to strictly enforce thread invariants in this class.
   bool mStrict = true;
-
-  nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
 #ifndef RELEASE_OR_BETA
   const char* mName = nullptr;
