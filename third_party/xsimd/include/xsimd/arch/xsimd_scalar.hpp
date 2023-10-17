@@ -139,6 +139,33 @@ namespace xsimd
     }
 
     template <class T>
+    inline T incr(T const& x) noexcept
+    {
+        return x + T(1);
+    }
+
+    template <class T>
+    inline T incr_if(T const& x, bool mask) noexcept
+    {
+        return x + T(mask ? 1 : 0);
+    }
+
+    inline bool all(bool mask)
+    {
+        return mask;
+    }
+
+    inline bool any(bool mask)
+    {
+        return mask;
+    }
+
+    inline bool none(bool mask)
+    {
+        return !mask;
+    }
+
+    template <class T>
     inline typename std::enable_if<std::is_integral<T>::value, T>::type
     bitwise_and(T x, T y) noexcept
     {
@@ -470,11 +497,13 @@ namespace xsimd
 #else
     inline float exp10(const float& x) noexcept
     {
-        return std::exp(0x1.26bb1cp+1f * x);
+        const float ln10 = std::log(10.f);
+        return std::exp(ln10 * x);
     }
     inline double exp10(const double& x) noexcept
     {
-        return std::exp(0x1.26bb1bbb55516p+1 * x);
+        const double ln10 = std::log(10.);
+        return std::exp(ln10 * x);
     }
 #endif
 
@@ -736,6 +765,18 @@ namespace xsimd
     inline auto sub(T const& x, Tp const& y) noexcept -> decltype(x - y)
     {
         return x - y;
+    }
+
+    template <class T>
+    inline T decr(T const& x) noexcept
+    {
+        return x - T(1);
+    }
+
+    template <class T>
+    inline T decr_if(T const& x, bool mask) noexcept
+    {
+        return x - T(mask ? 1 : 0);
     }
 
 #ifdef XSIMD_ENABLE_XTL_COMPLEX

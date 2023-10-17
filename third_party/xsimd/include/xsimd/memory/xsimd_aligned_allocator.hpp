@@ -39,7 +39,7 @@ namespace xsimd
      * @tparam T type of objects to allocate.
      * @tparam Align alignment in bytes.
      */
-    template <class T, size_t Align = default_arch::alignment()>
+    template <class T, size_t Align>
     class aligned_allocator
     {
     public:

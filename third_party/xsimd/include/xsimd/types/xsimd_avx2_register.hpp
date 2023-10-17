@@ -17,7 +17,7 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * AVX2 instructions
      */

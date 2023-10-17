@@ -549,6 +549,13 @@ namespace xsimd
             }
         }
 
+        // decr_if
+        template <class A, class T, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
+        inline batch<T, A> decr_if(batch<T, A> const& self, batch_bool<T, A> const& mask, requires_arch<avx>) noexcept
+        {
+            return self + batch<T, A>(mask.data);
+        }
+
         // div
         template <class A>
         inline batch<float, A> div(batch<float, A> const& self, batch<float, A> const& other, requires_arch<avx>) noexcept
@@ -747,6 +754,13 @@ namespace xsimd
             // tmp1 = (a2+a3, b2+b3, c2+c3, d2+d3)
             tmp1 = _mm256_permute2f128_pd(tmp0, tmp1, 0x21);
             return _mm256_add_pd(tmp1, tmp2);
+        }
+
+        // incr_if
+        template <class A, class T, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
+        inline batch<T, A> incr_if(batch<T, A> const& self, batch_bool<T, A> const& mask, requires_arch<avx>) noexcept
+        {
+            return self - batch<T, A>(mask.data);
         }
 
         // insert

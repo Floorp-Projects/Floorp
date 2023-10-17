@@ -20,7 +20,7 @@ namespace xsimd
     struct fma3;
 
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * SSE4.2 + FMA instructions
      */

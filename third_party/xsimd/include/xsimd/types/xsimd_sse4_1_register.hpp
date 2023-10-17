@@ -21,7 +21,7 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * SSE4.1 instructions
      */

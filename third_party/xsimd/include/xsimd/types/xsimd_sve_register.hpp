@@ -25,7 +25,7 @@ namespace xsimd
     namespace detail
     {
         /**
-         * @ingroup arch
+         * @ingroup architectures
          *
          * SVE instructions (fixed vector size) for arm64
          */

@@ -21,7 +21,7 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * SSSE3 instructions
      */
