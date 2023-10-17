@@ -6,6 +6,7 @@
 #ifndef LIB_JXL_JPEG_DEC_JPEG_SERIALIZATION_STATE_H_
 #define LIB_JXL_JPEG_DEC_JPEG_SERIALIZATION_STATE_H_
 
+#include <algorithm>
 #include <deque>
 #include <vector>
 
@@ -19,7 +20,7 @@ struct HuffmanCodeTable {
   int8_t depth[256];
   uint16_t code[256];
   bool initialized = false;
-  void InitDepths(int value = 0) {
+  void InitDepths(int8_t value = 0) {
     std::fill(std::begin(depth), std::end(depth), value);
   }
 };
@@ -43,7 +44,8 @@ struct DCTCodingState {
   HuffmanCodeTable* cur_ac_huff_;
   // The sequence of currently buffered refinement bits for a successive
   // approximation scan (one where Ah > 0).
-  std::vector<int> refinement_bits_;
+  std::vector<uint16_t> refinement_bits_;
+  size_t refinement_bits_count_ = 0;
 };
 
 struct EncodeScanState {

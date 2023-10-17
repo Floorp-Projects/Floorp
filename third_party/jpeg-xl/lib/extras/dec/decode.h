@@ -42,7 +42,7 @@ bool CanDecode(Codec codec);
 // that Encode() would encode to PFM instead of PPM.
 Codec CodecFromPath(std::string path,
                     size_t* JXL_RESTRICT bits_per_sample = nullptr,
-                    std::string* basename = nullptr,
+                    std::string* filename = nullptr,
                     std::string* extension = nullptr);
 
 // Decodes "bytes" info *ppf.

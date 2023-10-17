@@ -3,15 +3,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <hwy/tests/hwy_gtest.h>
-
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/color_management.h"
+#include "lib/jxl/base/matrix_ops.h"
+#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_xyb.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
-#include "lib/jxl/matrix_ops.h"
 #include "lib/jxl/opsin_params.h"
 #include "lib/jxl/testing.h"
 
@@ -34,7 +32,7 @@ void LinearSrgbToOpsin(float rgb_r, float rgb_g, float rgb_b,
   ImageBundle ib(&metadata);
   ib.SetFromImage(std::move(linear), metadata.color_encoding);
   Image3F opsin(1, 1);
-  (void)ToXYB(ib, /*pool=*/nullptr, &opsin, GetJxlCms());
+  (void)ToXYB(ib, /*pool=*/nullptr, &opsin, *JxlGetDefaultCms());
 
   *xyb_x = opsin.PlaneRow(0, 0)[0];
   *xyb_y = opsin.PlaneRow(1, 0)[0];
@@ -76,7 +74,7 @@ TEST(OpsinImageTest, VerifyOpsinAbsorbanceInverseMatrix) {
   }
   EXPECT_TRUE(Inv3x3Matrix(matrix));
   for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(matrix[i], kOpsinAbsorbanceMatrix[i], 1e-6);
+    EXPECT_NEAR(matrix[i], jxl::cms::kOpsinAbsorbanceMatrix[i], 1e-6);
   }
 }
 
@@ -114,7 +112,7 @@ TEST(OpsinImageTest, VerifyGray) {
     float x, y, b;
     LinearSrgbToOpsin(i / 255., i / 255., i / 255., &x, &y, &b);
     EXPECT_NEAR(0, x, 1e-6);
-    EXPECT_NEAR(kYToBRatio, b / y, 3e-5);
+    EXPECT_NEAR(jxl::cms::kYToBRatio, b / y, 3e-5);
   }
 }
 

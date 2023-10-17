@@ -6,7 +6,6 @@
 #include "lib/jxl/quantizer.h"
 
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/image_ops.h"

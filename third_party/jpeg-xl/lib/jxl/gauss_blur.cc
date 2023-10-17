@@ -16,10 +16,10 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/base/matrix_ops.h"
 #include "lib/jxl/image_ops.h"
-#include "lib/jxl/matrix_ops.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {

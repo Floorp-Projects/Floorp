@@ -15,7 +15,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_ans.h"
 #include "lib/jxl/enc_heuristics.h"
@@ -38,6 +37,7 @@ struct PassesEncoderState {
 
   ImageF initial_quant_field;    // Invalid in Falcon mode.
   ImageF initial_quant_masking;  // Invalid in Falcon mode.
+  ImageF initial_quant_masking1x1;  // Invalid in Falcon mode.
 
   // Per-pass DCT coefficients for the image. One row per group.
   std::vector<std::unique_ptr<ACImage>> coeffs;

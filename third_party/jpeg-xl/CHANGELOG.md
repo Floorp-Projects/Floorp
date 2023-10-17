@@ -12,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    of extra channels (like alpha) separately.
  - encoder API: new api functions for streaming encoding:
   - `JxlEncoderSetOutputProcessor`
-  - `JxlEncoderFlushInput` and
+  - `JxlEncoderFlushInput` 
   - `JxlEncoderOutputProcessor` struct
-  - `JxlEncoderSetOutputCallback`,
+  - `JxlEncoderSetOutputCallback`
+  - `JxlChunkedFrameInputSource` struct
+  - `JxlEncoderAddChunkedFrame`
  - encoder API: new options for more fine-grained control over metadata
    preservation when using `JxlEncoderAddJPEGFrame`:
   - `JXL_ENC_FRAME_SETTING_JPEG_KEEP_EXIF`

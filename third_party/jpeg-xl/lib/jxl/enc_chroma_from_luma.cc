@@ -19,10 +19,11 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/dec_transforms-inl.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_transforms-inl.h"
@@ -159,7 +160,10 @@ int32_t FindBestMultiplier(const float* values_m, const float* values_s,
   }
   // CFL seems to be tricky for larger transforms for HF components
   // close to zero. This heuristic brings the solutions closer to zero
-  // and reduces red-green oscillations.
+  // and reduces red-green oscillations. A better approach would
+  // look into variance of the multiplier within separate (e.g. 8x8)
+  // areas and only apply this heuristic where there is a high variance.
+  // This would give about 1 % more compression density.
   float towards_zero = 2.6;
   if (x >= towards_zero) {
     x -= towards_zero;
@@ -198,7 +202,7 @@ void ComputeDC(const ImageF& dc_values, bool fast, int32_t* dc_x,
   *dc_x = FindBestMultiplier(dc_values_yx, dc_values_x, dc_values.xsize(), 0.0f,
                              kDistanceMultiplierDC, fast);
   *dc_b = FindBestMultiplier(dc_values_yb, dc_values_b, dc_values.xsize(),
-                             kYToBRatio, kDistanceMultiplierDC, fast);
+                             jxl::cms::kYToBRatio, kDistanceMultiplierDC, fast);
 }
 
 void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
@@ -341,8 +345,9 @@ void ComputeTile(const Image3F& opsin, const DequantMatrices& dequant,
   JXL_CHECK(num_ac % Lanes(df) == 0);
   row_out_x[tx] = FindBestMultiplier(coeffs_yx, coeffs_x, num_ac, 0.0f,
                                      kDistanceMultiplierAC, fast);
-  row_out_b[tx] = FindBestMultiplier(coeffs_yb, coeffs_b, num_ac, kYToBRatio,
-                                     kDistanceMultiplierAC, fast);
+  row_out_b[tx] =
+      FindBestMultiplier(coeffs_yb, coeffs_b, num_ac, jxl::cms::kYToBRatio,
+                         kDistanceMultiplierAC, fast);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -395,7 +400,8 @@ void ColorCorrelationMapEncodeDC(ColorCorrelationMap* map, BitWriter* writer,
 
   BitWriter::Allotment allotment(writer, 1 + 2 * kBitsPerByte + 12 + 32);
   if (ytox_dc == 0 && ytob_dc == 0 && color_factor == kDefaultColorFactor &&
-      base_correlation_x == 0.0f && base_correlation_b == kYToBRatio) {
+      base_correlation_x == 0.0f &&
+      base_correlation_b == jxl::cms::kYToBRatio) {
     writer->Write(1, 1);
     allotment.ReclaimAndCharge(writer, layer, aux_out);
     return;

@@ -14,39 +14,30 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <array>
 #include <cmath>  // std::abs
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/field_encodings.h"
 
 namespace jxl {
 
-// (All CIE units are for the standard 1931 2 degree observer)
+using IccBytes = ::jxl::cms::IccBytes;
+using ColorSpace = ::jxl::cms::ColorSpace;
+using WhitePoint = ::jxl::cms::WhitePoint;
+using Primaries = ::jxl::cms::Primaries;
+using TransferFunction = ::jxl::cms::TransferFunction;
+using RenderingIntent = ::jxl::cms::RenderingIntent;
+using CIExy = ::jxl::cms::CIExy;
+using PrimariesCIExy = ::jxl::cms::PrimariesCIExy;
 
-// Color space the color pixel data is encoded in. The color pixel data is
-// 3-channel in all cases except in case of kGray, where it uses only 1 channel.
-// This also determines the amount of channels used in modular encoding.
-enum class ColorSpace : uint32_t {
-  // Trichromatic color data. This also includes CMYK if a kBlack
-  // ExtraChannelInfo is present. This implies, if there is an ICC profile, that
-  // the ICC profile uses a 3-channel color space if no kBlack extra channel is
-  // present, or uses color space 'CMYK' if a kBlack extra channel is present.
-  kRGB,
-  // Single-channel data. This implies, if there is an ICC profile, that the ICC
-  // profile also represents single-channel data and has the appropriate color
-  // space ('GRAY').
-  kGray,
-  // Like kRGB, but implies fixed values for primaries etc.
-  kXYB,
-  // For non-RGB/gray data, e.g. from non-electro-optical sensors. Otherwise
-  // the same conditions as kRGB apply.
-  kUnknown
-};
+namespace cms {
 
 static inline const char* EnumName(ColorSpace /*unused*/) {
   return "ColorSpace";
@@ -57,14 +48,6 @@ static inline constexpr uint64_t EnumBits(ColorSpace /*unused*/) {
          MakeBit(CS::kUnknown);
 }
 
-// Values from CICP ColourPrimaries.
-enum class WhitePoint : uint32_t {
-  kD65 = 1,     // sRGB/BT.709/Display P3/BT.2020
-  kCustom = 2,  // Actual values encoded in separate fields
-  kE = 10,      // XYZ
-  kDCI = 11,    // DCI-P3
-};
-
 static inline const char* EnumName(WhitePoint /*unused*/) {
   return "WhitePoint";
 }
@@ -73,14 +56,6 @@ static inline constexpr uint64_t EnumBits(WhitePoint /*unused*/) {
          MakeBit(WhitePoint::kE) | MakeBit(WhitePoint::kDCI);
 }
 
-// Values from CICP ColourPrimaries
-enum class Primaries : uint32_t {
-  kSRGB = 1,    // Same as BT.709
-  kCustom = 2,  // Actual values encoded in separate fields
-  k2100 = 9,    // Same as BT.2020
-  kP3 = 11,
-};
-
 static inline const char* EnumName(Primaries /*unused*/) { return "Primaries"; }
 static inline constexpr uint64_t EnumBits(Primaries /*unused*/) {
   using Pr = Primaries;
@@ -88,34 +63,16 @@ static inline constexpr uint64_t EnumBits(Primaries /*unused*/) {
          MakeBit(Pr::kP3);
 }
 
-// Values from CICP TransferCharacteristics
-enum class TransferFunction : uint32_t {
-  k709 = 1,
-  kUnknown = 2,
-  kLinear = 8,
-  kSRGB = 13,
-  kPQ = 16,   // from BT.2100
-  kDCI = 17,  // from SMPTE RP 431-2 reference projector
-  kHLG = 18,  // from BT.2100
-};
-
 static inline const char* EnumName(TransferFunction /*unused*/) {
   return "TransferFunction";
 }
+
 static inline constexpr uint64_t EnumBits(TransferFunction /*unused*/) {
   using TF = TransferFunction;
   return MakeBit(TF::k709) | MakeBit(TF::kLinear) | MakeBit(TF::kSRGB) |
          MakeBit(TF::kPQ) | MakeBit(TF::kDCI) | MakeBit(TF::kHLG) |
          MakeBit(TF::kUnknown);
 }
-
-enum class RenderingIntent : uint32_t {
-  // Values match ICC sRGB encodings.
-  kPerceptual = 0,  // good for photos, requires a profile with LUT.
-  kRelative,        // good for logos.
-  kSaturation,      // perhaps useful for CG with fully saturated colors.
-  kAbsolute,        // leaves white point unchanged; good for proofing.
-};
 
 static inline const char* EnumName(RenderingIntent /*unused*/) {
   return "RenderingIntent";
@@ -126,17 +83,7 @@ static inline constexpr uint64_t EnumBits(RenderingIntent /*unused*/) {
          MakeBit(RI::kSaturation) | MakeBit(RI::kAbsolute);
 }
 
-// Chromaticity (Y is omitted because it is 1 for primaries/white points)
-struct CIExy {
-  double x = 0.0;
-  double y = 0.0;
-};
-
-struct PrimariesCIExy {
-  CIExy r;
-  CIExy g;
-  CIExy b;
-};
+}  // namespace cms
 
 // Serializable form of CIExy.
 struct Customxy : public Fields {
@@ -149,8 +96,12 @@ struct Customxy : public Fields {
   // Returns false if x or y do not fit in the encoding.
   Status Set(const CIExy& xy);
 
-  int32_t x;
-  int32_t y;
+  bool IsSame(const Customxy& other) const {
+    return (storage_.x == other.storage_.x) && (storage_.y == other.storage_.y);
+  }
+
+ private:
+  ::jxl::cms::Customxy storage_;
 };
 
 struct CustomTransferFunction : public Fields {
@@ -162,49 +113,62 @@ struct CustomTransferFunction : public Fields {
   bool SetImplicit();
 
   // Gamma: only used for PNG inputs
-  bool IsGamma() const { return have_gamma_; }
+  bool IsGamma() const { return storage_.have_gamma; }
   double GetGamma() const {
     JXL_ASSERT(IsGamma());
-    return gamma_ * 1E-7;  // (0, 1)
+    return storage_.gamma * 1E-7;  // (0, 1)
   }
   Status SetGamma(double gamma);
 
   TransferFunction GetTransferFunction() const {
     JXL_ASSERT(!IsGamma());
-    return transfer_function_;
+    return storage_.transfer_function;
   }
   void SetTransferFunction(const TransferFunction tf) {
-    have_gamma_ = false;
-    transfer_function_ = tf;
+    storage_.have_gamma = false;
+    storage_.transfer_function = tf;
   }
 
   bool IsUnknown() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kUnknown);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kUnknown);
   }
   bool IsSRGB() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kSRGB);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kSRGB);
   }
   bool IsLinear() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kLinear);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kLinear);
   }
   bool IsPQ() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kPQ);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kPQ);
   }
   bool IsHLG() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kHLG);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kHLG);
   }
   bool Is709() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::k709);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::k709);
   }
   bool IsDCI() const {
-    return !have_gamma_ && (transfer_function_ == TransferFunction::kDCI);
+    return !storage_.have_gamma &&
+           (storage_.transfer_function == TransferFunction::kDCI);
   }
   bool IsSame(const CustomTransferFunction& other) const {
-    if (have_gamma_ != other.have_gamma_) return false;
-    if (have_gamma_) {
-      if (gamma_ != other.gamma_) return false;
+    if (storage_.have_gamma != other.storage_.have_gamma) {
+      return false;
+    }
+    if (storage_.have_gamma) {
+      if (storage_.gamma != other.storage_.gamma) {
+        return false;
+      }
     } else {
-      if (transfer_function_ != other.transfer_function_) return false;
+      if (storage_.transfer_function != other.storage_.transfer_function) {
+        return false;
+      }
     }
     return true;
   }
@@ -215,15 +179,7 @@ struct CustomTransferFunction : public Fields {
   ColorSpace nonserialized_color_space = ColorSpace::kRGB;
 
  private:
-  static constexpr uint32_t kGammaMul = 10000000;
-
-  bool have_gamma_;
-
-  // OETF exponent to go from linear to gamma-compressed.
-  uint32_t gamma_;  // Only used if have_gamma_.
-
-  // Can be kUnknown.
-  TransferFunction transfer_function_;  // Only used if !have_gamma_.
+  ::jxl::cms::CustomTransferFunction storage_;
 };
 
 // Compact encoding of data required to interpret and translate pixels to a
@@ -241,33 +197,29 @@ struct ColorEncoding : public Fields {
   Status CreateICC();
 
   // Returns non-empty and valid ICC profile, unless:
-  // - between calling InternalRemoveICC() and CreateICC() in tests;
   // - WantICC() == true and SetICC() was not yet called;
   // - after a failed call to SetSRGB(), SetICC(), or CreateICC().
-  const PaddedBytes& ICC() const { return icc_; }
-
-  // Internal only, do not call except from tests.
-  void InternalRemoveICC() { icc_.clear(); }
+  const IccBytes& ICC() const { return storage_.icc; }
 
   // Returns true if `icc` is assigned and decoded successfully. If so,
   // subsequent WantICC() will return true until DecideIfWantICC() changes it.
   // Returning false indicates data has been lost.
-  Status SetICC(PaddedBytes&& icc, const JxlCmsInterface* cms) {
+  Status SetICC(IccBytes&& icc, const JxlCmsInterface* cms) {
     if (icc.empty()) return false;
-    icc_ = std::move(icc);
+    storage_.icc = std::move(icc);
 
     if (cms == nullptr) {
-      want_icc_ = true;
-      have_fields_ = false;
+      storage_.want_icc = true;
+      storage_.have_fields = false;
       return true;
     }
 
     if (!SetFieldsFromICC(*cms)) {
-      InternalRemoveICC();
+      storage_.icc.clear();
       return false;
     }
 
-    want_icc_ = true;
+    storage_.want_icc = true;
     return true;
   }
 
@@ -276,39 +228,39 @@ struct ColorEncoding : public Fields {
   // space. Functions to get and set fields, such as SetWhitePoint, cannot be
   // used anymore after this and functions such as IsSRGB return false no matter
   // what the contents of the icc profile.
-  Status SetICCRaw(PaddedBytes&& icc) {
+  Status SetICCRaw(IccBytes&& icc) {
     if (icc.empty()) return false;
-    icc_ = std::move(icc);
+    storage_.icc = std::move(icc);
 
-    want_icc_ = true;
-    have_fields_ = false;
+    storage_.want_icc = true;
+    storage_.have_fields = false;
     return true;
   }
 
   // Returns whether to send the ICC profile in the codestream.
-  bool WantICC() const { return want_icc_; }
+  bool WantICC() const { return storage_.want_icc; }
 
   // Return whether the direct fields are set, if false but ICC is set, only
   // raw ICC bytes are known.
-  bool HaveFields() const { return have_fields_; }
+  bool HaveFields() const { return storage_.have_fields; }
 
   // Causes WantICC() to return false if ICC() can be reconstructed from fields.
   void DecideIfWantICC(const JxlCmsInterface& cms);
 
-  bool IsGray() const { return color_space_ == ColorSpace::kGray; }
-  bool IsCMYK() const { return cmyk_; }
+  bool IsGray() const { return storage_.color_space == ColorSpace::kGray; }
+  bool IsCMYK() const { return storage_.cmyk; }
   size_t Channels() const { return IsGray() ? 1 : 3; }
 
   // Returns false if the field is invalid and unusable.
   bool HasPrimaries() const {
-    return !IsGray() && color_space_ != ColorSpace::kXYB;
+    return !IsGray() && storage_.color_space != ColorSpace::kXYB;
   }
 
   // Returns true after setting the field to a value defined by color_space,
   // otherwise false and leaves the field unchanged.
   bool ImplicitWhitePoint() {
-    if (color_space_ == ColorSpace::kXYB) {
-      white_point = WhitePoint::kD65;
+    if (storage_.color_space == ColorSpace::kXYB) {
+      storage_.white_point = WhitePoint::kD65;
       return true;
     }
     return false;
@@ -318,10 +270,10 @@ struct ColorEncoding : public Fields {
   // profile is set without the fields being set, this returns false, even if
   // the content of the ICC profile would match sRGB.
   bool IsSRGB() const {
-    if (!have_fields_) return false;
-    if (!IsGray() && color_space_ != ColorSpace::kRGB) return false;
-    if (white_point != WhitePoint::kD65) return false;
-    if (primaries != Primaries::kSRGB) return false;
+    if (!storage_.have_fields) return false;
+    if (!IsGray() && storage_.color_space != ColorSpace::kRGB) return false;
+    if (storage_.white_point != WhitePoint::kD65) return false;
+    if (storage_.primaries != Primaries::kSRGB) return false;
     if (!tf.IsSRGB()) return false;
     return true;
   }
@@ -330,60 +282,71 @@ struct ColorEncoding : public Fields {
   // unparsed ICC profile is set without the fields being set, this returns
   // false, even if the content of the ICC profile would match linear sRGB.
   bool IsLinearSRGB() const {
-    if (!have_fields_) return false;
-    if (!IsGray() && color_space_ != ColorSpace::kRGB) return false;
-    if (white_point != WhitePoint::kD65) return false;
-    if (primaries != Primaries::kSRGB) return false;
+    if (!storage_.have_fields) return false;
+    if (!IsGray() && storage_.color_space != ColorSpace::kRGB) return false;
+    if (storage_.white_point != WhitePoint::kD65) return false;
+    if (storage_.primaries != Primaries::kSRGB) return false;
     if (!tf.IsLinear()) return false;
     return true;
   }
 
   Status SetSRGB(const ColorSpace cs,
                  const RenderingIntent ri = RenderingIntent::kRelative) {
-    InternalRemoveICC();
+    storage_.icc.clear();
     JXL_ASSERT(cs == ColorSpace::kGray || cs == ColorSpace::kRGB);
-    color_space_ = cs;
-    white_point = WhitePoint::kD65;
-    primaries = Primaries::kSRGB;
+    storage_.color_space = cs;
+    storage_.white_point = WhitePoint::kD65;
+    storage_.primaries = Primaries::kSRGB;
     tf.SetTransferFunction(TransferFunction::kSRGB);
-    rendering_intent = ri;
+    storage_.rendering_intent = ri;
     return CreateICC();
   }
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override;
 
   // Accessors ensure tf.nonserialized_color_space is updated at the same time.
-  ColorSpace GetColorSpace() const { return color_space_; }
+  ColorSpace GetColorSpace() const { return storage_.color_space; }
   void SetColorSpace(const ColorSpace cs) {
-    color_space_ = cs;
+    storage_.color_space = cs;
     tf.nonserialized_color_space = cs;
   }
 
   CIExy GetWhitePoint() const;
   Status SetWhitePoint(const CIExy& xy);
 
+  WhitePoint GetWhitePointType() const { return storage_.white_point; }
+  Status SetWhitePointType(const WhitePoint& wp);
+
   PrimariesCIExy GetPrimaries() const;
   Status SetPrimaries(const PrimariesCIExy& xy);
+
+  Primaries GetPrimariesType() const { return storage_.primaries; }
+  Status SetPrimariesType(const Primaries& p);
+
+  RenderingIntent GetRenderingIntent() const {
+    return storage_.rendering_intent;
+  }
+  Status SetRenderingIntent(const RenderingIntent& ri);
 
   // Checks if the color spaces (including white point / primaries) are the
   // same, but ignores the transfer function, rendering intent and ICC bytes.
   bool SameColorSpace(const ColorEncoding& other) const {
-    if (color_space_ != other.color_space_) return false;
+    if (storage_.color_space != other.storage_.color_space) return false;
 
-    if (white_point != other.white_point) return false;
-    if (white_point == WhitePoint::kCustom) {
-      if (white_.x != other.white_.x || white_.y != other.white_.y)
+    if (storage_.white_point != other.storage_.white_point) return false;
+    if (storage_.white_point == WhitePoint::kCustom) {
+      if (!white_.IsSame(other.white_)) {
         return false;
+      }
     }
 
     if (HasPrimaries() != other.HasPrimaries()) return false;
     if (HasPrimaries()) {
-      if (primaries != other.primaries) return false;
-      if (primaries == Primaries::kCustom) {
-        if (red_.x != other.red_.x || red_.y != other.red_.y) return false;
-        if (green_.x != other.green_.x || green_.y != other.green_.y)
-          return false;
-        if (blue_.x != other.blue_.x || blue_.y != other.blue_.y) return false;
+      if (storage_.primaries != other.storage_.primaries) return false;
+      if (storage_.primaries == Primaries::kCustom) {
+        if (!red_.IsSame(other.red_)) return false;
+        if (!green_.IsSame(other.green_)) return false;
+        if (!blue_.IsSame(other.blue_)) return false;
       }
     }
     return true;
@@ -398,30 +361,21 @@ struct ColorEncoding : public Fields {
   mutable bool all_default;
 
   // Only valid if HaveFields()
-  WhitePoint white_point;
-  Primaries primaries;  // Only valid if HasPrimaries()
   CustomTransferFunction tf;
-  RenderingIntent rendering_intent;
+
+  void ToExternal(JxlColorEncoding* external) const;
+  Status FromExternal(const JxlColorEncoding& external);
+  std::string Description() const;
 
  private:
   // Returns true if all fields have been initialized (possibly to kUnknown).
   // Returns false if the ICC profile is invalid or decoding it fails.
   Status SetFieldsFromICC(const JxlCmsInterface& cms);
 
-  // If true, the codestream contains an ICC profile and we do not serialize
-  // fields. Otherwise, fields are serialized and we create an ICC profile.
-  bool want_icc_;
+  static std::array<ColorEncoding, 2> CreateC2(Primaries pr,
+                                               TransferFunction tf);
 
-  // When false, fields such as white_point and tf are invalid and must not be
-  // used. This occurs after setting a raw bytes-only ICC profile, only the
-  // ICC bytes may be used. The color_space_ field is still valid.
-  bool have_fields_ = true;
-
-  PaddedBytes icc_;  // Valid ICC profile
-
-  ColorSpace color_space_;  // Can be kUnknown
-  bool cmyk_ = false;
-
+  ::jxl::cms::ColorEncoding storage_;
   // Only used if white_point == kCustom.
   Customxy white_;
 
@@ -447,17 +401,68 @@ static inline std::ostream& operator<<(std::ostream& os,
   return os << Description(c);
 }
 
-void ConvertInternalToExternalColorEncoding(const jxl::ColorEncoding& internal,
-                                            JxlColorEncoding* external);
-
-Status ConvertExternalToInternalColorEncoding(const JxlColorEncoding& external,
-                                              jxl::ColorEncoding* internal);
-
 Status PrimariesToXYZ(float rx, float ry, float gx, float gy, float bx,
                       float by, float wx, float wy, float matrix[9]);
 Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
                          float by, float wx, float wy, float matrix[9]);
 Status AdaptToXYZD50(float wx, float wy, float matrix[9]);
+
+class ColorSpaceTransform {
+ public:
+  explicit ColorSpaceTransform(const JxlCmsInterface& cms) : cms_(cms) {}
+  ~ColorSpaceTransform() {
+    if (cms_data_ != nullptr) {
+      cms_.destroy(cms_data_);
+    }
+  }
+
+  // Cannot copy.
+  ColorSpaceTransform(const ColorSpaceTransform&) = delete;
+  ColorSpaceTransform& operator=(const ColorSpaceTransform&) = delete;
+
+  Status Init(const ColorEncoding& c_src, const ColorEncoding& c_dst,
+              float intensity_target, size_t xsize, size_t num_threads) {
+    xsize_ = xsize;
+    JxlColorProfile input_profile;
+    icc_src_ = c_src.ICC();
+    input_profile.icc.data = icc_src_.data();
+    input_profile.icc.size = icc_src_.size();
+    c_src.ToExternal(&input_profile.color_encoding);
+    input_profile.num_channels = c_src.IsCMYK() ? 4 : c_src.Channels();
+    JxlColorProfile output_profile;
+    icc_dst_ = c_dst.ICC();
+    output_profile.icc.data = icc_dst_.data();
+    output_profile.icc.size = icc_dst_.size();
+    c_dst.ToExternal(&output_profile.color_encoding);
+    if (c_dst.IsCMYK())
+      return JXL_FAILURE("Conversion to CMYK is not supported");
+    output_profile.num_channels = c_dst.Channels();
+    cms_data_ = cms_.init(cms_.init_data, num_threads, xsize, &input_profile,
+                          &output_profile, intensity_target);
+    JXL_RETURN_IF_ERROR(cms_data_ != nullptr);
+    return true;
+  }
+
+  float* BufSrc(const size_t thread) const {
+    return cms_.get_src_buf(cms_data_, thread);
+  }
+
+  float* BufDst(const size_t thread) const {
+    return cms_.get_dst_buf(cms_data_, thread);
+  }
+
+  Status Run(const size_t thread, const float* buf_src, float* buf_dst) {
+    return cms_.run(cms_data_, thread, buf_src, buf_dst, xsize_);
+  }
+
+ private:
+  JxlCmsInterface cms_;
+  void* cms_data_ = nullptr;
+  // The interface may retain pointers into these.
+  IccBytes icc_src_;
+  IccBytes icc_dst_;
+  size_t xsize_;
+};
 
 }  // namespace jxl
 

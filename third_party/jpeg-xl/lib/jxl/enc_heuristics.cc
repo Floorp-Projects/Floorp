@@ -686,7 +686,7 @@ void DownsampleImage2_Iterative(Image3F* opsin) {
                        downsampled.ysize() - kBlockDim);
 
   Image3F rgb(opsin->xsize(), opsin->ysize());
-  OpsinParams opsin_params;  // TODO: use the ones that are actually used
+  OpsinParams opsin_params;  // TODO(user): use the ones that are actually used
   opsin_params.Init(kDefaultIntensityTarget);
   OpsinToLinear(*opsin, Rect(rgb), nullptr, &rgb, opsin_params);
 
@@ -844,7 +844,8 @@ Status DefaultEncoderHeuristics::LossyFrameHeuristics(
     }
     enc_state->initial_quant_field = InitialQuantField(
         butteraugli_distance_for_iqf, *opsin, shared.frame_dim, pool, 1.0f,
-        &enc_state->initial_quant_masking);
+        &enc_state->initial_quant_masking,
+        &enc_state->initial_quant_masking1x1);
     quantizer.SetQuantField(quant_dc, enc_state->initial_quant_field, nullptr);
   }
 

@@ -13,12 +13,17 @@
 #include <vector>
 
 #include "lib/extras/codec.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/cms/jxl_cms.h"
+#include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/common.h"  // JXL_HIGH_PRECISION, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/dec_frame.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/fake_parallel_runner_testonly.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/icc_codec.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
@@ -42,10 +47,12 @@ Status DecodeFile(const Span<const uint8_t> file, bool use_slow_pipeline,
         io->metadata.m.xyb_encoded;
     JXL_RETURN_IF_ERROR(Bundle::Read(&reader, &io->metadata.transform_data));
     if (io->metadata.m.color_encoding.WantICC()) {
-      PaddedBytes icc;
-      JXL_RETURN_IF_ERROR(ReadICC(&reader, &icc));
-      JXL_RETURN_IF_ERROR(
-          io->metadata.m.color_encoding.SetICC(std::move(icc), &GetJxlCms()));
+      PaddedBytes icc_data;
+      JXL_RETURN_IF_ERROR(ReadICC(&reader, &icc_data));
+      IccBytes icc;
+      Span<const uint8_t>(icc_data).AppendTo(&icc);
+      JXL_RETURN_IF_ERROR(io->metadata.m.color_encoding.SetICC(
+          std::move(icc), JxlGetDefaultCms()));
     }
     PassesDecoderState dec_state;
     JXL_RETURN_IF_ERROR(
@@ -218,7 +225,7 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
   PassesEncoderState enc_state;
   enc_state.shared.image_features.splines = config.splines;
   ASSERT_TRUE(EncodeFile(config.cparams, &io, &enc_state, &compressed,
-                         GetJxlCms(), /*aux_out=*/nullptr, &pool));
+                         *JxlGetDefaultCms(), /*aux_out=*/nullptr, &pool));
 
   CodecInOut io_default;
   ASSERT_TRUE(DecodeFile(Span<const uint8_t>(compressed),

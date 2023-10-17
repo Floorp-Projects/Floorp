@@ -12,7 +12,8 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/common.h"
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/sanitizers.h"
 

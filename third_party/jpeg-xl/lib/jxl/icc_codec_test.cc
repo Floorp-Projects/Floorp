@@ -5,16 +5,18 @@
 
 #include "lib/jxl/icc_codec.h"
 
+#include <cstdint>
 #include <string>
 
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
 
-void TestProfile(const PaddedBytes& icc) {
+void TestProfile(const IccBytes& icc) {
   BitWriter writer;
   ASSERT_TRUE(WriteICC(icc, &writer, 0, nullptr));
   writer.ZeroPadToByte();
@@ -32,11 +34,9 @@ void TestProfile(const PaddedBytes& icc) {
 }
 
 void TestProfile(const std::string& icc) {
-  PaddedBytes bytes(icc.size());
-  for (size_t i = 0; i < icc.size(); i++) {
-    bytes[i] = icc[i];
-  }
-  TestProfile(bytes);
+  IccBytes data;
+  Span<const uint8_t>(icc).AppendTo(&data);
+  TestProfile(data);
 }
 
 // Valid profile from one of the images output by the decoder.
@@ -128,7 +128,7 @@ TEST(IccCodecTest, Icc) {
 
   {
     // Exactly the ICC header size
-    PaddedBytes profile(128);
+    IccBytes profile(128);
     for (size_t i = 0; i < 128; i++) {
       profile[i] = 0;
     }
@@ -136,14 +136,14 @@ TEST(IccCodecTest, Icc) {
   }
 
   {
-    PaddedBytes profile;
-    profile.append(kTestProfile, kTestProfile + sizeof(kTestProfile));
+    IccBytes profile;
+    Span<const uint8_t>(kTestProfile, sizeof(kTestProfile)).AppendTo(&profile);
     TestProfile(profile);
   }
 
   // Test substrings of full profile
   {
-    PaddedBytes profile;
+    IccBytes profile;
     for (size_t i = 0; i <= 256; i++) {
       profile.push_back(kTestProfile[i]);
       TestProfile(profile);

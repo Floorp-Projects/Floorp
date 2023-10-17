@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {
@@ -203,20 +203,6 @@ void ScaleImage(const T lambda, Image3<T>* image) {
 }
 
 template <typename T>
-Plane<T> Product(const Plane<T>& a, const Plane<T>& b) {
-  Plane<T> c(a.xsize(), a.ysize());
-  for (size_t y = 0; y < a.ysize(); ++y) {
-    const T* const JXL_RESTRICT row_a = a.Row(y);
-    const T* const JXL_RESTRICT row_b = b.Row(y);
-    T* const JXL_RESTRICT row_c = c.Row(y);
-    for (size_t x = 0; x < a.xsize(); ++x) {
-      row_c[x] = row_a[x] * row_b[x];
-    }
-  }
-  return c;
-}
-
-template <typename T>
 void FillImage(const T value, Plane<T>* image) {
   for (size_t y = 0; y < image->ysize(); ++y) {
     T* const JXL_RESTRICT row = image->Row(y);
@@ -349,42 +335,6 @@ void ImageMinMax(const Plane<T>& image, T* const JXL_RESTRICT min,
   }
 }
 
-// Copies pixels, scaling their value relative to the "from" min/max by
-// "to_range". Example: U8 [0, 255] := [0.0, 1.0], to_range = 1.0 =>
-// outputs [0.0, 1.0].
-template <typename FromType, typename ToType>
-void ImageConvert(const Plane<FromType>& from, const float to_range,
-                  Plane<ToType>* const JXL_RESTRICT to) {
-  JXL_ASSERT(SameSize(from, *to));
-  FromType min_from, max_from;
-  ImageMinMax(from, &min_from, &max_from);
-  const float scale = to_range / (max_from - min_from);
-  for (size_t y = 0; y < from.ysize(); ++y) {
-    const FromType* const JXL_RESTRICT row_from = from.Row(y);
-    ToType* const JXL_RESTRICT row_to = to->Row(y);
-    for (size_t x = 0; x < from.xsize(); ++x) {
-      row_to[x] = static_cast<ToType>((row_from[x] - min_from) * scale);
-    }
-  }
-}
-
-template <typename From>
-Plane<float> ConvertToFloat(const Plane<From>& from) {
-  float factor = 1.0f / std::numeric_limits<From>::max();
-  if (std::is_same<From, double>::value || std::is_same<From, float>::value) {
-    factor = 1.0f;
-  }
-  Plane<float> to(from.xsize(), from.ysize());
-  for (size_t y = 0; y < from.ysize(); ++y) {
-    const From* const JXL_RESTRICT row_from = from.Row(y);
-    float* const JXL_RESTRICT row_to = to.Row(y);
-    for (size_t x = 0; x < from.xsize(); ++x) {
-      row_to[x] = row_from[x] * factor;
-    }
-  }
-  return to;
-}
-
 template <typename T>
 Plane<T> ImageFromPacked(const std::vector<T>& packed, const size_t xsize,
                          const size_t ysize) {
@@ -411,19 +361,6 @@ void Image3Max(const Image3<T>& image, std::array<T, 3>* out_max) {
   }
 }
 
-// Computes the sum of the pixels in `rect`.
-template <typename T>
-T ImageSum(const Plane<T>& image, const Rect& rect) {
-  T result = 0;
-  for (size_t y = 0; y < rect.ysize(); ++y) {
-    const T* JXL_RESTRICT row = rect.ConstRow(image, y);
-    for (size_t x = 0; x < rect.xsize(); ++x) {
-      result += row[x];
-    }
-  }
-  return result;
-}
-
 template <typename T>
 std::vector<T> PackedFromImage(const Plane<T>& image, const Rect& rect) {
   const size_t xsize = rect.xsize();
@@ -438,50 +375,6 @@ std::vector<T> PackedFromImage(const Plane<T>& image, const Rect& rect) {
 template <typename T>
 std::vector<T> PackedFromImage(const Plane<T>& image) {
   return PackedFromImage(image, Rect(image));
-}
-
-template <typename From>
-Image3F ConvertToFloat(const Image3<From>& from) {
-  return Image3F(ConvertToFloat(from.Plane(0)), ConvertToFloat(from.Plane(1)),
-                 ConvertToFloat(from.Plane(2)));
-}
-
-template <typename Tin, typename Tout>
-void Subtract(const Image3<Tin>& image1, const Image3<Tin>& image2,
-              Image3<Tout>* out) {
-  const size_t xsize = image1.xsize();
-  const size_t ysize = image1.ysize();
-  JXL_CHECK(xsize == image2.xsize());
-  JXL_CHECK(ysize == image2.ysize());
-
-  for (size_t c = 0; c < 3; ++c) {
-    for (size_t y = 0; y < ysize; ++y) {
-      const Tin* const JXL_RESTRICT row1 = image1.ConstPlaneRow(c, y);
-      const Tin* const JXL_RESTRICT row2 = image2.ConstPlaneRow(c, y);
-      Tout* const JXL_RESTRICT row_out = out->PlaneRow(c, y);
-      for (size_t x = 0; x < xsize; ++x) {
-        row_out[x] = row1[x] - row2[x];
-      }
-    }
-  }
-}
-
-// Adds `what` of the size of `rect` to `to` in the position of `rect`.
-template <typename Tin, typename Tout>
-void AddTo(const Rect& rect, const Image3<Tin>& what, Image3<Tout>* to) {
-  const size_t xsize = what.xsize();
-  const size_t ysize = what.ysize();
-  JXL_ASSERT(xsize == rect.xsize());
-  JXL_ASSERT(ysize == rect.ysize());
-  for (size_t c = 0; c < 3; ++c) {
-    for (size_t y = 0; y < ysize; ++y) {
-      const Tin* JXL_RESTRICT row_what = what.ConstPlaneRow(c, y);
-      Tout* JXL_RESTRICT row_to = rect.PlaneRow(to, c, y);
-      for (size_t x = 0; x < xsize; ++x) {
-        row_to[x] += row_what[x];
-      }
-    }
-  }
 }
 
 // Initializes all planes to the same "value".

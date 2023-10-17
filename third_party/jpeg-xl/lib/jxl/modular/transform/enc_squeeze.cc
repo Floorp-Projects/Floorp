@@ -8,7 +8,6 @@
 #include <stdlib.h>
 
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/squeeze.h"
 #include "lib/jxl/modular/transform/transform.h"

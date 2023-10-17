@@ -99,8 +99,8 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
     g_printerr(LOAD_PROC " Error: JxlDecoderSetParallelRunner failed\n");
     return false;
   }
-  // TODO: make this work with coalescing set to false, while handling frames
-  // with duration 0 and references to earlier frames correctly.
+  // TODO(user): make this work with coalescing set to false, while handling
+  // frames with duration 0 and references to earlier frames correctly.
   if (JXL_DEC_SUCCESS != JxlDecoderSetCoalescing(dec.get(), JXL_TRUE)) {
     g_printerr(LOAD_PROC " Error: JxlDecoderSetCoalescing failed\n");
     return false;

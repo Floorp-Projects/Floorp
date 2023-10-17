@@ -12,11 +12,14 @@ set(JPEGXL_INTERNAL_BASE_SOURCES
   jxl/base/byte_order.h
   jxl/base/cache_aligned.cc
   jxl/base/cache_aligned.h
+  jxl/base/common.h
   jxl/base/compiler_specific.h
   jxl/base/data_parallel.cc
   jxl/base/data_parallel.h
+  jxl/base/fast_math-inl.h
   jxl/base/float.h
   jxl/base/iaca.h
+  jxl/base/matrix_ops.h
   jxl/base/os_macros.h
   jxl/base/override.h
   jxl/base/padded_bytes.cc
@@ -24,6 +27,7 @@ set(JPEGXL_INTERNAL_BASE_SOURCES
   jxl/base/printf_macros.h
   jxl/base/random.cc
   jxl/base/random.h
+  jxl/base/rational_polynomial-inl.h
   jxl/base/sanitizer_definitions.h
   jxl/base/scope_guard.h
   jxl/base/span.h
@@ -120,14 +124,18 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/blending.h
   jxl/chroma_from_luma.cc
   jxl/chroma_from_luma.h
+  jxl/cms/color_encoding_cms.h
+  jxl/cms/color_management.cc
+  jxl/cms/color_management.h
+  jxl/cms/opsin_params.h
+  jxl/cms/tone_mapping-inl.h
+  jxl/cms/transfer_functions-inl.h
   jxl/codec_in_out.h
   jxl/coeff_order.cc
   jxl/coeff_order.h
   jxl/coeff_order_fwd.h
   jxl/color_encoding_internal.cc
   jxl/color_encoding_internal.h
-  jxl/color_management.cc
-  jxl/color_management.h
   jxl/common.h
   jxl/compressed_dc.cc
   jxl/compressed_dc.h
@@ -166,7 +174,6 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/dec_noise.h
   jxl/dec_patch_dictionary.cc
   jxl/dec_patch_dictionary.h
-  jxl/dec_tone_mapping-inl.h
   jxl/dec_transforms-inl.h
   jxl/dec_xyb-inl.h
   jxl/dec_xyb.cc
@@ -186,10 +193,10 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/fast_dct32-inl.h
   jxl/fast_dct64-inl.h
   jxl/fast_dct8-inl.h
-  jxl/fast_math-inl.h
   jxl/field_encodings.h
   jxl/fields.cc
   jxl/fields.h
+  jxl/frame_dimensions.h
   jxl/frame_header.cc
   jxl/frame_header.h
   jxl/gauss_blur.cc
@@ -215,7 +222,6 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/loop_filter.h
   jxl/luminance.cc
   jxl/luminance.h
-  jxl/matrix_ops.h
   jxl/memory_manager_internal.cc
   jxl/memory_manager_internal.h
   jxl/modular/encoding/context_predict.h
@@ -238,6 +244,7 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/noise.h
   jxl/opsin_params.cc
   jxl/opsin_params.h
+  jxl/pack_signed.h
   jxl/passes_state.cc
   jxl/passes_state.h
   jxl/patch_dictionary_internal.h
@@ -246,7 +253,6 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/quantizer-inl.h
   jxl/quantizer.cc
   jxl/quantizer.h
-  jxl/rational_polynomial-inl.h
   jxl/render_pipeline/low_memory_render_pipeline.cc
   jxl/render_pipeline/low_memory_render_pipeline.h
   jxl/render_pipeline/render_pipeline.cc
@@ -292,7 +298,6 @@ set(JPEGXL_INTERNAL_DEC_SOURCES
   jxl/splines.h
   jxl/toc.cc
   jxl/toc.h
-  jxl/transfer_functions-inl.h
   jxl/transpose-inl.h
   jxl/xorshift128plus-inl.h
 )
@@ -323,8 +328,6 @@ set(JPEGXL_INTERNAL_ENC_SOURCES
   jxl/enc_cluster.h
   jxl/enc_coeff_order.cc
   jxl/enc_coeff_order.h
-  jxl/enc_color_management.cc
-  jxl/enc_color_management.h
   jxl/enc_comparator.cc
   jxl/enc_comparator.h
   jxl/enc_context_map.cc
@@ -362,7 +365,6 @@ set(JPEGXL_INTERNAL_ENC_SOURCES
   jxl/enc_icc_codec.h
   jxl/enc_image_bundle.cc
   jxl/enc_image_bundle.h
-  jxl/enc_jxl_skcms.h
   jxl/enc_linalg.cc
   jxl/enc_linalg.h
   jxl/enc_modular.cc
@@ -411,6 +413,9 @@ set(JPEGXL_INTERNAL_ENC_SOURCES
   jxl/modular/transform/enc_squeeze.h
   jxl/modular/transform/enc_transform.cc
   jxl/modular/transform/enc_transform.h
+  jxl/cms/jxl_cms.cc
+  jxl/cms/jxl_cms.h
+  jxl/cms/jxl_skcms.h
 )
 
 set(JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES
@@ -427,6 +432,8 @@ set(JPEGXL_INTERNAL_EXTRAS_FOR_TOOLS_SOURCES
 )
 
 set(JPEGXL_INTERNAL_EXTRAS_SOURCES
+  extras/alpha_blend.cc
+  extras/alpha_blend.h
   extras/dec/color_description.cc
   extras/dec/color_description.h
   extras/dec/color_hints.cc
@@ -576,6 +583,7 @@ set(JPEGXL_INTERNAL_TESTS
   jxl/bit_reader_test.cc
   jxl/bits_test.cc
   jxl/blending_test.cc
+  jxl/butteraugli/butteraugli_test.cc
   jxl/byte_order_test.cc
   jxl/coeff_order_test.cc
   jxl/color_encoding_internal_test.cc

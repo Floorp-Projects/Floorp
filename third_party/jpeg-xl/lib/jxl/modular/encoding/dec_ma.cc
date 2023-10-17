@@ -9,6 +9,7 @@
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/modular/encoding/ma_common.h"
 #include "lib/jxl/modular/modular_image.h"
+#include "lib/jxl/pack_signed.h"
 
 namespace jxl {
 

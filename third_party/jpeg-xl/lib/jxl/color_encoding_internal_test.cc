@@ -19,12 +19,12 @@ TEST(ColorEncodingTest, RoundTripAll) {
     {
       ColorEncoding c;
       EXPECT_TRUE(c.SetWhitePoint(c_original.GetWhitePoint()));
-      EXPECT_EQ(c_original.white_point, c.white_point);
+      EXPECT_EQ(c_original.GetWhitePointType(), c.GetWhitePointType());
     }
     {
       ColorEncoding c;
       EXPECT_TRUE(c.SetPrimaries(c_original.GetPrimaries()));
-      EXPECT_EQ(c_original.primaries, c.primaries);
+      EXPECT_EQ(c_original.GetPrimariesType(), c.GetPrimariesType());
     }
     if (c_original.tf.IsGamma()) {
       ColorEncoding c;
@@ -111,15 +111,16 @@ TEST(ColorEncodingTest, InternalExternalConversion) {
     CustomTransferFunction tf;
     EXPECT_TRUE(tf.SetGamma((float(rand()) / float((RAND_MAX)) * 0.5) + 0.25));
     source_internal.tf = tf;
-    source_internal.rendering_intent = static_cast<RenderingIntent>(rand() % 4);
+    ASSERT_TRUE(source_internal.SetRenderingIntent(
+        static_cast<RenderingIntent>(rand() % 4)));
 
-    ConvertInternalToExternalColorEncoding(source_internal, &external);
-    EXPECT_TRUE(ConvertExternalToInternalColorEncoding(external,
-                                                       &destination_internal));
+    source_internal.ToExternal(&external);
+    EXPECT_TRUE(destination_internal.FromExternal(external));
 
     EXPECT_EQ(source_internal.GetColorSpace(),
               destination_internal.GetColorSpace());
-    EXPECT_EQ(source_internal.white_point, destination_internal.white_point);
+    EXPECT_EQ(source_internal.GetWhitePointType(),
+              destination_internal.GetWhitePointType());
     EXPECT_EQ(source_internal.GetWhitePoint().x,
               destination_internal.GetWhitePoint().x);
     EXPECT_EQ(source_internal.GetWhitePoint().y,
@@ -146,8 +147,8 @@ TEST(ColorEncodingTest, InternalExternalConversion) {
       EXPECT_EQ(source_internal.tf.GetTransferFunction(),
                 destination_internal.tf.GetTransferFunction());
     }
-    EXPECT_EQ(source_internal.rendering_intent,
-              destination_internal.rendering_intent);
+    EXPECT_EQ(source_internal.GetRenderingIntent(),
+              destination_internal.GetRenderingIntent());
   }
 }
 

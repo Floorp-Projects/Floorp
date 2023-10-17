@@ -14,12 +14,11 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image_bundle.h"
@@ -44,14 +43,14 @@ TEST(PassesTest, RoundtripSmallPasses) {
   CompressParams cparams;
   cparams.butteraugli_distance = 1.0;
   cparams.progressive_mode = true;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
-              IsSlightlyBelow(1.1));
+              IsSlightlyBelow(0.8222));
 }
 
 TEST(PassesTest, RoundtripUnalignedPasses) {
@@ -64,12 +63,12 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
   CompressParams cparams;
   cparams.butteraugli_distance = 2.0;
   cparams.progressive_mode = true;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.72));
 }
@@ -88,17 +87,17 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
     CompressParams cparams;
     cparams.butteraugli_distance = target_distance;
     cparams.progressive_mode = true;
-    cparams.SetCms(GetJxlCms());
+    cparams.SetCms(*JxlGetDefaultCms());
     CodecInOut io2;
     JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _,
                             /* compressed_size */ nullptr, &pool));
     EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                    GetJxlCms(),
+                                    *JxlGetDefaultCms(),
                                     /*distmap=*/nullptr, &pool),
                 IsSlightlyBelow(target_distance + threshold));
   };
 
-  auto run1 = std::async(std::launch::async, test, 1.0f, 0.5f);
+  auto run1 = std::async(std::launch::async, test, 1.0f, 0.15f);
   auto run2 = std::async(std::launch::async, test, 2.0f, 0.0f);
 }
 
@@ -111,7 +110,7 @@ TEST(PassesTest, RoundtripLargeFastPasses) {
   CompressParams cparams;
   cparams.speed_tier = SpeedTier::kSquirrel;
   cparams.progressive_mode = true;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _,
@@ -131,7 +130,7 @@ TEST(PassesTest, RoundtripProgressiveConsistent) {
   cparams.speed_tier = SpeedTier::kSquirrel;
   cparams.progressive_mode = true;
   cparams.butteraugli_distance = 2.0;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   // Try each xsize mod kBlockDim to verify right border handling.
   for (size_t xsize = 48; xsize > 40; --xsize) {
@@ -149,12 +148,12 @@ TEST(PassesTest, RoundtripProgressiveConsistent) {
     EXPECT_EQ(size2, size3);
 
     // Exact same distance.
-    const float dist2 = ButteraugliDistance(io.frames, io2.frames,
-                                            ButteraugliParams(), GetJxlCms(),
-                                            /*distmap=*/nullptr, &pool);
-    const float dist3 = ButteraugliDistance(io.frames, io3.frames,
-                                            ButteraugliParams(), GetJxlCms(),
-                                            /*distmap=*/nullptr, &pool);
+    const float dist2 = ButteraugliDistance(
+        io.frames, io2.frames, ButteraugliParams(), *JxlGetDefaultCms(),
+        /*distmap=*/nullptr, &pool);
+    const float dist3 = ButteraugliDistance(
+        io.frames, io3.frames, ButteraugliParams(), *JxlGetDefaultCms(),
+        /*distmap=*/nullptr, &pool);
     EXPECT_EQ(dist2, dist3);
   }
 }
@@ -174,8 +173,8 @@ TEST(PassesTest, AllDownsampleFeasible) {
   cparams.progressive_mode = true;
   cparams.butteraugli_distance = 1.0;
   PassesEncoderState enc_state;
-  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
-                         &aux, &pool));
+  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed,
+                         *JxlGetDefaultCms(), &aux, &pool));
 
   EXPECT_LE(compressed.size(), 240000u);
   float target_butteraugli[9] = {};
@@ -199,7 +198,7 @@ TEST(PassesTest, AllDownsampleFeasible) {
     EXPECT_EQ(output.xsize(), io.xsize()) << "downsampling = " << downsampling;
     EXPECT_EQ(output.ysize(), io.ysize()) << "downsampling = " << downsampling;
     EXPECT_LE(ButteraugliDistance(io.frames, output.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr, nullptr),
               target_butteraugli[downsampling])
         << "downsampling: " << downsampling;
@@ -223,8 +222,8 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
   cparams.qprogressive_mode = true;
   cparams.butteraugli_distance = 1.0;
   PassesEncoderState enc_state;
-  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
-                         &aux, &pool));
+  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed,
+                         *JxlGetDefaultCms(), &aux, &pool));
 
   EXPECT_LE(compressed.size(), 220000u);
 
@@ -248,7 +247,7 @@ TEST(PassesTest, AllDownsampleFeasibleQProgressive) {
     EXPECT_EQ(output.xsize(), io.xsize()) << "downsampling = " << downsampling;
     EXPECT_EQ(output.ysize(), io.ysize()) << "downsampling = " << downsampling;
     EXPECT_LE(ButteraugliDistance(io.frames, output.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               target_butteraugli[downsampling])
         << "downsampling: " << downsampling;
@@ -282,8 +281,8 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
   cparams.qprogressive_mode = true;
   cparams.butteraugli_distance = 1.0;
   PassesEncoderState enc_state;
-  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
-                         &aux, &pool));
+  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed,
+                         *JxlGetDefaultCms(), &aux, &pool));
 
   EXPECT_LE(compressed.size(), 10000u);
 
@@ -300,7 +299,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
 
   // 0 if reading all the passes, ~15 if skipping the 8x pass.
   float butteraugli_distance_down2_full = ButteraugliDistance(
-      output.frames, output_d2.frames, ButteraugliParams(), GetJxlCms(),
+      output.frames, output_d2.frames, ButteraugliParams(), *JxlGetDefaultCms(),
       /*distmap=*/nullptr);
 
   EXPECT_LE(butteraugli_distance_down2_full, 3.2f);
@@ -330,8 +329,8 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
   cparams.qprogressive_mode = true;
   cparams.butteraugli_distance = 1.0;
   PassesEncoderState enc_state;
-  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
-                         &aux, &pool));
+  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed,
+                         *JxlGetDefaultCms(), &aux, &pool));
 
   EXPECT_LE(compressed.size(), 220000u);
 
@@ -348,7 +347,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
 
   // 0 if reading all the passes, ~15 if skipping the 8x pass.
   float butteraugli_distance_down2_full = ButteraugliDistance(
-      output.frames, output_d2.frames, ButteraugliParams(), GetJxlCms(),
+      output.frames, output_d2.frames, ButteraugliParams(), *JxlGetDefaultCms(),
       /*distmap=*/nullptr);
 
   EXPECT_LE(butteraugli_distance_down2_full, 3.0f);
@@ -369,8 +368,8 @@ TEST(PassesTest, NonProgressiveDCImage) {
   cparams.progressive_mode = false;
   cparams.butteraugli_distance = 2.0;
   PassesEncoderState enc_state;
-  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed, GetJxlCms(),
-                         &aux, &pool));
+  ASSERT_TRUE(EncodeFile(cparams, &io, &enc_state, &compressed,
+                         *JxlGetDefaultCms(), &aux, &pool));
 
   // Even in non-progressive mode, it should be possible to return a DC-only
   // image.
@@ -394,12 +393,12 @@ TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
   cparams.gaborish = Override::kOff;
   cparams.butteraugli_distance = 1.0;
   cparams.progressive_mode = true;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
   EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.2));
 }

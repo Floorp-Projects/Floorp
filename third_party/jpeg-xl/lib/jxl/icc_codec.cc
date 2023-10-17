@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/icc_codec_common.h"
@@ -50,6 +49,19 @@ void Shuffle(uint8_t* data, size_t size, size_t width) {
 //               11 bytes as used even if only 10 are used (and 9 is enough for
 //               63-bit values).
 constexpr const size_t kPreambleSize = 22;  // enough for reading 2 VarInts
+
+uint64_t DecodeVarInt(const uint8_t* input, size_t inputSize, size_t* pos) {
+  size_t i;
+  uint64_t ret = 0;
+  for (i = 0; *pos + i < inputSize && i < 10; ++i) {
+    ret |= uint64_t(input[*pos + i] & 127) << uint64_t(7 * i);
+    // If the next-byte flag is not set, stop
+    if ((input[*pos + i] & 128) == 0) break;
+  }
+  // TODO(user): Return a decoding error if i == 10.
+  *pos += i + 1;
+  return ret;
+}
 
 }  // namespace
 

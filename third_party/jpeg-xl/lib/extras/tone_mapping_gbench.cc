@@ -6,7 +6,6 @@
 #include "benchmark/benchmark.h"
 #include "lib/extras/codec.h"
 #include "lib/extras/tone_mapping.h"
-#include "lib/jxl/enc_color_management.h"
 
 namespace jxl {
 
@@ -18,8 +17,8 @@ static void BM_ToneMapping(benchmark::State& state) {
   // we mainly measure the tone mapping itself.
   ColorEncoding linear_rec2020;
   linear_rec2020.SetColorSpace(ColorSpace::kRGB);
-  linear_rec2020.primaries = Primaries::k2100;
-  linear_rec2020.white_point = WhitePoint::kD65;
+  JXL_CHECK(linear_rec2020.SetPrimariesType(Primaries::k2100));
+  JXL_CHECK(linear_rec2020.SetWhitePointType(WhitePoint::kD65));
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_CHECK(linear_rec2020.CreateICC());
 

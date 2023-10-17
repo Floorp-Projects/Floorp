@@ -10,7 +10,6 @@
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/frame_header.h"
@@ -39,7 +38,8 @@ struct AuxOut;
 // can later be used to make better decisions about ac strategy.
 ImageF InitialQuantField(float butteraugli_target, const Image3F& opsin,
                          const FrameDimensions& frame_dim, ThreadPool* pool,
-                         float rescale, ImageF* initial_quant_mask);
+                         float rescale, ImageF* initial_quant_mask,
+                         ImageF* initial_quant_mask1x1);
 
 float InitialQuantDC(float butteraugli_target);
 

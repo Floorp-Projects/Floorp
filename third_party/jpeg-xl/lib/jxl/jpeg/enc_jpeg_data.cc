@@ -101,7 +101,7 @@ Status DetectBlobs(jpeg::JPEGData& jpeg_data) {
 }
 
 Status ParseChunkedMarker(const jpeg::JPEGData& src, uint8_t marker_type,
-                          const ByteSpan& tag, PaddedBytes* output,
+                          const ByteSpan& tag, IccBytes* output,
                           bool allow_permutations = false) {
   output->clear();
 
@@ -164,7 +164,7 @@ Status ParseChunkedMarker(const jpeg::JPEGData& src, uint8_t marker_type,
     if (!presence[index]) {
       return JXL_FAILURE("Missing chunk.");
     }
-    output->append(chunks[index]);
+    chunks[index].AppendTo(output);
   }
 
   return true;
@@ -217,7 +217,7 @@ static inline bool IsJPG(const Span<const uint8_t> bytes) {
 
 Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
                                     ColorEncoding* color_encoding) {
-  PaddedBytes icc_profile;
+  IccBytes icc_profile;
   if (!ParseChunkedMarker(jpg, kApp2, ByteSpan(kIccProfileTag), &icc_profile)) {
     JXL_WARNING("ReJPEG: corrupted ICC profile\n");
     icc_profile.clear();

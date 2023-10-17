@@ -7,7 +7,6 @@
 #define LIB_JXL_MODULAR_TRANSFORM_RCT_H_
 
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/transform.h"  // CheckEqualChannels
 

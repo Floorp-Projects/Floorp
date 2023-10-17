@@ -3469,13 +3469,19 @@ void PrepareDCGlobalPalette(bool is_single_group, size_t width, size_t height,
   row_encoder.ProcessRow(p[0] + 16, p[0] + 15, p[0] + 15, p[0] + 15, pcolors);
   p[1][15] = p[0][16];
   p[0][15] = p[0][16];
-  row_encoder.ProcessRow(p[1] + 16, p[1] + 15, p[0] + 16, p[0] + 15, pcolors);
+  if (nb_chans > 1) {
+    row_encoder.ProcessRow(p[1] + 16, p[1] + 15, p[0] + 16, p[0] + 15, pcolors);
+  }
   p[2][15] = p[1][16];
   p[1][15] = p[1][16];
-  row_encoder.ProcessRow(p[2] + 16, p[2] + 15, p[1] + 16, p[1] + 15, pcolors);
+  if (nb_chans > 2) {
+    row_encoder.ProcessRow(p[2] + 16, p[2] + 15, p[1] + 16, p[1] + 15, pcolors);
+  }
   p[3][15] = p[2][16];
   p[2][15] = p[2][16];
-  row_encoder.ProcessRow(p[3] + 16, p[3] + 15, p[2] + 16, p[2] + 15, pcolors);
+  if (nb_chans > 3) {
+    row_encoder.ProcessRow(p[3] + 16, p[3] + 15, p[2] + 16, p[2] + 15, pcolors);
+  }
   row_encoder.Finalize();
 
   if (!is_single_group) {

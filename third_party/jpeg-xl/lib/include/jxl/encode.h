@@ -20,6 +20,9 @@
 #include <jxl/parallel_runner.h>
 #include <jxl/stats.h>
 #include <jxl/version.h>
+#include <stdint.h>
+
+#include "jxl/types.h"
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -790,6 +793,141 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetOutputProcessor(
  * @return JXL_ENC_SUCCESS on success, JXL_ENC_ERROR on error.
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderFlushInput(JxlEncoder* enc);
+
+/**
+ * This struct provides callback functions to pass pixel data in a streaming
+ * manner instead of requiring the entire frame data in memory at once.
+ */
+struct JxlChunkedFrameInputSource {
+  /**
+   * A pointer to any user-defined data or state. This can be used to pass
+   * information to the callback functions.
+   */
+  void* opaque;
+
+  /**
+   * Get the pixel format that color channel data will be provided in.
+   * When called, `pixel_format` points to a suggested pixel format; if
+   * color channel data can be given in this pixel format, processing might
+   * be more efficient.
+   *
+   * This function will be called exactly once, before any call to
+   * get_color_channel_at.
+   *
+   * @param opaque user supplied parameters to the callback
+   * @param pixel_format format for pixels
+   */
+  void (*get_color_channels_pixel_format)(void* opaque,
+                                          JxlPixelFormat* pixel_format);
+
+  /**
+   * Callback to retrieve a rectangle of color channel data at a specific
+   * location. It is guaranteed that xpos and ypos are multiples of 128. xsize,
+   * ysize will be multiples of 128, unless the resulting rectangle would be out
+   * of image bounds. Moreover, xsize and ysize will be at most 2048. The
+   * returned data will be assumed to be in the format returned by the
+   * (preceding) call to get_color_channels_pixel_format, except the `align`
+   * parameter of the pixel format will be ignored. Instead, the `i`-th row will
+   * be assumed to start at position `return_value + i * *row_offset`, with the
+   * value of `*row_offset` decided by the callee.
+   *
+   * Note that multiple calls to `get_color_channel_data_at` may happen before a
+   * call to `release_buffer`.
+   *
+   * @param opaque user supplied parameters to the callback
+   * @param xpos horizontal position for the data.
+   * @param ypos vertical position for the data.
+   * @param xsize horizontal size of the requested rectangle of data.
+   * @param ysize vertical size of the requested rectangle of data.
+   * @param row_offset pointer to a the byte offset between consecutive rows of
+   * the retrieved pixel data.
+   * @return pointer to the retrieved pixel data.
+   */
+  const void* (*get_color_channel_data_at)(void* opaque, size_t xpos,
+                                           size_t ypos, size_t xsize,
+                                           size_t ysize, size_t* row_offset);
+
+  /**
+   * Get the pixel format that extra channel data will be provided in.
+   * When called, `pixel_format` points to a suggested pixel format; if
+   * extra channel data can be given in this pixel format, processing might
+   * be more efficient.
+   *
+   * This function will be called exactly once per index, before any call to
+   * get_extra_channel_data_at with that given index.
+   *
+   * @param opaque user supplied parameters to the callback
+   * @param ec_index zero-indexed index of the extra channel
+   * @param pixel_format format for extra channel data
+   */
+  void (*get_extra_channel_pixel_format)(void* opaque, size_t ec_index,
+                                         JxlPixelFormat* pixel_format);
+
+  /**
+   * Callback to retrieve a rectangle of extra channel `ec_index` data at a
+   * specific location. It is guaranteed that xpos and ypos are multiples of
+   * 128. xsize, ysize will be multiples of 128, unless the resulting rectangle
+   * would be out of image bounds. Moreover, xsize and ysize will be at most
+   * 2048. The returned data will be assumed to be in the format returned by the
+   * (preceding) call to get_extra_channels_pixel_format_at with the
+   * corresponding extra channel index `ec_index`, except the `align` parameter
+   * of the pixel format will be ignored. Instead, the `i`-th row will be
+   * assumed to start at position `return_value + i * *row_offset`, with the
+   * value of `*row_offset` decided by the callee.
+   *
+   * Note that multiple calls to `get_extra_channel_data_at` may happen before a
+   * call to `release_buffer`.
+   *
+   * @param opaque user supplied parameters to the callback
+   * @param xpos horizontal position for the data.
+   * @param ypos vertical position for the data.
+   * @param xsize horizontal size of the requested rectangle of data.
+   * @param ysize vertical size of the requested rectangle of data.
+   * @param row_offset pointer to a the byte offset between consecutive rows of
+   * the retrieved pixel data.
+   * @return pointer to the retrieved pixel data.
+   */
+  const void* (*get_extra_channel_data_at)(void* opaque, size_t ec_index,
+                                           size_t xpos, size_t ypos,
+                                           size_t xsize, size_t ysize,
+                                           size_t* row_offset);
+
+  /**
+   * Releases the buffer `buf` (obtained through a call to
+   * `get_color_channel_data_at` or `get_extra_channel_data_at`). This function
+   * will be called exactly once per call to `get_color_channel_data_at` or
+   * `get_extra_channel_data_at`.
+   *
+   * @param opaque user supplied parameters to the callback
+   * @param buf pointer returned by `get_color_channel_data_at` or
+   * `get_extra_channel_data_at`
+   */
+  void (*release_buffer)(void* opaque, const void* buf);
+};
+
+/**
+ * @brief Adds a frame to the encoder using a chunked input source.
+ *
+ * This function gives a way to encode a frame by providing pixel data in a
+ * chunked or streaming manner, which can be especially useful when dealing with
+ * large images that may not fit entirely in memory or when trying to optimize
+ * memory usage. The input data is provided through callbacks defined in the
+ * `JxlChunkedFrameInputSource` struct. Once the frame data has been completely
+ * retrieved, this function will flush the input and close it if it is the last
+ * frame.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param is_last_frame indicates if this is the last frame.
+ * @param chunked_frame_input struct providing callback methods for retrieving
+ * pixel data in chunks.
+ *
+ * @return Returns a status indicating the success or failure of adding the
+ * frame.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderAddChunkedFrame(
+    const JxlEncoderFrameSettings* frame_settings, JXL_BOOL is_last_frame,
+    struct JxlChunkedFrameInputSource chunked_frame_input);
 
 /**
  * Sets the buffer to read pixels from for an extra channel at a given index.

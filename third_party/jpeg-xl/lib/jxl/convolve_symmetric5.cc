@@ -10,7 +10,7 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/common.h"  // RoundUpTo
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/convolve-inl.h"
 
 HWY_BEFORE_NAMESPACE();

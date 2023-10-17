@@ -18,7 +18,6 @@
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_optimize.h"
 #include "lib/jxl/image_ops.h"
-#include "lib/jxl/opsin_params.h"
 
 namespace jxl {
 namespace {

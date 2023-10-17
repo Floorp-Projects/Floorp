@@ -16,7 +16,7 @@
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/common.h"  // kMaxNumPasses
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_transforms-inl.h"
 #include "lib/jxl/enc_aux_out.h"
@@ -150,7 +150,7 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       }
     }
   }
-  if (c == 1 && sum_of_vals < std::max(xsize, ysize)) {
+  if (c == 1 && sum_of_vals * 8 < xsize * ysize) {
     static const double kLimit[4] = {
         0.46,
         0.46,
@@ -208,56 +208,71 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
     }
   }
   {
-    static const double kMul1[3][3] = {
+    static const double kMul1[4][3] = {
         {
-            0.13289977307244785,
-            0.13991489841351781,
-            0.083900681804010419,
+            0.22080615753848404,
+            0.45797479824262011,
+            0.29859235095977965,
         },
         {
-            0.69938583107168562,
-            0.19612117586770869,
-            0.15307492924107463,
+            0.70109486510286834,
+            0.16185281305512639,
+            0.14387691730035473,
         },
         {
-            0.099160801461836312,
-            0.16684944507307059,
-            0.16608517854968413,
-        },
-    };
-    static const double kMul2[3][3] = {
-        {
-            0.24773711435293466,
-            0.65189637683223112,
-            1.0,
+            0.114985964456218638,
+            0.44656840441027695,
+            0.10587658215149048,
         },
         {
-            0.46465181913392556,
-            0.3142440606068525,
-            0.30128806880068809,
-        },
-        {
-            0.45203398366713637,
-            0.15063329382779103,
-            0.067846407329923752,
+            0.46849665264409396,
+            0.41239077937781954,
+            0.088667407767185444,
         },
     };
-    const float kQuantNormalizer = 2.8261379721245263;
+    static const double kMul2[4][3] = {
+        {
+            0.27450281941822197,
+            1.1255766549984996,
+            0.98950459134128388,
+        },
+        {
+            0.4652168675598285,
+            0.40945807983455818,
+            0.36581899811751367,
+        },
+        {
+            0.28034972424715715,
+            0.9182653201929738,
+            1.5581531543057416,
+        },
+        {
+            0.26873118114033728,
+            0.68863712390392484,
+            1.2082185408666786,
+        },
+    };
+    static const double kQuantNormalizer = 2.2942708343284721;
     sum_of_error *= kQuantNormalizer;
     sum_of_vals *= kQuantNormalizer;
     if (quant_kind >= AcStrategy::Type::DCT16X16) {
-      int ix = 2;
+      int ix = 3;
       if (quant_kind == AcStrategy::Type::DCT32X16 ||
           quant_kind == AcStrategy::Type::DCT16X32) {
         ix = 1;
       } else if (quant_kind == AcStrategy::Type::DCT16X16) {
         ix = 0;
+      } else if (quant_kind == AcStrategy::Type::DCT32X32) {
+        ix = 2;
       }
       int step =
           sum_of_error / (kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim +
                           kMul2[ix][c] * sum_of_vals);
       if (step >= 2) {
         step = 2;
+      }
+      if (step < 0) {
+        step = 0;
       }
       if (sum_of_error > kMul1[ix][c] * xsize * ysize * kBlockDim * kBlockDim +
                              kMul2[ix][c] * sum_of_vals) {
@@ -270,7 +285,7 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
   }
   {
     // Reduce quant in highly active areas.
-    int32_t div = (xsize + ysize) / 2;
+    int32_t div = (xsize * ysize);
     int32_t activity = (hfNonZeros[0] + div / 2) / div;
     int32_t orig_qp_limit = std::max(4, *quant / 2);
     for (int i = 1; i < 4; ++i) {

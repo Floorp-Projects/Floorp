@@ -20,7 +20,6 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"

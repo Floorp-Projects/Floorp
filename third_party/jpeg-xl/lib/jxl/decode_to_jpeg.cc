@@ -5,6 +5,8 @@
 
 #include "lib/jxl/decode_to_jpeg.h"
 
+#include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
+
 namespace jxl {
 
 #if JPEGXL_ENABLE_TRANSCODE_JPEG

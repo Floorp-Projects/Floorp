@@ -5,11 +5,12 @@
 
 // Fast SIMD evaluation of rational polynomials for approximating functions.
 
-#if defined(LIB_JXL_RATIONAL_POLYNOMIAL_INL_H_) == defined(HWY_TARGET_TOGGLE)
-#ifdef LIB_JXL_RATIONAL_POLYNOMIAL_INL_H_
-#undef LIB_JXL_RATIONAL_POLYNOMIAL_INL_H_
+#if defined(LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_) == \
+    defined(HWY_TARGET_TOGGLE)
+#ifdef LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_
+#undef LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_
 #else
-#define LIB_JXL_RATIONAL_POLYNOMIAL_INL_H_
+#define LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_
 #endif
 
 #include <stddef.h>
@@ -98,4 +99,4 @@ HWY_INLINE HWY_MAYBE_UNUSED V EvalRationalPolynomial(const D d, const V x,
 }  // namespace HWY_NAMESPACE
 }  // namespace jxl
 HWY_AFTER_NAMESPACE();
-#endif  // LIB_JXL_RATIONAL_POLYNOMIAL_INL_H_
+#endif  // LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_

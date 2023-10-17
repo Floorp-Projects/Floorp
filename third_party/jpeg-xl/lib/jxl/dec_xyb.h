@@ -15,7 +15,6 @@
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_metadata.h"
-#include "lib/jxl/opsin_params.h"
 
 namespace jxl {
 

@@ -19,11 +19,11 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/enc_linalg.h"
 #include "lib/jxl/enc_optimize.h"
@@ -320,7 +320,7 @@ std::vector<ConnectedComponent> FindCC(const ImageF& energy, double t_low,
   return ans;
 }
 
-// TODO (sggonzalez): Adapt this function for the different color spaces or
+// TODO(sggonzalez): Adapt this function for the different color spaces or
 // remove it if the color space with the best performance does not need it
 void ComputeDotLosses(GaussianEllipse* ellipse, const ConnectedComponent& cc,
                       const Image3F& img, const Image3F& background) {

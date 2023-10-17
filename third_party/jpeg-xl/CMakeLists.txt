@@ -173,8 +173,10 @@ set(JPEGXL_TEST_TOOLS false CACHE BOOL
     "Run scripts that test the encoding / decoding tools.")
 set(JPEGXL_ENABLE_AVX512 false CACHE BOOL
     "Build with AVX512 support (faster on CPUs that support it, but larger binary size).")
+set(JPEGXL_ENABLE_AVX512_SPR false CACHE BOOL
+    "Build with AVX-512FP16 support (faster on CPUs that support it, but larger binary size).")
 set(JPEGXL_ENABLE_AVX512_ZEN4 false CACHE BOOL
-    "Build with Zen4-optimized AVX512 support (faster on CPUs that support it, but larger binary size).")
+"Build with Zen4-optimized AVX512 support (faster on CPUs that support it, but larger binary size).")
 
 # Force system dependencies.
 set(JPEGXL_FORCE_SYSTEM_BROTLI false CACHE BOOL
@@ -216,6 +218,10 @@ if (NOT JPEGXL_ENABLE_AVX512)
   message(STATUS "Disabled AVX512 (set JPEGXL_ENABLE_AVX512 to enable it)")
   set(HWY_DISABLED_TARGETS "${HWY_DISABLED_TARGETS}|HWY_AVX3")
   add_definitions(-DFJXL_ENABLE_AVX512=0)
+endif()
+if (NOT JPEGXL_ENABLE_AVX512_SPR)
+  message(STATUS "Disabled AVX512_SPR (set JPEGXL_ENABLE_AVX512_SPR to enable it)")
+  set(HWY_DISABLED_TARGETS "${HWY_DISABLED_TARGETS}|HWY_AVX3_SPR")
 endif()
 if (NOT JPEGXL_ENABLE_AVX512_ZEN4)
   message(STATUS "Disabled AVX512_ZEN4 (set JPEGXL_ENABLE_AVX512_ZEN4 to enable it)")
@@ -357,6 +363,11 @@ else ()
 
   # Force build with optimizations in release mode.
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+  # Also optimize debug build; this is "unofficial", so it goes through ENV
+  if(DEFINED ENV{JPEGXL_OPT_DBG})
+    # Not the same thing as release_with_debug
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2")
+  endif()
 
   add_compile_options(
     # Ignore this to allow redefining __DATE__ and others.
@@ -525,3 +536,23 @@ endif ()
 
 # Binary tools
 add_subdirectory(tools)
+
+
+macro(list_test_targets out dir)
+  get_property(dir_targets DIRECTORY ${dir} PROPERTY BUILDSYSTEM_TARGETS)
+  foreach(target ${dir_targets})
+    if (target MATCHES ".*_test")
+      list(APPEND ${out} ${target})
+    endif()
+  endforeach()
+  get_property(subdirectories DIRECTORY ${dir} PROPERTY SUBDIRECTORIES)
+  foreach(subdir ${subdirectories})
+    list_test_targets(${out} ${subdir})
+  endforeach()
+endmacro()
+
+set(all_tests_list)
+list_test_targets(all_tests_list ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_custom_target(all_tests)
+add_dependencies(all_tests ${all_tests_list})

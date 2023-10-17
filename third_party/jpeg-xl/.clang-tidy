@@ -1,6 +1,4 @@
 # Disabled checks:
-# - google-readability-todo: We don't use the google TODO format.
-#
 # - modernize-deprecated-headers: We don't use std:: versions of the standard
 #   types and functions like size_t or printf, so we should include <stdio.h>
 #   instead <cstdio>.
@@ -27,7 +25,6 @@ Checks: >-
   modernize-*,
   performance-*,
   readability-*,
-  -google-readability-todo,
   -modernize-deprecated-headers,
   -modernize-return-braced-init-list,
   -modernize-use-auto,

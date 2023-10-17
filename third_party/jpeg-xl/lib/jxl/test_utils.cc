@@ -14,9 +14,9 @@
 #include "lib/extras/packed_image_convert.h"
 #include "lib/jxl/base/float.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_file.h"
 
@@ -119,11 +119,13 @@ ColorEncoding ColorEncodingFromDescriptor(const ColorEncodingDescriptor& desc) {
   ColorEncoding c;
   c.SetColorSpace(desc.color_space);
   if (desc.color_space != ColorSpace::kXYB) {
-    c.white_point = desc.white_point;
-    c.primaries = desc.primaries;
+    JXL_CHECK(c.SetWhitePointType(desc.white_point));
+    if (desc.color_space != ColorSpace::kGray) {
+      JXL_CHECK(c.SetPrimariesType(desc.primaries));
+    }
     c.tf.SetTransferFunction(desc.tf);
   }
-  c.rendering_intent = desc.rendering_intent;
+  JXL_CHECK(c.SetRenderingIntent(desc.rendering_intent));
   JXL_CHECK(c.CreateICC());
   return c;
 }
@@ -136,7 +138,8 @@ void CheckSameEncodings(const std::vector<ColorEncoding>& a,
   JXL_CHECK(a.size() == b.size());
   for (size_t i = 0; i < a.size(); ++i) {
     if ((a[i].ICC() == b[i].ICC()) ||
-        ((a[i].primaries == b[i].primaries) && a[i].tf.IsSame(b[i].tf))) {
+        ((a[i].GetPrimariesType() == b[i].GetPrimariesType()) &&
+         a[i].tf.IsSame(b[i].tf))) {
       continue;
     }
     failures << "CheckSameEncodings " << check_name << ": " << i
@@ -175,8 +178,8 @@ bool Roundtrip(const CodecInOut* io, const CompressParams& cparams,
 
   std::unique_ptr<PassesEncoderState> enc_state =
       jxl::make_unique<PassesEncoderState>();
-  JXL_CHECK(EncodeFile(cparams, io, enc_state.get(), &compressed, GetJxlCms(),
-                       aux_out, pool));
+  JXL_CHECK(EncodeFile(cparams, io, enc_state.get(), &compressed,
+                       *JxlGetDefaultCms(), aux_out, pool));
 
   for (const ImageBundle& ib1 : io->frames) {
     metadata_encodings_1.push_back(ib1.metadata()->color_encoding);
@@ -238,13 +241,13 @@ std::vector<ColorEncodingDescriptor> AllEncodings() {
 
     for (WhitePoint wp : Values<WhitePoint>()) {
       if (wp == WhitePoint::kCustom) continue;
-      if (c.ImplicitWhitePoint() && c.white_point != wp) continue;
-      c.white_point = wp;
+      if (c.ImplicitWhitePoint() && c.GetWhitePointType() != wp) continue;
+      JXL_CHECK(c.SetWhitePointType(wp));
 
       for (Primaries primaries : Values<Primaries>()) {
         if (primaries == Primaries::kCustom) continue;
         if (!c.HasPrimaries()) continue;
-        c.primaries = primaries;
+        JXL_CHECK(c.SetPrimariesType(primaries));
 
         for (TransferFunction tf : Values<TransferFunction>()) {
           if (tf == TransferFunction::kUnknown) continue;
@@ -544,7 +547,7 @@ float ButteraugliDistance(const extras::PackedPixelFile& a,
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
   // TODO(eustas): simplify?
   return ButteraugliDistance(io0.frames, io1.frames, ButteraugliParams(),
-                             GetJxlCms(),
+                             *JxlGetDefaultCms(),
                              /*distmap=*/nullptr, pool);
 }
 
@@ -556,7 +559,8 @@ float Butteraugli3Norm(const extras::PackedPixelFile& a,
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, pool, &io1));
   ButteraugliParams ba;
   ImageF distmap;
-  ButteraugliDistance(io0.frames, io1.frames, ba, GetJxlCms(), &distmap, pool);
+  ButteraugliDistance(io0.frames, io1.frames, ba, *JxlGetDefaultCms(), &distmap,
+                      pool);
   return ComputeDistanceP(distmap, ba, 3);
 }
 
@@ -566,7 +570,7 @@ float ComputeDistance2(const extras::PackedPixelFile& a,
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(a, nullptr, &io0));
   CodecInOut io1;
   JXL_CHECK(ConvertPackedPixelFileToCodecInOut(b, nullptr, &io1));
-  return ComputeDistance2(io0.Main(), io1.Main(), GetJxlCms());
+  return ComputeDistance2(io0.Main(), io1.Main(), *JxlGetDefaultCms());
 }
 
 bool SameAlpha(const extras::PackedPixelFile& a,

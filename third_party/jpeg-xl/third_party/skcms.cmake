@@ -32,10 +32,10 @@ if(JPEGXL_BUNDLE_SKCMS)
   target_compile_options(skcms-obj PRIVATE -DJPEGXL_BUNDLE_SKCMS=1)
   if(MSVC)
     target_compile_options(skcms-obj
-      PRIVATE /FI${CMAKE_CURRENT_SOURCE_DIR}/../lib/jxl/enc_jxl_skcms.h)
+      PRIVATE /FI${CMAKE_CURRENT_SOURCE_DIR}/../lib/jxl/cms/jxl_skcms.h)
   else()
     target_compile_options(skcms-obj
-      PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/../lib/jxl/enc_jxl_skcms.h)
+      PRIVATE -include ${CMAKE_CURRENT_SOURCE_DIR}/../lib/jxl/cms/jxl_skcms.h)
   endif()
 endif()
 

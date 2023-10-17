@@ -14,9 +14,9 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/enc_ans.h"
@@ -33,6 +33,7 @@
 #include "lib/jxl/modular/encoding/ma_common.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/modular/transform/transform.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/toc.h"
 
 namespace jxl {

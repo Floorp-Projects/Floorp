@@ -17,13 +17,12 @@
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/padded_bytes.h"
+#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/color_management.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
@@ -112,7 +111,7 @@ TEST(ModularTest, RoundtripLossyDeltaPalette) {
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 6800u);
   EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.5));
 }
@@ -135,7 +134,7 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 7000u);
   EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(10.1));
 }
@@ -146,7 +145,7 @@ TEST(ModularTest, RoundtripLossy) {
   CompressParams cparams;
   cparams.modular_mode = true;
   cparams.butteraugli_distance = 2.f;
-  cparams.SetCms(GetJxlCms());
+  cparams.SetCms(*JxlGetDefaultCms());
 
   CodecInOut io_out;
 
@@ -157,7 +156,7 @@ TEST(ModularTest, RoundtripLossy) {
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 30000u);
   EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(2.3));
 }
@@ -175,14 +174,15 @@ TEST(ModularTest, RoundtripLossy16) {
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io));
   JXL_CHECK(!io.metadata.m.have_preview);
   JXL_CHECK(io.frames.size() == 1);
-  JXL_CHECK(io.frames[0].TransformTo(ColorEncoding::SRGB(), GetJxlCms()));
+  JXL_CHECK(
+      io.frames[0].TransformTo(ColorEncoding::SRGB(), *JxlGetDefaultCms()));
   io.metadata.m.color_encoding = ColorEncoding::SRGB();
 
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 300u);
   EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  GetJxlCms(),
+                                  *JxlGetDefaultCms(),
                                   /*distmap=*/nullptr),
               IsSlightlyBelow(1.6));
 }
@@ -343,7 +343,7 @@ TEST_P(ModularTestParam, RoundtripLossless) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &compressed_size));
   EXPECT_LE(compressed_size, bitdepth * xsize * ysize / 3);
-  EXPECT_LE(0, ComputeDistance2(io.Main(), io2.Main(), GetJxlCms()));
+  EXPECT_LE(0, ComputeDistance2(io.Main(), io2.Main(), *JxlGetDefaultCms()));
   size_t different = 0;
   for (size_t c = 0; c < 3; c++) {
     for (size_t y = 0; y < ysize; y++) {

@@ -13,7 +13,6 @@
 #include <utility>
 
 #include "lib/jxl/base/bits.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/image_ops.h"
 
 namespace jxl {
