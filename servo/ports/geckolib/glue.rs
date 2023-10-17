@@ -404,8 +404,7 @@ pub extern "C" fn Servo_AnimationValues_IsInterpolable(
     from: &AnimationValue,
     to: &AnimationValue,
 ) -> bool {
-    from.animate(to, Procedure::Interpolate { progress: 0.5 })
-        .is_ok()
+    from.interpolable_with(to)
 }
 
 #[no_mangle]
@@ -1179,6 +1178,65 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
         &computed_values,
     )
     .into()
+}
+
+#[repr(C)]
+#[derive(Default)]
+pub struct ShouldTransitionResult {
+    should_animate: bool,
+    old_transition_value_matches: bool,
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ComputedValues_ShouldTransition(
+    old: &ComputedValues,
+    new: &ComputedValues,
+    prop: nsCSSPropertyID,
+    old_transition_value: Option<&AnimationValue>,
+    start: &mut structs::RefPtr<AnimationValue>,
+    end: &mut structs::RefPtr<AnimationValue>,
+) -> ShouldTransitionResult {
+    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else { return Default::default() };
+    if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
+        return Default::default();
+    }
+    let Some(new_value) = AnimationValue::from_computed_values(prop, new) else { return Default::default() };
+
+    if let Some(old_transition_value) = old_transition_value {
+        if *old_transition_value == new_value {
+            return ShouldTransitionResult {
+                should_animate: false,
+                old_transition_value_matches: true,
+            }
+        }
+    }
+
+    let Some(old_value) = AnimationValue::from_computed_values(prop, old) else { return Default::default() };
+    if old_value == new_value || !old_value.interpolable_with(&new_value) {
+        return Default::default();
+    }
+
+    start.set_arc(Arc::new(old_value));
+    end.set_arc(Arc::new(new_value));
+
+    ShouldTransitionResult {
+        should_animate: true,
+        old_transition_value_matches: false,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
+    style: &ComputedValues,
+    prop: nsCSSPropertyID,
+    transition_value: &AnimationValue,
+) -> bool {
+    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else { return false };
+    if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
+        return false;
+    }
+    let Some(value) = AnimationValue::from_computed_values(prop, style) else { return false };
+    value == *transition_value
 }
 
 #[no_mangle]

@@ -36,20 +36,6 @@ using mozilla::dom::KeyframeEffect;
 using namespace mozilla;
 using namespace mozilla::css;
 
-static inline bool ExtractNonDiscreteComputedValue(
-    nsCSSPropertyID aProperty, const ComputedStyle& aComputedStyle,
-    AnimationValue& aAnimationValue) {
-  if (Servo_Property_IsDiscreteAnimatable(aProperty) &&
-      aProperty != eCSSProperty_visibility) {
-    return false;
-  }
-
-  aAnimationValue.mServo =
-      Servo_ComputedValues_ExtractAnimationValue(&aComputedStyle, aProperty)
-          .Consume();
-  return !!aAnimationValue.mServo;
-}
-
 bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
                                             PseudoStyleType aPseudoType,
                                             const ComputedStyle& aOldStyle,
@@ -168,8 +154,8 @@ bool nsTransitionManager::DoUpdateTransitions(
           // start a new transition (because delay and duration are both zero,
           // or because the new value is not interpolable); a new transition
           // would have anim->ToValue() matching currentValue.
-          !ExtractNonDiscreteComputedValue(property, aNewStyle, currentValue) ||
-          currentValue != anim->ToValue()) {
+          !Servo_ComputedValues_TransitionValueMatches(
+              &aNewStyle, property, anim->ToValue().mServo.get())) {
         // Stop the transition.
         DoCancelTransition(aElement, aPseudoType, aElementTransitions, i);
       }
@@ -293,30 +279,28 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     return false;
   }
 
-  AnimationValue startValue, endValue;
-  bool haveValues =
-      ExtractNonDiscreteComputedValue(aProperty, aOldStyle, startValue) &&
-      ExtractNonDiscreteComputedValue(aProperty, aNewStyle, endValue);
-
-  bool haveChange = startValue != endValue;
-
-  bool shouldAnimate = haveValues && haveChange &&
-                       startValue.IsInterpolableWith(aProperty, endValue);
-
-  bool haveCurrentTransition = false;
   size_t currentIndex = nsTArray<KeyframeEffect>::NoIndex;
-  const CSSTransition* oldTransition = nullptr;
-  if (aElementTransitions) {
-    OwningCSSTransitionPtrArray& animations = aElementTransitions->mAnimations;
+  const auto* oldTransition = [&]() -> const CSSTransition* {
+    if (!aElementTransitions) {
+      return nullptr;
+    }
+    const OwningCSSTransitionPtrArray& animations =
+        aElementTransitions->mAnimations;
     for (size_t i = 0, i_end = animations.Length(); i < i_end; ++i) {
       if (animations[i]->TransitionProperty() == aProperty) {
-        haveCurrentTransition = true;
         currentIndex = i;
-        oldTransition = animations[i];
-        break;
+        return animations[i];
       }
     }
-  }
+    return nullptr;
+  }();
+
+  AnimationValue startValue, endValue;
+  const StyleShouldTransitionResult result =
+      Servo_ComputedValues_ShouldTransition(
+          &aOldStyle, &aNewStyle, aProperty,
+          oldTransition ? oldTransition->ToValue().mServo.get() : nullptr,
+          &startValue.mServo, &endValue.mServo);
 
   // If we got a style change that changed the value to the endpoint
   // of the currently running transition, we don't want to interrupt
@@ -332,14 +316,13 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   // endpoint of our finished transition, we also don't want to start
   // a new transition for the reasons described in
   // https://lists.w3.org/Archives/Public/www-style/2015Jan/0444.html .
-  if (haveCurrentTransition && haveValues &&
-      aElementTransitions->mAnimations[currentIndex]->ToValue() == endValue) {
+  if (result.old_transition_value_matches) {
     // GetAnimationRule already called RestyleForAnimation.
     return false;
   }
 
-  if (!shouldAnimate) {
-    if (haveCurrentTransition) {
+  if (!result.should_animate) {
+    if (oldTransition) {
       // We're in the middle of a transition, and just got a non-transition
       // style change to something that we can't animate.  This might happen
       // because we got a non-transition style change changing to the current
@@ -357,9 +340,8 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
 
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
-  if (haveCurrentTransition &&
-      aElementTransitions->mAnimations[currentIndex]->HasCurrentEffect() &&
-      oldTransition && oldTransition->StartForReversingTest() == endValue) {
+  if (oldTransition && oldTransition->HasCurrentEffect() &&
+      oldTransition->StartForReversingTest() == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
     double valuePortion =
@@ -422,7 +404,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
         "duplicate transitions for property");
   }
 #endif
-  if (haveCurrentTransition) {
+  if (oldTransition) {
     // If this new transition is replacing an existing transition that is
     // running on the compositor, we store select parameters from the replaced
     // transition so that later, once all scripts have run, we can update the
