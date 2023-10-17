@@ -514,7 +514,7 @@ windowsLaunchOnLogin:
   variables:
     enabled:
       type: boolean
-      fallbackPref: browser.startup.windowsLaunchOnLogin.enabled
+      setPref: browser.startup.windowsLaunchOnLogin.enabled
       description: Should users see the Windows launch on login checkbox.
 
 abouthomecache:

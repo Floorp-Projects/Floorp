@@ -10,14 +10,20 @@ ChromeUtils.defineESModuleGetters(this, {
   WindowsLaunchOnLogin: "resource://gre/modules/WindowsLaunchOnLogin.sys.mjs",
 });
 
-add_setup(async function () {
-  // Ensure checkbox is enabled before running tests
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.startup.windowsLaunchOnLogin.enabled", true]],
-  });
-});
+const { ExperimentAPI } = ChromeUtils.importESModule(
+  "resource://nimbus/ExperimentAPI.sys.mjs"
+);
+
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 
 add_task(async function test_check_checkbox() {
+  await ExperimentAPI.ready();
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "windowsLaunchOnLogin",
+    value: { enabled: true },
+  });
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     // Open preferences to general pane
     await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
@@ -36,9 +42,15 @@ add_task(async function test_check_checkbox() {
 
     gBrowser.removeCurrentTab();
   });
+  await doCleanup();
 });
 
 add_task(async function test_uncheck_checkbox() {
+  await ExperimentAPI.ready();
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "windowsLaunchOnLogin",
+    value: { enabled: true },
+  });
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     // Open preferences to general pane
     await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
@@ -57,9 +69,15 @@ add_task(async function test_uncheck_checkbox() {
 
     gBrowser.removeCurrentTab();
   });
+  await doCleanup();
 });
 
 add_task(async function create_external_regkey() {
+  await ExperimentAPI.ready();
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "windowsLaunchOnLogin",
+    value: { enabled: true },
+  });
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     // Create registry key without using settings pane to check if
     // this is reflected in the settings
@@ -86,9 +104,15 @@ add_task(async function create_external_regkey() {
 
     gBrowser.removeCurrentTab();
   });
+  await doCleanup();
 });
 
 add_task(async function delete_external_regkey() {
+  await ExperimentAPI.ready();
+  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+    featureId: "windowsLaunchOnLogin",
+    value: { enabled: true },
+  });
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     // Delete registry key without using settings pane to check if
     // this is reflected in the settings
@@ -108,10 +132,10 @@ add_task(async function delete_external_regkey() {
 
     gBrowser.removeCurrentTab();
   });
+  await doCleanup();
 });
 
 registerCleanupFunction(async function () {
-  await SpecialPowers.popPrefEnv();
   await WindowsLaunchOnLogin.withLaunchOnLoginRegistryKey(async wrk => {
     let registryName = WindowsLaunchOnLogin.getLaunchOnLoginRegistryName();
     if (wrk.hasValue(registryName)) {
