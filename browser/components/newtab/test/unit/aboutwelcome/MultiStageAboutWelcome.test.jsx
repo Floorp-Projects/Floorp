@@ -199,24 +199,26 @@ describe("MultiStageAboutWelcome module", () => {
   });
 
   describe("WelcomeScreen component", () => {
-    describe("get started screen", () => {
+    describe("easy setup screen", () => {
       const screen = AboutWelcomeDefaults.getDefaults().screens.find(
-        s => s.id === "AW_PIN_FIREFOX"
+        s => s.id === "AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN"
       );
+      let EASY_SETUP_SCREEN_PROPS;
 
-      const GET_STARTED_SCREEN_PROPS = {
-        id: screen.id,
-        totalNumberOfScreens: 1,
-        content: screen.content,
-        messageId: `${DEFAULT_PROPS.message_id}_${screen.id}`,
-        UTMTerm: DEFAULT_PROPS.utm_term,
-        flowParams: null,
-      };
+      beforeEach(() => {
+        EASY_SETUP_SCREEN_PROPS = {
+          id: screen.id,
+          content: screen.content,
+          messageId: `${DEFAULT_PROPS.message_id}_${screen.id}`,
+          UTMTerm: DEFAULT_PROPS.utm_term,
+          flowParams: null,
+          totalNumberOfScreens: 1,
+          setActiveMultiSelect: sandbox.stub(),
+        };
+      });
 
-      it("should render GetStarted Screen", () => {
-        const wrapper = shallow(
-          <WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />
-        );
+      it("should render Easy Setup screen", () => {
+        const wrapper = shallow(<WelcomeScreen {...EASY_SETUP_SCREEN_PROPS} />);
         assert.ok(wrapper.exists());
       });
 
@@ -258,8 +260,9 @@ describe("MultiStageAboutWelcome module", () => {
       it("should assign the total number of screens and current screen to the aria-valuemax and aria-valuenow labels", () => {
         const EXTRA_PROPS = { totalNumberOfScreens: 3, order: 1 };
         const wrapper = mount(
-          <WelcomeScreen {...GET_STARTED_SCREEN_PROPS} {...EXTRA_PROPS} />
+          <WelcomeScreen {...EASY_SETUP_SCREEN_PROPS} {...EXTRA_PROPS} />
         );
+
         const steps = wrapper.find(`div.steps`);
         assert.ok(steps.exists());
         const { attributes } = steps.getDOMNode();
@@ -289,7 +292,7 @@ describe("MultiStageAboutWelcome module", () => {
       });
 
       it("should have a primary, secondary and secondary.top button in the rendered input", () => {
-        const wrapper = mount(<WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />);
+        const wrapper = mount(<WelcomeScreen {...EASY_SETUP_SCREEN_PROPS} />);
         assert.ok(wrapper.find(".primary").exists());
         assert.ok(
           wrapper
