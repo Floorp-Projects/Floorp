@@ -838,6 +838,14 @@ export var SessionStore = {
   finishTabRemotenessChange(aTab, aSwitchId) {
     SessionStoreInternal.finishTabRemotenessChange(aTab, aSwitchId);
   },
+
+  /**
+   * Clear session store data for a given private browsing window.
+   * @param {ChromeWindow} win - Open private browsing window to clear data for.
+   */
+  purgeDataForPrivateWindow(win) {
+    return SessionStoreInternal.purgeDataForPrivateWindow(win);
+  },
 };
 
 // Freeze the SessionStore object. We don't want anyone to modify it.
@@ -2700,6 +2708,39 @@ var SessionStoreInternal = {
     }
 
     this._uninit();
+  },
+
+  /**
+   * Clear session store data for a given private browsing window.
+   * @param {ChromeWindow} win - Open private browsing window to clear data for.
+   */
+  purgeDataForPrivateWindow(win) {
+    // No need to clear data if already shutting down.
+    if (lazy.RunState.isQuitting) {
+      return;
+    }
+
+    // Check if we have data for the given window.
+    let windowData = this._windows[win.__SSi];
+    if (!windowData) {
+      return;
+    }
+
+    // Clear closed tab data.
+    if (windowData._closedTabs.length) {
+      // Remove all of the closed tabs from the _lastClosedActions list
+      for (let closedTab of windowData._closedTabs) {
+        this._removeClosedAction(
+          this._LAST_ACTION_CLOSED_TAB,
+          closedTab.closedId
+        );
+      }
+
+      // Reset the closed tab list.
+      windowData._closedTabs = [];
+      windowData._lastClosedTabGroupCount = -1;
+      this._closedObjectsChanged = true;
+    }
   },
 
   /**

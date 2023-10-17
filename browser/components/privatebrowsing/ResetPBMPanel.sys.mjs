@@ -24,6 +24,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
 });
 
 export const ResetPBMPanel = {
@@ -189,6 +190,9 @@ export const ResetPBMPanel = {
 
     // In the remaining PBM window: If the sidebar is open close it.
     triggeringWindow.SidebarUI?.hide();
+
+    // Clear session store data for the remaining PBM window.
+    lazy.SessionStore.purgeDataForPrivateWindow(triggeringWindow);
 
     // 4. Clear private browsing data.
     //    TODO: this doesn't wait for data to be cleared. This is probably
