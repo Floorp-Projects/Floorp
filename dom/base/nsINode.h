@@ -192,16 +192,22 @@ enum class NodeSelectorFlags : uint32_t {
   /// child's later siblings must also be restyled.
   HasSlowSelectorLaterSiblings = 1 << 3,
 
+  /// HasSlowSelector* was set by the presence of :nth (But not of).
+  HasSlowSelectorNth = 1 << 4,
+
   /// A child of this node might be matched by :nth-child(.. of <selector>) or
   /// :nth-last-child(.. of <selector>). If a DOM mutation may have caused the
   /// selector to either match or no longer match that child, the child's
   /// siblings are restyled.
-  HasSlowSelectorNthOf = 1 << 4,
+  HasSlowSelectorNthOf = 1 << 5,
+
+  /// All instances of :nth flags.
+  HasSlowSelectorNthAll = HasSlowSelectorNthOf | HasSlowSelectorNth,
 
   /// Set of selector flags that may trigger a restyle on DOM append, with
   /// restyle on siblings or a single parent (And perhaps their subtrees).
   AllSimpleRestyleFlagsForAppend = HasEmptySelector | HasSlowSelector |
-                                   HasEdgeChildSelector | HasSlowSelectorNthOf,
+                                   HasEdgeChildSelector | HasSlowSelectorNthAll,
 
   /// Set of selector flags that may trigger a restyle as a result of any
   /// DOM mutation.
@@ -209,17 +215,17 @@ enum class NodeSelectorFlags : uint32_t {
       AllSimpleRestyleFlagsForAppend | HasSlowSelectorLaterSiblings,
 
   // This node was evaluated as an anchor for a relative selector.
-  RelativeSelectorAnchor = 1 << 5,
+  RelativeSelectorAnchor = 1 << 6,
 
   // This node was evaluated as an anchor for a relative selector, and that
   // relative selector was not the subject of the overall selector.
-  RelativeSelectorAnchorNonSubject = 1 << 6,
+  RelativeSelectorAnchorNonSubject = 1 << 7,
 
   // This node's sibling(s) performed a relative selector search to this node.
-  RelativeSelectorSearchDirectionSibling = 1 << 7,
+  RelativeSelectorSearchDirectionSibling = 1 << 8,
 
   // This node's ancestor(s) performed a relative selector search to this node.
-  RelativeSelectorSearchDirectionAncestor = 1 << 8,
+  RelativeSelectorSearchDirectionAncestor = 1 << 9,
 
   // This node's sibling(s) and ancestor(s), and/or this node's ancestor's
   // sibling(s) performed a relative selector search to this node.

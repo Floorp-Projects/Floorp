@@ -136,8 +136,10 @@ void RestyleManager::ContentAppended(nsIContent* aFirstNewContent) {
       auto* containerElement = container->AsElement();
       PostRestyleEvent(containerElement, RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
-      StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-          containerElement->GetFirstElementChild());
+      if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+        StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+            containerElement->GetFirstElementChild());
+      }
     } else {
       RestylePreviousSiblings(aFirstNewContent);
       RestyleSiblingsStartingWith(aFirstNewContent);
@@ -398,8 +400,10 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
       auto* containerElement = container->AsElement();
       PostRestyleEvent(containerElement, RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
-      StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-          containerElement->GetFirstElementChild());
+      if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+        StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+            containerElement->GetFirstElementChild());
+      }
     } else {
       RestylePreviousSiblings(aChild);
       RestyleSiblingsStartingWith(aChild);
@@ -411,8 +415,10 @@ void RestyleManager::RestyleForInsertOrChange(nsIContent* aChild) {
   if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
     RestyleSiblingsStartingWith(aChild->GetNextSibling());
-    StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-        aChild->GetNextElementSibling());
+    if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+      StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+          aChild->GetNextElementSibling());
+    }
   }
 
   if (selectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
@@ -492,8 +498,10 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
       auto* containerElement = container->AsElement();
       PostRestyleEvent(containerElement, RestyleHint::RestyleSubtree(),
                        nsChangeHint(0));
-      StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-          containerElement->GetFirstElementChild());
+      if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+        StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+            containerElement->GetFirstElementChild());
+      }
     } else {
       RestylePreviousSiblings(aOldChild);
       RestyleSiblingsStartingWith(aOldChild);
@@ -505,8 +513,10 @@ void RestyleManager::ContentRemoved(nsIContent* aOldChild,
   if (selectorFlags & NodeSelectorFlags::HasSlowSelectorLaterSiblings) {
     // Restyle all later siblings.
     RestyleSiblingsStartingWith(aFollowingSibling);
-    StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
-        nextSibling);
+    if (selectorFlags & NodeSelectorFlags::HasSlowSelectorNthAll) {
+      StyleSet()->MaybeInvalidateRelativeSelectorForNthDependencyFromSibling(
+          nextSibling);
+    }
   }
 
   if (selectorFlags & NodeSelectorFlags::HasEdgeChildSelector) {
