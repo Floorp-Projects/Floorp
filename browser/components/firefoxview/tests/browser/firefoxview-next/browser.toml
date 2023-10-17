@@ -13,6 +13,7 @@ fail-if = ["a11y_checks"] # Bug 1854625 clicked button may not be focusable
 fail-if = ["a11y_checks"] # Bug 1854625 clicked button, fxview-tab-row-secondary-button, panel-item may not be focusable
 
 ["browser_opentabs_cards.js"]
+fail-if = ["a11y_checks"] # Bug 1858041 clicked .fxview0tab-row-main, button, div may not be focusable
 
 ["browser_opentabs_recency_next.js"]
 skip-if = [

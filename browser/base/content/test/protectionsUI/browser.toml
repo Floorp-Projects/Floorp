@@ -16,7 +16,10 @@ support-files = [
 ["browser_protectionsUI.js"]
 fail-if = ["a11y_checks"] # Bug 1854233 protections-popup-mainView-panel-header may not be focusable
 https_first_disabled = true
-skip-if = ["os == 'linux' && !debug && tsan"] # Bug 1675107
+skip-if = [
+  "os == 'linux' && !debug && tsan", # Bug 1675107
+  "a11y_checks", # Bug 1858041 and 1849179 for causing intermittent crashes
+]
 
 ["browser_protectionsUI_3.js"]
 
