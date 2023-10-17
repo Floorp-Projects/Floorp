@@ -357,7 +357,7 @@ class BuildMonitor(MozbuildObject):
             # the upload path, alongside, for convenience, a copy of the HTML
             # viewer.
             if "MOZ_AUTOMATION" in os.environ and "UPLOAD_PATH" in os.environ:
-                build_resources_profile_path = os.path.join(
+                build_resources_profile_path = mozpath.join(
                     os.environ["UPLOAD_PATH"], "profile_build_resources.json"
                 )
             else:
@@ -814,7 +814,7 @@ class StaticAnalysisOutputManager(OutputManager):
         assert output_format in ("text", "json"), "Invalid output format {}".format(
             output_format
         )
-        path = os.path.realpath(path)
+        path = mozpath.realpath(path)
 
         if output_format == "json":
             self.monitor._warnings_database.save_to_file(path)
@@ -1283,7 +1283,7 @@ class BuildDriver(MozbuildObject):
                     path_arg = self._wrap_path_argument(target)
 
                     if directory is not None:
-                        make_dir = os.path.join(self.topobjdir, directory)
+                        make_dir = mozpath.join(self.topobjdir, directory)
                         make_target = target
                     else:
                         make_dir, make_target = resolve_target_to_make(
@@ -1410,11 +1410,11 @@ class BuildDriver(MozbuildObject):
             # until we suppress them for real.
             # TODO remove entries/feature once we stop generating warnings
             # in these directories.
-            pathToThirdparty = os.path.join(
+            pathToThirdparty = mozpath.join(
                 self.topsrcdir, "tools", "rewriting", "ThirdPartyPaths.txt"
             )
 
-            pathToGenerated = os.path.join(
+            pathToGenerated = mozpath.join(
                 self.topsrcdir, "tools", "rewriting", "Generated.txt"
             )
 
@@ -1454,7 +1454,7 @@ class BuildDriver(MozbuildObject):
                         continue
 
                     if warning["flag"] in suppressed:
-                        suppressed_by_dir[os.path.dirname(path)] += 1
+                        suppressed_by_dir[mozpath.dirname(path)] += 1
                         continue
 
                 warnings.append(warning)
@@ -1616,7 +1616,7 @@ class BuildDriver(MozbuildObject):
         )
         build_site.ensure()
 
-        command = [build_site.python_path, os.path.join(self.topsrcdir, "configure.py")]
+        command = [build_site.python_path, mozpath.join(self.topsrcdir, "configure.py")]
         if options:
             command.extend(options)
 
@@ -1654,7 +1654,7 @@ class BuildDriver(MozbuildObject):
         if self.is_clobber_needed():
             print(
                 INSTALL_TESTS_CLOBBER.format(
-                    clobber_file=os.path.join(self.topobjdir, "CLOBBER")
+                    clobber_file=mozpath.join(self.topobjdir, "CLOBBER")
                 )
             )
             sys.exit(1)
@@ -1707,7 +1707,7 @@ class BuildDriver(MozbuildObject):
         return True
 
     def _write_mozconfig_json(self):
-        mozconfig_json = os.path.join(self.topobjdir, ".mozconfig.json")
+        mozconfig_json = mozpath.join(self.topobjdir, ".mozconfig.json")
         with FileAvoidWrite(mozconfig_json) as fh:
             to_write = six.ensure_text(
                 json.dumps(
@@ -1772,16 +1772,16 @@ class BuildDriver(MozbuildObject):
             if line.startswith("export ") or "UPLOAD_EXTRA_FILES" in line
         ]
 
-        mozconfig_client_mk = os.path.join(self.topobjdir, ".mozconfig-client-mk")
+        mozconfig_client_mk = mozpath.join(self.topobjdir, ".mozconfig-client-mk")
         with FileAvoidWrite(mozconfig_client_mk) as fh:
             fh.write("\n".join(mozconfig_make_lines))
 
-        mozconfig_mk = os.path.join(self.topobjdir, ".mozconfig.mk")
+        mozconfig_mk = mozpath.join(self.topobjdir, ".mozconfig.mk")
         with FileAvoidWrite(mozconfig_mk) as fh:
             fh.write("\n".join(mozconfig_filtered_lines))
 
         # Copy the original mozconfig to the objdir.
-        mozconfig_objdir = os.path.join(self.topobjdir, ".mozconfig")
+        mozconfig_objdir = mozpath.join(self.topobjdir, ".mozconfig")
         if mozconfig["path"]:
             with open(mozconfig["path"], "r") as ifh:
                 with FileAvoidWrite(mozconfig_objdir) as ofh:

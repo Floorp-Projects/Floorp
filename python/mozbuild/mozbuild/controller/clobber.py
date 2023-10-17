@@ -11,6 +11,7 @@ import sys
 from textwrap import TextWrapper
 
 from mozfile.mozfile import remove as mozfileremove
+from mozpack import path as mozpath
 
 CLOBBER_MESSAGE = "".join(
     [
@@ -51,10 +52,10 @@ class Clobberer(object):
         assert os.path.isabs(topsrcdir)
         assert os.path.isabs(topobjdir)
 
-        self.topsrcdir = os.path.normpath(topsrcdir)
-        self.topobjdir = os.path.normpath(topobjdir)
-        self.src_clobber = os.path.join(topsrcdir, "CLOBBER")
-        self.obj_clobber = os.path.join(topobjdir, "CLOBBER")
+        self.topsrcdir = mozpath.normpath(topsrcdir)
+        self.topobjdir = mozpath.normpath(topobjdir)
+        self.src_clobber = mozpath.join(topsrcdir, "CLOBBER")
+        self.obj_clobber = mozpath.join(topobjdir, "CLOBBER")
         if substs:
             self.substs = substs
         else:
@@ -62,7 +63,7 @@ class Clobberer(object):
 
         # Try looking for mozilla/CLOBBER, for comm-central
         if not os.path.isfile(self.src_clobber):
-            comm_clobber = os.path.join(topsrcdir, "mozilla", "CLOBBER")
+            comm_clobber = mozpath.join(topsrcdir, "mozilla", "CLOBBER")
             if os.path.isfile(comm_clobber):
                 self.src_clobber = comm_clobber
 
@@ -112,7 +113,7 @@ class Clobberer(object):
         try:
             for p in os.listdir(root):
                 if p not in exclude:
-                    paths.append(os.path.join(root, p))
+                    paths.append(mozpath.join(root, p))
         except OSError as e:
             if e.errno != errno.ENOENT:
                 raise
@@ -123,7 +124,7 @@ class Clobberer(object):
         """Deletes the given subdirectories in an optimal way."""
         procs = []
         for p in sorted(paths_to_delete):
-            path = os.path.join(root, p)
+            path = mozpath.join(root, p)
             if (
                 sys.platform.startswith("win")
                 and self.have_winrm()
@@ -169,7 +170,7 @@ class Clobberer(object):
         # Now handle cargo's build artifacts and skip removing the incremental
         # compilation cache.
         for target in rust_targets:
-            cargo_path = os.path.join(self.topobjdir, target, rust_build_kind)
+            cargo_path = mozpath.join(self.topobjdir, target, rust_build_kind)
             paths = self.collect_subdirs(
                 cargo_path,
                 {
@@ -193,7 +194,7 @@ class Clobberer(object):
             error.
         """
         assert cwd
-        cwd = os.path.normpath(cwd)
+        cwd = mozpath.normpath(cwd)
 
         if not self.clobber_needed():
             print("Clobber not needed.", file=fh)
