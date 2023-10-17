@@ -166,6 +166,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/private-browsing-web-api-fixes.js",
     "shims/rambler-authenticator.js",
     "shims/rich-relevance.js",
+    "shims/salesforce.js",
     "shims/spotify-embed.js",
     "shims/tracking-pixel.png",
     "shims/tsn-ca.js",
