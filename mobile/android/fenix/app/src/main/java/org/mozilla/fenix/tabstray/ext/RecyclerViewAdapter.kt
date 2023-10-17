@@ -12,8 +12,14 @@ import androidx.recyclerview.widget.RecyclerView
 fun <VH : RecyclerView.ViewHolder> RecyclerView.Adapter<out VH>.observeFirstInsert(block: () -> Unit) {
     val observer = object : RecyclerView.AdapterDataObserver() {
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            block.invoke()
-            unregisterAdapterDataObserver(this)
+            // There's a bug where [onItemRangeInserted] is intermittently called with an [itemCount] of zero, causing
+            // the Tabs Tray to always open scrolled at the top. This check forces [onItemRangeInserted] to wait
+            // until [itemCount] is non-zero to execute [block] and remove the adapter observer.
+            // This is a temporary fix until the Compose rewrite is enabled by default, where this bug is not present.
+            if (itemCount > 0) {
+                block.invoke()
+                unregisterAdapterDataObserver(this)
+            }
         }
     }
     registerAdapterDataObserver(observer)
