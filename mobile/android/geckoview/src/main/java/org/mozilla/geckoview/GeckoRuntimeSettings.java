@@ -549,7 +549,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
   /* package */ final Pref<Integer> mGlMsaaLevel = new Pref<>("webgl.msaa-samples", 4);
   /* package */ final Pref<Boolean> mTelemetryEnabled =
       new Pref<>("toolkit.telemetry.geckoview.streaming", false);
-  /* package */ final Pref<String> mGeckoViewLogLevel = new Pref<>("geckoview.logging", "Debug");
+  /* package */ final Pref<String> mGeckoViewLogLevel =
+      new Pref<>("geckoview.logging", BuildConfig.DEBUG_BUILD ? "Debug" : "Warn");
   /* package */ final Pref<Boolean> mConsoleServiceToLogcat =
       new Pref<>("consoleservice.logcat", true);
   /* package */ final Pref<Boolean> mDevToolsConsoleToLogcat =

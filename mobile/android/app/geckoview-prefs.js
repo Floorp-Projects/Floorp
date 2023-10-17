@@ -271,15 +271,6 @@ pref("formhelper.autozoom", true);
 // Optionally send web console output to logcat (bug 1415318)
 pref("geckoview.console.enabled", false);
 
-// Turn off debug logging for official builds of GeckoView
-// to prevent privacy-sensitive data like visited URLS from
-// being saved in logs
-#ifdef RELEASE_OR_BETA
-  pref("geckoview.logging", "Warn");
-#else
-  pref("geckoview.logging", "Debug");
-#endif
-
 pref("image.cache.size", 1048576); // bytes
 
 // Inherit locale from the OS, used for multi-locale builds
