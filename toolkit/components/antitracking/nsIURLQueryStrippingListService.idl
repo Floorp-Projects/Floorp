@@ -102,4 +102,27 @@ interface nsIURLQueryStrippingListService : nsISupports
    * disabled, in this case it will resolve immediately.
    */
   Promise testWaitForInit();
+
+
+  /**
+   * Add new lists with different params
+   *
+   * Note that this is for testing purpose.
+   */
+  Promise testSetList(in jsval testFile);
+
+
+  /**
+   * Check if Strip on Share observers are unregistered
+   *
+   * Note that this is for testing purpose.
+   */
+  boolean testHasStripOnShareObservers();
+
+  /**
+   * Check if QPS observers are unregistered
+   *
+   * Note that this is for testing purpose.
+   */
+  boolean testHasQPSObservers();
 };
