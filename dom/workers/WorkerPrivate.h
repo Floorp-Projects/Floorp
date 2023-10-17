@@ -45,6 +45,7 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIEventTarget.h"
 #include "nsILoadInfo.h"
+#include "nsRFPService.h"
 #include "nsTObserverArray.h"
 
 class nsIThreadInternal;
@@ -979,6 +980,10 @@ class WorkerPrivate final
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
   bool ShouldResistFingerprinting(RFPTarget aTarget) const;
+
+  const Maybe<RFPTarget>& GetOverriddenFingerprintingSettings() const {
+    return mLoadInfo.mOverriddenFingerprintingSettings;
+  }
 
   RemoteWorkerChild* GetRemoteWorkerController();
 

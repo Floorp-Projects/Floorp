@@ -20,6 +20,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 #include "mozilla/Result.h"
@@ -66,6 +67,7 @@
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
+#include "nsRFPService.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsThreadUtils.h"
@@ -523,17 +525,85 @@ nsresult ServiceWorkerPrivate::Initialize() {
       net::CookieJarSettings::Create(principal);
   MOZ_ASSERT(cookieJarSettings);
 
-  // We can populate the partitionKey from the originAttribute of the principal
-  // if it has partitionKey set. It's because ServiceWorker is using the foreign
-  // partitioned principal and it implies that it's a third-party service
-  // worker. So, the cookieJarSettings can directly use the partitionKey from
-  // it. For first-party case, we can populate the partitionKey from the
-  // principal URI.
+  // We can populate the partitionKey and the fingerprinting protection
+  // overrides using the originAttribute of the principal. If it has
+  // partitionKey set, It's a foreign partitioned principal and it implies that
+  // it's a third-party service worker. So, the cookieJarSettings can directly
+  // use the partitionKey from it. For first-party case, we can populate the
+  // partitionKey from the principal URI.
+  Maybe<uint64_t> overriddenFingerprintingSettingsArg;
+  Maybe<RFPTarget> overriddenFingerprintingSettings;
   if (!principal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
     net::CookieJarSettings::Cast(cookieJarSettings)
         ->SetPartitionKey(principal->OriginAttributesRef().mPartitionKey);
+
+    // The service worker is for a third-party context, we get first-party
+    // domain from the partitionKey and the third-party domain from the
+    // principal of the service worker. Then, we can get the fingerprinting
+    // protection overrides using them.
+    nsAutoString scheme;
+    nsAutoString pkBaseDomain;
+    int32_t unused;
+
+    if (OriginAttributes::ParsePartitionKey(
+            principal->OriginAttributesRef().mPartitionKey, scheme,
+            pkBaseDomain, unused)) {
+      nsCOMPtr<nsIURI> firstPartyURI;
+      rv = NS_NewURI(getter_AddRefs(firstPartyURI),
+                     scheme + u"://"_ns + pkBaseDomain);
+      if (NS_SUCCEEDED(rv)) {
+        overriddenFingerprintingSettings =
+            nsRFPService::GetOverriddenFingerprintingSettingsForURI(
+                firstPartyURI, uri);
+        if (overriddenFingerprintingSettings.isSome()) {
+          overriddenFingerprintingSettingsArg.emplace(
+              uint64_t(overriddenFingerprintingSettings.ref()));
+        }
+      }
+    }
+  } else if (!principal->OriginAttributesRef().mFirstPartyDomain.IsEmpty()) {
+    // Using the first party domain to know the context of the service worker.
+    // We will run into here if FirstPartyIsolation is enabled. In this case,
+    // the PartitionKey won't get populated.
+    nsCOMPtr<nsIURI> firstPartyURI;
+    // Because the service worker is only available in secure contexts, so we
+    // don't need to consider http and only use https as scheme to create
+    // the first-party URI
+    rv = NS_NewURI(
+        getter_AddRefs(firstPartyURI),
+        u"https://"_ns + principal->OriginAttributesRef().mFirstPartyDomain);
+    if (NS_SUCCEEDED(rv)) {
+      // If the first party domain is not a third-party domain, the service
+      // worker is running in first-party context.
+      bool isThirdParty;
+      rv = principal->IsThirdPartyURI(firstPartyURI, &isThirdParty);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      overriddenFingerprintingSettings =
+          isThirdParty
+              ? nsRFPService::GetOverriddenFingerprintingSettingsForURI(
+                    firstPartyURI, uri)
+              : nsRFPService::GetOverriddenFingerprintingSettingsForURI(
+                    uri, nullptr);
+
+      if (overriddenFingerprintingSettings.isSome()) {
+        overriddenFingerprintingSettingsArg.emplace(
+            uint64_t(overriddenFingerprintingSettings.ref()));
+      }
+    }
   } else {
     net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+
+    // The service worker is for a first-party context, we can use the uri of
+    // the service worker as the first-party domain to get the fingerprinting
+    // protection overrides.
+    overriddenFingerprintingSettings =
+        nsRFPService::GetOverriddenFingerprintingSettingsForURI(uri, nullptr);
+
+    if (overriddenFingerprintingSettings.isSome()) {
+      overriddenFingerprintingSettingsArg.emplace(
+          uint64_t(overriddenFingerprintingSettings.ref()));
+    }
   }
 
   net::CookieJarSettingsArgs cjsData;
@@ -609,6 +679,7 @@ nsresult ServiceWorkerPrivate::Initialize() {
           "ShouldResistFingerprinting function for the ServiceWorker depends "
           "on this boolean and will also consider an explicit RFPTarget.",
           RFPTarget::IsAlwaysEnabledForPrecompute),
+      overriddenFingerprintingSettingsArg,
       // Origin trials are associated to a window, so it doesn't make sense on
       // service workers.
       OriginTrials(), std::move(serviceWorkerData), regInfo->AgentClusterId(),

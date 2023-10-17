@@ -232,6 +232,12 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
+  Maybe<uint64_t> overriddenFingerprintingSettingsArg;
+  if (loadInfo.mOverriddenFingerprintingSettings.isSome()) {
+    overriddenFingerprintingSettingsArg.emplace(
+        uint64_t(loadInfo.mOverriddenFingerprintingSettings.ref()));
+  }
+
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name, workerType,
       credentials, loadingPrincipalInfo, principalInfo,
@@ -239,7 +245,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       loadInfo.mUsingStorageAccess, cjsData, loadInfo.mDomain, isSecureContext,
       ipcClientInfo, loadInfo.mReferrerInfo, storageAllowed,
       AntiTrackingUtils::IsThirdPartyWindow(window, nullptr),
-      loadInfo.mShouldResistFingerprinting,
+      loadInfo.mShouldResistFingerprinting, overriddenFingerprintingSettingsArg,
       OriginTrials::FromWindow(nsGlobalWindowInner::Cast(window)),
       void_t() /* OptionalServiceWorkerData */, agentClusterId,
       remoteType.unwrap());

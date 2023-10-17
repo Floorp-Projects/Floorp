@@ -16236,6 +16236,7 @@ void Document::SendPageUseCounters() {
 }
 
 bool Document::RecomputeResistFingerprinting() {
+  mOverriddenFingerprintingSettings.reset();
   const bool previous = mShouldResistFingerprinting;
 
   RefPtr<BrowsingContext> opener =
@@ -16260,6 +16261,8 @@ bool Document::RecomputeResistFingerprinting() {
          mParentDocument->GetDocumentURI()->GetSpecOrDefault().get()));
     mShouldResistFingerprinting = mParentDocument->ShouldResistFingerprinting(
         RFPTarget::IsAlwaysEnabledForPrecompute);
+    mOverriddenFingerprintingSettings =
+        mParentDocument->mOverriddenFingerprintingSettings;
   } else if (opener && shouldInheritFrom(opener->GetDocument())) {
     MOZ_LOG(
         nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
@@ -16270,16 +16273,34 @@ bool Document::RecomputeResistFingerprinting() {
     mShouldResistFingerprinting =
         opener->GetDocument()->ShouldResistFingerprinting(
             RFPTarget::IsAlwaysEnabledForPrecompute);
+    mOverriddenFingerprintingSettings =
+        opener->GetDocument()->mOverriddenFingerprintingSettings;
+  } else if (nsContentUtils::IsChromeDoc(this)) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
+            ("Inside RecomputeResistFingerprinting with a ChromeDoc"));
+
+    mShouldResistFingerprinting = false;
+    mOverriddenFingerprintingSettings.reset();
+  } else if (mChannel) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
+            ("Inside RecomputeResistFingerprinting with URI %s",
+             GetDocumentURI() ? GetDocumentURI()->GetSpecOrDefault().get()
+                              : "null"));
+    mShouldResistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
+        mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+
+    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
+    mOverriddenFingerprintingSettings =
+        loadInfo->GetOverriddenFingerprintingSettings();
   } else {
-    bool chromeDoc = nsContentUtils::IsChromeDoc(this);
-    MOZ_LOG(
-        nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-        ("Inside RecomputeResistFingerprinting with URI %s ChromeDoc:%x",
-         GetDocumentURI() ? GetDocumentURI()->GetSpecOrDefault().get() : "null",
-         chromeDoc));
-    mShouldResistFingerprinting =
-        !chromeDoc && nsContentUtils::ShouldResistFingerprinting(
-                          mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
+            ("Inside RecomputeResistFingerprinting fallback case."));
+    // We still preserve the behavior in the fallback case. But, it means there
+    // might be some cases we haven't considered yet and we need to investigate
+    // them.
+    mShouldResistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
+        mChannel, RFPTarget::IsAlwaysEnabledForPrecompute);
+    mOverriddenFingerprintingSettings.reset();
   }
 
   MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,

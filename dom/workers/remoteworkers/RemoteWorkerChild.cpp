@@ -263,6 +263,12 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   info.mShouldResistFingerprinting = aData.shouldResistFingerprinting();
+  Maybe<RFPTarget> overriddenFingerprintingSettings;
+  if (aData.overriddenFingerprintingSettings().isSome()) {
+    overriddenFingerprintingSettings.emplace(
+        RFPTarget(aData.overriddenFingerprintingSettings().ref()));
+  }
+  info.mOverriddenFingerprintingSettings = overriddenFingerprintingSettings;
   net::CookieJarSettings::Deserialize(aData.cookieJarSettings(),
                                       getter_AddRefs(info.mCookieJarSettings));
   info.mCookieJarSettingsArgs = aData.cookieJarSettings();

@@ -80,6 +80,8 @@ struct RemoteWorkerData
 
   bool shouldResistFingerprinting;
 
+  uint64_t? overriddenFingerprintingSettings;
+
   OriginTrials originTrials;
 
   OptionalServiceWorkerData serviceWorkerData;
