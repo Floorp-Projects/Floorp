@@ -212,17 +212,28 @@ class DefaultAddonUpdater(
         logger.info("onUpdatePermissionRequest $current")
 
         val shouldGrantWithoutPrompt = Addon.localizePermissions(newPermissions, applicationContext).isEmpty()
-        val shouldShowNotification =
+        val shouldNotPrompt =
             updateStatusStorage.isPreviouslyAllowed(applicationContext, updated.id) || shouldGrantWithoutPrompt
 
-        onPermissionsGranted(shouldShowNotification)
+        // When the extension update doesn't have new permissions that the user should grant with a prompt,
+        // we allow the update to continue.
+        //
+        // Otherwise, the permission request will first be user-cancelled because we return `false` below
+        // but we create an Android notification right after, which is responsible for prompting the user.
+        // When the user allows the new permissions in the Android notification, the extension update is
+        // triggered again and - since the permissions have been previously allowed - there is no new
+        // permissions that the user should grant and so we allow the update to continue. At this point,
+        // the extension is fully updated.
+        onPermissionsGranted(shouldNotPrompt)
 
-        if (!shouldShowNotification) {
+        if (shouldNotPrompt) {
+            // Update has been completed at this point.
+            updateStatusStorage.markAsUnallowed(applicationContext, updated.id)
+        } else {
+            // We create the Android notification here.
             val notificationId = NotificationHandlerService.getNotificationId(applicationContext, updated.id)
             val notification = createNotification(updated, newPermissions, notificationId)
             notificationsDelegate.notify(notificationId = notificationId, notification = notification)
-        } else {
-            updateStatusStorage.markAsUnallowed(applicationContext, updated.id)
         }
     }
 
