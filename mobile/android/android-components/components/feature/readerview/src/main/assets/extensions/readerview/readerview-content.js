@@ -44,14 +44,12 @@ function connectNativePort() {
   let port = browser.runtime.connectNative("mozacReaderview");
   port.onMessage.addListener((message) => {
      switch (message.action) {
-       case 'show':
-         browser.runtime.sendMessage({action: "show", options: message.value, url: location.href});
-
+       case 'cachePage':
          let serializedDoc = new XMLSerializer().serializeToString(document);
-         browser.runtime.sendMessage({action: "addSerializedDoc", doc: serializedDoc});
+         browser.runtime.sendMessage({action: "addSerializedDoc", doc: serializedDoc, id: message.id});
          break;
        case 'checkReaderState':
-         port.postMessage({baseUrl: browser.runtime.getURL("/"), readerable: isReaderable()});
+         port.postMessage({type: 'checkReaderState', baseUrl: browser.runtime.getURL("/"), readerable: isReaderable()});
          break;
        default:
          console.error(`Received unsupported action ${message.action}`);

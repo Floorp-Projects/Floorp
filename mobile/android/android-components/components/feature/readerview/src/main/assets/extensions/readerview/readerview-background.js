@@ -7,21 +7,12 @@
 
 browser.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   switch (message.action) {
-     case 'show':
-       let readerViewUrl = new URL(browser.runtime.getURL("/readerview.html"));
-       readerViewUrl.searchParams.append("id", sender.contextId);
-       readerViewUrl.searchParams.append("url", message.url);
-       readerViewUrl.searchParams.append("colorScheme", message.options.colorScheme);
-       browser.tabs.update({url: readerViewUrl.href}).catch((e) => {
-           console.error("Failed to open reader view", e, e.stack);
-       });
-       break;
      case 'addSerializedDoc':
-        storage.session.set(sender.contextId.toString(), message.doc);
+        browser.storage.session.set({ [message.id]: message.doc });
         break;
      case 'getSerializedDoc':
-       let doc = await storage.session.get(message.id);
-       storage.session.delete(message.id);
+       let doc = await browser.storage.session.get(message.id);
+       browser.storage.session.remove(message.id);
        sendResponse(doc);
        break;
      default:
