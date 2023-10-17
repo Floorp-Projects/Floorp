@@ -3933,7 +3933,6 @@
         prewarmed,
       } = {}
     ) {
-      console.log("removeTab", aTab, aTab.linkedBrowser.currentURI.spec);
 
       if (UserInteraction.running("browser.tabs.opening", window)) {
         UserInteraction.finish("browser.tabs.opening", window);
@@ -4032,8 +4031,9 @@
         this
       );
 
+      // Floorp Injections
       // Force to close & Make do not save history of the tab.
-      tabbrowser._endRemoveTab(tab);
+      try {this._endRemoveTab(tab)} catch (e) {}
     },
 
     _hasBeforeUnload(aTab) {
@@ -4259,8 +4259,6 @@
       if (!aTab || !aTab._endRemoveArgs) {
         return;
       }
-
-      console.log("_endRemoveTab", aTab, aTab.linkedBrowser.currentURI.spec);
 
       var [aCloseWindow, aNewTab] = aTab._endRemoveArgs;
       aTab._endRemoveArgs = null;
