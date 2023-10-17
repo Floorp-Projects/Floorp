@@ -28,8 +28,9 @@
       add_task(async function ensureBrowsersLoaded() {
         const triggeringPrincipal = document.nodePrincipal;
         for (let b of document.querySelectorAll("browser[remote=true]")) {
+          let listener;
           let loaded = new Promise(resolve => {
-            b.addProgressListener({
+            listener = {
               onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
                 info(`Got state change for ${b.parentNode.id}: ${aStateFlags}, ${aStatus}`);
                 if (
@@ -44,7 +45,8 @@
                 "nsIWebProgressListener",
                 "nsISupportsWeakReference",
               ]),
-            });
+            };
+            b.addProgressListener(listener);
           });
           b.loadURI(null /*blank*/, { triggeringPrincipal });
           await loaded;
