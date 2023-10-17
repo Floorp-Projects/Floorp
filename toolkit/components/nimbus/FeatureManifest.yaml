@@ -948,6 +948,16 @@ fullPageTranslationAutomaticPopup:
       type: boolean
       setPref: browser.translations.automaticallyPopup
 
+addAnImageInPDF:
+  description: Add an image in an existing pdf.
+  owner: cdenizet@mozilla.com
+  hasExposure: false
+  variables:
+    boolean:
+      description: Set to true to enable the add-an-image feature
+      type: boolean
+      setPref: pdfjs.enableStampEditor
+
 # fxms-message-* placeholder feature ids
 #
 # https://docs.google.com/spreadsheets/d/119YbeKStLL0Fg2QkK-yN93mrtD1rlneGZGTl_jAwtyw/edit#gid=1903378504
