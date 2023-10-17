@@ -210,7 +210,7 @@ bool PointerEvent::IsPrimary() { return mEvent->AsPointerEvent()->mIsPrimary; }
 bool PointerEvent::EnableGetCoalescedEvents(JSContext* aCx, JSObject* aGlobal) {
   return !StaticPrefs::
              dom_w3c_pointer_events_getcoalescedevents_only_in_securecontext() ||
-         JS::GetIsSecureContext(js::GetContextRealm(aCx));
+         IsSecureContextOrObjectIsFromSecureContext(aCx, aGlobal);
 }
 
 void PointerEvent::GetCoalescedEvents(
