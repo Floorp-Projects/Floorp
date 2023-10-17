@@ -269,15 +269,17 @@ class NonNativeInputTrack final : public DeviceInputTrack {
  private:
   ~NonNativeInputTrack() = default;
 
-  // Graph driver thread only.
-  bool CheckGraphDriverChanged();
-
   // Graph thread only.
   RefPtr<AudioInputSource> mAudioSource;
   AudioInputSource::Id mSourceIdNumber;
 
-  // Graph driver thread only.
-  std::thread::id mGraphDriverThreadId;
+#ifdef DEBUG
+  // Graph thread only.
+  bool HasGraphThreadChanged();
+  // Graph thread only.  Identifies a thread only between StartAudio()
+  // and StopAudio(), to track the thread used with mAudioSource.
+  std::thread::id mGraphThreadId;
+#endif
 };
 
 class AudioInputSourceListener : public AudioInputSource::EventListener {

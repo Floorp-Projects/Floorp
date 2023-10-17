@@ -127,8 +127,8 @@ void AudioInputSource::Stop() {
 AudioSegment AudioInputSource::GetAudioSegment(TrackTime aDuration,
                                                Consumer aConsumer) {
   if (aConsumer == Consumer::Changed) {
-    // Reset queue's consumer to avoid hitting the assertion for checking the
-    // consistency of mSPSCQueue's mConsumerId in Dequeue.
+    // Reset queue's consumer thread to acquire its mReadIndex on the new
+    // thread.
     mSPSCQueue.ResetConsumerThreadId();
   }
 

@@ -498,16 +498,9 @@ void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
     return;
   }
 
-  // GetAudioSegment only checks the given reader if DEBUG is defined.
-  AudioInputSource::Consumer consumer =
-#ifdef DEBUG
-      // If we are on GraphRunner, we should always be on the same thread.
-      mGraph->mGraphRunner || !CheckGraphDriverChanged()
-          ? AudioInputSource::Consumer::Same
-          : AudioInputSource::Consumer::Changed;
-#else
-      AudioInputSource::Consumer::Same;
-#endif
+  AudioInputSource::Consumer consumer = AudioInputSource::Consumer::Same;
+  // GraphRunner keeps the same thread.
+  MOZ_ASSERT(!HasGraphThreadChanged());
 
   AudioSegment data = mAudioSource->GetAudioSegment(delta, consumer);
   MOZ_ASSERT(data.GetDuration() == delta);
@@ -526,6 +519,9 @@ void NonNativeInputTrack::StartAudio(
   MOZ_ASSERT(aAudioInputSource->mDeviceId == mDeviceId);
 
   TRACK_GRAPH_LOG("StartAudio with source %p", aAudioInputSource.get());
+#ifdef DEBUG
+  mGraphThreadId = std::this_thread::get_id();
+#endif
   mAudioSource = std::move(aAudioInputSource);
   mAudioSource->Start();
 }
@@ -539,6 +535,9 @@ void NonNativeInputTrack::StopAudio() {
   }
   mAudioSource->Stop();
   mAudioSource = nullptr;
+#ifdef DEBUG
+  mGraphThreadId = std::thread::id();
+#endif
 }
 
 AudioInputType NonNativeInputTrack::DevicePreference() const {
@@ -583,16 +582,18 @@ AudioInputSource::Id NonNativeInputTrack::GenerateSourceId() {
   return mSourceIdNumber++;
 }
 
-bool NonNativeInputTrack::CheckGraphDriverChanged() {
-  MOZ_ASSERT(mGraph->CurrentDriver()->OnThread());
+#ifdef DEBUG
+bool NonNativeInputTrack::HasGraphThreadChanged() {
+  MOZ_ASSERT(mGraph->OnGraphThread());
 
   std::thread::id currentId = std::this_thread::get_id();
-  if (mGraphDriverThreadId == currentId) {
+  if (mGraphThreadId == currentId) {
     return false;
   }
-  mGraphDriverThreadId = currentId;
+  mGraphThreadId = currentId;
   return true;
 }
+#endif  // DEBUG
 
 AudioInputSourceListener::AudioInputSourceListener(NonNativeInputTrack* aOwner)
     : mOwner(aOwner) {}
