@@ -19,7 +19,9 @@ fun GeckoProductAnalysis?.toProductReviewState(isInitialAnalysis: Boolean = true
     this?.toProductReview(isInitialAnalysis) ?: ProductReviewState.Error.GenericError
 
 private fun GeckoProductAnalysis.toProductReview(isInitialAnalysis: Boolean): ProductReviewState =
-    if (productId == null) {
+    if (pageNotSupported) {
+        ProductReviewState.Error.UnsupportedProductTypeError
+    } else if (productId == null) {
         if (needsAnalysis) {
             ProductReviewState.NoAnalysisPresent()
         } else {

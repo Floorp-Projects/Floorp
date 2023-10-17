@@ -275,4 +275,15 @@ class ProductAnalysisMapperTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `WHEN page not supported is true THEN it is mapped to unsupported product error `() {
+        val actual = ProductAnalysisTestData.productAnalysis(
+            pageNotSupported = true,
+        ).toProductReviewState()
+
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.UnsupportedProductTypeError
+
+        assertEquals(expected, actual)
+    }
 }
