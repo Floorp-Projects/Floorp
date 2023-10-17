@@ -2983,6 +2983,23 @@ pictureinpicture.settings:
     expiry_version: "never"
     release_channel_collection: opt-out
 
+launch_on_login:
+  last_profile_disable:
+    objects: ["startup"]
+    description: >
+      Recorded when Launch on login is disabled because the
+      start with last profile setting has been disabled.
+    notification_emails:
+      - nalexander@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1858223
+    expiry_version: "never"
+    release_channel_collection: opt-out
+
 doh:
   evaluate_v2:
     methods: ["evaluate_v2"]
