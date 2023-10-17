@@ -477,6 +477,7 @@ browsertime-benchmark-wasm:
         by-subtest:
             wasm-godot: 1500
             wasm-godot-baseline: 1500
+            wasm-misc-baseline: 1500
             default: 900
     mozharness:
         extra-options:
