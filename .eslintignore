@@ -176,7 +176,6 @@ js/src/fuzz-tests/
 mobile/android/docs/geckoview/assets/js/search-data.json
 
 # Uses `#filter substitution`
-mobile/android/app/mobile.js
 mobile/android/app/geckoview-prefs.js
 
 # Not much JS to lint and non-standard at that
