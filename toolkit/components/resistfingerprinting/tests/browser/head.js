@@ -61,3 +61,167 @@ function promiseObserver(topic) {
     Services.obs.addObserver(obs, topic);
   });
 }
+
+/**
+ *
+ * Spawns a worker in the given browser and sends a callback function to it.
+ * The result of the callback function is returned as a Promise.
+ *
+ * @param {object} browser - The browser context to spawn the worker in.
+ * @param {Function} fn - The callback function to send to the worker.
+ * @returns {Promise} A Promise that resolves to the result of the callback function.
+ */
+function runFunctionInWorker(browser, fn) {
+  return SpecialPowers.spawn(browser, [fn.toString()], async callback => {
+    // Create a worker.
+    let worker = new content.Worker("worker.js");
+
+    // Send the callback to the worker.
+    return new content.Promise(resolve => {
+      worker.onmessage = e => {
+        resolve(e.data.result);
+      };
+
+      worker.postMessage({
+        callback,
+      });
+    });
+  });
+}
+
+const TEST_FIRST_PARTY_CONTEXT_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.net"
+  ) + "testPage.html";
+const TEST_THIRD_PARTY_CONTEXT_PAGE =
+  getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://example.com"
+  ) + "scriptExecPage.html";
+
+/**
+ * Executes provided callbacks in both first and third party contexts.
+ *
+ * @param {string} name - Name of the test.
+ * @param {Function} firstPartyCallback - The callback to be executed in the first-party context.
+ * @param {Function} thirdPartyCallback - The callback to be executed in the third-party context.
+ * @param {Function} [cleanupFunction] - A cleanup function to be called after the tests.
+ * @param {Array} [extraPrefs] - Optional. An array of preferences to be set before running the test.
+ */
+function runTestInFirstAndThirdPartyContexts(
+  name,
+  firstPartyCallback,
+  thirdPartyCallback,
+  cleanupFunction,
+  extraPrefs
+) {
+  add_task(async _ => {
+    info("Starting test `" + name + "' in first and third party contexts");
+
+    await SpecialPowers.flushPrefEnv();
+
+    if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
+      await SpecialPowers.pushPrefEnv({ set: extraPrefs });
+    }
+
+    info("Creating a new tab");
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TEST_FIRST_PARTY_CONTEXT_PAGE
+    );
+
+    info("Creating a 3rd party content and a 1st party popup");
+    let firstPartyPopupPromise = BrowserTestUtils.waitForNewTab(
+      gBrowser,
+      TEST_THIRD_PARTY_CONTEXT_PAGE,
+      true
+    );
+
+    let thirdPartyBC = await SpecialPowers.spawn(
+      tab.linkedBrowser,
+      [TEST_THIRD_PARTY_CONTEXT_PAGE],
+      async url => {
+        let ifr = content.document.createElement("iframe");
+
+        await new content.Promise(resolve => {
+          ifr.onload = resolve;
+
+          content.document.body.appendChild(ifr);
+          ifr.src = url;
+        });
+
+        content.open(url);
+
+        return ifr.browsingContext;
+      }
+    );
+    let firstPartyTab = await firstPartyPopupPromise;
+    let firstPartyBrowser = firstPartyTab.linkedBrowser;
+
+    info("Sending code to the 3rd party content and the 1st party popup");
+    let runningCallbackTask = async obj => {
+      return new content.Promise(resolve => {
+        content.postMessage({ callback: obj.callback }, "*");
+
+        content.addEventListener("message", function msg(event) {
+          // This is the event from above postMessage.
+          if (event.data.callback) {
+            return;
+          }
+
+          if (event.data.type == "finish") {
+            content.removeEventListener("message", msg);
+            resolve();
+            return;
+          }
+
+          if (event.data.type == "ok") {
+            ok(event.data.what, event.data.msg);
+            return;
+          }
+
+          if (event.data.type == "info") {
+            info(event.data.msg);
+            return;
+          }
+
+          ok(false, "Unknown message");
+        });
+      });
+    };
+
+    let firstPartyTask = SpecialPowers.spawn(
+      firstPartyBrowser,
+      [
+        {
+          callback: firstPartyCallback.toString(),
+        },
+      ],
+      runningCallbackTask
+    );
+
+    let thirdPartyTask = SpecialPowers.spawn(
+      thirdPartyBC,
+      [
+        {
+          callback: thirdPartyCallback.toString(),
+        },
+      ],
+      runningCallbackTask
+    );
+
+    await Promise.all([firstPartyTask, thirdPartyTask]);
+
+    info("Removing the tab");
+    BrowserTestUtils.removeTab(tab);
+    BrowserTestUtils.removeTab(firstPartyTab);
+  });
+
+  add_task(async _ => {
+    info("Cleaning up.");
+    if (cleanupFunction) {
+      await cleanupFunction();
+    }
+  });
+}
