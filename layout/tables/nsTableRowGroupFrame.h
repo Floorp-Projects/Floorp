@@ -33,8 +33,6 @@ struct TableRowGroupReflowInput;
  */
 class nsTableRowGroupFrame final : public nsContainerFrame,
                                    public nsILineIterator {
-  using TableRowGroupReflowInput = mozilla::TableRowGroupReflowInput;
-
  public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsTableRowGroupFrame)
@@ -315,8 +313,9 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   LogicalSides GetLogicalSkipSides() const override;
 
   void PlaceChild(nsPresContext* aPresContext,
-                  TableRowGroupReflowInput& aReflowInput, nsIFrame* aKidFrame,
-                  const ReflowInput& aKidReflowInput, mozilla::WritingMode aWM,
+                  mozilla::TableRowGroupReflowInput& aReflowInput,
+                  nsIFrame* aKidFrame, const ReflowInput& aKidReflowInput,
+                  mozilla::WritingMode aWM,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize& aContainerSize, ReflowOutput& aDesiredSize,
                   const nsRect& aOriginalKidRect,
@@ -335,7 +334,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
    * @param   aReflowInput current inline state
    */
   void ReflowChildren(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      TableRowGroupReflowInput& aReflowInput,
+                      mozilla::TableRowGroupReflowInput& aReflowInput,
                       nsReflowStatus& aStatus,
                       bool* aPageBreakBeforeEnd = nullptr);
 
