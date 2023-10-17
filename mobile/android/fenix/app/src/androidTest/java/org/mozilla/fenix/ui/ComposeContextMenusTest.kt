@@ -76,7 +76,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextOpenLinkNewTab() {
+    fun verifyOpenLinkNewTabContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val genericURL =
@@ -99,7 +99,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextOpenLinkPrivateTab() {
+    fun verifyOpenLinkInNewPrivateTabContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val genericURL =
@@ -121,7 +121,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextCopyLink() {
+    fun verifyCopyLinkContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val genericURL =
@@ -141,29 +141,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextCopyLinkNotDisplayedAfterApplied() {
-        val pageLinks = TestAssetHelper.getGenericAsset(mockWebServer, 4)
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 3)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(pageLinks.url) {
-            longClickPageObject(itemWithText("Link 3"))
-            verifyContextMenuForLocalHostLinks(genericURL.url)
-            clickContextMenuItem("Copy link")
-            verifySnackBarText("Link copied to clipboard")
-        }.openNavigationToolbar {
-        }.visitLinkFromClipboard {
-            verifyUrl(genericURL.url.toString())
-        }.openComposeTabDrawer(composeTestRule) {
-        }.openNewTab {
-        }
-        navigationToolbar {
-            verifyClipboardSuggestionsAreDisplayed(shouldBeDisplayed = false)
-        }
-    }
-
-    @Test
-    fun verifyContextShareLink() {
+    fun verifyShareLinkContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val genericURL =
@@ -182,7 +160,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextOpenImageNewTab() {
+    fun verifyOpenImageNewTabContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val imageResource =
@@ -201,7 +179,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextCopyImageLocation() {
+    fun verifyCopyImageLocationContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val imageResource =
@@ -221,7 +199,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextSaveImage() {
+    fun verifySaveImageContextMenuOptionTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val imageResource =
@@ -244,7 +222,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextMixedVariations() {
+    fun verifyContextMenuLinkVariationsTest() {
         val pageLinks =
             TestAssetHelper.getGenericAsset(mockWebServer, 4)
         val genericURL =
@@ -267,7 +245,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextMixedVariationsInPDFTest() {
+    fun verifyPDFContextMenuLinkVariationsTest() {
         val genericURL =
             TestAssetHelper.getGenericAsset(mockWebServer, 3)
 
@@ -287,7 +265,7 @@ class ComposeContextMenusTest {
     }
 
     @Test
-    fun verifyContextOpenLinkInAppTest() {
+    fun verifyOpenLinkInAppContextMenuOptionTest() {
         val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         navigationToolbar {

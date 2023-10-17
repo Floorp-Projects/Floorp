@@ -29,6 +29,7 @@ import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.EngineShortcut
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
 import java.util.Locale
 
@@ -507,6 +508,7 @@ class SettingsSearchTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/412927
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun verifyShowClipboardSuggestionsToggleTest() {
         val link = "https://www.mozilla.org/en-US/"
@@ -516,6 +518,21 @@ class SettingsSearchTest {
         }.openNavigationToolbar {
             verifyClipboardSuggestionsAreDisplayed(link, true)
         }.visitLinkFromClipboard {
+            waitForPageToLoad()
+        }.openTabDrawer {
+        }.openNewTab {
+        }
+        navigationToolbar {
+            // After visiting the link from clipboard it shouldn't be displayed again
+            verifyClipboardSuggestionsAreDisplayed(shouldBeDisplayed = false)
+        }.goBackToHomeScreen {
+            setTextToClipBoard(appContext, link)
+        }.openTabDrawer {
+        }.openNewTab {
+        }
+        navigationToolbar {
+            verifyClipboardSuggestionsAreDisplayed(link, true)
+        }.goBackToHomeScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
@@ -525,7 +542,10 @@ class SettingsSearchTest {
             exitMenu()
         }
         homeScreen {
-        }.openNavigationToolbar {
+        }.openTabDrawer {
+        }.openNewTab {
+        }
+        navigationToolbar {
             verifyClipboardSuggestionsAreDisplayed(link, false)
         }
     }

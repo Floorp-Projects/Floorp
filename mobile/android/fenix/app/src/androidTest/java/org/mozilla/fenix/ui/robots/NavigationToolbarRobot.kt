@@ -147,23 +147,6 @@ class NavigationToolbarRobot {
     class Transition {
         private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
-        fun goBackToWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            openEditURLView()
-            clearAddressBarButton().click()
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view")
-                        .textContains(""),
-                ).waitForExists(waitingTime),
-            )
-
-            goBackButton()
-
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
-        }
-
         fun enterURLAndEnterToBrowser(
             url: Uri,
             interact: BrowserRobot.() -> Unit,
@@ -298,8 +281,9 @@ class NavigationToolbarRobot {
             return BrowserRobot.Transition()
         }
 
-        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            goBackButton()
+        fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.pressBack()
+            mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
@@ -425,7 +409,6 @@ private fun tabsCounter() =
     mDevice.findObject(By.res("$packageName:id/counter_root"))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
 private fun clearAddressBarButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_clear_view")
-private fun goBackButton() = mDevice.pressBack()
 private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
 
