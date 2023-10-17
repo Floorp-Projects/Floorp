@@ -108,6 +108,9 @@ const invalidTests = [
 
   // Duplicate date.
   "2012-Apr-08 12/12/12",
+
+  // T instead of space between date and time
+  "2012-Apr-08T10:00:00",
 ];
 
 for (const testString of invalidTests) {
