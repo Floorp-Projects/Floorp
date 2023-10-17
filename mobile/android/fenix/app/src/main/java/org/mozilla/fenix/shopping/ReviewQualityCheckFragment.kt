@@ -16,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.lazyStore
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.shopping.di.ReviewQualityCheckMiddlewareProvider
 import org.mozilla.fenix.shopping.store.BottomSheetDismissSource
@@ -40,14 +40,14 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
     private var behavior: BottomSheetBehavior<View>? = null
     private val bottomSheetStateFeature =
         ViewBoundFeatureWrapper<ReviewQualityCheckBottomSheetStateFeature>()
-    private val store by lazy {
+    private val store by lazyStore { viewModelScope ->
         ReviewQualityCheckStore(
             middleware = ReviewQualityCheckMiddlewareProvider.provideMiddleware(
                 settings = requireComponents.settings,
                 browserStore = requireComponents.core.store,
                 appStore = requireComponents.appStore,
                 context = requireContext().applicationContext,
-                scope = lifecycleScope,
+                scope = viewModelScope,
             ),
         )
     }
