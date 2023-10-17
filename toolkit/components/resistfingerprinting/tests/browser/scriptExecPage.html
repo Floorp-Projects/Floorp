@@ -1,0 +1,37 @@
+<html>
+<head>
+  <title>A content page for executing script!</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/resistfingerprinting/tests/browser/testHelpers.js"></script>
+</head>
+<body>
+<h1>Here the content!</h1>
+<script>
+
+function info(msg) {
+  window.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  window.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = async function(e) {
+  if (!e.data.callback) {
+    return;
+  }
+  let data = e.data.callback;
+  let runnableStr = `(() => {return (${data});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+
+  await runnable.call(this, this, window);
+
+  window.postMessage({ type: "finish" }, "*");
+};
+
+</script>
+</body>
+</html>

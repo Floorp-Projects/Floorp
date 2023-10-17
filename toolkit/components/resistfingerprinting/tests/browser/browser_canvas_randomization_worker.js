@@ -16,33 +16,6 @@ const emptyPage =
  * canvas data is altered because of the canvas randomization.
  */
 
-/**
- *
- * Spawns a worker in the given browser and sends a callback function to it.
- * The result of the callback function is returned as a Promise.
- *
- * @param {object} browser - The browser context to spawn the worker in.
- * @param {Function} fn - The callback function to send to the worker.
- * @returns {Promise} A Promise that resolves to the result of the callback function.
- */
-function runFunctionInWorker(browser, fn) {
-  return SpecialPowers.spawn(browser, [fn.toString()], async callback => {
-    // Create a worker.
-    let worker = new content.Worker("worker.js");
-
-    // Send the callback to the worker.
-    return new content.Promise(resolve => {
-      worker.onmessage = e => {
-        resolve(e.data.result);
-      };
-
-      worker.postMessage({
-        callback,
-      });
-    });
-  });
-}
-
 var TEST_CASES = [
   {
     name: "CanvasRenderingContext2D.getImageData() with a offscreen canvas",

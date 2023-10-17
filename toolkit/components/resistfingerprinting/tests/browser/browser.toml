@@ -2,6 +2,9 @@
 support-files = [
   "empty.html",
   "head.js",
+  "scriptExecPage.html",
+  "serviceWorker.js",
+  "testHelpers.js",
   "testPage.html",
   "worker.js",
 ]
@@ -13,3 +16,9 @@ support-files = [
 ["browser_fingerprintingRemoteOverrides.js"]
 
 ["browser_fingerprinting_randomization_key.js"]
+
+["browser_fingerprintingWebCompat.js"]
+
+["browser_fpiServiceWorkers_fingerprinting.js"]
+
+["browser_serviceWorker_fingerprinting_webcompat.js"]
