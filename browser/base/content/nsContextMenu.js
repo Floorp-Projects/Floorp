@@ -986,14 +986,15 @@ class nsContextMenu {
     );
 
     // Showing "Copy Clean link" depends on whether the strip-on-share feature is enabled
-    // and the user is selecting a URL
+    // and whether we can strip anything.
     this.showItem(
       "context-stripOnShareLink",
       STRIP_ON_SHARE_ENABLED &&
         this.onLink &&
         !this.onMailtoLink &&
         !this.onTelLink &&
-        !this.onMozExtLink
+        !this.onMozExtLink &&
+        this.getStrippedLink()
     );
 
     let copyLinkSeparator = document.getElementById("context-sep-copylink");
@@ -2276,7 +2277,7 @@ class nsContextMenu {
   /**
    * Strips any known query params from the link URI.
    * @returns {nsIURI|null} - the stripped version of the URI,
-   * or the original URI if we could not strip any query parameter.
+   * or null if we could not strip any query parameter.
    *
    */
   getStrippedLink() {
@@ -2290,10 +2291,7 @@ class nsContextMenu {
       console.warn(`isLinkURIStrippable: ${e.message}`);
       return null;
     }
-
-    // If nothing can be stripped, we return the original URI
-    // so the feature can still be used.
-    return strippedLinkURI ?? this.linkURI;
+    return strippedLinkURI;
   }
 
   // Kept for addon compat
