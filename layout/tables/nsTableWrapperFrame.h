@@ -190,21 +190,21 @@ class nsTableWrapperFrame : public nsContainerFrame {
                             const mozilla::LogicalMargin& aCaptionMargin,
                             const mozilla::WritingMode aWM) const;
 
-  nsresult GetCaptionOrigin(mozilla::StyleCaptionSide,
-                            const mozilla::LogicalSize& aContainBlockSize,
-                            const mozilla::LogicalSize& aInnerSize,
-                            const mozilla::LogicalSize& aCaptionSize,
-                            mozilla::LogicalMargin& aCaptionMargin,
-                            mozilla::LogicalPoint& aOrigin,
-                            mozilla::WritingMode aWM);
+  void GetCaptionOrigin(mozilla::StyleCaptionSide,
+                        const mozilla::LogicalSize& aContainBlockSize,
+                        const mozilla::LogicalSize& aInnerSize,
+                        const mozilla::LogicalSize& aCaptionSize,
+                        mozilla::LogicalMargin& aCaptionMargin,
+                        mozilla::LogicalPoint& aOrigin,
+                        mozilla::WritingMode aWM) const;
 
-  nsresult GetInnerOrigin(const MaybeCaptionSide&,
-                          const mozilla::LogicalSize& aContainBlockSize,
-                          const mozilla::LogicalSize& aCaptionSize,
-                          const mozilla::LogicalMargin& aCaptionMargin,
-                          const mozilla::LogicalSize& aInnerSize,
-                          mozilla::LogicalPoint& aOrigin,
-                          mozilla::WritingMode aWM);
+  void GetInnerOrigin(const MaybeCaptionSide&,
+                      const mozilla::LogicalSize& aContainBlockSize,
+                      const mozilla::LogicalSize& aCaptionSize,
+                      const mozilla::LogicalMargin& aCaptionMargin,
+                      const mozilla::LogicalSize& aInnerSize,
+                      mozilla::LogicalPoint& aOrigin,
+                      mozilla::WritingMode aWM) const;
 
   // Create and init the child reflow input, using passed-in aChildRI, so that
   // caller can use it after we return.

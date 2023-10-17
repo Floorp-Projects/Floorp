@@ -143,7 +143,7 @@ void nsTableRowGroupFrame::AddDeletedRowIndex(int32_t aDeletedRowStoredIndex) {
   return tableFrame->AddDeletedRowIndex(aDeletedRowStoredIndex);
 }
 
-nsresult nsTableRowGroupFrame::InitRepeatedFrame(
+void nsTableRowGroupFrame::InitRepeatedFrame(
     nsTableRowGroupFrame* aHeaderFooterFrame) {
   nsTableRowFrame* copyRowFrame = GetFirstRow();
   nsTableRowFrame* originalRowFrame = aHeaderFooterFrame->GetFirstRow();
@@ -172,8 +172,6 @@ nsresult nsTableRowGroupFrame::InitRepeatedFrame(
     originalRowFrame = originalRowFrame->GetNextRow();
     copyRowFrame = copyRowFrame->GetNextRow();
   }
-
-  return NS_OK;
 }
 
 // Handle the child-traversal part of DisplayGenericTablePart
@@ -1052,12 +1050,12 @@ static nsTableRowFrame* GetRowBefore(nsTableRowFrame& aStartRow,
   return rowBefore;
 }
 
-nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
-                                             ReflowOutput& aDesiredSize,
-                                             const ReflowInput& aReflowInput,
-                                             nsTableFrame* aTableFrame,
-                                             nsReflowStatus& aStatus,
-                                             bool aRowForcedPageBreak) {
+void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
+                                         ReflowOutput& aDesiredSize,
+                                         const ReflowInput& aReflowInput,
+                                         nsTableFrame* aTableFrame,
+                                         nsReflowStatus& aStatus,
+                                         bool aRowForcedPageBreak) {
   MOZ_ASSERT(aPresContext->IsPaginated(),
              "SplitRowGroup currently supports only paged media");
 
@@ -1310,7 +1308,6 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
     // of the page anymore.
     isTopOfPage = isTopOfPage && rowRect.YMost() == 0;
   }
-  return NS_OK;
 }
 
 /** Layout the entire row group.
