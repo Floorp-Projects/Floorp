@@ -1,8 +1,8 @@
 # `object`
 
 The `object` crate provides a unified interface to working with object files
-across platforms. It supports reading object files and executable files,
-and writing COFF/ELF/Mach-O object files and ELF/PE executable files.
+across platforms. It supports reading relocatable object files and executable files,
+and writing COFF/ELF/Mach-O/XCOFF relocatable object files and ELF/PE executable files.
 
 For reading files, it provides multiple levels of support:
 
@@ -11,7 +11,7 @@ For reading files, it provides multiple levels of support:
 * a higher level unified API for accessing common features of object files, such
   as sections and symbols ([example](crates/examples/src/objdump.rs))
 
-Supported file formats: ELF, Mach-O, Windows PE/COFF, Wasm, and Unix archive.
+Supported file formats: ELF, Mach-O, Windows PE/COFF, Wasm, XCOFF, and Unix archive.
 
 ## Example for unified read API
 ```rust
@@ -39,8 +39,8 @@ See [`crates/examples`](crates/examples) for more examples.
 Changes to MSRV are considered breaking changes. We are conservative about changing the MSRV,
 but sometimes are required to due to dependencies. The MSRV is:
 
-  * 1.52.0 for the `read` feature and its dependencies.
-  * 1.61.0 for the `write` feature and its dependencies.
+  * 1.60.0 for the `read` feature and its dependencies.
+  * 1.65.0 for other features.
 
 ## License
 

@@ -1,8 +1,7 @@
 //! A pure rust replacement for the [miniz](https://github.com/richgel999/miniz)
 //! DEFLATE/zlib encoder/decoder.
-//! The plan for this crate is to be used as a back-end for the
-//! [flate2](https://github.com/alexcrichton/flate2-rs) crate and eventually remove the
-//! need to depend on a C library.
+//! Used a rust back-end for the
+//! [flate2](https://github.com/alexcrichton/flate2-rs) crate.
 //!
 //! # Usage
 //! ## Simple compression/decompression:
@@ -175,7 +174,7 @@ impl DataFormat {
 /// `Result` alias for all miniz status codes both successful and failed.
 pub type MZResult = Result<MZStatus, MZError>;
 
-/// A structure containg the result of a call to the inflate or deflate streaming functions.
+/// A structure containing the result of a call to the inflate or deflate streaming functions.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct StreamResult {
     /// The number of bytes consumed from the input slice.

@@ -380,7 +380,7 @@ static void UpdateCodecSpecificInfo(webrtc::CodecSpecificInfo& aInfo,
       vp9.temporal_idx = webrtc::kNoTemporalIdx;
       vp9.temporal_up_switch = false;
       vp9.num_spatial_layers = 1;
-      vp9.end_of_picture = true;
+      aInfo.end_of_picture = true;
       vp9.gof_idx = webrtc::kNoGofIdx;
       vp9.width[0] = aSize.width;
       vp9.height[0] = aSize.height;

@@ -770,7 +770,7 @@ pub struct DwarfAux64 {
     pub x_nreloc: U64<BE>,
     /// Reserved.
     pub pad: u8,
-    /// Contains _AUX_SECT; Type of Auxillary entry.
+    /// Contains _AUX_SECT; Type of Auxiliary entry.
     pub x_auxtype: u8,
 }
 

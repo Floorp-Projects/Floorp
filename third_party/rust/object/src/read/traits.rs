@@ -210,7 +210,7 @@ pub trait Object<'data: 'file, 'file>: read::private::Sealed {
 
     /// The filename and GUID from the PE CodeView section
     #[inline]
-    fn pdb_info(&self) -> Result<Option<CodeView>> {
+    fn pdb_info(&self) -> Result<Option<CodeView<'_>>> {
         Ok(None)
     }
 
@@ -452,7 +452,7 @@ pub trait ObjectSymbol<'data>: read::private::Sealed {
     fn is_local(&self) -> bool;
 
     /// Symbol flags that are specific to each file format.
-    fn flags(&self) -> SymbolFlags<SectionIndex>;
+    fn flags(&self) -> SymbolFlags<SectionIndex, SymbolIndex>;
 }
 
 /// An iterator for files that don't have dynamic relocations.

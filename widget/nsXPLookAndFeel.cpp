@@ -490,8 +490,6 @@ static constexpr struct {
      widget::ThemeChangeKind::Style},
     {"widget.windows.uwp-system-colors.highlight-accent"_ns,
      widget::ThemeChangeKind::Style},
-    {"widget.windows.titlebar-accent.enabled"_ns,
-     widget::ThemeChangeKind::Style},
     // Affects env().
     {"layout.css.prefers-color-scheme.content-override"_ns,
      widget::ThemeChangeKind::Style},
@@ -508,6 +506,7 @@ static constexpr struct {
     {"dom.element.popover.enabled"_ns},
     {"mathml.legacy_mathvariant_attribute.disabled"_ns},
     {"layout.css.always_underline_links"_ns},
+    {"browser.theme.windows.accent-color-in-tabs.enabled"_ns},
 };
 
 // Read values from the user's preferences.

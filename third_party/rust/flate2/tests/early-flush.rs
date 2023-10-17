@@ -1,5 +1,3 @@
-extern crate flate2;
-
 use std::io::{Read, Write};
 
 use flate2::read::GzDecoder;

@@ -276,6 +276,11 @@ fn parse_relocation<Elf: FileHeader>(
             elf::R_BPF_64_32 => (RelocationKind::Absolute, 32),
             r_type => (RelocationKind::Elf(r_type), 0),
         },
+        elf::EM_CSKY => match reloc.r_type(endian, false) {
+            elf::R_CKCORE_ADDR32 => (RelocationKind::Absolute, 32),
+            elf::R_CKCORE_PCREL32 => (RelocationKind::Relative, 32),
+            r_type => (RelocationKind::Elf(r_type), 0),
+        },
         elf::EM_386 => match reloc.r_type(endian, false) {
             elf::R_386_32 => (RelocationKind::Absolute, 32),
             elf::R_386_PC32 => (RelocationKind::Relative, 32),

@@ -40,9 +40,10 @@ pub struct Decompress {
     inner: Inflate,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 /// Values which indicate the form of flushing to be used when compressing
 /// in-memory data.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[non_exhaustive]
 pub enum FlushCompress {
     /// A typical parameter for passing to compression/decompression functions,
     /// this indicates that the underlying stream to decide how much data to
@@ -80,14 +81,12 @@ pub enum FlushCompress {
     /// The return value may indicate that the stream is not yet done and more
     /// data has yet to be processed.
     Finish = ffi::MZ_FINISH as isize,
-
-    #[doc(hidden)]
-    _Nonexhaustive,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 /// Values which indicate the form of flushing to be used when
 /// decompressing in-memory data.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[non_exhaustive]
 pub enum FlushDecompress {
     /// A typical parameter for passing to compression/decompression functions,
     /// this indicates that the underlying stream to decide how much data to
@@ -108,9 +107,6 @@ pub enum FlushDecompress {
     /// The return value may indicate that the stream is not yet done and more
     /// data has yet to be processed.
     Finish = ffi::MZ_FINISH as isize,
-
-    #[doc(hidden)]
-    _Nonexhaustive,
 }
 
 /// The inner state for an error when decompressing
@@ -215,11 +211,6 @@ impl Compress {
     ///
     /// If `window_bits` does not fall into the range 9 ..= 15,
     /// `new_with_window_bits` will panic.
-    ///
-    /// # Note
-    ///
-    /// This constructor is only available when the `zlib` feature is used.
-    /// Other backends currently do not support custom window bits.
     #[cfg(feature = "any_zlib")]
     pub fn new_with_window_bits(
         level: Compression,
@@ -247,11 +238,6 @@ impl Compress {
     ///
     /// If `window_bits` does not fall into the range 9 ..= 15,
     /// `new_with_window_bits` will panic.
-    ///
-    /// # Note
-    ///
-    /// This constructor is only available when the `zlib` feature is used.
-    /// Other backends currently do not support gzip headers for Compress.
     #[cfg(feature = "any_zlib")]
     pub fn new_gzip(level: Compression, window_bits: u8) -> Compress {
         assert!(
@@ -362,7 +348,7 @@ impl Compress {
         unsafe {
             let before = self.total_out();
             let ret = {
-                let ptr = output.as_mut_ptr().offset(len as isize);
+                let ptr = output.as_mut_ptr().add(len);
                 let out = slice::from_raw_parts_mut(ptr, cap - len);
                 self.compress(input, out, flush)
             };
@@ -393,11 +379,6 @@ impl Decompress {
     ///
     /// If `window_bits` does not fall into the range 9 ..= 15,
     /// `new_with_window_bits` will panic.
-    ///
-    /// # Note
-    ///
-    /// This constructor is only available when the `zlib` feature is used.
-    /// Other backends currently do not support custom window bits.
     #[cfg(feature = "any_zlib")]
     pub fn new_with_window_bits(zlib_header: bool, window_bits: u8) -> Decompress {
         assert!(
@@ -418,11 +399,6 @@ impl Decompress {
     ///
     /// If `window_bits` does not fall into the range 9 ..= 15,
     /// `new_with_window_bits` will panic.
-    ///
-    /// # Note
-    ///
-    /// This constructor is only available when the `zlib` feature is used.
-    /// Other backends currently do not support gzip headers for Decompress.
     #[cfg(feature = "any_zlib")]
     pub fn new_gzip(window_bits: u8) -> Decompress {
         assert!(
@@ -503,7 +479,7 @@ impl Decompress {
         unsafe {
             let before = self.total_out();
             let ret = {
-                let ptr = output.as_mut_ptr().offset(len as isize);
+                let ptr = output.as_mut_ptr().add(len);
                 let out = slice::from_raw_parts_mut(ptr, cap - len);
                 self.decompress(input, out, flush)
             };

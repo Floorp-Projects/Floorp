@@ -517,7 +517,6 @@ impl CompressorOxide {
 impl Default for CompressorOxide {
     /// Initialize the compressor with a level of 4, zlib wrapper and
     /// the default strategy.
-    #[inline(always)]
     fn default() -> Self {
         CompressorOxide {
             lz: LZOxide::new(),

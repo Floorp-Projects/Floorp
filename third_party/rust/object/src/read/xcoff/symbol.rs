@@ -5,9 +5,9 @@ use core::marker::PhantomData;
 use core::str;
 
 use crate::endian::{BigEndian as BE, U32Bytes};
-use crate::pod::Pod;
+use crate::pod::{bytes_of, Pod};
 use crate::read::util::StringTable;
-use crate::{bytes_of, xcoff, Object, ObjectSection, SectionKind};
+use crate::xcoff;
 
 use crate::read::{
     self, Bytes, Error, ObjectSymbol, ObjectSymbolTable, ReadError, ReadRef, Result, SectionIndex,
@@ -95,10 +95,10 @@ where
         self.get::<Xcoff::Symbol>(index, 0)
     }
 
-    /// Return the file auxiliary symbol.
-    pub fn aux_file(&self, index: usize) -> Result<&'data Xcoff::FileAux> {
+    /// Return a file auxiliary symbol.
+    pub fn aux_file(&self, index: usize, offset: usize) -> Result<&'data Xcoff::FileAux> {
         debug_assert!(self.symbol(index)?.has_aux_file());
-        let aux_file = self.get::<Xcoff::FileAux>(index, 1)?;
+        let aux_file = self.get::<Xcoff::FileAux>(index, offset)?;
         if let Some(aux_type) = aux_file.x_auxtype() {
             if aux_type != xcoff::AUX_FILE {
                 return Err(Error("Invalid index for file auxiliary symbol."));
@@ -145,7 +145,6 @@ pub type XcoffSymbolTable64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug, Clone, Copy)]
 pub struct XcoffSymbolTable<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {
@@ -193,7 +192,6 @@ pub type XcoffSymbolIterator64<'data, 'file, R = &'data [u8]> =
 /// An iterator over the symbols of an `XcoffFile`.
 pub struct XcoffSymbolIterator<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {
@@ -240,7 +238,6 @@ pub type XcoffSymbol64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug, Clone, Copy)]
 pub struct XcoffSymbol<'data, 'file, Xcoff, R = &'data [u8]>
 where
-    'data: 'file,
     Xcoff: FileHeader,
     R: ReadRef<'data>,
 {
@@ -264,7 +261,14 @@ impl<'data, 'file, Xcoff: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
     }
 
     fn name_bytes(&self) -> Result<&'data [u8]> {
-        self.symbol.name(self.symbols.strings)
+        if self.symbol.has_aux_file() {
+            // By convention the file name is in the first auxiliary entry.
+            self.symbols
+                .aux_file(self.index.0, 1)?
+                .fname(self.symbols.strings)
+        } else {
+            self.symbol.name(self.symbols.strings)
+        }
     }
 
     fn name(&self) -> Result<&'data str> {
@@ -283,7 +287,8 @@ impl<'data, 'file, Xcoff: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
             | xcoff::C_HIDEXT
             | xcoff::C_FCN
             | xcoff::C_BLOCK
-            | xcoff::C_STAT => self.symbol.n_value().into(),
+            | xcoff::C_STAT
+            | xcoff::C_INFO => self.symbol.n_value().into(),
             _ => 0,
         }
     }
@@ -300,32 +305,46 @@ impl<'data, 'file, Xcoff: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
             {
                 let sym_type = aux_csect.sym_type() & 0x07;
                 if sym_type == xcoff::XTY_SD || sym_type == xcoff::XTY_CM {
-                    aux_csect.x_scnlen()
-                } else {
-                    0
+                    return aux_csect.x_scnlen();
                 }
-            } else {
-                0
             }
-        } else {
-            0
         }
+        0
     }
 
     fn kind(&self) -> SymbolKind {
-        match self.symbol.n_sclass() {
-            xcoff::C_FILE => SymbolKind::File,
-            xcoff::C_NULL => SymbolKind::Null,
-            _ => self
+        if self.symbol.has_aux_csect() {
+            if let Ok(aux_csect) = self
                 .file
-                .section_by_index(SectionIndex((self.symbol.n_scnum() - 1) as usize))
-                .map(|section| match section.kind() {
-                    SectionKind::Data | SectionKind::UninitializedData => SymbolKind::Data,
-                    SectionKind::UninitializedTls | SectionKind::Tls => SymbolKind::Tls,
-                    SectionKind::Text => SymbolKind::Text,
-                    _ => SymbolKind::Unknown,
-                })
-                .unwrap_or(SymbolKind::Unknown),
+                .symbols
+                .aux_csect(self.index.0, self.symbol.n_numaux() as usize)
+            {
+                let sym_type = aux_csect.sym_type() & 0x07;
+                if sym_type == xcoff::XTY_SD || sym_type == xcoff::XTY_CM {
+                    return match aux_csect.x_smclas() {
+                        xcoff::XMC_PR | xcoff::XMC_GL => SymbolKind::Text,
+                        xcoff::XMC_RO | xcoff::XMC_RW | xcoff::XMC_TD | xcoff::XMC_BS => {
+                            SymbolKind::Data
+                        }
+                        xcoff::XMC_TL | xcoff::XMC_UL => SymbolKind::Tls,
+                        xcoff::XMC_DS | xcoff::XMC_TC0 | xcoff::XMC_TC => {
+                            // `Metadata` might be a better kind for these if we had it.
+                            SymbolKind::Data
+                        }
+                        _ => SymbolKind::Unknown,
+                    };
+                } else if sym_type == xcoff::XTY_LD {
+                    // A function entry point. Neither `Text` nor `Label` are a good fit for this.
+                    return SymbolKind::Text;
+                } else if sym_type == xcoff::XTY_ER {
+                    return SymbolKind::Unknown;
+                }
+            }
+        }
+        match self.symbol.n_sclass() {
+            xcoff::C_NULL => SymbolKind::Null,
+            xcoff::C_FILE => SymbolKind::File,
+            _ => SymbolKind::Unknown,
         }
     }
 
@@ -407,8 +426,29 @@ impl<'data, 'file, Xcoff: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
     }
 
     #[inline]
-    fn flags(&self) -> SymbolFlags<SectionIndex> {
-        SymbolFlags::None
+    fn flags(&self) -> SymbolFlags<SectionIndex, SymbolIndex> {
+        let mut x_smtyp = 0;
+        let mut x_smclas = 0;
+        let mut containing_csect = None;
+        if self.symbol.has_aux_csect() {
+            if let Ok(aux_csect) = self
+                .file
+                .symbols
+                .aux_csect(self.index.0, self.symbol.n_numaux() as usize)
+            {
+                x_smtyp = aux_csect.x_smtyp();
+                x_smclas = aux_csect.x_smclas();
+                if x_smtyp == xcoff::XTY_LD {
+                    containing_csect = Some(SymbolIndex(aux_csect.x_scnlen() as usize))
+                }
+            }
+        }
+        SymbolFlags::Xcoff {
+            n_sclass: self.symbol.n_sclass(),
+            x_smtyp,
+            x_smclas,
+            containing_csect,
+        }
     }
 }
 
@@ -536,6 +576,27 @@ pub trait FileAux: Debug + Pod {
     fn x_fname(&self) -> &[u8; 8];
     fn x_ftype(&self) -> u8;
     fn x_auxtype(&self) -> Option<u8>;
+
+    /// Parse the x_fname field, which may be an inline string or a string table offset.
+    fn fname<'data, R: ReadRef<'data>>(
+        &'data self,
+        strings: StringTable<'data, R>,
+    ) -> Result<&'data [u8]> {
+        let x_fname = self.x_fname();
+        if x_fname[0] == 0 {
+            // If the name starts with 0 then the last 4 bytes are a string table offset.
+            let offset = u32::from_be_bytes(x_fname[4..8].try_into().unwrap());
+            strings
+                .get(offset)
+                .read_error("Invalid XCOFF symbol name offset")
+        } else {
+            // The name is inline and padded with nulls.
+            Ok(match memchr::memchr(b'\0', x_fname) {
+                Some(end) => &x_fname[..end],
+                None => x_fname,
+            })
+        }
+    }
 }
 
 impl FileAux for xcoff::FileAux64 {

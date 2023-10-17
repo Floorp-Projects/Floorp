@@ -19,7 +19,6 @@ pub type MachOSegmentIterator64<'data, 'file, Endian = Endianness, R = &'data [u
 #[derive(Debug)]
 pub struct MachOSegmentIterator<'data, 'file, Mach, R = &'data [u8]>
 where
-    'data: 'file,
     Mach: MachHeader,
     R: ReadRef<'data>,
 {
@@ -53,7 +52,6 @@ pub type MachOSegment64<'data, 'file, Endian = Endianness, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct MachOSegment<'data, 'file, Mach, R = &'data [u8]>
 where
-    'data: 'file,
     Mach: MachHeader,
     R: ReadRef<'data>,
 {
@@ -160,7 +158,7 @@ pub trait Segment: Debug + Pod {
     type Endian: endian::Endian;
     type Section: Section<Endian = Self::Endian>;
 
-    fn from_command(command: LoadCommandData<Self::Endian>) -> Result<Option<(&Self, &[u8])>>;
+    fn from_command(command: LoadCommandData<'_, Self::Endian>) -> Result<Option<(&Self, &[u8])>>;
 
     fn cmd(&self, endian: Self::Endian) -> u32;
     fn cmdsize(&self, endian: Self::Endian) -> u32;
@@ -219,7 +217,7 @@ impl<Endian: endian::Endian> Segment for macho::SegmentCommand32<Endian> {
     type Endian = Endian;
     type Section = macho::Section32<Self::Endian>;
 
-    fn from_command(command: LoadCommandData<Self::Endian>) -> Result<Option<(&Self, &[u8])>> {
+    fn from_command(command: LoadCommandData<'_, Self::Endian>) -> Result<Option<(&Self, &[u8])>> {
         command.segment_32()
     }
 
@@ -263,7 +261,7 @@ impl<Endian: endian::Endian> Segment for macho::SegmentCommand64<Endian> {
     type Endian = Endian;
     type Section = macho::Section64<Self::Endian>;
 
-    fn from_command(command: LoadCommandData<Self::Endian>) -> Result<Option<(&Self, &[u8])>> {
+    fn from_command(command: LoadCommandData<'_, Self::Endian>) -> Result<Option<(&Self, &[u8])>> {
         command.segment_64()
     }
 

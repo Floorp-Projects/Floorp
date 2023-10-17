@@ -30,7 +30,11 @@ module.exports = async function (context, commands) {
     context.log.info("Cycle %d, starting the measure", count);
     if (expose_profiler === "true") {
       context.log.info("Custom profiler start!");
-      await commands.profiler.start();
+      if (context.options.browser === "firefox") {
+        await commands.profiler.start();
+      } else if (context.options.browser === "chrome") {
+        await commands.trace.start();
+      }
     }
     await commands.measure.start(url);
 
@@ -52,7 +56,11 @@ module.exports = async function (context, commands) {
     }
     if (expose_profiler === "true") {
       context.log.info("Custom profiler stop!");
-      await commands.profiler.stop();
+      if (context.options.browser === "firefox") {
+        await commands.profiler.stop();
+      } else if (context.options.browser === "chrome") {
+        await commands.trace.stop();
+      }
     }
     if (
       data == null &&

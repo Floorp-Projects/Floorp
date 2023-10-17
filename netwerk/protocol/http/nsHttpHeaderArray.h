@@ -226,6 +226,7 @@ inline bool nsHttpHeaderArray::IsSingletonHeader(const nsHttpAtom& header) {
          header == nsHttp::If_Modified_Since ||
          header == nsHttp::If_Unmodified_Since || header == nsHttp::From ||
          header == nsHttp::Location || header == nsHttp::Max_Forwards ||
+         header == nsHttp::GlobalPrivacyControl ||
          // Ignore-multiple-headers are singletons in the sense that they
          // shouldn't be merged.
          IsIgnoreMultipleHeader(header);

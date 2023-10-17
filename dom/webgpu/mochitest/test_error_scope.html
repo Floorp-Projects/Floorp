@@ -20,7 +20,11 @@
         const buffer = device.createBuffer({ size: 0, usage: 0 });
         const error = await device.popErrorScope();
 
-        isnot(error, null);
+        isnot(
+          error,
+          null,
+          "Attempt to createBuffer with size 0 and usage 0 should generate an error."
+        );
 
         try {
           await device.popErrorScope();

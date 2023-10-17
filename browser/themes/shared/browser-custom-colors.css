@@ -54,6 +54,7 @@
     --input-border-color: light-dark(color-mix(in srgb, currentColor 41%, transparent), #8f8f9d);
 
     --tab-selected-bgcolor: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
+    --tab-selected-textcolor: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
     --tab-icon-overlay-stroke: light-dark(rgb(255, 255, 255), rgb(66, 65, 77));
     --tab-icon-overlay-fill: light-dark(rgb(91, 91, 102), rgb(251, 251, 254));
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));

@@ -57,7 +57,8 @@
       "support_url": "http://example.com/support1.html",
       "contributions_url": "http://example.com/contribution1.html",
       "weekly_downloads": 3333,
-      "last_updated": "2010-02-01T14:04:05Z"
+      "last_updated": "2010-02-01T14:04:05Z",
+      "url": "https://addons.mozilla.org/en-US/firefox/addon/test1@tests.mozilla.org/"
     },
     {
       "name": "PASS",

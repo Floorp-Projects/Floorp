@@ -1,5 +1,5 @@
 #![warn(rust_2018_idioms)]
-#![cfg(feature = "full")]
+#![cfg(all(feature = "full", not(tokio_wasi)))] // WASI does not support all fs operations
 
 use tempfile::tempdir;
 use tokio::fs;

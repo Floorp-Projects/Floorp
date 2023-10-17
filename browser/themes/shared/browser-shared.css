@@ -163,6 +163,7 @@
 
 #navigator-toolbox {
   appearance: none;
+
   /* Toolbar / content area border */
   border-bottom: 1px solid var(--chrome-content-separator-color);
 

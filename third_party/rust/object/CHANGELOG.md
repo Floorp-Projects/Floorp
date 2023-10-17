@@ -2,6 +2,172 @@
 
 --------------------------------------------------------------------------------
 
+## 0.32.0
+
+Released 2023/08/12.
+
+### Breaking changes
+
+* Changed `read::elf::Note::name` to exclude all trailing null bytes.
+  [#549](https://github.com/gimli-rs/object/pull/549)
+
+* Updated dependencies, and changed some optional dependencies to use the `dep:`
+  feature syntax.
+  [#558](https://github.com/gimli-rs/object/pull/558)
+  [#569](https://github.com/gimli-rs/object/pull/569)
+
+### Changed
+
+* The minimum supported rust version for the `read` feature and its dependencies
+  has changed to 1.60.0.
+
+* The minimum supported rust version for other features has changed to 1.65.0.
+
+* Changed many definitions from `static` to `const`.
+  [#549](https://github.com/gimli-rs/object/pull/549)
+
+* Fixed Mach-O section alignment padding in `write::Object`.
+  [#553](https://github.com/gimli-rs/object/pull/553)
+
+* Changed `read::File` to an enum.
+  [#564](https://github.com/gimli-rs/object/pull/564)
+
+### Added
+
+* Added `elf::ELF_NOTE_GO`, `elf::NT_GO_BUILD_ID`, and `read::elf::Note::name_bytes`.
+  [#549](https://github.com/gimli-rs/object/pull/549)
+
+* Added `read::FileKind::CoffImport` and `read::coff::ImportFile`.
+  [#555](https://github.com/gimli-rs/object/pull/555)
+  [#556](https://github.com/gimli-rs/object/pull/556)
+
+* Added `Architecture::Csky` and basic ELF support for C-SKY.
+  [#561](https://github.com/gimli-rs/object/pull/561)
+
+* Added `read::elf::ElfSymbol::raw_symbol`.
+  [#562](https://github.com/gimli-rs/object/pull/562)
+
+--------------------------------------------------------------------------------
+
+## 0.30.4
+
+Released 2023/06/05.
+
+### Changed
+
+* Fixed Mach-O section alignment padding in `write::Object`.
+  [#553](https://github.com/gimli-rs/object/pull/553)
+
+--------------------------------------------------------------------------------
+
+## 0.31.1
+
+Released 2023/05/09.
+
+### Changed
+
+* Fixed address for global symbols in `read::wasm`.
+  [#539](https://github.com/gimli-rs/object/pull/539)
+
+* Fixed writing of alignment for empty ELF sections.
+  [#540](https://github.com/gimli-rs/object/pull/540)
+
+### Added
+
+* Added more `elf::GNU_PROPERTY_*` definitions.
+  Added `read::elf::note::gnu_properties`, `write::StandardSection::GnuProperty`,
+  and `write::Object::add_elf_gnu_property_u32`.
+  [#537](https://github.com/gimli-rs/object/pull/537)
+  [#541](https://github.com/gimli-rs/object/pull/541)
+
+* Added Mach-O support for `Architecture::Aarch64_Ilp32`.
+  [#542](https://github.com/gimli-rs/object/pull/542)
+  [#545](https://github.com/gimli-rs/object/pull/545)
+
+* Added `Architecture::Wasm64`.
+  [#543](https://github.com/gimli-rs/object/pull/543)
+
+--------------------------------------------------------------------------------
+
+## 0.31.0
+
+Released 2023/04/14.
+
+### Breaking changes
+
+* Added a type parameter on existing COFF types to support reading COFF `/bigobj` files.
+  [#502](https://github.com/gimli-rs/object/pull/502)
+
+* Changed PE symbols to support COFF `/bigobj`.
+  Changed `pe::IMAGE_SYM_*` to `i32`.
+  Changed `pe::ImageSymbolEx::section_number` to `I32Bytes`.
+  Deleted a number of methods from `pe::ImageSymbol`.
+  Use the `read::pe::ImageSymbol` trait instead.
+  [#502](https://github.com/gimli-rs/object/pull/502)
+
+* Changed `pe::Guid` to a single array, and added methods to read the individual fields.
+  [#502](https://github.com/gimli-rs/object/pull/502)
+
+* Added `Symbol` type parameter to `SymbolFlags` to support `SymbolFlags::Xcoff`.
+  [#527](https://github.com/gimli-rs/object/pull/527)
+
+### Changed
+
+* Fix alignment when reserving zero length sections in `write::elf::Write::reserve`.
+  [#514](https://github.com/gimli-rs/object/pull/514)
+
+* Validate command size in `read::macho::LoadCommandIterator`.
+  [#516](https://github.com/gimli-rs/object/pull/516)
+
+* Handle invalid alignment in `read::macho::MachoSection::align`.
+  [#516](https://github.com/gimli-rs/object/pull/516)
+
+* Accept `SymbolKind::Unknown` in `write::Object::macho_write`.
+  [#519](https://github.com/gimli-rs/object/pull/519)
+
+* Updated `wasmparser` dependency.
+  [#528](https://github.com/gimli-rs/object/pull/528)
+
+### Added
+
+* Added more `elf::EF_RISCV_*` definitions.
+  [#507](https://github.com/gimli-rs/object/pull/507)
+
+* Added `read::elf::SectionHeader::gnu_attributes` and associated types.
+  Added `.gnu.attributes` support to `write::elf::Writer`.
+  [#509](https://github.com/gimli-rs/object/pull/509)
+  [#525](https://github.com/gimli-rs/object/pull/525)
+
+* Added `write::Object::set_macho_build_version`.
+  [#524](https://github.com/gimli-rs/object/pull/524)
+
+* Added `read::FileKind::Xcoff32`, `read::FileKind::Xcoff64`, `read::XcoffFile`,
+  and associated types.
+  Added XCOFF support to `write::Object`.
+  [#469](https://github.com/gimli-rs/object/pull/469)
+  [#476](https://github.com/gimli-rs/object/pull/476)
+  [#477](https://github.com/gimli-rs/object/pull/477)
+  [#482](https://github.com/gimli-rs/object/pull/482)
+  [#484](https://github.com/gimli-rs/object/pull/484)
+  [#486](https://github.com/gimli-rs/object/pull/486)
+  [#527](https://github.com/gimli-rs/object/pull/527)
+
+* Added `read::FileKind::CoffBig`, `read::pe::CoffHeader` and `read::pe::ImageSymbol`.
+  [#502](https://github.com/gimli-rs/object/pull/502)
+
+* Added `elf::PT_GNU_PROPERTY`.
+  [#530](https://github.com/gimli-rs/object/pull/530)
+
+* Added `elf::ELFCOMPRESS_ZSTD`, `read::CompressionFormat::Zstandard`,
+  and Zstandard decompression in `read::CompressedData::decompress` using
+  the `ruzstd` crate.
+  [#532](https://github.com/gimli-rs/object/pull/532)
+
+* Added `read::elf::NoteIterator::new`.
+  [#533](https://github.com/gimli-rs/object/pull/533)
+
+--------------------------------------------------------------------------------
+
 ## 0.30.3
 
 Released 2023/01/23.
@@ -162,7 +328,7 @@ Released 2022/01/19.
 ### Changed
 
 * For the Mach-O support in `write::Object`, accept `RelocationKind::MachO` for all
-  architecures, and accept `RelocationKind::Absolute` for ARM64.
+  architectures, and accept `RelocationKind::Absolute` for ARM64.
   [#422](https://github.com/gimli-rs/object/pull/422)
 
 ### Added

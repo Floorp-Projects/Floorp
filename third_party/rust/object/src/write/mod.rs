@@ -25,9 +25,14 @@ pub mod elf;
 
 #[cfg(feature = "macho")]
 mod macho;
+#[cfg(feature = "macho")]
+pub use macho::MachOBuildVersion;
 
 #[cfg(feature = "pe")]
 pub mod pe;
+
+#[cfg(feature = "xcoff")]
+mod xcoff;
 
 mod string;
 pub use string::StringId;
@@ -41,7 +46,7 @@ pub struct Error(String);
 
 impl fmt::Display for Error {
     #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.0)
     }
 }
@@ -52,7 +57,7 @@ impl error::Error for Error {}
 /// The result type used within the write module.
 pub type Result<T> = result::Result<T, Error>;
 
-/// A writable object file.
+/// A writable relocatable object file.
 #[derive(Debug)]
 pub struct Object<'a> {
     format: BinaryFormat,
@@ -70,6 +75,8 @@ pub struct Object<'a> {
     pub mangling: Mangling,
     /// Mach-O "_tlv_bootstrap" symbol.
     tlv_bootstrap: Option<SymbolId>,
+    #[cfg(feature = "macho")]
+    macho_build_version: Option<MachOBuildVersion>,
 }
 
 impl<'a> Object<'a> {
@@ -88,6 +95,8 @@ impl<'a> Object<'a> {
             flags: FileFlags::None,
             mangling: Mangling::default(format, architecture),
             tlv_bootstrap: None,
+            #[cfg(feature = "macho")]
+            macho_build_version: None,
         }
     }
 
@@ -171,8 +180,10 @@ impl<'a> Object<'a> {
             .get(&section)
             .cloned()
             .unwrap_or_else(|| {
-                let (segment, name, kind) = self.section_info(section);
-                self.add_section(segment.to_vec(), name.to_vec(), kind)
+                let (segment, name, kind, flags) = self.section_info(section);
+                let id = self.add_section(segment.to_vec(), name.to_vec(), kind);
+                self.section_mut(id).flags = flags;
+                id
             })
     }
 
@@ -197,7 +208,7 @@ impl<'a> Object<'a> {
         let section = &self.sections[id.0];
         for standard_section in StandardSection::all() {
             if !self.standard_sections.contains_key(standard_section) {
-                let (segment, name, kind) = self.section_info(*standard_section);
+                let (segment, name, kind, _flags) = self.section_info(*standard_section);
                 if segment == &*section.segment && name == &*section.name && kind == section.kind {
                     self.standard_sections.insert(*standard_section, id);
                 }
@@ -210,7 +221,7 @@ impl<'a> Object<'a> {
     fn section_info(
         &self,
         section: StandardSection,
-    ) -> (&'static [u8], &'static [u8], SectionKind) {
+    ) -> (&'static [u8], &'static [u8], SectionKind, SectionFlags) {
         match self.format {
             #[cfg(feature = "coff")]
             BinaryFormat::Coff => self.coff_section_info(section),
@@ -218,6 +229,8 @@ impl<'a> Object<'a> {
             BinaryFormat::Elf => self.elf_section_info(section),
             #[cfg(feature = "macho")]
             BinaryFormat::MachO => self.macho_section_info(section),
+            #[cfg(feature = "xcoff")]
+            BinaryFormat::Xcoff => self.xcoff_section_info(section),
             _ => unimplemented!(),
         }
     }
@@ -234,8 +247,10 @@ impl<'a> Object<'a> {
             self.set_subsections_via_symbols();
             self.section_id(section)
         } else {
-            let (segment, name, kind) = self.subsection_info(section, name);
-            self.add_section(segment.to_vec(), name, kind)
+            let (segment, name, kind, flags) = self.subsection_info(section, name);
+            let id = self.add_section(segment.to_vec(), name, kind);
+            self.section_mut(id).flags = flags;
+            id
         };
         let offset = self.append_section_data(section_id, data, align);
         (section_id, offset)
@@ -243,7 +258,7 @@ impl<'a> Object<'a> {
 
     fn has_subsections_via_symbols(&self) -> bool {
         match self.format {
-            BinaryFormat::Coff | BinaryFormat::Elf => false,
+            BinaryFormat::Coff | BinaryFormat::Elf | BinaryFormat::Xcoff => false,
             BinaryFormat::MachO => true,
             _ => unimplemented!(),
         }
@@ -261,10 +276,10 @@ impl<'a> Object<'a> {
         &self,
         section: StandardSection,
         value: &[u8],
-    ) -> (&'static [u8], Vec<u8>, SectionKind) {
-        let (segment, section, kind) = self.section_info(section);
+    ) -> (&'static [u8], Vec<u8>, SectionKind, SectionFlags) {
+        let (segment, section, kind, flags) = self.section_info(section);
         let name = self.subsection_name(section, value);
-        (segment, name, kind)
+        (segment, name, kind, flags)
     }
 
     #[allow(unused_variables)]
@@ -506,6 +521,8 @@ impl<'a> Object<'a> {
             BinaryFormat::Elf => self.elf_fixup_relocation(&mut relocation)?,
             #[cfg(feature = "macho")]
             BinaryFormat::MachO => self.macho_fixup_relocation(&mut relocation),
+            #[cfg(feature = "xcoff")]
+            BinaryFormat::Xcoff => self.xcoff_fixup_relocation(&mut relocation),
             _ => unimplemented!(),
         };
         if addend != 0 {
@@ -574,6 +591,8 @@ impl<'a> Object<'a> {
             BinaryFormat::Elf => self.elf_write(buffer),
             #[cfg(feature = "macho")]
             BinaryFormat::MachO => self.macho_write(buffer),
+            #[cfg(feature = "xcoff")]
+            BinaryFormat::Xcoff => self.xcoff_write(buffer),
             _ => unimplemented!(),
         }
     }
@@ -607,6 +626,8 @@ pub enum StandardSection {
     TlsVariables,
     /// Common data. Only supported for Mach-O.
     Common,
+    /// Notes for GNU properties. Only supported for ELF.
+    GnuProperty,
 }
 
 impl StandardSection {
@@ -623,6 +644,7 @@ impl StandardSection {
             StandardSection::UninitializedTls => SectionKind::UninitializedTls,
             StandardSection::TlsVariables => SectionKind::TlsVariables,
             StandardSection::Common => SectionKind::Common,
+            StandardSection::GnuProperty => SectionKind::Note,
         }
     }
 
@@ -639,6 +661,7 @@ impl StandardSection {
             StandardSection::UninitializedTls,
             StandardSection::TlsVariables,
             StandardSection::Common,
+            StandardSection::GnuProperty,
         ]
     }
 }
@@ -717,7 +740,7 @@ impl<'a> Section<'a> {
         offset as u64
     }
 
-    /// Append unitialized data to a section.
+    /// Append uninitialized data to a section.
     ///
     /// Must not be called for sections that contain initialized data.
     pub fn append_bss(&mut self, size: u64, align: u64) -> u64 {
@@ -732,7 +755,7 @@ impl<'a> Section<'a> {
             self.size = offset;
         }
         self.size += size;
-        offset as u64
+        offset
     }
 
     /// Returns the section as-built so far.
@@ -806,7 +829,7 @@ pub struct Symbol {
     /// The section containing the symbol.
     pub section: SymbolSection,
     /// Symbol flags that are specific to each file format.
-    pub flags: SymbolFlags<SectionId>,
+    pub flags: SymbolFlags<SectionId, SymbolId>,
 }
 
 impl Symbol {
@@ -893,6 +916,8 @@ pub enum Mangling {
     Elf,
     /// Mach-O symbol mangling.
     MachO,
+    /// Xcoff symbol mangling.
+    Xcoff,
 }
 
 impl Mangling {
@@ -903,6 +928,7 @@ impl Mangling {
             (BinaryFormat::Coff, _) => Mangling::Coff,
             (BinaryFormat::Elf, _) => Mangling::Elf,
             (BinaryFormat::MachO, _) => Mangling::MachO,
+            (BinaryFormat::Xcoff, _) => Mangling::Xcoff,
             _ => Mangling::None,
         }
     }
@@ -910,7 +936,7 @@ impl Mangling {
     /// Return the prefix to use for global symbols.
     pub fn global_prefix(self) -> Option<u8> {
         match self {
-            Mangling::None | Mangling::Elf | Mangling::Coff => None,
+            Mangling::None | Mangling::Elf | Mangling::Coff | Mangling::Xcoff => None,
             Mangling::CoffI386 | Mangling::MachO => Some(b'_'),
         }
     }

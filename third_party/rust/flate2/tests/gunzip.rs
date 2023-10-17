@@ -1,5 +1,3 @@
-extern crate flate2;
-
 use flate2::read::GzDecoder;
 use flate2::read::MultiGzDecoder;
 use std::fs::File;
@@ -16,7 +14,7 @@ fn test_extract_success() {
         .unwrap()
         .read_to_end(&mut expected)
         .unwrap();
-    assert!(content == expected);
+    assert_eq!(content, expected);
 }
 //
 // test partial extraction of a multistream gzipped file

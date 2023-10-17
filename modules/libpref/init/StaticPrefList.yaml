@@ -1478,17 +1478,11 @@
 
 # Communicates the toolbar color to platform (for e.g., prefers-color-scheme).
 #
-# Returns whether the toolbar is dark (0), light (1), or system (2).
-#
-# Default to "light" on macOS / Windows, and "system" elsewhere. The theming
-# code sets it appropriately.
+# Returns whether the toolbar is dark (0), light (1), or system (2). The
+# theming code overrides it if appropriate.
 - name: browser.theme.toolbar-theme
   type: RelaxedAtomicUint32
-#if defined(XP_WIN) || defined(XP_MACOSX)
-  value: 1
-#else
   value: 2
-#endif
   mirror: always
 
 # Communicates the preferred content theme color to platform (for e.g.,
@@ -1500,6 +1494,14 @@
 - name: browser.theme.content-theme
   type: RelaxedAtomicUint32
   value: 2
+  mirror: always
+  rust: true
+
+# Whether the firefox titlebar respects the
+# -moz-windows-accent-color-in-titlebar setting on the tab strip.
+- name: browser.theme.windows.accent-color-in-tabs.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
   rust: true
 
@@ -4478,6 +4480,12 @@
 - name: dom.webgpu.enabled
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Is support for the Web GPU API enabled on DOM workers?
+- name: dom.webgpu.workers.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Are WebGPU indirect draws/dispatches enabled?
@@ -15491,13 +15499,6 @@
 # false for now since it can cause some contrast-with-background issues
 # specially with grey accents, see bug 1776588.
 - name: widget.windows.uwp-system-colors.highlight-accent
-  type: bool
-  value: false
-  mirror: always
-
-# Whether to use the accent color for the titlebar, if the relevant Windows
-# setting says so. See bug 1851155.
-- name: widget.windows.titlebar-accent.enabled
   type: bool
   value: false
   mirror: always

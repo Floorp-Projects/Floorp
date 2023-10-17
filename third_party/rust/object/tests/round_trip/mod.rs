@@ -1,7 +1,7 @@
 #![cfg(all(feature = "read", feature = "write"))]
 
 use object::read::{Object, ObjectSection, ObjectSymbol};
-use object::{read, write};
+use object::{read, write, SectionIndex};
 use object::{
     Architecture, BinaryFormat, Endianness, RelocationEncoding, RelocationKind, SectionKind,
     SymbolFlags, SymbolKind, SymbolScope, SymbolSection,
@@ -235,6 +235,7 @@ fn elf_any() {
         (Architecture::Arm, Endianness::Little),
         (Architecture::Avr, Endianness::Little),
         (Architecture::Bpf, Endianness::Little),
+        (Architecture::Csky, Endianness::Little),
         (Architecture::I386, Endianness::Little),
         (Architecture::X86_64, Endianness::Little),
         (Architecture::X86_64_X32, Endianness::Little),
@@ -448,4 +449,189 @@ fn macho_x86_64() {
     assert_eq!(symbol.address(), func1_offset);
     assert_eq!(symbol.name(), "_func1");
     assert_eq!(map.get(func1_offset - 1), None);
+}
+
+#[test]
+fn macho_any() {
+    for (arch, endian) in [
+        (Architecture::Aarch64, Endianness::Little),
+        (Architecture::Aarch64_Ilp32, Endianness::Little),
+        /* TODO:
+        (Architecture::Arm, Endianness::Little),
+        */
+        (Architecture::I386, Endianness::Little),
+        (Architecture::X86_64, Endianness::Little),
+        /* TODO:
+        (Architecture::PowerPc, Endianness::Big),
+        (Architecture::PowerPc64, Endianness::Big),
+        */
+    ]
+    .iter()
+    .copied()
+    {
+        let mut object = write::Object::new(BinaryFormat::MachO, arch, endian);
+
+        let section = object.section_id(write::StandardSection::Data);
+        object.append_section_data(section, &[1; 30], 4);
+        let symbol = object.section_symbol(section);
+
+        object
+            .add_relocation(
+                section,
+                write::Relocation {
+                    offset: 8,
+                    size: 32,
+                    kind: RelocationKind::Absolute,
+                    encoding: RelocationEncoding::Generic,
+                    symbol,
+                    addend: 0,
+                },
+            )
+            .unwrap();
+        if arch.address_size().unwrap().bytes() >= 8 {
+            object
+                .add_relocation(
+                    section,
+                    write::Relocation {
+                        offset: 16,
+                        size: 64,
+                        kind: RelocationKind::Absolute,
+                        encoding: RelocationEncoding::Generic,
+                        symbol,
+                        addend: 0,
+                    },
+                )
+                .unwrap();
+        }
+
+        let bytes = object.write().unwrap();
+        let object = read::File::parse(&*bytes).unwrap();
+        println!("{:?}", object.architecture());
+        assert_eq!(object.format(), BinaryFormat::MachO);
+        assert_eq!(object.architecture(), arch);
+        assert_eq!(object.endianness(), endian);
+
+        let mut sections = object.sections();
+
+        let data = sections.next().unwrap();
+        println!("{:?}", data);
+        assert_eq!(data.segment_name(), Ok(Some("__DATA")));
+        assert_eq!(data.name(), Ok("__data"));
+        assert_eq!(data.kind(), SectionKind::Data);
+
+        let mut relocations = data.relocations();
+
+        let (offset, relocation) = relocations.next().unwrap();
+        println!("{:?}", relocation);
+        assert_eq!(offset, 8);
+        assert_eq!(relocation.kind(), RelocationKind::Absolute);
+        assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
+        assert_eq!(relocation.size(), 32);
+        assert_eq!(relocation.addend(), 0);
+
+        if arch.address_size().unwrap().bytes() >= 8 {
+            let (offset, relocation) = relocations.next().unwrap();
+            println!("{:?}", relocation);
+            assert_eq!(offset, 16);
+            assert_eq!(relocation.kind(), RelocationKind::Absolute);
+            assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
+            assert_eq!(relocation.size(), 64);
+            assert_eq!(relocation.addend(), 0);
+        }
+    }
+}
+
+#[cfg(feature = "xcoff")]
+#[test]
+fn xcoff_powerpc() {
+    for arch in [Architecture::PowerPc, Architecture::PowerPc64] {
+        let mut object = write::Object::new(BinaryFormat::Xcoff, arch, Endianness::Big);
+
+        object.add_file_symbol(b"file.c".to_vec());
+
+        let text = object.section_id(write::StandardSection::Text);
+        object.append_section_data(text, &[1; 30], 4);
+
+        let func1_offset = object.append_section_data(text, &[1; 30], 4);
+        assert_eq!(func1_offset, 32);
+        let func1_symbol = object.add_symbol(write::Symbol {
+            name: b"func1".to_vec(),
+            value: func1_offset,
+            size: 32,
+            kind: SymbolKind::Text,
+            scope: SymbolScope::Linkage,
+            weak: false,
+            section: write::SymbolSection::Section(text),
+            flags: SymbolFlags::None,
+        });
+
+        object
+            .add_relocation(
+                text,
+                write::Relocation {
+                    offset: 8,
+                    size: 64,
+                    kind: RelocationKind::Absolute,
+                    encoding: RelocationEncoding::Generic,
+                    symbol: func1_symbol,
+                    addend: 0,
+                },
+            )
+            .unwrap();
+
+        let bytes = object.write().unwrap();
+        let object = read::File::parse(&*bytes).unwrap();
+        assert_eq!(object.format(), BinaryFormat::Xcoff);
+        assert_eq!(object.architecture(), arch);
+        assert_eq!(object.endianness(), Endianness::Big);
+
+        let mut sections = object.sections();
+
+        let text = sections.next().unwrap();
+        println!("{:?}", text);
+        let text_index = text.index().0;
+        assert_eq!(text.name(), Ok(".text"));
+        assert_eq!(text.kind(), SectionKind::Text);
+        assert_eq!(text.address(), 0);
+        assert_eq!(text.size(), 62);
+        assert_eq!(&text.data().unwrap()[..30], &[1; 30]);
+        assert_eq!(&text.data().unwrap()[32..62], &[1; 30]);
+
+        let mut symbols = object.symbols();
+
+        let mut symbol = symbols.next().unwrap();
+        println!("{:?}", symbol);
+        assert_eq!(symbol.name(), Ok("file.c"));
+        assert_eq!(symbol.address(), 0);
+        assert_eq!(symbol.kind(), SymbolKind::File);
+        assert_eq!(symbol.section_index(), None);
+        assert_eq!(symbol.scope(), SymbolScope::Compilation);
+        assert_eq!(symbol.is_weak(), false);
+        assert_eq!(symbol.is_undefined(), false);
+
+        symbol = symbols.next().unwrap();
+        println!("{:?}", symbol);
+        let func1_symbol = symbol.index();
+        assert_eq!(symbol.name(), Ok("func1"));
+        assert_eq!(symbol.address(), func1_offset);
+        assert_eq!(symbol.kind(), SymbolKind::Text);
+        assert_eq!(symbol.section_index(), Some(SectionIndex(text_index)));
+        assert_eq!(symbol.scope(), SymbolScope::Linkage);
+        assert_eq!(symbol.is_weak(), false);
+        assert_eq!(symbol.is_undefined(), false);
+
+        let mut relocations = text.relocations();
+
+        let (offset, relocation) = relocations.next().unwrap();
+        println!("{:?}", relocation);
+        assert_eq!(offset, 8);
+        assert_eq!(relocation.kind(), RelocationKind::Absolute);
+        assert_eq!(relocation.encoding(), RelocationEncoding::Generic);
+        assert_eq!(relocation.size(), 64);
+        assert_eq!(
+            relocation.target(),
+            read::RelocationTarget::Symbol(func1_symbol)
+        );
+        assert_eq!(relocation.addend(), 0);
+    }
 }

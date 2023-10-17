@@ -486,6 +486,8 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
    */
   virtual void DecrementSuspendCount();
 
+  class ControlMessageInterface;
+
  protected:
   // Called on graph thread either during destroy handling or before handing
   // graph control to the main thread to release tracks.
@@ -1172,6 +1174,31 @@ class MediaTrackGraph {
    * at construction.
    */
   const TrackRate mSampleRate;
+};
+
+/**
+ * This represents a message run on the graph thread to modify track or graph
+ * state.  These are passed from main thread to graph thread through
+ * AppendMessage(), or scheduled on the graph thread with
+ * RunMessageAfterProcessing().
+ */
+class MediaTrack::ControlMessageInterface {
+ public:
+  MOZ_COUNTED_DEFAULT_CTOR(ControlMessageInterface)
+  // All these run on the graph thread unless the graph has been forced to
+  // shut down.
+  MOZ_COUNTED_DTOR_VIRTUAL(ControlMessageInterface)
+  // Do the action of this message on the MediaTrackGraph thread. Any actions
+  // affecting graph processing should take effect at mProcessedTime.
+  // All track data for times < mProcessedTime has already been
+  // computed.
+  virtual void Run() = 0;
+  // RunDuringShutdown() is only relevant to messages generated on the main
+  // thread (for AppendMessage()).
+  // When we're shutting down the application, most messages are ignored but
+  // some cleanup messages should still be processed (on the main thread).
+  // This must not add new control messages to the graph.
+  virtual void RunDuringShutdown() {}
 };
 
 }  // namespace mozilla

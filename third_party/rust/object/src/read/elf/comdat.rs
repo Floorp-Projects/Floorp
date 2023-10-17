@@ -18,7 +18,6 @@ pub type ElfComdatIterator64<'data, 'file, Endian = Endianness, R = &'data [u8]>
 #[derive(Debug)]
 pub struct ElfComdatIterator<'data, 'file, Elf, R = &'data [u8]>
 where
-    'data: 'file,
     Elf: FileHeader,
     R: ReadRef<'data>,
 {
@@ -140,7 +139,6 @@ pub type ElfComdatSectionIterator64<'data, 'file, Endian = Endianness, R = &'dat
 #[derive(Debug)]
 pub struct ElfComdatSectionIterator<'data, 'file, Elf, R = &'data [u8]>
 where
-    'data: 'file,
     Elf: FileHeader,
     R: ReadRef<'data>,
 {

@@ -106,7 +106,7 @@ impl<T> Drop for OnceCell<T> {
         if self.initialized_mut() {
             unsafe {
                 self.value
-                    .with_mut(|ptr| ptr::drop_in_place((&mut *ptr).as_mut_ptr()));
+                    .with_mut(|ptr| ptr::drop_in_place((*ptr).as_mut_ptr()));
             };
         }
     }
@@ -301,6 +301,8 @@ impl<T> OnceCell<T> {
         F: FnOnce() -> Fut,
         Fut: Future<Output = T>,
     {
+        crate::trace::async_trace_leaf().await;
+
         if self.initialized() {
             // SAFETY: The OnceCell has been fully initialized.
             unsafe { self.get_unchecked() }
@@ -349,6 +351,8 @@ impl<T> OnceCell<T> {
         F: FnOnce() -> Fut,
         Fut: Future<Output = Result<T, E>>,
     {
+        crate::trace::async_trace_leaf().await;
+
         if self.initialized() {
             // SAFETY: The OnceCell has been fully initialized.
             unsafe { Ok(self.get_unchecked()) }
@@ -416,7 +420,7 @@ unsafe impl<T: Send> Send for OnceCell<T> {}
 /// Errors that can be returned from [`OnceCell::set`].
 ///
 /// [`OnceCell::set`]: crate::sync::OnceCell::set
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SetError<T> {
     /// The cell was already initialized when [`OnceCell::set`] was called.
     ///

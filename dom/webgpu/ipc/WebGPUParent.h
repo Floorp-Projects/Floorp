@@ -42,6 +42,7 @@ class WebGPUParent final : public PWebGPUParent {
       AdapterRequestDeviceResolver&& resolver);
   ipc::IPCResult RecvAdapterDestroy(RawId aAdapterId);
   ipc::IPCResult RecvDeviceDestroy(RawId aDeviceId);
+  ipc::IPCResult RecvDeviceDrop(RawId aDeviceId);
   ipc::IPCResult RecvCreateBuffer(RawId aDeviceId, RawId aBufferId,
                                   dom::GPUBufferDescriptor&& aDesc,
                                   ipc::UnsafeSharedMemoryHandle&& aShmem);
@@ -123,6 +124,7 @@ class WebGPUParent final : public PWebGPUParent {
     bool mHasMapFlags;
     uint64_t mMappedOffset;
     uint64_t mMappedSize;
+    RawId mDeviceId;
   };
 
   BufferMapData* GetBufferMapData(RawId aBufferId);
@@ -143,10 +145,14 @@ class WebGPUParent final : public PWebGPUParent {
   std::shared_ptr<ExternalTexture> GetExternalTexture(ffi::WGPUTextureId aId);
 
  private:
+  static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,
+                          uint8_t* aUserData);
   void DeallocBufferShmem(RawId aBufferId);
 
   virtual ~WebGPUParent();
   void MaintainDevices();
+  void LoseDevice(const RawId aDeviceId, Maybe<uint8_t> aReason,
+                  const nsACString& aMessage);
 
   bool ForwardError(const RawId aDeviceId, ErrorBuffer& aError) {
     return ForwardError(Some(aDeviceId), aError);
@@ -176,6 +182,10 @@ class WebGPUParent final : public PWebGPUParent {
 
   std::unordered_map<ffi::WGPUTextureId, std::shared_ptr<ExternalTexture>>
       mExternalTextures;
+
+  // Store a set of DeviceIds that have been SendDeviceLost. We use this to
+  // limit each Device to one DeviceLost message.
+  nsTHashSet<RawId> mLostDeviceIds;
 };
 
 }  // namespace webgpu

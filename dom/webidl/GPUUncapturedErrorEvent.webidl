@@ -11,8 +11,8 @@ dictionary GPUUncapturedErrorEventInit : EventInit {
     required GPUError error;
 };
 
-[Pref="dom.webgpu.enabled",
- Exposed=(Window /* ,DedicatedWorker*/), SecureContext]
+[Func="mozilla::webgpu::Instance::PrefEnabled",
+ Exposed=(Window, DedicatedWorker), SecureContext]
 interface GPUUncapturedErrorEvent: Event {
     constructor(DOMString type, GPUUncapturedErrorEventInit gpuUncapturedErrorEventInitDict);
     readonly attribute GPUError error;
