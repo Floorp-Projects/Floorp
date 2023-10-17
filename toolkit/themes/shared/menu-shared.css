@@ -33,6 +33,14 @@ menuseparator::before {
   flex: 1;
 }
 
+/* Accel text */
+
+@media not (prefers-contrast) {
+  menuitem:not([disabled]) > .menu-accel-container > :is(.menu-accel, .menu-iconic-accel) {
+    color: var(--panel-disabled-color);
+  }
+}
+
 /* Scroll buttons */
 
 /* Hide arrow buttons when there's nothing to scroll in that direction */
@@ -103,7 +111,7 @@ menucaption {
 menu,
 menuitem {
   &:where([disabled="true"]) {
-    color: GrayText;
+    color: var(--panel-disabled-color);
     text-shadow: none;
     -moz-font-smoothing-background-color: -moz-mac-menuitem;
   }
@@ -136,7 +144,7 @@ menucaption {
     list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
   }
 
-  & > image {
+  > image {
     width: var(--menu-arrow-width);
   }
 

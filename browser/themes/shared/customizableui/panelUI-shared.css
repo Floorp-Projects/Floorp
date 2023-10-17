@@ -282,14 +282,9 @@ toolbarseparator + .panel-subview-body {
     margin-inline-end: 8px !important;
   }
 
-  :is(.menu-accel, .menu-iconic-accel) {
+  .menu-accel,
+  .menu-iconic-accel {
     margin-inline-start: 16px !important;
-
-    @media not (prefers-contrast) {
-      menuitem:not([disabled]) > .menu-accel-container > & {
-        color: var(--panel-disabled-color);
-      }
-    }
   }
 
   menu > .menu-right {
