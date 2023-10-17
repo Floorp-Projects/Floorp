@@ -828,7 +828,7 @@ already_AddRefed<nsIArray> CookieStorage::PurgeCookiesWithCallbacks(
 
 // remove a cookie from the hashtable, and update the iterator state.
 void CookieStorage::RemoveCookieFromList(const CookieListIter& aIter) {
-  RemoveCookieFromDB(aIter);
+  RemoveCookieFromDB(*aIter.Cookie());
   RemoveCookieFromListInternal(aIter);
 }
 
