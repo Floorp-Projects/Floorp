@@ -4,50 +4,48 @@
 
 @import url("chrome://global/skin/in-content/common.css");
 
-#screenshots-component {
-  width: 100%;
-  height: 100%;
-  overflow: clip;
-  user-select: none;
-  pointer-events: auto;
-  touch-action: none;
-  font: message-box;
+:host {
+  display: contents;
 }
 
-#screenshots-overlay-container {
+[hidden] {
+  display: none !important;
+}
+
+#screenshots-component {
   position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
+  inset: 0;
+  font: message-box;
+  user-select: none;
+  touch-action: none;
   pointer-events: auto;
   cursor: crosshair;
-}
 
-#preview-container {
-  background-color: rgba(0, 0, 0, 0.7);
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  &[dragging] {
+    cursor: grabbing;
+  }
 }
 
 #selection-container {
   overflow: clip;
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
 }
 
-#screenshots-overlay-container[hidden] {
-  display: none;
-}
-
-#screenshots-overlay-container[dragging] {
-  cursor: grabbing;
+#preview-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 #buttons-container {
@@ -122,19 +120,6 @@
   margin-inline-end: 5px;
 }
 
-.fixed-container {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  justify-content: center;
-  inset-inline-start: 0;
-  margin: 0;
-  padding: 0;
-  position: fixed;
-  top: 0;
-  width: 100%;
-}
 
 .face-container {
   position: relative;
