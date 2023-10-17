@@ -214,6 +214,8 @@
   position: absolute;
   overflow: clip;
   pointer-events: none;
+  /* FIXME(bug 1859421): This shouldn't be needed */
+  z-index: -1;
 }
 
 .highlight {
