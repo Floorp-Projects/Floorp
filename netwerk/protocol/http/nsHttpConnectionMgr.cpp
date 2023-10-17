@@ -2057,6 +2057,8 @@ void nsHttpConnectionMgr::AbortAndCloseAllConnections(int32_t, ARefBase*) {
     // Close websocket "fake" connections
     ent->CloseH2WebsocketConnections();
 
+    ent->ClosePendingConnections();
+
     // Close all pending transactions.
     ent->CancelAllTransactions(NS_ERROR_ABORT);
 
@@ -2368,6 +2370,8 @@ void nsHttpConnectionMgr::OnMsgVerifyTraffic(int32_t, ARefBase*) {
     return;
   }
 
+  mCoalescingHash.Clear();
+
   // Mark connections for traffic verification
   for (const auto& entry : mCT.Values()) {
     entry->VerifyTraffic();
@@ -2483,7 +2487,8 @@ void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
     conn->DontReuse();
   }
 
-  if (NS_SUCCEEDED(ent->RemoveActiveConnection(conn))) {
+  if (NS_SUCCEEDED(ent->RemoveActiveConnection(conn)) ||
+      NS_SUCCEEDED(ent->RemovePendingConnection(conn))) {
   } else if (!connTCP || connTCP->EverUsedSpdy()) {
     LOG(("HttpConnectionBase %p not found in its connection entry, try ^anon",
          conn));
@@ -2632,7 +2637,7 @@ void nsHttpConnectionMgr::OnMsgCompleteUpgrade(int32_t, ARefBase* param) {
 void nsHttpConnectionMgr::OnMsgUpdateParam(int32_t inParam, ARefBase*) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   uint32_t param = static_cast<uint32_t>(inParam);
-  uint16_t name = ((param)&0xFFFF0000) >> 16;
+  uint16_t name = ((param) & 0xFFFF0000) >> 16;
   uint16_t value = param & 0x0000FFFF;
 
   switch (name) {
