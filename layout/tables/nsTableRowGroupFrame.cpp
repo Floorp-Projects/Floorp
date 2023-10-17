@@ -902,25 +902,20 @@ nscoord nsTableRowGroupFrame::CollapseRowGroupIfNecessary(nscoord aBTotalOffset,
   return bGroupOffset;
 }
 
-// Create a continuing frame, add it to the child list, and then push it
-// and the frames that follow
-void nsTableRowGroupFrame::CreateContinuingRowFrame(nsIFrame& aRowFrame,
-                                                    nsIFrame** aContRowFrame) {
-  // XXX what is the row index?
-  if (!aContRowFrame) {
-    NS_ASSERTION(false, "bad call");
-    return;
-  }
-  // create the continuing frame which will create continuing cell frames
-  *aContRowFrame =
-      PresShell()->FrameConstructor()->CreateContinuingFrame(&aRowFrame, this);
+nsTableRowFrame* nsTableRowGroupFrame::CreateContinuingRowFrame(
+    nsIFrame* aRowFrame) {
+  // Create the continuing frame which will create continuing cell frames.
+  auto* contRowFrame = static_cast<nsTableRowFrame*>(
+      PresShell()->FrameConstructor()->CreateContinuingFrame(aRowFrame, this));
 
-  // Add the continuing row frame to the child list
-  mFrames.InsertFrame(nullptr, &aRowFrame, *aContRowFrame);
+  // Add the continuing row frame to the child list.
+  mFrames.InsertFrame(nullptr, aRowFrame, contRowFrame);
 
-  // Push the continuing row frame and the frames that follow
+  // Push the continuing row frame and the frames that follow.
   // This needs to match `UndoContinuedRow`.
-  PushChildrenToOverflow(*aContRowFrame, &aRowFrame);
+  PushChildrenToOverflow(contRowFrame, aRowFrame);
+
+  return contRowFrame;
 }
 
 // Reflow the cells with rowspan > 1 which originate between aFirstRow
@@ -992,7 +987,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
           }
         } else {
           if (!aContRow) {
-            CreateContinuingRowFrame(aLastRow, (nsIFrame**)&aContRow);
+            aContRow = CreateContinuingRowFrame(&aLastRow);
           }
           if (aContRow) {
             if (row != &aLastRow) {
@@ -1149,12 +1144,11 @@ nsresult nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
                 rowMetrics.Height() <= rowReflowInput.AvailableHeight(),
                 "data loss - incomplete row needed more height than available, "
                 "on top of page");
-            CreateContinuingRowFrame(*rowFrame, (nsIFrame**)&contRow);
-            if (contRow) {
-              aDesiredSize.Height() += rowMetrics.Height();
-              if (prevRowFrame) aDesiredSize.Height() += cellSpacingB;
-            } else
-              return NS_ERROR_NULL_POINTER;
+            contRow = CreateContinuingRowFrame(rowFrame);
+            aDesiredSize.Height() += rowMetrics.Height();
+            if (prevRowFrame) {
+              aDesiredSize.Height() += cellSpacingB;
+            }
           } else {
             // Put the row on the next page to give it more height
             rowIsOnPage = false;
