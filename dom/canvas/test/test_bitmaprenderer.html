@@ -43,11 +43,11 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
   ctx.fillStyle = "#00FF00";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-  var canvasRef = createCanvas(90, 90);
+  var canvasRef = createCanvas(canvasWidth, canvasHeight);
   var ctx = canvasRef.getContext("2d");
   // Clear with black transparent first
   ctx.fillStyle = "rgba(0, 0, 0, 0)";
-  ctx.fillRect(0, 0, 90, 90);
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
   ctx.fillStyle = "#00FF00";
   ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -89,52 +89,58 @@ function runTest(canvasWidth, canvasHeight, nextTest) {
   });
 }
 
-function scaleTest() {
-  var canvas1 = createCanvas(64, 64);
-  var ctx = canvas1.getContext("2d");
+function createSolidGreenBitmap(width, height) {
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext("2d");
   ctx.fillStyle = "#00FF00";
-  ctx.fillRect(0, 0, 64, 64);
+  ctx.fillRect(0, 0, width, height);
+  const bitmap = createImageBitmap(canvas);
+  document.body.removeChild(canvas);
+  return bitmap;
+}
 
-  var canvas2 = createCanvas(64, 64);
-  var ctx2 = canvas2.getContext("2d");
-  ctx2.fillStyle = "#00FF00";
-  ctx2.fillRect(0, 0, 64, 64);
+async function scaleTestCase(name, refWidth, refHeight, testWidth, testHeight, canvasWidth, canvasHeight) {
+  const refBitmap = await createSolidGreenBitmap(refWidth, refHeight);
+  const refCanvas = createCanvas(refWidth, refHeight);
+  const refCtx = refCanvas.getContext("bitmaprenderer");
+  refCtx.transferFromImageBitmap(refBitmap);
+  is(refCanvas.width, refWidth, name + ": refCanvas width " + refCanvas.width + " is ref " + refWidth);
+  is(refCanvas.height, refHeight, name + ": refCanvas height " + refCanvas.height + " is ref " + refHeight);
+  const refSnapshot = await snapshotWindow(window);
+  document.body.removeChild(refCanvas);
 
-  var p1 = createImageBitmap(canvas1);
-  var p2 = createImageBitmap(canvas2);
-  Promise.all([p1, p2]).then(async function(bitmaps) {
-    document.body.removeChild(canvas1);
-    document.body.removeChild(canvas2);
+  const bitmap = await createSolidGreenBitmap(testWidth, testHeight);
+  const canvas = createCanvas(canvasWidth, canvasHeight);
+  const ctx = canvas.getContext("bitmaprenderer");
+  ctx.transferFromImageBitmap(bitmap);
+  is(canvas.width, testWidth, name + ": canvas width " + canvas.width + " is bitmap " + testWidth);
+  is(canvas.height, testHeight, name + ": canvas height " + canvas.height + " is bitmap " + testHeight);
+  if (refWidth !== testWidth) {
+    canvas.width = refWidth;
+    is(canvas.width, refWidth, name + ": canvas width " + canvas.width + " is ref " + refWidth);
+  }
+  if (refHeight !== testHeight) {
+    canvas.height = refHeight;
+    is(canvas.height, refHeight, name + ": canvas height " + canvas.height + " is ref " + refHeight);
+  }
+  const snapshot = await snapshotWindow(window);
+  document.body.removeChild(canvas);
 
-    // Create a large canvas then shrink.
-    var canvas3 = createCanvas(128, 128);
-    var ctx3 = canvas3.getContext("bitmaprenderer");
-    ctx3.transferFromImageBitmap(bitmaps[0]);
-    var snapshotLargeRef = await snapshotWindow(window);
+  const results = compareSnapshots(snapshot, refSnapshot, true);
+  ok(results[0], name + ": screenshots should be the same");
+  return Promise.resolve();
+}
 
-    canvas3.width = 32;
-    canvas3.height = 32;
-    var snapshotSmall = await snapshotWindow(window);
-    document.body.removeChild(canvas3);
-
-    // Create a small canvas then grow.
-    var canvas4 = createCanvas(32, 32);
-    var ctx4 = canvas4.getContext("bitmaprenderer");
-    ctx4.transferFromImageBitmap(bitmaps[1]);
-    var snapshotSmallRef = await snapshotWindow(window);
-
-    canvas4.width = 128;
-    canvas4.height = 128;
-    var snapshotLarge = await snapshotWindow(window);
-    document.body.removeChild(canvas4);
-
-    var resultsLarge = compareSnapshots(snapshotLarge, snapshotLargeRef, true);
-    ok(resultsLarge[0], "Screenshots should be the same");
-
-    var resultsSmall = compareSnapshots(snapshotSmall, snapshotSmallRef, true);
-    ok(resultsSmall[0], "Screenshots should be the same");
-    runTestOnWorker();
-  });
+async function scaleTest() {
+  await scaleTestCase("grow_unscaled", 64, 64, 64, 64, 32, 32); // Canvas grows, no scaling.
+  await scaleTestCase("grow_downscaled", 64, 64, 128, 128, 32, 32); // Canvas grows, scales down.
+  await scaleTestCase("grow_upscaled", 64, 64, 32, 32, 16, 16); // Canvas grows, scales up.
+  await scaleTestCase("same_downscaled", 64, 64, 128, 128, 128, 128); // Canvas unchanged, scales down.
+  await scaleTestCase("same_upscaled", 64, 64, 32, 32, 32, 32); // Canvas unchanged, scales up.
+  await scaleTestCase("shrink_unscaled", 64, 64, 64, 64, 128, 128); // Canvas shrinks, no scaling.
+  await scaleTestCase("shrink_downscaled", 64, 64, 128, 128, 256, 256); // Canvas shrinks, scales down.
+  await scaleTestCase("shrink_upscaled", 64, 64, 32, 32, 256, 256); // Canvas shrinks, scales up.
+  runTestOnWorker();
 }
 
 function runTestOnWorker() {

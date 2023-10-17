@@ -434,12 +434,12 @@ panelview[id^=PanelUI-webext-] {
   width: 22.5em;
 }
 
-#customizationui-widget-multiview panelview:not([extension]) {
+:where(#customizationui-widget-multiview) panelview:not([extension]) {
   min-width: var(--menu-panel-width);
   max-width: 35em;
 }
 
-#customizationui-widget-multiview #appMenu-libraryView,
+#appMenu-libraryView,
 #pageActionPanel panelview,
 #widget-overflow panelview {
   min-width: var(--menu-panel-width-wide);
@@ -1987,12 +1987,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #reset-pbm-panel {
   max-width: var(--menu-panel-width-wide);
-}
-
-#reset-pbm-panel-container {
   padding: 16px 16px 0;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
 }
 

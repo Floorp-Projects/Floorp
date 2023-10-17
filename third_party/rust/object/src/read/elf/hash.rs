@@ -45,7 +45,7 @@ impl<'data, Elf: FileHeader> HashTable<'data, Elf> {
         endian: Elf::Endian,
         name: &[u8],
         hash: u32,
-        version: Option<&Version>,
+        version: Option<&Version<'_>>,
         symbols: &SymbolTable<'data, Elf, R>,
         versions: &VersionTable<'data, Elf>,
     ) -> Option<(usize, &'data Elf::Sym)> {
@@ -160,7 +160,7 @@ impl<'data, Elf: FileHeader> GnuHashTable<'data, Elf> {
         endian: Elf::Endian,
         name: &[u8],
         hash: u32,
-        version: Option<&Version>,
+        version: Option<&Version<'_>>,
         symbols: &SymbolTable<'data, Elf, R>,
         versions: &VersionTable<'data, Elf>,
     ) -> Option<(usize, &'data Elf::Sym)> {

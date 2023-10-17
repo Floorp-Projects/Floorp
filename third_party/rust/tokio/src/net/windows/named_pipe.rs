@@ -10,27 +10,30 @@ use std::ptr;
 use std::task::{Context, Poll};
 
 use crate::io::{AsyncRead, AsyncWrite, Interest, PollEvented, ReadBuf, Ready};
+#[cfg(not(tokio_no_as_fd))]
+use crate::os::windows::io::{AsHandle, BorrowedHandle};
 use crate::os::windows::io::{AsRawHandle, FromRawHandle, RawHandle};
+
+cfg_io_util! {
+    use bytes::BufMut;
+}
 
 // Hide imports which are not used when generating documentation.
 #[cfg(not(docsrs))]
 mod doc {
     pub(super) use crate::os::windows::ffi::OsStrExt;
-    pub(super) use crate::winapi::shared::minwindef::{DWORD, FALSE};
-    pub(super) use crate::winapi::um::fileapi;
-    pub(super) use crate::winapi::um::handleapi;
-    pub(super) use crate::winapi::um::namedpipeapi;
-    pub(super) use crate::winapi::um::winbase;
-    pub(super) use crate::winapi::um::winnt;
-
+    pub(super) mod windows_sys {
+        pub(crate) use windows_sys::{
+            Win32::Foundation::*, Win32::Storage::FileSystem::*, Win32::System::Pipes::*,
+            Win32::System::SystemServices::*,
+        };
+    }
     pub(super) use mio::windows as mio_windows;
 }
 
 // NB: none of these shows up in public API, so don't document them.
 #[cfg(docsrs)]
 mod doc {
-    pub type DWORD = crate::doc::NotDefinedHere;
-
     pub(super) mod mio_windows {
         pub type NamedPipe = crate::doc::NotDefinedHere;
     }
@@ -97,7 +100,6 @@ use self::doc::*;
 /// # Ok(()) }
 /// ```
 ///
-/// [`ERROR_PIPE_BUSY`]: crate::winapi::shared::winerror::ERROR_PIPE_BUSY
 /// [Windows named pipe]: https://docs.microsoft.com/en-us/windows/win32/ipc/named-pipes
 #[derive(Debug)]
 pub struct NamedPipeServer {
@@ -188,17 +190,15 @@ impl NamedPipeServer {
     /// # Ok(()) }
     /// ```
     pub async fn connect(&self) -> io::Result<()> {
-        loop {
-            match self.io.connect() {
-                Ok(()) => break,
-                Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
-                    self.io.registration().readiness(Interest::WRITABLE).await?;
-                }
-                Err(e) => return Err(e),
+        match self.io.connect() {
+            Err(e) if e.kind() == io::ErrorKind::WouldBlock => {
+                self.io
+                    .registration()
+                    .async_io(Interest::WRITABLE, || self.io.connect())
+                    .await
             }
+            x => x,
         }
-
-        Ok(())
     }
 
     /// Disconnects the server end of a named pipe instance from a client
@@ -207,7 +207,7 @@ impl NamedPipeServer {
     /// ```
     /// use tokio::io::AsyncWriteExt;
     /// use tokio::net::windows::named_pipe::{ClientOptions, ServerOptions};
-    /// use winapi::shared::winerror;
+    /// use windows_sys::Win32::Foundation::ERROR_PIPE_NOT_CONNECTED;
     ///
     /// const PIPE_NAME: &str = r"\\.\pipe\tokio-named-pipe-disconnect";
     ///
@@ -227,7 +227,7 @@ impl NamedPipeServer {
     /// // Write fails with an OS-specific error after client has been
     /// // disconnected.
     /// let e = client.write(b"ping").await.unwrap_err();
-    /// assert_eq!(e.raw_os_error(), Some(winerror::ERROR_PIPE_NOT_CONNECTED as i32));
+    /// assert_eq!(e.raw_os_error(), Some(ERROR_PIPE_NOT_CONNECTED as i32));
     /// # Ok(()) }
     /// ```
     pub fn disconnect(&self) -> io::Result<()> {
@@ -239,6 +239,12 @@ impl NamedPipeServer {
     /// This function is usually paired with `try_read()` or `try_write()`. It
     /// can be used to concurrently read / write to the same pipe on a single
     /// task without splitting the pipe.
+    ///
+    /// The function may complete without the pipe being ready. This is a
+    /// false-positive and attempting an operation will return with
+    /// `io::ErrorKind::WouldBlock`. The function can also return with an empty
+    /// [`Ready`] set, so you should always check the returned value and possibly
+    /// wait again if the requested states are not set.
     ///
     /// # Examples
     ///
@@ -399,8 +405,12 @@ impl NamedPipeServer {
     /// # Return
     ///
     /// If data is successfully read, `Ok(n)` is returned, where `n` is the
-    /// number of bytes read. `Ok(0)` indicates the pipe's read half is closed
-    /// and will no longer yield data. If the pipe is not ready to read data
+    /// number of bytes read. If `n` is `0`, then it can indicate one of two scenarios:
+    ///
+    /// 1. The pipe's read half is closed and will no longer yield data.
+    /// 2. The specified buffer was 0 bytes in length.
+    ///
+    /// If the pipe is not ready to read data,
     /// `Err(io::ErrorKind::WouldBlock)` is returned.
     ///
     /// # Examples
@@ -526,6 +536,86 @@ impl NamedPipeServer {
         self.io
             .registration()
             .try_io(Interest::READABLE, || (&*self.io).read_vectored(bufs))
+    }
+
+    cfg_io_util! {
+        /// Tries to read data from the stream into the provided buffer, advancing the
+        /// buffer's internal cursor, returning how many bytes were read.
+        ///
+        /// Receives any pending data from the pipe but does not wait for new data
+        /// to arrive. On success, returns the number of bytes read. Because
+        /// `try_read_buf()` is non-blocking, the buffer does not have to be stored by
+        /// the async task and can exist entirely on the stack.
+        ///
+        /// Usually, [`readable()`] or [`ready()`] is used with this function.
+        ///
+        /// [`readable()`]: NamedPipeServer::readable()
+        /// [`ready()`]: NamedPipeServer::ready()
+        ///
+        /// # Return
+        ///
+        /// If data is successfully read, `Ok(n)` is returned, where `n` is the
+        /// number of bytes read. `Ok(0)` indicates the stream's read half is closed
+        /// and will no longer yield data. If the stream is not ready to read data
+        /// `Err(io::ErrorKind::WouldBlock)` is returned.
+        ///
+        /// # Examples
+        ///
+        /// ```no_run
+        /// use tokio::net::windows::named_pipe;
+        /// use std::error::Error;
+        /// use std::io;
+        ///
+        /// const PIPE_NAME: &str = r"\\.\pipe\tokio-named-pipe-client-readable";
+        ///
+        /// #[tokio::main]
+        /// async fn main() -> Result<(), Box<dyn Error>> {
+        ///     let server = named_pipe::ServerOptions::new().create(PIPE_NAME)?;
+        ///
+        ///     loop {
+        ///         // Wait for the pipe to be readable
+        ///         server.readable().await?;
+        ///
+        ///         let mut buf = Vec::with_capacity(4096);
+        ///
+        ///         // Try to read data, this may still fail with `WouldBlock`
+        ///         // if the readiness event is a false positive.
+        ///         match server.try_read_buf(&mut buf) {
+        ///             Ok(0) => break,
+        ///             Ok(n) => {
+        ///                 println!("read {} bytes", n);
+        ///             }
+        ///             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+        ///                 continue;
+        ///             }
+        ///             Err(e) => {
+        ///                 return Err(e.into());
+        ///             }
+        ///         }
+        ///     }
+        ///
+        ///     Ok(())
+        /// }
+        /// ```
+        pub fn try_read_buf<B: BufMut>(&self, buf: &mut B) -> io::Result<usize> {
+            self.io.registration().try_io(Interest::READABLE, || {
+                use std::io::Read;
+
+                let dst = buf.chunk_mut();
+                let dst =
+                    unsafe { &mut *(dst as *mut _ as *mut [std::mem::MaybeUninit<u8>] as *mut [u8]) };
+
+                // Safety: We trust `NamedPipeServer::read` to have filled up `n` bytes in the
+                // buffer.
+                let n = (&*self.io).read(dst)?;
+
+                unsafe {
+                    buf.advance_mut(n);
+                }
+
+                Ok(n)
+            })
+        }
     }
 
     /// Waits for the pipe to become writable.
@@ -724,27 +814,32 @@ impl NamedPipeServer {
             .try_io(Interest::WRITABLE, || (&*self.io).write_vectored(buf))
     }
 
-    /// Tries to read or write from the socket using a user-provided IO operation.
+    /// Tries to read or write from the pipe using a user-provided IO operation.
     ///
-    /// If the socket is ready, the provided closure is called. The closure
-    /// should attempt to perform IO operation from the socket by manually
+    /// If the pipe is ready, the provided closure is called. The closure
+    /// should attempt to perform IO operation from the pipe by manually
     /// calling the appropriate syscall. If the operation fails because the
-    /// socket is not actually ready, then the closure should return a
+    /// pipe is not actually ready, then the closure should return a
     /// `WouldBlock` error and the readiness flag is cleared. The return value
     /// of the closure is then returned by `try_io`.
     ///
-    /// If the socket is not ready, then the closure is not called
+    /// If the pipe is not ready, then the closure is not called
     /// and a `WouldBlock` error is returned.
     ///
     /// The closure should only return a `WouldBlock` error if it has performed
-    /// an IO operation on the socket that failed due to the socket not being
+    /// an IO operation on the pipe that failed due to the pipe not being
     /// ready. Returning a `WouldBlock` error in any other situation will
-    /// incorrectly clear the readiness flag, which can cause the socket to
+    /// incorrectly clear the readiness flag, which can cause the pipe to
     /// behave incorrectly.
     ///
     /// The closure should not perform the IO operation using any of the
     /// methods defined on the Tokio `NamedPipeServer` type, as this will mess with
-    /// the readiness flag and can cause the socket to behave incorrectly.
+    /// the readiness flag and can cause the pipe to behave incorrectly.
+    ///
+    /// This method is not intended to be used with combined interests.
+    /// The closure should perform only one type of IO operation, so it should not
+    /// require more than one ready state. This method may panic or sleep forever
+    /// if it is called with a combined interest.
     ///
     /// Usually, [`readable()`], [`writable()`] or [`ready()`] is used with this function.
     ///
@@ -757,6 +852,39 @@ impl NamedPipeServer {
         f: impl FnOnce() -> io::Result<R>,
     ) -> io::Result<R> {
         self.io.registration().try_io(interest, f)
+    }
+
+    /// Reads or writes from the pipe using a user-provided IO operation.
+    ///
+    /// The readiness of the pipe is awaited and when the pipe is ready,
+    /// the provided closure is called. The closure should attempt to perform
+    /// IO operation on the pipe by manually calling the appropriate syscall.
+    /// If the operation fails because the pipe is not actually ready,
+    /// then the closure should return a `WouldBlock` error. In such case the
+    /// readiness flag is cleared and the pipe readiness is awaited again.
+    /// This loop is repeated until the closure returns an `Ok` or an error
+    /// other than `WouldBlock`.
+    ///
+    /// The closure should only return a `WouldBlock` error if it has performed
+    /// an IO operation on the pipe that failed due to the pipe not being
+    /// ready. Returning a `WouldBlock` error in any other situation will
+    /// incorrectly clear the readiness flag, which can cause the pipe to
+    /// behave incorrectly.
+    ///
+    /// The closure should not perform the IO operation using any of the methods
+    /// defined on the Tokio `NamedPipeServer` type, as this will mess with the
+    /// readiness flag and can cause the pipe to behave incorrectly.
+    ///
+    /// This method is not intended to be used with combined interests.
+    /// The closure should perform only one type of IO operation, so it should not
+    /// require more than one ready state. This method may panic or sleep forever
+    /// if it is called with a combined interest.
+    pub async fn async_io<R>(
+        &self,
+        interest: Interest,
+        f: impl FnMut() -> io::Result<R>,
+    ) -> io::Result<R> {
+        self.io.registration().async_io(interest, f).await
     }
 }
 
@@ -802,6 +930,13 @@ impl AsRawHandle for NamedPipeServer {
     }
 }
 
+#[cfg(not(tokio_no_as_fd))]
+impl AsHandle for NamedPipeServer {
+    fn as_handle(&self) -> BorrowedHandle<'_> {
+        unsafe { BorrowedHandle::borrow_raw(self.as_raw_handle()) }
+    }
+}
+
 /// A [Windows named pipe] client.
 ///
 /// Constructed using [`ClientOptions::open`].
@@ -819,7 +954,7 @@ impl AsRawHandle for NamedPipeServer {
 /// use std::time::Duration;
 /// use tokio::net::windows::named_pipe::ClientOptions;
 /// use tokio::time;
-/// use winapi::shared::winerror;
+/// use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
 ///
 /// const PIPE_NAME: &str = r"\\.\pipe\named-pipe-idiomatic-client";
 ///
@@ -827,7 +962,7 @@ impl AsRawHandle for NamedPipeServer {
 /// let client = loop {
 ///     match ClientOptions::new().open(PIPE_NAME) {
 ///         Ok(client) => break client,
-///         Err(e) if e.raw_os_error() == Some(winerror::ERROR_PIPE_BUSY as i32) => (),
+///         Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
 ///         Err(e) => return Err(e),
 ///     }
 ///
@@ -838,7 +973,7 @@ impl AsRawHandle for NamedPipeServer {
 /// # Ok(()) }
 /// ```
 ///
-/// [`ERROR_PIPE_BUSY`]: crate::winapi::shared::winerror::ERROR_PIPE_BUSY
+/// [`ERROR_PIPE_BUSY`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Foundation/constant.ERROR_PIPE_BUSY.html
 /// [Windows named pipe]: https://docs.microsoft.com/en-us/windows/win32/ipc/named-pipes
 #[derive(Debug)]
 pub struct NamedPipeClient {
@@ -901,6 +1036,12 @@ impl NamedPipeClient {
     /// This function is usually paired with `try_read()` or `try_write()`. It
     /// can be used to concurrently read / write to the same pipe on a single
     /// task without splitting the pipe.
+    ///
+    /// The function may complete without the pipe being ready. This is a
+    /// false-positive and attempting an operation will return with
+    /// `io::ErrorKind::WouldBlock`. The function can also return with an empty
+    /// [`Ready`] set, so you should always check the returned value and possibly
+    /// wait again if the requested states are not set.
     ///
     /// # Examples
     ///
@@ -1059,8 +1200,12 @@ impl NamedPipeClient {
     /// # Return
     ///
     /// If data is successfully read, `Ok(n)` is returned, where `n` is the
-    /// number of bytes read. `Ok(0)` indicates the pipe's read half is closed
-    /// and will no longer yield data. If the pipe is not ready to read data
+    /// number of bytes read. If `n` is `0`, then it can indicate one of two scenarios:
+    ///
+    /// 1. The pipe's read half is closed and will no longer yield data.
+    /// 2. The specified buffer was 0 bytes in length.
+    ///
+    /// If the pipe is not ready to read data,
     /// `Err(io::ErrorKind::WouldBlock)` is returned.
     ///
     /// # Examples
@@ -1184,6 +1329,86 @@ impl NamedPipeClient {
         self.io
             .registration()
             .try_io(Interest::READABLE, || (&*self.io).read_vectored(bufs))
+    }
+
+    cfg_io_util! {
+        /// Tries to read data from the stream into the provided buffer, advancing the
+        /// buffer's internal cursor, returning how many bytes were read.
+        ///
+        /// Receives any pending data from the pipe but does not wait for new data
+        /// to arrive. On success, returns the number of bytes read. Because
+        /// `try_read_buf()` is non-blocking, the buffer does not have to be stored by
+        /// the async task and can exist entirely on the stack.
+        ///
+        /// Usually, [`readable()`] or [`ready()`] is used with this function.
+        ///
+        /// [`readable()`]: NamedPipeClient::readable()
+        /// [`ready()`]: NamedPipeClient::ready()
+        ///
+        /// # Return
+        ///
+        /// If data is successfully read, `Ok(n)` is returned, where `n` is the
+        /// number of bytes read. `Ok(0)` indicates the stream's read half is closed
+        /// and will no longer yield data. If the stream is not ready to read data
+        /// `Err(io::ErrorKind::WouldBlock)` is returned.
+        ///
+        /// # Examples
+        ///
+        /// ```no_run
+        /// use tokio::net::windows::named_pipe;
+        /// use std::error::Error;
+        /// use std::io;
+        ///
+        /// const PIPE_NAME: &str = r"\\.\pipe\tokio-named-pipe-client-readable";
+        ///
+        /// #[tokio::main]
+        /// async fn main() -> Result<(), Box<dyn Error>> {
+        ///     let client = named_pipe::ClientOptions::new().open(PIPE_NAME)?;
+        ///
+        ///     loop {
+        ///         // Wait for the pipe to be readable
+        ///         client.readable().await?;
+        ///
+        ///         let mut buf = Vec::with_capacity(4096);
+        ///
+        ///         // Try to read data, this may still fail with `WouldBlock`
+        ///         // if the readiness event is a false positive.
+        ///         match client.try_read_buf(&mut buf) {
+        ///             Ok(0) => break,
+        ///             Ok(n) => {
+        ///                 println!("read {} bytes", n);
+        ///             }
+        ///             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+        ///                 continue;
+        ///             }
+        ///             Err(e) => {
+        ///                 return Err(e.into());
+        ///             }
+        ///         }
+        ///     }
+        ///
+        ///     Ok(())
+        /// }
+        /// ```
+        pub fn try_read_buf<B: BufMut>(&self, buf: &mut B) -> io::Result<usize> {
+            self.io.registration().try_io(Interest::READABLE, || {
+                use std::io::Read;
+
+                let dst = buf.chunk_mut();
+                let dst =
+                    unsafe { &mut *(dst as *mut _ as *mut [std::mem::MaybeUninit<u8>] as *mut [u8]) };
+
+                // Safety: We trust `NamedPipeClient::read` to have filled up `n` bytes in the
+                // buffer.
+                let n = (&*self.io).read(dst)?;
+
+                unsafe {
+                    buf.advance_mut(n);
+                }
+
+                Ok(n)
+            })
+        }
     }
 
     /// Waits for the pipe to become writable.
@@ -1379,27 +1604,32 @@ impl NamedPipeClient {
             .try_io(Interest::WRITABLE, || (&*self.io).write_vectored(buf))
     }
 
-    /// Tries to read or write from the socket using a user-provided IO operation.
+    /// Tries to read or write from the pipe using a user-provided IO operation.
     ///
-    /// If the socket is ready, the provided closure is called. The closure
-    /// should attempt to perform IO operation from the socket by manually
+    /// If the pipe is ready, the provided closure is called. The closure
+    /// should attempt to perform IO operation from the pipe by manually
     /// calling the appropriate syscall. If the operation fails because the
-    /// socket is not actually ready, then the closure should return a
+    /// pipe is not actually ready, then the closure should return a
     /// `WouldBlock` error and the readiness flag is cleared. The return value
     /// of the closure is then returned by `try_io`.
     ///
-    /// If the socket is not ready, then the closure is not called
+    /// If the pipe is not ready, then the closure is not called
     /// and a `WouldBlock` error is returned.
     ///
     /// The closure should only return a `WouldBlock` error if it has performed
-    /// an IO operation on the socket that failed due to the socket not being
+    /// an IO operation on the pipe that failed due to the pipe not being
     /// ready. Returning a `WouldBlock` error in any other situation will
-    /// incorrectly clear the readiness flag, which can cause the socket to
+    /// incorrectly clear the readiness flag, which can cause the pipe to
     /// behave incorrectly.
     ///
     /// The closure should not perform the IO operation using any of the methods
     /// defined on the Tokio `NamedPipeClient` type, as this will mess with the
-    /// readiness flag and can cause the socket to behave incorrectly.
+    /// readiness flag and can cause the pipe to behave incorrectly.
+    ///
+    /// This method is not intended to be used with combined interests.
+    /// The closure should perform only one type of IO operation, so it should not
+    /// require more than one ready state. This method may panic or sleep forever
+    /// if it is called with a combined interest.
     ///
     /// Usually, [`readable()`], [`writable()`] or [`ready()`] is used with this function.
     ///
@@ -1412,6 +1642,39 @@ impl NamedPipeClient {
         f: impl FnOnce() -> io::Result<R>,
     ) -> io::Result<R> {
         self.io.registration().try_io(interest, f)
+    }
+
+    /// Reads or writes from the pipe using a user-provided IO operation.
+    ///
+    /// The readiness of the pipe is awaited and when the pipe is ready,
+    /// the provided closure is called. The closure should attempt to perform
+    /// IO operation on the pipe by manually calling the appropriate syscall.
+    /// If the operation fails because the pipe is not actually ready,
+    /// then the closure should return a `WouldBlock` error. In such case the
+    /// readiness flag is cleared and the pipe readiness is awaited again.
+    /// This loop is repeated until the closure returns an `Ok` or an error
+    /// other than `WouldBlock`.
+    ///
+    /// The closure should only return a `WouldBlock` error if it has performed
+    /// an IO operation on the pipe that failed due to the pipe not being
+    /// ready. Returning a `WouldBlock` error in any other situation will
+    /// incorrectly clear the readiness flag, which can cause the pipe to
+    /// behave incorrectly.
+    ///
+    /// The closure should not perform the IO operation using any of the methods
+    /// defined on the Tokio `NamedPipeClient` type, as this will mess with the
+    /// readiness flag and can cause the pipe to behave incorrectly.
+    ///
+    /// This method is not intended to be used with combined interests.
+    /// The closure should perform only one type of IO operation, so it should not
+    /// require more than one ready state. This method may panic or sleep forever
+    /// if it is called with a combined interest.
+    pub async fn async_io<R>(
+        &self,
+        interest: Interest,
+        f: impl FnMut() -> io::Result<R>,
+    ) -> io::Result<R> {
+        self.io.registration().async_io(interest, f).await
     }
 }
 
@@ -1457,17 +1720,11 @@ impl AsRawHandle for NamedPipeClient {
     }
 }
 
-// Helper to set a boolean flag as a bitfield.
-macro_rules! bool_flag {
-    ($f:expr, $t:expr, $flag:expr) => {{
-        let current = $f;
-
-        if $t {
-            $f = current | $flag;
-        } else {
-            $f = current & !$flag;
-        };
-    }};
+#[cfg(not(tokio_no_as_fd))]
+impl AsHandle for NamedPipeClient {
+    fn as_handle(&self) -> BorrowedHandle<'_> {
+        unsafe { BorrowedHandle::borrow_raw(self.as_raw_handle()) }
+    }
 }
 
 /// A builder structure for construct a named pipe with named pipe-specific
@@ -1477,12 +1734,21 @@ macro_rules! bool_flag {
 /// See [`ServerOptions::create`].
 #[derive(Debug, Clone)]
 pub struct ServerOptions {
-    open_mode: DWORD,
-    pipe_mode: DWORD,
-    max_instances: DWORD,
-    out_buffer_size: DWORD,
-    in_buffer_size: DWORD,
-    default_timeout: DWORD,
+    // dwOpenMode
+    access_inbound: bool,
+    access_outbound: bool,
+    first_pipe_instance: bool,
+    write_dac: bool,
+    write_owner: bool,
+    access_system_security: bool,
+    // dwPipeMode
+    pipe_mode: PipeMode,
+    reject_remote_clients: bool,
+    // other options
+    max_instances: u32,
+    out_buffer_size: u32,
+    in_buffer_size: u32,
+    default_timeout: u32,
 }
 
 impl ServerOptions {
@@ -1499,9 +1765,15 @@ impl ServerOptions {
     /// ```
     pub fn new() -> ServerOptions {
         ServerOptions {
-            open_mode: winbase::PIPE_ACCESS_DUPLEX | winbase::FILE_FLAG_OVERLAPPED,
-            pipe_mode: winbase::PIPE_TYPE_BYTE | winbase::PIPE_REJECT_REMOTE_CLIENTS,
-            max_instances: winbase::PIPE_UNLIMITED_INSTANCES,
+            access_inbound: true,
+            access_outbound: true,
+            first_pipe_instance: false,
+            write_dac: false,
+            write_owner: false,
+            access_system_security: false,
+            pipe_mode: PipeMode::Byte,
+            reject_remote_clients: true,
+            max_instances: windows_sys::PIPE_UNLIMITED_INSTANCES,
             out_buffer_size: 65536,
             in_buffer_size: 65536,
             default_timeout: 0,
@@ -1513,15 +1785,11 @@ impl ServerOptions {
     /// The default pipe mode is [`PipeMode::Byte`]. See [`PipeMode`] for
     /// documentation of what each mode means.
     ///
-    /// This corresponding to specifying [`dwPipeMode`].
+    /// This corresponds to specifying `PIPE_TYPE_` and `PIPE_READMODE_` in  [`dwPipeMode`].
     ///
     /// [`dwPipeMode`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
     pub fn pipe_mode(&mut self, pipe_mode: PipeMode) -> &mut Self {
-        self.pipe_mode = match pipe_mode {
-            PipeMode::Byte => winbase::PIPE_TYPE_BYTE,
-            PipeMode::Message => winbase::PIPE_TYPE_MESSAGE,
-        };
-
+        self.pipe_mode = pipe_mode;
         self
     }
 
@@ -1617,7 +1885,7 @@ impl ServerOptions {
     /// # Ok(()) }
     /// ```
     pub fn access_inbound(&mut self, allowed: bool) -> &mut Self {
-        bool_flag!(self.open_mode, allowed, winbase::PIPE_ACCESS_INBOUND);
+        self.access_inbound = allowed;
         self
     }
 
@@ -1715,7 +1983,7 @@ impl ServerOptions {
     /// # Ok(()) }
     /// ```
     pub fn access_outbound(&mut self, allowed: bool) -> &mut Self {
-        bool_flag!(self.open_mode, allowed, winbase::PIPE_ACCESS_OUTBOUND);
+        self.access_outbound = allowed;
         self
     }
 
@@ -1783,11 +2051,109 @@ impl ServerOptions {
     /// [`create`]: ServerOptions::create
     /// [`FILE_FLAG_FIRST_PIPE_INSTANCE`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea#pipe_first_pipe_instance
     pub fn first_pipe_instance(&mut self, first: bool) -> &mut Self {
-        bool_flag!(
-            self.open_mode,
-            first,
-            winbase::FILE_FLAG_FIRST_PIPE_INSTANCE
-        );
+        self.first_pipe_instance = first;
+        self
+    }
+
+    /// Requests permission to modify the pipe's discretionary access control list.
+    ///
+    /// This corresponds to setting [`WRITE_DAC`] in dwOpenMode.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::{io, os::windows::prelude::AsRawHandle, ptr};
+    //
+    /// use tokio::net::windows::named_pipe::ServerOptions;
+    /// use windows_sys::{
+    ///     Win32::Foundation::ERROR_SUCCESS,
+    ///     Win32::Security::DACL_SECURITY_INFORMATION,
+    ///     Win32::Security::Authorization::{SetSecurityInfo, SE_KERNEL_OBJECT},
+    /// };
+    ///
+    /// const PIPE_NAME: &str = r"\\.\pipe\write_dac_pipe";
+    ///
+    /// # #[tokio::main] async fn main() -> io::Result<()> {
+    /// let mut pipe_template = ServerOptions::new();
+    /// pipe_template.write_dac(true);
+    /// let pipe = pipe_template.create(PIPE_NAME)?;
+    ///
+    /// unsafe {
+    ///     assert_eq!(
+    ///         ERROR_SUCCESS,
+    ///         SetSecurityInfo(
+    ///             pipe.as_raw_handle() as _,
+    ///             SE_KERNEL_OBJECT,
+    ///             DACL_SECURITY_INFORMATION,
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///         )
+    ///     );
+    /// }
+    ///
+    /// # Ok(()) }
+    /// ```
+    ///
+    /// ```
+    /// use std::{io, os::windows::prelude::AsRawHandle, ptr};
+    //
+    /// use tokio::net::windows::named_pipe::ServerOptions;
+    /// use windows_sys::{
+    ///     Win32::Foundation::ERROR_ACCESS_DENIED,
+    ///     Win32::Security::DACL_SECURITY_INFORMATION,
+    ///     Win32::Security::Authorization::{SetSecurityInfo, SE_KERNEL_OBJECT},
+    /// };
+    ///
+    /// const PIPE_NAME: &str = r"\\.\pipe\write_dac_pipe_fail";
+    ///
+    /// # #[tokio::main] async fn main() -> io::Result<()> {
+    /// let mut pipe_template = ServerOptions::new();
+    /// pipe_template.write_dac(false);
+    /// let pipe = pipe_template.create(PIPE_NAME)?;
+    ///
+    /// unsafe {
+    ///     assert_eq!(
+    ///         ERROR_ACCESS_DENIED,
+    ///         SetSecurityInfo(
+    ///             pipe.as_raw_handle() as _,
+    ///             SE_KERNEL_OBJECT,
+    ///             DACL_SECURITY_INFORMATION,
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///             ptr::null_mut(),
+    ///         )
+    ///     );
+    /// }
+    ///
+    /// # Ok(()) }
+    /// ```
+    ///
+    /// [`WRITE_DAC`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
+    pub fn write_dac(&mut self, requested: bool) -> &mut Self {
+        self.write_dac = requested;
+        self
+    }
+
+    /// Requests permission to modify the pipe's owner.
+    ///
+    /// This corresponds to setting [`WRITE_OWNER`] in dwOpenMode.
+    ///
+    /// [`WRITE_OWNER`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
+    pub fn write_owner(&mut self, requested: bool) -> &mut Self {
+        self.write_owner = requested;
+        self
+    }
+
+    /// Requests permission to modify the pipe's system access control list.
+    ///
+    /// This corresponds to setting [`ACCESS_SYSTEM_SECURITY`] in dwOpenMode.
+    ///
+    /// [`ACCESS_SYSTEM_SECURITY`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
+    pub fn access_system_security(&mut self, requested: bool) -> &mut Self {
+        self.access_system_security = requested;
         self
     }
 
@@ -1798,7 +2164,7 @@ impl ServerOptions {
     ///
     /// [`PIPE_REJECT_REMOTE_CLIENTS`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea#pipe_reject_remote_clients
     pub fn reject_remote_clients(&mut self, reject: bool) -> &mut Self {
-        bool_flag!(self.pipe_mode, reject, winbase::PIPE_REJECT_REMOTE_CLIENTS);
+        self.reject_remote_clients = reject;
         self
     }
 
@@ -1820,7 +2186,7 @@ impl ServerOptions {
     /// ```
     /// use std::io;
     /// use tokio::net::windows::named_pipe::{ServerOptions, ClientOptions};
-    /// use winapi::shared::winerror;
+    /// use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
     ///
     /// const PIPE_NAME: &str = r"\\.\pipe\tokio-named-pipe-max-instances";
     ///
@@ -1836,11 +2202,11 @@ impl ServerOptions {
     ///
     /// // Too many servers!
     /// let e = server.create(PIPE_NAME).unwrap_err();
-    /// assert_eq!(e.raw_os_error(), Some(winerror::ERROR_PIPE_BUSY as i32));
+    /// assert_eq!(e.raw_os_error(), Some(ERROR_PIPE_BUSY as i32));
     ///
     /// // Still too many servers even if we specify a higher value!
     /// let e = server.max_instances(100).create(PIPE_NAME).unwrap_err();
-    /// assert_eq!(e.raw_os_error(), Some(winerror::ERROR_PIPE_BUSY as i32));
+    /// assert_eq!(e.raw_os_error(), Some(ERROR_PIPE_BUSY as i32));
     /// # Ok(()) }
     /// ```
     ///
@@ -1856,9 +2222,10 @@ impl ServerOptions {
     /// let builder = ServerOptions::new().max_instances(255);
     /// # Ok(()) }
     /// ```
+    #[track_caller]
     pub fn max_instances(&mut self, instances: usize) -> &mut Self {
         assert!(instances < 255, "cannot specify more than 254 instances");
-        self.max_instances = instances as DWORD;
+        self.max_instances = instances as u32;
         self
     }
 
@@ -1868,7 +2235,7 @@ impl ServerOptions {
     ///
     /// [`nOutBufferSize`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
     pub fn out_buffer_size(&mut self, buffer: u32) -> &mut Self {
-        self.out_buffer_size = buffer as DWORD;
+        self.out_buffer_size = buffer;
         self
     }
 
@@ -1878,7 +2245,7 @@ impl ServerOptions {
     ///
     /// [`nInBufferSize`]: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
     pub fn in_buffer_size(&mut self, buffer: u32) -> &mut Self {
-        self.in_buffer_size = buffer as DWORD;
+        self.in_buffer_size = buffer;
         self
     }
 
@@ -1935,7 +2302,7 @@ impl ServerOptions {
     ///
     /// [`create`]: ServerOptions::create
     /// [`CreateFile`]: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
-    /// [`SECURITY_ATTRIBUTES`]: crate::winapi::um::minwinbase::SECURITY_ATTRIBUTES
+    /// [`SECURITY_ATTRIBUTES`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Security/struct.SECURITY_ATTRIBUTES.html
     pub unsafe fn create_with_security_attributes_raw(
         &self,
         addr: impl AsRef<OsStr>,
@@ -1943,10 +2310,46 @@ impl ServerOptions {
     ) -> io::Result<NamedPipeServer> {
         let addr = encode_addr(addr);
 
-        let h = namedpipeapi::CreateNamedPipeW(
+        let pipe_mode = {
+            let mut mode = if matches!(self.pipe_mode, PipeMode::Message) {
+                windows_sys::PIPE_TYPE_MESSAGE | windows_sys::PIPE_READMODE_MESSAGE
+            } else {
+                windows_sys::PIPE_TYPE_BYTE | windows_sys::PIPE_READMODE_BYTE
+            };
+            if self.reject_remote_clients {
+                mode |= windows_sys::PIPE_REJECT_REMOTE_CLIENTS;
+            } else {
+                mode |= windows_sys::PIPE_ACCEPT_REMOTE_CLIENTS;
+            }
+            mode
+        };
+        let open_mode = {
+            let mut mode = windows_sys::FILE_FLAG_OVERLAPPED;
+            if self.access_inbound {
+                mode |= windows_sys::PIPE_ACCESS_INBOUND;
+            }
+            if self.access_outbound {
+                mode |= windows_sys::PIPE_ACCESS_OUTBOUND;
+            }
+            if self.first_pipe_instance {
+                mode |= windows_sys::FILE_FLAG_FIRST_PIPE_INSTANCE;
+            }
+            if self.write_dac {
+                mode |= windows_sys::WRITE_DAC;
+            }
+            if self.write_owner {
+                mode |= windows_sys::WRITE_OWNER;
+            }
+            if self.access_system_security {
+                mode |= windows_sys::ACCESS_SYSTEM_SECURITY;
+            }
+            mode
+        };
+
+        let h = windows_sys::CreateNamedPipeW(
             addr.as_ptr(),
-            self.open_mode,
-            self.pipe_mode,
+            open_mode,
+            pipe_mode,
             self.max_instances,
             self.out_buffer_size,
             self.in_buffer_size,
@@ -1954,11 +2357,11 @@ impl ServerOptions {
             attrs as *mut _,
         );
 
-        if h == handleapi::INVALID_HANDLE_VALUE {
+        if h == windows_sys::INVALID_HANDLE_VALUE {
             return Err(io::Error::last_os_error());
         }
 
-        NamedPipeServer::from_raw_handle(h)
+        NamedPipeServer::from_raw_handle(h as _)
     }
 }
 
@@ -1968,8 +2371,10 @@ impl ServerOptions {
 /// See [`ClientOptions::open`].
 #[derive(Debug, Clone)]
 pub struct ClientOptions {
-    desired_access: DWORD,
-    security_qos_flags: DWORD,
+    generic_read: bool,
+    generic_write: bool,
+    security_qos_flags: u32,
+    pipe_mode: PipeMode,
 }
 
 impl ClientOptions {
@@ -1988,8 +2393,11 @@ impl ClientOptions {
     /// ```
     pub fn new() -> Self {
         Self {
-            desired_access: winnt::GENERIC_READ | winnt::GENERIC_WRITE,
-            security_qos_flags: winbase::SECURITY_IDENTIFICATION | winbase::SECURITY_SQOS_PRESENT,
+            generic_read: true,
+            generic_write: true,
+            security_qos_flags: windows_sys::SECURITY_IDENTIFICATION
+                | windows_sys::SECURITY_SQOS_PRESENT,
+            pipe_mode: PipeMode::Byte,
         }
     }
 
@@ -2000,7 +2408,7 @@ impl ClientOptions {
     /// [`GENERIC_READ`]: https://docs.microsoft.com/en-us/windows/win32/secauthz/generic-access-rights
     /// [`CreateFile`]: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
     pub fn read(&mut self, allowed: bool) -> &mut Self {
-        bool_flag!(self.desired_access, allowed, winnt::GENERIC_READ);
+        self.generic_read = allowed;
         self
     }
 
@@ -2011,7 +2419,7 @@ impl ClientOptions {
     /// [`GENERIC_WRITE`]: https://docs.microsoft.com/en-us/windows/win32/secauthz/generic-access-rights
     /// [`CreateFile`]: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
     pub fn write(&mut self, allowed: bool) -> &mut Self {
-        bool_flag!(self.desired_access, allowed, winnt::GENERIC_WRITE);
+        self.generic_write = allowed;
         self
     }
 
@@ -2034,11 +2442,20 @@ impl ClientOptions {
     /// automatically when using this method.
     ///
     /// [`CreateFile`]: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
-    /// [`SECURITY_IDENTIFICATION`]: crate::winapi::um::winbase::SECURITY_IDENTIFICATION
+    /// [`SECURITY_IDENTIFICATION`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Storage/FileSystem/constant.SECURITY_IDENTIFICATION.html
     /// [Impersonation Levels]: https://docs.microsoft.com/en-us/windows/win32/api/winnt/ne-winnt-security_impersonation_level
     pub fn security_qos_flags(&mut self, flags: u32) -> &mut Self {
         // See: https://github.com/rust-lang/rust/pull/58216
-        self.security_qos_flags = flags | winbase::SECURITY_SQOS_PRESENT;
+        self.security_qos_flags = flags | windows_sys::SECURITY_SQOS_PRESENT;
+        self
+    }
+
+    /// The pipe mode.
+    ///
+    /// The default pipe mode is [`PipeMode::Byte`]. See [`PipeMode`] for
+    /// documentation of what each mode means.
+    pub fn pipe_mode(&mut self, pipe_mode: PipeMode) -> &mut Self {
+        self.pipe_mode = pipe_mode;
         self
     }
 
@@ -2063,8 +2480,7 @@ impl ClientOptions {
     ///   but the server is not currently waiting for a connection. Please see the
     ///   examples for how to check for this error.
     ///
-    /// [`ERROR_PIPE_BUSY`]: crate::winapi::shared::winerror::ERROR_PIPE_BUSY
-    /// [`winapi`]: crate::winapi
+    /// [`ERROR_PIPE_BUSY`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Foundation/constant.ERROR_PIPE_BUSY.html
     /// [enabled I/O]: crate::runtime::Builder::enable_io
     /// [Tokio Runtime]: crate::runtime::Runtime
     ///
@@ -2075,7 +2491,7 @@ impl ClientOptions {
     /// use std::time::Duration;
     /// use tokio::net::windows::named_pipe::ClientOptions;
     /// use tokio::time;
-    /// use winapi::shared::winerror;
+    /// use windows_sys::Win32::Foundation::ERROR_PIPE_BUSY;
     ///
     /// const PIPE_NAME: &str = r"\\.\pipe\mynamedpipe";
     ///
@@ -2083,7 +2499,7 @@ impl ClientOptions {
     /// let client = loop {
     ///     match ClientOptions::new().open(PIPE_NAME) {
     ///         Ok(client) => break client,
-    ///         Err(e) if e.raw_os_error() == Some(winerror::ERROR_PIPE_BUSY as i32) => (),
+    ///         Err(e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => (),
     ///         Err(e) => return Err(e),
     ///     }
     ///
@@ -2113,7 +2529,7 @@ impl ClientOptions {
     ///
     /// [`open`]: ClientOptions::open
     /// [`CreateFile`]: https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew
-    /// [`SECURITY_ATTRIBUTES`]: crate::winapi::um::minwinbase::SECURITY_ATTRIBUTES
+    /// [`SECURITY_ATTRIBUTES`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Security/struct.SECURITY_ATTRIBUTES.html
     pub unsafe fn open_with_security_attributes_raw(
         &self,
         addr: impl AsRef<OsStr>,
@@ -2121,29 +2537,50 @@ impl ClientOptions {
     ) -> io::Result<NamedPipeClient> {
         let addr = encode_addr(addr);
 
+        let desired_access = {
+            let mut access = 0;
+            if self.generic_read {
+                access |= windows_sys::GENERIC_READ;
+            }
+            if self.generic_write {
+                access |= windows_sys::GENERIC_WRITE;
+            }
+            access
+        };
+
         // NB: We could use a platform specialized `OpenOptions` here, but since
-        // we have access to winapi it ultimately doesn't hurt to use
+        // we have access to windows_sys it ultimately doesn't hurt to use
         // `CreateFile` explicitly since it allows the use of our already
         // well-structured wide `addr` to pass into CreateFileW.
-        let h = fileapi::CreateFileW(
+        let h = windows_sys::CreateFileW(
             addr.as_ptr(),
-            self.desired_access,
+            desired_access,
             0,
             attrs as *mut _,
-            fileapi::OPEN_EXISTING,
+            windows_sys::OPEN_EXISTING,
             self.get_flags(),
-            ptr::null_mut(),
+            0,
         );
 
-        if h == handleapi::INVALID_HANDLE_VALUE {
+        if h == windows_sys::INVALID_HANDLE_VALUE {
             return Err(io::Error::last_os_error());
         }
 
-        NamedPipeClient::from_raw_handle(h)
+        if matches!(self.pipe_mode, PipeMode::Message) {
+            let mode = windows_sys::PIPE_READMODE_MESSAGE;
+            let result =
+                windows_sys::SetNamedPipeHandleState(h, &mode, ptr::null_mut(), ptr::null_mut());
+
+            if result == 0 {
+                return Err(io::Error::last_os_error());
+            }
+        }
+
+        NamedPipeClient::from_raw_handle(h as _)
     }
 
     fn get_flags(&self) -> u32 {
-        self.security_qos_flags | winbase::FILE_FLAG_OVERLAPPED
+        self.security_qos_flags | windows_sys::FILE_FLAG_OVERLAPPED
     }
 }
 
@@ -2156,16 +2593,19 @@ pub enum PipeMode {
     /// Data is written to the pipe as a stream of bytes. The pipe does not
     /// distinguish bytes written during different write operations.
     ///
-    /// Corresponds to [`PIPE_TYPE_BYTE`][crate::winapi::um::winbase::PIPE_TYPE_BYTE].
+    /// Corresponds to [`PIPE_TYPE_BYTE`].
+    ///
+    /// [`PIPE_TYPE_BYTE`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Pipes/constant.PIPE_TYPE_BYTE.html
     Byte,
     /// Data is written to the pipe as a stream of messages. The pipe treats the
     /// bytes written during each write operation as a message unit. Any reading
     /// on a named pipe returns [`ERROR_MORE_DATA`] when a message is not read
     /// completely.
     ///
-    /// Corresponds to [`PIPE_TYPE_MESSAGE`][crate::winapi::um::winbase::PIPE_TYPE_MESSAGE].
+    /// Corresponds to [`PIPE_TYPE_MESSAGE`].
     ///
-    /// [`ERROR_MORE_DATA`]: crate::winapi::shared::winerror::ERROR_MORE_DATA
+    /// [`ERROR_MORE_DATA`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/Foundation/constant.ERROR_MORE_DATA.html
+    /// [`PIPE_TYPE_MESSAGE`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Pipes/constant.PIPE_TYPE_MESSAGE.html
     Message,
 }
 
@@ -2175,11 +2615,15 @@ pub enum PipeMode {
 pub enum PipeEnd {
     /// The named pipe refers to the client end of a named pipe instance.
     ///
-    /// Corresponds to [`PIPE_CLIENT_END`][crate::winapi::um::winbase::PIPE_CLIENT_END].
+    /// Corresponds to [`PIPE_CLIENT_END`].
+    ///
+    /// [`PIPE_CLIENT_END`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Pipes/constant.PIPE_CLIENT_END.html
     Client,
     /// The named pipe refers to the server end of a named pipe instance.
     ///
-    /// Corresponds to [`PIPE_SERVER_END`][crate::winapi::um::winbase::PIPE_SERVER_END].
+    /// Corresponds to [`PIPE_SERVER_END`].
+    ///
+    /// [`PIPE_SERVER_END`]: https://docs.rs/windows-sys/latest/windows_sys/Win32/System/Pipes/constant.PIPE_SERVER_END.html
     Server,
 }
 
@@ -2217,26 +2661,26 @@ unsafe fn named_pipe_info(handle: RawHandle) -> io::Result<PipeInfo> {
     let mut in_buffer_size = 0;
     let mut max_instances = 0;
 
-    let result = namedpipeapi::GetNamedPipeInfo(
-        handle,
+    let result = windows_sys::GetNamedPipeInfo(
+        handle as _,
         &mut flags,
         &mut out_buffer_size,
         &mut in_buffer_size,
         &mut max_instances,
     );
 
-    if result == FALSE {
+    if result == 0 {
         return Err(io::Error::last_os_error());
     }
 
     let mut end = PipeEnd::Client;
     let mut mode = PipeMode::Byte;
 
-    if flags & winbase::PIPE_SERVER_END != 0 {
+    if flags & windows_sys::PIPE_SERVER_END != 0 {
         end = PipeEnd::Server;
     }
 
-    if flags & winbase::PIPE_TYPE_MESSAGE != 0 {
+    if flags & windows_sys::PIPE_TYPE_MESSAGE != 0 {
         mode = PipeMode::Message;
     }
 

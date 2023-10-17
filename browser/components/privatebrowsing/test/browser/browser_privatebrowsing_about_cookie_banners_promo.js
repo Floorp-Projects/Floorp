@@ -51,24 +51,22 @@ add_task(async function test_cookie_banners_promo() {
   });
   await ASRouter.onPrefChange();
 
-  const { win, tab } = await openTabAndWaitForRender();
-
+  const sandbox = sinon.createSandbox();
   const expectedUrl = Services.urlFormatter.formatURL(
     "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cookie-banner-reduction"
   );
-  let tabOpened = new Promise(resolve => {
-    win.gBrowser.tabContainer.addEventListener(
-      "TabOpen",
-      event => {
-        let newTab = event.target;
-        let newBrowser = newTab.linkedBrowser;
-        let result = newTab;
-        BrowserTestUtils.waitForDocLoadAndStopIt(expectedUrl, newBrowser).then(
-          () => resolve(result)
-        );
-      },
-      { once: true }
-    );
+
+  const { win, tab } = await openTabAndWaitForRender();
+  let triedToOpenTab = new Promise(resolve => {
+    sandbox.stub(win, "openLinkIn").callsFake((url, where) => {
+      is(url, expectedUrl, "The link should open the expected URL");
+      is(
+        where,
+        "tabshifted",
+        "The link should open the expected URL in a new foreground tab"
+      );
+      resolve();
+    });
   });
 
   await SpecialPowers.spawn(tab, [promoImgSrc], async function (imgSrc) {
@@ -77,10 +75,11 @@ add_task(async function test_cookie_banners_promo() {
     );
     ok(promoImage?.src === imgSrc, "Cookie banner reduction promo is shown");
     let linkEl = content.document.getElementById("private-browsing-promo-link");
-    EventUtils.synthesizeClick(linkEl);
+    linkEl.click();
   });
 
-  await tabOpened;
+  await triedToOpenTab;
+  sandbox.restore();
 
   ok(true, "The link was clicked and the new tab opened");
 

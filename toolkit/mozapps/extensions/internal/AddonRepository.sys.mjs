@@ -245,6 +245,11 @@ AddonSearchResult.prototype = {
   weeklyDownloads: null,
 
   /**
+   * The URL to the AMO detail page of this (listed) add-on
+   */
+  amoListingURL: null,
+
+  /**
    * AddonInstall object generated from the add-on XPI url
    */
   install: null,
@@ -639,7 +644,16 @@ export var AddonRepository = {
   },
 
   /**
-   * Performs the daily background update check.
+   * Performs the periodic background update check.
+   *
+   * In Firefox Desktop builds, the background update check is triggered on a
+   * daily basis as part of the AOM background update check and registered
+   * from: `toolkit/mozapps/extensions/extensions.manifest`
+   *
+   * In GeckoView builds, add-ons are checked for updates individually. The
+   * `AddonRepository.backgroundUpdateCheck()` method is called by the
+   * `updateWebExtension()` method defined in `GeckoViewWebExtensions.sys.mjs`
+   * but only when `AddonRepository.isMetadataStale()` returns true.
    *
    * @return Promise{null} Resolves when the metadata update is complete.
    */
@@ -714,6 +728,7 @@ export var AddonRepository = {
     }
     addon.homepageURL = aEntry.homepage;
     addon.supportURL = aEntry.support_url;
+    addon.amoListingURL = aEntry.url;
 
     addon.description = convertHTMLToPlainText(aEntry.summary);
     addon.fullDescription = convertHTMLToPlainText(aEntry.description);

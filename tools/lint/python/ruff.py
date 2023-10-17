@@ -13,7 +13,6 @@ from pathlib import Path
 
 import mozfile
 from mozlint import result
-from mozprocess.processhandler import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))
 RUFF_REQUIREMENTS_PATH = os.path.join(here, "ruff_requirements.txt")
@@ -90,29 +89,19 @@ def setup(root, log, **lintargs):
         return 1
 
 
-class RuffProcess(ProcessHandler):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        self.stderr = []
-        kwargs["stream"] = False
-        kwargs["universal_newlines"] = True
-        ProcessHandler.__init__(self, *args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandler.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
-
-
 def run_process(config, cmd, **kwargs):
-    proc = RuffProcess(config, cmd, **kwargs)
-    proc.run()
+    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+    )
+    signal.signal(signal.SIGINT, orig)
     try:
+        output, _ = proc.communicate()
         proc.wait()
     except KeyboardInterrupt:
         proc.kill()
 
-    return "\n".join(proc.output)
+    return output
 
 
 def lint(paths, config, log, **lintargs):

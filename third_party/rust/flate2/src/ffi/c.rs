@@ -215,9 +215,9 @@ impl InflateBackend for Inflate {
         let raw = &mut *self.inner.stream_wrapper;
         raw.msg = ptr::null_mut();
         raw.next_in = input.as_ptr() as *mut u8;
-        raw.avail_in = cmp::min(input.len(), c_uint::max_value() as usize) as c_uint;
+        raw.avail_in = cmp::min(input.len(), c_uint::MAX as usize) as c_uint;
         raw.next_out = output.as_mut_ptr();
-        raw.avail_out = cmp::min(output.len(), c_uint::max_value() as usize) as c_uint;
+        raw.avail_out = cmp::min(output.len(), c_uint::MAX as usize) as c_uint;
 
         let rc = unsafe { mz_inflate(raw, flush as c_int) };
 
@@ -303,9 +303,9 @@ impl DeflateBackend for Deflate {
         let raw = &mut *self.inner.stream_wrapper;
         raw.msg = ptr::null_mut();
         raw.next_in = input.as_ptr() as *mut _;
-        raw.avail_in = cmp::min(input.len(), c_uint::max_value() as usize) as c_uint;
+        raw.avail_in = cmp::min(input.len(), c_uint::MAX as usize) as c_uint;
         raw.next_out = output.as_mut_ptr();
-        raw.avail_out = cmp::min(output.len(), c_uint::max_value() as usize) as c_uint;
+        raw.avail_out = cmp::min(output.len(), c_uint::MAX as usize) as c_uint;
 
         let rc = unsafe { mz_deflate(raw, flush as c_int) };
 

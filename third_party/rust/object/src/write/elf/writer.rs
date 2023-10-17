@@ -5,6 +5,7 @@ use core::mem;
 
 use crate::elf;
 use crate::endian::*;
+use crate::pod;
 use crate::write::string::{StringId, StringTable};
 use crate::write::util;
 use crate::write::{Error, Result, WritableBuffer};
@@ -113,6 +114,10 @@ pub struct Writer<'a> {
     gnu_verneed_count: u16,
     gnu_verneed_remaining: u16,
     gnu_vernaux_remaining: u16,
+
+    gnu_attributes_str_id: Option<StringId>,
+    gnu_attributes_offset: usize,
+    gnu_attributes_size: usize,
 }
 
 impl<'a> Writer<'a> {
@@ -198,6 +203,10 @@ impl<'a> Writer<'a> {
             gnu_verneed_count: 0,
             gnu_verneed_remaining: 0,
             gnu_vernaux_remaining: 0,
+
+            gnu_attributes_str_id: None,
+            gnu_attributes_offset: 0,
+            gnu_attributes_size: 0,
         }
     }
 
@@ -216,10 +225,9 @@ impl<'a> Writer<'a> {
     ///
     /// Returns the aligned offset of the start of the range.
     pub fn reserve(&mut self, len: usize, align_start: usize) -> usize {
-        if len == 0 {
-            return self.len;
+        if align_start > 1 {
+            self.len = util::align(self.len, align_start);
         }
-        self.len = util::align(self.len, align_start);
         let offset = self.len;
         self.len += len;
         offset
@@ -227,7 +235,9 @@ impl<'a> Writer<'a> {
 
     /// Write alignment padding bytes.
     pub fn write_align(&mut self, align_start: usize) {
-        util::write_align(self.buffer, align_start);
+        if align_start > 1 {
+            util::write_align(self.buffer, align_start);
+        }
     }
 
     /// Write data.
@@ -1735,6 +1745,54 @@ impl<'a> Writer<'a> {
         });
     }
 
+    /// Reserve the section index for the `.gnu.attributes` section.
+    pub fn reserve_gnu_attributes_section_index(&mut self) -> SectionIndex {
+        debug_assert!(self.gnu_attributes_str_id.is_none());
+        self.gnu_attributes_str_id = Some(self.add_section_name(&b".gnu.attributes"[..]));
+        self.reserve_section_index()
+    }
+
+    /// Reserve the range for the `.gnu.attributes` section.
+    pub fn reserve_gnu_attributes(&mut self, gnu_attributes_size: usize) {
+        debug_assert_eq!(self.gnu_attributes_offset, 0);
+        if gnu_attributes_size == 0 {
+            return;
+        }
+        self.gnu_attributes_size = gnu_attributes_size;
+        self.gnu_attributes_offset = self.reserve(self.gnu_attributes_size, self.elf_align);
+    }
+
+    /// Write the section header for the `.gnu.attributes` section.
+    ///
+    /// This function does nothing if the section index was not reserved.
+    pub fn write_gnu_attributes_section_header(&mut self) {
+        if self.gnu_attributes_str_id.is_none() {
+            return;
+        }
+        self.write_section_header(&SectionHeader {
+            name: self.gnu_attributes_str_id,
+            sh_type: elf::SHT_GNU_ATTRIBUTES,
+            sh_flags: 0,
+            sh_addr: 0,
+            sh_offset: self.gnu_attributes_offset as u64,
+            sh_size: self.gnu_attributes_size as u64,
+            sh_link: self.dynstr_index.0,
+            sh_info: 0, // TODO
+            sh_addralign: self.elf_align as u64,
+            sh_entsize: 0,
+        });
+    }
+
+    /// Write the data for the `.gnu.attributes` section.
+    pub fn write_gnu_attributes(&mut self, data: &[u8]) {
+        if self.gnu_attributes_offset == 0 {
+            return;
+        }
+        util::write_align(self.buffer, self.elf_align);
+        debug_assert_eq!(self.gnu_attributes_offset, self.buffer.len());
+        self.buffer.write_bytes(data);
+    }
+
     /// Reserve a file range for the given number of relocations.
     ///
     /// Returns the offset of the range.
@@ -1856,6 +1914,136 @@ impl<'a> Writer<'a> {
             sh_addralign: 4,
             sh_entsize: 4,
         });
+    }
+
+    /// Return a helper for writing an attributes section.
+    pub fn attributes_writer(&self) -> AttributesWriter {
+        AttributesWriter::new(self.endian)
+    }
+}
+
+/// A helper for writing an attributes section.
+///
+/// Attributes have a variable length encoding, so it is awkward to write them in a
+/// single pass. Instead, we build the entire attributes section data in memory, using
+/// placeholders for unknown lengths that are filled in later.
+#[allow(missing_debug_implementations)]
+pub struct AttributesWriter {
+    endian: Endianness,
+    data: Vec<u8>,
+    subsection_offset: usize,
+    subsubsection_offset: usize,
+}
+
+impl AttributesWriter {
+    /// Create a new `AttributesWriter` for the given endianness.
+    pub fn new(endian: Endianness) -> Self {
+        AttributesWriter {
+            endian,
+            data: vec![0x41],
+            subsection_offset: 0,
+            subsubsection_offset: 0,
+        }
+    }
+
+    /// Start a new subsection with the given vendor name.
+    pub fn start_subsection(&mut self, vendor: &[u8]) {
+        debug_assert_eq!(self.subsection_offset, 0);
+        debug_assert_eq!(self.subsubsection_offset, 0);
+        self.subsection_offset = self.data.len();
+        self.data.extend_from_slice(&[0; 4]);
+        self.data.extend_from_slice(vendor);
+        self.data.push(0);
+    }
+
+    /// End the subsection.
+    ///
+    /// The subsection length is automatically calculated and written.
+    pub fn end_subsection(&mut self) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_eq!(self.subsubsection_offset, 0);
+        let length = self.data.len() - self.subsection_offset;
+        self.data[self.subsection_offset..][..4]
+            .copy_from_slice(pod::bytes_of(&U32::new(self.endian, length as u32)));
+        self.subsection_offset = 0;
+    }
+
+    /// Start a new sub-subsection with the given tag.
+    pub fn start_subsubsection(&mut self, tag: u8) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_eq!(self.subsubsection_offset, 0);
+        self.subsubsection_offset = self.data.len();
+        self.data.push(tag);
+        self.data.extend_from_slice(&[0; 4]);
+    }
+
+    /// Write a section or symbol index to the sub-subsection.
+    ///
+    /// The user must also call this function to write the terminating 0 index.
+    pub fn write_subsubsection_index(&mut self, index: u32) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        util::write_uleb128(&mut self.data, u64::from(index));
+    }
+
+    /// Write raw index data to the sub-subsection.
+    ///
+    /// The terminating 0 index is automatically written.
+    pub fn write_subsubsection_indices(&mut self, indices: &[u8]) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        self.data.extend_from_slice(indices);
+        self.data.push(0);
+    }
+
+    /// Write an attribute tag to the sub-subsection.
+    pub fn write_attribute_tag(&mut self, tag: u64) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        util::write_uleb128(&mut self.data, tag);
+    }
+
+    /// Write an attribute integer value to the sub-subsection.
+    pub fn write_attribute_integer(&mut self, value: u64) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        util::write_uleb128(&mut self.data, value);
+    }
+
+    /// Write an attribute string value to the sub-subsection.
+    ///
+    /// The value must not include the null terminator.
+    pub fn write_attribute_string(&mut self, value: &[u8]) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        self.data.extend_from_slice(value);
+        self.data.push(0);
+    }
+
+    /// Write raw attribute data to the sub-subsection.
+    pub fn write_subsubsection_attributes(&mut self, attributes: &[u8]) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        self.data.extend_from_slice(attributes);
+    }
+
+    /// End the sub-subsection.
+    ///
+    /// The sub-subsection length is automatically calculated and written.
+    pub fn end_subsubsection(&mut self) {
+        debug_assert_ne!(self.subsection_offset, 0);
+        debug_assert_ne!(self.subsubsection_offset, 0);
+        let length = self.data.len() - self.subsubsection_offset;
+        self.data[self.subsubsection_offset + 1..][..4]
+            .copy_from_slice(pod::bytes_of(&U32::new(self.endian, length as u32)));
+        self.subsubsection_offset = 0;
+    }
+
+    /// Return the completed section data.
+    pub fn data(self) -> Vec<u8> {
+        debug_assert_eq!(self.subsection_offset, 0);
+        debug_assert_eq!(self.subsubsection_offset, 0);
+        self.data
     }
 }
 

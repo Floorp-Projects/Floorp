@@ -32,6 +32,7 @@ use winapi::um::winsock2::{
     self as sock, u_long, POLLERR, POLLHUP, POLLRDNORM, POLLWRNORM, SD_BOTH, SD_RECEIVE, SD_SEND,
     WSAPOLLFD,
 };
+use winapi::um::winsock2::{SOCKET_ERROR, WSAEMSGSIZE, WSAESHUTDOWN};
 
 use crate::{RecvFlags, SockAddr, TcpKeepalive, Type};
 
@@ -464,6 +465,38 @@ pub(crate) fn recv_from(
             }
         })
     }
+}
+
+pub(crate) fn peek_sender(socket: Socket) -> io::Result<SockAddr> {
+    // Safety: `recvfrom` initialises the `SockAddr` for us.
+    let ((), sender) = unsafe {
+        SockAddr::init(|storage, addrlen| {
+            let res = syscall!(
+                recvfrom(
+                    socket,
+                    // Windows *appears* not to care if you pass a null pointer.
+                    ptr::null_mut(),
+                    0,
+                    MSG_PEEK,
+                    storage.cast(),
+                    addrlen,
+                ),
+                PartialEq::eq,
+                SOCKET_ERROR
+            );
+            match res {
+                Ok(_n) => Ok(()),
+                Err(e) => match e.raw_os_error() {
+                    Some(code) if code == (WSAESHUTDOWN as i32) || code == (WSAEMSGSIZE as i32) => {
+                        Ok(())
+                    }
+                    _ => Err(e),
+                },
+            }
+        })
+    }?;
+
+    Ok(sender)
 }
 
 pub(crate) fn recv_from_vectored(

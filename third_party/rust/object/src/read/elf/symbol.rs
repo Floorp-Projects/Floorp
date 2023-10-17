@@ -208,7 +208,6 @@ pub type ElfSymbolTable64<'data, 'file, Endian = Endianness, R = &'data [u8]> =
 #[derive(Debug, Clone, Copy)]
 pub struct ElfSymbolTable<'data, 'file, Elf, R = &'data [u8]>
 where
-    'data: 'file,
     Elf: FileHeader,
     R: ReadRef<'data>,
 {
@@ -256,7 +255,6 @@ pub type ElfSymbolIterator64<'data, 'file, Endian = Endianness, R = &'data [u8]>
 /// An iterator over the symbols of an `ElfFile`.
 pub struct ElfSymbolIterator<'data, 'file, Elf, R = &'data [u8]>
 where
-    'data: 'file,
     Elf: FileHeader,
     R: ReadRef<'data>,
 {
@@ -302,7 +300,6 @@ pub type ElfSymbol64<'data, 'file, Endian = Endianness, R = &'data [u8]> =
 #[derive(Debug, Clone, Copy)]
 pub struct ElfSymbol<'data, 'file, Elf, R = &'data [u8]>
 where
-    'data: 'file,
     Elf: FileHeader,
     R: ReadRef<'data>,
 {
@@ -310,6 +307,14 @@ where
     pub(super) symbols: &'file SymbolTable<'data, Elf, R>,
     pub(super) index: SymbolIndex,
     pub(super) symbol: &'data Elf::Sym,
+}
+
+impl<'data, 'file, Elf: FileHeader, R: ReadRef<'data>> ElfSymbol<'data, 'file, Elf, R> {
+    /// Return a reference to the raw symbol structure.
+    #[inline]
+    pub fn raw_symbol(&self) -> &'data Elf::Sym {
+        self.symbol
+    }
 }
 
 impl<'data, 'file, Elf: FileHeader, R: ReadRef<'data>> read::private::Sealed
@@ -430,7 +435,7 @@ impl<'data, 'file, Elf: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
     }
 
     #[inline]
-    fn flags(&self) -> SymbolFlags<SectionIndex> {
+    fn flags(&self) -> SymbolFlags<SectionIndex, SymbolIndex> {
         SymbolFlags::Elf {
             st_info: self.symbol.st_info(),
             st_other: self.symbol.st_other(),

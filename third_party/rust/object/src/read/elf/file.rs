@@ -161,6 +161,7 @@ where
             (elf::EM_ARM, _) => Architecture::Arm,
             (elf::EM_AVR, _) => Architecture::Avr,
             (elf::EM_BPF, _) => Architecture::Bpf,
+            (elf::EM_CSKY, _) => Architecture::Csky,
             (elf::EM_386, _) => Architecture::I386,
             (elf::EM_X86_64, false) => Architecture::X86_64_X32,
             (elf::EM_X86_64, true) => Architecture::X86_64,
@@ -456,6 +457,15 @@ pub trait FileHeader: Debug + Pod {
     /// This is a property of the type, not a value in the header data.
     fn is_type_64(&self) -> bool;
 
+    /// Return true if this type is a 64-bit header.
+    ///
+    /// This is a property of the type, not a value in the header data.
+    ///
+    /// This is the same as `is_type_64`, but is non-dispatchable.
+    fn is_type_64_sized() -> bool
+    where
+        Self: Sized;
+
     fn e_ident(&self) -> &elf::Ident;
     fn e_type(&self, endian: Self::Endian) -> u16;
     fn e_machine(&self, endian: Self::Endian) -> u16;
@@ -725,6 +735,14 @@ impl<Endian: endian::Endian> FileHeader for elf::FileHeader32<Endian> {
     }
 
     #[inline]
+    fn is_type_64_sized() -> bool
+    where
+        Self: Sized,
+    {
+        false
+    }
+
+    #[inline]
     fn e_ident(&self) -> &elf::Ident {
         &self.e_ident
     }
@@ -810,6 +828,14 @@ impl<Endian: endian::Endian> FileHeader for elf::FileHeader64<Endian> {
 
     #[inline]
     fn is_type_64(&self) -> bool {
+        true
+    }
+
+    #[inline]
+    fn is_type_64_sized() -> bool
+    where
+        Self: Sized,
+    {
         true
     }
 

@@ -30,20 +30,28 @@
   }
 }
 
-@media not (prefers-contrast) {
-  /* Use a different color in inactive windows. */
-  #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
-    color: ThreeDShadow;
-  }
+@media (-moz-windows-accent-color-in-titlebar) {
+  :root[tabsintitlebar] {
+    @media (-moz-windows-accent-color-in-tabs) {
+      --toolbox-non-lwt-bgcolor: ActiveCaption;
+      --toolbox-non-lwt-textcolor: CaptionText;
+      --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
+      --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
+    }
 
-  @media (-moz-windows-accent-color-in-titlebar) {
-    :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
+    &[sizemode="normal"] #navigator-toolbox {
       border-top: .5px solid ActiveBorder;
-
       &:-moz-window-inactive {
         border-top-color: InactiveBorder;
       }
     }
+  }
+}
+
+@media not (prefers-contrast) {
+  /* Use a different color in inactive windows. */
+  #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
+    color: ThreeDShadow;
   }
 
   :root[tabsintitlebar] .tab-label-container:-moz-window-inactive {

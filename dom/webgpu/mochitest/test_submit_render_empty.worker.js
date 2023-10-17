@@ -21,7 +21,8 @@ self.addEventListener("message", async function (event) {
       colorAttachments: [
         {
           view,
-          loadValue: { r: 0, g: 0, b: 0, a: 0 },
+          clearValue: { r: 0, g: 0, b: 0, a: 0 },
+          loadOp: "clear",
           storeOp: "store",
         },
       ],

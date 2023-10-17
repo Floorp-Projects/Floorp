@@ -1,5 +1,3 @@
-extern crate flate2;
-
 use flate2::write::GzEncoder;
 use flate2::{read, Compression};
 use std::io;

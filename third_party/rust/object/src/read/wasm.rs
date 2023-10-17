@@ -6,6 +6,7 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
+use core::ops::Range;
 use core::{slice, str};
 use wasmparser as wp;
 
@@ -17,27 +18,33 @@ use crate::read::{
     SymbolScope, SymbolSection,
 };
 
-const SECTION_CUSTOM: usize = 0;
-const SECTION_TYPE: usize = 1;
-const SECTION_IMPORT: usize = 2;
-const SECTION_FUNCTION: usize = 3;
-const SECTION_TABLE: usize = 4;
-const SECTION_MEMORY: usize = 5;
-const SECTION_GLOBAL: usize = 6;
-const SECTION_EXPORT: usize = 7;
-const SECTION_START: usize = 8;
-const SECTION_ELEMENT: usize = 9;
-const SECTION_CODE: usize = 10;
-const SECTION_DATA: usize = 11;
-const SECTION_DATA_COUNT: usize = 12;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(usize)]
+enum SectionId {
+    Custom = 0,
+    Type = 1,
+    Import = 2,
+    Function = 3,
+    Table = 4,
+    Memory = 5,
+    Global = 6,
+    Export = 7,
+    Start = 8,
+    Element = 9,
+    Code = 10,
+    Data = 11,
+    DataCount = 12,
+}
 // Update this constant when adding new section id:
-const MAX_SECTION_ID: usize = SECTION_DATA_COUNT;
+const MAX_SECTION_ID: usize = SectionId::DataCount as usize;
 
 /// A WebAssembly object file.
 #[derive(Debug)]
 pub struct WasmFile<'data, R = &'data [u8]> {
+    data: &'data [u8],
+    has_memory64: bool,
     // All sections, including custom sections.
-    sections: Vec<wp::Section<'data>>,
+    sections: Vec<SectionHeader<'data>>,
     // Indices into `sections` of sections with a non-zero id.
     id_sections: Box<[Option<usize>; MAX_SECTION_ID + 1]>,
     // Whether the file has DWARF information.
@@ -47,6 +54,13 @@ pub struct WasmFile<'data, R = &'data [u8]> {
     // Address of the function body for the entry point.
     entry: u64,
     marker: PhantomData<R>,
+}
+
+#[derive(Debug)]
+struct SectionHeader<'data> {
+    id: SectionId,
+    range: Range<usize>,
+    name: &'data str,
 }
 
 #[derive(Clone)]
@@ -67,9 +81,11 @@ impl<'data, R: ReadRef<'data>> WasmFile<'data, R> {
     pub fn parse(data: R) -> Result<Self> {
         let len = data.len().read_error("Unknown Wasm file size")?;
         let data = data.read_bytes_at(0, len).read_error("Wasm read failed")?;
-        let module = wp::ModuleReader::new(data).read_error("Invalid Wasm header")?;
+        let parser = wp::Parser::new(0).parse_all(data);
 
         let mut file = WasmFile {
+            data,
+            has_memory64: false,
             sections: Vec::new(),
             id_sections: Default::default(),
             has_debug_symbols: false,
@@ -90,18 +106,23 @@ impl<'data, R: ReadRef<'data>> WasmFile<'data, R> {
         let mut imported_funcs_count = 0;
         let mut local_func_kinds = Vec::new();
         let mut entry_func_id = None;
+        let mut code_range_start = 0;
+        let mut code_func_index = 0;
+        // One-to-one mapping of globals to their value (if the global is a constant integer).
+        let mut global_values = Vec::new();
 
-        for section in module {
-            let section = section.read_error("Invalid Wasm section header")?;
+        for payload in parser {
+            let payload = payload.read_error("Invalid Wasm section header")?;
 
-            match section.code {
-                wp::SectionCode::Import => {
+            match payload {
+                wp::Payload::TypeSection(section) => {
+                    file.add_section(SectionId::Type, section.range(), "");
+                }
+                wp::Payload::ImportSection(section) => {
+                    file.add_section(SectionId::Import, section.range(), "");
                     let mut last_module_name = None;
 
-                    for import in section
-                        .get_import_section_reader()
-                        .read_error("Couldn't read header of the import section")?
-                    {
+                    for import in section {
                         let import = import.read_error("Couldn't read an import item")?;
                         let module_name = import.module;
 
@@ -118,17 +139,20 @@ impl<'data, R: ReadRef<'data>> WasmFile<'data, R> {
                         }
 
                         let kind = match import.ty {
-                            wp::ImportSectionEntryType::Function(_) => {
+                            wp::TypeRef::Func(_) => {
                                 imported_funcs_count += 1;
                                 SymbolKind::Text
                             }
-                            wp::ImportSectionEntryType::Table(_)
-                            | wp::ImportSectionEntryType::Memory(_)
-                            | wp::ImportSectionEntryType::Global(_) => SymbolKind::Data,
+                            wp::TypeRef::Memory(memory) => {
+                                file.has_memory64 |= memory.memory64;
+                                SymbolKind::Data
+                            }
+                            wp::TypeRef::Table(_) | wp::TypeRef::Global(_) => SymbolKind::Data,
+                            wp::TypeRef::Tag(_) => SymbolKind::Unknown,
                         };
 
                         file.symbols.push(WasmSymbolInternal {
-                            name: import.field,
+                            name: import.name,
                             address: 0,
                             size: 0,
                             kind,
@@ -137,28 +161,49 @@ impl<'data, R: ReadRef<'data>> WasmFile<'data, R> {
                         });
                     }
                 }
-                wp::SectionCode::Function => {
-                    local_func_kinds = vec![
-                        LocalFunctionKind::Unknown;
-                        section
-                            .get_function_section_reader()
-                            .read_error("Couldn't read header of the function section")?
-                            .get_count() as usize
-                    ];
+                wp::Payload::FunctionSection(section) => {
+                    file.add_section(SectionId::Function, section.range(), "");
+                    local_func_kinds =
+                        vec![LocalFunctionKind::Unknown; section.into_iter().count()];
                 }
-                wp::SectionCode::Export => {
+                wp::Payload::TableSection(section) => {
+                    file.add_section(SectionId::Table, section.range(), "");
+                }
+                wp::Payload::MemorySection(section) => {
+                    file.add_section(SectionId::Memory, section.range(), "");
+                    for memory in section {
+                        let memory = memory.read_error("Couldn't read a memory item")?;
+                        file.has_memory64 |= memory.memory64;
+                    }
+                }
+                wp::Payload::GlobalSection(section) => {
+                    file.add_section(SectionId::Global, section.range(), "");
+                    for global in section {
+                        let global = global.read_error("Couldn't read a global item")?;
+                        let mut address = None;
+                        if !global.ty.mutable {
+                            // There should be exactly one instruction.
+                            let init = global.init_expr.get_operators_reader().read();
+                            address = match init.read_error("Couldn't read a global init expr")? {
+                                wp::Operator::I32Const { value } => Some(value as u64),
+                                wp::Operator::I64Const { value } => Some(value as u64),
+                                _ => None,
+                            };
+                        }
+                        global_values.push(address);
+                    }
+                }
+                wp::Payload::ExportSection(section) => {
+                    file.add_section(SectionId::Export, section.range(), "");
                     if let Some(main_file_symbol) = main_file_symbol.take() {
                         file.symbols.push(main_file_symbol);
                     }
 
-                    for export in section
-                        .get_export_section_reader()
-                        .read_error("Couldn't read header of the export section")?
-                    {
+                    for export in section {
                         let export = export.read_error("Couldn't read an export item")?;
 
                         let (kind, section_idx) = match export.kind {
-                            wp::ExternalKind::Function => {
+                            wp::ExternalKind::Func => {
                                 if let Some(local_func_id) =
                                     export.index.checked_sub(imported_funcs_count)
                                 {
@@ -175,133 +220,149 @@ impl<'data, R: ReadRef<'data>> WasmFile<'data, R> {
                                     };
                                     symbol_ids.push(file.symbols.len() as u32);
                                 }
-                                (SymbolKind::Text, SECTION_CODE)
+                                (SymbolKind::Text, SectionId::Code)
                             }
                             wp::ExternalKind::Table
                             | wp::ExternalKind::Memory
-                            | wp::ExternalKind::Global => (SymbolKind::Data, SECTION_DATA),
+                            | wp::ExternalKind::Global => (SymbolKind::Data, SectionId::Data),
+                            // TODO
+                            wp::ExternalKind::Tag => continue,
                         };
 
+                        // Try to guess the symbol address. Rust and C export a global containing
+                        // the address in linear memory of the symbol.
+                        let mut address = 0;
+                        if export.kind == wp::ExternalKind::Global {
+                            if let Some(&Some(x)) = global_values.get(export.index as usize) {
+                                address = x;
+                            }
+                        }
+
                         file.symbols.push(WasmSymbolInternal {
-                            name: export.field,
-                            address: 0,
+                            name: export.name,
+                            address,
                             size: 0,
                             kind,
-                            section: SymbolSection::Section(SectionIndex(section_idx)),
+                            section: SymbolSection::Section(SectionIndex(section_idx as usize)),
                             scope: SymbolScope::Dynamic,
                         });
                     }
                 }
-                wp::SectionCode::Start => {
-                    entry_func_id = Some(
-                        section
-                            .get_start_section_content()
-                            .read_error("Couldn't read contents of the start section")?,
-                    );
+                wp::Payload::StartSection { func, range, .. } => {
+                    file.add_section(SectionId::Start, range, "");
+                    entry_func_id = Some(func);
                 }
-                wp::SectionCode::Code => {
+                wp::Payload::ElementSection(section) => {
+                    file.add_section(SectionId::Element, section.range(), "");
+                }
+                wp::Payload::CodeSectionStart { range, .. } => {
+                    code_range_start = range.start;
+                    file.add_section(SectionId::Code, range, "");
                     if let Some(main_file_symbol) = main_file_symbol.take() {
                         file.symbols.push(main_file_symbol);
                     }
+                }
+                wp::Payload::CodeSectionEntry(body) => {
+                    let i = code_func_index;
+                    code_func_index += 1;
 
-                    for (i, (body, local_func_kind)) in section
-                        .get_code_section_reader()
-                        .read_error("Couldn't read header of the code section")?
-                        .into_iter()
-                        .zip(&mut local_func_kinds)
-                        .enumerate()
-                    {
-                        let body = body.read_error("Couldn't read a function body")?;
-                        let range = body.range();
+                    let range = body.range();
 
-                        let address = range.start as u64 - section.range().start as u64;
-                        let size = (range.end - range.start) as u64;
+                    let address = range.start as u64 - code_range_start as u64;
+                    let size = (range.end - range.start) as u64;
 
-                        if entry_func_id == Some(i as u32) {
-                            file.entry = address;
+                    if entry_func_id == Some(i as u32) {
+                        file.entry = address;
+                    }
+
+                    let local_func_kind = &mut local_func_kinds[i];
+                    match local_func_kind {
+                        LocalFunctionKind::Unknown => {
+                            *local_func_kind = LocalFunctionKind::Local {
+                                symbol_id: file.symbols.len() as u32,
+                            };
+                            file.symbols.push(WasmSymbolInternal {
+                                name: "",
+                                address,
+                                size,
+                                kind: SymbolKind::Text,
+                                section: SymbolSection::Section(SectionIndex(
+                                    SectionId::Code as usize,
+                                )),
+                                scope: SymbolScope::Compilation,
+                            });
                         }
-
-                        match local_func_kind {
-                            LocalFunctionKind::Unknown => {
-                                *local_func_kind = LocalFunctionKind::Local {
-                                    symbol_id: file.symbols.len() as u32,
-                                };
-                                file.symbols.push(WasmSymbolInternal {
-                                    name: "",
-                                    address,
-                                    size,
-                                    kind: SymbolKind::Text,
-                                    section: SymbolSection::Section(SectionIndex(SECTION_CODE)),
-                                    scope: SymbolScope::Compilation,
-                                });
+                        LocalFunctionKind::Exported { symbol_ids } => {
+                            for symbol_id in core::mem::take(symbol_ids) {
+                                let export_symbol = &mut file.symbols[symbol_id as usize];
+                                export_symbol.address = address;
+                                export_symbol.size = size;
                             }
-                            LocalFunctionKind::Exported { symbol_ids } => {
-                                for symbol_id in core::mem::take(symbol_ids) {
-                                    let export_symbol = &mut file.symbols[symbol_id as usize];
-                                    export_symbol.address = address;
-                                    export_symbol.size = size;
-                                }
-                            }
-                            _ => unreachable!(),
                         }
+                        _ => unreachable!(),
                     }
                 }
-                wp::SectionCode::Custom {
-                    kind: wp::CustomSectionKind::Name,
-                    ..
-                } => {
-                    for name in section
-                        .get_name_section_reader()
-                        .read_error("Couldn't read header of the name section")?
-                    {
-                        // TODO: Right now, ill-formed name subsections
-                        // are silently ignored in order to maintain
-                        // compatibility with extended name sections, which
-                        // are not yet supported by the version of
-                        // `wasmparser` currently used.
-                        // A better fix would be to update `wasmparser` to
-                        // the newest version, but this requires
-                        // a major rewrite of this file.
-                        if let Ok(wp::Name::Function(name)) = name {
-                            let mut name_map = name.get_map().read_error(
-                                "Couldn't read header of the function name subsection",
-                            )?;
-                            for _ in 0..name_map.get_count() {
-                                let naming = name_map
-                                    .read()
-                                    .read_error("Couldn't read a function name")?;
-                                if let Some(local_index) =
-                                    naming.index.checked_sub(imported_funcs_count)
-                                {
-                                    if let LocalFunctionKind::Local { symbol_id } =
-                                        local_func_kinds[local_index as usize]
+                wp::Payload::DataSection(section) => {
+                    file.add_section(SectionId::Data, section.range(), "");
+                }
+                wp::Payload::DataCountSection { range, .. } => {
+                    file.add_section(SectionId::DataCount, range, "");
+                }
+                wp::Payload::CustomSection(section) => {
+                    let name = section.name();
+                    let size = section.data().len();
+                    let mut range = section.range();
+                    range.start = range.end - size;
+                    file.add_section(SectionId::Custom, range, name);
+                    if name == "name" {
+                        for name in
+                            wp::NameSectionReader::new(section.data(), section.data_offset())
+                        {
+                            // TODO: Right now, ill-formed name subsections
+                            // are silently ignored in order to maintain
+                            // compatibility with extended name sections, which
+                            // are not yet supported by the version of
+                            // `wasmparser` currently used.
+                            // A better fix would be to update `wasmparser` to
+                            // the newest version, but this requires
+                            // a major rewrite of this file.
+                            if let Ok(wp::Name::Function(name_map)) = name {
+                                for naming in name_map {
+                                    let naming =
+                                        naming.read_error("Couldn't read a function name")?;
+                                    if let Some(local_index) =
+                                        naming.index.checked_sub(imported_funcs_count)
                                     {
-                                        file.symbols[symbol_id as usize].name = naming.name;
+                                        if let LocalFunctionKind::Local { symbol_id } =
+                                            local_func_kinds[local_index as usize]
+                                        {
+                                            file.symbols[symbol_id as usize].name = naming.name;
+                                        }
                                     }
                                 }
                             }
                         }
+                    } else if name.starts_with(".debug_") {
+                        file.has_debug_symbols = true;
                     }
-                }
-                wp::SectionCode::Custom { name, .. } if name.starts_with(".debug_") => {
-                    file.has_debug_symbols = true;
                 }
                 _ => {}
             }
-
-            let id = section_code_to_id(section.code);
-            file.id_sections[id] = Some(file.sections.len());
-
-            file.sections.push(section);
         }
 
         Ok(file)
+    }
+
+    fn add_section(&mut self, id: SectionId, range: Range<usize>, name: &'data str) {
+        let section = SectionHeader { id, range, name };
+        self.id_sections[id as usize] = Some(self.sections.len());
+        self.sections.push(section);
     }
 }
 
 impl<'data, R> read::private::Sealed for WasmFile<'data, R> {}
 
-impl<'data, 'file, R> Object<'data, 'file> for WasmFile<'data, R>
+impl<'data, 'file, R: ReadRef<'data>> Object<'data, 'file> for WasmFile<'data, R>
 where
     'data: 'file,
     R: 'file,
@@ -319,7 +380,11 @@ where
 
     #[inline]
     fn architecture(&self) -> Architecture {
-        Architecture::Wasm32
+        if self.has_memory64 {
+            Architecture::Wasm64
+        } else {
+            Architecture::Wasm32
+        }
     }
 
     #[inline]
@@ -329,7 +394,7 @@ where
 
     #[inline]
     fn is_64(&self) -> bool {
-        false
+        self.has_memory64
     }
 
     fn kind(&self) -> ObjectKind {
@@ -358,15 +423,15 @@ where
             .read_error("Invalid Wasm section index")?;
         let section = self.sections.get(id_section).unwrap();
         Ok(WasmSection {
+            file: self,
             section,
-            marker: PhantomData,
         })
     }
 
     fn sections(&'file self) -> Self::SectionIterator {
         WasmSectionIterator {
+            file: self,
             sections: self.sections.iter(),
-            marker: PhantomData,
         }
     }
 
@@ -513,8 +578,8 @@ impl<'data, 'file, R> ObjectSegment<'data> for WasmSegment<'data, 'file, R> {
 /// An iterator over the sections of a `WasmFile`.
 #[derive(Debug)]
 pub struct WasmSectionIterator<'data, 'file, R = &'data [u8]> {
-    sections: slice::Iter<'file, wp::Section<'data>>,
-    marker: PhantomData<R>,
+    file: &'file WasmFile<'data, R>,
+    sections: slice::Iter<'file, SectionHeader<'data>>,
 }
 
 impl<'data, 'file, R> Iterator for WasmSectionIterator<'data, 'file, R> {
@@ -523,8 +588,8 @@ impl<'data, 'file, R> Iterator for WasmSectionIterator<'data, 'file, R> {
     fn next(&mut self) -> Option<Self::Item> {
         let section = self.sections.next()?;
         Some(WasmSection {
+            file: self.file,
             section,
-            marker: PhantomData,
         })
     }
 }
@@ -532,20 +597,20 @@ impl<'data, 'file, R> Iterator for WasmSectionIterator<'data, 'file, R> {
 /// A section of a `WasmFile`.
 #[derive(Debug)]
 pub struct WasmSection<'data, 'file, R = &'data [u8]> {
-    section: &'file wp::Section<'data>,
-    marker: PhantomData<R>,
+    file: &'file WasmFile<'data, R>,
+    section: &'file SectionHeader<'data>,
 }
 
 impl<'data, 'file, R> read::private::Sealed for WasmSection<'data, 'file, R> {}
 
-impl<'data, 'file, R> ObjectSection<'data> for WasmSection<'data, 'file, R> {
+impl<'data, 'file, R: ReadRef<'data>> ObjectSection<'data> for WasmSection<'data, 'file, R> {
     type RelocationIterator = WasmRelocationIterator<'data, 'file, R>;
 
     #[inline]
     fn index(&self) -> SectionIndex {
         // Note that we treat all custom sections as index 0.
         // This is ok because they are never looked up by index.
-        SectionIndex(section_code_to_id(self.section.code))
+        SectionIndex(self.section.id as usize)
     }
 
     #[inline]
@@ -555,7 +620,7 @@ impl<'data, 'file, R> ObjectSection<'data> for WasmSection<'data, 'file, R> {
 
     #[inline]
     fn size(&self) -> u64 {
-        let range = self.section.range();
+        let range = &self.section.range;
         (range.end - range.start) as u64
     }
 
@@ -566,16 +631,17 @@ impl<'data, 'file, R> ObjectSection<'data> for WasmSection<'data, 'file, R> {
 
     #[inline]
     fn file_range(&self) -> Option<(u64, u64)> {
-        let range = self.section.range();
+        let range = &self.section.range;
         Some((range.start as _, range.end as _))
     }
 
     #[inline]
     fn data(&self) -> Result<&'data [u8]> {
-        let mut reader = self.section.get_binary_reader();
-        // TODO: raise a feature request upstream to be able
-        // to get remaining slice from a BinaryReader directly.
-        Ok(reader.read_bytes(reader.bytes_remaining()).unwrap())
+        let range = &self.section.range;
+        self.file
+            .data
+            .read_bytes_at(range.start as u64, range.end as u64 - range.start as u64)
+            .read_error("Invalid Wasm section size or offset")
     }
 
     fn data_range(&self, _address: u64, _size: u64) -> Result<Option<&'data [u8]>> {
@@ -599,20 +665,20 @@ impl<'data, 'file, R> ObjectSection<'data> for WasmSection<'data, 'file, R> {
 
     #[inline]
     fn name(&self) -> Result<&str> {
-        Ok(match self.section.code {
-            wp::SectionCode::Custom { name, .. } => name,
-            wp::SectionCode::Type => "<type>",
-            wp::SectionCode::Import => "<import>",
-            wp::SectionCode::Function => "<function>",
-            wp::SectionCode::Table => "<table>",
-            wp::SectionCode::Memory => "<memory>",
-            wp::SectionCode::Global => "<global>",
-            wp::SectionCode::Export => "<export>",
-            wp::SectionCode::Start => "<start>",
-            wp::SectionCode::Element => "<element>",
-            wp::SectionCode::Code => "<code>",
-            wp::SectionCode::Data => "<data>",
-            wp::SectionCode::DataCount => "<data_count>",
+        Ok(match self.section.id {
+            SectionId::Custom => self.section.name,
+            SectionId::Type => "<type>",
+            SectionId::Import => "<import>",
+            SectionId::Function => "<function>",
+            SectionId::Table => "<table>",
+            SectionId::Memory => "<memory>",
+            SectionId::Global => "<global>",
+            SectionId::Export => "<export>",
+            SectionId::Start => "<start>",
+            SectionId::Element => "<element>",
+            SectionId::Code => "<code>",
+            SectionId::Data => "<data>",
+            SectionId::DataCount => "<data_count>",
         })
     }
 
@@ -628,25 +694,23 @@ impl<'data, 'file, R> ObjectSection<'data> for WasmSection<'data, 'file, R> {
 
     #[inline]
     fn kind(&self) -> SectionKind {
-        match self.section.code {
-            wp::SectionCode::Custom { kind, .. } => match kind {
-                wp::CustomSectionKind::Reloc | wp::CustomSectionKind::Linking => {
-                    SectionKind::Linker
-                }
+        match self.section.id {
+            SectionId::Custom => match self.section.name {
+                "reloc." | "linking" => SectionKind::Linker,
                 _ => SectionKind::Other,
             },
-            wp::SectionCode::Type => SectionKind::Metadata,
-            wp::SectionCode::Import => SectionKind::Linker,
-            wp::SectionCode::Function => SectionKind::Metadata,
-            wp::SectionCode::Table => SectionKind::UninitializedData,
-            wp::SectionCode::Memory => SectionKind::UninitializedData,
-            wp::SectionCode::Global => SectionKind::Data,
-            wp::SectionCode::Export => SectionKind::Linker,
-            wp::SectionCode::Start => SectionKind::Linker,
-            wp::SectionCode::Element => SectionKind::Data,
-            wp::SectionCode::Code => SectionKind::Text,
-            wp::SectionCode::Data => SectionKind::Data,
-            wp::SectionCode::DataCount => SectionKind::UninitializedData,
+            SectionId::Type => SectionKind::Metadata,
+            SectionId::Import => SectionKind::Linker,
+            SectionId::Function => SectionKind::Metadata,
+            SectionId::Table => SectionKind::UninitializedData,
+            SectionId::Memory => SectionKind::UninitializedData,
+            SectionId::Global => SectionKind::Data,
+            SectionId::Export => SectionKind::Linker,
+            SectionId::Start => SectionKind::Linker,
+            SectionId::Element => SectionKind::Data,
+            SectionId::Code => SectionKind::Text,
+            SectionId::Data => SectionKind::Data,
+            SectionId::DataCount => SectionKind::UninitializedData,
         }
     }
 
@@ -717,10 +781,7 @@ impl<'data, 'file, R> ObjectComdat<'data> for WasmComdat<'data, 'file, R> {
 
 /// An iterator over the sections in a COMDAT section group of a `WasmFile`.
 #[derive(Debug)]
-pub struct WasmComdatSectionIterator<'data, 'file, R = &'data [u8]>
-where
-    'data: 'file,
-{
+pub struct WasmComdatSectionIterator<'data, 'file, R = &'data [u8]> {
     #[allow(unused)]
     file: &'file WasmFile<'data, R>,
 }
@@ -869,7 +930,7 @@ impl<'data, 'file> ObjectSymbol<'data> for WasmSymbol<'data, 'file> {
     }
 
     #[inline]
-    fn flags(&self) -> SymbolFlags<SectionIndex> {
+    fn flags(&self) -> SymbolFlags<SectionIndex, SymbolIndex> {
         SymbolFlags::None
     }
 }
@@ -886,23 +947,5 @@ impl<'data, 'file, R> Iterator for WasmRelocationIterator<'data, 'file, R> {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         None
-    }
-}
-
-fn section_code_to_id(code: wp::SectionCode) -> usize {
-    match code {
-        wp::SectionCode::Custom { .. } => SECTION_CUSTOM,
-        wp::SectionCode::Type => SECTION_TYPE,
-        wp::SectionCode::Import => SECTION_IMPORT,
-        wp::SectionCode::Function => SECTION_FUNCTION,
-        wp::SectionCode::Table => SECTION_TABLE,
-        wp::SectionCode::Memory => SECTION_MEMORY,
-        wp::SectionCode::Global => SECTION_GLOBAL,
-        wp::SectionCode::Export => SECTION_EXPORT,
-        wp::SectionCode::Start => SECTION_START,
-        wp::SectionCode::Element => SECTION_ELEMENT,
-        wp::SectionCode::Code => SECTION_CODE,
-        wp::SectionCode::Data => SECTION_DATA,
-        wp::SectionCode::DataCount => SECTION_DATA_COUNT,
     }
 }

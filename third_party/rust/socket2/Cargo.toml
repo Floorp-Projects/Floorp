@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "socket2"
-version = "0.4.7"
+version = "0.4.9"
 authors = [
     "Alex Crichton <alex@alexcrichton.com>",
     "Thomas de Zeeuw <thomasdezeeuw@gmail.com>",
@@ -57,7 +57,7 @@ features = ["all"]
 all = []
 
 [target."cfg(unix)".dependencies.libc]
-version = "0.2.124"
+version = "0.2.139"
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.9"

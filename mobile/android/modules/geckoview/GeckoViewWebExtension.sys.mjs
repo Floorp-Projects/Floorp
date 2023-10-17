@@ -15,6 +15,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
@@ -297,6 +298,7 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     policy = await policy.readyPromise;
   }
   const {
+    amoListingURL,
     averageRating,
     blocklistState,
     creator,
@@ -371,6 +373,7 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     isBuiltIn: isBuiltin,
     webExtensionFlags: exportFlags(policy),
     metaData: {
+      amoListingURL,
       averageRating,
       baseURL,
       blocklistState,
@@ -1063,6 +1066,20 @@ export var GeckoViewWebExtension = {
   },
 
   async updateWebExtension(aId) {
+    // Refresh the cached metadata when necessary. This allows us to always
+    // export relatively recent metadata to the embedder.
+    if (lazy.AddonRepository.isMetadataStale()) {
+      // We use a promise to avoid more than one call to `backgroundUpdateCheck()`
+      // when `updateWebExtension()` is called for multiple add-ons in parallel.
+      if (!this._promiseAddonRepositoryUpdate) {
+        this._promiseAddonRepositoryUpdate =
+          lazy.AddonRepository.backgroundUpdateCheck().finally(() => {
+            this._promiseAddonRepositoryUpdate = null;
+          });
+      }
+      await this._promiseAddonRepositoryUpdate;
+    }
+
     const extension = await this.extensionById(aId);
 
     const install = await this.checkForUpdate(extension);

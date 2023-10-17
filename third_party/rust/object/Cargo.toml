@@ -11,8 +11,9 @@
 
 [package]
 edition = "2018"
+rust-version = "1.60"
 name = "object"
-version = "0.30.3"
+version = "0.32.0"
 exclude = [
     "/.github",
     "/testfiles",
@@ -57,21 +58,26 @@ version = "1"
 optional = true
 
 [dependencies.hashbrown]
-version = "0.13.1"
+version = "0.14.0"
 features = ["ahash"]
 optional = true
 default-features = false
 
 [dependencies.indexmap]
-version = "1.6"
+version = "2.0"
 optional = true
+default-features = false
 
 [dependencies.memchr]
 version = "2.4.1"
 default-features = false
 
+[dependencies.ruzstd]
+version = "0.4.0"
+optional = true
+
 [dependencies.wasmparser]
-version = "0.57"
+version = "0.110.0"
 optional = true
 
 [features]
@@ -86,7 +92,8 @@ archive = []
 cargo-all = []
 coff = []
 compression = [
-    "flate2",
+    "dep:flate2",
+    "dep:ruzstd",
     "std",
 ]
 default = [
@@ -104,6 +111,7 @@ doc = [
     "macho",
     "pe",
     "wasm",
+    "xcoff",
 ]
 elf = []
 macho = []
@@ -115,6 +123,7 @@ read = [
     "elf",
     "macho",
     "pe",
+    "xcoff",
     "unaligned",
 ]
 read_core = []
@@ -130,25 +139,25 @@ unstable = []
 unstable-all = [
     "all",
     "unstable",
-    "xcoff",
 ]
-wasm = ["wasmparser"]
+wasm = ["dep:wasmparser"]
 write = [
     "write_std",
     "coff",
     "elf",
     "macho",
     "pe",
+    "xcoff",
 ]
 write_core = [
-    "crc32fast",
-    "indexmap",
-    "hashbrown",
+    "dep:crc32fast",
+    "dep:indexmap",
+    "dep:hashbrown",
 ]
 write_std = [
     "write_core",
     "std",
-    "indexmap/std",
-    "crc32fast/std",
+    "indexmap?/std",
+    "crc32fast?/std",
 ]
 xcoff = []

@@ -23,23 +23,6 @@
   position: relative;
 }
 
-/*
-  This is a workaround for Bug 1482157
-  -moz-default-appearance: toolbox; makes the macOS sheets attached to the
-  element's bottom border. We cannot put this property on the toolbox itself as
-  it cancels all backgrounds that are there, so we set it on the toolbox bottom
-  border.
-*/
-#navigator-toolbox::after {
-  content: "";
-  display: flex;
-  appearance: auto;
-  -moz-default-appearance: toolbox;
-  height: 1px;
-  margin-top: -1px;
-  opacity: 0.001;
-}
-
 /** Begin titlebar **/
 
 #titlebar {

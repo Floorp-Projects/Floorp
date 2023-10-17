@@ -25,7 +25,7 @@ add_setup(async function () {
 });
 
 add_task(async function test_open_import() {
-  let promiseImportWindow = BrowserTestUtils.waitForMigrationWizard(window);
+  let promiseWizardTab = BrowserTestUtils.waitForMigrationWizard(window);
 
   let browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.synthesizeMouseAtCenter("menu-button", {}, browser);
@@ -44,9 +44,9 @@ add_task(async function test_open_import() {
   }
   await BrowserTestUtils.synthesizeMouseAtCenter(getImportItem, {}, browser);
 
-  info("waiting for Import to get opened");
-  let importWindow = await promiseImportWindow;
-  Assert.ok(true, "Import opened");
+  info("waiting for migration wizard to open");
+  let wizardTab = await promiseWizardTab;
+  Assert.ok(wizardTab, "Migration wizard opened");
 
   // First event is for opening about:logins
   await LoginTestUtils.telemetry.waitForEventCount(2);
@@ -56,5 +56,5 @@ add_task(async function test_open_import() {
     { process: "content" }
   );
 
-  await BrowserTestUtils.closeMigrationWizard(importWindow);
+  await BrowserTestUtils.removeTab(wizardTab);
 });

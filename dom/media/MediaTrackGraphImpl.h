@@ -75,31 +75,17 @@ struct TrackUpdate {
  * RunMessageAfterProcessing().  A ControlMessage
  * always has a weak reference to a particular affected track.
  */
-class ControlMessage {
+class ControlMessage : public MediaTrack::ControlMessageInterface {
  public:
-  explicit ControlMessage(MediaTrack* aTrack) : mTrack(aTrack) {
-    MOZ_COUNT_CTOR(ControlMessage);
-  }
-  // All these run on the graph thread
-  MOZ_COUNTED_DTOR_VIRTUAL(ControlMessage)
-  // Do the action of this message on the MediaTrackGraph thread. Any actions
-  // affecting graph processing should take effect at mProcessedTime.
-  // All track data for times < mProcessedTime has already been
-  // computed.
-  virtual void Run() = 0;
-  // RunDuringShutdown() is only relevant to messages generated on the main
-  // thread (for AppendMessage()).
-  // When we're shutting down the application, most messages are ignored but
-  // some cleanup messages should still be processed (on the main thread).
-  // This must not add new control messages to the graph.
-  virtual void RunDuringShutdown() {}
+  explicit ControlMessage(MediaTrack* aTrack) : mTrack(aTrack) {}
+
   MediaTrack* GetTrack() { return mTrack; }
 
  protected:
   // We do not hold a reference to mTrack. The graph will be holding a reference
   // to the track until the Destroy message is processed. The last message
   // referencing a track is the Destroy message for that track.
-  MediaTrack* mTrack;
+  MediaTrack* const mTrack;
 };
 
 class MessageBlock {
@@ -123,6 +109,8 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
                             public nsITimerCallback,
                             public nsINamed {
  public:
+  using ControlMessageInterface = MediaTrack::ControlMessageInterface;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
   NS_DECL_NSITHREADOBSERVER

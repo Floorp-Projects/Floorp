@@ -143,10 +143,8 @@ where
             // then we need to keep asking for more data because if we
             // return that 0 bytes of data have been read then it will
             // be interpreted as EOF.
-            Ok(Status::Ok) | Ok(Status::BufError) if read == 0 && !eof && !dst.is_empty() => {
-                continue
-            }
-            Ok(Status::Ok) | Ok(Status::BufError) | Ok(Status::StreamEnd) => return Ok(read),
+            Ok(Status::Ok | Status::BufError) if read == 0 && !eof && !dst.is_empty() => continue,
+            Ok(Status::Ok | Status::BufError | Status::StreamEnd) => return Ok(read),
 
             Err(..) => {
                 return Err(io::Error::new(

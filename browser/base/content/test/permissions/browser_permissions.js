@@ -60,7 +60,16 @@ add_task(async function testMainViewVisible() {
 
     PermissionTestUtils.remove(gBrowser.currentURI, "camera");
 
+    // We intentionally turn off a11y_checks, because the following function
+    // is expected to click a toolbar button that may be already hidden
+    // with "display:none;". The permissions panel anchor is hidden because
+    // the last permission was removed, however we force opening the panel
+    // anyways in order to test that the list has been properly emptied:
+    AccessibilityUtils.setEnv({
+      mustHaveAccessibleRule: false,
+    });
     await openPermissionPopup();
+    AccessibilityUtils.resetEnv();
 
     testPermListHasEntries(false);
 

@@ -132,6 +132,11 @@ base64 = { path = "build/rust/base64" }
 # Patch wasi 0.10 to 0.11
 wasi = { path = "build/rust/wasi" }
 
+# tokio 0.29.0 includes an experimental "tracing" feature which requires
+# backtrace ^0.3.58 and the `tokio_unstable` flag. We don't use it, and nothing
+# else we do use requires backtrace, so dummy it out for now.
+backtrace = { path = "build/rust/backtrace" }
+
 # Patch bindgen 0.63, 0.64 and 0.66 to 0.68
 bindgen_0_63 = { package = "bindgen", path = "build/rust/bindgen-0.63" }
 bindgen_0_64 = { package = "bindgen", path = "build/rust/bindgen-0.64" }

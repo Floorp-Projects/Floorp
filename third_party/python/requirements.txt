@@ -533,9 +533,9 @@ sentry-sdk==0.14.3 ; python_version >= "3.7" and python_version < "4.0" \
 setuptools==68.0.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:11e52c67415a381d10d6b462ced9cfb97066179f0e871399e006c4ab101fc85f \
     --hash=sha256:baf1fdb41c6da4cd2eae722e135500da913332ab3f2f5c7d33af9b492acb5235
-six==1.13.0 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
-    --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66
+six==1.16.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926 \
+    --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
 slugid==2.0.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:a950d98b72691178bdd4d6c52743c4a2aa039207cf7a97d71060a111ff9ba297 \
     --hash=sha256:aec8b0e01c4ad32e38e12d609eab3ec912fd129aaf6b2ded0199b56a5f8fd67c
@@ -566,9 +566,9 @@ typing-extensions==3.10.0.0 ; python_version >= "3.7" and python_version < "4.0"
     --hash=sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497 \
     --hash=sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342 \
     --hash=sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84
-urllib3==1.26.0 ; python_version >= "3.7" and python_version < "4" \
-    --hash=sha256:4849f132941d68144df0a3785ccc4fe423430ba5db0108d045c8cadbc90f517a \
-    --hash=sha256:bad31cb622ceee0ab46c4c884cf61957def0ff2e644de0a7a093678844c9ccac
+urllib3==1.26.17 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:24d6a242c28d29af46c3fae832c36db3bbebcc533dd1bb549172cd739c82df21 \
+    --hash=sha256:94a757d178c9be92ef5539b8840d48dc9cf1b2709c9d6b588232a055c524458b
 voluptuous==0.12.1 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:663572419281ddfaf4b4197fd4942d181630120fb39b333e3adad70aeb56444b \
     --hash=sha256:8ace33fcf9e6b1f59406bfaf6b8ec7bcc44266a9f29080b4deb4fe6ff2492386

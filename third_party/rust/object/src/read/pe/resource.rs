@@ -143,7 +143,7 @@ pub struct ResourceName {
 
 impl ResourceName {
     /// Converts to a `String`.
-    pub fn to_string_lossy(&self, directory: ResourceDirectory) -> Result<String> {
+    pub fn to_string_lossy(&self, directory: ResourceDirectory<'_>) -> Result<String> {
         let d = self.data(directory)?.iter().map(|c| c.get(LE));
 
         Ok(char::decode_utf16(d)

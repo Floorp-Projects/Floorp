@@ -445,8 +445,9 @@
   background-repeat: repeat-x;
 }
 
-.tabbrowser-tab:is([selected], [multiselected]):-moz-lwtheme {
-  color: var(--lwt-tab-text, var(--toolbar-color));
+#TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
+.tabbrowser-tab:is([selected], [multiselected]) {
+  color: var(--tab-selected-textcolor, var(--toolbar-color));
 }
 
 @media (prefers-contrast) {

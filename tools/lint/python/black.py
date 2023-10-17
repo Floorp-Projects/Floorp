@@ -13,7 +13,6 @@ import mozpack.path as mozpath
 from mozfile import which
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozprocess import ProcessHandler
 
 here = os.path.abspath(os.path.dirname(__file__))
 BLACK_REQUIREMENTS_PATH = os.path.join(here, "black_requirements.txt")
@@ -65,8 +64,8 @@ def parse_issues(config, output, paths, *, log):
     reformatted = re.compile("^reformatted (.*)$", re.I)
     cannot_reformat = re.compile("^error: cannot format (.*?): (.*)$", re.I)
     results = []
-    for line in output:
-        line = line.decode("utf-8")
+    for l in output.split(b"\n"):
+        line = l.decode("utf-8").rstrip("\r\n")
         if line.startswith("All done!") or line.startswith("Oh no!"):
             break
 
@@ -92,27 +91,17 @@ def parse_issues(config, output, paths, *, log):
     return results
 
 
-class BlackProcess(ProcessHandler):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs["stream"] = False
-        ProcessHandler.__init__(self, *args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandler.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
-
-
 def run_process(config, cmd):
-    proc = BlackProcess(config, cmd)
-    proc.run()
+    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    signal.signal(signal.SIGINT, orig)
     try:
+        output, _ = proc.communicate()
         proc.wait()
     except KeyboardInterrupt:
         proc.kill()
 
-    return proc.output
+    return output
 
 
 def setup(root, **lintargs):

@@ -5,13 +5,13 @@
 import os
 import re
 import signal
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
 from mozboot.util import get_tools_dir
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
-from mozprocess import ProcessHandler
 
 CLANG_FORMAT_NOT_FOUND = """
 Could not find clang-format! It should've been installed automatically - \
@@ -31,28 +31,19 @@ def setup(root, mach_command_context, **lintargs):
         return 1
 
 
-class ClangFormatProcess(ProcessHandler):
-    def __init__(self, config, *args, **kwargs):
-        self.config = config
-        kwargs["stream"] = False
-        kwargs["universal_newlines"] = True
-        ProcessHandler.__init__(self, *args, **kwargs)
-
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandler.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
-
-
 def run_process(config, cmd):
-    proc = ClangFormatProcess(config, cmd)
-    proc.run()
+    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    signal.signal(signal.SIGINT, orig)
     try:
+        output, _ = proc.communicate()
         proc.wait()
     except KeyboardInterrupt:
         proc.kill()
 
-    return proc.output
+    return output
 
 
 def get_clang_format_binary():
@@ -91,9 +82,9 @@ def remove_ignored_path(paths, topsrcdir, log):
 
     ignored_dir = []
     with open(path_to_third_party, "r") as fh:
-        for line in fh:
+        for l in fh:
             # In case it starts with a space
-            line = line.strip()
+            line = l.strip()
             # Remove comments and empty lines
             if line.startswith("#") or len(line) == 0:
                 continue
@@ -139,7 +130,7 @@ def lint(paths, config, fix=None, **lintargs):
     cmd_args = [binary]
 
     base_command = cmd_args + ["--version"]
-    version = run_process(config, base_command)
+    version = run_process(config, base_command).rstrip("\r\n")
     log.debug("Version: {}".format(version))
 
     cmd_args.append("--output-replacements-xml")
@@ -161,7 +152,8 @@ def lint(paths, config, fix=None, **lintargs):
     # XML parsers don't know how to handle that, so do it manually.
     parser = None
     replacements = []
-    for line in output:
+    for l in output.split("\n"):
+        line = l.rstrip("\r\n")
         if line.startswith("<?xml "):
             if parser:
                 replacements.append(list(replacement(parser)))

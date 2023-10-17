@@ -403,14 +403,13 @@ void nsStandardURL::InvalidateCache(bool invalidateCachedFile) {
 // Return the number of "dots" in the string, or -1 if invalid.  Note that the
 // number of relevant entries in the bases/starts/ends arrays is number of
 // dots + 1.
-// Since the trailing dot is allowed, we pass and adjust "length".
 //
-// length is assumed to be <= host.Length(); the callers is responsible for that
+// length is assumed to be <= host.Length(); the caller is responsible for that
 //
 // Note that the value returned is guaranteed to be in [-1, 3] range.
 inline int32_t ValidateIPv4Number(const nsACString& host, int32_t bases[4],
                                   int32_t dotIndex[3], bool& onlyBase10,
-                                  int32_t& length) {
+                                  int32_t length, bool trailingDot) {
   MOZ_ASSERT(length <= (int32_t)host.Length());
   if (length <= 0) {
     return -1;
@@ -426,14 +425,9 @@ inline int32_t ValidateIPv4Number(const nsACString& host, int32_t bases[4],
       // A dot should not follow a dot, or be first - it can follow an x though.
       if (!(lastWasNumber ||
             (i >= 2 && (host[i - 1] == 'X' || host[i - 1] == 'x') &&
-             host[i - 2] == '0'))) {
+             host[i - 2] == '0')) ||
+          (i == (length - 1) && trailingDot)) {
         return -1;
-      }
-
-      if (dotCount > 0 &&
-          i == (length - 1)) {  // Trailing dot is OK; shorten and return
-        length--;
-        return dotCount;
       }
 
       if (dotCount > 2) {
@@ -562,11 +556,20 @@ nsresult nsStandardURL::NormalizeIPv4(const nsACString& host,
   bool onlyBase10 = true;  // Track this as a special case
   int32_t dotIndex[3];     // The positions of the dots in the string
 
-  // The length may be adjusted by ValidateIPv4Number (ignoring the trailing
-  // period) so use "length", rather than host.Length() after that call.
-  int32_t length = static_cast<int32_t>(host.Length());
-  int32_t dotCount =
-      ValidateIPv4Number(host, bases, dotIndex, onlyBase10, length);
+  // Use "length" rather than host.Length() after call to
+  // ValidateIPv4Number because of potential trailing period.
+  nsDependentCSubstring filteredHost;
+  bool trailingDot = false;
+  if (host.Length() > 0 && host.Last() == '.') {
+    trailingDot = true;
+    filteredHost.Rebind(host.BeginReading(), host.Length() - 1);
+  } else {
+    filteredHost.Rebind(host.BeginReading(), host.Length());
+  }
+
+  int32_t length = static_cast<int32_t>(filteredHost.Length());
+  int32_t dotCount = ValidateIPv4Number(filteredHost, bases, dotIndex,
+                                        onlyBase10, length, trailingDot);
   if (dotCount < 0 || length <= 0) {
     return NS_ERROR_FAILURE;
   }
@@ -3995,7 +3998,7 @@ nsresult Test_ParseIPv4Number(const nsACString& input, int32_t base,
 
 int32_t Test_ValidateIPv4Number(const nsACString& host, int32_t bases[4],
                                 int32_t dotIndex[3], bool& onlyBase10,
-                                int32_t& length) {
+                                int32_t length) {
   return mozilla::net::ValidateIPv4Number(host, bases, dotIndex, onlyBase10,
-                                          length);
+                                          length, false);
 }

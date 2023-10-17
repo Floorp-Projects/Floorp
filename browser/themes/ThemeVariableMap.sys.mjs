@@ -31,7 +31,7 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--lwt-tab-text",
+    "--tab-selected-textcolor",
     {
       lwtProperty: "tab_text",
     },

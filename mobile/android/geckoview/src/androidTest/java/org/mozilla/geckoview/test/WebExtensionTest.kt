@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.greaterThan
 import org.hamcrest.core.IsEqual.equalTo
 import org.hamcrest.core.StringEndsWith.endsWith
 import org.json.JSONObject
@@ -2258,6 +2259,8 @@ class WebExtensionTest : BaseSessionTest() {
                 "xpinstall.signatures.required" to false,
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false,
+                "extensions.getAddons.cache.enabled" to true,
+                "extensions.getAddons.cache.lastUpdate" to 0,
             ),
         )
         mainSession.loadUri("https://example.com")
@@ -2303,6 +2306,52 @@ class WebExtensionTest : BaseSessionTest() {
 
         // Check that the WebExtension was not applied after being uninstalled
         assertBodyBorderEqualTo("")
+
+        // This pref should have been updated because we expect the cached
+        // metadata to have been refreshed.
+        val geckoPrefs = sessionRule.getPrefs(
+            "extensions.getAddons.cache.lastUpdate",
+        )
+        assumeThat(geckoPrefs[0] as Int, greaterThan(0))
+    }
+
+    @Test
+    fun updateWithMetadataNotStale() {
+        val now = (System.currentTimeMillis() / 1000).toInt()
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "xpinstall.signatures.required" to false,
+                "extensions.install.requireBuiltInCerts" to false,
+                "extensions.update.requireBuiltInCerts" to false,
+                "extensions.getAddons.cache.enabled" to true,
+                "extensions.getAddons.cache.lastUpdate" to now,
+            ),
+        )
+
+        sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
+            @AssertCalled
+            override fun onInstallPrompt(extension: WebExtension): GeckoResult<AllowOrDeny> {
+                assertEquals(extension.metaData.version, "1.0")
+
+                return GeckoResult.allow()
+            }
+        })
+
+        // 1. Install
+        val update1 = sessionRule.waitForResult(
+            controller.install("https://example.org/tests/junit/update-1.xpi"),
+        )
+        // 2. Update
+        val update2 = sessionRule.waitForResult(controller.update(update1))
+        // 3. Uninstall
+        sessionRule.waitForResult(controller.uninstall(update2))
+
+        // This pref should not have been updated because the cache isn't stale
+        // (we set the pref to the current time at the top of this test case).
+        val geckoPrefs = sessionRule.getPrefs(
+            "extensions.getAddons.cache.lastUpdate",
+        )
+        assumeThat(geckoPrefs[0] as Int, equalTo(now))
     }
 
     // Test extension updating when the new extension has different permissions.

@@ -73,6 +73,7 @@ var ADDON_PROPERTIES = [
   "dailyUsers",
   "sourceURI",
   "updateDate",
+  "amoListingURL",
 ];
 
 // Results of getAddonsByIDs
@@ -119,6 +120,8 @@ var GET_RESULTS = [
     weeklyDownloads: 3333,
     sourceURI: BASE_URL + INSTALL_URL2,
     updateDate: new Date(1265033045000),
+    amoListingURL:
+      "https://addons.mozilla.org/en-US/firefox/addon/test1@tests.mozilla.org/",
   },
   {
     id: "test2@tests.mozilla.org",

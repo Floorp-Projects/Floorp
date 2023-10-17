@@ -152,6 +152,7 @@ impl<'a> ReadBuf<'a> {
     ///
     /// Panics if `self.remaining()` is less than `n`.
     #[inline]
+    #[track_caller]
     pub fn initialize_unfilled_to(&mut self, n: usize) -> &mut [u8] {
         assert!(self.remaining() >= n, "n overflows remaining");
 
@@ -195,6 +196,7 @@ impl<'a> ReadBuf<'a> {
     ///
     /// Panics if the filled region of the buffer would become larger than the initialized region.
     #[inline]
+    #[track_caller]
     pub fn advance(&mut self, n: usize) {
         let new = self.filled.checked_add(n).expect("filled overflow");
         self.set_filled(new);
@@ -211,6 +213,7 @@ impl<'a> ReadBuf<'a> {
     ///
     /// Panics if the filled region of the buffer would become larger than the initialized region.
     #[inline]
+    #[track_caller]
     pub fn set_filled(&mut self, n: usize) {
         assert!(
             n <= self.initialized,
@@ -241,6 +244,7 @@ impl<'a> ReadBuf<'a> {
     ///
     /// Panics if `self.remaining()` is less than `buf.len()`.
     #[inline]
+    #[track_caller]
     pub fn put_slice(&mut self, buf: &[u8]) {
         assert!(
             self.remaining() >= buf.len(),
@@ -263,6 +267,33 @@ impl<'a> ReadBuf<'a> {
             self.initialized = end;
         }
         self.filled = end;
+    }
+}
+
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+unsafe impl<'a> bytes::BufMut for ReadBuf<'a> {
+    fn remaining_mut(&self) -> usize {
+        self.remaining()
+    }
+
+    // SAFETY: The caller guarantees that at least `cnt` unfilled bytes have been initialized.
+    unsafe fn advance_mut(&mut self, cnt: usize) {
+        self.assume_init(cnt);
+        self.advance(cnt);
+    }
+
+    fn chunk_mut(&mut self) -> &mut bytes::buf::UninitSlice {
+        // SAFETY: No region of `unfilled` will be deinitialized because it is
+        // exposed as an `UninitSlice`, whose API guarantees that the memory is
+        // never deinitialized.
+        let unfilled = unsafe { self.unfilled_mut() };
+        let len = unfilled.len();
+        let ptr = unfilled.as_mut_ptr() as *mut u8;
+
+        // SAFETY: The pointer is valid for `len` bytes because it comes from a
+        // slice of that length.
+        unsafe { bytes::buf::UninitSlice::from_raw_parts_mut(ptr, len) }
     }
 }
 

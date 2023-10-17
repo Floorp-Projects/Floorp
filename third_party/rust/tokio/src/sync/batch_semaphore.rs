@@ -49,7 +49,7 @@ struct Waitlist {
 /// Error returned from the [`Semaphore::try_acquire`] function.
 ///
 /// [`Semaphore::try_acquire`]: crate::sync::Semaphore::try_acquire
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TryAcquireError {
     /// The semaphore has been [closed] and cannot issue new permits.
     ///
@@ -110,6 +110,14 @@ struct Waiter {
 
     /// Should not be `Unpin`.
     _p: PhantomPinned,
+}
+
+generate_addr_of_methods! {
+    impl<> Waiter {
+        unsafe fn addr_of_pointers(self: NonNull<Self>) -> NonNull<linked_list::Pointers<Waiter>> {
+            &self.pointers
+        }
+    }
 }
 
 impl Semaphore {
@@ -256,7 +264,7 @@ impl Semaphore {
 
             match self.permits.compare_exchange(curr, next, AcqRel, Acquire) {
                 Ok(_) => {
-                    // TODO: Instrument once issue has been solved}
+                    // TODO: Instrument once issue has been solved
                     return Ok(());
                 }
                 Err(actual) => curr = actual,
@@ -436,6 +444,7 @@ impl Semaphore {
         }
 
         assert_eq!(acquired, 0);
+        let mut old_waker = None;
 
         // Otherwise, register the waker & enqueue the node.
         node.waker.with_mut(|waker| {
@@ -447,7 +456,7 @@ impl Semaphore {
                 .map(|waker| !waker.will_wake(cx.waker()))
                 .unwrap_or(true)
             {
-                *waker = Some(cx.waker().clone());
+                old_waker = std::mem::replace(waker, Some(cx.waker().clone()));
             }
         });
 
@@ -460,6 +469,8 @@ impl Semaphore {
 
             waiters.queue.push_front(node);
         }
+        drop(waiters);
+        drop(old_waker);
 
         Pending
     }
@@ -532,11 +543,11 @@ impl Future for Acquire<'_> {
         #[cfg(all(tokio_unstable, feature = "tracing"))]
         let coop = ready!(trace_poll_op!(
             "poll_acquire",
-            crate::coop::poll_proceed(cx),
+            crate::runtime::coop::poll_proceed(cx),
         ));
 
         #[cfg(not(all(tokio_unstable, feature = "tracing")))]
-        let coop = ready!(crate::coop::poll_proceed(cx));
+        let coop = ready!(crate::runtime::coop::poll_proceed(cx));
 
         let result = match semaphore.poll_acquire(cx, needed, node, *queued) {
             Pending => {
@@ -582,7 +593,7 @@ impl<'a> Acquire<'a> {
 
                 tracing::trace!(
                     target: "runtime::resource::async_op::state_update",
-                    permits_obtained = 0 as usize,
+                    permits_obtained = 0usize,
                     permits.op = "override",
                 );
 
@@ -704,12 +715,6 @@ impl std::error::Error for TryAcquireError {}
 ///
 /// `Waiter` is forced to be !Unpin.
 unsafe impl linked_list::Link for Waiter {
-    // XXX: ideally, we would be able to use `Pin` here, to enforce the
-    // invariant that list entries may not move while in the list. However, we
-    // can't do this currently, as using `Pin<&'a mut Waiter>` as the `Handle`
-    // type would require `Semaphore` to be generic over a lifetime. We can't
-    // use `Pin<*mut Waiter>`, as raw pointers are `Unpin` regardless of whether
-    // or not they dereference to an `!Unpin` target.
     type Handle = NonNull<Waiter>;
     type Target = Waiter;
 
@@ -721,7 +726,7 @@ unsafe impl linked_list::Link for Waiter {
         ptr
     }
 
-    unsafe fn pointers(mut target: NonNull<Waiter>) -> NonNull<linked_list::Pointers<Waiter>> {
-        NonNull::from(&mut target.as_mut().pointers)
+    unsafe fn pointers(target: NonNull<Waiter>) -> NonNull<linked_list::Pointers<Waiter>> {
+        Waiter::addr_of_pointers(target)
     }
 }

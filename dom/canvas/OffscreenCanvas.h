@@ -150,6 +150,8 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   bool MayNeuter() const { return !mNeutered && !mCurrentContext; }
 
+  void SetSize(const nsIntSize& aSize, ErrorResult& aRv);
+
   nsIPrincipal* GetExpandedReader() const { return mExpandedReader; }
 
   void SetWriteOnly(RefPtr<nsIPrincipal>&& aExpandedReader);

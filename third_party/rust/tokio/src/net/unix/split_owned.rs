@@ -110,9 +110,20 @@ impl OwnedReadHalf {
 
     /// Waits for any of the requested ready states.
     ///
-    /// This function is usually paired with `try_read()` or `try_write()`. It
-    /// can be used to concurrently read / write to the same socket on a single
-    /// task without splitting the socket.
+    /// This function is usually paired with [`try_read()`]. It can be used instead
+    /// of [`readable()`] to check the returned ready set for [`Ready::READABLE`]
+    /// and [`Ready::READ_CLOSED`] events.
+    ///
+    /// The function may complete without the socket being ready. This is a
+    /// false-positive and attempting an operation will return with
+    /// `io::ErrorKind::WouldBlock`. The function can also return with an empty
+    /// [`Ready`] set, so you should always check the returned value and possibly
+    /// wait again if the requested states are not set.
+    ///
+    /// This function is equivalent to [`UnixStream::ready`].
+    ///
+    /// [`try_read()`]: Self::try_read
+    /// [`readable()`]: Self::readable
     ///
     /// # Cancel safety
     ///
@@ -155,8 +166,12 @@ impl OwnedReadHalf {
     /// # Return
     ///
     /// If data is successfully read, `Ok(n)` is returned, where `n` is the
-    /// number of bytes read. `Ok(0)` indicates the stream's read half is closed
-    /// and will no longer yield data. If the stream is not ready to read data
+    /// number of bytes read. If `n` is `0`, then it can indicate one of two scenarios:
+    ///
+    /// 1. The stream's read half is closed and will no longer yield data.
+    /// 2. The specified buffer was 0 bytes in length.
+    ///
+    /// If the stream is not ready to read data,
     /// `Err(io::ErrorKind::WouldBlock)` is returned.
     pub fn try_read(&self, buf: &mut [u8]) -> io::Result<usize> {
         self.inner.try_read(buf)
@@ -257,9 +272,20 @@ impl OwnedWriteHalf {
 
     /// Waits for any of the requested ready states.
     ///
-    /// This function is usually paired with `try_read()` or `try_write()`. It
-    /// can be used to concurrently read / write to the same socket on a single
-    /// task without splitting the socket.
+    /// This function is usually paired with [`try_write()`]. It can be used instead
+    /// of [`writable()`] to check the returned ready set for [`Ready::WRITABLE`]
+    /// and [`Ready::WRITE_CLOSED`] events.
+    ///
+    /// The function may complete without the socket being ready. This is a
+    /// false-positive and attempting an operation will return with
+    /// `io::ErrorKind::WouldBlock`. The function can also return with an empty
+    /// [`Ready`] set, so you should always check the returned value and possibly
+    /// wait again if the requested states are not set.
+    ///
+    /// This function is equivalent to [`UnixStream::ready`].
+    ///
+    /// [`try_write()`]: Self::try_write
+    /// [`writable()`]: Self::writable
     ///
     /// # Cancel safety
     ///
@@ -382,12 +408,12 @@ impl AsyncWrite for OwnedWriteHalf {
 
 impl AsRef<UnixStream> for OwnedReadHalf {
     fn as_ref(&self) -> &UnixStream {
-        &*self.inner
+        &self.inner
     }
 }
 
 impl AsRef<UnixStream> for OwnedWriteHalf {
     fn as_ref(&self) -> &UnixStream {
-        &*self.inner
+        &self.inner
     }
 }

@@ -127,6 +127,8 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
     buffer->SetMapped(0, aDesc.mSize, writable);
   }
 
+  aDevice->TrackBuffer(buffer.get());
+
   return buffer.forget();
 }
 
@@ -144,9 +146,12 @@ void Buffer::Drop() {
   }
   mMapped.reset();
 
-  if (mValid && !GetDevice().IsLost()) {
+  if (mValid && GetDevice().IsBridgeAlive()) {
     GetDevice().GetBridge()->SendBufferDrop(mId);
   }
+
+  GetDevice().UntrackBuffer(this);
+
   mValid = false;
 }
 

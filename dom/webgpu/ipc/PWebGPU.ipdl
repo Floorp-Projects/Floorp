@@ -59,6 +59,7 @@ parent:
   async TextureViewDestroy(RawId selfId);
   async SamplerDestroy(RawId selfId);
   async DeviceDestroy(RawId selfId);
+  async DeviceDrop(RawId selfId);
 
   async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
   async CommandEncoderDestroy(RawId selfId);
@@ -89,6 +90,7 @@ parent:
 child:
   async UncapturedError(RawId? aDeviceId, nsCString message);
   async DropAction(ByteBuf buf);
+  async DeviceLost(RawId aDeviceId, uint8_t? reason, nsCString message);
   async __delete__();
 };
 

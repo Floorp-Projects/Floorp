@@ -63,13 +63,13 @@ impl Crc {
 
     /// Combine the CRC with the CRC for the subsequent block of bytes.
     pub fn combine(&mut self, additional_crc: &Crc) {
-        self.amt += additional_crc.amt;
+        self.amt = self.amt.wrapping_add(additional_crc.amt);
         self.hasher.combine(&additional_crc.hasher);
     }
 }
 
 impl<R: Read> CrcReader<R> {
-    /// Create a new CrcReader.
+    /// Create a new `CrcReader`.
     pub fn new(r: R) -> CrcReader<R> {
         CrcReader {
             inner: r,
@@ -79,27 +79,27 @@ impl<R: Read> CrcReader<R> {
 }
 
 impl<R> CrcReader<R> {
-    /// Get the Crc for this CrcReader.
+    /// Get the Crc for this `CrcReader`.
     pub fn crc(&self) -> &Crc {
         &self.crc
     }
 
-    /// Get the reader that is wrapped by this CrcReader.
+    /// Get the reader that is wrapped by this `CrcReader`.
     pub fn into_inner(self) -> R {
         self.inner
     }
 
-    /// Get the reader that is wrapped by this CrcReader by reference.
+    /// Get the reader that is wrapped by this `CrcReader` by reference.
     pub fn get_ref(&self) -> &R {
         &self.inner
     }
 
-    /// Get a mutable reference to the reader that is wrapped by this CrcReader.
+    /// Get a mutable reference to the reader that is wrapped by this `CrcReader`.
     pub fn get_mut(&mut self) -> &mut R {
         &mut self.inner
     }
 
-    /// Reset the Crc in this CrcReader.
+    /// Reset the Crc in this `CrcReader`.
     pub fn reset(&mut self) {
         self.crc.reset();
     }
@@ -135,34 +135,34 @@ pub struct CrcWriter<W> {
 }
 
 impl<W> CrcWriter<W> {
-    /// Get the Crc for this CrcWriter.
+    /// Get the Crc for this `CrcWriter`.
     pub fn crc(&self) -> &Crc {
         &self.crc
     }
 
-    /// Get the writer that is wrapped by this CrcWriter.
+    /// Get the writer that is wrapped by this `CrcWriter`.
     pub fn into_inner(self) -> W {
         self.inner
     }
 
-    /// Get the writer that is wrapped by this CrcWriter by reference.
+    /// Get the writer that is wrapped by this `CrcWriter` by reference.
     pub fn get_ref(&self) -> &W {
         &self.inner
     }
 
-    /// Get a mutable reference to the writer that is wrapped by this CrcWriter.
+    /// Get a mutable reference to the writer that is wrapped by this `CrcWriter`.
     pub fn get_mut(&mut self) -> &mut W {
         &mut self.inner
     }
 
-    /// Reset the Crc in this CrcWriter.
+    /// Reset the Crc in this `CrcWriter`.
     pub fn reset(&mut self) {
         self.crc.reset();
     }
 }
 
 impl<W: Write> CrcWriter<W> {
-    /// Create a new CrcWriter.
+    /// Create a new `CrcWriter`.
     pub fn new(w: W) -> CrcWriter<W> {
         CrcWriter {
             inner: w,

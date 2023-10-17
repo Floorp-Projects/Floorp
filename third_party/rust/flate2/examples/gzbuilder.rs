@@ -1,5 +1,3 @@
-extern crate flate2;
-
 use flate2::Compression;
 use flate2::GzBuilder;
 use std::fs::File;

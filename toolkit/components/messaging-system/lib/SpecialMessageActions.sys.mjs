@@ -193,7 +193,6 @@ export const SpecialMessageActions = {
     const allowedPrefs = [
       "browser.dataFeatureRecommendations.enabled",
       "browser.migrate.content-modal.about-welcome-behavior",
-      "browser.migrate.content-modal.enabled",
       "browser.migrate.content-modal.import-all.enabled",
       "browser.migrate.preferences-entrypoint.enabled",
       "browser.shopping.experience2023.active",

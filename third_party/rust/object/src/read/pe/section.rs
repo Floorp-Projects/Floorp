@@ -143,7 +143,6 @@ pub type PeSectionIterator64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct PeSectionIterator<'data, 'file, Pe, R = &'data [u8]>
 where
-    'data: 'file,
     Pe: ImageNtHeaders,
     R: ReadRef<'data>,
 {
@@ -178,7 +177,6 @@ pub type PeSection64<'data, 'file, R = &'data [u8]> =
 #[derive(Debug)]
 pub struct PeSection<'data, 'file, Pe, R = &'data [u8]>
 where
-    'data: 'file,
     Pe: ImageNtHeaders,
     R: ReadRef<'data>,
 {

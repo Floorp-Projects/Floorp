@@ -80,7 +80,7 @@ where
     }
 
     /// Returns information about the rich header of this file (if any).
-    pub fn rich_header_info(&self) -> Option<RichHeaderInfo> {
+    pub fn rich_header_info(&self) -> Option<RichHeaderInfo<'_>> {
         RichHeaderInfo::parse(self.data, self.dos_header.nt_headers_offset().into())
     }
 
@@ -298,7 +298,7 @@ where
         Ok(exports)
     }
 
-    fn pdb_info(&self) -> Result<Option<CodeView>> {
+    fn pdb_info(&self) -> Result<Option<CodeView<'_>>> {
         let data_dir = match self.data_directory(pe::IMAGE_DIRECTORY_ENTRY_DEBUG) {
             Some(data_dir) => data_dir,
             None => return Ok(None),

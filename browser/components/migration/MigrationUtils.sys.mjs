@@ -31,7 +31,6 @@ var gMigrators = null;
 var gFileMigrators = null;
 var gProfileStartup = null;
 var gL10n = null;
-var gHasOpenedLegacyWizard = false;
 
 let gForceExitSpinResolve = false;
 let gKeepUndoData = false;
@@ -552,8 +551,8 @@ class MigrationUtils {
   }
 
   /**
-   * Show the migration wizard.  On mac, this may just focus the wizard if it's
-   * already running, in which case aOpener and aOptions are ignored.
+   * Show the migration wizard in about:preferences, or if there is not an existing
+   * browser window open, in a new top-level dialog window.
    *
    * NB: If you add new consumers, please add a migration entry point constant to
    * MIGRATION_ENTRYPOINTS and supply that entrypoint with the entrypoint property
@@ -577,10 +576,9 @@ class MigrationUtils {
    * @param {string} [aOptions.profileId]
    *   An identifier for the profile to use when migrating.
    * @returns {Promise<undefined>}
-   *   If the new content-modal migration dialog is enabled and an
-   *   about:preferences tab can be opened, this will resolve when
+   *   If an about:preferences tab can be opened, this will resolve when
    *   that tab has been switched to. Otherwise, this will resolve
-   *   just after opening the dialog window.
+   *   just after opening the top-level dialog window.
    */
   showMigrationWizard(aOpener, aOptions) {
     // When migration is kicked off from about:welcome, there are
@@ -597,10 +595,6 @@ class MigrationUtils {
     //   The migration wizard will open in a new top-level content
     //   window.
     //
-    // "legacy":
-    //   The legacy migration wizard will open, even if the new migration
-    //   wizard is enabled by default.
-    //
     // "default" / other
     //   The user will be directed to the migration wizard in
     //   about:preferences. The tab will not close once the
@@ -610,92 +604,59 @@ class MigrationUtils {
       "default"
     );
 
-    let aboutWelcomeLegacyBehavior =
-      aboutWelcomeBehavior == "legacy" &&
-      aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB;
+    let entrypoint = aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
+    Services.telemetry
+      .getHistogramById("FX_MIGRATION_ENTRY_POINT_CATEGORICAL")
+      .add(entrypoint);
 
-    if (
-      Services.prefs.getBoolPref(
-        "browser.migrate.content-modal.enabled",
-        false
-      ) &&
-      !aboutWelcomeLegacyBehavior
-    ) {
-      let entrypoint =
-        aOptions.entrypoint || this.MIGRATION_ENTRYPOINTS.UNKNOWN;
-      Services.telemetry
-        .getHistogramById("FX_MIGRATION_ENTRY_POINT_CATEGORICAL")
-        .add(entrypoint);
+    let openStandaloneWindow = blocking => {
+      let features = "dialog,centerscreen,resizable=no";
 
-      let openStandaloneWindow = blocking => {
-        let features = "dialog,centerscreen,resizable=no";
+      if (blocking) {
+        features += ",modal";
+      }
 
-        if (blocking) {
-          features += ",modal";
+      Services.ww.openWindow(
+        aOpener,
+        "chrome://browser/content/migration/migration-dialog-window.html",
+        "_blank",
+        features,
+        {
+          options: aOptions,
         }
+      );
+      return Promise.resolve();
+    };
 
-        Services.ww.openWindow(
-          aOpener,
-          "chrome://browser/content/migration/migration-dialog-window.html",
-          "_blank",
-          features,
-          {
-            options: aOptions,
-          }
+    if (aOptions.isStartupMigration) {
+      // Record that the uninstaller requested a profile refresh
+      if (Services.env.get("MOZ_UNINSTALLER_PROFILE_REFRESH")) {
+        Services.env.set("MOZ_UNINSTALLER_PROFILE_REFRESH", "");
+        Services.telemetry.scalarSet(
+          "migration.uninstaller_profile_refresh",
+          true
         );
-        return Promise.resolve();
-      };
-
-      if (aOptions.isStartupMigration) {
-        // Record that the uninstaller requested a profile refresh
-        if (Services.env.get("MOZ_UNINSTALLER_PROFILE_REFRESH")) {
-          Services.env.set("MOZ_UNINSTALLER_PROFILE_REFRESH", "");
-          Services.telemetry.scalarSet(
-            "migration.uninstaller_profile_refresh",
-            true
-          );
-        }
-
-        openStandaloneWindow(true /* blocking */);
-        return Promise.resolve();
       }
 
-      if (aOpener?.openPreferences) {
-        if (aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB) {
-          if (aboutWelcomeBehavior == "autoclose") {
-            return aOpener.openPreferences("general-migrate-autoclose");
-          } else if (aboutWelcomeBehavior == "standalone") {
-            openStandaloneWindow(false /* blocking */);
-            return Promise.resolve();
-          }
-        }
-        return aOpener.openPreferences("general-migrate");
-      }
-
-      // If somehow we failed to open about:preferences, fall back to opening
-      // the top-level window.
-      openStandaloneWindow(false /* blocking */);
+      openStandaloneWindow(true /* blocking */);
       return Promise.resolve();
     }
-    // Legacy migration dialog
-    if (!gHasOpenedLegacyWizard) {
-      gHasOpenedLegacyWizard = true;
-      aOptions.openedTime = Cu.now();
+
+    if (aOpener?.openPreferences) {
+      if (aOptions.entrypoint == this.MIGRATION_ENTRYPOINTS.NEWTAB) {
+        if (aboutWelcomeBehavior == "autoclose") {
+          return aOpener.openPreferences("general-migrate-autoclose");
+        } else if (aboutWelcomeBehavior == "standalone") {
+          openStandaloneWindow(false /* blocking */);
+          return Promise.resolve();
+        }
+      }
+      return aOpener.openPreferences("general-migrate");
     }
 
-    const DIALOG_URL = "chrome://browser/content/migration/migration.xhtml";
-    let features = "chrome,dialog,modal,centerscreen,titlebar,resizable=no";
-    if (AppConstants.platform == "macosx" && !this.isStartupMigration) {
-      let win = Services.wm.getMostRecentWindow("Browser:MigrationWizard");
-      if (win) {
-        win.focus();
-        return Promise.resolve();
-      }
-      // On mac, the migration wiazrd should only be modal in the case of
-      // startup-migration.
-      features = "centerscreen,chrome,resizable=no";
-    }
-    Services.ww.openWindow(aOpener, DIALOG_URL, "_blank", features, aOptions);
+    // If somehow we failed to open about:preferences, fall back to opening
+    // the top-level window.
+    openStandaloneWindow(false /* blocking */);
     return Promise.resolve();
   }
 

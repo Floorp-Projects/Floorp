@@ -1,11 +1,9 @@
 #![warn(rust_2018_idioms)]
-#![cfg(all(feature = "full", tokio_unstable))]
+#![cfg(all(feature = "full"))]
 
 use tokio::sync::oneshot;
 use tokio::task::JoinSet;
 use tokio::time::Duration;
-
-use futures::future::FutureExt;
 
 fn rt() -> tokio::runtime::Runtime {
     tokio::runtime::Builder::new_current_thread()
@@ -24,7 +22,7 @@ async fn test_with_sleep() {
     set.detach_all();
     assert_eq!(set.len(), 0);
 
-    assert!(matches!(set.join_one().await, Ok(None)));
+    assert!(matches!(set.join_next().await, None));
 
     for i in 0..10 {
         set.spawn(async move {
@@ -35,14 +33,14 @@ async fn test_with_sleep() {
     }
 
     let mut seen = [false; 10];
-    while let Some(res) = set.join_one().await.unwrap() {
+    while let Some(res) = set.join_next().await.transpose().unwrap() {
         seen[res] = true;
     }
 
     for was_seen in &seen {
         assert!(was_seen);
     }
-    assert!(matches!(set.join_one().await, Ok(None)));
+    assert!(matches!(set.join_next().await, None));
 
     // Do it again.
     for i in 0..10 {
@@ -53,14 +51,14 @@ async fn test_with_sleep() {
     }
 
     let mut seen = [false; 10];
-    while let Some(res) = set.join_one().await.unwrap() {
+    while let Some(res) = set.join_next().await.transpose().unwrap() {
         seen[res] = true;
     }
 
     for was_seen in &seen {
         assert!(was_seen);
     }
-    assert!(matches!(set.join_one().await, Ok(None)));
+    assert!(matches!(set.join_next().await, None));
 }
 
 #[tokio::test]
@@ -99,11 +97,45 @@ async fn alternating() {
     assert_eq!(set.len(), 2);
 
     for _ in 0..16 {
-        let () = set.join_one().await.unwrap().unwrap();
+        let () = set.join_next().await.unwrap().unwrap();
         assert_eq!(set.len(), 1);
         set.spawn(async {});
         assert_eq!(set.len(), 2);
     }
+}
+
+#[tokio::test(start_paused = true)]
+async fn abort_tasks() {
+    let mut set = JoinSet::new();
+    let mut num_canceled = 0;
+    let mut num_completed = 0;
+    for i in 0..16 {
+        let abort = set.spawn(async move {
+            tokio::time::sleep(Duration::from_secs(i as u64)).await;
+            i
+        });
+
+        if i % 2 != 0 {
+            // abort odd-numbered tasks.
+            abort.abort();
+        }
+    }
+    loop {
+        match set.join_next().await {
+            Some(Ok(res)) => {
+                num_completed += 1;
+                assert_eq!(res % 2, 0);
+            }
+            Some(Err(e)) => {
+                assert!(e.is_cancelled());
+                num_canceled += 1;
+            }
+            None => break,
+        }
+    }
+
+    assert_eq!(num_canceled, 8);
+    assert_eq!(num_completed, 8);
 }
 
 #[test]
@@ -115,50 +147,11 @@ fn runtime_gone() {
         drop(rt);
     }
 
-    assert!(rt().block_on(set.join_one()).unwrap_err().is_cancelled());
-}
-
-// This ensures that `join_one` works correctly when the coop budget is
-// exhausted.
-#[tokio::test(flavor = "current_thread")]
-async fn join_set_coop() {
-    // Large enough to trigger coop.
-    const TASK_NUM: u32 = 1000;
-
-    static SEM: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(0);
-
-    let mut set = JoinSet::new();
-
-    for _ in 0..TASK_NUM {
-        set.spawn(async {
-            SEM.add_permits(1);
-        });
-    }
-
-    // Wait for all tasks to complete.
-    //
-    // Since this is a `current_thread` runtime, there's no race condition
-    // between the last permit being added and the task completing.
-    let _ = SEM.acquire_many(TASK_NUM).await.unwrap();
-
-    let mut count = 0;
-    let mut coop_count = 0;
-    loop {
-        match set.join_one().now_or_never() {
-            Some(Ok(Some(()))) => {}
-            Some(Err(err)) => panic!("failed: {}", err),
-            None => {
-                coop_count += 1;
-                tokio::task::yield_now().await;
-                continue;
-            }
-            Some(Ok(None)) => break,
-        }
-
-        count += 1;
-    }
-    assert!(coop_count >= 1);
-    assert_eq!(count, TASK_NUM);
+    assert!(rt()
+        .block_on(set.join_next())
+        .unwrap()
+        .unwrap_err()
+        .is_cancelled());
 }
 
 #[tokio::test(start_paused = true)]
@@ -181,7 +174,7 @@ async fn abort_all() {
     assert_eq!(set.len(), 10);
 
     let mut count = 0;
-    while let Some(res) = set.join_one().await.transpose() {
+    while let Some(res) = set.join_next().await {
         if let Err(err) = res {
             assert!(err.is_cancelled());
         }
@@ -189,4 +182,54 @@ async fn abort_all() {
     }
     assert_eq!(count, 10);
     assert_eq!(set.len(), 0);
+}
+
+#[cfg(feature = "parking_lot")]
+mod parking_lot {
+    use super::*;
+
+    use futures::future::FutureExt;
+
+    // This ensures that `join_next` works correctly when the coop budget is
+    // exhausted.
+    #[tokio::test(flavor = "current_thread")]
+    async fn join_set_coop() {
+        // Large enough to trigger coop.
+        const TASK_NUM: u32 = 1000;
+
+        static SEM: tokio::sync::Semaphore = tokio::sync::Semaphore::const_new(0);
+
+        let mut set = JoinSet::new();
+
+        for _ in 0..TASK_NUM {
+            set.spawn(async {
+                SEM.add_permits(1);
+            });
+        }
+
+        // Wait for all tasks to complete.
+        //
+        // Since this is a `current_thread` runtime, there's no race condition
+        // between the last permit being added and the task completing.
+        let _ = SEM.acquire_many(TASK_NUM).await.unwrap();
+
+        let mut count = 0;
+        let mut coop_count = 0;
+        loop {
+            match set.join_next().now_or_never() {
+                Some(Some(Ok(()))) => {}
+                Some(Some(Err(err))) => panic!("failed: {}", err),
+                None => {
+                    coop_count += 1;
+                    tokio::task::yield_now().await;
+                    continue;
+                }
+                Some(None) => break,
+            }
+
+            count += 1;
+        }
+        assert!(coop_count >= 1);
+        assert_eq!(count, TASK_NUM);
+    }
 }
