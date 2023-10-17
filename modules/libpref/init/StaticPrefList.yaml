@@ -11665,6 +11665,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Whether we can send OnDataAvailable to content process directly.
+- name: network.send_OnDataFinished.nsInputStreamPump
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Perform all network access on the socket process.
 # The pref requires "network.process.enabled" to be true.
 # Changing these prefs requires a restart.
