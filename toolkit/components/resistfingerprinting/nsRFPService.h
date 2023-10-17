@@ -295,6 +295,24 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   // --------------------------------------------------------------------------
 
+  // The method for getting the granular fingerprinting protection override of
+  // the given channel. Due to WebCompat reason, there can be a granular
+  // overrides to replace default enabled RFPTargets for the context of the
+  // channel. The method will return Nothing() to indicate using the default
+  // RFPTargets
+  static Maybe<RFPTarget> GetOverriddenFingerprintingSettingsForChannel(
+      nsIChannel* aChannel);
+
+  // The method for getting the granular fingerprinting protection override of
+  // the given first-party and third-party URIs. It will return the granular
+  // overrides if there is one defined for the context of the first-party URI
+  // and third-party URI. Otherwise, it will return Nothing() to indicate using
+  // the default RFPTargets.
+  static Maybe<RFPTarget> GetOverriddenFingerprintingSettingsForURI(
+      nsIURI* aFirstPartyURI, nsIURI* aThirdPartyURI);
+
+  // --------------------------------------------------------------------------
+
  private:
   nsresult Init();
 

@@ -39,12 +39,16 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/fallible.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
+#include "nsAboutProtocolUtils.h"
 #include "nsBaseHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -52,6 +56,7 @@
 #include "nsCoord.h"
 #include "nsTHashMap.h"
 #include "nsDebug.h"
+#include "nsEffectiveTLDService.h"
 #include "nsError.h"
 #include "nsHashKeys.h"
 #include "nsJSUtils.h"
@@ -69,6 +74,7 @@
 #include "nsICookieJarSettings.h"
 #include "nsICryptoHash.h"
 #include "nsIGlobalObject.h"
+#include "nsILoadInfo.h"
 #include "nsIObserverService.h"
 #include "nsIRandomGenerator.h"
 #include "nsIUserIdleService.h"
@@ -1544,4 +1550,190 @@ nsRFPService::CleanAllOverrides() {
   MOZ_ASSERT(XRE_IsParentProcess());
   mFingerprintingOverrides.Clear();
   return NS_OK;
+}
+
+/* static */
+Maybe<RFPTarget> nsRFPService::GetOverriddenFingerprintingSettingsForChannel(
+    nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCOMPtr<nsIURI> uri;
+  Unused << aChannel->GetURI(getter_AddRefs(uri));
+
+  if (uri->SchemeIs("about") && !NS_IsContentAccessibleAboutURI(uri)) {
+    return Nothing();
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  MOZ_ASSERT(loadInfo);
+
+  RefPtr<dom::BrowsingContext> bc;
+  loadInfo->GetTargetBrowsingContext(getter_AddRefs(bc));
+  if (!bc || !bc->IsContent()) {
+    return Nothing();
+  }
+
+  // The channel is for the first-party load.
+  if (!loadInfo->GetIsThirdPartyContextToTopWindow()) {
+    return GetOverriddenFingerprintingSettingsForURI(uri, nullptr);
+  }
+
+  // The channel is for the third-party load. We get the first-party URI from
+  // the top-level window global parent.
+  RefPtr<dom::WindowGlobalParent> topWGP =
+      bc->Top()->Canonical()->GetCurrentWindowGlobal();
+
+  if (NS_WARN_IF(!topWGP)) {
+    return Nothing();
+  }
+
+  nsCOMPtr<nsIPrincipal> topPrincipal = topWGP->DocumentPrincipal();
+  if (NS_WARN_IF(!topPrincipal)) {
+    return Nothing();
+  }
+
+  // Only apply the override if the top is content. In testing, the top level
+  // document could be a null principal. We don't need to apply override in this
+  // case.
+  if (!topPrincipal->GetIsContentPrincipal()) {
+    return Nothing();
+  }
+
+  nsCOMPtr<nsIURI> topURI = topWGP->GetDocumentURI();
+  if (NS_WARN_IF(!topURI)) {
+    return Nothing();
+  }
+
+  // The top-level page could be navigated to an error page. We cannot get
+  // the correct override in this case. So, we return nothing from here.
+  if (nsContentUtils::IsErrorPage(topURI)) {
+    return Nothing();
+  }
+
+#ifdef DEBUG
+  // Verify if the top URI matches the partitionKey of the channel.
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+
+  nsAutoString partitionKey;
+  cookieJarSettings->GetPartitionKey(partitionKey);
+
+  OriginAttributes attrs;
+  attrs.SetPartitionKey(topURI);
+
+  // The partitionKey of the channel could haven't been set here if the loading
+  // channel is top-level.
+  MOZ_ASSERT_IF(!partitionKey.IsEmpty(),
+                attrs.mPartitionKey.Equals(partitionKey));
+#endif
+
+  return GetOverriddenFingerprintingSettingsForURI(topURI, uri);
+}
+
+/* static */
+Maybe<RFPTarget> nsRFPService::GetOverriddenFingerprintingSettingsForURI(
+    nsIURI* aFirstPartyURI, nsIURI* aThirdPartyURI) {
+  MOZ_ASSERT(aFirstPartyURI);
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  RefPtr<nsRFPService> service = GetOrCreate();
+  if (NS_WARN_IF(!service)) {
+    return Nothing();
+  }
+
+  // The fingerprinting overrides with a specific scope will replace the
+  // overrides with a more general scope. For example, the {first-party domain}
+  // will take over {first-party domain, *} because the latter one has a smaller
+  // scope.
+
+  // First, we get the overrides that applies to every context.
+  Maybe<RFPTarget> result = service->mFingerprintingOverrides.MaybeGet("*"_ns);
+
+  RefPtr<nsEffectiveTLDService> eTLDService =
+      nsEffectiveTLDService::GetInstance();
+  if (NS_WARN_IF(!eTLDService)) {
+    return Nothing();
+  }
+
+  nsAutoCString firstPartyDomain;
+  nsresult rv = eTLDService->GetBaseDomain(aFirstPartyURI, 0, firstPartyDomain);
+  if (NS_FAILED(rv)) {
+    return Nothing();
+  }
+
+  // The check is for a first-party load. A first-party load can be a
+  // top-level load or a first-party subresource/iframe load. The first-party
+  // load can match the following two scopes.
+  //   1. {first-party domain, *}: Every context that is under the given
+  //   first-party domain, including itself.
+  //   2. {first-party domain}: First-party contexts that load the given
+  //   first-party domain.
+  if (!aThirdPartyURI) {
+    // Test the {first-party domain, *} scope.
+    nsAutoCString key;
+    key.Assign(firstPartyDomain);
+    key.Append(FP_OVERRIDES_DOMAIN_KEY_DELIMITER);
+    key.Append("*");
+
+    Maybe<RFPTarget> fpOverrides =
+        service->mFingerprintingOverrides.MaybeGet(key);
+    if (fpOverrides) {
+      result = fpOverrides;
+    }
+
+    // Test the {first-party domain} scope.
+    fpOverrides = service->mFingerprintingOverrides.MaybeGet(firstPartyDomain);
+    if (fpOverrides) {
+      result = fpOverrides;
+    }
+
+    return result;
+  }
+
+  // The check is for a third-party load. The third-party load can match the
+  // following three scopes.
+  //   1. {first-party domain, *}: Every context that is under the given
+  //   first-party domain.
+  //   2. {*, third-party domain}: Every third-party context that loads the
+  //   given third-party domain.
+  //   3. {first-party domain, third-party domain}: The third-party context that
+  //   is under the given first-party domain.
+
+  nsAutoCString thirdPartyDomain;
+  rv = eTLDService->GetBaseDomain(aThirdPartyURI, 0, thirdPartyDomain);
+  if (NS_FAILED(rv)) {
+    return Nothing();
+  }
+
+  // Test {first-party domain, *} scope.
+  nsAutoCString key;
+  key.Assign(firstPartyDomain);
+  key.Append(FP_OVERRIDES_DOMAIN_KEY_DELIMITER);
+  key.Append("*");
+  Maybe<RFPTarget> fpOverrides =
+      service->mFingerprintingOverrides.MaybeGet(key);
+  if (fpOverrides) {
+    result = fpOverrides;
+  }
+
+  // Test {*, third-party domain} scope.
+  key.Assign("*");
+  key.Append(FP_OVERRIDES_DOMAIN_KEY_DELIMITER);
+  key.Append(thirdPartyDomain);
+  fpOverrides = service->mFingerprintingOverrides.MaybeGet(key);
+  if (fpOverrides) {
+    result = fpOverrides;
+  }
+
+  // Test {first-party domain, third-party domain} scope.
+  key.Assign(firstPartyDomain);
+  key.Append(FP_OVERRIDES_DOMAIN_KEY_DELIMITER);
+  key.Append(thirdPartyDomain);
+  fpOverrides = service->mFingerprintingOverrides.MaybeGet(key);
+  if (fpOverrides) {
+    result = fpOverrides;
+  }
+
+  return result;
 }
