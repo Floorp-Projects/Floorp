@@ -353,7 +353,11 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
                           nsTableRowFrame*& aFirstTruncatedRow,
                           nscoord& aDesiredHeight);
 
-  void CreateContinuingRowFrame(nsIFrame& aRowFrame, nsIFrame** aContRowFrame);
+  /**
+   * Create a continuing table row frame, add it to the child list, and then
+   * push it and its later siblings to our overflow frames list.
+   */
+  nsTableRowFrame* CreateContinuingRowFrame(nsIFrame* aRowFrame);
 
   bool IsSimpleRowFrame(nsTableFrame* aTableFrame, nsTableRowFrame* aRowFrame);
 
