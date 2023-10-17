@@ -339,7 +339,6 @@ void nsTableRowGroupFrame::ReflowChildren(
   bool isPaginated = aPresContext->IsPaginated() &&
                      NS_UNCONSTRAINEDSIZE != aReflowInput.availSize.BSize(wm);
 
-  bool haveRow = false;
   bool reflowAllKids = aReflowInput.reflowInput.ShouldReflowAllKids() ||
                        tableFrame->IsGeometryDirty() ||
                        tableFrame->NeedToCollapse();
@@ -355,7 +354,6 @@ void nsTableRowGroupFrame::ReflowChildren(
   for (nsTableRowFrame* kidFrame = GetFirstRow(); kidFrame;
        prevKidFrame = kidFrame, kidFrame = kidFrame->GetNextRow()) {
     nscoord cellSpacingB = tableFrame->GetRowSpacing(kidFrame->GetRowIndex());
-    haveRow = true;
 
     // Reflow the row frame
     if (reflowAllKids || kidFrame->IsSubtreeDirty() ||
@@ -453,7 +451,7 @@ void nsTableRowGroupFrame::ReflowChildren(
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
   }
 
-  if (haveRow) {
+  if (GetFirstRow()) {
     aReflowInput.bCoord -=
         tableFrame->GetRowSpacing(GetStartRowIndex() + GetRowCount());
   }
