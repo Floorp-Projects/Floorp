@@ -604,7 +604,8 @@ function roundTo(number, digits) {
  * @param  {String} value
  *         The color, in any form accepted by CSS.
  * @return {String}
- *         The color classification, one of "rgb", "hsl", "hex", or "name".
+ *         The color classification, one of "rgb", "hsl", "hwb",
+ *         "hex", "name", or if no format is recognized, "authored".
  */
 function classifyColor(value) {
   value = value.toLowerCase();
@@ -616,8 +617,10 @@ function classifyColor(value) {
     return CssColor.COLORUNIT.hwb;
   } else if (/^#[0-9a-f]+$/.exec(value)) {
     return CssColor.COLORUNIT.hex;
+  } else if (/^[a-z\-]+$/.exec(value)) {
+    return CssColor.COLORUNIT.name;
   }
-  return CssColor.COLORUNIT.name;
+  return CssColor.COLORUNIT.authored;
 }
 
 /**
