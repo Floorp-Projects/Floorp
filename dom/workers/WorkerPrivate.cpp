@@ -2802,6 +2802,8 @@ nsresult WorkerPrivate::GetLoadInfo(
         aParent->IsThirdPartyContextToTopWindow();
     loadInfo.mShouldResistFingerprinting = aParent->ShouldResistFingerprinting(
         RFPTarget::IsAlwaysEnabledForPrecompute);
+    loadInfo.mOverriddenFingerprintingSettings =
+        aParent->GetOverriddenFingerprintingSettings();
     loadInfo.mParentController = aParent->GlobalScope()->GetController();
     loadInfo.mWatchedByDevTools = aParent->IsWatchedByDevTools();
   } else {
@@ -2944,6 +2946,8 @@ nsresult WorkerPrivate::GetLoadInfo(
       loadInfo.mShouldResistFingerprinting =
           document->ShouldResistFingerprinting(
               RFPTarget::IsAlwaysEnabledForPrecompute);
+      loadInfo.mOverriddenFingerprintingSettings =
+          document->GetOverriddenFingerprintingSettings();
 
       // This is an hack to deny the storage-access-permission for workers of
       // sub-iframes.
