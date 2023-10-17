@@ -274,23 +274,6 @@
       this._adjustAutofillItemLayout();
       this.setAttribute("formautofillattached", "true");
 
-      let buttonTextBundleKey;
-      if (this._itemBox.getAttribute("size") == "small") {
-        buttonTextBundleKey =
-          AppConstants.platform == "macosx"
-            ? "autocompleteFooterOptionOSXShort2"
-            : "autocompleteFooterOptionShort2";
-      } else {
-        buttonTextBundleKey =
-          AppConstants.platform == "macosx"
-            ? "autocompleteFooterOptionOSX2"
-            : "autocompleteFooterOption2";
-      }
-
-      let buttonText =
-        this._stringBundle.GetStringFromName(buttonTextBundleKey);
-      this._optionButton.textContent = buttonText;
-
       let value = JSON.parse(this.getAttribute("ac-value"));
 
       this._allFieldCategories = value.categories;
@@ -306,6 +289,13 @@
       } else {
         this._itemBox.setAttribute("no-warning", "true");
       }
+
+      const buttonTextBundleKey = value.categories
+        ? "autocompleteManageAddresses"
+        : "autocompleteManageCreditCards";
+      const buttonText =
+        this._stringBundle.GetStringFromName(buttonTextBundleKey);
+      this._optionButton.textContent = buttonText;
     }
   }
 

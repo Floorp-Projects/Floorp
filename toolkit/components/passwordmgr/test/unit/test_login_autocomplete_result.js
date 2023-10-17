@@ -141,7 +141,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: {
             formHostname: "mochi.test",
@@ -164,7 +164,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: {
             formHostname: "mochi.test",
@@ -223,7 +223,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -272,7 +272,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -328,7 +328,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -377,7 +377,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -398,7 +398,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -411,7 +411,7 @@ add_task(async function test_all_patterns() {
       items: [
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -441,7 +441,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -467,7 +467,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -493,7 +493,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -544,7 +544,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -595,7 +595,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },
@@ -647,7 +647,7 @@ add_task(async function test_all_patterns() {
         },
         {
           value: "",
-          label: "View Saved Logins",
+          label: "Manage Passwords",
           style: "loginsFooter",
           comment: { formHostname: "mochi.test" },
         },

@@ -417,7 +417,7 @@ form_autocomplete:
       insecureWarning: The number of insecure login field warning rows shown (should be 0 or 1).
       login: The number of login rows shown (with or without the domain line).
       importableLogin: The number of import suggestion rows shown.
-      loginsFooter: The number of "View Saved Logins" footer row shown.
+      loginsFooter: The number of "Manage Passwords" footer row shown.
       stringLength: Length of the text in the field that triggered these results.
     notification_emails: ["passwords-dev@mozilla.org"]
     products:
