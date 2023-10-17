@@ -141,7 +141,6 @@ add_task(async function test_aboutwelcome_easy_setup_screen_impression() {
   );
   await cleanup();
   sandbox.restore();
-  await popPrefs();
 });
 
 /**
@@ -200,7 +199,6 @@ add_task(async function test_aboutwelcome_mr_template_content() {
 
   await cleanup();
   sandbox.restore();
-  await popPrefs();
 });
 
 /**
@@ -247,7 +245,6 @@ add_task(async function test_aboutwelcome_mr_template_content_needs_pin() {
 
   await cleanup();
   sandbox.restore();
-  await popPrefs();
 });
 
 /**
@@ -282,7 +279,6 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
 
   await cleanup();
   sandbox.restore();
-  await popPrefs();
 });
 /**
  * Test MR template content - Browser is Pinned and set as default
@@ -317,7 +313,6 @@ add_task(async function test_aboutwelcome_mr_template_only_import() {
 
   await cleanup();
   sandbox.restore();
-  await popPrefs();
 });
 
 add_task(async function test_aboutwelcome_gratitude() {

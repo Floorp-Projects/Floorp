@@ -13,6 +13,7 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/enUS-searchFeatures.ftl                  (../components/urlbar/content/enUS-searchFeatures.ftl)
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
+  preview/onboarding.ftl                           (../components/newtab/aboutwelcome/content/onboarding.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
