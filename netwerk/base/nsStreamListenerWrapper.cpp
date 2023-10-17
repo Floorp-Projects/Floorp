@@ -18,13 +18,7 @@ NS_IMETHODIMP
 nsStreamListenerWrapper::OnAfterLastPart(nsresult aStatus) {
   if (nsCOMPtr<nsIMultiPartChannelListener> listener =
           do_QueryInterface(mListener)) {
-    nsresult rv = NS_OK;
-    if (nsCOMPtr<nsIMultiPartChannelListener> listener =
-            do_QueryInterface(mListener)) {
-      rv = listener->OnAfterLastPart(aStatus);
-    }
-    mListener = nullptr;
-    return rv;
+    return listener->OnAfterLastPart(aStatus);
   }
   return NS_OK;
 }
