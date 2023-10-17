@@ -11,11 +11,9 @@
 #include "MainThreadUtils.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
@@ -207,14 +205,8 @@ class nsHtml5StreamParser final : public nsISupports {
 
   nsresult OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInStream,
                            uint64_t aSourceOffset, uint32_t aLength);
-  /**
-   * ReentrantMonitorAutoEnter is used for protecting access to
-   * nsHtml5StreamParser::mOnStopCalled and should be obtained from
-   * nsHtml5StreamListener::mDelegateMonitor
-   */
-  nsresult OnStopRequest(
-      nsIRequest* aRequest, nsresult status,
-      const mozilla::ReentrantMonitorAutoEnter& aProofOfLock);
+
+  nsresult OnStopRequest(nsIRequest* aRequest, nsresult status);
 
   // EncodingDeclarationHandler
   // https://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/common/EncodingDeclarationHandler.java
@@ -764,13 +756,6 @@ class nsHtml5StreamParser final : public nsISupports {
    * If content is being sent to the devtools, an encoded UUID for the parser.
    */
   nsString mUUIDForDevtools;
-
-  /**
-   * prevent multiple calls to OnStopRequest
-   * This field can be called from multiple threads and is protected by
-   * nsHtml5StreamListener::mDelegateMonitor passed in the OnStopRequest
-   */
-  bool mOnStopCalled{false};
 };
 
 #endif  // nsHtml5StreamParser_h

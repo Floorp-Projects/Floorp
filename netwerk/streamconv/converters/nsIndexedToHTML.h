@@ -7,7 +7,6 @@
 #define ____nsindexedtohtml___h___
 
 #include "nsCOMPtr.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "nsString.h"
 #include "nsIStreamConverter.h"
 #include "nsIDirIndexListener.h"
@@ -28,7 +27,6 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
   NS_DECL_NSISTREAMCONVERTER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSIDIRINDEXLISTENER
 
   nsIndexedToHTML() = default;

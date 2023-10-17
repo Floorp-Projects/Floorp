@@ -34,6 +34,7 @@ class nsInputStreamPump;
 //-----------------------------------------------------------------------------
 
 class nsJARChannel final : public nsIJARChannel,
+                           public nsIStreamListener,
                            public nsIThreadRetargetableRequest,
                            public nsIThreadRetargetableStreamListener,
                            public nsHashPropertyBag {

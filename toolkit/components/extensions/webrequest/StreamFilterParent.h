@@ -39,6 +39,7 @@ using namespace mozilla::dom;
 using mozilla::ipc::IPCResult;
 
 class StreamFilterParent final : public PStreamFilterParent,
+                                 public nsIStreamListener,
                                  public nsIThreadRetargetableStreamListener,
                                  public nsIRequest,
                                  public StreamFilterBase {

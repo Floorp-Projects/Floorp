@@ -166,7 +166,8 @@ class ChannelMediaResource
 
   void GetDebugInfo(dom::MediaResourceDebugInfo& aInfo) override;
 
-  class Listener final : public nsIInterfaceRequestor,
+  class Listener final : public nsIStreamListener,
+                         public nsIInterfaceRequestor,
                          public nsIChannelEventSink,
                          public nsIThreadRetargetableStreamListener {
     ~Listener() = default;

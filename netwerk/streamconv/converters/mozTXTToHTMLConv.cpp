@@ -7,7 +7,6 @@
 #include "mozTXTToHTMLConv.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/Maybe.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
@@ -910,8 +909,7 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
 ****************************************************************************/
 
 NS_IMPL_ISUPPORTS(mozTXTToHTMLConv, mozITXTToHTMLConv, nsIStreamConverter,
-                  nsIThreadRetargetableStreamListener, nsIStreamListener,
-                  nsIRequestObserver)
+                  nsIStreamListener, nsIRequestObserver)
 
 int32_t mozTXTToHTMLConv::CiteLevelTXT(const char16_t* line,
                                        uint32_t& logLineStart) {
@@ -1257,14 +1255,6 @@ mozTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
                                   uint64_t sourceOffset, uint32_t count) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_IMETHODIMP
-mozTXTToHTMLConv::OnDataFinished(nsresult aStatus) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-mozTXTToHTMLConv::CheckListenerChain() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 mozTXTToHTMLConv::OnStartRequest(nsIRequest* request) {

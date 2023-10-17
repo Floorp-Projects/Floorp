@@ -28,7 +28,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_intl.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/TextUtils.h"
 
 #include "mozilla/UniquePtrExtensions.h"
@@ -1390,39 +1389,14 @@ class nsHtml5RequestStopper : public Runnable {
   }
 };
 
-nsresult nsHtml5StreamParser::OnStopRequest(
-    nsIRequest* aRequest, nsresult status,
-    const mozilla::ReentrantMonitorAutoEnter& aProofOfLock) {
-  MOZ_ASSERT_IF(aRequest, mRequest == aRequest);
-  if (mOnStopCalled) {
-    return NS_OK;
+nsresult nsHtml5StreamParser::OnStopRequest(nsIRequest* aRequest,
+                                            nsresult status) {
+  MOZ_ASSERT(mRequest == aRequest, "Got Stop on wrong stream.");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
+  if (NS_FAILED(mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
+    NS_WARNING("Dispatching StopRequest event failed.");
   }
-
-  mOnStopCalled = true;
-
-  if (MOZ_UNLIKELY(NS_IsMainThread())) {
-    nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
-    if (NS_FAILED(
-            mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
-      NS_WARNING("Dispatching StopRequest event failed.");
-    }
-    return NS_OK;
-  }
-
-  if (!StaticPrefs::network_send_OnDataFinished_html5parser()) {
-    // Let the MainThread event handle this, even though it will just
-    // send it back to this thread, so we can accurately judge the impact
-    // of this change. This should eventually be removed once the PoC is
-    // complete
-    mOnStopCalled = false;
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(IsParserThread(), "Wrong thread!");
-
-  mozilla::MutexAutoLock autoLock(mTokenizerMutex);
-  DoStopRequest();
-  PostLoadFlusher();
   return NS_OK;
 }
 
