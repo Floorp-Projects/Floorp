@@ -6,16 +6,9 @@
     "command": "${workspaceFolder}/mach",
     "args": ["--log-no-times"],
     "windows": {
-      "command": "/mozilla-build/start-shell.bat",
-      "args": [
-        "cd",
-        // Use PowerShell to mangle path for mozilla-build environment
-        {"value": "$('${workspaceFolder}' -replace '\\\\','/')", "quoting": "weak"},
-        "';'",
-
-        "mach",
-        "--log-no-times"
-      ]
+      // Not using ${workspaceFolder} because doing so somehow runs
+      // the command on a new window instead of within the vscode terminal
+      "command": "./mach"
     },
     "tasks": [
       {
