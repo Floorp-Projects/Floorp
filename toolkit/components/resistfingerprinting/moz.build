@@ -38,3 +38,5 @@ XPIDL_SOURCES += [
     "nsIFingerprintingWebCompatService.idl",
     "nsIRFPService.idl",
 ]
+
+include("/ipc/chromium/chromium-config.mozbuild")
