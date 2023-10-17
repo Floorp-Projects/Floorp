@@ -30,7 +30,7 @@ function removeItem(item) {
 
 function hasPendingMessage(item, msg) {
   let messageBar = htmlDoc().querySelector(
-    `message-bar[addon-id="${item.addon.id}"`
+    `moz-message-bar[addon-id="${item.addon.id}"`
   );
   is_element_visible(messageBar, msg);
 }
