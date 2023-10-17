@@ -37,6 +37,16 @@
       --toolbox-non-lwt-textcolor: CaptionText;
       --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
       --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
+
+      #TabsToolbar:not(:-moz-lwtheme) {
+        /* These colors match the Linux/HCM default button colors. We need to
+         * override these on the tabs toolbar because the accent color is
+         * arbitrary, so the hardcoded colors from browser-custom-colors might
+         * not provide sufficient contrast. */
+        --toolbarbutton-icon-fill: currentColor;
+        --toolbarbutton-hover-background: color-mix(in srgb, currentColor 17%, transparent);
+        --toolbarbutton-active-background: color-mix(in srgb, currentColor 30%, transparent);
+      }
     }
 
     &[sizemode="normal"] #navigator-toolbox {
