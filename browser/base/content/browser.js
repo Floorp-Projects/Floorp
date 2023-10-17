@@ -1570,7 +1570,7 @@ var gBrowserInit = {
     updateBookmarkToolbarVisibility();
 
     // Set a sane starting width/height for all resolutions on new profiles.
-    if (ChromeUtils.shouldResistFingerprinting("RoundWindowSize")) {
+    if (ChromeUtils.shouldResistFingerprinting("RoundWindowSize", null)) {
       // When the fingerprinting resistance is enabled, making sure that we don't
       // have a maximum window to interfere with generating rounded window dimensions.
       document.documentElement.setAttribute("sizemode", "normal");
