@@ -2974,7 +2974,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   // XXXbz I guess we're assuming that the caller will either pass in
   // a channel with a useful type or call SetContentType?
   SetContentType(""_ns);
-  mContentLanguage.Truncate();
+  mContentLanguage = nullptr;
   mBaseTarget.Truncate();
 
   mXMLDeclarationBits = 0;
@@ -6831,7 +6831,11 @@ void Document::SetHeaderData(nsAtom* aHeaderField, const nsAString& aData) {
   }
 
   if (aHeaderField == nsGkAtoms::headerContentLanguage) {
-    CopyUTF16toUTF8(aData, mContentLanguage);
+    if (aData.IsEmpty()) {
+      mContentLanguage = nullptr;
+    } else {
+      mContentLanguage = NS_AtomizeMainThread(aData);
+    }
     mMayNeedFontPrefsUpdate = true;
     if (auto* presContext = GetPresContext()) {
       presContext->ContentLanguageChanged();
@@ -18344,26 +18348,26 @@ void Document::SetCachedSizes(nsTabSizes* aSizes) {
   mCachedTabSizeGeneration = GetGeneration();
 }
 
-already_AddRefed<nsAtom> Document::GetContentLanguageAsAtomForStyle() const {
-  nsAutoString contentLang;
-  GetContentLanguage(contentLang);
-  contentLang.StripWhitespace();
-
+nsAtom* Document::GetContentLanguageAsAtomForStyle() const {
   // Content-Language may be a comma-separated list of language codes,
   // in which case the HTML5 spec says to treat it as unknown
-  if (!contentLang.IsEmpty() && !contentLang.Contains(char16_t(','))) {
-    return NS_Atomize(contentLang);
+  if (mContentLanguage &&
+      !nsDependentAtomString(mContentLanguage).Contains(char16_t(','))) {
+    return GetContentLanguage();
   }
 
   return nullptr;
 }
 
-already_AddRefed<nsAtom> Document::GetLanguageForStyle() const {
-  RefPtr<nsAtom> lang = GetContentLanguageAsAtomForStyle();
-  if (!lang) {
-    lang = mLanguageFromCharset;
+nsAtom* Document::GetLanguageForStyle() const {
+  if (nsAtom* lang = GetContentLanguageAsAtomForStyle()) {
+    return lang;
   }
-  return lang.forget();
+  return mLanguageFromCharset.get();
+}
+
+void Document::GetContentLanguageForBindings(DOMString& aString) const {
+  aString.SetKnownLiveAtom(mContentLanguage, DOMString::eTreatNullAsEmpty);
 }
 
 const LangGroupFontPrefs* Document::GetFontPrefsForLang(

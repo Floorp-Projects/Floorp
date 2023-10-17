@@ -763,14 +763,16 @@ bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,
   // is missing as well from the preferences.
   // The content language can be a comma-separated list of
   // language codes.
-  nsAutoString language;
-  aElement->OwnerDoc()->GetContentLanguage(language);
-
-  NS_ConvertUTF16toUTF8 langString(aValue);
-  language.StripWhitespace();
-  for (auto const& lang : language.Split(char16_t(','))) {
-    if (nsStyleUtil::LangTagCompare(NS_ConvertUTF16toUTF8(lang), langString)) {
-      return true;
+  // FIXME: We're not really consistent in our treatment of comma-separated
+  // content-language values.
+  if (nsAtom* language = aElement->OwnerDoc()->GetContentLanguage()) {
+    const NS_ConvertUTF16toUTF8 langString(aValue);
+    nsAtomCString docLang(language);
+    docLang.StripWhitespace();
+    for (auto const& lang : docLang.Split(',')) {
+      if (nsStyleUtil::LangTagCompare(lang, langString)) {
+        return true;
+      }
     }
   }
   return false;

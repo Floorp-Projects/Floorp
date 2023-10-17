@@ -20,16 +20,13 @@
 using namespace mozilla;
 using mozilla::intl::LocaleService;
 
-void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
+already_AddRefed<nsAtom> ICUUtils::LanguageTagIterForContent::GetNext() {
   if (mCurrentFallbackIndex < 0) {
     mCurrentFallbackIndex = 0;
     // Try the language specified by a 'lang'/'xml:lang' attribute on mContent
     // or any ancestor, if such an attribute is specified:
-    nsAutoString lang;
-    mContent->GetLang(lang);
-    if (!lang.IsEmpty()) {
-      CopyUTF16toUTF8(lang, aBCP47LangTag);
-      return;
+    if (auto* lang = mContent->GetLang()) {
+      return do_AddRef(lang);
     }
   }
 
@@ -37,27 +34,22 @@ void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
     mCurrentFallbackIndex = 1;
     // Else try the language specified by any Content-Language HTTP header or
     // pragma directive:
-    nsAutoString lang;
-    mContent->OwnerDoc()->GetContentLanguage(lang);
-    if (!lang.IsEmpty()) {
-      CopyUTF16toUTF8(lang, aBCP47LangTag);
-      return;
+    if (nsAtom* lang = mContent->OwnerDoc()->GetContentLanguage()) {
+      return do_AddRef(lang);
     }
   }
 
   if (mCurrentFallbackIndex < 2) {
     mCurrentFallbackIndex = 2;
     // Else take the app's locale:
-
     nsAutoCString appLocale;
-    LocaleService::GetInstance()->GetAppLocaleAsBCP47(aBCP47LangTag);
-    return;
+    LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocale);
+    return NS_Atomize(appLocale);
   }
 
   // TODO: Probably not worth it, but maybe have a fourth fallback to using
   // the OS locale?
-
-  aBCP47LangTag.Truncate();  // Signal iterator exhausted
+  return nullptr;
 }
 
 /* static */
@@ -65,9 +57,15 @@ bool ICUUtils::LocalizeNumber(double aValue,
                               LanguageTagIterForContent& aLangTags,
                               nsAString& aLocalizedValue) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
+  MOZ_ASSERT(NS_IsMainThread());
+  using LangToFormatterCache =
+      nsTHashMap<RefPtr<nsAtom>, UniquePtr<intl::NumberFormat>>;
 
-  nsAutoCString langTag;
-  aLangTags.GetNext(langTag);
+  static StaticAutoPtr<LangToFormatterCache> sCache;
+  if (!sCache) {
+    sCache = new LangToFormatterCache();
+    ClearOnShutdown(&sCache);
+  }
 
   intl::NumberFormatOptions options;
   if (StaticPrefs::dom_forms_number_grouping()) {
@@ -81,19 +79,19 @@ bool ICUUtils::LocalizeNumber(double aValue,
   // (14-16 decimal fractional digits).
   options.mFractionDigits = Some(std::make_pair(0, 16));
 
-  while (!langTag.IsEmpty()) {
-    auto result = intl::NumberFormat::TryCreate(langTag.get(), options);
-    if (result.isErr()) {
-      aLangTags.GetNext(langTag);
+  while (RefPtr<nsAtom> langTag = aLangTags.GetNext()) {
+    auto& formatter = sCache->LookupOrInsertWith(langTag, [&] {
+      nsAutoCString tag;
+      langTag->ToUTF8String(tag);
+      return intl::NumberFormat::TryCreate(tag, options).unwrapOr(nullptr);
+    });
+    if (!formatter) {
       continue;
     }
-    UniquePtr<intl::NumberFormat> nf = result.unwrap();
     intl::nsTStringToBufferAdapter adapter(aLocalizedValue);
-    if (nf->format(aValue, adapter).isOk()) {
+    if (formatter->format(aValue, adapter).isOk()) {
       return true;
     }
-
-    aLangTags.GetNext(langTag);
   }
   return false;
 }
@@ -102,34 +100,41 @@ bool ICUUtils::LocalizeNumber(double aValue,
 double ICUUtils::ParseNumber(const nsAString& aValue,
                              LanguageTagIterForContent& aLangTags) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
-
+  using LangToParserCache =
+      nsTHashMap<RefPtr<nsAtom>, UniquePtr<intl::NumberParser>>;
+  static StaticAutoPtr<LangToParserCache> sCache;
   if (aValue.IsEmpty()) {
     return std::numeric_limits<float>::quiet_NaN();
   }
 
+  if (!sCache) {
+    sCache = new LangToParserCache();
+    ClearOnShutdown(&sCache);
+  }
+
   const Span<const char16_t> value(aValue.BeginReading(), aValue.Length());
 
-  nsAutoCString langTag;
-  aLangTags.GetNext(langTag);
-  while (!langTag.IsEmpty()) {
-    auto createResult = intl::NumberParser::TryCreate(
-        langTag.get(), StaticPrefs::dom_forms_number_grouping());
-    if (createResult.isErr()) {
-      aLangTags.GetNext(langTag);
+  while (RefPtr<nsAtom> langTag = aLangTags.GetNext()) {
+    auto& parser = sCache->LookupOrInsertWith(langTag, [&] {
+      nsAutoCString tag;
+      langTag->ToUTF8String(tag);
+      return intl::NumberParser::TryCreate(
+                 tag.get(), StaticPrefs::dom_forms_number_grouping())
+          .unwrapOr(nullptr);
+    });
+    if (!parser) {
       continue;
     }
-    UniquePtr<intl::NumberParser> np = createResult.unwrap();
-
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");
-    auto parseResult = np->ParseDouble(value);
-    if (parseResult.isOk()) {
-      std::pair<double, int32_t> parsed = parseResult.unwrap();
-      if (parsed.second == static_cast<int32_t>(value.Length())) {
-        return parsed.first;
-      }
+    auto parseResult = parser->ParseDouble(value);
+    if (!parseResult.isOk()) {
+      continue;
     }
-    aLangTags.GetNext(langTag);
+    std::pair<double, int32_t> parsed = parseResult.unwrap();
+    if (parsed.second == static_cast<int32_t>(value.Length())) {
+      return parsed.first;
+    }
   }
   return std::numeric_limits<float>::quiet_NaN();
 }
