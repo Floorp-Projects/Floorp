@@ -12,6 +12,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/RegisterWorkletBindings.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
@@ -58,6 +59,12 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 
   mShouldResistFingerprinting = aWindow->AsGlobal()->ShouldResistFingerprinting(
       RFPTarget::IsAlwaysEnabledForPrecompute);
+
+  RefPtr<dom::Document> doc = nsGlobalWindowInner::Cast(aWindow)->GetDocument();
+  if (doc) {
+    mOverriddenFingerprintingSettings =
+        doc->GetOverriddenFingerprintingSettings();
+  }
 }
 
 WorkletImpl::~WorkletImpl() { MOZ_ASSERT(!mGlobalScope); }
