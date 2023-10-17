@@ -1544,6 +1544,17 @@ void DocumentLoadListener::SerializeRedirectData(
 
   aArgs.registrarId() = mRedirectChannelId;
 
+#ifdef DEBUG
+  // We only set the granularFingerprintingProtection field when opening http
+  // channels. So, we mark the field as set here if the channel is not a
+  // nsHTTPChannel to pass the assertion check for getting this field in below
+  // LoadInfoToLoadInfoArgs() call.
+  if (!baseChannel) {
+    static_cast<mozilla::net::LoadInfo*>(redirectLoadInfo.get())
+        ->MarkOverriddenFingerprintingSettingsAsSet();
+  }
+#endif
+
   MOZ_ALWAYS_SUCCEEDS(
       ipc::LoadInfoToLoadInfoArgs(redirectLoadInfo, &aArgs.loadInfo()));
 

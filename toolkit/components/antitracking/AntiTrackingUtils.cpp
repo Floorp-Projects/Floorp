@@ -973,6 +973,21 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
   Unused << loadInfo->SetStoragePermission(
       AntiTrackingUtils::GetStoragePermissionStateInParent(aChannel));
 
+  // Note that we need to put this after computing the IsThirdPartyToTopWindow
+  // flag because it will be used when getting the granular fingerprinting
+  // protections.
+  Maybe<RFPTarget> overriddenFingerprintingSettings =
+      nsRFPService::GetOverriddenFingerprintingSettingsForChannel(aChannel);
+
+  if (overriddenFingerprintingSettings) {
+    loadInfo->SetOverriddenFingerprintingSettings(
+        overriddenFingerprintingSettings.ref());
+  }
+#ifdef DEBUG
+  static_cast<mozilla::net::LoadInfo*>(loadInfo.get())
+      ->MarkOverriddenFingerprintingSettingsAsSet();
+#endif
+
   // We only update the IsOnContentBlockingAllowList flag and the partition key
   // for the top-level http channel.
   //

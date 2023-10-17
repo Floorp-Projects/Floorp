@@ -631,6 +631,10 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mParserCreatedScript(rhs.mParserCreatedScript),
       mStoragePermission(rhs.mStoragePermission),
       mOverriddenFingerprintingSettings(rhs.mOverriddenFingerprintingSettings),
+#ifdef DEBUG
+      mOverriddenFingerprintingSettingsIsSet(
+          rhs.mOverriddenFingerprintingSettingsIsSet),
+#endif
       mIsMetaRefresh(rhs.mIsMetaRefresh),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mIsMediaRequest(rhs.mIsMediaRequest),
@@ -643,7 +647,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mInterceptionInfo(rhs.mInterceptionInfo),
       mHasInjectedCookieForCookieBannerHandling(
           rhs.mHasInjectedCookieForCookieBannerHandling),
-      mWasSchemelessInput(rhs.mWasSchemelessInput) {}
+      mWasSchemelessInput(rhs.mWasSchemelessInput) {
+}
 
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
@@ -1137,6 +1142,16 @@ LoadInfo::SetStoragePermission(
 }
 
 const Maybe<RFPTarget>& LoadInfo::GetOverriddenFingerprintingSettings() {
+#ifdef DEBUG
+  RefPtr<BrowsingContext> browsingContext;
+  GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+
+  // Exclude this check if the target browsing context is for the parent
+  // process.
+  MOZ_ASSERT_IF(XRE_IsParentProcess() && browsingContext &&
+                    !browsingContext->IsInProcess(),
+                mOverriddenFingerprintingSettingsIsSet);
+#endif
   return mOverriddenFingerprintingSettings;
 }
 
