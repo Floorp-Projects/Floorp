@@ -474,8 +474,7 @@ static void RepeatedlyTryOleSetClipboard(IDataObject* aDataObj) {
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::SetNativeClipboardData(
-    nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
-    int32_t aWhichClipboard) {
+    nsITransferable* aTransferable, int32_t aWhichClipboard) {
   MOZ_CLIPBOARD_LOG("%s", __FUNCTION__);
 
   if (aWhichClipboard != kGlobalClipboard) {
