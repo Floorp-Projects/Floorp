@@ -97,7 +97,7 @@
   user-select: none;
 }
 
-:root:where([tabsintitlebar]) {
+:root[tabsintitlebar] {
   --toolbox-non-lwt-bgcolor: ActiveCaption;
   --toolbox-non-lwt-textcolor: CaptionText;
   --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
@@ -171,8 +171,8 @@
   color: var(--toolbox-non-lwt-textcolor);
 
   &:-moz-window-inactive {
-    background-color: var(--toolbox-non-lwt-bgcolor-inactive);
-    color: var(--toolbox-non-lwt-textcolor-inactive);
+    background-color: var(--toolbox-non-lwt-bgcolor-inactive, var(--toolbox-non-lwt-bgcolor));
+    color: var(--toolbox-non-lwt-textcolor-inactive, var(--toolbox-non-lwt-textcolor));
   }
 
   :root[customizing] & {
@@ -188,9 +188,6 @@
 
     &:-moz-window-inactive {
       background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-      :root[tabsintitlebar] & {
-        color: color-mix(in srgb, currentColor 60%, transparent);
-      }
     }
   }
 
