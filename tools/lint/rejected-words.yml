@@ -156,7 +156,7 @@ avoid-blacklist-and-whitelist:
         - layout/tools/reftest/reftestcommandline.py
         - layout/tools/reftest/runreftest.py
         - layout/tools/reftest/selftest/conftest.py
-        - mobile/android/app/mobile.js
+        - mobile/android/app/geckoview-prefs.js
         - mobile/android/geckoview/src/main/java/org/mozilla/gecko/util/HardwareCodecCapabilityUtils.java
         - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/ContentBlocking.java
         - mobile/android/geckoview/src/main/java/org/mozilla/geckoview/CrashReporter.java

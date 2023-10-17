@@ -123,7 +123,6 @@ excluded_from_imports_prefix = list(
             "browser/components/enterprisepolicies/schemas/schema.sys.mjs",
             "browser/locales/en-US/firefox-l10n.js",
             "mobile/android/app/geckoview-prefs.js",
-            "mobile/android/app/mobile.js",
             "mobile/android/locales/en-US/mobile-l10n.js",
             "modules/libpref/greprefs.js",
             "modules/libpref/init/all.js",
