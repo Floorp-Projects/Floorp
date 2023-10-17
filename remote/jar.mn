@@ -16,6 +16,7 @@ remote.jar:
   content/shared/AppInfo.sys.mjs (shared/AppInfo.sys.mjs)
   content/shared/Browser.sys.mjs (shared/Browser.sys.mjs)
   content/shared/Capture.sys.mjs (shared/Capture.sys.mjs)
+  content/shared/ChallengeHeaderParser.sys.mjs (shared/ChallengeHeaderParser.sys.mjs)
   content/shared/DOM.sys.mjs (shared/DOM.sys.mjs)
   content/shared/Format.sys.mjs (shared/Format.sys.mjs)
   content/shared/Log.sys.mjs (shared/Log.sys.mjs)
