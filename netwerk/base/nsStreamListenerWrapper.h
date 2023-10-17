@@ -6,6 +6,7 @@
 #define nsStreamListenerWrapper_h__
 
 #include "nsCOMPtr.h"
+#include "nsIRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsIMultiPartChannel.h"
@@ -27,12 +28,34 @@ class nsStreamListenerWrapper final
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_FORWARD_SAFE_NSIREQUESTOBSERVER(mListener)
   NS_FORWARD_SAFE_NSISTREAMLISTENER(mListener)
   NS_DECL_NSIMULTIPARTCHANNELLISTENER
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
+  //  Don't use NS_FORWARD_NSIREQUESTOBSERVER(mListener->) here, because we need
+  //  to release mListener in OnStopRequest, and IDL-generated function doesn't.
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    // OnStartRequest can come after OnStopRequest in certain cases (multipart
+    // listeners)
+    nsCOMPtr<nsIMultiPartChannel> multiPartChannel =
+        do_QueryInterface(aRequest);
+    if (multiPartChannel) {
+      mIsMulti = true;
+    }
+    return mListener->OnStartRequest(aRequest);
+  }
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
+                           nsresult aStatusCode) override {
+    nsresult rv = mListener->OnStopRequest(aRequest, aStatusCode);
+    if (!mIsMulti) {
+      // Multipart channels can call OnStartRequest again
+      mListener = nullptr;
+    }
+    return rv;
+  }
+
  private:
+  bool mIsMulti{false};
   ~nsStreamListenerWrapper() = default;
   nsCOMPtr<nsIStreamListener> mListener;
 };

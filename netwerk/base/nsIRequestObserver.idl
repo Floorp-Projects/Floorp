@@ -20,6 +20,9 @@ interface nsIRequestObserver : nsISupports
      *
      * An exception thrown from onStartRequest has the side-effect of
      * causing the request to be canceled.
+     *
+     * Note: if this request is an nsIMultiPartChannelListener then
+     * OnStartRequest may be called multiple times.
      */
     void onStartRequest(in nsIRequest aRequest);
 
@@ -31,6 +34,9 @@ interface nsIRequestObserver : nsISupports
      * @param aStatusCode reason for stopping (NS_OK if completed successfully)
      *
      * An exception thrown from onStopRequest is generally ignored.
+     *
+     * Note: if this request is an nsIMultiPartChannelListener then
+     * OnStopRequest may be called multiple times.
      */
     void onStopRequest(in nsIRequest aRequest,
                        in nsresult aStatusCode);
