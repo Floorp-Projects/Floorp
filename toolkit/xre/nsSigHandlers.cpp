@@ -37,6 +37,10 @@
 #    include <ucontext.h>
 #  endif
 
+#  ifdef MOZ_WIDGET_GTK
+#    include <dlfcn.h>
+#  endif
+
 // Note: some tests manipulate this value.
 unsigned int _gdb_sleep_duration = 300;
 
@@ -117,15 +121,32 @@ MOZ_NEVER_INLINE void child_ah_crap_handler(int signum) {
 #    include <glib.h>
 #  endif
 
-#  if defined(MOZ_WIDGET_GTK) && \
-      (GLIB_MAJOR_VERSION > 2 || \
-       (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#  if defined(MOZ_WIDGET_GTK)
+
+#    if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION < 50
+// These types are only available in glib 2.50+
+typedef enum {
+  G_LOG_WRITER_HANDLED = 1,
+  G_LOG_WRITER_UNHANDLED = 0,
+} GLogWriterOutput;
+typedef struct _GLogField GLogField;
+struct _GLogField {
+  const gchar* key;
+  gconstpointer value;
+  gssize length;
+};
+typedef GLogWriterOutput (*GLogWriterFunc)(GLogLevelFlags log_level,
+                                           const GLogField* fields,
+                                           gsize n_fields, gpointer user_data);
+#    endif
 
 static GLogFunc orig_log_func = nullptr;
 
 extern "C" {
 static void glib_log_func(const gchar* log_domain, GLogLevelFlags log_level,
                           const gchar* message, gpointer user_data);
+static GLogWriterOutput glib_log_writer_func(GLogLevelFlags, const GLogField*,
+                                             gsize, gpointer);
 }
 
 // GDK sometimes avoids calling exit handlers, but we still want to know when we
@@ -151,23 +172,42 @@ static bool IsCrashyGtkMessage(const nsACString& aMessage) {
   return false;
 }
 
+static void HandleGLibMessage(GLogLevelFlags aLogLevel,
+                              const nsDependentCString& aMessage) {
+  if (MOZ_UNLIKELY(IsCrashyGtkMessage(aMessage))) {
+    MOZ_CRASH_UNSAFE(strdup(aMessage.get()));
+  }
+
+  if (aLogLevel &
+      (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION)) {
+    NS_DebugBreak(NS_DEBUG_ASSERTION, aMessage.get(), "glib assertion",
+                  __FILE__, __LINE__);
+  } else if (aLogLevel & (G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING)) {
+    NS_DebugBreak(NS_DEBUG_WARNING, aMessage.get(), "glib warning", __FILE__,
+                  __LINE__);
+  }
+}
+
 /* static */ void glib_log_func(const gchar* log_domain,
                                 GLogLevelFlags log_level, const gchar* message,
                                 gpointer user_data) {
-  if (MOZ_UNLIKELY(IsCrashyGtkMessage(nsDependentCString(message)))) {
-    MOZ_CRASH_UNSAFE(strdup(message));
-  }
-
-  if (log_level &
-      (G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION)) {
-    NS_DebugBreak(NS_DEBUG_ASSERTION, message, "glib assertion", __FILE__,
-                  __LINE__);
-  } else if (log_level & (G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING)) {
-    NS_DebugBreak(NS_DEBUG_WARNING, message, "glib warning", __FILE__,
-                  __LINE__);
-  }
-
+  HandleGLibMessage(log_level, nsDependentCString(message));
   orig_log_func(log_domain, log_level, message, nullptr);
+}
+
+GLogWriterOutput glib_log_writer_func(GLogLevelFlags flags,
+                                      const GLogField* fields, gsize n_fields,
+                                      gpointer user_data) {
+  static const GLogWriterFunc sLogWriterDefault =
+      (GLogWriterFunc)dlsym(RTLD_DEFAULT, "g_log_writer_default");
+  for (gsize i = 0; i < n_fields; ++i) {
+    if (!strcmp(fields[i].key, "MESSAGE") && fields[i].length < 0) {
+      HandleGLibMessage(flags,
+                        nsDependentCString((const char*)fields[i].value));
+      break;
+    }
+  }
+  return sLogWriterDefault(flags, fields, n_fields, user_data);
 }
 
 #  endif
@@ -316,14 +356,22 @@ void InstallSignalHandlers(const char* aProgname) {
   }
 #  endif
 
-#  if defined(MOZ_WIDGET_GTK) && \
-      (GLIB_MAJOR_VERSION > 2 || \
-       (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
+#  ifdef MOZ_WIDGET_GTK
   // Override the default glib logging function to intercept some crashes that
-  // are uninterceptable otherwise.
-  // Also, when XPCOM_DEBUG_BREAK is set, we can also get stacks for them.
-  // so we get stacks for it too.
-  orig_log_func = g_log_set_default_handler(glib_log_func, nullptr);
+  // are uninterceptable otherwise. Also, when XPCOM_DEBUG_BREAK is set, we can
+  // also get stacks for them, so we get stacks for it too.
+  //
+  // If we can hook via g_log_set_writer_func, then we don't need to hook via
+  // g_log_set_default_handler, because the GTK default handler uses structured
+  // logging and thus will end up in our log writer function anyways.
+  static const auto sSetLogWriter =
+      (void (*)(GLogWriterFunc, gpointer, GDestroyNotify))dlsym(
+          RTLD_DEFAULT, "g_log_set_writer_func");
+  if (sSetLogWriter) {
+    sSetLogWriter(glib_log_writer_func, nullptr, nullptr);
+  } else {
+    orig_log_func = g_log_set_default_handler(glib_log_func, nullptr);
+  }
 #  endif
 }
 
