@@ -195,6 +195,12 @@ class LoadInfo final : public nsILoadInfo {
     mIsThirdPartyContextToTopWindow.reset();
   }
 
+#ifdef DEBUG
+  void MarkOverriddenFingerprintingSettingsAsSet() {
+    mOverriddenFingerprintingSettingsIsSet = true;
+  }
+#endif
+
  private:
   // private constructor that is only allowed to be called from within
   // HttpChannelParent and FTPChannelParent declared as friends undeneath.
@@ -359,6 +365,11 @@ class LoadInfo final : public nsILoadInfo {
   nsILoadInfo::StoragePermissionState mStoragePermission =
       nsILoadInfo::NoStoragePermission;
   Maybe<RFPTarget> mOverriddenFingerprintingSettings;
+#ifdef DEBUG
+  // A boolean used to ensure the mOverriddenFingerprintingSettings is set
+  // before use it.
+  bool mOverriddenFingerprintingSettingsIsSet = false;
+#endif
   bool mIsMetaRefresh = false;
 
   // Is true if this load was triggered by processing the attributes of the
