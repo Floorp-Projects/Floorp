@@ -914,8 +914,10 @@ export class ScreenshotsOverlay {
 
     if (boxRight < 300) {
       this.buttonsContainer.style.left = `${boxLeft}px`;
+      this.buttonsContainer.style.right = "";
     } else {
       this.buttonsContainer.style.right = `calc(100% - ${boxRight}px)`;
+      this.buttonsContainer.style.left = "";
     }
 
     this.buttonsContainer.style.top = `${top}px`;
