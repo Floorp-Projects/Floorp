@@ -34,18 +34,14 @@ namespace mozilla {
 struct TableRowGroupReflowInput {
   const ReflowInput& reflowInput;  // Our reflow input
 
-  nsTableFrame* tableFrame;
-
   // The available size (computed from the parent)
   mozilla::LogicalSize availSize;
 
   // Running block-offset
   nscoord bCoord;
 
-  TableRowGroupReflowInput(const ReflowInput& aReflowInput,
-                           nsTableFrame* aTableFrame)
+  explicit TableRowGroupReflowInput(const ReflowInput& aReflowInput)
       : reflowInput(aReflowInput),
-        tableFrame(aTableFrame),
         availSize(aReflowInput.AvailableSize()),
         bCoord(0) {}
 
@@ -401,12 +397,12 @@ void nsTableRowGroupFrame::ReflowChildren(
       aReflowInput.bCoord += cellSpacingB;
 
       if (!reflowAllKids) {
-        if (IsSimpleRowFrame(aReflowInput.tableFrame, kidFrame)) {
+        if (IsSimpleRowFrame(tableFrame, kidFrame)) {
           // Inform the row of its new bsize.
           kidFrame->DidResize();
           // the overflow area may have changed inflate the overflow area
           const nsStylePosition* stylePos = StylePosition();
-          if (aReflowInput.tableFrame->IsAutoBSize(wm) &&
+          if (tableFrame->IsAutoBSize(wm) &&
               !stylePos->BSize(wm).ConvertsToLength()) {
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
@@ -1345,7 +1341,7 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
   nsTableFrame::CheckRequestSpecialBSizeReflow(aReflowInput);
 
   nsTableFrame* tableFrame = GetTableFrame();
-  TableRowGroupReflowInput state(aReflowInput, tableFrame);
+  TableRowGroupReflowInput state(aReflowInput);
   const nsStyleVisibility* groupVis = StyleVisibility();
   bool collapseGroup = StyleVisibility::Collapse == groupVis->mVisible;
   if (collapseGroup) {
