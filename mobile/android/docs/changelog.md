@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **feature-tabs**
+  * Adds parameter to `TabCounterToolbarButton` to show the mask while in private browsing mode.
+
 * **feature-readerview**
   * Adds `UUIDCreator` to `ReaderViewFeature` to create UUIDs for cache keys.
   * Moves the implementation of presenting Reader Mode from the content scripts to `ReaderViewFeature`

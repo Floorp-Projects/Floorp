@@ -4,9 +4,11 @@
 
 package mozilla.components.feature.tabs.toolbar
 
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -27,6 +29,7 @@ import mozilla.components.ui.tabcounter.R
 import mozilla.components.ui.tabcounter.TabCounter
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -76,6 +79,44 @@ class TabCounterToolbarButtonTest {
         val view = button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
         val counterText: TextView = view.findViewById(R.id.counter_text)
         assertEquals("0", counterText.text)
+    }
+
+    @Test
+    fun `GIVEN showMaskInPrivateMode is false WHEN tab counter is created THEN badge is not visible`() {
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = BrowserStore(),
+                menu = tabCounterMenu,
+                showMaskInPrivateMode = false,
+            ),
+        )
+
+        val view = button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+        val counterMask: View = view.findViewById(R.id.counter_mask)
+        assertFalse(counterMask.isVisible)
+    }
+
+    @Test
+    fun `GIVEN showMaskInPrivateMode is true WHEN tab counter is created THEN badge is visible`() {
+        val tab = createTab("https://www.mozilla.org", true, "test-id")
+        val store = BrowserStore(BrowserState(tabs = listOf(tab), selectedTabId = "test-id"))
+        val button = spy(
+            TabCounterToolbarButton(
+                lifecycleOwner,
+                false,
+                showTabs = showTabs,
+                store = store,
+                menu = tabCounterMenu,
+                showMaskInPrivateMode = true,
+            ),
+        )
+
+        val view = button.createView(LinearLayout(testContext) as ViewGroup) as TabCounter
+        val counterMask: View = view.findViewById(R.id.counter_mask)
+        assertTrue(counterMask.isVisible)
     }
 
     @Test
