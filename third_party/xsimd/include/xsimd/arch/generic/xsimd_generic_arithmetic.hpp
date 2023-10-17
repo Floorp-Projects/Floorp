@@ -43,6 +43,20 @@ namespace xsimd
                                  self, other);
         }
 
+        // decr
+        template <class A, class T>
+        inline batch<T, A> decr(batch<T, A> const& self, requires_arch<generic>) noexcept
+        {
+            return self - T(1);
+        }
+
+        // decr_if
+        template <class A, class T, class Mask>
+        inline batch<T, A> decr_if(batch<T, A> const& self, Mask const& mask, requires_arch<generic>) noexcept
+        {
+            return select(mask, decr(self), self);
+        }
+
         // div
         template <class A, class T, class = typename std::enable_if<std::is_integral<T>::value, void>::type>
         inline batch<T, A> div(batch<T, A> const& self, batch<T, A> const& other, requires_arch<generic>) noexcept
@@ -110,6 +124,20 @@ namespace xsimd
             auto res_r = -fms(x.real(), y.real(), fms(x.imag(), y.imag(), z.real()));
             auto res_i = -fma(x.real(), y.imag(), fma(x.imag(), y.real(), z.imag()));
             return { res_r, res_i };
+        }
+
+        // incr
+        template <class A, class T>
+        inline batch<T, A> incr(batch<T, A> const& self, requires_arch<generic>) noexcept
+        {
+            return self + T(1);
+        }
+
+        // incr_if
+        template <class A, class T, class Mask>
+        inline batch<T, A> incr_if(batch<T, A> const& self, Mask const& mask, requires_arch<generic>) noexcept
+        {
+            return select(mask, incr(self), self);
         }
 
         // mul

@@ -23,7 +23,7 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * SSE2 instructions
      */

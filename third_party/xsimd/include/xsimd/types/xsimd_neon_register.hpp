@@ -22,7 +22,7 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
      * NEON instructions for arm32
      */

@@ -378,8 +378,8 @@ namespace xsimd
                                                  std::complex<float> c0, std::complex<float> c1,
                                                  std::complex<float> c2, std::complex<float> c3) noexcept
         {
-            return batch<std::complex<float>>(float32x4_t { c0.real(), c1.real(), c2.real(), c3.real() },
-                                              float32x4_t { c0.imag(), c1.imag(), c2.imag(), c3.imag() });
+            return batch<std::complex<float>, A>(float32x4_t { c0.real(), c1.real(), c2.real(), c3.real() },
+                                                 float32x4_t { c0.imag(), c1.imag(), c2.imag(), c3.imag() });
         }
 
         template <class A, class... Args>

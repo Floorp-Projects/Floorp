@@ -17,9 +17,9 @@
 namespace xsimd
 {
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
-     * FMA4 instructions
+     * SSE4.2 + FMA4 instructions
      */
     struct fma4 : sse4_2
     {

@@ -18,9 +18,9 @@ namespace xsimd
 {
 
     /**
-     * @ingroup arch
+     * @ingroup architectures
      *
-     * AVX512CD instrutions
+     * AVX512CD instructions
      */
     struct avx512cd : avx512f
     {

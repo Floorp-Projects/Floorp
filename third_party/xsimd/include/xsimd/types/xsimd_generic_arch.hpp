@@ -15,17 +15,30 @@
 #include "../config/xsimd_config.hpp"
 
 /**
- * @defgroup arch Architecture description
+ * @defgroup architectures Architecture description
  * */
 namespace xsimd
 {
+    /**
+     * @ingroup architectures
+     *
+     * Base class for all architectures.
+     */
     struct generic
     {
+        /// Whether this architecture is supported at compile-time.
         static constexpr bool supported() noexcept { return true; }
+        /// Whether this architecture is available at run-time.
         static constexpr bool available() noexcept { return true; }
+        /// If this architectures supports aligned memory accesses, the required
+        /// alignment.
         static constexpr std::size_t alignment() noexcept { return 0; }
+        /// Whether this architecture requires aligned memory access.
         static constexpr bool requires_alignment() noexcept { return false; }
+        /// Unique identifier for this architecture.
         static constexpr unsigned version() noexcept { return generic::version(0, 0, 0); }
+        /// Name of the architecture.
+        static constexpr char const* name() noexcept { return "generic"; }
 
     protected:
         static constexpr unsigned version(unsigned major, unsigned minor, unsigned patch) noexcept { return major * 10000u + minor * 100u + patch; }
