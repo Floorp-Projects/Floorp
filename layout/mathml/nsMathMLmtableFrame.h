@@ -230,9 +230,9 @@ class nsMathMLmtdFrame final : public nsTableCellFrame {
                             int32_t aModType) override;
 
   mozilla::StyleVerticalAlignKeyword GetVerticalAlign() const override;
-  nsresult ProcessBorders(nsTableFrame* aFrame,
-                          mozilla::nsDisplayListBuilder* aBuilder,
-                          const mozilla::nsDisplayListSet& aLists) override;
+  void ProcessBorders(nsTableFrame* aFrame,
+                      mozilla::nsDisplayListBuilder* aBuilder,
+                      const mozilla::nsDisplayListSet& aLists) override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));

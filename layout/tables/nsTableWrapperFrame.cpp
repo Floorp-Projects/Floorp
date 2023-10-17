@@ -506,19 +506,22 @@ nscoord nsTableWrapperFrame::ComputeFinalBSize(
                                          aCaptionMargin.BStartEnd(aWM)));
 }
 
-nsresult nsTableWrapperFrame::GetCaptionOrigin(
-    StyleCaptionSide aCaptionSide, const LogicalSize& aContainBlockSize,
-    const LogicalSize& aInnerSize, const LogicalSize& aCaptionSize,
-    LogicalMargin& aCaptionMargin, LogicalPoint& aOrigin, WritingMode aWM) {
+void nsTableWrapperFrame::GetCaptionOrigin(StyleCaptionSide aCaptionSide,
+                                           const LogicalSize& aContainBlockSize,
+                                           const LogicalSize& aInnerSize,
+                                           const LogicalSize& aCaptionSize,
+                                           LogicalMargin& aCaptionMargin,
+                                           LogicalPoint& aOrigin,
+                                           WritingMode aWM) const {
   aOrigin.I(aWM) = aOrigin.B(aWM) = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.ISize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aInnerSize.BSize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.ISize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.BSize(aWM))) {
-    return NS_OK;
+    return;
   }
   if (mCaptionFrames.IsEmpty()) {
-    return NS_OK;
+    return;
   }
 
   NS_ASSERTION(NS_AUTOMARGIN != aCaptionMargin.IStart(aWM) &&
@@ -537,13 +540,15 @@ nsresult nsTableWrapperFrame::GetCaptionOrigin(
       aOrigin.B(aWM) = aCaptionMargin.BStart(aWM);
       break;
   }
-  return NS_OK;
 }
 
-nsresult nsTableWrapperFrame::GetInnerOrigin(
-    const MaybeCaptionSide& aCaptionSide, const LogicalSize& aContainBlockSize,
-    const LogicalSize& aCaptionSize, const LogicalMargin& aCaptionMargin,
-    const LogicalSize& aInnerSize, LogicalPoint& aOrigin, WritingMode aWM) {
+void nsTableWrapperFrame::GetInnerOrigin(const MaybeCaptionSide& aCaptionSide,
+                                         const LogicalSize& aContainBlockSize,
+                                         const LogicalSize& aCaptionSize,
+                                         const LogicalMargin& aCaptionMargin,
+                                         const LogicalSize& aInnerSize,
+                                         LogicalPoint& aOrigin,
+                                         WritingMode aWM) const {
   NS_ASSERTION(NS_AUTOMARGIN != aCaptionMargin.IStart(aWM) &&
                    NS_AUTOMARGIN != aCaptionMargin.IEnd(aWM),
                "The computed caption margin is auto?");
@@ -553,7 +558,7 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
       (NS_UNCONSTRAINEDSIZE == aInnerSize.BSize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.ISize(aWM)) ||
       (NS_UNCONSTRAINEDSIZE == aCaptionSize.BSize(aWM))) {
-    return NS_OK;
+    return;
   }
 
   // block-dir computation
@@ -568,7 +573,6 @@ nsresult nsTableWrapperFrame::GetInnerOrigin(
         break;
     }
   }
-  return NS_OK;
 }
 
 void nsTableWrapperFrame::CreateReflowInputForInnerTable(

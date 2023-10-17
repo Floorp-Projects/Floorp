@@ -101,9 +101,9 @@ class nsTableCellFrame : public nsContainerFrame,
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
-  virtual nsresult ProcessBorders(nsTableFrame* aFrame,
-                                  nsDisplayListBuilder* aBuilder,
-                                  const nsDisplayListSet& aLists);
+  virtual void ProcessBorders(nsTableFrame* aFrame,
+                              nsDisplayListBuilder* aBuilder,
+                              const nsDisplayListSet& aLists);
 
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;

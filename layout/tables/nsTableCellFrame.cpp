@@ -321,18 +321,18 @@ ImgDrawResult nsTableCellFrame::PaintBackground(gfxContext& aRenderingContext,
   return nsCSSRendering::PaintStyleImageLayer(params, aRenderingContext);
 }
 
-nsresult nsTableCellFrame::ProcessBorders(nsTableFrame* aFrame,
-                                          nsDisplayListBuilder* aBuilder,
-                                          const nsDisplayListSet& aLists) {
+void nsTableCellFrame::ProcessBorders(nsTableFrame* aFrame,
+                                      nsDisplayListBuilder* aBuilder,
+                                      const nsDisplayListSet& aLists) {
   const nsStyleBorder* borderStyle = StyleBorder();
-  if (aFrame->IsBorderCollapse() || !borderStyle->HasBorder()) return NS_OK;
+  if (aFrame->IsBorderCollapse() || !borderStyle->HasBorder()) {
+    return;
+  }
 
   if (!GetContentEmpty() ||
       StyleTableBorder()->mEmptyCells == StyleEmptyCells::Show) {
     aLists.BorderBackground()->AppendNewToTop<nsDisplayBorder>(aBuilder, this);
   }
-
-  return NS_OK;
 }
 
 void nsTableCellFrame::InvalidateFrame(uint32_t aDisplayItemKey,

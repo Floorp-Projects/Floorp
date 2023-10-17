@@ -1135,11 +1135,10 @@ StyleVerticalAlignKeyword nsMathMLmtdFrame::GetVerticalAlign() const {
   return alignment;
 }
 
-nsresult nsMathMLmtdFrame::ProcessBorders(nsTableFrame* aFrame,
-                                          nsDisplayListBuilder* aBuilder,
-                                          const nsDisplayListSet& aLists) {
+void nsMathMLmtdFrame::ProcessBorders(nsTableFrame* aFrame,
+                                      nsDisplayListBuilder* aBuilder,
+                                      const nsDisplayListSet& aLists) {
   aLists.BorderBackground()->AppendNewToTop<nsDisplaymtdBorder>(aBuilder, this);
-  return NS_OK;
 }
 
 LogicalMargin nsMathMLmtdFrame::GetBorderWidth(WritingMode aWM) const {
