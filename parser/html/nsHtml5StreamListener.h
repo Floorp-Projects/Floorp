@@ -28,8 +28,7 @@
  * threads, so there is no need to have a mutex around nsHtml5StreamParserPtr to
  * prevent it from double-releasing nsHtml5StreamParser.
  */
-class nsHtml5StreamListener : public nsIStreamListener,
-                              public nsIThreadRetargetableStreamListener {
+class nsHtml5StreamListener : public nsIThreadRetargetableStreamListener {
  public:
   explicit nsHtml5StreamListener(nsHtml5StreamParser* aDelegate);
 
