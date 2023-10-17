@@ -49,6 +49,8 @@ reflects `nsresult` codes into Rust.
   exposes bindings for XPCOM string types. You can use the same `ns{A,C}String`
   types as C++ for owned strings and pass them back and forth over the
   boundary. There is also `ns{A,C}Str` for dependent or borrowed strings.
+- [thin-vec](https://docs.rs/thin-vec/latest/thin_vec/) provides a
+  Rust `Vec`-like type that is layout-compatible with Gecko's `nsTArray`.
 - [xpcom](https://searchfox.org/mozilla-central/source/xpcom/rust/xpcom/src)
   provides multiple building blocks for a component's implementation.
   - The `RefPtr` type is for managing reference-counted pointers.
