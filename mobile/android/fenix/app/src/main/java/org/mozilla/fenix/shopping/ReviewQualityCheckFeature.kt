@@ -27,37 +27,41 @@ private const val DEBOUNCE_TIMEOUT_MILLIS = 200L
  * @property appStore Reference to the application's [AppStore].
  * @property browserStore Reference to the application's [BrowserStore].
  * @property shoppingExperienceFeature Reference to the [ShoppingExperienceFeature].
- * @property onAvailabilityChange Invoked when availability of this feature changes based on feature
+ * @property onIconVisibilityChange Invoked when shopping icon visibility changes based on feature
  * flag and when the loaded page is a supported product page.
  * @property onBottomSheetStateChange Invoked when the bottom sheet is collapsed or expanded.
  * @property debounceTimeoutMillis Function that returns the debounce timeout in milliseconds. This
  * make it possible to wait till [ContentState.isProductUrl] is stable before invoking
- * [onAvailabilityChange].
+ * [onIconVisibilityChange].
+ * @property onProductPageDetected Invoked when a product page is detected and loaded. Used to
+ * detect when to send telemetry for shopping.product_page_visits.
  */
 @OptIn(FlowPreview::class)
 class ReviewQualityCheckFeature(
     private val appStore: AppStore,
     private val browserStore: BrowserStore,
     private val shoppingExperienceFeature: ShoppingExperienceFeature,
-    private val onAvailabilityChange: (isAvailable: Boolean) -> Unit,
+    private val onIconVisibilityChange: (isAvailable: Boolean) -> Unit,
     private val onBottomSheetStateChange: (isExpanded: Boolean) -> Unit,
     private val debounceTimeoutMillis: (Boolean) -> Long = { if (it) DEBOUNCE_TIMEOUT_MILLIS else 0 },
+    private val onProductPageDetected: () -> Unit,
 ) : LifecycleAwareFeature {
     private var scope: CoroutineScope? = null
     private var appStoreScope: CoroutineScope? = null
 
     override fun start() {
-        if (!shoppingExperienceFeature.isEnabled) {
-            onAvailabilityChange(false)
-            return
-        }
-
         scope = browserStore.flowScoped { flow ->
             flow.mapNotNull { it.selectedTab }
                 .map { it.content.isProductUrl && !it.content.loading }
                 .distinctUntilChanged()
                 .debounce(debounceTimeoutMillis)
-                .collect(onAvailabilityChange)
+                .collect {
+                    if (it) {
+                        onProductPageDetected()
+                    }
+
+                    onIconVisibilityChange(shoppingExperienceFeature.isEnabled && it)
+                }
         }
 
         appStoreScope = appStore.flowScoped { flow ->

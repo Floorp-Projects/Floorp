@@ -10773,6 +10773,26 @@ shopping:
     metadata:
       tags:
         - Shopping
+  product_page_visits:
+    type: counter
+    description: |
+      Counts number of visits to a supported retailer product page
+      while enrolled in either the control or treatment branches
+      of the shopping experiment.
+    send_in_pings:
+      - metrics
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854501
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4120#issuecomment-1768423370
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Shopping
 
 shopping.settings:
   component_opted_out:

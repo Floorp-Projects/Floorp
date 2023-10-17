@@ -30,19 +30,33 @@ class ReviewQualityCheckFeatureTest {
     val coroutinesTestRule = MainCoroutineRule()
 
     @Test
-    fun `WHEN feature is not enabled THEN callback returns false`() {
+    fun `WHEN feature is not enabled THEN callback returns false`() = runTest {
         var availability: Boolean? = null
+        val tab = createTab(
+            url = "https://www.mozilla.org",
+            id = "test-tab",
+            isProductUrl = true,
+        )
+        val browserState = BrowserState(
+            tabs = listOf(tab),
+            selectedTabId = tab.id,
+        )
         val tested = ReviewQualityCheckFeature(
             appStore = AppStore(),
-            browserStore = BrowserStore(),
+            browserStore = BrowserStore(
+                initialState = browserState,
+            ),
             shoppingExperienceFeature = FakeShoppingExperienceFeature(enabled = false),
-            onAvailabilityChange = {
+            onIconVisibilityChange = {
                 availability = it
             },
             onBottomSheetStateChange = {},
+            onProductPageDetected = {},
         )
 
         tested.start()
+
+        testScheduler.advanceTimeBy(250)
 
         assertFalse(availability!!)
     }
@@ -66,10 +80,11 @@ class ReviewQualityCheckFeatureTest {
                     initialState = browserState,
                 ),
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                 },
                 onBottomSheetStateChange = {},
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -99,10 +114,11 @@ class ReviewQualityCheckFeatureTest {
                     initialState = browserState,
                 ),
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                 },
                 onBottomSheetStateChange = {},
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -129,11 +145,12 @@ class ReviewQualityCheckFeatureTest {
                     initialState = browserState,
                 ),
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                 },
                 onBottomSheetStateChange = {},
                 debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -165,11 +182,12 @@ class ReviewQualityCheckFeatureTest {
                 appStore = AppStore(),
                 browserStore = browserStore,
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                 },
                 onBottomSheetStateChange = {},
                 debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -204,11 +222,12 @@ class ReviewQualityCheckFeatureTest {
                 appStore = AppStore(),
                 browserStore = browserStore,
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                 },
                 onBottomSheetStateChange = {},
                 debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -238,10 +257,11 @@ class ReviewQualityCheckFeatureTest {
                 appStore = AppStore(),
                 browserStore = browserStore,
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability.add(it)
                 },
                 onBottomSheetStateChange = {},
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -301,11 +321,12 @@ class ReviewQualityCheckFeatureTest {
                 appStore = AppStore(),
                 browserStore = browserStore,
                 shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-                onAvailabilityChange = {
+                onIconVisibilityChange = {
                     availability = it
                     availabilityCount++
                 },
                 onBottomSheetStateChange = {},
+                onProductPageDetected = {},
             )
 
             tested.start()
@@ -329,10 +350,11 @@ class ReviewQualityCheckFeatureTest {
             appStore = appStore,
             browserStore = BrowserStore(),
             shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-            onAvailabilityChange = {},
+            onIconVisibilityChange = {},
             onBottomSheetStateChange = {
                 isExpanded = it
             },
+            onProductPageDetected = {},
         )
 
         tested.start()
@@ -354,10 +376,11 @@ class ReviewQualityCheckFeatureTest {
             appStore = appStore,
             browserStore = BrowserStore(),
             shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-            onAvailabilityChange = {},
+            onIconVisibilityChange = {},
             onBottomSheetStateChange = {
                 isExpanded = it
             },
+            onProductPageDetected = {},
         )
 
         tested.start()
@@ -379,10 +402,11 @@ class ReviewQualityCheckFeatureTest {
             appStore = appStore,
             browserStore = BrowserStore(),
             shoppingExperienceFeature = FakeShoppingExperienceFeature(),
-            onAvailabilityChange = {},
+            onIconVisibilityChange = {},
             onBottomSheetStateChange = {
                 isExpanded = it
             },
+            onProductPageDetected = {},
         )
 
         tested.start()
@@ -393,5 +417,141 @@ class ReviewQualityCheckFeatureTest {
 
         tested.start()
         assertFalse(isExpanded!!)
+    }
+
+    @Test
+    fun `GIVEN feature is enabled WHEN non product url accessed THEN callback not called`() {
+        runTest {
+            var invokedCounter = 0
+            val tab = createTab(
+                url = "https://www.mozilla.org",
+                id = "test-tab",
+                isProductUrl = false,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+            val tested = ReviewQualityCheckFeature(
+                appStore = AppStore(),
+                browserStore = BrowserStore(
+                    initialState = browserState,
+                ),
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
+                onIconVisibilityChange = {},
+                onBottomSheetStateChange = {},
+                debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {
+                    invokedCounter++
+                },
+            )
+
+            tested.start()
+
+            assertEquals(invokedCounter, 0)
+        }
+    }
+
+    @Test
+    fun `GIVEN feature is enabled WHEN product url accessed THEN callback called`() {
+        runTest {
+            var invokedCounter = 0
+            val tab = createTab(
+                url = "https://www.shopping.org",
+                id = "test-tab",
+                isProductUrl = true,
+            ).let {
+                it.copy(content = it.content.copy(loading = false))
+            }
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+            val tested = ReviewQualityCheckFeature(
+                appStore = AppStore(),
+                browserStore = BrowserStore(
+                    initialState = browserState,
+                ),
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(),
+                onIconVisibilityChange = {},
+                onBottomSheetStateChange = {},
+                debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {
+                    invokedCounter++
+                },
+            )
+
+            tested.start()
+
+            assertEquals(invokedCounter, 1)
+        }
+    }
+
+    @Test
+    fun `GIVEN feature is disabled WHEN non product url accessed THEN callback not called`() {
+        runTest {
+            var invokedCounter = 0
+            val tab = createTab(
+                url = "https://www.mozilla.org",
+                id = "test-tab",
+                isProductUrl = false,
+            )
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+            val tested = ReviewQualityCheckFeature(
+                appStore = AppStore(),
+                browserStore = BrowserStore(
+                    initialState = browserState,
+                ),
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(enabled = false),
+                onIconVisibilityChange = {},
+                onBottomSheetStateChange = {},
+                debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {
+                    invokedCounter++
+                },
+            )
+
+            tested.start()
+
+            assertEquals(invokedCounter, 0)
+        }
+    }
+
+    @Test
+    fun `GIVEN feature is disabled WHEN product url accessed THEN callback called`() {
+        runTest {
+            var invokedCounter = 0
+            val tab = createTab(
+                url = "https://www.mozilla.org",
+                id = "test-tab",
+                isProductUrl = true,
+            ).let {
+                it.copy(content = it.content.copy(loading = false))
+            }
+            val browserState = BrowserState(
+                tabs = listOf(tab),
+                selectedTabId = tab.id,
+            )
+            val tested = ReviewQualityCheckFeature(
+                appStore = AppStore(),
+                browserStore = BrowserStore(
+                    initialState = browserState,
+                ),
+                shoppingExperienceFeature = FakeShoppingExperienceFeature(enabled = false),
+                onIconVisibilityChange = {},
+                onBottomSheetStateChange = {},
+                debounceTimeoutMillis = { 0 },
+                onProductPageDetected = {
+                    invokedCounter++
+                },
+            )
+
+            tested.start()
+
+            assertEquals(invokedCounter, 1)
+        }
     }
 }
