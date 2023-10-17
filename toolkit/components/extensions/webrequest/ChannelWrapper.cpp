@@ -1197,6 +1197,18 @@ ChannelWrapper::RequestListener::CheckListenerChain() {
   return rv;
 }
 
+NS_IMETHODIMP
+ChannelWrapper::RequestListener::OnDataFinished(nsresult aStatus) {
+  MOZ_ASSERT(mOrigStreamListener, "Should have mOrigStreamListener");
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+      do_QueryInterface(mOrigStreamListener);
+  if (retargetableListener) {
+    return retargetableListener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}
+
 /*****************************************************************************
  * Event dispatching
  *****************************************************************************/

@@ -8,6 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsError.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
@@ -728,6 +729,22 @@ nsHTTPCompressConv::CheckListenerChain() {
   }
 
   return listener->CheckListenerChain();
+}
+
+NS_IMETHODIMP
+nsHTTPCompressConv::OnDataFinished(nsresult aStatus) {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
+
+  {
+    MutexAutoLock lock(mMutex);
+    listener = do_QueryInterface(mListener);
+  }
+
+  if (listener) {
+    return listener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
 }
 
 }  // namespace net

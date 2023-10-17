@@ -63,7 +63,6 @@ using DNSPromise = MozPromise<nsCOMPtr<nsIDNSRecord>, nsresult, false>;
 
 class nsHttpChannel final : public HttpBaseChannel,
                             public HttpAsyncAborter<nsHttpChannel>,
-                            public nsIStreamListener,
                             public nsICachingChannel,
                             public nsICacheEntryOpenCallback,
                             public nsITransportEventSink,

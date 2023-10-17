@@ -63,8 +63,7 @@ class nsURILoader final : public nsIURILoader {
  * Each instance remains alive until its target URL has been loaded
  * (or aborted).
  */
-class nsDocumentOpenInfo : public nsIStreamListener,
-                           public nsIThreadRetargetableStreamListener {
+class nsDocumentOpenInfo : public nsIThreadRetargetableStreamListener {
  public:
   // Real constructor
   // aFlags is a combination of the flags on nsIURILoader
