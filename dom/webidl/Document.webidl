@@ -468,7 +468,7 @@ partial interface Document {
   [ChromeOnly]
   attribute boolean devToolsAnonymousAndShadowEventsEnabled;
 
-  [ChromeOnly] readonly attribute DOMString contentLanguage;
+  [ChromeOnly, BinaryName="contentLanguageForBindings"] readonly attribute DOMString contentLanguage;
 
   [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;
 

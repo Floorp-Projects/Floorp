@@ -153,8 +153,8 @@ class DictionaryFetcher final : public nsIContentPrefCallback2 {
 
   nsCOMPtr<nsIEditorSpellCheckCallback> mCallback;
   uint32_t mGroup;
-  nsString mRootContentLang;
-  nsString mRootDocContentLang;
+  RefPtr<nsAtom> mRootContentLang;
+  RefPtr<nsAtom> mRootDocContentLang;
   nsTArray<nsCString> mDictionaries;
 
  private:
@@ -769,10 +769,10 @@ EditorSpellCheck::UpdateCurrentDictionary(
 
   RefPtr<DictionaryFetcher> fetcher =
       new DictionaryFetcher(this, aCallback, mDictionaryFetcherGroup);
-  rootEditableElement->GetLang(fetcher->mRootContentLang);
+  fetcher->mRootContentLang = rootEditableElement->GetLang();
   RefPtr<Document> doc = rootEditableElement->GetComposedDoc();
   NS_ENSURE_STATE(doc);
-  doc->GetContentLanguage(fetcher->mRootDocContentLang);
+  fetcher->mRootDocContentLang = doc->GetContentLanguage();
 
   rv = fetcher->Fetch(mEditor);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -866,7 +866,9 @@ nsresult EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher) {
   nsCString contentLangs;
   // Reset mPreferredLangs so we only get the current state.
   mPreferredLangs.Clear();
-  CopyUTF16toUTF8(aFetcher->mRootContentLang, contentLangs);
+  if (aFetcher->mRootContentLang) {
+    aFetcher->mRootContentLang->ToUTF8String(contentLangs);
+  }
 #ifdef DEBUG_DICT
   printf("***** mPreferredLangs (element) |%s|\n", contentLangs.get());
 #endif
@@ -874,7 +876,9 @@ nsresult EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher) {
     mPreferredLangs.AppendElement(contentLangs);
   } else {
     // If no luck, try the "Content-Language" header.
-    CopyUTF16toUTF8(aFetcher->mRootDocContentLang, contentLangs);
+    if (aFetcher->mRootDocContentLang) {
+      aFetcher->mRootDocContentLang->ToUTF8String(contentLangs);
+    }
 #ifdef DEBUG_DICT
     printf("***** mPreferredLangs (content-language) |%s|\n",
            contentLangs.get());

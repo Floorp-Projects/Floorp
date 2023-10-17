@@ -10,11 +10,13 @@
 // nsGkAtom, so we only build when included into internal libs:
 #ifdef MOZILLA_INTERNAL_API
 
-#  include "nsString.h"
+#  include "nsStringFwd.h"
 #  include "unicode/unum.h"  // for UNumberFormat
 #  include "mozilla/intl/ICUError.h"
+#  include "mozilla/AlreadyAddRefed.h"
 
 class nsIContent;
+class nsAtom;
 
 class ICUUtils {
  public:
@@ -41,7 +43,7 @@ class ICUUtils {
      * Once all fallbacks have been exhausted then this function will set
      * aBCP47LangTag to the empty string.
      */
-    void GetNext(nsACString& aBCP47LangTag);
+    already_AddRefed<nsAtom> GetNext();
 
     bool IsAtStart() const { return mCurrentFallbackIndex < 0; }
 

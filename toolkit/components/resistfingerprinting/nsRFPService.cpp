@@ -988,25 +988,25 @@ bool nsRFPService::GetSpoofedKeyCodeInfo(
   KeyboardRegions keyboardRegion = RFP_DEFAULT_SPOOFING_KEYBOARD_REGION;
   // If the document is given, we use the content language which is get from the
   // document. Otherwise, we use the default one.
-  if (aDoc != nullptr) {
-    nsAutoString language;
-    aDoc->GetContentLanguage(language);
+  if (aDoc) {
+    nsAtom* lang = aDoc->GetContentLanguage();
 
     // If the content-langauge is not given, we try to get langauge from the
     // HTML lang attribute.
-    if (language.IsEmpty()) {
-      dom::Element* elm = aDoc->GetHtmlElement();
-
-      if (elm != nullptr) {
-        elm->GetLang(language);
+    if (!lang) {
+      if (dom::Element* elm = aDoc->GetHtmlElement()) {
+        lang = elm->GetLang();
       }
     }
 
     // If two or more languages are given, per HTML5 spec, we should consider
     // it as 'unknown'. So we use the default one.
-    if (!language.IsEmpty() && !language.Contains(char16_t(','))) {
-      language.StripWhitespace();
-      GetKeyboardLangAndRegion(language, keyboardLang, keyboardRegion);
+    if (lang) {
+      nsDependentAtomString langStr(lang);
+      if (!langStr.Contains(char16_t(','))) {
+        langStr.StripWhitespace();
+        GetKeyboardLangAndRegion(langStr, keyboardLang, keyboardRegion);
+      }
     }
   }
 
