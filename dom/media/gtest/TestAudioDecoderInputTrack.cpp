@@ -21,6 +21,7 @@ using namespace mozilla::media;
 using testing::AssertionResult;
 using testing::NiceMock;
 using testing::Return;
+using ControlMessageInterface = MediaTrack::ControlMessageInterface;
 
 constexpr uint32_t kNoFlags = 0;
 constexpr TrackRate kRate = 44100;
@@ -40,7 +41,7 @@ class MockTestGraph : public MediaTrackGraphImpl {
   }
 
   MOCK_CONST_METHOD0(OnGraphThread, bool());
-  MOCK_METHOD1(AppendMessage, void(UniquePtr<ControlMessage>));
+  MOCK_METHOD1(AppendMessage, void(UniquePtr<ControlMessageInterface>));
 
  protected:
   ~MockTestGraph() = default;
@@ -320,8 +321,9 @@ TEST_F(TestAudioDecoderInputTrack, VolumeChange) {
   // one for setting the track's volume, another for the track destruction.
   EXPECT_CALL(*mGraph, AppendMessage)
       .Times(2)
-      .WillOnce([](UniquePtr<ControlMessage> aMessage) { aMessage->Run(); })
-      .WillOnce([](UniquePtr<ControlMessage> aMessage) {});
+      .WillOnce(
+          [](UniquePtr<ControlMessageInterface> aMessage) { aMessage->Run(); })
+      .WillOnce([](UniquePtr<ControlMessageInterface> aMessage) {});
 
   // The default volume is 1.0.
   float expectedVolume = 1.0;
@@ -419,8 +421,9 @@ TEST_F(TestAudioDecoderInputTrack, PlaybackRateChange) {
   // one for setting the track's playback, another for the track destruction.
   EXPECT_CALL(*mGraph, AppendMessage)
       .Times(2)
-      .WillOnce([](UniquePtr<ControlMessage> aMessage) { aMessage->Run(); })
-      .WillOnce([](UniquePtr<ControlMessage> aMessage) {});
+      .WillOnce(
+          [](UniquePtr<ControlMessageInterface> aMessage) { aMessage->Run(); })
+      .WillOnce([](UniquePtr<ControlMessageInterface> aMessage) {});
 
   // Changing the playback rate.
   float expectedPlaybackRate = 2.0;

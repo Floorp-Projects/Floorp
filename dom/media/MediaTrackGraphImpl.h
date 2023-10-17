@@ -72,12 +72,14 @@ struct TrackUpdate {
  * This represents a message run on the graph thread to modify track or graph
  * state.  These are passed from main thread to graph thread through
  * AppendMessage(), or scheduled on the graph thread with
- * RunMessageAfterProcessing().  A ControlMessage
- * always has a weak reference to a particular affected track.
+ * RunMessageAfterProcessing().  A ControlMessage often has
+ * a weak reference to a particular affected track.
  */
 class ControlMessage : public MediaTrack::ControlMessageInterface {
  public:
-  explicit ControlMessage(MediaTrack* aTrack) : mTrack(aTrack) {}
+  explicit ControlMessage(MediaTrack* aTrack) : mTrack(aTrack) {
+    MOZ_RELEASE_ASSERT(!aTrack || !NS_IsMainThread() || !aTrack->IsDestroyed());
+  }
 
   MediaTrack* GetTrack() { return mTrack; }
 
@@ -90,7 +92,7 @@ class ControlMessage : public MediaTrack::ControlMessageInterface {
 
 class MessageBlock {
  public:
-  nsTArray<UniquePtr<ControlMessage>> mMessages;
+  nsTArray<UniquePtr<MediaTrack::ControlMessageInterface>> mMessages;
 };
 
 /**
@@ -180,10 +182,10 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    */
   void ApplyTrackUpdate(TrackUpdate* aUpdate) MOZ_REQUIRES(mMonitor);
   /**
-   * Append a ControlMessage to the message queue. This queue is drained
+   * Append a control message to the message queue. This queue is drained
    * during RunInStableState; the messages will run on the graph thread.
    */
-  virtual void AppendMessage(UniquePtr<ControlMessage> aMessage);
+  virtual void AppendMessage(UniquePtr<ControlMessageInterface> aMessage);
 
   /**
    * Dispatches a runnable from any thread to the correct main thread for this
@@ -330,7 +332,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Schedules |aMessage| to run after processing, at a time when graph state
    * can be changed.  Graph thread.
    */
-  void RunMessageAfterProcessing(UniquePtr<ControlMessage> aMessage);
+  void RunMessageAfterProcessing(UniquePtr<ControlMessageInterface> aMessage);
 
   /**
    * Resolve the GraphStartedPromise when the driver has started processing on
@@ -664,7 +666,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * Main-thread view of the number of ports in this graph, to catch bugs.
    *
    * When this becomes zero, and mMainThreadTrackCount is 0, the graph is
-   * marked as forbidden to add more ControlMessages to. It will be shut down
+   * marked as forbidden to add more control messages to. It will be shut down
    * shortly after.
    */
   size_t mMainThreadPortCount = 0;
@@ -772,7 +774,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   // MediaTrackGraph normally does its work without holding mMonitor, so it is
   // not safe to just grab mMonitor from some thread and start monkeying with
   // the graph. Instead, communicate with the graph thread using provided
-  // mechanisms such as the ControlMessage queue.
+  // mechanisms such as the control message queue.
   Monitor mMonitor;
 
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
@@ -925,7 +927,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * immediately because we want all messages between stable states to be
    * processed as an atomic batch.
    */
-  nsTArray<UniquePtr<ControlMessage>> mCurrentTaskMessageQueue;
+  nsTArray<UniquePtr<ControlMessageInterface>> mCurrentTaskMessageQueue;
   /**
    * True from when RunInStableState sets mLifecycleState to LIFECYCLE_RUNNING,
    * until RunInStableState has determined that mLifecycleState is >
@@ -995,7 +997,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
 
 #ifdef DEBUG
   /**
-   * Used to assert when AppendMessage() runs ControlMessages synchronously.
+   * Used to assert when AppendMessage() runs control messages synchronously.
    */
   bool mCanRunMessagesSynchronously;
 #endif
