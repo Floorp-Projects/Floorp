@@ -203,9 +203,14 @@ class Task {
 
   friend class TaskController;
 
-  // When this returns false, the task is considered incomplete and will be
-  // rescheduled at the current 'mPriority' level.
-  virtual bool Run() = 0;
+  enum class TaskResult {
+    Complete,
+    Incomplete,
+  };
+
+  // When this returns TaskResult::Incomplete, it will be rescheduled at the
+  // current 'mPriority' level.
+  virtual TaskResult Run() = 0;
 
  private:
   Task* GetHighestPriorityDependency();
