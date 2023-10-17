@@ -197,6 +197,11 @@ impl AnimationValue {
         id
     }
 
+    /// Returns whether this value is interpolable with another one.
+    pub fn interpolable_with(&self, other: &Self) -> bool {
+        self.animate(other, Procedure::Interpolate { progress: 0.5 }).is_ok()
+    }
+
     /// "Uncompute" this animation value in order to be used inside the CSS
     /// cascade.
     pub fn uncompute(&self) -> PropertyDeclaration {
