@@ -67,57 +67,53 @@ export class ScreenshotsOverlay {
       <template>
         <link rel="stylesheet" href="chrome://browser/content/screenshots/overlay/overlay.css" />
         <div id="screenshots-component">
-          <div id="screenshots-overlay-container">
-            <div id="preview-container">
-              <div class="fixed-container">
-                <div class="face-container">
-                  <div class="eye left"><div id="left-eye" class="eyeball"></div></div>
-                  <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
-                  <div class="face"></div>
-                </div>
-                <div class="preview-instructions">${instructions.value}</div>
-                <button class="screenshots-button" id="screenshots-cancel-button">${cancel.value}</button>
+          <div id="preview-container">
+            <div class="face-container">
+              <div class="eye left"><div id="left-eye" class="eyeball"></div></div>
+              <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
+              <div class="face"></div>
+            </div>
+            <div class="preview-instructions">${instructions.value}</div>
+            <button class="screenshots-button" id="screenshots-cancel-button">${cancel.value}</button>
+          </div>
+          <div id="hover-highlight"></div>
+          <div id="selection-container">
+            <div id="top-background" class="bghighlight"></div>
+            <div id="bottom-background" class="bghighlight"></div>
+            <div id="left-background" class="bghighlight"></div>
+            <div id="right-background" class="bghighlight"></div>
+            <div id="highlight" class="highlight">
+              <div id="mover-topLeft" class="mover-target direction-topLeft">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-top" class="mover-target direction-top">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-topRight" class="mover-target direction-topRight">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-left" class="mover-target direction-left">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-right" class="mover-target direction-right">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-bottomLeft" class="mover-target direction-bottomLeft">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-bottom" class="mover-target direction-bottom">
+                <div class="mover"></div>
+              </div>
+              <div id="mover-bottomRight" class="mover-target direction-bottomRight">
+                <div class="mover"></div>
               </div>
             </div>
-            <div id="hover-highlight"></div>
-            <div id="selection-container">
-              <div id="top-background" class="bghighlight"></div>
-              <div id="bottom-background" class="bghighlight"></div>
-              <div id="left-background" class="bghighlight"></div>
-              <div id="right-background" class="bghighlight"></div>
-              <div id="highlight" class="highlight">
-                <div id="mover-topLeft" class="mover-target direction-topLeft">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-top" class="mover-target direction-top">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-topRight" class="mover-target direction-topRight">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-left" class="mover-target direction-left">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-right" class="mover-target direction-right">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-bottomLeft" class="mover-target direction-bottomLeft">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-bottom" class="mover-target direction-bottom">
-                  <div class="mover"></div>
-                </div>
-                <div id="mover-bottomRight" class="mover-target direction-bottomRight">
-                  <div class="mover"></div>
-                </div>
-              </div>
-            </div>
-            <div id="buttons-container">
-              <div class="buttons-wrapper">
-                <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
-                <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
-                <button id="download" class="screenshots-button primary" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
-              </div>
+          </div>
+          <div id="buttons-container">
+            <div class="buttons-wrapper">
+              <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
+              <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
+              <button id="download" class="screenshots-button primary" title="${download.value}" aria-label="${download.value}"><img/>${download.value}</button>
             </div>
           </div>
         </div>
@@ -194,10 +190,7 @@ export class ScreenshotsOverlay {
     this.hoverElementContainer = this.getElementById("hover-highlight");
     this.selectionContainer = this.getElementById("selection-container");
     this.buttonsContainer = this.getElementById("buttons-container");
-    this.screenshotsContainer = this.getElementById(
-      "screenshots-overlay-container"
-    );
-    this.screenshotsComponent = this.getElementById("screenshots-component");
+    this.screenshotsContainer = this.getElementById("screenshots-component");
 
     this.leftEye = this.getElementById("left-eye");
     this.rightEye = this.getElementById("right-eye");
@@ -937,12 +930,10 @@ export class ScreenshotsOverlay {
    */
   setPointerEventsNone() {
     this.screenshotsContainer.style.pointerEvents = "none";
-    this.screenshotsComponent.style.pointerEvents = "none";
   }
 
   resetPointerEvents() {
     this.screenshotsContainer.style.pointerEvents = "";
-    this.screenshotsComponent.style.pointerEvents = "";
   }
 
   /**
