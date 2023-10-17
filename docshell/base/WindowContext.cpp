@@ -13,6 +13,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/PermissionDelegateIPCUtils.h"
+#include "mozilla/RFPTargetIPCUtils.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -236,6 +237,12 @@ bool WindowContext::CanSet(FieldIndex<IDX_UsingStorageAccess>,
 
 bool WindowContext::CanSet(FieldIndex<IDX_ShouldResistFingerprinting>,
                            const bool& aShouldResistFingerprinting,
+                           ContentParent* aSource) {
+  return CheckOnlyOwningProcessCanSet(aSource);
+}
+
+bool WindowContext::CanSet(FieldIndex<IDX_OverriddenFingerprintingSettings>,
+                           const Maybe<RFPTarget>& aValue,
                            ContentParent* aSource) {
   return CheckOnlyOwningProcessCanSet(aSource);
 }

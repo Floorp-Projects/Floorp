@@ -109,6 +109,8 @@ WindowGlobalInit WindowGlobalActor::WindowInitializer(
       nsContentUtils::IsThirdPartyTrackingResourceWindow(aWindow);
   fields.Get<Indexes::IDX_ShouldResistFingerprinting>() =
       doc->ShouldResistFingerprinting(RFPTarget::IsAlwaysEnabledForPrecompute);
+  fields.Get<Indexes::IDX_OverriddenFingerprintingSettings>() =
+      doc->GetOverriddenFingerprintingSettings();
   fields.Get<Indexes::IDX_IsSecureContext>() = aWindow->IsSecureContext();
 
   // Initialze permission fields

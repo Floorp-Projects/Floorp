@@ -215,6 +215,10 @@ void WindowGlobalChild::OnNewDocument(Document* aDocument) {
   if (auto policy = aDocument->GetEmbedderPolicy()) {
     txn.SetEmbedderPolicy(*policy);
   }
+  txn.SetShouldResistFingerprinting(aDocument->ShouldResistFingerprinting(
+      RFPTarget::IsAlwaysEnabledForPrecompute));
+  txn.SetOverriddenFingerprintingSettings(
+      aDocument->GetOverriddenFingerprintingSettings());
 
   if (nsCOMPtr<nsIChannel> channel = aDocument->GetChannel()) {
     nsCOMPtr<nsILoadInfo> loadInfo(channel->LoadInfo());
