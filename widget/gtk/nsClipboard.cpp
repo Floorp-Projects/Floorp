@@ -249,7 +249,6 @@ nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
 
 NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
-                                    nsIClipboardOwner* aOwner,
                                     int32_t aWhichClipboard) {
   MOZ_DIAGNOSTIC_ASSERT(aTransferable);
   MOZ_DIAGNOSTIC_ASSERT(
