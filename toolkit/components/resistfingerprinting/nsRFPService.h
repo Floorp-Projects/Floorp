@@ -150,6 +150,9 @@ enum TimerPrecisionType {
 // NOLINTNEXTLINE(bugprone-macro-parentheses)
 #define ITEM_VALUE(name, val) name = val,
 
+// The definition for fingerprinting protections. Each enum represents one
+// fingerprinting protection that targets one specific WebAPI our fingerprinting
+// surface. The enums can be found in RFPTargets.inc.
 enum class RFPTarget : uint64_t {
 #include "RFPTargets.inc"
 };

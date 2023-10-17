@@ -25,6 +25,7 @@ native LoadContextRef(already_AddRefed<nsISupports>);
 #include "mozilla/LoadTainting.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/UniquePtr.h"
+#include "nsRFPService.h"
 #include "nsStringFwd.h"
 
 namespace mozilla {
@@ -50,6 +51,8 @@ native OriginAttributes(mozilla::OriginAttributes);
 [ref] native const_MaybeClientInfoRef(const mozilla::Maybe<mozilla::dom::ClientInfo>);
 [ref] native const_ServiceWorkerDescriptorRef(const mozilla::dom::ServiceWorkerDescriptor);
 [ref] native const_MaybeServiceWorkerDescriptorRef(const mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor>);
+[ref] native const_MaybeRFPTarget(const mozilla::Maybe<mozilla::RFPTarget>);
+      native RFPTarget(mozilla::RFPTarget);
 [ptr] native PerformanceStoragePtr(mozilla::dom::PerformanceStorage);
       native LoadTainting(mozilla::LoadTainting);
       native CSPRef(already_AddRefed<nsIContentSecurityPolicy>);
@@ -609,6 +612,24 @@ interface nsILoadInfo : nsISupports
    */
   [infallible] attribute nsILoadInfo_StoragePermissionState
         storagePermission;
+
+  /**
+   * Get the granular overrides of fingerprinting protections associated to the
+   * channel, the value will override the default fingerprinting protection
+   * settings. This field will only get populated if these is one that comes
+   * from the local granular overrides pref or WebCompat. Otherwise, a value of
+   * Nothing() indicates no granular overrides are present for this channel.
+   *
+   * The RFPTarget defined in the RFPTargets.inc.
+   */
+  [noscript, nostdcall, notxpcom]
+  const_MaybeRFPTarget GetOverriddenFingerprintingSettings();
+
+  /**
+   * Set the granular overrides of fingerprinting protections for the channel.
+   */
+  [noscript, nostdcall, notxpcom]
+  void SetOverriddenFingerprintingSettings(in RFPTarget aTargets);
 
   /**
    * True if the load was triggered by a meta refresh.

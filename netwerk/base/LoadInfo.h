@@ -240,6 +240,7 @@ class LoadInfo final : public nsILoadInfo {
       bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
       bool aIsInDevToolsContext, bool aParserCreatedScript,
       nsILoadInfo::StoragePermissionState aStoragePermission,
+      const Maybe<RFPTarget>& aOverriddenFingerprintingSettings,
       bool aIsMetaRefresh, uint32_t aRequestBlockingReason,
       nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy,
@@ -357,6 +358,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mParserCreatedScript = false;
   nsILoadInfo::StoragePermissionState mStoragePermission =
       nsILoadInfo::NoStoragePermission;
+  Maybe<RFPTarget> mOverriddenFingerprintingSettings;
   bool mIsMetaRefresh = false;
 
   // Is true if this load was triggered by processing the attributes of the
