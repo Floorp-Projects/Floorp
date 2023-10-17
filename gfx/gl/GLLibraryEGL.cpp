@@ -150,7 +150,12 @@ static PRLibrary* LoadLibraryForEGLOnWindows(const nsAString& filename) {
   PRLibSpec lspec;
   lspec.type = PR_LibSpec_PathnameU;
   lspec.value.pathname_u = path.get();
-  return PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
+  PRLibrary* lib = PR_LoadLibraryWithFlags(lspec, PR_LD_LAZY | PR_LD_LOCAL);
+  if (!lib) {
+    gfxCriticalNote << "Failed to load " << path.get() << " " << PR_GetError()
+                    << " " << PR_GetOSError();
+  }
+  return lib;
 }
 
 #endif  // XP_WIN
