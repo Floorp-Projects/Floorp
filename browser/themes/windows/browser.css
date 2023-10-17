@@ -53,12 +53,6 @@
   #toolbar-menubar:not(:-moz-lwtheme):-moz-window-inactive {
     color: ThreeDShadow;
   }
-
-  :root[tabsintitlebar] .tab-label-container:-moz-window-inactive {
-    /* Calculated to match the opacity change of Windows Explorer
-       titlebar text change for inactive windows. */
-    opacity: .6;
-  }
 }
 
 /* When temporarily showing the menu bar, make it at least as tall as the
