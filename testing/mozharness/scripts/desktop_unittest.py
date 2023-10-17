@@ -12,6 +12,7 @@ author: Jordan Lund
 
 import copy
 import glob
+import imp
 import json
 import multiprocessing
 import os
@@ -24,7 +25,6 @@ from datetime import datetime, timedelta
 here = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(1, os.path.dirname(here))
 
-from mozfile import load_source
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import INFO, WARNING
 from mozharness.base.script import PreScriptAction
@@ -1198,7 +1198,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 )
 
                 if suite_category == "reftest":
-                    ref_formatter = load_source(
+                    ref_formatter = imp.load_source(
                         "ReftestFormatter",
                         os.path.abspath(
                             os.path.join(dirs["abs_reftest_dir"], "output.py")
