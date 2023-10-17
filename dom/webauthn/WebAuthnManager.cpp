@@ -177,7 +177,7 @@ nsresult RelaxSameOrigin(nsPIDOMWindowInner* aParent,
  **********************************************************************/
 
 void WebAuthnManager::ClearTransaction() {
-  if (!mTransaction.isNothing()) {
+  if (mTransaction.isSome()) {
     StopListeningForVisibilityEvents();
   }
 
@@ -185,20 +185,10 @@ void WebAuthnManager::ClearTransaction() {
   Unfollow();
 }
 
-void WebAuthnManager::RejectTransaction(const nsresult& aError) {
-  if (!NS_WARN_IF(mTransaction.isNothing())) {
-    mTransaction.ref().mPromise->MaybeReject(aError);
-  }
-
-  ClearTransaction();
-}
-
-void WebAuthnManager::CancelTransaction(const nsresult& aError) {
+void WebAuthnManager::CancelParent() {
   if (!NS_WARN_IF(!mChild || mTransaction.isNothing())) {
     mChild->SendRequestCancel(mTransaction.ref().mId);
   }
-
-  RejectTransaction(aError);
 }
 
 void WebAuthnManager::HandleVisibilityChange() {
@@ -244,13 +234,7 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
 
     // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
-  // Abort the request if aborted flag is already set.
-  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    return promise.forget();
+    CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
 
   nsString origin;
@@ -452,11 +436,30 @@ already_AddRefed<Promise> WebAuthnManager::MakeCredential(
     return promise.forget();
   }
 
+  // Abort the request if aborted flag is already set.
+  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(global)) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::Value> reason(cx);
+    aSignal.Value().GetReason(cx, &reason);
+    promise->MaybeReject(reason);
+    return promise.forget();
+  }
+
   WebAuthnMakeCredentialInfo info(
       origin, NS_ConvertUTF8toUTF16(rpId), challenge, clientDataJSON,
       adjustedTimeout, excludeList, rpInfo, userInfo, coseAlgos, extensions,
       authSelection, attestation, context->Top()->Id());
 
+  // Set up the transaction state (including event listeners, etc). Fallible
+  // operations should not be performed below this line, as we must not leave
+  // the transaction state partially initialized. Once the transaction state is
+  // initialized the only valid ways to end the transaction are
+  // CancelTransaction, RejectTransaction, and FinishMakeCredential.
 #ifdef XP_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     ListenForVisibilityEvents();
@@ -503,13 +506,7 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
 
     // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
-    CancelTransaction(NS_ERROR_ABORT);
-  }
-
-  // Abort the request if aborted flag is already set.
-  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
-    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-    return promise.forget();
+    CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
 
   nsString origin;
@@ -656,11 +653,30 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
     return promise.forget();
   }
 
+  // Abort the request if aborted flag is already set.
+  if (aSignal.WasPassed() && aSignal.Value().Aborted()) {
+    AutoJSAPI jsapi;
+    if (!jsapi.Init(global)) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+    JSContext* cx = jsapi.cx();
+    JS::Rooted<JS::Value> reason(cx);
+    aSignal.Value().GetReason(cx, &reason);
+    promise->MaybeReject(reason);
+    return promise.forget();
+  }
+
   WebAuthnGetAssertionInfo info(origin, NS_ConvertUTF8toUTF16(rpId), challenge,
                                 clientDataJSON, adjustedTimeout, allowList,
                                 extensions, aOptions.mUserVerification,
                                 context->Top()->Id());
 
+  // Set up the transaction state (including event listeners, etc). Fallible
+  // operations should not be performed below this line, as we must not leave
+  // the transaction state partially initialized. Once the transaction state is
+  // initialized the only valid ways to end the transaction are
+  // CancelTransaction, RejectTransaction, and FinishGetAssertion.
 #ifdef XP_WIN
   if (!WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     ListenForVisibilityEvents();
@@ -704,7 +720,7 @@ already_AddRefed<Promise> WebAuthnManager::Store(const Credential& aCredential,
 
     // Otherwise, the user may well have clicked away, so let's
     // abort the old transaction and take over control from here.
-    CancelTransaction(NS_ERROR_ABORT);
+    CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
   }
 
   promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -822,7 +838,21 @@ void WebAuthnManager::RequestAborted(const uint64_t& aTransactionId,
 }
 
 void WebAuthnManager::RunAbortAlgorithm() {
-  CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
+  if (NS_WARN_IF(mTransaction.isNothing())) {
+    return;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(global)) {
+    CancelTransaction(NS_ERROR_DOM_ABORT_ERR);
+    return;
+  }
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> reason(cx);
+  Signal()->GetReason(cx, &reason);
+  CancelTransaction(reason);
 }
 
 }  // namespace mozilla::dom
