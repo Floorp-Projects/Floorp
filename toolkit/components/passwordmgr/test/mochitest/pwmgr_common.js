@@ -78,7 +78,7 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
 
   // Check the footer first.
   let footerResult = actualValues[actualValues.length - 1];
-  is(footerResult, "View Saved Logins", "the footer text is shown correctly");
+  is(footerResult, "Manage Passwords", "the footer text is shown correctly");
 
   if (actualValues.length == 1) {
     is(

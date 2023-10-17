@@ -229,7 +229,7 @@ class LoginsFooterAutocompleteItem extends AutocompleteItem {
   constructor(formHostname, telemetryEventData) {
     super("loginsFooter");
 
-    this.label = getLocalizedString("viewSavedLogins.label");
+    this.label = getLocalizedString("managePasswords.label");
 
     // The comment field of `loginsFooter` results have many additional pieces of
     // information for telemetry purposes. After bug 1555209, this information
@@ -367,7 +367,7 @@ export class LoginAutoCompleteResult {
         this.#rows.push(new ImportableLearnMoreAutocompleteItem());
       }
 
-      // If we have anything in autocomplete, then add "View Saved Logins"
+      // If we have anything in autocomplete, then add "Manage Passwords"
       this.#rows.push(
         new LoginsFooterAutocompleteItem(hostname, telemetryEventData)
       );
