@@ -4033,7 +4033,11 @@
 
       // Floorp Injections
       // Force to close & Make do not save history of the tab.
-      try {this._endRemoveTab(tab)} catch (e) {}
+      try {
+        this._endRemoveTab(aTab)
+      } catch (e) {
+        console.warn(e)
+      }
     },
 
     _hasBeforeUnload(aTab) {
