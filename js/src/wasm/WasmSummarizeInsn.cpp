@@ -720,6 +720,11 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
       // 10 111 000 10 0 imm9 00 n t = LDURSW Xt, [Xn|SP, #imm9]
       case 0b10'111'000'10'0:
         return Some(TrapMachineInsn::Load32);
+      // 01 111 000 11 0 imm9 00 n t = LDURSH Wt, [Xn|SP, #imm9]
+      // 01 111 000 10 0 imm9 00 n t = LDURSH Xt, [Xn|SP, #imm9]
+      case 0b01'111'000'11'0:
+      case 0b01'111'000'10'0:
+        return Some(TrapMachineInsn::Load16);
     }
   }
 
