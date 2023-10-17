@@ -276,13 +276,7 @@ features:
       enabled:
         description: If true, the extensions process is enabled.
         type: Boolean
-        default: false
-    defaults:
-      - channels:
-          - developer
-          - nightly
-        value:
-          enabled: true
+        default: true
 
   growth-data:
     description: A feature measuring campaign growth data
