@@ -4,7 +4,9 @@
  */
 
 #include "StreamFunctions.h"
+#include "MainThreadUtils.h"
 #include "nsDeflateConverter.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
@@ -22,7 +24,7 @@ using namespace mozilla;
  * method to the data.
  */
 NS_IMPL_ISUPPORTS(nsDeflateConverter, nsIStreamConverter, nsIStreamListener,
-                  nsIRequestObserver)
+                  nsIThreadRetargetableStreamListener, nsIRequestObserver)
 
 nsresult nsDeflateConverter::Init() {
   int zerr;
@@ -136,6 +138,21 @@ NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest* aRequest) {
 
   return mListener->OnStartRequest(aRequest);
 }
+
+NS_IMETHODIMP
+nsDeflateConverter::OnDataFinished(nsresult aStatus) {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+      do_QueryInterface(mListener);
+
+  if (retargetable) {
+    return retargetable->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDeflateConverter::CheckListenerChain() { return NS_ERROR_NO_INTERFACE; }
 
 NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest* aRequest,
                                                 nsresult aStatusCode) {

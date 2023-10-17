@@ -53,7 +53,6 @@ class nsBaseChannel
       public nsIAsyncVerifyRedirectCallback,
       public mozilla::net::PrivateBrowsingChannel<nsBaseChannel>,
       public mozilla::net::NeckoTargetHolder,
-      protected nsIStreamListener,
       protected nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_ISUPPORTS_INHERITED
