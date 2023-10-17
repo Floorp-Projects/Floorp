@@ -2040,6 +2040,10 @@ static JSFunction* CreateFunctionFast(JSContext* cx,
     fun->initAtom(atom);
   }
 
+#ifdef DEBUG
+  fun->assertFunctionKindIntegrity();
+#endif
+
   return fun;
 }
 

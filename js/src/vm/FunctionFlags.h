@@ -20,27 +20,67 @@ namespace js {
 
 class FunctionFlags {
  public:
+  // Syntactic characteristics of a function.
   enum FunctionKind : uint8_t {
+    // Regular function that doesn't match any of the other kinds.
+    //
+    // This kind is used by the following scipted functions:
+    //   * FunctionDeclaration
+    //   * FunctionExpression
+    //   * Function created from Function() call or its variants
+    //
+    // Also all native functions excluding AsmJS and Wasm use this kind.
     NormalFunction = 0,
-    Arrow,   // ES6 '(args) => body' syntax
-    Method,  // ES6 MethodDefinition
+
+    // ES6 '(args) => body' syntax.
+    // This kind is used only by scripted function.
+    Arrow,
+
+    // ES6 MethodDefinition syntax.
+    // This kind is used only by scripted function.
+    Method,
+
+    // Class constructor syntax, or default constructor.
+    // This kind is used only by scripted function and default constructor.
+    //
+    // WARNING: This is independent from Flags::CONSTRUCTOR.
     ClassConstructor,
+
+    // Getter and setter syntax in objects or classes.
+    // This kind is used only by scripted function.
+    //
+    // NOTE: Native getter and setter created from JSPropertySpec don't use
+    //       this kind, but use NormalFunction.
     Getter,
     Setter,
-    AsmJS,  // An asm.js module or exported function
-    Wasm,   // An exported WebAssembly function
+
+    // An asm.js module or exported function.
+    //
+    // This kind is used only by scripted function, and used only when the
+    // asm.js module is created.
+    //
+    // "use asm" directive itself doesn't necessarily imply this kind.
+    // e.g. arrow function with "use asm" becomes Arrow kind,
+    //
+    // See EstablishPreconditions in js/src/wasm/AsmJS.cpp
+    AsmJS,
+
+    // An exported WebAssembly function.
+    Wasm,
+
     FunctionKindLimit
   };
 
   enum Flags : uint16_t {
-    // The general kind of a function. This is used to describe characteristics
-    // of functions that do not merit a dedicated flag bit below.
+    // FunctionKind enum value.
     FUNCTION_KIND_SHIFT = 0,
     FUNCTION_KIND_MASK = 0x0007,
 
     // The AllocKind used was FunctionExtended and extra slots were allocated.
     // These slots may be used by the engine or the embedding so care must be
     // taken to avoid conflicts.
+    //
+    // This flag is used both by scripted functions and native functions.
     EXTENDED = 1 << 3,
 
     // Set if function is a self-hosted builtin or intrinsic. An 'intrinsic'
@@ -58,12 +98,21 @@ class FunctionFlags {
 
     // Function may be called as a constructor. This corresponds in the spec as
     // having a [[Construct]] internal method.
+    //
+    // e.g. FunctionDeclaration has this flag, but GeneratorDeclaration doesn't
+    //      have this flag.
+    //
+    // This flag is used both by scripted functions and native functions.
+    //
+    // WARNING: This is independent from FunctionKind::ClassConstructor.
     CONSTRUCTOR = 1 << 7,
 
     // (1 << 8) is unused.
 
     // Function comes from a FunctionExpression, ArrowFunction, or Function()
-    // call (not a FunctionDeclaration or nonstandard function-statement).
+    // call (not a FunctionDeclaration).
+    //
+    // This flag is used only by scripted functions and AsmJS.
     LAMBDA = 1 << 9,
 
     // The WASM function has a JIT entry which emulates the
@@ -72,12 +121,18 @@ class FunctionFlags {
 
     // Function had no explicit name, but a name was set by SetFunctionName at
     // compile time or SetFunctionName at runtime.
+    //
+    // This flag can be used both by scripted functions and native functions.
     HAS_INFERRED_NAME = 1 << 11,
 
     // Function had no explicit name, but a name was guessed for it anyway.
+    //
+    // This flag is used only by scripted function.
     HAS_GUESSED_ATOM = 1 << 12,
 
     // The 'length' or 'name property has been resolved. See fun_resolve.
+    //
+    // These flags are used both by scripted functions and native functions.
     RESOLVED_NAME = 1 << 13,
     RESOLVED_LENGTH = 1 << 14,
 
@@ -92,6 +147,8 @@ class FunctionFlags {
     //
     // We call the first one "ghost".
     // It should be kept lazy, and shouldn't be exposed to debugger.
+    //
+    // This flag is used only by scripted functions.
     GHOST_FUNCTION = 1 << 15,
 
     // Shifted form of FunctionKinds.
@@ -172,6 +229,61 @@ class FunctionFlags {
     return static_cast<FunctionKind>((flags_ & FUNCTION_KIND_MASK) >>
                                      FUNCTION_KIND_SHIFT);
   }
+
+#ifdef DEBUG
+  void assertFunctionKindIntegrity() {
+    switch (kind()) {
+      case FunctionKind::NormalFunction:
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+
+      case FunctionKind::Arrow:
+        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(hasFlags(LAMBDA));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+      case FunctionKind::Method:
+        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAMBDA));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+      case FunctionKind::ClassConstructor:
+        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAMBDA));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+      case FunctionKind::Getter:
+        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAMBDA));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+      case FunctionKind::Setter:
+        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAMBDA));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+
+      case FunctionKind::AsmJS:
+        MOZ_ASSERT(!hasFlags(BASESCRIPT));
+        MOZ_ASSERT(!hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
+        break;
+      case FunctionKind::Wasm:
+        MOZ_ASSERT(!hasFlags(BASESCRIPT));
+        MOZ_ASSERT(!hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAMBDA));
+        break;
+      default:
+        break;
+    }
+  }
+#endif
 
   /* A function can be classified as either native (C++) or interpreted (JS): */
   bool isInterpreted() const {
