@@ -358,7 +358,7 @@ void nsTableRowGroupFrame::ReflowChildren(
       LogicalRect oldKidRect = kidFrame->GetLogicalRect(wm, containerSize);
       nsRect oldKidInkOverflow = kidFrame->InkOverflowRect();
 
-      ReflowOutput desiredSize(aReflowInput.mReflowInput);
+      ReflowOutput kidDesiredSize(aReflowInput.mReflowInput);
 
       // Reflow the child into the available space, giving it as much bsize as
       // it wants. We'll deal with splitting later after we've computed the row
@@ -384,13 +384,13 @@ void nsTableRowGroupFrame::ReflowChildren(
       }
 
       LogicalPoint kidPosition(wm, 0, aReflowInput.mBCoord);
-      ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowInput, wm,
+      ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowInput, wm,
                   kidPosition, containerSize, ReflowChildFlags::Default,
                   aStatus);
 
       // Place the child
       PlaceChild(aPresContext, aReflowInput, kidFrame, kidReflowInput, wm,
-                 kidPosition, containerSize, desiredSize,
+                 kidPosition, containerSize, kidDesiredSize,
                  oldKidRect.GetPhysicalRect(wm, containerSize),
                  oldKidInkOverflow);
       aReflowInput.mBCoord += cellSpacingB;
@@ -406,7 +406,7 @@ void nsTableRowGroupFrame::ReflowChildren(
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
             InvalidateFrame();
-          } else if (oldKidRect.BSize(wm) != desiredSize.BSize(wm)) {
+          } else if (oldKidRect.BSize(wm) != kidDesiredSize.BSize(wm)) {
             needToCalcRowBSizes = true;
           }
         } else {
