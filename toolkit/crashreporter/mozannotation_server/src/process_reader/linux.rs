@@ -90,18 +90,15 @@ impl ProcessReader {
                 context,
             )?;
 
-            let (note_address, desc) = self
-                .find_mozannotation_note(module_address, &elf)
-                .ok_or(FindAnnotationsAddressError::ProgramHeaderNotFound)?;
-            usize::checked_add(note_address, desc)
-                .ok_or(FindAnnotationsAddressError::InvalidAddress)
+            self.find_mozannotation_note(module_address, &elf)
+                .ok_or(FindAnnotationsAddressError::ProgramHeaderNotFound)
         })
     }
 
     // Looks through the program headers for the note contained in the
     // mozannotation_client crate. If the note is found return the address of the
     // note's desc field as well as its contents.
-    fn find_mozannotation_note(&self, module_address: usize, elf: &Elf) -> Option<(usize, usize)> {
+    fn find_mozannotation_note(&self, module_address: usize, elf: &Elf) -> Option<usize> {
         for program_header in elf.program_headers.iter() {
             // We're looking for a note in the program headers, it needs to be
             // readable and it needs to be at least as large as the
@@ -119,10 +116,13 @@ impl ProcessReader {
                     if let Ok(note) = self.copy_object::<goblin::elf::note::Nhdr32>(note_address) {
                         if note.n_type == ANNOTATION_TYPE {
                             if let Ok(note) = self.copy_object::<MozAnnotationNote>(note_address) {
-                                return Some((
-                                    note_address + offset_of!(MozAnnotationNote, desc),
-                                    note.desc,
-                                ));
+                                let desc = note.desc;
+                                let ehdr = (-note.ehdr) as usize;
+                                let offset = desc + ehdr
+                                    - (offset_of!(MozAnnotationNote, ehdr)
+                                        - offset_of!(MozAnnotationNote, desc));
+
+                                return usize::checked_add(module_address, offset);
                             }
                         }
 
