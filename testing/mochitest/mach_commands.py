@@ -14,6 +14,7 @@ import six
 from mach.decorators import Command, CommandArgument
 from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.base import MozbuildObject
+from mozfile import load_source
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -90,11 +91,8 @@ class MochitestRunner(MozbuildObject):
         """Runs a mochitest."""
         # runtests.py is ambiguous, so we load the file/module manually.
         if "mochitest" not in sys.modules:
-            import imp
-
             path = os.path.join(self.mochitest_dir, "runtests.py")
-            with open(path, "r") as fh:
-                imp.load_module("mochitest", fh, path, (".py", "r", imp.PY_SOURCE))
+            load_source("mochitest", path)
 
         import mochitest
 
@@ -145,11 +143,9 @@ class MochitestRunner(MozbuildObject):
         if host_ret != 0:
             return host_ret
 
-        import imp
-
         path = os.path.join(self.mochitest_dir, "runtestsremote.py")
-        with open(path, "r") as fh:
-            imp.load_module("runtestsremote", fh, path, (".py", "r", imp.PY_SOURCE))
+        load_source("runtestsremote", path)
+
         import runtestsremote
 
         options = Namespace(**kwargs)
@@ -190,14 +186,11 @@ def setup_argument_parser():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        import imp
-
         path = os.path.join(build_obj.topobjdir, mochitest_dir, "runtests.py")
         if not os.path.exists(path):
             path = os.path.join(here, "runtests.py")
 
-        with open(path, "r") as fh:
-            imp.load_module("mochitest", fh, path, (".py", "r", imp.PY_SOURCE))
+        load_source("mochitest", path)
 
         from mochitest_options import MochitestArgumentParser
 
@@ -232,14 +225,11 @@ def setup_junit_argument_parser():
         warnings.simplefilter("ignore")
 
         # runtests.py contains MochitestDesktop, required by runjunit
-        import imp
-
         path = os.path.join(build_obj.topobjdir, mochitest_dir, "runtests.py")
         if not os.path.exists(path):
             path = os.path.join(here, "runtests.py")
 
-        with open(path, "r") as fh:
-            imp.load_module("mochitest", fh, path, (".py", "r", imp.PY_SOURCE))
+        load_source("mochitest", path)
 
         import runjunit
         from mozrunner.devices.android_device import (

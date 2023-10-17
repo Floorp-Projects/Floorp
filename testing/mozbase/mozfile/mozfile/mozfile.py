@@ -22,6 +22,7 @@ __all__ = [
     "extract",
     "is_url",
     "load",
+    "load_source",
     "copy_contents",
     "match",
     "move",
@@ -630,6 +631,19 @@ def load(resource):
         return open(resource)
 
     return urllib.request.urlopen(resource)
+
+
+# see https://docs.python.org/3/whatsnew/3.12.html#imp
+def load_source(modname, filename):
+    import importlib.machinery
+    import importlib.util
+
+    loader = importlib.machinery.SourceFileLoader(modname, filename)
+    spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module.__name__] = module
+    loader.exec_module(module)
+    return module
 
 
 # We can't depend on mozpack.path here, so copy the 'match' function over.

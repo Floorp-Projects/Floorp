@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import imp
+
 import os
 import re
 import sys
@@ -14,6 +14,7 @@ from unittest.case import SkipTest
 
 import six
 from marionette_driver.errors import TimeoutException, UnresponsiveInstanceException
+from mozfile import load_source
 from mozlog import get_default_logger
 
 
@@ -363,21 +364,20 @@ class MarionetteTestCase(CommonTestCase):
         testvars,
         **kwargs
     ):
-        # since we use imp.load_source to load test modules, if a module
-        # is loaded with the same name as another one the module would just be
-        # reloaded.
+        # since load_source caches modules, if a module is loaded with the same
+        # name as another one the module would just be reloaded.
         #
-        # We may end up by finding too many test in a module then since
-        # reload() only update the module dict (so old keys are still there!)
-        # see https://docs.python.org/2/library/functions.html#reload
+        # We may end up by finding too many test in a module then since reload()
+        # only update the module dict (so old keys are still there!) see
+        # https://docs.python.org/2/library/functions.html#reload
         #
-        # we get rid of that by removing the module from sys.modules,
-        # so we ensure that it will be fully loaded by the
-        # imp.load_source call.
+        # we get rid of that by removing the module from sys.modules, so we
+        # ensure that it will be fully loaded by the imp.load_source call.
+
         if mod_name in sys.modules:
             del sys.modules[mod_name]
 
-        test_mod = imp.load_source(mod_name, filepath)
+        test_mod = load_source(mod_name, filepath)
 
         for name in dir(test_mod):
             obj = getattr(test_mod, name)
