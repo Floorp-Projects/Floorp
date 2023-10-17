@@ -18,7 +18,7 @@ origin:
 vendoring:
   url: https://github.com/QuantStack/xsimd
   source-hosting: github
-  tracking: commit
+  tracking: tag
 
   exclude:
     - ".*"
@@ -35,3 +35,11 @@ vendoring:
 
   keep:
     - include/
+
+updatebot:
+  maintainer-phab: padenot
+  maintainer-bz: padenot@mozilla.com
+  tasks:
+    - type: vendoring
+      enabled: true
+      frequency: release
