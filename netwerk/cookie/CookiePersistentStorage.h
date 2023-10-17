@@ -77,7 +77,7 @@ class CookiePersistentStorage final : public CookieStorage {
 
   void RemoveAllInternal() override;
 
-  void RemoveCookieFromDB(const CookieListIter& aIter) override;
+  void RemoveCookieFromDB(const Cookie& aCookie) override;
 
   void StoreCookie(const nsACString& aBaseDomain,
                    const OriginAttributes& aOriginAttributes,
@@ -89,7 +89,7 @@ class CookiePersistentStorage final : public CookieStorage {
   static void UpdateCookieInList(Cookie* aCookie, int64_t aLastAccessed,
                                  mozIStorageBindingParamsArray* aParamsArray);
 
-  void PrepareCookieRemoval(const CookieListIter& aIter,
+  void PrepareCookieRemoval(const Cookie& aCookie,
                             mozIStorageBindingParamsArray* aParamsArray);
 
   void InitDBConn();
