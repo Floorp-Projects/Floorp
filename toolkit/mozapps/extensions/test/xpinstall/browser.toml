@@ -79,6 +79,7 @@ skip-if = ["true"] # disabled due to a leak. See bug 682410.
 
 ["browser_containers.js"]
 https_first_disabled = true # Bug 1737265
+fail-if = ["a11y_checks"] # Bug 1858041 clicked .popup-notification-primary-button may not be focusable
 
 ["browser_cookies.js"]
 
@@ -113,9 +114,11 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 
 ["browser_hash2.js"]
 https_first_disabled = true # Bug 1737265
+skip-if = ["a11y_checks"] # Bug 1858041 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
 ["browser_httphash.js"]
 https_first_disabled = true # Bug 1737265
+skip-if = ["a11y_checks"] # Bug 1858041 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_httphash2.js"]
 
@@ -134,6 +137,7 @@ skip-if = ["true"] # Bug 1449788
 
 ["browser_installchrome.js"]
 https_first_disabled = true # Bug 1737265
+skip-if = ["a11y_checks"] # Bug 1858041 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
 ["browser_localfile.js"]
 
@@ -156,6 +160,7 @@ skip-if = ["debug"] # Bug 1541577 - leaks on debug
 
 ["browser_relative.js"]
 https_first_disabled = true # Bug 1737265
+skip-if = ["a11y_checks"] # Bug 1858041 to investigate intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_required_useractivation.js"]
 
@@ -171,7 +176,10 @@ skip-if = ["require_signing"]
 
 ["browser_unsigned_trigger_iframe.js"]
 https_first_disabled = true # Bug 1737265
-skip-if = ["require_signing"]
+skip-if = [
+  "require_signing",
+  "a11y_checks", # Bug 1858041 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
+]
 
 ["browser_unsigned_trigger_xorigin.js"]
 https_first_disabled = true # Bug 1737265

@@ -9,6 +9,7 @@ prefs = [
 
 ["browser_midi_permission_gated.js"]
 support-files = ["blank.html"]
+skip-if = ["a11y_checks"] # Bug 1858041 clicked popup-notification-primary-button may not be focusable, intermittent results (passes on Try, fails on Autoland)
 
 ["browser_refresh_port_list.js"]
 run-if = ["os != 'android'"]

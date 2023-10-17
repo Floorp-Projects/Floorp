@@ -323,6 +323,7 @@ skip-if = [
 ]
 
 ["browser_webconsole_context_menu_copy_message_with_async_stacktrace.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849230 for causing crashes
 
 ["browser_webconsole_context_menu_copy_message_with_framework_stacktrace.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

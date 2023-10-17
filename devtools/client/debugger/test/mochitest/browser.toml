@@ -369,7 +369,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_dbg-pretty-print-inline-scripts.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bug 1858041 and 1849028 intermittent a11y_checks results (fails on Try, passes on Autoland)
 
 ["browser_dbg-pretty-print-paused-anonymous.js"]
 
@@ -470,13 +470,13 @@ skip-if = ["os == 'win' && ccov"] # Bug 1453549
 skip-if = ["os == 'win'"] # Bug 1448523, Bug 1448450
 
 ["browser_dbg-sourcemapped-scopes.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 # Bug 1441545, 1536253 - very slow on debug
 skip-if = [
   "ccov",
   "debug",
   "tsan",
   "verify && debug && os == 'linux'",
+  "a11y_checks", # Bug 1858041, 1849230, 1849028 intermittent crashes a11y_checks results (fails/crashes on Try, passes on Autoland)
 ]
 
 ["browser_dbg-sourcemapped-stepping.js"]
