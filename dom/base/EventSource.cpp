@@ -73,6 +73,7 @@ static LazyLogModule gEventSourceLog("EventSource");
   PR_IntervalToMilliseconds(DELAY_INTERVAL_LIMIT)
 
 class EventSourceImpl final : public nsIObserver,
+                              public nsIStreamListener,
                               public nsIChannelEventSink,
                               public nsIInterfaceRequestor,
                               public nsSupportsWeakReference,
@@ -1949,10 +1950,6 @@ EventSourceImpl::CheckListenerChain() {
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread!");
   return NS_OK;
 }
-
-NS_IMETHODIMP
-EventSourceImpl::OnDataFinished(nsresult) { return NS_OK; }
-
 ////////////////////////////////////////////////////////////////////////////////
 // EventSource
 ////////////////////////////////////////////////////////////////////////////////

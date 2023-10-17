@@ -135,27 +135,6 @@ nsStreamListenerTee::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-nsStreamListenerTee::OnDataFinished(nsresult aStatus) {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
-      do_QueryInterface(mListener, &rv);
-  if (retargetableListener) {
-    rv = retargetableListener->OnDataFinished(aStatus);
-  }
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!mObserver) {
-    return rv;
-  }
-  retargetableListener = do_QueryInterface(mObserver, &rv);
-  if (retargetableListener) {
-    rv = retargetableListener->OnDataFinished(aStatus);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsStreamListenerTee::Init(nsIStreamListener* listener, nsIOutputStream* sink,
                           nsIRequestObserver* requestObserver) {
   NS_ENSURE_ARG_POINTER(listener);

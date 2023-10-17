@@ -35,15 +35,5 @@ nsStreamListenerWrapper::CheckListenerChain() {
   return rv;
 }
 
-NS_IMETHODIMP
-nsStreamListenerWrapper::OnDataFinished(nsresult aStatus) {
-  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
-      do_QueryInterface(mListener);
-  if (retargetableListener) {
-    return retargetableListener->OnDataFinished(aStatus);
-  }
-
-  return NS_OK;
-}
 }  // namespace net
 }  // namespace mozilla

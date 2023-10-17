@@ -838,9 +838,6 @@ imgRequest::CheckListenerChain() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-imgRequest::OnDataFinished(nsresult) { return NS_OK; }
-
 /** nsIStreamListener methods **/
 
 struct NewPartResult final {

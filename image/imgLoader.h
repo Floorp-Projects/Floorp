@@ -415,7 +415,8 @@ class imgLoader final : public imgILoader,
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
 
-class ProxyListener : public nsIThreadRetargetableStreamListener {
+class ProxyListener : public nsIStreamListener,
+                      public nsIThreadRetargetableStreamListener {
  public:
   explicit ProxyListener(nsIStreamListener* dest);
 
@@ -463,7 +464,8 @@ class nsProgressNotificationProxy final : public nsIProgressEventSink,
 
 #include "nsCOMArray.h"
 
-class imgCacheValidator : public nsIThreadRetargetableStreamListener,
+class imgCacheValidator : public nsIStreamListener,
+                          public nsIThreadRetargetableStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
                           public nsIAsyncVerifyRedirectCallback {

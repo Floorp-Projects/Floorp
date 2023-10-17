@@ -233,17 +233,6 @@ StreamFilterParent::CheckListenerChain() {
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-StreamFilterParent::OnDataFinished(nsresult aStatus) {
-  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
-      do_QueryInterface(mOrigListener);
-  if (listener) {
-    return listener->OnDataFinished(aStatus);
-  }
-
-  return NS_OK;
-}
-
 /*****************************************************************************
  * Error handling
  *****************************************************************************/

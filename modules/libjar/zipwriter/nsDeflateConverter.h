@@ -8,7 +8,6 @@
 
 #include "nsIStreamConverter.h"
 #include "nsCOMPtr.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "zlib.h"
 #include "mozilla/Attributes.h"
 
@@ -26,7 +25,6 @@ class nsDeflateConverter final : public nsIStreamConverter {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSISTREAMCONVERTER
 
   nsDeflateConverter() : mWrapMode(WRAP_NONE), mOffset(0), mZstream() {

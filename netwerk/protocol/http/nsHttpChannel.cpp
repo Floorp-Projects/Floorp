@@ -8404,18 +8404,6 @@ nsHttpChannel::CheckListenerChain() {
   return rv;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::OnDataFinished(nsresult aStatus) {
-  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
-      do_QueryInterface(mListener);
-
-  if (listener) {
-    return listener->OnDataFinished(aStatus);
-  }
-
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsITransportEventSink
 //-----------------------------------------------------------------------------
