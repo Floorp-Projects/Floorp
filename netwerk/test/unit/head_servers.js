@@ -230,8 +230,17 @@ class NodeHTTP2ServerCode extends BaseNodeHTTPServerCode {
       BaseNodeHTTPServerCode.globalHandler
     );
 
+    global.sessionCount = 0;
+    global.server.on("session", () => {
+      global.sessionCount++;
+    });
+
     let serverPort = await ADB.listenAndForwardPort(global.server, port);
     return serverPort;
+  }
+
+  static sessionCount() {
+    return global.sessionCount;
   }
 }
 
@@ -249,6 +258,11 @@ class NodeHTTP2Server extends BaseNodeServer {
     await this.execute(ADB);
     this._port = await this.execute(`NodeHTTP2ServerCode.startServer(${port})`);
     await this.execute(`global.path_handlers = {};`);
+  }
+
+  async sessionCount() {
+    let count = this.execute(`NodeHTTP2ServerCode.sessionCount()`);
+    return count;
   }
 }
 

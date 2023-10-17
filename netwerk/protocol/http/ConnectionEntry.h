@@ -49,6 +49,7 @@ class ConnectionEntry {
   void CloseIdleConnections();
   void CloseIdleConnections(uint32_t maxToClose);
   void CloseH2WebsocketConnections();
+  void ClosePendingConnections();
   nsresult RemoveIdleConnection(nsHttpConnection* conn);
   bool IsInIdleConnections(HttpConnectionBase* conn);
   size_t IdleConnectionsLength() const { return mIdleConns.Length(); }
@@ -61,6 +62,7 @@ class ConnectionEntry {
   void InsertIntoActiveConns(HttpConnectionBase* conn);
   bool IsInActiveConns(HttpConnectionBase* conn);
   nsresult RemoveActiveConnection(HttpConnectionBase* conn);
+  nsresult RemovePendingConnection(HttpConnectionBase* conn);
   void MakeAllDontReuseExcept(HttpConnectionBase* conn);
   bool FindConnToClaim(PendingTransactionInfo* pendingTransInfo);
   void CloseActiveConnections();
@@ -205,7 +207,12 @@ class ConnectionEntry {
 
   nsTArray<RefPtr<nsHttpConnection>> mIdleConns;  // idle persistent connections
   nsTArray<RefPtr<HttpConnectionBase>> mActiveConns;  // active connections
-
+  // When a connection is added to this mPendingConns list, it is primarily
+  // to keep the connection alive and to continue serving its ongoing
+  // transaction. While in this list, the connection will not be available to
+  // serve any new transactions and will remain here until its current
+  // transaction is complete.
+  nsTArray<RefPtr<HttpConnectionBase>> mPendingConns;
   // "fake" http2 websocket connections that needs to be cleaned up on shutdown
   nsTArray<RefPtr<HttpConnectionBase>> mH2WebsocketConns;
 

@@ -426,6 +426,16 @@ nsresult ConnectionEntry::RemoveActiveConnection(HttpConnectionBase* conn) {
   return NS_OK;
 }
 
+nsresult ConnectionEntry::RemovePendingConnection(HttpConnectionBase* conn) {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  if (!mPendingConns.RemoveElement(conn)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
 void ConnectionEntry::ClosePersistentConnections() {
   LOG(("ConnectionEntry::ClosePersistentConnections [ci=%s]\n",
        mConnInfo->HashKey().get()));
@@ -476,13 +486,33 @@ uint32_t ConnectionEntry::PruneDeadConnections() {
 
 void ConnectionEntry::VerifyTraffic() {
   if (!mConnInfo->IsHttp3()) {
-    // Iterate over all active connections and check them.
-    for (uint32_t index = 0; index < mActiveConns.Length(); ++index) {
-      RefPtr<nsHttpConnection> conn = do_QueryObject(mActiveConns[index]);
+    for (uint32_t index = 0; index < mPendingConns.Length(); ++index) {
+      RefPtr<nsHttpConnection> conn = do_QueryObject(mPendingConns[index]);
       if (conn) {
         conn->CheckForTraffic(true);
       }
     }
+
+    uint32_t numConns = mActiveConns.Length();
+    if (numConns) {
+      // Walk the list backwards to allow us to remove entries easily.
+      for (int index = numConns - 1; index >= 0; index--) {
+        RefPtr<nsHttpConnection> conn = do_QueryObject(mActiveConns[index]);
+        if (conn) {
+          conn->CheckForTraffic(true);
+          if (conn->EverUsedSpdy() &&
+              StaticPrefs::
+                  network_http_http2_move_to_pending_list_after_network_change()) {
+            mActiveConns.RemoveElementAt(index);
+            gHttpHandler->ConnMgr()->DecrementActiveConnCount(conn);
+            mPendingConns.AppendElement(conn);
+            LOG(("Move active connection to pending list [conn=%p]\n",
+                 conn.get()));
+          }
+        }
+      }
+    }
+
     // Iterate the idle connections and unmark them for traffic checks.
     for (uint32_t index = 0; index < mIdleConns.Length(); ++index) {
       RefPtr<nsHttpConnection> conn = do_QueryObject(mIdleConns[index]);
@@ -688,6 +718,18 @@ void ConnectionEntry::CloseAllActiveConnsWithNullTransactcion(
            liveTransaction, activeConn.get()));
       activeConn->CloseTransaction(liveTransaction, aCloseCode);
     }
+  }
+}
+
+void ConnectionEntry::ClosePendingConnections() {
+  while (mPendingConns.Length()) {
+    RefPtr<HttpConnectionBase> conn(mPendingConns[0]);
+    mPendingConns.RemoveElementAt(0);
+
+    // Since HttpConnectionBase::Close doesn't break the bond with
+    // the connection's transaction, we must explicitely tell it
+    // to close its transaction and not just self.
+    conn->CloseTransaction(conn->Transaction(), NS_ERROR_ABORT, true);
   }
 }
 

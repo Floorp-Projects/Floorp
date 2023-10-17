@@ -12262,6 +12262,11 @@
   value: false
   mirror: always
 
+- name: network.http.http2.move_to_pending_list_after_network_change
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Enable HTTP/3
 - name: network.http.http3.enable
   type: RelaxedAtomicBool
