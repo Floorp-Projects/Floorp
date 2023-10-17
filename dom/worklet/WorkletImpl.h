@@ -122,6 +122,11 @@ class WorkletImpl {
 
   bool mSharedMemoryAllowed;
   bool mShouldResistFingerprinting;
+  // The granular fingerprinting protection overrides applied to the worklet.
+  // This will only get populated if these is one that comes from the local
+  // granular override pref or WebCompat. Otherwise, a value of Nothing()
+  // indicates no granular overrides are present for this workerlet.
+  Maybe<RFPTarget> mOverriddenFingerprintingSettings;
 
   const OriginTrials mTrials;
 };
