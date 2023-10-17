@@ -62,8 +62,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             if (rv == NS_ERROR_NOT_AVAILABLE) {
               clientData = inputClientData;
             } else if (NS_FAILED(rv)) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -72,8 +70,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             nsTArray<uint8_t> attObj;
             rv = aValue->GetAttestationObject(attObj);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -82,8 +78,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             nsTArray<uint8_t> credentialId;
             rv = aValue->GetCredentialId(credentialId);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -92,8 +86,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             nsTArray<nsString> transports;
             rv = aValue->GetTransports(transports);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -105,9 +97,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
                 maybeAuthenticatorAttachment);
             if (rv != NS_ERROR_NOT_AVAILABLE) {
               if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPRegisterAbort"_ns, 1);
                 Unused << parent->SendAbort(aTransactionId,
                                             NS_ERROR_DOM_NOT_ALLOWED_ERR);
                 return;
@@ -120,9 +109,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
             rv = aValue->GetCredPropsRk(&credPropsRk);
             if (rv != NS_ERROR_NOT_AVAILABLE) {
               if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPRegisterAbort"_ns, 1);
                 Unused << parent->SendAbort(aTransactionId,
                                             NS_ERROR_DOM_NOT_ALLOWED_ERR);
                 return;
@@ -135,16 +121,12 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
                 clientData, attObj, credentialId, transports, extensions,
                 authenticatorAttachment);
 
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPRegisterFinish"_ns, 1);
             Unused << parent->SendConfirmRegister(aTransactionId, result);
           },
           [this, parent, aTransactionId](
               const WebAuthnRegisterPromise::RejectValueType aValue) {
             mTransactionId.reset();
             mRegisterPromiseRequest.Complete();
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPRegisterAbort"_ns, 1);
             Unused << parent->SendAbort(aTransactionId, aValue);
           })
       ->Track(mRegisterPromiseRequest);
@@ -207,8 +189,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             if (rv == NS_ERROR_NOT_AVAILABLE) {
               clientData = inputClientData;
             } else if (NS_FAILED(rv)) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPRegisterAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -217,8 +197,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             nsTArray<uint8_t> credentialId;
             rv = aValue->GetCredentialId(credentialId);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -227,8 +205,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             nsTArray<uint8_t> signature;
             rv = aValue->GetSignature(signature);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -237,8 +213,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             nsTArray<uint8_t> authenticatorData;
             rv = aValue->GetAuthenticatorData(authenticatorData);
             if (NS_WARN_IF(NS_FAILED(rv))) {
-              Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                   u"CTAPSignAbort"_ns, 1);
               Unused << parent->SendAbort(aTransactionId,
                                           NS_ERROR_DOM_NOT_ALLOWED_ERR);
               return;
@@ -253,9 +227,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
                 maybeAuthenticatorAttachment);
             if (rv != NS_ERROR_NOT_AVAILABLE) {
               if (NS_WARN_IF(NS_FAILED(rv))) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPSignAbort"_ns, 1);
                 Unused << parent->SendAbort(aTransactionId,
                                             NS_ERROR_DOM_NOT_ALLOWED_ERR);
                 return;
@@ -268,9 +239,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
             rv = aValue->GetUsedAppId(&usedAppId);
             if (rv != NS_ERROR_NOT_AVAILABLE) {
               if (NS_FAILED(rv)) {
-                Telemetry::ScalarAdd(
-                    Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                    u"CTAPSignAbort"_ns, 1);
                 Unused << parent->SendAbort(aTransactionId,
                                             NS_ERROR_DOM_NOT_ALLOWED_ERR);
                 return;
@@ -282,16 +250,12 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
                 clientData, credentialId, signature, authenticatorData,
                 extensions, userHandle, authenticatorAttachment);
 
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPSignFinish"_ns, 1);
             Unused << parent->SendConfirmSign(aTransactionId, result);
           },
           [this, parent,
            aTransactionId](const WebAuthnSignPromise::RejectValueType aValue) {
             mTransactionId.reset();
             mSignPromiseRequest.Complete();
-            Telemetry::ScalarAdd(Telemetry::ScalarID::SECURITY_WEBAUTHN_USED,
-                                 u"CTAPSignAbort"_ns, 1);
             Unused << parent->SendAbort(aTransactionId, aValue);
           })
       ->Track(mSignPromiseRequest);
