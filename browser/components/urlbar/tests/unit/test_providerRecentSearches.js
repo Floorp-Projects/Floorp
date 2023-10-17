@@ -3,6 +3,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarProviderRecentSearches:
+    "resource:///modules/UrlbarProviderRecentSearches.sys.mjs",
+});
+
 let RECENTSEARCHES_ENABLED_PREF = "browser.urlbar.recentsearches.featureGate";
 let RECENTSEARCHES_SUGGESTS_PREF = "browser.urlbar.suggest.recentsearches";
 
@@ -82,6 +87,73 @@ add_task(async function test_most_recent_shown() {
       makeRecentSearchResult(context, defaultEngine, "Search 7"),
       makeRecentSearchResult(context, defaultEngine, "Search 6"),
       makeRecentSearchResult(context, defaultEngine, "Search 5"),
+    ],
+  });
+  await UrlbarTestUtils.formHistory.clear();
+});
+
+add_task(async function test_per_engine() {
+  Services.prefs.setBoolPref(RECENTSEARCHES_ENABLED_PREF, true);
+  Services.prefs.setBoolPref(RECENTSEARCHES_SUGGESTS_PREF, true);
+
+  let oldEngine = defaultEngine;
+  await addSearches();
+
+  defaultEngine = await addTestSuggestionsEngine(null, {
+    name: "NewTestEngine",
+  });
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
+  );
+
+  await addSearches();
+
+  let context = createContext("", {
+    isPrivate: false,
+    formHistoryName: "test",
+  });
+  await check_results({
+    context,
+    matches: [
+      makeRecentSearchResult(context, defaultEngine, "Joy Formidable"),
+      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
+      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
+    ],
+  });
+
+  info("Delete one of the results");
+  UrlbarProviderRecentSearches.onEngagement(
+    null,
+    context,
+    { selType: "dismiss", result: context.results[0] },
+    { removeResult: () => {} }
+  );
+
+  info("The result should be deleted");
+  context = createContext("", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
+      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
+    ],
+  });
+
+  defaultEngine = oldEngine;
+  await Services.search.setDefault(
+    defaultEngine,
+    Ci.nsISearchService.CHANGE_REASON_ADDON_INSTALL
+  );
+
+  info("The same search term still exists on different engine");
+  context = createContext("", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeRecentSearchResult(context, defaultEngine, "Joy Formidable"),
+      makeRecentSearchResult(context, defaultEngine, "Glasgow Weather"),
+      makeRecentSearchResult(context, defaultEngine, "Bob Vylan"),
     ],
   });
 });
