@@ -231,6 +231,29 @@ export class NetworkEventRecord {
    */
   addServerTimings(serverTimings) {}
 
+  /**
+   * Convert the provided request timing to a timing relative to the beginning
+   * of the request. All timings are numbers representing high definition
+   * timestamps.
+   *
+   * @param {number} timing
+   *     High definition timestamp for a request timing relative from the time
+   *     origin.
+   * @param {number} requestTime
+   *     High definition timestamp for the request start time relative from the
+   *     time origin.
+   * @returns {number}
+   *     High definition timestamp for the request timing relative to the start
+   *     time of the request, or 0 if the provided timing was 0.
+   */
+  #convertTimestamp(timing, requestTime) {
+    if (timing == 0) {
+      return 0;
+    }
+
+    return timing - requestTime;
+  }
+
   #emitBeforeRequestSent() {
     this.#updateDataFromTimedChannel();
 
@@ -272,29 +295,6 @@ export class NetworkEventRecord {
       responseData: this.#responseData,
       timestamp: Date.now(),
     });
-  }
-
-  /**
-   * Convert the provided request timing to a timing relative to the beginning
-   * of the request. All timings are numbers representing high definition
-   * timestamps.
-   *
-   * @param {number} timing
-   *     High definition timestamp for a request timing relative from the time
-   *     origin.
-   * @param {number} requestTime
-   *     High definition timestamp for the request start time relative from the
-   *     time origin.
-   * @returns {number}
-   *     High definition timestamp for the request timing relative to the start
-   *     time of the request, or 0 if the provided timing was 0.
-   */
-  #convertTimestamp(timing, requestTime) {
-    if (timing == 0) {
-      return 0;
-    }
-
-    return timing - requestTime;
   }
 
   #getBrowsingContext() {
