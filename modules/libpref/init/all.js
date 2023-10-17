@@ -6,7 +6,7 @@
 // The prefs in this file are shipped with the GRE and should apply to all
 // embedding situations. Application-specific preferences belong somewhere
 // else, such as browser/app/profile/firefox.js or
-// mobile/android/app/mobile.js.
+// mobile/android/app/geckoview-prefs.js.
 //
 // NOTE: Not all prefs should be defined in this (or any other) data file.
 // Static prefs are defined in StaticPrefList.yaml. Those prefs should *not*

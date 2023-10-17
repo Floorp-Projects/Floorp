@@ -213,7 +213,6 @@ lintpref:
             - 'modules/libpref/init/all.js'
             - 'modules/libpref/init/StaticPrefList.yaml'
             - 'browser/app/profile/firefox.js'
-            - 'mobile/android/app/mobile.js'
             - 'devtools/client/preferences/debugger.js'
             - 'mobile/android/app/geckoview-prefs.js'
             - 'browser/branding/official/pref/firefox-branding.js'
