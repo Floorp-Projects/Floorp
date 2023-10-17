@@ -186,6 +186,12 @@ TRRLoadInfo::SetStoragePermission(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+const Maybe<RFPTarget>& TRRLoadInfo::GetOverriddenFingerprintingSettings() {
+  return mOverriddenFingerprintingSettings;
+}
+
+void TRRLoadInfo::SetOverriddenFingerprintingSettings(RFPTarget aTargets) {}
+
 NS_IMETHODIMP
 TRRLoadInfo::GetIsMetaRefresh(bool* aResult) {
   return NS_ERROR_NOT_IMPLEMENTED;
