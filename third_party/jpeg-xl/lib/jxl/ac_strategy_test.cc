@@ -14,7 +14,6 @@
 #include <utility>
 
 #include "lib/jxl/base/random.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dec_transforms_testonly.h"
 #include "lib/jxl/enc_transforms.h"

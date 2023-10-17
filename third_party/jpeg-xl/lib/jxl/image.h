@@ -20,7 +20,6 @@
 #include "lib/jxl/base/cache_aligned.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 
 namespace jxl {
 

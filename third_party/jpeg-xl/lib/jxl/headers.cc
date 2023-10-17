@@ -5,8 +5,8 @@
 
 #include "lib/jxl/headers.h"
 
-#include "lib/jxl/common.h"
 #include "lib/jxl/fields.h"
+#include "lib/jxl/frame_dimensions.h"
 
 namespace jxl {
 namespace {

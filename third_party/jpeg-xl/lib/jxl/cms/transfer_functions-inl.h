@@ -5,11 +5,11 @@
 
 // Transfer functions for color encodings.
 
-#if defined(LIB_JXL_TRANSFER_FUNCTIONS_INL_H_) == defined(HWY_TARGET_TOGGLE)
-#ifdef LIB_JXL_TRANSFER_FUNCTIONS_INL_H_
-#undef LIB_JXL_TRANSFER_FUNCTIONS_INL_H_
+#if defined(LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_) == defined(HWY_TARGET_TOGGLE)
+#ifdef LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
+#undef LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
 #else
-#define LIB_JXL_TRANSFER_FUNCTIONS_INL_H_
+#define LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_
 #endif
 
 #include <algorithm>
@@ -17,9 +17,9 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/fast_math-inl.h"
+#include "lib/jxl/base/rational_polynomial-inl.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/fast_math-inl.h"
-#include "lib/jxl/rational_polynomial-inl.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -424,4 +424,4 @@ V FastLinearToSRGB(D d, V v) {
 }  // namespace jxl
 HWY_AFTER_NAMESPACE();
 
-#endif  // LIB_JXL_TRANSFER_FUNCTIONS_INL_H_
+#endif  // LIB_JXL_CMS_TRANSFER_FUNCTIONS_INL_H_

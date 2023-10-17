@@ -22,35 +22,39 @@ namespace {
 // Any valid encoding is larger (ensures codecs can read the first few bytes)
 constexpr size_t kMinBytes = 9;
 
-void BasenameAndExtension(std::string path, std::string* basename,
+void BasenameAndExtension(const std::string& path, std::string* filename,
                           std::string* extension) {
-  // Pattern: file.jxl
-  size_t pos = path.find_last_of('.');
-  if (pos < path.size()) {
-    *basename = path.substr(0, pos);
-    *extension = path.substr(pos);
-    return;
-  }
-  // Pattern: jxl:-
-  pos = path.find_first_of(':');
-  if (pos < path.size()) {
-    *basename = path.substr(pos + 1);
+  // Pattern: "png:name" or "png:-"
+  size_t pos = path.find_first_of(':');
+  if (pos != std::string::npos) {
     *extension = "." + path.substr(0, pos);
+    *filename = path.substr(pos + 1);
+    //+ ((path.length() == pos + 2 && path.substr(pos + 1, 1) == "-") ? "" :
+    //*extension);
     return;
   }
+
+  // Pattern: "name.png"
+  pos = path.find_last_of('.');
+  if (pos != std::string::npos) {
+    *extension = path.substr(pos);
+    *filename = path;
+    return;
+  }
+
   // Extension not found
-  *basename = path;
+  *filename = path;
   *extension = "";
 }
 
 }  // namespace
 
 Codec CodecFromPath(std::string path, size_t* JXL_RESTRICT bits_per_sample,
-                    std::string* basename, std::string* extension) {
+                    std::string* filename, std::string* extension) {
   std::string base;
   std::string ext;
   BasenameAndExtension(path, &base, &ext);
-  if (basename) *basename = base;
+  if (filename) *filename = base;
   if (extension) *extension = ext;
 
   std::transform(ext.begin(), ext.end(), ext.begin(), [](char c) {

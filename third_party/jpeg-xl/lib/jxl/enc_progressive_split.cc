@@ -11,7 +11,7 @@
 #include <memory>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/common.h"  // kMaxNumPasses
 #include "lib/jxl/image.h"
 
 namespace jxl {

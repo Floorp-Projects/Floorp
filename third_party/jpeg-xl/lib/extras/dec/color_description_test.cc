@@ -21,8 +21,7 @@ TEST(ColorDescriptionTest, RoundTripAll) {
     JxlColorEncoding c_external = {};
     EXPECT_TRUE(ParseDescription(description, &c_external));
     ColorEncoding c_internal;
-    EXPECT_TRUE(
-        ConvertExternalToInternalColorEncoding(c_external, &c_internal));
+    EXPECT_TRUE(c_internal.FromExternal(c_external));
     EXPECT_TRUE(c_original.SameColorEncoding(c_internal))
         << "Where c_original=" << c_original
         << " and c_internal=" << c_internal;

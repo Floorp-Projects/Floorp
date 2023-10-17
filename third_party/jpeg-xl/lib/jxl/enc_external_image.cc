@@ -17,10 +17,9 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/float.h"
 #include "lib/jxl/base/printf_macros.h"
-#include "lib/jxl/color_management.h"
-#include "lib/jxl/common.h"
 
 namespace jxl {
 namespace {

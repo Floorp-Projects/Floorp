@@ -11,7 +11,6 @@
 #include <cmath>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/transfer_functions-inl.h"
 
 namespace jxl {
 

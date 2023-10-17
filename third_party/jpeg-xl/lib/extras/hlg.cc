@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-#include "lib/jxl/enc_color_management.h"
+#include "lib/jxl/cms/jxl_cms.h"
 
 namespace jxl {
 
@@ -19,11 +19,12 @@ float GetHlgGamma(const float peak_luminance, const float surround_luminance) {
 Status HlgOOTF(ImageBundle* ib, const float gamma, ThreadPool* pool) {
   ColorEncoding linear_rec2020;
   linear_rec2020.SetColorSpace(ColorSpace::kRGB);
-  linear_rec2020.primaries = Primaries::k2100;
-  linear_rec2020.white_point = WhitePoint::kD65;
+  JXL_RETURN_IF_ERROR(linear_rec2020.SetPrimariesType(Primaries::k2100));
+  JXL_RETURN_IF_ERROR(linear_rec2020.SetWhitePointType(WhitePoint::kD65));
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_RETURN_IF_ERROR(linear_rec2020.CreateICC());
-  JXL_RETURN_IF_ERROR(ib->TransformTo(linear_rec2020, GetJxlCms(), pool));
+  JXL_RETURN_IF_ERROR(
+      ib->TransformTo(linear_rec2020, *JxlGetDefaultCms(), pool));
 
   JXL_RETURN_IF_ERROR(RunOnPool(
       pool, 0, ib->ysize(), ThreadPool::NoInit,

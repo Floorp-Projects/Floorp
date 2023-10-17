@@ -14,6 +14,7 @@
 #include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/options.h"
+#include "lib/jxl/pack_signed.h"
 
 namespace jxl {
 

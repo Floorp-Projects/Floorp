@@ -11,8 +11,8 @@
 #include <array>
 #include <utility>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/span.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_fields.h"
 #include "lib/jxl/frame_header.h"

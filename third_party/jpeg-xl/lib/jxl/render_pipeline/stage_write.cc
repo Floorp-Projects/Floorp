@@ -6,7 +6,7 @@
 #include "lib/jxl/render_pipeline/stage_write.h"
 
 #include "lib/jxl/alpha.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/sanitizers.h"

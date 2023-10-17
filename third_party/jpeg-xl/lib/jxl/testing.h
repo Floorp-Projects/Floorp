@@ -18,7 +18,9 @@
 
 #include <sstream>
 
+// JPEGXL_ENABLE_BOXES, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "gtest/gtest.h"
+#include "lib/jxl/common.h"
 
 #ifdef JXL_DISABLE_SLOW_TESTS
 #define JXL_SLOW_TEST(X) DISABLED_##X

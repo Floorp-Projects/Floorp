@@ -10,8 +10,10 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/common.h"
+#include "lib/jxl/cms/opsin_params.h"
+#include "lib/jxl/common.h"  // JXL_HIGH_PRECISION
 #include "lib/jxl/dec_xyb-inl.h"
-#include "lib/jxl/opsin_params.h"
 #include "lib/jxl/sanitizers.h"
 
 HWY_BEFORE_NAMESPACE();
@@ -44,12 +46,12 @@ class XYBStage : public RenderPipelineStage {
     // TODO(eustas): when using frame origin, addresses might be unaligned;
     //               making them aligned will void performance penalty.
     if (output_is_xyb_) {
-      const auto scale_x = Set(d, kScaledXYBScale[0]);
-      const auto scale_y = Set(d, kScaledXYBScale[1]);
-      const auto scale_bmy = Set(d, kScaledXYBScale[2]);
-      const auto offset_x = Set(d, kScaledXYBOffset[0]);
-      const auto offset_y = Set(d, kScaledXYBOffset[1]);
-      const auto offset_bmy = Set(d, kScaledXYBOffset[2]);
+      const auto scale_x = Set(d, jxl::cms::kScaledXYBScale[0]);
+      const auto scale_y = Set(d, jxl::cms::kScaledXYBScale[1]);
+      const auto scale_bmy = Set(d, jxl::cms::kScaledXYBScale[2]);
+      const auto offset_x = Set(d, jxl::cms::kScaledXYBOffset[0]);
+      const auto offset_y = Set(d, jxl::cms::kScaledXYBOffset[1]);
+      const auto offset_bmy = Set(d, jxl::cms::kScaledXYBOffset[2]);
       for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
         const auto in_x = LoadU(d, row0 + x);
         const auto in_y = LoadU(d, row1 + x);

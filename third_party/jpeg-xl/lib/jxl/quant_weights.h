@@ -19,7 +19,6 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/image.h"
 

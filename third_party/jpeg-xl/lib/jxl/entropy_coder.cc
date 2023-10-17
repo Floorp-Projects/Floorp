@@ -19,13 +19,13 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
 #include "lib/jxl/dec_context_map.h"
 #include "lib/jxl/epf.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_ops.h"
+#include "lib/jxl/pack_signed.h"
 
 namespace jxl {
 

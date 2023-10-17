@@ -4,11 +4,10 @@
 // license that can be found in the LICENSE file.
 
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
-#include "lib/jxl/color_management.h"
 #include "lib/jxl/dec_xyb.h"
-#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -30,7 +29,7 @@ TEST(OpsinInverseTest, LinearInverseInverts) {
   io.SetFromImage(std::move(linear2), io.metadata.m.color_encoding);
   ThreadPool* null_pool = nullptr;
   Image3F opsin(io.xsize(), io.ysize());
-  (void)ToXYB(io.Main(), null_pool, &opsin, GetJxlCms());
+  (void)ToXYB(io.Main(), null_pool, &opsin, *JxlGetDefaultCms());
 
   OpsinParams opsin_params;
   opsin_params.Init(/*intensity_target=*/255.0f);

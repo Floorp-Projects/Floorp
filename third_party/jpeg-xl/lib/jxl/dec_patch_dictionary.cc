@@ -22,8 +22,7 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/blending.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/color_management.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/common.h"  // kMaxNumReferenceFrames
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_frame.h"
 #include "lib/jxl/entropy_coder.h"
@@ -31,6 +30,7 @@
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/image_ops.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/patch_dictionary_internal.h"
 
 namespace jxl {

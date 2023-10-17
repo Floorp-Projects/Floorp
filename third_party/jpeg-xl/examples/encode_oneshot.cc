@@ -59,6 +59,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
 
   size_t readsize = fread(data.data(), 1, size, file);
   if ((long)readsize != size) {
+    fclose(file);
     return false;
   }
   if (fclose(file) != 0) {

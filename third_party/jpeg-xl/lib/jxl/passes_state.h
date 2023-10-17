@@ -9,7 +9,6 @@
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dec_patch_dictionary.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/image.h"

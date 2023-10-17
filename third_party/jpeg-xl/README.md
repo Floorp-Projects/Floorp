@@ -12,6 +12,10 @@ https://github.com/libjxl/libjxl/actions/workflows/fuzz.yml)
 https://github.com/libjxl/libjxl/actions/workflows/release.yaml)
 [![Doc](https://readthedocs.org/projects/libjxl/badge/?version=latest)](
 https://libjxl.readthedocs.io/en/latest/?badge=latest)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/7845/badge)](
+https://www.bestpractices.dev/projects/7845)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/libjxl/libjxl/badge)](
+https://securityscorecards.dev/viewer/?uri=github.com/libjxl/libjxl)
 [![codecov](https://codecov.io/gh/libjxl/libjxl/branch/main/graph/badge.svg)](
 https://codecov.io/gh/libjxl/libjxl)
 

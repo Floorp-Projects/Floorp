@@ -3,16 +3,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#if defined(LIB_JXL_DEC_TONE_MAPPING_INL_H_) == defined(HWY_TARGET_TOGGLE)
-#ifdef LIB_JXL_DEC_TONE_MAPPING_INL_H_
-#undef LIB_JXL_DEC_TONE_MAPPING_INL_H_
+#if defined(LIB_JXL_CMS_TONE_MAPPING_INL_H_) == defined(HWY_TARGET_TOGGLE)
+#ifdef LIB_JXL_CMS_TONE_MAPPING_INL_H_
+#undef LIB_JXL_CMS_TONE_MAPPING_INL_H_
 #else
-#define LIB_JXL_DEC_TONE_MAPPING_INL_H_
+#define LIB_JXL_CMS_TONE_MAPPING_INL_H_
 #endif
 
 #include <hwy/highway.h>
 
-#include "lib/jxl/transfer_functions-inl.h"
+#include "lib/jxl/cms/transfer_functions-inl.h"
 
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
@@ -236,4 +236,4 @@ void GamutMap(V* red, V* green, V* blue, const float primaries_luminances[3],
 }  // namespace jxl
 HWY_AFTER_NAMESPACE();
 
-#endif  // LIB_JXL_DEC_TONE_MAPPING_INL_H_
+#endif  // LIB_JXL_CMS_TONE_MAPPING_INL_H_

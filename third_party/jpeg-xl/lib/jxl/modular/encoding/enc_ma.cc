@@ -19,11 +19,12 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
+#include "lib/jxl/base/fast_math-inl.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/enc_ans.h"
-#include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/modular/encoding/context_predict.h"
 #include "lib/jxl/modular/options.h"
+#include "lib/jxl/pack_signed.h"
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {

@@ -3,33 +3,27 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include "lib/jxl/color_management.h"
-
-#include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "lib/jxl/cms/color_management.h"
 
 #include <algorithm>
-#include <array>
-#include <atomic>
-#include <memory>
+#include <cmath>
+#include <cstddef>
+#include <cstring>
 #include <string>
-#include <utility>
+#include <vector>
 
 #undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "lib/jxl/color_management.cc"
+#define HWY_TARGET_INCLUDE "lib/jxl/cms/color_management.cc"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/matrix_ops.h"
+#include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/dec_tone_mapping-inl.h"
-#include "lib/jxl/field_encodings.h"
-#include "lib/jxl/matrix_ops.h"
-#include "lib/jxl/opsin_params.h"
-#include "lib/jxl/transfer_functions-inl.h"
+#include "lib/jxl/cms/opsin_params.h"
+#include "lib/jxl/cms/tone_mapping-inl.h"
+#include "lib/jxl/cms/transfer_functions-inl.h"
 
 #ifndef JXL_ENABLE_3D_ICC_TONEMAPPING
 #define JXL_ENABLE_3D_ICC_TONEMAPPING 1
@@ -185,16 +179,16 @@ bool CanToneMap(const ColorEncoding& encoding) {
   return encoding.GetColorSpace() == ColorSpace::kRGB &&
          encoding.HasPrimaries() &&
          (encoding.tf.IsPQ() || encoding.tf.IsHLG()) &&
-         ((encoding.primaries == Primaries::kP3 &&
-           (encoding.white_point == WhitePoint::kD65 ||
-            encoding.white_point == WhitePoint::kDCI)) ||
-          (encoding.primaries != Primaries::kCustom &&
-           encoding.white_point == WhitePoint::kD65));
+         ((encoding.GetPrimariesType() == Primaries::kP3 &&
+           (encoding.GetWhitePointType() == WhitePoint::kD65 ||
+            encoding.GetWhitePointType() == WhitePoint::kDCI)) ||
+          (encoding.GetPrimariesType() != Primaries::kCustom &&
+           encoding.GetWhitePointType() == WhitePoint::kD65));
 }
 
-void ICCComputeMD5(const PaddedBytes& data, uint8_t sum[16])
+void ICCComputeMD5(const IccBytes& data, uint8_t sum[16])
     JXL_NO_SANITIZE("unsigned-integer-overflow") {
-  PaddedBytes data64 = data;
+  IccBytes data64 = data;
   data64.push_back(128);
   // Add bytes such that ((size + 8) & 63) == 0.
   size_t extra = ((64 - ((data64.size() + 8) & 63)) & 63);
@@ -292,7 +286,7 @@ Status CreateICCRGBMatrix(CIExy r, CIExy g, CIExy b, CIExy w, float result[9]) {
   return true;
 }
 
-void WriteICCUint32(uint32_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
+void WriteICCUint32(uint32_t value, size_t pos, IccBytes* JXL_RESTRICT icc) {
   if (icc->size() < pos + 4) icc->resize(pos + 4);
   (*icc)[pos + 0] = (value >> 24u) & 255;
   (*icc)[pos + 1] = (value >> 16u) & 255;
@@ -300,25 +294,24 @@ void WriteICCUint32(uint32_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
   (*icc)[pos + 3] = value & 255;
 }
 
-void WriteICCUint16(uint16_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
+void WriteICCUint16(uint16_t value, size_t pos, IccBytes* JXL_RESTRICT icc) {
   if (icc->size() < pos + 2) icc->resize(pos + 2);
   (*icc)[pos + 0] = (value >> 8u) & 255;
   (*icc)[pos + 1] = value & 255;
 }
 
-void WriteICCUint8(uint8_t value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
+void WriteICCUint8(uint8_t value, size_t pos, IccBytes* JXL_RESTRICT icc) {
   if (icc->size() < pos + 1) icc->resize(pos + 1);
   (*icc)[pos] = value;
 }
 
 // Writes a 4-character tag
-void WriteICCTag(const char* value, size_t pos, PaddedBytes* JXL_RESTRICT icc) {
+void WriteICCTag(const char* value, size_t pos, IccBytes* JXL_RESTRICT icc) {
   if (icc->size() < pos + 4) icc->resize(pos + 4);
   memcpy(icc->data() + pos, value, 4);
 }
 
-Status WriteICCS15Fixed16(float value, size_t pos,
-                          PaddedBytes* JXL_RESTRICT icc) {
+Status WriteICCS15Fixed16(float value, size_t pos, IccBytes* JXL_RESTRICT icc) {
   // "nextafterf" for 32768.0f towards zero are:
   // 32767.998046875, 32767.99609375, 32767.994140625
   // Even the first value works well,...
@@ -331,8 +324,7 @@ Status WriteICCS15Fixed16(float value, size_t pos,
   return true;
 }
 
-Status CreateICCHeader(const ColorEncoding& c,
-                       PaddedBytes* JXL_RESTRICT header) {
+Status CreateICCHeader(const ColorEncoding& c, IccBytes* JXL_RESTRICT header) {
   // TODO(lode): choose color management engine name, e.g. "skia" if
   // integrated in skia.
   static const char* kCmm = "jxl ";
@@ -374,7 +366,7 @@ Status CreateICCHeader(const ColorEncoding& c,
   WriteICCUint32(0, 52, header);  // device model
   WriteICCUint32(0, 56, header);  // device attributes
   WriteICCUint32(0, 60, header);  // device attributes
-  WriteICCUint32(static_cast<uint32_t>(c.rendering_intent), 64, header);
+  WriteICCUint32(static_cast<uint32_t>(c.GetRenderingIntent()), 64, header);
 
   // Mandatory D50 white point of profile connection space
   WriteICCUint32(0x0000f6d6, 68, header);
@@ -387,7 +379,7 @@ Status CreateICCHeader(const ColorEncoding& c,
 }
 
 void AddToICCTagTable(const char* tag, size_t offset, size_t size,
-                      PaddedBytes* JXL_RESTRICT tagtable,
+                      IccBytes* JXL_RESTRICT tagtable,
                       std::vector<size_t>* offsets) {
   WriteICCTag(tag, tagtable->size(), tagtable);
   // writing true offset deferred to later
@@ -396,8 +388,7 @@ void AddToICCTagTable(const char* tag, size_t offset, size_t size,
   WriteICCUint32(size, tagtable->size(), tagtable);
 }
 
-void FinalizeICCTag(PaddedBytes* JXL_RESTRICT tags, size_t* offset,
-                    size_t* size) {
+void FinalizeICCTag(IccBytes* JXL_RESTRICT tags, size_t* offset, size_t* size) {
   while ((tags->size() & 3) != 0) {
     tags->push_back(0);
   }
@@ -407,7 +398,7 @@ void FinalizeICCTag(PaddedBytes* JXL_RESTRICT tags, size_t* offset,
 
 // The input text must be ASCII, writing other characters to UTF-16 is not
 // implemented.
-void CreateICCMlucTag(const std::string& text, PaddedBytes* JXL_RESTRICT tags) {
+void CreateICCMlucTag(const std::string& text, IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("mluc", tags->size(), tags);
   WriteICCUint32(0, tags->size(), tags);
   WriteICCUint32(1, tags->size(), tags);
@@ -421,7 +412,7 @@ void CreateICCMlucTag(const std::string& text, PaddedBytes* JXL_RESTRICT tags) {
   }
 }
 
-Status CreateICCXYZTag(float xyz[3], PaddedBytes* JXL_RESTRICT tags) {
+Status CreateICCXYZTag(float xyz[3], IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("XYZ ", tags->size(), tags);
   WriteICCUint32(0, tags->size(), tags);
   for (size_t i = 0; i < 3; ++i) {
@@ -430,7 +421,7 @@ Status CreateICCXYZTag(float xyz[3], PaddedBytes* JXL_RESTRICT tags) {
   return true;
 }
 
-Status CreateICCChadTag(float chad[9], PaddedBytes* JXL_RESTRICT tags) {
+Status CreateICCChadTag(float chad[9], IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("sf32", tags->size(), tags);
   WriteICCUint32(0, tags->size(), tags);
   for (size_t i = 0; i < 9; i++) {
@@ -439,25 +430,25 @@ Status CreateICCChadTag(float chad[9], PaddedBytes* JXL_RESTRICT tags) {
   return true;
 }
 
-void MaybeCreateICCCICPTag(const ColorEncoding& c,
-                           PaddedBytes* JXL_RESTRICT tags, size_t* offset,
-                           size_t* size, PaddedBytes* JXL_RESTRICT tagtable,
+void MaybeCreateICCCICPTag(const ColorEncoding& c, IccBytes* JXL_RESTRICT tags,
+                           size_t* offset, size_t* size,
+                           IccBytes* JXL_RESTRICT tagtable,
                            std::vector<size_t>* offsets) {
   if (c.GetColorSpace() != ColorSpace::kRGB) {
     return;
   }
   uint8_t primaries = 0;
-  if (c.primaries == Primaries::kP3) {
-    if (c.white_point == WhitePoint::kD65) {
+  if (c.GetPrimariesType() == Primaries::kP3) {
+    if (c.GetWhitePointType() == WhitePoint::kD65) {
       primaries = 12;
-    } else if (c.white_point == WhitePoint::kDCI) {
+    } else if (c.GetWhitePointType() == WhitePoint::kDCI) {
       primaries = 11;
     } else {
       return;
     }
-  } else if (c.primaries != Primaries::kCustom &&
-             c.white_point == WhitePoint::kD65) {
-    primaries = static_cast<uint8_t>(c.primaries);
+  } else if (c.GetPrimariesType() != Primaries::kCustom &&
+             c.GetWhitePointType() == WhitePoint::kD65) {
+    primaries = static_cast<uint8_t>(c.GetPrimariesType());
   } else {
     return;
   }
@@ -478,7 +469,7 @@ void MaybeCreateICCCICPTag(const ColorEncoding& c,
 }
 
 void CreateICCCurvCurvTag(const std::vector<uint16_t>& curve,
-                          PaddedBytes* JXL_RESTRICT tags) {
+                          IccBytes* JXL_RESTRICT tags) {
   size_t pos = tags->size();
   tags->resize(tags->size() + 12 + curve.size() * 2, 0);
   WriteICCTag("curv", pos, tags);
@@ -491,7 +482,7 @@ void CreateICCCurvCurvTag(const std::vector<uint16_t>& curve,
 
 // Writes 12 + 4*params.size() bytes
 Status CreateICCCurvParaTag(std::vector<float> params, size_t curve_type,
-                            PaddedBytes* JXL_RESTRICT tags) {
+                            IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("para", tags->size(), tags);
   WriteICCUint32(0, tags->size(), tags);
   WriteICCUint16(curve_type, tags->size(), tags);
@@ -502,7 +493,7 @@ Status CreateICCCurvParaTag(std::vector<float> params, size_t curve_type,
   return true;
 }
 
-Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
+Status CreateICCLutAtoBTagForXYB(IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("mAB ", tags->size(), tags);
   // 4 reserved bytes set to 0
   WriteICCUint32(0, tags->size(), tags);
@@ -539,35 +530,15 @@ Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
   // 3 bytes of padding
   WriteICCUint8(0, tags->size(), tags);
   WriteICCUint16(0, tags->size(), tags);
-  const float kOffsets[3] = {
-      kScaledXYBOffset[0] + kScaledXYBOffset[1],
-      kScaledXYBOffset[1] - kScaledXYBOffset[0] + 1.0f / kScaledXYBScale[0],
-      kScaledXYBOffset[1] + kScaledXYBOffset[2]};
-  const float kScaling[3] = {
-      1.0f / (1.0f / kScaledXYBScale[0] + 1.0f / kScaledXYBScale[1]),
-      1.0f / (1.0f / kScaledXYBScale[0] + 1.0f / kScaledXYBScale[1]),
-      1.0f / (1.0f / kScaledXYBScale[1] + 1.0f / kScaledXYBScale[2])};
   // 2*2*2*3 entries of 2 bytes each = 48 bytes
+  const jxl::cms::ColorCube3D& cube = jxl::cms::UnscaledA2BCube();
   for (size_t ix = 0; ix < 2; ++ix) {
     for (size_t iy = 0; iy < 2; ++iy) {
       for (size_t ib = 0; ib < 2; ++ib) {
-        float in_f[3] = {ix * 1.0f, iy * 1.0f, ib * 1.0f};
-        for (size_t c = 0; c < 3; ++c) {
-          in_f[c] /= kScaledXYBScale[c];
-          in_f[c] -= kScaledXYBOffset[c];
-        }
-        float out_f[3];
-        out_f[0] = in_f[1] + in_f[0];
-        out_f[1] = in_f[1] - in_f[0];
-        out_f[2] = in_f[2] + in_f[1];
+        const jxl::cms::ColorCube0D& out_f = cube[ix][iy][ib];
         for (int i = 0; i < 3; ++i) {
-          out_f[i] += kOffsets[i];
-          out_f[i] *= kScaling[i];
-        }
-        for (int i = 0; i < 3; ++i) {
-          JXL_RETURN_IF_ERROR(out_f[i] >= 0.f && out_f[i] <= 1.f);
-          uint16_t val = static_cast<uint16_t>(
-              0.5f + 65535 * std::max(0.f, std::min(1.f, out_f[i])));
+          int32_t val = static_cast<int32_t>(0.5f + 65535 * out_f[i]);
+          JXL_DASSERT(val >= 0 && val <= 65535);
           WriteICCUint16(val, tags->size(), tags);
         }
       }
@@ -576,14 +547,14 @@ Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
   // offset = 148
   // 3 curves with 5 parameters = 3 * (12 + 5 * 4) = 96 bytes
   for (size_t i = 0; i < 3; ++i) {
-    const float b =
-        -kOffsets[i] - std::cbrt(jxl::kNegOpsinAbsorbanceBiasRGB[i]);
+    const float b = -jxl::cms::kXYBOffset[i] -
+                    std::cbrt(jxl::cms::kNegOpsinAbsorbanceBiasRGB[i]);
     std::vector<float> params = {
         3,
-        1.0f / kScaling[i],
+        1.0f / jxl::cms::kXYBScale[i],
         b,
-        0,                                // unused
-        std::max(0.f, -b * kScaling[i]),  // make skcms happy
+        0,                                           // unused
+        std::max(0.f, -b * jxl::cms::kXYBScale[i]),  // make skcms happy
     };
     JXL_RETURN_IF_ERROR(CreateICCCurvParaTag(params, 3, tags));
   }
@@ -598,15 +569,14 @@ Status CreateICCLutAtoBTagForXYB(PaddedBytes* JXL_RESTRICT tags) {
   for (size_t i = 0; i < 3; ++i) {
     float intercept = 0;
     for (size_t j = 0; j < 3; ++j) {
-      intercept += matrix[i * 3 + j] * jxl::kNegOpsinAbsorbanceBiasRGB[j];
+      intercept += matrix[i * 3 + j] * jxl::cms::kNegOpsinAbsorbanceBiasRGB[j];
     }
     JXL_RETURN_IF_ERROR(WriteICCS15Fixed16(intercept, tags->size(), tags));
   }
   return true;
 }
 
-Status CreateICCLutAtoBTagForHDR(ColorEncoding c,
-                                 PaddedBytes* JXL_RESTRICT tags) {
+Status CreateICCLutAtoBTagForHDR(ColorEncoding c, IccBytes* JXL_RESTRICT tags) {
   static constexpr size_t k3DLutDim = 9;
   WriteICCTag("mft1", tags->size(), tags);
   // 4 reserved bytes set to 0
@@ -662,7 +632,7 @@ Status CreateICCLutAtoBTagForHDR(ColorEncoding c,
 }
 
 // Some software (Apple Safari, Preview) requires this.
-Status CreateICCNoOpBToATag(PaddedBytes* JXL_RESTRICT tags) {
+Status CreateICCNoOpBToATag(IccBytes* JXL_RESTRICT tags) {
   WriteICCTag("mBA ", tags->size(), tags);
   // 4 reserved bytes set to 0
   WriteICCUint32(0, tags->size(), tags);
@@ -692,9 +662,8 @@ Status CreateICCNoOpBToATag(PaddedBytes* JXL_RESTRICT tags) {
 
 }  // namespace
 
-Status MaybeCreateProfile(const ColorEncoding& c,
-                          PaddedBytes* JXL_RESTRICT icc) {
-  PaddedBytes header, tagtable, tags;
+Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
+  IccBytes header, tagtable, tags;
 
   if (c.GetColorSpace() == ColorSpace::kUnknown || c.tf.IsUnknown()) {
     return false;  // Not an error
@@ -711,7 +680,7 @@ Status MaybeCreateProfile(const ColorEncoding& c,
   }
 
   if (c.GetColorSpace() == ColorSpace::kXYB &&
-      c.rendering_intent != RenderingIntent::kPerceptual) {
+      c.GetRenderingIntent() != RenderingIntent::kPerceptual) {
     return JXL_FAILURE(
         "Only perceptual rendering intent implemented for XYB "
         "ICC profile.");
@@ -855,14 +824,14 @@ Status MaybeCreateProfile(const ColorEncoding& c,
   WriteICCUint32(header.size() + tagtable.size() + tags.size(), 0, &header);
 
   *icc = header;
-  icc->append(tagtable);
-  icc->append(tags);
+  Span<const uint8_t>(tagtable).AppendTo(icc);
+  Span<const uint8_t>(tags).AppendTo(icc);
 
   // The MD5 checksum must be computed on the profile with profile flags,
   // rendering intent, and region of the checksum itself, set to 0.
   // TODO(lode): manually verify with a reliable tool that this creates correct
   // signature (profile id) for ICC profiles.
-  PaddedBytes icc_sum = *icc;
+  IccBytes icc_sum = *icc;
   if (icc_sum.size() >= 64 + 4) {
     memset(icc_sum.data() + 44, 0, 4);
     memset(icc_sum.data() + 64, 0, 4);

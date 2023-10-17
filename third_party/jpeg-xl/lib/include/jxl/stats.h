@@ -33,7 +33,7 @@ typedef struct JxlEncoderStatsStruct JxlEncoderStats;
  *
  * @return pointer to initialized JxlEncoderStats instance
  */
-JXL_EXPORT JxlEncoderStats* JxlEncoderStatsCreate();
+JXL_EXPORT JxlEncoderStats* JxlEncoderStatsCreate(void);
 
 /**
  * Deinitializes and frees JxlEncoderStats instance.

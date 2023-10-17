@@ -19,6 +19,7 @@ namespace extras {
 
 std::unique_ptr<Encoder> GetPAMEncoder();
 std::unique_ptr<Encoder> GetPGMEncoder();
+std::unique_ptr<Encoder> GetPNMEncoder();
 std::unique_ptr<Encoder> GetPPMEncoder();
 std::unique_ptr<Encoder> GetPFMEncoder();
 

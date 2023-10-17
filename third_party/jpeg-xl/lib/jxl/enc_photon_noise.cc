@@ -5,6 +5,10 @@
 
 #include "lib/jxl/enc_photon_noise.h"
 
+#include <algorithm>
+
+#include "lib/jxl/cms/opsin_params.h"
+
 namespace jxl {
 
 namespace {
@@ -38,7 +42,8 @@ inline constexpr T Cube(const T x) {
 
 NoiseParams SimulatePhotonNoise(const size_t xsize, const size_t ysize,
                                 const float iso) {
-  const float kOpsinAbsorbanceBiasCbrt = std::cbrt(kOpsinAbsorbanceBias[1]);
+  const float kOpsinAbsorbanceBiasCbrt =
+      std::cbrt(jxl::cms::kOpsinAbsorbanceBias[1]);
 
   // Focal plane exposure for 18% of kDefaultIntensityTarget, in lx·s.
   // (ISO = 10 lx·s ÷ H)
@@ -57,8 +62,8 @@ NoiseParams SimulatePhotonNoise(const size_t xsize, const size_t ysize,
     // scaled_index is used for XYB = (0, 2·scaled_index, 2·scaled_index)
     const float y = 2 * scaled_index;
     // 1 = default intensity target
-    const float linear = std::max(
-        0.f, Cube(y - kOpsinAbsorbanceBiasCbrt) + kOpsinAbsorbanceBias[1]);
+    const float linear = std::max(0.f, Cube(y - kOpsinAbsorbanceBiasCbrt) +
+                                           jxl::cms::kOpsinAbsorbanceBias[1]);
     const float electrons_per_pixel = electrons_per_pixel_18 * (linear / 0.18f);
     // Quadrature sum of read noise, photon shot noise (sqrt(S) so simply not
     // squared here) and photo response non-uniformity.
@@ -69,7 +74,8 @@ NoiseParams SimulatePhotonNoise(const size_t xsize, const size_t ysize,
                   Square(kPhotoResponseNonUniformity * electrons_per_pixel));
     const float linear_noise = noise * (0.18f / electrons_per_pixel_18);
     const float opsin_derivative =
-        (1.f / 3) / Square(std::cbrt(linear - kOpsinAbsorbanceBias[1]));
+        (1.f / 3) /
+        Square(std::cbrt(linear - jxl::cms::kOpsinAbsorbanceBias[1]));
     const float opsin_noise = linear_noise * opsin_derivative;
 
     // TODO(sboukortt): verify more thoroughly whether the denominator is

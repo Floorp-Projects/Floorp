@@ -14,9 +14,13 @@
 #include <vector>
 
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
+
+// JPEGXL_ENABLE_BOXES, JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/common.h"
+
 #if JPEGXL_ENABLE_BOXES || JPEGXL_ENABLE_TRANSCODE_JPEG
 #include "lib/jxl/box_content_decoder.h"
 #endif
@@ -27,6 +31,7 @@
 #include "lib/jxl/decode_to_jpeg.h"
 #endif
 #include "lib/jxl/fields.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
 #include "lib/jxl/icc_codec.h"
@@ -1057,8 +1062,8 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
       // Other non-successful status is an error
       return JXL_DEC_ERROR;
     }
-    PaddedBytes icc;
-    status = dec->icc_reader.Process(reader.get(), &icc);
+    PaddedBytes decoded_icc;
+    status = dec->icc_reader.Process(reader.get(), &decoded_icc);
     if (status.code() == StatusCode::kNotEnoughBytes) {
       return dec->RequestMoreInput();
     }
@@ -1066,6 +1071,8 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
       // Other non-successful status is an error
       return JXL_DEC_ERROR;
     }
+    IccBytes icc;
+    Span<const uint8_t>(decoded_icc).AppendTo(&icc);
     if (!dec->metadata.m.color_encoding.SetICCRaw(std::move(icc))) {
       return JXL_DEC_ERROR;
     }
@@ -2223,7 +2230,7 @@ JxlDecoderStatus JxlDecoderGetColorAsEncodedProfile(
     return JXL_DEC_ERROR;  // Indicate no encoded profile available.
 
   if (color_encoding) {
-    ConvertInternalToExternalColorEncoding(*jxl_color_encoding, color_encoding);
+    jxl_color_encoding->ToExternal(color_encoding);
   }
 
   return JXL_DEC_SUCCESS;
@@ -2660,8 +2667,7 @@ JxlDecoderStatus JxlDecoderSetPreferredColorProfile(
     return JXL_API_ERROR("Unknown output colorspace");
   }
   jxl::ColorEncoding c_out;
-  JXL_API_RETURN_IF_ERROR(
-      ConvertExternalToInternalColorEncoding(*color_encoding, &c_out));
+  JXL_API_RETURN_IF_ERROR(c_out.FromExternal(*color_encoding));
   JXL_API_RETURN_IF_ERROR(!c_out.ICC().empty());
   auto& output_encoding = dec->passes_state->output_encoding_info;
   if (!c_out.SameColorEncoding(output_encoding.color_encoding)) {

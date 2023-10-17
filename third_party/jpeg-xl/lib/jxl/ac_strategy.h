@@ -13,7 +13,7 @@
 
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image_ops.h"
 
 // Defines the different kinds of transforms, and heuristics to choose between

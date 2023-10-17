@@ -9,7 +9,9 @@
 
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/common.h"  // kMaxNumPasses
 #include "lib/jxl/fields.h"
+#include "lib/jxl/pack_signed.h"
 
 namespace jxl {
 

@@ -8,11 +8,10 @@
 #include "lib/jxl/ans_params.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/enc_ans.h"
 #include "lib/jxl/entropy_coder.h"
-#include "lib/jxl/opsin_params.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/splines.h"
 
 namespace jxl {
@@ -91,7 +90,7 @@ void EncodeSplines(const Splines& splines, BitWriter* writer,
 }
 
 Splines FindSplines(const Image3F& opsin) {
-  // TODO: implement spline detection.
+  // TODO(user): implement spline detection.
   return {};
 }
 

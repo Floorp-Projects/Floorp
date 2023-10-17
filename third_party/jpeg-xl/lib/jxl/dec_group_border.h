@@ -12,7 +12,7 @@
 
 #include "lib/jxl/base/arch_macros.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
+#include "lib/jxl/frame_dimensions.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {

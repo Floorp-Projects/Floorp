@@ -7,8 +7,8 @@
 
 #include <stdint.h>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/coeff_order.h"
-#include "lib/jxl/common.h"
 #include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_coeff_order.h"
 #include "lib/jxl/field_encodings.h"

@@ -14,7 +14,6 @@
 #include <hwy/highway.h>
 #include <hwy/tests/hwy_gtest.h>
 
-#include "lib/jxl/common.h"
 #include "lib/jxl/dct-inl.h"
 #include "lib/jxl/dct_for_test.h"
 #include "lib/jxl/dct_scales.h"

@@ -106,8 +106,8 @@ class BlobsWriterPNG {
       // By convention, the data is prefixed with "Exif\0\0" when stored in
       // the legacy (and non-standard) "Raw profile type exif" text chunk
       // currently used here.
-      // TODO: Store Exif data in an eXIf chunk instead, which always begins
-      // with the TIFF header.
+      // TODO(user): Store Exif data in an eXIf chunk instead, which always
+      //             begins with the TIFF header.
       if (exif.size() >= sizeof kExifSignature &&
           memcmp(exif.data(), kExifSignature, sizeof kExifSignature) != 0) {
         exif.insert(exif.begin(), kExifSignature,
@@ -119,7 +119,8 @@ class BlobsWriterPNG {
       JXL_RETURN_IF_ERROR(EncodeBase16("iptc", blobs.iptc, strings));
     }
     if (!blobs.xmp.empty()) {
-      // TODO: Store XMP data in an "XML:com.adobe.xmp" text chunk instead.
+      // TODO(user): Store XMP data in an "XML:com.adobe.xmp" text chunk
+      //             instead.
       JXL_RETURN_IF_ERROR(EncodeBase16("xmp", blobs.xmp, strings));
     }
     return true;

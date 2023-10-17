@@ -84,7 +84,7 @@ Status EncodeWithLibjpeg(const PackedPixelFile& ppf, int quality,
 
 std::string Description(const JxlColorEncoding& color_encoding) {
   ColorEncoding c_enc;
-  JXL_CHECK(ConvertExternalToInternalColorEncoding(color_encoding, &c_enc));
+  JXL_CHECK(c_enc.FromExternal(color_encoding));
   return Description(c_enc);
 }
 

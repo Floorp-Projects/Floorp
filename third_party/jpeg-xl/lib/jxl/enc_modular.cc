@@ -38,6 +38,7 @@
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/options.h"
 #include "lib/jxl/modular/transform/enc_transform.h"
+#include "lib/jxl/pack_signed.h"
 #include "lib/jxl/toc.h"
 
 namespace jxl {

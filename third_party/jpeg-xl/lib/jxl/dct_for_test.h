@@ -13,7 +13,7 @@
 #include <cmath>
 #include <vector>
 
-#include "lib/jxl/common.h"  // Pi
+#include "lib/jxl/base/common.h"
 
 namespace jxl {
 

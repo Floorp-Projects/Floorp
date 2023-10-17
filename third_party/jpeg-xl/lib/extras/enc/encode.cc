@@ -162,6 +162,7 @@ std::unique_ptr<Encoder> Encoder::FromExtension(std::string extension) {
   if (extension == ".pam") return GetPAMEncoder();
   if (extension == ".pgm") return GetPGMEncoder();
   if (extension == ".ppm") return GetPPMEncoder();
+  if (extension == ".pnm") return GetPNMEncoder();
   if (extension == ".pfm") return GetPFMEncoder();
   if (extension == ".exr") return GetEXREncoder();
   if (extension == ".exif") return jxl::make_unique<MetadataEncoder<0>>();
