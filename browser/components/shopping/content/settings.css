@@ -14,6 +14,7 @@
 #shopping-settings-opt-out-button {
   display: flex;
   justify-self: center;
+  align-items: center;
 }
 
 #powered-by-fakespot {
