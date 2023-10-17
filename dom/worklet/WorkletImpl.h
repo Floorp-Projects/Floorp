@@ -85,7 +85,8 @@ class WorkletImpl {
   bool IsSystemPrincipal() const { return mPrincipal->IsSystemPrincipal(); }
   bool ShouldResistFingerprinting(RFPTarget aTarget) const {
     return mShouldResistFingerprinting &&
-           nsRFPService::IsRFPEnabledFor(aTarget);
+           nsRFPService::IsRFPEnabledFor(aTarget,
+                                         mOverriddenFingerprintingSettings);
   }
 
   virtual void OnAddModuleStarted() const {

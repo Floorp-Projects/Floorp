@@ -194,7 +194,9 @@ bool nsRFPService::IsRFPPrefEnabled(bool aIsPrivateMode) {
 }
 
 /* static */
-bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
+bool nsRFPService::IsRFPEnabledFor(
+    RFPTarget aTarget,
+    const Maybe<RFPTarget>& aOverriddenFingerprintingSettings) {
   MOZ_ASSERT(aTarget != RFPTarget::AllTargets);
 
   if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
@@ -210,6 +212,11 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
     if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
+
+    if (aOverriddenFingerprintingSettings) {
+      return bool(aOverriddenFingerprintingSettings.ref() & aTarget);
+    }
+
     return bool(sEnabledFingerintingProtections & aTarget);
   }
 

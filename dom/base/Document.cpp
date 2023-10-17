@@ -16311,7 +16311,9 @@ bool Document::RecomputeResistFingerprinting() {
 }
 
 bool Document::ShouldResistFingerprinting(RFPTarget aTarget) const {
-  return mShouldResistFingerprinting && nsRFPService::IsRFPEnabledFor(aTarget);
+  return mShouldResistFingerprinting &&
+         nsRFPService::IsRFPEnabledFor(aTarget,
+                                       mOverriddenFingerprintingSettings);
 }
 
 WindowContext* Document::GetWindowContextForPageUseCounters() const {

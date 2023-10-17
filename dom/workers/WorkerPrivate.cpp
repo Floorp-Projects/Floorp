@@ -5786,7 +5786,8 @@ PerformanceStorage* WorkerPrivate::GetPerformanceStorage() {
 
 bool WorkerPrivate::ShouldResistFingerprinting(RFPTarget aTarget) const {
   return mLoadInfo.mShouldResistFingerprinting &&
-         nsRFPService::IsRFPEnabledFor(aTarget);
+         nsRFPService::IsRFPEnabledFor(
+             aTarget, mLoadInfo.mOverriddenFingerprintingSettings);
 }
 
 void WorkerPrivate::SetRemoteWorkerController(RemoteWorkerChild* aController) {

@@ -711,7 +711,11 @@ var FullZoom = {
     }
     return (
       !aBrowser?.browsingContext?.topWindowContext.shouldResistFingerprinting ||
-      !ChromeUtils.shouldResistFingerprinting("SiteSpecificZoom")
+      !ChromeUtils.shouldResistFingerprinting(
+        "SiteSpecificZoom",
+        aBrowser?.browsingContext?.topWindowContext
+          .overriddenFingerprintingSettings
+      )
     );
   },
 

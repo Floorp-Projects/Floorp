@@ -717,7 +717,8 @@ partial namespace ChromeUtils {
   [ChromeOnly]
   sequence<UTF8String> getAllPossibleUtilityActorNames();
 
-  boolean shouldResistFingerprinting(JSRFPTarget target);
+  boolean shouldResistFingerprinting(JSRFPTarget target,
+                                     unsigned long long? overriddenFingerprintingSettings);
 };
 
 /*
