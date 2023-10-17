@@ -46,10 +46,11 @@ import org.mozilla.gecko.util.GeckoBundle;
 /* package */ class WebAuthnTokenManager {
   private static final String LOGTAG = "WebAuthnTokenManager";
 
-  // from u2fhid-capi.h
+  // from dom/webauthn/WebAuthnTransportIdentifiers.h
   private static final byte AUTHENTICATOR_TRANSPORT_USB = 1;
   private static final byte AUTHENTICATOR_TRANSPORT_NFC = 2;
   private static final byte AUTHENTICATOR_TRANSPORT_BLE = 4;
+  private static final byte AUTHENTICATOR_TRANSPORT_INTERNAL = 8;
 
   private static final Algorithm[] SUPPORTED_ALGORITHMS = {
     EC2Algorithm.ES256,
@@ -76,7 +77,9 @@ import org.mozilla.gecko.util.GeckoBundle;
     if ((transports & AUTHENTICATOR_TRANSPORT_BLE) == AUTHENTICATOR_TRANSPORT_BLE) {
       result.add(Transport.BLUETOOTH_LOW_ENERGY);
     }
-
+    if ((transports & AUTHENTICATOR_TRANSPORT_INTERNAL) == AUTHENTICATOR_TRANSPORT_INTERNAL) {
+      result.add(Transport.INTERNAL);
+    }
     return result;
   }
 
