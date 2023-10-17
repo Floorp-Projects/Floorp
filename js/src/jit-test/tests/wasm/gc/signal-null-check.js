@@ -81,12 +81,12 @@ function testStructGetSet(fieldType, signedness, defaultValue, numFields) {
   ins.exports["test_set_last"]();
 
   ins.exports["init-null"]();
-  assertDerefenceNull(() => ins.exports["test_get_first"]());
-  assertDerefenceNull(() => ins.exports["test_get_mid"]());
-  assertDerefenceNull(() => ins.exports["test_get_last"]());
-  assertDerefenceNull(() => ins.exports["test_set_first"]());
-  assertDerefenceNull(() => ins.exports["test_set_mid"]());
-  assertDerefenceNull(() => ins.exports["test_set_last"]());
+  assertDereferenceNull(() => ins.exports["test_get_first"]());
+  assertDereferenceNull(() => ins.exports["test_get_mid"]());
+  assertDereferenceNull(() => ins.exports["test_get_last"]());
+  assertDereferenceNull(() => ins.exports["test_set_first"]());
+  assertDereferenceNull(() => ins.exports["test_set_mid"]());
+  assertDereferenceNull(() => ins.exports["test_set_last"]());
 
   ins.exports["init-non-null"]();
   ins.exports["test_set_last"]();
@@ -130,12 +130,12 @@ function testArrayGetSet(fieldType, signedness, defaultValue, numItems) {
   ins.exports["test_set"](numItems - 1);
 
   ins.exports["init-null"]();
-  assertDerefenceNull(() => ins.exports["test_get"](0));
-  assertDerefenceNull(() => ins.exports["test_get"](numItems >> 1));
-  assertDerefenceNull(() => ins.exports["test_get"](numItems - 1));
-  assertDerefenceNull(() => ins.exports["test_set"](0));
-  assertDerefenceNull(() => ins.exports["test_set"](numItems >> 1));
-  assertDerefenceNull(() => ins.exports["test_set"](numItems - 1));
+  assertDereferenceNull(() => ins.exports["test_get"](0));
+  assertDereferenceNull(() => ins.exports["test_get"](numItems >> 1));
+  assertDereferenceNull(() => ins.exports["test_get"](numItems - 1));
+  assertDereferenceNull(() => ins.exports["test_set"](0));
+  assertDereferenceNull(() => ins.exports["test_set"](numItems >> 1));
+  assertDereferenceNull(() => ins.exports["test_set"](numItems - 1));
 
   ins.exports["init-non-null"]();
   ins.exports["test_set"](3);
@@ -143,6 +143,38 @@ function testArrayGetSet(fieldType, signedness, defaultValue, numItems) {
 }
 
 
-function assertDerefenceNull(fun) {
+function assertDereferenceNull(fun) {
   assertErrorMessage(fun, WebAssembly.RuntimeError, /dereferencing null pointer/);
 }
+
+// Linear memory loads/stores from small constant addresses also require
+// trapsites, it seems.  So check that the following is compilable -- in
+// particular, that it doesn't produce any TrapSite placement validation errors.
+
+const ins = wasmEvalText(`
+  (module
+    (memory 1)
+    (func (result i32) (i32.load8_s (i32.const 17)))
+    (func (result i32) (i32.load8_u (i32.const 17)))
+    (func (result i32) (i32.load16_s (i32.const 17)))
+    (func (result i32) (i32.load16_u (i32.const 17)))
+
+    (func (result i64) (i64.load8_s (i32.const 17)))
+    (func (result i64) (i64.load8_u (i32.const 17)))
+    (func (result i64) (i64.load16_s (i32.const 17)))
+    (func (result i64) (i64.load16_u (i32.const 17)))
+
+    (func (result i64) (i64.load32_s (i32.const 17)))
+    (func (result i64) (i64.load32_u (i32.const 17)))
+
+    (func (param i32) (i32.store8  (i32.const 17) (local.get 0)))
+    (func (param i32) (i32.store16 (i32.const 17) (local.get 0)))
+
+    (func (param i64) (i64.store8  (i32.const 17) (local.get 0)))
+    (func (param i64) (i64.store16 (i32.const 17) (local.get 0)))
+    (func (param i64) (i64.store32 (i32.const 17) (local.get 0)))
+
+    (func (export "leet") (result i32) (i32.const 1337))
+  )`);
+
+assertEq(ins.exports["leet"](), 1337);
