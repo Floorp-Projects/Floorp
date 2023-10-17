@@ -174,6 +174,10 @@ class JSFunction : public js::NativeObject {
 
   FunctionFlags::FunctionKind kind() const { return flags().kind(); }
 
+#ifdef DEBUG
+  void assertFunctionKindIntegrity() { flags().assertFunctionKindIntegrity(); }
+#endif
+
   /* A function can be classified as either native (C++) or interpreted (JS): */
   bool isInterpreted() const { return flags().isInterpreted(); }
   bool isNativeFun() const { return flags().isNativeFun(); }
