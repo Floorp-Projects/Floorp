@@ -46,27 +46,24 @@ async function openAboutWelcome() {
   await pushPrefs(
     // Speed up the tests by disabling transitions.
     ["browser.aboutwelcome.transitions", false],
-    ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true],
-    ["browser.migrate.content-modal.about-welcome-behavior", "default"]
+    ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true]
   );
   await setAboutWelcomePref(true);
-
-  // Stub out the doesAppNeedPin to false so the about:welcome pages do not attempt
-  // to pin the app.
-  const { ShellService } = ChromeUtils.importESModule(
-    "resource:///modules/ShellService.sys.mjs"
-  );
-  sandbox.stub(ShellService, "doesAppNeedPin").returns(false);
 
   sandbox
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
+    // Renders easy setup import screen as first screen to prevent pin/default dialog boxes breaking tests
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
+      "doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"
     )
     .resolves(false)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+      "!doesAppNeedPin && 'browser.shell.checkDefaultBrowser'|preferenceValue && !isDefaultBrowser"
+    )
+    .resolves(false)
+    .withArgs(
+      "doesAppNeedPin && (!'browser.shell.checkDefaultBrowser'|preferenceValue || isDefaultBrowser)"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
@@ -282,7 +279,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_accept() {
     browser,
     "Language changed",
     // Expected selectors:
-    [`.screen.AW_IMPORT_SETTINGS`],
+    [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
@@ -373,7 +370,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_decline() {
     browser,
     "Language selection declined",
     // Expected selectors:
-    [`.screen.AW_IMPORT_SETTINGS`],
+    [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
@@ -478,7 +475,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_noMatch() {
     browser,
     "Language selection skipped",
     // Expected selectors:
-    [`.screen.AW_IMPORT_SETTINGS`],
+    [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
     // Unexpected selectors:
     [
       `[data-l10n-id*="onboarding-live-language"]`,
@@ -509,7 +506,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_bidiNotSupported() {
     browser,
     "Language selection skipped for bidi",
     // Expected selectors:
-    [`.screen.AW_IMPORT_SETTINGS`],
+    [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
     // Unexpected selectors:
     [
       `[data-l10n-id*="onboarding-live-language"]`,
@@ -543,7 +540,7 @@ add_task(
       browser,
       "Language selection skipped for bidi",
       // Expected selectors:
-      [`.screen.AW_IMPORT_SETTINGS`],
+      [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
       // Unexpected selectors:
       [
         `[data-l10n-id*="onboarding-live-language"]`,
@@ -640,7 +637,7 @@ add_task(async function test_aboutwelcome_languageSwitcher_cancelWaiting() {
     browser,
     "Language selection declined waiting",
     // Expected selectors:
-    [`.screen.AW_IMPORT_SETTINGS`],
+    [`.screen.AW_IMPORT_SETTINGS_EMBEDDED`],
     // Unexpected selectors:
     liveLanguageSwitchSelectors
   );
