@@ -21,7 +21,6 @@ import yaml
 from mach.decorators import Command, CommandArgument, SubCommand
 from mach.registrar import Registrar
 from mozbuild.util import memoize
-from mozfile import load_source
 
 here = os.path.abspath(os.path.dirname(__file__))
 topsrcdir = os.path.abspath(os.path.dirname(os.path.dirname(here)))
@@ -364,8 +363,11 @@ def toggle_no_autodoc():
 
 @memoize
 def _read_project_properties():
+    import imp
+
     path = os.path.normpath(manager().conf_py_path)
-    conf = load_source("doc_conf", path)
+    with open(path, "r") as fh:
+        conf = imp.load_module("doc_conf", fh, path, (".py", "r", imp.PY_SOURCE))
 
     # Prefer the Mozilla project name, falling back to Sphinx's
     # default variable if it isn't defined.

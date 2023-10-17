@@ -4,10 +4,11 @@
 
 import codecs
 import encodings.idna
+import imp
+import os
 import re
 import sys
-
-from make_dafsa import words_to_bin, words_to_cxx
+from make_dafsa import words_to_cxx, words_to_bin
 
 """
 Processes a file containing effective TLD data.  See the following URL for a
@@ -21,6 +22,7 @@ http://wiki.mozilla.org/Gecko:Effective_TLD_Service
 
 def getEffectiveTLDs(path):
     file = codecs.open(path, "r", "UTF-8")
+    entries = []
     domains = set()
     for line in file:
         # line always contains a line terminator unless the file is empty

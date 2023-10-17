@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import imp
 import io
 import json
 import os
@@ -11,7 +12,7 @@ import tempfile
 import unittest
 
 import mozpack.path as mozpath
-from mozfile import NamedTemporaryFile, load_source
+from mozfile import NamedTemporaryFile
 from mozunit import MockedOpen, main
 from mozwebidlcodegen import WebIDLCodegenManager, WebIDLCodegenManagerState
 
@@ -241,7 +242,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
         with NamedTemporaryFile("wt") as fh:
             fh.write("# Original content")
             fh.flush()
-            mod = load_source("mozwebidlcodegen.fakemodule", fh.name)
+            mod = imp.load_source("mozwebidlcodegen.fakemodule", fh.name)
             mod.__file__ = fake_path
 
             args = self._get_manager_args()
