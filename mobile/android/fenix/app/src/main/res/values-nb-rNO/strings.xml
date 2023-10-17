@@ -65,6 +65,19 @@
         å beholde det du gjør på nettet privat fra alle andre som bruker denne enheten.</string>
     <string name="private_browsing_common_myths">Vanlige myter om privat nettlesing</string>
 
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Etterlat ingen spor på denne enheten</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle">%1$s sletter infokapsler, historikk og nettstedsdata når du lukker alle dine private vinduer. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Hvem kan ha mulighet til å se aktiviteten min?</string>
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Åpne din neste private fane med ett trykk.</string>
@@ -86,6 +99,11 @@
     <string name="tcp_cfr_message">Vår kraftigste personvernfunksjon til nå isolerer sporere på tvers av nettsteder.</string>
     <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
     <string name="tcp_cfr_learn_more">Les mer om total beskyttelse mot infokapsler</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Trykk her for å starte en ny privat økt. Slett historikken din, infokapsler — alt.</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Kameratilgang er nødvendig. Gå til Android-innstillinger, trykk på tillatelser, og trykk på tillat.</string>
@@ -225,6 +243,9 @@
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Startskjerm</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Slett nettleserhistorikk</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Valgt språk</string>
@@ -303,16 +324,9 @@
     <string name="onboarding_home_enable_notifications_negative_button">Ikke nå</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Gjør %s til din nettleser</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Bruk Firefox som din favorittnettleser</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s setter mennesker over fortjeneste og forsvarer personvernet ditt ved å blokkere sporere på tvers av nettsteder.\n\nFinn ut mer i %2$s.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox setter mennesker over fortjeneste og forsvarer personvernet ditt ved å blokkere sporere på tvers av nettsteder.\n\nFinn ut mer i personvernerklæringen vår.</string>
@@ -331,15 +345,9 @@
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Logg inn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ikke nå</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">Varsler hjelper deg å gjøre mer med %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Varsler hjelper deg å gjøre mer med Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">Send faner mellom enheter, behandle nedlastinger og få tips om hvordan du får mest mulig ut av %s.</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Send faner mellom enheter, behandle nedlastinger og få tips om hvordan du får mest mulig ut av Firefox.</string>
@@ -347,6 +355,12 @@
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Slå på varsler</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Ikke nå</string>
+
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">Med Firefox på startskjermen din har du enkel tilgang til den personvernfokuserte  nettleseren som blokkerer sporing på tvers av nettsteder.</string>
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">Ikke nå</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -481,11 +495,13 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Tilgjengelighet</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Selvvalgt server for Firefox-konto</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Selvvalgt server for Firefox-konto</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">Selvvalgt server for Mozilla-konto</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Selvvalgt synkroniseringsserver</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox-konto/synkroniseringsserver endret. Avslutter applikasjonen for å legge til endringer…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-konto/synkroniseringsserver endret. Avslutter applikasjonen for å legge til endringer…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Konto</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -501,7 +517,7 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">Logg inn for å synkronisere faner, bokmerker, passord med mer.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox-konto</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox-konto</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Koble til igjen for å fortsette synkroniseringen</string>
     <!-- Preference for language -->
@@ -514,7 +530,7 @@
     <string name="preferences_remote_debugging">Fjernfeilsøking via USB</string>
 
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Vis søkemotorer</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Vis søkemotorer</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Vis søkeforslag</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -633,9 +649,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">Tillegget støttes ikke</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Tillegget støttes ikke</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Tillegget er allerede installert</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Tillegget er allerede installert</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -1916,7 +1932,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Legg til</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Lagre</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Lagre</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Rediger</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2164,6 +2180,19 @@
     <string name="experiments_snackbar">Aktiver telemetri for å sende data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Gå til innstillinger</string>
+
+    <!-- Summary for grade C for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_c_description">Blanding av pålitelige og upålitelige vurderinger</string>
+    <!-- Summary for grades D and F for review quality check adjusted grading. -->
+    <string name="review_quality_check_grade_d_f_description">Upålitelige vurderinger</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">Ja, prøv det</string>
+    <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_secondary_button_text">Ikke nå</string>
+    <!-- Text for the first CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_first_cfr_message">Finn ut om du kan stole på vurderinger av dette produktet — før du kjøper.</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Prøv vurderingskontrollør</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

@@ -552,7 +552,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">通过 USB 远程调试</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">显示搜索引擎</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">显示搜索引擎</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">显示搜索建议</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1992,7 +1992,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">添加</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">保存</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">保存</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">编辑</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2242,7 +2242,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">核查评价</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">核查评价</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">核查评价</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">可信评价</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2288,7 +2290,9 @@
     <string name="review_quality_check_settings_recommended_products">在核查评价中展示广告</string>
 
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">您偶尔会看到相关商品的广告，所有广告均符合我们的评价质量标准。%s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">您偶尔会看到相关商品的广告，所有广告均符合我们的评价质量标准。%s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">您会偶尔看到相关产品的广告。我们只宣传具有可靠评价的产品。 %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">详细了解</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2318,8 +2322,10 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">若您发现此商品已有货，请向我们反馈，以便我们核查评价。</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">反馈此商品已有货</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">反馈此商品已有货</string>
 
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">报告商品有货</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">正在检查评价质量</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->

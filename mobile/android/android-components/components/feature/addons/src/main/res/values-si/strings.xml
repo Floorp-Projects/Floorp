@@ -140,6 +140,12 @@
     <string name="mozac_feature_addons_addons">එක්කහු</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">එක්කහු කළමනාකරු</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">එක්කහු තාවකාලිකව අබල කර ඇත</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">ඔබගේ පද්ධතිය අස්ථායී කරමින් එක්කහුවක් හෝ කිහිපයක් නතර විය.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">එක්කහු යළි අරඹන්න</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">තවත් එක්කහු සොයාගන්න</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

@@ -546,7 +546,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Ñemopotĩ okayguáva USB rupi</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Ehechauka hekaha mongu’eha</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Ehechauka hekaha mongu’eha</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Ehechauka ñemoñe’ẽ jehekarã</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -1985,7 +1985,7 @@
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description">Mbojuaju</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Ñongatu</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ñongatu</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Mbosako’i</string>
     <!-- Text for the menu button to delete a search engine -->
@@ -2239,7 +2239,9 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">Marandu’i rechajeyha</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Marandu’i rechajeyha</string>
+    <!-- Name for the review quality check feature used as title for the panel. -->
+    <string name="review_quality_check_feature_name_2">Marandu’i rechajeyha</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Marandu’i jeroviaha</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2283,7 +2285,7 @@
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Ehechauka ñemurã marandu’i rechajeyhápe</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description" tools:ignore="UnusedResources">Ehecháta ñemurã sapy’agua apopyre iporãvagui. Opaite ñemurã ojapova’erã oipotaháicha jehechajey porãverã. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ehecháta ñemurã sapy’agua apopyre iporãvagui. Opaite ñemurã ojapova’erã oipotaháicha jehechajey porãverã. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Eikuaave</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2312,7 +2314,9 @@
     <!-- Text for the body of warning card informing the user that the current product is currently not available. -->
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">Ehechárõ ko apopyre ojejoguakuaajeýma, oremomarandu ha romba’apóta hekopyahu hag̃ua ñehesa’ijo.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
-    <string name="review_quality_check_product_availability_warning_action" tools:ignore="UnusedResources">Emombe’u ko apopyre ojeporukuaajeymaha</string>
+    <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">Emombe’u ko apopyre ojeporukuaajeymaha</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Emomarandu apopyre ojeporukuaaha</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">Ehechajey marandu’i porãngue</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
