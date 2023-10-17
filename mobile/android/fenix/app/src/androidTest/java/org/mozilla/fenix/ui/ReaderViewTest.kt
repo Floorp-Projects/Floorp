@@ -13,6 +13,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
@@ -63,10 +64,13 @@ class ReaderViewTest {
      *   - Show the toggle button in the navigation bar
      *
      */
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/250592
     @Test
-    fun verifyReaderViewPageMenuDetection() {
+    fun verifyReaderModePageDetectionTest() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
+        val genericPage =
+            TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(readerViewPage.url) {
@@ -82,70 +86,17 @@ class ReaderViewTest {
 
         navigationToolbar {
             verifyReaderViewDetected(true)
-        }
-    }
-
-    /**
-     *  Verify that non Reader View capable pages
-     *
-     *   - Reader View toggle should not be visible in the navigation toolbar
-     *
-     */
-    @Test
-    fun verifyNonReaderViewPageMenuNoDetection() {
-        var genericPage =
-            TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
         }.enterURLAndEnterToBrowser(genericPage.url) {
-            mDevice.waitForIdle()
         }
-
         navigationToolbar {
             verifyReaderViewDetected(false)
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/250585
+    @SmokeTest
     @Test
-    fun verifyReaderViewToggle() {
-        val readerViewPage =
-            TestAssetHelper.getLoremIpsumAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            mDevice.waitForIdle()
-        }
-
-        registerAndCleanupIdlingResources(
-            ViewVisibilityIdlingResource(
-                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-                View.VISIBLE,
-            ),
-        ) {}
-
-        navigationToolbar {
-            verifyReaderViewDetected(true)
-            toggleReaderView()
-            mDevice.waitForIdle()
-        }
-        browserScreen {
-            verifyPageContent(estimatedReadingTime)
-        }.openThreeDotMenu {
-            verifyReaderViewAppearance(true)
-        }.closeBrowserMenuToBrowser { }
-
-        navigationToolbar {
-            verifyCloseReaderViewDetected(true)
-            toggleReaderView()
-            mDevice.waitForIdle()
-            verifyReaderViewDetected(true)
-        }.openThreeDotMenu {
-            verifyReaderViewAppearance(false)
-        }.closeBrowserMenuToBrowser { }
-    }
-
-    @Test
-    fun verifyReaderViewAppearanceFontToggle() {
+    fun verifyReaderModeControlsTest() {
         val readerViewPage =
             TestAssetHelper.getLoremIpsumAsset(mockWebServer)
 
@@ -177,44 +128,15 @@ class ReaderViewTest {
             verifyAppearanceFontSerif(true)
             verifyAppearanceFontIncrease(true)
             verifyAppearanceFontDecrease(true)
+            verifyAppearanceFontSize(3)
+            verifyAppearanceColorGroup(true)
+            verifyAppearanceColorDark(true)
+            verifyAppearanceColorLight(true)
+            verifyAppearanceColorSepia(true)
         }.toggleSansSerif {
             verifyAppearanceFontIsActive("SANSSERIF")
         }.toggleSerif {
             verifyAppearanceFontIsActive("SERIF")
-        }
-    }
-
-    @Test
-    fun verifyReaderViewAppearanceFontSizeToggle() {
-        val readerViewPage =
-            TestAssetHelper.getLoremIpsumAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            mDevice.waitForIdle()
-        }
-
-        registerAndCleanupIdlingResources(
-            ViewVisibilityIdlingResource(
-                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-                View.VISIBLE,
-            ),
-        ) {}
-
-        navigationToolbar {
-            verifyReaderViewDetected(true)
-            toggleReaderView()
-            mDevice.waitForIdle()
-        }
-
-        browserScreen {
-            verifyPageContent(estimatedReadingTime)
-        }.openThreeDotMenu {
-            verifyReaderViewAppearance(true)
-        }.openReaderViewAppearance {
-            verifyAppearanceFontIncrease(true)
-            verifyAppearanceFontDecrease(true)
-            verifyAppearanceFontSize(3)
         }.toggleFontSizeIncrease {
             verifyAppearanceFontSize(4)
         }.toggleFontSizeIncrease {
@@ -227,46 +149,20 @@ class ReaderViewTest {
             verifyAppearanceFontSize(4)
         }.toggleFontSizeDecrease {
             verifyAppearanceFontSize(3)
-        }
-    }
-
-    @Test
-    fun verifyReaderViewAppearanceColorSchemeChange() {
-        val readerViewPage =
-            TestAssetHelper.getLoremIpsumAsset(mockWebServer)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(readerViewPage.url) {
-            mDevice.waitForIdle()
-        }
-
-        registerAndCleanupIdlingResources(
-            ViewVisibilityIdlingResource(
-                activityIntentTestRule.activity.findViewById(R.id.mozac_browser_toolbar_page_actions),
-                View.VISIBLE,
-            ),
-        ) {}
-
-        navigationToolbar {
-            verifyReaderViewDetected(true)
-            toggleReaderView()
-            mDevice.waitForIdle()
-        }
-
-        browserScreen {
-            verifyPageContent(estimatedReadingTime)
-        }.openThreeDotMenu {
-            verifyReaderViewAppearance(true)
-        }.openReaderViewAppearance {
-            verifyAppearanceColorDark(true)
-            verifyAppearanceColorLight(true)
-            verifyAppearanceColorSepia(true)
         }.toggleColorSchemeChangeDark {
             verifyAppearanceColorSchemeChange("DARK")
         }.toggleColorSchemeChangeSepia {
             verifyAppearanceColorSchemeChange("SEPIA")
         }.toggleColorSchemeChangeLight {
             verifyAppearanceColorSchemeChange("LIGHT")
+        }.closeAppearanceMenu {
+        }
+        navigationToolbar {
+            toggleReaderView()
+            mDevice.waitForIdle()
+            verifyReaderViewDetected(true)
+        }.openThreeDotMenu {
+            verifyReaderViewAppearance(false)
         }
     }
 }

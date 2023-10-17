@@ -16,6 +16,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.click
 
 /**
@@ -89,6 +90,14 @@ class ReaderViewRobot {
     }
 
     class Transition {
+
+        fun closeAppearanceMenu(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.pressBack()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
         fun toggleSansSerif(interact: ReaderViewRobot.() -> Unit): Transition {
             fun sansSerifButton() =
                 onView(
