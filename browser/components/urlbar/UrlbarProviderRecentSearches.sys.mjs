@@ -62,11 +62,16 @@ class ProviderRecentSearches extends UrlbarProvider {
       return;
     }
 
+    let engine = lazy.UrlbarSearchUtils.getDefaultEngine(
+      queryContext.isPrivate
+    );
+
     if (details.selType == "dismiss" && queryContext.formHistoryName) {
       lazy.FormHistory.update({
         op: "remove",
         fieldname: "searchbar-history",
         value: result.payload.suggestion,
+        source: engine.name,
       }).catch(error =>
         console.error(`Removing form history failed: ${error}`)
       );

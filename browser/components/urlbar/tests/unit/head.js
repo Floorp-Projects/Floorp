@@ -234,11 +234,18 @@ function makeTestServer(port = -1) {
  * onto the search query.
  *
  * @param {Function} suggestionsFn
- *        A function that returns an array of suggestion strings given a
- *        search string.  If not given, a default function is used.
+ *   A function that returns an array of suggestion strings given a
+ *   search string.  If not given, a default function is used.
+ * @param {object} options
+ *   Options for the check.
+ * @param {string} [options.name]
+ *   The name of the engine to install.
  * @returns {nsISearchEngine} The new engine.
  */
-async function addTestSuggestionsEngine(suggestionsFn = null) {
+async function addTestSuggestionsEngine(
+  suggestionsFn = null,
+  { name = SUGGESTIONS_ENGINE_NAME } = {}
+) {
   // This port number should match the number in engine-suggestions.xml.
   let server = makeTestServer();
   server.registerPathHandler("/suggest", (req, resp) => {
@@ -252,14 +259,14 @@ async function addTestSuggestionsEngine(suggestionsFn = null) {
     resp.write(JSON.stringify(data));
   });
   await SearchTestUtils.installSearchExtension({
-    name: SUGGESTIONS_ENGINE_NAME,
+    name,
     search_url: `http://localhost:${server.identity.primaryPort}/search`,
     suggest_url: `http://localhost:${server.identity.primaryPort}/suggest`,
     suggest_url_get_params: "?q={searchTerms}",
     // test_search_suggestions_aliases.js uses the search form.
     search_form: `http://localhost:${server.identity.primaryPort}/search?q={searchTerms}`,
   });
-  let engine = Services.search.getEngineByName("Suggestions");
+  let engine = Services.search.getEngineByName(name);
   return engine;
 }
 
