@@ -24,9 +24,9 @@
 #include "nsIPowerManagerService.h"
 #ifdef MOZ_ENABLE_DBUS
 #  include <gio/gio.h>
-#  include "WakeLockListener.h"
 #  include "nsIObserverService.h"
 #endif
+#include "WakeLockListener.h"
 #include "gfxPlatform.h"
 #include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
