@@ -184,7 +184,7 @@ include:
 
 - `modules/libpref/init/all.js`, used by all products;
 - `browser/app/profile/firefox.js`, used by Firefox desktop;
-- `mobile/android/app/mobile.js`, used by Firefox mobile;
+- `mobile/android/app/geckoview-prefs.js`, used by GeckoView;
 - `mail/app/profile/all-thunderbird.js`, used by Thunderbird (in comm-central);
 - `suite/browser/browser-prefs.js`, used by SeaMonkey (in comm-central).
 

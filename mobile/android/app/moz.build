@@ -16,10 +16,6 @@ for var in ("MOZ_UPDATER", "MOZ_APP_UA_NAME", "ANDROID_PACKAGE_NAME", "CPU_ARCH"
 if CONFIG["MOZ_PKG_SPECIAL"]:
     DEFINES["MOZ_PKG_SPECIAL"] = CONFIG["MOZ_PKG_SPECIAL"]
 
-JS_PREFERENCE_PP_FILES += [
-    "mobile.js",
-]
-
 if not CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
     # Equivalent to JS_PREFERENCE_PP_FILES[CONFIG['ANDROID_CPU_ARCH']],
     # which isn't supported out of the box.
