@@ -86,8 +86,6 @@ using lul::DwarfCFIToModule;
 using lul::FindElfSectionByName;
 using lul::GetOffset;
 using lul::IsValidElf;
-using lul::Module;
-using lul::scoped_ptr;
 using lul::Summariser;
 using lul::UniqueStringUniverse;
 using std::set;
