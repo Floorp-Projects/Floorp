@@ -1165,9 +1165,9 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
 
 class HelperThreadTaskHandler : public Task {
  public:
-  TaskResult Run() override {
+  bool Run() override {
     JS::RunHelperThreadTask();
-    return TaskResult::Complete;
+    return true;
   }
   explicit HelperThreadTaskHandler()
       : Task(Kind::OffMainThreadOnly, EventQueuePriority::Normal) {
