@@ -16,12 +16,20 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NetworkListener:
     "chrome://remote/content/shared/listeners/NetworkListener.sys.mjs",
+  parseChallengeHeader:
+    "chrome://remote/content/shared/ChallengeHeaderParser.sys.mjs",
   parseURLPattern:
     "chrome://remote/content/shared/webdriver/URLPattern.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
+
+/**
+ * @typedef {object} AuthChallenge
+ * @property {string} scheme
+ * @property {string} realm
+ */
 
 /**
  * @typedef {object} BaseParameters
@@ -184,6 +192,7 @@ const InterceptPhase = {
  * @property {number|null} bodySize
  *     Defaults to null.
  * @property {ResponseContent} content
+ * @property {Array<AuthChallenge>=} authChallenges
  */
 
 /**
@@ -365,6 +374,42 @@ class NetworkModule extends Module {
     }
 
     this.#interceptMap.delete(intercept);
+  }
+
+  #extractChallenges(responseData) {
+    let headerName;
+
+    // Using case-insensitive match for header names, so we use the lowercase
+    // version of the "WWW-Authenticate" / "Proxy-Authenticate" strings.
+    if (responseData.status === 401) {
+      headerName = "www-authenticate";
+    } else if (responseData.status === 407) {
+      headerName = "proxy-authenticate";
+    } else {
+      return null;
+    }
+
+    const challenges = [];
+
+    for (const header of responseData.headers) {
+      if (header.name.toLowerCase() === headerName) {
+        // A single header can contain several challenges.
+        const headerChallenges = lazy.parseChallengeHeader(header.value);
+        for (const headerChallenge of headerChallenges) {
+          const realmParam = headerChallenge.params.find(
+            param => param.name == "realm"
+          );
+          const realm = realmParam ? realmParam.value : undefined;
+          const challenge = {
+            scheme: headerChallenge.scheme,
+            realm,
+          };
+          challenges.push(challenge);
+        }
+      }
+    }
+
+    return challenges;
   }
 
   #getContextInfo(browsingContext) {
@@ -570,6 +615,11 @@ class NetworkModule extends Module {
       ...baseParameters,
       response: responseData,
     });
+
+    const authChallenges = this.#extractChallenges(responseData);
+    if (authChallenges !== null) {
+      responseEvent.response.authChallenges = authChallenges;
+    }
 
     this.emitEvent(
       protocolEventName,
