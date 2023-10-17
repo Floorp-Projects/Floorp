@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-16T17:08:49.465830'
+updated_at: '2023-10-17T14:34:37.762523'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3382,12 +3382,13 @@ modules:
         meta:
           components:
             - Firefox::Messaging System
+          peers_emeritus:
+            - *k88hudson
         owners:
           - *pdahiya
         peers:
           - *nanj
           - *Mardak
-          - *k88hudson
         machine_name: inproduct_messaging
 
       - name: Launcher Process
@@ -3425,11 +3426,12 @@ modules:
         meta:
           components:
             - Firefox::New Tab Page
+          peers_emeritus:
+            - *k88hudson
+            - *aoprea
         owners:
           - *ed
         peers:
-          - *k88hudson
-          - *aoprea
           - *thecount
         machine_name: new_tab_page
 
@@ -4205,5 +4207,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d8c4484d39645eb0b2e175b1a3634d6b3cc47426
-  export: a6e22c1edd65c7da848df1cb4c92c507e6803737
+  config: fab1e28e32eca300488081d2fc9b7c0769b3552d
+  export: 23925624c95ce06293fe26987721d8cc8764177c
