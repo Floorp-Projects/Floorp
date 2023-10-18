@@ -70,11 +70,11 @@ class MallocedBlockCache {
 
   ~MallocedBlockCache();
 
-  // Allocation and freeing.  Use `alloc` to allocate.  `allowSlow` is
+  // Allocation and freeing.  Use `alloc` to allocate.  `allocSlow` is
   // `alloc`s fallback path.  Do not call it directly, since it doesn't handle
   // all cases by itself.
   [[nodiscard]] inline PointerAndUint7 alloc(size_t size);
-  [[nodiscard]] MOZ_NEVER_INLINE PointerAndUint7 allowSlow(size_t size);
+  [[nodiscard]] MOZ_NEVER_INLINE PointerAndUint7 allocSlow(size_t size);
 
   inline void free(PointerAndUint7 blockAndListID);
 
@@ -132,7 +132,7 @@ inline PointerAndUint7 MallocedBlockCache::alloc(size_t size) {
   }
 
   // Fallback path for all other cases.
-  return allowSlow(size);
+  return allocSlow(size);
 }
 
 inline void MallocedBlockCache::free(PointerAndUint7 blockAndListID) {

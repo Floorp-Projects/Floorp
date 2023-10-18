@@ -16,7 +16,7 @@ MallocedBlockCache::~MallocedBlockCache() { clear(); }
 // This is the fallback path for MallocedBlockCache::alloc.  Do not call this
 // directly, since it doesn't handle all cases by itself.  See ::alloc for
 // further comments.
-PointerAndUint7 MallocedBlockCache::allowSlow(size_t size) {
+PointerAndUint7 MallocedBlockCache::allocSlow(size_t size) {
   // We're never expected to handle zero-sized blocks.
   MOZ_ASSERT(size > 0);
 

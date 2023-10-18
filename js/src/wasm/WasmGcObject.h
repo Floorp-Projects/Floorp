@@ -14,6 +14,7 @@
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "gc/Pretenuring.h"
+#include "gc/ZoneAllocator.h"  // AddCellMemory
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Probes.h"
@@ -23,6 +24,22 @@
 #include "wasm/WasmValType.h"
 
 using js::wasm::FieldType;
+
+namespace js::wasm {
+
+// For trailer blocks whose owning Wasm{Struct,Array}Objects make it into the
+// tenured heap, we have to tell the tenured heap how big those trailers are
+// in order to get major GCs to happen sufficiently frequently.  In an attempt
+// to make the numbers more accurate, for each block we overstate the size by
+// the following amount, on the assumption that:
+//
+// * mozjemalloc has an overhead of at least one word per block
+//
+// * the malloc-cache mechanism rounds up small block sizes to the nearest 16;
+//   hence the average increase is 16 / 2.
+static const size_t TrailerBlockOverhead = (16 / 2) + (1 * sizeof(void*));
+
+}  // namespace js::wasm
 
 namespace js {
 
@@ -492,13 +509,19 @@ MOZ_ALWAYS_INLINE WasmStructObject* WasmStructObject::createStructOOL(
     memset(&(structObj->inlineData_[0]), 0, inlineBytes);
     memset(outlineData.pointer(), 0, outlineBytes);
   }
+
   if (MOZ_LIKELY(js::gc::IsInsideNursery(structObj))) {
-    // See corresponding comment in WasmArrayObject::createArray.
+    // See corresponding comment in WasmArrayObject::createArrayNonEmpty.
     if (MOZ_UNLIKELY(!nursery.registerTrailer(outlineData, outlineBytes))) {
       nursery.mallocedBlockCache().free(outlineData);
       ReportOutOfMemory(cx);
       return nullptr;
     }
+  } else {
+    // See corresponding comment in WasmArrayObject::createArrayNonEmpty.
+    MOZ_ASSERT(structObj->isTenured());
+    AddCellMemory(structObj, outlineBytes + wasm::TrailerBlockOverhead,
+                  MemoryUse::WasmTrailerBlock);
   }
 
   js::gc::gcprobes::CreateObject(structObj);

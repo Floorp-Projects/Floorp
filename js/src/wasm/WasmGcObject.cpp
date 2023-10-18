@@ -31,6 +31,7 @@
 #include "vm/TypedArrayObject.h"
 #include "vm/Uint8Clamped.h"
 
+#include "gc/GCContext-inl.h"  // GCContext::removeCellMemory
 #include "gc/ObjectKind-inl.h"
 
 using mozilla::AssertedCast;
@@ -67,10 +68,11 @@ using namespace wasm;
 //     a js::MallocedBlockCache -- and the intention is that trailers are
 //     allocated from this pool and freed back into it whenever possible.
 //
-// (b) WasmArrayObject::createArray and WasmStructObject::createStructOOL
-//     always request trailer allocation from the nursery's cache (a).  If the
-//     cache cannot honour the request directly it will allocate directly from
-//     js_malloc; we hope this happens only infrequently.
+// (b) WasmArrayObject::createArrayNonEmpty and
+//     WasmStructObject::createStructOOL always request trailer allocation
+//     from the nursery's cache (a).  If the cache cannot honour the request
+//     directly it will allocate directly from js_malloc; we hope this happens
+//     only infrequently.
 //
 // (c) The allocated block is returned as a js::PointerAndUint7, a pair that
 //     holds the trailer block pointer and an auxiliary tag that the
@@ -81,7 +83,7 @@ using namespace wasm;
 //     of and do not interact with js::PointerAndUint7, and nor does any
 //     JIT-generated code.
 //
-// (d) Still in WasmArrayObject::createArray and
+// (d) Still in WasmArrayObject::createArrayNonEmpty and
 //     WasmStructObject::createStructOOL, if the object was allocated in the
 //     nursery, then the resulting js::PointerAndUint7 is "registered" with
 //     the nursery by handing it to Nursery::registerTrailer.
@@ -89,16 +91,15 @@ using namespace wasm;
 // (e) When a minor collection happens (Nursery::doCollection), we are
 //     notified of objects that are moved by calls to the ::obj_moved methods
 //     in this file.  For those objects that have been tenured, the raw
-//     trailer pointer is "deregistered" with the nursery by handing it to
-//     Nursery::deregisterTrailer.
+//     trailer pointer is "unregistered" with the nursery by handing it to
+//     Nursery::unregisterTrailer.
 //
 // (f) Still during minor collection: The nursery now knows both the set of
 //     trailer blocks added, and those removed because the corresponding
 //     object has been tenured.  The difference between these two sets (that
 //     is, `added - removed`) is the set of trailer blocks corresponding to
 //     blocks that didn't get tenured.  That set is computed and freed (back
-//     to the nursery's js::MallocedBlockCache) by
-//     :Nursery::freeTrailerBlocks.
+//     to the nursery's js::MallocedBlockCache) by Nursery::freeTrailerBlocks.
 //
 // (g) At the end of minor collection, the added and removed sets are made
 //     empty, and the cycle begins again.
@@ -108,11 +109,17 @@ using namespace wasm;
 //     js_free.  This mechanism exists so as to ensure that unused blocks do
 //     not remain in the cache indefinitely.
 //
-// (i) For objects that got tenured, we are eventually notified of their death
+// (i) In order that the tenured heap is collected "often enough" in the case
+//     where the trailer blocks are large (relative to their owning objects),
+//     we have to tell the tenured heap about the sizes of trailers entering
+//     and leaving it.  This is done via calls to AddCellMemory and
+//     GCContext::removeCellMemory.
+//
+// (j) For objects that got tenured, we are eventually notified of their death
 //     by a call to the ::obj_finalize methods below.  At that point we hand
 //     their block pointers to js_free.
 //
-// (j) When the nursery is eventually destroyed, all blocks in its block cache
+// (k) When the nursery is eventually destroyed, all blocks in its block cache
 //     are handed to js_free.  Hence, at process exit, provided all nurseries
 //     are first collected and then their destructors run, no C++ heap blocks
 //     are leaked.
@@ -122,18 +129,25 @@ using namespace wasm;
 // the nursery -- are cycled through the nursery's block cache.
 //
 // Trailers associated with tenured blocks cannot participate though; they are
-// always returned to js_free.  It would be possible to enable them to
-// participate by changing their owning object's OOL data pointer to be a
+// always returned to js_free.  Making them participate is difficult: it would
+// require changing their owning object's OOL data pointer to be a
 // js::PointerAndUint7 rather than a raw `void*`, so that then the blocks
 // could be released to the cache in the ::obj_finalize methods.  This would
 // however require changes in the generated code for array element and OOL
 // struct element accesses.
 //
+// It would also lead to threading difficulties, because the ::obj_finalize
+// methods run on a background thread, whilst allocation from the cache
+// happens on the main thread, but the MallocedBlockCache is not thread safe.
+// Making it thread safe would entail adding a locking mechanism, but that's
+// potentially slow and so negates the point of having a cache at all.
+//
 // Here's a short summary of the trailer block life cycle:
 //
 // * allocated:
 //
-//   - in WasmArrayObject::createArray / WasmStructObject::createStructOOL
+//   - in WasmArrayObject::createArrayNonEmpty
+//     and WasmStructObject::createStructOOL
 //
 //   - by calling the nursery's MallocBlockCache alloc method
 //
@@ -426,15 +440,23 @@ WasmArrayObject* WasmArrayObject::createArrayNonEmpty(
   }
 
   if (MOZ_LIKELY(js::gc::IsInsideNursery(arrayObj))) {
-    // We need to register the OOL area with the nursery, so it will be
-    // freed after GCing of the nursery if `arrayObj_` doesn't make it into
-    // the tenured heap.
+    // We need to register the OOL area with the nursery, so it will be freed
+    // after GCing of the nursery if `arrayObj_` doesn't make it into the
+    // tenured heap.  Note, the nursery will keep a running total of the
+    // current trailer block sizes, so it can decide to do a (minor)
+    // collection if that becomes excessive.
     if (MOZ_UNLIKELY(
             !nursery.registerTrailer(outlineData, outlineBytes.value()))) {
       nursery.mallocedBlockCache().free(outlineData);
       ReportOutOfMemory(cx);
       return nullptr;
     }
+  } else {
+    MOZ_ASSERT(arrayObj->isTenured());
+    // Register the trailer size with the major GC mechanism, so that can also
+    // is able to decide if that space use warrants a (major) collection.
+    AddCellMemory(arrayObj, outlineBytes.value() + TrailerBlockOverhead,
+                  MemoryUse::WasmTrailerBlock);
   }
 
   js::gc::gcprobes::CreateObject(arrayObj);
@@ -513,10 +535,27 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
 
 /* static */
 void WasmArrayObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
+  // This method, and also ::obj_moved and the WasmStructObject equivalents,
+  // assumes that the object's TypeDef (as reachable via its SuperTypeVector*)
+  // stays alive at least as long as the object.
   WasmArrayObject& arrayObj = object->as<WasmArrayObject>();
   MOZ_ASSERT((arrayObj.data_ == nullptr) == (arrayObj.numElements_ == 0));
   if (arrayObj.data_) {
+    // Free the trailer block.  Unfortunately we can't give it back to the
+    // malloc'd block cache because we might not be running on the main
+    // thread, and the cache isn't thread-safe.
     js_free(arrayObj.data_);
+    // And tell the tenured-heap accounting machinery that the trailer has
+    // been freed.
+    const TypeDef& typeDef = arrayObj.typeDef();
+    MOZ_ASSERT(typeDef.isArrayType());
+    size_t trailerSize = size_t(arrayObj.numElements_) *
+                         size_t(typeDef.arrayType().elementType_.size());
+    // Ensured by WasmArrayObject::createArrayNonEmpty.
+    MOZ_RELEASE_ASSERT(trailerSize <= size_t(MaxArrayPayloadBytes));
+    gcx->removeCellMemory(&arrayObj, trailerSize + TrailerBlockOverhead,
+                          MemoryUse::WasmTrailerBlock);
+    // For safety
     arrayObj.data_ = nullptr;
   }
 }
@@ -529,8 +568,21 @@ size_t WasmArrayObject::obj_moved(JSObject* obj, JSObject* old) {
     MOZ_ASSERT(obj->isTenured());
     WasmArrayObject& arrayObj = obj->as<WasmArrayObject>();
     if (arrayObj.data_) {
+      // Tell the nursery that the trailer is no longer associated with an
+      // object in the nursery, since the object has been moved to the tenured
+      // heap.
       Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
       nursery.unregisterTrailer(arrayObj.data_);
+      // Tell the tenured-heap accounting machinery that the trailer is now
+      // associated with the tenured heap.
+      const TypeDef& typeDef = arrayObj.typeDef();
+      MOZ_ASSERT(typeDef.isArrayType());
+      size_t trailerSize = size_t(arrayObj.numElements_) *
+                           size_t(typeDef.arrayType().elementType_.size());
+      // Ensured by WasmArrayObject::createArrayNonEmpty.
+      MOZ_RELEASE_ASSERT(trailerSize <= size_t(MaxArrayPayloadBytes));
+      AddCellMemory(&arrayObj, trailerSize + TrailerBlockOverhead,
+                    MemoryUse::WasmTrailerBlock);
     }
   }
   return 0;
@@ -632,16 +684,26 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
 
 /* static */
 void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
+  // See corresponding comments in WasmArrayObject::obj_finalize.
   WasmStructObject& structObj = object->as<WasmStructObject>();
-
   if (structObj.outlineData_) {
     js_free(structObj.outlineData_);
+    const TypeDef& typeDef = structObj.typeDef();
+    MOZ_ASSERT(typeDef.isStructType());
+    uint32_t totalBytes = typeDef.structType().size_;
+    uint32_t inlineBytes, outlineBytes;
+    WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+    MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
+    MOZ_ASSERT(outlineBytes > 0);
+    gcx->removeCellMemory(&structObj, outlineBytes + TrailerBlockOverhead,
+                          MemoryUse::WasmTrailerBlock);
     structObj.outlineData_ = nullptr;
   }
 }
 
 /* static */
 size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
+  // See also, corresponding comments in WasmArrayObject::obj_moved.
   MOZ_ASSERT(!IsInsideNursery(obj));
   if (IsInsideNursery(old)) {
     // It's been tenured.
@@ -652,6 +714,15 @@ size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
     MOZ_ASSERT(structObj.outlineData_);
     Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
     nursery.unregisterTrailer(structObj.outlineData_);
+    const TypeDef& typeDef = structObj.typeDef();
+    MOZ_ASSERT(typeDef.isStructType());
+    uint32_t totalBytes = typeDef.structType().size_;
+    uint32_t inlineBytes, outlineBytes;
+    WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+    MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
+    MOZ_ASSERT(outlineBytes > 0);
+    AddCellMemory(&structObj, outlineBytes + TrailerBlockOverhead,
+                  MemoryUse::WasmTrailerBlock);
   }
   return 0;
 }
