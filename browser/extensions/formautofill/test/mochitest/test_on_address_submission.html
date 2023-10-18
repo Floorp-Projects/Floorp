@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill submit</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: check if address is saved/updated correctly
+
+<script>
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+
+"use strict";
+
+let TEST_ADDRESSES = [{
+  organization: "Sesame Street",
+  country: "US",
+  "street-address": "123 Sesame Street.",
+  tel: "+13453453456",
+}, {
+  organization: "Mozilla",
+  country: "US",
+  "street-address": "331 E. Evelyn Avenue",
+  tel: "+16509030800",
+}];
+
+add_task(async function setup_prefs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.addresses.enabled", true],
+      ["extensions.formautofill.addresses.capture.enabled", true],
+    ],
+  });
+});
+
+initPopupListener();
+
+// Submit first address for saving.
+add_task(async function check_storage_after_form_submitted() {
+  // We already verified the first time use case in browser test
+  await SpecialPowers.pushPrefEnv({
+    "set": [["extensions.formautofill.firstTimeUse", false]],
+  });
+
+  for (let key in TEST_ADDRESSES[0]) {
+    await setInput("#" + key, TEST_ADDRESSES[0][key]);
+  }
+
+  clickOnElement("input[type=submit]");
+
+  let expectedAddresses = TEST_ADDRESSES.slice(0, 1);
+  await onStorageChanged("add");
+  // Check if timesUsed is set correctly
+  expectedAddresses[0].timesUsed = 1;
+  let matching = await checkAddresses(expectedAddresses);
+  ok(matching, "Address saved as expected");
+  delete expectedAddresses[0].timesUsed;
+});
+
+// Submit another new address.
+add_task(async function check_storage_after_another_address_submitted() {
+  await SpecialPowers.pushPrefEnv({"set": [["privacy.reduceTimerPrecision", false]]});
+
+  document.querySelector("form").reset();
+  for (let key in TEST_ADDRESSES[1]) {
+    await setInput("#" + key, TEST_ADDRESSES[1][key]);
+  }
+
+  clickOnElement("input[type=submit]");
+
+  // The 2nd test address should be on the top since it's the last used one.
+  let addressesInMenu = TEST_ADDRESSES.slice(1);
+  addressesInMenu.push(TEST_ADDRESSES[0]);
+
+  // let expectedAddresses = TEST_ADDRESSES.slice(0);
+  await onStorageChanged("add");
+  let matching = await checkAddresses(TEST_ADDRESSES);
+  ok(matching, "New address saved as expected");
+
+  await setInput("#organization", "");
+  synthesizeKey("KEY_ArrowDown");
+  await expectPopup();
+  checkMenuEntries(addressesInMenu.map(address =>
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
+  ));
+});
+
+// Submit another new address that is mergeable.
+add_task(async function new_address_submitted_and_merged() {
+    // TODO: Bug Bug 1812294
+});
+
+// Submit an updated autofill address and merge.
+add_task(async function check_storage_after_form_submitted() {
+    // TODO: Bug Bug 1812294
+});
+
+// Submit a subset address manually.
+add_task(async function submit_subset_manually() {
+    // TODO: Bug Bug 1812294
+});
+
+</script>
+
+<div>
+
+  <form onsubmit="return false">
+    <p>This is a basic form for submitting test.</p>
+    <p><label>organization: <input id="organization" name="organization" autocomplete="organization" type="text"></label></p>
+    <p><label>streetAddress: <input id="street-address" name="street-address" autocomplete="street-address" type="text"></label></p>
+    <p><label>tel: <input id="tel" name="tel" autocomplete="tel" type="text"></label></p>
+    <p><label>country: <input id="country" name="country" autocomplete="country" type="text"></label></p>
+    <p><input type="submit"></p>
+  </form>
+
+</div>
+</body>
+</html>

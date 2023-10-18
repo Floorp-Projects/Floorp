@@ -13,6 +13,8 @@ support-files = [
   "formautofill_common.js",
 ]
 
+["test_address_level_1_submission.html"]
+
 ["test_autofill_and_ordinal_forms.html"]
 
 ["test_autofocus_form.html"]
@@ -28,3 +30,5 @@ skip-if = ["verify"]
 ["test_multi_locale_CA_address_form.html"]
 
 ["test_multiple_forms.html"]
+
+["test_on_address_submission.html"]

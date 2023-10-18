@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autofill submission for a country without address-level1</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="formautofill_common.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+Form autofill test: Test autofill submission for a country without address-level1
+
+<script>
+/* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
+
+"use strict";
+
+const TEST_ADDRESSES = [{
+  organization: "Mozilla",
+  "street-address": "123 Sesame Street",
+  country: "DE",
+  timesUsed: 1,
+}];
+
+add_task(async function test_DE_is_valid_testcase() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.formautofill.addresses.capture.enabled", true],
+      ["extensions.formautofill.addresses.supportedCountries", "US,CA,DE"],
+      ["extensions.formautofill.creditCards.supportedCountries", "US,CA,DE"],
+    ],
+  });
+  let chromeScript = SpecialPowers.loadChromeScript(function test_country_data() {
+    /* eslint-env mozilla/chrome-script */
+    const {AddressDataLoader} = ChromeUtils.importESModule("resource://gre/modules/shared/FormAutofillUtils.sys.mjs");
+    let data = AddressDataLoader.getData("DE");
+    addMessageListener("CheckSubKeys", () => {
+      return !data.defaultLocale.sub_keys;
+    });
+  });
+
+  SimpleTest.registerCleanupFunction(() => {
+    chromeScript.destroy();
+  });
+
+  let result = await chromeScript.sendQuery("CheckSubKeys");
+  ok(result, "Check that there are no sub_keys for the test country");
+});
+
+add_task(async function test_form_will_submit_without_sub_keys() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // This needs to match the country in the previous test and must have no sub_keys.
+      ["browser.search.region", "DE"],
+      // We already verified the first time use case in browser test
+      ["extensions.formautofill.firstTimeUse", false],
+      ["extensions.formautofill.addresses.capture.enabled", true],
+      ["extensions.formautofill.addresses.supportedCountries", "US,CA,DE"],
+      ["extensions.formautofill.addresses.supported", "detect"]
+    ],
+  });
+  // Click a field to get the form handler created
+  await focusAndWaitForFieldsIdentified("input[autocomplete='organization']");
+
+  let loadPromise = new Promise(resolve => {
+    /* eslint-disable-next-line mozilla/balanced-listeners */
+    document.getElementById("submit_frame").addEventListener("load", resolve);
+  });
+
+  clickOnElement("input[type=submit]");
+  await onStorageChanged("add");
+  // Check if timesUsed is set correctly
+  let matching = await checkAddresses(TEST_ADDRESSES);
+  ok(matching, "Address saved as expected");
+
+  await loadPromise;
+  isnot(window.submit_frame.location.href, "about:blank", "Check form submitted");
+});
+
+</script>
+
+<div>
+  <!-- Submit to the frame so that the test doesn't get replaced. We don't return
+    -- false in onsubmit since we're testing the submission succeeds. -->
+  <iframe id="submit_frame" name="submit_frame"></iframe>
+  <form action="/" target="submit_frame" method="POST">
+    <p><label>organization: <input autocomplete="organization" value="Mozilla"></label></p>
+    <p><label>streetAddress: <input autocomplete="street-address" value="123 Sesame Street"></label></p>
+    <p><label>address-level1: <select autocomplete="address-level1">
+          <option selected>AL</option>
+          <option>AK</option>
+    </select></label></p>
+    <p><label>country: <input autocomplete="country" value="DE"></label></p>
+    <p><input type="submit"></p>
+  </form>
+
+</div>
+</body>
+</html>
