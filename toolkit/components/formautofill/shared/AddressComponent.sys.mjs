@@ -226,12 +226,23 @@ class StreetAddress extends AddressField {
   }
 
   equals(other) {
+    if (this.structuredStreetAddress && other.structuredStreetAddress) {
+      return (
+        this.street_number?.toLowerCase() ==
+          other.street_number?.toLowerCase() &&
+        this.street_name?.toLowerCase() == other.street_name?.toLowerCase() &&
+        this.apartment_number?.toLowerCase() ==
+          other.apartment_number?.toLowerCase() &&
+        this.floor_number?.toLowerCase() == other.floor_number?.toLowerCase()
+      );
+    }
+
+    const options = {
+      ignore_case: true,
+    };
+
     return (
-      this.street_number?.toLowerCase() == other.street_number?.toLowerCase() &&
-      this.street_name?.toLowerCase() == other.street_name?.toLowerCase() &&
-      this.apartment_number?.toLowerCase() ==
-        other.apartment_number?.toLowerCase() &&
-      this.floor_number?.toLowerCase() == other.floor_number?.toLowerCase()
+      this.normalizeUserValue(options) == other.normalizeUserValue(options)
     );
   }
 
