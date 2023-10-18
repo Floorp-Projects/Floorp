@@ -1172,6 +1172,100 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
 
 // ================================================================== none ====
 
+#  elif defined(JS_CODEGEN_RISCV64)
+
+Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
+  // Check instruction alignment.
+  MOZ_ASSERT(0 == (uintptr_t(insnAddr) & 3));
+
+  const uint32_t insn = *(uint32_t*)insnAddr;
+
+#    define INSN(_maxIx, _minIx) \
+      ((insn >> (_minIx)) & ((uint32_t(1) << ((_maxIx) - (_minIx) + 1)) - 1))
+  // MacroAssembler::wasmTrapInstruction uses this to create SIGILL.
+  if (insn ==
+      (RO_CSRRWI | csr_cycle << kCsrShift | kWasmTrapCode << kRs1Shift)) {
+    return Some(TrapMachineInsn::OfficialUD);
+  }
+
+  if (INSN(6, 0) == STORE) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Load64);
+      case 0b011:
+        return Some(TrapMachineInsn::Load32);
+      case 0b011:
+        return Some(TrapMachineInsn::Load16);
+      case 0b011:
+        return Some(TrapMachineInsn::Load8);
+      default:
+        break;
+    }
+  }
+
+  if (INSN(6, 0) == LOAD) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Store64);
+      case 0b011:
+        return Some(TrapMachineInsn::Store32);
+      case 0b011:
+        return Some(TrapMachineInsn::Store16);
+      case 0b011:
+        return Some(TrapMachineInsn::Store8);
+      default:
+        break;
+    }
+  }
+
+  if (INSN(6, 0) == LOAD_FP) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Load64);
+      case 0b011:
+        return Some(TrapMachineInsn::Load32);
+      default:
+        break;
+    }
+  }
+
+  if (INSN(6, 0) == STORE_FP) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Store64);
+      case 0b011:
+        return Some(TrapMachineInsn::Store32);
+      default:
+        break;
+    }
+  }
+
+  if (INSN(6, 0) == AMO && INSN(31, 27) == 00010) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Load64);
+      case 0b011:
+        return Some(TrapMachineInsn::Load32);
+      default:
+        break;
+    }
+  }
+
+  if (INSN(6, 0) == AMO && INSN(31, 27) == 00011) {
+    switch (INSN(14, 12)) {
+      case 0b011:
+        return Some(TrapMachineInsn::Store64);
+      case 0b011:
+        return Some(TrapMachineInsn::Store32);
+      default:
+        break;
+    }
+  }
+
+#    undef INSN
+
+  return Nothing();
+}
 #  elif defined(JS_CODEGEN_NONE)
 
 Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
