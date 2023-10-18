@@ -59,7 +59,6 @@ support-files = ["test_bug332636.html^headers^"]
 skip-if = ["os == 'android'"]
 
 ["test_bug410986.html"]
-skip-if = ["headless"]
 
 ["test_bug414526.html"]
 
@@ -84,12 +83,10 @@ skip-if = ["headless"]
 ["test_bug471722.html"]
 
 ["test_bug478725.html"]
-skip-if = ["headless"]
 
 ["test_bug480647.html"]
 
 ["test_bug480972.html"]
-skip-if = ["headless"]
 
 ["test_bug483651.html"]
 
@@ -104,10 +101,8 @@ skip-if = [
 ["test_bug514156.html"]
 
 ["test_bug520189.html"]
-skip-if = ["headless"]
 
 ["test_bug525389.html"]
-skip-if = ["headless"]
 
 ["test_bug537046.html"]
 
@@ -120,7 +115,6 @@ support-files = [
 ["test_bug550434.html"]
 
 ["test_bug551704.html"]
-skip-if = ["headless"]
 
 ["test_bug552782.html"]
 
@@ -216,7 +210,6 @@ skip-if = ["os == 'android'"]
 ["test_bug677752.html"]
 
 ["test_bug681229.html"]
-skip-if = ["headless"]
 
 ["test_bug686203.html"]
 
@@ -330,7 +323,6 @@ skip-if = ["os == 'win' && ccov && xorigin"] # high frequency intermittent
 ["test_bug1230473.html"]
 
 ["test_bug1247483.html"]
-skip-if = ["headless"]
 
 ["test_bug1248128.html"]
 
@@ -588,7 +580,6 @@ skip-if = ["verify && debug && os == 'win'"] # bug 1485293
 ["test_root_element_replacement.html"]
 
 ["test_sanitizer_on_paste.html"]
-skip-if = ["headless"] # 1686012
 support-files = ["file_sanitizer_on_paste.sjs"]
 
 ["test_select_all_without_body.html"]

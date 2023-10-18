@@ -362,7 +362,6 @@ skip-if = [
 ["test_bug331959.html"]
 
 ["test_bug333064.html"]
-skip-if = ["headless"] # Headless: Bug 1405868
 
 ["test_bug333198.html"]
 

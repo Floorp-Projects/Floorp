@@ -213,7 +213,6 @@ support-files = [
 ["test_bug1646140-1.html"]
 
 ["test_bug1646140-2.html"]
-skip-if = ["headless"] # Bug 1685088
 
 ["test_compatmode.html"]
 

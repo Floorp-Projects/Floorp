@@ -15,10 +15,20 @@ bool HeadlessClipboardData::HasText() const { return !mPlain.IsVoid(); }
 
 const nsAString& HeadlessClipboardData::GetText() const { return mPlain; }
 
+void HeadlessClipboardData::SetHTML(const nsAString& aHTML) {
+  mHTML = aHTML;
+  mChangeCount++;
+}
+
+bool HeadlessClipboardData::HasHTML() const { return !mHTML.IsVoid(); }
+
+const nsAString& HeadlessClipboardData::GetHTML() const { return mHTML; }
+
 int32_t HeadlessClipboardData::GetChangeCount() const { return mChangeCount; }
 
 void HeadlessClipboardData::Clear() {
   mPlain.SetIsVoid(true);
+  mHTML.SetIsVoid(true);
   mChangeCount++;
 }
 

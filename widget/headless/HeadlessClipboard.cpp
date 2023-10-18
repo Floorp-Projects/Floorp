@@ -32,23 +32,36 @@ HeadlessClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
   // Clear out the clipboard in order to set the new data.
   EmptyNativeClipboardData(aWhichClipboard);
 
-  // Only support plain text for now.
-  nsCOMPtr<nsISupports> clip;
-  nsresult rv = aTransferable->GetTransferData(kTextMime, getter_AddRefs(clip));
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_FAILED(rv)) {
     return rv;
-  }
-  nsCOMPtr<nsISupportsString> wideString = do_QueryInterface(clip);
-  if (!wideString) {
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
 
   auto& clipboard = mClipboards[aWhichClipboard];
   MOZ_ASSERT(clipboard);
 
-  nsAutoString utf16string;
-  wideString->GetData(utf16string);
-  clipboard->SetText(utf16string);
+  for (const auto& flavor : flavors) {
+    if (!flavor.EqualsLiteral(kTextMime) && !flavor.EqualsLiteral(kHTMLMime)) {
+      continue;
+    }
+
+    nsCOMPtr<nsISupports> data;
+    rv = aTransferable->GetTransferData(flavor.get(), getter_AddRefs(data));
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    nsCOMPtr<nsISupportsString> wideString = do_QueryInterface(data);
+    if (!wideString) {
+      continue;
+    }
+
+    nsAutoString utf16string;
+    wideString->GetData(utf16string);
+    flavor.EqualsLiteral(kTextMime) ? clipboard->SetText(utf16string)
+                                    : clipboard->SetHTML(utf16string);
+  }
 
   return NS_OK;
 }
@@ -60,25 +73,43 @@ HeadlessClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
   MOZ_DIAGNOSTIC_ASSERT(
       nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
+  nsTArray<nsCString> flavors;
+  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
   auto& clipboard = mClipboards[aWhichClipboard];
   MOZ_ASSERT(clipboard);
 
-  if (!clipboard->HasText()) {
-    return NS_OK;
+  for (const auto& flavor : flavors) {
+    if (!flavor.EqualsLiteral(kTextMime) && !flavor.EqualsLiteral(kHTMLMime)) {
+      continue;
+    }
+
+    bool isText = flavor.EqualsLiteral(kTextMime);
+    if (!(isText ? clipboard->HasText() : clipboard->HasHTML())) {
+      continue;
+    }
+
+    nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    rv = dataWrapper->SetData(isText ? clipboard->GetText()
+                                     : clipboard->GetHTML());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    nsCOMPtr<nsISupports> genericDataWrapper = do_QueryInterface(dataWrapper);
+    rv = aTransferable->SetTransferData(flavor.get(), genericDataWrapper);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    // XXX Other platforms only fill the first available type, too.
+    break;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsISupportsString> dataWrapper =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-  rv = dataWrapper->SetData(clipboard->GetText());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  nsCOMPtr<nsISupports> genericDataWrapper = do_QueryInterface(dataWrapper);
-  rv = aTransferable->SetTransferData(kTextMime, genericDataWrapper);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
   return NS_OK;
 }
 
@@ -112,7 +143,8 @@ HeadlessClipboard::HasNativeClipboardDataMatchingFlavors(
 
   // Retrieve the union of all aHasType in aFlavorList
   for (auto& flavor : aFlavorList) {
-    if (flavor.EqualsLiteral(kTextMime) && clipboard->HasText()) {
+    if ((flavor.EqualsLiteral(kTextMime) && clipboard->HasText()) ||
+        (flavor.EqualsLiteral(kHTMLMime) && clipboard->HasHTML())) {
       return true;
     }
   }
