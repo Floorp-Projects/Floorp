@@ -175,3 +175,4 @@ load trimming_needed_and_last_sample_invalid_duration.ogg
 load 1839193.html
 load 1850453.html
 test-pref(media.wmf.hevc.enabled,1) load 1859384.mp4
+test-pref(media.wmf.hevc.enabled,1) load 1859600.mp4
