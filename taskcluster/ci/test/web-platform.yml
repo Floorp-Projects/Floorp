@@ -139,6 +139,7 @@ web-platform-tests-backlog:
             - --skip-implementation-status=implementing
             - --skip-implementation-status=not-implementing
             - --backlog
+            - --exclude-tag=webgpu
 
 web-platform-tests-reftest:
     description: "Web platform reftest run"
@@ -336,6 +337,7 @@ web-platform-tests-reftest-backlog:
             - --skip-implementation-status=implementing
             - --skip-implementation-status=not-implementing
             - --backlog
+            - --exclude-tag=webgpu
 
 web-platform-tests-wdspec:
     description: "Web platform webdriver-spec run"
