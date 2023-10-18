@@ -11,7 +11,7 @@
 #include "DOMMediaStream.h"
 #include "MediaDecoder.h"
 #include "MediaEncoder.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "VideoUtils.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/AudioStreamTrack.h"

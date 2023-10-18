@@ -78,9 +78,9 @@ bool AudioDecoderInputTrack::ConvertAudioDataToSegment(
     mResampler.own(nullptr);
     mResamplerChannelCount = 0;
   }
-  if (mInputSampleRate != GraphImpl()->GraphRate()) {
+  if (mInputSampleRate != Graph()->GraphRate()) {
     aSegment.ResampleChunks(mResampler, &mResamplerChannelCount,
-                            mInputSampleRate, GraphImpl()->GraphRate());
+                            mInputSampleRate, Graph()->GraphRate());
   }
   return aSegment.GetDuration() > 0;
 }
@@ -233,22 +233,12 @@ void AudioDecoderInputTrack::SetVolume(float aVolume) {
 
 void AudioDecoderInputTrack::SetVolumeImpl(float aVolume) {
   MOZ_ASSERT(NS_IsMainThread());
-  class Message : public ControlMessage {
-   public:
-    Message(AudioDecoderInputTrack* aTrack, float aVolume)
-        : ControlMessage(aTrack), mTrack(aTrack), mVolume(aVolume) {}
-    void Run() override {
-      TRACE_COMMENT("AudioDecoderInputTrack::SetVolume ControlMessage", "%f",
-                    mVolume);
-      LOG_M("Apply volume=%f", mTrack.get(), mVolume);
-      mTrack->mVolume = mVolume;
-    }
-
-   protected:
-    const RefPtr<AudioDecoderInputTrack> mTrack;
-    const float mVolume;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aVolume));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aVolume] {
+    TRACE_COMMENT("AudioDecoderInputTrack::SetVolume ControlMessage", "%f",
+                  aVolume);
+    LOG_M("Apply volume=%f", this, aVolume);
+    mVolume = aVolume;
+  });
 }
 
 void AudioDecoderInputTrack::SetPlaybackRate(float aPlaybackRate) {
@@ -263,25 +253,13 @@ void AudioDecoderInputTrack::SetPlaybackRate(float aPlaybackRate) {
 
 void AudioDecoderInputTrack::SetPlaybackRateImpl(float aPlaybackRate) {
   MOZ_ASSERT(NS_IsMainThread());
-  class Message : public ControlMessage {
-   public:
-    Message(AudioDecoderInputTrack* aTrack, float aPlaybackRate)
-        : ControlMessage(aTrack),
-          mTrack(aTrack),
-          mPlaybackRate(aPlaybackRate) {}
-    void Run() override {
-      TRACE_COMMENT("AudioDecoderInputTrack::SetPlaybackRate ControlMessage",
-                    "%f", mPlaybackRate);
-      LOG_M("Apply playback rate=%f", mTrack.get(), mPlaybackRate);
-      mTrack->mPlaybackRate = mPlaybackRate;
-      mTrack->SetTempoAndRateForTimeStretcher();
-    }
-
-   protected:
-    const RefPtr<AudioDecoderInputTrack> mTrack;
-    const float mPlaybackRate;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aPlaybackRate));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aPlaybackRate] {
+    TRACE_COMMENT("AudioDecoderInputTrack::SetPlaybackRate ControlMessage",
+                  "%f", aPlaybackRate);
+    LOG_M("Apply playback rate=%f", this, aPlaybackRate);
+    mPlaybackRate = aPlaybackRate;
+    SetTempoAndRateForTimeStretcher();
+  });
 }
 
 void AudioDecoderInputTrack::SetPreservesPitch(bool aPreservesPitch) {
@@ -296,25 +274,14 @@ void AudioDecoderInputTrack::SetPreservesPitch(bool aPreservesPitch) {
 
 void AudioDecoderInputTrack::SetPreservesPitchImpl(bool aPreservesPitch) {
   MOZ_ASSERT(NS_IsMainThread());
-  class Message : public ControlMessage {
-   public:
-    Message(AudioDecoderInputTrack* aTrack, bool aPreservesPitch)
-        : ControlMessage(aTrack),
-          mTrack(aTrack),
-          mPreservesPitch(aPreservesPitch) {}
-    void Run() override {
-      TRACE_COMMENT("AudioDecoderInputTrack::SetPreservesPitch", "%s",
-                    mPreservesPitch ? "true" : "false")
-      LOG_M("Apply preserves pitch=%d", mTrack.get(), mPreservesPitch);
-      mTrack->mPreservesPitch = mPreservesPitch;
-      mTrack->SetTempoAndRateForTimeStretcher();
-    }
-
-   protected:
-    const RefPtr<AudioDecoderInputTrack> mTrack;
-    const bool mPreservesPitch;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aPreservesPitch));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, aPreservesPitch] {
+        TRACE_COMMENT("AudioDecoderInputTrack::SetPreservesPitch", "%s",
+                      aPreservesPitch ? "true" : "false");
+        LOG_M("Apply preserves pitch=%d", this, aPreservesPitch);
+        mPreservesPitch = aPreservesPitch;
+        SetTempoAndRateForTimeStretcher();
+      });
 }
 
 void AudioDecoderInputTrack::Close() {
@@ -654,7 +621,7 @@ void AudioDecoderInputTrack::EnsureTimeStretcher() {
   AssertOnGraphThread();
   if (!mTimeStretcher) {
     mTimeStretcher = new RLBoxSoundTouch();
-    mTimeStretcher->setSampleRate(GraphImpl()->GraphRate());
+    mTimeStretcher->setSampleRate(Graph()->GraphRate());
     mTimeStretcher->setChannels(GetChannelCountForTimeStretcher());
     mTimeStretcher->setPitch(1.0);
 

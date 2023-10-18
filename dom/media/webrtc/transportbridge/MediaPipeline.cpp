@@ -19,7 +19,7 @@
 #include "ImageTypes.h"
 #include "MediaEngine.h"
 #include "MediaSegment.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "MediaStreamTrack.h"
 #include "RtpLogger.h"
@@ -1224,33 +1224,20 @@ class MediaPipelineReceiveAudio::PipelineListener
   void SetPrivatePrincipal(PrincipalHandle aHandle) {
     MOZ_ASSERT(NS_IsMainThread());
 
-    class Message : public ControlMessage {
-     public:
-      Message(RefPtr<PipelineListener> aListener,
-              PrincipalHandle aPrivatePrincipal)
-          : ControlMessage(nullptr),
-            mListener(std::move(aListener)),
-            mPrivatePrincipal(std::move(aPrivatePrincipal)) {}
-
-      void Run() override {
-        if (mListener->mPrivacy == PrincipalPrivacy::Private) {
-          return;
-        }
-        mListener->mPrincipalHandle = mPrivatePrincipal;
-        mListener->mPrivacy = PrincipalPrivacy::Private;
-        mListener->mForceSilence = false;
-      }
-
-      const RefPtr<PipelineListener> mListener;
-      PrincipalHandle mPrivatePrincipal;
-    };
-
     if (mSource->IsDestroyed()) {
       return;
     }
 
-    mSource->GraphImpl()->AppendMessage(
-        MakeUnique<Message>(this, std::move(aHandle)));
+    mSource->QueueControlMessageWithNoShutdown(
+        [self = RefPtr{this}, this,
+         privatePrincipal = std::move(aHandle)]() mutable {
+          if (mPrivacy == PrincipalPrivacy::Private) {
+            return;
+          }
+          mPrincipalHandle = std::move(privatePrincipal);
+          mPrivacy = PrincipalPrivacy::Private;
+          mForceSilence = false;
+        });
   }
 
  private:
