@@ -8,6 +8,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
@@ -432,6 +433,7 @@ class TelemetryHandler {
         partnerCode,
         source: inContentSource ?? source,
         isShoppingPage: info.isShoppingPage,
+        isPrivate: lazy.PrivateBrowsingUtils.isBrowserPrivate(browser),
       };
     }
 
@@ -1372,12 +1374,14 @@ class ContentHandler {
         source: impressionInfo.source,
         shopping_tab_displayed: info.shoppingTabDisplayed,
         is_shopping_page: impressionInfo.isShoppingPage,
+        is_private: impressionInfo.isPrivate,
       });
       lazy.logConsole.debug(`Reported Impression:`, {
         impressionId,
         ...impressionInfo,
         shoppingTabDisplayed: info.shoppingTabDisplayed,
       });
+      Services.obs.notifyObservers(null, "reported-page-with-impression");
     } else {
       lazy.logConsole.debug("Could not find an impression id.");
     }

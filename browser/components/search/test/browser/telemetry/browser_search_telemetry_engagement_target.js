@@ -151,6 +151,7 @@ add_task(async function test_click_second_ad_in_component() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -192,6 +193,7 @@ add_task(async function test_click_ads_link_modified() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -235,6 +237,7 @@ add_task(async function test_click_and_submit_incontent_searchbox() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -255,6 +258,7 @@ add_task(async function test_click_and_submit_incontent_searchbox() {
         partner_code: "ff",
         source: "follow_on_from_refine_on_incontent_search",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
     },
@@ -294,6 +298,7 @@ add_task(async function test_click_autosuggest() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -310,6 +315,7 @@ add_task(async function test_click_autosuggest() {
         partner_code: "ff",
         source: "follow_on_from_refine_on_incontent_search",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
     },
@@ -338,6 +344,7 @@ add_task(async function test_click_carousel_expand() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -389,6 +396,7 @@ add_task(async function test_click_link_with_special_characters_in_path() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [

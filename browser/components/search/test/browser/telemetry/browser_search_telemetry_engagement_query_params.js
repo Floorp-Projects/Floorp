@@ -89,6 +89,7 @@ add_task(async function test_click_links() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -122,6 +123,7 @@ add_task(async function test_click_links() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -138,6 +140,7 @@ add_task(async function test_click_links() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -187,6 +190,7 @@ add_task(async function test_click_link_with_more_parameters() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -235,6 +239,7 @@ add_task(async function test_click_link_with_fewer_parameters() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -283,6 +288,7 @@ add_task(async function test_click_link_with_reordered_parameters() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [

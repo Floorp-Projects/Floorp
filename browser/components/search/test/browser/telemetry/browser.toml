@@ -111,13 +111,18 @@ support-files = [
   "serp.css",
 ]
 
+["browser_search_telemetry_private.js"]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html", "serp.css"]
+
 ["browser_search_telemetry_searchbar.js"]
 https_first_disabled = true
 support-files = [
   "telemetrySearchSuggestions.sjs",
   "telemetrySearchSuggestions.xml",
 ]
-fail-if = ["a11y_checks"] # Bug 1854660 clicked button.searchbar-engine-one-off-item-engine-0 may not be focusable; richlistitem.autocomplete-richlistitem may be not labeled
+fail-if = [
+  "a11y_checks",
+] # Bug 1854660 clicked button.searchbar-engine-one-off-item-engine-0 may not be focusable; richlistitem.autocomplete-richlistitem may be not labeled
 
 ["browser_search_telemetry_shopping.js"]
 support-files = ["searchTelemetryAd_shopping.html"]
@@ -126,15 +131,10 @@ support-files = ["searchTelemetryAd_shopping.html"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
 ["browser_search_telemetry_sources_ads.js"]
-support-files = [
-  "searchTelemetry.html",
-  "searchTelemetryAd.html",
-]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
 ["browser_search_telemetry_sources_ads_clicks.js"]
-support-files = [
-  "searchTelemetryAd.html",
-]
+support-files = ["searchTelemetryAd.html"]
 
 ["browser_search_telemetry_sources_ads_data_attributes.js"]
 support-files = [
