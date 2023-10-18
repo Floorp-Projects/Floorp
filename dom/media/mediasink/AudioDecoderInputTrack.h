@@ -9,8 +9,8 @@
 #include "MediaEventSource.h"
 #include "MediaTimer.h"
 #include "MediaTrackGraph.h"
-#include "MediaTrackGraphImpl.h"
 #include "MediaSegment.h"
+#include "TimeUnits.h"
 #include "mozilla/SPSCQueue.h"
 #include "mozilla/StateMirroring.h"
 #include "nsISerialEventTarget.h"
@@ -18,6 +18,7 @@
 namespace mozilla {
 
 class AudioData;
+class AudioInfo;
 class RLBoxSoundTouch;
 
 /**

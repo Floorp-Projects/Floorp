@@ -12,7 +12,7 @@
 #include "CubebDeviceEnumerator.h"
 #include "MediaTimer.h"
 #include "MediaTrackConstraints.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"

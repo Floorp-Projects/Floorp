@@ -255,12 +255,6 @@ class MediaEncoder {
   void EnsureGraphTrackFrom(MediaTrack* aTrack);
 
   /**
-   * Takes a regular runnable and dispatches it to the graph wrapped in a
-   * ControlMessage.
-   */
-  void RunOnGraph(already_AddRefed<Runnable> aRunnable);
-
-  /**
    * Shuts down gracefully if there is no remaining live track encoder.
    */
   void MaybeShutdown();

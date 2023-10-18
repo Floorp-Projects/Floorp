@@ -6,7 +6,7 @@
 
 #include "AudioDeviceInfo.h"
 #include "AudioStreamTrack.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 
