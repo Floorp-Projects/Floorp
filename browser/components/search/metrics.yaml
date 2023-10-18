@@ -142,9 +142,11 @@ serp:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816736
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816738
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1829953
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851495
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1813162
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1824543
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1851495
     data_sensitivity:
       - interaction
     notification_emails:
@@ -186,6 +188,10 @@ serp:
       is_shopping_page:
         description:
           Indicates if the page is a shopping page.
+        type: boolean
+      is_private:
+        description:
+          Indicates if the page was loaded while in Private Browsing Mode.
         type: boolean
 
   engagement:

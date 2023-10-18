@@ -130,6 +130,7 @@ add_task(async function test_search() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -162,6 +163,7 @@ add_task(async function test_reload() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
     {
@@ -172,6 +174,7 @@ add_task(async function test_reload() {
         source: "reload",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -203,6 +206,7 @@ add_task(async function test_reload() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
     {
@@ -213,6 +217,7 @@ add_task(async function test_reload() {
         source: "reload",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {
@@ -253,6 +258,7 @@ add_task(async function test_fresh_search() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -284,6 +290,7 @@ add_task(async function test_click_ad() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {
@@ -323,6 +330,7 @@ add_task(async function test_go_back() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {
@@ -339,6 +347,7 @@ add_task(async function test_go_back() {
         source: "tabhistory",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -371,6 +380,7 @@ add_task(async function test_go_back() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {
@@ -387,6 +397,7 @@ add_task(async function test_go_back() {
         source: "tabhistory",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {
@@ -430,6 +441,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -459,6 +471,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
     {
@@ -469,6 +482,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         source: "urlbar_persisted",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
   ]);
@@ -502,6 +516,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         source: "urlbar",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
     },
     {
@@ -512,6 +527,7 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
         source: "urlbar_persisted",
         shopping_tab_displayed: "false",
         is_shopping_page: "false",
+        is_private: "false",
       },
       engagements: [
         {

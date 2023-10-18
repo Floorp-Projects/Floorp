@@ -72,6 +72,7 @@ add_task(async function test_click_non_ads_link() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [
@@ -120,6 +121,7 @@ add_task(async function test_click_non_ad_with_no_ads() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "false",
       },
       engagements: [

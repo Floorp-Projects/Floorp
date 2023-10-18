@@ -117,6 +117,7 @@ add_task(async function test_click_tab() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -133,6 +134,7 @@ add_task(async function test_click_tab() {
         partner_code: "",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
@@ -169,6 +171,7 @@ add_task(async function test_click_shopping() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -185,6 +188,7 @@ add_task(async function test_click_shopping() {
         partner_code: "",
         source: "unknown",
         is_shopping_page: "true",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
@@ -225,6 +229,7 @@ add_task(async function test_click_related_search_in_new_tab() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -241,6 +246,7 @@ add_task(async function test_click_related_search_in_new_tab() {
         partner_code: "",
         source: "opened_in_new_tab",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
@@ -286,6 +292,7 @@ add_task(async function test_click_redirect_search_in_newtab() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -302,6 +309,7 @@ add_task(async function test_click_redirect_search_in_newtab() {
         partner_code: "",
         source: "opened_in_new_tab",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
@@ -352,6 +360,7 @@ add_task(async function test_content_source_reset() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -372,6 +381,7 @@ add_task(async function test_content_source_reset() {
         partner_code: "ff",
         source: "follow_on_from_refine_on_incontent_search",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -388,6 +398,7 @@ add_task(async function test_content_source_reset() {
         partner_code: "",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
@@ -436,6 +447,7 @@ add_task(async function test_click_refinement_button() {
         partner_code: "ff",
         source: "unknown",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
       engagements: [
@@ -452,6 +464,7 @@ add_task(async function test_click_refinement_button() {
         partner_code: "",
         source: "follow_on_from_refine_on_SERP",
         is_shopping_page: "false",
+        is_private: "false",
         shopping_tab_displayed: "true",
       },
     },
