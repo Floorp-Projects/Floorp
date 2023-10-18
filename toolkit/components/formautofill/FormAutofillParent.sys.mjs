@@ -524,7 +524,7 @@ export class FormAutofillParent extends JSWindowActorParent {
       { ignoreInvalid: true }
     );
 
-    let mergeableRecord = null;
+    let oldRecord = {};
     let mergeableFields = [];
 
     // Exams all stored record to determine whether to show the prompt or not.
@@ -562,7 +562,7 @@ export class FormAutofillParent extends JSWindowActorParent {
           .filter(v => ["superset", "similar"].includes(v[1]))
           .map(v => v[0]);
         if (!mergeableFields.length || mergeableFields.length > fields.length) {
-          mergeableRecord = record;
+          oldRecord = record;
           mergeableFields = fields;
         }
       }
@@ -579,9 +579,8 @@ export class FormAutofillParent extends JSWindowActorParent {
       await lazy.FormAutofillPrompter.promptToSaveAddress(
         browser,
         storage,
-        newAddress.record,
         address.flowId,
-        { mergeableRecord, mergeableFields }
+        { oldRecord, newRecord: newAddress.record }
       );
     };
   }
