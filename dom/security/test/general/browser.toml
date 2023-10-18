@@ -73,3 +73,10 @@ support-files = [
   "file_framing_xfo_object.html",
   "file_framing_xfo_embed_object.sjs",
 ]
+
+["browser_test_gpc_privateBrowsingMode.js"]
+support-files = [
+  "file_empty.html",
+  "file_gpc_server.sjs",
+]
+

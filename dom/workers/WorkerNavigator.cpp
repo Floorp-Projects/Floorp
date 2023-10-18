@@ -91,6 +91,21 @@ JSObject* WorkerNavigator::WrapObject(JSContext* aCx,
   return WorkerNavigator_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+bool WorkerNavigator::GlobalPrivacyControl() const {
+  bool gpcStatus = StaticPrefs::privacy_globalprivacycontrol_enabled();
+  if (!gpcStatus) {
+    JSObject* jso = GetWrapper();
+    if (const nsCOMPtr<nsIGlobalObject> global = xpc::NativeGlobal(jso)) {
+      if (const nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull()) {
+        gpcStatus = principal->GetPrivateBrowsingId() > 0 &&
+                    StaticPrefs::privacy_globalprivacycontrol_pbmode_enabled();
+      }
+    }
+  }
+  return StaticPrefs::privacy_globalprivacycontrol_functionality_enabled() &&
+         gpcStatus;
+}
+
 void WorkerNavigator::SetLanguages(const nsTArray<nsString>& aLanguages) {
   WorkerNavigator_Binding::ClearCachedLanguagesValue(this);
   mProperties.mLanguages = aLanguages.Clone();
