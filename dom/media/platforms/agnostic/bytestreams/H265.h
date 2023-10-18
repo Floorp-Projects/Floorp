@@ -112,6 +112,12 @@ class H265NALU final {
   }
 
   bool IsSPS() const { return mNalUnitType == NAL_TYPES::SPS_NUT; }
+  bool IsVPS() const { return mNalUnitType == NAL_TYPES::VPS_NUT; }
+  bool IsPPS() const { return mNalUnitType == NAL_TYPES::PPS_NUT; }
+  bool IsSEI() const {
+    return mNalUnitType == NAL_TYPES::PREFIX_SEI_NUT ||
+           mNalUnitType == NAL_TYPES::SUFFIX_SEI_NUT;
+  }
 
   uint8_t mNalUnitType;
   uint8_t mNuhLayerId;
