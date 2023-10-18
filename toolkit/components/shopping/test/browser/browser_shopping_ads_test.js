@@ -8,6 +8,9 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_ad_attribution() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
   await SpecialPowers.pushPrefEnv({
     set: [
       ["toolkit.shopping.ohttpRelayURL", ""],
@@ -208,7 +211,15 @@ add_task(async function test_ad_attribution() {
     await clickedEvent;
     Assert.ok(true, "Got ad clicked event");
 
+    // Test the click was recorded by telemetry
+    await Services.fog.testFlushAllChildren();
+    var adsClickedEvents = Glean.shopping.surfaceAdsClicked.testGetValue();
+    Assert.equal(adsClickedEvents.length, 1, "should have recorded a click");
+    Assert.equal(adsClickedEvents[0].category, "shopping");
+    Assert.equal(adsClickedEvents[0].name, "surface_ads_clicked");
+
     gBrowser.removeTab(adTab);
+    Services.fog.testResetFOG();
   });
 
   await SpecialPowers.popPrefEnv();
