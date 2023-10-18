@@ -150,6 +150,14 @@ add_task(async function test_failing() {
 });
 """
 
+ADD_TASK_REJECTED_UNDEFINED = """
+function run_test() { run_next_test(); }
+
+add_task(async function test_failing() {
+  await Promise.reject();
+});
+"""
+
 ADD_TASK_FAILURE_INSIDE = """
 function run_test() { run_next_test(); }
 
@@ -1081,6 +1089,21 @@ add_test({
         self.assertEqual(1, self.x.testCount)
         self.assertEqual(0, self.x.passCount)
         self.assertEqual(1, self.x.failCount)
+
+    def testAddTaskTestRejectedUndefined(self):
+        """
+        Ensure rejected task with undefined reason reports as failure and does not hang.
+        """
+        self.writeFile(
+            "test_add_task_rejected_undefined.js", ADD_TASK_REJECTED_UNDEFINED
+        )
+        self.writeManifest(["test_add_task_rejected_undefined.js"])
+
+        self.assertTestResult(False)
+        self.assertEqual(1, self.x.testCount)
+        self.assertEqual(0, self.x.passCount)
+        self.assertEqual(1, self.x.failCount)
+        self.assertNotInLog("TEST-UNEXPECTED-TIMEOUT")
 
     def testAddTaskTestFailureInside(self):
         """

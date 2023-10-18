@@ -882,6 +882,9 @@ function _format_stack(stack) {
 // Make a nice display string from an object that behaves
 // like Error
 function _exception_message(ex) {
+  if (ex === undefined) {
+    return "`undefined` exception, maybe from an empty reject()?";
+  }
   let message = "";
   if (ex.name) {
     message = ex.name + ": ";
@@ -909,7 +912,7 @@ function do_report_unexpected_exception(ex, text) {
   _passed = false;
   _testLogger.error(text + "Unexpected exception " + _exception_message(ex), {
     source_file: filename,
-    stack: _format_stack(ex.stack),
+    stack: _format_stack(ex?.stack),
   });
   _do_quit();
   throw Components.Exception("", Cr.NS_ERROR_ABORT);
@@ -919,7 +922,7 @@ function do_note_exception(ex, text) {
   let filename = Components.stack.caller.filename;
   _testLogger.info(text + "Swallowed exception " + _exception_message(ex), {
     source_file: filename,
-    stack: _format_stack(ex.stack),
+    stack: _format_stack(ex?.stack),
   });
 }
 
@@ -1775,10 +1778,30 @@ function run_next_test() {
             );
             _setTaskPrefs(initialPrefsValues);
             try {
+              // Note `ex` at this point could be undefined, for example as
+              // result of a bare call to reject().
               do_report_unexpected_exception(ex);
             } catch (error) {
-              // The above throws NS_ERROR_ABORT and we don't want this to show up
-              // as an unhandled rejection later.
+              // The above throws NS_ERROR_ABORT and we don't want this to show
+              // up as an unhandled rejection later. If any other exception
+              // happened, something went wrong, so we abort.
+              if (error.result != Cr.NS_ERROR_ABORT) {
+                let extra = {};
+                if (error.fileName) {
+                  extra.source_file = error.fileName;
+                  if (error.lineNumber) {
+                    extra.line_number = error.lineNumber;
+                  }
+                } else {
+                  extra.source_file = "xpcshell/head.js";
+                }
+                if (error.stack) {
+                  extra.stack = _format_stack(error.stack);
+                }
+                _testLogger.error(_exception_message(error), extra);
+                _do_quit();
+                throw Components.Exception("", Cr.NS_ERROR_ABORT);
+              }
             }
           }
         );
