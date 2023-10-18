@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { SessionStoreTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/SessionStoreTestUtils.sys.mjs"
+);
+
 const PREF_ID_ALWAYS_ASK =
   "browser.privatebrowsing.resetPBM.showConfirmationDialog";
 
@@ -662,6 +666,60 @@ add_task(async function test_reset_action_closes_sidebar() {
 
   // Cleanup: Close the sidebar of the normal browsing window.
   SidebarUI.hide();
+
+  // Cleanup: Close the private window that remained open.
+  await BrowserTestUtils.closeWindow(win);
+});
+
+/**
+ * Test that the session store history gets purged by the reset action.
+ */
+add_task(async function test_reset_action_purges_session_store() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.resetPBM.enabled", true]],
+  });
+
+  info("Open a private browsing window.");
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  Assert.equal(
+    SessionStore.getClosedTabCountForWindow(win),
+    0,
+    "Initially there should be no closed tabs recorded for the PBM window in SessionStore."
+  );
+
+  info("Load a bunch of tabs in the private window.");
+
+  let tab;
+  let loadPromises = [
+    "https://example.com",
+    "https://example.org",
+    "https://example.net",
+  ].map(async url => {
+    tab = BrowserTestUtils.addTab(win.gBrowser, url);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  });
+  await Promise.all(loadPromises);
+
+  info("Manually close a tab");
+  await SessionStoreTestUtils.closeTab(tab);
+
+  Assert.equal(
+    SessionStore.getClosedTabCountForWindow(win),
+    1,
+    "The manually closed tab should be recorded in SessionStore."
+  );
+
+  info("Trigger the restart PBM action");
+  await ResetPBMPanel._restartPBM(win);
+
+  Assert.equal(
+    SessionStore.getClosedTabCountForWindow(win),
+    0,
+    "After triggering the PBM reset action there should be no closed tabs recorded for the PBM window in SessionStore."
+  );
 
   // Cleanup: Close the private window that remained open.
   await BrowserTestUtils.closeWindow(win);
