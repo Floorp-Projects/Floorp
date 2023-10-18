@@ -7,7 +7,8 @@
 //! https://drafts.css-houdini.org/css-properties-values-api-1/#at-property-rule
 
 use super::{
-    syntax::{Descriptor, ParsedDescriptor},
+    syntax::Descriptor,
+    registry::PropertyRegistration,
     value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
 };
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
@@ -36,12 +37,12 @@ pub fn parse_property_block<'i, 't>(
     context: &ParserContext,
     input: &mut Parser<'i, 't>,
     name: PropertyRuleName,
-    location: SourceLocation,
-) -> Result<PropertyRuleData, ParseError<'i>> {
-    let mut rule = PropertyRuleData::empty(name, location);
+    source_location: SourceLocation,
+) -> Result<PropertyRegistration, ParseError<'i>> {
+    let mut descriptors = PropertyDescriptors::default();
     let mut parser = PropertyRuleParser {
         context,
-        rule: &mut rule,
+        descriptors: &mut descriptors,
     };
     let mut iter = RuleBodyParser::new(input, &mut parser);
     while let Some(declaration) = iter.next() {
@@ -66,15 +67,36 @@ pub fn parse_property_block<'i, 't>(
             context.log_css_error(location, error);
         }
     }
-    if rule.validate_registration(context.url_data).is_err() {
+
+    // https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor:
+    //
+    //     The syntax descriptor is required for the @property rule to be valid; if it’s
+    //     missing, the @property rule is invalid.
+    let Some(syntax) = descriptors.syntax else { return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid)) };
+
+    // https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor:
+    //
+    //     The inherits descriptor is required for the @property rule to be valid; if it’s
+    //     missing, the @property rule is invalid.
+    let Some(inherits) = descriptors.inherits else { return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid)) };
+
+    if PropertyRegistration::validate_initial_value(&syntax, descriptors.initial_value.as_ref(), context.url_data).is_err() {
         return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
     }
-    Ok(rule)
+
+    Ok(PropertyRegistration {
+        name,
+        syntax,
+        inherits,
+        initial_value: descriptors.initial_value,
+        url_data: context.url_data.clone(),
+        source_location,
+    })
 }
 
 struct PropertyRuleParser<'a, 'b: 'a> {
     context: &'a ParserContext<'b>,
-    rule: &'a mut PropertyRuleData,
+    descriptors: &'a mut PropertyDescriptors,
 }
 
 /// Default methods reject all at rules.
@@ -108,36 +130,19 @@ macro_rules! property_descriptors {
         /// Data inside a `@property` rule.
         ///
         /// <https://drafts.css-houdini.org/css-properties-values-api-1/#at-property-rule>
-        #[derive(Clone, Debug, PartialEq)]
-        pub struct PropertyRuleData {
-            /// The custom property name.
-            pub name: PropertyRuleName,
-
+        #[derive(Clone, Debug, Default, PartialEq)]
+        struct PropertyDescriptors {
             $(
                 #[$doc]
-                pub $ident: Option<$ty>,
+                $ident: Option<$ty>,
             )*
-
-            /// Line and column of the @property rule source code.
-            pub source_location: SourceLocation,
         }
 
-        impl PropertyRuleData {
-            /// Create an empty property rule
-            pub fn empty(name: PropertyRuleName, source_location: SourceLocation) -> Self {
-                PropertyRuleData {
-                    name,
-                    $(
-                        $ident: None,
-                    )*
-                    source_location,
-                }
-            }
-
-            /// Serialization of declarations in PropertyRuleData
-            pub fn decl_to_css(&self, dest: &mut CssStringWriter) -> fmt::Result {
+        impl PropertyRegistration {
+            fn decl_to_css(&self, dest: &mut CssStringWriter) -> fmt::Result {
                 $(
-                    if let Some(ref value) = self.$ident {
+                    let $ident = Option::<&$ty>::from(&self.$ident);
+                    if let Some(ref value) = $ident {
                         dest.write_str(concat!($name, ": "))?;
                         value.to_css(&mut CssWriter::new(dest))?;
                         dest.write_str("; ")?;
@@ -147,14 +152,14 @@ macro_rules! property_descriptors {
             }
         }
 
-       impl<'a, 'b, 'i> DeclarationParser<'i> for PropertyRuleParser<'a, 'b> {
-           type Declaration = ();
-           type Error = StyleParseErrorKind<'i>;
+        impl<'a, 'b, 'i> DeclarationParser<'i> for PropertyRuleParser<'a, 'b> {
+            type Declaration = ();
+            type Error = StyleParseErrorKind<'i>;
 
-           fn parse_value<'t>(
-               &mut self,
-               name: CowRcStr<'i>,
-               input: &mut Parser<'i, 't>,
+            fn parse_value<'t>(
+                &mut self,
+                name: CowRcStr<'i>,
+                input: &mut Parser<'i, 't>,
             ) -> Result<(), ParseError<'i>> {
                 match_ignore_ascii_case! { &*name,
                     $(
@@ -163,7 +168,7 @@ macro_rules! property_descriptors {
                             // to, but in this case we do because we set the value as a side effect
                             // rather than returning it.
                             let value = input.parse_entirely(|i| Parse::parse(self.context, i))?;
-                            self.rule.$ident = Some(value)
+                            self.descriptors.$ident = Some(value)
                         },
                     )*
                     _ => return Err(input.new_custom_error(SelectorParseErrorKind::UnexpectedIdent(name.clone()))),
@@ -174,10 +179,9 @@ macro_rules! property_descriptors {
     }
 }
 
-#[cfg(feature = "gecko")]
 property_descriptors! {
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor>
-    "syntax" syntax: ParsedDescriptor,
+    "syntax" syntax: Descriptor,
 
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor>
     "inherits" inherits: Inherits,
@@ -189,25 +193,16 @@ property_descriptors! {
 /// Errors that can happen when registering a property.
 #[allow(missing_docs)]
 pub enum PropertyRegistrationError {
-    MissingSyntax,
-    MissingInherits,
     NoInitialValue,
     InvalidInitialValue,
     InitialValueNotComputationallyIndependent,
 }
 
-impl PropertyRuleData {
+impl PropertyRegistration {
     /// Measure heap usage.
     #[cfg(feature = "gecko")]
-    pub fn size_of(&self, _guard: &SharedRwLockReadGuard, ops: &mut MallocSizeOfOps) -> usize {
-        self.name.0.size_of(ops) +
-            self.syntax.size_of(ops) +
-            self.inherits.size_of(ops) +
-            if let Some(ref initial_value) = self.initial_value {
-                initial_value.size_of(ops)
-            } else {
-                0
-            }
+    pub fn size_of(&self, _: &SharedRwLockReadGuard, ops: &mut MallocSizeOfOps) -> usize {
+        MallocSizeOf::size_of(self, ops)
     }
 
     /// Performs syntax validation as per the initial value descriptor.
@@ -260,31 +255,9 @@ impl PropertyRuleData {
 
         Ok(())
     }
-
-    /// Performs relevant rule validity checks.
-    fn validate_registration(
-        &self,
-        url_data: &UrlExtraData,
-    ) -> Result<(), PropertyRegistrationError> {
-        use self::PropertyRegistrationError::*;
-
-        // https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor:
-        //
-        //     The syntax descriptor is required for the @property rule to be valid; if it’s
-        //     missing, the @property rule is invalid.
-        let Some(ref syntax) = self.syntax else { return Err(MissingSyntax) };
-
-        // https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor:
-        //
-        //     The inherits descriptor is required for the @property rule to be valid; if it’s
-        //     missing, the @property rule is invalid.
-        if self.inherits.is_none() { return Err(MissingInherits) };
-
-        Self::validate_initial_value(syntax.descriptor(), self.initial_value.as_ref(), url_data)
-    }
 }
 
-impl ToCssWithGuard for PropertyRuleData {
+impl ToCssWithGuard for PropertyRegistration {
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#serialize-a-csspropertyrule>
     fn to_css(&self, _guard: &SharedRwLockReadGuard, dest: &mut CssStringWriter) -> fmt::Result {
         dest.write_str("@property ")?;
@@ -295,7 +268,7 @@ impl ToCssWithGuard for PropertyRuleData {
     }
 }
 
-impl ToShmem for PropertyRuleData {
+impl ToShmem for PropertyRegistration {
     fn to_shmem(&self, _builder: &mut SharedMemoryBuilder) -> to_shmem::Result<Self> {
         Err(String::from(
             "ToShmem failed for PropertyRule: cannot handle @property rules",
@@ -304,7 +277,7 @@ impl ToShmem for PropertyRuleData {
 }
 
 /// A custom property name wrapper that includes the `--` prefix in its serialization
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, MallocSizeOf)]
 pub struct PropertyRuleName(pub CustomPropertyName);
 
 impl ToCss for PropertyRuleName {

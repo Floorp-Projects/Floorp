@@ -2918,14 +2918,16 @@ pub extern "C" fn Servo_PropertyRule_GetName(rule: &PropertyRule, result: &mut n
 
 #[no_mangle]
 pub extern "C" fn Servo_PropertyRule_GetSyntax(rule: &PropertyRule, result: &mut nsACString) {
-    if let Some(ref syntax) = rule.syntax {
-        CssWriter::new(result).write_str(syntax.as_str()).unwrap()
+    if let Some(syntax) = rule.syntax.specified_string() {
+        result.assign(syntax);
+    } else {
+        debug_assert!(false, "Rule without specified syntax?");
     }
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_PropertyRule_GetInherits(rule: &PropertyRule) -> bool {
-    matches!(rule.inherits, Some(PropertyInherits::True))
+    rule.inherits()
 }
 
 #[no_mangle]
@@ -7484,7 +7486,7 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     let name = Atom::from(name.as_str_unchecked());
     let stylist = &doc_data.stylist;
     let custom_registration = stylist.get_custom_property_registration(&name);
-    let computed_value = if custom_registration.map_or(true, |r| r.inherits) {
+    let computed_value = if custom_registration.map_or(true, |r| r.inherits()) {
         computed_values.custom_properties.inherited.as_ref().and_then(|m| m.get(&name))
     } else {
         computed_values.custom_properties.non_inherited.as_ref().and_then(|m| m.get(&name))
@@ -8608,7 +8610,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
 ) -> RegisterCustomPropertyResult {
     use self::RegisterCustomPropertyResult::*;
     use style::custom_properties::SpecifiedValue;
-    use style::properties_and_values::rule::{PropertyRuleData, PropertyRegistrationError};
+    use style::properties_and_values::rule::{PropertyRegistrationError, PropertyRuleName};
     use style::properties_and_values::syntax::Descriptor;
 
     let mut per_doc_data = per_doc_data.borrow_mut();
@@ -8630,7 +8632,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
     }
     // Attempt to consume a syntax definition from syntax. If it returns failure, throw a
     // SyntaxError. Otherwise, let syntax definition be the returned syntax definition.
-    let Ok(syntax) = Descriptor::from_str(syntax) else { return InvalidSyntax };
+    let Ok(syntax) = Descriptor::from_str(syntax, /* preserve_specified = */ false) else { return InvalidSyntax };
 
     let initial_value = match initial_value {
         Some(v) => {
@@ -8648,11 +8650,9 @@ pub extern "C" fn Servo_RegisterCustomProperty(
     };
 
     if let Err(error) =
-        PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref(), url_data)
+        PropertyRegistration::validate_initial_value(&syntax, initial_value.as_ref(), url_data)
     {
         return match error {
-            PropertyRegistrationError::MissingInherits |
-            PropertyRegistrationError::MissingSyntax => unreachable!(),
             PropertyRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
             PropertyRegistrationError::InvalidInitialValue => InvalidInitialValue,
             PropertyRegistrationError::NoInitialValue=> NoInitialValue,
@@ -8663,12 +8663,13 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         .stylist
         .custom_property_script_registry_mut()
         .register(
-            name,
             PropertyRegistration {
+                name: PropertyRuleName(name),
                 syntax,
-                inherits,
+                inherits: if inherits { PropertyInherits::True } else { PropertyInherits::False },
                 initial_value,
                 url_data: url_data.clone(),
+                source_location: SourceLocation { line: 0, column: 0 },
             },
         );
 
@@ -8696,16 +8697,23 @@ impl PropDef {
     /// Creates a PropDef from a name and a PropertyRegistration.
     pub fn new(
         name: Atom,
-        property_registration: PropertyRegistration,
+        property_registration: &PropertyRegistration,
         from_js: bool
     ) -> Self {
-        let syntax = property_registration.syntax.to_css_nscstring();
+        let mut syntax = nsCString::new();
+        if let Some(spec) = property_registration.syntax.specified_string() {
+            syntax.assign(spec);
+        } else {
+            // FIXME: Descriptor::to_css should behave consistently (probably this shouldn't use
+            // the ToCss trait).
+            property_registration.syntax.to_css(&mut CssWriter::new(&mut syntax)).unwrap();
+        };
         let initial_value = property_registration.initial_value.to_css_nscstring();
 
         PropDef {
             name,
             syntax,
-            inherits: property_registration.inherits,
+            inherits: property_registration.inherits(),
             has_initial_value: property_registration.initial_value.is_some(),
             initial_value,
             from_js
@@ -8728,7 +8736,7 @@ pub extern "C" fn Servo_GetRegisteredCustomProperties(
             .map(|(name, property_registration)|
                 PropDef::new(
                     name.clone(),
-                    property_registration.clone(),
+                    property_registration,
                     /* from_js */
                     true
                 )
@@ -8742,10 +8750,9 @@ pub extern "C" fn Servo_GetRegisteredCustomProperties(
                 .iter()
                 .map(|(name, value)| {
                     let property_registration = &value.last().unwrap().0;
-
                     PropDef::new(
                         name.clone(),
-                        property_registration.clone(),
+                        property_registration,
                         /* from_js */
                         false
                     )
