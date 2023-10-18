@@ -537,6 +537,15 @@ export class MigrationWizard extends HTMLElement {
         "data-l10n-args",
         JSON.stringify({ permissionsPath: panelItem.permissionsPath })
       );
+
+      this.dispatchEvent(
+        new CustomEvent("MigrationWizard:PermissionsNeeded", {
+          bubbles: true,
+          detail: {
+            key,
+          },
+        })
+      );
     }
 
     selectionPage.toggleAttribute(
