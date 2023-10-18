@@ -361,8 +361,15 @@ static DesktopCaptureOptions CreateDesktopCaptureOptions() {
   }
   options.set_allow_cropping_window_capturer(true);
 #  if defined(RTC_ENABLE_WIN_WGC)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_wgc()) {
-    options.set_allow_wgc_capturer(true);
+  if (mozilla::StaticPrefs::media_webrtc_capture_screen_allow_wgc()) {
+    options.set_allow_wgc_screen_capturer(true);
+    options.set_allow_wgc_zero_hertz(
+        mozilla::StaticPrefs::media_webrtc_capture_wgc_allow_zero_hertz());
+  }
+  if (mozilla::StaticPrefs::media_webrtc_capture_window_allow_wgc()) {
+    options.set_allow_wgc_window_capturer(true);
+    options.set_allow_wgc_zero_hertz(
+        mozilla::StaticPrefs::media_webrtc_capture_wgc_allow_zero_hertz());
   }
 #  endif
 #endif

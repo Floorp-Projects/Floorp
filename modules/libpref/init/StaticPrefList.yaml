@@ -10820,7 +10820,17 @@
   value: true
   mirror: always
 
-- name: media.webrtc.capture.allow-wgc
+- name: media.webrtc.capture.screen.allow-wgc
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: media.webrtc.capture.window.allow-wgc
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: media.webrtc.capture.wgc.allow-zero-hertz
   type: RelaxedAtomicBool
   value: false
   mirror: always
