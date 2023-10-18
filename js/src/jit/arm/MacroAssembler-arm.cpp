@@ -4817,8 +4817,15 @@ void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
 void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
                                        Address boundsCheckLimit, Label* ok) {
   ScratchRegisterScope scratch(*this);
-  ma_ldr(DTRAddr(boundsCheckLimit.base, DtrOffImm(boundsCheckLimit.offset)),
-         scratch);
+  // We want to do a word load from
+  //   [boundsCheckLimit.base, #+boundsCheckLimit.offset],
+  // but the offset might exceed 4095, so we can't use ma_ldr directly.
+  // ma_dataTransferN will handle this correctly, but needs a scratch reg as
+  // an address temporary for the big-offset case.  The scratch reg is also
+  // used in all cases for the loaded value; that's OK.
+  ma_dataTransferN(IsLoad, /*size=*/32, /*IsSigned=*/false,
+                   boundsCheckLimit.base, Imm32(boundsCheckLimit.offset),
+                   scratch, scratch);
   as_cmp(index, O2Reg(scratch));
   as_b(ok, cond);
   if (JitOptions.spectreIndexMasking) {
