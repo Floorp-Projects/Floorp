@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
+
 let TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -47,18 +51,37 @@ async function waitForDialogAndCopyURL() {
   //select the whole URL
   gURLBar.focus();
   await SimpleTest.promiseClipboardChange(AUTH_URL, () => {
-    Assert.equal(gURLBar.value, AUTH_URL, "url bar copy value set");
+    Assert.equal(
+      gURLBar.value,
+      UrlbarTestUtils.trimURL(AUTH_URL),
+      "url bar copy value set"
+    );
     gURLBar.select();
     goDoCommand("cmd_copy");
   });
 
   // select only part of the URL
   gURLBar.focus();
-  let endOfSelectionRange = AUTH_URL.indexOf("/auth-route.sjs");
+  let endOfSelectionRange =
+    UrlbarTestUtils.trimURL(AUTH_URL).indexOf("/auth-route.sjs");
+
+  let isProtocolTrimmed = AUTH_URL.startsWith(
+    UrlbarTestUtils.getTrimmedProtocolWithSlashes()
+  );
   await SimpleTest.promiseClipboardChange(
-    AUTH_URL.substring(0, endOfSelectionRange),
+    AUTH_URL.substring(
+      0,
+      endOfSelectionRange +
+        (isProtocolTrimmed
+          ? UrlbarTestUtils.getTrimmedProtocolWithSlashes().length
+          : 0)
+    ),
     () => {
-      Assert.equal(gURLBar.value, AUTH_URL, "url bar copy value set");
+      Assert.equal(
+        gURLBar.value,
+        UrlbarTestUtils.trimURL(AUTH_URL),
+        "url bar copy value set"
+      );
       gURLBar.selectionStart = 0;
       gURLBar.selectionEnd = endOfSelectionRange;
       goDoCommand("cmd_copy");
@@ -73,14 +96,18 @@ async function waitForDialogAndCopyURL() {
   await onDialogClosed;
   Assert.equal(
     window.gURLBar.value,
-    CROSS_DOMAIN_URL,
+    UrlbarTestUtils.trimURL(CROSS_DOMAIN_URL),
     "No location is provided by the prompt"
   );
 
   //select the whole URL after URL is reset to normal
   gURLBar.focus();
   await SimpleTest.promiseClipboardChange(CROSS_DOMAIN_URL, () => {
-    Assert.equal(gURLBar.value, CROSS_DOMAIN_URL, "url bar copy value set");
+    Assert.equal(
+      gURLBar.value,
+      UrlbarTestUtils.trimURL(CROSS_DOMAIN_URL),
+      "url bar copy value set"
+    );
     gURLBar.select();
     goDoCommand("cmd_copy");
   });
@@ -91,5 +118,20 @@ async function waitForDialogAndCopyURL() {
  * canceling the prompt
  */
 add_task(async function testUrlCopy() {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimHttps", false],
+      ["browser.urlbar.trimURLs", true],
+    ],
+  });
+  await trigger401AndHandle();
+  SpecialPowers.popPrefEnv();
+
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.trimHttps", true],
+      ["browser.urlbar.trimURLs", true],
+    ],
+  });
   await trigger401AndHandle();
 });

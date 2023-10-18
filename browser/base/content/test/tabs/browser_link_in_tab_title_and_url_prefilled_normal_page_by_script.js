@@ -10,6 +10,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/base/content/test/tabs/common_link_in_tab_title_and_url_prefilled.js",
   this
 );
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
 
 add_task(async function normal_page__by_script() {
   await doTestInSameWindow({
@@ -26,7 +29,7 @@ add_task(async function normal_page__by_script() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -39,7 +42,7 @@ add_task(async function normal_page__by_script__abort() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: BLANK_TITLE,
-      urlbar: BLANK_URL,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Abort loading");
@@ -47,7 +50,7 @@ add_task(async function normal_page__by_script__abort() {
     },
     finalState: {
       tab: BLANK_TITLE,
-      urlbar: BLANK_URL,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
       history: [],
     },
   });
@@ -60,7 +63,7 @@ add_task(async function normal_page__by_script__timeout() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: BLANK_TITLE,
-      urlbar: BLANK_URL,
+      urlbar: UrlbarTestUtils.trimURL(BLANK_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -68,7 +71,7 @@ add_task(async function normal_page__by_script__timeout() {
     },
     finalState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: REQUEST_TIMEOUT_URL,
+      urlbar: UrlbarTestUtils.trimURL(REQUEST_TIMEOUT_URL),
       history: [REQUEST_TIMEOUT_URL],
     },
   });

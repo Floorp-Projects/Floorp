@@ -3,6 +3,10 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 let TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -60,7 +64,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       );
       Assert.equal(
         window.gURLBar.value,
-        AUTH_URL,
+        UrlbarTestUtils.trimURL(AUTH_URL),
         "Correct location is provided by the prompt"
       );
       Assert.equal(
@@ -75,7 +79,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       );
       Assert.equal(
         window.gURLBar.value,
-        "https://example.org",
+        UrlbarTestUtils.trimURL("https://example.org"),
         "No location is provided by the prompt, correct location is displayed"
       );
       Assert.equal(
@@ -87,7 +91,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       BrowserTestUtils.removeTab(tab);
       Assert.equal(
         window.gURLBar.value,
-        AUTH_URL,
+        UrlbarTestUtils.trimURL(AUTH_URL),
         "Correct location is provided by the prompt"
       );
       Assert.equal(
@@ -108,7 +112,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       gURLBar.setURI(null, true);
       Assert.equal(
         window.gURLBar.value,
-        AUTH_URL,
+        UrlbarTestUtils.trimURL(AUTH_URL),
         "Correct location is provided by the prompt"
       );
       // Cross domain and pref is not enabled
@@ -120,7 +124,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
       );
       Assert.equal(
         window.gURLBar.value,
-        CROSS_DOMAIN_URL,
+        UrlbarTestUtils.trimURL(CROSS_DOMAIN_URL),
         "No location is provided by the prompt, correct location is displayed"
       );
       Assert.equal(
@@ -138,7 +142,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
     );
     Assert.equal(
       window.gURLBar.value,
-      SAME_DOMAIN_URL,
+      UrlbarTestUtils.trimURL(SAME_DOMAIN_URL),
       "No location is provided by the prompt, correct location is displayed"
     );
     Assert.equal(
@@ -167,7 +171,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
   gURLBar.setURI(null, true);
   Assert.equal(
     window.gURLBar.value,
-    crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL,
+    UrlbarTestUtils.trimURL(crossDomain ? CROSS_DOMAIN_URL : SAME_DOMAIN_URL),
     "No location is provided by the prompt"
   );
   Assert.equal(

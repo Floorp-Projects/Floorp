@@ -5,6 +5,10 @@
 // Test the behavior of the tab and the urlbar when opening normal web page by
 // clicking link that the target is "_blank".
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 /* import-globals-from common_link_in_tab_title_and_url_prefilled.js */
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/browser/base/content/test/tabs/common_link_in_tab_title_and_url_prefilled.js",
@@ -18,7 +22,7 @@ add_task(async function normal_page__foreground__click() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -26,7 +30,7 @@ add_task(async function normal_page__foreground__click() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -39,7 +43,7 @@ add_task(async function normal_page__foreground__contextmenu() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -47,7 +51,7 @@ add_task(async function normal_page__foreground__contextmenu() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -60,7 +64,7 @@ add_task(async function normal_page__foreground__abort() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Abort loading");
@@ -68,7 +72,7 @@ add_task(async function normal_page__foreground__abort() {
     },
     finalState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -81,7 +85,7 @@ add_task(async function normal_page__foreground__timeout() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: REQUEST_TIMEOUT_URL,
+      urlbar: UrlbarTestUtils.trimURL(REQUEST_TIMEOUT_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -89,7 +93,7 @@ add_task(async function normal_page__foreground__timeout() {
     },
     finalState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: REQUEST_TIMEOUT_URL,
+      urlbar: UrlbarTestUtils.trimURL(REQUEST_TIMEOUT_URL),
       history: [REQUEST_TIMEOUT_URL],
     },
   });
@@ -112,7 +116,7 @@ add_task(async function normal_page__background__click() {
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -120,7 +124,7 @@ add_task(async function normal_page__background__click() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -133,7 +137,7 @@ add_task(async function normal_page__background__contextmenu() {
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -141,7 +145,7 @@ add_task(async function normal_page__background__contextmenu() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
       history: [WAIT_A_BIT_URL],
     },
   });
@@ -154,7 +158,7 @@ add_task(async function normal_page__background__abort() {
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Abort loading");
@@ -162,7 +166,7 @@ add_task(async function normal_page__background__abort() {
     },
     finalState: {
       tab: WAIT_A_BIT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
       history: [],
     },
   });
@@ -175,7 +179,7 @@ add_task(async function normal_page__background__timeout() {
     openAs: OPEN_AS.BACKGROUND,
     loadingState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -183,7 +187,7 @@ add_task(async function normal_page__background__timeout() {
     },
     finalState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
       history: [REQUEST_TIMEOUT_URL],
     },
   });

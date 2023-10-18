@@ -11,6 +11,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
+
 add_task(async function normal_page__no_target() {
   await doTestInSameWindow({
     link: "wait-a-bit--no-target",
@@ -20,7 +24,7 @@ add_task(async function normal_page__no_target() {
       // Inherit the title and URL until finishing loading a new link when the
       // link is opened in same tab.
       tab: HOME_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -28,7 +32,7 @@ add_task(async function normal_page__no_target() {
     },
     finalState: {
       tab: WAIT_A_BIT_PAGE_TITLE,
-      urlbar: WAIT_A_BIT_URL,
+      urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
       history: [HOME_URL, WAIT_A_BIT_URL],
     },
   });
@@ -41,7 +45,7 @@ add_task(async function normal_page__no_target__abort() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: HOME_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Abort loading");
@@ -49,7 +53,7 @@ add_task(async function normal_page__no_target__abort() {
     },
     finalState: {
       tab: HOME_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
       history: [HOME_URL],
     },
   });
@@ -62,7 +66,7 @@ add_task(async function normal_page__no_target__timeout() {
     openAs: OPEN_AS.FOREGROUND,
     loadingState: {
       tab: HOME_TITLE,
-      urlbar: HOME_URL,
+      urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
     async actionWhileLoading(onTabLoaded) {
       info("Wait until loading the link target");
@@ -70,7 +74,7 @@ add_task(async function normal_page__no_target__timeout() {
     },
     finalState: {
       tab: REQUEST_TIMEOUT_LOADING_TITLE,
-      urlbar: REQUEST_TIMEOUT_URL,
+      urlbar: UrlbarTestUtils.trimURL(REQUEST_TIMEOUT_URL),
       history: [HOME_URL, REQUEST_TIMEOUT_URL],
     },
   });
