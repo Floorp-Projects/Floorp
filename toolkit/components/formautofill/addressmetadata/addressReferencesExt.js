@@ -722,7 +722,6 @@ var addressDataExt = {
       "U.S.A.",
       "U.S.A",
     ],
-    fmt: "%N%n%A%n%C%S%n%Z%O",
     alpha_3_code: "USA",
   },
   "data/UM": {
