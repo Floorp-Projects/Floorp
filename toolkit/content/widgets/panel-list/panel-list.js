@@ -209,7 +209,7 @@
         winHeight,
         winScrollY,
         winScrollX,
-        winWidth,
+        clientWidth,
       } = await new Promise(resolve => {
         this.style.left = 0;
         this.style.top = 0;
@@ -227,6 +227,8 @@
             // Use y since top is reserved.
             let anchorBounds = getBounds(anchorElement);
             let panelBounds = getBounds(this);
+            let clientWidth = document.scrollingElement.clientWidth;
+
             resolve({
               anchorBottom: anchorBounds.bottom,
               anchorHeight: anchorBounds.height,
@@ -236,9 +238,9 @@
               panelHeight: panelBounds.height,
               panelWidth: panelBounds.width,
               winHeight: innerHeight,
-              winWidth: innerWidth,
               winScrollX: scrollX,
               winScrollY: scrollY,
+              clientWidth,
             });
           }, 0)
         );
@@ -257,7 +259,7 @@
           align = rightAlignX < 0 ? "left" : "right";
         } else {
           // Prefer aligning on the left.
-          align = leftAlignX + panelWidth > winWidth ? "right" : "left";
+          align = leftAlignX + panelWidth > clientWidth ? "right" : "left";
         }
         leftOffset = align === "left" ? leftAlignX : rightAlignX;
 
@@ -502,7 +504,7 @@
         anchorTop,
         parentPanelTop,
         panelWidth,
-        winWidth,
+        clientWidth,
       } = await new Promise(resolve => {
         requestAnimationFrame(() => {
           // It's possible this is being used in a context where windowUtils is
@@ -515,6 +517,7 @@
           let anchorBounds = getBounds(this.lastAnchorNode);
           let parentPanelBounds = getBounds(hostElement);
           let panelBounds = getBounds(this);
+          let clientWidth = document.scrollingElement.clientWidth;
 
           resolve({
             anchorLeft: anchorBounds.left,
@@ -522,14 +525,20 @@
             anchorTop: anchorBounds.top,
             parentPanelTop: parentPanelBounds.top,
             panelWidth: panelBounds.width,
-            winWidth: innerWidth,
+            clientWidth,
           });
         });
       });
 
       let align = hostElement.getAttribute("align");
 
-      if (align == "left" && anchorLeft + anchorWidth + panelWidth < winWidth) {
+      // we use document.scrollingElement.clientWidth to exclude the width
+      // of vertical scrollbars, because its inclusion can cause the submenu
+      // to open to the wrong side and be overlapped by the scrollbar.
+      if (
+        align == "left" &&
+        anchorLeft + anchorWidth + panelWidth < clientWidth
+      ) {
         this.style.left = `${anchorWidth}px`;
         this.style.right = "";
       } else {
