@@ -2021,23 +2021,11 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForSystem(
     chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL |
                    nsIWebBrowserChrome::CHROME_DEPENDENT;
   }
-
-  /* On mobile we want to ignore the dialog window feature, since the mobile UI
-     does not provide any affordance for dialog windows. This does not interfere
-     with dialog windows created through openDialog. */
-  bool disableDialogFeature = false;
-  nsCOMPtr<nsIPrefBranch> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  branch->GetBoolPref("dom.disable_window_open_dialog_feature",
-                      &disableDialogFeature);
-
-  if (!disableDialogFeature) {
-    if (aFeatures.GetBoolWithDefault("dialog", false)) {
-      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
-    }
+  if (aFeatures.GetBoolWithDefault("dialog", false)) {
+    chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
   }
 
-  /* and dialogs need to have the last word. assume dialogs are dialogs,
+  /* dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */
   if (aDialog) {
     if (!aFeatures.Exists("dialog")) {
