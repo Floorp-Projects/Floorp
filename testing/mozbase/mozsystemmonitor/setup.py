@@ -19,8 +19,7 @@ setup(
     description="Monitor system resource usage.",
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
     classifiers=[
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3",
     ],
     # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     license="MPL 2.0",

@@ -120,9 +120,7 @@ def _collect(pipe, poll_interval):
     try:
         # Establish initial values.
 
-        # We should ideally use a monotonic clock. However, Python 2.7 doesn't
-        # make a monotonic clock available on all platforms. Python 3.3 does!
-        last_time = time.time()
+        last_time = time.monotonic()
         io_last = get_disk_io_counters()
         cpu_last = psutil.cpu_times(True)
         swap_last = psutil.swap_memory()
@@ -139,7 +137,7 @@ def _collect(pipe, poll_interval):
             cpu_percent = psutil.cpu_percent(None, True)
             virt_mem = psutil.virtual_memory()
             swap_mem = psutil.swap_memory()
-            measured_end_time = time.time()
+            measured_end_time = time.monotonic()
 
             # TODO Does this wrap? At 32 bits? At 64 bits?
             # TODO Consider patching "delta" API to upstream.
@@ -169,7 +167,7 @@ def _collect(pipe, poll_interval):
                 )
             )
 
-            collection_overhead = time.time() - last_time - sleep_interval
+            collection_overhead = time.monotonic() - last_time - sleep_interval
             last_time = measured_end_time
             sleep_interval = max(0, poll_interval - collection_overhead)
 
@@ -306,6 +304,7 @@ class SystemResourceMonitor(object):
         self._virt_len = len(virt)
         self._swap_type = type(swap)
         self._swap_len = len(swap)
+        self.start_timestamp = time.time()
 
         self._pipe, child_pipe = multiprocessing.Pipe(True)
 
@@ -413,7 +412,7 @@ class SystemResourceMonitor(object):
         Events are actions that occur at a specific point in time. If you are
         looking for an action that has a duration, see the phase API below.
         """
-        self.events.append((time.time(), name))
+        self.events.append((time.monotonic(), name))
 
     def record_marker(self, name, start, end, text):
         """Record a marker with a duration and an optional text
@@ -425,10 +424,10 @@ class SystemResourceMonitor(object):
         self.markers.append((name, start, end, text))
 
     def begin_marker(self, name, text):
-        self._active_markers[name + ":" + text] = time.time()
+        self._active_markers[name + ":" + text] = time.monotonic()
 
     def end_marker(self, name, text):
-        end = time.time()
+        end = time.monotonic()
         id = name + ":" + text
         if not id in self._active_markers:
             return
@@ -453,14 +452,14 @@ class SystemResourceMonitor(object):
         """
         assert name not in self._active_phases
 
-        self._active_phases[name] = time.time()
+        self._active_phases[name] = time.monotonic()
 
     def finish_phase(self, name):
         """Record the end of a phase."""
 
         assert name in self._active_phases
 
-        phase = (self._active_phases[name], time.time())
+        phase = (self._active_phases[name], time.monotonic())
         self.phases[name] = phase
         del self._active_phases[name]
 
@@ -769,7 +768,7 @@ class SystemResourceMonitor(object):
         return o
 
     def as_profile(self):
-        startTime = self.measurements[0].start
+        start_time = self.start_time
         profile = {
             "meta": {
                 "processType": 0,
@@ -779,7 +778,7 @@ class SystemResourceMonitor(object):
                 "preprocessedProfileVersion": 47,
                 "symbolicationNotSupported": True,
                 "interval": self.poll_interval * 1000,
-                "startTime": startTime * 1000,
+                "startTime": self.start_timestamp * 1000,
                 "logicalCPUs": psutil.cpu_count(logical=True),
                 "physicalCPUs": psutil.cpu_count(logical=False),
                 "mainMemory": psutil.virtual_memory()[0],
@@ -969,8 +968,8 @@ class SystemResourceMonitor(object):
             # number of ms is good enough.
             # For short duration markers, the profiler front-end may show up to
             # 3 digits after the decimal point (ie. µs precision).
-            markers["startTime"].append(round((start - startTime) * 1000, precision))
-            markers["endTime"].append(round((end - startTime) * 1000, precision))
+            markers["startTime"].append(round((start - start_time) * 1000, precision))
+            markers["endTime"].append(round((end - start_time) * 1000, precision))
             markers["category"].append(0)
             # 1 = marker with start and end times, 2 = start but no end.
             markers["phase"].append(1)
@@ -996,7 +995,7 @@ class SystemResourceMonitor(object):
 
             # Sample times
             samples["stack"].append(0)
-            samples["time"].append(round((m.end - startTime) * 1000))
+            samples["time"].append(round((m.end - start_time) * 1000))
 
             # CPU
             markerData = {
