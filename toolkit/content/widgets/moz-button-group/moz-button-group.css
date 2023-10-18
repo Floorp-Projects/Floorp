@@ -7,6 +7,10 @@
   justify-content: flex-end;
 }
 
+::slotted(button) {
+  margin: 0 !important;
+}
+
 ::slotted(button:not(:first-child, .popup-notification-dropmarker)) {
   margin-inline-start: 8px !important;
 }
