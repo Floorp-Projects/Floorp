@@ -2550,6 +2550,12 @@ void MediaTrack::QueueMessage(UniquePtr<ControlMessageInterface> aMessage) {
   GraphImpl()->AppendMessage(std::move(aMessage));
 }
 
+void MediaTrack::RunMessageAfterProcessing(
+    UniquePtr<ControlMessageInterface> aMessage) {
+  MOZ_ASSERT(mGraph->OnGraphThread());
+  GraphImpl()->RunMessageAfterProcessing(std::move(aMessage));
+}
+
 SourceMediaTrack::SourceMediaTrack(MediaSegment::Type aType,
                                    TrackRate aSampleRate)
     : MediaTrack(aSampleRate, aType,

@@ -662,24 +662,15 @@ void AudioNodeTrack::SetActive() {
   }
 }
 
-class AudioNodeTrack::CheckForInactiveMessage final : public ControlMessage {
- public:
-  explicit CheckForInactiveMessage(AudioNodeTrack* aTrack)
-      : ControlMessage(aTrack) {}
-  void Run() override {
-    TRACE("AudioNodeTrack::CheckForInactive");
-    auto ns = static_cast<AudioNodeTrack*>(mTrack);
-    ns->CheckForInactive();
-  }
-};
-
 void AudioNodeTrack::ScheduleCheckForInactive() {
   if (mActiveInputCount > 0 && !mMarkAsEndedAfterThisBlock) {
     return;
   }
 
-  auto message = MakeUnique<CheckForInactiveMessage>(this);
-  GraphImpl()->RunMessageAfterProcessing(std::move(message));
+  RunAfterProcessing([self = RefPtr{this}, this] {
+    TRACE("AudioNodeTrack::CheckForInactive");
+    CheckForInactive();
+  });
 }
 
 void AudioNodeTrack::CheckForInactive() {
