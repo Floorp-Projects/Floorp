@@ -29,8 +29,6 @@
 """Request Handler and Request/Connection classes for standalone server.
 """
 
-from __future__ import absolute_import
-
 import os
 
 from six.moves import CGIHTTPServer

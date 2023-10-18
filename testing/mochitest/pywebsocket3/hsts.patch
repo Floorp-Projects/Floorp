@@ -1,0 +1,31 @@
+diff --git a/mod_pywebsocket/handshake/base.py b/mod_pywebsocket/handshake/base.py
+index ffad0614d6bc4..12fa8ece25d03 100644
+--- a/mod_pywebsocket/handshake/base.py
++++ b/mod_pywebsocket/handshake/base.py
+@@ -300,6 +300,9 @@ class HandshakerBase(object):
+ 
+     def _set_protocol(self):
+         self._request.ws_protocol = None
++        # MOZILLA
++        self._request.sts = None
++        # /MOZILLA
+ 
+         sec_websocket_protocol_header = self._transform_header(
+             common.SEC_WEBSOCKET_PROTOCOL_HEADER)
+diff --git a/mod_pywebsocket/handshake/hybi.py b/mod_pywebsocket/handshake/hybi.py
+index cf931db5a506e..5290ea24fb6f6 100644
+--- a/mod_pywebsocket/handshake/hybi.py
++++ b/mod_pywebsocket/handshake/hybi.py
+@@ -205,6 +205,12 @@ class Handshaker(HandshakerBase):
+                     common.SEC_WEBSOCKET_EXTENSIONS_HEADER,
+                     common.format_extensions(self._request.ws_extensions)))
+ 
++        # MOZILLA
++        if self._request.sts is not None:
++            response.append(format_header("Strict-Transport-Security",
++                                          self._request.sts))
++        # /MOZILLA
++
+         # Headers not specific for WebSocket
+         for name, value in self._request.extra_headers:
+             response.append(format_header(name, value))
