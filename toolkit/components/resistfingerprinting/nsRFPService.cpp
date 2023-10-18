@@ -107,13 +107,8 @@ static constexpr uint32_t kVideoDroppedRatio = 5;
 
 // Fingerprinting protections that are enabled by default. This can be
 // overridden using the privacy.fingerprintingProtection.overrides pref.
-#ifdef NIGHTLY_BUILD
 const RFPTarget kDefaultFingerintingProtections =
     RFPTarget::CanvasRandomization | RFPTarget::FontVisibilityLangPack;
-#else
-const RFPTarget kDefaultFingerintingProtections =
-    RFPTarget::FontVisibilityLangPack;
-#endif
 
 // ============================================================================
 // ============================================================================
