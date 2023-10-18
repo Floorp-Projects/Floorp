@@ -18,26 +18,12 @@ export function getFramework(symbols) {
   return null;
 }
 
-function isReactComponent({
-  importsReact,
-  classes,
-  callExpressions,
-  identifiers,
-}) {
+function isReactComponent({ importsReact, classes, identifiers }) {
   return (
     importsReact ||
-    requiresReact(callExpressions) ||
     extendsReactComponent(classes) ||
     isReact(identifiers) ||
     isRedux(identifiers)
-  );
-}
-
-function requiresReact(callExpressions) {
-  return callExpressions.some(
-    callExpression =>
-      callExpression.name === "require" &&
-      callExpression.values.some(value => value === "react")
   );
 }
 

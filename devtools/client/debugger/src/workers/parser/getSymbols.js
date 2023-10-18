@@ -61,8 +61,12 @@ function extractSymbol(path, symbols, state) {
     symbols.classes.push(getClassDeclarationSymbol(path.node));
   }
 
-  if (t.isImportDeclaration(path) && !symbols.importsReact) {
-    symbols.importsReact = isReactImport(path.node);
+  if (!symbols.importsReact) {
+    if (t.isImportDeclaration(path)) {
+      symbols.importsReact = isReactImport(path.node);
+    } else if (t.isCallExpression(path)) {
+      symbols.importsReact = isReactRequire(path.node);
+    }
   }
 
   if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
@@ -82,22 +86,16 @@ function extractSymbol(path, symbols, state) {
     });
   }
 
-  if (t.isCallExpression(path)) {
-    symbols.callExpressions.push(getCallExpressionSymbol(path.node));
-  }
-
   symbols.identifiers.push(...getIdentifierSymbols(path));
 }
 
 function extractSymbols(sourceId) {
   const symbols = {
     functions: [],
-    callExpressions: [],
     memberExpressions: [],
     comments: [],
     identifiers: [],
     classes: [],
-    imports: [],
     literals: [],
     hasJsx: false,
     hasTypes: false,
@@ -366,10 +364,6 @@ export function getSymbols(sourceId) {
     // This is used in the main thread only to compute the source icon
     framework: symbols.framework,
 
-    // This attribute is only used within the worker for framework computation:
-    // `callExpressions`
-    // Only uses `name` and `values` attributes.
-
     // This is only used by `findOutOfScopeLocations`:
     // `comments`
   };
@@ -408,23 +402,12 @@ function isReactImport(node) {
   );
 }
 
-function getCallExpressionSymbol(node) {
-  const { callee, arguments: args } = node;
-  const values = args.filter(arg => arg.value).map(arg => arg.value);
-  if (t.isMemberExpression(callee)) {
-    const {
-      property: { name },
-    } = callee;
-    return {
-      name,
-      values,
-    };
-  }
-  const { identifierName } = callee.loc;
-  return {
-    name: identifierName,
-    values,
-  };
+function isReactRequire(node) {
+  const { callee } = node;
+  const name = t.isMemberExpression(callee)
+    ? callee.property.name
+    : callee.loc.identifierName;
+  return name == "require" && node.arguments.some(arg => arg.value == "react");
 }
 
 function getClassParentName(superClass) {
