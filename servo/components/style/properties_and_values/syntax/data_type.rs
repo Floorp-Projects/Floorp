@@ -5,8 +5,7 @@
 //! Used for parsing and serializing component names from the syntax string.
 
 use super::{Component, ComponentName, Multiplier};
-use std::fmt::{self, Debug};
-use std::{fmt::Write};
+use std::fmt::{self, Debug, Write};
 use style_traits::{CssWriter, ToCss};
 
 /// <https://drafts.css-houdini.org/css-properties-values-api-1/#supported-names>

@@ -23,7 +23,6 @@ use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
-use crate::properties_and_values::rule::Inherits;
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
@@ -715,7 +714,7 @@ impl Stylist {
         for (k, v) in self.custom_property_script_registry().properties().iter() {
             seen_names.insert(k.clone());
             if let Some(value) = &v.initial_value {
-                let map = if v.inherits {
+                let map = if v.inherits() {
                     &mut inherited_map
                 } else {
                     &mut non_inherited_map
@@ -728,7 +727,7 @@ impl Stylist {
                 if seen_names.insert(k.clone()) {
                     let last_value = &v.last().unwrap().0;
                     if let Some(ref value) = last_value.initial_value {
-                        let map = if last_value.inherits {
+                        let map = if last_value.inherits() {
                             &mut inherited_map
                         } else {
                             &mut non_inherited_map
@@ -2414,7 +2413,8 @@ pub struct CascadeData {
 
     /// A map with all the layer-ordered registrations from style at this `CascadeData`'s origin,
     /// indexed by name.
-    custom_property_registrations: LayerOrderedMap<PropertyRegistration>,
+    #[ignore_malloc_size_of = "Arc"]
+    custom_property_registrations: LayerOrderedMap<Arc<PropertyRegistration>>,
 
     /// A map from cascade layer name to layer order.
     layer_id: FxHashMap<LayerName, LayerId>,
@@ -2945,18 +2945,10 @@ impl CascadeData {
                         compare_keyframes_in_same_layer,
                     )?;
                 },
-                CssRule::Property(ref rule) => {
-                    let url_data = stylesheet.contents().url_data.read();
-                    // FIXME(emilio, bug 1858160): Simplify storage.
-                    let registration = PropertyRegistration {
-                        syntax: rule.syntax.as_ref().unwrap().descriptor().clone(),
-                        inherits: rule.inherits == Some(Inherits::True),
-                        initial_value: rule.initial_value.clone(),
-                        url_data: url_data.clone(),
-                    };
+                CssRule::Property(ref registration) => {
                     self.custom_property_registrations.try_insert(
-                        rule.name.0.clone(),
-                        registration,
+                        registration.name.0.clone(),
+                        Arc::clone(registration),
                         containing_rule_state.layer_id,
                     )?;
                 },
@@ -3300,7 +3292,7 @@ impl CascadeData {
     }
 
     /// Returns the custom properties map.
-    pub fn custom_property_registrations(&self) -> &LayerOrderedMap<PropertyRegistration> {
+    pub fn custom_property_registrations(&self) -> &LayerOrderedMap<Arc<PropertyRegistration>> {
         &self.custom_property_registrations
     }
 

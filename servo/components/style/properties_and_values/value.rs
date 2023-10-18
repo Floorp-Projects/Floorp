@@ -484,7 +484,7 @@ impl<'a> Parser<'a> {
             None,
             None,
         );
-        for component in self.syntax.0.iter() {
+        for component in self.syntax.components.iter() {
             let result = input.try_parse(|input| {
                 input.parse_entirely(|input| {
                     Self::parse_value(context, input, &component.unpremultiplied())
