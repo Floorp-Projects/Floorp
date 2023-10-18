@@ -21,9 +21,6 @@ var { ExtensionPreferencesManager } = ChromeUtils.importESModule(
 var { ExtensionError } = ExtensionUtils;
 
 const CONTAINER_PREF_INSTALL_DEFAULTS = {
-  "privacy.userContext.enabled": true,
-  "privacy.userContext.ui.enabled": true,
-  "privacy.usercontext.about_newtab_segregation.enabled": true,
   "privacy.userContext.extension": undefined,
 };
 
@@ -158,6 +155,11 @@ this.contextualIdentities = class extends ExtensionAPIPersistent {
     let { extension } = this;
 
     if (extension.hasPermission("contextualIdentities")) {
+      // Turn on contextual identities, and never turn it off.  We handle
+      // this here to ensure prefs are set when an addon is enabled.
+      Services.prefs.setBoolPref("privacy.userContext.enabled", true);
+      Services.prefs.setBoolPref("privacy.userContext.ui.enabled", true);
+
       ExtensionPreferencesManager.setSetting(
         extension.id,
         CONTAINERS_ENABLED_SETTING_NAME,
