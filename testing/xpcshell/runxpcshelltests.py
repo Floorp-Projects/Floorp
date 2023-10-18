@@ -1405,6 +1405,7 @@ class XPCShellTests(object):
                         env=self.env,
                         cwd=os.getcwd(),
                         universal_newlines=True,
+                        start_new_session=True,
                     )
                 self.nodeProc[name] = process
 
@@ -1434,6 +1435,9 @@ class XPCShellTests(object):
             self.log.info("Node %s server shutting down ..." % name)
             if proc.poll() is not None:
                 self.log.info("Node server %s already dead %s" % (name, proc.poll()))
+            elif sys.platform != "win32":
+                # Kill process and all its spawned children.
+                os.killpg(proc.pid, signal.SIGTERM)
             else:
                 proc.terminate()
 
