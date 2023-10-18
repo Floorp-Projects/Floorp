@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<script>
+  window.addEventListener('load', async () => {
+    const db1 = indexedDB.open('DB_1696052013002', {})
+    db1.onsuccess = () => window.close()
+    const blob = new Blob(['0'], {})
+    db2 = indexedDB.open('DB_1696052013003', {})
+    db2.onupgradeneeded = (e) => {
+      const store = e.target.result.createObjectStore('IDBStore_0', {
+        'autoIncrement': true,
+      }, 'ObjectKey_0')
+      store.put({ store_key_1: blob })
+      const index = store.createIndex('IDBIndex_2', ['index_key_3'], {})
+      store.mozGetAll()
+      store.transaction.commit()
+    }
+  })
+</script>
