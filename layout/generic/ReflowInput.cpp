@@ -2456,8 +2456,7 @@ static void UpdateProp(nsIFrame* aFrame,
                        const FramePropertyDescriptor<nsMargin>* aProperty,
                        bool aNeeded, const nsMargin& aNewValue) {
   if (aNeeded) {
-    nsMargin* propValue = aFrame->GetProperty(aProperty);
-    if (propValue) {
+    if (nsMargin* propValue = aFrame->GetProperty(aProperty)) {
       *propValue = aNewValue;
     } else {
       aFrame->AddProperty(aProperty, new nsMargin(aNewValue));
@@ -2474,11 +2473,7 @@ void SizeComputationInput::InitOffsets(WritingMode aCBWM, nscoord aPercentBasis,
                                        const Maybe<LogicalMargin>& aPadding,
                                        const nsStyleDisplay* aDisplay) {
   DISPLAY_INIT_OFFSETS(mFrame, this, aPercentBasis, aCBWM, aBorder, aPadding);
-
-  // Since we are in reflow, we don't need to store these properties anymore
-  // unless they are dependent on width, in which case we store the new value.
   nsPresContext* presContext = mFrame->PresContext();
-  mFrame->RemoveProperty(nsIFrame::UsedBorderProperty());
 
   // Compute margins from the specified margin style information. These
   // become the default computed values, and may be adjusted below
