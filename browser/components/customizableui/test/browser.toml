@@ -38,8 +38,6 @@ skip-if = ["verify"]
 ["browser_1795260_searchbar_overflow_toolbar.js"]
 tags = "overflowable-toolbar"
 
-["browser_1856572_ensure_Fluent_works_in_customizeMode.js"]
-
 ["browser_694291_searchbar_preference.js"]
 
 ["browser_873501_handle_specials.js"]
