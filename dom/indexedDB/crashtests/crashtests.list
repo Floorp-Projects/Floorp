@@ -3,3 +3,4 @@ load 1499854-1.html
 load 1505821-1.html
 load 1543154-1.html
 skip-if(!is64Bit) skip-if(Android) skip-if(AddressSanitizer) skip-if(ThreadSanitizer) load 1813284-1.html
+skip-if(Android) load 1857979-1.html
