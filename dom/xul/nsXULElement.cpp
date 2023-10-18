@@ -1885,9 +1885,9 @@ class ScriptCompileTask final : public Task {
   }
 
  public:
-  bool Run() override {
+  TaskResult Run() override {
     Compile();
-    return true;
+    return TaskResult::Complete;
   }
 
   already_AddRefed<JS::Stencil> StealStencil() { return mStencil.forget(); }
@@ -1923,11 +1923,11 @@ class NotifyOffThreadScriptCompletedTask : public Task {
         mReceiver(aReceiver),
         mCompileTask(aCompileTask) {}
 
-  bool Run() override {
+  TaskResult Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (PastShutdownPhase(ShutdownPhase::XPCOMShutdownFinal)) {
-      return true;
+      return TaskResult::Complete;
     }
 
     RefPtr<JS::Stencil> stencil = mCompileTask->StealStencil();
@@ -1936,7 +1936,7 @@ class NotifyOffThreadScriptCompletedTask : public Task {
     (void)mReceiver->OnScriptCompileComplete(
         stencil, stencil ? NS_OK : NS_ERROR_FAILURE);
 
-    return true;
+    return TaskResult::Complete;
   }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY

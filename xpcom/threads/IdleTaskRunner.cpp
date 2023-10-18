@@ -36,7 +36,7 @@ class IdleTaskRunnerTask : public Task {
     SetManager(TaskController::Get()->GetIdleTaskManager());
   }
 
-  bool Run() override {
+  TaskResult Run() override {
     if (mRunner) {
       // IdleTaskRunner::Run can actually trigger the destruction of the
       // IdleTaskRunner. Make sure it doesn't get destroyed before the method
@@ -44,7 +44,7 @@ class IdleTaskRunnerTask : public Task {
       RefPtr<IdleTaskRunner> runner(mRunner);
       runner->Run();
     }
-    return true;
+    return TaskResult::Complete;
   }
 
   void SetIdleDeadline(TimeStamp aDeadline) override {

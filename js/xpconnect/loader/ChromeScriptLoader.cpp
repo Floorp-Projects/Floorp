@@ -143,15 +143,15 @@ class AsyncScriptCompileTask final : public Task {
   }
 
  public:
-  bool Run() override {
+  TaskResult Run() override {
     MutexAutoLock lock(mMutex);
 
     if (mIsCancelled) {
-      return true;
+      return TaskResult::Complete;
     }
 
     Compile();
-    return true;
+    return TaskResult::Complete;
   }
 
   already_AddRefed<JS::Stencil> StealStencil(JSContext* aCx) {
@@ -227,7 +227,7 @@ class AsyncScriptCompilationCompleteTask : public Task {
   }
 #endif
 
-  bool Run() override;
+  TaskResult Run() override;
 
  private:
   // NOTE:
@@ -379,11 +379,11 @@ bool AsyncScriptCompiler::StartOffThreadCompile(
   return true;
 }
 
-bool AsyncScriptCompilationCompleteTask::Run() {
+Task::TaskResult AsyncScriptCompilationCompleteTask::Run() {
   mCompiler->OnCompilationComplete(mCompileTask.get());
   mCompiler = nullptr;
   mCompileTask = nullptr;
-  return true;
+  return TaskResult::Complete;
 }
 
 void AsyncScriptCompiler::OnCompilationComplete(
