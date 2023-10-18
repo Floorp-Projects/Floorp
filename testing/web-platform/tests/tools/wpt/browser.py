@@ -38,7 +38,7 @@ FIREFOX_CI_ROOT_URL = 'https://firefox-ci-tc.services.mozilla.com'
 
 
 def _get_fileversion(binary, logger=None):
-    command = "(Get-Item '%s').VersionInfo.FileVersion" % binary.replace("'", "''")
+    command = "(Get-Item -ErrorAction Stop '%s').VersionInfo.FileVersion" % binary.replace("'", "''")
     try:
         return call("powershell.exe", command).strip()
     except (subprocess.CalledProcessError, OSError):
