@@ -680,20 +680,13 @@ class ProfileCreator:
                     elif name != 'unittest-features':
                         pref_paths.append(os.path.join(self.prefs_root, name, 'user.js'))
         else:
-            # Old preference files used before the creation of profiles.json (remove when no longer supported)
-            legacy_pref_paths = (
-                os.path.join(self.prefs_root, 'prefs_general.js'),   # Used in Firefox 60 and below
-                os.path.join(self.prefs_root, 'common', 'user.js'),  # Used in Firefox 61
-            )
-            for path in legacy_pref_paths:
-                if os.path.isfile(path):
-                    pref_paths.append(path)
+            self.logger.warning(f"Failed to load profiles from {profiles}")
 
         for path in pref_paths:
             if os.path.exists(path):
                 prefs.add(Preferences.read_prefs(path))
             else:
-                self.logger.warning("Failed to find base prefs file in %s" % path)
+                self.logger.warning(f"Failed to find prefs file in {path}")
 
         # Add any custom preferences
         prefs.add(self.extra_prefs, cast=True)
