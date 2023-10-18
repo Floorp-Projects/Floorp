@@ -30,22 +30,6 @@
 
 #define nsHtml5Tokenizer_cpp__
 
-#include "jArray.h"
-#include "nsAHtml5TreeBuilderState.h"
-#include "nsAtom.h"
-#include "nsGkAtoms.h"
-#include "nsHtml5ArrayCopy.h"
-#include "nsHtml5AtomTable.h"
-#include "nsHtml5DocumentMode.h"
-#include "nsHtml5Highlighter.h"
-#include "nsHtml5Macros.h"
-#include "nsHtml5NamedCharacters.h"
-#include "nsHtml5NamedCharactersAccel.h"
-#include "nsHtml5String.h"
-#include "nsHtml5TokenizerLoopPolicies.h"
-#include "nsIContent.h"
-#include "nsTraceRefcnt.h"
-
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5TreeBuilder.h"
