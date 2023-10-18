@@ -119,11 +119,14 @@ void VideoCaptureImpl::DeRegisterCaptureDataCallback(
 }
 
 int32_t VideoCaptureImpl::StopCaptureIfAllClientsClose() {
-  if (_dataCallBacks.empty()) {
-    return StopCapture();
-  } else {
-    return 0;
+  RTC_DCHECK_RUN_ON(&api_checker_);
+  {
+    MutexLock lock(&api_lock_);
+    if (!_dataCallBacks.empty()) {
+      return 0;
+    }
   }
+  return StopCapture();
 }
 
 int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
