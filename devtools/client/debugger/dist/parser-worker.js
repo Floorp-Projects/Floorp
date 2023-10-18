@@ -41343,8 +41343,16 @@
       return /^\[/m.test(expression);
     }
 
-    function getPatternIdentifiers(pattern) {
-      let items = [];
+    /**
+     * Add the identifiers for a given object pattern.
+     *
+     * @param {Array.<Object>} identifiers
+     *        the current list of identifiers where to push the new identifiers
+     *        related to this path.
+     * @param {Object} pattern
+     */
+    function addPatternIdentifiers(identifiers, pattern) {
+      let items;
       if (lib$3.isObjectPattern(pattern)) {
         items = pattern.properties.map(({ value }) => value);
       }
@@ -41353,24 +41361,24 @@
         items = pattern.elements;
       }
 
-      return getIdentifiers(items);
+      if (items) {
+        addIdentifiers(identifiers, items);
+      }
     }
 
-    function getIdentifiers(items) {
-      let ids = [];
-      items.forEach(function (item) {
+    function addIdentifiers(identifiers, items) {
+      for (const item of items) {
         if (lib$3.isObjectPattern(item) || lib$3.isArrayPattern(item)) {
-          ids = ids.concat(getPatternIdentifiers(item));
+          addPatternIdentifiers(identifiers, item);
         } else if (lib$3.isIdentifier(item)) {
           const { start, end } = item.loc;
-          ids.push({
+          identifiers.push({
             name: item.name,
             expression: item.name,
             location: { start, end },
           });
         }
-      });
-      return ids;
+      }
     }
 
     // Top Level checks the number of "body" nodes in the ancestor chain
@@ -41722,7 +41730,7 @@
         });
       }
 
-      symbols.identifiers.push(...getIdentifierSymbols(path));
+      getIdentifierSymbols(symbols.identifiers, path);
     }
 
     function extractSymbols(sourceId) {
@@ -42072,37 +42080,36 @@
     /**
      * Get a list of identifiers that are part of the given path.
      *
+     * @param {Array.<Object>} identifiers
+     *        the current list of identifiers where to push the new identifiers
+     *        related to this path.
      * @param {Object} path
-     * @returns {Array.<Object>} a list of identifiers
      */
-    function getIdentifierSymbols(path) {
+    function getIdentifierSymbols(identifiers, path) {
       if (lib$3.isStringLiteral(path) && lib$3.isProperty(path.parentPath)) {
         const { start, end } = path.node.loc;
-        return [
-          {
-            name: path.node.value,
-            expression: getObjectExpressionValue(path.parent),
-            location: { start, end },
-          },
-        ];
+        identifiers.push({
+          name: path.node.value,
+          expression: getObjectExpressionValue(path.parent),
+          location: { start, end },
+        });
+        return;
       }
 
-      const identifiers = [];
       if (lib$3.isIdentifier(path) && !lib$3.isGenericTypeAnnotation(path.parent)) {
         // We want to include function params, but exclude the function name
         if (lib$3.isClassMethod(path.parent) && !path.inList) {
-          return [];
+          return;
         }
 
         if (lib$3.isProperty(path.parentPath) && !isObjectShorthand(path.parent)) {
           const { start, end } = path.node.loc;
-          return [
-            {
-              name: path.node.name,
-              expression: getObjectExpressionValue(path.parent),
-              location: { start, end },
-            },
-          ];
+          identifiers.push({
+            name: path.node.name,
+            expression: getObjectExpressionValue(path.parent),
+            location: { start, end },
+          });
+          return;
         }
 
         let { start, end } = path.node.loc;
@@ -42130,10 +42137,8 @@
       if (lib$3.isVariableDeclarator(path)) {
         const nodeId = path.node.id;
 
-        identifiers.push(...getPatternIdentifiers(nodeId));
+        addPatternIdentifiers(identifiers, nodeId);
       }
-
-      return identifiers;
     }
 
     /**
