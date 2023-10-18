@@ -14,7 +14,8 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/PrintTarget.h"
 #include "mozilla/Preferences.h"  // for Preferences
-#include "mozilla/Services.h"     // for GetObserverService
+#include "mozilla/ProfilerMarkers.h"
+#include "mozilla/Services.h"  // for GetObserverService
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Try.h"            // for MOZ_TRY
 #include "mozilla/mozalloc.h"       // for operator new
@@ -269,6 +270,8 @@ nsresult nsDeviceContext::BeginDocument(const nsAString& aTitle,
                                         int32_t aStartPage, int32_t aEndPage) {
   MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc,
                         "Mismatched BeginDocument/EndDocument calls");
+  AUTO_PROFILER_MARKER_TEXT("DeviceContext Printing", LAYOUT_Printing, {},
+                            "nsDeviceContext::BeginDocument"_ns);
 
   nsresult rv = mPrintTarget->BeginPrinting(aTitle, aPrintToFileName,
                                             aStartPage, aEndPage);
@@ -292,6 +295,8 @@ RefPtr<PrintEndDocumentPromise> nsDeviceContext::EndDocument() {
   MOZ_DIAGNOSTIC_ASSERT(mIsCurrentlyPrintingDoc,
                         "Mismatched BeginDocument/EndDocument calls");
   MOZ_DIAGNOSTIC_ASSERT(mPrintTarget);
+  AUTO_PROFILER_MARKER_TEXT("DeviceContext Printing", LAYOUT_Printing, {},
+                            "nsDeviceContext::EndDocument"_ns);
 
   mIsCurrentlyPrintingDoc = false;
 
@@ -315,6 +320,8 @@ RefPtr<PrintEndDocumentPromise> nsDeviceContext::EndDocument() {
 nsresult nsDeviceContext::AbortDocument() {
   MOZ_DIAGNOSTIC_ASSERT(mIsCurrentlyPrintingDoc,
                         "Mismatched BeginDocument/EndDocument calls");
+  AUTO_PROFILER_MARKER_TEXT("DeviceContext Printing", LAYOUT_Printing, {},
+                            "nsDeviceContext::AbortDocument"_ns);
 
   nsresult rv = mPrintTarget->AbortPrinting();
   mIsCurrentlyPrintingDoc = false;
@@ -331,6 +338,9 @@ nsresult nsDeviceContext::AbortDocument() {
 nsresult nsDeviceContext::BeginPage(const IntSize& aSizeInPoints) {
   MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc || mPrintTarget,
                         "What nulled out our print target while printing?");
+  AUTO_PROFILER_MARKER_TEXT("DeviceContext Printing", LAYOUT_Printing, {},
+                            "nsDeviceContext::BeginPage"_ns);
+
   if (mDeviceContextSpec) {
     MOZ_TRY(mDeviceContextSpec->BeginPage(aSizeInPoints));
   }
@@ -343,6 +353,9 @@ nsresult nsDeviceContext::BeginPage(const IntSize& aSizeInPoints) {
 nsresult nsDeviceContext::EndPage() {
   MOZ_DIAGNOSTIC_ASSERT(!mIsCurrentlyPrintingDoc || mPrintTarget,
                         "What nulled out our print target while printing?");
+  AUTO_PROFILER_MARKER_TEXT("DeviceContext Printing", LAYOUT_Printing, {},
+                            "nsDeviceContext::EndPage"_ns);
+
   if (mPrintTarget) {
     MOZ_TRY(mPrintTarget->EndPage());
   }

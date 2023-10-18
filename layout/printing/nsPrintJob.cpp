@@ -581,6 +581,8 @@ nsresult nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting) {
   PR_PL(("****  Failed %s - rv 0x%" PRIX32,
          aIsPrinting ? "Printing" : "Print Preview",
          static_cast<uint32_t>(aResult)));
+  PROFILER_MARKER_TEXT("PrintJob", LAYOUT_Printing, MarkerStack::Capture(),
+                       "nsPrintJob::CleanupOnFailure"_ns);
 
   /* cleanup... */
   if (mPagePrintTimer) {

@@ -7,6 +7,7 @@
 #include "nsPagePrintTimer.h"
 
 #include "mozilla/dom/Document.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Unused.h"
 #include "nsPrintJob.h"
 #include "nsPrintObject.h"
@@ -148,6 +149,10 @@ nsPagePrintTimer::Notify(nsITimer* timer) {
     }
   } else if (timer == mWatchDogTimer) {
     mWatchDogCount++;
+    PROFILER_MARKER_TEXT(
+        "nsPagePrintTimer::Notify", LAYOUT_Printing, {},
+        nsPrintfCString("Watchdog Timer Count %d", mWatchDogCount));
+
     if (mWatchDogCount > WATCH_DOG_MAX_COUNT) {
       Fail();
       return NS_OK;
@@ -211,6 +216,8 @@ void nsPagePrintTimer::Stop() {
 
 void nsPagePrintTimer::Fail() {
   NS_WARNING("nsPagePrintTimer::Fail called");
+  PROFILER_MARKER_TEXT("nsPagePrintTimer", LAYOUT_Printing, {},
+                       "nsPagePrintTimer::Fail aborting print operation"_ns);
 
   mDone = true;
   Stop();
