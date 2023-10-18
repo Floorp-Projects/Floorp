@@ -57,6 +57,11 @@ add_task(async function test_pdf_blobURI() {
  * Test site identity state for PDFs served via HTTP.
  */
 add_task(async function test_pdf_http() {
+  let expectedIdentity = Services.prefs.getBoolPref(
+    "security.insecure_connection_text.enabled"
+  )
+    ? "notSecure notSecureText"
+    : "notSecure";
   const PDF_URI_NOSCHEME =
     getRootDirectory(gTestPath).replace(
       "chrome://mochitests/content",
@@ -66,8 +71,8 @@ add_task(async function test_pdf_http() {
   await testIdentityMode(
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     "http://" + PDF_URI_NOSCHEME,
-    "notSecure",
-    "Identity should be notSecure for a PDF served via HTTP."
+    expectedIdentity,
+    `Identity should be ${expectedIdentity} for a PDF served via HTTP.`
   );
   await testIdentityMode(
     "https://" + PDF_URI_NOSCHEME,

@@ -3,6 +3,10 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
@@ -64,12 +68,17 @@ add_task(async function test_identityBlock_inherited_blank() {
     await otherTabPromise;
 
     ok(
-      gURLBar.value.startsWith("example.org/"),
+      gURLBar.value.startsWith(
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        UrlbarTestUtils.trimURL("http://example.org/")
+      ),
       "URL bar value should be correct, was " + gURLBar.value
     );
     is(
       identityBox.className,
-      "notSecure",
+      Services.prefs.getBoolPref("security.insecure_connection_text.enabled")
+        ? "notSecure notSecureText"
+        : "notSecure",
       "Identity box should have been updated."
     );
 

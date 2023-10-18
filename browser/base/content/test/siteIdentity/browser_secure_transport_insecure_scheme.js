@@ -7,6 +7,12 @@
 // insecure in terms of the site identity panel. We achieve this by running an
 // HTTP-over-TLS "proxy" and having Firefox request an http:// URI over it.
 
+const NOT_SECURE_LABEL = Services.prefs.getBoolPref(
+  "security.insecure_connection_text.enabled"
+)
+  ? "notSecure notSecureText"
+  : "notSecure";
+
 /**
  * Tests that the page info dialog "security" section labels a
  * connection as unencrypted and does not show certificate.
@@ -177,7 +183,11 @@ add_task(async function () {
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com/", async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "notSecure", "identity should be 'not secure'");
+    is(
+      identityMode,
+      NOT_SECURE_LABEL,
+      `identity should be '${NOT_SECURE_LABEL}'`
+    );
 
     // eslint-disable-next-line @microsoft/sdl/no-insecure-url
     await testPageInfoNotEncrypted("http://example.com");
