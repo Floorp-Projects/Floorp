@@ -4,10 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/preferences/dialogs/sitePermissions.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
-
 <window
   id="SitePermissionsDialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -24,6 +20,16 @@
     data-l10n-attrs="buttonlabelaccept, buttonaccesskeyaccept"
   >
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://browser/content/preferences/dialogs/sitePermissions.css"
+      />
+      <html:link
+        rel="stylesheet"
+        href="chrome://browser/skin/preferences/preferences.css"
+      />
+
       <html:link
         rel="localization"
         href="browser/preferences/preferences.ftl"

@@ -6,9 +6,6 @@
 
 <!DOCTYPE window>
 
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
-
 <window
   windowtype="Update:History"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -26,6 +23,12 @@
     data-l10n-attrs="buttonlabelcancel"
   >
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://mozapps/skin/update/updates.css"
+      />
+
       <html:link rel="localization" href="toolkit/updates/history.ftl" />
     </linkset>
 

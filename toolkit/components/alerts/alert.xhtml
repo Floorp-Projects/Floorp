@@ -5,9 +5,6 @@
 
 <!DOCTYPE window>
 
-<?xml-stylesheet href="chrome://global/content/alerts/alert.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/alert.css" type="text/css"?>
-
 <window
   id="alertNotification"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -20,6 +17,12 @@
   onbeforeunload="onAlertBeforeUnload();"
 >
   <linkset>
+    <xhtml:link
+      rel="stylesheet"
+      href="chrome://global/content/alerts/alert.css"
+    />
+    <xhtml:link rel="stylesheet" href="chrome://global/skin/alert.css" />
+
     <xhtml:link rel="localization" href="toolkit/global/alert.ftl" />
   </linkset>
 

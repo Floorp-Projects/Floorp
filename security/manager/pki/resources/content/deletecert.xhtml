@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pippki/content/deletecert.css" type="text/css"?>
-
 <!DOCTYPE window>
 
 <window
@@ -17,6 +14,12 @@
 >
   <dialog id="deleteCertificate" buttons="accept,cancel">
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://pippki/content/deletecert.css"
+      />
+
       <html:link
         rel="localization"
         href="security/certificates/certManager.ftl"
