@@ -8,9 +8,9 @@ import gzip
 import os
 import signal
 import socket
-import subprocess
 import sys
 import time
+from subprocess import PIPE, Popen
 
 from redo import retriable, retry
 from six.moves.urllib.request import urlretrieve
@@ -25,7 +25,6 @@ except ImportError:
     lzma = None
 
 from mozlog import get_proxy_logger
-from mozprocess import ProcessHandler
 
 from mozproxy import mozbase_dir, mozharness_dir
 
@@ -91,9 +90,6 @@ def transform_platform(str_to_transform, config_platform, config_processor=None)
 def tooltool_download(manifest, run_local, raptor_dir):
     """Download a file from tooltool using the provided tooltool manifest"""
 
-    def outputHandler(line):
-        LOG.info(line)
-
     tooltool_path = None
 
     for path in TOOLTOOL_PATHS:
@@ -132,10 +128,7 @@ def tooltool_download(manifest, run_local, raptor_dir):
         ]
 
     try:
-        proc = ProcessHandler(
-            command, processOutputLine=outputHandler, storeOutput=False, cwd=raptor_dir
-        )
-        proc.run()
+        proc = Popen(command, cwd=raptor_dir, text=True)
         if proc.wait() != 0:
             raise Exception("Command failed")
     except Exception as e:
@@ -200,7 +193,7 @@ def extract_archive(path, dest_dir, typ):
     LOG.info("Extracting %s to %s using %r" % (path, dest_dir, args))
     t0 = time.time()
     with ifh:
-        p = subprocess.Popen(args, cwd=str(dest_dir), bufsize=0, stdin=subprocess.PIPE)
+        p = Popen(args, cwd=str(dest_dir), bufsize=0, stdin=PIPE)
         while True:
             if not pipe_stdin:
                 break
