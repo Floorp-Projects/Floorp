@@ -96,7 +96,6 @@ vendoring:
       to: '{vendor_dir}/include/ogg/config_types.h'
 
   patches:
-    - solaris-types.patch
     - memory-reporting.patch
 
 updatebot:
