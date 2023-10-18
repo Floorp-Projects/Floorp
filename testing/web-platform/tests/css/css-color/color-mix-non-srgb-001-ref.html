@@ -9,15 +9,15 @@ div { color: black; }
 <body>
 <script>
 const TEST_CASES = [
-    ["red", "green", "xyz", "color(xyz 0.24479 0.183508 0.0225301)"],
-    ["red", "green", "lab", "lab(50.2841 16.6263 59.2386)"],
-    ["red", "green", "lch", "lch(50.2841 87.4108 87.6208)"],
-    ["red", "green 90%", "xyz", "color(xyz 0.110709 0.160203 0.0250896)"],
-    ["red", "green 90%", "lab", "lab(47.079 -34.7167 50.7168)"],
-    ["red", "green 90%", "lch", "lch(47.079 71.8696 125.031)"],
-    ["red 90%", "green", "xyz", "color(xyz 0.378871 0.206813 0.0199707)"],
-    ["red 90%", "green", "lab", "lab(53.4893 67.9692 67.7605)"],
-    ["red 90%", "green", "lch", "lch(53.4893 102.952 50.2103)"],
+    ["red", "green", "xyz", "rgb(188, 92, 0)"],
+    ["red", "green", "lab", "rgb(161, 108, 0)"],
+    ["red", "green", "lch", "rgb(145, 116, 0)"],
+    ["red", "green 90%", "xyz", "rgb(89, 122, 0)"],
+    ["red", "green 90%", "lab", "rgb(65, 126, 0)"],
+    ["red", "green 90%", "lch", "rgb(49, 128, 0)"],
+    ["red 90%", "green", "xyz", "rgb(243, 40, 0)"],
+    ["red 90%", "green", "lab", "rgb(237, 55, 0)"],
+    ["red 90%", "green", "lch", "rgb(235, 59, 0)"],
 ];
 
 for (let [from, to, space, expected] of TEST_CASES) {
