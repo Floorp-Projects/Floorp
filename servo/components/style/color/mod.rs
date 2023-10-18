@@ -9,6 +9,8 @@ pub mod convert;
 pub mod mix;
 pub mod parsing;
 
+mod gamut;
+
 use cssparser::color::PredefinedColorSpace;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ToCss};
@@ -23,6 +25,14 @@ impl ColorComponents {
     #[must_use]
     pub fn map(self, f: impl Fn(f32) -> f32) -> Self {
         Self(f(self.0), f(self.1), f(self.2))
+    }
+}
+
+impl std::ops::Sub for ColorComponents {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
     }
 }
 
