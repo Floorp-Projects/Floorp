@@ -154,8 +154,14 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
         reader.ReadBits(readBits);
         nalSize -= readBits;
       }
-      MOZ_ASSERT(nalu.mNalUnitType == nalUnitType);
-      hvcc.mNALUs.AppendElement(nalu);
+      // Per ISO_IEC-14496-15-2022, 8.3.2.1.3 Semantics, NALU should only be
+      // SPS/PPS/VPS or SEI, ignore all the other types of NALU.
+      if (nalu.IsSPS() || nalu.IsPPS() || nalu.IsVPS() || nalu.IsSEI()) {
+        hvcc.mNALUs.AppendElement(nalu);
+      } else {
+        LOG("Ignore NALU (%u) which is not SPS/PPS/VPS or SEI",
+            nalu.mNalUnitType);
+      }
     }
   }
   hvcc.mByteBuffer = aExtraData;
