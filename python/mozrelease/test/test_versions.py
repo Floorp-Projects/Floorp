@@ -1,7 +1,11 @@
 import mozunit
 import pytest
 
-from mozrelease.versions import MozillaVersion
+from mozrelease.versions import (
+    AncientMozillaVersion,
+    ModernMozillaVersion,
+    MozillaVersion,
+)
 
 ALL_VERSIONS = [  # Keep this sorted
     "3.0",
@@ -89,6 +93,21 @@ def test_versions_compare_greater(comparable_versions):
     """Test that versions properly compare in order."""
     smaller_version, larger_version = comparable_versions
     assert MozillaVersion(larger_version) > MozillaVersion(smaller_version)
+
+
+def test_ModernMozillaVersion():
+    """Test properties specific to ModernMozillaVersion"""
+    assert isinstance(MozillaVersion("1.2.4"), ModernMozillaVersion)
+    assert isinstance(MozillaVersion("1.2.4rc3"), ModernMozillaVersion)
+    assert MozillaVersion("1.2rc3") == MozillaVersion("1.2.0rc3")
+
+
+def test_AncientMozillaVersion():
+    """Test properties specific to AncientMozillaVersion"""
+    assert isinstance(MozillaVersion("1.2.0.4"), AncientMozillaVersion)
+    assert isinstance(MozillaVersion("1.2.0.4pre1"), AncientMozillaVersion)
+    assert MozillaVersion("1.2pre1") == MozillaVersion("1.2.0pre1")
+    assert MozillaVersion("1.2.0.4pre1") == MozillaVersion("1.2.4pre1")
 
 
 @pytest.mark.parametrize("version", ALL_VERSIONS)
