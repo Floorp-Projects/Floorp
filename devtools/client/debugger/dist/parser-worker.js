@@ -15767,22 +15767,6 @@
         return this._ancestor.key;
       }
 
-      set node(replacement) {
-        if (this.type !== "Identifier") {
-          throw new Error(
-            "Replacing anything other than leaf nodes is undefined behavior " +
-              "in t.traverse()"
-          );
-        }
-
-        const { node, key, index } = this._ancestor;
-        if (typeof index === "number") {
-          node[key][index] = replacement;
-        } else {
-          node[key] = replacement;
-        }
-      }
-
       get type() {
         return this.node.type;
       }
@@ -15801,14 +15785,6 @@
         return index;
       }
 
-      get depth() {
-        return this._index;
-      }
-
-      replace(node) {
-        this.node = node;
-      }
-
       find(predicate) {
         for (let path = this; path; path = path.parentPath) {
           if (predicate(path)) {
@@ -15824,25 +15800,6 @@
         }
 
         return this.parentPath.find(predicate);
-      }
-
-      getSibling(offset) {
-        const { node, key, index } = this._ancestor;
-
-        if (typeof index !== "number") {
-          throw new Error("Non-array nodes do not have siblings");
-        }
-
-        const container = node[key];
-
-        const siblingIndex = index + offset;
-        if (siblingIndex < 0 || siblingIndex >= container.length) {
-          return null;
-        }
-
-        return new SimplePath(
-          this._ancestors.slice(0, -1).concat([{ node, key, index: siblingIndex }])
-        );
       }
     }
 
