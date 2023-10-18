@@ -359,7 +359,7 @@ uint32_t AudioNodeTrack::ComputedNumberOfChannels(uint32_t aInputChannelCount) {
 }
 
 uint32_t AudioNodeTrack::NumberOfChannels() const {
-  MOZ_ASSERT(GraphImpl()->OnGraphThread());
+  AssertOnGraphThread();
 
   return mNumberOfInputChannels;
 }

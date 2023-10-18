@@ -171,12 +171,6 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   inline void AssertOnDecoderThread() const {
     MOZ_ASSERT(mDecoderThread->IsOnCurrentThread());
   }
-  inline void AssertOnGraphThread() const {
-    MOZ_ASSERT(GraphImpl()->OnGraphThread());
-  }
-  inline void AssertOnGraphThreadOrNotRunning() const {
-    MOZ_ASSERT(GraphImpl()->OnGraphThreadOrNotRunning());
-  }
 
   const RefPtr<nsISerialEventTarget> mDecoderThread;
 

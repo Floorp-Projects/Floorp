@@ -474,17 +474,17 @@ AudioInputProcessing::AudioInputProcessing(uint32_t aMaxChannelCount)
 
 void AudioInputProcessing::Disconnect(MediaTrackGraphImpl* aGraph) {
   // This method is just for asserts.
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 }
 
 bool AudioInputProcessing::PassThrough(MediaTrackGraphImpl* aGraph) const {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   return mSkipProcessing;
 }
 
 void AudioInputProcessing::SetPassThrough(MediaTrackGraphImpl* aGraph,
                                           bool aPassThrough) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 
   if (aPassThrough == mSkipProcessing) {
     return;
@@ -519,7 +519,7 @@ void AudioInputProcessing::SetRequestedInputChannelCount(
 }
 
 void AudioInputProcessing::Start(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 
   if (mEnabled) {
     return;
@@ -535,7 +535,7 @@ void AudioInputProcessing::Start(MediaTrackGraphImpl* aGraph) {
 }
 
 void AudioInputProcessing::Stop(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 
   if (!mEnabled) {
     return;
@@ -664,7 +664,7 @@ void AudioInputProcessing::Stop(MediaTrackGraphImpl* aGraph) {
 void AudioInputProcessing::Process(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
                                    GraphTime aTo, AudioSegment* aInput,
                                    AudioSegment* aOutput) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   MOZ_ASSERT(aFrom <= aTo);
   MOZ_ASSERT(!mEnded);
 
@@ -740,7 +740,7 @@ void AudioInputProcessing::ProcessOutputData(MediaTrackGraphImpl* aGraph,
                                              AudioDataValue* aBuffer,
                                              size_t aFrames, TrackRate aRate,
                                              uint32_t aChannels) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 
   if (!mEnabled || PassThrough(aGraph)) {
     return;
@@ -1054,7 +1054,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
 }
 
 void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
 
   // Reset some processing
   mAudioProcessing->Initialize();
@@ -1066,7 +1066,7 @@ void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
 
 void AudioInputProcessing::ApplyConfig(MediaTrackGraphImpl* aGraph,
                                        const AudioProcessing::Config& aConfig) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   mAudioProcessing->ApplyConfig(aConfig);
 }
 
@@ -1077,13 +1077,13 @@ void AudioInputProcessing::End() {
 
 TrackTime AudioInputProcessing::NumBufferedFrames(
     MediaTrackGraphImpl* aGraph) const {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   return mSegment.GetDuration();
 }
 
 void AudioInputProcessing::EnsureAudioProcessing(MediaTrackGraphImpl* aGraph,
                                                  uint32_t aChannels) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   MOZ_ASSERT(aChannels > 0);
   MOZ_ASSERT(mEnabled);
   MOZ_ASSERT(!mSkipProcessing);
@@ -1122,7 +1122,7 @@ void AudioInputProcessing::EnsureAudioProcessing(MediaTrackGraphImpl* aGraph,
 }
 
 void AudioInputProcessing::ResetAudioProcessing(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  aGraph->AssertOnGraphThread();
   MOZ_ASSERT(mSkipProcessing || !mEnabled);
   MOZ_ASSERT(mPacketizerInput);
 
@@ -1240,7 +1240,7 @@ void AudioProcessingTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                             size_t aFrames, TrackRate aRate,
                                             uint32_t aChannels) {
   MOZ_ASSERT(mGraph == aGraph, "Cannot feed audio output to another graph");
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   if (mInputProcessing) {
     mInputProcessing->ProcessOutputData(aGraph, aBuffer, aFrames, aRate,
                                         aChannels);
@@ -1249,7 +1249,7 @@ void AudioProcessingTrack::NotifyOutputData(MediaTrackGraphImpl* aGraph,
 
 void AudioProcessingTrack::SetInputProcessingImpl(
     RefPtr<AudioInputProcessing> aInputProcessing) {
-  MOZ_ASSERT(GraphImpl()->OnGraphThread());
+  AssertOnGraphThread();
   mInputProcessing = std::move(aInputProcessing);
 }
 

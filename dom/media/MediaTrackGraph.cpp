@@ -2122,7 +2122,7 @@ void MediaTrack::IncrementSuspendCount() {
     MOZ_ASSERT(mGraph || mConsumers.IsEmpty());
     return;
   }
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
     mConsumers[i]->Suspended();
   }
@@ -2139,7 +2139,7 @@ void MediaTrack::DecrementSuspendCount() {
     MOZ_ASSERT(mGraph || mConsumers.IsEmpty());
     return;
   }
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   for (uint32_t i = 0; i < mConsumers.Length(); ++i) {
     mConsumers[i]->Resumed();
   }
@@ -2385,7 +2385,7 @@ RefPtr<GenericPromise> MediaTrack::RemoveListener(
 
 void MediaTrack::AddDirectListenerImpl(
     already_AddRefed<DirectMediaTrackListener> aListener) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   // Base implementation, for tracks that don't support direct track listeners.
   RefPtr<DirectMediaTrackListener> listener = aListener;
   listener->NotifyDirectListenerInstalled(
@@ -2444,7 +2444,7 @@ void MediaTrack::RunAfterPendingUpdates(
 }
 
 void MediaTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   MOZ_DIAGNOSTIC_ASSERT(
       aMode == DisabledTrackMode::ENABLED ||
           mDisabledMode == DisabledTrackMode::ENABLED,
@@ -2466,7 +2466,7 @@ void MediaTrack::SetDisabledTrackMode(DisabledTrackMode aMode) {
 
 void MediaTrack::ApplyTrackDisabling(MediaSegment* aSegment,
                                      MediaSegment* aRawSegment) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   mozilla::ApplyTrackDisabling(mDisabledMode, aSegment, aRawSegment);
 }
 
@@ -2552,7 +2552,7 @@ void MediaTrack::QueueMessage(UniquePtr<ControlMessageInterface> aMessage) {
 
 void MediaTrack::RunMessageAfterProcessing(
     UniquePtr<ControlMessageInterface> aMessage) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   GraphImpl()->RunMessageAfterProcessing(std::move(aMessage));
 }
 
@@ -2843,7 +2843,7 @@ void SourceMediaTrack::NotifyDirectConsumers(MediaSegment* aSegment) {
 
 void SourceMediaTrack::AddDirectListenerImpl(
     already_AddRefed<DirectMediaTrackListener> aListener) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   MutexAutoLock lock(mMutex);
 
   RefPtr<DirectMediaTrackListener> listener = aListener;
@@ -2943,7 +2943,7 @@ void SourceMediaTrack::End() {
 }
 
 void SourceMediaTrack::SetDisabledTrackModeImpl(DisabledTrackMode aMode) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   {
     MutexAutoLock lock(mMutex);
     const DisabledTrackMode oldMode = mDirectDisabledMode;

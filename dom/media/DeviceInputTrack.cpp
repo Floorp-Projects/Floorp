@@ -142,7 +142,7 @@ void DeviceInputConsumerTrack::GetInputSourceData(AudioSegment& aOutput,
                                                   const MediaInputPort* aPort,
                                                   GraphTime aFrom,
                                                   GraphTime aTo) const {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   MOZ_ASSERT(aOutput.IsEmpty());
 
   MediaTrack* source = aPort->GetSource();
@@ -284,7 +284,7 @@ DeviceInputTrack::DeviceInputTrack(TrackRate aSampleRate,
       mPrincipalHandle(aPrincipalHandle) {}
 
 uint32_t DeviceInputTrack::MaxRequestedInputChannels() const {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   uint32_t maxInputChannels = 0;
   for (const auto& listener : mListeners) {
     maxInputChannels = std::max(maxInputChannels,
@@ -294,7 +294,7 @@ uint32_t DeviceInputTrack::MaxRequestedInputChannels() const {
 }
 
 bool DeviceInputTrack::HasVoiceInput() const {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   for (const auto& listener : mListeners) {
     if (listener->IsVoiceInput(mGraph)) {
       return true;
@@ -304,7 +304,7 @@ bool DeviceInputTrack::HasVoiceInput() const {
 }
 
 void DeviceInputTrack::DeviceChanged(MediaTrackGraphImpl* aGraph) const {
-  MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   MOZ_ASSERT(aGraph == mGraph,
              "Receive device changed signal from another graph");
   TRACK_GRAPH_LOG("DeviceChanged");
@@ -381,14 +381,14 @@ NativeInputTrack::NativeInputTrack(TrackRate aSampleRate,
       mInputChannels(0) {}
 
 void NativeInputTrack::DestroyImpl() {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   mPendingData.Clear();
   ProcessedMediaTrack::DestroyImpl();
 }
 
 void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                     uint32_t aFlags) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   TRACE_COMMENT("NativeInputTrack::ProcessInput", "%p", this);
 
   TRACK_GRAPH_LOGV("(Native) ProcessInput from %" PRId64 " to %" PRId64
@@ -415,12 +415,12 @@ void NativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 }
 
 uint32_t NativeInputTrack::NumberOfChannels() const {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   return mInputChannels;
 }
 
 void NativeInputTrack::NotifyInputStopped(MediaTrackGraphImpl* aGraph) {
-  MOZ_ASSERT(aGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   MOZ_ASSERT(aGraph == mGraph,
              "Receive input stopped signal from another graph");
   TRACK_GRAPH_LOG("(Native) NotifyInputStopped");
@@ -434,7 +434,7 @@ void NativeInputTrack::NotifyInputData(MediaTrackGraphImpl* aGraph,
                                        size_t aFrames, TrackRate aRate,
                                        uint32_t aChannels,
                                        uint32_t aAlreadyBuffered) {
-  MOZ_ASSERT(aGraph->OnGraphThread());
+  AssertOnGraphThread();
   MOZ_ASSERT(aGraph == mGraph, "Receive input data from another graph");
   TRACK_GRAPH_LOGV(
       "NotifyInputData: frames=%zu, rate=%d, channel=%u, alreadyBuffered=%u",
@@ -469,7 +469,7 @@ NonNativeInputTrack::NonNativeInputTrack(
       mSourceIdNumber(0) {}
 
 void NonNativeInputTrack::DestroyImpl() {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   if (mAudioSource) {
     mAudioSource->Stop();
     mAudioSource = nullptr;
@@ -479,7 +479,7 @@ void NonNativeInputTrack::DestroyImpl() {
 
 void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                        uint32_t aFlags) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   TRACE_COMMENT("NonNativeInputTrack::ProcessInput", "%p", this);
 
   TRACK_GRAPH_LOGV("(NonNative) ProcessInput from %" PRId64 " to %" PRId64
@@ -508,13 +508,13 @@ void NonNativeInputTrack::ProcessInput(GraphTime aFrom, GraphTime aTo,
 }
 
 uint32_t NonNativeInputTrack::NumberOfChannels() const {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   return mAudioSource ? mAudioSource->mChannelCount : 0;
 }
 
 void NonNativeInputTrack::StartAudio(
     RefPtr<AudioInputSource>&& aAudioInputSource) {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   MOZ_ASSERT(aAudioInputSource->mPrincipalHandle == mPrincipalHandle);
   MOZ_ASSERT(aAudioInputSource->mDeviceId == mDeviceId);
 
@@ -527,7 +527,7 @@ void NonNativeInputTrack::StartAudio(
 }
 
 void NonNativeInputTrack::StopAudio() {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
 
   TRACK_GRAPH_LOG("StopAudio from source %p", mAudioSource.get());
   if (!mAudioSource) {
@@ -541,13 +541,13 @@ void NonNativeInputTrack::StopAudio() {
 }
 
 AudioInputType NonNativeInputTrack::DevicePreference() const {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
   return mAudioSource && mAudioSource->mIsVoice ? AudioInputType::Voice
                                                 : AudioInputType::Unknown;
 }
 
 void NonNativeInputTrack::NotifyDeviceChanged(uint32_t aSourceId) {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
 
   // No need to forward the notification if the audio input has been stopped or
   // restarted by it users.
@@ -562,7 +562,7 @@ void NonNativeInputTrack::NotifyDeviceChanged(uint32_t aSourceId) {
 }
 
 void NonNativeInputTrack::NotifyInputStopped(uint32_t aSourceId) {
-  MOZ_ASSERT(mGraph->OnGraphThreadOrNotRunning());
+  AssertOnGraphThreadOrNotRunning();
 
   // No need to forward the notification if the audio input has been stopped or
   // restarted by it users.
@@ -578,13 +578,13 @@ void NonNativeInputTrack::NotifyInputStopped(uint32_t aSourceId) {
 }
 
 AudioInputSource::Id NonNativeInputTrack::GenerateSourceId() {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
   return mSourceIdNumber++;
 }
 
 #ifdef DEBUG
 bool NonNativeInputTrack::HasGraphThreadChanged() {
-  MOZ_ASSERT(mGraph->OnGraphThread());
+  AssertOnGraphThread();
 
   std::thread::id currentId = std::this_thread::get_id();
   if (mGraphThreadId == currentId) {
