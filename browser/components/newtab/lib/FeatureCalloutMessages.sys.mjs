@@ -807,6 +807,53 @@ const MESSAGES = () => {
       trigger: { id: "shoppingProductPageWithSidebarClosed" },
       frequency: { lifetime: 1 },
     },
+    {
+      id: "CFR_COOKIEBANNER",
+      groups: ["cfr"],
+      template: "feature_callout",
+      content: {
+        id: "CFR_COOKIEBANNER",
+        template: "multistage",
+        backdrop: "transparent",
+        screens: [
+          {
+            id: "COOKIEBANNER_CALLOUT",
+            anchors: [
+              {
+                selector: "#tracking-protection-icon-container",
+                panel_position: {
+                  callout_attachment: "topleft",
+                  anchor_attachment: "bottomcenter",
+                },
+              },
+            ],
+            content: {
+              position: "callout",
+              autohide: true,
+              title: { string_id: "cookie-banner-blocker-cfr-header" },
+              subtitle: { string_id: "cookie-banner-blocker-cfr-body" },
+              title_logo: {
+                imageURL:
+                  "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+              },
+              dismiss_button: {
+                size: "small",
+                action: { dismiss: true },
+              },
+            },
+          },
+        ],
+        transitions: false,
+        disableHistoryUpdates: true,
+      },
+      frequency: {
+        lifetime: 1,
+      },
+      trigger: {
+        id: "cookieBannerHandled",
+      },
+      targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.mode.privateBrowsing == 1'`,
+    },
   ];
   messages = add24HourImpressionJEXLTargeting(
     ["FIREFOX_VIEW_TAB_PICKUP_REMINDER"],
