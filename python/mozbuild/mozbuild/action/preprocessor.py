@@ -4,7 +4,6 @@
 
 import sys
 
-from mozbuild.action.util import log_build_task
 from mozbuild.preprocessor import Preprocessor
 
 
@@ -21,4 +20,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    log_build_task(main, sys.argv[1:])
+    main(sys.argv[1:])

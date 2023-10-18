@@ -12,7 +12,6 @@ import buildconfig
 from mozpack.executables import ELF, UNKNOWN, get_type
 from packaging.version import Version
 
-from mozbuild.action.util import log_build_task
 from mozbuild.util import memoize
 
 STDCXX_MAX_VERSION = Version("3.4.19")
@@ -325,4 +324,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    sys.exit(log_build_task(main, sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

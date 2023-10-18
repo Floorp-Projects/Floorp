@@ -14,8 +14,6 @@ from mozpack.errors import errors
 from mozpack.files import FileFinder
 from mozpack.path import match
 
-from mozbuild.action.util import log_build_task
-
 
 def main(args):
     parser = argparse.ArgumentParser()
@@ -49,4 +47,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    log_build_task(main, sys.argv[1:])
+    main(sys.argv[1:])

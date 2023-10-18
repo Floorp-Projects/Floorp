@@ -11,7 +11,6 @@ import io
 import os
 import sys
 
-from mozbuild.action.util import log_build_task
 from mozbuild.util import ensureParentDir, lock_file
 
 
@@ -46,4 +45,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    sys.exit(log_build_task(main, sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

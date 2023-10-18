@@ -126,7 +126,7 @@ class ProcessExecutionMixin(LoggingMixin):
                 except LineHandlingEarlyReturn:
                     return
 
-            if line.startswith("BUILDTASK") or not log_name:
+            if not log_name:
                 return
 
             self.log(log_level, log_name, {"line": line.rstrip()}, "{line}")
