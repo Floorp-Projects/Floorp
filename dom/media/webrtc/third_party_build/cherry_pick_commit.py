@@ -112,6 +112,7 @@ if __name__ == "__main__":
     default_tmp_dir = ".moz-fast-forward/tmp"
     default_script_dir = "dom/media/webrtc/third_party_build"
     default_patch_dir = "third_party/libwebrtc/moz-patch-stack"
+    default_repo_dir = ".moz-fast-forward/moz-libwebrtc"
 
     parser = argparse.ArgumentParser(
         description="Cherry-pick upstream libwebrtc commit"
@@ -143,8 +144,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--repo-path",
-        required=True,
-        help="path to libwebrtc repo",
+        default=default_repo_dir,
+        help="path to moz-libwebrtc repo (defaults to {})".format(default_repo_dir),
     )
     parser.add_argument(
         "--commit-sha",
