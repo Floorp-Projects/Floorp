@@ -160,7 +160,8 @@ enum class GCAbortReason {
   _(SharedArrayRawBuffer)                  \
   _(XDRBufferElements)                     \
   _(GlobalObjectData)                      \
-  _(ProxyExternalValueArray)
+  _(ProxyExternalValueArray)               \
+  _(WasmTrailerBlock)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
