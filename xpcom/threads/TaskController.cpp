@@ -344,7 +344,7 @@ void TaskController::RunPoolThread() {
           MutexAutoUnlock unlock(mGraphMutex);
           lastTask = nullptr;
           AUTO_PROFILE_FOLLOWING_TASK(task);
-          taskCompleted = task->Run();
+          taskCompleted = task->Run() == Task::TaskResult::Complete;
           ranTask = true;
         }
 
@@ -545,10 +545,10 @@ class RunnableTask : public Task {
                Kind aKind)
       : Task(aKind, aPriority), mRunnable(aRunnable) {}
 
-  virtual bool Run() override {
+  virtual TaskResult Run() override {
     mRunnable->Run();
     mRunnable = nullptr;
-    return true;
+    return TaskResult::Complete;
   }
 
   void SetIdleDeadline(TimeStamp aDeadline) override {
@@ -873,7 +873,7 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
           AutoSetMainThreadRunnableName nameGuard(name);
 #endif
           AUTO_PROFILE_FOLLOWING_TASK(task);
-          result = task->Run();
+          result = task->Run() == Task::TaskResult::Complete;
         }
 
         // Task itself should keep manager alive.

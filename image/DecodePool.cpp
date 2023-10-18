@@ -142,9 +142,9 @@ class DecodingTask final : public Task {
                                           : EventQueuePriority::RenderBlocking),
         mTask(aTask) {}
 
-  bool Run() override {
+  TaskResult Run() override {
     mTask->Run();
-    return true;
+    return TaskResult::Complete;
   }
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
