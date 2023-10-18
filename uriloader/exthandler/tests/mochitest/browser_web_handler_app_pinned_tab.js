@@ -3,6 +3,10 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 let testURL =
   "http://mochi.test:8888/browser/" +
   "uriloader/exthandler/tests/mochitest/mailto.html";
@@ -74,7 +78,7 @@ add_task(async function () {
   let tab = await promiseTabOpened;
   is(
     gURLBar.value,
-    expectedURL,
+    UrlbarTestUtils.trimURL(expectedURL),
     "the mailto web handler is opened in a new tab"
   );
   BrowserTestUtils.removeTab(tab);
