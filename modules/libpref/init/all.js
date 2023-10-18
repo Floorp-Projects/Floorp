@@ -186,12 +186,7 @@ pref("pdfjs.enableScripting", true);
 pref("pdfjs.enableXfa", true);
 
 // Enable adding an image in a pdf.
-#ifdef RELEASE_OR_BETA
-  // It'll be enabled through Nimbus.
-  pref("pdfjs.enableStampEditor", false);
-#else
-  pref("pdfjs.enableStampEditor", true);
-#endif
+pref("pdfjs.enableStampEditor", true);
 
 // Disable support for MathML
 pref("mathml.disabled",    false);
