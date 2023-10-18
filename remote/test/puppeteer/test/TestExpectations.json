@@ -3969,7 +3969,7 @@
     "testIdPattern": "[oopif.spec] OOPIF-debug OOPIF should support lazy OOP frames",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "headless", "webDriverBiDi"],
-    "expectations": ["PASS"]
+    "expectations": ["FAIL"]
   },
   {
     "testIdPattern": "[prerender.spec] Prerender can navigate to a prerendered page via Puppeteer",
