@@ -10,6 +10,7 @@ const IOS_DEFAULT_PREFERENCES = {
   "extensions.formautofill.creditCards.heuristics.fathom.types":
     "cc-number,cc-name",
   "extensions.formautofill.loglevel": "Warn",
+  "extensions.formautofill.firstTimeUse": true,
   "extensions.formautofill.addresses.supported": "off",
   "extensions.formautofill.creditCards.supported": "detect",
   "browser.search.region": "US",

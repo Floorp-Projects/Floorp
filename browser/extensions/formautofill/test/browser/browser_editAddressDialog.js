@@ -82,8 +82,6 @@ add_task(async function test_saveAddress() {
       "VK_TAB",
       TEST_ADDRESS_1["family-name"],
       "VK_TAB",
-      TEST_ADDRESS_1.organization,
-      "VK_TAB",
       TEST_ADDRESS_1["street-address"],
       "VK_TAB",
       TEST_ADDRESS_1["address-level2"],
@@ -91,6 +89,8 @@ add_task(async function test_saveAddress() {
       TEST_ADDRESS_1["address-level1"],
       "VK_TAB",
       TEST_ADDRESS_1["postal-code"],
+      "VK_TAB",
+      TEST_ADDRESS_1.organization,
       "VK_TAB",
       // TEST_ADDRESS_1.country, // Country is already US
       "VK_TAB",
