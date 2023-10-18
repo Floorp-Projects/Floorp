@@ -616,6 +616,12 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE] == 1 },
     )
 
+    var shouldUseCookieBannerPrivateMode by lazyFeatureFlagPreference(
+        appContext.getPreferenceKey(R.string.pref_key_cookie_banner_private_mode),
+        featureFlag = true,
+        default = { cookieBannersSection[CookieBannersSection.FEATURE_SETTING_VALUE_PBM] == 1 },
+    )
+
     var userOptOutOfReEngageCookieBannerDialog by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_cookie_banner_re_engage_dialog_dismissed),
         default = false,
@@ -1765,6 +1771,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
             false -> if (shouldShowCookieBannerReEngagementDialog()) {
                 CookieBannerHandlingMode.REJECT_ALL
             } else {
+                CookieBannerHandlingMode.DISABLED
+            }
+        }
+    }
+
+    /**
+     * Get the current mode for cookie banner handling
+     */
+    fun getCookieBannerHandlingPrivateMode(): CookieBannerHandlingMode {
+        return when (shouldUseCookieBannerPrivateMode) {
+            true -> CookieBannerHandlingMode.REJECT_ALL
+            false -> {
                 CookieBannerHandlingMode.DISABLED
             }
         }

@@ -243,7 +243,8 @@ features:
           {
             "feature-ui": 0,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4
+            "dialog-re-engage-time": 4,
+            "feature-setting-value-pbm": 0
           }
     defaults:
       - channel: developer
@@ -251,7 +252,8 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4
+            "dialog-re-engage-time": 4,
+            "feature-setting-value-pbm": 0
           }
         }
       - channel: nightly
@@ -259,7 +261,8 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4
+            "dialog-re-engage-time": 4,
+            "feature-setting-value-pbm": 0
           }
         }
   unified-search:
@@ -460,6 +463,9 @@ types:
           description: An integer indicating the number of hours that needs to happen before
             the re-engagement dialog shows again since the last seen, for example if set to 4
             that means if the users has seen the dialog, it will see it 4 hours later.
+        feature-setting-value-pbm:
+          description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
+            0 for setting the value to disabled, 1  for enabling the setting with the value reject_all.
     OnboardingPanel:
       description: The types of onboarding panels in the onboarding page
       variants:
