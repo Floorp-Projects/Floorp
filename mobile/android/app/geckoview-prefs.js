@@ -176,9 +176,6 @@ pref("dom.disable_open_during_load", true);
 // Don't allow JS to move and resize existing windows (bug 456081)
 pref("dom.disable_window_move_resize", true);
 
-// Disable opening windows with the dialog feature (bug 725502)
-pref("dom.disable_window_open_dialog_feature", true);
-
 // "graceful" process termination is misinterpreted as a process crash.
 // To avoid this issue, we set dom.ipc.keepProcessesAlive.extension to 1.
 // This stops Gecko from terminating the extension process. This also reduces
