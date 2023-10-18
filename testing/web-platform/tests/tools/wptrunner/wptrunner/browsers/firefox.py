@@ -606,7 +606,7 @@ class FirefoxOutputHandler(OutputHandler):
 
 
 class GeckodriverOutputHandler(FirefoxOutputHandler):
-    PORT_RE = re.compile(b".*Listening on [^ :]*:(\d+)")
+    PORT_RE = re.compile(rb".*Listening on [^ :]*:(\d+)")
 
     def __init__(self, logger, command, symbols_path=None, stackfix_dir=None, asan=False,
                  leak_report_file=None, init_deadline=None):
