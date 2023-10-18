@@ -85,7 +85,7 @@ function extractSymbol(path, symbols, state) {
     });
   }
 
-  getIdentifierSymbols(symbols.identifiers, path);
+  getIdentifierSymbols(symbols.identifiers, symbols.identifiersKeys, path);
 }
 
 function extractSymbols(sourceId) {
@@ -94,6 +94,9 @@ function extractSymbols(sourceId) {
     memberExpressions: [],
     comments: [],
     identifiers: [],
+    // This holds a set of unique identifier location key (string)
+    // It helps registering only the first identifier when there is duplicated ones for the same location.
+    identifiersKeys: new Set(),
     classes: [],
     literals: [],
     hasJsx: false,
@@ -121,7 +124,6 @@ function extractSymbols(sourceId) {
 
   // comments are extracted separately from the AST
   symbols.comments = getComments(ast);
-  symbols.identifiers = getUniqueIdentifiers(symbols.identifiers);
   symbols.framework = getFramework(symbols);
 
   return symbols;
@@ -369,20 +371,6 @@ export function getSymbols(sourceId) {
   };
 }
 
-function getUniqueIdentifiers(identifiers) {
-  const newIdentifiers = [];
-  const locationKeys = new Set();
-  for (const newId of identifiers) {
-    const key = nodeLocationKey(newId);
-    if (!locationKeys.has(key)) {
-      locationKeys.add(key);
-      newIdentifiers.push(newId);
-    }
-  }
-
-  return newIdentifiers;
-}
-
 function getMemberExpressionSymbol(path) {
   const { start, end } = path.node.property.loc;
   return {
@@ -438,16 +426,19 @@ function getClassDeclarationSymbol(node) {
  * @param {Array.<Object>} identifiers
  *        the current list of identifiers where to push the new identifiers
  *        related to this path.
+ * @param {Set<String>} identifiersKeys
+ *        List of currently registered identifier location key.
  * @param {Object} path
  */
-function getIdentifierSymbols(identifiers, path) {
+function getIdentifierSymbols(identifiers, identifiersKeys, path) {
   if (t.isStringLiteral(path) && t.isProperty(path.parentPath)) {
-    const { start, end } = path.node.loc;
-    identifiers.push({
-      name: path.node.value,
-      expression: getObjectExpressionValue(path.parent),
-      location: { start, end },
-    });
+    if (!identifiersKeys.has(nodeLocationKey(path.node.loc))) {
+      identifiers.push({
+        name: path.node.value,
+        expression: getObjectExpressionValue(path.parent),
+        location: path.node.loc,
+      });
+    }
     return;
   }
 
@@ -458,12 +449,13 @@ function getIdentifierSymbols(identifiers, path) {
     }
 
     if (t.isProperty(path.parentPath) && !isObjectShorthand(path.parent)) {
-      const { start, end } = path.node.loc;
-      identifiers.push({
-        name: path.node.name,
-        expression: getObjectExpressionValue(path.parent),
-        location: { start, end },
-      });
+      if (!identifiersKeys.has(nodeLocationKey(path.node.loc))) {
+        identifiers.push({
+          name: path.node.name,
+          expression: getObjectExpressionValue(path.parent),
+          location: path.node.loc,
+        });
+      }
       return;
     }
 
@@ -473,25 +465,28 @@ function getIdentifierSymbols(identifiers, path) {
       end = { ...end, column };
     }
 
-    identifiers.push({
-      name: path.node.name,
-      expression: path.node.name,
-      location: { start, end },
-    });
+    if (!identifiersKeys.has(nodeLocationKey({ start, end }))) {
+      identifiers.push({
+        name: path.node.name,
+        expression: path.node.name,
+        location: { start, end },
+      });
+    }
   }
 
   if (t.isThisExpression(path.node)) {
-    const { start, end } = path.node.loc;
-    identifiers.push({
-      name: "this",
-      location: { start, end },
-      expression: "this",
-    });
+    if (!identifiersKeys.has(nodeLocationKey(path.node.loc))) {
+      identifiers.push({
+        name: "this",
+        location: path.node.loc,
+        expression: "this",
+      });
+    }
   }
 
   if (t.isVariableDeclarator(path)) {
     const nodeId = path.node.id;
 
-    addPatternIdentifiers(identifiers, nodeId);
+    addPatternIdentifiers(identifiers, identifiersKeys, nodeId);
   }
 }
