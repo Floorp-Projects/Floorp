@@ -1463,6 +1463,7 @@ class ConnectionPool final {
   // This mutex guards mDatabases, see below.
   Mutex mDatabasesMutex MOZ_UNANNOTATED;
 
+  nsCOMPtr<nsIThreadPool> mIOTarget;
   nsTArray<IdleThreadInfo> mIdleThreads;
   nsTArray<IdleDatabaseInfo> mIdleDatabases;
   nsTArray<NotNull<DatabaseInfo*>> mDatabasesPerformingIdleMaintenance;
@@ -6512,6 +6513,22 @@ bool IsSome(
   return aMaybeStmt.isSome();
 }
 
+already_AddRefed<nsIThreadPool> MakeConnectionIOTarget() {
+  nsCOMPtr<nsIThreadPool> threadPool = new nsThreadPool();
+
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetThreadLimit(kMaxConnectionThreadCount));
+
+  MOZ_ALWAYS_SUCCEEDS(
+      threadPool->SetIdleThreadLimit(kMaxIdleConnectionThreadCount));
+
+  MOZ_ALWAYS_SUCCEEDS(
+      threadPool->SetIdleThreadTimeout(kConnectionThreadIdleMS));
+
+  MOZ_ALWAYS_SUCCEEDS(threadPool->SetName("IndexedDB IO"_ns));
+
+  return threadPool.forget();
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -7541,6 +7558,7 @@ DatabaseConnection::UpdateRefcountFunction::OnFunctionCall(
 
 ConnectionPool::ConnectionPool()
     : mDatabasesMutex("ConnectionPool::mDatabasesMutex"),
+      mIOTarget(MakeConnectionIOTarget()),
       mIdleTimer(NS_NewTimer()),
       mNextTransactionId(0),
       mTotalThreadCount(0) {
