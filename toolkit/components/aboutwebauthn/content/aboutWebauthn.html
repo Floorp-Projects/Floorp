@@ -38,6 +38,12 @@
           data-l10n-id="about-webauthn-pin-section-title"
         ></span>
       </div>
+      <div id="credentials-tab-button" class="category">
+        <span
+          class="tablinks"
+          data-l10n-id="about-webauthn-credential-management-section-title"
+        ></span>
+      </div>
     </div>
 
     <div hidden id="main-content">
@@ -102,6 +108,38 @@
           data-l10n-id="about-webauthn-current-change-pin-button"
         ></button>
         <label id="set-change-pin-result" class="ctap-result"></label>
+      </div>
+
+      <div
+        hidden
+        class="tabcontent credential-management-section"
+        id="credential-management-section"
+      >
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-credential-management-section-title"
+        ></h2>
+        <div
+          hidden
+          id="credential-list-subsection"
+          class="token-info-flex-child"
+        >
+          <h3
+            data-l10n-id="about-webauthn-credential-list-subsection-title"
+          ></h3>
+          <div hidden id="credential-list-empty-label">
+            <label
+              hidden
+              data-l10n-id="about-webauthn-credential-list-empty"
+            ></label>
+          </div>
+          <table id="credential-list"></table>
+        </div>
+        <button
+          class="credentials-button"
+          id="list-credentials-button"
+          data-l10n-id="about-webauthn-list-credentials-button"
+        ></button>
       </div>
 
       <div

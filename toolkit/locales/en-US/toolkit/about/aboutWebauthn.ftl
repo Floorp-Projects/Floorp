@@ -14,6 +14,7 @@ about-webauthn-info-section-title = Device info
 about-webauthn-info-subsection-title = Authenticator info
 about-webauthn-options-subsection-title = Authenticator options
 about-webauthn-pin-section-title = PIN Management
+about-webauthn-credential-management-section-title = Manage credentials
 about-webauthn-pin-required-section-title = PIN required
 
 ## Info field texts
@@ -49,13 +50,18 @@ about-webauthn-new-pin-label = New PIN:
 about-webauthn-repeat-pin-label = Repeat new PIN:
 about-webauthn-current-pin-label = Current PIN:
 about-webauthn-pin-required-label = Please enter your PIN:
+about-webauthn-credential-list-subsection-title = Credentials:
+about-webauthn-credential-list-empty = No credentials found on device.
 
 ## Buttons
 
 about-webauthn-current-set-pin-button = Set PIN
 about-webauthn-current-change-pin-button = Change PIN
+# List is a verb, as in "Show list of credentials"
+about-webauthn-list-credentials-button = List credentials
 about-webauthn-cancel-button = Cancel
 about-webauthn-send-pin-button = OK
+about-webauthn-delete-button = Delete
 
 ## Authenticator options fields
 ## Option fields correspond to the CTAP2 option IDs and definitions found in https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#option-id

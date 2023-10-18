@@ -11,7 +11,7 @@ extern crate xpcom;
 use authenticator::{
     authenticatorservice::{RegisterArgs, SignArgs},
     ctap2::attestation::AttestationObject,
-    ctap2::commands::get_info::AuthenticatorVersion,
+    ctap2::commands::{get_info::AuthenticatorVersion, PinUvAuthResult},
     ctap2::server::{
         AuthenticationExtensionsClientInputs, AuthenticatorAttachment,
         PublicKeyCredentialDescriptor, PublicKeyCredentialParameters,
@@ -20,8 +20,8 @@ use authenticator::{
     },
     errors::AuthenticatorError,
     statecallback::StateCallback,
-    AuthenticatorInfo, InteractiveRequest, ManageResult, Pin, RegisterResult, SignResult,
-    StateMachine, StatusPinUv, StatusUpdate,
+    AuthenticatorInfo, CredentialManagementResult, InteractiveRequest, ManageResult, Pin,
+    RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
 };
 use base64::Engine;
 use cstr::cstr;
@@ -97,6 +97,9 @@ enum BrowserPromptType<'a> {
     ListenSuccess,
     ListenError {
         error: Box<BrowserPromptType<'a>>,
+    },
+    CredentialManagementUpdate {
+        result: CredentialManagementResult,
     },
     UnknownError,
 }
@@ -538,6 +541,7 @@ struct TransactionState {
     pin_receiver: PinReceiver,
     selection_receiver: SelectionReceiver,
     interactive_receiver: InteractiveManagementReceiver,
+    puat_cache: Option<PinUvAuthResult>, // Cached credential to avoid repeated PIN-entries
 }
 
 // AuthrsService provides an nsIWebAuthnService built on top of authenticator-rs.
@@ -739,6 +743,7 @@ impl AuthrsService {
             interactive_receiver: None,
             pin_receiver: None,
             selection_receiver: None,
+            puat_cache: None,
         });
 
         if none_attestation
@@ -995,6 +1000,7 @@ impl AuthrsService {
             interactive_receiver: None,
             pin_receiver: None,
             selection_receiver: None,
+            puat_cache: None,
         });
 
         // As in `register`, we are intentionally avoiding `AuthenticatorService` here.
@@ -1192,6 +1198,7 @@ impl AuthrsService {
                 interactive_receiver: None,
                 pin_receiver: None,
                 selection_receiver: None,
+                puat_cache: None,
             });
         }
 
@@ -1272,13 +1279,17 @@ impl AuthrsService {
         // Always test if it can be parsed from incoming JSON (even for tests)
         let incoming: RequestWrapper =
             serde_json::from_str(&c_cmd.to_utf8()).or(Err(NS_ERROR_DOM_OPERATION_ERR))?;
-        let command = match incoming {
-            RequestWrapper::Quit => InteractiveRequest::Quit,
-            RequestWrapper::ChangePIN(a, b) => InteractiveRequest::ChangePIN(a, b),
-            RequestWrapper::SetPIN(a) => InteractiveRequest::SetPIN(a),
-        };
         if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
             let guard = self.transaction.lock().unwrap();
+            let puat = guard.as_ref().and_then(|g| g.puat_cache.clone());
+            let command = match incoming {
+                RequestWrapper::Quit => InteractiveRequest::Quit,
+                RequestWrapper::ChangePIN(a, b) => InteractiveRequest::ChangePIN(a, b),
+                RequestWrapper::SetPIN(a) => InteractiveRequest::SetPIN(a),
+                RequestWrapper::CredentialManagement(c) => {
+                    InteractiveRequest::CredentialManagement(c, puat)
+                }
+            };
             match &guard.as_ref().unwrap().interactive_receiver {
                 Some(channel) => channel.send(command).or(Err(NS_ERROR_FAILURE)),
                 // Either we weren't expecting a pin, or the controller is confused
