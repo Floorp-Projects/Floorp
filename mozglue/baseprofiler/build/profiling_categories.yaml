@@ -114,6 +114,8 @@
       label: Style computation
     - name: LAYOUT_Destroy
       label: Layout cleanup
+    - name: LAYOUT_Printing
+      label: Printing
 
 - name: JS
   label: JavaScript

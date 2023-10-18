@@ -34,6 +34,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/webgpu/CanvasContext.h"
@@ -649,6 +650,8 @@ nsresult HTMLCanvasElement::DispatchPrintCallback(nsITimerCallback* aCallback) {
 }
 
 void HTMLCanvasElement::CallPrintCallback() {
+  AUTO_PROFILER_MARKER_TEXT("HTMLCanvasElement Printing", LAYOUT_Printing, {},
+                            "HTMLCanvasElement::CallPrintCallback"_ns);
   if (!mPrintState) {
     // `mPrintState` might have been destroyed by cancelling the previous
     // printing (especially the canvas frame destruction) during processing
