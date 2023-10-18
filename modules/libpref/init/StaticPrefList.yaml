@@ -12969,13 +12969,6 @@
   value: false
   mirror: always
 
-# Controls whether or not GPC signals are sent in private browsing mode.
-# This can be overridden by `privacy.globalprivacycontrol.enabled` as true.
-- name: privacy.globalprivacycontrol.pbmode.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Controls whether or not GPC signals are sent. Meant to act as a third option
 # of 'undecided' by leaving the navigator property undefined and not attaching
 # the Sec-GPC HTTP header.

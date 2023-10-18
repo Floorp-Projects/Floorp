@@ -1020,9 +1020,6 @@ pref("privacy.authPromptSpoofingProtection",         true);
 // Enable GPC if the user turns it on in about:preferences
 pref("privacy.globalprivacycontrol.functionality.enabled",  true);
 
-// Enable GPC in private browsing mode
-pref("privacy.globalprivacycontrol.pbmode.enabled", true);
-
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
 // simple gestures support

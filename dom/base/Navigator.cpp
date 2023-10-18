@@ -650,14 +650,8 @@ void Navigator::GetDoNotTrack(nsAString& aResult) {
 }
 
 bool Navigator::GlobalPrivacyControl() {
-  bool gpcStatus = StaticPrefs::privacy_globalprivacycontrol_enabled();
-  if (!gpcStatus) {
-    nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(mWindow);
-    gpcStatus = loadContext && loadContext->UsePrivateBrowsing() &&
-                StaticPrefs::privacy_globalprivacycontrol_pbmode_enabled();
-  }
-  return StaticPrefs::privacy_globalprivacycontrol_functionality_enabled() &&
-         gpcStatus;
+  return StaticPrefs::privacy_globalprivacycontrol_enabled() &&
+         StaticPrefs::privacy_globalprivacycontrol_functionality_enabled();
 }
 
 uint64_t Navigator::HardwareConcurrency() {
