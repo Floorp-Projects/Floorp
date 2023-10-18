@@ -33,6 +33,7 @@ from mozterm.widgets import Footer
 from ..backend import get_backend_class
 from ..base import MozbuildObject
 from ..compilation.warnings import WarningsCollector, WarningsDatabase
+from ..telemetry import get_cpu_brand
 from ..testing import install_test_files
 from ..util import FileAvoidWrite, mkdir, resolve_target_to_make
 from .clobber import Clobberer
@@ -187,7 +188,10 @@ class BuildMonitor(MozbuildObject):
         warnings_path is a path of a warnings database to use.
         """
         self._warnings_path = warnings_path
-        self.resources = SystemResourceMonitor(poll_interval=0.1)
+        self.resources = SystemResourceMonitor(
+            poll_interval=0.1,
+            metadata={"CPUName": get_cpu_brand()},
+        )
         self._resources_started = False
 
         self.tiers = TierStatus(self.resources)
@@ -1207,6 +1211,21 @@ class BuildDriver(MozbuildObject):
 
             def get_substs_flag(name):
                 return bool(substs.get(name, None))
+
+            host = substs.get("host")
+            monitor.resources.metadata["oscpu"] = host
+            target = substs.get("target")
+            if host != target:
+                monitor.resources.metadata["abi"] = target
+
+            product_name = substs.get("MOZ_BUILD_APP")
+            app_displayname = substs.get("MOZ_APP_DISPLAYNAME")
+            if app_displayname:
+                product_name = app_displayname
+                app_version = substs.get("MOZ_APP_VERSION")
+                if app_version:
+                    product_name += " " + app_version
+            monitor.resources.metadata["product"] = product_name
 
             mozbuild_metrics.artifact.set(get_substs_flag("MOZ_ARTIFACT_BUILDS"))
             mozbuild_metrics.debug.set(get_substs_flag("MOZ_DEBUG"))

@@ -258,7 +258,7 @@ class SystemResourceMonitor(object):
     # collection stops, it flushes all that data to a pipe to be read by
     # the parent process.
 
-    def __init__(self, poll_interval=1.0):
+    def __init__(self, poll_interval=1.0, metadata={}):
         """Instantiate a system resource monitor instance.
 
         The instance is configured with a poll interval. This is the interval
@@ -313,6 +313,7 @@ class SystemResourceMonitor(object):
             target=_collect, args=(child_pipe, poll_interval)
         )
         self.poll_interval = poll_interval
+        self.metadata = metadata
 
     def __del__(self):
         if self._running:
@@ -950,6 +951,8 @@ class SystemResourceMonitor(object):
 
         firstThread = profile["threads"][0]
         markers = firstThread["markers"]
+        for key in self.metadata:
+            profile["meta"][key] = self.metadata[key]
 
         def get_string_index(string):
             stringArray = firstThread["stringArray"]
