@@ -12,7 +12,10 @@ async function expectSavedAddresses(expectedCount) {
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.formautofill.addresses.capture.v2.enabled", true]],
+    set: [
+      ["extensions.formautofill.addresses.capture.v2.enabled", true],
+      ["extensions.formautofill.addresses.supported", "on"],
+    ],
   });
 });
 
@@ -137,11 +140,8 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await sleep(1000);
       await openPopupOn(browser, "form #given-name");
-      await sleep(1000);
       await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
-      await sleep(1000);
       await BrowserTestUtils.synthesizeKey("VK_RETURN", {}, browser);
       await waitForAutofill(
         browser,
@@ -154,7 +154,6 @@ add_task(async function test_doorhanger_not_shown_when_autofill_untouched() {
         form.querySelector("input[type=submit]").click();
       });
 
-      await sleep(1000);
       is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
     }
   );
@@ -183,7 +182,6 @@ add_task(async function test_doorhanger_not_shown_when_fill_duplicate() {
         },
       });
 
-      await sleep(1000);
       is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
     }
   );
@@ -228,7 +226,6 @@ add_task(
           },
         });
 
-        await sleep(1000);
         is(PopupNotifications.panel.state, "closed", "Doorhanger is hidden");
       }
     );
