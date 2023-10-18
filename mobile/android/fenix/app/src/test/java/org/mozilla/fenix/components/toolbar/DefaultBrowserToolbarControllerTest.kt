@@ -369,6 +369,7 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleEraseButtonClicked() {
+        assertNull(Events.browserToolbarEraseTapped.testGetValue())
         val controller = createController()
         controller.handleEraseButtonClick()
 
@@ -376,6 +377,7 @@ class DefaultBrowserToolbarControllerTest {
             homeViewModel.sessionToDelete = HomeFragment.ALL_PRIVATE_TABS
             navController.navigate(BrowserFragmentDirections.actionGlobalHome())
         }
+        assertNotNull(Events.browserToolbarEraseTapped.testGetValue())
     }
 
     @Test

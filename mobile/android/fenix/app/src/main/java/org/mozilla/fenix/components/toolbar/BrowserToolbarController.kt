@@ -202,6 +202,7 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleEraseButtonClick() {
+        Events.browserToolbarEraseTapped.record(NoExtras())
         homeViewModel.sessionToDelete = HomeFragment.ALL_PRIVATE_TABS
         val directions = BrowserFragmentDirections.actionGlobalHome()
         navController.navigate(directions)

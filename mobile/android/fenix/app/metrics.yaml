@@ -454,6 +454,20 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  browser_toolbar_erase_tapped:
+    type: event
+    description: |
+      An event that indicates that a user has tapped
+      erase button on browser toolbar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1859903
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4151#issuecomment-1769519433
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
   tab_view_changed:
     type: event
     description: |
