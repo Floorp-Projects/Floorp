@@ -30,9 +30,6 @@ add_setup(async function () {
 add_task(async function test_permissions() {
   Services.telemetry.clearEvents();
 
-  // Ensure no events have been logged
-  TelemetryTestUtils.assertNumberOfEvents(0);
-
   let sandbox = sinon.createSandbox();
   registerCleanupFunction(() => {
     sandbox.restore();
@@ -74,6 +71,10 @@ add_task(async function test_permissions() {
     let dialogBody = prefsWin.document.body;
     let wizard = dialogBody.querySelector("migration-wizard");
     let shadow = wizard.openOrClosedShadowRoot;
+
+    // Clear out any pre-existing events events have been logged
+    Services.telemetry.clearEvents();
+    TelemetryTestUtils.assertNumberOfEvents(0);
 
     let panelItem = shadow.querySelector(
       `panel-item[key="${InternalTestingProfileMigrator.key}"]`
