@@ -29,6 +29,7 @@ class AsyncLogger;
 class AudioCaptureTrack;
 class CrossGraphTransmitter;
 class CrossGraphReceiver;
+class NativeInputTrack;
 };  // namespace mozilla
 
 extern mozilla::AsyncLogger gMTGTraceLogger;
@@ -111,21 +112,21 @@ class AudioDataListenerInterface {
   /**
    * Number of audio input channels.
    */
-  virtual uint32_t RequestedInputChannelCount(MediaTrackGraphImpl* aGraph) = 0;
+  virtual uint32_t RequestedInputChannelCount(MediaTrackGraph* aGraph) = 0;
 
   /**
    * Whether the underlying audio device is used for voice input.
    */
-  virtual bool IsVoiceInput(MediaTrackGraphImpl* aGraph) const = 0;
+  virtual bool IsVoiceInput(MediaTrackGraph* aGraph) const = 0;
   /**
    * Called when the underlying audio device has changed.
    */
-  virtual void DeviceChanged(MediaTrackGraphImpl* aGraph) = 0;
+  virtual void DeviceChanged(MediaTrackGraph* aGraph) = 0;
 
   /**
    * Called when the underlying audio device is being closed.
    */
-  virtual void Disconnect(MediaTrackGraphImpl* aGraph) = 0;
+  virtual void Disconnect(MediaTrackGraph* aGraph) = 0;
 };
 
 class AudioDataListener : public AudioDataListenerInterface {
@@ -1179,6 +1180,10 @@ class MediaTrackGraph {
    * released on main thread.
    */
   void DispatchToMainThreadStableState(already_AddRefed<nsIRunnable> aRunnable);
+  /* Called on the graph thread when the input device settings should be
+   * reevaluated, for example, if the channel count of the input track should
+   * be changed. */
+  void ReevaluateInputDevice(CubebUtils::AudioDeviceID aID);
 
   /**
    * Returns graph sample rate in Hz.
@@ -1209,6 +1214,21 @@ class MediaTrackGraph {
    * completed.  Some tracks may have performed processing beyond this time.
    */
   GraphTime ProcessedTime() const;
+  /**
+   * For Graph thread logging.
+   */
+  void* CurrentDriver() const;
+
+  /* Do not call this directly. For users who need to get a DeviceInputTrack,
+   * use DeviceInputTrack::OpenAudio() instead. This should only be used in
+   * DeviceInputTrack to get the existing DeviceInputTrack paired with the given
+   * device in this graph. Main thread only.*/
+  DeviceInputTrack* GetDeviceInputTrackMainThread(
+      CubebUtils::AudioDeviceID aID);
+
+  /* Do not call this directly. This should only be used in DeviceInputTrack to
+   * get the existing NativeInputTrackMain thread only.*/
+  NativeInputTrack* GetNativeInputTrackMainThread();
 
  protected:
   explicit MediaTrackGraph(TrackRate aSampleRate) : mSampleRate(aSampleRate) {

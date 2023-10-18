@@ -737,15 +737,17 @@ TrackTime MediaTrackGraphImpl::PlayAudio(AudioMixer* aMixer,
   return ticksWritten;
 }
 
-DeviceInputTrack* MediaTrackGraphImpl::GetDeviceInputTrackMainThread(
+DeviceInputTrack* MediaTrackGraph::GetDeviceInputTrackMainThread(
     CubebUtils::AudioDeviceID aID) {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDeviceInputTrackManagerMainThread.GetDeviceInputTrack(aID);
+  auto* impl = static_cast<MediaTrackGraphImpl*>(this);
+  return impl->mDeviceInputTrackManagerMainThread.GetDeviceInputTrack(aID);
 }
 
-NativeInputTrack* MediaTrackGraphImpl::GetNativeInputTrackMainThread() {
+NativeInputTrack* MediaTrackGraph::GetNativeInputTrackMainThread() {
   MOZ_ASSERT(NS_IsMainThread());
-  return mDeviceInputTrackManagerMainThread.GetNativeInputTrack();
+  auto* impl = static_cast<MediaTrackGraphImpl*>(this);
+  return impl->mDeviceInputTrackManagerMainThread.GetNativeInputTrack();
 }
 
 void MediaTrackGraphImpl::OpenAudioInputImpl(DeviceInputTrack* aTrack) {
@@ -1054,9 +1056,14 @@ static const char* GetAudioInputTypeString(const AudioInputType& aType) {
   return aType == AudioInputType::Voice ? "Voice" : "Unknown";
 }
 
+void MediaTrackGraph::ReevaluateInputDevice(CubebUtils::AudioDeviceID aID) {
+  MOZ_ASSERT(OnGraphThread());
+  auto* impl = static_cast<MediaTrackGraphImpl*>(this);
+  impl->ReevaluateInputDevice(aID);
+}
+
 void MediaTrackGraphImpl::ReevaluateInputDevice(CubebUtils::AudioDeviceID aID) {
   MOZ_ASSERT(OnGraphThread());
-
   LOG(LogLevel::Debug, ("%p: ReevaluateInputDevice: device %p", this, aID));
 
   DeviceInputTrack* track =
@@ -3971,6 +3978,11 @@ Watchable<mozilla::GraphTime>& MediaTrackGraphImpl::CurrentTime() {
 GraphTime MediaTrackGraph::ProcessedTime() const {
   AssertOnGraphThreadOrNotRunning();
   return static_cast<const MediaTrackGraphImpl*>(this)->mProcessedTime;
+}
+
+void* MediaTrackGraph::CurrentDriver() const {
+  AssertOnGraphThreadOrNotRunning();
+  return static_cast<const MediaTrackGraphImpl*>(this)->mDriver;
 }
 
 uint32_t MediaTrackGraphImpl::AudioInputChannelCount(
