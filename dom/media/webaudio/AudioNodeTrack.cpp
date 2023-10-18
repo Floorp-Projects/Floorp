@@ -5,7 +5,7 @@
 
 #include "AudioNodeTrack.h"
 
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "MediaTrackListener.h"
 #include "AudioNodeEngine.h"
 #include "ThreeDPoint.h"
@@ -134,29 +134,12 @@ void AudioNodeTrack::SizeOfAudioNodesIncludingThis(
 void AudioNodeTrack::SetTrackTimeParameter(uint32_t aIndex,
                                            AudioContext* aContext,
                                            double aTrackTime) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, uint32_t aIndex,
-            MediaTrack* aRelativeToTrack, double aTrackTime)
-        : ControlMessage(aTrack),
-          mTrackTime(aTrackTime),
-          mRelativeToTrack(aRelativeToTrack),
-          mIndex(aIndex) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetTrackTimeParameterImpl");
-      static_cast<AudioNodeTrack*>(mTrack)->SetTrackTimeParameterImpl(
-          mIndex, mRelativeToTrack, mTrackTime);
-    }
-    double mTrackTime;
-    MediaTrack* MOZ_UNSAFE_REF(
-        "ControlMessages are processed in order.  This \
-destination track is not yet destroyed.  Its (future) destroy message will be \
-processed after this message.") mRelativeToTrack;
-    uint32_t mIndex;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(
-      this, aIndex, aContext->DestinationTrack(), aTrackTime));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, aIndex,
+       relativeToTrack = RefPtr{aContext->DestinationTrack()}, aTrackTime] {
+        TRACE("AudioNodeTrack::SetTrackTimeParameterImpl");
+        SetTrackTimeParameterImpl(aIndex, relativeToTrack, aTrackTime);
+      });
 }
 
 void AudioNodeTrack::SetTrackTimeParameterImpl(uint32_t aIndex,
@@ -167,171 +150,80 @@ void AudioNodeTrack::SetTrackTimeParameterImpl(uint32_t aIndex,
 }
 
 void AudioNodeTrack::SetDoubleParameter(uint32_t aIndex, double aValue) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, uint32_t aIndex, double aValue)
-        : ControlMessage(aTrack), mValue(aValue), mIndex(aIndex) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetDoubleParameter");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetDoubleParameter(
-          mIndex, mValue);
-    }
-    double mValue;
-    uint32_t mIndex;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, aIndex, aValue] {
+        TRACE("AudioNodeTrack::SetDoubleParameter");
+        Engine()->SetDoubleParameter(aIndex, aValue);
+      });
 }
 
 void AudioNodeTrack::SetInt32Parameter(uint32_t aIndex, int32_t aValue) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, uint32_t aIndex, int32_t aValue)
-        : ControlMessage(aTrack), mValue(aValue), mIndex(aIndex) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetInt32Parameter");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetInt32Parameter(mIndex,
-                                                                        mValue);
-    }
-    int32_t mValue;
-    uint32_t mIndex;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aValue));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, aIndex, aValue] {
+        TRACE("AudioNodeTrack::SetInt32Parameter");
+        Engine()->SetInt32Parameter(aIndex, aValue);
+      });
 }
 
 void AudioNodeTrack::SendTimelineEvent(uint32_t aIndex,
                                        const AudioParamEvent& aEvent) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, uint32_t aIndex,
-            const AudioParamEvent& aEvent)
-        : ControlMessage(aTrack),
-          mEvent(aEvent),
-          mSampleRate(aTrack->mSampleRate),
-          mIndex(aIndex) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::RecvTimelineEvent");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->RecvTimelineEvent(mIndex,
-                                                                        mEvent);
-    }
-    AudioParamEvent mEvent;
-    TrackRate mSampleRate;
-    uint32_t mIndex;
-  };
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aIndex, aEvent));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, aIndex, event = aEvent]() mutable {
+        TRACE("AudioNodeTrack::RecvTimelineEvent");
+        Engine()->RecvTimelineEvent(aIndex, event);
+      });
 }
 
 void AudioNodeTrack::SetBuffer(AudioChunk&& aBuffer) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, AudioChunk&& aBuffer)
-        : ControlMessage(aTrack), mBuffer(aBuffer) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetBuffer");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetBuffer(
-          std::move(mBuffer));
-    }
-    AudioChunk mBuffer;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aBuffer)));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, buffer = std::move(aBuffer)]() mutable {
+        TRACE("AudioNodeTrack::SetBuffer");
+        Engine()->SetBuffer(std::move(buffer));
+      });
 }
 
 void AudioNodeTrack::SetReverb(WebCore::Reverb* aReverb,
                                uint32_t aImpulseChannelCount) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, WebCore::Reverb* aReverb,
-            uint32_t aImpulseChannelCount)
-        : ControlMessage(aTrack),
-          mReverb(aReverb),
-          mImpulseChanelCount(aImpulseChannelCount) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetReverb");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetReverb(
-          mReverb.release(), mImpulseChanelCount);
-    }
-    UniquePtr<WebCore::Reverb> mReverb;
-    uint32_t mImpulseChanelCount;
-  };
-
-  GraphImpl()->AppendMessage(
-      MakeUnique<Message>(this, aReverb, aImpulseChannelCount));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this,
+                                     reverb = WrapUnique(aReverb),
+                                     aImpulseChannelCount]() mutable {
+    TRACE("AudioNodeTrack::SetReverb");
+    Engine()->SetReverb(reverb.release(), aImpulseChannelCount);
+  });
 }
 
 void AudioNodeTrack::SetRawArrayData(nsTArray<float>&& aData) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, nsTArray<float>&& aData)
-        : ControlMessage(aTrack), mData(std::move(aData)) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetRawArrayData");
-      static_cast<AudioNodeTrack*>(mTrack)->Engine()->SetRawArrayData(
-          std::move(mData));
-    }
-    nsTArray<float> mData;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aData)));
+  QueueControlMessageWithNoShutdown(
+      [self = RefPtr{this}, this, data = std::move(aData)]() mutable {
+        TRACE("AudioNodeTrack::SetRawArrayData");
+        Engine()->SetRawArrayData(std::move(data));
+      });
 }
 
 void AudioNodeTrack::SetChannelMixingParameters(
     uint32_t aNumberOfChannels, ChannelCountMode aChannelCountMode,
     ChannelInterpretation aChannelInterpretation) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, uint32_t aNumberOfChannels,
-            ChannelCountMode aChannelCountMode,
-            ChannelInterpretation aChannelInterpretation)
-        : ControlMessage(aTrack),
-          mNumberOfChannels(aNumberOfChannels),
-          mChannelCountMode(aChannelCountMode),
-          mChannelInterpretation(aChannelInterpretation) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetChannelMixingParameters");
-      static_cast<AudioNodeTrack*>(mTrack)->SetChannelMixingParametersImpl(
-          mNumberOfChannels, mChannelCountMode, mChannelInterpretation);
-    }
-    uint32_t mNumberOfChannels;
-    ChannelCountMode mChannelCountMode;
-    ChannelInterpretation mChannelInterpretation;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(
-      this, aNumberOfChannels, aChannelCountMode, aChannelInterpretation));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this,
+                                     aNumberOfChannels, aChannelCountMode,
+                                     aChannelInterpretation] {
+    TRACE("AudioNodeTrack::SetChannelMixingParameters");
+    SetChannelMixingParametersImpl(aNumberOfChannels, aChannelCountMode,
+                                   aChannelInterpretation);
+  });
 }
 
 void AudioNodeTrack::SetPassThrough(bool aPassThrough) {
-  class Message final : public ControlMessage {
-   public:
-    Message(AudioNodeTrack* aTrack, bool aPassThrough)
-        : ControlMessage(aTrack), mPassThrough(aPassThrough) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SetPassThrough");
-      static_cast<AudioNodeTrack*>(mTrack)->mPassThrough = mPassThrough;
-    }
-    bool mPassThrough;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aPassThrough));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aPassThrough] {
+    TRACE("AudioNodeTrack::SetPassThrough");
+    mPassThrough = aPassThrough;
+  });
 }
 
 void AudioNodeTrack::SendRunnable(already_AddRefed<nsIRunnable> aRunnable) {
-  class Message final : public ControlMessage {
-   public:
-    Message(MediaTrack* aTrack, already_AddRefed<nsIRunnable> aRunnable)
-        : ControlMessage(aTrack), mRunnable(aRunnable) {}
-    void Run() override {
-      TRACE("AudioNodeTrack::SendRunnable");
-      mRunnable->Run();
-    }
-
-   private:
-    nsCOMPtr<nsIRunnable> mRunnable;
-  };
-
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, std::move(aRunnable)));
+  QueueControlMessageWithNoShutdown([runnable = nsCOMPtr{aRunnable}] {
+    TRACE("AudioNodeTrack::SendRunnable");
+    runnable->Run();
+  });
 }
 
 void AudioNodeTrack::SetChannelMixingParametersImpl(
@@ -364,26 +256,14 @@ uint32_t AudioNodeTrack::NumberOfChannels() const {
   return mNumberOfInputChannels;
 }
 
-class AudioNodeTrack::AdvanceAndResumeMessage final : public ControlMessage {
- public:
-  AdvanceAndResumeMessage(AudioNodeTrack* aTrack, TrackTime aAdvance)
-      : ControlMessage(aTrack), mAdvance(aAdvance) {}
-  void Run() override {
-    TRACE("AudioNodeTrack::AdvanceAndResumeMessage");
-    auto ns = static_cast<AudioNodeTrack*>(mTrack);
-    ns->mStartTime -= mAdvance;
-    ns->mSegment->AppendNullData(mAdvance);
-    ns->DecrementSuspendCount();
-  }
-
- private:
-  TrackTime mAdvance;
-};
-
 void AudioNodeTrack::AdvanceAndResume(TrackTime aAdvance) {
   mMainThreadCurrentTime += aAdvance;
-  GraphImpl()->AppendMessage(
-      MakeUnique<AdvanceAndResumeMessage>(this, aAdvance));
+  QueueControlMessageWithNoShutdown([self = RefPtr{this}, this, aAdvance] {
+    TRACE("AudioNodeTrack::AdvanceAndResumeMessage");
+    mStartTime -= aAdvance;
+    mSegment->AppendNullData(aAdvance);
+    DecrementSuspendCount();
+  });
 }
 
 void AudioNodeTrack::ObtainInputBlock(AudioBlock& aTmpChunk,
