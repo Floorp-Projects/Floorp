@@ -25,6 +25,19 @@ label {
 #ctap-listen-div {
     padding-top: 15px;
 }
+#ctap-listen-result {
+  font-weight: 600;
+  font-size: 1.5em;
+  padding-inline-start: 15px;
+
+  &.success {
+    background-color: var(--green-50);
+  }
+
+  &.error {
+    background-color: var(--red-50);
+  }
+}
 
 .category {
   cursor: pointer;
@@ -58,4 +71,9 @@ label {
 
 .token-info-flex-child#authenticator-options {
     margin-inline-end: 2px;
+}
+
+.button-row {
+  display: inline-block;
+  margin-inline-end: 5px;
 }

@@ -32,9 +32,19 @@
           data-l10n-id="about-webauthn-info-section-title"
         ></span>
       </div>
+      <div hidden id="pin-tab-button" class="category">
+        <span
+          class="tablinks"
+          data-l10n-id="about-webauthn-pin-section-title"
+        ></span>
+      </div>
     </div>
 
     <div hidden id="main-content">
+      <div id="ctap-listen-div">
+        <label id="ctap-listen-result"></label>
+      </div>
+
       <div hidden class="tabcontent token-info-section" id="token-info-section">
         <h2
           class="categoryTitle"
@@ -50,6 +60,82 @@
             <table id="authenticator-info"></table>
           </div>
         </div>
+      </div>
+
+      <div hidden class="tabcontent pin-section" id="set-change-pin-section">
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-pin-section-title"
+        ></h2>
+        <div id="new-pin-div">
+          <label
+            for="new-pin"
+            data-l10n-id="about-webauthn-new-pin-label"
+          ></label>
+          <input type="password" id="new-pin" name="new-pin" required />
+          <label
+            for="new-pin-repeat"
+            data-l10n-id="about-webauthn-repeat-pin-label"
+          ></label>
+          <input
+            type="password"
+            id="new-pin-repeat"
+            name="new-pin-repeat"
+            required
+          />
+        </div>
+        <div id="current-pin-div">
+          <label
+            for="current-pin"
+            data-l10n-id="about-webauthn-current-pin-label"
+          ></label>
+          <input type="password" id="current-pin" name="current-pin" required />
+        </div>
+        <button
+          disabled
+          id="set-pin-button"
+          data-l10n-id="about-webauthn-current-set-pin-button"
+        ></button>
+        <button
+          disabled
+          id="change-pin-button"
+          data-l10n-id="about-webauthn-current-change-pin-button"
+        ></button>
+        <label id="set-change-pin-result" class="ctap-result"></label>
+      </div>
+
+      <div
+        hidden
+        class="tabcontent pin-required-section"
+        id="pin-required-section"
+      >
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-pin-required-section-title"
+        ></h2>
+        <div id="pin-div">
+          <label
+            for="pin-required"
+            data-l10n-id="about-webauthn-pin-required-label"
+          ></label>
+          <input
+            type="password"
+            id="pin-required"
+            name="pin-required"
+            required
+            autofocus
+          />
+        </div>
+        <button
+          id="send-pin-button"
+          class="button-row"
+          data-l10n-id="about-webauthn-send-pin-button"
+        ></button>
+        <button
+          id="cancel-send-pin-button"
+          class="button-row"
+          data-l10n-id="about-webauthn-cancel-button"
+        ></button>
       </div>
     </div>
   </body>
