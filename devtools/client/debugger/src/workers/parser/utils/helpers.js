@@ -139,8 +139,16 @@ export function getVariables(dec) {
   ];
 }
 
-export function getPatternIdentifiers(pattern) {
-  let items = [];
+/**
+ * Add the identifiers for a given object pattern.
+ *
+ * @param {Array.<Object>} identifiers
+ *        the current list of identifiers where to push the new identifiers
+ *        related to this path.
+ * @param {Object} pattern
+ */
+export function addPatternIdentifiers(identifiers, pattern) {
+  let items;
   if (t.isObjectPattern(pattern)) {
     items = pattern.properties.map(({ value }) => value);
   }
@@ -149,24 +157,24 @@ export function getPatternIdentifiers(pattern) {
     items = pattern.elements;
   }
 
-  return getIdentifiers(items);
+  if (items) {
+    addIdentifiers(identifiers, items);
+  }
 }
 
-function getIdentifiers(items) {
-  let ids = [];
-  items.forEach(function (item) {
+function addIdentifiers(identifiers, items) {
+  for (const item of items) {
     if (t.isObjectPattern(item) || t.isArrayPattern(item)) {
-      ids = ids.concat(getPatternIdentifiers(item));
+      addPatternIdentifiers(identifiers, item);
     } else if (t.isIdentifier(item)) {
       const { start, end } = item.loc;
-      ids.push({
+      identifiers.push({
         name: item.name,
         expression: item.name,
         location: { start, end },
       });
     }
-  });
-  return ids;
+  }
 }
 
 // Top Level checks the number of "body" nodes in the ancestor chain
