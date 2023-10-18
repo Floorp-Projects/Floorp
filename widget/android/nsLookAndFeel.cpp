@@ -269,6 +269,14 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
   nsresult rv = NS_OK;
 
   switch (aID) {
+    case IntID::ScrollbarFadeBeginDelay:
+      aResult = 450;
+      break;
+
+    case IntID::ScrollbarFadeDuration:
+      aResult = 0;
+      break;
+
     case IntID::ScrollButtonLeftMouseButtonAction:
       aResult = 0;
       break;
