@@ -544,7 +544,11 @@ CoderResult CodeStructType(Coder<mode>& coder,
   WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::StructType, 136);
   MOZ_TRY((CodeVector<mode, StructField, &CodeStructField<mode>>(
       coder, &item->fields_)));
-  MOZ_TRY(CodePod(coder, &item->size_));
+  if constexpr (mode == MODE_DECODE) {
+    if (!item->init()) {
+      return Err(OutOfMemory());
+    }
+  }
   return Ok();
 }
 
