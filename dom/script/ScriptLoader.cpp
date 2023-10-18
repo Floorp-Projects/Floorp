@@ -1606,14 +1606,14 @@ class OffThreadCompilationCompleteTask : public Task {
   }
 #endif
 
-  TaskResult Run() override {
+  bool Run() override {
     MOZ_ASSERT(NS_IsMainThread());
 
     RefPtr<ScriptLoadContext> context = mRequest->GetScriptLoadContext();
 
     if (!context->mCompileOrDecodeTask) {
       // Request has been cancelled by MaybeCancelOffThreadScript.
-      return TaskResult::Complete;
+      return true;
     }
 
     RecordStopTime();
@@ -1638,7 +1638,7 @@ class OffThreadCompilationCompleteTask : public Task {
 
     mRequest = nullptr;
     mLoader = nullptr;
-    return TaskResult::Complete;
+    return true;
   }
 
  private:
@@ -1857,17 +1857,17 @@ class ScriptOrModuleCompileTask final : public CompileOrDecodeTask {
     return NS_OK;
   }
 
-  TaskResult Run() override {
+  bool Run() override {
     MutexAutoLock lock(mMutex);
 
     if (IsCancelled(lock)) {
-      return TaskResult::Complete;
+      return true;
     }
 
     RefPtr<JS::Stencil> stencil = Compile();
 
     DidRunTask(lock, std::move(stencil));
-    return TaskResult::Complete;
+    return true;
   }
 
  private:
@@ -1932,11 +1932,11 @@ class ScriptDecodeTask final : public CompileOrDecodeTask {
     return NS_OK;
   }
 
-  TaskResult Run() override {
+  bool Run() override {
     MutexAutoLock lock(mMutex);
 
     if (IsCancelled(lock)) {
-      return TaskResult::Complete;
+      return true;
     }
 
     RefPtr<JS::Stencil> stencil = Decode();
@@ -1946,7 +1946,7 @@ class ScriptDecodeTask final : public CompileOrDecodeTask {
     mOptions.steal(std::move(mDecodeOptions));
 
     DidRunTask(lock, std::move(stencil));
-    return TaskResult::Complete;
+    return true;
   }
 
  private:
