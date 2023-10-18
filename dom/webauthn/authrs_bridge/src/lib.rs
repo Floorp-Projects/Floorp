@@ -20,7 +20,8 @@ use authenticator::{
     },
     errors::AuthenticatorError,
     statecallback::StateCallback,
-    Pin, RegisterResult, SignResult, StateMachine, StatusPinUv, StatusUpdate,
+    AuthenticatorInfo, ManageResult, Pin, RegisterResult, SignResult, StateMachine, StatusPinUv,
+    StatusUpdate,
 };
 use base64::Engine;
 use cstr::cstr;
@@ -44,7 +45,8 @@ use xpcom::interfaces::{
     nsIWebAuthnSignPromise, nsIWebAuthnSignResult,
 };
 use xpcom::{xpcom_method, RefPtr};
-
+mod about_webauthn_controller;
+use about_webauthn_controller::*;
 mod test_token;
 use test_token::TestTokenManager;
 
@@ -77,6 +79,9 @@ enum BrowserPromptType<'a> {
     SelectDevice,
     UvBlocked,
     PinRequired,
+    SelectedDevice {
+        auth_info: Option<AuthenticatorInfo>,
+    },
     PinInvalid {
         retries: Option<u8>,
     },
@@ -87,6 +92,14 @@ enum BrowserPromptType<'a> {
     SelectSignResult {
         entities: &'a [PublicKeyCredentialUserEntity],
     },
+    ListenSuccess,
+    ListenError,
+}
+
+#[derive(Debug)]
+enum PromptTarget {
+    Browser,
+    AboutPage,
 }
 
 #[derive(Serialize)]
@@ -98,13 +111,29 @@ struct BrowserPromptMessage<'a> {
     browsing_context_id: Option<u64>,
 }
 
+fn notify_observers(prompt_target: PromptTarget, json: nsString) -> Result<(), nsresult> {
+    let main_thread = get_main_thread()?;
+    let target = match prompt_target {
+        PromptTarget::Browser => cstr!("webauthn-prompt"),
+        PromptTarget::AboutPage => cstr!("about-webauthn-prompt"),
+    };
+
+    RunnableBuilder::new("AuthrsService::send_prompt", move || {
+        if let Ok(obs_svc) = xpcom::components::Observer::service::<nsIObserverService>() {
+            unsafe {
+                obs_svc.NotifyObservers(std::ptr::null(), target.as_ptr(), json.as_ptr());
+            }
+        }
+    })
+    .dispatch(main_thread.coerce())
+}
+
 fn send_prompt(
     prompt: BrowserPromptType,
     tid: u64,
     origin: Option<&str>,
     browsing_context_id: Option<u64>,
 ) -> Result<(), nsresult> {
-    let main_thread = get_main_thread()?;
     let mut json = nsString::new();
     write!(
         json,
@@ -117,18 +146,7 @@ fn send_prompt(
         })
     )
     .or(Err(NS_ERROR_FAILURE))?;
-    RunnableBuilder::new("AuthrsService::send_prompt", move || {
-        if let Ok(obs_svc) = xpcom::components::Observer::service::<nsIObserverService>() {
-            unsafe {
-                obs_svc.NotifyObservers(
-                    std::ptr::null(),
-                    cstr!("webauthn-prompt").as_ptr(),
-                    json.as_ptr(),
-                );
-            }
-        }
-    })
-    .dispatch(main_thread.coerce())
+    notify_observers(PromptTarget::Browser, json)
 }
 
 fn cancel_prompts(tid: u64) -> Result<(), nsresult> {
@@ -486,6 +504,7 @@ impl SignPromise {
 
 #[derive(Clone)]
 enum TransactionPromise {
+    Listen,
     Register(RegisterPromise),
     Sign(SignPromise),
 }
@@ -493,6 +512,7 @@ enum TransactionPromise {
 impl TransactionPromise {
     fn reject(&self, err: nsresult) -> Result<(), nsresult> {
         match self {
+            TransactionPromise::Listen => Ok(()),
             TransactionPromise::Register(promise) => promise.resolve_or_reject(Err(err)),
             TransactionPromise::Sign(promise) => promise.resolve_or_reject(Err(err)),
         }
@@ -512,6 +532,7 @@ struct TransactionState {
     promise: TransactionPromise,
     pin_receiver: PinReceiver,
     selection_receiver: SelectionReceiver,
+    interactive_receiver: InteractiveManagementReceiver,
 }
 
 // AuthrsService provides an nsIWebAuthnService built on top of authenticator-rs.
@@ -704,6 +725,7 @@ impl AuthrsService {
             browsing_context_id,
             pending_args: Some(TransactionArgs::Register(timeout_ms as u64, info)),
             promise: TransactionPromise::Register(promise),
+            interactive_receiver: None,
             pin_receiver: None,
             selection_receiver: None,
         });
@@ -739,6 +761,10 @@ impl AuthrsService {
         let Some(TransactionArgs::Register(timeout_ms, info)) = state.pending_args.take() else {
             return Err(NS_ERROR_FAILURE);
         };
+        // We have to drop the guard here, as there _may_ still be another operation
+        // ongoing and `register()` below will try to cancel it. This will call the state
+        // callback of that operation, which in turn may try to access `transaction`, deadlocking.
+        drop(guard);
 
         let (status_tx, status_rx) = channel::<StatusUpdate>();
         let status_transaction = self.transaction.clone();
@@ -790,6 +816,7 @@ impl AuthrsService {
                     let _ = cancel_prompts(tid);
                 }
                 let _ = promise.resolve_or_reject(result.map_err(authrs_to_nserror));
+                *guard = None;
             }),
         );
 
@@ -922,6 +949,7 @@ impl AuthrsService {
                     let _ = cancel_prompts(tid);
                 }
                 let _ = promise.resolve_or_reject(result.map_err(authrs_to_nserror));
+                *guard = None;
             }),
         );
 
@@ -953,6 +981,7 @@ impl AuthrsService {
             browsing_context_id,
             pending_args: None,
             promise: TransactionPromise::Sign(promise),
+            interactive_receiver: None,
             pin_receiver: None,
             selection_receiver: None,
         });
@@ -1129,6 +1158,81 @@ impl AuthrsService {
     ) -> Result<(), nsresult> {
         self.test_token_manager
             .set_user_verified(authenticator_id, is_user_verified)
+    }
+
+    xpcom_method!(listen => Listen());
+    pub(crate) fn listen(&self) -> Result<(), nsresult> {
+        // For now, we don't support softtokens
+        if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            return Ok(());
+        }
+
+        {
+            let mut guard = self.transaction.lock().unwrap();
+            if guard.as_ref().is_some() {
+                // ignore listen() and continue with ongoing transaction
+                return Ok(());
+            }
+            *guard = Some(TransactionState {
+                tid: 0,
+                browsing_context_id: 0,
+                pending_args: None,
+                promise: TransactionPromise::Listen,
+                interactive_receiver: None,
+                pin_receiver: None,
+                selection_receiver: None,
+            });
+        }
+
+        let callback_transaction = self.transaction.clone();
+        let state_callback = StateCallback::<Result<ManageResult, AuthenticatorError>>::new(
+            Box::new(move |result| {
+                let mut guard = callback_transaction.lock().unwrap();
+                let Some(state) = guard.as_mut() else {
+                    return;
+                };
+                match state.promise {
+                    TransactionPromise::Listen => (),
+                    _ => return,
+                }
+                *guard = None;
+                let msg = match result {
+                    Ok(_) => BrowserPromptType::ListenSuccess,
+                    Err(_) => BrowserPromptType::ListenError,
+                };
+                let _ = send_about_prompt(&msg);
+            }),
+        );
+
+        // Calling `manage()` within the lock, to avoid race conditions
+        // where we might check listen_blocked, see that it's false,
+        // continue along, but in parallel `make_credential()` aborts the
+        // interactive process shortly after, setting listen_blocked to true,
+        // then accessing usb_token_manager afterwards and at the same time
+        // we do it here, causing a runtime crash for trying to mut-borrow it twice.
+        let (status_tx, status_rx) = channel::<StatusUpdate>();
+        let status_transaction = self.transaction.clone();
+        RunnableBuilder::new(
+            "AuthrsTransport::AboutWebauthn::StatusReceiver",
+            move || {
+                let _ = interactive_status_callback(status_rx, status_transaction);
+            },
+        )
+        .may_block(true)
+        .dispatch_background_task()?;
+        if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
+            self.usb_token_manager.lock().unwrap().manage(
+                60 * 1000 * 1000,
+                status_tx,
+                state_callback,
+            );
+        } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            // We don't yet support softtoken
+        } else {
+            // Silently accept request, if all webauthn-options are disabled.
+            // Used for testing.
+        }
+        Ok(())
     }
 }
 

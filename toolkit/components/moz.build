@@ -15,6 +15,7 @@ DIRS += [
     "aboutcheckerboard",
     "aboutmemory",
     "aboutprocesses",
+    "aboutwebauthn",
     "alerts",
     "antitracking",
     "apppicker",
