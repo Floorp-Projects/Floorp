@@ -260,6 +260,11 @@ jobs:
       env:
           GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
+    - name: Remove folders
+      run: |
+        rm -fr ./third_party/rust
+        rm -fr ./third_party/libwebrtc
+        
     - name: Package 1 - mach 🎁
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
