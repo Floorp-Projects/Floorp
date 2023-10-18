@@ -608,17 +608,17 @@ class InitializeVirtualDesktopManagerTask : public Task {
   }
 #endif
 
-  virtual TaskResult Run() override {
+  virtual bool Run() override {
     RefPtr<IVirtualDesktopManager> desktopManager;
     HRESULT hr = ::CoCreateInstance(
         CLSID_VirtualDesktopManager, NULL, CLSCTX_INPROC_SERVER,
         __uuidof(IVirtualDesktopManager), getter_AddRefs(desktopManager));
     if (FAILED(hr)) {
-      return TaskResult::Complete;
+      return true;
     }
 
     gVirtualDesktopManager = desktopManager;
-    return TaskResult::Complete;
+    return true;
   }
 };
 
