@@ -199,24 +199,6 @@ void HTMLImageElement::GetDecoding(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::decoding, kDecodingTableDefault->tag, aValue);
 }
 
-// https://whatpr.org/html/3752/urls-and-fetching.html#lazy-loading-attributes
-static const nsAttrValue::EnumTable kLoadingTable[] = {
-    {"eager", HTMLImageElement::Loading::Eager},
-    {"lazy", HTMLImageElement::Loading::Lazy},
-    {nullptr, 0}};
-
-void HTMLImageElement::GetLoading(nsAString& aValue) const {
-  GetEnumAttr(nsGkAtoms::loading, kLoadingTable[0].tag, aValue);
-}
-
-HTMLImageElement::Loading HTMLImageElement::LoadingState() const {
-  const nsAttrValue* val = mAttrs.GetAttr(nsGkAtoms::loading);
-  if (!val) {
-    return HTMLImageElement::Loading::Eager;
-  }
-  return static_cast<HTMLImageElement::Loading>(val->GetEnumValue());
-}
-
 already_AddRefed<Promise> HTMLImageElement::Decode(ErrorResult& aRv) {
   return nsImageLoadingContent::QueueDecodeAsync(aRv);
 }
@@ -239,9 +221,7 @@ bool HTMLImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                     kDecodingTableDefault);
     }
     if (aAttribute == nsGkAtoms::loading) {
-      return aResult.ParseEnumValue(aValue, kLoadingTable,
-                                    /* aCaseSensitive = */ false,
-                                    kLoadingTable);
+      return ParseLoadingAttribute(aValue, aResult);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return true;
@@ -660,17 +640,8 @@ void HTMLImageElement::NodeInfoChanged(Document* aOldDoc) {
     StringToURI(src, OwnerDoc(), getter_AddRefs(mSrcURI));
   }
 
-  // Unlike the LazyLoadImageObserver, the intersection observer
-  // for the viewport could contain the element even if
-  // it's not lazy-loading. For instance, the element has
-  // started to load, but haven't reached to the viewport.
-  // So here we always try to unobserve it.
-  if (auto* observer = aOldDoc->GetLazyLoadImageObserverViewport()) {
-    observer->Unobserve(*this);
-  }
-
   if (mLazyLoading) {
-    aOldDoc->GetLazyLoadImageObserver()->Unobserve(*this);
+    aOldDoc->GetLazyLoadObserver()->Unobserve(*this);
     mLazyLoading = false;
     SetLazyLoading();
   }
@@ -1298,7 +1269,7 @@ void HTMLImageElement::SetLazyLoading() {
     return;
   }
 
-  doc->EnsureLazyLoadImageObserver().Observe(*this);
+  doc->EnsureLazyLoadObserver().Observe(*this);
   mLazyLoading = true;
   UpdateImageState(true);
 }
@@ -1326,7 +1297,7 @@ void HTMLImageElement::StopLazyLoading(StartLoading aStartLoading) {
   }
   mLazyLoading = false;
   Document* doc = OwnerDoc();
-  if (auto* obs = doc->GetLazyLoadImageObserver()) {
+  if (auto* obs = doc->GetLazyLoadObserver()) {
     obs->Unobserve(*this);
   }
 

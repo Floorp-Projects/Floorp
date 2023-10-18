@@ -1850,7 +1850,7 @@ nsLoadFlags nsImageLoadingContent::LoadFlags() {
   auto* image = HTMLImageElement::FromNode(AsContent());
   if (image && image->OwnerDoc()->IsScriptEnabled() &&
       !image->OwnerDoc()->IsStaticDocument() &&
-      image->LoadingState() == HTMLImageElement::Loading::Lazy) {
+      image->LoadingState() == Element::Loading::Lazy) {
     // Note that LOAD_BACKGROUND is not about priority of the load, but about
     // whether it blocks the load event (by bypassing the loadgroup).
     return nsIRequest::LOAD_BACKGROUND;

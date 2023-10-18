@@ -543,15 +543,19 @@ void nsFrameLoader::LoadFrame(bool aOriginalSrc) {
     return;
   }
 
-  nsIURI* base_uri = mOwnerContent->GetBaseURI();
+  // If we are being loaded by a lazy loaded iframe, use its base URI first
+  // instead of the current base URI.
+  auto* lazyBaseURI = GetLazyLoadFrameResumptionState().mBaseURI.get();
+  nsIURI* baseURI = lazyBaseURI ? lazyBaseURI : mOwnerContent->GetBaseURI();
+
   auto encoding = doc->GetDocumentCharacterSet();
 
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), src, encoding, base_uri);
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), src, encoding, baseURI);
 
   // If the URI was malformed, try to recover by loading about:blank.
   if (rv == NS_ERROR_MALFORMED_URI) {
-    rv = NS_NewURI(getter_AddRefs(uri), u"about:blank"_ns, encoding, base_uri);
+    rv = NS_NewURI(getter_AddRefs(uri), u"about:blank"_ns, encoding, baseURI);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -692,7 +696,8 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
       loadState->SetBaseURI(mOwnerContent->GetBaseURI());
     }
 
-    auto referrerInfo = MakeRefPtr<ReferrerInfo>(*mOwnerContent);
+    auto referrerInfo = MakeRefPtr<ReferrerInfo>(
+        *mOwnerContent, GetLazyLoadFrameResumptionState().mReferrerPolicy);
     loadState->SetReferrerInfo(referrerInfo);
 
     loadState->SetIsFromProcessingFrameAttributes();
@@ -3083,6 +3088,15 @@ nsresult nsFrameLoader::ReallyLoadFrameScripts() {
 
 already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
+}
+
+const LazyLoadFrameResumptionState&
+nsFrameLoader::GetLazyLoadFrameResumptionState() {
+  static const LazyLoadFrameResumptionState sEmpty;
+  if (auto* iframe = HTMLIFrameElement::FromNode(*mOwnerContent)) {
+    return iframe->GetLazyLoadFrameResumptionState();
+  }
+  return sEmpty;
 }
 
 void nsFrameLoader::SetDetachedSubdocFrame(nsIFrame* aDetachedFrame) {

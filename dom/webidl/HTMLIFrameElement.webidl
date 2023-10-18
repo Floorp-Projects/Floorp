@@ -13,8 +13,7 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window,
- InstrumentedProps=(loading)]
+[Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
   [HTMLConstructor] constructor();
 
@@ -34,6 +33,8 @@ interface HTMLIFrameElement : HTMLElement {
            attribute DOMString height;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString referrerPolicy;
+  [CEReactions, SetterThrows, Pure, Pref="dom.iframe-lazy-loading.enabled"]
+           attribute DOMString loading;
   [NeedsSubjectPrincipal]
   readonly attribute Document? contentDocument;
   readonly attribute WindowProxy? contentWindow;
