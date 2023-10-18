@@ -15,6 +15,12 @@ const SECURE_TEST_URI = ROOT_URI + "iframe_navigation.html";
 // eslint-disable-next-line @microsoft/sdl/no-insecure-url
 const INSECURE_TEST_URI = SECURE_TEST_URI.replace("https://", "http://");
 
+const NOT_SECURE_LABEL = Services.prefs.getBoolPref(
+  "security.insecure_connection_text.enabled"
+)
+  ? "notSecure notSecureText"
+  : "notSecure";
+
 // From a secure URI, navigate the iframe to about:blank (should still be
 // secure).
 add_task(async function () {
@@ -71,7 +77,11 @@ add_task(async function () {
   let uri = INSECURE_TEST_URI + "#blank";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "notSecure", "identity should be 'not secure' before");
+    is(
+      identityMode,
+      NOT_SECURE_LABEL,
+      "identity should be 'not secure' before"
+    );
 
     await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
@@ -82,7 +92,11 @@ add_task(async function () {
 
     let newIdentityMode =
       window.document.getElementById("identity-box").className;
-    is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
+    is(
+      newIdentityMode,
+      NOT_SECURE_LABEL,
+      "identity should be 'not secure' after"
+    );
   });
 });
 
@@ -92,7 +106,11 @@ add_task(async function () {
   let uri = INSECURE_TEST_URI + "#secure";
   await BrowserTestUtils.withNewTab(uri, async browser => {
     let identityMode = window.document.getElementById("identity-box").className;
-    is(identityMode, "notSecure", "identity should be 'not secure' before");
+    is(
+      identityMode,
+      NOT_SECURE_LABEL,
+      "identity should be 'not secure' before"
+    );
 
     await SpecialPowers.spawn(browser, [], async () => {
       content.postMessage("", "*"); // This kicks off the navigation.
@@ -103,6 +121,10 @@ add_task(async function () {
 
     let newIdentityMode =
       window.document.getElementById("identity-box").className;
-    is(newIdentityMode, "notSecure", "identity should be 'not secure' after");
+    is(
+      newIdentityMode,
+      NOT_SECURE_LABEL,
+      "identity should be 'not secure' after"
+    );
   });
 });
