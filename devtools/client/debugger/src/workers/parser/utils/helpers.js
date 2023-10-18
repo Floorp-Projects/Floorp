@@ -145,9 +145,11 @@ export function getVariables(dec) {
  * @param {Array.<Object>} identifiers
  *        the current list of identifiers where to push the new identifiers
  *        related to this path.
+ * @param {Set<String>} identifiersKeys
+ *        List of currently registered identifier location key.
  * @param {Object} pattern
  */
-export function addPatternIdentifiers(identifiers, pattern) {
+export function addPatternIdentifiers(identifiers, identifiersKeys, pattern) {
   let items;
   if (t.isObjectPattern(pattern)) {
     items = pattern.properties.map(({ value }) => value);
@@ -158,21 +160,22 @@ export function addPatternIdentifiers(identifiers, pattern) {
   }
 
   if (items) {
-    addIdentifiers(identifiers, items);
+    addIdentifiers(identifiers, identifiersKeys, items);
   }
 }
 
-function addIdentifiers(identifiers, items) {
+function addIdentifiers(identifiers, identifiersKeys, items) {
   for (const item of items) {
     if (t.isObjectPattern(item) || t.isArrayPattern(item)) {
-      addPatternIdentifiers(identifiers, item);
+      addPatternIdentifiers(identifiers, identifiersKeys, item);
     } else if (t.isIdentifier(item)) {
-      const { start, end } = item.loc;
-      identifiers.push({
-        name: item.name,
-        expression: item.name,
-        location: { start, end },
-      });
+      if (!identifiersKeys.has(nodeLocationKey(item.loc))) {
+        identifiers.push({
+          name: item.name,
+          expression: item.name,
+          location: item.loc,
+        });
+      }
     }
   }
 }
@@ -183,8 +186,7 @@ export function isTopLevel(ancestors) {
   return ancestors.filter(ancestor => ancestor.key == "body").length == 1;
 }
 
-export function nodeLocationKey(a) {
-  const { start, end } = a.location;
+export function nodeLocationKey({ start, end }) {
   return `${start.line}:${start.column}:${end.line}:${end.column}`;
 }
 
