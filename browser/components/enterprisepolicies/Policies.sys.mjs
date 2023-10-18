@@ -1726,6 +1726,7 @@ export var Policies = {
         "network.",
         "pdfjs.",
         "places.",
+        "pref.",
         "print.",
         "signon.",
         "spellchecker.",
