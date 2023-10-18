@@ -104,7 +104,7 @@ clippy:
     # the version of cargo-clippy is:
     # clippy 0.1.65 (2019147 2022-09-19)
     # we use the date instead to facilitate the check
-    # replacing - by . because Python StrictVersion expects this
+    # replacing - by . because Python packaging.version.Version expects this
     min_clippy_version: 2022.09.19
     type: external
     payload: clippy:lint
