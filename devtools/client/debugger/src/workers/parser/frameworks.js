@@ -18,21 +18,18 @@ export function getFramework(symbols) {
   return null;
 }
 
-function isReactComponent({ imports, classes, callExpressions, identifiers }) {
+function isReactComponent({
+  importsReact,
+  classes,
+  callExpressions,
+  identifiers,
+}) {
   return (
-    importsReact(imports) ||
+    importsReact ||
     requiresReact(callExpressions) ||
     extendsReactComponent(classes) ||
     isReact(identifiers) ||
     isRedux(identifiers)
-  );
-}
-
-function importsReact(imports) {
-  return imports.some(
-    importObj =>
-      importObj.source === "react" &&
-      importObj.specifiers.some(specifier => specifier === "React")
   );
 }
 

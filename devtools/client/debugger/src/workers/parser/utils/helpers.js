@@ -81,14 +81,6 @@ export function getComments(ast) {
   }));
 }
 
-export function getSpecifiers(specifiers) {
-  if (!specifiers) {
-    return [];
-  }
-
-  return specifiers.map(specifier => specifier.local?.name);
-}
-
 export function isComputedExpression(expression) {
   return /^\[/m.test(expression);
 }

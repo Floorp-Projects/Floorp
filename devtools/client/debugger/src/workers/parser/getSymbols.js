@@ -13,7 +13,6 @@ import {
   getObjectExpressionValue,
   getPatternIdentifiers,
   getComments,
-  getSpecifiers,
   getCode,
   nodeLocationKey,
   getFunctionParameterNames,
@@ -62,8 +61,8 @@ function extractSymbol(path, symbols, state) {
     symbols.classes.push(getClassDeclarationSymbol(path.node));
   }
 
-  if (t.isImportDeclaration(path)) {
-    symbols.imports.push(getImportDeclarationSymbol(path.node));
+  if (t.isImportDeclaration(path) && !symbols.importsReact) {
+    symbols.importsReact = isReactImport(path.node);
   }
 
   if (t.isMemberExpression(path) || t.isOptionalMemberExpression(path)) {
@@ -103,6 +102,7 @@ function extractSymbols(sourceId) {
     hasJsx: false,
     hasTypes: false,
     framework: undefined,
+    importsReact: false,
   };
 
   const state = {
@@ -366,10 +366,7 @@ export function getSymbols(sourceId) {
     // This is used in the main thread only to compute the source icon
     framework: symbols.framework,
 
-    // These two attribute are only used within the worker for framework computation:
-    // `imports`
-    // Only uses `sources` and `specifiers` attributes.
-    //
+    // This attribute is only used within the worker for framework computation:
     // `callExpressions`
     // Only uses `name` and `values` attributes.
 
@@ -404,11 +401,11 @@ function getMemberExpressionSymbol(path) {
   };
 }
 
-function getImportDeclarationSymbol(node) {
-  return {
-    source: node.source.value,
-    specifiers: getSpecifiers(node.specifiers),
-  };
+function isReactImport(node) {
+  return (
+    node.source.value == "react" &&
+    node.specifiers?.some(specifier => specifier.local?.name == "React")
+  );
 }
 
 function getCallExpressionSymbol(node) {
