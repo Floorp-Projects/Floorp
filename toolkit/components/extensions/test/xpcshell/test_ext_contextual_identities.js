@@ -5,6 +5,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
   ExtensionPreferencesManager:
     "resource://gre/modules/ExtensionPreferencesManager.sys.mjs",
+  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
 });
 
 const CONTAINERS_PREF = "privacy.userContext.enabled";
@@ -159,8 +160,6 @@ add_task(async function test_contextualIdentity_events() {
 });
 
 add_task(async function test_contextualIdentity_with_permissions() {
-  const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
-
   async function background() {
     let ci;
     await browser.test.assertRejects(
@@ -368,15 +367,14 @@ add_task(async function test_contextualIdentity_with_permissions() {
   await extension.unload();
   equal(
     Services.prefs.getBoolPref(CONTAINERS_PREF),
-    initial,
-    "Pref should now be initial state"
+    true,
+    "Pref should remain enabled"
   );
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
 });
 
 add_task(async function test_contextualIdentity_extensions_enable_containers() {
-  const initial = Services.prefs.getBoolPref(CONTAINERS_PREF);
   async function background() {
     let ci = await browser.contextualIdentities.get("firefox-container-1");
     browser.test.assertTrue(!!ci, "We have an identity");
@@ -385,7 +383,7 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   }
   function makeExtension(id) {
     return ExtensionTestUtils.loadExtension({
-      useAddonManager: "temporary",
+      useAddonManager: "permanent",
       background,
       manifest: {
         browser_specific_settings: {
@@ -419,7 +417,11 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   );
   await extension.unload();
   await testSetting(null, "setting should be unset");
-  testPref(initial, "setting should be initial value");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should remain enabled"
+  );
 
   // Lets set containers explicitly to be off and test we keep it that way after removal
   Services.prefs.setBoolPref(CONTAINERS_PREF, false);
@@ -430,9 +432,26 @@ add_task(async function test_contextualIdentity_extensions_enable_containers() {
   await testSetting(extension1.id, "setting should be controlled");
   testPref(true, "Pref should now be enabled, whatever it's initial state");
 
+  // Test that disabling leaves containers on, and that re-enabling with containers off
+  // will re-enable containers.
+  const addon = await AddonManager.getAddonByID(extension1.id);
+  await addon.disable();
+  await testSetting(undefined, "setting should not be an addon");
+  testPref(true, "Pref should remain enabled, whatever it's initial state");
+
+  Services.prefs.setBoolPref(CONTAINERS_PREF, false);
+
+  await addon.enable();
+  await testSetting(extension1.id, "setting should be controlled");
+  testPref(true, "Pref should be enabled");
+
   await extension1.unload();
   await testSetting(null, "setting should be unset");
-  testPref(false, "Pref should be false");
+  equal(
+    Services.prefs.getBoolPref(CONTAINERS_PREF),
+    true,
+    "Pref should remain enabled"
+  );
 
   // Lets set containers explicitly to be on and test we keep it that way after removal.
   Services.prefs.setBoolPref(CONTAINERS_PREF, true);
@@ -511,8 +530,8 @@ add_task(async function test_contextualIdentity_preference_change() {
   await extension.unload();
   equal(
     Services.prefs.getBoolPref(CONTAINERS_PREF),
-    false,
-    "Pref should now be the initial state we set it to."
+    true,
+    "Pref should remain enabled"
   );
 
   Services.prefs.clearUserPref(CONTAINERS_PREF);
