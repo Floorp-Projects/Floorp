@@ -41685,7 +41685,11 @@
         const { start, end } = path.node.loc;
         symbols.literals.push({
           location: { start, end },
-          expression: getSnippet(path.parentPath),
+          get expression() {
+            delete this.expression;
+            this.expression = getSnippet(path.parentPath);
+            return this.expression;
+          },
         });
       }
 
@@ -41979,7 +41983,11 @@
       const { start, end } = path.node.property.loc;
       return {
         location: { start, end },
-        expression: getSnippet(path),
+        get expression() {
+          delete this.expression;
+          this.expression = getSnippet(path);
+          return this.expression;
+        },
         computed: path.node.computed,
       };
     }
@@ -42039,7 +42047,11 @@
         if (!identifiersKeys.has(nodeLocationKey(path.node.loc))) {
           identifiers.push({
             name: path.node.value,
-            expression: getObjectExpressionValue(path.parent),
+            get expression() {
+              delete this.expression;
+              this.expression = getObjectExpressionValue(path.parent);
+              return this.expression;
+            },
             location: path.node.loc,
           });
         }
@@ -42056,7 +42068,11 @@
           if (!identifiersKeys.has(nodeLocationKey(path.node.loc))) {
             identifiers.push({
               name: path.node.name,
-              expression: getObjectExpressionValue(path.parent),
+              get expression() {
+                delete this.expression;
+                this.expression = getObjectExpressionValue(path.parent);
+                return this.expression;
+              },
               location: path.node.loc,
             });
           }
