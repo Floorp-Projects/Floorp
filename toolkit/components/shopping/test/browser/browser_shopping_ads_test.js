@@ -89,6 +89,18 @@ add_task(async function test_ad_attribution() {
     await impressionEvent;
     Assert.ok(true, "Got ad impression event");
 
+    // Test the impression was recorded by telemetry
+    await Services.fog.testFlushAllChildren();
+    var adsImpressionEvents =
+      Glean.shopping.surfaceAdsImpression.testGetValue();
+    Assert.equal(
+      adsImpressionEvents.length,
+      1,
+      "should have recorded an event"
+    );
+    Assert.equal(adsImpressionEvents[0].category, "shopping");
+    Assert.equal(adsImpressionEvents[0].name, "surface_ads_impression");
+
     //
     // Test that impression event is fired after switching to a tab that was
     // opened in the background
