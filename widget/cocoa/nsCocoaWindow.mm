@@ -1766,25 +1766,36 @@ void nsCocoaWindow::CocoaWindowDidEnterFullscreen(bool aFullscreen) {
   mHasStartedNativeFullscreen = false;
   EndOurNativeTransition();
   DispatchOcclusionEvent();
-  HandleUpdateFullscreenOnResize();
-  FinishCurrentTransitionIfMatching(aFullscreen ? TransitionType::Fullscreen
-                                                : TransitionType::Windowed);
-}
 
-void nsCocoaWindow::CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen) {
-  mHasStartedNativeFullscreen = false;
-  EndOurNativeTransition();
-  DispatchOcclusionEvent();
-
-  // If we already updated our fullscreen state due to a resize, we need to
-  // update it again.
-  if (mUpdateFullscreenOnResize.isNothing()) {
-    UpdateFullscreenState(!aAttemptedFullscreen, true);
-    ReportSizeEvent();
+  // Check if aFullscreen matches our expected fullscreen state. It might not if
+  // there was a failure somewhere along the way, in which case we'll recover
+  // from that.
+  bool receivedExpectedFullscreen = false;
+  if (mUpdateFullscreenOnResize.isSome()) {
+    bool expectingFullscreen =
+        (*mUpdateFullscreenOnResize == TransitionType::Fullscreen);
+    receivedExpectedFullscreen = (expectingFullscreen == aFullscreen);
+  } else {
+    receivedExpectedFullscreen = (mInFullScreenMode == aFullscreen);
   }
 
-  TransitionType transition = aAttemptedFullscreen ? TransitionType::Fullscreen
-                                                   : TransitionType::Windowed;
+  TransitionType transition =
+      aFullscreen ? TransitionType::Fullscreen : TransitionType::Windowed;
+  if (receivedExpectedFullscreen) {
+    // Everything is as expected. Update our state if needed.
+    HandleUpdateFullscreenOnResize();
+  } else {
+    // We weren't expecting this fullscreen state. Update our fullscreen state
+    // to the new reality.
+    UpdateFullscreenState(aFullscreen, true);
+
+    // If we have a current transition, switch it to match what we just did.
+    if (mTransitionCurrent.isSome()) {
+      mTransitionCurrent = Some(transition);
+    }
+  }
+
+  // Whether we expected this transition or not, we're ready to finish it.
   FinishCurrentTransitionIfMatching(transition);
 }
 
@@ -3214,20 +3225,6 @@ void nsCocoaWindow::CocoaWindowDidResize() {
     return;
   }
   mGeckoWindow->CocoaWindowDidEnterFullscreen(false);
-}
-
-- (void)windowDidFailToEnterFullScreen:(NSWindow*)window {
-  if (!mGeckoWindow) {
-    return;
-  }
-  mGeckoWindow->CocoaWindowDidFailFullscreen(true);
-}
-
-- (void)windowDidFailToExitFullScreen:(NSWindow*)window {
-  if (!mGeckoWindow) {
-    return;
-  }
-  mGeckoWindow->CocoaWindowDidFailFullscreen(false);
 }
 
 - (void)windowDidBecomeMain:(NSNotification*)aNotification {

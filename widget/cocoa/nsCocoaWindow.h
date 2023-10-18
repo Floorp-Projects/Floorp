@@ -380,7 +380,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   // access object state.
   void CocoaWindowWillEnterFullscreen(bool aFullscreen);
   void CocoaWindowDidEnterFullscreen(bool aFullscreen);
-  void CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen);
   void CocoaWindowDidResize();
   void CocoaSendToplevelActivateEvents();
   void CocoaSendToplevelDeactivateEvents();
