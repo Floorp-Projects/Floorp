@@ -12,6 +12,7 @@ support-files = [
   "server_helper.js",
 ]
 
+["browser_shopping_ads_test.js"]
 ["browser_shopping_integration.js"]
 support-files = [
   "analysis.sjs",

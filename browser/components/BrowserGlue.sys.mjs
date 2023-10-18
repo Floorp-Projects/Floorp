@@ -772,6 +772,8 @@ let JSWINDOWACTORS = {
         // methods available to the page js on load.
         DOMDocElementInserted: {},
         ReportProductAvailable: { wantUntrusted: true },
+        AdClicked: { wantUntrusted: true },
+        AdImpression: { wantUntrusted: true },
       },
     },
     matches: ["about:shoppingsidebar"],

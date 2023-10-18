@@ -21,20 +21,38 @@ class RecommendedAd extends MozLitElement {
   static get queries() {
     return {
       ratingEl: "moz-five-star",
-      linkEl: "#ad-title",
+      linkEl: "#recommended-ad-wrapper",
     };
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (this.initialized) {
+      return;
+    }
+    this.initialized = true;
+
+    document.addEventListener("visibilitychange", this);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.clearRecommendationAdTimeout();
+    document.removeEventListener("visibilitychange", this);
+    this.resetImpressionTimer();
     this.revokeImageUrl();
   }
 
-  clearRecommendationAdTimeout() {
-    if (this.recommendationAdTimeout) {
-      clearTimeout(this.recommendationAdTimeout);
+  startImpressionTimer() {
+    if (!this.timeout && document.visibilityState === "visible") {
+      this.timeout = setTimeout(
+        () => this.recordImpression(),
+        AD_IMPRESSION_TIMEOUT
+      );
     }
+  }
+
+  resetImpressionTimer() {
+    this.timeout = clearTimeout(this.timeout);
   }
 
   revokeImageUrl() {
@@ -43,29 +61,44 @@ class RecommendedAd extends MozLitElement {
     }
   }
 
-  adImpression() {
-    // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1846774
-    // We want to send an api call when the ad is view for 1 second
-    // this.dispatchEvent(
-    //   new CustomEvent("Shopping:AdImpression", {
-    //     bubbles: true,
-    //   })
-    // );
+  recordImpression() {
+    if (this.hasImpressed) {
+      return;
+    }
 
-    this.clearRecommendationAdTimeout();
+    this.dispatchEvent(
+      new CustomEvent("AdImpression", {
+        bubbles: true,
+        detail: { aid: this.product.aid },
+      })
+    );
+
+    document.removeEventListener("visibilitychange", this);
+    this.resetImpressionTimer();
+
+    this.hasImpressed = true;
   }
 
   handleClick(event) {
-    event.preventDefault();
-    window.open(this.product.url, "_blank");
+    if (event.button === 0 || event.button === 1) {
+      this.dispatchEvent(
+        new CustomEvent("AdClicked", {
+          bubbles: true,
+          detail: { aid: this.product.aid },
+        })
+      );
+    }
+  }
 
-    // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=1846774
-    // We want to send an api call when the ad is clicked
-    // this.dispatchEvent(
-    //   new CustomEvent("Shopping:AdClicked", {
-    //     bubbles: true,
-    //   })
-    // );
+  handleEvent(event) {
+    if (event.type !== "visibilitychange") {
+      return;
+    }
+    if (document.visibilityState === "visible") {
+      this.startImpressionTimer();
+    } else if (!this.hasImpressed) {
+      this.resetImpressionTimer();
+    }
   }
 
   priceTemplate() {
@@ -75,13 +108,7 @@ class RecommendedAd extends MozLitElement {
   }
 
   render() {
-    if (!this.adSeen) {
-      this.recommendationAdTimeout = setTimeout(
-        () => this.adImpression(),
-        AD_IMPRESSION_TIMEOUT
-      );
-      this.adSeen = true;
-    }
+    this.startImpressionTimer();
 
     this.revokeImageUrl();
     this.imageUrl = URL.createObjectURL(this.product.image_blob);
@@ -97,7 +124,9 @@ class RecommendedAd extends MozLitElement {
       >
         <a id="recommended-ad-wrapper" slot="content" href=${
           this.product.url
-        } target="_blank" @click=${this.handleClick}>
+        } target="_blank" @click=${this.handleClick} @auxclick=${
+      this.handleClick
+    }>
           <div id="ad-content">
             <img id="ad-preview-image" src=${this.imageUrl}></img>
             <span id="ad-title" lang="en">${this.product.name}</span>
