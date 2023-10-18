@@ -577,8 +577,8 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                                   const VMFunctionData& f, DynFn nativeFun,
-                                   uint32_t* wrapperOffset) {
+                                   VMFunctionId id, const VMFunctionData& f,
+                                   DynFn nativeFun, uint32_t* wrapperOffset) {
   AutoCreatedBy acb(masm, "JitRuntime::generateVMWrapper");
 
   *wrapperOffset = startTrampolineCode(masm);
@@ -611,7 +611,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.Push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
   masm.loadJSContext(reg_cx);
-  masm.enterExitFrame(reg_cx, regs.getAny(), &f);
+  masm.enterExitFrame(reg_cx, regs.getAny(), id);
 
   // Save the current stack pointer as the base for copying arguments.
   Register argsBase = InvalidReg;

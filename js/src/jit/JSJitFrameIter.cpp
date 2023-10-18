@@ -176,8 +176,9 @@ static uint32_t ComputeBaselineFrameSize(const JSJitFrameIter& frame) {
   if (frame.isExitFrame()) {
     frameSize -= ExitFrameLayout::Size();
     if (frame.exitFrame()->isWrapperExit()) {
-      const VMFunctionData* data = frame.exitFrame()->footer()->function();
-      frameSize -= data->explicitStackSlots() * sizeof(void*);
+      VMFunctionId id = frame.exitFrame()->footer()->functionId();
+      const VMFunctionData& data = GetVMFunction(id);
+      frameSize -= data.explicitStackSlots() * sizeof(void*);
     }
     return frameSize;
   }

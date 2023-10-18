@@ -939,9 +939,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   //
   // See JitFrames.h, and TraceJitExitFrame in JitFrames.cpp.
 
-  // Push stub code and the VMFunctionData pointer.
-  inline void enterExitFrame(Register cxreg, Register scratch,
-                             const VMFunctionData* f);
+  // Links the exit frame and pushes the ExitFooterFrame.
+  inline void enterExitFrame(Register cxreg, Register scratch, VMFunctionId f);
 
   // Push an exit frame token to identify which fake exit frame this footer
   // corresponds to.

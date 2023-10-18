@@ -202,7 +202,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 
     masm.push(jitcode);
 
-    using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
+    using Fn = bool (*)(BaselineFrame* frame, InterpreterFrame* interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(framePtrScratch);  // BaselineFrame
@@ -347,8 +347,7 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   masm.reserveStack(sizeof(void*));
   masm.movl(esp, ebx);
 
-  using Fn =
-      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(InvalidationBailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupUnalignedABICall(edx);
   masm.passABIArg(eax);
   masm.passABIArg(ebx);
@@ -539,7 +538,7 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   masm.movl(esp, ebx);
 
   // Call the bailout function.
-  using Fn = bool (*)(BailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(BailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupUnalignedABICall(ecx);
   masm.passABIArg(eax);
   masm.passABIArg(ebx);
@@ -565,8 +564,8 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                                   const VMFunctionData& f, DynFn nativeFun,
-                                   uint32_t* wrapperOffset) {
+                                   VMFunctionId id, const VMFunctionData& f,
+                                   DynFn nativeFun, uint32_t* wrapperOffset) {
   AutoCreatedBy acb(masm, "JitRuntime::generateVMWrapper");
 
   *wrapperOffset = startTrampolineCode(masm);
@@ -592,7 +591,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.Push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
   masm.loadJSContext(cxreg);
-  masm.enterExitFrame(cxreg, regs.getAny(), &f);
+  masm.enterExitFrame(cxreg, regs.getAny(), id);
 
   // Save the current stack pointer as the base for copying arguments.
   Register argsBase = InvalidReg;

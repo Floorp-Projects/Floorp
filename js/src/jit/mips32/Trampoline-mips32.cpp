@@ -681,8 +681,8 @@ void JitRuntime::generateBailoutHandler(MacroAssembler& masm,
 }
 
 bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
-                                   const VMFunctionData& f, DynFn nativeFun,
-                                   uint32_t* wrapperOffset) {
+                                   VMFunctionId id, const VMFunctionData& f,
+                                   DynFn nativeFun, uint32_t* wrapperOffset) {
   *wrapperOffset = startTrampolineCode(masm);
 
   // Avoid conflicts with argument registers while discarding the result after
@@ -705,7 +705,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
 
   // We're aligned to an exit frame, so link it up.
   masm.loadJSContext(cxreg);
-  masm.enterExitFrame(cxreg, regs.getAny(), &f);
+  masm.enterExitFrame(cxreg, regs.getAny(), id);
 
   // Save the base of the argument set stored on the stack.
   Register argsBase = InvalidReg;

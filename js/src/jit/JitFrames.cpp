@@ -881,6 +881,13 @@ uintptr_t* JitFrameLayout::slotRef(SafepointSlotEntry where) {
   return (uintptr_t*)((uint8_t*)thisAndActualArgs() + where.slot);
 }
 
+#ifdef DEBUG
+void ExitFooterFrame::assertValidVMFunctionId() const {
+  MOZ_ASSERT(data_ >= uintptr_t(ExitFrameType::VMFunction));
+  MOZ_ASSERT(data_ - uintptr_t(ExitFrameType::VMFunction) < NumVMFunctions());
+}
+#endif
+
 #ifdef JS_NUNBOX32
 static inline uintptr_t ReadAllocation(const JSJitFrameIter& frame,
                                        const LAllocation* a) {
@@ -1280,13 +1287,12 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
 
   MOZ_ASSERT(frame.exitFrame()->isWrapperExit());
 
-  const VMFunctionData* f = footer->function();
-  MOZ_ASSERT(f);
+  const VMFunctionData& f = GetVMFunction(footer->functionId());
 
   // Trace arguments of the VM wrapper.
   uint8_t* argBase = frame.exitFrame()->argBase();
-  for (uint32_t explicitArg = 0; explicitArg < f->explicitArgs; explicitArg++) {
-    switch (f->argRootType(explicitArg)) {
+  for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
+    switch (f.argRootType(explicitArg)) {
       case VMFunctionData::RootNone:
         break;
       case VMFunctionData::RootObject: {
@@ -1315,7 +1321,7 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
         break;
     }
 
-    switch (f->argProperties(explicitArg)) {
+    switch (f.argProperties(explicitArg)) {
       case VMFunctionData::WordByValue:
       case VMFunctionData::WordByRef:
         argBase += sizeof(void*);
@@ -1327,8 +1333,8 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     }
   }
 
-  if (f->outParam == Type_Handle) {
-    switch (f->outParamRootType) {
+  if (f.outParam == Type_Handle) {
+    switch (f.outParamRootType) {
       case VMFunctionData::RootNone:
         MOZ_CRASH("Handle outparam must have root type");
       case VMFunctionData::RootObject:
@@ -1353,7 +1359,7 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
     }
   }
 
-  TraceJitExitFrameCopiedArguments(trc, f, footer);
+  TraceJitExitFrameCopiedArguments(trc, &f, footer);
 }
 
 static void TraceBaselineInterpreterEntryFrame(JSTracer* trc,

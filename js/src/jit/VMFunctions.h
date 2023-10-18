@@ -692,6 +692,8 @@ enum class VMFunctionId;
 
 extern const VMFunctionData& GetVMFunction(VMFunctionId id);
 
+extern size_t NumVMFunctions();
+
 }  // namespace jit
 }  // namespace js
 

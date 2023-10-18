@@ -352,11 +352,13 @@ uint32_t MacroAssembler::buildFakeExitFrame(Register scratch) {
 // Exit frame footer.
 
 void MacroAssembler::enterExitFrame(Register cxreg, Register scratch,
-                                    const VMFunctionData* f) {
-  MOZ_ASSERT(f);
+                                    VMFunctionId f) {
   linkExitFrame(cxreg, scratch);
-  // Push VMFunction pointer, to mark arguments.
-  Push(ImmPtr(f));
+  // Push `ExitFrameType::VMFunction + VMFunctionId`, for marking the arguments.
+  // See ExitFooterFrame::data_.
+  uintptr_t type = uintptr_t(ExitFrameType::VMFunction) + uintptr_t(f);
+  MOZ_ASSERT(type <= INT32_MAX);
+  Push(Imm32(type));
 }
 
 void MacroAssembler::enterFakeExitFrame(Register cxreg, Register scratch,

@@ -270,7 +270,7 @@ class JitRuntime {
 
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
-  bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
+  bool generateVMWrapper(JSContext* cx, MacroAssembler& masm, VMFunctionId id,
                          const VMFunctionData& f, DynFn nativeFun,
                          uint32_t* wrapperOffset);
 
