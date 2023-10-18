@@ -77,6 +77,7 @@ cookie-banner-report-site:
     - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
   notification_emails:
     - android-probes@mozilla.com
+
 fx-suggest:
   description: |
     A ping representing a single event occurring with or to a Firefox Suggestion.
@@ -91,3 +92,15 @@ fx-suggest:
     - lina@mozilla.com
     - ttran@mozilla.com
     - najiang@mozilla.com
+
+font-list:
+  description: |
+      List of fonts installed on the user's device
+  include_client_id: false
+  bugs:
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193#c2
+  notification_emails:
+    - android-probes@mozilla.com
+    - tom@mozilla.com

@@ -1867,6 +1867,14 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Font List Telemetry Ping Sent
+     */
+    var numFontListSent by intPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_num_font_list_sent),
+        default = 0,
+    )
+
+    /**
      * Indicates how many days in the first week user opened the app.
      */
     val growthEarlyUseCount = counterPreference(
