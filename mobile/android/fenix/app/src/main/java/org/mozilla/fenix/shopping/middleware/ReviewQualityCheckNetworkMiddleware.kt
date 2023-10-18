@@ -6,7 +6,7 @@ package org.mozilla.fenix.shopping.middleware
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
+import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.components.AppStore
@@ -138,7 +138,7 @@ class ReviewQualityCheckNetworkMiddleware(
     private fun Store<ReviewQualityCheckState, ReviewQualityCheckAction>.restoreAnalysingStateIfRequired(
         productPageUrl: String,
         productReviewState: ProductReviewState,
-        productAnalysis: GeckoProductAnalysis?,
+        productAnalysis: ProductAnalysis?,
     ) {
         if (productReviewState.isAnalysisPresentOrNoAnalysisPresent() &&
             productAnalysis?.needsAnalysis == true &&

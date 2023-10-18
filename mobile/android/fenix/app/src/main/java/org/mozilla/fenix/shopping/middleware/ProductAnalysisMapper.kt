@@ -4,8 +4,7 @@
 
 package org.mozilla.fenix.shopping.middleware
 
-import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
-import mozilla.components.browser.engine.gecko.shopping.Highlight
+import mozilla.components.concept.engine.shopping.Highlight
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
@@ -15,10 +14,10 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
  */
-fun GeckoProductAnalysis?.toProductReviewState(isInitialAnalysis: Boolean = true): ProductReviewState =
+fun ProductAnalysis?.toProductReviewState(isInitialAnalysis: Boolean = true): ProductReviewState =
     this?.toProductReview(isInitialAnalysis) ?: ProductReviewState.Error.GenericError
 
-private fun GeckoProductAnalysis.toProductReview(isInitialAnalysis: Boolean): ProductReviewState =
+private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): ProductReviewState =
     if (pageNotSupported) {
         ProductReviewState.Error.UnsupportedProductTypeError
     } else if (productId == null) {

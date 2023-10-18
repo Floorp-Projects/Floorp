@@ -20,9 +20,6 @@ import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.mediasession.GeckoMediaSessionDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
-import mozilla.components.browser.engine.gecko.shopping.GeckoProductAnalysis
-import mozilla.components.browser.engine.gecko.shopping.GeckoProductRecommendation
-import mozilla.components.browser.engine.gecko.shopping.Highlight
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -40,6 +37,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.engine.shopping.Highlight
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductRecommendation
 import mozilla.components.concept.engine.window.WindowRequest
@@ -680,7 +678,7 @@ class GeckoEngineSession(
             }
 
             val productRecommendations = response.map { it: Recommendation ->
-                GeckoProductRecommendation(
+                ProductRecommendation(
                     it.url,
                     it.analysisUrl,
                     it.adjustedRating,
@@ -694,7 +692,7 @@ class GeckoEngineSession(
                 )
             }
             onResult(productRecommendations)
-            GeckoResult<GeckoProductRecommendation>()
+            GeckoResult<ProductRecommendation>()
         }, {
                 throwable: Throwable ->
             logger.error("Requesting product analysis failed.", throwable)
@@ -744,7 +742,7 @@ class GeckoEngineSession(
                 )
             }
 
-            val analysisResult = GeckoProductAnalysis(
+            val analysisResult = ProductAnalysis(
                 response.productId,
                 response.analysisURL,
                 response.grade,
