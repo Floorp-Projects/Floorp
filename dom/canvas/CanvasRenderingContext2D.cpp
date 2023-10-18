@@ -2672,7 +2672,7 @@ void CanvasRenderingContext2D::SetFilter(const nsACString& aFilter,
           SVGObserverUtils::ObserveFiltersForCanvasContext(
               this, mCanvasElement, CurrentState().filterChain.AsSpan());
     }
-    UpdateFilter();
+    UpdateFilter(/* aFlushIfNeeded = */ true);
   }
 }
 
@@ -2875,7 +2875,7 @@ static bool FiltersNeedFrameFlush(Span<const StyleFilter> aFilters) {
   return false;
 }
 
-void CanvasRenderingContext2D::UpdateFilter() {
+void CanvasRenderingContext2D::UpdateFilter(bool aFlushIfNeeded) {
   const bool writeOnly = IsWriteOnly() ||
                          (mCanvasElement && mCanvasElement->IsWriteOnly()) ||
                          (mOffscreenCanvas && mOffscreenCanvas->IsWriteOnly());
@@ -2889,18 +2889,13 @@ void CanvasRenderingContext2D::UpdateFilter() {
     return;
   }
 
-  RefPtr<const ComputedStyle> canvasStyle;
-
   // The PresContext is only used with URL filters and we don't allow those to
   // be used on worker threads.
   nsPresContext* presContext = nullptr;
   if (presShell) {
-    if (FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
+    if (aFlushIfNeeded &&
+        FiltersNeedFrameFlush(CurrentState().filterChain.AsSpan())) {
       presShell->FlushPendingNotifications(FlushType::Frames);
-      if (mCanvasElement) {
-        canvasStyle =
-            nsComputedDOMStyle::GetComputedStyleNoFlush(mCanvasElement);
-      }
     }
 
     if (MOZ_UNLIKELY(presShell->IsDestroying())) {
@@ -2908,6 +2903,10 @@ void CanvasRenderingContext2D::UpdateFilter() {
     }
 
     presContext = presShell->GetPresContext();
+  }
+  RefPtr<const ComputedStyle> canvasStyle;
+  if (mCanvasElement) {
+    canvasStyle = nsComputedDOMStyle::GetComputedStyleNoFlush(mCanvasElement);
   }
 
   MOZ_RELEASE_ASSERT(!mStyleStack.IsEmpty());
