@@ -68,6 +68,7 @@ fun FeltPrivacyModeInfoCard(
                 style = FirefoxTheme.typography.body2.copy(
                     color = FirefoxTheme.colors.textPrimary,
                 ),
+                linkTextColor = FirefoxTheme.colors.textPrimary,
                 linkTextDecoration = TextDecoration.Underline,
             )
         }
