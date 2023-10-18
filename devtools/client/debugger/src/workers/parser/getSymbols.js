@@ -80,7 +80,6 @@ function extractSymbol(path, symbols, state) {
     // We only need literals that are part of computed memeber expressions
     const { start, end } = path.node.loc;
     symbols.literals.push({
-      name: path.node.value,
       location: { start, end },
       expression: getSnippet(path.parentPath),
     });
@@ -345,8 +344,9 @@ export function getSymbols(sourceId) {
     // * name: string
     // * location: object {start: number, end: number}
     // * expression: string
+    // * computed: boolean (only for memberExpressions)
     //
-    // `findBestMatchExpression` uses `location` and `expression` (not name).
+    // `findBestMatchExpression` uses `location`, `computed` and `expression` (not name).
     //    `expression` isn't used from the worker thread implementation of `findBestMatchExpression`.
     //    The main thread only uses `expression` and `location`.
     // framework computation uses only:
@@ -386,9 +386,6 @@ function getUniqueIdentifiers(identifiers) {
 function getMemberExpressionSymbol(path) {
   const { start, end } = path.node.property.loc;
   return {
-    name: t.isPrivateName(path.node.property)
-      ? `#${path.node.property.id.name}`
-      : path.node.property.name,
     location: { start, end },
     expression: getSnippet(path),
     computed: path.node.computed,
