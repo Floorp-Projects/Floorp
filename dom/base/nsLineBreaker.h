@@ -264,6 +264,8 @@ class nsLineBreaker {
   // start using a linebreaker, but it may be set to true if the line-breaker
   // has been explicitly flushed mid-word.
   bool mWordContinuation;
+  // True if using old line segmenter.
+  const bool mLegacyBehavior;
 };
 
 #endif /*NSLINEBREAKER_H_*/

@@ -14,6 +14,7 @@
 #include "mozilla/intl/LineBreaker.h"  // for LineBreaker::ComputeBreakPositions
 #include "mozilla/intl/Locale.h"
 #include "mozilla/intl/UnicodeProperties.h"
+#include "mozilla/StaticPrefs_intl.h"
 
 using mozilla::AutoRestore;
 using mozilla::intl::LineBreaker;
@@ -46,7 +47,14 @@ static constexpr uint8_t kNonBreakableASCII[] = {
 };
 
 template <typename T>
-static constexpr bool IsNonBreakableChar(T aChar) {
+static constexpr bool IsNonBreakableChar(T aChar, bool aLegacyBehavior) {
+  if (aLegacyBehavior) {
+    // If not using ICU4X, line break rules aren't compatible with UAX#14. Use
+    // old way.
+    return (0x0030 <= aChar && aChar <= 0x0039) ||
+           (0x0041 <= aChar && aChar <= 0x005A) ||
+           (0x0061 <= aChar && aChar <= 0x007A) || (0x000a == aChar);
+  }
   if (aChar < 0x20 || aChar > 0x7f) {
     return false;
   }
@@ -61,7 +69,8 @@ nsLineBreaker::nsLineBreaker()
       mBreakHere(false),
       mWordBreak(WordBreakRule::Normal),
       mLineBreak(LineBreakRule::Auto),
-      mWordContinuation(false) {}
+      mWordContinuation(false),
+      mLegacyBehavior(!mozilla::StaticPrefs::intl_icu4x_segmenter_enabled()) {}
 
 nsLineBreaker::~nsLineBreaker() {
   NS_ASSERTION(mCurrentWord.Length() == 0,
@@ -142,13 +151,12 @@ nsresult nsLineBreaker::FlushCurrentWord() {
     memset(breakState.Elements(),
            gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
            length * sizeof(uint8_t));
-  } else if (!mCurrentWordMightBeBreakable) {
-    // For break-strict set everything internal to "break", otherwise
-    // to "no break"!
+  } else if (!mCurrentWordMightBeBreakable &&
+             mWordBreak != WordBreakRule::BreakAll) {
+    // word-break: normal or keep-all has no break opportunity if the word
+    // is non-breakable. (See the comment of kNonBreakableASCII).
     memset(breakState.Elements(),
-           mWordBreak == WordBreakRule::BreakAll
-               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
-               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE,
+           gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE,
            length * sizeof(uint8_t));
   } else {
     LineBreaker::ComputeBreakPositions(
@@ -246,7 +254,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
-          !IsNonBreakableChar<char16_t>(aText[offset])) {
+          !IsNonBreakableChar<char16_t>(aText[offset], mLegacyBehavior)) {
         mCurrentWordMightBeBreakable = true;
       }
       UpdateCurrentWordLanguage(aHyphenationLanguage);
@@ -363,7 +371,8 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       continue;
     }
 
-    if (!wordMightBeBreakable && !IsNonBreakableChar<char16_t>(ch)) {
+    if (!wordMightBeBreakable &&
+        !IsNonBreakableChar<char16_t>(ch, mLegacyBehavior)) {
       wordMightBeBreakable = true;
     }
     ++offset;
@@ -435,7 +444,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     while (offset < aLength && !IsSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
-          !IsNonBreakableChar<uint8_t>(aText[offset])) {
+          !IsNonBreakableChar<uint8_t>(aText[offset], mLegacyBehavior)) {
         mCurrentWordMightBeBreakable = true;
       }
       ++offset;
@@ -528,7 +537,8 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       continue;
     }
 
-    if (!wordMightBeBreakable && !IsNonBreakableChar<uint8_t>(ch)) {
+    if (!wordMightBeBreakable &&
+        !IsNonBreakableChar<uint8_t>(ch, mLegacyBehavior)) {
       wordMightBeBreakable = true;
     }
     ++offset;
