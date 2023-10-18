@@ -20,7 +20,6 @@ from xpidl.rust import print_rust_bindings
 from xpidl.rust_macros import print_rust_macros_bindings
 from xpidl.xpidl import IDLParser
 
-from mozbuild.action.util import log_build_task
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
@@ -150,4 +149,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    log_build_task(main, sys.argv[1:])
+    main(sys.argv[1:])

@@ -220,7 +220,6 @@ class BuildMonitor(MozbuildObject):
             self.instance_warnings.insert(warning.copy())
 
         self._warnings_collector = WarningsCollector(on_warning, objdir=self.topobjdir)
-        self._build_tasks = []
 
         self.build_objects = []
         self.build_dirs = set()
@@ -294,16 +293,6 @@ class BuildMonitor(MozbuildObject):
                 raise Exception("Unknown build status: %s" % action)
 
             return BuildOutputResult(None, update_needed, message)
-        elif plain_line.startswith("BUILDTASK"):
-            _, data = plain_line.split(maxsplit=1)
-            # Check that we can parse the JSON. Skip this line if we can't;
-            # we'll be missing data, but that's not a huge deal.
-            try:
-                json.loads(data)
-                self._build_tasks.append(data)
-            except json.decoder.JSONDecodeError:
-                pass
-            return BuildOutputResult(None, False, None)
 
         warning = None
 
@@ -330,18 +319,6 @@ class BuildMonitor(MozbuildObject):
 
         self.warnings_database.prune()
         self.warnings_database.save_to_file(self._warnings_path)
-
-        if "MOZ_AUTOMATION" not in os.environ:
-            build_tasks_path = self._get_state_filename("build_tasks.json")
-            with io.open(build_tasks_path, "w", encoding="utf-8", newline="\n") as fh:
-                fh.write("[")
-                first = True
-                for task in self._build_tasks:
-                    # We've already verified all of these are valid JSON, so we
-                    # can write the data out to the file directly.
-                    fh.write("%s\n  %s" % ("," if not first else "", task))
-                    first = False
-                fh.write("\n]\n")
 
         # Record usage.
         if not record_usage:

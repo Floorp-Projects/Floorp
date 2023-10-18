@@ -15,7 +15,6 @@ import traceback
 import buildconfig
 import six
 
-from mozbuild.action.util import log_build_task
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
@@ -152,4 +151,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(log_build_task(main, sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))

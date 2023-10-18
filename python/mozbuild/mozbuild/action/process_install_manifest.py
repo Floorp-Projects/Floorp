@@ -12,7 +12,6 @@ from mozpack.errors import errors
 from mozpack.files import BaseFile, FileFinder
 from mozpack.manifests import InstallManifest
 
-from mozbuild.action.util import log_build_task
 from mozbuild.util import DefinesAction
 
 COMPLETE = (
@@ -121,4 +120,4 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    log_build_task(main, sys.argv[1:])
+    main(sys.argv[1:])
