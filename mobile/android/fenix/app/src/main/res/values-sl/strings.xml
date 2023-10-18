@@ -2332,7 +2332,7 @@
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Preizkusite naš zaupanja vreden vodnik po ocenah izdelkov</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">Pred nakupom preverite, kako zanesljiva so mnenja o izdelkih v trgovini &lt;b&gt;%1$s&lt;/b&gt;. Pregledovalnik mnenj, preizkusna zmogljivost %2$sa, je vgrajen neposredno v brskalnik. Deluje tudi v trgovinah &lt;b&gt;%3$s&lt;/b&gt; in &lt;b&gt;%4$s&lt;/b&gt;.</string>
+    <string name="review_quality_check_contextual_onboarding_description">Pred nakupom preverite, kako zanesljiva so mnenja o izdelkih v trgovini %1$s. Pregledovalnik mnenj, preizkusna zmogljivost %2$sa, je vgrajen neposredno v brskalnik. Deluje tudi v trgovinah %3$s in %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla %1$s vam omogoča, da se izognete pristranskim in nepristnim mnenjem. Naš model umetne inteligence se nenehno izboljšuje, da vas ščiti med nakupovanjem. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->

@@ -163,7 +163,7 @@
     <!-- Name of the "notification channel" used for displaying a notification for updating an add-on. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_addons_updater_notification_channel">Diweddariadau Ychwanegion</string>
     <!-- Name of the "notification channel" used for displaying a notification for new supported add-ons. See https://developer.android.com/training/notify-user/channels -->
-    <string name="mozac_feature_addons_supported_checker_notification_channel">Gwiriwr ychwanegion sy’n cael eu cynnal</string>
+    <string name="mozac_feature_addons_supported_checker_notification_channel">Gwirydd ychwanegion sy’n cael eu cynnal</string>
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">Ychwanegion newydd ar gael</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->

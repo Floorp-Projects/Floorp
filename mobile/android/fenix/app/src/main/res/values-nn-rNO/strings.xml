@@ -693,6 +693,8 @@
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Handsam kontoen</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Endre passord, handsam datainnsamling, eller slett kontoen din</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synkroniser no</string>
     <!-- Preference category for sync -->
@@ -2261,6 +2263,8 @@
     <string name="review_quality_check_settings_recommended_products">Vis annonsar i vurderingskontrolløren</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Du vil av og til sjå annonsar for relevante produkt. Alle annonsar må oppfylle kvalitetsstandardane våre for vurderingar. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Du vil av og til sjå reklame for relevante produkt. Vi reklamerer berre for produkt med pålitelege vurderingar. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Les meir</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->

@@ -2192,7 +2192,7 @@
     <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Gwirydd adolygiadau</string>
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name_2">Gwiriwr Adolygiadau</string>
+    <string name="review_quality_check_feature_name_2">Gwirydd Adolygiadau</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">Adolygiadau dibynadwy</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2234,23 +2234,23 @@
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Gosodiadau</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
-    <string name="review_quality_check_settings_recommended_products">Dangos hysbysebion yn y gwiriwr adolygiadau</string>
+    <string name="review_quality_check_settings_recommended_products">Dangos hysbysebion yn y gwirydd adolygiadau</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
     <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Fe welwch hysbysebion achlysurol ar gyfer cynnyrch perthnasol. Rhaid i bob hysbyseb fodloni ein safonau ansawdd adolygiadau. %s</string>
     <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
-    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Fe welwch hysbysebion achlysurol ar gyfer cynhyrchion perthnasol. Dim ond gydag adolygiadau dibynadwy yr ydym yn hysbysebu cynhyrchion. %s</string>
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Byddwch yn gweld hysbysebion achlysurol ar gyfer cynnyrch perthnasol. Dim ond cynnyrch gydag adolygiadau dibynadwy rydym yn eu hysbysebu. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Dysgu rhagor</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
-    <string name="review_quality_check_settings_turn_off">Diffodd y gwiriwr adolygiadau</string>
+    <string name="review_quality_check_settings_turn_off">Diffodd y gwirydd adolygiadau</string>
     <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
     <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Rhagor i feddwl amdanyn nhw</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Hysbyseb gan %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Mae’r gwiriwr adolygiadau yn cael ei bweru gan %s.</string>
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">Mae’r gwirydd adolygiadau yn cael ei bweru gan %s.</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by_2">Mae’r gwiriwr adolygiadau yn cael ei bweru gan %s</string>
+    <string name="review_quality_check_powered_by_2">Mae’r gwirydd adolygiadau yn cael ei bweru gan %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s gan Mozilla</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
@@ -2308,7 +2308,7 @@
     <!-- Headline for review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_title">Rhowch gynnig ar ein canllaw dibynadwy i adolygiadau cynnyrch</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">Gweld pa mor ddibynadwy yw adolygiadau cynnyrch ar %1$s cyn i chi brynu. Mae gwiriwr adolygiadau, nodwedd arbrofol gan %2$s, wedi’i gynnwys yn y porwr. Mae’n gweithio ar %3$s a %4$s hefyd.</string>
+    <string name="review_quality_check_contextual_onboarding_description">Gweld pa mor ddibynadwy yw adolygiadau cynnyrch ar %1$s cyn i chi brynu. Mae gwirydd adolygiadau, nodwedd arbrofol gan %2$s, wedi’i gynnwys yn y porwr. Mae’n gweithio ar %3$s a %4$s hefyd.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Gan ddefnyddio pŵer %1$s gan Mozilla, rydym yn eich helpu i osgoi adolygiadau rhagfarnllyd ac annilys. Mae ein model AI bob amser yn gwella i’ch diogelu wrth i chi siopa. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2326,17 +2326,17 @@
     <!-- Text for the first CFR presenting the review quality check feature. -->
     <string name="review_quality_check_first_cfr_message">Darganfyddwch a allwch ymddiried yn adolygiadau’r cynnyrch hwn - cyn i chi brynu.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Rhowch gynnig ar y gwiriwr adolygiadau</string>
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">Rhowch gynnig ar y gwirydd adolygiadau</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->
     <string name="review_quality_check_second_cfr_message">A yw’r adolygiadau hyn yn ddibynadwy? Gwiriwch nawr i weld sgôr wedi’i addasu.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
-    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Agor y gwiriwr adolygiadau</string>
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">Agor y gwirydd adolygiadau</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_open_handle_content_description">Agor y gwiriwr adolygiadau</string>
+    <string name="review_quality_check_open_handle_content_description">Agor y gwirydd adolygiadau</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
-    <string name="review_quality_check_close_handle_content_description">Cau’r gwiriwr adolygiadau</string>
+    <string name="review_quality_check_close_handle_content_description">Cau’r gwirydd adolygiadau</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s allan o 5 seren</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
