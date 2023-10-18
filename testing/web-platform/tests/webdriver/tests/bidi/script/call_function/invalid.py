@@ -1,3 +1,5 @@
+# META: timeout=long
+
 import pytest
 import webdriver.bidi.error as error
 
