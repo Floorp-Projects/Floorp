@@ -401,11 +401,6 @@ pref("toolkit.defaultChromeURI", "chrome://geckoview/content/geckoview.xhtml", l
 // Whether to use unified telemetry behavior; requires a restart to take effect
 pref("toolkit.telemetry.unified", false);
 
-// Show/Hide scrollbars when active/inactive (bug 1223928)
-pref("ui.scrollbarFadeBeginDelay", 450);
-pref("ui.scrollbarFadeDuration", 0);
-pref("ui.useOverlayScrollbars", 1);
-
 // Download protection lists are not available on Android (bug 1397938, bug 1394017)
 pref("urlclassifier.downloadAllowTable", "");
 pref("urlclassifier.downloadBlockTable", "");
