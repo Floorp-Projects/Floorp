@@ -349,14 +349,15 @@ class TestRunnerManager(threading.Thread):
         self.unexpected_fail_tests = defaultdict(list)
         self.unexpected_pass_tests = defaultdict(list)
 
-        # Properties we initialize once the thread is started
+        # Properties we initialize right after the thread is started
         self.logger = None
         self.test_source = None
         self.command_queue = None
         self.remote_queue = None
 
+        # Properties we initalize later in the lifecycle
         self.timer = None
-
+        self.test_runner_proc = None
         self.browser = None
 
         super().__init__(name=f"TestRunnerManager-{index}", target=self.run_loop, args=[test_queue], daemon=True)
