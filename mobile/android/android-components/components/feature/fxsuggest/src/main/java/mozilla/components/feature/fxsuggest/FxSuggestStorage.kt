@@ -13,6 +13,7 @@ import mozilla.appservices.suggest.SuggestIngestionConstraints
 import mozilla.appservices.suggest.SuggestStore
 import mozilla.appservices.suggest.Suggestion
 import mozilla.appservices.suggest.SuggestionQuery
+import java.io.File
 
 /**
  * A coroutine-aware wrapper around the synchronous [SuggestStore] interface.
@@ -22,10 +23,10 @@ import mozilla.appservices.suggest.SuggestionQuery
 class FxSuggestStorage(
     context: Context,
 ) {
-    // Lazily initializes the store on first use. `Context.getDatabasePath()` does I/O, so
-    // `store.value` should only be accessed from the read or write scope.
+    // Lazily initializes the store on first use. `cacheDir` and using the `File` constructor
+    // does I/O, so `store.value` should only be accessed from the read or write scope.
     private val store: Lazy<SuggestStore> = lazy {
-        SuggestStore(context.getDatabasePath(DATABASE_NAME).absolutePath)
+        SuggestStore(File(context.cacheDir, DATABASE_NAME).absolutePath)
     }
 
     // We expect almost all Suggest storage operations to be reads, with infrequent writes. The
