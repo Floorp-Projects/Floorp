@@ -19,6 +19,8 @@ def test_recording_generation(*args):
 
     assert os.path.exists(test_file)
     os.remove(test_file)
+    os.remove(file.recording_path)
+    os.remove(file._metadata_path)
 
 
 def test_recording_content(*args):
@@ -27,6 +29,8 @@ def test_recording_content(*args):
 
     assert file.metadata("test_file") is True
     assert os.path.exists(file.recording_path)
+    os.remove(file.recording_path)
+    os.remove(file._metadata_path)
 
 
 if __name__ == "__main__":

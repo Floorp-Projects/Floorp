@@ -21,6 +21,9 @@ class Process:
     def poll(self):
         return None
 
+    def communicate(self):
+        return (["mock stdout"], ["mock stderr"])
+
     def wait(self):
         return 0
 
@@ -29,7 +32,7 @@ class Process:
 
     proc = object()
     pid = 1234
-    stderr = stdout = None
+    stderr = stdout = []
     returncode = 0
 
 
@@ -62,6 +65,16 @@ def get_status_code(url, playback):
     return response.status_code
 
 
+def cleanup():
+    # some tests create this file as a side-effect
+    policies_file = os.path.join("distribution", "policies.json")
+    try:
+        if os.path.exists(policies_file):
+            os.remove(policies_file)
+    except PermissionError:
+        pass
+
+
 def test_mitm_check_proxy(*args):
     # test setup
     pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
@@ -92,11 +105,12 @@ def test_mitm_check_proxy(*args):
             assert get_status_code(url, playback) == 404
         finally:
             playback.stop()
+    cleanup()
 
 
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=Process)
-@mock.patch("mozproxy.utils.ProcessHandler", new=Process)
+@mock.patch("mozproxy.utils.Popen", new=Process)
 @mock.patch("os.kill", new=kill)
 def test_mitm(*args):
     pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
@@ -120,11 +134,12 @@ def test_mitm(*args):
         playback.start()
     finally:
         playback.stop()
+    cleanup()
 
 
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=Process)
-@mock.patch("mozproxy.utils.ProcessHandler", new=Process)
+@mock.patch("mozproxy.utils.Popen", new=Process)
 @mock.patch("os.kill", new=kill)
 def test_playback_setup_failed(*args):
     class SetupFailed(Exception):
@@ -166,7 +181,7 @@ def test_playback_setup_failed(*args):
 
 @mock.patch("mozproxy.backends.mitm.Mitmproxy.check_proxy")
 @mock.patch("mozproxy.backends.mitm.mitm.ProcessHandler", new=ProcessWithRetry)
-@mock.patch("mozproxy.utils.ProcessHandler", new=ProcessWithRetry)
+@mock.patch("mozproxy.utils.Popen", new=ProcessWithRetry)
 @mock.patch("os.kill", new=kill)
 def test_mitm_with_retry(*args):
     pageset_name = os.path.join(here, "files", "mitm5-linux-firefox-amazon.manifest")
@@ -190,6 +205,7 @@ def test_mitm_with_retry(*args):
         playback.start()
     finally:
         playback.stop()
+    cleanup()
 
 
 if __name__ == "__main__":

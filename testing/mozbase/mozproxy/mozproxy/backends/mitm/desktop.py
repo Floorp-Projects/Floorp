@@ -74,7 +74,7 @@ class MitmproxyDesktop(Mitmproxy):
         2. Create the policies.json file inside that folder; which points to the certificate
            location, and turns on the the browser proxy settings
         """
-        LOG.info("Installing mitmproxy CA certficate into Firefox")
+        LOG.info("Installing mitmproxy CA certificate into Firefox")
 
         # browser_path is the exe, we want the folder
         self.policies_dir = os.path.dirname(browser_path)
