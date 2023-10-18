@@ -28,6 +28,11 @@ add_setup(async function () {
  * user profiles.
  */
 add_task(async function test_permissions() {
+  Services.telemetry.clearEvents();
+
+  // Ensure no events have been logged
+  TelemetryTestUtils.assertNumberOfEvents(0);
+
   let sandbox = sinon.createSandbox();
   registerCleanupFunction(() => {
     sandbox.restore();
@@ -141,4 +146,23 @@ add_task(async function test_permissions() {
     doneButton.click();
     await dialogClosed;
   });
+
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        category: "browser.migration",
+        method: "linux_perms",
+        object: "wizard",
+        value: null,
+        extra: {
+          migrator_key: InternalTestingProfileMigrator.key,
+        },
+      },
+    ],
+    {
+      category: "browser.migration",
+      method: "linux_perms",
+      object: "wizard",
+    }
+  );
 });

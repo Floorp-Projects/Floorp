@@ -143,6 +143,16 @@ export class MigrationWizardChild extends JSWindowActorChild {
         break;
       }
 
+      case "MigrationWizard:PermissionsNeeded": {
+        // In theory, the migrator permissions might be requested on any
+        // platform - but in practice, this only happens on Linux, so that's
+        // why the event is named linux_perms.
+        this.#sendTelemetryEvent("linux_perms", {
+          migrator_key: event.detail.key,
+        });
+        break;
+      }
+
       case "MigrationWizard:GetPermissions": {
         let success = await this.sendQuery("GetPermissions", {
           key: event.detail.key,

@@ -1095,6 +1095,24 @@ browser.migration:
       configured: >
         "1" if Variant 2 of the new Migration Wizard was being used, and the list of
         resources was expanded. "0" otherwise.
+  linux_perms:
+    objects: ["wizard"]
+    description: >
+      Recorded if the user is on Linux and the browser is installed in a sandboxed
+      environment that prevents it from reading other browser's data, and the user
+      is presented with instructions and an option to grant the browser permission
+      to read that other data.
+    bug_numbers:
+      - 1824786
+    notification_emails:
+      - mconley@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes: [main]
+    release_channel_collection: opt-out
+    expiry_version: never
+    extra_keys:
+      migrator_key: The key of the migrator that will perform the migration.
   safari_perms:
     objects: ["legacy_wizard", "wizard"]
     description: >
