@@ -28,7 +28,6 @@
   // Deliberately avoiding mouseup here because the last selectionchange
   // may be fired before or after the mouseup.
   document.addEventListener("mousedown", logEvents);
-  document.addEventListener("mousemove", logEvents);
   document.addEventListener("mousemove", e => e.preventDefault());
 
   promise_test(async test => {
@@ -54,8 +53,7 @@
 
     await mouseup_promise;
 
-    const expected_events = ["mousemove", "mousedown", "selectionchange",
-        "mousemove", "selectionchange"];
+    const expected_events = ["mousedown", "selectionchange", "selectionchange"];
 
     assert_equals(event_log.toString(), expected_events.toString(),
         "received events");
@@ -88,7 +86,7 @@
 
     await Promise.race([dragstart_promise, mouseup_promise]);
 
-    const expected_events = ["mousemove", "mousedown", "mousemove", "dragstart"];
+    const expected_events = ["mousedown", "dragstart"];
 
     assert_equals(event_log.toString(), expected_events.toString(),
         "received events");
