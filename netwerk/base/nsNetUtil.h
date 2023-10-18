@@ -1045,6 +1045,8 @@ struct LinkHeader {
   bool operator==(const LinkHeader& rhs) const;
 };
 
+// Implements roughly step 2 to 4 of
+// <https://httpwg.org/specs/rfc8288.html#parse-set>.
 nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData);
 
 enum ASDestination : uint8_t {

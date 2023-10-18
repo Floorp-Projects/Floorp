@@ -275,8 +275,12 @@ void nsContentSink::DoProcessLinkHeader() {
   }
 
   nsAutoString value;
+
+  // Getting the header data and parsing the link header together roughly
+  // implement <https://httpwg.org/specs/rfc8288.html#parse-set>.
   mDocument->GetHeaderData(nsGkAtoms::link, value);
   auto linkHeaders = net::ParseLinkHeader(value);
+
   for (const auto& linkHeader : linkHeaders) {
     ProcessLinkFromHeader(linkHeader, 0);
   }
