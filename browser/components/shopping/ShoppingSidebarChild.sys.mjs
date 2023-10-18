@@ -110,6 +110,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
   }
 
   handleEvent(event) {
+    let aid;
     switch (event.type) {
       case "ContentReady":
         this.updateContent();
@@ -119,6 +120,14 @@ export class ShoppingSidebarChild extends RemotePageChild {
         break;
       case "ReportProductAvailable":
         this.reportProductAvailable();
+        break;
+      case "AdClicked":
+        aid = event.detail.aid;
+        this.#product.sendAttributionEvent("click", aid);
+        break;
+      case "AdImpression":
+        aid = event.detail.aid;
+        this.#product.sendAttributionEvent("impression", aid);
         break;
     }
   }
