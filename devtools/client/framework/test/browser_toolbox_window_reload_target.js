@@ -89,6 +89,8 @@ async function testOneTool(toolbox, toolID) {
   info(`Select tool ${toolID}`);
   await toolbox.selectTool(toolID);
 
+  assertThemeStyleSheet(toolbox, toolID);
+
   await testReload("toolbox.reload.key", toolbox);
   await testReload("toolbox.reload2.key", toolbox);
   await testReload("toolbox.forceReload.key", toolbox);
@@ -100,4 +102,29 @@ async function testReload(shortcut, toolbox) {
 
   await sendToolboxReloadShortcut(L10N.getStr(shortcut), toolbox);
   reloadsSent++;
+}
+
+/**
+ * As opening all panels is an expensive operation, reuse this test in order
+ * to add a few assertions around panel's stylesheets.
+ * Ensure the proper ordering of the theme stylesheet. `global.css` should come
+ * first if it exists, then the theme.
+ */
+function assertThemeStyleSheet(toolbox, toolID) {
+  const iframe = toolbox.doc.getElementById("toolbox-panel-iframe-" + toolID);
+  const styleSheets = iframe.contentDocument.querySelectorAll(
+    `link[rel="stylesheet"]`
+  );
+  ok(
+    !!styleSheets.length,
+    `The panel ${toolID} should have at least have one stylesheet`
+  );
+
+  // In the web console, we have a special case where global.css is registered very first
+  if (styleSheets[0].href === "chrome://global/skin/global.css") {
+    is(styleSheets[1].href, "chrome://devtools/skin/light-theme.css");
+  } else {
+    // Otherwise, in all other panels, the theme file is registered very first
+    is(styleSheets[0].href, "chrome://devtools/skin/light-theme.css");
+  }
 }
