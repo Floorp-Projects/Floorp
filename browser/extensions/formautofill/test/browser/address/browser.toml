@@ -16,4 +16,10 @@ support-files = [
 
 ["browser_address_doorhanger_tel.js"]
 
+["browser_address_doorhanger_ui.js"]
+
 ["browser_address_telemetry.js"]
+
+["browser_edit_address_doorhanger_display.js"]
+
+["browser_edit_address_doorhanger_save_edited_fields.js"]
