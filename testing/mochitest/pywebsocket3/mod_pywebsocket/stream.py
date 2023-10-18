@@ -33,8 +33,6 @@ Specification:
 http://tools.ietf.org/html/rfc6455
 """
 
-from __future__ import absolute_import, division
-
 from collections import deque
 import logging
 import os
@@ -274,7 +272,6 @@ def parse_frame(receive_bytes,
     raw_payload_bytes = receive_bytes(payload_length)
 
     if logger.isEnabledFor(common.LOGLEVEL_FINE):
-        # pylint --py3k W1619
         logger.log(
             common.LOGLEVEL_FINE, 'Done receiving payload data at %s MB/s',
             payload_length / (time.time() - receive_start) / 1000 / 1000)
@@ -286,7 +283,6 @@ def parse_frame(receive_bytes,
     unmasked_bytes = masker.mask(raw_payload_bytes)
 
     if logger.isEnabledFor(common.LOGLEVEL_FINE):
-        # pylint --py3k W1619
         logger.log(common.LOGLEVEL_FINE,
                    'Done unmasking payload data at %s MB/s',
                    payload_length / (time.time() - unmask_start) / 1000 / 1000)
@@ -879,7 +875,7 @@ class Stream(object):
             wait_response: True when caller want to wait the response.
         Raises:
             BadOperationException: when reason is specified with code None
-            or reason is not an instance of both str and unicode.
+                or reason is not an instance of both str and unicode.
         """
 
         if self._request.server_terminated:
