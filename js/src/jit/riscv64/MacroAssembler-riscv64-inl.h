@@ -1890,25 +1890,20 @@ void MacroAssembler::sqrtFloat32(FloatRegister src, FloatRegister dest) {
 }
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
     FloatRegister src, const Address& addr) {
-  // FIXME -- see https://bugzilla.mozilla.org/show_bug.cgi?id=1855963
-  return FaultingCodeOffset();
-  ma_fst_s(src, addr);
+  return ma_fst_s(src, addr);
 }
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
     FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_s(src, addr);
+  return ma_fst_s(src, addr);
 }
 
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
     FloatRegister src, const Address& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_d(src, addr);
+  return ma_fst_d(src, addr);
 }
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
     FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_d(src, addr);
+  return ma_fst_d(src, addr);
 }
 void MacroAssembler::sub32(Register src, Register dest) {
   subw(dest, dest, src);
