@@ -129,6 +129,7 @@ export class ShoppingSidebarChild extends RemotePageChild {
       case "AdImpression":
         aid = event.detail.aid;
         this.#product.sendAttributionEvent("impression", aid);
+        Glean.shopping.surfaceAdsImpression.record();
         break;
     }
   }
