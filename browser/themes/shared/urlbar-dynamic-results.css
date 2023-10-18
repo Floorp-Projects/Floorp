@@ -169,7 +169,7 @@
   font-size: var(--urlbarView-small-font-size);
 
   .urlbarView-row:not([selected]) & {
-    color: var(--urlbar-popup-action-color);
+    color: var(--urlbarView-action-color);
   }
 }
 

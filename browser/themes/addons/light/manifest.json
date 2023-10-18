@@ -68,7 +68,7 @@
   "theme_experiment": {
     "stylesheet": "experiment.css",
     "colors": {
-      "popup_action_color": "--urlbar-popup-action-color",
+      "popup_action_color": "--urlbarView-action-color",
       "button": "--button-bgcolor",
       "button_hover": "--button-hover-bgcolor",
       "button_active": "--button-active-bgcolor",

@@ -9,10 +9,10 @@
 :root {
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
-  --urlbar-popup-action-color: LinkText;
 
   --urlbarView-secondary-text-color: color-mix(in srgb, currentColor 73%, transparent);
 
+  --urlbarView-action-color: LinkText;
   --urlbarView-action-slide-in-distance: 200px;
 
   --urlbarView-row-gutter: 2px;
@@ -38,7 +38,7 @@
   }
 
   &:-moz-lwtheme {
-    --urlbar-popup-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
+    --urlbarView-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
     /* Fallback colors for when themes don't specify popup_highlight / popup_highlight_text. */
     --autocomplete-popup-highlight-background: light-dark(rgb(0, 99, 255), rgb(0, 99, 225));
     --autocomplete-popup-highlight-color: white;
@@ -594,7 +594,7 @@
 
     /* This targets both rich and non-rich results, so not using the child selector here. */
     .urlbarView-row:not(:hover, [selected], [sponsored]) & {
-      color: var(--urlbar-popup-action-color);
+      color: var(--urlbarView-action-color);
     }
 
     &[slide-in] {
