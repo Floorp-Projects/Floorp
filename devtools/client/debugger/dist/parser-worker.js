@@ -42003,6 +42003,18 @@
         // `memberExpressions`, `literals`
         // This one is also used within the worker for framework computation
         // `identifiers`
+        //
+        // These three memberExpressions, literals and identifiers attributes are arrays containing objects whose attributes are:
+        // * name: string
+        // * location: object {start: number, end: number}
+        // * expression: string
+        //
+        // `findBestMatchExpression` uses `location` and `expression` (not name).
+        //    `expression` isn't used from the worker thread implementation of `findBestMatchExpression`.
+        //    The main thread only uses `expression` and `location`.
+        // framework computation uses only:
+        // * `name` for identifiers
+        // * `expression` for memberExpression
 
         // This is used within the worker for framework computation,
         // and in the main thread by the outline panel
@@ -42015,8 +42027,13 @@
         // This is used in the main thread only to compute the source icon
         framework: symbols.framework,
 
-        // This is only used within the worker for framework computation:
-        // `imports`, `callExpressions`
+        // These two attribute are only used within the worker for framework computation:
+        // `imports`
+        // Only uses `sources` and `specifiers` attributes.
+        //
+        // `callExpressions`
+        // Only uses `name` and `values` attributes.
+
         // This is only used by `findOutOfScopeLocations`:
         // `comments`
       };
@@ -42051,7 +42068,6 @@
     function getImportDeclarationSymbol(node) {
       return {
         source: node.source.value,
-        location: node.loc,
         specifiers: getSpecifiers(node.specifiers),
       };
     }
@@ -42061,19 +42077,17 @@
       const values = args.filter(arg => arg.value).map(arg => arg.value);
       if (lib$3.isMemberExpression(callee)) {
         const {
-          property: { name, loc },
+          property: { name },
         } = callee;
         return {
           name,
           values,
-          location: loc,
         };
       }
-      const { start, end, identifierName } = callee.loc;
+      const { identifierName } = callee.loc;
       return {
         name: identifierName,
         values,
-        location: { start, end },
       };
     }
 
