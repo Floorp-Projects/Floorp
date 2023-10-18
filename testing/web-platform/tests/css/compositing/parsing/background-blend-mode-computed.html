@@ -29,13 +29,9 @@ test_computed_value("background-blend-mode", "saturation");
 test_computed_value("background-blend-mode", "color");
 test_computed_value("background-blend-mode", "luminosity");
 
-// per spec, excess values should be dropped.
-// see https://drafts.fxtf.org/compositing-1/#background-blend-mode
-// and https://drafts.csswg.org/css-backgrounds-3/#layering
-// > The lists are matched up from the first value: excess values at the end are not used.
-test_computed_value("background-blend-mode", "normal, luminosity", "normal");
-test_computed_value("background-blend-mode", "screen, overlay", "screen");
-test_computed_value("background-blend-mode", "color, saturation", "color");
+test_computed_value("background-blend-mode", "normal, luminosity");
+test_computed_value("background-blend-mode", "screen, overlay");
+test_computed_value("background-blend-mode", "color, saturation");
 </script>
 </body>
 </html>
