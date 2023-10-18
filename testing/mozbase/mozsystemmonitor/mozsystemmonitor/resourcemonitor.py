@@ -169,7 +169,7 @@ def _collect(pipe, poll_interval):
                 )
             )
 
-            collection_overhead = time.time() - last_time - poll_interval
+            collection_overhead = time.time() - last_time - sleep_interval
             last_time = measured_end_time
             sleep_interval = max(0, poll_interval - collection_overhead)
 
