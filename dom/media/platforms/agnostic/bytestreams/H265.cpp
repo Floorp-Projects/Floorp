@@ -142,7 +142,12 @@ Result<HVCCConfig, nsresult> HVCCConfig::Parse(
     for (uint16_t nIdx = 0; nIdx < numNalus; nIdx++) {
       const uint16_t nalUnitLength = reader.ReadBits(16);
       if (reader.BitsLeft() < nalUnitLength * 8) {
-        return mozilla::Err(NS_ERROR_FAILURE);
+        LOG("Aborting parsing, NALU size (%u bits) is larger than remaining "
+            "(%zu bits)!",
+            nalUnitLength * 8u, reader.BitsLeft());
+        // We return what we've parsed so far and ignore the rest.
+        hvcc.mByteBuffer = aExtraData;
+        return hvcc;
       }
       const uint8_t* currentPtr =
           aExtraData->Elements() + reader.BitCount() / 8;
