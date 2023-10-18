@@ -884,6 +884,20 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "emeraude.my.salesforce.com",
+    platform: "all",
+    name: "Salesforce IndexedDB Script Access",
+    bug: "1855139",
+    contentScripts: [
+      {
+        js: "salesforce.js",
+        matches: ["*://emeraude.my.salesforce.com/*"],
+        runAt: "document_start",
+        allFrames: true,
+      },
+    ],
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;

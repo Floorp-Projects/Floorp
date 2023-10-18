@@ -72,6 +72,13 @@ var UAHelpers = {
       .replace(`Firefox/${ver[1]}`, "Firefox/99.0")
       .replace(`rv:${ver[1]}`, "rv:99.0");
   },
+  capRvTo109(originalUA) {
+    const ver = originalUA.match(/rv:(\d+\.\d+)/);
+    if (!ver || parseFloat(ver[1]) <= 109) {
+      return originalUA;
+    }
+    return originalUA.replace(`rv:${ver[1]}`, "rv:109.0");
+  },
   getWindowsUA(originalUA) {
     const rv = originalUA.match("rv:[0-9]+.[0-9]+")[0];
     const ver = originalUA.match("Firefox/[0-9]+.[0-9]+")[0];

@@ -863,22 +863,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1827678 - UA override for static.slots.lv
-     * Webcompat issue #68379 - https://webcompat.com/issues/68379
-     */
-    id: "bug1827678-webc68379",
-    platform: "android",
-    domain: "static.slots.lv",
-    bug: "1827678",
-    config: {
-      matches: ["*://static.slots.lv/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1827678 - UA override for mobile.onvue.com
      * Webcompat issue #68520 - https://webcompat.com/issues/68520
      */
@@ -1264,23 +1248,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1836181 - UA override for conference.amwell.com
-     *
-     * The site's content is not loaded unless a Chrome UA is used.
-     */
-    id: "bug1836181",
-    platform: "all",
-    domain: "conference.amwell.com",
-    bug: "1836181",
-    config: {
-      matches: ["*://conference.amwell.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1836182 - UA override for www.flatsatshadowglen.com
      *
      * The site's content is not loaded unless a Chrome UA is used.
@@ -1407,6 +1374,26 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://my.southerncross.co.nz/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1858664 - UA override to freeze rv segment to 109
+     *
+     * Some sites have issues with a UA string with "rv:" segment
+     * higher than 109, freezing it to 109 fixes the issues.
+     */
+    id: "bug1858664",
+    platform: "all",
+    domain: "Sites with known breakage with rv: segment higher than 109",
+    bug: "1858664",
+    config: {
+      matches: [
+        "*://*.tesco.com/*", // #1858664
+      ],
+      uaTransformer: originalUA => {
+        return UAHelpers.capRvTo109(originalUA);
       },
     },
   },
