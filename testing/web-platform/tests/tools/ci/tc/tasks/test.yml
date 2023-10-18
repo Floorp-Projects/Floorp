@@ -230,6 +230,7 @@ tasks:
                 browser: firefox_android
                 channel: nightly
               use:
+                - trigger-daily
                 - trigger-push
           do:
             - ${vars.browser}-${vars.channel}-${vars.suite}:
@@ -292,6 +293,12 @@ tasks:
             - vars:
                 browser: chrome
                 channel: stable
+              use:
+                - trigger-daily
+                - trigger-push
+            - vars:
+                browser: firefox_android
+                channel: nightly
               use:
                 - trigger-daily
                 - trigger-push
