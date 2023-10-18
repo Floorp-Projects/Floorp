@@ -24,6 +24,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -74,6 +75,16 @@ struct RemotenessOptions;
 struct NavigationIsolationOptions;
 class SessionStoreChild;
 class SessionStoreParent;
+
+struct LazyLoadFrameResumptionState {
+  RefPtr<nsIURI> mBaseURI;
+  ReferrerPolicy mReferrerPolicy = ReferrerPolicy::_empty;
+
+  void Clear() {
+    mBaseURI = nullptr;
+    mReferrerPolicy = ReferrerPolicy::_empty;
+  }
+};
 
 namespace ipc {
 class StructuredCloneData;
@@ -489,6 +500,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void InvokeBrowsingContextReadyCallback();
 
   void RequestFinalTabStateFlush();
+
+  const mozilla::dom::LazyLoadFrameResumptionState&
+  GetLazyLoadFrameResumptionState();
 
   RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;

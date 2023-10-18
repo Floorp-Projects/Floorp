@@ -165,6 +165,11 @@ void nsGenericHTMLFrameElement::SwapFrameLoaders(
 }
 
 void nsGenericHTMLFrameElement::LoadSrc() {
+  // Waiting for lazy load, do nothing.
+  if (mLazyLoading) {
+    return;
+  }
+
   EnsureFrameLoader();
 
   if (!mFrameLoader) {

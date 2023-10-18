@@ -140,6 +140,13 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
   // do not bloat any struct.
   bool mFullscreenFlag = false;
 
+  /**
+   * Represents the iframe is deferred loading until this element gets visible.
+   * We just do not load if set and leave specific elements to set it (see
+   * HTMLIFrameElement).
+   */
+  bool mLazyLoading = false;
+
  private:
   void GetManifestURL(nsAString& aOut);
 

@@ -71,6 +71,10 @@ class ReferrerInfo : public nsIReferrerInfo {
   explicit ReferrerInfo(const Element&);
   explicit ReferrerInfo(const Document&);
 
+  // Creates already initialized ReferrerInfo from an element or a document with
+  // a specific referrer policy.
+  ReferrerInfo(const Element&, ReferrerPolicyEnum);
+
   // create an exact copy of the ReferrerInfo
   already_AddRefed<ReferrerInfo> Clone() const;
 

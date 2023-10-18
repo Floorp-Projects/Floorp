@@ -978,6 +978,16 @@ ReferrerInfo::ReferrerInfo(const Element& aElement) : ReferrerInfo() {
   InitWithElement(&aElement);
 }
 
+ReferrerInfo::ReferrerInfo(const Element& aElement,
+                           ReferrerPolicyEnum aOverridePolicy)
+    : ReferrerInfo(aElement) {
+  // Override referrer policy if not empty
+  if (aOverridePolicy != ReferrerPolicyEnum::_empty) {
+    mPolicy = aOverridePolicy;
+    mOriginalPolicy = aOverridePolicy;
+  }
+}
+
 ReferrerInfo::ReferrerInfo(nsIURI* aOriginalReferrer,
                            ReferrerPolicyEnum aPolicy, bool aSendReferrer,
                            const Maybe<nsCString>& aComputedReferrer)
