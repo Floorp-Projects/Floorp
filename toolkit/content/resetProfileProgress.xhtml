@@ -6,9 +6,6 @@
 
 <!DOCTYPE window>
 
-<?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
-
 <window
   id="resetProfileProgressDialog"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -18,6 +15,12 @@
 >
   <vbox>
     <linkset>
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/content/resetProfile.css"
+      />
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+
       <html:link rel="localization" href="branding/brand.ftl" />
       <html:link rel="localization" href="toolkit/global/resetProfile.ftl" />
     </linkset>

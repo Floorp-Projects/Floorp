@@ -5,10 +5,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin/in-content/common.css"?>
-<?xml-stylesheet href="chrome://global/skin/printPageSetup.css" type="text/css"?>
-
 <window
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -22,6 +18,16 @@
 >
   <dialog id="printPageSetupDialog">
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      <html:link
+        rel="stylesheet"
+        href="chrome://global/skin/printPageSetup.css"
+      />
+
       <html:link rel="localization" href="toolkit/printing/printDialogs.ftl" />
     </linkset>
 

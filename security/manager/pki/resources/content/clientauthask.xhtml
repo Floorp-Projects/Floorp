@@ -3,9 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pippki/content/clientauthask.css" type="text/css"?>
-
 <!DOCTYPE window>
 
 <window
@@ -20,6 +17,12 @@
     buttonidcancel="client-auth-send-no-certificate"
   >
     <linkset>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+      <html:link
+        rel="stylesheet"
+        href="chrome://pippki/content/clientauthask.css"
+      />
+
       <html:link rel="localization" href="security/pippki/pippki.ftl" />
     </linkset>
 

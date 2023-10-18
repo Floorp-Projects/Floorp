@@ -6,9 +6,6 @@
 
 <!-- This is temporary until bug 1521632 is fixed -->
 
-<?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://mozapps/skin/update/updates.css"?>
-
 <window windowtype="Update:Elevation"
         type="child"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -26,6 +23,9 @@
   <script src="chrome://mozapps/content/update/updateElevation.js"/>
 
 <linkset>
+  <html:link rel="stylesheet" href="chrome://global/skin/global.css" />
+  <html:link rel="stylesheet" href="chrome://mozapps/skin/update/updates.css" />
+
   <html:link rel="localization" href="branding/brand.ftl"/>
   <html:link rel="localization" href="toolkit/updates/elevation.ftl"/>
 </linkset>

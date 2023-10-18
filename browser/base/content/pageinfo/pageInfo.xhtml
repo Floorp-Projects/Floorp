@@ -3,9 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<?xml-stylesheet href="chrome://browser/content/pageinfo/pageInfo.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/pageInfo.css" type="text/css"?>
-
 <window id="main-window"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
@@ -19,6 +16,12 @@
   persist="screenX screenY width height sizemode">
 
   <linkset>
+    <html:link
+      rel="stylesheet"
+      href="chrome://browser/content/pageinfo/pageInfo.css"
+    />
+    <html:link rel="stylesheet" href="chrome://browser/skin/pageInfo.css" />
+
     <html:link rel="localization" href="browser/pageInfo.ftl"/>
   </linkset>
   #ifdef XP_MACOSX
