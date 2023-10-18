@@ -1982,6 +1982,9 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 
 #reset-pbm-panel {
   max-width: var(--menu-panel-width-wide);
+}
+
+#reset-pbm-panel-container {
   padding: 16px 16px 0;
   gap: 8px;
 }

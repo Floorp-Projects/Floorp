@@ -13,6 +13,7 @@ const PREF_ID_ALWAYS_ASK =
 const SELECTOR_TOOLBAR_BUTTON = "#reset-pbm-toolbar-button";
 
 const SELECTOR_PANELVIEW = "panel #reset-pbm-panel";
+const SELECTOR_CONTAINER = "#reset-pbm-panel-container";
 const SELECTOR_PANEL_HEADING = "#reset-pbm-panel-header > description";
 const SELECTOR_PANEL_DESCRIPTION = "#reset-pbm-panel-description";
 const SELECTOR_PANEL_CHECKBOX = "#reset-pbm-panel-checkbox";
@@ -308,6 +309,38 @@ add_task(async function test_panel() {
       "browser.privatebrowsing.resetPBM.showConfirmationDialog"
     ),
     "The always ask pref should be true."
+  );
+
+  info("Accessibility checks");
+  let panel = privateWin.document.querySelector(SELECTOR_PANELVIEW);
+  Assert.equal(
+    panel.getAttribute("role"),
+    "document",
+    "Panel should have role document."
+  );
+
+  let container = panel.querySelector(SELECTOR_CONTAINER);
+  Assert.equal(
+    container.getAttribute("role"),
+    "alertdialog",
+    "Panel container should have role alertdialog."
+  );
+  Assert.equal(
+    container.getAttribute("aria-labelledby"),
+    "reset-pbm-panel-header",
+    "aria-labelledby should point to heading."
+  );
+
+  let heading = panel.querySelector(SELECTOR_PANEL_HEADING);
+  Assert.equal(
+    heading.getAttribute("role"),
+    "heading",
+    "Heading should have role heading."
+  );
+  Assert.equal(
+    heading.getAttribute("aria-level"),
+    "2",
+    "heading should have aria-level 2"
   );
 
   info("Click the checkbox to uncheck it.");
