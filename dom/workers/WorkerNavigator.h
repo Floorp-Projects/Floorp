@@ -98,10 +98,7 @@ class WorkerNavigator final : public nsWrapperCache {
   // Worker thread only!
   void SetOnLine(bool aOnline) { mOnline = aOnline; }
 
-  bool GlobalPrivacyControl() const {
-    return StaticPrefs::privacy_globalprivacycontrol_enabled() &&
-           StaticPrefs::privacy_globalprivacycontrol_functionality_enabled();
-  }
+  bool GlobalPrivacyControl() const;
 
   void SetLanguages(const nsTArray<nsString>& aLanguages);
 
