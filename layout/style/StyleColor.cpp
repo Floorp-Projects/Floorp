@@ -7,7 +7,8 @@
 #include "mozilla/StyleColorInlines.h"
 
 #include "mozilla/ComputedStyle.h"
-#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/dom/BindingDeclarations.h"
 #include "nsIFrame.h"
 #include "nsStyleStruct.h"
 
@@ -64,33 +65,16 @@ StyleAbsoluteColor StyleAbsoluteColor::ToColorSpace(
 nscolor StyleAbsoluteColor::ToColor() const {
   auto srgb = ToColorSpace(StyleColorSpace::Srgb);
 
-  constexpr float MIN = 0.0f;
-  constexpr float MAX = 1.0f;
+  // TODO(tlouw): Needs gamut mapping here. Right now we just hard clip the
+  //              components to [0..1], which will yield invalid colors.
+  //              https://bugzilla.mozilla.org/show_bug.cgi?id=1626624
+  auto red = std::clamp(srgb.components._0, 0.0f, 1.0f);
+  auto green = std::clamp(srgb.components._1, 0.0f, 1.0f);
+  auto blue = std::clamp(srgb.components._2, 0.0f, 1.0f);
 
-  // We KNOW the values are in srgb so we can do a quick gamut limit check
-  // here and avoid calling into Servo_MapColorIntoGamutLimits and let it
-  // return early anyway.
-  auto isColorInGamut =
-      (srgb.components._0 >= MIN && srgb.components._0 <= MAX &&
-       srgb.components._1 >= MIN && srgb.components._1 <= MAX &&
-       srgb.components._2 >= MIN && srgb.components._2 <= MAX);
-
-  if (!isColorInGamut) {
-    if (StaticPrefs::layout_css_gamut_map_for_rendering_enabled()) {
-      srgb = Servo_MapColorIntoGamutLimits(&srgb);
-    } else {
-      // If gamut mapping is not enabled, we just naively clip the colors at
-      // sRGB gamut limits. This will go away completely when gamut mapping is
-      // enabled.
-      srgb.components._0 = std::clamp(srgb.components._0, 0.0f, 1.0f);
-      srgb.components._1 = std::clamp(srgb.components._1, 0.0f, 1.0f);
-      srgb.components._2 = std::clamp(srgb.components._2, 0.0f, 1.0f);
-    }
-  }
-
-  return NS_RGBA(nsStyleUtil::FloatToColorComponent(srgb.components._0),
-                 nsStyleUtil::FloatToColorComponent(srgb.components._1),
-                 nsStyleUtil::FloatToColorComponent(srgb.components._2),
+  return NS_RGBA(nsStyleUtil::FloatToColorComponent(red),
+                 nsStyleUtil::FloatToColorComponent(green),
+                 nsStyleUtil::FloatToColorComponent(blue),
                  nsStyleUtil::FloatToColorComponent(srgb.alpha));
 }
 
