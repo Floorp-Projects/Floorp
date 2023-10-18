@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,width=device-width">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+#scroller {
+  height: 50vh;
+  width: 50vw;
+  overflow: scroll;
+  overscroll-behavior: none;
+}
+
+#spacer {
+  height: 200vh;
+  width: 200vw;
+}
+  </style>
+</head>
+<body>
+  <div id="scroller">
+    <div id="spacer">
+    </div>
+  </div>
+</body>
+<script>
+const searchParams = new URLSearchParams(location.search);
+
+async function test() {
+  var scrollendCount = 0;
+
+  // Add a scrollend event listener that counts the number of scrollend
+  // events fired to the scrollable element.
+  scroller.addEventListener("scrollend", () => {
+    scrollendCount += 1;
+  });
+
+  // Move the mouse over the scroller and perform a mouse click.
+  await promiseNativeMouseEventWithAPZ({
+    target: scroller,
+    offsetX: 10,
+    offsetY: 10,
+    type: "mousemove",
+  });
+
+  await promiseNativeMouseEventWithAPZ({
+    target: scroller,
+    offsetX: 10,
+    offsetY: 10,
+    type: "mousedown",
+  });
+
+  await promiseNativeMouseEventWithAPZ({
+    target: scroller,
+    offsetX: 10,
+    offsetY: 10,
+    type: "mouseup",
+  });
+
+  // Determine the arrow key value based on the value of "direction".
+  let key = null;
+  let direction = searchParams.get("direction");
+  switch (direction) {
+    case "up":
+      key = nativeArrowUpKey();
+      break;
+    case "down":
+      key = nativeArrowDownKey();
+      break;
+    default:
+      ok(false, "Unsupported direction value: " + direction);
+      break;
+  }
+
+  is(scrollendCount, 0, "A scrollend event should not be triggered yet");
+  is(scroller.scrollTop, 0, "No scroll should have occured yet");
+
+  // In order to exercise handling of keyboard events in APZ, we may
+  // want to flush repaints before the key input.
+  if (searchParams.has("flush-before-key")) {
+    await promiseApzFlushedRepaints();
+  }
+  await promiseFrame();
+
+  let transformEndPromise = promiseTransformEnd();
+
+  let scrollPromise = new Promise(resolve => scroller.addEventListener("scroll", resolve));
+  await new Promise(resolve => {
+    synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, key, {},
+                        "", "", resolve);
+  });
+
+  await promiseApzFlushedRepaints();
+
+  if (direction == "up") {
+    if (SpecialPowers.getBoolPref("general.smoothScroll")) {
+      // The smooth scroll animation with no distance should not be longer than
+      // half a second.
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } else {
+      await promiseFrame();
+    }
+    is(scroller.scrollTop, 0, "No scroll should have occured");
+    is(scrollendCount, 0, "A user gesture with no scroll should have no scrollend");
+  } else {
+    await scrollPromise;
+    if (SpecialPowers.getBoolPref("general.smoothScroll")) {
+      // If smooth scrolling is enabled and there is room to scroll, wait for the
+      // transform end notification.
+      await transformEndPromise;
+    }
+    await promiseFrame();
+    isnot(scroller.scrollTop, 0, "A scroll should have occured");
+    is(scrollendCount, 1, "A user gesture with a scroll should trigger a scrollend");
+  }
+}
+
+function isOnChaosMode() {
+  return SpecialPowers.Services.env.get("MOZ_CHAOSMODE");
+}
+
+if ((getPlatform() == "mac" || getPlatform() == "windows") &&
+    !isOnChaosMode()) {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+} else {
+  ok(true, "Skipping test, native key events are not supported on " +
+     getPlatform());
+  subtestDone();
+}
+</script>
+</html>
