@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
 /* import-globals-from ../../mochitest/role.js */
 /* import-globals-from ../../mochitest/states.js */
 loadScripts(
@@ -226,7 +229,8 @@ add_task(async () => {
       let input = await getMacAccessible("urlbar-input");
       is(
         input.getAttributeValue("AXValue"),
-        "example.com",
+        // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+        UrlbarTestUtils.trimURL("http://example.com"),
         "Location bar has correct value"
       );
     }
