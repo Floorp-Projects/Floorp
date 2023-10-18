@@ -36,7 +36,14 @@ const COMPARE_TESTS = [
   ["123 Main St. Apt 4, Floor 2", "123 Main St. Apt 41, Floor 2", DIFFERENT], // Apartment number is different
   ["123 Main St. Apt 4, Floor 2", "123 Main St. Apt 4, Floor 22", DIFFERENT], // Floor number is different
 
-  ["123 Main St. Apt 4, Floor 2", "123 Main St. Floor 2, Apt 4", DIFFERENT], //
+  ["123 Main St. Apt 4, Floor 2", "123 Main St. Floor 2, Apt 4", DIFFERENT],
+
+  // When address cannot be parsed
+  ["Any Address", "any address", SAME],
+  ["Any Address 4F", "Any Address", A_CONTAINS_B],
+  ["An Any Address 4F", "Any Address", A_CONTAINS_B],
+  ["Any Address", "Address Any", DIFFERENT],
+  ["Any Address", "Other Address", DIFFERENT],
 ];
 
 const TEST_FIELD_NAME = "street-address";
