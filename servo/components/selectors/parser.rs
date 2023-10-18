@@ -365,6 +365,7 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
         #[cfg(debug_assertions)]
         let selector_repr = unsafe { *(&selector as *const _ as *const usize) };
         let list = Self(ThinArcUnion::from_first(selector.into_data()));
+        #[cfg(debug_assertions)]
         debug_assert_eq!(
             selector_repr,
             unsafe { *(&list as *const _ as *const usize) },
