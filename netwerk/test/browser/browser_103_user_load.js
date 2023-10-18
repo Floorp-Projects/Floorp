@@ -7,6 +7,10 @@
 // simulate user initiated loads by entering the URL in the URL-bar code based on
 // https://searchfox.org/mozilla-central/rev/5644fae86d5122519a0e34ee03117c88c6ed9b47/browser/components/urlbar/tests/browser/browser_enter.js
 
+ChromeUtils.defineESModuleGetters(this, {
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
+});
+
 const {
   request_count_checking,
   test_hint_preload_internal,
@@ -60,7 +64,7 @@ add_task(async function user_initiated_load() {
   // Check url bar and selected tab.
   is(
     gURLBar.value,
-    START_VALUE,
+    UrlbarTestUtils.trimURL(START_VALUE),
     "Urlbar should preserve the value on return keypress"
   );
   is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
