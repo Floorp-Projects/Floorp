@@ -372,5 +372,10 @@ AndroidWebAuthnService::SetUserVerified(uint64_t authenticatorId,
 NS_IMETHODIMP
 AndroidWebAuthnService::Listen() { return NS_ERROR_NOT_IMPLEMENTED; }
 
+NS_IMETHODIMP
+AndroidWebAuthnService::RunCommand(const nsACString& cmd) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace dom
 }  // namespace mozilla
