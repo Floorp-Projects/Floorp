@@ -388,3 +388,38 @@ add_task(async function test_wt_incoming_bidi_stream() {
 
   webTransport.closeSession(0, "");
 });
+
+async function createWebTransportAndConnect() {
+  let webTransport = NetUtil.newWebTransport();
+
+  await new Promise(resolve => {
+    let listener = new WebTransportListener().QueryInterface(
+      Ci.WebTransportSessionEventListener
+    );
+    listener.ready = resolve;
+
+    webTransport.asyncConnect(
+      NetUtil.newURI(`https://${host}/success`),
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
+      listener
+    );
+  });
+
+  return webTransport;
+}
+
+add_task(async function test_multple_webtransport_connnection() {
+  let webTransports = [];
+  for (let i = 0; i < 3; i++) {
+    let transport = await createWebTransportAndConnect();
+    webTransports.push(transport);
+  }
+
+  let first = webTransports[0];
+  await streamCreatePromise(first, true);
+
+  for (let i = 0; i < 3; i++) {
+    webTransports[i].closeSession(0, "");
+  }
+});

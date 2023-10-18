@@ -836,6 +836,12 @@ void nsHttpConnectionMgr::UpdateCoalescingForNewConn(
   MOZ_ASSERT(ent);
   MOZ_ASSERT(mCT.GetWeak(newConn->ConnectionInfo()->HashKey()) == ent);
   LOG(("UpdateCoalescingForNewConn newConn=%p aNoHttp3=%d", newConn, aNoHttp3));
+  if (newConn->ConnectionInfo()->GetWebTransport()) {
+    LOG(("Don't coalesce a WebTransport conn %p", newConn));
+    // TODO: implement this properly in bug 1815735.
+    return;
+  }
+
   HttpConnectionBase* existingConn =
       FindCoalescableConnection(ent, true, false, false);
   if (existingConn) {
