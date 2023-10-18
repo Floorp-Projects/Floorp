@@ -250,7 +250,6 @@ nsIFrame* SVGRenderingObserver::GetAndObserveReferencedFrame(
 }
 
 void SVGRenderingObserver::OnNonDOMMutationRenderingChange() {
-  mInObserverSet = false;
   OnRenderingChange();
 }
 
@@ -1137,6 +1136,13 @@ void SVGRenderingObserverSet::InvalidateAll() {
 
   const auto observers = std::move(mObservers);
 
+  // We've moved all the observers from mObservers, effectively
+  // evicting them so we need to notify all observers of eviction
+  // before we process any rendering changes. In short, don't
+  // try to merge these loops.
+  for (const auto& observer : observers) {
+    observer->NotifyEvictedFromRenderingObserverSet();
+  }
   for (const auto& observer : observers) {
     observer->OnNonDOMMutationRenderingChange();
   }
@@ -1155,6 +1161,7 @@ void SVGRenderingObserverSet::InvalidateAllForReflow() {
     if (obs->ObservesReflow()) {
       observers.AppendElement(obs);
       mObservers.Remove(it);
+      obs->NotifyEvictedFromRenderingObserverSet();
     }
   }
 
