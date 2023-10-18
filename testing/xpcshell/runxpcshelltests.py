@@ -8,6 +8,7 @@ import copy
 import json
 import os
 import pipes
+import platform
 import random
 import re
 import shutil
@@ -1563,6 +1564,8 @@ class XPCShellTests(object):
         self.mozInfo["msix"] = options.get(
             "app_binary"
         ) is not None and "WindowsApps" in options.get("app_binary", "")
+
+        self.mozInfo["is_ubuntu"] = "Ubuntu" in platform.version()
 
         mozinfo.update(self.mozInfo)
 
