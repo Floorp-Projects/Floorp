@@ -152,6 +152,9 @@ class IMEContentObserver final : public nsStubMutationObserver,
     return mIMENotificationRequests &&
            mIMENotificationRequests->WantDuringDeactive();
   }
+  [[nodiscard]] bool EditorIsTextEditor() const {
+    return mEditorBase && mEditorBase->IsTextEditor();
+  }
   nsIWidget* GetWidget() const { return mWidget; }
   void SuppressNotifyingIME();
   void UnsuppressNotifyingIME();

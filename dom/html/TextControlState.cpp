@@ -3044,7 +3044,11 @@ IMEContentObserver* TextControlState::GetIMEContentObserver() const {
       mTextCtrlElement != IMEStateManager::GetFocusedElement()) {
     return nullptr;
   }
-  return IMEStateManager::GetActiveContentObserver();
+  IMEContentObserver* observer = IMEStateManager::GetActiveContentObserver();
+  // The text control element may be an editing host.  In this case, the
+  // observer does not observe the anonymous nodes under mTextCtrlElement.
+  // So, it means that the observer is not for ours.
+  return observer && observer->EditorIsTextEditor() ? observer : nullptr;
 }
 
 }  // namespace mozilla
