@@ -22,6 +22,7 @@ prefs = [
   "browser.newtabpage.activity-stream.feeds.section.topstories.options={\"provider_name\":\"\"}",
   "messaging-system.log=all",
   "intl.multilingual.aboutWelcome.languageMismatchEnabled=false",
+  "browser.attribution.macos.enabled=true",
 ]
 
 ["browser_aboutwelcome_attribution.js"]

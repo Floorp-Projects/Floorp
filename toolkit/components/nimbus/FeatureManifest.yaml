@@ -1908,3 +1908,12 @@ feltPrivacy:
       setPref: browser.privatebrowsing.resetPBM.enabled
       description: >-
         Enables the reset PBM feature button and confirmation panel.
+
+attribution:
+  description: Prefs related to install attribution
+  hasExposure: false
+  variables:
+    macosEnabled:
+      type: boolean
+      description: Whether or not macOS attribution data will be processed and sent in Telemetry
+      fallbackPref: browser.attribution.macos.enabled

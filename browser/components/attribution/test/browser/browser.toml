@@ -1,5 +1,6 @@
 [DEFAULT]
 support-files = ["head.js"]
+prefs = ["browser.attribution.macos.enabled=true"]
 
 ["browser_AttributionCode_Mac_telemetry.js"]
 skip-if = ["toolkit != 'cocoa'"] # macOS only telemetry.

@@ -16,6 +16,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -228,6 +229,17 @@ export var AttributionCode = {
         )}`
       );
       return gCachedAttrData;
+    }
+
+    // This is a temporary block while we rollout macOS attribution.
+    if (
+      AppConstants.platform == "macosx" &&
+      !lazy.NimbusFeatures.attribution.getVariable("macosEnabled")
+    ) {
+      lazy.log.debug(
+        "getAttrDataSync: macOS attribution disabled by nimbus; skipping"
+      );
+      return {};
     }
 
     gCachedAttrData = {};

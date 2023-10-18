@@ -2863,3 +2863,8 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
 // Whether the reset private browsing panel should ask for confirmation before
 // performing the clear action.
 pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
+
+// bug 1858545: Temporary pref to enable a staged rollout of macOS attribution Telemetry
+#ifdef XP_MACOSX
+  pref("browser.attribution.macos.enabled", false);
+#endif
