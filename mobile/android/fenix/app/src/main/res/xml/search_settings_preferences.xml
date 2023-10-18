@@ -16,7 +16,7 @@
         <Preference
             app:iconSpaceReserved="false"
             android:key="@string/pref_key_manage_search_shortcuts"
-            android:title="@string/preferences_manage_search_shortcuts"
+            android:title="@string/preferences_manage_search_shortcuts2"
             android:summary="@string/preferences_manage_search_shortcuts_summary"/>
     </PreferenceCategory>
 
@@ -88,12 +88,13 @@
         <SwitchPreference
             app:iconSpaceReserved="false"
             android:defaultValue="true"
-            android:key="@string/pref_key_enable_autocomplete_urls"
-            android:title="@string/preferences_enable_autocomplete_urls" />
+            android:key="@string/pref_key_show_voice_search"
+            android:title="@string/preferences_show_voice_search" />
         <SwitchPreference
             app:iconSpaceReserved="false"
             android:defaultValue="true"
-            android:key="@string/pref_key_show_voice_search"
-            android:title="@string/preferences_show_voice_search" />       
+            android:key="@string/pref_key_enable_autocomplete_urls"
+            android:title="@string/preferences_enable_autocomplete_urls" />
+   
     </PreferenceCategory>
 </PreferenceScreen>

@@ -402,7 +402,7 @@ class EngineShortcut(
 
 private val defaultSearchEngineHeader = onView(withText("Default search engine"))
 
-private val manageSearchShortcutsHeader = onView(withText("Manage search shortcuts"))
+private val manageSearchShortcutsHeader = onView(withText("Manage alternative search engines"))
 
 private fun searchHistorySwitchButton(): ViewInteraction {
     onView(withId(androidx.preference.R.id.recycler_view)).perform(
