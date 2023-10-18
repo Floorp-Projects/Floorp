@@ -71,14 +71,14 @@ struct TrackUpdate {
 /**
  * This represents a message run on the graph thread to modify track or graph
  * state.  These are passed from main thread to graph thread through
- * AppendMessage(), or scheduled on the graph thread with
- * RunMessageAfterProcessing().  A ControlMessage often has
- * a weak reference to a particular affected track.
+ * AppendMessage().  A ControlMessage often has a weak reference to a
+ * particular affected track.
  */
 class ControlMessage : public MediaTrack::ControlMessageInterface {
  public:
   explicit ControlMessage(MediaTrack* aTrack) : mTrack(aTrack) {
-    MOZ_RELEASE_ASSERT(!aTrack || !NS_IsMainThread() || !aTrack->IsDestroyed());
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_RELEASE_ASSERT(!aTrack || !aTrack->IsDestroyed());
   }
 
   MediaTrack* GetTrack() { return mTrack; }

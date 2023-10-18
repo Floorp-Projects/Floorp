@@ -513,6 +513,21 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
    */
   virtual void DecrementSuspendCount();
 
+  /**
+   * For use during ProcessedMediaTrack::ProcessInput() or
+   * MediaTrackListener callbacks, when graph state cannot be changed.
+   * Queues a control message to execute a given lambda function with no
+   * parameters after processing, at a time when graph state can be changed.
+   * The lambda will always be executed before handing control of the graph
+   * to the main thread for shutdown.
+   * Graph thread.
+   */
+  template <typename Function>
+  void RunAfterProcessing(Function&& aFunction) {
+    RunMessageAfterProcessing(WrapUnique(
+        new ControlMessageWithNoShutdown(std::forward<Function>(aFunction))));
+  }
+
   class ControlMessageInterface;
 
  protected:
@@ -532,6 +547,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   class ControlOrShutdownMessage;
 
   void QueueMessage(UniquePtr<ControlMessageInterface> aMessage);
+  void RunMessageAfterProcessing(UniquePtr<ControlMessageInterface> aMessage);
 
   void NotifyMainThreadListeners() {
     NS_ASSERTION(NS_IsMainThread(), "Call only on main thread");
@@ -1217,7 +1233,7 @@ class MediaTrackGraph {
  * state.  These are passed from main thread to graph thread by
  * QueueControlMessageWithNoShutdown() or QueueControlOrShutdownMessage()
  * through AppendMessage(), or scheduled on the graph thread with
- * RunMessageAfterProcessing().
+ * RunAfterProcessing().
  */
 class MediaTrack::ControlMessageInterface {
  public:
