@@ -7860,6 +7860,13 @@ pub extern "C" fn Servo_ConvertColorSpace(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_MapColorIntoGamutLimits(
+    color: &AbsoluteColor
+) -> AbsoluteColor {
+    color.map_into_gamut_limits()
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_IntersectionObserverRootMargin_Parse(
     value: &nsACString,
     result: *mut IntersectionObserverRootMargin,
