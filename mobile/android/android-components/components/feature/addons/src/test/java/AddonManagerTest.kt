@@ -28,11 +28,13 @@ import mozilla.components.concept.engine.webextension.EnableSource
 import mozilla.components.concept.engine.webextension.Metadata
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.AddonManager.Companion.ADDON_ICON_SIZE
+import mozilla.components.feature.addons.ui.translateName
 import mozilla.components.feature.addons.update.AddonUpdater.Status
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
@@ -542,11 +544,15 @@ class AddonManagerTest {
             any(),
         )
 
+        val metadata: Metadata = mock()
         val extension: WebExtension = mock()
+        whenever(metadata.name).thenReturn("nameFromMetadata")
         whenever(extension.id).thenReturn("ext1")
+        whenever(extension.getMetadata()).thenReturn(metadata)
         onSuccessCaptor.value.invoke(extension)
         assertNotNull(installedAddon)
         assertEquals(addon.id, installedAddon!!.id)
+        assertEquals("nameFromMetadata", installedAddon!!.translateName(testContext))
         assertTrue(manager.pendingAddonActions.isEmpty())
     }
 

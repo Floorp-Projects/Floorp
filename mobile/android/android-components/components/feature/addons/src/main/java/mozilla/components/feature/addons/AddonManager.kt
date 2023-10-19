@@ -134,8 +134,8 @@ class AddonManager(
             id = addon.id,
             url = addon.downloadUrl,
             onSuccess = { ext ->
-                val installedAddon = addon.copy(installedState = ext.toInstalledState())
-                addonUpdater.registerForFutureUpdates(installedAddon.id)
+                val installedAddon = Addon.newFromWebExtension(ext, ext.toInstalledState())
+                    .copy(iconUrl = addon.iconUrl)
                 completePendingAddonAction(pendingAction)
                 onSuccess(installedAddon)
             },
