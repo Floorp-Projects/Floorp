@@ -1512,12 +1512,14 @@ html {
 }
 @media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split] .multi-select-container {
-    flex-direction: row;
-    align-self: stretch;
-    align-items: center;
+    flex-direction: column;
+    align-self: center;
+    align-items: start;
     justify-content: center;
+    width: 240px;
     padding: 0 30px;
     margin-inline: 0;
+    box-sizing: content-box;
   }
 }
 .onboardingContainer .screen[pos=split] .tiles-theme-container {
@@ -1651,6 +1653,7 @@ html {
   .onboardingContainer .screen[pos=split] .section-main .main-content .primary,
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
     min-width: 240px;
+    margin-inline: 0;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .colorway-text {
     text-align: center;

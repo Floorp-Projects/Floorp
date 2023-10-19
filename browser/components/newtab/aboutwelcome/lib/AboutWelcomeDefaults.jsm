@@ -97,6 +97,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
         background:
           "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
         progress_bar: true,
+        hide_secondary_section: "responsive",
         logo: {},
         title: { string_id: "mr2022-onboarding-set-default-title" },
         subtitle: {
