@@ -46,12 +46,6 @@ let ignoreList = [
     errorMessage: /Unknown property.*overflow-clip-box/i,
     isFromDevTools: false,
   },
-  // Same but with zoom.
-  {
-    sourceName: /\bscrollbars\.css$/i,
-    errorMessage: /Unknown property ‘zoom’/i,
-    isFromDevTools: false,
-  },
   // These variables are declared somewhere else, and error when we load the
   // files directly. They're all marked intermittent because their appearance
   // in the error console seems to not be consistent.
@@ -69,6 +63,14 @@ let ignoreList = [
     isFromDevTools: false,
   },
 ];
+
+if (!Services.prefs.getBoolPref("layout.css.zoom.enabled")) {
+  ignoreList.push({
+    sourceName: /\bscrollbars\.css$/i,
+    errorMessage: /Unknown property ‘zoom’/i,
+    isFromDevTools: false,
+  });
+}
 
 if (!Services.prefs.getBoolPref("layout.css.color-mix.enabled")) {
   // Reserved to UA sheets unless layout.css.color-mix.enabled flipped to true.
