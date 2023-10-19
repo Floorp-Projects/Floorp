@@ -266,7 +266,7 @@ static size_t GetTid() {
 #  endif
 #  define LOG(fmt, ...)                                                \
     FdPrintf(LOG_STDERR, "PHC[%zu,%zu,~%zu] " fmt, GetPid(), GetTid(), \
-             size_t(GAtomic::Now()), __VA_ARGS__)
+             size_t(GAtomic::Now()), ##__VA_ARGS__)
 
 #else
 
