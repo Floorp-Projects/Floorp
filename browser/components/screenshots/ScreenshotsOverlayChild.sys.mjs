@@ -67,7 +67,7 @@ export class ScreenshotsOverlay {
       <template>
         <link rel="stylesheet" href="chrome://browser/content/screenshots/overlay/overlay.css" />
         <div id="screenshots-component">
-          <div id="preview-container">
+          <div id="preview-container" hidden>
             <div class="face-container">
               <div class="eye left"><div id="left-eye" class="eyeball"></div></div>
               <div class="eye right"><div id="right-eye" class="eyeball"></div></div>
@@ -76,8 +76,8 @@ export class ScreenshotsOverlay {
             <div class="preview-instructions">${instructions.value}</div>
             <button class="screenshots-button" id="screenshots-cancel-button">${cancel.value}</button>
           </div>
-          <div id="hover-highlight"></div>
-          <div id="selection-container">
+          <div id="hover-highlight" hidden></div>
+          <div id="selection-container" hidden>
             <div id="top-background" class="bghighlight"></div>
             <div id="bottom-background" class="bghighlight"></div>
             <div id="left-background" class="bghighlight"></div>
@@ -109,7 +109,7 @@ export class ScreenshotsOverlay {
               </div>
             </div>
           </div>
-          <div id="buttons-container">
+          <div id="buttons-container" hidden>
             <div class="buttons-wrapper">
               <button id="cancel" class="screenshots-button" title="${cancel.value}" aria-label="${cancel.value}"><img/></button>
               <button id="copy" class="screenshots-button" title="${copy.value}" aria-label="${copy.value}"><img/>${copy.value}</button>
