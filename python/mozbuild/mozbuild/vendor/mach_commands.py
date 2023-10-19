@@ -62,7 +62,7 @@ def vendor(
     add_to_exports=False,
     force=False,
     verify=False,
-    patch_mode="",
+    patch_mode=None,
 ):
     """
     Vendor third-party dependencies into the source repository.
@@ -92,22 +92,21 @@ def vendor(
             "Cannot perform update actions if we don't have a 'vendoring' section in the moz.yaml"
         )
 
-    if patch_mode and patch_mode not in ["none", "only"]:
+    patch_modes = "none", "only", "check"
+    if patch_mode and patch_mode not in patch_modes:
         print(
             "Unknown patch mode given '%s'. Please use one of: 'none' or 'only'."
             % patch_mode
         )
         sys.exit(1)
-    if (
-        manifest["vendoring"].get("patches", [])
-        and not patch_mode
-        and not check_for_update
-    ):
+
+    patches = manifest["vendoring"].get("patches")
+    if patches and not patch_mode and not check_for_update:
         print(
             "Patch mode was not given when required. Please use one of: 'none' or 'only'"
         )
         sys.exit(1)
-    if patch_mode == "only" and not manifest["vendoring"].get("patches", []):
+    if patch_mode == "only" and not patches:
         print(
             "Patch import was specified for %s but there are no vendored patches defined."
             % library

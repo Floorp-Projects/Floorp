@@ -120,6 +120,7 @@ class VendorManifest(MozbuildObject):
         self.yaml_file = yaml_file
         self._extract_directory = throwe
         self.logInfo = functools.partial(self.log, logging.INFO, "vendor")
+        self.patch_mode = patch_mode
         if "vendor-directory" not in self.manifest["vendoring"]:
             self.manifest["vendoring"]["vendor-directory"] = os.path.dirname(
                 self.yaml_file
@@ -259,6 +260,22 @@ class VendorManifest(MozbuildObject):
         self.logInfo({}, "Checking for update actions")
         self.update_files(new_revision)
 
+        if self.patch_mode == "check":
+            self.import_local_patches(
+                self.manifest["vendoring"].get("patches", []),
+                os.path.dirname(self.yaml_file),
+                self.manifest["vendoring"]["vendor-directory"],
+            )
+        elif "patches" in self.manifest["vendoring"]:
+            # Remind the user
+            self.log(
+                logging.CRITICAL,
+                "vendor",
+                {},
+                "Patches present in manifest!!! Please run "
+                "'./mach vendor --patch-mode only' after commiting changes.",
+            )
+
         if self.should_perform_step("hg-add"):
             self.logInfo({}, "Registering changes with version control.")
             self.repository.add_remove_files(
@@ -293,16 +310,6 @@ class VendorManifest(MozbuildObject):
             self.logInfo({}, "Skipping update of moz.build files")
 
         self.logInfo({"rev": new_revision}, "Updated to '{rev}'.")
-
-        if "patches" in self.manifest["vendoring"]:
-            # Remind the user
-            self.log(
-                logging.CRITICAL,
-                "vendor",
-                {},
-                "Patches present in manifest!!! Please run "
-                "'./mach vendor --patch-mode only' after commiting changes.",
-            )
 
     def process_regular(self, new_revision, timestamp, ignore_modified, add_to_exports):
         is_individual = False
