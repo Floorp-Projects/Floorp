@@ -1058,24 +1058,28 @@ impl<A, B> ArcUnion<A, B> {
     #[inline]
     pub fn borrow(&self) -> ArcUnionBorrow<A, B> {
         if self.is_first() {
-            let ptr = self.p.as_ptr() as *const A;
-            let borrow = unsafe { ArcBorrow::from_ref(&*ptr) };
+            let ptr = self.p.as_ptr() as *const ArcInner<A>;
+            let borrow = unsafe { ArcBorrow::from_ref(&(*ptr).data) };
             ArcUnionBorrow::First(borrow)
         } else {
-            let ptr = ((self.p.as_ptr() as usize) & !0x1) as *const B;
-            let borrow = unsafe { ArcBorrow::from_ref(&*ptr) };
+            let ptr = ((self.p.as_ptr() as usize) & !0x1) as *const ArcInner<B>;
+            let borrow = unsafe { ArcBorrow::from_ref(&(*ptr).data) };
             ArcUnionBorrow::Second(borrow)
         }
     }
 
     /// Creates an `ArcUnion` from an instance of the first type.
     pub fn from_first(other: Arc<A>) -> Self {
-        unsafe { Self::new(Arc::into_raw(other) as *mut _) }
+        let union = unsafe { Self::new(other.ptr() as *mut _) };
+        mem::forget(other);
+        union
     }
 
     /// Creates an `ArcUnion` from an instance of the second type.
     pub fn from_second(other: Arc<B>) -> Self {
-        unsafe { Self::new(((Arc::into_raw(other) as usize) | 0x1) as *mut _) }
+        let union = unsafe { Self::new(((other.ptr() as usize) | 0x1) as *mut _) };
+        mem::forget(other);
+        union
     }
 
     /// Returns true if this `ArcUnion` contains the first type.
