@@ -17,7 +17,7 @@ Building Firefox with symbols
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There is a single configure option to enable building with symbols on
-all platforms. This is enabled by default so unless you have explcitly
+all platforms. This is enabled by default so unless you have explicitly
 disabled it your build you should include symbols.
 
 ::

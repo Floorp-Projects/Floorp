@@ -115,7 +115,7 @@ def test_cli_run_with_wrong_linters(run, capfd):
     run(["-l", "external", "-l", "foobar"])
     out, err = capfd.readouterr()
 
-    # Check if it identifes foobar as invalid linter
+    # Check if it identifies foobar as invalid linter
     assert "A failure occurred in the foobar linter." in out
 
     # Check for exception message

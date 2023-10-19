@@ -8,7 +8,7 @@ conventions include:
 
 -  Consistency makes measurement of processes simpler across the
    organization
--  Consistency makes it easier to write re-usable process tools
+-  Consistency makes it easier to write reusable process tools
 -  Consistency increases clarity for those than need to work across
    different repositories and bug trackers
 -  Consistency reduces friction around engineering mobility between

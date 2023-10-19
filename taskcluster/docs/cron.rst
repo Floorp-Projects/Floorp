@@ -11,7 +11,7 @@ In the root of the Gecko directory, you will find `.cron.yml`.  This defines
 the periodic tasks ("cron jobs") run for Gecko.  Each specifies a name, what to
 do, and some parameters to determine when the cron job should occur.
 
-See `the scema <https://hg.mozilla.org/ci/ci-configuration/file/tip/build-decision/src/build_decision/cron/schema.yml>`_
+See `the schema <https://hg.mozilla.org/ci/ci-configuration/file/tip/build-decision/src/build_decision/cron/schema.yml>`_
 for details on the format and meaning of this file.
 
 How It Works

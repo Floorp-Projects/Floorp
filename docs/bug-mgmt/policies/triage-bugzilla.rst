@@ -68,7 +68,7 @@ Firefox::General and Toolkit::General
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Bugs in Firefox::General are fitted with Bug Bug’s model to see if
-there’s another component with a high liklihood of fit, and if a
+there’s another component with a high likelihood of fit, and if a
 threshold confidence is achieved, the bug is moved to that component.
 
 Members of the community also review bugs in this component and try to

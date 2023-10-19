@@ -99,7 +99,7 @@ Then, there is two ways to communicate with the other targets:
 
   * Use `Target.attachToTarget({ flatten: true })` and include `sessionId` in CDP packets
     This requires a special client, which will use the `sessionId` returned by `Target.attachToTarget()` in order to spawn a distinct client instance.
-    This client will re-use the same WebSocket connection, but every single CDP packet will contain an additional `sessionId` attribute.
+    This client will reuse the same WebSocket connection, but every single CDP packet will contain an additional `sessionId` attribute.
     This helps distinguish packets which relate to the original target as well as the multiple additional targets you may attach to.
 
 In both cases, `Target.attachToTarget()` is special as it will spawn `cdp/session/TabSession` for the tab you are attaching to.

@@ -30,7 +30,7 @@ ProfilerParent
   The main profiler machinery is installed in the parent process. It uses IPC to
   communicate to the child processes. The PProfiler is the actor which is used
   to communicate across processes to coordinate things. See `ProfilerParent.h`_. The
-  ProfilerParent uses the DestroyReleasedChunksAtOrBefore meessage to control the
+  ProfilerParent uses the DestroyReleasedChunksAtOrBefore message to control the
   overall chunk limit.
 
 ProfilerChild

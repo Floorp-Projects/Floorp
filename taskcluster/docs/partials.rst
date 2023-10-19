@@ -53,7 +53,7 @@ scan the 'from_mar' and 'to_mar', download the tools, and run ``make_incremental
 ``tools/update-packaging``.
 
 If a scope is given for a set of temporary S3 credentials, the task will use a caching script,
-to allow re-use of the diffs made for larger files. Some of the larger files are not localised,
+to allow reuse of the diffs made for larger files. Some of the larger files are not localised,
 and this allows us to save a lot of compute time.
 
 For Releases

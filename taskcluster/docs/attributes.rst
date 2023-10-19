@@ -257,7 +257,7 @@ toolchain-command
 =================
 An extra attribute used to communicate to the build system bootstrap code the
 command used to build the toolchain. This is useful because the commands are
-formatted differently depending on the worker type, sometimes unconveniently
+formatted differently depending on the worker type, sometimes inconveniently
 to parse afterwards.
 
 always_target

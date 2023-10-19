@@ -2,7 +2,7 @@ Presets
 =======
 
 Some selectors, such as ``fuzzy`` and ``syntax``, allow saving and loading presets from a file. This is a
-good way to re-use a selection, either at a later date or by sharing with others. Look for a
+good way to reuse a selection, either at a later date or by sharing with others. Look for a
 'preset' section in ``mach <selector> --help`` to determine whether the selector supports this
 functionality.
 

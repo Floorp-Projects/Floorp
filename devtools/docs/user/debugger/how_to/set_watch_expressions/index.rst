@@ -12,7 +12,7 @@ The screenshot below shows the *Watch expressions* panel with a number of expres
 
 To add a watch expression click the **+** button in the top right corner of the panel. Then type the expression into the text entry field that appears at the bottom of the panel, and press :kbd:`Enter` to save it. The expression will be evaluated when you save, when you step through the code, or when you select the *Refresh* icon (next to **+**).
 
-You can enter any valid expression into the watch, and even declare new "watch" variables and re-use them. For example, ``mywatchvar1 = 3`` and ``mywatchvar2 = mywatchvar1 + 2`` will evaluate ``mywatchvar2`` as 5. You can also declare an expression that modifies a variable value in the code, and this will be re-evaluated whenever you step through the code or refresh the watch expression.
+You can enter any valid expression into the watch, and even declare new "watch" variables and reuse them. For example, ``mywatchvar1 = 3`` and ``mywatchvar2 = mywatchvar1 + 2`` will evaluate ``mywatchvar2`` as 5. You can also declare an expression that modifies a variable value in the code, and this will be re-evaluated whenever you step through the code or refresh the watch expression.
 
 .. warning::
 

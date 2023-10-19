@@ -60,7 +60,7 @@ Declarations within a namespace look like:
 
 The four types of objects that can be defined inside a namespace are:
 
-- **types**: A type is a re-usable schema fragment.  A common use of types
+- **types**: A type is a reusable schema fragment.  A common use of types
   is to define in one place an object with a particular set of typed fields
   that is used in multiple places in an API.
 

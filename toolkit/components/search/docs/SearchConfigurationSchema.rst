@@ -535,7 +535,7 @@ In this example, for normal mode:
 
 In private browsing mode:
 
-    - engine1@ext is default in the US region, and all other regions execpt for GB and FR
+    - engine1@ext is default in the US region, and all other regions except for GB and FR
     - engine2@ext is default in only the GB region
     - engine3@ext is never default anywhere
     - engine4@ext is default in the FR region.

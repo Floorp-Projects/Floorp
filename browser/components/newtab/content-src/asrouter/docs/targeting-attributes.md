@@ -4,7 +4,7 @@ When you create ASRouter messages such as snippets, contextual feature recommend
 
 Targeting information must be captured in [an expression](./targeting-guide.md) that has access to the following attributes. You may combine and compare any of these attributes as needed.
 
-Please note that some targeting attributes require stricter controls on the telemetry than can be colleted, so when in doubt, ask for review.
+Please note that some targeting attributes require stricter controls on the telemetry than can be collected, so when in doubt, ask for review.
 
 ## Available attributes
 

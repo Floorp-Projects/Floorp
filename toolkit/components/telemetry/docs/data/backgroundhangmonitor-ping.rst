@@ -92,7 +92,7 @@ the stack will consist only of label stack and chrome JS script frames.
 A single frame in the stack is either a raw string, representing a label stack
 or chrome JS script frame, or a native stack frame.
 
-Label stack frames contain the static string from all insances of the
+Label stack frames contain the static string from all instances of the
 AUTO_PROFILER_LABEL* macros. Additionally, dynamic strings are collected from
 all usages of the AUTO_PROFILER_LABEL_DYNAMIC*_NONSENSITIVE macros. The dynamic
 strings are simply appended to the static strings after a space character.

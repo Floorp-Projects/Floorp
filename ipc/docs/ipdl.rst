@@ -55,7 +55,7 @@ just needs endpoints to be bound judiciously at runtime.  The example in
 :ref:`Connecting With Other Processes` shows one way this can be done.  It
 also shows that, without proper plain-language documentation of *all* of the
 ways endpoints are configured, this can quickly lead to unmaintainable code.
-Be sure to document your endpoint bindings throroughly!!!
+Be sure to document your endpoint bindings thoroughly!!!
 
 .. _Chromium Mojo: https://chromium.googlesource.com/chromium/src/+/refs/heads/main/mojo/core/README.md#Port
 

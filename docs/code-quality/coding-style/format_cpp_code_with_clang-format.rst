@@ -78,7 +78,7 @@ the ``--assume-filename <path>`` argument.
 Configuring the clang-format commit hook
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To run clang-format at commit phase, run ``mach boostrap`` or just add
+To run clang-format at commit phase, run ``mach bootstrap`` or just add
 the following line in the ``hgrc`` file:
 
 .. code:: ini

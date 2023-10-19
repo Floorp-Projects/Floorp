@@ -77,4 +77,4 @@ In addition to the `data collection review <https://wiki.mozilla.org/Firefox/Dat
    - Does the submitted data answer the posed product questions?
    - Does the shape of the data allow to answer the questions efficiently?
    - Is the data limited to what's needed to answer the questions?
-   - Does the data use common formats? (i.e. can we re-use tooling or analysis know-how)
+   - Does the data use common formats? (i.e. can we reuse tooling or analysis know-how)

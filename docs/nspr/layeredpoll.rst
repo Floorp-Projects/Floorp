@@ -22,7 +22,7 @@ of the :ref:`PRPollDesc` array that has a non-NULL :ref:`PRFileDesc` and whose
 ``poll() method``.
 The ``poll()`` method is one of the vector contained in the
 :ref:`PRIOMethods` table. In the case of layered I/O, the elements (the
-methods) of the methods table may be overridden by the implementor of
+methods) of the methods table may be overridden by the implementer of
 that layer. The layers are then *stacked.* I/O using that *stack* will
 call through the method at the top layer, and each layer may make
 altering decisions regarding how the I/O operation should proceed.
@@ -55,7 +55,7 @@ methods table. One can get a copy of default methods by calling
 :ref:`PR_GetDefaultIOMethods` These methods simply pass all calls
 through the layer on to the next lower layer of the stack.
 
-A layer implementor might copy the elements of the ``PRIOMethods``
+A layer implementer might copy the elements of the ``PRIOMethods``
 acquired from this function into a methods table of its own, then
 override just those methods of interest. *Usually* (with only a single
 exception) a layered method will perform its design duties and then call

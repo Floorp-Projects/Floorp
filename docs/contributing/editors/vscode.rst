@@ -31,7 +31,7 @@ Getting setup
 -------------
 
 Close `VS Code` if it is already open, then build the configuration for `VS Code`
-by simplying running from the terminal:
+by simply running from the terminal:
 
 .. code::
 
