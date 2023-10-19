@@ -78,7 +78,9 @@ static bool RestartApplication() {
   if (pid == -1) {
     free(argv);
     return false;
-  } else if (pid == 0) {
+  }
+
+  if (pid == 0) {
     (void)execv(argv[0], argv);
     _exit(1);
   }
