@@ -181,6 +181,23 @@ linux64-custom-v8:
         ]
         toolchain-artifact: public/build/d8.tar.zst
 
+macosx64-xz:
+    description: "xz development library"
+    worker-type: b-osx-1015
+    treeherder:
+        symbol: TM(xz)
+    worker:
+        max-run-time: 30000
+    run:
+        script: build-xz.sh
+        toolchain-artifact: public/build/xz.tar.zst
+    fetches:
+        fetch:
+            - xz-5.4.4
+        toolchain:
+            - macosx64-clang-toolchain
+            - macosx64-sdk-toolchain
+
 macosx64-custom-car:
     description: "Custom chromium-as-release build for mac"
     worker-type: b-osx-1015
