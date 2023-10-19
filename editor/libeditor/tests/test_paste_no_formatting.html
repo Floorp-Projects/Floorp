@@ -31,10 +31,6 @@ add_task(async function test_paste_formatted() {
   window.getSelection().selectAllChildren(document.getElementById("source"));
   synthesizeKey("c", { accelKey: true });
 
-  const isHeadless = await SpecialPowers.spawnChrome([], () => {
-          return Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless;
-        });
-
   function doKey(element, withShiftKey)
   {
     let inputEventPromise = new Promise(resolve => {
@@ -99,7 +95,7 @@ add_task(async function test_paste_formatted() {
     doKey(editable, false);
     is(
       editable.innerHTML,
-      isHeadless ? expectedText : expectedHTML,
+      expectedHTML,
       "test_pasteWithFormatIntoEditableArea: Pasting with format should work as expected"
     );
     editable.innerHTML = innerHTMLBeforeTest;
@@ -196,7 +192,7 @@ add_task(async function test_paste_formatted() {
   let result = await pastePromise;
   is(result.text, expectedText, "paste text into non-editable");
   is(result.html,
-     isHeadless ? "" : htmlPrefix + expectedHTML + htmlPostfix,
+     htmlPrefix + expectedHTML + htmlPostfix,
      "paste html into non-editable");
 
   // Unformatted paste into non-editable area
