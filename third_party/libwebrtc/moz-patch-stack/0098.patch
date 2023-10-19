@@ -1,0 +1,31 @@
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 18 Oct 2023 17:25:00 +0000
+Subject: Bug 1857862 - (fix-32a8169a65) Don't call non-constexpr
+ RTC_CHECK_NOTREACHED from constexpr VideoFrameTypeToString under gcc-8.
+ r=webrtc-reviewers,mjf
+
+Differential Revision: https://phabricator.services.mozilla.com/D191308
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8a4449ba24fa3192b44863ed8ba96f6f94a6e88d
+---
+ api/video/video_frame_type.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/api/video/video_frame_type.h b/api/video/video_frame_type.h
+index 9079829ff8..3665a80cd8 100644
+--- a/api/video/video_frame_type.h
++++ b/api/video/video_frame_type.h
+@@ -34,7 +34,11 @@ inline constexpr absl::string_view VideoFrameTypeToString(
+     case VideoFrameType::kVideoFrameDelta:
+       return "delta";
+   }
++// Mozilla:
++//   gcc-8 complains about a constexpr function calling a non-constexpr ditto.
++#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 9)
+   RTC_CHECK_NOTREACHED();
++#endif
+   return "";
+ }
+ 
+-- 
+2.34.1
+
