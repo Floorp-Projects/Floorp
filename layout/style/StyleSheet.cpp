@@ -1155,34 +1155,14 @@ already_AddRefed<StyleSheet> StyleSheet::CreateEmptyChildSheet(
   return child.forget();
 }
 
-// We disable parallel stylesheet parsing if any of the following three
-// conditions hold:
-//
-// (1) The pref is off.
-// (2) The browser is recording CSS errors (which parallel parsing can't
-//     handle).
-// (3) The stylesheet is a chrome stylesheet, since those can use
-//     -moz-bool-pref, which needs to access the pref service, which is not
-//     threadsafe.
+// We disable parallel stylesheet parsing if the browser is recording CSS errors
+// (which parallel parsing can't handle).
 static bool AllowParallelParse(css::Loader& aLoader, URLExtraData* aUrlData) {
-  // If the browser is recording CSS errors, we need to use the sequential path
-  // because the parallel path doesn't support that.
   Document* doc = aLoader.GetDocument();
   if (doc && css::ErrorReporter::ShouldReportErrors(*doc)) {
     return false;
   }
-
-  // If this is a chrome stylesheet, it might use -moz-bool-pref, which needs to
-  // access the pref service, which is not thread-safe. We could probably expose
-  // the relevant booleans as thread-safe var caches if we needed to, but
-  // parsing chrome stylesheets in parallel is unlikely to be a win anyway.
-  //
-  // Note that UA stylesheets can also use -moz-bool-pref, but those are always
-  // parsed sync.
-  if (aUrlData->ChromeRulesEnabled()) {
-    return false;
-  }
-
+  // Otherwise we can parse in parallel.
   return true;
 }
 

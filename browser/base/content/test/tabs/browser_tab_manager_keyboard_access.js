@@ -12,8 +12,7 @@ add_task(async function test_open_tabmanager_keyboard() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.tabmanager.enabled", true]],
   });
-  let newWindow =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
   let elem = newWindow.document.getElementById("alltabs-button");
 
   // Borrowed from forceFocus() in the keyboard directory head.js

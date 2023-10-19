@@ -2235,6 +2235,7 @@ STATIC_ATOMS = [
     Atom("initialBrowsingContextGroupId", "initialBrowsingContextGroupId"),
     Atom("initiallyactive", "initiallyactive"),
     # Names for system metrics.
+    Atom("_moz_bool_pref", "-moz-bool-pref"),
     Atom("_moz_scrollbar_start_backward", "-moz-scrollbar-start-backward"),
     Atom("_moz_scrollbar_start_forward", "-moz-scrollbar-start-forward"),
     Atom("_moz_scrollbar_end_backward", "-moz-scrollbar-end-backward"),
@@ -2394,10 +2395,11 @@ STATIC_ATOMS = [
     Atom("onplaybackstatechange", "onplaybackstatechange"),
     Atom("onpositionstatechange", "onpositionstatechange"),
     Atom("onsupportedkeyschange", "onsupportedkeyschange"),
-    Atom("_moz_popover_enabled", "-moz-popover-enabled"),
-    # media query for MathML Core's implementation of mi
-    Atom("_moz_mathml_core_mi", "-moz-mathml-core-mi"),
-    Atom("_moz_always_underline_links", "-moz-always-underline-links"),
+    # Media query prefs for UA sheets.
+    Atom("dom_element_popover_enabled", "dom.element.popover.enabled"),
+    Atom("mathml_legacy_mathvariant_attribute_disabled", "mathml.legacy_mathvariant_attribute.disabled"),
+    Atom("layout_css_always_underline_links", "layout.css.always_underline_links"),
+    Atom("layout_css_cached_scrollbar_styles_enabled", "layout.css.cached-scrollbar-styles.enabled"),
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),

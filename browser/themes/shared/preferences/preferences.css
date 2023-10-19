@@ -245,7 +245,8 @@ checkbox {
   font-weight: var(--font-weight-bold);
 }
 
-@supports not -moz-bool-pref("browser.migrate.preferences-entrypoint.enabled") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media not (-moz-bool-pref: "browser.migrate.preferences-entrypoint.enabled") {
   #dataMigrationGroup {
     display: none;
   }

@@ -273,9 +273,6 @@ html|input.tree-input {
   }
 }
 
-/* Stylelint doesn't cope with the Level 4 media query here.
- * Filed as https://github.com/stylelint/stylelint/issues/6834 */
-/* stylelint-disable-next-line media-feature-name-no-unknown */
 @media (-moz-platform: macos) and (not (prefers-contrast)) {
     /* We show a `SelectedItem` background on selected rows, so we do not need the
        dotted outline in that case. For users who have Full Keyboard Access

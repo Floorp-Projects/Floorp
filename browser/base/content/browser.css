@@ -133,7 +133,8 @@ panelview:not([visible]) {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-@supports not -moz-bool-pref("browser.tabs.tabmanager.enabled") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media not (-moz-bool-pref: "browser.tabs.tabmanager.enabled") {
   #tabbrowser-tabs:not([overflow], [hashiddentabs]) ~ #alltabs-button {
     display: none;
   }

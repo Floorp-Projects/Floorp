@@ -1639,9 +1639,30 @@ const nsTArray<Element*>* Gecko_ShadowRoot_GetElementsWithId(
   return aShadowRoot->GetAllElementsForId(aId);
 }
 
-bool Gecko_GetBoolPrefValue(const char* aPrefName) {
+bool Gecko_ComputeBoolPrefMediaQuery(nsAtom* aPref) {
   MOZ_ASSERT(NS_IsMainThread());
-  return Preferences::GetBool(aPrefName);
+  // This map leaks until shutdown, but that's fine, all the values are
+  // controlled by us so it's not expected to be big.
+  static StaticAutoPtr<nsTHashMap<RefPtr<nsAtom>, bool>> sRegisteredPrefs;
+  if (!sRegisteredPrefs) {
+    sRegisteredPrefs = new nsTHashMap<RefPtr<nsAtom>, bool>();
+    ClearOnShutdown(&sRegisteredPrefs);
+  }
+  return sRegisteredPrefs->LookupOrInsertWith(aPref, [&] {
+    nsAutoAtomCString prefName(aPref);
+    Preferences::RegisterCallback(
+        [](const char* aPrefName, void*) {
+          if (sRegisteredPrefs) {
+            RefPtr<nsAtom> name = NS_Atomize(nsDependentCString(aPrefName));
+            sRegisteredPrefs->InsertOrUpdate(name,
+                                             Preferences::GetBool(aPrefName));
+          }
+          LookAndFeel::NotifyChangedAllWindows(
+              widget::ThemeChangeKind::MediaQueriesOnly);
+        },
+        prefName);
+    return Preferences::GetBool(prefName.get());
+  });
 }
 
 bool Gecko_IsFontFormatSupported(StyleFontFaceSourceFormatKeyword aFormat) {

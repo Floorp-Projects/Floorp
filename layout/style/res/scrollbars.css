@@ -5,7 +5,8 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 /* Rules required for style caching of anonymous content scrollbar parts */
-@supports -moz-bool-pref("layout.css.cached-scrollbar-styles.enabled") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "layout.css.cached-scrollbar-styles.enabled") {
   :is(scrollcorner, resizer, scrollbar, scrollbarbutton, slider):where(:-moz-native-anonymous) {
     /* All scrollbar parts must not inherit any properties from the scrollable
      * element (except for visibility and pointer-events), for the anonymous

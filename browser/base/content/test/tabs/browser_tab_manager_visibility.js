@@ -11,8 +11,7 @@ const DUMMY_PAGE_PATH = "/browser/base/content/test/tabs/dummy_page.html";
 add_task(async function tab_manager_visibility_preference_on() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", true);
 
-  let newWindow =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,
@@ -34,8 +33,7 @@ add_task(async function tab_manager_visibility_preference_on() {
 add_task(async function tab_manager_visibility_preference_off() {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", false);
 
-  let newWindow =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let newWindow = await BrowserTestUtils.openNewBrowserWindow();
   await BrowserTestUtils.withNewTab(
     {
       gBrowser: newWindow.gBrowser,

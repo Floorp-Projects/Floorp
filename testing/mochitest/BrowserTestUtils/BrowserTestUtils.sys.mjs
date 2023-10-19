@@ -1062,19 +1062,6 @@ export var BrowserTestUtils = {
   },
 
   /**
-   * Clear the stylesheet cache and open a new window to ensure
-   * CSS @supports -moz-bool-pref(...) {} rules are correctly
-   * applied to the browser chrome.
-   *
-   * @param {Object} options See BrowserTestUtils.openNewBrowserWindow
-   * @returns {Promise} Resolves with the new window once it is loaded.
-   */
-  async openNewWindowWithFlushedCacheForMozSupports(options) {
-    ChromeUtils.clearStyleSheetCache();
-    return BrowserTestUtils.openNewBrowserWindow(options);
-  },
-
-  /**
    * Open a new browser window from an existing one.
    * This relies on OpenBrowserWindow in browser.js, and waits for the window
    * to be completely loaded before resolving.

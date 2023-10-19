@@ -19,8 +19,7 @@ add_setup(async function () {
  * Tests that middle-clicking on a tab in the Tab Manager will close it.
  */
 add_task(async function test_tab_manager_close_middle_click() {
-  let win =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   win.gTabsPanel.init();
   await addTabTo(win.gBrowser, URL1);
   await addTabTo(win.gBrowser, URL2);
@@ -53,8 +52,7 @@ add_task(async function test_tab_manager_close_middle_click() {
  * will close it.
  */
 add_task(async function test_tab_manager_close_button() {
-  let win =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  let win = await BrowserTestUtils.openNewBrowserWindow();
   win.gTabsPanel.init();
   await addTabTo(win.gBrowser, URL1);
   await addTabTo(win.gBrowser, URL2);

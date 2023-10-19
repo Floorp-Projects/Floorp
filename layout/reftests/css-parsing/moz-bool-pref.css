@@ -11,7 +11,7 @@
   background: green;
 }
 
-@supports -moz-bool-pref("testing.supports.moz-bool-pref") {
+@media (-moz-bool-pref: "testing.supports.moz-bool-pref") {
   .enabled {
     background: green;
   }
