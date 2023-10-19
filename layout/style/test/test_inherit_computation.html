@@ -159,8 +159,8 @@ function test_property(property)
 }
 
 for (var prop in gCSSProperties) {
-  // Skip -moz-binding because it effectively drops the frame.
-  if (prop == "-moz-binding") {
+  // Skip zoom because it affects other props.
+  if (prop == "zoom") {
     continue;
   }
   var info = gCSSProperties[prop];
