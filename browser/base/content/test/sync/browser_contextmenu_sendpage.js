@@ -109,7 +109,16 @@ add_task(async function test_link_contextmenu() {
     "context-bookmarklink",
     "context-savelink",
     "context-savelinktopocket",
-    "context-copylink",
+    "context-copylink"
+  );
+
+  if (
+    Services.prefs.getBoolPref("privacy.query_stripping.strip_on_share.enabled")
+  ) {
+    expectedArray.push("context-stripOnShareLink");
+  }
+
+  expectedArray.push(
     "context-sendlinktodevice",
     "context-sep-sendlinktodevice",
     "context-searchselect",
