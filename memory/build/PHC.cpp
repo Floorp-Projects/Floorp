@@ -109,6 +109,7 @@
 #  include <unistd.h>
 #endif
 
+#include "mozjemalloc.h"
 #include "replace_malloc.h"
 #include "FdPrintf.h"
 #include "Mutex.h"
@@ -325,17 +326,6 @@ static const size_t kAllPagesJemallocSize = kAllPagesSize - kPageSize;
 
 // The default state for PHC.  Either Enabled or OnlyFree.
 #define DEFAULT_STATE mozilla::phc::OnlyFree
-
-// The junk value used to fill new allocation in debug builds. It's same value
-// as the one used by mozjemalloc. PHC applies it unconditionally in debug
-// builds. Unlike mozjemalloc, PHC doesn't consult the MALLOC_OPTIONS
-// environment variable to possibly change that behaviour.
-//
-// Also note that, unlike mozjemalloc, PHC doesn't have a poison value for freed
-// allocations because freed allocations are protected by OS page protection.
-#ifdef DEBUG
-const uint8_t kAllocJunk = 0xe4;
-#endif
 
 // The maximum time.
 static const Time kMaxTime = ~(Time(0));
