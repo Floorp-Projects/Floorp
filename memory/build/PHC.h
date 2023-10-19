@@ -96,8 +96,11 @@ class AddrInfo {
 
 // Global instance that is retrieved by the process generating the crash report
 extern AddrInfo gAddrInfo;
-
 }  // namespace phc
 }  // namespace mozilla
+
+struct ReplaceMallocBridge;
+
+ReplaceMallocBridge* GetPHCBridge();
 
 #endif /* PHC_h */
