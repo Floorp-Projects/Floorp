@@ -8,6 +8,7 @@
 
 #include <windows.h>
 
+#include "mozilla/NativeNt.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsDllInterceptor.h"
 
@@ -53,12 +54,21 @@ uintptr_t WINAPI patched_TF_Notify(UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 bool WindowsMsctfInitialization() {
   // Only proceed if we detect ZoneAlarm Anti-Keylogger (bug 1777960)
-  if (!::GetModuleHandleW(L"icsak.dll")) {
+  HMODULE icsak = ::GetModuleHandleW(L"icsak.dll");
+  if (!icsak) {
     return true;
   }
 
   // Only proceed if msctf.dll uses the new lParam convention
   if (!IsWin1122H2OrLater()) {
+    return true;
+  }
+
+  // Only proceed if icsak.dll is in version 1.5.393.2181 or older
+  nt::PEHeaders icsakHeaders{icsak};
+  uint64_t icsakVersion{};
+  if (!icsakHeaders || !icsakHeaders.GetVersionInfo(icsakVersion) ||
+      icsakVersion > 0x0001000501890885) {
     return true;
   }
 
