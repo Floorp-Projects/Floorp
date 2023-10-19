@@ -1,0 +1,208 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * "address-capture" prefix is used for cases where the style should apply
+ * to "save address doorhanger", "update address doorhanger", and "edit address doorhanger"
+ *
+ * "address-save" prefix is used for "save address doorhanger"
+ * "address-update" prefix is used for "update address doorhanger"
+ * "address-edit" prefix is used for "edit address doorhanger"
+ * "address-save-update" prefix is used for "save address doorhanger" and "update address doorhanger"
+ */
+
+.address-capture-notification {
+  /* Overwrite margin that we don't need */
+  :is(popupnotificationcontent, .panel-footer) {
+    margin-top: 0;
+  }
+
+  description {
+    margin: 0;
+  }
+
+  .popup-notification-body-container {
+    padding-block: 0;
+  }
+
+  .popup-notification-body {
+    width: 25.8em;
+  }
+
+  /* define the default text format for the address capture doorhanger */
+  :is(p, textarea) {
+    margin-block: 0;
+    line-height: 1.5;
+  }
+
+  menulist {
+    padding-block: 6px;
+    padding-inline: 16px 12px;
+  }
+
+  toolbarbutton {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 4px;
+    margin: 0;
+    padding: 0;
+
+    > .toolbarbutton-icon {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 4px;
+      padding: 8px;
+    }
+
+    &:hover {
+      background-color: var(--panel-item-hover-bgcolor);
+
+      &:active {
+        background-color: var(--panel-item-active-bgcolor);
+      }
+    }
+  }
+
+  .popup-notification-primary-button {
+    color: var(--button-primary-color);
+    background-color: var(--button-primary-bgcolor);
+
+    &:hover {
+      background-color: var(--button-primary-hover-bgcolor);
+
+      &:active {
+        background-color: var(--button-primary-active-bgcolor);
+      }
+    }
+  }
+}
+
+.address-capture-header {
+  margin-top: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: row;
+
+  > p {
+    padding-block: 8px 4px;
+    font-weight: var(--font-weight-bold);
+  }
+}
+
+
+.address-save-update-notification-content > .address-capture-content {
+  padding-inline: 4px 0;
+}
+
+.address-capture-description,
+.address-save-update-row-container,
+.address-edit-row-container {
+  margin-bottom: 16px;
+}
+
+.address-save-update-row-container {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+
+  > image {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+  }
+}
+
+.address-update-text-diff-added,
+.address-update-text-diff-removed {
+  font-weight: var(--font-weight-bold);
+  color: light-dark(rgba(2, 80, 187, 1), rgba(128, 235, 255, 1));
+  background: light-dark(rgba(0, 96, 223, 0.08), rgba(0, 221, 255, 0.14));
+}
+
+.address-update-text-diff-removed {
+  text-decoration: line-through;
+}
+
+#address-capture-edit-address-button {
+  list-style-image: url("chrome://browser/skin/formautofill/icon-address-edit.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-start: auto;
+}
+
+#address-capture-menu-button {
+  list-style-image: url("chrome://browser/skin/formautofill/icon-doorhanger-menu.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+
+  margin-inline-start: auto;
+}
+
+.address-capture-img-address {
+  list-style-image: url("chrome://browser/skin/formautofill/icon-capture-address-fields.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.address-capture-img-email {
+  list-style-image: url("chrome://browser/skin/formautofill/icon-capture-email-fields.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.address-edit-row-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.address-edit-input-container {
+  display: flex;
+  flex-direction: column;
+
+  > label {
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
+}
+
+
+/* Default size for input fields in address edit doorhanger */
+.address-edit-notification-content {
+  :is(input, textarea) {
+    width: 15.8em;
+    margin: 0;
+  }
+
+  menulist {
+    width: 17em;
+    height: 2.46em;
+    margin: 0;
+  }
+}
+
+#address-edit-street-address-input {
+  height: 4.6em;
+  resize: none;
+}
+
+#address-edit-postal-code-input,
+#address-edit-address-level2-input,
+#address-edit-address-level3-input {
+  width: 6.87em;
+}
+
+#address-edit-address-level1-input {
+  width: 8.1em;
+}
+
+#address-edit-tel-input {
+  width: 10.6em;
+}
+
+#address-edit-email-input {
+  width: 12em;
+}
