@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">권한에 대해 더 알아보기</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">평가</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">이 부가 기능의 상세 정보</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">설정</string>
     <!-- Indicates the add-on is enabled. -->

@@ -245,4 +245,6 @@
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>A pagina %1$s a l\'é segnalâ comme \'n scito inganevole a l\'é stæta blocâ da-e teu preferense de seguessa.</p>]]></string>
 
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Verscion segua do scito no disponibile</string>
     </resources>
