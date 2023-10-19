@@ -38,7 +38,7 @@ class Nyx {
   void release(uint32_t iterations = 1);
   void handle_event(const char* type, const char* file, int line,
                     const char* reason);
-  void dump_file(void* buffer, size_t len, char* filename);
+  void dump_file(void* buffer, size_t len, const char* filename);
 
  private:
   std::atomic<bool> mInited;
