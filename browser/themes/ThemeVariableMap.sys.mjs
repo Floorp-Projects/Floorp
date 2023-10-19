@@ -50,18 +50,6 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--toolbar-bgcolor",
-    {
-      lwtProperty: "toolbarColor",
-    },
-  ],
-  [
-    "--toolbar-color",
-    {
-      lwtProperty: "toolbar_text",
-    },
-  ],
-  [
     "--lwt-tabs-border-color",
     {
       lwtProperty: "toolbar_top_separator",
