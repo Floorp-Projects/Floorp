@@ -358,18 +358,8 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
 
   UndefineCaretBidiLevel();
 
-  if (aInsertionString.IsEmpty() &&
-      aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
-    // HACK: this is a fix for bug 19395
-    // I can't outlaw all empty insertions
-    // because IME transaction depend on them
-    // There is more work to do to make the
-    // world safe for IME.
-    return EditActionResult::CanceledResult();
-  }
-
   nsAutoString insertionString(aInsertionString);
-  if (mMaxTextLength >= 0) {
+  if (!aInsertionString.IsEmpty() && mMaxTextLength >= 0) {
     Result<EditActionResult, nsresult> result =
         MaybeTruncateInsertionStringForMaxLength(insertionString);
     if (MOZ_UNLIKELY(result.isErr())) {
@@ -408,6 +398,16 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
           "EditorBase::DeleteSelectionAsSubAction(eNone, eNoStrip) failed");
       return Err(rv);
     }
+  }
+
+  if (aInsertionString.IsEmpty() &&
+      aEditSubAction != EditSubAction::eInsertTextComingFromIME) {
+    // HACK: this is a fix for bug 19395
+    // I can't outlaw all empty insertions
+    // because IME transaction depend on them
+    // There is more work to do to make the
+    // world safe for IME.
+    return EditActionResult::CanceledResult();
   }
 
   // XXX Why don't we cancel here?  Shouldn't we do this first?
