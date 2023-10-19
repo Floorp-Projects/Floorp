@@ -4537,10 +4537,11 @@ struct BaseAllocator {
   arena_t* mArena;
 };
 
-#define MALLOC_DECL(name, return_type, ...)                               \
-  return_type MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
-    BaseAllocator allocator(nullptr);                                     \
-    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));              \
+#define MALLOC_DECL(name, return_type, ...)                  \
+  inline return_type MozJemalloc::name(                      \
+      ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {              \
+    BaseAllocator allocator(nullptr);                        \
+    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #include "malloc_decls.h"
@@ -4673,7 +4674,7 @@ inline void* MozJemalloc::valloc(size_t aSize) {
 // Begin non-standard functions.
 
 // This was added by Mozilla for use by SQLite.
-size_t MozJemalloc::malloc_good_size(size_t aSize) {
+inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
   if (aSize <= gMaxLargeClass) {
     // Small or large
     aSize = SizeClass(aSize).Size();
@@ -4687,12 +4688,12 @@ size_t MozJemalloc::malloc_good_size(size_t aSize) {
   return aSize;
 }
 
-size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
+inline size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
   return AllocInfo::GetValidated(aPtr).Size();
 }
 
-void MozJemalloc::jemalloc_stats_internal(jemalloc_stats_t* aStats,
-                                          jemalloc_bin_stats_t* aBinStats) {
+inline void MozJemalloc::jemalloc_stats_internal(
+    jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   size_t non_arena_mapped, chunk_header_size;
 
   if (!aStats) {
@@ -4970,7 +4971,7 @@ inline void MozJemalloc::moz_set_max_dirty_page_modifier(int32_t aModifier) {
 }
 
 #define MALLOC_DECL(name, return_type, ...)                          \
-  return_type MozJemalloc::moz_arena_##name(                         \
+  inline return_type MozJemalloc::moz_arena_##name(                  \
       arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
     BaseAllocator allocator(                                         \
         gArenas.GetById(aArenaId, /* IsPrivate = */ true));          \
@@ -5399,4 +5400,9 @@ MOZ_EXPORT void* _expand(void* aPtr, size_t newsize) {
 MOZ_EXPORT size_t _msize(void* aPtr) {
   return DefaultMalloc::malloc_usable_size(aPtr);
 }
+#endif
+
+#ifdef MOZ_PHC
+// Compile PHC and mozjemalloc together so that PHC can inline mozjemalloc.
+#  include "PHC.cpp"
 #endif

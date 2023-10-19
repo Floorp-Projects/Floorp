@@ -79,7 +79,7 @@ struct AlignedAllocator {
 // The MozJemalloc allocator
 struct MozJemalloc {
 #  define MALLOC_DECL(name, return_type, ...) \
-    static return_type name(__VA_ARGS__);
+    static inline return_type name(__VA_ARGS__);
 #  include "malloc_decls.h"
 };
 
@@ -90,16 +90,17 @@ struct MozJemallocPHC : public MozJemalloc {
 #    define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #    include "malloc_decls.h"
 
-  static int posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize) {
+  static inline int posix_memalign(void** aMemPtr, size_t aAlignment,
+                                   size_t aSize) {
     return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment,
                                                       aSize);
   }
 
-  static void* aligned_alloc(size_t aAlignment, size_t aSize) {
+  static inline void* aligned_alloc(size_t aAlignment, size_t aSize) {
     return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
   }
 
-  static void* valloc(size_t aSize) {
+  static inline void* valloc(size_t aSize) {
     return AlignedAllocator<memalign>::valloc(aSize);
   }
 

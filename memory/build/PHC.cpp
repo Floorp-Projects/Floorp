@@ -1301,7 +1301,7 @@ MOZ_ALWAYS_INLINE static void* PageMalloc(const Maybe<arena_id_t>& aArenaId,
                     : MozJemalloc::malloc(aReqSize));
 }
 
-void* MozJemallocPHC::malloc(size_t aReqSize) {
+inline void* MozJemallocPHC::malloc(size_t aReqSize) {
   return PageMalloc(Nothing(), aReqSize);
 }
 
@@ -1326,7 +1326,7 @@ MOZ_ALWAYS_INLINE static void* PageCalloc(const Maybe<arena_id_t>& aArenaId,
                     : MozJemalloc::calloc(aNum, aReqSize));
 }
 
-void* MozJemallocPHC::calloc(size_t aNum, size_t aReqSize) {
+inline void* MozJemallocPHC::calloc(size_t aNum, size_t aReqSize) {
   return PageCalloc(Nothing(), aNum, aReqSize);
 }
 
@@ -1455,7 +1455,7 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
                                   : MozJemalloc::realloc(aOldPtr, aNewSize));
 }
 
-void* MozJemallocPHC::realloc(void* aOldPtr, size_t aNewSize) {
+inline void* MozJemallocPHC::realloc(void* aOldPtr, size_t aNewSize) {
   return PageRealloc(Nothing(), aOldPtr, aNewSize);
 }
 
@@ -1519,7 +1519,7 @@ MOZ_ALWAYS_INLINE static void PageFree(const Maybe<arena_id_t>& aArenaId,
   }
 }
 
-void MozJemallocPHC::free(void* aPtr) { PageFree(Nothing(), aPtr); }
+inline void MozJemallocPHC::free(void* aPtr) { PageFree(Nothing(), aPtr); }
 
 // This handles memalign and moz_arena_memalign.
 MOZ_ALWAYS_INLINE static void* PageMemalign(const Maybe<arena_id_t>& aArenaId,
@@ -1540,11 +1540,11 @@ MOZ_ALWAYS_INLINE static void* PageMemalign(const Maybe<arena_id_t>& aArenaId,
                     : MozJemalloc::memalign(aAlignment, aReqSize));
 }
 
-void* MozJemallocPHC::memalign(size_t aAlignment, size_t aReqSize) {
+inline void* MozJemallocPHC::memalign(size_t aAlignment, size_t aReqSize) {
   return PageMemalign(Nothing(), aAlignment, aReqSize);
 }
 
-size_t MozJemallocPHC::malloc_usable_size(usable_ptr_t aPtr) {
+inline size_t MozJemallocPHC::malloc_usable_size(usable_ptr_t aPtr) {
   if (!maybe_init()) {
     return MozJemalloc::malloc_usable_size(aPtr);
   }
@@ -1580,8 +1580,8 @@ static size_t metadata_size() {
          MozJemalloc::malloc_usable_size(gMut);
 }
 
-void MozJemallocPHC::jemalloc_stats_internal(jemalloc_stats_t* aStats,
-                                             jemalloc_bin_stats_t* aBinStats) {
+inline void MozJemallocPHC::jemalloc_stats_internal(
+    jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   MozJemalloc::jemalloc_stats_internal(aStats, aBinStats);
 
   if (!maybe_init()) {
@@ -1628,8 +1628,8 @@ void MozJemallocPHC::jemalloc_stats_internal(jemalloc_stats_t* aStats,
   aStats->bookkeeping += bookkeeping;
 }
 
-void MozJemallocPHC::jemalloc_ptr_info(const void* aPtr,
-                                       jemalloc_ptr_info_t* aInfo) {
+inline void MozJemallocPHC::jemalloc_ptr_info(const void* aPtr,
+                                              jemalloc_ptr_info_t* aInfo) {
   if (!maybe_init()) {
     return MozJemalloc::jemalloc_ptr_info(aPtr, aInfo);
   }
@@ -1663,26 +1663,28 @@ void MozJemallocPHC::jemalloc_ptr_info(const void* aPtr,
 #endif
 }
 
-void* MozJemallocPHC::moz_arena_malloc(arena_id_t aArenaId, size_t aReqSize) {
+inline void* MozJemallocPHC::moz_arena_malloc(arena_id_t aArenaId,
+                                              size_t aReqSize) {
   return PageMalloc(Some(aArenaId), aReqSize);
 }
 
-void* MozJemallocPHC::moz_arena_calloc(arena_id_t aArenaId, size_t aNum,
-                                       size_t aReqSize) {
+inline void* MozJemallocPHC::moz_arena_calloc(arena_id_t aArenaId, size_t aNum,
+                                              size_t aReqSize) {
   return PageCalloc(Some(aArenaId), aNum, aReqSize);
 }
 
-void* MozJemallocPHC::moz_arena_realloc(arena_id_t aArenaId, void* aOldPtr,
-                                        size_t aNewSize) {
+inline void* MozJemallocPHC::moz_arena_realloc(arena_id_t aArenaId,
+                                               void* aOldPtr, size_t aNewSize) {
   return PageRealloc(Some(aArenaId), aOldPtr, aNewSize);
 }
 
-void MozJemallocPHC::moz_arena_free(arena_id_t aArenaId, void* aPtr) {
+inline void MozJemallocPHC::moz_arena_free(arena_id_t aArenaId, void* aPtr) {
   return PageFree(Some(aArenaId), aPtr);
 }
 
-void* MozJemallocPHC::moz_arena_memalign(arena_id_t aArenaId, size_t aAlignment,
-                                         size_t aReqSize) {
+inline void* MozJemallocPHC::moz_arena_memalign(arena_id_t aArenaId,
+                                                size_t aAlignment,
+                                                size_t aReqSize) {
   return PageMemalign(Some(aArenaId), aAlignment, aReqSize);
 }
 
