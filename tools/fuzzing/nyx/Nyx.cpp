@@ -38,7 +38,7 @@ MOZ_EXPORT __attribute__((weak)) void nyx_handle_event(const char*, const char*,
                                                        int, const char*);
 MOZ_EXPORT __attribute__((weak)) void nyx_puts(const char*);
 MOZ_EXPORT __attribute__((weak)) void nyx_dump_file(void* buffer, size_t len,
-                                                    char* filename);
+                                                    const char* filename);
 }
 
 /*
@@ -217,9 +217,7 @@ void Nyx::handle_event(const char* type, const char* file, int line,
   }
 }
 
-void Nyx::dump_file(void* buffer, size_t len, char* filename) {
-  MOZ_RELEASE_ASSERT(mInited);
-
+void Nyx::dump_file(void* buffer, size_t len, const char* filename) {
   if (!mReplayMode) {
     nyx_dump_file(buffer, len, filename);
   }
