@@ -112,6 +112,14 @@ module.exports = {
             message:
               "'arguments' is disallowed, use ArgumentsLength(), GetArgument(n), or rest-parameters",
           },
+          {
+            selector: "VariableDeclaration[kind='let']",
+            message: "'let' declarations are disallowed to avoid TDZ checks, use 'var' instead",
+          },
+          {
+            selector: "VariableDeclaration[kind='const']",
+            message: "'const' declarations are disallowed to avoid TDZ checks, use 'var' instead",
+          },
         ],
       },
 
