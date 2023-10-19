@@ -7,6 +7,8 @@
 #ifndef mozjemalloc_h
 #define mozjemalloc_h
 
+#include <errno.h>
+
 #include "mozjemalloc_types.h"
 #include "mozilla/MacroArgs.h"
 
@@ -30,6 +32,43 @@
 #define ARGS3(t1, t2, t3) ARGS2(t1, t2), arg3
 
 #ifdef MOZ_MEMORY
+
+size_t GetKernelPageSize();
+
+// Implement the set of alignment functions in terms of memalign.
+template <void* (*memalign)(size_t, size_t)>
+struct AlignedAllocator {
+  static inline int posix_memalign(void** aMemPtr, size_t aAlignment,
+                                   size_t aSize) {
+    void* result;
+
+    // alignment must be a power of two and a multiple of sizeof(void*)
+    if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
+      return EINVAL;
+    }
+
+    // The 0-->1 size promotion is done in the memalign() call below
+    result = memalign(aAlignment, aSize);
+
+    if (!result) {
+      return ENOMEM;
+    }
+
+    *aMemPtr = result;
+    return 0;
+  }
+
+  static inline void* aligned_alloc(size_t aAlignment, size_t aSize) {
+    if (aSize % aAlignment) {
+      return nullptr;
+    }
+    return memalign(aAlignment, aSize);
+  }
+
+  static inline void* valloc(size_t aSize) {
+    return memalign(GetKernelPageSize(), aSize);
+  }
+};
 
 // These classes each implement the same interface.  Writing out the
 // interface for each one rather than using inheritance makes things more
