@@ -6,7 +6,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PageActions: "resource:///modules/PageActions.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   ReaderMode: "resource://gre/modules/ReaderMode.sys.mjs",
 });
@@ -201,10 +200,6 @@ export class AboutReaderParent extends JSWindowActorParent {
       if (browser.isArticle) {
         Services.obs.notifyObservers(null, "reader-mode-available");
       }
-    }
-
-    if (!button.hidden) {
-      lazy.PageActions.sendPlacedInUrlbarTrigger(button);
     }
   }
 
