@@ -40,10 +40,10 @@
   justify-content: center;
   margin: 0;
   padding: 0;
-  position: sticky;
+  position: absolute;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
 }
@@ -119,6 +119,7 @@
 #copy > img {
   margin-inline-end: 5px;
 }
+
 
 .face-container {
   position: relative;
