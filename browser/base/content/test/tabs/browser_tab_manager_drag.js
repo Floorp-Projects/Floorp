@@ -201,8 +201,7 @@ add_task(async function test_move_to_tab_bar() {
 });
 
 add_task(async function test_move_to_different_tab_bar() {
-  const newWindow2 =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  const newWindow2 = await BrowserTestUtils.openNewBrowserWindow();
 
   await testWithNewWindow(async function (newWindow) {
     Services.telemetry.clearScalars();
