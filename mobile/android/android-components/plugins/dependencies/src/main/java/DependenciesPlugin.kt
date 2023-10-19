@@ -25,6 +25,7 @@ object Versions {
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.11"
     const val okhttp = "4.11.0"
+    const val coil = "2.4.0"
 
     const val android_gradle_plugin = "8.0.2"
 
@@ -202,6 +203,14 @@ object ComponentsDependencies {
     const val thirdparty_sentry_latest = "io.sentry:sentry-android:${Versions.sentry_latest}"
     const val thirdparty_zxing = "com.google.zxing:core:${Versions.zxing}"
     const val thirdparty_disklrucache = "com.jakewharton:disklrucache:${Versions.disklrucache}"
+    /**
+     *  ⚠️️ DO NOT use any NETWORK based operations provided by the Coil library.
+     *  ⚠️️ The Coil library should be used for DECODING data only.
+     *
+     *  Fenix is using SvgDecoder.kt for SVG decoding. However this dependency will also expose other
+     *  API features that Fenix should not use.
+     */
+    const val thirdparty_coil_svg = "io.coil-kt:coil-svg:${Versions.coil}"
 
     const val firebase_messaging = "com.google.firebase:firebase-messaging:${Versions.Firebase.messaging}"
 }

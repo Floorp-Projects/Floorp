@@ -33,6 +33,7 @@ import mozilla.components.browser.icons.compose.IconLoaderScope
 import mozilla.components.browser.icons.compose.IconLoaderState
 import mozilla.components.browser.icons.compose.InternalIconLoaderScope
 import mozilla.components.browser.icons.decoder.ICOIconDecoder
+import mozilla.components.browser.icons.decoder.SvgIconDecoder
 import mozilla.components.browser.icons.extension.IconMessageHandler
 import mozilla.components.browser.icons.generator.DefaultIconGenerator
 import mozilla.components.browser.icons.generator.IconGenerator
@@ -105,6 +106,7 @@ class BrowserIcons constructor(
     private val decoders: List<ImageDecoder> = listOf(
         AndroidImageDecoder(),
         ICOIconDecoder(),
+        SvgIconDecoder(context),
     ),
     private val processors: List<IconProcessor> = listOf(
         MemoryIconProcessor(sharedMemoryCache),
@@ -174,7 +176,7 @@ class BrowserIcons constructor(
 
         // (3) Then try to load an icon.
         val (icon, resource) = load(context, request, updatedLoaders, decoders, desiredSize)
-            ?: generator.generate(context, request) to null
+            ?: (generator.generate(context, request) to null)
 
         // (4) Finally process the icon.
         process(context, processors, request, resource, icon, desiredSize)
