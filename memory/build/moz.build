@@ -24,7 +24,7 @@ if CONFIG["MOZ_REPLACE_MALLOC"]:
 
 if CONFIG["MOZ_PHC"]:
     DEFINES["MOZ_PHC"] = True
-    SOURCES += [
+    UNIFIED_SOURCES += [
         "FdPrintf.cpp",
         "PHC.cpp",
     ]

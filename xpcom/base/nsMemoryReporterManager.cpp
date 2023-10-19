@@ -44,7 +44,7 @@
 #include "mozilla/ipc/UtilityProcessManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #ifdef MOZ_PHC
-#  include "replace_malloc_bridge.h"
+#  include "PHC.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -1340,7 +1340,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
 
 #ifdef MOZ_PHC
     mozilla::phc::MemoryUsage usage;
-    ReplaceMalloc::PHCMemoryUsage(usage);
+    mozilla::phc::PHCMemoryUsage(usage);
 
     MOZ_COLLECT_REPORT(
       "explicit/heap-overhead/phc/metadata", KIND_NONHEAP, UNITS_BYTES,

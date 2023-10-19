@@ -16,7 +16,7 @@
 #include "gtest/gtest.h"
 
 #ifdef MOZ_PHC
-#  include "replace_malloc_bridge.h"
+#  include "PHC.h"
 #endif
 
 using namespace mozilla;
@@ -25,13 +25,13 @@ class AutoDisablePHCOnCurrentThread {
  public:
   AutoDisablePHCOnCurrentThread() {
 #ifdef MOZ_PHC
-    ReplaceMalloc::DisablePHCOnCurrentThread();
+    mozilla::phc::DisablePHCOnCurrentThread();
 #endif
   }
 
   ~AutoDisablePHCOnCurrentThread() {
 #ifdef MOZ_PHC
-    ReplaceMalloc::ReenablePHCOnCurrentThread();
+    mozilla::phc::ReenablePHCOnCurrentThread();
 #endif
   }
 };
@@ -364,7 +364,7 @@ static bool CanReallocInPlace(size_t aFromSize, size_t aToSize,
   // PHC allocations must be disabled because PHC reallocs differently to
   // mozjemalloc.
 #ifdef MOZ_PHC
-  MOZ_RELEASE_ASSERT(!ReplaceMalloc::IsPHCEnabledOnCurrentThread());
+  MOZ_RELEASE_ASSERT(!mozilla::phc::IsPHCEnabledOnCurrentThread());
 #endif
 
   if (aFromSize == malloc_good_size(aToSize)) {

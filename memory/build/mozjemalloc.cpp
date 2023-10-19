@@ -5182,14 +5182,6 @@ static void init() {
   }
   gOriginalMallocTable = tempTable;
   gMallocTablePtr = &gOriginalMallocTable;
-
-#  ifdef MOZ_PHC
-  // For now PHC still uses the bridge, so if no other allocator registered a
-  // bridge then register PHC's now.
-  if (!gReplaceMallocBridge) {
-    gReplaceMallocBridge = GetPHCBridge();
-  }
-#  endif
 }
 
 // WARNING WARNING WARNING: this function should be used with extreme care. It

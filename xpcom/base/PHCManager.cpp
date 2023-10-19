@@ -6,7 +6,7 @@
 
 #include "PHCManager.h"
 
-#include "replace_malloc_bridge.h"
+#include "PHC.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_memory.h"
 
@@ -23,11 +23,11 @@ static PHCState GetPHCStateFromPref() {
 static void PrefChangeCallback(const char* aPrefName, void* aNull) {
   MOZ_ASSERT(0 == strcmp(aPrefName, kPHCPref));
 
-  ReplaceMalloc::SetPHCState(GetPHCStateFromPref());
+  SetPHCState(GetPHCStateFromPref());
 }
 
 void InitPHCState() {
-  ReplaceMalloc::SetPHCState(GetPHCStateFromPref());
+  SetPHCState(GetPHCStateFromPref());
 
   Preferences::RegisterCallback(PrefChangeCallback, kPHCPref);
 }

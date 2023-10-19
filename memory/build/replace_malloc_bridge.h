@@ -117,29 +117,8 @@ struct DMDFuncs;
 
 namespace phc {
 
-// PHC has three different states:
-//  * Not compiled in
-//  * OnlyFree         - The memory allocator is hooked but new allocations
-//                       requests will be forwarded to mozjemalloc, free() will
-//                       correctly free any PHC allocations and realloc() will
-//                       "move" PHC allocations to mozjemalloc allocations.
-//  * Enabled          - Full use.
-enum PHCState {
-  OnlyFree,
-  Enabled,
-};
-
 class AddrInfo;
 
-struct MemoryUsage {
-  // The amount of memory used for PHC metadata, eg information about each
-  // allocation including stacks.
-  size_t mMetadataBytes = 0;
-
-  // The amount of memory lost due to rounding allocation sizes up to the
-  // nearest page.  AKA internal fragmentation.
-  size_t mFragmentationBytes = 0;
-};
 }  // namespace phc
 
 // Callbacks to register debug file handles for Poison IO interpose.
@@ -181,37 +160,6 @@ struct ReplaceMallocBridge {
       const malloc_hook_table_t* aHookTable) {
     return nullptr;
   }
-
-  // If this is a PHC-handled address, return true, and if an AddrInfo is
-  // provided, fill in all of its fields. Otherwise, return false and leave
-  // AddrInfo unchanged.
-  // This method was added in version 4 of the bridge.
-  virtual bool IsPHCAllocation(const void*, mozilla::phc::AddrInfo*) {
-    return false;
-  }
-
-  // Disable PHC allocations on the current thread. Only useful for tests. Note
-  // that PHC deallocations will still occur as needed.
-  // This method was added in version 4 of the bridge.
-  virtual void DisablePHCOnCurrentThread() {}
-
-  // Re-enable PHC allocations on the current thread. Only useful for tests.
-  // This method was added in version 4 of the bridge.
-  virtual void ReenablePHCOnCurrentThread() {}
-
-  // Test whether PHC allocations are enabled on the current thread. Only
-  // useful for tests.
-  // This method was added in version 4 of the bridge.
-  virtual bool IsPHCEnabledOnCurrentThread() { return false; }
-
-  // Return PHC memory usage information by filling in the supplied structure.
-  // This method was added in version 5 of the bridge.
-  virtual void PHCMemoryUsage(mozilla::phc::MemoryUsage& aMemoryUsage) {}
-
-  // Set PHC's state.  See the comments above on `PHCState` for the meaning of
-  // each state.
-  // This method was added in version 6 of the bridge.
-  virtual void SetPHCState(mozilla::phc::PHCState aState) {}
 
 #  ifndef REPLACE_MALLOC_IMPL
   // Returns the replace-malloc bridge if its version is at least the
@@ -255,44 +203,6 @@ struct ReplaceMalloc {
     auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 3);
     return singleton ? singleton->RegisterHook(aName, aTable, aHookTable)
                      : nullptr;
-  }
-
-  static bool IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
-    return singleton ? singleton->IsPHCAllocation(aPtr, aOut) : false;
-  }
-
-  static void DisablePHCOnCurrentThread() {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
-    if (singleton) {
-      singleton->DisablePHCOnCurrentThread();
-    }
-  }
-
-  static void ReenablePHCOnCurrentThread() {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
-    if (singleton) {
-      singleton->ReenablePHCOnCurrentThread();
-    }
-  }
-
-  static bool IsPHCEnabledOnCurrentThread() {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
-    return singleton ? singleton->IsPHCEnabledOnCurrentThread() : false;
-  }
-
-  static void PHCMemoryUsage(mozilla::phc::MemoryUsage& aMemoryUsage) {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 5);
-    if (singleton) {
-      singleton->PHCMemoryUsage(aMemoryUsage);
-    }
-  }
-
-  static void SetPHCState(mozilla::phc::PHCState aPHCState) {
-    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 6);
-    if (singleton) {
-      singleton->SetPHCState(aPHCState);
-    }
   }
 };
 #  endif

@@ -102,7 +102,7 @@
 #endif
 
 #ifdef MOZ_PHC
-#include "replace_malloc_bridge.h"
+#include "PHC.h"
 #endif
 
 #if defined(__ANDROID__)
@@ -458,7 +458,7 @@ static void GetPHCAddrInfo(siginfo_t* siginfo,
                            mozilla::phc::AddrInfo* addr_info) {
   // Is this a crash involving a PHC allocation?
   if (siginfo->si_signo == SIGSEGV || siginfo->si_signo == SIGBUS) {
-    ReplaceMalloc::IsPHCAllocation(siginfo->si_addr, addr_info);
+    mozilla::phc::IsPHCAllocation(siginfo->si_addr, addr_info);
   }
 }
 #endif

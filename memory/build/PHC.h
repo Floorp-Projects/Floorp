@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "mozmemory_wrap.h"
+
 namespace mozilla {
 namespace phc {
 
@@ -96,11 +98,50 @@ class AddrInfo {
 
 // Global instance that is retrieved by the process generating the crash report
 extern AddrInfo gAddrInfo;
+
+// If this is a PHC-handled address, return true, and if an AddrInfo is
+// provided, fill in all of its fields. Otherwise, return false and leave
+// AddrInfo unchanged.
+MOZ_JEMALLOC_API bool IsPHCAllocation(const void*, AddrInfo*);
+
+// Disable PHC allocations on the current thread. Only useful for tests. Note
+// that PHC deallocations will still occur as needed.
+MOZ_JEMALLOC_API void DisablePHCOnCurrentThread();
+
+// Re-enable PHC allocations on the current thread. Only useful for tests.
+MOZ_JEMALLOC_API void ReenablePHCOnCurrentThread();
+
+// Test whether PHC allocations are enabled on the current thread. Only
+// useful for tests.
+MOZ_JEMALLOC_API bool IsPHCEnabledOnCurrentThread();
+
+// PHC has three different states:
+//  * Not compiled in
+//  * OnlyFree         - The memory allocator is hooked but new allocations
+//                       requests will be forwarded to mozjemalloc, free() will
+//                       correctly free any PHC allocations and realloc() will
+//                       "move" PHC allocations to mozjemalloc allocations.
+//  * Enabled          - Full use.
+enum PHCState {
+  OnlyFree,
+  Enabled,
+};
+
+MOZ_JEMALLOC_API void SetPHCState(PHCState aState);
+
+struct MemoryUsage {
+  // The amount of memory used for PHC metadata, eg information about each
+  // allocation including stacks.
+  size_t mMetadataBytes = 0;
+
+  // The amount of memory lost due to rounding allocation sizes up to the
+  // nearest page.  AKA internal fragmentation.
+  size_t mFragmentationBytes = 0;
+};
+
+MOZ_JEMALLOC_API void PHCMemoryUsage(MemoryUsage& aMemoryUsage);
+
 }  // namespace phc
 }  // namespace mozilla
-
-struct ReplaceMallocBridge;
-
-ReplaceMallocBridge* GetPHCBridge();
 
 #endif /* PHC_h */
