@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -36,7 +37,8 @@ fun FeltPrivacyModeInfoCard(
 ) {
     Card(
         modifier = Modifier
-            .wrapContentHeight(),
+            .wrapContentHeight()
+            .fillMaxWidth(),
         backgroundColor = FirefoxTheme.colors.layer2,
         shape = RoundedCornerShape(8.dp),
         elevation = 5.dp,
