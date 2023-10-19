@@ -6,14 +6,13 @@ package org.mozilla.fenix.compose
 
 import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -21,7 +20,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import mozilla.components.support.ktx.android.content.isScreenReaderEnabled
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -62,7 +60,6 @@ fun LinkText(
     linkTextColor: Color = FirefoxTheme.colors.textAccent,
     linkTextDecoration: TextDecoration = TextDecoration.None,
 ) {
-    val context = LocalContext.current
     val annotatedString = buildUrlAnnotatedString(
         text,
         linkTextStates,
@@ -77,20 +74,17 @@ fun LinkText(
     ClickableText(
         text = annotatedString,
         style = style,
-        modifier = Modifier.clickable(
-            enabled = context.isScreenReaderEnabled,
-            role = Role.Button,
-            onClickLabel = linkTextStates.firstOrNull()?.text ?: "",
-            onClick = {
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            onClick {
                 linkTextStates.firstOrNull()?.let {
                     it.onClick(it.url)
                 }
-            },
-        ),
-        onClick = { charOffset ->
-            if (!context.isScreenReaderEnabled) {
-                onTextClick(annotatedString, charOffset, linkTextStates)
+
+                return@onClick true
             }
+        },
+        onClick = { charOffset ->
+            onTextClick(annotatedString, charOffset, linkTextStates)
         },
     )
 }
