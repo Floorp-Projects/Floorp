@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script>
+    window.addEventListener("load", async () => {
+      let a = document.createElement("iframe")
+      document.documentElement.appendChild(a)
+      let b = await a.contentWindow.clientInformation.storage.getDirectory()
+      let c = await b.getFileHandle("80e2d2c3-0712-4ccd-94b5-e2dd1732ea09", {"create": true})
+      let d = await c.createWritable({ })
+      setTimeout(async () => {
+        document.documentElement.removeAttribute("class");
+        await d.truncate(1);
+      }, 1000)
+      document.replaceChildren(document.documentElement, document.documentElement)
+    })
+  </script>
+</head>
+</html>
