@@ -162,8 +162,8 @@ search.engine.default:
         type: string
         description: |
           The source of the change of engine. For possible values,
-          see `DEFAULT_CHANGE_REASON` in
-          https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchUtils.sys.mjs
+          see `REASON_CHANGE_MAP` in
+          https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchService.sys.mjs
 
 search.engine.private:
   engine_id:
