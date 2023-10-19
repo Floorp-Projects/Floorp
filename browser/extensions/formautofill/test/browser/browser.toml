@@ -36,9 +36,6 @@ skip-if = [
 
 ["browser_fathom_cc.js"]
 
-["browser_first_time_use_doorhanger.js"]
-skip-if = ["verify"]
-
 ["browser_manageAddressesDialog.js"]
 
 ["browser_privacyPreferences.js"]

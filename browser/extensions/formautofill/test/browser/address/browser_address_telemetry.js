@@ -350,7 +350,7 @@ add_task(async function test_popup_opened_form_without_autocomplete() {
 
 add_task(async function test_submit_autofill_profile_new() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.formautofill.firstTimeUse", true]],
+    set: [["extensions.formautofill.addresses.capture.v2.enabled", true]],
   });
   async function test_per_command(
     command,

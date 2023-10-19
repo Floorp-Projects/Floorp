@@ -54,8 +54,6 @@ add_task(async function test_form_will_submit_without_sub_keys() {
     set: [
       // This needs to match the country in the previous test and must have no sub_keys.
       ["browser.search.region", "DE"],
-      // We already verified the first time use case in browser test
-      ["extensions.formautofill.firstTimeUse", false],
       ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.addresses.supportedCountries", "US,CA,DE"],
       ["extensions.formautofill.addresses.supported", "detect"]
