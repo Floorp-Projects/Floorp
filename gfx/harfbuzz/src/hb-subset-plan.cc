@@ -399,34 +399,20 @@ _collect_layout_variation_indices (hb_subset_plan_t* plan)
     return;
   }
 
-  const OT::VariationStore *var_store = nullptr;
   hb_set_t varidx_set;
-  float *store_cache = nullptr;
-  bool collect_delta = plan->pinned_at_default ? false : true;
-  if (collect_delta)
-  {
-    if (gdef->has_var_store ())
-    {
-      var_store = &(gdef->get_var_store ());
-      store_cache = var_store->create_cache ();
-    }
-  }
-
   OT::hb_collect_variation_indices_context_t c (&varidx_set,
-                                                &plan->layout_variation_idx_delta_map,
-                                                plan->normalized_coords ? &(plan->normalized_coords) : nullptr,
-                                                var_store,
                                                 &plan->_glyphset_gsub,
-                                                &plan->gpos_lookups,
-                                                store_cache);
+                                                &plan->gpos_lookups);
   gdef->collect_variation_indices (&c);
 
   if (hb_ot_layout_has_positioning (plan->source))
     gpos->collect_variation_indices (&c);
 
-  var_store->destroy_cache (store_cache);
-
-  gdef->remap_layout_variation_indices (&varidx_set, &plan->layout_variation_idx_delta_map);
+  gdef->remap_layout_variation_indices (&varidx_set,
+                                        plan->normalized_coords,
+                                        !plan->pinned_at_default,
+                                        plan->all_axes_pinned,
+                                        &plan->layout_variation_idx_delta_map);
 
   unsigned subtable_count = gdef->has_var_store () ? gdef->get_var_store ().get_sub_table_count () : 0;
   _generate_varstore_inner_maps (varidx_set, subtable_count, plan->gdef_varstore_inner_maps);
@@ -927,6 +913,7 @@ _normalize_axes_location (hb_face_t *face, hb_subset_plan_t *plan)
     {
       axis_not_pinned = true;
       plan->axes_index_map.set (old_axis_idx, new_axis_idx);
+      plan->axis_tags.push (axis_tag);
       new_axis_idx++;
     }
 

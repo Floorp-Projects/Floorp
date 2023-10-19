@@ -1,3 +1,5 @@
+fs = import('fs')
+
 hb_version_h = configure_file(
                command: [find_program('gen-hb-version.py'), meson.project_version(), '@OUTPUT@', '@INPUT@'],
                input: 'hb-version.h.in',
@@ -703,13 +705,14 @@ if get_option('tests').enabled()
       'test-serialize': ['test-serialize.cc', 'hb-static.cc'],
       'test-set': ['test-set.cc', 'hb-static.cc'],
       'test-tuple-varstore': ['test-tuple-varstore.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
+      'test-item-varstore': ['test-item-varstore.cc', 'hb-subset-instancer-solver.cc', 'hb-static.cc'],
       'test-use-table': 'test-use-table.cc',
       'test-vector': ['test-vector.cc', 'hb-static.cc'],
     }
     foreach name, source : noinst_programs
       executable(name, source,
         include_directories: incconfig,
-        cpp_args: cpp_args,
+        cpp_args: cpp_args + ['-UNDEBUG'],
         dependencies: libharfbuzz_dep,
         install: false,
       )
@@ -789,15 +792,95 @@ endif
 
 have_gobject = conf.get('HAVE_GOBJECT', 0) == 1
 
+# This code (especially PACKAGE_INIT) kept similar to what CMake's own
+# configure_package_config_file() generates, see
+# https://cmake.org/cmake/help/latest/module/CMakePackageConfigHelpers.html#command:configure_package_config_file
+
 cmake_config = configuration_data()
-cmake_config.set('libdir', get_option('prefix') / get_option('libdir'))
-cmake_config.set('includedir', get_option('prefix') / get_option('includedir'))
-cmake_config.set('HB_LIBTOOL_VERSION_INFO', hb_libtool_version_info)
-cmake_config.set('have_gobject', '@0@'.format(have_gobject))
+cmake_config_dir = cmake_package_install_dir / 'harfbuzz'
+
+have_fs_relative_to = meson.version().version_compare('>=1.3.0')
+
+if not have_fs_relative_to
+  relative_to = find_program('relative_to.py')
+endif
+
+if have_fs_relative_to
+  cmake_package_prefix_dir = fs.relative_to(get_option('prefix'), get_option('prefix') / cmake_config_dir)
+else
+  cmake_package_prefix_dir = run_command(relative_to, get_option('prefix'), get_option('prefix') / cmake_config_dir, check: true).stdout().strip()
+endif
+
+cmake_package_prefix_dir = '${CMAKE_CURRENT_LIST_DIR}/@0@'.format(cmake_package_prefix_dir)
+
+# Make all the relevant paths relative to our prefix, so we can later append
+# them onto ${PACKAGE_PREFIX_DIR} to get the correct paths.
+
+cmake_install_includedir = get_option('includedir')
+
+if fs.is_absolute(cmake_install_includedir)
+  if have_fs_relative_to
+    cmake_install_includedir = fs.relative_to(cmake_install_includedir, get_option('prefix'))
+  else
+    cmake_install_includedir = run_command(relative_to, cmake_install_includedir, get_option('prefix'), check: true).stdout().strip()
+  endif
+endif
+
+cmake_install_libdir = get_option('libdir')
+
+if fs.is_absolute(cmake_install_libdir)
+  if have_fs_relative_to
+    cmake_install_libdir = fs.relative_to(cmake_install_libdir, get_option('prefix'))
+  else
+    cmake_install_libdir = run_command(relative_to, cmake_install_libdir, get_option('prefix'), check: true).stdout().strip()
+  endif
+endif
+
+cmake_config.set('PACKAGE_INIT', '''
+get_filename_component(PACKAGE_PREFIX_DIR "@0@" ABSOLUTE)
+
+macro(set_and_check _var _file)
+  set(${_var} "${_file}")
+  if(NOT EXISTS "${_file}")
+    message(FATAL_ERROR "File or directory ${_file} referenced by variable ${_var} does not exist !")
+  endif()
+endmacro()
+
+macro(check_required_components _NAME)
+  foreach(comp ${${_NAME}_FIND_COMPONENTS})
+    if(NOT ${_NAME}_${comp}_FOUND)
+      if(${_NAME}_FIND_REQUIRED_${comp})
+        set(${_NAME}_FOUND FALSE)
+      endif()
+    endif()
+  endforeach()
+endmacro()
+'''.format(cmake_package_prefix_dir))
+
+cmake_config.set('PACKAGE_CMAKE_INSTALL_INCLUDEDIR', '${PACKAGE_PREFIX_DIR}/@0@'.format(cmake_install_includedir))
+cmake_config.set('PACKAGE_CMAKE_INSTALL_LIBDIR', '${PACKAGE_PREFIX_DIR}/@0@'.format(cmake_install_libdir))
+cmake_config.set('PACKAGE_INCLUDE_INSTALL_DIR', '${PACKAGE_PREFIX_DIR}/@0@/@1@'.format(cmake_install_includedir, meson.project_name()))
+cmake_config.set('HB_HAVE_GOBJECT', have_gobject ? 'YES' : 'NO')
+cmake_config.set('HB_LIBRARY_TYPE', get_option('default_library') == 'static' ? 'STATIC' : 'SHARED')
+
+if get_option('default_library') == 'static'
+  cmake_config.set('HB_LIB_PREFIX', '${CMAKE_STATIC_LIBRARY_PREFIX}')
+  cmake_config.set('HB_LIB_SUFFIX', '${CMAKE_STATIC_LIBRARY_SUFFIX}')
+elif host_machine.system() == 'darwin'
+  cmake_config.set('HB_LIB_PREFIX', '${CMAKE_SHARED_LIBRARY_PREFIX}')
+  cmake_config.set('HB_LIB_SUFFIX', '.@0@.${CMAKE_SHARED_LIBRARY_SUFFIX}'.format(hb_so_version))
+elif host_machine.system() == 'windows'
+  cmake_config.set('HB_LIB_PREFIX', '${CMAKE_IMPORT_LIBRARY_PREFIX}')
+  cmake_config.set('HB_LIB_SUFFIX', '${CMAKE_IMPORT_LIBRARY_SUFFIX}')
+else
+  cmake_config.set('HB_LIB_PREFIX', '${CMAKE_SHARED_LIBRARY_PREFIX}')
+  cmake_config.set('HB_LIB_SUFFIX', '${CMAKE_SHARED_LIBRARY_SUFFIX}.@0@'.format(version))
+endif
+
 configure_file(input: 'harfbuzz-config.cmake.in',
   output: 'harfbuzz-config.cmake',
   configuration: cmake_config,
-  install_dir: get_option('libdir') / 'cmake' / 'harfbuzz',
+  install_dir: cmake_config_dir,
 )
 
 gobject_enums_c = []

@@ -104,12 +104,12 @@ struct hb_hashmap_t
     hb_pair_t<const K &, V &> get_pair_ref() { return hb_pair_t<const K &, V &> (key, value); }
 
     uint32_t total_hash () const
-    { return (hash * 31) + hb_hash (value); }
+    { return (hash * 31u) + hb_hash (value); }
 
-    static constexpr bool is_trivial = std::is_trivially_constructible<K>::value &&
-				       std::is_trivially_destructible<K>::value &&
-				       std::is_trivially_constructible<V>::value &&
-				       std::is_trivially_destructible<V>::value;
+    static constexpr bool is_trivial = hb_is_trivially_constructible(K) &&
+				       hb_is_trivially_destructible(K) &&
+				       hb_is_trivially_constructible(V) &&
+				       hb_is_trivially_destructible(V);
   };
 
   hb_object_header_t header;
@@ -398,37 +398,37 @@ struct hb_hashmap_t
 
   auto iter_items () const HB_AUTO_RETURN
   (
-    + hb_iter (items, size ())
+    + hb_iter (items, this->size ())
     | hb_filter (&item_t::is_real)
   )
   auto iter_ref () const HB_AUTO_RETURN
   (
-    + iter_items ()
+    + this->iter_items ()
     | hb_map (&item_t::get_pair_ref)
   )
   auto iter () const HB_AUTO_RETURN
   (
-    + iter_items ()
+    + this->iter_items ()
     | hb_map (&item_t::get_pair)
   )
   auto keys_ref () const HB_AUTO_RETURN
   (
-    + iter_items ()
+    + this->iter_items ()
     | hb_map (&item_t::get_key)
   )
   auto keys () const HB_AUTO_RETURN
   (
-    + keys_ref ()
+    + this->keys_ref ()
     | hb_map (hb_ridentity)
   )
   auto values_ref () const HB_AUTO_RETURN
   (
-    + iter_items ()
+    + this->iter_items ()
     | hb_map (&item_t::get_value)
   )
   auto values () const HB_AUTO_RETURN
   (
-    + values_ref ()
+    + this->values_ref ()
     | hb_map (hb_ridentity)
   )
 
