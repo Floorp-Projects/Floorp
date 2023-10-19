@@ -4737,7 +4737,7 @@
 # <iframe loading="lazy">
 - name: dom.iframe_lazy_loading.enabled
   type: RelaxedAtomicBool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 #---------------------------------------------------------------------------
