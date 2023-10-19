@@ -869,6 +869,15 @@ class alignas(8) Value {
     return true;
   }
 
+  // Like isMagic, but without the release assertion.
+  bool isMagicNoReleaseCheck(JSWhyMagic why) const {
+    if (!isMagic()) {
+      return false;
+    }
+    MOZ_ASSERT(whyMagic() == why);
+    return true;
+  }
+
   JS::TraceKind traceKind() const {
     MOZ_ASSERT(isGCThing());
     static_assert((JSVAL_TAG_STRING & 0x03) == size_t(JS::TraceKind::String),

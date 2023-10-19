@@ -345,7 +345,8 @@ JS_PUBLIC_API inline bool CallArgsBase<WantUsedRval>::requireAtLeast(
 }  // namespace detail
 
 MOZ_ALWAYS_INLINE CallArgs CallArgsFromVp(unsigned argc, Value* vp) {
-  return CallArgs::create(argc, vp + 2, vp[1].isMagic(JS_IS_CONSTRUCTING));
+  return CallArgs::create(argc, vp + 2,
+                          vp[1].isMagicNoReleaseCheck(JS_IS_CONSTRUCTING));
 }
 
 // This method is only intended for internal use in SpiderMonkey.  We may
