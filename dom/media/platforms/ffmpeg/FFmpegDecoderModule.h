@@ -86,6 +86,13 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       return media::DecodeSupportSet{};
     }
 
+    if (VPXDecoder::IsVP9(mimeType) &&
+        aParams.mOptions.contains(CreateDecoderParams::Option::LowLatency)) {
+      // SVC layers are unsupported, and may be used in low latency use cases
+      // (WebRTC).
+      return media::DecodeSupportSet{};
+    }
+
     AVCodecID videoCodec = FFmpegVideoDecoder<V>::GetCodecId(mimeType);
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(
         mimeType,
