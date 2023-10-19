@@ -92,7 +92,7 @@ HB_SUBSET_PLAN_MEMBER (hb_map_t, colrv1_layers)
 HB_SUBSET_PLAN_MEMBER (hb_map_t, colr_palettes)
 
 //Old layout item variation index -> (New varidx, delta) mapping
-HB_SUBSET_PLAN_MEMBER (hb_hashmap_t E(<unsigned, hb_pair_t E(<unsigned, int>)>), layout_variation_idx_delta_map)
+HB_SUBSET_PLAN_MEMBER (mutable hb_hashmap_t E(<unsigned, hb_pair_t E(<unsigned, int>)>), layout_variation_idx_delta_map)
 
 //gdef varstore retained varidx mapping
 HB_SUBSET_PLAN_MEMBER (hb_vector_t<hb_inc_bimap_t>, gdef_varstore_inner_maps)
@@ -113,6 +113,8 @@ HB_SUBSET_PLAN_MEMBER (hb_map_t, axes_index_map)
 
 //axis_index->axis_tag mapping in fvar axis array
 HB_SUBSET_PLAN_MEMBER (hb_map_t, axes_old_index_tag_map)
+//vector of retained axis tags in the order of axes given in the 'fvar' table
+HB_SUBSET_PLAN_MEMBER (hb_vector_t<hb_tag_t>, axis_tags)
 
 //hmtx metrics map: new gid->(advance, lsb)
 HB_SUBSET_PLAN_MEMBER (mutable hb_hashmap_t E(<hb_codepoint_t, hb_pair_t E(<unsigned, int>)>), hmtx_map)

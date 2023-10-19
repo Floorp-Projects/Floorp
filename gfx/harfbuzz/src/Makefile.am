@@ -14,7 +14,7 @@ check_PROGRAMS =
 
 EXTRA_DIST += harfbuzz.cc harfbuzz-subset.cc
 EXTRA_DIST += meson.build
-EXTRA_DIST += fix_get_types.py
+EXTRA_DIST += fix_get_types.py relative_to.py
 
 # Convenience targets:
 lib: $(BUILT_SOURCES) libharfbuzz.la
@@ -458,6 +458,7 @@ COMPILED_TESTS = \
 	test-classdef-graph \
 	test-instancer-solver \
 	test-tuple-varstore \
+	test-item-varstore \
 	$(NULL)
 COMPILED_TESTS_CPPFLAGS = $(HBCFLAGS) -DMAIN -UNDEBUG
 COMPILED_TESTS_LDADD = libharfbuzz.la $(HBLIBS)
@@ -535,6 +536,10 @@ test_instancer_solver_LDADD = $(COMPILED_TESTS_LDADD)
 test_tuple_varstore_SOURCES = test-tuple-varstore.cc hb-subset-instancer-solver.cc hb-static.cc
 test_tuple_varstore_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
 test_tuple_varstore_LDADD = $(COMPILED_TESTS_LDADD)
+
+test_item_varstore_SOURCES = test-item-varstore.cc hb-subset-instancer-solver.cc hb-static.cc
+test_item_varstore_CPPFLAGS = $(COMPILED_TESTS_CPPFLAGS)
+test_item_varstore_LDADD = $(COMPILED_TESTS_LDADD)
 
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.py \
