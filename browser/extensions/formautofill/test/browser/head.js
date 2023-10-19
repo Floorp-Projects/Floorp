@@ -11,6 +11,15 @@ const { FormAutofillParent } = ChromeUtils.importESModule(
   "resource://autofill/FormAutofillParent.sys.mjs"
 );
 
+const { AutofillDoorhanger, AddressEditDoorhanger, AddressSaveDoorhanger } =
+  ChromeUtils.importESModule(
+    "resource://autofill/FormAutofillPrompter.sys.mjs"
+  );
+
+const { FormAutofillNameUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs"
+);
+
 const MANAGE_ADDRESSES_DIALOG_URL =
   "chrome://formautofill/content/manageAddresses.xhtml";
 const MANAGE_CREDIT_CARDS_DIALOG_URL =
@@ -185,6 +194,10 @@ const TEST_CREDIT_CARD_5 = {
 const MAIN_BUTTON = "button";
 const SECONDARY_BUTTON = "secondaryButton";
 const MENU_BUTTON = "menubutton";
+const EDIT_ADDRESS_BUTTON = "edit";
+const ADDRESS_MENU_BUTTON = "addressMenuButton";
+const ADDRESS_MENU_LEARN_MORE = "learnMore";
+const ADDRESS_MENU_PREFENCE = "preference";
 
 /**
  * Collection of timeouts that are used to ensure something should not happen.
@@ -715,37 +728,64 @@ function waitForPopupShown() {
 /**
  * Clicks the popup notification button and wait for popup hidden.
  *
- * @param {string} button The button type in popup notification.
+ * @param {string} buttonType The button type in popup notification.
  * @param {number} index The action's index in menu list.
  */
-async function clickDoorhangerButton(button, index) {
+async function clickDoorhangerButton(buttonType, index = 0) {
   let popuphidden = BrowserTestUtils.waitForEvent(
     PopupNotifications.panel,
     "popuphidden"
   );
 
-  if (button == MAIN_BUTTON || button == SECONDARY_BUTTON) {
-    EventUtils.synthesizeMouseAtCenter(getNotification()[button], {});
-  } else if (button == MENU_BUTTON) {
+  let button;
+  if (buttonType == MAIN_BUTTON || buttonType == SECONDARY_BUTTON) {
+    button = getNotification()[buttonType];
+  } else if (buttonType == MENU_BUTTON) {
     // Click the dropmarker arrow and wait for the menu to show up.
     info("expecting notification menu button present");
     await BrowserTestUtils.waitForCondition(() => getNotification().menubutton);
     await sleep(2000); // menubutton needs extra time for binding
     let notification = getNotification();
+
     ok(notification.menubutton, "notification menupopup displayed");
     let dropdownPromise = BrowserTestUtils.waitForEvent(
       notification.menupopup,
       "popupshown"
     );
-    await EventUtils.synthesizeMouseAtCenter(notification.menubutton, {});
+
+    notification.menubutton.click();
     info("expecting notification popup show up");
     await dropdownPromise;
 
-    let actionMenuItem = notification.querySelectorAll("menuitem")[index];
-    await EventUtils.synthesizeMouseAtCenter(actionMenuItem, {});
+    button = notification.querySelectorAll("menuitem")[index];
   }
+
+  button.click();
   info("expecting notification popup hidden");
   await popuphidden;
+}
+
+async function clickAddressDoorhangerButton(buttonType, subType) {
+  const notification = getNotification();
+  let button;
+  if (buttonType == EDIT_ADDRESS_BUTTON) {
+    button = AddressSaveDoorhanger.editButton(notification);
+  } else if (buttonType == ADDRESS_MENU_BUTTON) {
+    const menu = AutofillDoorhanger.menuButton(notification);
+    const promise = BrowserTestUtils.waitForEvent(menu.menupopup, "popupshown");
+    menu.click();
+    await promise;
+    if (subType == ADDRESS_MENU_PREFENCE) {
+      button = AutofillDoorhanger.preferenceButton(notification);
+    } else if (subType == ADDRESS_MENU_LEARN_MORE) {
+      button = AutofillDoorhanger.learnMoreButton(notification);
+    }
+  } else {
+    await clickDoorhangerButton(buttonType);
+    return;
+  }
+
+  EventUtils.synthesizeMouseAtCenter(button, {});
 }
 
 function getDoorhangerCheckbox() {
@@ -1118,6 +1158,31 @@ async function add_heuristic_tests(
 
 async function add_autofill_heuristic_tests(patterns, fixturePathPrefix = "") {
   add_heuristic_tests(patterns, fixturePathPrefix, { testAutofill: true });
+}
+
+function fillEditDoorhanger(record) {
+  const notification = getNotification();
+
+  for (const [key, value] of Object.entries(record)) {
+    const id = AddressEditDoorhanger.getInputId(key);
+    const element = notification.querySelector(`#${id}`);
+    element.value = value;
+  }
+}
+
+// TODO: This function should be removed. We should make normalizeFields in
+// FormAutofillStorageBase.sys.mjs static and using it directly
+function normalizeAddressFields(record) {
+  let normalized = { ...record };
+
+  if (normalized.name != undefined) {
+    let nameParts = FormAutofillNameUtils.splitName(normalized.name);
+    normalized["given-name"] = nameParts.given;
+    normalized["additional-name"] = nameParts.middle;
+    normalized["family-name"] = nameParts.family;
+    delete normalized.name;
+  }
+  return normalized;
 }
 
 add_setup(function () {
