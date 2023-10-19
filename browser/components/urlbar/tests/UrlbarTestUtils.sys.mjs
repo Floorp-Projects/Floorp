@@ -708,7 +708,7 @@ export var UrlbarTestUtils = {
     if (win.gURLBar.view.isOpen) {
       return;
     }
-    this.info("Awaiting for the urlbar panel to open");
+    this.info("Waiting for the urlbar view to open");
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewOpen() {
@@ -717,7 +717,7 @@ export var UrlbarTestUtils = {
         },
       });
     });
-    this.info("Urlbar panel opened");
+    this.info("Urlbar view opened");
   },
 
   /**
@@ -729,16 +729,11 @@ export var UrlbarTestUtils = {
    * @returns {Promise} resolved once the popup is closed
    */
   async promisePopupClose(win, closeFn = null) {
-    if (closeFn) {
-      await closeFn();
-    } else {
-      win.gURLBar.view.close();
-    }
-    if (!win.gURLBar.view.isOpen) {
-      return;
-    }
-    this.info("Awaiting for the urlbar panel to close");
-    await new Promise(resolve => {
+    let closePromise = new Promise(resolve => {
+      if (!win.gURLBar.view.isOpen) {
+        resolve();
+        return;
+      }
       win.gURLBar.controller.addQueryListener({
         onViewClose() {
           win.gURLBar.controller.removeQueryListener(this);
@@ -746,7 +741,17 @@ export var UrlbarTestUtils = {
         },
       });
     });
-    this.info("Urlbar panel closed");
+    if (closeFn) {
+      this.info("Awaiting custom close function");
+      await closeFn();
+      this.info("Done awaiting custom close function");
+    } else {
+      this.info("Closing the view directly");
+      win.gURLBar.view.close();
+    }
+    this.info("Waiting for the view to close");
+    await closePromise;
+    this.info("Urlbar view closed");
   },
 
   /**
