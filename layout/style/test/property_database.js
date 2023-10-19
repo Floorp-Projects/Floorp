@@ -14012,19 +14012,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.transforms")) {
 
 if (IsCSSPropertyPrefEnabled("layout.css.zoom.enabled")) {
   Object.assign(gCSSProperties, {
-    "zoom": {
+    zoom: {
       domProp: "zoom",
       inherited: false,
       type: CSS_TYPE_LONGHAND,
       initial_values: ["normal", "1", "100%", "0", "0%"],
-      other_values: [
-        "1.5",
-        "2",
-        "150%",
-        "200%",
-      ],
+      other_values: ["1.5", "2", "150%", "200%"],
       invalid_values: ["-1", "-40%"],
-    }
+    },
   });
 }
 
