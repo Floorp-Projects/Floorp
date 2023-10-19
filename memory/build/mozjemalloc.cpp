@@ -2466,7 +2466,6 @@ static inline arena_t* thread_local_arena(bool enabled) {
   return arena;
 }
 
-template <>
 inline void MozJemalloc::jemalloc_thread_local_arena(bool aEnabled) {
   if (malloc_init()) {
     thread_local_arena(aEnabled);
@@ -3587,7 +3586,6 @@ class AllocInfo {
   };
 };
 
-template <>
 inline void MozJemalloc::jemalloc_ptr_info(const void* aPtr,
                                            jemalloc_ptr_info_t* aInfo) {
   arena_chunk_t* chunk = GetChunkForPtr(aPtr);
@@ -4539,7 +4537,6 @@ struct BaseAllocator {
 };
 
 #define MALLOC_DECL(name, return_type, ...)                  \
-  template <>                                                \
   inline return_type MozJemalloc::name(                      \
       ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {              \
     BaseAllocator allocator(nullptr);                        \
@@ -4692,18 +4689,15 @@ struct AlignedAllocator {
   }
 };
 
-template <>
 inline int MozJemalloc::posix_memalign(void** aMemPtr, size_t aAlignment,
                                        size_t aSize) {
   return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment, aSize);
 }
 
-template <>
 inline void* MozJemalloc::aligned_alloc(size_t aAlignment, size_t aSize) {
   return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
 }
 
-template <>
 inline void* MozJemalloc::valloc(size_t aSize) {
   return AlignedAllocator<memalign>::valloc(aSize);
 }
@@ -4713,7 +4707,6 @@ inline void* MozJemalloc::valloc(size_t aSize) {
 // Begin non-standard functions.
 
 // This was added by Mozilla for use by SQLite.
-template <>
 inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
   if (aSize <= gMaxLargeClass) {
     // Small or large
@@ -4728,12 +4721,10 @@ inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
   return aSize;
 }
 
-template <>
 inline size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
   return AllocInfo::GetValidated(aPtr).Size();
 }
 
-template <>
 inline void MozJemalloc::jemalloc_stats_internal(
     jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
   size_t non_arena_mapped, chunk_header_size;
@@ -4882,12 +4873,10 @@ inline void MozJemalloc::jemalloc_stats_internal(
                                    aStats->page_cache + aStats->bookkeeping);
 }
 
-template <>
 inline size_t MozJemalloc::jemalloc_stats_num_bins() {
   return NUM_SMALL_CLASSES;
 }
 
-template <>
 inline void MozJemalloc::jemalloc_set_main_thread() {
   MOZ_ASSERT(malloc_initialized);
   gArenas.SetMainThread();
@@ -4933,7 +4922,6 @@ void arena_t::HardPurge() {
   }
 }
 
-template <>
 inline void MozJemalloc::jemalloc_purge_freed_pages() {
   if (malloc_initialized) {
     MutexAutoLock lock(gArenas.mLock);
@@ -4946,14 +4934,12 @@ inline void MozJemalloc::jemalloc_purge_freed_pages() {
 
 #else  // !defined MALLOC_DOUBLE_PURGE
 
-template <>
 inline void MozJemalloc::jemalloc_purge_freed_pages() {
   // Do nothing.
 }
 
 #endif  // defined MALLOC_DOUBLE_PURGE
 
-template <>
 inline void MozJemalloc::jemalloc_free_dirty_pages(void) {
   if (malloc_initialized) {
     MutexAutoLock lock(gArenas.mLock);
@@ -4998,7 +4984,6 @@ inline arena_t* ArenaCollection::GetById(arena_id_t aArenaId, bool aIsPrivate) {
   return result;
 }
 
-template <>
 inline arena_id_t MozJemalloc::moz_create_arena_with_params(
     arena_params_t* aParams) {
   if (malloc_init()) {
@@ -5008,20 +4993,17 @@ inline arena_id_t MozJemalloc::moz_create_arena_with_params(
   return 0;
 }
 
-template <>
 inline void MozJemalloc::moz_dispose_arena(arena_id_t aArenaId) {
   arena_t* arena = gArenas.GetById(aArenaId, /* IsPrivate = */ true);
   MOZ_RELEASE_ASSERT(arena);
   gArenas.DisposeArena(arena);
 }
 
-template <>
 inline void MozJemalloc::moz_set_max_dirty_page_modifier(int32_t aModifier) {
   gArenas.SetDefaultMaxDirtyPageModifier(aModifier);
 }
 
 #define MALLOC_DECL(name, return_type, ...)                          \
-  template <>                                                        \
   inline return_type MozJemalloc::moz_arena_##name(                  \
       arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
     BaseAllocator allocator(                                         \
@@ -5292,7 +5274,6 @@ MOZ_JEMALLOC_API void jemalloc_replace_dynamic(
 }
 
 #  define MALLOC_DECL(name, return_type, ...)                           \
-    template <>                                                         \
     inline return_type ReplaceMalloc::name(                             \
         ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {                       \
       if (MOZ_UNLIKELY(!gMallocTablePtr)) {                             \

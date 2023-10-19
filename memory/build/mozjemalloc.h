@@ -31,24 +31,26 @@
 
 #ifdef MOZ_MEMORY
 
-// Generic interface exposing the whole public allocator API
-// This facilitates the implementation of things like replace-malloc.
+// These classes each implement the same interface.  Writing out the
+// interface for each one rather than using inheritance makes things more
+// explicit.
+//
 // Note: compilers are expected to be able to optimize out `this`.
-template <typename T>
-struct Allocator : public T {
+
+// The MozJemalloc allocator
+struct MozJemalloc {
 #  define MALLOC_DECL(name, return_type, ...) \
     static return_type name(__VA_ARGS__);
 #  include "malloc_decls.h"
 };
 
-// The MozJemalloc allocator
-struct MozJemallocBase {};
-typedef Allocator<MozJemallocBase> MozJemalloc;
-
 #  ifdef MOZ_REPLACE_MALLOC
 // The replace-malloc allocator
-struct ReplaceMallocBase {};
-typedef Allocator<ReplaceMallocBase> ReplaceMalloc;
+struct ReplaceMalloc {
+#    define MALLOC_DECL(name, return_type, ...) \
+      static return_type name(__VA_ARGS__);
+#    include "malloc_decls.h"
+};
 
 typedef ReplaceMalloc DefaultMalloc;
 #  else
