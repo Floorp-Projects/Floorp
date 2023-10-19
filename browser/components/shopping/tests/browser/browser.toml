@@ -38,7 +38,6 @@ prefs = [
 ["browser_shopping_message_triggers.js"]
 
 ["browser_shopping_onboarding.js"]
-skip-if = ["debug"]  # Bug 1850787
 
 ["browser_shopping_settings.js"]
 
