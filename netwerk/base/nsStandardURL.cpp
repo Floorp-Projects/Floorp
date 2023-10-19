@@ -2710,7 +2710,15 @@ nsStandardURL::Resolve(const nsACString& in, nsACString& out) {
     // locate result path
     resultPath = strstr(result, "://");
     if (resultPath) {
-      resultPath = strchr(resultPath + 3, '/');
+      // If there are multiple slashes after :// we must ignore them
+      // otherwise net_CoalesceDirs may think the host is a part of the path.
+      resultPath += 3;
+      if (protocol.IsEmpty() && Scheme() != "file") {
+        while (*resultPath == '/') {
+          resultPath++;
+        }
+      }
+      resultPath = strchr(resultPath, '/');
       if (resultPath) {
         net_CoalesceDirs(coalesceFlag, resultPath);
       }
