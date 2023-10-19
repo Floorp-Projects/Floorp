@@ -767,12 +767,14 @@ html {
         margin-inline: 0 10px;
 
         @media only screen and (width <= 800px) {
-          flex-direction: row;
-          align-self: stretch;
-          align-items: center;
+          flex-direction: column;
+          align-self: center;
+          align-items: start;
           justify-content: center;
+          width: 240px;
           padding: 0 30px;
           margin-inline: 0;
+          box-sizing: content-box;
         }
       }
 
@@ -940,6 +942,7 @@ html {
             .primary,
             .secondary {
               min-width: 240px;
+              margin-inline: 0;
             }
 
             .colorway-text {
