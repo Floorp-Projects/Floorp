@@ -34,6 +34,9 @@ let NAVIGATION_ITEMS =
         null,
       ];
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
+let hasStripOnShare = Services.prefs.getBoolPref(
+  "privacy.query_stripping.strip_on_share.enabled"
+);
 let hasContainers =
   Services.prefs.getBoolPref("privacy.userContext.enabled") &&
   ContextualIdentityService.getPublicIdentities().length;
@@ -101,6 +104,7 @@ add_task(async function test_xul_text_link_label() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -192,6 +196,7 @@ const kLinkItems = [
   ...(hasPocket ? ["context-savelinktopocket", true] : []),
   "context-copylink",
   true,
+  ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
   "---",
   null,
   "context-searchselect",
@@ -1195,6 +1200,8 @@ add_task(async function test_copylinkcommand() {
 });
 
 add_task(async function test_dom_full_screen() {
+  let exited = BrowserTestUtils.waitForEvent(window, "MozDOMFullscreen:Exited");
+
   let fullscreenItems = NAVIGATION_ITEMS.concat([
     "context-leave-dom-fullscreen",
     true,
@@ -1266,6 +1273,23 @@ add_task(async function test_dom_full_screen() {
       );
     },
   });
+  await exited;
+
+  await BrowserTestUtils.waitForCondition(() => {
+    return !TelemetryStopwatch.running("FULLSCREEN_CHANGE_MS");
+  });
+
+  if (AppConstants.platform == "macosx") {
+    // On macOS, the fullscreen transition takes some extra time
+    // to complete, and we don't receive events for it. We need to
+    // wait for it to complete or else input events in the next test
+    // might get eaten up. This is the best we can currently do.
+
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  await SimpleTest.promiseFocus(window);
 });
 
 add_task(async function test_pagemenu2() {
@@ -1444,6 +1468,7 @@ add_task(async function test_imagelink() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-viewimage",
@@ -1649,6 +1674,7 @@ add_task(async function test_svg_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1677,6 +1703,7 @@ add_task(async function test_svg_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1705,6 +1732,7 @@ add_task(async function test_svg_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1735,6 +1763,7 @@ add_task(async function test_svg_relative_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1763,6 +1792,7 @@ add_task(async function test_svg_relative_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1791,6 +1821,7 @@ add_task(async function test_svg_relative_link() {
     ...(hasPocket ? ["context-savelinktopocket", true] : []),
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
@@ -1859,6 +1890,7 @@ add_task(async function test_background_image() {
     true,
     "context-copylink",
     true,
+    ...(hasStripOnShare ? ["context-stripOnShareLink", true] : []),
     "---",
     null,
     "context-searchselect",
