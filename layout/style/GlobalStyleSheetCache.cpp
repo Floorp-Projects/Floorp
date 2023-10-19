@@ -519,11 +519,6 @@ RefPtr<StyleSheet> GlobalStyleSheetCache::LoadSheet(
     gCSSLoader = new Loader;
   }
 
-  // Note: The parallel parsing code assume that UA sheets are always loaded
-  // synchronously like they are here, and thus that we'll never attempt
-  // parallel parsing on them. If that ever changes, we'll either need to find a
-  // different way to prohibit parallel parsing for UA sheets, or handle
-  // -moz-bool-pref and various other things in the parallel parsing code.
   auto result = gCSSLoader->LoadSheetSync(aURI, aParsingMode,
                                           css::Loader::UseSystemPrincipal::Yes);
   if (MOZ_UNLIKELY(result.isErr())) {

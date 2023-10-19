@@ -88,7 +88,8 @@ p {
   min-width: 70vw;
 }
 
-@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
   .search-inner-wrapper {
     height: 52px;
     padding: 0;
@@ -249,7 +250,8 @@ p {
   }
 }
 
-@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
   .search-handoff-button,
   .search-handoff-button:hover:not(.focused),
   .search-handoff-button:active,
@@ -359,7 +361,8 @@ p {
   margin-top: 15px;
 }
 
-@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
   .info-border {
     border-radius: 8px;
     box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
@@ -575,7 +578,8 @@ p {
   margin: 0;
 }
 
-@supports -moz-bool-pref("browser.privatebrowsing.felt-privacy-v1") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
   html.private {
     background: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%);
   }

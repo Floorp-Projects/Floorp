@@ -53,7 +53,8 @@
     border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
   }
 
-  @media (-moz-gtk-csd-rounded-bottom-corners) {
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media (-moz-bool-pref: "widget.gtk.rounded-bottom-corners.enabled") {
     #navigator-toolbox {
       /* The body clip below covers this. */
       border-radius: 0;
@@ -117,7 +118,8 @@ menuitem.bookmark-item {
   font-size: 1.05em;
 }
 
-@supports -moz-bool-pref("browser.urlbar.experimental.expandTextOnFocus") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.urlbar.experimental.expandTextOnFocus") {
   #urlbar[breakout-extend] {
     font-size: 1.14em;
   }

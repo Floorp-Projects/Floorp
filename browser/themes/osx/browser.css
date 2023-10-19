@@ -151,7 +151,8 @@
   font-size: 1.25em;
 }
 
-@supports -moz-bool-pref("browser.urlbar.experimental.expandTextOnFocus") {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.urlbar.experimental.expandTextOnFocus") {
   #urlbar[breakout-extend] {
     font-size: 1.36em;
   }

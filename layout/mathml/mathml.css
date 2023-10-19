@@ -308,7 +308,8 @@ semantics > :not(:first-child) {
   display: none;
 }
 
-@media (-moz-mathml-core-mi) {
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "mathml.legacy_mathvariant_attribute.disabled") {
   /* Implement MathML Core's automatic italic on mi.
      https://w3c.github.io/mathml-core/#the-mathvariant-attribute */
   mi {

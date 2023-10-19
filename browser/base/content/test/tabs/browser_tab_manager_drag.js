@@ -48,8 +48,7 @@ function getOrderOfTabs(tabs) {
 async function testWithNewWindow(func) {
   Services.prefs.setBoolPref("browser.tabs.tabmanager.enabled", true);
 
-  const newWindow =
-    await BrowserTestUtils.openNewWindowWithFlushedCacheForMozSupports();
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow();
 
   await Promise.all([
     addTabTo(newWindow.gBrowser, URL1),

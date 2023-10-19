@@ -589,9 +589,7 @@ const nsTArray<mozilla::dom::Element*>* Gecko_Document_GetElementsWithId(
 const nsTArray<mozilla::dom::Element*>* Gecko_ShadowRoot_GetElementsWithId(
     const mozilla::dom::ShadowRoot*, nsAtom* aId);
 
-// Check the value of the given bool preference. The pref name needs to
-// be null-terminated.
-bool Gecko_GetBoolPrefValue(const char* pref_name);
+bool Gecko_ComputeBoolPrefMediaQuery(nsAtom*);
 
 // Check whether font format/tech is supported.
 bool Gecko_IsFontFormatSupported(
