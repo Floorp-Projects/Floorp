@@ -2,6 +2,11 @@ queue_rules:
   - name: default
     conditions:
       - status-success=complete-pr
+    priority_rules:
+      - name: high priority
+        conditions:
+            - label=urgent
+        priority: high
 pull_request_rules:
   - name: Resolve conflict
     conditions:
