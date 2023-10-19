@@ -141,6 +141,7 @@ mochitest-plain:
             linux.*/debug: 16
             linux.*64-tsan-qr/opt: 20
             .*(asan|ccov).*: 10
+            linux.*/opt: 8
             default: 5
     instance-size:
         by-test-platform:
@@ -268,7 +269,7 @@ mochitest-browser-chrome:
         by-variant:
             msix:
                 by-test-platform:
-                    .*/debug: 12
+                    .*/debug: 16
                     default: 7
             default:
                 by-test-platform:
