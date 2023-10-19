@@ -43,7 +43,7 @@ function generateModal(propOverrides, renderType = "shallow") {
     displayedSources: [],
     blackBoxRanges: {},
     openedTabUrls: [],
-    selectedSource: { id: "foo" },
+    selectedLocation: { source: { id: "foo" } },
     selectSpecificLocation: jest.fn(),
     setQuickOpenQuery: jest.fn(),
     highlightLineRange: jest.fn(),
@@ -243,7 +243,7 @@ describe("QuickOpenModal", () => {
           searchType: "functions",
           // symbol searching relies on a source being selected.
           // So we dummy out the source and the API.
-          selectedSource: { id: "foo", text: "yo" },
+          selectedLocation: { source: { id: "foo", text: "yo" } },
           selectedContentLoaded: true,
         },
         "mount"
@@ -268,7 +268,7 @@ describe("QuickOpenModal", () => {
 
           // symbol searching relies on a source being selected.
           // So we dummy out the source and the API.
-          selectedSource: null,
+          selectedLocation: null,
           selectedContentLoaded: false,
         },
         "mount"
@@ -300,7 +300,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: ":34:12",
           searchType: "goto",
-          selectedSource: { id: "foo" },
+          selectedLocation: { source: { id: "foo" } },
         },
         "shallow"
       );
@@ -326,7 +326,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: ":34:12",
           searchType: "goto",
-          selectedSource: { id: sourceId },
+          selectedLocation: { source: { id: sourceId } },
           selectedContentLoaded: true,
         },
         "shallow"
@@ -436,7 +436,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: "@test",
           searchType: "other",
-          selectedSource: { id },
+          selectedLocation: { source: { id } },
         },
         "shallow"
       );
@@ -465,7 +465,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: "@test",
           searchType: "functions",
-          selectedSource: { id },
+          selectedLocation: { source: { id } },
         },
         "shallow"
       );
@@ -494,7 +494,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: ":3:4",
           searchType: "gotoSource",
-          selectedSource: { id },
+          selectedLocation: { source: { id } },
         },
         "shallow"
       );
@@ -580,7 +580,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: "test",
           searchType: "functions",
-          selectedSource: { id: sourceId },
+          selectedLocation: { source: { id: sourceId } },
           selectedContentLoaded: true,
         },
         "shallow"
@@ -644,7 +644,7 @@ describe("QuickOpenModal", () => {
           enabled: true,
           query: "test",
           searchType: "functions",
-          selectedSource: { id: sourceId },
+          selectedLocation: { source: { id: sourceId } },
           selectedContentLoaded: true,
         },
         "shallow"
@@ -673,7 +673,7 @@ describe("QuickOpenModal", () => {
             enabled: true,
             query: "test",
             searchType: "variables",
-            selectedSource: null,
+            selectedLocation: null,
             selectedContentLoaded: true,
           },
           "shallow"
@@ -710,7 +710,7 @@ describe("QuickOpenModal", () => {
             enabled: true,
             query: "test",
             searchType: "other",
-            selectedSource: { id: sourceId },
+            selectedLocation: { source: { id: sourceId } },
             selectedContentLoaded: true,
           },
           "shallow"

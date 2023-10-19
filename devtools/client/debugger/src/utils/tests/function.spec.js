@@ -4,31 +4,31 @@
 
 import { findFunctionText } from "../function";
 
-import { getSymbols } from "../../workers/parser/getSymbols";
+import { getFunctionSymbols } from "../../workers/parser/getSymbols";
 import { populateOriginalSource } from "../../workers/parser/tests/helpers";
 
 describe("function", () => {
   describe("findFunctionText", () => {
     it("finds function", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
-      const text = findFunctionText(14, source, source.content, symbols);
+      const functions = getFunctionSymbols(source.id);
+      const text = findFunctionText(14, source, source.content, { functions });
       expect(text).toMatchSnapshot();
     });
 
     it("finds function signature", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
+      const functions = getFunctionSymbols(source.id);
 
-      const text = findFunctionText(13, source, source.content, symbols);
+      const text = findFunctionText(13, source, source.content, { functions });
       expect(text).toMatchSnapshot();
     });
 
     it("misses function closing brace", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
+      const functions = getFunctionSymbols(source.id);
 
-      const text = findFunctionText(15, source, source.content, symbols);
+      const text = findFunctionText(15, source, source.content, { functions });
 
       // TODO: we should try and match the closing bracket.
       expect(text).toEqual(null);
@@ -36,25 +36,25 @@ describe("function", () => {
 
     it("finds property function", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
+      const functions = getFunctionSymbols(source.id);
 
-      const text = findFunctionText(29, source, source.content, symbols);
+      const text = findFunctionText(29, source, source.content, { functions });
       expect(text).toMatchSnapshot();
     });
 
     it("finds class function", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
+      const functions = getFunctionSymbols(source.id);
 
-      const text = findFunctionText(33, source, source.content, symbols);
+      const text = findFunctionText(33, source, source.content, { functions });
       expect(text).toMatchSnapshot();
     });
 
     it("cant find function", () => {
       const source = populateOriginalSource("func");
-      const symbols = getSymbols(source.id);
+      const functions = getFunctionSymbols(source.id);
 
-      const text = findFunctionText(20, source, source.content, symbols);
+      const text = findFunctionText(20, source, source.content, { functions });
       expect(text).toEqual(null);
     });
   });
