@@ -30,6 +30,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import mozilla.components.support.webextensions.WebExtensionController
 import org.json.JSONObject
 import java.lang.ref.WeakReference
+import java.net.URLEncoder
 import java.util.Locale
 import java.util.UUID
 
@@ -294,7 +295,12 @@ class ReaderViewFeature(
 
     private fun WebExtensionController.createReaderUrl(url: String, id: String): String? {
         val colorScheme = config.colorScheme.name.lowercase(Locale.ROOT)
-        return readerBaseUrl?.let { it + "readerview.html?url=$url&id=$id&colorScheme=$colorScheme" }
+        // Encode the original page url, otherwise when the readerview page will try to
+        // parse the url and retrieve the readerview url params (ir and colorScheme)
+        // the parser may get confused because the original webpage url being interpolated
+        // may also include its own search params non-escaped (See Bug 1860490).
+        val encodedUrl = URLEncoder.encode(url, "UTF-8")
+        return readerBaseUrl?.let { it + "readerview.html?url=$encodedUrl&id=$id&colorScheme=$colorScheme" }
     }
 
     @VisibleForTesting

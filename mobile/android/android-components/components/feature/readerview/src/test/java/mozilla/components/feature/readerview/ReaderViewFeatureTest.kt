@@ -282,7 +282,7 @@ class ReaderViewFeatureTest {
         val readerViewFeature = ReaderViewFeature(testContext, engine, store, mock(), { "bbbbf5ce-3b0f-4f74-8a1f-986d89bffea7" })
         readerViewFeature.readerBaseUrl = "moz-extension://012345/"
         readerViewFeature.showReaderView()
-        verify(store).dispatch(EngineAction.LoadUrlAction(tab.id, "moz-extension://012345/readerview.html?url=https://www.mozilla.org&id=bbbbf5ce-3b0f-4f74-8a1f-986d89bffea7&colorScheme=light"))
+        verify(store).dispatch(EngineAction.LoadUrlAction(tab.id, "moz-extension://012345/readerview.html?url=https%3A%2F%2Fwww.mozilla.org&id=bbbbf5ce-3b0f-4f74-8a1f-986d89bffea7&colorScheme=light"))
         verify(store).dispatch(ReaderAction.UpdateReaderActiveAction(tab.id, true))
     }
 
