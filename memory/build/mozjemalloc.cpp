@@ -5194,9 +5194,9 @@ static void replace_malloc_init_funcs(malloc_table_t*);
 extern "C" void logalloc_init(malloc_table_t*, ReplaceMallocBridge**);
 
 extern "C" void dmd_init(malloc_table_t*, ReplaceMallocBridge**);
-
-extern "C" void phc_init(malloc_table_t*, ReplaceMallocBridge**);
 #  endif
+
+void phc_init(malloc_table_t*, ReplaceMallocBridge**);
 
 bool Equals(const malloc_table_t& aTable1, const malloc_table_t& aTable2) {
   return memcmp(&aTable1, &aTable2, sizeof(malloc_table_t)) == 0;
@@ -5234,11 +5234,11 @@ static void init() {
     dmd_init(&tempTable, &gReplaceMallocBridge);
   }
 #    endif
-#    ifdef MOZ_PHC
+#  endif
+#  ifdef MOZ_PHC
   if (Equals(tempTable, gDefaultMallocTable)) {
     phc_init(&tempTable, &gReplaceMallocBridge);
   }
-#    endif
 #  endif
   if (!Equals(tempTable, gDefaultMallocTable)) {
     replace_malloc_init_funcs(&tempTable);

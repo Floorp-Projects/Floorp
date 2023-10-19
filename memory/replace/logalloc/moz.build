@@ -7,9 +7,15 @@
 ReplaceMalloc("logalloc")
 
 SOURCES += [
-    "FdPrintf.cpp",
     "LogAlloc.cpp",
 ]
+
+# FdPrintf is statically linked if we're using static linking to mozjemalloc
+# and PHC is also compiled-in.
+if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"] or not CONFIG["MOZ_PHC"]:
+    SOURCES += [
+        "/memory/build/FdPrintf.cpp",
+    ]
 
 DisableStlWrapping()
 NO_PGO = True

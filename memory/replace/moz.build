@@ -20,6 +20,3 @@ DIRS += [
 
 if CONFIG["MOZ_DMD"]:
     DIRS += ["dmd"]
-
-if CONFIG["MOZ_PHC"]:
-    DIRS += ["phc"]
