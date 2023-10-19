@@ -982,8 +982,8 @@ bool RemoteTextureMap::CheckRemoteTextureReady(
 
   auto* owner = GetTextureOwner(lock, aInfo.mOwnerId, aInfo.mForPid);
   if (!owner || owner->mIsContextLost) {
-    // Owner is already removed or context lost.
-    return false;
+    // Owner is already removed or context lost. No need to wait texture ready.
+    return true;
   }
 
   const auto key = std::pair(aInfo.mForPid, aInfo.mTextureId);
