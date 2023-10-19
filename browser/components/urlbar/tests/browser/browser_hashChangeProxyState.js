@@ -22,7 +22,7 @@ add_task(async function () {
       let verifyURLBarState = testType => {
         is(
           gURLBar.value,
-          expectedURL,
+          UrlbarTestUtils.trimURL(expectedURL),
           "URL bar visible value should be correct " + testType
         );
         is(
@@ -129,7 +129,7 @@ add_task(async function () {
 
   is(
     gURLBar.value,
-    url,
+    UrlbarTestUtils.trimURL(url),
     "URL bar visible value should be correct when the page loads from about:newtab"
   );
   is(
