@@ -60,4 +60,3 @@ class Klass {
 
 const o = 1 + 2;
 console.log(o);
-

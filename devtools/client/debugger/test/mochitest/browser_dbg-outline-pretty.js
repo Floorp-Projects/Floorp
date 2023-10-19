@@ -11,16 +11,17 @@ add_task(async function () {
 
   await selectSource(dbg, "simple1.js");
   findElementWithSelector(dbg, ".outline-tab").click();
-  const originalSource = getItems(dbg);
+  await waitForElementWithSelector(dbg, ".outline-list");
+  const originalSourceOutlineItems = getItems(dbg);
 
   clickElement(dbg, "prettyPrintButton");
   await waitForLoadedSource(dbg, "simple1.js:formatted");
   await waitForElementWithSelector(dbg, ".outline-list");
-  const prettySource = getItems(dbg);
+  const prettySourceOutlineItems = getItems(dbg);
 
   is(
-    originalSource.length,
-    prettySource.length,
+    originalSourceOutlineItems.length,
+    prettySourceOutlineItems.length,
     "Length of outline functions for both prettyPrint and originalSource same"
   );
 });

@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// Tests that clicking a function in outline panel, the editor highlights the correct location.
 // Tests that outline panel can sort functions alphabetically.
 
 "use strict";
@@ -10,9 +9,26 @@
 add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple1.js");
 
+  findElementWithSelector(dbg, ".outline-tab").click();
+
+  is(
+    findAllElements(dbg, "outlineItems").length,
+    0,
+    " There are no outline items when no source is selected"
+  );
+  is(
+    findElementWithSelector(dbg, ".outline-pane-info").innerText,
+    "No file selected",
+    "The correct message is displayed when there are no outline items"
+  );
+
+  findElementWithSelector(dbg, ".sources-tab").click();
+  await waitForSourcesInSourceTree(dbg, [], { noExpand: true });
+
   await selectSource(dbg, "simple1.js", 1);
 
   findElementWithSelector(dbg, ".outline-tab").click();
+  await waitForElementWithSelector(dbg, ".outline-list");
 
   assertOutlineItems(dbg, [
     "λmain()",
@@ -29,16 +45,6 @@ add_task(async function () {
     "λconstructor()",
     "λtest()",
   ]);
-
-  info("Click an item in outline panel");
-  const item = getNthItem(dbg, 3);
-  item.click();
-  await waitForLoadedSource(dbg, "simple1.js");
-  assertHighlightLocation(dbg, "simple1.js", 15);
-  ok(
-    item.parentNode.classList.contains("focused"),
-    "The clicked item li is focused"
-  );
 
   info("Sort the list");
   findElementWithSelector(dbg, ".outline-footer button").click();
@@ -67,23 +73,21 @@ add_task(async function () {
   ]);
 });
 
-function assertOutlineItems(dbg, expectedItems) {
-  SimpleTest.isDeeply(
-    getItems(dbg).map(i => i.innerText.trim()),
-    expectedItems,
-    "The expected items are displayed in the outline panel"
-  );
-}
+// Test empty panel when source has not function or class symbols
+add_task(async function () {
+  const dbg = await initDebugger("doc-on-load.html", "top-level.js");
+  await selectSource(dbg, "top-level.js", 1);
 
-function getItems(dbg) {
-  return Array.from(
-    findAllElementsWithSelector(
-      dbg,
-      ".outline-list h2, .outline-list .outline-list__element"
-    )
+  findElementWithSelector(dbg, ".outline-tab").click();
+  await waitFor(
+    () =>
+      dbg.win.document.querySelector(".outline-pane-info").innerText ==
+      "No functions"
   );
-}
 
-function getNthItem(dbg, index) {
-  return findElement(dbg, "outlineItem", index);
-}
+  is(
+    findAllElements(dbg, "outlineItems").length,
+    0,
+    " There are no outline items when no source is selected"
+  );
+});
