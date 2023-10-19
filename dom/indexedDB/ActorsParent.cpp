@@ -1521,6 +1521,10 @@ class ConnectionPool final {
 
   static void IdleTimerCallback(nsITimer* aTimer, void* aClosure);
 
+  static uint32_t SerialNumber() { return ++sSerialNumber; }
+
+  static uint32_t sSerialNumber;
+
   void Cleanup();
 
   void AdjustIdleTimer();
@@ -1683,9 +1687,6 @@ class ConnectionPool::FinishCallbackWrapper final : public Runnable {
 };
 
 class ConnectionPool::ThreadRunnable final : public Runnable {
-  // Only touched on the background thread.
-  static uint32_t sNextSerialNumber;
-
   // Set at construction for logging.
   const uint32_t mSerialNumber;
 
@@ -1694,15 +1695,11 @@ class ConnectionPool::ThreadRunnable final : public Runnable {
   FlippedOnce<true> mContinueRunning;
 
  public:
-  ThreadRunnable();
+  explicit ThreadRunnable(uint32_t aSerialNumber);
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ThreadRunnable, Runnable)
 
   uint32_t SerialNumber() const { return mSerialNumber; }
-
-  nsCString GetThreadName() const {
-    return nsPrintfCString("IndexedDB #%" PRIu32, mSerialNumber);
-  }
 
  private:
   ~ThreadRunnable() override;
@@ -8045,12 +8042,15 @@ bool ConnectionPool::ScheduleTransaction(TransactionInfo& aTransactionInfo,
       bool created = false;
 
       if (mTotalThreadCount < kMaxConnectionThreadCount) {
+        const uint32_t serialNumber = SerialNumber();
+        const nsCString serialName =
+            nsPrintfCString("IndexedDB #%" PRIu32, serialNumber);
         // This will set the thread up with the profiler.
-        RefPtr<ThreadRunnable> runnable = new ThreadRunnable();
+        RefPtr<ThreadRunnable> runnable = new ThreadRunnable(serialNumber);
 
         nsCOMPtr<nsIThread> newThread;
-        nsresult rv = NS_NewNamedThread(runnable->GetThreadName(),
-                                        getter_AddRefs(newThread), runnable);
+        nsresult rv =
+            NS_NewNamedThread(serialName, getter_AddRefs(newThread), runnable);
         if (NS_SUCCEEDED(rv)) {
           newThread->SetNameForWakeupTelemetry("IndexedDB (all)"_ns);
           MOZ_ASSERT(newThread);
@@ -8619,11 +8619,11 @@ nsresult ConnectionPool::FinishCallbackWrapper::Run() {
   return NS_OK;
 }
 
-uint32_t ConnectionPool::ThreadRunnable::sNextSerialNumber = 0;
+uint32_t ConnectionPool::sSerialNumber = 0u;
 
-ConnectionPool::ThreadRunnable::ThreadRunnable()
+ConnectionPool::ThreadRunnable::ThreadRunnable(uint32_t aSerialNumber)
     : Runnable("dom::indexedDB::ConnectionPool::ThreadRunnable"),
-      mSerialNumber(++sNextSerialNumber) {
+      mSerialNumber(aSerialNumber) {
   AssertIsOnBackgroundThread();
 }
 
