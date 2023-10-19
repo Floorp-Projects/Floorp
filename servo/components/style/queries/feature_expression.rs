@@ -757,7 +757,7 @@ impl QueryExpressionValue {
                 QueryExpressionValue::Resolution(Resolution::parse(context, input)?)
             },
             Evaluator::String(..) => {
-                QueryExpressionValue::String(input.expect_ident()?.as_ref().into())
+                QueryExpressionValue::String(input.expect_string()?.as_ref().into())
             },
             Evaluator::Enumerated { parser, .. } => {
                 QueryExpressionValue::Enumerated(parser(context, input)?)
