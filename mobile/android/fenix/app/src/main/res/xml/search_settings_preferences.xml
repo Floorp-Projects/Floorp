@@ -16,7 +16,7 @@
         <Preference
             app:iconSpaceReserved="false"
             android:key="@string/pref_key_manage_search_shortcuts"
-            android:title="@string/preferences_manage_search_shortcuts2"
+            android:title="@string/preferences_manage_search_shortcuts_2"
             android:summary="@string/preferences_manage_search_shortcuts_summary"/>
     </PreferenceCategory>
 
@@ -72,7 +72,7 @@
         <Preference
             app:iconSpaceReserved="false"
             android:key="@string/pref_key_learn_about_fx_suggest"
-            android:title="@string/preference_search_learn_about_fx_suggest" />   
+            android:title="@string/preference_search_learn_about_fx_suggest" />
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -95,6 +95,5 @@
             android:defaultValue="true"
             android:key="@string/pref_key_enable_autocomplete_urls"
             android:title="@string/preferences_enable_autocomplete_urls" />
-   
     </PreferenceCategory>
 </PreferenceScreen>

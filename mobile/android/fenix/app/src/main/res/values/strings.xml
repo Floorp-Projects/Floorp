@@ -389,7 +389,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Select one</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts2">Manage alternative search engines</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Manage search shortcuts</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Manage alternative search engines</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Edit engines visible in the search menu</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->

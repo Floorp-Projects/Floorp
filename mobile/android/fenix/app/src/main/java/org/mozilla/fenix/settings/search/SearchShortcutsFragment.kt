@@ -105,6 +105,6 @@ class SearchShortcutsFragment : Fragment(R.layout.fragment_search_shortcuts) {
     override fun onResume() {
         super.onResume()
         view?.hideKeyboard()
-        showToolbar(getString(R.string.preferences_manage_search_shortcuts2))
+        showToolbar(getString(R.string.preferences_manage_search_shortcuts_2))
     }
 }
