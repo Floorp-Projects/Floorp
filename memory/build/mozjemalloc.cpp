@@ -162,6 +162,7 @@
 #include "mozilla/fallible.h"
 #include "rb.h"
 #include "Mutex.h"
+#include "PHC.h"
 #include "Utils.h"
 
 #if defined(XP_WIN)
@@ -4536,11 +4537,10 @@ struct BaseAllocator {
   arena_t* mArena;
 };
 
-#define MALLOC_DECL(name, return_type, ...)                  \
-  inline return_type MozJemalloc::name(                      \
-      ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) {              \
-    BaseAllocator allocator(nullptr);                        \
-    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__)); \
+#define MALLOC_DECL(name, return_type, ...)                               \
+  return_type MozJemalloc::name(ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
+    BaseAllocator allocator(nullptr);                                     \
+    return allocator.name(ARGS_HELPER(ARGS, ##__VA_ARGS__));              \
   }
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
 #include "malloc_decls.h"
@@ -4673,7 +4673,7 @@ inline void* MozJemalloc::valloc(size_t aSize) {
 // Begin non-standard functions.
 
 // This was added by Mozilla for use by SQLite.
-inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
+size_t MozJemalloc::malloc_good_size(size_t aSize) {
   if (aSize <= gMaxLargeClass) {
     // Small or large
     aSize = SizeClass(aSize).Size();
@@ -4687,12 +4687,12 @@ inline size_t MozJemalloc::malloc_good_size(size_t aSize) {
   return aSize;
 }
 
-inline size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
+size_t MozJemalloc::malloc_usable_size(usable_ptr_t aPtr) {
   return AllocInfo::GetValidated(aPtr).Size();
 }
 
-inline void MozJemalloc::jemalloc_stats_internal(
-    jemalloc_stats_t* aStats, jemalloc_bin_stats_t* aBinStats) {
+void MozJemalloc::jemalloc_stats_internal(jemalloc_stats_t* aStats,
+                                          jemalloc_bin_stats_t* aBinStats) {
   size_t non_arena_mapped, chunk_header_size;
 
   if (!aStats) {
@@ -4970,7 +4970,7 @@ inline void MozJemalloc::moz_set_max_dirty_page_modifier(int32_t aModifier) {
 }
 
 #define MALLOC_DECL(name, return_type, ...)                          \
-  inline return_type MozJemalloc::moz_arena_##name(                  \
+  return_type MozJemalloc::moz_arena_##name(                         \
       arena_id_t aArenaId, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
     BaseAllocator allocator(                                         \
         gArenas.GetById(aArenaId, /* IsPrivate = */ true));          \
@@ -5064,7 +5064,7 @@ void _malloc_postfork_child(void) {
 
 #  include "replace_malloc.h"
 
-#  define MALLOC_DECL(name, return_type, ...) MozJemalloc::name,
+#  define MALLOC_DECL(name, return_type, ...) CanonicalMalloc::name,
 
 // The default malloc table, i.e. plain allocations. It never changes. It's
 // used by init(), and not used after that.
@@ -5177,16 +5177,19 @@ static void init() {
   }
 #    endif
 #  endif
-#  ifdef MOZ_PHC
-  if (Equals(tempTable, gDefaultMallocTable)) {
-    phc_init(&tempTable, &gReplaceMallocBridge);
-  }
-#  endif
   if (!Equals(tempTable, gDefaultMallocTable)) {
     replace_malloc_init_funcs(&tempTable);
   }
   gOriginalMallocTable = tempTable;
   gMallocTablePtr = &gOriginalMallocTable;
+
+#  ifdef MOZ_PHC
+  // For now PHC still uses the bridge, so if no other allocator registered a
+  // bridge then register PHC's now.
+  if (!gReplaceMallocBridge) {
+    gReplaceMallocBridge = GetPHCBridge();
+  }
+#  endif
 }
 
 // WARNING WARNING WARNING: this function should be used with extreme care. It
@@ -5262,30 +5265,30 @@ MOZ_JEMALLOC_API struct ReplaceMallocBridge* get_bridge(void) {
 // replace_valloc, and default implementations will be automatically derived
 // from replace_memalign.
 static void replace_malloc_init_funcs(malloc_table_t* table) {
-  if (table->posix_memalign == MozJemalloc::posix_memalign &&
-      table->memalign != MozJemalloc::memalign) {
+  if (table->posix_memalign == CanonicalMalloc::posix_memalign &&
+      table->memalign != CanonicalMalloc::memalign) {
     table->posix_memalign =
         AlignedAllocator<ReplaceMalloc::memalign>::posix_memalign;
   }
-  if (table->aligned_alloc == MozJemalloc::aligned_alloc &&
-      table->memalign != MozJemalloc::memalign) {
+  if (table->aligned_alloc == CanonicalMalloc::aligned_alloc &&
+      table->memalign != CanonicalMalloc::memalign) {
     table->aligned_alloc =
         AlignedAllocator<ReplaceMalloc::memalign>::aligned_alloc;
   }
-  if (table->valloc == MozJemalloc::valloc &&
-      table->memalign != MozJemalloc::memalign) {
+  if (table->valloc == CanonicalMalloc::valloc &&
+      table->memalign != CanonicalMalloc::memalign) {
     table->valloc = AlignedAllocator<ReplaceMalloc::memalign>::valloc;
   }
   if (table->moz_create_arena_with_params ==
-          MozJemalloc::moz_create_arena_with_params &&
-      table->malloc != MozJemalloc::malloc) {
+          CanonicalMalloc::moz_create_arena_with_params &&
+      table->malloc != CanonicalMalloc::malloc) {
 #  define MALLOC_DECL(name, ...) \
     table->name = DummyArenaAllocator<ReplaceMalloc>::name;
 #  define MALLOC_FUNCS MALLOC_FUNCS_ARENA_BASE
 #  include "malloc_decls.h"
   }
-  if (table->moz_arena_malloc == MozJemalloc::moz_arena_malloc &&
-      table->malloc != MozJemalloc::malloc) {
+  if (table->moz_arena_malloc == CanonicalMalloc::moz_arena_malloc &&
+      table->malloc != CanonicalMalloc::malloc) {
 #  define MALLOC_DECL(name, ...) \
     table->name = DummyArenaAllocator<ReplaceMalloc>::name;
 #  define MALLOC_FUNCS MALLOC_FUNCS_ARENA_ALLOC

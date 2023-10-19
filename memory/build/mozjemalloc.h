@@ -83,6 +83,39 @@ struct MozJemalloc {
 #  include "malloc_decls.h"
 };
 
+#  ifdef MOZ_PHC
+struct MozJemallocPHC : public MozJemalloc {
+#    define MALLOC_DECL(name, return_type, ...) \
+      static return_type name(__VA_ARGS__);
+#    define MALLOC_FUNCS MALLOC_FUNCS_MALLOC_BASE
+#    include "malloc_decls.h"
+
+  static int posix_memalign(void** aMemPtr, size_t aAlignment, size_t aSize) {
+    return AlignedAllocator<memalign>::posix_memalign(aMemPtr, aAlignment,
+                                                      aSize);
+  }
+
+  static void* aligned_alloc(size_t aAlignment, size_t aSize) {
+    return AlignedAllocator<memalign>::aligned_alloc(aAlignment, aSize);
+  }
+
+  static void* valloc(size_t aSize) {
+    return AlignedAllocator<memalign>::valloc(aSize);
+  }
+
+  static size_t malloc_usable_size(usable_ptr_t);
+
+  static void jemalloc_stats_internal(jemalloc_stats_t*, jemalloc_bin_stats_t*);
+
+  static void jemalloc_ptr_info(const void*, jemalloc_ptr_info_t*);
+
+#    define MALLOC_DECL(name, return_type, ...) \
+      static return_type name(__VA_ARGS__);
+#    define MALLOC_FUNCS MALLOC_FUNCS_ARENA_ALLOC
+#    include "malloc_decls.h"
+};
+#  endif
+
 #  ifdef MOZ_REPLACE_MALLOC
 // The replace-malloc allocator
 struct ReplaceMalloc {
@@ -90,10 +123,18 @@ struct ReplaceMalloc {
       static return_type name(__VA_ARGS__);
 #    include "malloc_decls.h"
 };
+#  endif
 
+#  ifdef MOZ_PHC
+typedef MozJemallocPHC CanonicalMalloc;
+#  else
+typedef MozJemalloc CanonicalMalloc;
+#  endif
+
+#  ifdef MOZ_REPLACE_MALLOC
 typedef ReplaceMalloc DefaultMalloc;
 #  else
-typedef MozJemalloc DefaultMalloc;
+typedef CanonicalMalloc DefaultMalloc;
 #  endif
 
 // Poison - write "poison" to cells upon deallocation.
