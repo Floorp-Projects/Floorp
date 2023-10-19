@@ -28,7 +28,7 @@
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
-      <description data-l10n-id="search-engine-default-desc-2" />
+      <description class="section-description" data-l10n-id="search-engine-default-desc-2" />
       <hbox>
         <menulist id="defaultEngine">
           <menupopup/>
@@ -50,6 +50,7 @@
     <groupbox id="searchSuggestionsGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-suggestions-header" /></label>
       <description id="searchSuggestionsDesc"
+                   class="section-description"
                    data-l10n-id="search-suggestions-desc" />
 
       <checkbox id="suggestionsInSearchFieldsCheckbox"
@@ -79,7 +80,7 @@
 
     <groupbox id="oneClickSearchProvidersGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-one-click-header2" /></label>
-      <description data-l10n-id="search-one-click-desc" />
+      <description class="section-description" data-l10n-id="search-one-click-desc" />
 
       <tree id="engineList" flex="1" rows="11" hidecolumnpicker="true" editable="true"
             seltype="single" allowunderflowscroll="true">

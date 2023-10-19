@@ -403,7 +403,7 @@
   <hbox data-subcategory="sitedata" align="baseline">
     <vbox flex="1">
       <description class="description-with-side-element" flex="1">
-        <html:span id="totalSiteDataSize" class="tail-with-learn-more"></html:span>
+        <html:span id="totalSiteDataSize" class="tail-with-learn-more section-description"></html:span>
         <html:a is="moz-support-link"
                 id="siteDataLearnMoreLink"
                 data-l10n-id="sitedata-learn-more"
@@ -464,7 +464,7 @@
   <vbox flex="1">
     <hbox>
       <description>
-        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more" data-l10n-id="cookie-banner-blocker-description" ></html:span>
+        <html:span id="cookieBannerReductionExplanation" class="tail-with-learn-more section-description" data-l10n-id="cookie-banner-blocker-description" ></html:span>
         <html:a is="moz-support-link" id="cookieBannerHandlingLearnMore" class="learnMore"  data-l10n-id="cookie-banner-learn-more" support-page="cookie-banner-reduction"/>
       </description>
     </hbox>
@@ -703,7 +703,7 @@
           hidden="true"
           data-subcategory="locationBar">
   <label><html:h2 id="locationBarGroupHeader" data-l10n-id="addressbar-header"/></label>
-  <label id="locationBarSuggestionLabel" data-l10n-id="addressbar-suggest"/>
+  <label id="locationBarSuggestionLabel" class="section-description" data-l10n-id="addressbar-suggest"/>
   <checkbox id="historySuggestion" data-l10n-id="addressbar-locbar-history-option"
             preference="browser.urlbar.suggest.history"/>
   <checkbox id="bookmarkSuggestion" data-l10n-id="addressbar-locbar-bookmarks-option"
@@ -1015,7 +1015,7 @@
   <label class="search-header" hidden="true"><html:h2 data-l10n-id="collection-header2" data-l10n-attrs="searchkeywords"/></label>
 
   <description>
-    <label class="tail-with-learn-more" data-l10n-id="collection-description"/>
+    <label class="tail-with-learn-more section-description" data-l10n-id="collection-description"/>
     <html:a id="dataCollectionPrivacyNotice"
            class="learnMore"
            data-l10n-id="collection-privacy-notice"/>
@@ -1199,7 +1199,7 @@
 <groupbox id="httpsOnlyBox" data-category="panePrivacy" hidden="true">
   <label><html:h2 data-l10n-id="httpsonly-header"/></label>
   <vbox data-subcategory="httpsonly" flex="1">
-    <label id="httpsOnlyDescription" data-l10n-id="httpsonly-description"/>
+    <label id="httpsOnlyDescription" class="section-description" data-l10n-id="httpsonly-description"/>
     <html:a is="moz-support-link"
             id="httpsOnlyLearnMore"
             class="learnMore"
