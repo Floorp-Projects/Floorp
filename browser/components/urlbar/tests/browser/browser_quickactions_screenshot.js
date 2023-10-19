@@ -137,7 +137,7 @@ add_task(async function search_mode_on_webpage() {
   );
 
   info("Check the urlbar state");
-  Assert.equal(gURLBar.value, "https://example.com");
+  Assert.equal(gURLBar.value, UrlbarTestUtils.trimURL("https://example.com"));
   Assert.equal(gURLBar.getAttribute("pageproxystate"), "valid");
 
   info("Show result again");
