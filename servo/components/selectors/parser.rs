@@ -18,7 +18,7 @@ use cssparser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind
 use cssparser::{CowRcStr, Delimiter, SourceLocation};
 use cssparser::{Parser as CssParser, ToCss, Token};
 use precomputed_hash::PrecomputedHash;
-use servo_arc::{Arc, ThinArc, UniqueArc};
+use servo_arc::{Arc, ThinArc, UniqueArc, ThinArcUnion, ArcUnionBorrow};
 use smallvec::SmallVec;
 use std::borrow::{Borrow, Cow};
 use std::fmt::{self, Debug};
@@ -352,11 +352,63 @@ pub trait Parser<'i> {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, ToShmem)]
+/// A selector list is a tagged pointer with either a single selector, or a ThinArc<()> of multiple
+/// selectors.
+#[derive(Clone, Eq, Debug, PartialEq, ToShmem)]
 #[shmem(no_bounds)]
 pub struct SelectorList<Impl: SelectorImpl>(
-    #[shmem(field_bound)] pub SmallVec<[Selector<Impl>; 1]>,
+    #[shmem(field_bound)] ThinArcUnion<SpecificityAndFlags, Component<Impl>, (), Selector<Impl>>
 );
+
+impl<Impl: SelectorImpl> SelectorList<Impl> {
+    pub fn from_one(selector: Selector<Impl>) -> Self {
+        #[cfg(debug_assertions)]
+        let selector_repr = unsafe { *(&selector as *const _ as *const usize) };
+        let list = Self(ThinArcUnion::from_first(selector.into_data()));
+        debug_assert_eq!(
+            selector_repr,
+            unsafe { *(&list as *const _ as *const usize) },
+            "We rely on the same bit representation for the single selector variant"
+        );
+        list
+    }
+
+    pub fn from_iter(mut iter: impl ExactSizeIterator<Item = Selector<Impl>>) -> Self {
+        if iter.len() == 1 {
+            Self::from_one(iter.next().unwrap())
+        } else {
+            Self(ThinArcUnion::from_second(ThinArc::from_header_and_iter((), iter)))
+        }
+    }
+
+    #[inline]
+    pub fn slice(&self) -> &[Selector<Impl>] {
+        match self.0.borrow() {
+            ArcUnionBorrow::First(..) => {
+                // SAFETY: see from_one.
+                let selector: &Selector<Impl> = unsafe { std::mem::transmute(self) };
+                std::slice::from_ref(selector)
+            },
+            ArcUnionBorrow::Second(list) => list.get().slice(),
+        }
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        match self.0.borrow() {
+            ArcUnionBorrow::First(..) => 1,
+            ArcUnionBorrow::Second(list) => list.len(),
+        }
+    }
+
+    /// Returns the address on the heap of the ThinArc for memory reporting.
+    pub fn thin_arc_heap_ptr(&self) -> *const ::std::os::raw::c_void {
+        match self.0.borrow() {
+            ArcUnionBorrow::First(s) => s.with_arc(|a| a.heap_ptr()),
+            ArcUnionBorrow::Second(s) => s.with_arc(|a| a.heap_ptr()),
+        }
+    }
+}
 
 /// Uniquely identify a selector based on its components, which is behind ThinArc and
 /// is therefore stable.
@@ -397,18 +449,7 @@ pub enum ParseRelative {
 impl<Impl: SelectorImpl> SelectorList<Impl> {
     /// Returns a selector list with a single `&`
     pub fn ampersand() -> Self {
-        Self(smallvec::smallvec![Selector::ampersand()])
-    }
-
-    /// Copies a selector list into a reference counted list.
-    pub fn to_shared(&self) -> ArcSelectorList<Impl> {
-        ThinArc::from_header_and_iter((), self.0.iter().cloned())
-    }
-
-    /// Turns a selector list into a reference counted list. Drains the list. We don't use
-    /// `mut self` to avoid memmoving around.
-    pub fn into_shared(&mut self) -> ArcSelectorList<Impl> {
-        ThinArc::from_header_and_iter((), self.0.drain(..))
+        Self::from_one(Selector::ampersand())
     }
 
     /// Parse a comma-separated list of Selectors.
@@ -443,7 +484,7 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
     where
         P: Parser<'i, Impl = Impl>,
     {
-        let mut values = SmallVec::new();
+        let mut values = SmallVec::<[_; 4]>::new();
         let forgiving = recovery == ForgivingParsing::Yes && parser.allow_forgiving_selectors();
         loop {
             let selector = input.parse_until_before(Delimiter::Comma, |input| {
@@ -464,18 +505,18 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
                 Err(_) => break,
             }
         }
-        Ok(SelectorList(values))
+        Ok(Self::from_iter(values.into_iter()))
     }
 
     /// Replaces the parent selector in all the items of the selector list.
-    pub fn replace_parent_selector(&self, parent: &ArcSelectorList<Impl>) -> Self {
-        Self(self.0.iter().map(|selector| selector.replace_parent_selector(parent)).collect())
+    pub fn replace_parent_selector(&self, parent: &SelectorList<Impl>) -> Self {
+        Self::from_iter(self.slice().iter().map(|selector| selector.replace_parent_selector(parent)))
     }
 
     /// Creates a SelectorList from a Vec of selectors. Used in tests.
     #[allow(dead_code)]
     pub(crate) fn from_vec(v: Vec<Selector<Impl>>) -> Self {
-        SelectorList(SmallVec::from_vec(v))
+        SelectorList::from_iter(v.into_iter())
     }
 }
 
@@ -582,9 +623,10 @@ where
                 // :where and :is OR their selectors, so we can't put any hash
                 // in the filter if there's more than one selector, as that'd
                 // exclude elements that may match one of the other selectors.
-                if list.len() == 1 &&
+                let slice = list.slice();
+                if slice.len() == 1 &&
                     !collect_selector_hashes(
-                        create_inner_iterator(&list.slice()[0]),
+                        create_inner_iterator(&slice[0]),
                         quirks_mode,
                         hashes,
                         len,
@@ -653,6 +695,8 @@ pub fn namespace_empty_string<Impl: SelectorImpl>() -> Impl::NamespaceUrl {
     Impl::NamespaceUrl::default()
 }
 
+type SelectorData<Impl> = ThinArc<SpecificityAndFlags, Component<Impl>>;
+
 /// A Selector stores a sequence of simple selectors and combinators. The
 /// iterator classes allow callers to iterate at either the raw sequence level or
 /// at the level of sequences of simple selectors separated by combinators. Most
@@ -669,9 +713,8 @@ pub fn namespace_empty_string<Impl: SelectorImpl>() -> Impl::NamespaceUrl {
 /// handle it in to_css to make it invisible to serialization.
 #[derive(Clone, Eq, PartialEq, ToShmem)]
 #[shmem(no_bounds)]
-pub struct Selector<Impl: SelectorImpl>(
-    #[shmem(field_bound)] ThinArc<SpecificityAndFlags, Component<Impl>>,
-);
+#[repr(transparent)]
+pub struct Selector<Impl: SelectorImpl>(#[shmem(field_bound)] SelectorData<Impl>);
 
 impl<Impl: SelectorImpl> Selector<Impl> {
     /// See Arc::mark_as_intentionally_leaked
@@ -905,7 +948,12 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         Selector(builder.build_with_specificity_and_flags(spec))
     }
 
-    pub fn replace_parent_selector(&self, parent: &ArcSelectorList<Impl>) -> Self {
+    #[inline]
+    fn into_data(self) -> SelectorData<Impl> {
+        self.0
+    }
+
+    pub fn replace_parent_selector(&self, parent: &SelectorList<Impl>) -> Self {
         // FIXME(emilio): Shouldn't allow replacing if parent has a pseudo-element selector
         // or what not.
         let flags = self.flags() - SelectorFlags::HAS_PARENT;
@@ -922,14 +970,13 @@ impl<Impl: SelectorImpl> Selector<Impl> {
 
         fn replace_parent_on_selector_list<Impl: SelectorImpl>(
             orig: &[Selector<Impl>],
-            parent: &ArcSelectorList<Impl>,
+            parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
             with_specificity: bool,
-        ) -> Option<ArcSelectorList<Impl>> {
+        ) -> Option<SelectorList<Impl>> {
             let mut any = false;
 
-            let result = ArcSelectorList::from_header_and_iter(
-                (),
+            let result = SelectorList::from_iter(
                 orig
                     .iter()
                     .map(|s| {
@@ -958,7 +1005,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
 
         fn replace_parent_on_relative_selector_list<Impl: SelectorImpl>(
             orig: &[RelativeSelector<Impl>],
-            parent: &ArcSelectorList<Impl>,
+            parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
         ) -> Vec<RelativeSelector<Impl>> {
             let mut any = false;
@@ -990,7 +1037,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
 
         fn replace_parent_on_selector<Impl: SelectorImpl>(
             orig: &Selector<Impl>,
-            parent: &ArcSelectorList<Impl>,
+            parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
         ) -> Selector<Impl> {
             if !orig.has_parent_selector() {
@@ -1755,8 +1802,8 @@ impl CombinatorComposition {
 impl<Impl: SelectorImpl> RelativeSelector<Impl> {
     fn from_selector_list(selector_list: SelectorList<Impl>) -> Box<[Self]> {
         let vec: Vec<Self> = selector_list
-            .0
-            .into_iter()
+            .slice()
+            .iter()
             .map(|selector| {
                 // It's more efficient to keep track of all this during the parse time, but that seems like a lot of special
                 // case handling for what it's worth.
@@ -1783,16 +1830,13 @@ impl<Impl: SelectorImpl> RelativeSelector<Impl> {
                 );
                 RelativeSelector {
                     match_hint,
-                    selector,
+                    selector: selector.clone(),
                 }
             })
             .collect();
         vec.into_boxed_slice()
     }
 }
-
-/// A reference-counted selector list.
-pub type ArcSelectorList<Impl> = ThinArc<(), Selector<Impl>>;
 
 /// A CSS simple selector or combinator. We store both in the same enum for
 /// optimal packing and cache performance, see [1].
@@ -1833,7 +1877,7 @@ pub enum Component<Impl: SelectorImpl> {
     ),
 
     /// Pseudo-classes
-    Negation(ArcSelectorList<Impl>),
+    Negation(SelectorList<Impl>),
     Root,
     Empty,
     Scope,
@@ -1872,13 +1916,13 @@ pub enum Component<Impl: SelectorImpl> {
     ///
     /// The inner argument is conceptually a SelectorList, but we move the
     /// selectors to the heap to keep Component small.
-    Where(ArcSelectorList<Impl>),
+    Where(SelectorList<Impl>),
     /// The `:is` pseudo-class.
     ///
     /// https://drafts.csswg.org/selectors/#matches-pseudo
     ///
     /// Same comment as above re. the argument.
-    Is(ArcSelectorList<Impl>),
+    Is(SelectorList<Impl>),
     /// The `:has` pseudo-class.
     ///
     /// https://drafts.csswg.org/selectors/#has-pseudo
@@ -2112,7 +2156,7 @@ impl<Impl: SelectorImpl> ToCss for SelectorList<Impl> {
     where
         W: fmt::Write,
     {
-        serialize_selector_list(self.0.iter(), dest)
+        serialize_selector_list(self.slice().iter(), dest)
     }
 }
 
@@ -2961,7 +3005,7 @@ where
     P: Parser<'i, Impl = Impl>,
     Impl: SelectorImpl,
 {
-    let mut list = SelectorList::parse_with_state(
+    let list = SelectorList::parse_with_state(
         parser,
         input,
         state |
@@ -2971,7 +3015,7 @@ where
         ParseRelative::No,
     )?;
 
-    Ok(Component::Negation(list.into_shared()))
+    Ok(Component::Negation(list))
 }
 
 /// simple_selector_sequence
@@ -3077,7 +3121,7 @@ fn parse_is_where<'i, 't, P, Impl>(
     parser: &P,
     input: &mut CssParser<'i, 't>,
     state: SelectorParsingState,
-    component: impl FnOnce(ArcSelectorList<Impl>) -> Component<Impl>,
+    component: impl FnOnce(SelectorList<Impl>) -> Component<Impl>,
 ) -> Result<Component<Impl>, ParseError<'i, P::Error>>
 where
     P: Parser<'i, Impl = Impl>,
@@ -3089,7 +3133,7 @@ where
     //     Pseudo-elements cannot be represented by the matches-any
     //     pseudo-class; they are not valid within :is().
     //
-    let mut inner = SelectorList::parse_with_state(
+    let inner = SelectorList::parse_with_state(
         parser,
         input,
         state |
@@ -3098,7 +3142,7 @@ where
         ForgivingParsing::Yes,
         ParseRelative::No,
     )?;
-    Ok(component(inner.into_shared()))
+    Ok(component(inner))
 }
 
 fn parse_has<'i, 't, P, Impl>(
@@ -3202,7 +3246,7 @@ where
     }
     // Whitespace between "of" and the selector list is optional
     // https://github.com/w3c/csswg-drafts/issues/8285
-    let mut selectors = SelectorList::parse_with_state(
+    let selectors = SelectorList::parse_with_state(
         parser,
         input,
         state |
@@ -3213,7 +3257,7 @@ where
     )?;
     Ok(Component::NthOf(NthOfSelectorData::new(
         &nth_data,
-        selectors.0.drain(..),
+        selectors.slice().iter().cloned(),
     )))
 }
 
@@ -4028,7 +4072,7 @@ pub mod tests {
                             vec![Component::Class(DummyAtom::from("cl"))],
                             specificity(0, 1, 0),
                             Default::default(),
-                        )]).to_shared()
+                        )])
                     ),
                 ],
                 specificity(0, 1, 0),
@@ -4048,7 +4092,7 @@ pub mod tests {
                             ],
                             specificity(0, 0, 0),
                             Default::default(),
-                        )]).to_shared(),
+                        )]),
                     ),
                 ],
                 specificity(0, 0, 0),
@@ -4071,7 +4115,7 @@ pub mod tests {
                             ],
                             specificity(0, 0, 1),
                             Default::default(),
-                        )]).to_shared()
+                        )])
                     ),
                 ],
                 specificity(0, 0, 1),
@@ -4177,7 +4221,7 @@ pub mod tests {
                         vec![Component::ExplicitUniversalType],
                         specificity(0, 0, 0),
                         Default::default(),
-                    )]).to_shared()
+                    )])
                 )],
                 specificity(0, 0, 0),
                 Default::default(),
@@ -4194,7 +4238,7 @@ pub mod tests {
                         ],
                         specificity(0, 0, 0),
                         Default::default(),
-                    )]).to_shared()
+                    )])
                 )],
                 specificity(0, 0, 0),
                 Default::default(),
@@ -4210,7 +4254,7 @@ pub mod tests {
                         vec![Component::ExplicitUniversalType],
                         specificity(0, 0, 0),
                         Default::default()
-                    )]).to_shared()
+                    )])
                 )],
                 specificity(0, 0, 0),
                 Default::default(),
@@ -4263,19 +4307,19 @@ pub mod tests {
         let parent = parse(".bar, div .baz").unwrap();
         let child = parse("#foo &.bar").unwrap();
         assert_eq!(
-            child.replace_parent_selector(&parent.to_shared()),
+            child.replace_parent_selector(&parent),
             parse("#foo :is(.bar, div .baz).bar").unwrap()
         );
 
         let has_child = parse("#foo:has(&.bar)").unwrap();
         assert_eq!(
-            has_child.replace_parent_selector(&parent.to_shared()),
+            has_child.replace_parent_selector(&parent),
             parse("#foo:has(:is(.bar, div .baz).bar)").unwrap()
         );
 
         let child = parse("#foo").unwrap();
         assert_eq!(
-            child.replace_parent_selector(&parent.to_shared()),
+            child.replace_parent_selector(&parent),
             parse(":is(.bar, div .baz) #foo").unwrap()
         );
 
@@ -4285,7 +4329,8 @@ pub mod tests {
 
     #[test]
     fn test_pseudo_iter() {
-        let selector = &parse("q::before").unwrap().0[0];
+        let list = parse("q::before").unwrap();
+        let selector = &list.slice()[0];
         assert!(!selector.is_universal());
         let mut iter = selector.iter();
         assert_eq!(
@@ -4302,18 +4347,19 @@ pub mod tests {
 
     #[test]
     fn test_universal() {
-        let selector = &parse_ns(
+        let list = parse_ns(
             "*|*::before",
             &DummyParser::default_with_namespace(DummyAtom::from("https://mozilla.org")),
         )
-        .unwrap()
-        .0[0];
+        .unwrap();
+        let selector = &list.slice()[0];
         assert!(selector.is_universal());
     }
 
     #[test]
     fn test_empty_pseudo_iter() {
-        let selector = &parse("::before").unwrap().0[0];
+        let list = parse("::before").unwrap();
+        let selector = &list.slice()[0];
         assert!(selector.is_universal());
         let mut iter = selector.iter();
         assert_eq!(
@@ -4344,11 +4390,11 @@ pub mod tests {
     #[test]
     fn visitor() {
         let mut test_visitor = TestVisitor { seen: vec![] };
-        parse(":not(:hover) ~ label").unwrap().0[0].visit(&mut test_visitor);
+        parse(":not(:hover) ~ label").unwrap().slice()[0].visit(&mut test_visitor);
         assert!(test_visitor.seen.contains(&":hover".into()));
 
         let mut test_visitor = TestVisitor { seen: vec![] };
-        parse("::before:hover").unwrap().0[0].visit(&mut test_visitor);
+        parse("::before:hover").unwrap().slice()[0].visit(&mut test_visitor);
         assert!(test_visitor.seen.contains(&":hover".into()));
     }
 }

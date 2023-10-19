@@ -13,9 +13,7 @@ use crate::str::CssStringWriter;
 use crate::stylesheets::CssRules;
 use cssparser::SourceLocation;
 #[cfg(feature = "gecko")]
-use malloc_size_of::MallocUnconditionalShallowSizeOf;
-#[cfg(feature = "gecko")]
-use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use malloc_size_of::{MallocUnconditionalShallowSizeOf, MallocUnconditionalSizeOf, MallocSizeOf, MallocSizeOfOps};
 use selectors::SelectorList;
 use servo_arc::Arc;
 use std::fmt::{self, Write};
@@ -58,7 +56,7 @@ impl StyleRule {
     #[cfg(feature = "gecko")]
     pub fn size_of(&self, guard: &SharedRwLockReadGuard, ops: &mut MallocSizeOfOps) -> usize {
         let mut n = 0;
-        n += self.selectors.0.size_of(ops);
+        n += self.selectors.unconditional_size_of(ops);
         n += self.block.unconditional_shallow_size_of(ops) +
             self.block.read_with(guard).size_of(ops);
         if let Some(ref rules) = self.rules {

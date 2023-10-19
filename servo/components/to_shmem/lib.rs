@@ -20,7 +20,7 @@ extern crate smallvec;
 extern crate string_cache;
 extern crate thin_vec;
 
-use servo_arc::{Arc, HeaderSlice};
+use servo_arc::{Arc, ArcUnion, HeaderSlice, ArcUnionBorrow};
 use smallbitvec::{InternalStorage, SmallBitVec};
 use smallvec::{Array, SmallVec};
 use std::alloc::Layout;
@@ -428,6 +428,23 @@ where
             ));
         }
         Ok(ManuallyDrop::new(Self::default()))
+    }
+}
+
+impl<A: 'static, B: 'static> ToShmem for ArcUnion<A, B>
+where
+    Arc<A>: ToShmem,
+    Arc<B>: ToShmem,
+{
+    fn to_shmem(&self, builder: &mut SharedMemoryBuilder) -> Result<Self> {
+        Ok(ManuallyDrop::new(match self.borrow() {
+            ArcUnionBorrow::First(first) => Self::from_first(ManuallyDrop::into_inner(first.with_arc(|a| {
+                a.to_shmem(builder)
+            })?)),
+            ArcUnionBorrow::Second(second) => Self::from_second(ManuallyDrop::into_inner(second.with_arc(|a| {
+                a.to_shmem(builder)
+            })?)),
+        }))
     }
 }
 
