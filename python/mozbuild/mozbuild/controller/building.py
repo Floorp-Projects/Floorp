@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 from collections import Counter, OrderedDict, namedtuple
+from itertools import dropwhile, islice, takewhile
 from textwrap import TextWrapper
 
 import six
@@ -179,6 +180,51 @@ class TierStatus(object):
             return d
 
 
+def record_cargo_timings(resource_monitor, timings_path):
+    cargo_start = 0
+    try:
+        with open(timings_path) as fh:
+            # Extrace the UNIT_DATA list from the cargo timing HTML file.
+            unit_data = dropwhile(lambda l: l.rstrip() != "const UNIT_DATA = [", fh)
+            unit_data = islice(unit_data, 1, None)
+            lines = takewhile(lambda l: l.rstrip() != "];", unit_data)
+            entries = json.loads("[" + "".join(lines) + "]")
+            # Normalize the entries so that any change in data format would
+            # trigger the exception handler that skips this (we don't want the
+            # build to fail in that case)
+            data = [
+                (
+                    "{} v{}{}".format(
+                        entry["name"], entry["version"], entry.get("target", "")
+                    ),
+                    entry["start"] or 0,
+                    entry["duration"] or 0,
+                )
+                for entry in entries
+            ]
+        starts = [
+            start
+            for marker, start in resource_monitor._active_markers.items()
+            if marker.startswith("Rust:")
+        ]
+        # The build system is not supposed to be running more than one cargo
+        # at the same time, which thankfully makes it easier to find the start
+        # of the one we got the timings for.
+        if len(starts) != 1:
+            return
+        cargo_start = starts[0]
+    except Exception:
+        return
+
+    if not cargo_start:
+        return
+
+    for name, start, duration in data:
+        resource_monitor.record_marker(
+            "Rust", cargo_start + start, cargo_start + start + duration, name
+        )
+
+
 class BuildMonitor(MozbuildObject):
     """Monitors the output of the build."""
 
@@ -261,7 +307,7 @@ class BuildMonitor(MozbuildObject):
         # If the previous line was colored (eg. for a compiler warning), our
         # line will start with the ansi reset sequence. Strip it to ensure it
         # does not interfere with our parsing of the line.
-        plain_line = self._terminal.strip(line) if self._terminal else line
+        plain_line = self._terminal.strip(line) if self._terminal else line.strip()
         if plain_line.startswith("BUILDSTATUS"):
             args = plain_line.split()[1:]
 
@@ -297,6 +343,11 @@ class BuildMonitor(MozbuildObject):
                 raise Exception("Unknown build status: %s" % action)
 
             return BuildOutputResult(None, update_needed, message)
+
+        elif plain_line.startswith("Timing report saved to "):
+            cargo_timings = plain_line[len("Timing report saved to ") :]
+            record_cargo_timings(self.resources, cargo_timings)
+            return BuildOutputResult(None, False, None)
 
         warning = None
 
