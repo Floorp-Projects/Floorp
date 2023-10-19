@@ -702,6 +702,19 @@ class AutofillRecords {
   }
 
   /**
+   * Returns true if the data set is empty. If the `includeDeleted` option is set to true,
+   * it will also consider items that are marked as deleted.
+   *
+   * @param   {object}  [options={}] options
+   * @param   {boolean} [options.includeDeleted = false]
+   *                    Indicates whether to include deleted items in the check.
+   * @returns {boolean} Returns `true` if the data set is empty, otherwise `false`.
+   */
+  isEmpty({ includeDeleted = false } = {}) {
+    return !this._data.find(r => !r.deleted || includeDeleted);
+  }
+
+  /**
    * Return all saved field names in the collection.
    *
    * @returns {Promise<Set>} Set containing saved field names.
