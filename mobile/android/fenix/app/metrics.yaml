@@ -7611,6 +7611,80 @@ play_store_attribution:
       tags:
         - Attribution
         - Performance
+meta_attribution:
+  app:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      The mobile application ID in Meta's attribution.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1860133
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4171
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Attribution
+  t:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      Value tracking user interaction with Meta attribution.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1860133
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4171
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Attribution
+  data:
+    type: text
+    send_in_pings:
+      - first-session
+    description: |
+      The Meta attribution data in encrypted format.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1860133
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4171
+    data_sensitivity:
+      # - technical
+      - web_activity # This is a workaround so we can use Text type for technical data.
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Attribution
+  nonce:
+    type: string
+    send_in_pings:
+      - first-session
+    description: |
+      Nonce used to decrypt the encrypted Meta attribution data.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1860133
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4171
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Attribution
 browser.search:
   with_ads:
     type: labeled_counter

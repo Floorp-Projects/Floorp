@@ -10,12 +10,12 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.MetaAttribution
 import org.mozilla.fenix.GleanMetrics.PlayStoreAttribution
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -28,29 +28,7 @@ internal class InstallReferrerMetricsServiceTest {
     val gleanTestRule = GleanTestRule(testContext)
 
     @Test
-    fun testUtmParamsFromUrl() {
-        assertEquals("SOURCE", UTMParams.fromQueryString("utm_source=SOURCE").source)
-        assertEquals("MEDIUM", UTMParams.fromQueryString("utm_medium=MEDIUM").medium)
-        assertEquals("CAMPAIGN", UTMParams.fromQueryString("utm_campaign=CAMPAIGN").campaign)
-        assertEquals("TERM", UTMParams.fromQueryString("utm_term=TERM").term)
-        assertEquals("CONTENT", UTMParams.fromQueryString("utm_content=CONTENT").content)
-    }
-
-    @Test
-    fun testUtmParamsFromUrlWithSpaces() {
-        assertEquals("WITH SPACE", UTMParams.fromQueryString("utm_source=WITH+SPACE").source)
-        assertEquals("WITH SPACE", UTMParams.fromQueryString("utm_medium=WITH%20SPACE").medium)
-        assertEquals("WITH SPACE", UTMParams.fromQueryString("utm_campaign=WITH SPACE").campaign)
-    }
-
-    @Test
-    fun testUtmParamsFromUrlWithMissingParams() {
-        assertNull(UTMParams.fromQueryString("missing=").source)
-        assertEquals("", UTMParams.fromQueryString("utm_source=").source)
-    }
-
-    @Test
-    fun testUtmParamsRoundTripThroughSettingsMinimumParams() {
+    fun `WHEN retrieving minimum UTM params from setting THEN result should match`() {
         val settings = Settings(context)
         val expected = UTMParams(source = "", medium = "", campaign = "", content = "", term = "")
         val observed = UTMParams.fromSettings(settings)
@@ -60,7 +38,7 @@ internal class InstallReferrerMetricsServiceTest {
     }
 
     @Test
-    fun testUtmParamsRoundTripThroughSettingsMaximumParams() {
+    fun `WHEN retrieving maximum UTM params from setting THEN result should match`() {
         val expected = UTMParams(source = "source", medium = "medium", campaign = "campaign", content = "content", term = "term")
         val settings = Settings(context)
 
@@ -73,10 +51,10 @@ internal class InstallReferrerMetricsServiceTest {
     }
 
     @Test
-    fun testInstallReferrerMetricsMinimumParams() {
-        val service = InstallReferrerMetricsService(context)
+    fun `WHEN parsing referrer response with no UTM params from setting THEN UTM params in settings should set to empty strings`() {
         val settings = Settings(context)
-        service.recordInstallReferrer(settings, "https://example.com")
+        val params = UTMParams.parseUTMParameters("")
+        params.recordInstallReferrer(settings)
 
         val expected = UTMParams(source = "", medium = "", campaign = "", content = "", term = "")
         val observed = UTMParams.fromSettings(settings)
@@ -92,29 +70,29 @@ internal class InstallReferrerMetricsServiceTest {
     }
 
     @Test
-    fun testInstallReferrerMetricsPartial() {
-        val service = InstallReferrerMetricsService(context)
+    fun `WHEN parsing referrer response with partial UTM params from setting THEN UTM params in settings should match expected`() {
         val settings = Settings(context)
-        service.recordInstallReferrer(settings, "https://example.com?utm_campaign=CAMPAIGN")
+        val params = UTMParams.parseUTMParameters("utm_campaign=CAMPAIGN")
+        params.recordInstallReferrer(settings)
 
         val expected = UTMParams(source = "", medium = "", campaign = "CAMPAIGN", content = "", term = "")
         val observed = UTMParams.fromSettings(settings)
         assertEquals(observed, expected)
 
-        assertNull(PlayStoreAttribution.source.testGetValue())
-        assertNull(PlayStoreAttribution.medium.testGetValue())
+        assertEquals("", PlayStoreAttribution.source.testGetValue())
+        assertEquals("", PlayStoreAttribution.medium.testGetValue())
         assertEquals("CAMPAIGN", PlayStoreAttribution.campaign.testGetValue())
-        assertNull(PlayStoreAttribution.content.testGetValue())
-        assertNull(PlayStoreAttribution.term.testGetValue())
+        assertEquals("", PlayStoreAttribution.content.testGetValue())
+        assertEquals("", PlayStoreAttribution.term.testGetValue())
 
         assertFalse(observed.isEmpty())
     }
 
     @Test
-    fun testInstallReferrerMetricsMaximumParams() {
-        val service = InstallReferrerMetricsService(context)
+    fun `WHEN parsing referrer response with full UTM params from setting THEN UTM params in settings should match expected`() {
         val settings = Settings(context)
-        service.recordInstallReferrer(settings, "https://example.com?utm_source=SOURCE&utm_medium=MEDIUM&utm_campaign=CAMPAIGN&utm_content=CONTENT&utm_term=TERM")
+        val params = UTMParams.parseUTMParameters("utm_source=SOURCE&utm_medium=MEDIUM&utm_campaign=CAMPAIGN&utm_content=CONTENT&utm_term=TERM")
+        params.recordInstallReferrer(settings)
 
         val expected = UTMParams(source = "SOURCE", medium = "MEDIUM", campaign = "CAMPAIGN", content = "CONTENT", term = "TERM")
         val observed = UTMParams.fromSettings(settings)
@@ -130,53 +108,66 @@ internal class InstallReferrerMetricsServiceTest {
     }
 
     @Test
-    fun testInstallReferrerMetricsShouldTrack() {
+    fun `WHEN Install referrer metrics service should track is called THEN it should always return false`() {
         val service = InstallReferrerMetricsService(context)
         assertFalse(service.shouldTrack(Event.GrowthData.FirstAppOpenForDay))
     }
 
     @Test
-    fun testInstallReferrerMetricsType() {
+    fun `WHEN Install referrer metrics service starts THEN then the service type should be marketing`() {
         val service = InstallReferrerMetricsService(context)
         assertEquals(MetricServiceType.Marketing, service.type)
     }
 
     @Test
-    fun testDecodeReferrerUrl() {
-        // Example from https://developers.google.com/analytics/devguides/collection/android/v4/campaigns#google-play-url-builder
-        val params = UTMParams.fromURLString(
-            "https://play.google.com/store/apps/details?id=com.example.application" +
-                "&referrer=utm_source%3Dgoogle" +
-                "%26utm_medium%3Dcpc" +
-                "%26utm_term%3Drunning%252Bshoes" +
-                "%26utm_content%3Dlogolink" +
-                "%26utm_campaign%3Dspring_sale",
-        )
-        assertNotNull(params)
+    fun `WHEN receiving a Meta encrypted attribution THEN will decrypt correctly`() {
+        val metaParams = MetaParams.extractMetaAttribution("""{"app":12345, "t":1234567890,"source":{"data":"DATA","nonce":"NONCE"}}""")
+        val expectedMetaParams = MetaParams("12345", "1234567890", "DATA", "NONCE")
 
-        val expected = UTMParams(
-            source = "google",
-            medium = "cpc",
-            campaign = "spring_sale",
-            content = "logolink",
-            term = "running+shoes",
-        )
-
-        assertEquals(expected, params)
+        assertEquals(metaParams, expectedMetaParams)
     }
 
     @Test
-    fun testDecodeReferrerAdMobUrl() {
-        val expected = UTMParams(source = "SOURCE", medium = "MEDIUM", campaign = "CAMPAIGN", content = "CONTENT", term = "TERM")
-        // Generated with https://developers.google.com/analytics/devguides/collection/android/v4/campaigns#google-play-url-builder
-        val fromUrl = UTMParams.fromURLString(
-            "https://play.google.com/store/apps/details?id=org.mozilla.fenix&referrer=utm_source%3DSOURCE%26utm_medium%3DMEDIUM%26utm_term%3DTERM%26utm_content%3DCONTENT%26utm_campaign%3DCAMPAIGN%26anid%3Dadmob",
-        )
-        assertNotNull(fromUrl)
-        assertEquals(expected, fromUrl)
+    fun `WHEN parsing referrer response with meta attribution THEN both UTM and Meta params should match expected`() {
+        val utmParams = UTMParams.parseUTMParameters("""utm_content={"app":12345, "t":1234567890,"source":{"data":"DATA","nonce":"NONCE"}}""")
+        val expectedUtmParams = UTMParams(source = "", medium = "", campaign = "", content = """{"app":12345, "t":1234567890,"source":{"data":"DATA","nonce":"NONCE"}}""", term = "")
 
-        val fromReferrerAttribute = UTMParams.fromURLString("utm_source%3DSOURCE%26utm_medium%3DMEDIUM%26utm_term%3DTERM%26utm_content%3DCONTENT%26utm_campaign%3DCAMPAIGN%26anid%3Dadmob")
-        assertNotNull(fromReferrerAttribute)
-        assertEquals(expected, fromReferrerAttribute)
+        assertEquals(utmParams, expectedUtmParams)
+
+        val metaParams = MetaParams.extractMetaAttribution(utmParams.content)
+        val expectedMetaParams = MetaParams("12345", "1234567890", "DATA", "NONCE")
+
+        assertEquals(metaParams, expectedMetaParams)
+    }
+
+    @Test
+    fun `WHEN recording Meta attribution THEN correct values should be recorded to telemetry`() {
+        // The data and nonce are from Meta's example https://developers.facebook.com/docs/app-ads/install-referrer/
+        val metaParams = MetaParams(
+            "12345",
+            "1234567890",
+            "afe56cf6228c6ea8c79da49186e718e92a579824596ae1d0d4d20d7793dca797bd4034ccf467bfae5c79a3981e7a2968c41949237e2b2db678c1c3d39c9ae564c5cafd52f2b77a3dc77bf1bae063114d0283b97417487207735da31ddc1531d5645a9c3e602c195a0ebf69c272aa5fda3a2d781cb47e117310164715a54c7a5a032740584e2789a7b4e596034c16425139a77e507c492b629c848573c714a03a2e7d25b9459b95842332b460f3682d19c35dbc7d53e3a51e0497ff6a6cbb367e760debc4194ae097498108df7b95eac2fa9bac4320077b510be3b7b823248bfe02ae501d9fe4ba179c7de6733c92bf89d523df9e31238ef497b9db719484cbab7531dbf6c5ea5a8087f95d59f5e4f89050e0f1dc03e464168ad76a64cca64b79",
+            "b7203c6a6fb633d16e9cf5c1",
+        )
+
+        assertNull(MetaAttribution.app.testGetValue())
+        assertNull(MetaAttribution.t.testGetValue())
+        assertNull(MetaAttribution.data.testGetValue())
+        assertNull(MetaAttribution.nonce.testGetValue())
+        metaParams.recordMetaAttribution()
+
+        val expectedApp = "12345"
+        val expectedT = "1234567890"
+        val expectedData = "afe56cf6228c6ea8c79da49186e718e92a579824596ae1d0d4d20d7793dca797bd4034ccf467bfae5c79a3981e7a2968c41949237e2b2db678c1c3d39c9ae564c5cafd52f2b77a3dc77bf1bae063114d0283b97417487207735da31ddc1531d5645a9c3e602c195a0ebf69c272aa5fda3a2d781cb47e117310164715a54c7a5a032740584e2789a7b4e596034c16425139a77e507c492b629c848573c714a03a2e7d25b9459b95842332b460f3682d19c35dbc7d53e3a51e0497ff6a6cbb367e760debc4194ae097498108df7b95eac2fa9bac4320077b510be3b7b823248bfe02ae501d9fe4ba179c7de6733c92bf89d523df9e31238ef497b9db719484cbab7531dbf6c5ea5a8087f95d59f5e4f89050e0f1dc03e464168ad76a64cca64b79"
+        val expectedNonce = "b7203c6a6fb633d16e9cf5c1"
+
+        val recordedApp = MetaAttribution.app.testGetValue()
+        assertEquals(recordedApp, expectedApp)
+        val recordedT = MetaAttribution.t.testGetValue()
+        assertEquals(recordedT, expectedT)
+        val recordedData = MetaAttribution.data.testGetValue()
+        assertEquals(recordedData, expectedData)
+        val recordedNonce = MetaAttribution.nonce.testGetValue()
+        assertEquals(recordedNonce, expectedNonce)
     }
 }

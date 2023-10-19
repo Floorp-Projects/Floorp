@@ -73,4 +73,9 @@ object FeatureFlags {
      * Allows users to enable Firefox Suggest.
      */
     const val fxSuggest = true
+
+    /**
+     * Enable Meta attribution.
+     */
+    val metaAttributionEnabled = Config.channel.isNightlyOrDebug
 }
