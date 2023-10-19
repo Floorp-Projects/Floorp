@@ -4322,7 +4322,7 @@ static void huge_dalloc(void* aPtr, arena_t* aArena) {
   ExtentAlloc::dealloc(node);
 }
 
-static size_t GetKernelPageSize() {
+size_t GetKernelPageSize() {
   static size_t kernel_page_size = ([]() {
 #ifdef XP_WIN
     SYSTEM_INFO info;
@@ -4654,40 +4654,6 @@ inline void BaseAllocator::free(void* aPtr) {
     huge_dalloc(aPtr, mArena);
   }
 }
-
-template <void* (*memalign)(size_t, size_t)>
-struct AlignedAllocator {
-  static inline int posix_memalign(void** aMemPtr, size_t aAlignment,
-                                   size_t aSize) {
-    void* result;
-
-    // alignment must be a power of two and a multiple of sizeof(void*)
-    if (((aAlignment - 1) & aAlignment) != 0 || aAlignment < sizeof(void*)) {
-      return EINVAL;
-    }
-
-    // The 0-->1 size promotion is done in the memalign() call below
-    result = memalign(aAlignment, aSize);
-
-    if (!result) {
-      return ENOMEM;
-    }
-
-    *aMemPtr = result;
-    return 0;
-  }
-
-  static inline void* aligned_alloc(size_t aAlignment, size_t aSize) {
-    if (aSize % aAlignment) {
-      return nullptr;
-    }
-    return memalign(aAlignment, aSize);
-  }
-
-  static inline void* valloc(size_t aSize) {
-    return memalign(GetKernelPageSize(), aSize);
-  }
-};
 
 inline int MozJemalloc::posix_memalign(void** aMemPtr, size_t aAlignment,
                                        size_t aSize) {
