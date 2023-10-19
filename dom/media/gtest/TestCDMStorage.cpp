@@ -1261,19 +1261,28 @@ void TestMatchBaseDomain_NoMatch() {
   testDir->Remove(true);
 }
 
+TEST(GeckoMediaPlugins, MatchBaseDomain_MatchOrigin)
+{ TestMatchBaseDomain_MatchOrigin(); }
+
+TEST(GeckoMediaPlugins, MatchBaseDomain_MatchTLD)
+{ TestMatchBaseDomain_MatchTLD(); }
+
+TEST(GeckoMediaPlugins, MatchBaseDomain_NoMatch)
+{ TestMatchBaseDomain_NoMatch(); }
+
+// Bug 1776767 - Skip all GMP tests on Windows ASAN
+#if !(defined(XP_WIN) && defined(MOZ_ASAN))
 TEST(GeckoMediaPlugins, CDMStorageGetNodeId)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestGetNodeId);
 }
 
-#if !defined(XP_WIN) || !defined(ASAN)
 TEST(GeckoMediaPlugins, CDMStorageBasic)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestBasicStorage);
 }
-#endif
 
 TEST(GeckoMediaPlugins, CDMStorageForgetThisSite)
 {
@@ -1286,15 +1295,6 @@ TEST(GeckoMediaPlugins, CDMStorageForgetThisBaseDomain)
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestForgetThisBaseDomain);
 }
-
-TEST(GeckoMediaPlugins, MatchBaseDomain_MatchOrigin)
-{ TestMatchBaseDomain_MatchOrigin(); }
-
-TEST(GeckoMediaPlugins, MatchBaseDomain_MatchTLD)
-{ TestMatchBaseDomain_MatchTLD(); }
-
-TEST(GeckoMediaPlugins, MatchBaseDomain_NoMatch)
-{ TestMatchBaseDomain_NoMatch(); }
 
 TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory1)
 {
@@ -1326,16 +1326,17 @@ TEST(GeckoMediaPlugins, CDMStoragePrivateBrowsing)
   runner->DoTest(&CDMStorageTest::TestPBStorage);
 }
 
-#if defined(XP_WIN)
-TEST(GeckoMediaPlugins, GMPOutputProtection)
-{
-  RefPtr<CDMStorageTest> runner = new CDMStorageTest();
-  runner->DoTest(&CDMStorageTest::TestOutputProtection);
-}
-#endif
-
 TEST(GeckoMediaPlugins, CDMStorageLongRecordNames)
 {
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestLongRecordNames);
 }
+
+#  if defined(XP_WIN)
+TEST(GeckoMediaPlugins, GMPOutputProtection)
+{
+  RefPtr<CDMStorageTest> runner = new CDMStorageTest();
+  runner->DoTest(&CDMStorageTest::TestOutputProtection);
+}
+#  endif  // defined(XP_WIN)
+#endif    // !(defined(XP_WIN) && defined(MOZ_ASAN))
