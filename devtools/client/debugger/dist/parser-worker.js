@@ -41934,6 +41934,15 @@
       return functions.filter(fn => fn.name !== "anonymous");
     }
 
+    function getClassSymbols(sourceId) {
+      const symbols = getInternalSymbols(sourceId);
+      if (!symbols) {
+        return [];
+      }
+
+      return symbols.classes;
+    }
+
     // This is only called from the main thread and we return a subset of attributes
     function getSymbols(sourceId) {
       const symbols = getInternalSymbols(sourceId);
@@ -41964,8 +41973,8 @@
         // * `expression` for memberExpression
 
         // This is used within the worker for framework computation,
-        // and in the main thread by the outline panel
-        classes: symbols.classes,
+        // and in the `getClassSymbols` function
+        // `classes`
 
         // The two following are only used by the main thread for computing CodeMirror "mode"
         hasJsx: symbols.hasJsx,
@@ -43886,6 +43895,7 @@
       findBestMatchExpression,
       getSymbols,
       getFunctionSymbols,
+      getClassSymbols,
       getScopes,
       clearSources: clearAllHelpersForSources,
       hasSyntaxError,

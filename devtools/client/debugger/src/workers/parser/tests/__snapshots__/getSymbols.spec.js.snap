@@ -10,9 +10,6 @@ exports[`Parser.getSymbols allSymbols 1`] = `
 [(24, 2), (26, 3)]  constructor() Ultra
 [(28, 2), (30, 3)]  beAwesome(person) Ultra
 
-classes:
-[(23, 0), (31, 1)]  Ultra
-
 hasJsx: false
 
 hasTypes: false
@@ -24,9 +21,6 @@ exports[`Parser.getSymbols call expression 1`] = `
 "functions:
 [(2, 0), (2, 70)]  evaluate(script, , )
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -36,9 +30,6 @@ framework: null"
 
 exports[`Parser.getSymbols call sites 1`] = `
 "functions:
-
-
-classes:
 
 
 hasJsx: false
@@ -54,10 +45,6 @@ exports[`Parser.getSymbols class 1`] = `
 [(12, 2), (15, 3)]  constructor() Test
 [(17, 2), (19, 3)]  bar(a) Test
 [(21, 8), (23, 3)]  baz(b) Test
-
-classes:
-[(1, 0), (24, 1)]  Test
-[(26, 0), (26, 14)]  Test2
 
 hasJsx: false
 
@@ -82,9 +69,6 @@ exports[`Parser.getSymbols component 1`] = `
 [(72, 33), (79, 1)]  createElement(color)
 [(82, 26), (84, 1)]  update(newColor)
 
-classes:
-[(5, 0), (20, 1)]  Punny
-
 hasJsx: true
 
 hasTypes: false
@@ -96,9 +80,6 @@ exports[`Parser.getSymbols destruct 1`] = `
 "functions:
 
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -108,9 +89,6 @@ framework: null"
 
 exports[`Parser.getSymbols es6 1`] = `
 "functions:
-
-
-classes:
 
 
 hasJsx: false
@@ -126,9 +104,6 @@ exports[`Parser.getSymbols expression 1`] = `
 [(23, 0), (23, 28)]  params()
 [(24, 11), (24, 32)]  pars()
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -142,9 +117,6 @@ exports[`Parser.getSymbols finds symbols in an html file 1`] = `
 [(22, 21), (24, 3)]  capitalize(name)
 [(36, 3), (39, 3)]  iife()
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -155,9 +127,6 @@ framework: null"
 exports[`Parser.getSymbols flow 1`] = `
 "functions:
 [(2, 2), (4, 3)]  renderHello(name, action, ) App
-
-classes:
-[(1, 0), (5, 1)]  App
 
 hasJsx: false
 
@@ -181,9 +150,6 @@ exports[`Parser.getSymbols func 1`] = `
 [(40, 0), (42, 1)]  test(a1, , )
 [(44, 0), (44, 13)]  anonymous()    1
 [(46, 0), (50, 1)]  ret2()
-
-classes:
-
 
 hasJsx: false
 
@@ -230,9 +196,6 @@ exports[`Parser.getSymbols function names 1`] = `
 [(49, 0), (49, 40)]  f(first = defaultArr, second)
 [(50, 0), (50, 34)]  g(first = null, second)
 
-classes:
-[(28, 0), (36, 1)]  Cls
-
 hasJsx: false
 
 hasTypes: false
@@ -242,9 +205,6 @@ framework: null"
 
 exports[`Parser.getSymbols jsx 1`] = `
 "functions:
-
-
-classes:
 
 
 hasJsx: true
@@ -261,9 +221,6 @@ exports[`Parser.getSymbols math 1`] = `
 [(14, 12), (14, 25)]  child()
 [(15, 9), (15, 22)]  child2()
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -275,9 +232,6 @@ exports[`Parser.getSymbols object expressions 1`] = `
 "functions:
 
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -287,9 +241,6 @@ framework: null"
 
 exports[`Parser.getSymbols optional chaining 1`] = `
 "functions:
-
-
-classes:
 
 
 hasJsx: false
@@ -304,9 +255,6 @@ exports[`Parser.getSymbols private fields 1`] = `
 [(2, 2), (6, 3)]  constructor(secret, ) MyClass
 [(13, 2), (15, 3)]  #getSalt() MyClass
 [(17, 2), (23, 3)]  debug() MyClass
-
-classes:
-[(1, 0), (24, 1)]  MyClass
 
 hasJsx: false
 
@@ -323,9 +271,6 @@ exports[`Parser.getSymbols proto 1`] = `
 [(8, 2), (10, 3)]  doThing(b) TodoView
 [(11, 10), (13, 3)]  render() TodoView
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -336,9 +281,6 @@ framework: null"
 exports[`Parser.getSymbols react component 1`] = `
 "functions:
 
-
-classes:
-[(3, 0), (3, 39)]  PrimaryPanes
 
 hasJsx: false
 
@@ -351,9 +293,6 @@ exports[`Parser.getSymbols regexp 1`] = `
 "functions:
 
 
-classes:
-
-
 hasJsx: false
 
 hasTypes: false
@@ -363,9 +302,6 @@ framework: null"
 
 exports[`Parser.getSymbols var 1`] = `
 "functions:
-
-
-classes:
 
 
 hasJsx: false

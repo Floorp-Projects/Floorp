@@ -23,7 +23,11 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
       [MockFunction] {
         "calls": Array [
           Array [
-            "foo",
+            Object {
+              "source": Object {
+                "id": "foo",
+              },
+            },
             100,
           ],
         ],
@@ -41,9 +45,11 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
     query="@"
     searchType="functions"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -205,9 +211,11 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
     query="#"
     searchType="variables"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -380,9 +388,11 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -616,9 +626,11 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
   query=":abc"
   searchType="goto"
   selectSpecificLocation={[MockFunction]}
-  selectedSource={
+  selectedLocation={
     Object {
-      "id": "foo",
+      "source": Object {
+        "id": "foo",
+      },
     }
   }
   setQuickOpenQuery={[MockFunction]}
@@ -779,9 +791,11 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
     query="dasdasdas"
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -955,9 +969,11 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
     query=":2222"
     searchType="goto"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -1119,9 +1135,11 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
     query=""
     searchType="other"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -1294,9 +1312,11 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
     query=":22k22"
     searchType="goto"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -1458,9 +1478,11 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
     query="test"
     searchType="other"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -1668,9 +1690,11 @@ exports[`QuickOpenModal updateResults on enable 1`] = `
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}
@@ -1845,9 +1869,11 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
     query=""
     searchType="sources"
     selectSpecificLocation={[MockFunction]}
-    selectedSource={
+    selectedLocation={
       Object {
-        "id": "foo",
+        "source": Object {
+          "id": "foo",
+        },
       }
     }
     setQuickOpenQuery={[MockFunction]}

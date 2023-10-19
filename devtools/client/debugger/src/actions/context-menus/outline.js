@@ -6,16 +6,14 @@ import { showMenu } from "../../context-menu/menu";
 import { copyToTheClipboard } from "../../utils/clipboard";
 import { findFunctionText } from "../../utils/function";
 
+import { flashLineRange } from "../../actions/ui";
+
 import {
-  getSelectedLocation,
   getSelectedSource,
-  getSymbols,
   getSelectedSourceTextContent,
 } from "../../selectors";
 
-import { flashLineRange } from "../../actions/ui";
-
-export function showOutlineContextMenu(event, func) {
+export function showOutlineContextMenu(event, func, symbols) {
   return async ({ dispatch, getState }) => {
     const state = getState();
 
@@ -23,7 +21,6 @@ export function showOutlineContextMenu(event, func) {
     if (!selectedSource) {
       return;
     }
-    const symbols = getSymbols(state, getSelectedLocation(state));
     const selectedSourceTextContent = getSelectedSourceTextContent(state);
 
     const sourceLine = func.location.start.line;
