@@ -31,49 +31,12 @@ const formatStringFromName =
   FormAutofillUtils.stringBundle.formatStringFromName;
 const brandShortName =
   FormAutofillUtils.brandBundle.GetStringFromName("brandShortName");
-let changeAutofillOptsKey = "changeAutofillOptions";
 let autofillOptsKey = "autofillOptionsLink";
 if (AppConstants.platform == "macosx") {
-  changeAutofillOptsKey += "OSX";
   autofillOptsKey += "OSX";
 }
 
 const CONTENT = {
-  addFirstTimeUse: {
-    notificationId: "autofill-address",
-    message: formatStringFromName("saveAddressesMessage", [brandShortName]),
-    anchor: {
-      id: "autofill-address-notification-icon",
-      URL: "chrome://formautofill/content/formfill-anchor.svg",
-      tooltiptext: GetStringFromName("openAutofillMessagePanel"),
-    },
-    mainAction: {
-      label: GetStringFromName(changeAutofillOptsKey),
-      accessKey: GetStringFromName("changeAutofillOptionsAccessKey"),
-      callbackState: "open-pref",
-    },
-    options: {
-      persistWhileVisible: true,
-      popupIconURL: "chrome://formautofill/content/icon-address-save.svg",
-      checkbox: {
-        get checked() {
-          return Services.prefs.getBoolPref("services.sync.engine.addresses");
-        },
-        get label() {
-          // If sync account is not set, return null label to hide checkbox
-          return Services.prefs.prefHasUserValue("services.sync.username")
-            ? GetStringFromName("addressesSyncCheckbox")
-            : null;
-        },
-        callback(event) {
-          let checked = event.target.checked;
-          Services.prefs.setBoolPref("services.sync.engine.addresses", checked);
-          lazy.log.debug("Set addresses sync to", checked);
-        },
-      },
-      hideClose: true,
-    },
-  },
   addAddress: {
     notificationId: "autofill-address",
     message: formatStringFromName("saveAddressesMessage", [brandShortName]),
@@ -287,11 +250,13 @@ export let FormAutofillPrompter = {
 
     return [mainAction, secondaryActions];
   },
+
   _getNotificationElm(browser, id) {
     let notificationId = id + "-notification";
     let chromeDoc = browser.ownerDocument;
     return chromeDoc.getElementById(notificationId);
   },
+
   /**
    * Append the link label element to the popupnotificationcontent.
    *
@@ -400,6 +365,7 @@ export let FormAutofillPrompter = {
       notificationPopupBox.appendChild(anchorElement);
     }
   },
+
   _addCheckboxListener(browser, { notificationId, options }) {
     if (!options.checkbox) {
       return;
@@ -444,21 +410,8 @@ export let FormAutofillPrompter = {
     let doorhangerType;
     if (mergeableRecord) {
       doorhangerType = "updateAddress";
-    } else if (FormAutofill.isAutofillAddressesCaptureV2Enabled) {
-      doorhangerType = "addAddress";
     } else {
-      doorhangerType = "addFirstTimeUse";
-      this._updateStorageAfterInteractWithPrompt("save", storage, newRecord);
-
-      // Show first time use doorhanger
-      if (FormAutofill.isAutofillAddressesFirstTimeUse) {
-        Services.prefs.setBoolPref(
-          FormAutofill.ADDRESSES_FIRST_TIME_USE_PREF,
-          false
-        );
-      } else {
-        return;
-      }
+      doorhangerType = "addAddress";
     }
 
     const description = FormAutofillUtils.getAddressLabel(newRecord);
@@ -611,11 +564,6 @@ export let FormAutofillPrompter = {
           return;
         }
         this._addCheckboxListener(browser, { notificationId, options });
-
-        // There's no preferences link or other customization in first time use doorhanger.
-        if (type == "addFirstTimeUse") {
-          return;
-        }
 
         const DESCRIPTION_ID = "description";
         const ADDITIONAL_DESCRIPTION_ID = "additional-description";
