@@ -340,7 +340,7 @@ properties they may have. The ``array`` property turns the parameter into an arr
 the parameter must also have a corresponding ``size_is`` property whose argument is
 the parameter that has the size of the array. In native code, the type gains
 another pointer indirection, and JavaScript arrays are used in script code.
-Script code callers can ignore the value of array parameter, but implementors
+Script code callers can ignore the value of array parameter, but implementers
 must still set the values appropriately.
 
 .. note::

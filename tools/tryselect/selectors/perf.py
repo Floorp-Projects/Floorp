@@ -717,7 +717,7 @@ class PerfParser(CompareParser):
                 # a platform. This means categories with mixed suites will
                 # be available even if some suites will no longer run
                 # given this platform constraint. The reasoning for this is that
-                # it's unexpected to receive desktop tests when you explcitly
+                # it's unexpected to receive desktop tests when you explicitly
                 # request android.
                 platform_queries = {
                     suite: (

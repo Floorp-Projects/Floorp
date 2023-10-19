@@ -12,7 +12,7 @@ useful thing to provide is a minimal HTML document which permits
 the problem to be reproduced along with a [trace-level log] from
 geckodriver showing the exact wire protocol calls made.
 
-Because of the wide variety and different charateristics of clients
+Because of the wide variety and different characteristics of clients
 used with geckodriver, their stacktraces, logs, and code examples are
 typically not very useful as they distract from the actual underlying
 cause.  **For this reason, we cannot overstate the importance of

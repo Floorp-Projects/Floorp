@@ -82,7 +82,7 @@ def get_stack_info(vcs: SupportedVcsRepository) -> Tuple[str, List[str]]:
         )
     print("Using", base_commit, "as the hg base commit.")
 
-    # Re-use the base revision when on Mercurial to avoid multiple calls to `hg log`.
+    # Reuse the base revision when on Mercurial to avoid multiple calls to `hg log`.
     branch_nodes_kwargs = {}
     if isinstance(vcs, HgRepository):
         branch_nodes_kwargs["base_ref"] = base_commit

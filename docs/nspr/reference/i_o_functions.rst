@@ -200,7 +200,7 @@ File descriptors may be layered. For example, SSL is a layer on top of a
 reliable bytestream layer such as TCP.
 
 Each type of layer has a unique identity, which is allocated by the
-runtime. The layer implementor should associate the identity with all
+runtime. The layer implementer should associate the identity with all
 layers of that type. It is then possible to scan the chain of layers and
 find a layer that one recognizes and therefore predict that it will
 implement a desired protocol.

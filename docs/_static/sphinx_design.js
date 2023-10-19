@@ -55,7 +55,7 @@
     }
   }
 
-  // Initiallize dropdown link
+  // Initialize dropdown link
   window.addEventListener("DOMContentLoaded", () => {
     if (document.getElementsByClassName(dropdownClassName).length) {
       setupDropdownLink();

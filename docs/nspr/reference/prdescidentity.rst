@@ -19,7 +19,7 @@ Description
 
 File descriptors may be layered. Each layer has it own identity.
 Identities are allocated by the runtime and are to be associated (by the
-layer implementor) with all file descriptors of that layer. It is then
+layer implementer) with all file descriptors of that layer. It is then
 possible to scan the chain of layers and find a layer that one
 recognizes, then predict that it will implement a desired protocol.
 

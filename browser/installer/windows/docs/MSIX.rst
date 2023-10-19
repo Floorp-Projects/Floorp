@@ -164,7 +164,7 @@ Signing Certificates
 ^^^^^^^^^^^^^^^^^^^^
 
 Mach will create the necessary signing keys and certificates for you
-and re-use them for subsequent signings. Before your locally signed
+and reuse them for subsequent signings. Before your locally signed
 builds can be installed you will need to install the correct
 certificate to the Windows Root Store. This can be done with a command
 like:

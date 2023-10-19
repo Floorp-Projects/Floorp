@@ -522,7 +522,7 @@ through several design considerations.
   programmatically editable. While the ``*.ini`` format worked for a long
   time the underspecified syntax made it difficult to reliably parse.
   The new ``*.toml`` format is widely accepted, as a formal syntax as well
-  as libararies to read and edit it (e.g. ``tomlkit``).
+  as libraries to read and edit it (e.g. ``tomlkit``).
 
 * there should be a single file that may easily be
   transported. Traditionally, test harnesses have lived in

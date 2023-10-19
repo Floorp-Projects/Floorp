@@ -96,7 +96,7 @@ program
 rules <https://www.mozilla.org/security/client-bug-bounty/>`__. As
 the report will usually not include any steps to reproduce or a test
 case, it will most likely receive a lower-end bounty. Like with regular
-bug reports, we would typically reward the first (identifable) report of
+bug reports, we would typically reward the first (identifiable) report of
 an issue.
 
 .. warning::

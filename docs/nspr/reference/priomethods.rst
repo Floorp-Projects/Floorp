@@ -118,7 +118,7 @@ implements the :ref:`PR_Write` function. For type definition details, see
 ``prio.h``.
 
 The I/O methods table provides procedural access to the functions of the
-file descriptor. It is the responsibility of a layer implementor to
+file descriptor. It is the responsibility of a layer implementer to
 provide suitable functions at every entry point (that is, for every
 function in the I/O methods table). If a layer provides no
 functionality, it should call the next lower (higher) function of the
