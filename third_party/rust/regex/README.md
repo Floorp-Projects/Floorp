@@ -1,15 +1,17 @@
 regex
 =====
-A Rust library for parsing, compiling, and executing regular expressions. Its
-syntax is similar to Perl-style regular expressions, but lacks a few features
-like look around and backreferences. In exchange, all searches execute in
-linear time with respect to the size of the regular expression and search text.
-Much of the syntax and implementation is inspired
-by [RE2](https://github.com/google/re2).
+This crate provides routines for searching strings for matches of a [regular
+expression] (aka "regex"). The regex syntax supported by this crate is similar
+to other regex engines, but it lacks several features that are not known how to
+implement efficiently. This includes, but is not limited to, look-around and
+backreferences. In exchange, all regex searches in this crate have worst case
+`O(m * n)` time complexity, where `m` is proportional to the size of the regex
+and `n` is proportional to the size of the string being searched.
+
+[regular expression]: https://en.wikipedia.org/wiki/Regular_expression
 
 [![Build status](https://github.com/rust-lang/regex/workflows/ci/badge.svg)](https://github.com/rust-lang/regex/actions)
 [![Crates.io](https://img.shields.io/crates/v/regex.svg)](https://crates.io/crates/regex)
-[![Rust](https://img.shields.io/badge/rust-1.41.1%2B-blue.svg?maxAge=3600)](https://github.com/rust-lang/regex)
 
 ### Documentation
 
@@ -40,8 +42,8 @@ fn main() {
 -
 (?P<day>\d{2})   # the day
 ").unwrap();
-    let caps = re.captures("2010-03-14").unwrap();
 
+    let caps = re.captures("2010-03-14").unwrap();
     assert_eq!("2010", &caps["year"]);
     assert_eq!("03", &caps["month"]);
     assert_eq!("14", &caps["day"]);
@@ -54,30 +56,19 @@ easy to adapt the above example with an iterator:
 ```rust
 use regex::Regex;
 
-const TO_SEARCH: &'static str = "
-On 2010-03-14, foo happened. On 2014-10-14, bar happened.
-";
-
 fn main() {
     let re = Regex::new(r"(\d{4})-(\d{2})-(\d{2})").unwrap();
+    let hay = "On 2010-03-14, foo happened. On 2014-10-14, bar happened.";
 
-    for caps in re.captures_iter(TO_SEARCH) {
-        // Note that all of the unwraps are actually OK for this regex
-        // because the only way for the regex to match is if all of the
-        // capture groups match. This is not true in general though!
-        println!("year: {}, month: {}, day: {}",
-                 caps.get(1).unwrap().as_str(),
-                 caps.get(2).unwrap().as_str(),
-                 caps.get(3).unwrap().as_str());
+    let mut dates = vec![];
+    for (_, [year, month, day]) in re.captures_iter(hay).map(|c| c.extract()) {
+        dates.push((year, month, day));
     }
+    assert_eq!(dates, vec![
+      ("2010", "03", "14"),
+      ("2014", "10", "14"),
+    ]);
 }
-```
-
-This example outputs:
-
-```text
-year: 2010, month: 03, day: 14
-year: 2014, month: 10, day: 14
 ```
 
 ### Usage: Avoid compiling the same regex in a loop
@@ -90,19 +81,23 @@ allocations internally to the matching engines.
 
 In Rust, it can sometimes be a pain to pass regular expressions around if
 they're used from inside a helper function. Instead, we recommend using the
-[`lazy_static`](https://crates.io/crates/lazy_static) crate to ensure that
-regular expressions are compiled exactly once.
+[`once_cell`](https://crates.io/crates/once_cell) crate to ensure that
+regular expressions are compiled exactly once. For example:
 
-For example:
+```rust
+use {
+    once_cell::sync::Lazy,
+    regex::Regex,
+};
 
-```rust,ignore
-use regex::Regex;
+fn some_helper_function(haystack: &str) -> bool {
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"...").unwrap());
+    RE.is_match(haystack)
+}
 
-fn some_helper_function(text: &str) -> bool {
-    lazy_static! {
-        static ref RE: Regex = Regex::new("...").unwrap();
-    }
-    RE.is_match(text)
+fn main() {
+    assert!(some_helper_function("abc"));
+    assert!(!some_helper_function("ac"));
 }
 ```
 
@@ -115,19 +110,21 @@ The main API of this crate (`regex::Regex`) requires the caller to pass a
 `&str` for searching. In Rust, an `&str` is required to be valid UTF-8, which
 means the main API can't be used for searching arbitrary bytes.
 
-To match on arbitrary bytes, use the `regex::bytes::Regex` API. The API
-is identical to the main API, except that it takes an `&[u8]` to search
-on instead of an `&str`. By default, `.` will match any *byte* using
-`regex::bytes::Regex`, while `.` will match any *UTF-8 encoded Unicode scalar
-value* using the main API.
+To match on arbitrary bytes, use the `regex::bytes::Regex` API. The API is
+identical to the main API, except that it takes an `&[u8]` to search on instead
+of an `&str`. The `&[u8]` APIs also permit disabling Unicode mode in the regex
+even when the pattern would match invalid UTF-8. For example, `(?-u:.)` is
+not allowed in `regex::Regex` but is allowed in `regex::bytes::Regex` since
+`(?-u:.)` matches any byte except for `\n`. Conversely, `.` will match the
+UTF-8 encoding of any Unicode scalar value except for `\n`.
 
 This example shows how to find all null-terminated strings in a slice of bytes:
 
 ```rust
 use regex::bytes::Regex;
 
-let re = Regex::new(r"(?P<cstr>[^\x00]+)\x00").unwrap();
-let text = b"foo\x00bar\x00baz\x00";
+let re = Regex::new(r"(?-u)(?<cstr>[^\x00]+)\x00").unwrap();
+let text = b"foo\xFFbar\x00baz\x00";
 
 // Extract all of the strings without the null terminator from each match.
 // The unwrap is OK here since a match requires the `cstr` capture to match.
@@ -135,12 +132,12 @@ let cstrs: Vec<&[u8]> =
     re.captures_iter(text)
       .map(|c| c.name("cstr").unwrap().as_bytes())
       .collect();
-assert_eq!(vec![&b"foo"[..], &b"bar"[..], &b"baz"[..]], cstrs);
+assert_eq!(vec![&b"foo\xFFbar"[..], &b"baz"[..]], cstrs);
 ```
 
-Notice here that the `[^\x00]+` will match any *byte* except for `NUL`. When
-using the main API, `[^\x00]+` would instead match any valid UTF-8 sequence
-except for `NUL`.
+Notice here that the `[^\x00]+` will match any *byte* except for `NUL`,
+including bytes like `\xFF` which are not valid UTF-8. When using the main API,
+`[^\x00]+` would instead match any valid UTF-8 sequence except for `NUL`.
 
 ### Usage: match multiple regular expressions simultaneously
 
@@ -170,11 +167,15 @@ assert!(!matches.matched(5));
 assert!(matches.matched(6));
 ```
 
-### Usage: enable SIMD optimizations
 
-SIMD optimizations are enabled automatically on Rust stable 1.27 and newer.
-For nightly versions of Rust, this requires a recent version with the SIMD
-features stabilized.
+### Usage: regex internals as a library
+
+The [`regex-automata` directory](./regex-automata/) contains a crate that
+exposes all of the internal matching engines used by the `regex` crate. The
+idea is that the `regex` crate exposes a simple API for 99% of use cases, but
+`regex-automata` exposes oodles of customizable behaviors.
+
+[Documentation for `regex-automata`.](https://docs.rs/regex-automata)
 
 
 ### Usage: a regular expression parser
@@ -186,7 +187,7 @@ This may be useful if you're implementing your own regex engine or otherwise
 need to do analysis on the syntax of a regular expression. It is otherwise not
 recommended for general use.
 
-[Documentation `regex-syntax`.](https://docs.rs/regex-syntax)
+[Documentation for `regex-syntax`.](https://docs.rs/regex-syntax)
 
 
 ### Crate features
@@ -205,29 +206,28 @@ all such features, use the following `Cargo.toml` dependency configuration:
 [dependencies.regex]
 version = "1.3"
 default-features = false
-# regex currently requires the standard library, you must re-enable it.
+# Unless you have a specific reason not to, it's good sense to enable standard
+# library support. It enables several optimizations and avoids spin locks. It
+# also shouldn't meaningfully impact compile times or binary size.
 features = ["std"]
 ```
 
-This will reduce the dependency tree of `regex` down to a single crate
-(`regex-syntax`).
+This will reduce the dependency tree of `regex` down to two crates:
+`regex-syntax` and `regex-automata`.
 
 The full set of features one can disable are
-[in the "Crate features" section of the documentation](https://docs.rs/regex/*/#crate-features).
+[in the "Crate features" section of the documentation](https://docs.rs/regex/1.*/#crate-features).
 
 
 ### Minimum Rust version policy
 
-This crate's minimum supported `rustc` version is `1.41.1`.
+This crate's minimum supported `rustc` version is `1.60.0`.
 
-The current **tentative** policy is that the minimum Rust version required
-to use this crate can be increased in minor version updates. For example, if
-regex 1.0 requires Rust 1.20.0, then regex 1.0.z for all values of `z` will
-also require Rust 1.20.0 or newer. However, regex 1.y for `y > 0` may require a
-newer minimum version of Rust.
-
-In general, this crate will be conservative with respect to the minimum
-supported version of Rust.
+The policy is that the minimum Rust version required to use this crate can be
+increased in minor version updates. For example, if regex 1.0 requires Rust
+1.20.0, then regex 1.0.z for all values of `z` will also require Rust 1.20.0 or
+newer. However, regex 1.y for `y > 0` may require a newer minimum version of
+Rust.
 
 
 ### License

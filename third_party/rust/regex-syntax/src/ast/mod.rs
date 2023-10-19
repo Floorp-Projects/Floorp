@@ -2,9 +2,9 @@
 Defines an abstract syntax for regular expressions.
 */
 
-use std::cmp::Ordering;
-use std::error;
-use std::fmt;
+use core::cmp::Ordering;
+
+use alloc::{boxed::Box, string::String, vec, vec::Vec};
 
 pub use crate::ast::visitor::{visit, Visitor};
 
@@ -20,6 +20,7 @@ mod visitor;
 /// valid Unicode property name. That particular error is reported when
 /// translating an AST to the high-level intermediate representation (`HIR`).
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Error {
     /// The kind of error.
     kind: ErrorKind,
@@ -65,7 +66,12 @@ impl Error {
 }
 
 /// The type of an error that occurred while building an AST.
+///
+/// This error type is marked as `non_exhaustive`. This means that adding a
+/// new variant is not considered a breaking change.
+#[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ErrorKind {
     /// The capturing group limit was exceeded.
     ///
@@ -169,71 +175,26 @@ pub enum ErrorKind {
     /// `(?<!re)`. Note that all of these syntaxes are otherwise invalid; this
     /// error is used to improve the user experience.
     UnsupportedLookAround,
-    /// Hints that destructuring should not be exhaustive.
-    ///
-    /// This enum may grow additional variants, so this makes sure clients
-    /// don't count on exhaustive matching. (Otherwise, adding a new variant
-    /// could break existing code.)
-    #[doc(hidden)]
-    __Nonexhaustive,
 }
 
-impl error::Error for Error {
-    // TODO: Remove this method entirely on the next breaking semver release.
-    #[allow(deprecated)]
-    fn description(&self) -> &str {
-        use self::ErrorKind::*;
-        match self.kind {
-            CaptureLimitExceeded => "capture group limit exceeded",
-            ClassEscapeInvalid => "invalid escape sequence in character class",
-            ClassRangeInvalid => "invalid character class range",
-            ClassRangeLiteral => "invalid range boundary, must be a literal",
-            ClassUnclosed => "unclosed character class",
-            DecimalEmpty => "empty decimal literal",
-            DecimalInvalid => "invalid decimal literal",
-            EscapeHexEmpty => "empty hexadecimal literal",
-            EscapeHexInvalid => "invalid hexadecimal literal",
-            EscapeHexInvalidDigit => "invalid hexadecimal digit",
-            EscapeUnexpectedEof => "unexpected eof (escape sequence)",
-            EscapeUnrecognized => "unrecognized escape sequence",
-            FlagDanglingNegation => "dangling flag negation operator",
-            FlagDuplicate { .. } => "duplicate flag",
-            FlagRepeatedNegation { .. } => "repeated negation",
-            FlagUnexpectedEof => "unexpected eof (flag)",
-            FlagUnrecognized => "unrecognized flag",
-            GroupNameDuplicate { .. } => "duplicate capture group name",
-            GroupNameEmpty => "empty capture group name",
-            GroupNameInvalid => "invalid capture group name",
-            GroupNameUnexpectedEof => "unclosed capture group name",
-            GroupUnclosed => "unclosed group",
-            GroupUnopened => "unopened group",
-            NestLimitExceeded(_) => "nest limit exceeded",
-            RepetitionCountInvalid => "invalid repetition count range",
-            RepetitionCountUnclosed => "unclosed counted repetition",
-            RepetitionMissing => "repetition operator missing expression",
-            UnicodeClassInvalid => "invalid Unicode character class",
-            UnsupportedBackreference => "backreferences are not supported",
-            UnsupportedLookAround => "look-around is not supported",
-            _ => unreachable!(),
-        }
-    }
-}
+#[cfg(feature = "std")]
+impl std::error::Error for Error {}
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         crate::error::Formatter::from(self).fmt(f)
     }
 }
 
-impl fmt::Display for ErrorKind {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         use self::ErrorKind::*;
         match *self {
             CaptureLimitExceeded => write!(
                 f,
                 "exceeded the maximum number of \
                  capturing groups ({})",
-                ::std::u32::MAX
+                u32::MAX
             ),
             ClassEscapeInvalid => {
                 write!(f, "invalid escape sequence found in character class")
@@ -310,7 +271,6 @@ impl fmt::Display for ErrorKind {
                 "look-around, including look-ahead and look-behind, \
                  is not supported"
             ),
-            _ => unreachable!(),
         }
     }
 }
@@ -320,6 +280,7 @@ impl fmt::Display for ErrorKind {
 /// All span positions are absolute byte offsets that can be used on the
 /// original regular expression that was parsed.
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Span {
     /// The start byte offset.
     pub start: Position,
@@ -327,8 +288,8 @@ pub struct Span {
     pub end: Position,
 }
 
-impl fmt::Debug for Span {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Debug for Span {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "Span({:?}, {:?})", self.start, self.end)
     }
 }
@@ -350,6 +311,7 @@ impl PartialOrd for Span {
 /// A position encodes one half of a span, and include the byte offset, line
 /// number and column number.
 #[derive(Clone, Copy, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Position {
     /// The absolute offset of this position, starting at `0` from the
     /// beginning of the regular expression pattern string.
@@ -360,8 +322,8 @@ pub struct Position {
     pub column: usize,
 }
 
-impl fmt::Debug for Position {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Debug for Position {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "Position(o: {:?}, l: {:?}, c: {:?})",
@@ -438,6 +400,7 @@ impl Position {
 /// comment contains a span of precisely where it occurred in the original
 /// regular expression.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct WithComments {
     /// The actual ast.
     pub ast: Ast,
@@ -450,6 +413,7 @@ pub struct WithComments {
 /// A regular expression can only contain comments when the `x` flag is
 /// enabled.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Comment {
     /// The span of this comment, including the beginning `#` and ending `\n`.
     pub span: Span,
@@ -466,6 +430,7 @@ pub struct Comment {
 /// This type defines its own destructor that uses constant stack space and
 /// heap space proportional to the size of the `Ast`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Ast {
     /// An empty regex that matches everything.
     Empty(Span),
@@ -541,8 +506,8 @@ impl Ast {
 ///
 /// This implementation uses constant stack space and heap space proportional
 /// to the size of the `Ast`.
-impl fmt::Display for Ast {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Display for Ast {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         use crate::ast::print::Printer;
         Printer::new().print(self, f)
     }
@@ -550,6 +515,7 @@ impl fmt::Display for Ast {
 
 /// An alternation of regular expressions.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Alternation {
     /// The span of this alternation.
     pub span: Span,
@@ -574,6 +540,7 @@ impl Alternation {
 
 /// A concatenation of regular expressions.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Concat {
     /// The span of this concatenation.
     pub span: Span,
@@ -602,6 +569,7 @@ impl Concat {
 /// represented in their literal form, e.g., `a` or in their escaped form,
 /// e.g., `\x61`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Literal {
     /// The span of this literal.
     pub span: Span,
@@ -615,23 +583,27 @@ impl Literal {
     /// If this literal was written as a `\x` hex escape, then this returns
     /// the corresponding byte value. Otherwise, this returns `None`.
     pub fn byte(&self) -> Option<u8> {
-        let short_hex = LiteralKind::HexFixed(HexLiteralKind::X);
-        if self.c as u32 <= 255 && self.kind == short_hex {
-            Some(self.c as u8)
-        } else {
-            None
+        match self.kind {
+            LiteralKind::HexFixed(HexLiteralKind::X) => {
+                u8::try_from(self.c).ok()
+            }
+            _ => None,
         }
     }
 }
 
 /// The kind of a single literal expression.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum LiteralKind {
     /// The literal is written verbatim, e.g., `a` or `☃`.
     Verbatim,
-    /// The literal is written as an escape because it is punctuation, e.g.,
-    /// `\*` or `\[`.
-    Punctuation,
+    /// The literal is written as an escape because it is otherwise a special
+    /// regex meta character, e.g., `\*` or `\[`.
+    Meta,
+    /// The literal is written as an escape despite the fact that the escape is
+    /// unnecessary, e.g., `\%` or `\/`.
+    Superfluous,
     /// The literal is written as an octal escape, e.g., `\141`.
     Octal,
     /// The literal is written as a hex code with a fixed number of digits
@@ -652,6 +624,7 @@ pub enum LiteralKind {
 /// A special literal is a special escape sequence recognized by the regex
 /// parser, e.g., `\f` or `\n`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum SpecialLiteralKind {
     /// Bell, spelled `\a` (`\x07`).
     Bell,
@@ -676,6 +649,7 @@ pub enum SpecialLiteralKind {
 /// differ when used without brackets in the number of hex digits that must
 /// follow.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum HexLiteralKind {
     /// A `\x` prefix. When used without brackets, this form is limited to
     /// two digits.
@@ -703,6 +677,7 @@ impl HexLiteralKind {
 
 /// A single character class expression.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Class {
     /// A Unicode character class, e.g., `\pL` or `\p{Greek}`.
     Unicode(ClassUnicode),
@@ -727,6 +702,7 @@ impl Class {
 
 /// A Perl character class.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassPerl {
     /// The span of this class.
     pub span: Span,
@@ -739,6 +715,7 @@ pub struct ClassPerl {
 
 /// The available Perl character classes.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassPerlKind {
     /// Decimal numbers.
     Digit,
@@ -750,6 +727,7 @@ pub enum ClassPerlKind {
 
 /// An ASCII character class.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassAscii {
     /// The span of this class.
     pub span: Span,
@@ -762,6 +740,7 @@ pub struct ClassAscii {
 
 /// The available ASCII character classes.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassAsciiKind {
     /// `[0-9A-Za-z]`
     Alnum,
@@ -825,6 +804,7 @@ impl ClassAsciiKind {
 
 /// A Unicode character class.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassUnicode {
     /// The span of this class.
     pub span: Span,
@@ -877,8 +857,156 @@ pub enum ClassUnicodeKind {
     },
 }
 
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for ClassUnicodeKind {
+    fn arbitrary(
+        u: &mut arbitrary::Unstructured,
+    ) -> arbitrary::Result<ClassUnicodeKind> {
+        #[cfg(any(
+            feature = "unicode-age",
+            feature = "unicode-bool",
+            feature = "unicode-gencat",
+            feature = "unicode-perl",
+            feature = "unicode-script",
+            feature = "unicode-segment",
+        ))]
+        {
+            use alloc::string::ToString;
+
+            use super::unicode_tables::{
+                property_names::PROPERTY_NAMES,
+                property_values::PROPERTY_VALUES,
+            };
+
+            match u.choose_index(3)? {
+                0 => {
+                    let all = PROPERTY_VALUES
+                        .iter()
+                        .flat_map(|e| e.1.iter())
+                        .filter(|(name, _)| name.len() == 1)
+                        .count();
+                    let idx = u.choose_index(all)?;
+                    let value = PROPERTY_VALUES
+                        .iter()
+                        .flat_map(|e| e.1.iter())
+                        .take(idx + 1)
+                        .last()
+                        .unwrap()
+                        .0
+                        .chars()
+                        .next()
+                        .unwrap();
+                    Ok(ClassUnicodeKind::OneLetter(value))
+                }
+                1 => {
+                    let all = PROPERTY_VALUES
+                        .iter()
+                        .map(|e| e.1.len())
+                        .sum::<usize>()
+                        + PROPERTY_NAMES.len();
+                    let idx = u.choose_index(all)?;
+                    let name = PROPERTY_VALUES
+                        .iter()
+                        .flat_map(|e| e.1.iter())
+                        .chain(PROPERTY_NAMES)
+                        .map(|(_, e)| e)
+                        .take(idx + 1)
+                        .last()
+                        .unwrap();
+                    Ok(ClassUnicodeKind::Named(name.to_string()))
+                }
+                2 => {
+                    let all = PROPERTY_VALUES
+                        .iter()
+                        .map(|e| e.1.len())
+                        .sum::<usize>();
+                    let idx = u.choose_index(all)?;
+                    let (prop, value) = PROPERTY_VALUES
+                        .iter()
+                        .flat_map(|e| {
+                            e.1.iter().map(|(_, value)| (e.0, value))
+                        })
+                        .take(idx + 1)
+                        .last()
+                        .unwrap();
+                    Ok(ClassUnicodeKind::NamedValue {
+                        op: u.arbitrary()?,
+                        name: prop.to_string(),
+                        value: value.to_string(),
+                    })
+                }
+                _ => unreachable!("index chosen is impossible"),
+            }
+        }
+        #[cfg(not(any(
+            feature = "unicode-age",
+            feature = "unicode-bool",
+            feature = "unicode-gencat",
+            feature = "unicode-perl",
+            feature = "unicode-script",
+            feature = "unicode-segment",
+        )))]
+        {
+            match u.choose_index(3)? {
+                0 => Ok(ClassUnicodeKind::OneLetter(u.arbitrary()?)),
+                1 => Ok(ClassUnicodeKind::Named(u.arbitrary()?)),
+                2 => Ok(ClassUnicodeKind::NamedValue {
+                    op: u.arbitrary()?,
+                    name: u.arbitrary()?,
+                    value: u.arbitrary()?,
+                }),
+                _ => unreachable!("index chosen is impossible"),
+            }
+        }
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        #[cfg(any(
+            feature = "unicode-age",
+            feature = "unicode-bool",
+            feature = "unicode-gencat",
+            feature = "unicode-perl",
+            feature = "unicode-script",
+            feature = "unicode-segment",
+        ))]
+        {
+            arbitrary::size_hint::and_all(&[
+                usize::size_hint(depth),
+                usize::size_hint(depth),
+                arbitrary::size_hint::or(
+                    (0, Some(0)),
+                    ClassUnicodeOpKind::size_hint(depth),
+                ),
+            ])
+        }
+        #[cfg(not(any(
+            feature = "unicode-age",
+            feature = "unicode-bool",
+            feature = "unicode-gencat",
+            feature = "unicode-perl",
+            feature = "unicode-script",
+            feature = "unicode-segment",
+        )))]
+        {
+            arbitrary::size_hint::and(
+                usize::size_hint(depth),
+                arbitrary::size_hint::or_all(&[
+                    char::size_hint(depth),
+                    String::size_hint(depth),
+                    arbitrary::size_hint::and_all(&[
+                        String::size_hint(depth),
+                        String::size_hint(depth),
+                        ClassUnicodeOpKind::size_hint(depth),
+                    ]),
+                ]),
+            )
+        }
+    }
+}
+
 /// The type of op used in a Unicode character class.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassUnicodeOpKind {
     /// A property set to a specific value, e.g., `\p{scx=Katakana}`.
     Equal,
@@ -901,6 +1029,7 @@ impl ClassUnicodeOpKind {
 
 /// A bracketed character class, e.g., `[a-z0-9]`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassBracketed {
     /// The span of this class.
     pub span: Span,
@@ -919,6 +1048,7 @@ pub struct ClassBracketed {
 /// items (literals, ranges, other bracketed classes) or a tree of binary set
 /// operations.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassSet {
     /// An item, which can be a single literal, range, nested character class
     /// or a union of items.
@@ -952,6 +1082,7 @@ impl ClassSet {
 
 /// A single component of a character class set.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassSetItem {
     /// An empty item.
     ///
@@ -995,6 +1126,7 @@ impl ClassSetItem {
 
 /// A single character class range in a set.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassSetRange {
     /// The span of this range.
     pub span: Span,
@@ -1016,6 +1148,7 @@ impl ClassSetRange {
 
 /// A union of items inside a character class set.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassSetUnion {
     /// The span of the items in this operation. e.g., the `a-z0-9` in
     /// `[^a-z0-9]`
@@ -1060,6 +1193,7 @@ impl ClassSetUnion {
 
 /// A Unicode character class set operation.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct ClassSetBinaryOp {
     /// The span of this operation. e.g., the `a-z--[h-p]` in `[a-z--h-p]`.
     pub span: Span,
@@ -1077,6 +1211,7 @@ pub struct ClassSetBinaryOp {
 /// explicit union operator. Concatenation inside a character class corresponds
 /// to the union operation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum ClassSetBinaryOpKind {
     /// The intersection of two sets, e.g., `\pN&&[a-z]`.
     Intersection,
@@ -1090,6 +1225,7 @@ pub enum ClassSetBinaryOpKind {
 
 /// A single zero-width assertion.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Assertion {
     /// The span of this assertion.
     pub span: Span,
@@ -1099,6 +1235,7 @@ pub struct Assertion {
 
 /// An assertion kind.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum AssertionKind {
     /// `^`
     StartLine,
@@ -1116,6 +1253,7 @@ pub enum AssertionKind {
 
 /// A repetition operation applied to a regular expression.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Repetition {
     /// The span of this operation.
     pub span: Span,
@@ -1129,6 +1267,7 @@ pub struct Repetition {
 
 /// The repetition operator itself.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct RepetitionOp {
     /// The span of this operator. This includes things like `+`, `*?` and
     /// `{m,n}`.
@@ -1139,6 +1278,7 @@ pub struct RepetitionOp {
 
 /// The kind of a repetition operator.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum RepetitionKind {
     /// `?`
     ZeroOrOne,
@@ -1152,6 +1292,7 @@ pub enum RepetitionKind {
 
 /// A range repetition operator.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum RepetitionRange {
     /// `{m}`
     Exactly(u32),
@@ -1181,6 +1322,7 @@ impl RepetitionRange {
 /// contains a sub-expression, e.g., `(a)`, `(?P<name>a)`, `(?:a)` and
 /// `(?is:a)`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Group {
     /// The span of this group.
     pub span: Span,
@@ -1203,7 +1345,7 @@ impl Group {
     /// Returns true if and only if this group is capturing.
     pub fn is_capturing(&self) -> bool {
         match self.kind {
-            GroupKind::CaptureIndex(_) | GroupKind::CaptureName(_) => true,
+            GroupKind::CaptureIndex(_) | GroupKind::CaptureName { .. } => true,
             GroupKind::NonCapturing(_) => false,
         }
     }
@@ -1214,7 +1356,7 @@ impl Group {
     pub fn capture_index(&self) -> Option<u32> {
         match self.kind {
             GroupKind::CaptureIndex(i) => Some(i),
-            GroupKind::CaptureName(ref x) => Some(x.index),
+            GroupKind::CaptureName { ref name, .. } => Some(name.index),
             GroupKind::NonCapturing(_) => None,
         }
     }
@@ -1222,11 +1364,17 @@ impl Group {
 
 /// The kind of a group.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum GroupKind {
     /// `(a)`
     CaptureIndex(u32),
-    /// `(?P<name>a)`
-    CaptureName(CaptureName),
+    /// `(?<name>a)` or `(?P<name>a)`
+    CaptureName {
+        /// True if the `?P<` syntax is used and false if the `?<` syntax is used.
+        starts_with_p: bool,
+        /// The capture name.
+        name: CaptureName,
+    },
     /// `(?:a)` and `(?i:a)`
     NonCapturing(Flags),
 }
@@ -1245,8 +1393,38 @@ pub struct CaptureName {
     pub index: u32,
 }
 
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for CaptureName {
+    fn arbitrary(
+        u: &mut arbitrary::Unstructured,
+    ) -> arbitrary::Result<CaptureName> {
+        let len = u.arbitrary_len::<char>()?;
+        if len == 0 {
+            return Err(arbitrary::Error::NotEnoughData);
+        }
+        let mut name: String = String::new();
+        for _ in 0..len {
+            let ch: char = u.arbitrary()?;
+            let cp = u32::from(ch);
+            let ascii_letter_offset = u8::try_from(cp % 26).unwrap();
+            let ascii_letter = b'a' + ascii_letter_offset;
+            name.push(char::from(ascii_letter));
+        }
+        Ok(CaptureName { span: u.arbitrary()?, name, index: u.arbitrary()? })
+    }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        arbitrary::size_hint::and_all(&[
+            Span::size_hint(depth),
+            usize::size_hint(depth),
+            u32::size_hint(depth),
+        ])
+    }
+}
+
 /// A group of flags that is not applied to a particular regular expression.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct SetFlags {
     /// The span of these flags, including the grouping parentheses.
     pub span: Span,
@@ -1258,6 +1436,7 @@ pub struct SetFlags {
 ///
 /// This corresponds only to the sequence of flags themselves, e.g., `is-u`.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct Flags {
     /// The span of this group of flags.
     pub span: Span,
@@ -1310,6 +1489,7 @@ impl Flags {
 
 /// A single item in a group of flags.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub struct FlagsItem {
     /// The span of this item.
     pub span: Span,
@@ -1319,6 +1499,7 @@ pub struct FlagsItem {
 
 /// The kind of an item in a group of flags.
 #[derive(Clone, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum FlagsItemKind {
     /// A negation operator applied to all subsequent flags in the enclosing
     /// group.
@@ -1339,6 +1520,7 @@ impl FlagsItemKind {
 
 /// A single flag.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[cfg_attr(feature = "arbitrary", derive(arbitrary::Arbitrary))]
 pub enum Flag {
     /// `i`
     CaseInsensitive,
@@ -1350,6 +1532,8 @@ pub enum Flag {
     SwapGreed,
     /// `u`
     Unicode,
+    /// `R`
+    CRLF,
     /// `x`
     IgnoreWhitespace,
 }
@@ -1358,7 +1542,7 @@ pub enum Flag {
 /// space but heap space proportional to the depth of the `Ast`.
 impl Drop for Ast {
     fn drop(&mut self) {
-        use std::mem;
+        use core::mem;
 
         match *self {
             Ast::Empty(_)
@@ -1408,7 +1592,7 @@ impl Drop for Ast {
 /// stack space but heap space proportional to the depth of the `ClassSet`.
 impl Drop for ClassSet {
     fn drop(&mut self) {
-        use std::mem;
+        use core::mem;
 
         match *self {
             ClassSet::Item(ref item) => match *item {
@@ -1492,8 +1676,19 @@ mod tests {
 
         // We run our test on a thread with a small stack size so we can
         // force the issue more easily.
+        //
+        // NOTE(2023-03-21): It turns out that some platforms (like FreeBSD)
+        // will just barf with very small stack sizes. So we bump this up a bit
+        // to give more room to breath. When I did this, I confirmed that if
+        // I remove the custom `Drop` impl for `Ast`, then this test does
+        // indeed still fail with a stack overflow. (At the time of writing, I
+        // had to bump it all the way up to 32K before the test would pass even
+        // without the custom `Drop` impl. So 16K seems like a safe number
+        // here.)
+        //
+        // See: https://github.com/rust-lang/regex/issues/967
         thread::Builder::new()
-            .stack_size(1 << 10)
+            .stack_size(16 << 10)
             .spawn(run)
             .unwrap()
             .join()
