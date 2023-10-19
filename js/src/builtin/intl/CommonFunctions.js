@@ -5,12 +5,14 @@
 /* Portions Copyright Norbert Lindenberg 2011-2012. */
 
 #ifdef DEBUG
+#define JS_CONCAT2(x, y) x##y
+#define JS_CONCAT(x, y) JS_CONCAT2(x, y)
 #define assertIsValidAndCanonicalLanguageTag(locale, desc) \
   do { \
-    var _canonical = intl_TryValidateAndCanonicalizeLanguageTag(locale); \
-    assert(_canonical !== null, \
+    var JS_CONCAT(canonical, __LINE__) = intl_TryValidateAndCanonicalizeLanguageTag(locale); \
+    assert(JS_CONCAT(canonical, __LINE__) !== null, \
            `${desc} is a structurally valid language tag`); \
-    assert(_canonical === locale, \
+    assert(JS_CONCAT(canonical, __LINE__) === locale, \
            `${desc} is a canonicalized language tag`); \
   } while (false)
 #else
