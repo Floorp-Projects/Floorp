@@ -3551,6 +3551,8 @@ bool LinkHeader::operator==(const LinkHeader& rhs) const {
          mReferrerPolicy == rhs.mReferrerPolicy && mAs == rhs.mAs;
 }
 
+constexpr auto kTitleStar = "title*"_ns;
+
 nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
   nsTArray<LinkHeader> linkHeaders;
 
@@ -3692,17 +3694,7 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
           *unescaped = kNullCh;
         }
 
-        if (attr.LowerCaseEqualsLiteral("rel")) {
-          if (header.mRel.IsEmpty()) {
-            header.mRel = value;
-            header.mRel.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("title")) {
-          if (header.mTitle.IsEmpty()) {
-            header.mTitle = value;
-            header.mTitle.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("title*")) {
+        if (attr.LowerCaseEqualsASCII(kTitleStar.get())) {
           if (titleStar.IsEmpty() && !wasQuotedString) {
             // RFC 5987 encoding; uses token format only, so skip if we get
             // here with a quoted-string
@@ -3716,61 +3708,8 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
               titleStar.Truncate();
             }
           }
-        } else if (attr.LowerCaseEqualsLiteral("type")) {
-          if (header.mType.IsEmpty()) {
-            header.mType = value;
-            header.mType.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("media")) {
-          if (header.mMedia.IsEmpty()) {
-            header.mMedia = value;
-
-            // The HTML5 spec is formulated in terms of the CSS3 spec,
-            // which specifies that media queries are case insensitive.
-            nsContentUtils::ASCIIToLower(header.mMedia);
-          }
-        } else if (attr.LowerCaseEqualsLiteral("anchor")) {
-          if (header.mAnchor.IsEmpty()) {
-            header.mAnchor = value;
-            header.mAnchor.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("crossorigin")) {
-          if (header.mCrossOrigin.IsVoid()) {
-            header.mCrossOrigin.SetIsVoid(false);
-            header.mCrossOrigin = value;
-            header.mCrossOrigin.StripWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("as")) {
-          if (header.mAs.IsEmpty()) {
-            header.mAs = value;
-            header.mAs.CompressWhitespace();
-          }
-        } else if (attr.LowerCaseEqualsLiteral("referrerpolicy")) {
-          // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#referrer-policy-attribute
-          // Specs says referrer policy attribute is an enumerated attribute,
-          // case insensitive and includes the empty string
-          // We will parse the value with AttributeReferrerPolicyFromString
-          // later, which will handle parsing it as an enumerated attribute.
-          if (header.mReferrerPolicy.IsEmpty()) {
-            header.mReferrerPolicy = value;
-          }
-
-        } else if (attr.LowerCaseEqualsLiteral("nonce")) {
-          if (header.mNonce.IsEmpty()) {
-            header.mNonce = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("integrity")) {
-          if (header.mIntegrity.IsEmpty()) {
-            header.mIntegrity = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("imagesrcset")) {
-          if (header.mSrcset.IsEmpty()) {
-            header.mSrcset = value;
-          }
-        } else if (attr.LowerCaseEqualsLiteral("imagesizes")) {
-          if (header.mSizes.IsEmpty()) {
-            header.mSizes = value;
-          }
+        } else {
+          header.MaybeUpdateAttribute(attr, value);
         }
       }
     }
@@ -3806,6 +3745,78 @@ nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
   }
 
   return linkHeaders;
+}
+
+void LinkHeader::MaybeUpdateAttribute(const nsAString& aAttribute,
+                                      const char16_t* aValue) {
+  MOZ_ASSERT(!aAttribute.LowerCaseEqualsASCII(kTitleStar.get()));
+
+  if (aAttribute.LowerCaseEqualsLiteral("rel")) {
+    if (mRel.IsEmpty()) {
+      mRel = aValue;
+      mRel.CompressWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("title")) {
+    if (mTitle.IsEmpty()) {
+      mTitle = aValue;
+      mTitle.CompressWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("type")) {
+    if (mType.IsEmpty()) {
+      mType = aValue;
+      mType.StripWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("media")) {
+    if (mMedia.IsEmpty()) {
+      mMedia = aValue;
+
+      // The HTML5 spec is formulated in terms of the CSS3 spec,
+      // which specifies that media queries are case insensitive.
+      nsContentUtils::ASCIIToLower(mMedia);
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("anchor")) {
+    if (mAnchor.IsEmpty()) {
+      mAnchor = aValue;
+      mAnchor.StripWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("crossorigin")) {
+    if (mCrossOrigin.IsVoid()) {
+      mCrossOrigin.SetIsVoid(false);
+      mCrossOrigin = aValue;
+      mCrossOrigin.StripWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("as")) {
+    if (mAs.IsEmpty()) {
+      mAs = aValue;
+      mAs.CompressWhitespace();
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("referrerpolicy")) {
+    // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#referrer-policy-attribute
+    // Specs says referrer policy attribute is an enumerated attribute,
+    // case insensitive and includes the empty string
+    // We will parse the aValue with AttributeReferrerPolicyFromString
+    // later, which will handle parsing it as an enumerated attribute.
+    if (mReferrerPolicy.IsEmpty()) {
+      mReferrerPolicy = aValue;
+    }
+
+  } else if (aAttribute.LowerCaseEqualsLiteral("nonce")) {
+    if (mNonce.IsEmpty()) {
+      mNonce = aValue;
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("integrity")) {
+    if (mIntegrity.IsEmpty()) {
+      mIntegrity = aValue;
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("imagesrcset")) {
+    if (mSrcset.IsEmpty()) {
+      mSrcset = aValue;
+    }
+  } else if (aAttribute.LowerCaseEqualsLiteral("imagesizes")) {
+    if (mSizes.IsEmpty()) {
+      mSizes = aValue;
+    }
+  }
 }
 
 // We will use official mime-types from:
