@@ -13,6 +13,7 @@ set -x
 clang_bindir=${MOZ_FETCHES_DIR}/clang/bin
 clang_libdir=${MOZ_FETCHES_DIR}/clang/lib
 python_src=${MOZ_FETCHES_DIR}/cpython-source
+xz_prefix=${MOZ_FETCHES_DIR}/xz
 
 # Make the compiler-rt available to clang.
 env UPLOAD_DIR= $GECKO_PATH/taskcluster/scripts/misc/repack-clang.sh
@@ -38,9 +39,9 @@ case `uname -s` in
         # NOTE: both CFLAGS and CPPFLAGS need to be set here, otherwise
         # configure step fails.
         sysroot_flags="-isysroot ${MOZ_FETCHES_DIR}/MacOSX${macosx_sdk}.sdk -mmacosx-version-min=${macosx_version_min}"
-        export CPPFLAGS=${sysroot_flags}
+        export CPPFLAGS="${sysroot_flags} -I${xz_prefix}/include"
         export CFLAGS=${sysroot_flags}
-        export LDFLAGS="${LDFLAGS} ${sysroot_flags}"
+        export LDFLAGS="${LDFLAGS} ${sysroot_flags} -L${xz_prefix}/lib"
         configure_flags_extra=--with-openssl=/usr/local/opt/openssl
 
         # see https://bugs.python.org/issue44065
@@ -76,15 +77,24 @@ case `uname -s` in
     Darwin)
         cp /usr/local/opt/openssl/lib/libssl*.dylib ${work_dir}/python/lib/
         cp /usr/local/opt/openssl/lib/libcrypto*.dylib ${work_dir}/python/lib/
+        cp ${xz_prefix}/lib/liblzma.dylib ${work_dir}/python/lib/
 
         # Instruct the loader to search for the lib in rpath instead of the one used during linking
         install_name_tool -change /usr/local/opt/openssl@1.1/lib/libssl.1.1.dylib @rpath/libssl.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
         install_name_tool -change /usr/local/opt/openssl@1.1/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so
+        otool -L ${work_dir}/python/lib/python3.8/lib-dynload/_ssl.cpython-38-darwin.so | grep @rpath/libssl.1.1.dylib
+
+
+        install_name_tool -change /xz/lib/liblzma.5.dylib @rpath/liblzma.5.dylib ${work_dir}/python/lib/python3.8/lib-dynload/_lzma.cpython-38-darwin.so
+        otool -L ${work_dir}/python/lib/python3.8/lib-dynload/_lzma.cpython-38-darwin.so | grep @rpath/liblzma.5.dylib
+
         # Also modify the shipped libssl to use the shipped libcrypto
         install_name_tool -change /usr/local/Cellar/openssl@1.1/1.1.1h/lib/libcrypto.1.1.dylib @rpath/libcrypto.1.1.dylib ${work_dir}/python/lib/libssl.1.1.dylib
+        otool -L ${work_dir}/python/lib/libssl.1.1.dylib | grep @rpath/libcrypto.1.1.dylib
 
         # sanity check
         ${work_dir}/python/bin/python3 -c "import ssl"
+        ${work_dir}/python/bin/python3 -c "import lzma"
         ;;
     Linux)
         cp /usr/lib/x86_64-linux-gnu/libffi.so.* ${work_dir}/python/lib/

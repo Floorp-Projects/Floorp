@@ -62,3 +62,4 @@ macosx64-python-3.8:
         toolchain:
             - macosx64-clang-toolchain
             - macosx64-sdk-toolchain
+            - macosx64-xz
