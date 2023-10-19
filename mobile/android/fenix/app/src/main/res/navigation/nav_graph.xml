@@ -300,9 +300,6 @@
             android:id="@+id/action_browserFragment_to_quickSettingsSheetDialogFragment"
             app:destination="@id/quickSettingsSheetDialogFragment" />
         <action
-            android:id="@+id/action_browserFragment_to_cookieBannerDialogFragment"
-            app:destination="@id/cookieBannerDialogFragment" />
-        <action
             android:id="@+id/action_browserFragment_to_reviewQualityCheckDialogFragment"
             app:destination="@id/reviewQualityCheckFragment" />
         <action
@@ -970,9 +967,6 @@
             android:name="cookieBannerUIMode"
             app:argType="org.mozilla.fenix.trackingprotection.CookieBannerUIMode" />
     </dialog>
-    <dialog
-        android:id="@+id/cookieBannerDialogFragment"
-        android:name="org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialog" />
     <fragment
         android:id="@+id/accountProblemFragment"
         android:name="org.mozilla.fenix.settings.account.AccountProblemFragment">

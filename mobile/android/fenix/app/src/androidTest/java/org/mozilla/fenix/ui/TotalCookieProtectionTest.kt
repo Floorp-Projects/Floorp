@@ -10,6 +10,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.components.toolbar.CFR_MINIMUM_NUMBER_OPENED_TABS
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -28,12 +29,12 @@ class TotalCookieProtectionTest {
     val composeTestRule = AndroidComposeTestRule(
         HomeActivityTestRule(
             isTCPCFREnabled = true,
-            isCookieBannerReductionDialogEnabled = false,
         ),
     ) { it.activity }
 
     @Before
     fun setUp() {
+        CFR_MINIMUM_NUMBER_OPENED_TABS = 0
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -43,6 +44,7 @@ class TotalCookieProtectionTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        CFR_MINIMUM_NUMBER_OPENED_TABS = 5
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2260552

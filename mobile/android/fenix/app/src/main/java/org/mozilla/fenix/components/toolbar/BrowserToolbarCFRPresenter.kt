@@ -56,7 +56,9 @@ private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -6
 /**
  * The minimum number of opened tabs to show the Total Cookie Protection CFR.
  */
-private const val CFR_MINIMUM_NUMBER_OPENED_TABS = 5
+internal var CFR_MINIMUM_NUMBER_OPENED_TABS = 5
+    @VisibleForTesting
+    internal set
 
 /**
  * Delegate for handling all the business logic for showing CFRs in the toolbar.
@@ -183,8 +185,7 @@ class BrowserToolbarCFRPresenter(
         }
 
         settings.shouldShowTotalCookieProtectionCFR && (
-            !settings.shouldShowCookieBannerReEngagementDialog() ||
-                settings.openTabsCount >= CFR_MINIMUM_NUMBER_OPENED_TABS
+            settings.openTabsCount >= CFR_MINIMUM_NUMBER_OPENED_TABS
             ) -> ToolbarCFR.TCP
 
         shoppingExperienceFeature.isEnabled &&

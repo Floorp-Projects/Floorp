@@ -168,7 +168,6 @@ class BrowserToolbarCFRPresenterTest {
         val presenter = createPresenter(
             settings = mockk {
                 every { shouldShowTotalCookieProtectionCFR } returns false
-                every { shouldShowCookieBannerReEngagementDialog() } returns false
                 every { shouldShowReviewQualityCheckCFR } returns false
                 every { shouldShowEraseActionCFR } returns false
             },
@@ -429,7 +428,7 @@ class BrowserToolbarCFRPresenterTest {
         browserStore: BrowserStore = mockk(),
         settings: Settings = mockk {
             every { shouldShowTotalCookieProtectionCFR } returns true
-            every { shouldShowCookieBannerReEngagementDialog() } returns false
+            every { openTabsCount } returns 5
             every { shouldShowReviewQualityCheckCFR } returns false
             every { shouldShowEraseActionCFR } returns false
         },
@@ -456,8 +455,8 @@ class BrowserToolbarCFRPresenterTest {
         browserStore: BrowserStore = mockk(),
         settings: Settings = mockk(relaxed = true) {
             every { shouldShowTotalCookieProtectionCFR } returns true
-            every { shouldShowCookieBannerReEngagementDialog() } returns false
             every { shouldShowEraseActionCFR } returns true
+            every { openTabsCount } returns 5
             every { shouldShowReviewQualityCheckCFR } returns true
         },
         toolbar: BrowserToolbar = mockk {

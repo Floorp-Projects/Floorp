@@ -68,11 +68,6 @@ interface FeatureSettingsHelper {
     var etpPolicy: ETPPolicy
 
     /**
-     * Enable or disable cookie banner reduction dialog.
-     */
-    var isCookieBannerReductionDialogEnabled: Boolean
-
-    /**
      * Enable or disable open in app banner.
      */
     var isOpenInAppBannerEnabled: Boolean

@@ -52,8 +52,6 @@ class CookieBannersFragment : PreferenceFragmentCompat() {
                     val mode = requireContext().settings().getCookieBannerHandling()
                     getEngineSettings().cookieBannerHandlingModePrivateBrowsing = mode
                     getEngineSettings().cookieBannerHandlingMode = mode
-                    getEngineSettings().cookieBannerHandlingDetectOnlyMode =
-                        requireContext().settings().shouldShowCookieBannerReEngagementDialog()
                     CookieBanners.settingChanged.record(CookieBanners.SettingChangedExtra(metricTag))
                     requireContext().components.useCases.sessionUseCases.reload()
                     return super.onPreferenceChange(preference, newValue)

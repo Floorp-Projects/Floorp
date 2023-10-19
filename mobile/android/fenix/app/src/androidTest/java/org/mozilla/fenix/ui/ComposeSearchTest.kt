@@ -61,7 +61,6 @@ class ComposeSearchTest {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
-            isCookieBannerReductionDialogEnabled = false,
             tabsTrayRewriteEnabled = true,
         ),
     ) { it.activity }
