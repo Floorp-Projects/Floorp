@@ -111,6 +111,8 @@
 
 #include "mozjemalloc.h"
 #include "replace_malloc.h"
+
+#include "mozjemalloc.h"
 #include "FdPrintf.h"
 #include "Mutex.h"
 #include "mozilla/Assertions.h"
@@ -140,8 +142,6 @@ extern "C" MOZ_EXPORT int pthread_atfork(void (*)(void), void (*)(void),
     void operator=(const T&)
 #endif
 
-static malloc_table_t sMallocTable;
-
 // This class provides infallible operations for the small number of heap
 // allocations that PHC does for itself. It would be nice if we could use the
 // InfallibleAllocPolicy from mozalloc, but PHC cannot use mozalloc.
@@ -155,7 +155,7 @@ class InfallibleAllocPolicy {
 
   template <class T>
   static T* new_() {
-    void* p = sMallocTable.malloc(sizeof(T));
+    void* p = MozJemalloc::malloc(sizeof(T));
     AbortOnFailure(p);
     return new (p) T;
   }
@@ -471,7 +471,7 @@ class GConst {
     // decommitted and inaccessible. Elsewhere in PHC we assume that we own
     // that page (so that memory errors in it get caught by PHC) but here we
     // use kAllPagesJemallocSize which subtracts jemalloc's guard page.
-    void* pages = sMallocTable.memalign(kPhcAlign, kAllPagesJemallocSize);
+    void* pages = MozJemalloc::memalign(kPhcAlign, kAllPagesJemallocSize);
     if (!pages) {
       MOZ_CRASH();
     }
@@ -552,7 +552,7 @@ class GMut {
     // The realloc is more than one page, and thus too large for PHC to handle.
     // Therefore, if PHC handles the first allocation, it must ask mozjemalloc
     // to allocate the 8192 bytes in the correct arena, and to do that, it must
-    // call sMallocTable.moz_arena_malloc with the correct arenaId under the
+    // call MozJemalloc::moz_arena_malloc with the correct arenaId under the
     // covers. Therefore it must record that arenaId.
     //
     // This field is also needed for jemalloc_ptr_info() to work, because it
@@ -973,7 +973,7 @@ class GTls {
   //
   // (b) It avoids doing any operations that might call malloc/free/etc., which
   //     would cause re-entry into PHC. (In practice, MozStackWalk() is the
-  //     only such operation.) Note that calls to the functions in sMallocTable
+  //     only such operation.) Note that calls to the functions in MozJemalloc
   //     are ok.
   //
   // For example, replace_malloc() will just fall back to mozjemalloc. However,
@@ -1065,7 +1065,7 @@ class AutoDisableOnCurrentThread {
 
 // Attempt a page allocation if the time and the size are right. Allocated
 // memory is zeroed if aZero is true. On failure, the caller should attempt a
-// normal allocation via sMallocTable. Can be called in a context where
+// normal allocation via MozJemalloc. Can be called in a context where
 // GMut::sMutex is locked.
 static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
                             size_t aAlignment, bool aZero) {
@@ -1164,7 +1164,7 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
       continue;
     }
 
-    size_t usableSize = sMallocTable.malloc_good_size(aReqSize);
+    size_t usableSize = MozJemalloc::malloc_good_size(aReqSize);
     MOZ_ASSERT(usableSize > 0);
 
     // Put the allocation as close to the end of the page as possible,
@@ -1253,8 +1253,8 @@ MOZ_ALWAYS_INLINE static void* PageMalloc(const Maybe<arena_id_t>& aArenaId,
                              /* aZero */ false);
   return ptr ? ptr
              : (aArenaId.isSome()
-                    ? sMallocTable.moz_arena_malloc(*aArenaId, aReqSize)
-                    : sMallocTable.malloc(aReqSize));
+                    ? MozJemalloc::moz_arena_malloc(*aArenaId, aReqSize)
+                    : MozJemalloc::malloc(aReqSize));
 }
 
 static void* replace_malloc(size_t aReqSize) {
@@ -1278,8 +1278,8 @@ MOZ_ALWAYS_INLINE static void* PageCalloc(const Maybe<arena_id_t>& aArenaId,
                              /* aZero */ true);
   return ptr ? ptr
              : (aArenaId.isSome()
-                    ? sMallocTable.moz_arena_calloc(*aArenaId, aNum, aReqSize)
-                    : sMallocTable.calloc(aNum, aReqSize));
+                    ? MozJemalloc::moz_arena_calloc(*aArenaId, aNum, aReqSize)
+                    : MozJemalloc::calloc(aNum, aReqSize));
 }
 
 static void* replace_calloc(size_t aNum, size_t aReqSize) {
@@ -1320,8 +1320,8 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
   if (pk.IsNothing()) {
     // A normal-to-normal transition.
     return aArenaId.isSome()
-               ? sMallocTable.moz_arena_realloc(*aArenaId, aOldPtr, aNewSize)
-               : sMallocTable.realloc(aOldPtr, aNewSize);
+               ? MozJemalloc::moz_arena_realloc(*aArenaId, aOldPtr, aNewSize)
+               : MozJemalloc::realloc(aOldPtr, aNewSize);
   }
 
   if (pk.IsGuardPage()) {
@@ -1360,7 +1360,7 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
     // because the user might have used malloc_usable_size() and filled up the
     // usable size.
     size_t oldUsableSize = gMut->PageUsableSize(lock, index);
-    size_t newUsableSize = sMallocTable.malloc_good_size(aNewSize);
+    size_t newUsableSize = MozJemalloc::malloc_good_size(aNewSize);
     uint8_t* pagePtr = gConst->AllocPagePtr(index);
     uint8_t* newPtr = pagePtr + kPageSize - newUsableSize;
     memmove(newPtr, aOldPtr, std::min(oldUsableSize, aNewSize));
@@ -1373,12 +1373,12 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
   // (Note that aArenaId is checked below.)
   void* newPtr;
   if (aArenaId.isSome()) {
-    newPtr = sMallocTable.moz_arena_malloc(*aArenaId, aNewSize);
+    newPtr = MozJemalloc::moz_arena_malloc(*aArenaId, aNewSize);
   } else {
     Maybe<arena_id_t> oldArenaId = gMut->PageArena(lock, index);
     newPtr = (oldArenaId.isSome()
-                  ? sMallocTable.moz_arena_malloc(*oldArenaId, aNewSize)
-                  : sMallocTable.malloc(aNewSize));
+                  ? MozJemalloc::moz_arena_malloc(*oldArenaId, aNewSize)
+                  : MozJemalloc::malloc(aNewSize));
   }
   if (!newPtr) {
     return nullptr;
@@ -1409,8 +1409,8 @@ MOZ_ALWAYS_INLINE static void PageFree(const Maybe<arena_id_t>& aArenaId,
   PtrKind pk = gConst->PtrKind(aPtr);
   if (pk.IsNothing()) {
     // Not a page allocation.
-    return aArenaId.isSome() ? sMallocTable.moz_arena_free(*aArenaId, aPtr)
-                             : sMallocTable.free(aPtr);
+    return aArenaId.isSome() ? MozJemalloc::moz_arena_free(*aArenaId, aPtr)
+                             : MozJemalloc::free(aPtr);
   }
 
   if (pk.IsGuardPage()) {
@@ -1465,9 +1465,9 @@ MOZ_ALWAYS_INLINE static void* PageMemalign(const Maybe<arena_id_t>& aArenaId,
   }
   return ptr ? ptr
              : (aArenaId.isSome()
-                    ? sMallocTable.moz_arena_memalign(*aArenaId, aAlignment,
+                    ? MozJemalloc::moz_arena_memalign(*aArenaId, aAlignment,
                                                       aReqSize)
-                    : sMallocTable.memalign(aAlignment, aReqSize));
+                    : MozJemalloc::memalign(aAlignment, aReqSize));
 }
 
 static void* replace_memalign(size_t aAlignment, size_t aReqSize) {
@@ -1478,7 +1478,7 @@ static size_t replace_malloc_usable_size(usable_ptr_t aPtr) {
   PtrKind pk = gConst->PtrKind(aPtr);
   if (pk.IsNothing()) {
     // Not a page allocation. Measure it normally.
-    return sMallocTable.malloc_usable_size(aPtr);
+    return MozJemalloc::malloc_usable_size(aPtr);
   }
 
   if (pk.IsGuardPage()) {
@@ -1502,13 +1502,13 @@ static size_t replace_malloc_usable_size(usable_ptr_t aPtr) {
 }
 
 static size_t metadata_size() {
-  return sMallocTable.malloc_usable_size(gConst) +
-         sMallocTable.malloc_usable_size(gMut);
+  return MozJemalloc::malloc_usable_size(gConst) +
+         MozJemalloc::malloc_usable_size(gMut);
 }
 
 void replace_jemalloc_stats(jemalloc_stats_t* aStats,
                             jemalloc_bin_stats_t* aBinStats) {
-  sMallocTable.jemalloc_stats_internal(aStats, aBinStats);
+  MozJemalloc::jemalloc_stats_internal(aStats, aBinStats);
 
   // We allocate our memory from jemalloc so it has already counted our memory
   // usage within "mapped" and "allocated", we must subtract the memory we
@@ -1554,7 +1554,7 @@ void replace_jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo) {
   PtrKind pk = gConst->PtrKind(aPtr);
   if (pk.IsNothing()) {
     // Not a page allocation.
-    return sMallocTable.jemalloc_ptr_info(aPtr, aInfo);
+    return MozJemalloc::jemalloc_ptr_info(aPtr, aInfo);
   }
 
   if (pk.IsGuardPage()) {
@@ -1580,17 +1580,17 @@ void replace_jemalloc_ptr_info(const void* aPtr, jemalloc_ptr_info_t* aInfo) {
 
 arena_id_t replace_moz_create_arena_with_params(arena_params_t* aParams) {
   // No need to do anything special here.
-  return sMallocTable.moz_create_arena_with_params(aParams);
+  return MozJemalloc::moz_create_arena_with_params(aParams);
 }
 
 void replace_moz_dispose_arena(arena_id_t aArenaId) {
   // No need to do anything special here.
-  return sMallocTable.moz_dispose_arena(aArenaId);
+  return MozJemalloc::moz_dispose_arena(aArenaId);
 }
 
 void replace_moz_set_max_dirty_page_modifier(int32_t aModifier) {
   // No need to do anything special here.
-  return sMallocTable.moz_set_max_dirty_page_modifier(aModifier);
+  return MozJemalloc::moz_set_max_dirty_page_modifier(aModifier);
 }
 
 void* replace_moz_arena_malloc(arena_id_t aArenaId, size_t aReqSize) {
@@ -1712,8 +1712,6 @@ void phc_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
     return;
   }
 
-  sMallocTable = *aMallocTable;
-
   // The choices of which functions to replace are complex enough that we set
   // them individually instead of using MALLOC_FUNCS/malloc_decls.h.
 
@@ -1753,7 +1751,7 @@ void phc_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
   //
   // Note: This must run after attempting an allocation so as to give the
   // system malloc a chance to insert its own atfork handler.
-  sMallocTable.malloc(-1);
+  MozJemalloc::malloc(-1);
   pthread_atfork(GMut::prefork, GMut::postfork_parent, GMut::postfork_child);
 #endif
 
