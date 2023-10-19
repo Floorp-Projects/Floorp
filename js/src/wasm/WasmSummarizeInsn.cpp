@@ -1192,11 +1192,11 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Load64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Load32);
-      case 0b011:
+      case 0b001:
         return Some(TrapMachineInsn::Load16);
-      case 0b011:
+      case 0b000:
         return Some(TrapMachineInsn::Load8);
       default:
         break;
@@ -1207,11 +1207,11 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Store64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Store32);
-      case 0b011:
+      case 0b001:
         return Some(TrapMachineInsn::Store16);
-      case 0b011:
+      case 0b000:
         return Some(TrapMachineInsn::Store8);
       default:
         break;
@@ -1222,7 +1222,7 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Load64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Load32);
       default:
         break;
@@ -1233,7 +1233,7 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Store64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Store32);
       default:
         break;
@@ -1244,7 +1244,7 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Load64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Load32);
       default:
         break;
@@ -1255,7 +1255,7 @@ Maybe<TrapMachineInsn> SummarizeTrapInstruction(const uint8_t* insnAddr) {
     switch (INSN(14, 12)) {
       case 0b011:
         return Some(TrapMachineInsn::Store64);
-      case 0b011:
+      case 0b010:
         return Some(TrapMachineInsn::Store32);
       default:
         break;

@@ -225,7 +225,6 @@ void Assembler::GeneralLi(Register rd, int64_t imm) {
     if (up_32 == 0 || low_32 == 0) {
       // No temp register is needed
     } else {
-      BlockTrampolinePoolScope block_trampoline_pool(this, 0);
       temp_reg = temps.hasAvailable() ? temps.Acquire() : InvalidReg;
     }
     if (temp_reg != InvalidReg) {

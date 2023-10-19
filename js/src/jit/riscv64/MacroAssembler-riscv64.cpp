@@ -2267,7 +2267,7 @@ static void AtomicExchange(MacroAssembler& masm,
   if (nbytes == 4) {
     masm.memoryBarrierBefore(sync);
     masm.bind(&again);
-    BlockTrampolinePoolScope block_trampoline_pool(&masm, 4);
+    BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
     if (access) {
       masm.append(*access, wasm::TrapMachineInsn::Atomic,
                   FaultingCodeOffset(masm.currentOffset()));
@@ -2358,7 +2358,7 @@ static void AtomicExchange64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 4);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -2390,7 +2390,7 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 4);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -5708,6 +5708,7 @@ FaultingCodeOffset MacroAssemblerRiscv64::ma_fld_s(FloatRegister ft,
     fco = FaultingCodeOffset(currentOffset());
     flw(ft, scratch, 0);
   }
+  return fco;
 }
 FaultingCodeOffset MacroAssemblerRiscv64::ma_fld_d(FloatRegister ft,
                                                    Address address) {
