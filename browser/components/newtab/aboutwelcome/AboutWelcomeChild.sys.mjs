@@ -347,7 +347,9 @@ const OPTIN_DEFAULT = {
       content: {
         position: "split",
         title: { string_id: "shopping-onboarding-headline" },
-        subtitle: { string_id: "shopping-onboarding-dynamic-subtitle-1" },
+        // We set the dynamic subtitle ID below at the same time as the args;
+        // to prevent intermittents caused by the args loading too late.
+        subtitle: { string_id: "" },
         above_button_content: [
           {
             type: "text",
@@ -828,6 +830,9 @@ export class AboutWelcomeShoppingChild extends AboutWelcomeChild {
     const [optInScreen] = content.screens;
 
     if (productUrl) {
+      optInScreen.content.subtitle.string_id =
+        "shopping-onboarding-dynamic-subtitle-1";
+
       switch (
         productUrl // Insert the productUrl into content
       ) {
