@@ -8637,7 +8637,7 @@
 # Is support for -moz-prefixed transform properties enabled?
 - name: layout.css.prefixes.transforms
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for -moz-prefixed transition properties enabled?
@@ -8798,7 +8798,7 @@
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
