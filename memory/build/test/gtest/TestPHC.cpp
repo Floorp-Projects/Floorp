@@ -5,10 +5,9 @@
 #include "gtest/gtest.h"
 
 #include "mozmemory.h"
-#include "replace_malloc_bridge.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
-#include "../../PHC.h"
+#include "PHC.h"
 
 using namespace mozilla;
 
@@ -37,7 +36,7 @@ uint8_t* GetPHCAllocation(size_t aSize, size_t aAlignment = 1) {
   for (int i = 0; i < 2000000; i++) {
     void* p = (aAlignment == 1) ? moz_xmalloc(aSize)
                                 : moz_xmemalign(aAlignment, aSize);
-    if (ReplaceMalloc::IsPHCAllocation(p, nullptr)) {
+    if (mozilla::phc::IsPHCAllocation(p, nullptr)) {
       return (uint8_t*)p;
     }
     free(p);
@@ -49,7 +48,7 @@ static const size_t kPageSize = 4096;
 
 TEST(PHC, TestPHCAllocations)
 {
-  ReplaceMalloc::SetPHCState(phc::PHCState::Enabled);
+  mozilla::phc::SetPHCState(phc::PHCState::Enabled);
 
   // First, check that allocations of various sizes all get put at the end of
   // their page as expected. Also, check their sizes are as expected.
@@ -125,7 +124,7 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
   jemalloc_ptr_info_t jeInfo;
 
   // Test an in-use PHC allocation: first byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
                         true, false));
   ASSERT_EQ(moz_malloc_usable_size(aPtr), aSize);
@@ -133,7 +132,7 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
   ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, aPtr, aSize, 0));
 
   // Test an in-use PHC allocation: last byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
                         true, false));
   ASSERT_EQ(moz_malloc_usable_size(aPtr + aSize - 1), aSize);
@@ -141,7 +140,7 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
   ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, aPtr, aSize, 0));
 
   // Test an in-use PHC allocation: last byte before it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr - 1, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr - 1, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
                         true, false));
   ASSERT_EQ(moz_malloc_usable_size(aPtr - 1), 0ul);
@@ -150,14 +149,14 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test an in-use PHC allocation: first byte on its allocation page.
   ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
+      mozilla::phc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
                         true, false));
   jemalloc_ptr_info(aPtr + aSize - kPageSize, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
 
   // Test an in-use PHC allocation: first byte in the following guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, false));
   jemalloc_ptr_info(aPtr + aSize, &jeInfo);
@@ -165,8 +164,8 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test an in-use PHC allocation: last byte in the lower half of the
   // following guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
-                                             &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
+                                            &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, false));
   jemalloc_ptr_info(aPtr + aSize + (kPageSize / 2 - 1), &jeInfo);
@@ -174,7 +173,7 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test an in-use PHC allocation: last byte in the preceding guard page.
   ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
+      mozilla::phc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, false));
   jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize, &jeInfo);
@@ -182,7 +181,7 @@ static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test an in-use PHC allocation: first byte in the upper half of the
   // preceding guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(
       aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, false));
@@ -196,21 +195,21 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
   jemalloc_ptr_info_t jeInfo;
 
   // Test a freed PHC allocation: first byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, aPtr, aSize, 0));
 
   // Test a freed PHC allocation: last byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr + aSize - 1, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, aPtr, aSize, 0));
 
   // Test a freed PHC allocation: last byte before it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr - 1, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr - 1, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr - 1, &jeInfo);
@@ -218,14 +217,14 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test a freed PHC allocation: first byte on its allocation page.
   ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
+      mozilla::phc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr + aSize - kPageSize, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
 
   // Test a freed PHC allocation: first byte in the following guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize, &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr + aSize, &jeInfo);
@@ -233,8 +232,8 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test a freed PHC allocation: last byte in the lower half of the following
   // guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
-                                             &phcInfo));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
+                                            &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr + aSize + (kPageSize / 2 - 1), &jeInfo);
@@ -242,7 +241,7 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test a freed PHC allocation: last byte in the preceding guard page.
   ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
+      mozilla::phc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, true));
   jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize, &jeInfo);
@@ -250,7 +249,7 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
 
   // Test a freed PHC allocation: first byte in the upper half of the preceding
   // guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(
       aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
                         true, true));
@@ -261,7 +260,7 @@ static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
 
 TEST(PHC, TestPHCInfo)
 {
-  ReplaceMalloc::SetPHCState(phc::PHCState::Enabled);
+  mozilla::phc::SetPHCState(phc::PHCState::Enabled);
 
   int stackVar;
   phc::AddrInfo phcInfo;
@@ -271,10 +270,10 @@ TEST(PHC, TestPHCInfo)
                         false, false));
 
   // Test some non-PHC allocation addresses.
-  ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(nullptr, &phcInfo));
+  ASSERT_FALSE(mozilla::phc::IsPHCAllocation(nullptr, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::Unknown, nullptr, 0,
                         false, false));
-  ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(&stackVar, &phcInfo));
+  ASSERT_FALSE(mozilla::phc::IsPHCAllocation(&stackVar, &phcInfo));
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::Unknown, nullptr, 0,
                         false, false));
 
@@ -295,7 +294,7 @@ TEST(PHC, TestPHCInfo)
 
 TEST(PHC, TestPHCDisablingThread)
 {
-  ReplaceMalloc::SetPHCState(phc::PHCState::Enabled);
+  mozilla::phc::SetPHCState(phc::PHCState::Enabled);
 
   uint8_t* p = GetPHCAllocation(32);
   uint8_t* q = GetPHCAllocation(32);
@@ -303,19 +302,19 @@ TEST(PHC, TestPHCDisablingThread)
     MOZ_CRASH("failed to get a PHC allocation");
   }
 
-  ASSERT_TRUE(ReplaceMalloc::IsPHCEnabledOnCurrentThread());
-  ReplaceMalloc::DisablePHCOnCurrentThread();
-  ASSERT_FALSE(ReplaceMalloc::IsPHCEnabledOnCurrentThread());
+  ASSERT_TRUE(mozilla::phc::IsPHCEnabledOnCurrentThread());
+  mozilla::phc::DisablePHCOnCurrentThread();
+  ASSERT_FALSE(mozilla::phc::IsPHCEnabledOnCurrentThread());
 
   // Test realloc() on a PHC allocation while PHC is disabled on the thread.
   uint8_t* p2 = (uint8_t*)realloc(p, 128);
   // The small realloc is fulfilled within the same page, but it does move.
   ASSERT_TRUE(p2 == p - 96);
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p2, nullptr));
+  ASSERT_TRUE(mozilla::phc::IsPHCAllocation(p2, nullptr));
   uint8_t* p3 = (uint8_t*)realloc(p2, 8192);
   // The big realloc is not in-place, and the result is not a PHC allocation.
   ASSERT_TRUE(p3 != p2);
-  ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(p3, nullptr));
+  ASSERT_FALSE(mozilla::phc::IsPHCAllocation(p3, nullptr));
   free(p3);
 
   // Test free() on a PHC allocation while PHC is disabled on the thread.
@@ -325,8 +324,8 @@ TEST(PHC, TestPHCDisablingThread)
   uint8_t* r = GetPHCAllocation(32);  // This will fail.
   ASSERT_FALSE(!!r);
 
-  ReplaceMalloc::ReenablePHCOnCurrentThread();
-  ASSERT_TRUE(ReplaceMalloc::IsPHCEnabledOnCurrentThread());
+  mozilla::phc::ReenablePHCOnCurrentThread();
+  ASSERT_TRUE(mozilla::phc::IsPHCEnabledOnCurrentThread());
 
   // If it really was reenabled we should be able to get PHC allocations
   // again.
@@ -337,7 +336,7 @@ TEST(PHC, TestPHCDisablingThread)
 
 TEST(PHC, TestPHCDisablingGlobal)
 {
-  ReplaceMalloc::SetPHCState(phc::PHCState::Enabled);
+  mozilla::phc::SetPHCState(phc::PHCState::Enabled);
 
   uint8_t* p1 = GetPHCAllocation(32);
   uint8_t* p2 = GetPHCAllocation(32);
@@ -346,20 +345,20 @@ TEST(PHC, TestPHCDisablingGlobal)
     MOZ_CRASH("failed to get a PHC allocation");
   }
 
-  ReplaceMalloc::SetPHCState(phc::PHCState::OnlyFree);
+  mozilla::phc::SetPHCState(phc::PHCState::OnlyFree);
 
   // Test realloc() on a PHC allocation while PHC is disabled on the thread.
   uint8_t* p3 = (uint8_t*)realloc(p1, 128);
   // The small realloc is evicted from PHC because in "OnlyFree" state PHC
   // tries to reduce its memory impact.
   ASSERT_TRUE(p3 != p1);
-  ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(p3, nullptr));
+  ASSERT_FALSE(mozilla::phc::IsPHCAllocation(p3, nullptr));
   free(p3);
   uint8_t* p4 = (uint8_t*)realloc(p2, 8192);
   // The big realloc is not in-place, and the result is not a PHC
   // allocation, regardless of PHC's state.
   ASSERT_TRUE(p4 != p2);
-  ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(p4, nullptr));
+  ASSERT_FALSE(mozilla::phc::IsPHCAllocation(p4, nullptr));
   free(p4);
 
   // Test free() on a PHC allocation while PHC is disabled on the thread.
@@ -369,7 +368,7 @@ TEST(PHC, TestPHCDisablingGlobal)
   uint8_t* r = GetPHCAllocation(32);  // This will fail.
   ASSERT_FALSE(!!r);
 
-  ReplaceMalloc::SetPHCState(phc::PHCState::Enabled);
+  mozilla::phc::SetPHCState(phc::PHCState::Enabled);
 
   // If it really was reenabled we should be able to get PHC allocations
   // again.

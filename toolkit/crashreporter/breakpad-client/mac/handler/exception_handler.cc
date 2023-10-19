@@ -43,7 +43,7 @@
 #include "mozilla/Assertions.h"
 
 #ifdef MOZ_PHC
-#include "replace_malloc_bridge.h"
+#include "PHC.h"
 #endif
 
 #ifndef __EXCEPTIONS
@@ -421,7 +421,7 @@ static void GetPHCAddrInfo(int exception_type, int64_t exception_subcode,
     // `exception_subcode` is only non-zero when it's a bad access, in which
     // case it holds the address of the bad access.
     char* addr = reinterpret_cast<char*>(exception_subcode);
-    ReplaceMalloc::IsPHCAllocation(addr, addr_info);
+    mozilla::phc::IsPHCAllocation(addr, addr_info);
   }
 }
 #endif

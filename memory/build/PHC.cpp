@@ -110,7 +110,6 @@
 #endif
 
 #include "mozjemalloc.h"
-#include "replace_malloc.h"
 
 #include "mozjemalloc.h"
 #include "FdPrintf.h"
@@ -1687,90 +1686,84 @@ void* MozJemallocPHC::moz_arena_memalign(arena_id_t aArenaId, size_t aAlignment,
   return PageMemalign(Some(aArenaId), aAlignment, aReqSize);
 }
 
-class PHCBridge : public ReplaceMallocBridge {
-  virtual bool IsPHCAllocation(const void* aPtr, phc::AddrInfo* aOut) override {
-    PtrKind pk = gConst->PtrKind(aPtr);
-    if (pk.IsNothing()) {
-      return false;
-    }
+namespace mozilla::phc {
 
-    bool isGuardPage = false;
-    if (pk.IsGuardPage()) {
-      if ((uintptr_t(aPtr) % kPageSize) < (kPageSize / 2)) {
-        // The address is in the lower half of a guard page, so it's probably an
-        // overflow. But first check that it is not on the very first guard
-        // page, in which case it cannot be an overflow, and we ignore it.
-        if (gConst->IsInFirstGuardPage(aPtr)) {
-          return false;
-        }
+bool IsPHCAllocation(const void* aPtr, AddrInfo* aOut) {
+  PtrKind pk = gConst->PtrKind(aPtr);
+  if (pk.IsNothing()) {
+    return false;
+  }
 
-        // Get the allocation page preceding this guard page.
-        pk = gConst->PtrKind(static_cast<const uint8_t*>(aPtr) - kPageSize);
-
-      } else {
-        // The address is in the upper half of a guard page, so it's probably an
-        // underflow. Get the allocation page following this guard page.
-        pk = gConst->PtrKind(static_cast<const uint8_t*>(aPtr) + kPageSize);
+  bool isGuardPage = false;
+  if (pk.IsGuardPage()) {
+    if ((uintptr_t(aPtr) % kPageSize) < (kPageSize / 2)) {
+      // The address is in the lower half of a guard page, so it's probably an
+      // overflow. But first check that it is not on the very first guard
+      // page, in which case it cannot be an overflow, and we ignore it.
+      if (gConst->IsInFirstGuardPage(aPtr)) {
+        return false;
       }
 
-      // Make a note of the fact that we hit a guard page.
-      isGuardPage = true;
-    }
+      // Get the allocation page preceding this guard page.
+      pk = gConst->PtrKind(static_cast<const uint8_t*>(aPtr) - kPageSize);
 
-    // At this point we know we have an allocation page.
-    uintptr_t index = pk.AllocPageIndex();
-
-    if (aOut) {
-      if (GMut::sMutex.TryLock()) {
-        gMut->FillAddrInfo(index, aPtr, isGuardPage, *aOut);
-        LOG("IsPHCAllocation: %zu, %p, %zu, %zu, %zu\n", size_t(aOut->mKind),
-            aOut->mBaseAddr, aOut->mUsableSize,
-            aOut->mAllocStack.isSome() ? aOut->mAllocStack->mLength : 0,
-            aOut->mFreeStack.isSome() ? aOut->mFreeStack->mLength : 0);
-        GMut::sMutex.Unlock();
-      } else {
-        LOG("IsPHCAllocation: PHC is locked\n");
-        aOut->mPhcWasLocked = true;
-      }
-    }
-    return true;
-  }
-
-  virtual void DisablePHCOnCurrentThread() override {
-    GTls::DisableOnCurrentThread();
-    LOG("DisablePHCOnCurrentThread: %zu\n", 0ul);
-  }
-
-  virtual void ReenablePHCOnCurrentThread() override {
-    GTls::EnableOnCurrentThread();
-    LOG("ReenablePHCOnCurrentThread: %zu\n", 0ul);
-  }
-
-  virtual bool IsPHCEnabledOnCurrentThread() override {
-    bool enabled = !GTls::IsDisabledOnCurrentThread();
-    LOG("IsPHCEnabledOnCurrentThread: %zu\n", size_t(enabled));
-    return enabled;
-  }
-
-  virtual void PHCMemoryUsage(
-      mozilla::phc::MemoryUsage& aMemoryUsage) override {
-    aMemoryUsage.mMetadataBytes = metadata_size();
-    if (gMut) {
-      MutexAutoLock lock(GMut::sMutex);
-      aMemoryUsage.mFragmentationBytes = gMut->FragmentationBytes();
     } else {
-      aMemoryUsage.mFragmentationBytes = 0;
+      // The address is in the upper half of a guard page, so it's probably an
+      // underflow. Get the allocation page following this guard page.
+      pk = gConst->PtrKind(static_cast<const uint8_t*>(aPtr) + kPageSize);
+    }
+
+    // Make a note of the fact that we hit a guard page.
+    isGuardPage = true;
+  }
+
+  // At this point we know we have an allocation page.
+  uintptr_t index = pk.AllocPageIndex();
+
+  if (aOut) {
+    if (GMut::sMutex.TryLock()) {
+      gMut->FillAddrInfo(index, aPtr, isGuardPage, *aOut);
+      LOG("IsPHCAllocation: %zu, %p, %zu, %zu, %zu\n", size_t(aOut->mKind),
+          aOut->mBaseAddr, aOut->mUsableSize,
+          aOut->mAllocStack.isSome() ? aOut->mAllocStack->mLength : 0,
+          aOut->mFreeStack.isSome() ? aOut->mFreeStack->mLength : 0);
+      GMut::sMutex.Unlock();
+    } else {
+      LOG("IsPHCAllocation: PHC is locked\n");
+      aOut->mPhcWasLocked = true;
     }
   }
-
-  // Enable or Disable PHC at runtime.  If PHC is disabled it will still trap
-  // bad uses of previous allocations, but won't track any new allocations.
-  virtual void SetPHCState(mozilla::phc::PHCState aState) override {
-    gMut->SetState(aState);
-  }
-};
-
-ReplaceMallocBridge* GetPHCBridge() {
-  static PHCBridge bridge;
-  return &bridge;
+  return true;
 }
+
+void DisablePHCOnCurrentThread() {
+  GTls::DisableOnCurrentThread();
+  LOG("DisablePHCOnCurrentThread: %zu\n", 0ul);
+}
+
+void ReenablePHCOnCurrentThread() {
+  GTls::EnableOnCurrentThread();
+  LOG("ReenablePHCOnCurrentThread: %zu\n", 0ul);
+}
+
+bool IsPHCEnabledOnCurrentThread() {
+  bool enabled = !GTls::IsDisabledOnCurrentThread();
+  LOG("IsPHCEnabledOnCurrentThread: %zu\n", size_t(enabled));
+  return enabled;
+}
+
+void PHCMemoryUsage(MemoryUsage& aMemoryUsage) {
+  aMemoryUsage.mMetadataBytes = metadata_size();
+  if (gMut) {
+    MutexAutoLock lock(GMut::sMutex);
+    aMemoryUsage.mFragmentationBytes = gMut->FragmentationBytes();
+  } else {
+    aMemoryUsage.mFragmentationBytes = 0;
+  }
+}
+
+// Enable or Disable PHC at runtime.  If PHC is disabled it will still trap
+// bad uses of previous allocations, but won't track any new allocations.
+void SetPHCState(PHCState aState) { gMut->SetState(aState); }
+
+}  // namespace mozilla::phc
