@@ -1535,6 +1535,12 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
   /* This makes the dialog top-aligned by default (the dialog box will move via
    * margin-top above) */
   bottom: auto;
+  /* When showModal() is called on a <dialog>, the <dialog> itself will be
+   * focused when there's no content, hence the focus ring. However, this
+   * focus ring is not needed because we always setup the content of the dialog
+   * after its opened and manually focus an element within it.
+   */
+  outline: none;
 }
 
 #window-modal-dialog.spotlight {
