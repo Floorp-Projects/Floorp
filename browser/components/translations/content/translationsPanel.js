@@ -11,7 +11,6 @@
 /* eslint-enable jsdoc/valid-types */
 
 ChromeUtils.defineESModuleGetters(this, {
-  PageActions: "resource:///modules/PageActions.sys.mjs",
   TranslationsTelemetry:
     "chrome://browser/content/translations/TranslationsTelemetry.sys.mjs",
 });
@@ -1559,10 +1558,6 @@ var TranslationsPanel = new (class {
                 "urlbar-translations-button-intro"
               );
             }
-          }
-
-          if (!button.hidden) {
-            PageActions.sendPlacedInUrlbarTrigger(button);
           }
         } else {
           if (handleEventId !== this.handleEventId) {

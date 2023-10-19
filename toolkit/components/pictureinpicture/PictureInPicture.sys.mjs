@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PageActions: "resource:///modules/PageActions.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -563,15 +562,10 @@ export var PictureInPicture = {
       this.getEligiblePipVideoCount(browser);
 
     let pipToggle = win.document.getElementById("picture-in-picture-button");
-    if (
+    pipToggle.hidden = !(
       totalPipCount === 1 ||
       (totalPipDisabled > 0 && lazy.RESPECT_PIP_DISABLED)
-    ) {
-      pipToggle.hidden = false;
-      lazy.PageActions.sendPlacedInUrlbarTrigger(pipToggle);
-    } else {
-      pipToggle.hidden = true;
-    }
+    );
 
     let browserHasPip = !!this.browserWeakMap.get(browser);
     if (browserHasPip) {
