@@ -120,7 +120,7 @@ where
 {
     // This is pretty much any(..) but manually inlined because the compiler
     // refuses to do so from querySelector / querySelectorAll.
-    for selector in &selector_list.0 {
+    for selector in selector_list.slice() {
         let matches = matches_selector(selector, 0, None, element, context);
         if matches {
             return true;

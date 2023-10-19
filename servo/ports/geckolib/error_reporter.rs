@@ -461,7 +461,7 @@ impl ErrorReporter {
             _ => {
                 let mut desugared = selectors.last().unwrap().clone();
                 for parent in selectors.iter().rev().skip(1) {
-                    desugared = desugared.replace_parent_selector(&parent.to_shared());
+                    desugared = desugared.replace_parent_selector(&parent);
                 }
                 Some(desugared.to_css_string())
             },

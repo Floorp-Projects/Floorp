@@ -2450,7 +2450,7 @@ fn desugared_selector_list(rules: &ThinVec<&LockedStyleRule>) -> SelectorList {
     let mut selectors: Option<SelectorList> = None;
     for rule in rules.iter().rev() {
         selectors = Some(read_locked_arc(rule, |rule| match selectors {
-            Some(s) => rule.selectors.replace_parent_selector(&s.to_shared()),
+            Some(ref s) => rule.selectors.replace_parent_selector(s),
             None => rule.selectors.clone(),
         }));
     }
@@ -2465,7 +2465,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
     specificity: Option<&mut u64>,
 ) {
     let selectors = desugared_selector_list(rules);
-    let Some(selector) = selectors.0.get(index as usize) else { return };
+    let Some(selector) = selectors.slice().get(index as usize) else { return };
     if let Some(text) = text {
         selector.to_css(text).unwrap();
     }
@@ -2476,7 +2476,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule) -> u32 {
-    read_locked_arc(rule, |rule| rule.selectors.0.len() as u32)
+    read_locked_arc(rule, |rule| rule.selectors.len() as u32)
 }
 
 #[no_mangle]
@@ -2492,7 +2492,7 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
     };
     let selectors = desugared_selector_list(rules);
-    let Some(selector) = selectors.0.get(index as usize) else { return false };
+    let Some(selector) = selectors.slice().get(index as usize) else { return false };
     let mut matching_mode = MatchingMode::Normal;
     match PseudoElement::from_pseudo_type(pseudo_type, None) {
         Some(pseudo) => {

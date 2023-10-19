@@ -58,13 +58,12 @@ use selectors::matching::{
 };
 use selectors::matching::{MatchingForInvalidation, VisitedHandlingMode};
 use selectors::parser::{
-    ArcSelectorList, AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
+    AncestorHashes, Combinator, Component, Selector, SelectorIter, SelectorList,
 };
 use selectors::visitor::{SelectorListKind, SelectorVisitor};
 use servo_arc::{Arc, ArcBorrow};
 use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
-use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
@@ -576,34 +575,16 @@ impl From<StyleRuleInclusion> for RuleInclusion {
     }
 }
 
-enum AncestorSelectorList<'a> {
-    Borrowed(&'a SelectorList<SelectorImpl>),
-    Shared(ArcSelectorList<SelectorImpl>),
-}
-
-impl<'a> AncestorSelectorList<'a> {
-    fn into_shared(&mut self) -> &ArcSelectorList<SelectorImpl> {
-        if let Self::Borrowed(ref b) = *self {
-            let shared = b.to_shared();
-            *self = Self::Shared(shared);
-        }
-        match *self {
-            Self::Shared(ref shared) => return shared,
-            Self::Borrowed(..) => unsafe { debug_unreachable!() },
-        }
-    }
-}
-
 /// A struct containing state from ancestor rules like @layer / @import /
 /// @container / nesting.
-struct ContainingRuleState<'a> {
+struct ContainingRuleState {
     layer_name: LayerName,
     layer_id: LayerId,
     container_condition_id: ContainerConditionId,
-    ancestor_selector_lists: SmallVec<[AncestorSelectorList<'a>; 2]>,
+    ancestor_selector_lists: SmallVec<[SelectorList<SelectorImpl>; 2]>,
 }
 
-impl<'a> Default for ContainingRuleState<'a> {
+impl Default for ContainingRuleState {
     fn default() -> Self {
         Self {
             layer_name: LayerName::new_empty(),
@@ -621,7 +602,7 @@ struct SavedContainingRuleState {
     container_condition_id: ContainerConditionId,
 }
 
-impl<'a> ContainingRuleState<'a> {
+impl ContainingRuleState {
     fn save(&self) -> SavedContainingRuleState {
         SavedContainingRuleState {
             ancestor_selector_lists_len: self.ancestor_selector_lists.len(),
@@ -2767,15 +2748,15 @@ impl CascadeData {
         }
     }
 
-    fn add_rule_list<'a, S>(
+    fn add_rule_list<S>(
         &mut self,
-        rules: std::slice::Iter<'a, CssRule>,
-        device: &'a Device,
+        rules: std::slice::Iter<CssRule>,
+        device: &Device,
         quirks_mode: QuirksMode,
         stylesheet: &S,
-        guard: &'a SharedRwLockReadGuard,
+        guard: &SharedRwLockReadGuard,
         rebuild_kind: SheetRebuildKind,
-        containing_rule_state: &mut ContainingRuleState<'a>,
+        containing_rule_state: &mut ContainingRuleState,
         mut precomputed_pseudo_element_decls: Option<&mut PrecomputedPseudoElementDeclarations>,
     ) -> Result<(), AllocErr>
     where
@@ -2785,7 +2766,7 @@ impl CascadeData {
             // Handle leaf rules first, as those are by far the most common
             // ones, and are always effective, so we can skip some checks.
             let mut handled = true;
-            let mut selectors_for_nested_rules = None;
+            let mut list_for_nested_rules = None;
             match *rule {
                 CssRule::Style(ref locked) => {
                     let style_rule = locked.read_with(guard);
@@ -2793,15 +2774,10 @@ impl CascadeData {
 
                     let has_nested_rules = style_rule.rules.is_some();
                     let mut ancestor_selectors = containing_rule_state.ancestor_selector_lists.last_mut();
-                    if has_nested_rules {
-                        selectors_for_nested_rules = Some(if ancestor_selectors.is_some() {
-                            Cow::Owned(SelectorList(Default::default()))
-                        } else {
-                            Cow::Borrowed(&style_rule.selectors)
-                        });
-                    }
+                    let mut replaced_selectors = SmallVec::<[Selector<SelectorImpl>; 4]>::new();
+                    let collect_replaced_selectors = has_nested_rules && ancestor_selectors.is_some();
 
-                    for selector in &style_rule.selectors.0 {
+                    for selector in style_rule.selectors.slice() {
                         self.num_selectors += 1;
 
                         let pseudo_element = selector.pseudo_element();
@@ -2832,7 +2808,7 @@ impl CascadeData {
                         }
 
                         let selector = match ancestor_selectors {
-                            Some(ref mut s) => selector.replace_parent_selector(&s.into_shared()),
+                            Some(ref mut s) => selector.replace_parent_selector(&s),
                             None => selector.clone(),
                         };
 
@@ -2847,10 +2823,8 @@ impl CascadeData {
                             containing_rule_state.container_condition_id,
                         );
 
-                        if let Some(Cow::Owned(ref mut nested_selectors)) =
-                            selectors_for_nested_rules
-                        {
-                            nested_selectors.0.push(rule.selector.clone())
+                        if collect_replaced_selectors {
+                            replaced_selectors.push(rule.selector.clone())
                         }
 
                         if rebuild_kind.should_rebuild_invalidation() {
@@ -2927,7 +2901,15 @@ impl CascadeData {
                         }
                     }
                     self.rules_source_order += 1;
-                    handled = !has_nested_rules;
+                    handled = true;
+                    if has_nested_rules {
+                        handled = false;
+                        list_for_nested_rules = Some(if collect_replaced_selectors {
+                            SelectorList::from_iter(replaced_selectors.drain(..))
+                        } else {
+                            style_rule.selectors.clone()
+                        });
+                    }
                 },
                 CssRule::Keyframes(ref keyframes_rule) => {
                     debug!("Found valid keyframes rule: {:?}", *keyframes_rule);
@@ -3112,11 +3094,8 @@ impl CascadeData {
                     }
                 },
                 CssRule::Style(..) => {
-                    if let Some(ref mut s) = selectors_for_nested_rules {
-                        containing_rule_state.ancestor_selector_lists.push(match s {
-                            Cow::Owned(ref mut list) => AncestorSelectorList::Shared(list.into_shared()),
-                            Cow::Borrowed(ref b) => AncestorSelectorList::Borrowed(b),
-                        });
+                    if let Some(s) = list_for_nested_rules {
+                        containing_rule_state.ancestor_selector_lists.push(s);
                     }
                 },
                 CssRule::Container(ref rule) => {

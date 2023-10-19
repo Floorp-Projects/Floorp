@@ -590,7 +590,7 @@ impl StylesheetInvalidationSet {
                 }
 
                 let style_rule = lock.read_with(guard);
-                for selector in &style_rule.selectors.0 {
+                for selector in style_rule.selectors.slice() {
                     self.collect_invalidations(selector, quirks_mode);
                     if self.fully_invalid {
                         return;

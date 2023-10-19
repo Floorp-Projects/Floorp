@@ -714,12 +714,12 @@ impl MallocSizeOf for selectors::parser::AncestorHashes {
     }
 }
 
-impl<Impl: selectors::parser::SelectorImpl> MallocSizeOf for selectors::parser::Selector<Impl>
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::Selector<Impl>
 where
     Impl::NonTSPseudoClass: MallocSizeOf,
     Impl::PseudoElement: MallocSizeOf,
 {
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+    fn unconditional_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         let mut n = 0;
 
         // It's OK to measure this ThinArc directly because it's the
@@ -734,22 +734,42 @@ where
     }
 }
 
-impl<Impl: selectors::parser::SelectorImpl> MallocSizeOf for selectors::parser::Component<Impl>
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::SelectorList<Impl>
 where
     Impl::NonTSPseudoClass: MallocSizeOf,
     Impl::PseudoElement: MallocSizeOf,
 {
-    fn size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+    fn unconditional_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
+        let mut n = 0;
+
+        // It's OK to measure this ThinArc directly because it's the "primary" reference. (The
+        // secondary references are on the Stylist.)
+        n += unsafe { ops.malloc_size_of(self.thin_arc_heap_ptr()) };
+        if self.len() > 1 {
+            for selector in self.slice().iter() {
+                n += selector.size_of(ops);
+            }
+        }
+        n
+    }
+}
+
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::Component<Impl>
+where
+    Impl::NonTSPseudoClass: MallocSizeOf,
+    Impl::PseudoElement: MallocSizeOf,
+{
+    fn unconditional_size_of(&self, ops: &mut MallocSizeOfOps) -> usize {
         use selectors::parser::Component;
 
         match self {
             Component::AttributeOther(ref attr_selector) => attr_selector.size_of(ops),
-            Component::Negation(ref components) => components.size_of(ops),
+            Component::Negation(ref components) => components.unconditional_size_of(ops),
             Component::NonTSPseudoClass(ref pseudo) => (*pseudo).size_of(ops),
             Component::Slotted(ref selector) | Component::Host(Some(ref selector)) => {
-                selector.size_of(ops)
+                selector.unconditional_size_of(ops)
             },
-            Component::Is(ref list) | Component::Where(ref list) => list.size_of(ops),
+            Component::Is(ref list) | Component::Where(ref list) => list.unconditional_size_of(ops),
             Component::Has(ref relative_selectors) => relative_selectors.size_of(ops),
             Component::NthOf(ref nth_of_data) => nth_of_data.size_of(ops),
             Component::PseudoElement(ref pseudo) => (*pseudo).size_of(ops),

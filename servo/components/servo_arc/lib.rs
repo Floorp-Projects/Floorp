@@ -879,6 +879,9 @@ impl<H, T> Arc<HeaderSlice<H, T>> {
 /// allocation itself, via `HeaderSlice`.
 pub type ThinArc<H, T> = Arc<HeaderSlice<H, T>>;
 
+/// See `ArcUnion`. This is a version that works for `ThinArc`s.
+pub type ThinArcUnion<H1, T1, H2, T2> = ArcUnion<HeaderSlice<H1, T1>, HeaderSlice<H2, T2>>;
+
 impl<H, T> UniqueArc<HeaderSlice<H, T>> {
     #[inline]
     pub fn from_header_and_iter<I>(header: H, items: I) -> Self
@@ -1026,6 +1029,8 @@ impl<A: PartialEq, B: PartialEq> PartialEq for ArcUnion<A, B> {
         }
     }
 }
+
+impl<A: Eq, B: Eq> Eq for ArcUnion<A, B> {}
 
 /// This represents a borrow of an `ArcUnion`.
 #[derive(Debug)]
