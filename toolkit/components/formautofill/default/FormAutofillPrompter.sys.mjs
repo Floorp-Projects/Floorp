@@ -55,7 +55,7 @@ let CONTENT = {};
  * The UI data sourced from the `CONTENT` variable is used for rendering. Derived classes
  * should override the `render()` method to customize the layout.
  */
-class AutofillDoorhanger {
+export class AutofillDoorhanger {
   /**
    * Constructs an instance of the `AutofillDoorhanger` class.
    *
@@ -63,6 +63,14 @@ class AutofillDoorhanger {
    * @param {object} oldRecord The old record that can be merged with the new record
    * @param {object} newRecord The new record submitted by users
    */
+  static headerClass = "address-capture-header";
+  static descriptionClass = "address-capture-description";
+  static contentClass = "address-capture-content";
+  static menuButtonId = "address-capture-menu-button";
+
+  static preferenceURL = null;
+  static learnMoreURL = null;
+
   constructor(browser, oldRecord, newRecord) {
     this.browser = browser;
     this.oldRecord = oldRecord;
@@ -98,27 +106,63 @@ class AutofillDoorhanger {
    */
 
   // The container of the header part
+  static header(panel) {
+    return panel.querySelector(`.${AutofillDoorhanger.headerClass}`);
+  }
   get header() {
-    return this.panel.querySelector(".address-capture-header");
+    return AutofillDoorhanger.header(this.panel);
   }
 
   // The container of the description part
+  static description(panel) {
+    return panel.querySelector(`.${AutofillDoorhanger.descriptionClass}`);
+  }
   get description() {
-    return this.panel.querySelector(".address-capture-description");
+    return AutofillDoorhanger.description(this.panel);
   }
 
   // The container of the content part
+  static content(panel) {
+    return panel.querySelector(`.${AutofillDoorhanger.contentClass}`);
+  }
   get content() {
-    return this.panel.querySelector(".address-capture-content");
+    return AutofillDoorhanger.content(this.panel);
+  }
+
+  static menuButton(panel) {
+    return panel.querySelector(`#${AutofillDoorhanger.menuButtonId}`);
+  }
+  get menuButton() {
+    return AutofillDoorhanger.menuButton(this.panel);
+  }
+
+  static preferenceButton(panel) {
+    const menu = AutofillDoorhanger.menuButton(panel);
+    return menu.menupopup.querySelector(
+      `[data-l10n-id=address-capture-manage-address-button]`
+    );
+  }
+  static learnMoreButton(panel) {
+    const menu = AutofillDoorhanger.menuButton(panel);
+    return menu.menupopup.querySelector(
+      `[data-l10n-id=address-capture-learn-more-button]`
+    );
+  }
+
+  get preferenceURL() {
+    return this.constructor.preferenceURL;
+  }
+  get learnMoreURL() {
+    return this.constructor.learnMoreURL;
   }
 
   onMenuItemClick(evt) {
     if (evt == "open-pref") {
-      this.browser.ownerGlobal.openPreferences("privacy-address-autofill");
+      this.browser.ownerGlobal.openPreferences(this.preferenceURL);
     } else if (evt == "learn-more") {
       const url =
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
-        "automatically-fill-your-address-web-forms";
+        this.learnMoreURL;
       this.browser.ownerGlobal.openWebLinkIn(url, "tab", {
         relatedToCurrent: true,
       });
@@ -141,16 +185,12 @@ class AutofillDoorhanger {
     this.doc.l10n.setAttributes(text, this.ui.header.l10nId);
 
     // Render the menu button
-    const menuButtonId = "address-capture-menu-button";
-    if (
-      !this.ui.menu?.length ||
-      this.header.querySelector(`#${menuButtonId}`)
-    ) {
+    if (!this.ui.menu?.length || AutofillDoorhanger.menuButton(this.panel)) {
       return;
     }
 
     const button = this.doc.createXULElement("toolbarbutton");
-    button.setAttribute("id", menuButtonId);
+    button.setAttribute("id", AutofillDoorhanger.menuButtonId);
 
     const menupopup = this.doc.createXULElement("menupopup");
     menupopup.setAttribute("class", "toolbar-menupopup");
@@ -273,6 +313,7 @@ class AutofillDoorhanger {
       return {
         label: msg.attributes.find(x => x.name == "label").value,
         accessKey: msg.attributes.find(x => x.name == "accessKey").value,
+        dismiss: param.dismiss,
       };
     }
 
@@ -302,13 +343,24 @@ class AutofillDoorhanger {
   }
 }
 
-class AddressSaveDoorhanger extends AutofillDoorhanger {
+export class AddressSaveDoorhanger extends AutofillDoorhanger {
+  static preferenceURL = "privacy-address-autofill";
+  static learnMoreURL = "automatically-fill-your-address-web-forms";
+  static editButtonId = "address-capture-edit-address-button";
+
   #editAddressCb = null;
 
   constructor(browser, oldRecord, newRecord, editAddressCb) {
     super(browser, oldRecord, newRecord);
 
     this.#editAddressCb = editAddressCb;
+  }
+
+  static editButton(panel) {
+    return panel.querySelector(`#${AddressSaveDoorhanger.editButtonId}`);
+  }
+  get editButton() {
+    return AddressSaveDoorhanger.editButton(this.panel);
   }
 
   /**
@@ -399,6 +451,7 @@ class AddressSaveDoorhanger extends AutofillDoorhanger {
           field => [this.oldRecord[field], this.newRecord[field]]
         );
         break;
+      case "country":
       case "tel":
       case "email":
       case "organization":
@@ -458,10 +511,9 @@ class AddressSaveDoorhanger extends AutofillDoorhanger {
       this.content.appendChild(section);
 
       // Put the edit address button in the first section
-      const editButtonId = "address-capture-edit-address-button";
-      if (!this.doc.getElementById(editButtonId)) {
+      if (!AddressSaveDoorhanger.editButton(this.panel)) {
         const button = this.doc.createXULElement("toolbarbutton");
-        button.setAttribute("id", editButtonId);
+        button.setAttribute("id", AddressSaveDoorhanger.editButtonId);
 
         // The element will be removed after the popup is closed
         /* eslint-disable mozilla/balanced-listeners */
@@ -479,9 +531,9 @@ class AddressSaveDoorhanger extends AutofillDoorhanger {
  * Address Update doorhanger and Address Save doorhanger have the same implementation.
  * The only difference is UI.
  */
-class AddressUpdateDoorhanger extends AddressSaveDoorhanger {}
+export class AddressUpdateDoorhanger extends AddressSaveDoorhanger {}
 
-class AddressEditDoorhanger extends AutofillDoorhanger {
+export class AddressEditDoorhanger extends AutofillDoorhanger {
   constructor(browser, record) {
     // Address edit dialog doesn't have "old" record
     super(browser, null, record);
@@ -694,7 +746,7 @@ class AddressEditDoorhanger extends AutofillDoorhanger {
       input = this.doc.createElement("input");
     }
 
-    input.setAttribute("id", AddressEditDoorhanger.#getInputId(fieldName));
+    input.setAttribute("id", AddressEditDoorhanger.getInputId(fieldName));
     input.value = this.#getFieldDisplayData(fieldName) ?? null;
     div.appendChild(input);
 
@@ -706,7 +758,7 @@ class AddressEditDoorhanger extends AutofillDoorhanger {
     return regex;
   }
 
-  static #getInputId(fieldName) {
+  static getInputId(fieldName) {
     return `address-edit-${fieldName}-input`;
   }
 
@@ -753,7 +805,13 @@ CONTENT = {
       sections: [
         {
           imgClass: "address-capture-img-address",
-          categories: ["name", "organization", "street-address", "address"],
+          categories: [
+            "name",
+            "organization",
+            "street-address",
+            "address",
+            "country",
+          ],
         },
         {
           imgClass: "address-capture-img-email",
@@ -806,7 +864,13 @@ CONTENT = {
       sections: [
         {
           imgClass: "address-capture-img-address",
-          categories: ["name", "organization", "street-address", "address"],
+          categories: [
+            "name",
+            "organization",
+            "street-address",
+            "address",
+            "country",
+          ],
         },
         {
           imgClass: "address-capture-img-email",
@@ -862,13 +926,14 @@ CONTENT = {
     footer: {
       mainAction: {
         l10nId: "address-capture-save-button",
-        callbackState: "create",
+        callbackState: "edit",
         confirmationHintId: "confirmation-hint-address-created",
       },
       secondaryActions: [
         {
           l10nId: "address-capture-cancel-button",
           callbackState: "cancel",
+          dismiss: true,
         },
       ],
     },
@@ -880,7 +945,7 @@ CONTENT = {
   },
 
   addCreditCard: {
-    notificationId: "autofill-credit-card",
+    notificationId: "autofill-credit-card-add",
     message: formatStringFromName("saveCreditCardMessage", [brandShortName]),
     descriptionLabel: GetStringFromName("saveCreditCardDescriptionLabel"),
     descriptionIcon: true,
@@ -947,7 +1012,7 @@ CONTENT = {
     },
   },
   updateCreditCard: {
-    notificationId: "autofill-credit-card",
+    notificationId: "autofill-credit-card-update",
     message: GetStringFromName("updateCreditCardMessage"),
     descriptionLabel: GetStringFromName("updateCreditCardDescriptionLabel"),
     descriptionIcon: true,
@@ -1344,13 +1409,16 @@ export let FormAutofillPrompter = {
           newRecord
         );
 
-        if (state == "create") {
+        if (state == "edit") {
           // If users choose "save" in the edit address doorhanger, we don't need
           // to show the save/update doorhanger after the edit address doorhanger
           // is closed
           recordToSave = editedRecord;
           chromeWin.PopupNotifications.remove(this._addrSaveDoorhanger);
-          resolve({ state, confimationHintId: null });
+          resolve({
+            state: isSave ? "create" : "update",
+            confimationHintId: null,
+          });
         }
       };
 
