@@ -826,28 +826,20 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         if not self._resource_monitor:
             return
 
-        # This should never raise an exception. This is a workaround until
-        # mozsystemmonitor is fixed. See bug 895388.
+        self._resource_monitor.stop()
+        self._log_resource_usage()
+
+        # Upload a JSON file containing the raw resource data.
         try:
-            self._resource_monitor.stop()
-            self._log_resource_usage()
-
-            # Upload a JSON file containing the raw resource data.
-            try:
-                upload_dir = self.query_abs_dirs()["abs_blob_upload_dir"]
-                if not os.path.exists(upload_dir):
-                    os.makedirs(upload_dir)
-                with open(os.path.join(upload_dir, "resource-usage.json"), "w") as fh:
-                    json.dump(
-                        self._resource_monitor.as_dict(), fh, sort_keys=True, indent=4
-                    )
-            except (AttributeError, KeyError):
-                self.exception("could not upload resource usage JSON", level=WARNING)
-
-        except Exception:
-            self.warning(
-                "Exception when reporting resource usage: %s" % traceback.format_exc()
-            )
+            upload_dir = self.query_abs_dirs()["abs_blob_upload_dir"]
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
+            with open(os.path.join(upload_dir, "resource-usage.json"), "w") as fh:
+                json.dump(
+                    self._resource_monitor.as_dict(), fh, sort_keys=True, indent=4
+                )
+        except (AttributeError, KeyError):
+            self.exception("could not upload resource usage JSON", level=WARNING)
 
     def _log_resource_usage(self):
         # Delay import because not available until virtualenv is populated.
