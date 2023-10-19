@@ -42,9 +42,17 @@
   --toolbar-field-focus-background-color: Field;
   --toolbar-field-focus-color: FieldText;
   --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
+
+  --toolbar-non-lwt-bgcolor: color-mix(in srgb, -moz-dialog 85%, white);
+  --toolbar-non-lwt-textcolor: -moz-dialogtext;
+  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
+  --toolbar-color: var(--toolbar-non-lwt-textcolor);
 }
 
 :root:-moz-lwtheme {
+  --toolbar-bgcolor: rgba(255,255,255,.4);
+  --toolbar-color: var(--lwt-text-color, inherit);
+
   --toolbar-field-background-color: rgba(255, 255, 255, 0.8);
   --toolbar-field-focus-background-color: white;
   --toolbar-field-color: black;

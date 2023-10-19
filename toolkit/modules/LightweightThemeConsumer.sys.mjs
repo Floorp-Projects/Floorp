@@ -79,6 +79,18 @@ const toolkitVariableMap = [
     },
   ],
   [
+    "--toolbar-bgcolor",
+    {
+      lwtProperty: "toolbarColor",
+    },
+  ],
+  [
+    "--toolbar-color",
+    {
+      lwtProperty: "toolbar_text",
+    },
+  ],
+  [
     "--toolbar-field-color",
     {
       lwtProperty: "toolbar_field_text",
