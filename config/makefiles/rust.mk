@@ -334,7 +334,7 @@ endif
 #
 #   $(call CARGO_BUILD)
 define CARGO_BUILD
-$(call RUN_CARGO,rustc)
+$(call RUN_CARGO,rustc$(if $(BUILDSTATUS), --timings))
 endef
 
 cargo_host_linker_env_var := CARGO_TARGET_$(call varize,$(RUST_HOST_TARGET))_LINKER
