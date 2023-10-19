@@ -151,6 +151,12 @@ bool AppleDecoderModule::IsVideoSupported(
           CreateDecoderParams::Option::HardwareDecoderNotAllowed)) {
     return false;
   }
+  if (VPXDecoder::IsVP9(aConfig.mMimeType) &&
+      aOptions.contains(CreateDecoderParams::Option::LowLatency)) {
+    // SVC layers are unsupported, and may be used in low latency use cases
+    // (WebRTC).
+    return false;
+  }
   if (aConfig.HasAlpha()) {
     return false;
   }
