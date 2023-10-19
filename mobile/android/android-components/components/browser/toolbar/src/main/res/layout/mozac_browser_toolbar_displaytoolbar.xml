@@ -116,11 +116,11 @@
     <mozilla.components.browser.toolbar.internal.ActionContainer
         android:id="@+id/mozac_browser_toolbar_page_actions"
         android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="@+id/mozac_browser_toolbar_background"
         app:layout_constraintTop_toTopOf="parent"
-        mozac:actionContainerItemSize="40dp"
+        mozac:actionContainerItemSize="48dp"
         tools:layout_width="48dp" />
 
     <!-- Browser Actions -->
