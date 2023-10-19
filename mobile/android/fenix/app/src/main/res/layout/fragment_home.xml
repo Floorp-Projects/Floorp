@@ -43,7 +43,7 @@
                 android:layout_gravity="end"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/content_description_private_browsing_button"
-                app:srcCompat="@drawable/private_browsing_button"
+                app:srcCompat="@drawable/ic_private_mode_circle_fill_48"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier=".167"/>
             <!-- This value needs to be 1.67 * the wordmark parallax value as its 24dp vs 40 -->
