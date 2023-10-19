@@ -67,13 +67,8 @@ if CONFIG["MOZ_BUILD_APP"] == "memory" or CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
         "/mozglue/misc/Printf.cpp",
     ]
 
-if not CONFIG["MOZ_REPLACE_MALLOC_STATIC"]:
-    SOURCES += [
-        "../FdPrintf.cpp",
-    ]
-
 LOCAL_INCLUDES += [
-    "..",
+    "/memory/build",
 ]
 
 # Link replace-malloc and the default allocator.

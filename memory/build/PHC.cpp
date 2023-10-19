@@ -1714,7 +1714,7 @@ class PHCBridge : public ReplaceMallocBridge {
 // dynamically (so we can guarantee their construction in this function) rather
 // than statically. GAtomic and GTls contain simple static data that doesn't
 // involve static initializers so they don't need to be allocated dynamically.
-void replace_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
+void phc_init(malloc_table_t* aMallocTable, ReplaceMallocBridge** aBridge) {
   // Don't run PHC if the page size isn't what we statically defined.
   jemalloc_stats_t stats;
   aMallocTable->jemalloc_stats_internal(&stats, nullptr);
