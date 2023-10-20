@@ -32,6 +32,7 @@ tasks.withType(KotlinCompile).configureEach {
 dependencies {
     api ComponentsDependencies.mozilla_appservices_suggest
 
+    implementation project(':browser-state')
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':feature-session')

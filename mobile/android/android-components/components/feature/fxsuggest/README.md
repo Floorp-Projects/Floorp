@@ -18,9 +18,26 @@ implementation "org.mozilla.components:feature-fxsuggest:{latest-version}"
 
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
-| Action      | Item                       | Extras            | Description                     |
-|-------------|----------------------------|-------------------|---------------------------------|
-| Click | amp_suggestion_clicked |  | a Firefox Suggestion has been clicked |
+| Action        | Item                       | Extras                        | Description                                                                    |
+|---------------|----------------------------|-------------------------------|--------------------------------------------------------------------------------|
+| `INTERACTION` | `amp_suggestion_clicked`   | `suggestion_clicked_extras`   | The user clicked on a Firefox Suggestion.                                      |
+| `DISPLAY`     | `amp_suggestion_impressed` | `suggestion_impressed_extras` | The user saw a Firefox Suggestion just before they navigated to a destination. |
+
+#### `suggestion_clicked_extras`
+
+| Key                | Type                       | Value                                                      |
+|--------------------|----------------------------|------------------------------------------------------------|
+| `interaction_info` | `FxSuggestInteractionInfo` | Type-specific information to record for this suggestion.   |
+| `position`         | `Long`                     | The 1-based position of this suggestion in the awesomebar. |
+
+
+#### `suggestion_impressed_extras`
+
+| Key                | Type                       | Value                                                      |
+|--------------------|----------------------------|------------------------------------------------------------|
+| `interaction_info` | `FxSuggestInteractionInfo` | Type-specific information to record for this suggestion.   |
+| `position`         | `Long`                     | The 1-based position of this suggestion in the awesomebar. |
+| `is_clicked`       | `Boolean`                  | Whether the user clicked on this suggestion.               |
 
 ## License
 

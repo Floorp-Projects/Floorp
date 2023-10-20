@@ -5,7 +5,7 @@
 package mozilla.components.feature.fxsuggest
 
 import mozilla.components.feature.fxsuggest.facts.FxSuggestFacts
-import mozilla.components.feature.fxsuggest.facts.emitSponsoredSuggestionClickedFact
+import mozilla.components.feature.fxsuggest.facts.emitSuggestionClickedFact
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
@@ -15,17 +15,18 @@ import org.junit.Test
 class FxSuggestFactsTest {
 
     @Test
-    fun testEmitSponsoredSuggestionClickedFact() {
+    fun emitSuggestionClickedFactWithAmpInteractionInfo() {
         CollectionProcessor.withFactCollection { facts ->
 
-            emitSponsoredSuggestionClickedFact(
-                FxSuggestClickInfo.Amp(
+            emitSuggestionClickedFact(
+                FxSuggestInteractionInfo.Amp(
                     blockId = 123,
                     advertiser = "mozilla",
-                    clickUrl = "https://example.com/reporting",
+                    reportingUrl = "https://example.com/reporting",
                     iabCategory = "22 - Shopping",
                     contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
                 ),
+                positionInAwesomeBar = 0,
             )
 
             assertEquals(1, facts.size)
@@ -34,10 +35,10 @@ class FxSuggestFactsTest {
                 assertEquals(Action.INTERACTION, action)
                 assertEquals(FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED, item)
 
-                val clickInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.CLICK_INFO) as? FxSuggestClickInfo.Amp)
+                val clickInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)
                 assertEquals(clickInfo.blockId, 123)
                 assertEquals(clickInfo.advertiser, "mozilla")
-                assertEquals(clickInfo.clickUrl, "https://example.com/reporting")
+                assertEquals(clickInfo.reportingUrl, "https://example.com/reporting")
                 assertEquals(clickInfo.iabCategory, "22 - Shopping")
                 assertEquals(clickInfo.contextId, "c303282d-f2e6-46ca-a04a-35d3d873712d")
             }

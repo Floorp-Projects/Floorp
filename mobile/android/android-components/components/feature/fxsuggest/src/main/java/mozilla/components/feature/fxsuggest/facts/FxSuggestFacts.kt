@@ -4,7 +4,7 @@
 
 package mozilla.components.feature.fxsuggest.facts
 
-import mozilla.components.feature.fxsuggest.FxSuggestClickInfo
+import mozilla.components.feature.fxsuggest.FxSuggestInteractionInfo
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
@@ -19,13 +19,16 @@ class FxSuggestFacts {
      */
     object Items {
         const val AMP_SUGGESTION_CLICKED = "amp_suggestion_clicked"
+        const val AMP_SUGGESTION_IMPRESSED = "amp_suggestion_impressed"
     }
 
     /**
      * Keys used in the metadata map.
      */
     object MetadataKeys {
-        const val CLICK_INFO = "click_info"
+        const val INTERACTION_INFO = "interaction_info"
+        const val POSITION = "position"
+        const val IS_CLICKED = "is_clicked"
     }
 }
 
@@ -44,10 +47,35 @@ private fun emitFxSuggestFact(
     ).collect()
 }
 
-internal fun emitSponsoredSuggestionClickedFact(clickInfo: FxSuggestClickInfo) {
-    emitFxSuggestFact(
-        Action.INTERACTION,
-        FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED,
-        metadata = mapOf(FxSuggestFacts.MetadataKeys.CLICK_INFO to clickInfo),
-    )
+internal fun emitSuggestionClickedFact(
+    interactionInfo: FxSuggestInteractionInfo,
+    positionInAwesomeBar: Long,
+) = when (interactionInfo) {
+    is FxSuggestInteractionInfo.Amp -> {
+        emitFxSuggestFact(
+            Action.INTERACTION,
+            FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED,
+            metadata = mapOf(
+                FxSuggestFacts.MetadataKeys.INTERACTION_INFO to interactionInfo,
+                FxSuggestFacts.MetadataKeys.POSITION to positionInAwesomeBar,
+            ),
+        )
+    }
+}
+
+internal fun emitSuggestionImpressedFact(
+    interactionInfo: FxSuggestInteractionInfo,
+    positionInAwesomeBar: Long,
+    isClicked: Boolean,
+) = when (interactionInfo) {
+    is FxSuggestInteractionInfo.Amp ->
+        emitFxSuggestFact(
+            Action.DISPLAY,
+            FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED,
+            metadata = mapOf(
+                FxSuggestFacts.MetadataKeys.INTERACTION_INFO to interactionInfo,
+                FxSuggestFacts.MetadataKeys.POSITION to positionInAwesomeBar,
+                FxSuggestFacts.MetadataKeys.IS_CLICKED to isClicked,
+            ),
+        )
 }

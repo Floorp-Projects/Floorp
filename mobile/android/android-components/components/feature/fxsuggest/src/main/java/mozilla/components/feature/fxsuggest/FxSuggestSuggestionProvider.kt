@@ -9,7 +9,6 @@ import mozilla.appservices.suggest.Suggestion
 import mozilla.appservices.suggest.SuggestionProvider
 import mozilla.appservices.suggest.SuggestionQuery
 import mozilla.components.concept.awesomebar.AwesomeBar
-import mozilla.components.feature.fxsuggest.facts.emitSponsoredSuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.toBitmap
 import java.util.UUID
@@ -32,6 +31,14 @@ class FxSuggestSuggestionProvider(
     private val suggestionsHeader: String? = null,
     private val contextId: String? = null,
 ) : AwesomeBar.SuggestionProvider {
+    /**
+     * [AwesomeBar.Suggestion.metadata] keys for this provider's suggestions.
+     */
+    object MetadataKeys {
+        const val CLICK_INFO = "click_info"
+        const val IMPRESSION_INFO = "impression_info"
+    }
+
     override val id: String = UUID.randomUUID().toString()
 
     override fun groupTitle(): String? = suggestionsHeader
@@ -70,10 +77,19 @@ class FxSuggestSuggestionProvider(
                     isSponsored = true,
                     icon = suggestion.icon,
                     clickInfo = contextId?.let {
-                        FxSuggestClickInfo.Amp(
+                        FxSuggestInteractionInfo.Amp(
                             blockId = suggestion.blockId,
                             advertiser = suggestion.advertiser.lowercase(),
-                            clickUrl = suggestion.clickUrl,
+                            reportingUrl = suggestion.clickUrl,
+                            iabCategory = suggestion.iabCategory,
+                            contextId = it,
+                        )
+                    },
+                    impressionInfo = contextId?.let {
+                        FxSuggestInteractionInfo.Amp(
+                            blockId = suggestion.blockId,
+                            advertiser = suggestion.advertiser.lowercase(),
+                            reportingUrl = suggestion.impressionUrl,
                             iabCategory = suggestion.iabCategory,
                             contextId = it,
                         )
@@ -101,9 +117,10 @@ class FxSuggestSuggestionProvider(
                 },
                 onSuggestionClicked = {
                     loadUrlUseCase.invoke(details.url)
-                    details.clickInfo?.let {
-                        emitSponsoredSuggestionClickedFact(it)
-                    }
+                },
+                metadata = buildMap {
+                    details.clickInfo?.let { put(MetadataKeys.CLICK_INFO, it) }
+                    details.impressionInfo?.let { put(MetadataKeys.IMPRESSION_INFO, it) }
                 },
             )
         }
@@ -115,27 +132,29 @@ internal data class SuggestionDetails(
     val fullKeyword: String,
     val isSponsored: Boolean,
     val icon: List<UByte>?,
-    val clickInfo: FxSuggestClickInfo? = null,
+    val clickInfo: FxSuggestInteractionInfo? = null,
+    val impressionInfo: FxSuggestInteractionInfo? = null,
 )
 
 /**
- * Collective of fields required for fxsuggest click telemetry
+ * Additional information about a Firefox Suggest [AwesomeBar.Suggestion] to record in telemetry when the user
+ * interacts with the suggestion.
  */
-sealed interface FxSuggestClickInfo {
+sealed interface FxSuggestInteractionInfo {
     /**
-     * AMP related fields for fx suggest click telemetry
+     * Interaction information for a sponsored Firefox Suggest search suggestion from AMP.
      *
      * @param blockId A unique identifier for the suggestion.
      * @param advertiser The name of the advertiser providing the sponsored suggestion.
-     * @param clickUrl The url to report the click to.
+     * @param reportingUrl The url to report the click or impression to.
      * @param iabCategory The categorization of the suggestion.
      * @param contextId The contextual services user identifier.
      */
     data class Amp(
         val blockId: Long,
         val advertiser: String,
-        val clickUrl: String,
+        val reportingUrl: String,
         val iabCategory: String,
         val contextId: String,
-    ) : FxSuggestClickInfo
+    ) : FxSuggestInteractionInfo
 }
