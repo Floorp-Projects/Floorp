@@ -8,6 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   SuggestIngestionConstraints: "resource://gre/modules/RustSuggest.sys.mjs",
   SuggestStore: "resource://gre/modules/RustSuggest.sys.mjs",
   Suggestion: "resource://gre/modules/RustSuggest.sys.mjs",
@@ -98,13 +99,19 @@ export class SuggestBackendRust extends BaseFeature {
 
     searchString = searchString.toLocaleLowerCase();
 
-    // TODO: Generalize this and support the other providers.
+    // Build the list of Rust providers to query. Each provider is identified by
+    // an integer value defined on the `SuggestionProvider` object. Here we
+    // convert the Rust suggestion types of our registered features to their
+    // corresponding provider integer values.
     let providers = [];
-    if (lazy.UrlbarPrefs.get("suggest.quicksuggest.sponsored")) {
-      providers.push(lazy.SuggestionProvider.AMP);
-    }
-    if (lazy.UrlbarPrefs.get("suggest.quicksuggest.nonsponsored")) {
-      providers.push(lazy.SuggestionProvider.WIKIPEDIA);
+    for (let type of lazy.QuickSuggest.registeredRustSuggestionTypes) {
+      let key = type.toUpperCase();
+      this.logger.debug("Adding provider to query:" + key);
+      if (!lazy.SuggestionProvider.hasOwnProperty(key)) {
+        this.logger.error(`SuggestionProvider["${key}"] is not defined!`);
+        continue;
+      }
+      providers.push(lazy.SuggestionProvider[key]);
     }
 
     let suggestions = await this.#store.query(

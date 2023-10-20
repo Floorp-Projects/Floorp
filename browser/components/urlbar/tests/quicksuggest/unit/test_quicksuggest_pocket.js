@@ -55,7 +55,7 @@ add_task(async function telemetryType() {
 
 // When non-sponsored suggestions are disabled, Pocket suggestions should be
 // disabled.
-add_task(async function nonsponsoredDisabled() {
+add_tasks_with_rust(async function nonsponsoredDisabled() {
   // Disable sponsored suggestions. Pocket suggestions are non-sponsored, so
   // doing this should not prevent them from being enabled.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
@@ -87,7 +87,7 @@ add_task(async function nonsponsoredDisabled() {
 
 // When Pocket-specific preferences are disabled, suggestions should not be
 // added.
-add_task(async function pocketSpecificPrefsDisabled() {
+add_tasks_with_rust(async function pocketSpecificPrefsDisabled() {
   const prefs = ["suggest.pocket", "pocket.featureGate"];
   for (const pref of prefs) {
     // First make sure the suggestion is added.
@@ -117,7 +117,7 @@ add_task(async function pocketSpecificPrefsDisabled() {
 
 // Check wheather the Pocket suggestions will be shown by the setup of Nimbus
 // variable.
-add_task(async function nimbus() {
+add_tasks_with_rust(async function nimbus() {
   // Disable the fature gate.
   UrlbarPrefs.set("pocket.featureGate", false);
   await check_results({
@@ -166,7 +166,7 @@ add_task(async function nimbus() {
 
 // The suggestion should be shown as a top pick when a high-confidence keyword
 // is matched.
-add_task(async function topPick() {
+add_tasks_with_rust(async function topPick() {
   await check_results({
     context: createContext(HIGH_KEYWORD, {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -528,6 +528,31 @@ function makeExpectedResult({
   source = "remote-settings",
   isTopPick = false,
 } = {}) {
+  if (
+    source == "remote-settings" &&
+    UrlbarPrefs.get("quicksuggest.rustEnabled")
+  ) {
+    source = "rust";
+  }
+
+  let provider;
+  let keywordSubstringNotTyped = fullKeyword.substring(searchString.length);
+  let description = suggestion.description;
+  switch (source) {
+    case "remote-settings":
+      provider = "PocketSuggestions";
+      break;
+    case "rust":
+      provider = "Pocket";
+      // Rust suggestions currently do not include full keyword or description.
+      keywordSubstringNotTyped = "";
+      description = suggestion.title;
+      break;
+    case "merino":
+      provider = "pocket";
+      break;
+  }
+
   let url = new URL(suggestion.url);
   url.searchParams.set("utm_medium", "firefox-desktop");
   url.searchParams.set("utm_source", "firefox-suggest");
@@ -542,13 +567,13 @@ function makeExpectedResult({
     heuristic: false,
     payload: {
       source,
-      provider: source == "remote-settings" ? "PocketSuggestions" : "pocket",
+      provider,
       telemetryType: "pocket",
       title: suggestion.title,
       url: url.href,
       displayUrl: url.href.replace(/^https:\/\//, ""),
       originalUrl: suggestion.url,
-      description: isTopPick ? suggestion.description : "",
+      description: isTopPick ? description : "",
       icon: isTopPick
         ? "chrome://global/skin/icons/pocket.svg"
         : "chrome://global/skin/icons/pocket-favicon.ico",
@@ -558,7 +583,7 @@ function makeExpectedResult({
         id: "firefox-suggest-pocket-bottom-text",
         args: {
           keywordSubstringTyped: searchString,
-          keywordSubstringNotTyped: fullKeyword.substring(searchString.length),
+          keywordSubstringNotTyped,
         },
       },
     },
@@ -566,6 +591,10 @@ function makeExpectedResult({
 }
 
 async function waitForSuggestions(keyword = LOW_KEYWORD) {
+  if (UrlbarPrefs.get("quicksuggest.rustEnabled")) {
+    return;
+  }
+
   let feature = QuickSuggest.getFeature("PocketSuggestions");
   await TestUtils.waitForCondition(async () => {
     let suggestions = await feature.queryRemoteSettings(keyword);
