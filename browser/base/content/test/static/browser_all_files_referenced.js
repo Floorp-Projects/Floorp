@@ -259,6 +259,13 @@ var allowlist = [
   {
     file: "resource://gre/localization/en-US/toolkit/updates/backgroundupdate.ftl",
   },
+  // toolkit/mozapps/defaultagent/Notification.cpp
+  // toolkit/mozapps/defaultagent/ScheduledTask.cpp
+  // Bug 1854425 - referenced by default browser agent which is only for Windows
+  {
+    file: "resource://gre/localization/en-US/browser/backgroundtasks/defaultagent.ftl",
+    platforms: ["linux", "macosx"],
+  },
   // Bug 1713242 - referenced by aboutThirdParty.html which is only for Windows
   {
     file: "resource://gre/localization/en-US/toolkit/about/aboutThirdParty.ftl",
