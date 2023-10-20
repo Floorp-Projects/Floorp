@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,10 +35,11 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
     private var _binding: FragmentSearchSuggestionsBinding? = null
     private val binding get() = _binding!!
-    lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
     private val defaultSearchEngineName: String
         get() = requireComponents.store.defaultSearchEngineName()
+
+    private val searchSuggestionsViewModel: SearchSuggestionsViewModel by activityViewModels()
 
     override fun onResume() {
         super.onResume()
@@ -60,12 +61,17 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         _binding = null
     }
 
-    @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View {
+        _binding = FragmentSearchSuggestionsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
-        searchSuggestionsViewModel = ViewModelProvider(requireParentFragment())
-            .get(SearchSuggestionsViewModel::class.java)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         searchSuggestionsViewModel.state.observe(
             viewLifecycleOwner,
@@ -82,19 +88,6 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
                     binding.enableSearchSuggestionsContainer.isVisible = state.givePrompt
             }
         }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        _binding = FragmentSearchSuggestionsBinding.inflate(inflater, container, false)
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
 
         val appName = resources.getString(R.string.app_name)
 
