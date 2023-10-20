@@ -2,21 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.all-buttons-container button {
-  background-position: center top;
-  background-repeat: no-repeat;
-  background-size: 46px 46px;
-  min-width: 90px;
-  padding: 46px 5px 5px;
-  margin: 2px;
-  color: var(--panel-color);
-}
-
-.all-buttons-container .full-page {
+.full-page {
   background-image: url("chrome://browser/content/screenshots/menu-fullpage.svg");
 }
 
-.all-buttons-container .visible-page {
+.visible-page {
   background-image: url("chrome://browser/content/screenshots/menu-visible.svg");
 }
 
@@ -24,4 +14,10 @@
   -moz-context-properties: fill, stroke;
   fill: currentColor;
   stroke: var(--color-accent-primary);
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 46px 46px;
+  min-width: 90px;
+  padding: 46px 5px 5px;
+  margin: 2px;
 }

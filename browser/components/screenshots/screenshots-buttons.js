@@ -11,12 +11,10 @@
   class ScreenshotsButtons extends MozXULElement {
     static get markup() {
       return `
-      <html:link rel="stylesheet" href="chrome://global/skin/in-content/common.css"/>
+      <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
       <html:link rel="stylesheet" href="chrome://browser/content/screenshots/screenshots-buttons.css"/>
-      <html:div id="screenshots-buttons" class="all-buttons-container">
-        <html:button class="visible-page" data-l10n-id="screenshots-save-visible-button"></html:button>
-        <html:button class="full-page" data-l10n-id="screenshots-save-page-button"></html:button>
-      </html:div>
+      <html:button class="visible-page panel-footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
+      <html:button class="full-page panel-footer-button" data-l10n-id="screenshots-save-page-button"></html:button>
       `;
     }
 
