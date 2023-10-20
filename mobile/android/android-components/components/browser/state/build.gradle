@@ -50,6 +50,7 @@ tasks.withType(KotlinCompile).configureEach {
 dependencies {
     api project(':lib-state')
 
+    implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':concept-storage')
     implementation project(':support-utils')

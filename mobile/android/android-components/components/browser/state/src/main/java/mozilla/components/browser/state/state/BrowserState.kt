@@ -7,6 +7,7 @@ package mozilla.components.browser.state.state
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.extension.WebExtensionPromptRequest
 import mozilla.components.browser.state.state.recover.TabState
+import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.lib.state.State
 import java.util.Locale
 
@@ -33,6 +34,7 @@ import java.util.Locale
  * @property restoreComplete Whether or not restoring [BrowserState] has completed. This can be used
  * on application startup e.g. as an indicator that tabs have been restored.
  * @property locale The current locale of the app. Will be null when following the system default.
+ * @property awesomeBarState Holds state for interactions with the [AwesomeBar].
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -51,4 +53,5 @@ data class BrowserState(
     val locale: Locale? = null,
     val showExtensionsProcessDisabledPrompt: Boolean = false,
     val extensionsProcessDisabled: Boolean = false,
+    val awesomeBarState: AwesomeBarState = AwesomeBarState(),
 ) : State

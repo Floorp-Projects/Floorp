@@ -5,6 +5,7 @@
 package mozilla.components.browser.state.reducer
 
 import mozilla.components.browser.state.action.AppLifecycleAction
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
@@ -75,6 +76,7 @@ internal object BrowserStateReducer {
             is HistoryMetadataAction -> HistoryMetadataReducer.reduce(state, action)
             is DebugAction -> DebugReducer.reduce(state, action)
             is ExtensionsProcessAction -> ExtensionsProcessStateReducer.reduce(state, action)
+            is AwesomeBarAction -> AwesomeBarStateReducer.reduce(state, action)
         }
     }
 }

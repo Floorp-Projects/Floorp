@@ -19,6 +19,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -72,6 +73,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -94,6 +96,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -133,6 +136,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -165,6 +169,7 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-errorpages
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -200,6 +205,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -222,6 +228,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -245,6 +252,7 @@ projects:
     - browser-menu
     - browser-menu2
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -289,6 +297,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -325,6 +334,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -348,6 +358,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -491,6 +502,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -541,6 +553,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -565,6 +578,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -648,6 +662,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -673,6 +688,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -712,6 +728,7 @@ projects:
     - browser-tabstray
     - browser-thumbnails
     - browser-toolbar
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -747,6 +764,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -771,6 +789,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -816,6 +835,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -851,6 +871,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -881,6 +902,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -901,6 +923,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -926,6 +949,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -974,6 +998,7 @@ projects:
     - browser-tabstray
     - browser-thumbnails
     - browser-toolbar
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1022,6 +1047,7 @@ projects:
     - browser-errorpages
     - browser-menu
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1045,6 +1071,7 @@ projects:
     - browser-errorpages
     - browser-session-storage
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1073,6 +1100,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1109,6 +1137,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1139,6 +1168,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1179,6 +1209,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1240,6 +1271,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1275,6 +1307,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1304,6 +1337,7 @@ projects:
     - browser-domains
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1360,6 +1394,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1381,6 +1416,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1406,6 +1442,7 @@ projects:
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1713,6 +1750,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1804,6 +1842,7 @@ projects:
     - browser-menu2
     - browser-state
     - browser-toolbar
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -1907,6 +1946,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -2024,6 +2064,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
@@ -2138,6 +2179,7 @@ projects:
     upstream_dependencies:
     - browser-errorpages
     - browser-state
+    - concept-awesomebar
     - concept-base
     - concept-engine
     - concept-fetch
