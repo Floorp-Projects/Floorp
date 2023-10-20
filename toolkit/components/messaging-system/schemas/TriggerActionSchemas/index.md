@@ -247,3 +247,14 @@ A `toast_notification` or `update_action` message can function normally under th
   targeting: "browser && browserWindow"
 }
 ```
+
+### `pageActionInUrlbar`
+
+Happens when a page action appears in the location bar. The specific page action(s) to watch for can be specified by id in the targeting expression. For example, to trigger when the reader mode button appears:
+
+```js
+{
+  trigger: { id: "pageActionInUrlbar" },
+  targeting: "pageAction == 'reader-mode-button'"
+}
+```
