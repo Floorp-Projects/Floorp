@@ -168,6 +168,22 @@ static CSSCoord ComputeSides(const CSSPoint& aOrigin,
   sint = std::fabs(sint);
   cost = std::fabs(cost);
 
+  // The trigonometric formula here doesn't work well if |theta| is 0deg or
+  // 90deg, so we handle these edge cases first.
+  if (sint < std::numeric_limits<double>::epsilon()) {
+    // For 0deg (or 180deg), we use |b| directly.
+    return static_cast<float>(b);
+  }
+
+  if (cost < std::numeric_limits<double>::epsilon()) {
+    // For 90deg (or 270deg), we use |bPrime| directly. This can also avoid 0/0
+    // if both |b| and |cost| are 0.0. (i.e. b / cost).
+    return static_cast<float>(bPrime);
+  }
+
+  // Note: The following formula works well only when 0 < theta < 90deg. So we
+  // handle 0deg and 90deg above first.
+  //
   // If |b * tan(theta)| is larger than |bPrime|, the intersection is
   // on the other side, and |b'| is the opposite side of angle |theta| in this
   // case.
@@ -223,7 +239,11 @@ static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
                                      const CSSRect& aContainingBlock) {
   if (aRaySizeType == StyleRaySize::Sides) {
     // If the initial position is not within the box, the distance is 0.
-    if (!aContainingBlock.Contains(aOrigin)) {
+    //
+    // Note: If the origin is at XMost() (and/or YMost()), we should consider it
+    // to be inside containing block (because we expect 100% x (or y) coordinate
+    // is still to be considered inside the containing block.
+    if (!aContainingBlock.ContainsInclusively(aOrigin)) {
       return 0.0;
     }
 
