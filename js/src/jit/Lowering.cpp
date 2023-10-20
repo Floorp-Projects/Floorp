@@ -1217,20 +1217,6 @@ static inline bool CanEmitCompareAtUses(MInstruction* ins) {
   return iter == ins->usesEnd();
 }
 
-static bool CanCompareCharactersInline(const JSLinearString* linear) {
-  size_t length = linear->length();
-
-  // Limit the number of inline instructions used for character comparisons. Use
-  // the same instruction limit for both encodings, i.e. two-byte uses half the
-  // limit of Latin-1 strings.
-  constexpr size_t Latin1StringCompareCutoff = 32;
-  constexpr size_t TwoByteStringCompareCutoff = 16;
-
-  return length > 0 &&
-         (linear->hasLatin1Chars() ? length <= Latin1StringCompareCutoff
-                                   : length <= TwoByteStringCompareCutoff);
-}
-
 void LIRGenerator::visitCompare(MCompare* comp) {
   MDefinition* left = comp->lhs();
   MDefinition* right = comp->rhs();
@@ -1257,7 +1243,7 @@ void LIRGenerator::visitCompare(MCompare* comp) {
       if (constant) {
         JSLinearString* linear = &constant->toString()->asLinear();
 
-        if (CanCompareCharactersInline(linear)) {
+        if (MacroAssembler::canCompareStringCharsInline(linear)) {
           MDefinition* input = left->isConstant() ? right : left;
 
           auto* lir = new (alloc()) LCompareSInline(useRegister(input), linear);
@@ -2548,7 +2534,7 @@ void LIRGenerator::visitStringStartsWith(MStringStartsWith* ins) {
   if (searchStr->isConstant()) {
     JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
 
-    if (CanCompareCharactersInline(linear)) {
+    if (MacroAssembler::canCompareStringCharsInline(linear)) {
       auto* lir = new (alloc())
           LStringStartsWithInline(useRegister(string), temp(), linear);
       define(lir, ins);
@@ -2573,7 +2559,7 @@ void LIRGenerator::visitStringEndsWith(MStringEndsWith* ins) {
   if (searchStr->isConstant()) {
     JSLinearString* linear = &searchStr->toConstant()->toString()->asLinear();
 
-    if (CanCompareCharactersInline(linear)) {
+    if (MacroAssembler::canCompareStringCharsInline(linear)) {
       auto* lir = new (alloc())
           LStringEndsWithInline(useRegister(string), temp(), linear);
       define(lir, ins);
