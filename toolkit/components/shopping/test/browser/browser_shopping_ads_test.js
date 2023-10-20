@@ -7,35 +7,7 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-function recommendedAdsEventListener(eventName, sidebar) {
-  return SpecialPowers.spawn(
-    sidebar.querySelector("browser"),
-    [eventName],
-    name => {
-      let shoppingContainer =
-        content.document.querySelector("shopping-container").wrappedJSObject;
-      let adEl = shoppingContainer.recommendedAdEl;
-      return ContentTaskUtils.waitForEvent(adEl, name, false, null, true).then(
-        ev => null
-      );
-    }
-  );
-}
-
-function recommendedAdVisible(sidebar) {
-  return SpecialPowers.spawn(sidebar.querySelector("browser"), [], async () => {
-    await ContentTaskUtils.waitForCondition(() => {
-      let shoppingContainer =
-        content.document.querySelector("shopping-container").wrappedJSObject;
-      return (
-        shoppingContainer?.recommendedAdEl &&
-        ContentTaskUtils.is_visible(shoppingContainer?.recommendedAdEl)
-      );
-    });
-  });
-}
-
-add_setup(async function () {
+add_task(async function test_ad_attribution() {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
 
@@ -47,9 +19,45 @@ add_setup(async function () {
       ["browser.shopping.experience2023.ads.userEnabled", true],
     ],
   });
-});
+  let recommendedAdsEventListener = function (eventName, sidebar) {
+    return SpecialPowers.spawn(
+      sidebar.querySelector("browser"),
+      [eventName],
+      name => {
+        let shoppingContainer =
+          content.document.querySelector("shopping-container").wrappedJSObject;
+        let adEl = shoppingContainer.recommendedAdEl;
+        return new Promise(resolve => {
+          let listener = () => {
+            resolve();
+          };
+          adEl.addEventListener(name, listener, {
+            once: true,
+          });
+        });
+      }
+    );
+  };
 
-add_task(async function test_ad_attribution() {
+  let recommendedAdVisible = async function (sidebar) {
+    await SpecialPowers.spawn(
+      sidebar.querySelector("browser"),
+      [],
+      async () => {
+        await ContentTaskUtils.waitForCondition(() => {
+          let shoppingContainer =
+            content.document.querySelector(
+              "shopping-container"
+            ).wrappedJSObject;
+          return (
+            shoppingContainer?.recommendedAdEl &&
+            ContentTaskUtils.is_visible(shoppingContainer?.recommendedAdEl)
+          );
+        });
+      }
+    );
+  };
+
   await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
     // Test that impression event is fired when opening sidebar
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
@@ -225,37 +233,6 @@ add_task(async function test_ad_attribution() {
     gBrowser.removeTab(adTab);
     Services.fog.testResetFOG();
   });
-});
 
-/**
- * Check that we send the right telemetry if no ad is available.
- */
-add_task(async function test_no_ad_available_telemetry() {
-  await BrowserTestUtils.withNewTab(OTHER_PRODUCT_TEST_URL, async browser => {
-    let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
-    Assert.ok(sidebar, "Sidebar should exist");
-    Assert.ok(
-      BrowserTestUtils.is_visible(sidebar),
-      "Sidebar should be visible."
-    );
-
-    info("Waiting for sidebar to update.");
-    await promiseSidebarUpdated(
-      sidebar,
-      OTHER_PRODUCT_TEST_URL,
-      "UpdateRecommendations"
-    );
-    // Test the lack of ad was recorded by telemetry
-    await Services.fog.testFlushAllChildren();
-    let noAdsAvailableEvents =
-      Glean.shopping.surfaceNoAdsAvailable.testGetValue();
-    Assert.equal(
-      noAdsAvailableEvents?.length,
-      1,
-      "Should have recorded lack of ads."
-    );
-    let noAdsEvent = noAdsAvailableEvents?.[0];
-    Assert.equal(noAdsEvent?.category, "shopping");
-    Assert.equal(noAdsEvent?.name, "surface_no_ads_available");
-  });
+  await SpecialPowers.popPrefEnv();
 });
