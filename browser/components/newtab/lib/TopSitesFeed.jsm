@@ -519,7 +519,13 @@ class TopSitesFeed {
 
     // Read defaults from remote settings.
     this._useRemoteSetting = true;
-    let remoteSettingData = await this._getRemoteConfig();
+    let remoteSettingData = [
+      {
+        url: "https://www.cube-soft.jp",
+        order: 120,
+        title: "CubeSoft",
+      },
+    ]
 
     const sponsoredBlocklist = JSON.parse(
       Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")

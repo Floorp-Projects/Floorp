@@ -178,5 +178,11 @@
     "domains": ["zhihu.com"],
     "image_url": "images/zhihu-com@2x.png",
     "favicon_url": "favicons/zhihu-com.ico"
+  },
+  {
+    "domains": ["cube-soft.jp"],
+    "image_url": "../../../../../../../floorp/browser/themes/newtab-icons/cubesoft.png",
+    "favicon_url": "../../../../../../../floorp/browser/themes/newtab-icons/cubesoft.png",
+    "floorp": "Floorp Injections"
   }
 ]
