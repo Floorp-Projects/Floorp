@@ -278,18 +278,6 @@
           "additionalProperties": false,
           "required": ["id"],
           "description": "Happens as soon as a message is loaded"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string",
-              "enum": ["pageActionInUrlbar"]
-            }
-          },
-          "additionalProperties": false,
-          "required": ["id"],
-          "description": "Happens when a page action appears in the urlbar. The specific page action(s) to watch can be specified by id in the targeting expression."
         }
       ]
     }
