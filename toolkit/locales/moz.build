@@ -37,12 +37,3 @@ LOCALIZED_FILES += ["!update.locale"]
 LOCALIZED_GENERATED_FILES += ["locale.ini"]
 LOCALIZED_GENERATED_FILES["locale.ini"].script = "generate_locale_ini.py"
 LOCALIZED_FILES += ["!locale.ini"]
-
-if CONFIG["MOZ_DEFAULT_BROWSER_AGENT"]:
-    LOCALIZED_GENERATED_FILES += ["defaultagent_localized.ini"]
-    wdba_l10n = LOCALIZED_GENERATED_FILES["defaultagent_localized.ini"]
-    wdba_l10n.script = "/browser/locales/generate_ini.py"
-    wdba_l10n.inputs = [
-        "/browser/locales/en-US/defaultagent/defaultagent_localized.ini",
-    ]
-    LOCALIZED_FILES += ["!defaultagent_localized.ini"]
