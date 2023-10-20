@@ -13,6 +13,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
+#include "mozilla/ShellHeaderOnlyUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -230,24 +231,19 @@ static mozilla::WindowsError LaunchFirefoxToHandleDefaultBrowserAgent() {
   }
   std::wstring firefoxPath = firefoxPathResult.unwrap();
 
-  const wchar_t* firefoxArgs[] = {firefoxPath.c_str(),
-                                  L"-to-handle-default-browser-agent"};
-  mozilla::UniquePtr<wchar_t[]> firefoxCmdLine(mozilla::MakeCommandLine(
-      mozilla::ArrayLength(firefoxArgs), const_cast<wchar_t**>(firefoxArgs)));
+  _bstr_t cmd = firefoxPath.c_str();
+  // Omit argv[0] because ShellExecute doesn't need it.
+  _variant_t args(L"-to-handle-default-browser-agent");
+  _variant_t operation(L"open");
+  _variant_t directory;
+  _variant_t showCmd(SW_SHOWNORMAL);
 
-  PROCESS_INFORMATION pi;
-  STARTUPINFOW si = {sizeof(si)};
-  if (!::CreateProcessW(firefoxPath.c_str(), firefoxCmdLine.get(), nullptr,
-                        nullptr, false,
-                        DETACHED_PROCESS | NORMAL_PRIORITY_CLASS, nullptr,
-                        nullptr, &si, &pi)) {
-    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
-    LOG_ERROR(hr);
-    return mozilla::WindowsError::FromHResult(hr);
-  }
-
-  CloseHandle(pi.hThread);
-  CloseHandle(pi.hProcess);
+  // To prevent inheriting environment variables from the background task, we
+  // run Firefox via Explorer instead of our own process. This mimics the
+  // implementation of the Windows Launcher Process.
+  auto result =
+      ShellExecuteByExplorer(cmd, args, operation, directory, showCmd);
+  NS_ENSURE_TRUE(result.isOk(), result.unwrapErr());
 
   return mozilla::WindowsError::CreateSuccess();
 }
