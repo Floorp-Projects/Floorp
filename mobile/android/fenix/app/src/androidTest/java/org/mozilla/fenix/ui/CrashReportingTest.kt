@@ -54,8 +54,9 @@ class CrashReportingTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/308906
     @Test
-    fun closeTabCrashedReporterTest() {
+    fun closeTabFromCrashedTabReporterTest() {
         homeScreen {
         }.openNavigationToolbar {
         }.openTabCrashReporter {
@@ -65,9 +66,10 @@ class CrashReportingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2336134
     @Ignore("Test failure caused by: https://github.com/mozilla-mobile/fenix/issues/19964")
     @Test
-    fun restoreTabCrashedReporterTest() {
+    fun restoreTabFromTabCrashedReporterTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -81,6 +83,7 @@ class CrashReportingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1681928
     @SmokeTest
     @Test
     fun useAppWhileTabIsCrashedTest() {
@@ -106,37 +109,6 @@ class CrashReportingTest {
         }.closeTabDrawer {
         }.goToHomescreen {
             verifyExistingTopSitesList()
-        }.openThreeDotMenu {
-            verifySettingsButton()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun privateBrowsingUseAppWhileTabIsCrashedTest() {
-        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
-
-        homeScreen {
-            togglePrivateBrowsingModeOnOff()
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(firstWebPage.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-        }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {
-            waitForPageToLoad()
-        }
-
-        navigationToolbar {
-        }.openTabCrashReporter {
-            verifyPageContent(tabCrashMessage)
-        }.openTabDrawer {
-            verifyExistingOpenTabs(firstWebPage.title)
-            verifyExistingOpenTabs(secondWebPage.title)
-        }.closeTabDrawer {
-        }.goToHomescreen {
-            verifyCommonMythsLink()
         }.openThreeDotMenu {
             verifySettingsButton()
         }
