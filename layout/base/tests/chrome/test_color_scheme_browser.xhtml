@@ -24,12 +24,16 @@
       <xul:browser type="content" src="about:blank" class="nonremote" />
     </div>
     <script><![CDATA[
+      SimpleTest.requestCompleteLog(); // to help diagnose intermittent bug 1787008
+
       // FIXME: This shouldn't be needed if remote browsers would block the load event.
       add_task(async function ensureBrowsersLoaded() {
+        info("Entering ensureBrowsersLoaded callback");
         const triggeringPrincipal = document.nodePrincipal;
         for (let b of document.querySelectorAll("browser[remote=true]")) {
           let listener;
           let loaded = new Promise(resolve => {
+            info("Entering 'loaded' callback; about to add progress listener");
             listener = {
               onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
                 info(`Got state change for ${b.parentNode.id}: ${aStateFlags}, ${aStatus}`);
@@ -48,6 +52,7 @@
             };
             b.addProgressListener(listener);
           });
+          info(`Calling b.loadURI for ${b.parentNode.id}`);
           b.loadURI(null /*blank*/, { triggeringPrincipal });
           await loaded;
         }
