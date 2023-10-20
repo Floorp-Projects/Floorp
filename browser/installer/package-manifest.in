@@ -62,7 +62,6 @@
 #endif
 #ifdef MOZ_DEFAULT_BROWSER_AGENT
 @RESPATH@/defaultagent.ini
-@RESPATH@/defaultagent_localized.ini
 #endif
 #if defined(MOZ_UPDATE_AGENT) || defined(MOZ_DEFAULT_BROWSER_AGENT)
 @RESPATH@/locale.ini
