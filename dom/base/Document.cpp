@@ -18745,24 +18745,17 @@ bool Document::HasThirdPartyChannel() {
   return false;
 }
 
-bool Document::IsContentInaccessibleAboutBlank() const {
+bool Document::IsLikelyContentInaccessibleTopLevelAboutBlank() const {
   if (!mDocumentURI || !NS_IsAboutBlank(mDocumentURI)) {
     return false;
   }
-  nsIPrincipal* prin = NodePrincipal();
-  if (!prin->GetIsNullPrincipal()) {
-    return false;
-  }
-  nsCOMPtr<nsIPrincipal> prec = prin->GetPrecursorPrincipal();
-  if (prec) {
-    return false;
-  }
-  // FIXME(emilio): This doesn't account for internal about:blank documents we
-  // do on cross-process navigations in iframes. That makes our per-document
-  // telemetry probes not really reliable but doesn't affect the correctness of
-  // our page probes, so it's not too terrible.
+  // FIXME(emilio): This is not quite edge-case free. See bug 1860098.
+  //
+  // For stuff in frames, that makes our per-document telemetry probes not
+  // really reliable but doesn't affect the correctness of our page probes, so
+  // it's not too terrible.
   BrowsingContext* bc = GetBrowsingContext();
-  return bc && bc->IsTop() && bc->Group()->Toplevels().Length() == 1;
+  return bc && bc->IsTop() && !bc->HadOriginalOpener();
 }
 
 bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
@@ -18770,7 +18763,7 @@ bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
     return false;
   }
 
-  if (IsContentInaccessibleAboutBlank()) {
+  if (IsLikelyContentInaccessibleTopLevelAboutBlank()) {
     return false;
   }
 

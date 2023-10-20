@@ -1620,7 +1620,7 @@ ColorScheme nsPresContext::DefaultBackgroundColorScheme() const {
   dom::Document* doc = Document();
   // Use a dark background for top-level about:blank that is inaccessible to
   // content JS.
-  if (doc->IsContentInaccessibleAboutBlank()) {
+  if (doc->IsLikelyContentInaccessibleTopLevelAboutBlank()) {
     return doc->PreferredColorScheme(Document::IgnoreRFP::Yes);
   }
   // Prefer the root color-scheme (since generally the default canvas
