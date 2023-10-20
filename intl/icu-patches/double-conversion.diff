@@ -1,81 +1,151 @@
 diff --git a/intl/icu/source/i18n/number_decimalquantity.cpp b/intl/icu/source/i18n/number_decimalquantity.cpp
-index 659465d0870db..bc20c01be2602 100644
 --- a/intl/icu/source/i18n/number_decimalquantity.cpp
 +++ b/intl/icu/source/i18n/number_decimalquantity.cpp
-@@ -16,7 +16,7 @@
+@@ -11,28 +11,37 @@
+ #include <stdlib.h>
+ 
+ #include "unicode/plurrule.h"
+ #include "cmemory.h"
+ #include "number_decnum.h"
  #include "putilimp.h"
  #include "number_decimalquantity.h"
  #include "number_roundingutils.h"
--#include "double-conversion.h"
++#ifdef JS_HAS_INTL_API
 +#include "double-conversion/double-conversion.h"
++#else
+ #include "double-conversion.h"
++#endif
  #include "charstr.h"
  #include "number_utils.h"
  #include "uassert.h"
-@@ -26,8 +26,8 @@ using namespace icu;
+ #include "util.h"
+ 
+ using namespace icu;
  using namespace icu::number;
  using namespace icu::number::impl;
  
--using icu::double_conversion::DoubleToStringConverter;
--using icu::double_conversion::StringToDoubleConverter;
++#ifdef JS_HAS_INTL_API
 +using double_conversion::DoubleToStringConverter;
 +using double_conversion::StringToDoubleConverter;
++#else
+ using icu::double_conversion::DoubleToStringConverter;
+ using icu::double_conversion::StringToDoubleConverter;
++#endif
  
  namespace {
  
+ int8_t NEGATIVE_FLAG = 1;
+ int8_t INFINITY_FLAG = 2;
+ int8_t NAN_FLAG = 4;
+ 
+ /** Helper function for safe subtraction (no overflow). */
 diff --git a/intl/icu/source/i18n/number_rounding.cpp b/intl/icu/source/i18n/number_rounding.cpp
-index e6bb509ffd75a..4da6f4a4b00a9 100644
 --- a/intl/icu/source/i18n/number_rounding.cpp
 +++ b/intl/icu/source/i18n/number_rounding.cpp
-@@ -10,7 +10,7 @@
+@@ -5,17 +5,21 @@
+ 
+ #if !UCONFIG_NO_FORMATTING
+ 
+ #include "charstr.h"
+ #include "uassert.h"
  #include "unicode/numberformatter.h"
  #include "number_types.h"
  #include "number_decimalquantity.h"
--#include "double-conversion.h"
++#ifdef JS_HAS_INTL_API
 +#include "double-conversion/double-conversion.h"
++#else
+ #include "double-conversion.h"
++#endif
  #include "number_roundingutils.h"
  #include "number_skeletons.h"
  #include "number_decnum.h"
+ #include "putilimp.h"
+ #include "string_segment.h"
+ 
+ using namespace icu;
+ using namespace icu::number;
 diff --git a/intl/icu/source/i18n/number_utils.cpp b/intl/icu/source/i18n/number_utils.cpp
-index ad7053214077b..a6c09adc61f18 100644
 --- a/intl/icu/source/i18n/number_utils.cpp
 +++ b/intl/icu/source/i18n/number_utils.cpp
-@@ -17,7 +17,7 @@
+@@ -12,26 +12,34 @@
+ #include <stdlib.h>
+ #include <cmath>
+ #include "number_decnum.h"
+ #include "number_types.h"
+ #include "number_utils.h"
  #include "charstr.h"
  #include "decContext.h"
  #include "decNumber.h"
--#include "double-conversion.h"
++#ifdef JS_HAS_INTL_API
 +#include "double-conversion/double-conversion.h"
++#else
+ #include "double-conversion.h"
++#endif
  #include "fphdlimp.h"
  #include "uresimp.h"
  #include "ureslocs.h"
-@@ -26,7 +26,7 @@ using namespace icu;
+ 
+ using namespace icu;
  using namespace icu::number;
  using namespace icu::number::impl;
  
--using icu::double_conversion::DoubleToStringConverter;
++#ifdef JS_HAS_INTL_API
 +using double_conversion::DoubleToStringConverter;
++#else
+ using icu::double_conversion::DoubleToStringConverter;
++#endif
  
  
  namespace {
+ 
+ const char16_t*
+ doGetPattern(UResourceBundle* res, const char* nsName, const char* patternKey, UErrorCode& publicStatus,
+              UErrorCode& localStatus) {
+     // Construct the path into the resource bundle
 diff --git a/intl/icu/source/i18n/units_converter.cpp b/intl/icu/source/i18n/units_converter.cpp
-index b89f495121006..2c648933a8b18 100644
 --- a/intl/icu/source/i18n/units_converter.cpp
 +++ b/intl/icu/source/i18n/units_converter.cpp
-@@ -7,7 +7,7 @@
+@@ -2,17 +2,21 @@
+ // License & terms of use: http://www.unicode.org/copyright.html
+ 
+ #include "unicode/utypes.h"
+ 
+ #if !UCONFIG_NO_FORMATTING
  
  #include "charstr.h"
  #include "cmemory.h"
--#include "double-conversion-string-to-double.h"
++#ifdef JS_HAS_INTL_API
 +#include "double-conversion/string-to-double.h"
++#else
+ #include "double-conversion-string-to-double.h"
++#endif
  #include "measunit_impl.h"
  #include "putilimp.h"
  #include "uassert.h"
-@@ -106,7 +106,7 @@ namespace {
+ #include "unicode/errorcode.h"
+ #include "unicode/localpointer.h"
+ #include "unicode/stringpiece.h"
+ #include "units_converter.h"
+ #include <algorithm>
+@@ -101,17 +105,21 @@ void U_I18N_API Factor::substituteConsta
+         this->constantExponents[i] = 0;
+     }
+ }
+ 
+ namespace {
  
  /* Helpers */
  
--using icu::double_conversion::StringToDoubleConverter;
++#ifdef JS_HAS_INTL_API
 +using double_conversion::StringToDoubleConverter;
++#else
+ using icu::double_conversion::StringToDoubleConverter;
++#endif
  
  // TODO: Make this a shared-utility function.
  // Returns `double` from a scientific number(i.e. "1", "2.01" or "3.09E+4")
+ double strToDouble(StringPiece strNum, UErrorCode &status) {
+     // We are processing well-formed input, so we don't need any special options to
+     // StringToDoubleConverter.
+     StringToDoubleConverter converter(0, 0, 0, "", "");
+     int32_t count;

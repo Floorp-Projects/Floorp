@@ -22,13 +22,3 @@ if CONFIG["TARGET_ENDIANNESS"] == "big":
     HOST_DEFINES["U_I18N_IMPLEMENTATION"] = True
     HOST_SOURCES += sources
     HOST_SOURCES += other_sources
-    HOST_SOURCES += [
-        "/mfbt/double-conversion/double-conversion/bignum-dtoa.cc",
-        "/mfbt/double-conversion/double-conversion/bignum.cc",
-        "/mfbt/double-conversion/double-conversion/cached-powers.cc",
-        "/mfbt/double-conversion/double-conversion/double-to-string.cc",
-        "/mfbt/double-conversion/double-conversion/fast-dtoa.cc",
-        "/mfbt/double-conversion/double-conversion/fixed-dtoa.cc",
-        "/mfbt/double-conversion/double-conversion/string-to-double.cc",
-        "/mfbt/double-conversion/double-conversion/strtod.cc",
-    ]

@@ -10,7 +10,11 @@
 #include "unicode/numberformatter.h"
 #include "number_types.h"
 #include "number_decimalquantity.h"
+#ifdef JS_HAS_INTL_API
 #include "double-conversion/double-conversion.h"
+#else
+#include "double-conversion.h"
+#endif
 #include "number_roundingutils.h"
 #include "number_skeletons.h"
 #include "number_decnum.h"

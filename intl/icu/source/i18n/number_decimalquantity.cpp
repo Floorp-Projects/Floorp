@@ -16,7 +16,11 @@
 #include "putilimp.h"
 #include "number_decimalquantity.h"
 #include "number_roundingutils.h"
+#ifdef JS_HAS_INTL_API
 #include "double-conversion/double-conversion.h"
+#else
+#include "double-conversion.h"
+#endif
 #include "charstr.h"
 #include "number_utils.h"
 #include "uassert.h"
@@ -26,8 +30,13 @@ using namespace icu;
 using namespace icu::number;
 using namespace icu::number::impl;
 
+#ifdef JS_HAS_INTL_API
 using double_conversion::DoubleToStringConverter;
 using double_conversion::StringToDoubleConverter;
+#else
+using icu::double_conversion::DoubleToStringConverter;
+using icu::double_conversion::StringToDoubleConverter;
+#endif
 
 namespace {
 
