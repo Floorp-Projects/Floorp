@@ -73,7 +73,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">Mae %1$s yn dileu eich cwcis, hanes, a data gwefan pan fyddwch yn cau eich holl ffenestri preifat. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">Mae %1$s yn dileu eich cwcis, hanes, a data gwefan pan fyddwch yn cau eich holl ffenestri preifat. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">Mae %1$s yn dileu eich cwcis, hanes, a data gwefan pan fyddwch yn cau eich holl dabiau preifat. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -323,10 +328,12 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Gwnewch Firefox yn borwr i chi</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Gwnewch Firefox yn borwr i chi</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Mae Firefox yn rhoi pobl o flaen elw ac yn diogelu eich preifatrwydd trwy rwystro tracwyr traws-gwefan.\n\nDysgwch ragor yn ein hysbysiad preifatrwydd.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Mae Firefox yn rhoi pobl o flaen elw ac yn diogelu eich preifatrwydd trwy rwystro tracwyr traws-gwefan.\n\nDysgwch ragor yn ein hysbysiad preifatrwydd.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Mae ein porwr dielw yn helpu i atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we.\n\nDysgwch fwy yn ein hysbysiad preifatrwydd.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">hysbysiad preifatrwydd</string>
@@ -335,19 +342,22 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Ewch o’r ffôn i’r gliniadur ac yn ôl</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Ewch o’r ffôn i’r gliniadur ac yn ôl</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Cipiwch dabiau a chyfrineiriau o’ch dyfeisiau eraill i barhau lle roeddech chi gynt.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Cipiwch dabiau a chyfrineiriau o’ch dyfeisiau eraill i barhau lle roeddech chi gynt.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Mewngofnodi</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nid nawr</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud rhagor gyda Firefox</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Mae hysbysiadau yn eich helpu i wneud rhagor gyda Firefox</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Mae hysbysiadau yn eich helpu i aros yn fwy diogel gyda Firefox</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Yn anfon tabiau rhwng dyfeisiau, rheoli llwythi, a chael awgrymiadau am sut i gael y gorau o Firefox.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Yn anfon tabiau rhwng dyfeisiau, rheoli llwythi, a chael awgrymiadau am sut i gael y gorau o Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Troi hysbysiadau ymlaen</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -386,7 +396,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Dewiswch un</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Rheoli llwybrau byr chwilio</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Rheoli llwybrau byr chwilio</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Rheoli peiriannau chwilio amgen</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Golygu peiriannau sy’n weladwy yn y ddewislen chwilio</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -397,8 +409,16 @@
     <string name="preferences_search">Chwilio</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Peiriannau chwilio</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Awgrymiadau o beiriannau chwilio</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Bar cyfeiriad</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Bar cyfeiriad</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Dewisiadau bar cyfeiriad</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Bar cyfeiriad - Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Dysgwch fwy am Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Graddio ar Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -985,9 +1005,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Enw’r casgliad</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Ailenwi</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Tynnu</string>
+    <string name="rename_top_site">Ailenwi</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Tynnu</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Dileu o’r hanes</string>
@@ -1938,7 +1958,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Golygu peiriant chwilio</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Ychwanegu</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Ychwanegu</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Cadw</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1947,17 +1967,17 @@
     <string name="search_engine_delete">Dileu</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Eraill</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Eraill</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Enw</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Enw</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Enw</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Enw peiriant chwilio</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL llinyn chwilio</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Llinyn chwilio i’w ddefnyddio</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Llinyn chwilio i’w ddefnyddio</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL i’w ddefnyddio i chwilio</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2104,14 +2124,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Llwybrau byr</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Enw</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Enw</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Enw llwybr byr</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">Iawn</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Diddymu</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">Iawn</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Diddymu</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Gosodiadau</string>

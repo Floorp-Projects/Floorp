@@ -73,7 +73,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">‏%1$s מוחק את העוגיות, ההיסטוריה ונתוני האתר שלך כאשר כל החלונות הפרטיים שלך נסגרים. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">‏%1$s מוחק את העוגיות, ההיסטוריה ונתוני האתר שלך כאשר כל החלונות הפרטיים שלך נסגרים. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">‏%1$s מוחק את העוגיות, ההיסטוריה ונתוני האתר שלך כאשר כל הלשוניות הפרטיות שלך נסגרות. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -324,22 +329,32 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">הגדרת Firefox כדפדפן ברירת המחדל שלך</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">הגדרת Firefox כדפדפן ברירת המחדל שלך</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">אנחנו אוהבים לשמור עליך</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">הגדרה כדפדפן ברירת המחדל</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">לא כעת</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">לקפוץ מהטלפון למחשב הנייד ובחזרה</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">לקפוץ מהטלפון למחשב הנייד ובחזרה</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">להישאר מוצפן במעבר בין מכשירים</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">ניתן לקבל לשוניות וססמאות מהמכשירים האחרים שלך כדי להמשיך מאיפה שהפסקת.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">ניתן לקבל לשוניות וססמאות מהמכשירים האחרים שלך כדי להמשיך מאיפה שהפסקת.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">כאשר החשבון שלך מחובר ומסונכרן, אתה מוגן יותר. Firefox מצפין את הססמאות והסימניות שלך ועוד.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">כניסה</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">לא כעת</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">התרעות עוזרות לך לעשות יותר עם Firefox</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">התרעות עוזרות לך לעשות יותר עם Firefox</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">התרעות עוזרות לך להישאר בטוח יותר עם Firefox</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">הפעלת התרעות</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -378,7 +393,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">יש לבחור אחד</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">ניהול קיצורי דרך לחיפוש</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">ניהול קיצורי דרך לחיפוש</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">ניהול מנועי חיפוש חלופיים</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">עריכת מנועים הגלויים בתפריט החיפוש</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -389,8 +406,16 @@
     <string name="preferences_search">חיפוש</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">מנועי חיפוש</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">הצעות ממנועי חיפוש</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">שורת כתובת</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">שורת כתובת</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">העדפות שורת הכתובת</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">שורת הכתובת - Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">מידע נוסף על Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">דירוג ב־Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -922,9 +947,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">שם האוסף</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">שינוי שם</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">הסרה</string>
+    <string name="rename_top_site">שינוי שם</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">הסרה</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">מחיקה מההיסטוריה</string>
@@ -1880,7 +1905,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">עריכת מנוע חיפוש</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">הוספה</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">הוספה</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">שמירה</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1889,17 +1914,17 @@
     <string name="search_engine_delete">מחיקה</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">אחר</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">אחר</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">שם</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">שם</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">שם</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">שם מנוע החיפוש</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">כתובת מחרוזת החיפוש</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">מחרוזת חיפוש לשימוש</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">מחרוזת חיפוש לשימוש</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">כתובת URL לשימוש לחיפוש</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2045,14 +2070,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">קיצורי דרך</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">שם</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">שם</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">שם קיצור הדרך</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">אישור</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">ביטול</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">אישור</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">ביטול</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">הגדרות</string>

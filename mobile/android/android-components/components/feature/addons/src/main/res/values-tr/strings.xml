@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">İzinler hakkında daha fazla bilgi alın</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Puan</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Bu eklenti hakkında daha fazla bilgi</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ayarlar</string>
     <!-- Indicates the add-on is enabled. -->

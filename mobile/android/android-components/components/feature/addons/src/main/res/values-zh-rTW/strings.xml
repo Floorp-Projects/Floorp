@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">了解權限的更多資訊</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">評分</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">關於此附加元件的更多資訊</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">設定</string>
     <!-- Indicates the add-on is enabled. -->

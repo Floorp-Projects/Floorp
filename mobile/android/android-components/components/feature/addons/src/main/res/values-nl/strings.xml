@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Meer info over toestemmingen</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Waardering</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Meer over deze add-on</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Instellingen</string>
     <!-- Indicates the add-on is enabled. -->

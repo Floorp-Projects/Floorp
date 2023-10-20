@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Dalše informacije wo prawach</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Pohódnoćenje</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Wjace wo tutym přidatku</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Nastajenja</string>
     <!-- Indicates the add-on is enabled. -->

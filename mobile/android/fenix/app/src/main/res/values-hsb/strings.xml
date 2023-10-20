@@ -73,7 +73,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">%1$s waše placki, historiju a sydłowe daty zhaša, hdyž wšě swoje priwatne wokna začinjeće. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s waše placki, historiju a sydłowe daty zhaša, hdyž wšě swoje priwatne wokna začinjeće. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s waše placki, historiju a sydłowe daty zhaša, hdyž wšě swoje priwatne rajtarki začinjeće. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -324,10 +329,10 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Wužiwajće Firefox po puću</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Wužiwajće Firefox po puću</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ludźi nad dobytki staja a blokuje sydła přesahowace slědowaki, zo by wašu priwatnosć škitał.\n\nDalše informacije w našej zdźělence priwatnosće.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox ludźi nad dobytki staja a blokuje sydła přesahowace slědowaki, zo by wašu priwatnosć škitał.\n\nDalše informacije w našej zdźělence priwatnosće.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">zdźělenka priwatnosće</string>
@@ -336,19 +341,22 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Skočće wot smóratka do laptopa a wróćo</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Skočće wot smóratka do laptopa a wróćo</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Wobstarajće sej rajtarki a hesła z druhich gratow, zo byšće tam pokročował, hdźež sće přestał.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Wobstarajće sej rajtarki a hesła z druhich gratow, zo byšće tam pokročował, hdźež sće přestał.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Přizjewić</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nic nětko</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Zdźělenki wam pomhaja, wjace z Firefox činić</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Zdźělenki wam pomhaja, wjace z Firefox činić</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Zdźělenki wam pomhaja, z Firefox wěsćiši wostać</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Sćelće rajtarki mjez gratami, rjadujće sćehnjenja a dóstańće pokiwy, zo byšće najwjace z Firefox wućahnył.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Sćelće rajtarki mjez gratami, rjadujće sćehnjenja a dóstańće pokiwy, zo byšće najwjace z Firefox wućahnył.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Zdźělenki zmóžnić</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -387,7 +395,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Wubjerće jednu</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Pytanske skrótšenki rjadować</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Pytanske skrótšenki rjadować</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Alternatiwne pytawy rjadować</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Pytawy wobdźěłać, kotrež su w pytanskim meniju</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -398,8 +408,16 @@
     <string name="preferences_search">Pytać</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Pytawy</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Namjety wot pytawow</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Adresowe polo</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Adresowe polo</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Nastajenja adresoweho pola</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Adresowe polo – Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Zhońće wjace wo Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Na Google Play pohódnoćić</string>
     <!-- Preference linking to about page for Fenix
@@ -989,9 +1007,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Mjeno zběrki</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Přemjenować</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Wotstronić</string>
+    <string name="rename_top_site">Přemjenować</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Wotstronić</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Z historije zhašeć</string>
@@ -1946,7 +1964,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Pytawu wobdźěłać</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Přidać</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Přidać</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Składować</string>
 
@@ -1956,17 +1974,17 @@
     <string name="search_engine_delete">Zhašeć</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Druhe</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Druhe</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Mjeno</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Mjeno</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Mjeno</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Mjeno pytawy</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL pytanskeho wuraza</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Pytanski wuraz, kotryž ma so wužiwać</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Pytanski wuraz, kotryž ma so wužiwać</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL, kotryž so ma za pytanje wužiwać</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2112,14 +2130,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Zwjazanja</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Mjeno</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Mjeno</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Mjeno zwjazanja</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">W porjadku</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Přetorhnyć</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">W porjadku</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Přetorhnyć</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Nastajenja</string>

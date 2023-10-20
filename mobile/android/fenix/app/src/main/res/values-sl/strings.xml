@@ -74,7 +74,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">Ko zaprete vsa zasebna okna, %1$s izbriše piškotke, zgodovino in podatke o spletnih mestih. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">Ko zaprete vsa zasebna okna, %1$s izbriše piškotke, zgodovino in podatke o spletnih mestih. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">Ko zaprete vse zasebne zavihke, %1$s izbriše piškotke, zgodovino in podatke o spletnih mestih. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -326,10 +331,10 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Naj bo Firefox vaš brskalnik za vsakodnevna opravila</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Naj bo Firefox vaš brskalnik za vsakodnevna opravila</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox daje ljudem prednost pred dobičkom in ščiti vašo zasebnost, tako da zavrača medspletne sledilce.\n\nPreberite več v našem obvestilu o zasebnosti.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox daje ljudem prednost pred dobičkom in ščiti vašo zasebnost, tako da zavrača medspletne sledilce.\n\nPreberite več v našem obvestilu o zasebnosti.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">obvestilu o zasebnosti</string>
@@ -338,19 +343,19 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ne zdaj</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Skočite s telefona na računalnik in nazaj</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Skočite s telefona na računalnik in nazaj</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Zajemite zavihke in gesla iz drugih naprav, da nadaljujete tam, kjer ste končali.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Zajemite zavihke in gesla iz drugih naprav, da nadaljujete tam, kjer ste končali.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Prijava</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ne zdaj</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Obvestila vam pomagajo pri delu s Firefoxom</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Obvestila vam pomagajo pri delu s Firefoxom</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Pošiljajte zavihke med napravami, upravljajte prenose in prejemajte nasvete, kako kar najbolje izkoristiti Firefox.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Pošiljajte zavihke med napravami, upravljajte prenose in prejemajte nasvete, kako kar najbolje izkoristiti Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Vklopi obvestila</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -390,7 +395,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Izberite enega</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Upravljanje bližnjic za iskanje</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Upravljanje bližnjic za iskanje</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Uredi iskalnike, vidne v iskalnem meniju</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -402,7 +407,7 @@
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Iskalnike</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Naslovna vrstica</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Naslovna vrstica</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Oceni v trgovini Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -992,9 +997,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Ime zbirke</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Preimenuj</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Odstrani</string>
+    <string name="rename_top_site">Preimenuj</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Odstrani</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Izbriši iz zgodovine</string>
@@ -1958,7 +1963,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Urejanje iskalnika</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Dodaj</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Dodaj</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Shrani</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1967,17 +1972,17 @@
     <string name="search_engine_delete">Izbriši</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Drugo</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Drugo</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Ime</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Ime</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Ime</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Ime iskalnika</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL iskalnega niza</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Iskalni niz za uporabo</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Iskalni niz za uporabo</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL za uporabo pri iskanju</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2126,14 +2131,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Bližnjice</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Ime</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Ime</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Ime bližnjice</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">V redu</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Prekliči</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">V redu</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Prekliči</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Nastavitve</string>

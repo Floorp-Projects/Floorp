@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Mear ynfo oer tastimmingen</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Wurdearring</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Mear oer dizze add-on</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ynstellingen</string>
     <!-- Indicates the add-on is enabled. -->

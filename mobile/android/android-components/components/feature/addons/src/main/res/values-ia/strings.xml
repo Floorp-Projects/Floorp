@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Saper plus sur le permissiones</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Valutation</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Altero re iste additivo</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Parametros</string>
     <!-- Indicates the add-on is enabled. -->

@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">מידע נוסף על הרשאות</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">דירוג</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">עוד על התוספת הזאת</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">הגדרות</string>
     <!-- Indicates the add-on is enabled. -->

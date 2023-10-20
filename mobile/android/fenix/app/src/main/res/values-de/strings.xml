@@ -76,7 +76,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">%1$s löscht Ihre Cookies, Chronik und Website-Daten, wenn Sie alle Ihre privaten Fenster schließen. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s löscht Ihre Cookies, Chronik und Website-Daten, wenn Sie alle Ihre privaten Fenster schließen. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s löscht Ihre Cookies, Chronik und Website-Daten, wenn Sie alle Ihre privaten Tabs schließen. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -330,10 +335,14 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Machen Sie Firefox zu Ihrem Browser Nr. 1.</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Machen Sie Firefox zu Ihrem Browser Nr. 1.</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Wir schützen Sie gerne</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox stellt Menschen über Gewinne und schützt Ihre Privatsphäre, indem er websiteübergreifende Tracker blockiert.\n\nErfahren Sie mehr in unserem Datenschutzhinweis.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox stellt Menschen über Gewinne und schützt Ihre Privatsphäre, indem er websiteübergreifende Tracker blockiert.\n\nErfahren Sie mehr in unserem Datenschutzhinweis.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Unser gemeinnützig unterstützter Browser verhindert, dass Unternehmen heimlich Ihre Aktivitäten im Internet verfolgen.\n\nWeitere Informationen finden Sie in unserem Datenschutzhinweis.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">Datenschutzhinweis</string>
@@ -342,19 +351,30 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nicht jetzt</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Wechseln Sie vom Handy zum Laptop und zurück</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Wechseln Sie vom Handy zum Laptop und zurück</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Verschlüsseln Sie ihre Daten, wenn Sie geräteübergreifend arbeiten</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Holen Sie sich die Tabs und Passwörter von Ihren anderen Geräten, um dort weiterzumachen, wo Sie aufgehört haben.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Holen Sie sich die Tabs und Passwörter von Ihren anderen Geräten, um dort weiterzumachen, wo Sie aufgehört haben.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Wenn Sie angemeldet und synchronisiert sind, sind Sie sicherer. Firefox verschlüsselt deine Passwörter, Lesezeichen und mehr.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Anmelden</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Nicht jetzt</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Benachrichtigungen helfen Ihnen, mehr aus Firefox zu machen</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Benachrichtigungen helfen Ihnen, mehr aus Firefox zu machen</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Benachrichtigungen helfen dir, mit Firefox sicherer zu sein</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Versenden Sie Tabs zwischen Geräten, verwalten Sie Downloads und erhalten Sie Tipps zur optimalen Nutzung von Firefox.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Versenden Sie Tabs zwischen Geräten, verwalten Sie Downloads und erhalten Sie Tipps zur optimalen Nutzung von Firefox.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Versenden Sie Tabs sicher zwischen Ihren Geräten und entdecken Sie andere Datenschutzfunktionen in Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Benachrichtigungen aktivieren</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -394,7 +414,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Eine Option auswählen</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Kürzel für die Suche verwalten</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Kürzel für die Suche verwalten</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Alternative Suchmaschinen verwalten</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Im Suchmenü sichtbare Suchmaschinen bearbeiten</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -405,8 +427,16 @@
     <string name="preferences_search">Suchen</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Suchmaschinen</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Vorschläge von Suchmaschinen</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Adressleiste</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Adressleiste</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Einstellungen in der Adressleiste</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Adressleiste – Firefox-Vorschläge</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Weitere Infos zu Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Bei Google Play bewerten</string>
     <!-- Preference linking to about page for Fenix
@@ -995,9 +1025,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Name der Sammlung</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Umbenennen</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Entfernen</string>
+    <string name="rename_top_site">Umbenennen</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Entfernen</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Aus Chronik löschen</string>
@@ -1973,7 +2003,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Suchmaschine bearbeiten</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Hinzufügen</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Hinzufügen</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Speichern</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1982,17 +2012,17 @@
     <string name="search_engine_delete">Löschen</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Andere</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Andere</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Name</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Name</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Name</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Name der Suchmaschine</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Such-String-URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Zu verwendender Such-String</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Zu verwendender Such-String</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">Für die Suche zu verwendende URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2138,14 +2168,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Verknüpfungen</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Name</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Name</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Name der Verknüpfung</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Abbrechen</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Abbrechen</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Einstellungen</string>

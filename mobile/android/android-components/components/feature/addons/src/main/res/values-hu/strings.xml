@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">További tudnivalók az engedélyekről</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Értékelés</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">További tudnivalók a kiegészítőről</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Beállítások</string>
     <!-- Indicates the add-on is enabled. -->
