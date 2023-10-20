@@ -3059,6 +3059,32 @@ void MacroAssembler::guardSpecificAtom(Register str, JSAtom* atom,
   branch32(Assembler::NotEqual, Address(str, JSString::offsetOfLength()),
            Imm32(atom->length()), fail);
 
+  // Compare short atoms using inline assembly.
+  if (canCompareStringCharsInline(atom)) {
+    // Pure two-byte strings can't be equal to Latin-1 strings.
+    if (atom->hasTwoByteChars()) {
+      JS::AutoCheckCannotGC nogc;
+      if (!mozilla::IsUtf16Latin1(atom->twoByteRange(nogc))) {
+        branchLatin1String(str, fail);
+      }
+    }
+
+    // Call into the VM when the input is a rope or has a different encoding.
+    Label vmCall;
+
+    // Load the input string's characters.
+    Register stringChars = scratch;
+    loadStringCharsForCompare(str, atom, stringChars, &vmCall);
+
+    // Start comparing character by character.
+    branchIfNotStringCharsEquals(stringChars, atom, fail);
+
+    // Falls through if both strings are equal.
+    jump(&done);
+
+    bind(&vmCall);
+  }
+
   // We have a non-atomized string with the same length. Call a helper
   // function to do the comparison.
   PushRegsInMask(volatileRegs);
