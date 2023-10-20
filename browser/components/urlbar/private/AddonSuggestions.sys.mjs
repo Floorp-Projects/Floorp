@@ -47,10 +47,6 @@ export class AddonSuggestions extends BaseFeature {
     return "amo";
   }
 
-  get rustSuggestionTypes() {
-    return ["Amo"];
-  }
-
   enable(enabled) {
     if (enabled) {
       lazy.QuickSuggest.jsBackend.register(this);
@@ -124,19 +120,14 @@ export class AddonSuggestions extends BaseFeature {
     }
 
     const { guid } =
-      suggestion.source === "merino"
-        ? suggestion.custom_details.amo
-        : suggestion;
+      suggestion.source === "remote-settings"
+        ? suggestion
+        : suggestion.custom_details.amo;
 
     const addon = await lazy.AddonManager.getAddonByID(guid);
     if (addon) {
       // Addon suggested is already installed.
       return null;
-    }
-
-    if (suggestion.source == "rust") {
-      suggestion.icon = suggestion.iconUrl;
-      delete suggestion.iconUrl;
     }
 
     // Set UTM params unless they're already defined. This allows remote

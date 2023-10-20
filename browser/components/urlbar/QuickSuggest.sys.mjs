@@ -150,16 +150,6 @@ class _QuickSuggest {
     return this.#features.Weather;
   }
 
-  /**
-   * @returns {Iterator}
-   *   An iterator over the names of all Rust suggestion types ("Adm",
-   *   "Wikipedia", etc.) that are managed by registered features (as defined by
-   *   `feature.rustSuggestionTypes`).
-   */
-  get registeredRustSuggestionTypes() {
-    return this.#featuresByRustSuggestionType.keys();
-  }
-
   get logger() {
     if (!this._logger) {
       this._logger = lazy.UrlbarUtils.getLogger({ prefix: "QuickSuggest" });
