@@ -10836,14 +10836,36 @@ fx_suggest:
   ping_type:
     type: string
     description: >
-      The ping's type. Currently always "fxsuggest-click".
+      The ping's type. Either "fxsuggest-click" or "fxsuggest-impression".
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
+      - https://github.com/mozilla-mobile/firefox-android/pull/4146#issuecomment-1775955811
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  position:
+    type: quantity
+    unit: non-negative integer
+    description: >
+      The position (1-based) of this suggestion in the full list of suggestions, relative to the
+      top of the awesomebar.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858542
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4146#issuecomment-1775955811
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com
@@ -10857,10 +10879,11 @@ fx_suggest:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com
@@ -10875,10 +10898,30 @@ fx_suggest:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - fx-suggest
+  is_clicked:
+    type: boolean
+    description: >
+      If `ping_type` is "fxsuggest-impression", indicates whether this impression is for a clicked
+      suggestion. If `ping_type` is "fxsuggest-click", always `true`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858542
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4146#issuecomment-1775955811
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com
@@ -10892,10 +10935,11 @@ fx_suggest:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com
@@ -10909,10 +10953,11 @@ fx_suggest:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com
@@ -10926,10 +10971,11 @@ fx_suggest:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
-      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+      - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1768996728
     data_sensitivity:
       - interaction
     notification_emails:
+      - android-probes@mozilla.com
       - lina@mozilla.com
       - ttran@mozilla.com
       - najiang@mozilla.com

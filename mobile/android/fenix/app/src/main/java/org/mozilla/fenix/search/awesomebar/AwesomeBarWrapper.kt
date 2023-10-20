@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.AbstractComposeView
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.compose.browser.awesomebar.AwesomeBar
 import mozilla.components.compose.browser.awesomebar.AwesomeBarDefaults
 import mozilla.components.compose.browser.awesomebar.AwesomeBarOrientation
@@ -64,6 +65,7 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                     groupTitle = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
                 ),
                 onSuggestionClicked = { suggestion ->
+                    context.components.core.store.dispatch(AwesomeBarAction.SuggestionClicked(suggestion))
                     suggestion.onSuggestionClicked?.invoke()
                     when {
                         suggestion.flags.contains(AwesomeBar.Suggestion.Flag.HISTORY) -> {
@@ -77,6 +79,9 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                 },
                 onAutoComplete = { suggestion ->
                     onEditSuggestionListener?.invoke(suggestion.editSuggestion!!)
+                },
+                onVisibilityStateUpdated = {
+                    context.components.core.store.dispatch(AwesomeBarAction.VisibilityStateUpdated(it))
                 },
                 onScroll = { hideKeyboard() },
                 profiler = context.components.core.engine.profiler,

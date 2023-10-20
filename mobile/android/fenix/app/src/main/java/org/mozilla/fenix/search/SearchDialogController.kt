@@ -12,6 +12,7 @@ import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
@@ -88,11 +89,13 @@ class SearchDialogController(
                 // fennec users may be used to navigating to "about:crashes". So we intercept this here
                 // and open the crash list activity instead.
                 activity.startActivity(Intent(activity, CrashListActivity::class.java))
+                store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
             }
             "about:addons" -> {
                 val directions =
                     SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
                 navController.navigateSafe(R.id.searchDialogFragment, directions)
+                store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
             }
             "moz://a" -> openSearchOrUrl(
                 SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
@@ -101,6 +104,8 @@ class SearchDialogController(
             else ->
                 if (url.isNotBlank()) {
                     openSearchOrUrl(url, fromHomeScreen)
+                } else {
+                    store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
                 }
         }
         dismissDialog()
@@ -143,6 +148,8 @@ class SearchDialogController(
                 searchAccessPoint,
             )
         }
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
     }
 
     override fun handleEditingCancelled() {
@@ -193,6 +200,8 @@ class SearchDialogController(
         )
 
         Events.enteredUrl.record(Events.EnteredUrlExtra(autocomplete = false))
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
     }
 
     override fun handleSearchTermsTapped(searchTerms: String) {
@@ -228,6 +237,8 @@ class SearchDialogController(
                 searchAccessPoint,
             )
         }
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
     }
 
     override fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine) {
@@ -280,6 +291,7 @@ class SearchDialogController(
         clearToolbarFocus()
         val directions = SearchDialogFragmentDirections.actionGlobalSearchEngineFragment()
         navController.navigateSafe(R.id.searchDialogFragment, directions)
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
     }
 
     override fun handleExistingSessionSelected(tabId: String) {
@@ -290,6 +302,8 @@ class SearchDialogController(
         activity.openToBrowser(
             from = BrowserDirection.FromSearchDialog,
         )
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false))
     }
 
     /**
@@ -345,6 +359,9 @@ class SearchDialogController(
                 intent.data = uri
                 dialog.cancel()
                 activity.startActivity(intent)
+            }
+            setOnDismissListener {
+                store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
             }
             create().withCenterAlignedButtons()
         }

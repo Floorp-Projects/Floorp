@@ -46,6 +46,7 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mozilla.components.browser.state.action.AwesomeBarAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
@@ -634,6 +635,9 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         hideDeviceKeyboard()
+        if (!dialogHandledAction) {
+            requireComponents.core.store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = true))
+        }
     }
 
     override fun onBackPressed(): Boolean {

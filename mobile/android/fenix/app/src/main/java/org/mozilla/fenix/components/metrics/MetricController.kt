@@ -281,16 +281,37 @@ internal class ReleaseMetricController(
         }
 
         Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED -> {
+            FxSuggest.pingType.set("fxsuggest-click")
+            FxSuggest.isClicked.set(true)
+            (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
+                FxSuggest.position.set(it)
+            }
             (metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)?.let {
-                FxSuggest.pingType.set("fxsuggest-click")
                 FxSuggest.blockId.set(it.blockId)
                 FxSuggest.advertiser.set(it.advertiser)
                 FxSuggest.reportingUrl.set(it.reportingUrl)
                 FxSuggest.iabCategory.set(it.iabCategory)
                 FxSuggest.contextId.set(UUID.fromString(it.contextId))
-                Pings.fxSuggest.submit()
             }
-            Unit
+            Pings.fxSuggest.submit()
+        }
+
+        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED -> {
+            FxSuggest.pingType.set("fxsuggest-impression")
+            (metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)?.let {
+                FxSuggest.isClicked.set(it)
+            }
+            (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
+                FxSuggest.position.set(it)
+            }
+            (metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)?.let {
+                FxSuggest.blockId.set(it.blockId)
+                FxSuggest.advertiser.set(it.advertiser)
+                FxSuggest.reportingUrl.set(it.reportingUrl)
+                FxSuggest.iabCategory.set(it.iabCategory)
+                FxSuggest.contextId.set(UUID.fromString(it.contextId))
+            }
+            Pings.fxSuggest.submit()
         }
 
         Component.FEATURE_PWA to ProgressiveWebAppFacts.Items.HOMESCREEN_ICON_TAP -> {
