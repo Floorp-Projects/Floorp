@@ -13,16 +13,10 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/mscom/EnsureMTA.h"
-#include "mozilla/intl/FileSource.h"
-#include "mozilla/intl/Localization.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-#include "nsString.h"
-#include "nsTArray.h"
 #include "nsWindowsHelpers.h"
 #include "readstrings.h"
 #include "updatererrors.h"
@@ -35,8 +29,6 @@
 #include "SetDefaultBrowser.h"
 
 #include "wintoastlib.h"
-
-using mozilla::intl::Localization;
 
 #define SEVEN_DAYS_IN_SECONDS (7 * 24 * 60 * 60)
 
@@ -158,42 +150,6 @@ static bool GetStrings(Strings& strings) {
     LOG_ERROR_MESSAGE(L"Failed to get install directory when getting strings");
     return false;
   }
-  nsTArray<nsCString> resIds = {"branding/brand.ftl"_ns,
-                                "browser/backgroundtasks/defaultagent.ftl"_ns};
-  RefPtr<Localization> l10n = Localization::Create(resIds, true);
-  nsAutoCString daHeaderText, daBodyText, daYesButton, daNoButton;
-  mozilla::ErrorResult daRv;
-  l10n->FormatValueSync("default-browser-notification-header-text"_ns, {},
-                        daHeaderText, daRv);
-  ENSURE_SUCCESS(daRv, false);
-  l10n->FormatValueSync("default-browser-notification-body-text"_ns, {},
-                        daBodyText, daRv);
-  ENSURE_SUCCESS(daRv, false);
-  l10n->FormatValueSync("default-browser-notification-yes-button-text"_ns, {},
-                        daYesButton, daRv);
-  ENSURE_SUCCESS(daRv, false);
-  l10n->FormatValueSync("default-browser-notification-no-button-text"_ns, {},
-                        daNoButton, daRv);
-  ENSURE_SUCCESS(daRv, false);
-
-  NS_ConvertUTF8toUTF16 daHeaderTextW(daHeaderText), daBodyTextW(daBodyText),
-      daYesButtonW(daYesButton), daNoButtonW(daNoButton);
-  strings.localizedToast.text1 =
-      mozilla::MakeUnique<wchar_t[]>(daHeaderTextW.Length() + 1);
-  wcsncpy(strings.localizedToast.text1.get(), daHeaderTextW.get(),
-          daHeaderTextW.Length() + 1);
-  strings.localizedToast.text2 =
-      mozilla::MakeUnique<wchar_t[]>(daBodyTextW.Length() + 1);
-  wcsncpy(strings.localizedToast.text2.get(), daBodyTextW.get(),
-          daBodyTextW.Length() + 1);
-  strings.localizedToast.action1 =
-      mozilla::MakeUnique<wchar_t[]>(daYesButtonW.Length() + 1);
-  wcsncpy(strings.localizedToast.action1.get(), daYesButtonW.get(),
-          daYesButtonW.Length() + 1);
-  strings.localizedToast.action2 =
-      mozilla::MakeUnique<wchar_t[]>(daNoButtonW.Length() + 1);
-  wcsncpy(strings.localizedToast.action2.get(), daNoButtonW.get(),
-          daNoButtonW.Length() + 1);
   const wchar_t* iniFormat = L"%s\\defaultagent.ini";
   int bufferSize = _scwprintf(iniFormat, installPath.get());
   ++bufferSize;  // Extra character for terminating null
@@ -202,6 +158,54 @@ static bool GetStrings(Strings& strings) {
   _snwprintf_s(iniPath.get(), bufferSize, _TRUNCATE, iniFormat,
                installPath.get());
 
+  IniReader stringsReader(iniPath.get());
+  stringsReader.AddKey("DefaultBrowserNotificationTitle",
+                       &strings.initialToast.text1);
+  stringsReader.AddKey("DefaultBrowserNotificationTitle",
+                       &strings.followupToast.text1);
+  stringsReader.AddKey("DefaultBrowserNotificationText",
+                       &strings.initialToast.text2);
+  stringsReader.AddKey("DefaultBrowserNotificationText",
+                       &strings.followupToast.text2);
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+                       &strings.initialToast.action1);
+  stringsReader.AddKey("DefaultBrowserNotificationMakeFirefoxDefault",
+                       &strings.followupToast.action1);
+  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
+                       &strings.initialToast.action2);
+  stringsReader.AddKey("DefaultBrowserNotificationDontShowAgain",
+                       &strings.followupToast.action2);
+  int result = stringsReader.Read();
+  if (result != OK) {
+    LOG_ERROR_MESSAGE(L"Unable to read English strings: %d", result);
+    return false;
+  }
+
+  const wchar_t* localizedIniFormat = L"%s\\defaultagent_localized.ini";
+  bufferSize = _scwprintf(localizedIniFormat, installPath.get());
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> localizedIniPath =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  _snwprintf_s(localizedIniPath.get(), bufferSize, _TRUNCATE,
+               localizedIniFormat, installPath.get());
+
+  IniReader localizedReader(localizedIniPath.get());
+  localizedReader.AddKey("DefaultBrowserNotificationHeaderText",
+                         &strings.localizedToast.text1);
+  localizedReader.AddKey("DefaultBrowserNotificationBodyText",
+                         &strings.localizedToast.text2);
+  localizedReader.AddKey("DefaultBrowserNotificationYesButtonText",
+                         &strings.localizedToast.action1);
+  localizedReader.AddKey("DefaultBrowserNotificationNoButtonText",
+                         &strings.localizedToast.action2);
+  result = localizedReader.Read();
+  if (result != OK) {
+    LOG_ERROR_MESSAGE(L"Unable to read localized strings: %d", result);
+    return false;
+  }
+
+  // IniReader is only capable of reading from one section at a time, so we need
+  // to make another one to read the other section.
   IniReader nonlocalizedReader(iniPath.get(), "Nonlocalized");
   nonlocalizedReader.AddKey("InitialToastRelativeImagePath",
                             &strings.initialToast.relImagePath);
@@ -209,7 +213,7 @@ static bool GetStrings(Strings& strings) {
                             &strings.followupToast.relImagePath);
   nonlocalizedReader.AddKey("LocalizedToastRelativeImagePath",
                             &strings.localizedToast.relImagePath);
-  int result = nonlocalizedReader.Read();
+  result = nonlocalizedReader.Read();
   if (result != OK) {
     LOG_ERROR_MESSAGE(L"Unable to read non-localized strings: %d", result);
     return false;
@@ -413,6 +417,23 @@ static NotificationActivities ShowNotification(
   NotificationActivities activitiesPerformed = {whichNotification,
                                                 NotificationShown::Error,
                                                 NotificationAction::NoAction};
+  using namespace WinToastLib;
+
+  if (!WinToast::isCompatible()) {
+    LOG_ERROR_MESSAGE(L"System is not compatible with WinToast");
+    return activitiesPerformed;
+  }
+
+  WinToast::instance()->setAppName(L"" MOZ_APP_DISPLAYNAME);
+  std::wstring aumiStr = aumi;
+  WinToast::instance()->setAppUserModelId(aumiStr);
+  WinToast::instance()->setShortcutPolicy(
+      WinToastLib::WinToast::SHORTCUT_POLICY_REQUIRE_NO_CREATE);
+  WinToast::WinToastError error;
+  if (!WinToast::instance()->initialize(&error)) {
+    LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
+    return activitiesPerformed;
+  }
 
   bool isEnglishInstall = FirefoxInstallIsEnglish();
 
@@ -423,138 +444,118 @@ static NotificationActivities ShowNotification(
   const ToastStrings* toastStrings =
       strings.GetToastStrings(whichNotification, isEnglishInstall);
 
-  mozilla::mscom::EnsureMTA([&] {
-    using namespace WinToastLib;
+  // This event object will let the handler notify us when it has handled the
+  // notification.
+  nsAutoHandle event(CreateEventW(nullptr, TRUE, FALSE, nullptr));
+  if (event.get() == nullptr) {
+    LOG_ERROR_MESSAGE(L"Unable to create event object: %#X", GetLastError());
+    return activitiesPerformed;
+  }
 
-    if (!WinToast::isCompatible()) {
-      LOG_ERROR_MESSAGE(L"System is not compatible with WinToast");
-      return;
-    }
-    WinToast::instance()->setAppName(L"" MOZ_APP_DISPLAYNAME);
-    std::wstring aumiStr = aumi;
-    WinToast::instance()->setAppUserModelId(aumiStr);
-    WinToast::instance()->setShortcutPolicy(
-        WinToastLib::WinToast::SHORTCUT_POLICY_REQUIRE_NO_CREATE);
-    WinToast::WinToastError error;
-    if (!WinToast::instance()->initialize(&error)) {
-      LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
-      return;
-    }
+  bool success = false;
+  if (whichNotification == NotificationType::Initial) {
+    success = SetInitialNotificationShown(true);
+  } else {
+    success = SetFollowupNotificationShown(true);
+  }
+  if (!success) {
+    // Return early in this case to prevent the notification from being shown
+    // on every run.
+    LOG_ERROR_MESSAGE(L"Unable to set notification as displayed");
+    return activitiesPerformed;
+  }
 
-    // This event object will let the handler notify us when it has handled the
-    // notification.
-    nsAutoHandle event(CreateEventW(nullptr, TRUE, FALSE, nullptr));
-    if (event.get() == nullptr) {
-      LOG_ERROR_MESSAGE(L"Unable to create event object: %#X", GetLastError());
-      return;
-    }
+  // We need the absolute image path, not the relative path.
+  mozilla::UniquePtr<wchar_t[]> installPath;
+  success = GetInstallDirectory(installPath);
+  if (!success) {
+    LOG_ERROR_MESSAGE(L"Failed to get install directory for the image path");
+    return activitiesPerformed;
+  }
+  const wchar_t* absPathFormat = L"%s\\%s";
+  int bufferSize = _scwprintf(absPathFormat, installPath.get(),
+                              toastStrings->relImagePath.get());
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> absImagePath =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  _snwprintf_s(absImagePath.get(), bufferSize, _TRUNCATE, absPathFormat,
+               installPath.get(), toastStrings->relImagePath.get());
 
-    bool success = false;
-    if (whichNotification == NotificationType::Initial) {
-      success = SetInitialNotificationShown(true);
+  // This is used to protect gHandlerReturnData.
+  gHandlerMutex = CreateMutexW(nullptr, TRUE, nullptr);
+  if (gHandlerMutex == nullptr) {
+    LOG_ERROR_MESSAGE(L"Unable to create mutex: %#X", GetLastError());
+    return activitiesPerformed;
+  }
+  // Automatically close this mutex when this function exits.
+  nsAutoHandle autoMutex(gHandlerMutex);
+  // No need to initialize gHandlerReturnData.activitiesPerformed, since it will
+  // be set by the handler. But we do need to initialize
+  // gHandlerReturnData.handlerDataHasBeenSet so the handler knows that no data
+  // has been set yet.
+  gHandlerReturnData.handlerDataHasBeenSet = false;
+  success = ReleaseMutex(gHandlerMutex);
+  if (!success) {
+    LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
+                      GetLastError());
+  }
+
+  // Finally ready to assemble the notification and dispatch it.
+  WinToastTemplate toastTemplate =
+      WinToastTemplate(WinToastTemplate::ImageAndText02);
+  toastTemplate.setTextField(toastStrings->text1.get(),
+                             WinToastTemplate::FirstLine);
+  toastTemplate.setTextField(toastStrings->text2.get(),
+                             WinToastTemplate::SecondLine);
+  toastTemplate.addAction(toastStrings->action1.get());
+  toastTemplate.addAction(toastStrings->action2.get());
+  toastTemplate.setImagePath(absImagePath.get());
+  toastTemplate.setScenario(WinToastTemplate::Scenario::Reminder);
+  ToastHandler* handler =
+      new ToastHandler(whichNotification, event.get(), aumi);
+  INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
+  if (id < 0) {
+    LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
+    return activitiesPerformed;
+  }
+
+  DWORD result = WaitForSingleObject(event.get(), NOTIFICATION_WAIT_TIMEOUT_MS);
+  // Don't return after these errors. Attempt to hide the notification.
+  if (result == WAIT_FAILED) {
+    LOG_ERROR_MESSAGE(L"Unable to wait on event object: %#X", GetLastError());
+  } else if (result == WAIT_TIMEOUT) {
+    LOG_ERROR_MESSAGE(L"Timed out waiting for event object");
+  } else {
+    result = WaitForSingleObject(gHandlerMutex, MUTEX_TIMEOUT_MS);
+    if (result == WAIT_TIMEOUT) {
+      LOG_ERROR_MESSAGE(L"Unable to obtain mutex ownership");
+      // activitiesPerformed is already set to error. No change needed.
+    } else if (result == WAIT_FAILED) {
+      LOG_ERROR_MESSAGE(L"Failed to wait on mutex: %#X", GetLastError());
+      // activitiesPerformed is already set to error. No change needed.
+    } else if (result == WAIT_ABANDONED) {
+      LOG_ERROR_MESSAGE(L"Found abandoned mutex");
+      ReleaseMutex(gHandlerMutex);
+      // activitiesPerformed is already set to error. No change needed.
     } else {
-      success = SetFollowupNotificationShown(true);
-    }
-    if (!success) {
-      // Return early in this case to prevent the notification from being shown
-      // on every run.
-      LOG_ERROR_MESSAGE(L"Unable to set notification as displayed");
-      return;
-    }
+      // Mutex is being held. It is safe to access gHandlerReturnData.
+      // If gHandlerReturnData.handlerDataHasBeenSet is false, the handler never
+      // ran. Use the error value activitiesPerformed already contains.
+      if (gHandlerReturnData.handlerDataHasBeenSet) {
+        activitiesPerformed = gHandlerReturnData.activitiesPerformed;
+      }
 
-    // We need the absolute image path, not the relative path.
-    mozilla::UniquePtr<wchar_t[]> installPath;
-    success = GetInstallDirectory(installPath);
-    if (!success) {
-      LOG_ERROR_MESSAGE(L"Failed to get install directory for the image path");
-      return;
-    }
-    const wchar_t* absPathFormat = L"%s\\%s";
-    int bufferSize = _scwprintf(absPathFormat, installPath.get(),
-                                toastStrings->relImagePath.get());
-    ++bufferSize;  // Extra character for terminating null
-    mozilla::UniquePtr<wchar_t[]> absImagePath =
-        mozilla::MakeUnique<wchar_t[]>(bufferSize);
-    _snwprintf_s(absImagePath.get(), bufferSize, _TRUNCATE, absPathFormat,
-                 installPath.get(), toastStrings->relImagePath.get());
-
-    // This is used to protect gHandlerReturnData.
-    gHandlerMutex = CreateMutexW(nullptr, TRUE, nullptr);
-    if (gHandlerMutex == nullptr) {
-      LOG_ERROR_MESSAGE(L"Unable to create mutex: %#X", GetLastError());
-      return;
-    }
-    // Automatically close this mutex when this function exits.
-    nsAutoHandle autoMutex(gHandlerMutex);
-    // No need to initialize gHandlerReturnData.activitiesPerformed, since it
-    // will be set by the handler. But we do need to initialize
-    // gHandlerReturnData.handlerDataHasBeenSet so the handler knows that no
-    // data has been set yet.
-    gHandlerReturnData.handlerDataHasBeenSet = false;
-    success = ReleaseMutex(gHandlerMutex);
-    if (!success) {
-      LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
-                        GetLastError());
-    }
-
-    // Finally ready to assemble the notification and dispatch it.
-    WinToastTemplate toastTemplate =
-        WinToastTemplate(WinToastTemplate::ImageAndText02);
-    toastTemplate.setTextField(toastStrings->text1.get(),
-                               WinToastTemplate::FirstLine);
-    toastTemplate.setTextField(toastStrings->text2.get(),
-                               WinToastTemplate::SecondLine);
-    toastTemplate.addAction(toastStrings->action1.get());
-    toastTemplate.addAction(toastStrings->action2.get());
-    toastTemplate.setImagePath(absImagePath.get());
-    toastTemplate.setScenario(WinToastTemplate::Scenario::Reminder);
-    ToastHandler* handler =
-        new ToastHandler(whichNotification, event.get(), aumi);
-    INT64 id = WinToast::instance()->showToast(toastTemplate, handler, &error);
-    if (id < 0) {
-      LOG_ERROR_MESSAGE(WinToast::strerror(error).c_str());
-      return;
-    }
-
-    DWORD result =
-        WaitForSingleObject(event.get(), NOTIFICATION_WAIT_TIMEOUT_MS);
-    // Don't return after these errors. Attempt to hide the notification.
-    if (result == WAIT_FAILED) {
-      LOG_ERROR_MESSAGE(L"Unable to wait on event object: %#X", GetLastError());
-    } else if (result == WAIT_TIMEOUT) {
-      LOG_ERROR_MESSAGE(L"Timed out waiting for event object");
-    } else {
-      result = WaitForSingleObject(gHandlerMutex, MUTEX_TIMEOUT_MS);
-      if (result == WAIT_TIMEOUT) {
-        LOG_ERROR_MESSAGE(L"Unable to obtain mutex ownership");
-        // activitiesPerformed is already set to error. No change needed.
-      } else if (result == WAIT_FAILED) {
-        LOG_ERROR_MESSAGE(L"Failed to wait on mutex: %#X", GetLastError());
-        // activitiesPerformed is already set to error. No change needed.
-      } else if (result == WAIT_ABANDONED) {
-        LOG_ERROR_MESSAGE(L"Found abandoned mutex");
-        ReleaseMutex(gHandlerMutex);
-        // activitiesPerformed is already set to error. No change needed.
-      } else {
-        // Mutex is being held. It is safe to access gHandlerReturnData.
-        // If gHandlerReturnData.handlerDataHasBeenSet is false, the handler
-        // never ran. Use the error value activitiesPerformed already contains.
-        if (gHandlerReturnData.handlerDataHasBeenSet) {
-          activitiesPerformed = gHandlerReturnData.activitiesPerformed;
-        }
-
-        success = ReleaseMutex(gHandlerMutex);
-        if (!success) {
-          LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
-                            GetLastError());
-        }
+      success = ReleaseMutex(gHandlerMutex);
+      if (!success) {
+        LOG_ERROR_MESSAGE(L"Unable to release mutex ownership: %#X",
+                          GetLastError());
       }
     }
+  }
 
-    if (!WinToast::instance()->hideToast(id)) {
-      LOG_ERROR_MESSAGE(L"Failed to hide notification");
-    }
-  });
+  if (!WinToast::instance()->hideToast(id)) {
+    LOG_ERROR_MESSAGE(L"Failed to hide notification");
+  }
   return activitiesPerformed;
 }
 

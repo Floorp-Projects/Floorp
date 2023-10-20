@@ -92,7 +92,14 @@ for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
 DEFINES["UNICODE"] = True
 DEFINES["_UNICODE"] = True
 
-FINAL_TARGET_FILES += ["defaultagent.ini"]
+GENERATED_FILES += ["defaultagent.ini"]
+defaultagentini = GENERATED_FILES["defaultagent.ini"]
+defaultagentini.script = "/browser/locales/generate_ini.py"
+defaultagentini.inputs = [
+    "defaultagent.ini",
+    "defaultagent_append.ini",
+]
+FINAL_TARGET_FILES += ["!defaultagent.ini"]
 
 FINAL_LIBRARY = "xul"
 
