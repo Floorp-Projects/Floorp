@@ -45,6 +45,27 @@
                   b.removeProgressListener(this);
                 }
               },
+              // Note: the following "onFoo" callbacks are only here for
+              // diagnostic purposes, and otherwise aren't relevant to the test.
+              onProgressChange(aWebProgress, aRequest,
+                               aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress) {
+                info(`Got progress change for ${b.parentNode.id}: ` +
+                     `${aCurSelfProgress}/${aMaxSelfProgress}, ` +
+                     `${aCurTotalProgress}/${aMaxTotalProgress}`);
+              },
+              onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+                info(`Got location change for ${b.parentNode.id}: ${aLocation.spec}, ${aFlags}`);
+              },
+              onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
+                info(`Got status change for ${b.parentNode.id}: ${aStatus}, ${aMessage}`);
+              },
+              onSecurityChange(aWebProgress, aRequest, aState) {
+                info(`Got security change for ${b.parentNode.id}: ${aState}`);
+              },
+              onContentBlockingEvent(aWebProgress, aRequest, aEvent) {
+                info(`Got content blocking event for ${b.parentNode.id}: ${aEvent}`);
+              },
               QueryInterface: ChromeUtils.generateQI([
                 "nsIWebProgressListener",
                 "nsISupportsWeakReference",
