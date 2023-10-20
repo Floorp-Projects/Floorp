@@ -268,49 +268,107 @@ export class MockRustSuggest {
   clear() {}
 
   async query(query) {
-    let records = this.#data.filter(record => record.type == "data");
-    let suggestions = records
-      .map(record => record.attachment)
-      .flat()
-      .filter(suggestion => suggestion.keywords.includes(query.keyword));
+    let { keyword, providers } = query;
+    return this.#data.reduce((matchedSuggestions, record) => {
+      if (!record.attachment) {
+        return matchedSuggestions;
+      }
+      for (let suggestion of record.attachment) {
+        let provider = this.#getProvider(record, suggestion);
+        if (!providers.includes(provider)) {
+          continue;
+        }
 
-    let matchedSuggestions = [];
-    for (let suggestion of suggestions) {
-      let isSponsored = suggestion.hasOwnProperty("is_sponsored")
-        ? suggestion.is_sponsored
-        : suggestion.iab_category == "22 - Shopping";
-      // TODO: Generalize this and support the other providers.
-      if (
-        (isSponsored &&
-          query.providers.includes(lazy.SuggestionProvider.AMP)) ||
-        (!isSponsored &&
-          query.providers.includes(lazy.SuggestionProvider.WIKIPEDIA))
-      ) {
+        switch (provider) {
+          case lazy.SuggestionProvider.POCKET:
+            if (
+              !suggestion.lowConfidenceKeywords.includes(keyword) &&
+              !suggestion.highConfidenceKeywords.includes(keyword)
+            ) {
+              continue;
+            }
+            break;
+          default:
+            if (!suggestion.keywords.includes(keyword)) {
+              continue;
+            }
+            break;
+        }
+
         matchedSuggestions.push(
-          isSponsored
-            ? new lazy.Suggestion.Amp(
-                suggestion.title,
-                suggestion.url,
-                suggestion.url, // rawUrl
-                [], // icon
-                query.keyword, // fullKeyword
-                suggestion.id, // blockId
-                suggestion.advertiser,
-                suggestion.iab_category,
-                suggestion.impression_url,
-                suggestion.click_url,
-                suggestion.click_url // rawClickUrl
-              )
-            : new lazy.Suggestion.Wikipedia(
-                suggestion.title,
-                suggestion.url,
-                [], // icon
-                query.keyword // fullKeyword
-              )
+          this.#makeSuggestion(provider, suggestion, query)
         );
       }
+
+      return matchedSuggestions;
+    }, []);
+  }
+
+  #getProvider(record, suggestion) {
+    switch (record.type) {
+      case "data":
+      case "test-data-type": {
+        let isSponsored = suggestion.hasOwnProperty("is_sponsored")
+          ? suggestion.is_sponsored
+          : suggestion.iab_category == "22 - Shopping";
+        return isSponsored
+          ? lazy.SuggestionProvider.AMP
+          : lazy.SuggestionProvider.WIKIPEDIA;
+      }
+      case "amo-suggestions":
+        return lazy.SuggestionProvider.AMO;
+      case "pocket-suggestions":
+        return lazy.SuggestionProvider.POCKET;
     }
-    return matchedSuggestions;
+    throw new Error(
+      "Unrecognized record-suggestion: " +
+        JSON.stringify({ record, suggestion })
+    );
+  }
+
+  #makeSuggestion(provider, suggestion, query) {
+    switch (provider) {
+      case lazy.SuggestionProvider.AMP:
+        return new lazy.Suggestion.Amp(
+          suggestion.title,
+          suggestion.url,
+          suggestion.url, // rawUrl
+          [], // icon
+          query.keyword, // fullKeyword
+          suggestion.id, // blockId
+          suggestion.advertiser,
+          suggestion.iab_category,
+          suggestion.impression_url,
+          suggestion.click_url,
+          suggestion.click_url // rawClickUrl
+        );
+      case lazy.SuggestionProvider.AMO:
+        return new lazy.Suggestion.Amo(
+          suggestion.title,
+          suggestion.url,
+          suggestion.icon,
+          suggestion.description,
+          suggestion.rating,
+          suggestion.number_of_ratings,
+          suggestion.guid,
+          suggestion.score
+        );
+      case lazy.SuggestionProvider.POCKET:
+        return new lazy.Suggestion.Pocket(
+          suggestion.title,
+          suggestion.url,
+          suggestion.score,
+          suggestion.highConfidenceKeywords.includes(query.keyword) // isTopPick
+        );
+      case lazy.SuggestionProvider.WIKIPEDIA:
+        return new lazy.Suggestion.Wikipedia(
+          suggestion.title,
+          suggestion.url,
+          [], // icon
+          query.keyword // fullKeyword
+        );
+    }
+    throw new Error("Unrecognized provider: " + provider);
   }
 
   #data = null;
