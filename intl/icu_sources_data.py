@@ -116,6 +116,28 @@ UNUSED_SOURCES = set(
         "intl/icu/source/i18n/alphaindex.cpp",
         "intl/icu/source/i18n/ulocdata.cpp",
     ]
+    +
+    # We use the version of double-conversion vendored in mfbt instead
+    [
+        "intl/icu/source/i18n/double-conversion-bignum-dtoa.cpp",
+        "intl/icu/source/i18n/double-conversion-bignum-dtoa.h",
+        "intl/icu/source/i18n/double-conversion-bignum.cpp",
+        "intl/icu/source/i18n/double-conversion-bignum.h",
+        "intl/icu/source/i18n/double-conversion-cached-powers.cpp",
+        "intl/icu/source/i18n/double-conversion-cached-powers.h",
+        "intl/icu/source/i18n/double-conversion-diy-fp.h",
+        "intl/icu/source/i18n/double-conversion-double-to-string.cpp",
+        "intl/icu/source/i18n/double-conversion-double-to-string.h",
+        "intl/icu/source/i18n/double-conversion-fast-dtoa.cpp",
+        "intl/icu/source/i18n/double-conversion-fast-dtoa.h",
+        "intl/icu/source/i18n/double-conversion-ieee.h",
+        "intl/icu/source/i18n/double-conversion-string-to-double.cpp",
+        "intl/icu/source/i18n/double-conversion-string-to-double.h",
+        "intl/icu/source/i18n/double-conversion-strtod.cpp",
+        "intl/icu/source/i18n/double-conversion-strtod.h",
+        "intl/icu/source/i18n/double-conversion-utils.h",
+        "intl/icu/source/i18n/double-conversion.h",
+    ]
 )
 
 
@@ -215,12 +237,12 @@ def update_data_file(topsrcdir):
         {
             "CPPFLAGS": (
                 "-DU_NO_DEFAULT_INCLUDE_UTF_HEADERS=1 "
-                + "-DU_HIDE_OBSOLETE_UTF_OLD_H=1"
+                + "-DU_HIDE_OBSOLETE_UTF_OLD_H=1 "
                 + "-DUCONFIG_NO_LEGACY_CONVERSION "
                 + "-DUCONFIG_NO_TRANSLITERATION "
                 + "-DUCONFIG_NO_REGULAR_EXPRESSIONS "
                 + "-DUCONFIG_NO_BREAK_ITERATION "
-                + "-DU_CHARSET_IS_UTF8"
+                + "-DU_CHARSET_IS_UTF8 "
             )
         }
     )

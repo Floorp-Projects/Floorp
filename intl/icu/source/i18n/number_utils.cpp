@@ -17,7 +17,11 @@
 #include "charstr.h"
 #include "decContext.h"
 #include "decNumber.h"
+#ifdef JS_HAS_INTL_API
 #include "double-conversion/double-conversion.h"
+#else
+#include "double-conversion.h"
+#endif
 #include "fphdlimp.h"
 #include "uresimp.h"
 #include "ureslocs.h"
@@ -26,7 +30,11 @@ using namespace icu;
 using namespace icu::number;
 using namespace icu::number::impl;
 
+#ifdef JS_HAS_INTL_API
 using double_conversion::DoubleToStringConverter;
+#else
+using icu::double_conversion::DoubleToStringConverter;
+#endif
 
 
 namespace {
