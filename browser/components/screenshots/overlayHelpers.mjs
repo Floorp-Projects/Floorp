@@ -339,6 +339,7 @@ export class WindowDimensions {
   #scrollY = null;
   #scrollMinX = null;
   #scrollMinY = null;
+  #devicePixelRatio = null;
 
   set dimensions(dimensions) {
     if (dimensions.clientHeight != null) {
@@ -365,6 +366,9 @@ export class WindowDimensions {
     if (dimensions.scrollMinY != null) {
       this.#scrollMinY = dimensions.scrollMinY;
     }
+    if (dimensions.devicePixelRatio != null) {
+      this.#devicePixelRatio = dimensions.devicePixelRatio;
+    }
   }
 
   get dimensions() {
@@ -377,6 +381,7 @@ export class WindowDimensions {
       scrollY: this.#scrollY,
       scrollMinX: this.#scrollMinX,
       scrollMinY: this.#scrollMinY,
+      devicePixelRatio: this.#devicePixelRatio,
     };
   }
 
@@ -410,5 +415,9 @@ export class WindowDimensions {
 
   get scrollMinY() {
     return this.#scrollMinY;
+  }
+
+  get devicePixelRatio() {
+    return this.#devicePixelRatio;
   }
 }

@@ -51,13 +51,19 @@
 #buttons-container {
   position: absolute;
   margin: 10px 0;
-  padding: 4px;
-  background-color: var(--in-content-page-background);
-  border-radius: 4px;
   cursor: auto;
 }
 
-.buttons-wrapper {
+#selection-size,
+#buttons-container {
+  padding: 4px;
+  background-color: var(--in-content-page-background);
+  color: var(--in-content-text-color);
+  border-radius: 4px;
+}
+
+.buttons-wrapper,
+#selection-size-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,6 +79,12 @@
   z-index: 6;
   min-width: 32px;
   margin-inline: 4px;
+}
+
+#selection-size-container {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 #screenshots-cancel-button {

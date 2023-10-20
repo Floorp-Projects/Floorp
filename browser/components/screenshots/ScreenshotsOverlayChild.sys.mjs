@@ -107,6 +107,9 @@ export class ScreenshotsOverlay {
               <div id="mover-bottomRight" class="mover-target direction-bottomRight">
                 <div class="mover"></div>
               </div>
+              <div id="selection-size-container">
+                <span id="selection-size"></span>
+              </div>
             </div>
           </div>
           <div id="buttons-container" hidden>
@@ -200,6 +203,8 @@ export class ScreenshotsOverlay {
     this.rightBackgroundEl = this.getElementById("right-background");
     this.bottomBackgroundEl = this.getElementById("bottom-background");
     this.highlightEl = this.getElementById("highlight");
+
+    this.selectionSize = this.getElementById("selection-size");
 
     this.addEventListeners();
   }
@@ -855,6 +860,25 @@ export class ScreenshotsOverlay {
     this.topBackgroundEl.style.height = `${top}px`;
     this.rightBackgroundEl.style = `top:${top}px;left:${right}px;width:calc(100% - ${right}px);height:${height}px;`;
     this.bottomBackgroundEl.style = `top:${bottom}px;height:calc(100% - ${bottom}px);`;
+
+    this.updateSelectionSizeText();
+  }
+
+  updateSelectionSizeText() {
+    let dpr = this.windowDimensions.devicePixelRatio;
+    let { width, height } = this.selectionRegion.dimensions;
+
+    let [selectionSizeTranslation] =
+      lazy.overlayLocalization.formatMessagesSync([
+        {
+          id: "screenshots-overlay-selection-region-size",
+          args: {
+            width: Math.floor(width * dpr),
+            height: Math.floor(height * dpr),
+          },
+        },
+      ]);
+    this.selectionSize.textContent = selectionSizeTranslation.value;
   }
 
   showSelectionContainer() {
@@ -1021,6 +1045,7 @@ export class ScreenshotsOverlay {
     this.updateWindowDimensions();
 
     if (this.#state === "selected" && eventType === "resize") {
+      this.updateSelectionSizeText();
       let didShift = this.selectionRegion.shift();
       if (didShift) {
         this.drawSelectionContainer();
@@ -1157,6 +1182,7 @@ export class ScreenshotsOverlay {
       scrollY,
       scrollMinX,
       scrollMinY,
+      devicePixelRatio: this.window.devicePixelRatio,
     };
 
     if (shouldUpdate) {
