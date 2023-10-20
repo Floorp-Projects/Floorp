@@ -47,6 +47,10 @@ export class PocketSuggestions extends BaseFeature {
     return "pocket";
   }
 
+  get rustSuggestionTypes() {
+    return ["Pocket"];
+  }
+
   get showLessFrequentlyCount() {
     let count = lazy.UrlbarPrefs.get("pocket.showLessFrequentlyCount") || 0;
     return Math.max(count, 0);
@@ -160,6 +164,16 @@ export class PocketSuggestions extends BaseFeature {
       ) {
         return null;
       }
+    }
+
+    if (suggestion.source == "rust") {
+      suggestion.is_top_pick = suggestion.isTopPick;
+      delete suggestion.isTopPick;
+
+      // The Rust component doesn't implement these properties. For now we use
+      // dummy values. See issue #5878 in application-services.
+      suggestion.description = suggestion.title;
+      suggestion.full_keyword = searchString;
     }
 
     let url = new URL(suggestion.url);
