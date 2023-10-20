@@ -21,11 +21,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_HYPHENS = {
-  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-  aliases: ["hyphens"],
-  property: "hyphens",
-  url: "https://developer.mozilla.org/docs/Web/CSS/hyphens",
+const ISSUE_SCROLLBAR_WIDTH = {
+  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
+  property: "scrollbar-width",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
   deprecated: false,
   experimental: false,
 };
@@ -66,10 +65,10 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_HYPHENS],
-    [ISSUE_HYPHENS],
+    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_WIDTH],
     async function () {
-      content.document.querySelector(".test").style.hyphens = "none";
+      content.document.querySelector(".test").style["scrollbar-width"] = "none";
     }
   );
 
@@ -79,8 +78,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
-    [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
     async function () {
       content.document.querySelector(".test").classList.add("issue");
     }
@@ -92,8 +91,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_HYPHENS],
-    [ISSUE_HYPHENS],
+    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_WIDTH],
     async function () {
       content.document.querySelector(".test").classList.remove("issue");
     }

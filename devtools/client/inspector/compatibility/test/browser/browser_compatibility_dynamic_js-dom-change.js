@@ -22,11 +22,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_HYPHENS = {
-  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-  aliases: ["hyphens"],
-  property: "hyphens",
-  url: "https://developer.mozilla.org/docs/Web/CSS/hyphens",
+const ISSUE_SCROLLBAR_WIDTH = {
+  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
+  property: "scrollbar-width",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
   deprecated: false,
   experimental: false,
 };
@@ -62,13 +61,13 @@ add_task(async function () {
     selectedElementPane,
     allElementsPane,
     [ISSUE_OUTLINE_RADIUS],
-    [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
+    [ISSUE_SCROLLBAR_WIDTH, ISSUE_OUTLINE_RADIUS],
     async function () {
       const doc = content.document;
       const parent = doc.querySelector("body");
 
       const newElementWithIssue = doc.createElement("div");
-      newElementWithIssue.style.hyphens = "none";
+      newElementWithIssue.style["scrollbar-width"] = "none";
 
       const parentOfIssueElement = doc.createElement("div");
       parentOfIssueElement.classList.add("parent");
@@ -89,8 +88,8 @@ add_task(async function () {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_HYPHENS],
-    [ISSUE_HYPHENS],
+    [ISSUE_SCROLLBAR_WIDTH],
+    [ISSUE_SCROLLBAR_WIDTH],
     async function () {
       const doc = content.document;
       const parent = doc.querySelector(".parent");

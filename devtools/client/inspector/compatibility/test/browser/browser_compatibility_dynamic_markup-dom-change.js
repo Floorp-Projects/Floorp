@@ -22,11 +22,10 @@ const ISSUE_OUTLINE_RADIUS = {
   experimental: false,
 };
 
-const ISSUE_HYPHENS = {
-  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY_ALIASES,
-  aliases: ["hyphens"],
-  property: "hyphens",
-  url: "https://developer.mozilla.org/docs/Web/CSS/hyphens",
+const ISSUE_SCROLLBAR_WIDTH = {
+  type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
+  property: "scrollbar-width",
+  url: "https://developer.mozilla.org/docs/Web/CSS/scrollbar-width",
   deprecated: false,
   experimental: false,
 };
@@ -40,7 +39,7 @@ const TEST_URI = `
   <body>
     <div></div>
     <div class="parent">
-      <div style="hyphens: none"></div>
+      <div style="scrollbar-width: none"></div>
     </div>
   </body>
 `;
@@ -54,7 +53,10 @@ add_task(async function () {
   const { allElementsPane, inspector } = await openCompatibilityView();
 
   info("Check initial issues");
-  await assertIssueList(allElementsPane, [ISSUE_OUTLINE_RADIUS, ISSUE_HYPHENS]);
+  await assertIssueList(allElementsPane, [
+    ISSUE_OUTLINE_RADIUS,
+    ISSUE_SCROLLBAR_WIDTH,
+  ]);
 
   info("Delete node whose child node has CSS compatibility issue");
   await testNodeRemoval(".parent", inspector, allElementsPane, [
