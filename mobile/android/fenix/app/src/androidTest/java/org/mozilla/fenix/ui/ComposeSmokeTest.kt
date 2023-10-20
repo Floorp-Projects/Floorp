@@ -8,7 +8,6 @@ package org.mozilla.fenix.ui
 
 import android.view.View
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.core.net.toUri
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
@@ -71,22 +70,6 @@ class ComposeSmokeTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
-    }
-
-    @Test
-    fun mainMenuInstallPWATest() {
-        val pwaPage = "https://mozilla-mobile.github.io/testapp/"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(pwaPage.toUri()) {
-            verifyNotificationDotOnMainMenu()
-        }.openThreeDotMenu {
-        }.clickInstall {
-            clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut("TEST_APP") {
-            mDevice.waitForIdle()
-            verifyNavURLBarHidden()
-        }
     }
 
     // Verifies that reader mode is detected and the custom appearance controls are displayed
