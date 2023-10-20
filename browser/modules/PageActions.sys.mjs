@@ -2,19 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
 const ACTION_ID_BOOKMARK = "bookmark";
@@ -23,8 +16,6 @@ const ACTION_ID_TRANSIENT_SEPARATOR = "transientSeparator";
 
 const PREF_PERSISTED_ACTIONS = "browser.pageActions.persistedActions";
 const PERSISTED_ACTIONS_CURRENT_VERSION = 1;
-
-let PAGE_ACTION_IN_URLBAR_TRIGGER_TIMEOUT;
 
 // Escapes the given raw URL string, and returns an equivalent CSS url()
 // value for it.
@@ -434,38 +425,6 @@ export var PageActions = {
       };
     }
     return actions;
-  },
-
-  /**
-   * Send an ASRouter trigger to possibly show messaging related to the page
-   * action that was placed in the urlbar.
-   *
-   * @param {Element} buttonNode The page action button node.
-   */
-  sendPlacedInUrlbarTrigger(buttonNode) {
-    if (!PAGE_ACTION_IN_URLBAR_TRIGGER_TIMEOUT) {
-      // Debounce to avoid triggering on momentary "flickers" where the button
-      // is placed but immediately hidden afterwards.
-      PAGE_ACTION_IN_URLBAR_TRIGGER_TIMEOUT = lazy.setTimeout(async () => {
-        await lazy.ASRouter.initialized;
-        let win = buttonNode?.ownerGlobal;
-        if (!win) {
-          return;
-        }
-        let rect = win.windowUtils.getBoundsWithoutFlushing(buttonNode);
-        if (rect.height > 0 && rect.width > 0) {
-          let style = win.getComputedStyle(buttonNode);
-          if (style?.visibility === "visible" && style?.display !== "none") {
-            await lazy.ASRouter.sendTriggerMessage({
-              browser: win.gBrowser.selectedBrowser,
-              id: "pageActionInUrlbar",
-              context: { pageAction: buttonNode.id },
-            });
-          }
-        }
-        PAGE_ACTION_IN_URLBAR_TRIGGER_TIMEOUT = null;
-      }, 500);
-    }
   },
 
   // This keeps track of all actions, even those that are not currently
@@ -1046,8 +1005,6 @@ Action.prototype = {
     if (this._onPlacedInUrlbar) {
       this._onPlacedInUrlbar(buttonNode);
     }
-
-    PageActions.sendPlacedInUrlbarTrigger(buttonNode);
   },
 
   /**

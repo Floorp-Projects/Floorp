@@ -3,10 +3,6 @@ const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
 
-const { ASRouter } = ChromeUtils.import(
-  "resource://activity-stream/lib/ASRouter.jsm"
-);
-
 const mockIdleService = {
   _observers: new Set(),
   _fireObservers(state) {
@@ -385,43 +381,4 @@ add_task(async function test_formAutofillTrigger() {
 
   sandbox.restore();
   formAutofillTrigger.uninit();
-});
-
-add_task(async function test_pageActionInUrlbarTrigger() {
-  const sandbox = sinon.createSandbox();
-  const receivedTrigger = new Promise(resolve => {
-    sandbox
-      .stub(ASRouter, "sendTriggerMessage")
-      .callsFake(({ id, context: { pageAction } }) => {
-        if (id === "pageActionInUrlbar") {
-          resolve(pageAction);
-        }
-      });
-  });
-  sandbox
-    .stub(PictureInPicture, "getEligiblePipVideoCount")
-    .returns({ totalPipCount: 1, totalPipDisabled: 0 });
-
-  SpecialPowers.pushPrefEnv({
-    set: [
-      ["media.videocontrols.picture-in-picture.enabled", true],
-      ["media.videocontrols.picture-in-picture.urlbar-button.enabled", true],
-    ],
-  });
-
-  const pipButton = document.getElementById("picture-in-picture-button");
-  const originalHidden = pipButton.hidden;
-  pipButton.hidden = false;
-  PictureInPicture.updateUrlbarToggle(gBrowser.selectedBrowser);
-
-  let pageAction = await receivedTrigger;
-  is(
-    pageAction,
-    "picture-in-picture-button",
-    "pageActionInUrlbar trigger sent with PiP button id"
-  );
-
-  SpecialPowers.popPrefEnv();
-  sandbox.restore();
-  pipButton.hidden = originalHidden;
 });
