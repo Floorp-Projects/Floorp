@@ -7,6 +7,11 @@
 #ifndef mozilla_ShellHeaderOnlyUtils_h
 #define mozilla_ShellHeaderOnlyUtils_h
 
+#if defined(LIBXUL) && !defined(UNICODE)
+#  error \
+      "UNICODE not set - must be set to prevent compile failure in `comdef.h` due to us deleting `FormatMessage` when absent."
+#endif
+
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include <objbase.h>
