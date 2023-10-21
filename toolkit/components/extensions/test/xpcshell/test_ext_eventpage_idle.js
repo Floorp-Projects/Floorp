@@ -149,6 +149,148 @@ add_task(async function test_eventpage_idle() {
 });
 
 add_task(
+  { pref_set: [["extensions.webextensions.runtime.timeout", 100]] },
+  async function test_eventpage_runtime_parentApiCall_resets_timeout() {
+    clearHistograms();
+
+    assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
+    assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        background: { persistent: false },
+      },
+      background() {
+        let count = 0;
+        let start = Date.now();
+
+        setInterval(() => {
+          if (count >= 6) {
+            return;
+          }
+
+          // Calling a parent API should reset the idle timeout.
+          browser.runtime.getBrowserInfo();
+
+          browser.test.log(`Interval counter: ${++count}.`);
+        }, 50);
+        browser.runtime.getBrowserInfo();
+
+        browser.runtime.onSuspend.addListener(() => {
+          browser.test.sendMessage("done", { count, time: Date.now() - start });
+        });
+      },
+    });
+
+    await extension.startup();
+    await promiseExtensionEvent(extension, "shutdown-background-script");
+
+    let { count, time } = await extension.awaitMessage("done");
+    equal(count, 6, "Parent API calls did prevent background suspension.");
+    ok(time > 300, `Background script suspended after ${time}ms.`);
+
+    assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
+      category: "reset_parentapicall",
+      categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertHistogramCategoryNotEmpty(
+      WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
+      {
+        keyed: true,
+        key: extension.id,
+        category: "reset_parentapicall",
+        categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      }
+    );
+
+    await extension.unload();
+  }
+);
+
+add_task(
+  { pref_set: [["extensions.webextensions.runtime.timeout", 500]] },
+  async function test_extension_page_reset_idle() {
+    let extension = ExtensionTestUtils.loadExtension({
+      useAddonManager: "permanent",
+      manifest: {
+        background: { persistent: false },
+      },
+      background() {
+        browser.test.log("background script start");
+        browser.runtime.onSuspend.addListener(() => {
+          browser.test.sendMessage("suspended");
+        });
+        browser.test.sendMessage("ready");
+      },
+      files: {
+        "page.html": "<meta charset=utf-8><script src=page.js></script>",
+        async "page.js"() {
+          await browser.runtime.getBrowserInfo();
+          browser.test.sendMessage("page-done");
+        },
+      },
+    });
+
+    await extension.startup();
+
+    // Need to set up the listener as early as possible.
+    let closed = promiseExtensionEvent(extension, "shutdown-background-script");
+
+    await extension.awaitMessage("ready");
+    info("Background script ready.");
+
+    extension.extension.once("background-script-reset-idle", () => {
+      ok(false, "background-script-reset-idle emitted from an extension page.");
+    });
+
+    let page = await ExtensionTestUtils.loadContentPage(
+      extension.extension.baseURI.resolve("page.html")
+    );
+    await extension.awaitMessage("page-done");
+    info("Test page loaded.");
+
+    await closed;
+    await extension.awaitMessage("suspended");
+
+    ok(true, "API call from extension page did not reset idle timeout.");
+
+    await page.close();
+    await extension.unload();
+  }
+);
+
+add_task(async function test_persistent_background_reset_idle() {
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      background: { persistent: true },
+    },
+    background() {
+      browser.test.onMessage.addListener(async () => {
+        await browser.runtime.getBrowserInfo();
+        browser.test.sendMessage("done");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("ready");
+
+  extension.extension.once("background-script-reset-idle", () => {
+    ok(false, "background-script-reset-idle from persistent background page.");
+  });
+
+  extension.sendMessage("call-parent-api");
+  ok(true, "API call from persistent background did not reset idle timeout.");
+
+  await extension.awaitMessage("done");
+  await extension.unload();
+});
+
+add_task(
   { pref_set: [["extensions.webextensions.runtime.timeout", 500]] },
   async function test_eventpage_runtime_onSuspend_timeout() {
     let extension = ExtensionTestUtils.loadExtension({
