@@ -181,8 +181,8 @@
   },
   {
     "domains": ["cube-soft.jp"],
-    "image_url": "../../../../../../../floorp/browser/themes/newtab-icons/cubesoft.png",
-    "favicon_url": "../../../../../../../floorp/browser/themes/newtab-icons/cubesoft.png",
+    "image_url": "images/cubesoft@2x.png",
+    "favicon_url": "favicons/cubesoft.png",
     "floorp": "Floorp Injections"
   }
 ]
