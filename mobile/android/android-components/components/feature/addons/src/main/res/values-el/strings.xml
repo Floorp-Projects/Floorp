@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Μάθετε περισσότερα σχετικά με τα δικαιώματα</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Αξιολόγηση</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Περισσότερα για αυτό το πρόσθετο</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ρυθμίσεις</string>
     <!-- Indicates the add-on is enabled. -->

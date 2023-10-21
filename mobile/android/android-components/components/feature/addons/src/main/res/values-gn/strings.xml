@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Eikuaave ñemoneĩ rehegua</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Jeporavopy</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Eikuaave moĩmbaha rehegua</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ñemboheko</string>
     <!-- Indicates the add-on is enabled. -->

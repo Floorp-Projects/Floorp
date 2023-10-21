@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">ვრცლად ნებართვების შესახებ</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">შეფასება</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">ვრცლად ამ დამატების შესახებ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">პარამეტრები</string>
     <!-- Indicates the add-on is enabled. -->

@@ -85,7 +85,7 @@
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Graddio</string>
     <!-- A link that points to the detail page of the add-on. -->
-    <string name="mozac_feature_addons_more_info_link">Mwy am yr ychwanegyn hwn</string>
+    <string name="mozac_feature_addons_more_info_link">Rhagor am yr ychwanegyn hwn</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Gosodiadau</string>
     <!-- Indicates the add-on is enabled. -->

@@ -70,7 +70,7 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">%1$s จะลบคุกกี้ ประวัติ และข้อมูลไซต์ของคุณเมื่อคุณปิดหน้าต่างส่วนตัวของคุณทั้งหมด %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s จะลบคุกกี้ ประวัติ และข้อมูลไซต์ของคุณเมื่อคุณปิดหน้าต่างส่วนตัวของคุณทั้งหมด %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -322,19 +322,12 @@
     <string name="onboarding_home_enable_notifications_negative_button">ไม่ใช่ตอนนี้</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
-    <!-- Title for set firefox as default browser screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">ทำให้ %s เป็นเบราว์เซอร์เริ่มต้นของคุณ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">ทำให้ Firefox เป็นเบราว์เซอร์เริ่มต้นของคุณ</string>
-    <!-- Description for set firefox as default browser screen.
-        The first parameter is the Firefox brand name.
-        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s ให้ความสำคัญกับผู้คนมากกว่าผลกำไรและปกป้องความเป็นส่วนตัวของคุณด้วยการปิดกั้นเครื่องมือติดตามข้ามไซต์\n\nเรียนรู้เพิ่มเติมใน %2$s ของเรา</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ทำให้ Firefox เป็นเบราว์เซอร์เริ่มต้นของคุณ</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox ให้ความสำคัญกับผู้คนมากกว่าผลกำไรและปกป้องความเป็นส่วนตัวของคุณด้วยการปิดกั้นเครื่องมือติดตามข้ามไซต์\n\nเรียนรู้เพิ่มเติมในประกาศความเป็นส่วนตัวของเรา</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox ให้ความสำคัญกับผู้คนมากกว่าผลกำไรและปกป้องความเป็นส่วนตัวของคุณด้วยการปิดกั้นเครื่องมือติดตามข้ามไซต์\n\nเรียนรู้เพิ่มเติมในประกาศความเป็นส่วนตัวของเรา</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ประกาศความเป็นส่วนตัว</string>
@@ -343,25 +336,19 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ไม่ใช่ตอนนี้</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">สับเปลี่ยนไปมาระหว่างโทรศัพท์กับแล็ปท็อป</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">นำแท็บและรหัสผ่านจากอุปกรณ์อื่น ๆ ของคุณเข้ามาเพื่อเรียกดูต่อจากที่คุณค้างไว้</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">นำแท็บและรหัสผ่านจากอุปกรณ์อื่น ๆ ของคุณเข้ามาเพื่อเรียกดูต่อจากที่คุณค้างไว้</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ลงชื่อเข้า</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ไม่ใช่ตอนนี้</string>
-    <!-- Title for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">การแจ้งเตือนช่วยให้คุณทำสิ่งต่างๆ ได้มากขึ้นด้วย %s</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">การแจ้งเตือนช่วยให้คุณทำสิ่งต่างๆ ได้มากขึ้นด้วย Firefox</string>
-    <!-- Description for enable notification permission screen.
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">ส่งแท็บระหว่างอุปกรณ์ จัดการการดาวน์โหลด และรับเคล็ดลับในการใช้ประโยชน์สูงสุดจาก %s</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">การแจ้งเตือนช่วยให้คุณทำสิ่งต่างๆ ได้มากขึ้นด้วย Firefox</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ส่งแท็บระหว่างอุปกรณ์ จัดการการดาวน์โหลด และรับเคล็ดลับในการใช้ประโยชน์สูงสุดจาก Firefox</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ส่งแท็บระหว่างอุปกรณ์ จัดการการดาวน์โหลด และรับเคล็ดลับในการใช้ประโยชน์สูงสุดจาก Firefox</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">เปิดการแจ้งเตือน</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -370,6 +357,9 @@
     <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">ลองใช้วิดเจ็ตค้นหาของ Firefox</string>
+    <!-- Description for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_description" tools:ignore="UnusedResources">ด้วย Firefox บนหน้าจอแรกของคุณ คุณจะสามารถเข้าถึงเบราว์เซอร์ที่เน้นเรื่องความเป็นส่วนตัวเป็นหลักซึ่งช่วยปิดกั้นตัวติดตามแบบข้ามไซต์ได้อย่างง่ายดาย</string>
     <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">เพิ่มวิดเจ็ต Firefox</string>
@@ -397,7 +387,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">เลือกหนึ่งตัว</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">จัดการทางลัดการค้นหา</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">จัดการทางลัดการค้นหา</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">แก้ไขเครื่องมือที่แสดงในเมนูค้นหา</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -409,7 +399,7 @@
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">เครื่องมือค้นหา</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">แถบที่อยู่</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">แถบที่อยู่</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ให้คะแนนบน Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -512,11 +502,13 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">การช่วยเข้าถึง</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">เซิร์ฟเวอร์บัญชี Firefox ที่กำหนดเอง</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">เซิร์ฟเวอร์บัญชี Firefox ที่กำหนดเอง</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">เซิร์ฟเวอร์บัญชี Mozilla ที่กำหนดเอง</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">เซิร์ฟเวอร์ Sync ที่กำหนดเอง</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">เปลี่ยนแปลงเซิร์ฟเวอร์บัญชี Firefox/Sync แล้ว กำลังออกจากแอปพลิเคชันเพื่อนำการเปลี่ยนแปลงไปใช้…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">เปลี่ยนแปลงเซิร์ฟเวอร์บัญชี Firefox/Sync แล้ว กำลังออกจากแอปพลิเคชันเพื่อนำการเปลี่ยนแปลงไปใช้…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">บัญชี</string>
     <!-- Preference for changing where the toolbar is positioned -->
@@ -532,7 +524,7 @@
     <!-- Preference description for banner about signing in -->
     <string name="preferences_sign_in_description_2">ลงชื่อเข้าเพื่อซิงค์แท็บ ที่คั่นหน้า รหัสผ่าน และอื่น ๆ ของคุณ</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">บัญชี Firefox</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">บัญชี Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">เชื่อมต่ออีกครั้งเพื่อทำการซิงค์ต่อ</string>
     <!-- Preference for language -->
@@ -544,7 +536,7 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">การดีบั๊กระยะไกลผ่าน USB</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">แสดงเครื่องมือค้นหา</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">แสดงเครื่องมือค้นหา</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">แสดงข้อเสนอแนะการค้นหา</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -666,9 +658,9 @@
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
-    <string name="addon_not_supported_error">ไม่รองรับส่วนเสริม</string>
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">ไม่รองรับส่วนเสริม</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">ส่วนเสริมถูกติดตั้งแล้ว</string>
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">ส่วนเสริมถูกติดตั้งแล้ว</string>
 
     <!-- Add-on process crash dialog to user -->
     <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
@@ -979,9 +971,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">ชื่อชุดสะสม</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">เปลี่ยนชื่อ</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">เอาออก</string>
+    <string name="rename_top_site">เปลี่ยนชื่อ</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">เอาออก</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">ลบออกจากประวัติ</string>
@@ -1933,26 +1925,26 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">แก้ไขเครื่องมือค้นหา</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">เพิ่ม</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">เพิ่ม</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">บันทึก</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">บันทึก</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">แก้ไข</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">ลบ</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">อื่น ๆ</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">อื่น ๆ</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">ชื่อ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">ชื่อ</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">ชื่อ</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">ชื่อเครื่องมือค้นหา</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">URL สตริงการค้นหา</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">สตริงการค้นหาที่จะใช้</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">สตริงการค้นหาที่จะใช้</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL ที่จะใช้ในการค้นหา</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2099,14 +2091,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">ทางลัด</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">ชื่อ</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">ชื่อ</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">ชื่อทางลัด</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">ตกลง</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">ยกเลิก</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">ตกลง</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">ยกเลิก</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">ตั้งค่า</string>
@@ -2185,7 +2177,7 @@
 
     <!-- Review quality check feature-->
     <!-- Name for the review quality check feature used as title for the panel. -->
-    <string name="review_quality_check_feature_name">ตัวตรวจสอบบทวิจารณ์</string>
+    <string name="review_quality_check_feature_name" moz:RemovedIn="120" tools:ignore="UnusedResources">ตัวตรวจสอบบทวิจารณ์</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_grade_a_b_description">บทวิจารณ์ที่น่าเชื่อถือ</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
@@ -2235,7 +2227,7 @@
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ไม่ใช่ตอนนี้</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
-    <string name="review_quality_check_beta_flag" tools:ignore="UnusedResources">Beta</string>
+    <string name="review_quality_check_beta_flag">Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s จาก 5 ดาว</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->

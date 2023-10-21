@@ -73,7 +73,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">A %1$s törli a sütiket, előzményeket és oldaladatokat, amikor bezárja az összes privát ablakot. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">A %1$s törli a sütiket, előzményeket és oldaladatokat, amikor bezárja az összes privát ablakot. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">A %1$s törli a sütiket, előzményeket és oldaladatokat, amikor bezárja az összes privát lapot. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -327,10 +332,14 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Legyen a Firefox a szokásos böngészője</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Legyen a Firefox a szokásos böngészője</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Szeretjük biztonságban tartani Önt</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">A Firefox az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">A Firefox az embereket helyezi a profit elé, és a webhelyek közötti nyomkövetők blokkolásával védi az Ön adatait.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">A nonprofit szervezet által támogatott böngészőnk segít megakadályozni, hogy a cégek titokban nyomon kövessék Önt az interneten.\n\nTovábbi információk az adatvédelmi nyilatkozatban találhatók.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">adatvédelmi nyilatkozatban</string>
@@ -339,19 +348,30 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Most nem</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Váltson át a telefonról a laptopra és vissza</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Maradjon titkosítva, amikor az eszközök között vált</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Vegye át a lapokat és a jelszavakat a többi eszközéről, hogy ott folytassa, ahol abbahagyta.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Vegye át a lapokat és a jelszavakat a többi eszközéről, hogy ott folytassa, ahol abbahagyta.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Ha be van jelentkezve és szinkronizálva van, akkor nagyobb biztonságban van. A Firefox titkosítja a jelszavait, könyvjelzőit és egyebeit.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Bejelentkezés</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Most nem</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a Firefoxszal</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Az értesítések segítségével még többet tehet a Firefoxszal</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Az értesítések segítségével nagyobb biztonságban lehet a Firefoxszal</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a Firefoxból.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Küldjön lapokat az eszközök között, kezelje a letöltéseket, és kapjon tippeket arról, hogyan hozza ki a legtöbbet a Firefoxból.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Küldjön biztonságosan lapokat eszközei között, és fedezzen fel más adatvédelmi funkciókat a Firefoxban.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Értesítések bekapcsolása</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -390,7 +410,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Válasszon egyet</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Keresési gyorsparancsok kezelése</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Keresési gyorsparancsok kezelése</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Alternatív keresőszolgáltatások kezelése</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">A keresés menüben látható keresőszolgáltatások szerkesztése</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -401,8 +423,16 @@
     <string name="preferences_search">Keresés</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Keresőszolgáltatások</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Javaslatok a keresőszolgáltatásoktól</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Címsáv</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Címsáv</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Címsáv beállításai</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Címsáv – Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Ismerje meg a Firefox Suggestet</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Értékelés a Google Playen</string>
     <!-- Preference linking to about page for Fenix
@@ -991,9 +1021,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Gyűjtemény neve</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Átnevezés</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Eltávolítás</string>
+    <string name="rename_top_site">Átnevezés</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Eltávolítás</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Törlés az előzményekből</string>
@@ -1951,7 +1981,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Keresőszolgáltatás szerkesztése</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Hozzáadás</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Hozzáadás</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Mentés</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1960,17 +1990,17 @@
     <string name="search_engine_delete">Törlés</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Egyéb</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Egyéb</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Név</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Név</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Név</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Keresőszolgáltatás neve</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Kereső webcíme</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Használandó keresőkifejezés</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Használandó keresőkifejezés</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">A kereséshez használandó webcím</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2117,14 +2147,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Indítóikonok</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Név</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Név</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Indítóikon neve</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">Rendben</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Mégse</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">Rendben</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Mégse</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Beállítások</string>
