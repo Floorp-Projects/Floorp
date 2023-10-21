@@ -31,8 +31,8 @@ add_task(async function test_pin_promo() {
 
     ok(promoContainer, "Pin promo is shown");
     is(
-      promoHeader.textContent,
-      "Private browsing freedom in one click",
+      promoHeader.getAttribute("data-l10n-id"),
+      "about-private-browsing-pin-promo-header",
       "Correct default values are shown"
     );
   });
@@ -67,15 +67,15 @@ add_task(async function test_pin_promo_mr2022_holdback() {
 
   await SpecialPowers.spawn(tab1, [], async function () {
     const promoContainer = content.document.querySelector(".promo");
-    const promoButtonText = content.document.querySelector(
+    const promoButton = content.document.querySelector(
       "#private-browsing-promo-link"
-    ).textContent;
+    );
 
     ok(promoContainer, "Promo is shown");
 
     Assert.equal(
-      promoButtonText,
-      "Download Firefox Focus",
+      promoButton.getAttribute("data-l10n-id"),
+      "about-private-browsing-focus-promo-cta",
       "Pin Promo not shown for holdback user"
     );
   });
@@ -100,8 +100,8 @@ add_task(async function test_pin_promo_mr2022_not_holdback() {
     ok(promoContainer, "Promo is shown");
 
     is(
-      promoHeader.textContent,
-      "Private browsing freedom in one click",
+      promoHeader.getAttribute("data-l10n-id"),
+      "about-private-browsing-pin-promo-header",
       "Pin Promo is shown"
     );
   });

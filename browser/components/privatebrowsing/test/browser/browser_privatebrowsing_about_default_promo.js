@@ -80,8 +80,8 @@ add_task(async function test_default_promo() {
 
     ok(promoContainer, "Focus promo is shown");
     is(
-      promoHeader.textContent,
-      "Next-level privacy on mobile",
+      promoHeader.getAttribute("data-l10n-id"),
+      "about-private-browsing-focus-promo-header-c",
       "Correct default values are shown"
     );
   });
