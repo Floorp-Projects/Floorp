@@ -2,12 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   BinarySearch: "resource://gre/modules/BinarySearch.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
 });
 
 const ACTION_ID_BOOKMARK = "bookmark";
@@ -425,6 +432,27 @@ export var PageActions = {
       };
     }
     return actions;
+  },
+
+  /**
+   * Send an ASRouter trigger to possibly show messaging related to the page
+   * action that was placed in the urlbar.
+   *
+   * @param {Element} buttonNode The page action button node.
+   */
+  sendPlacedInUrlbarTrigger(buttonNode) {
+    lazy.setTimeout(async () => {
+      await lazy.ASRouter.initialized;
+      let win = buttonNode?.ownerGlobal;
+      if (!win || buttonNode.hidden) {
+        return;
+      }
+      await lazy.ASRouter.sendTriggerMessage({
+        browser: win.gBrowser.selectedBrowser,
+        id: "pageActionInUrlbar",
+        context: { pageAction: buttonNode.id },
+      });
+    }, 500);
   },
 
   // This keeps track of all actions, even those that are not currently
