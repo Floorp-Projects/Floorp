@@ -127,8 +127,8 @@ add_task(async function test_experiment_messaging_show_default_on_dismiss() {
       "should render the default promo message after dismissing experiment promo"
     );
     is(
-      promoHeader.textContent,
-      "Next-level privacy on mobile",
+      promoHeader.getAttribute("data-l10n-id"),
+      "about-private-browsing-focus-promo-header-c",
       "Correct default values are shown"
     );
   });
