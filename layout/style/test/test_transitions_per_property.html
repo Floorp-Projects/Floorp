@@ -315,7 +315,6 @@ var supported_properties = {
     "y": [ test_length_transition, test_percent_transition,
            test_length_unclamped, test_percent_unclamped ],
     "z-index": [ test_integer_transition, test_pos_integer_or_auto_transition ],
-    "zoom": [ test_number_transition, test_percent_transition ],
     "-webkit-line-clamp": [ test_pos_integer_or_none_transition ],
     "-webkit-text-fill-color": [ test_color_transition,
                                  test_currentcolor_transition ],
@@ -351,6 +350,7 @@ var supported_properties = {
       test_length_transition, test_percent_transition,
       test_length_clamped, test_percent_clamped,
     ],
+    "scrollbar-color": [ test_scrollbar_color_transition ],
 };
 
 if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled")) {
@@ -372,9 +372,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
   supported_properties["contain-intrinsic-height"] = supported_properties["contain-intrinsic-width"];
 }
 
-supported_properties["scrollbar-color"] = [
-  test_scrollbar_color_transition,
-];
+if (IsCSSPropertyPrefEnabled("layout.css.zoom.enabled")) {
+  Object.assign(supported_properties, {
+    "zoom": [ test_number_transition, test_percent_transition ],
+  });
+}
 
 // For properties which are well-tested by web-platform-tests, we don't need to
 // test animations/transitions again on them.
