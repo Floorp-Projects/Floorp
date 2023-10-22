@@ -39,7 +39,6 @@ const HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES = [
   "reset_listeners",
   "reset_nativeapp",
   "reset_streamfilter",
-  "reset_parentapicall",
 ];
 
 function valueSum(arr) {

@@ -794,17 +794,11 @@ class BackgroundBuilder {
         return;
       }
 
-      if (
-        extension.backgroundState == BACKGROUND_STATE.SUSPENDING &&
-        // After we begin suspending the background, parent API calls from
-        // runtime.onSuspend listeners shouldn't cancel the suspension.
-        resetIdleDetails?.reason !== "parentApiCall"
-      ) {
+      if (extension.backgroundState == BACKGROUND_STATE.SUSPENDING) {
         extension.backgroundState = BACKGROUND_STATE.RUNNING;
         // call runtime.onSuspendCanceled
         extension.emit("background-script-suspend-canceled");
       }
-
       this.resetIdleTimer();
 
       if (
@@ -833,9 +827,6 @@ class BackgroundBuilder {
             break;
           case "pendingListeners":
             category = "reset_listeners";
-            break;
-          case "parentApiCall":
-            category = "reset_parentapicall";
             break;
         }
 
