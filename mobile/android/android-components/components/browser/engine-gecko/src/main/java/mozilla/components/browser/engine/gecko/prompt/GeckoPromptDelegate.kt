@@ -880,7 +880,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         } catch (e: IOException) {
             Logger("GeckoPromptDelegate").warn("Could not convert uri to file uri", e)
         }
-        return Uri.parse("file:///${temporalFile.absolutePath}")
+        return Uri.parse("file:///${Uri.encode(temporalFile.absolutePath)}")
     }
 
     @VisibleForTesting
