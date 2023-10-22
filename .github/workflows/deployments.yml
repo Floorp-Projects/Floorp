@@ -509,7 +509,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86 Windows MAR "Floorp-Projects/Floorp-Update" 🚀
-      if: inputs.lightning-build == 'false'
+      if: ${{ !inputs.lightning-build }}
       run: |
         echo "Preparing to run GitHub Actions for Release x86 Windows MAR, waiting for 30 seconds"
         sleep 60
@@ -529,7 +529,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
-      if: inputs.lightning-build == 'false'
+      if: ${{ !inputs.lightning-build }}
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
@@ -544,7 +544,7 @@ jobs:
           }'
 
     - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
-      if: inputs.lightning-build == 'false'
+      if: ${{ !inputs.lightning-build }}
       run: |
         curl -X POST \
           -H "Authorization: token ${{ secrets.PAT }}" \
