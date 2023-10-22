@@ -793,6 +793,7 @@ skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_bug1113600.html"]
 skip-if = ["os == 'win' && os_version == '10.0' && debug"] # Bug 1713410
+skip-if = ["os == 'mac'"] # Bug 1198168
 
 ["test_bug1120222.html"]
 tags = "capturestream"
