@@ -860,8 +860,6 @@ class DisplayListBuilder final {
   wr::PipelineId mPipelineId;
   layers::WebRenderBackend mBackend;
 
-  nsTArray<wr::PipelineId> mRemotePipelineIds;
-
   layers::DisplayItemCache* mDisplayItemCache;
   Maybe<uint16_t> mCurrentCacheSlot;
   float mInheritedOpacity = 1.0f;

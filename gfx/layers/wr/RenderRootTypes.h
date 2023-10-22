@@ -24,7 +24,6 @@ struct DisplayListData {
   Maybe<mozilla::ipc::ByteBuf> mDLCache;
   Maybe<mozilla::ipc::ByteBuf> mDLSpatialTree;
   wr::BuiltDisplayListDescriptor mDLDesc;
-  nsTArray<wr::PipelineId> mRemotePipelineIds;
   nsTArray<OpUpdateResource> mResourceUpdates;
   nsTArray<RefCountedShmem> mSmallShmems;
   nsTArray<mozilla::ipc::Shmem> mLargeShmems;
