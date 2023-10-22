@@ -20,7 +20,6 @@ void IPDLParamTraits<mozilla::layers::DisplayListData>::Write(
   WriteIPDLParam(aWriter, aActor, std::move(aParam.mDLCache));
   WriteIPDLParam(aWriter, aActor, std::move(aParam.mDLSpatialTree));
   WriteIPDLParam(aWriter, aActor, aParam.mDLDesc);
-  WriteIPDLParam(aWriter, aActor, aParam.mRemotePipelineIds);
   WriteIPDLParam(aWriter, aActor, aParam.mResourceUpdates);
   WriteIPDLParam(aWriter, aActor, aParam.mSmallShmems);
   WriteIPDLParam(aWriter, aActor, std::move(aParam.mLargeShmems));
@@ -36,7 +35,6 @@ bool IPDLParamTraits<mozilla::layers::DisplayListData>::Read(
       ReadIPDLParam(aReader, aActor, &aResult->mDLCache) &&
       ReadIPDLParam(aReader, aActor, &aResult->mDLSpatialTree) &&
       ReadIPDLParam(aReader, aActor, &aResult->mDLDesc) &&
-      ReadIPDLParam(aReader, aActor, &aResult->mRemotePipelineIds) &&
       ReadIPDLParam(aReader, aActor, &aResult->mResourceUpdates) &&
       ReadIPDLParam(aReader, aActor, &aResult->mSmallShmems) &&
       ReadIPDLParam(aReader, aActor, &aResult->mLargeShmems) &&
