@@ -344,7 +344,7 @@ jobs:
         echo "****************************************************************************************************"
 
     - name: Deploy to GitHub Releases for Stable Version 🚀
-      if: inputs.lightning-build == 'false'
+      if: ${{ !inputs.lightning-build }}
       id: create_release
       uses: "softprops/action-gh-release@v1"
       with:
