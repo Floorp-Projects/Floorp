@@ -1370,7 +1370,7 @@ void nsSHistory::LoadURIOrBFCache(LoadEntryResult& aLoadEntry) {
                       ->GetCurrentWindowGlobal()) {
             wgp->PermitUnload([canonicalBC, loadState, she, frameLoader,
                                currentFrameLoader, canSave](bool aAllow) {
-              if (aAllow) {
+              if (aAllow && !canonicalBC->IsReplaced()) {
                 FinishRestore(canonicalBC, loadState, she, frameLoader,
                               canSave && canonicalBC->AllowedInBFCache(
                                              Nothing(), nullptr));

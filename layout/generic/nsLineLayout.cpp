@@ -998,7 +998,9 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
-        kidNextInFlow->GetParent()->DeleteNextInFlowChild(kidNextInFlow, true);
+        FrameDestroyContext context(aFrame->PresShell());
+        kidNextInFlow->GetParent()->DeleteNextInFlowChild(context,
+                                                          kidNextInFlow, true);
       }
     }
 

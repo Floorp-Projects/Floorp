@@ -7,7 +7,7 @@
 #include "xpcAccessibleTable.h"
 
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
 
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
@@ -359,53 +359,5 @@ xpcAccessibleTable::IsProbablyForLayout(bool* aResult) {
   if (!Intl()) return NS_ERROR_FAILURE;
 
   *aResult = Intl()->IsProbablyLayoutTable();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTable::SelectColumn(int32_t aColIdx) {
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= Intl()->ColCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  Intl()->SelectCol(aColIdx);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTable::SelectRow(int32_t aRowIdx) {
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= Intl()->RowCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  Intl()->SelectRow(aRowIdx);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTable::UnselectColumn(int32_t aColIdx) {
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  if (aColIdx < 0 || static_cast<uint32_t>(aColIdx) >= Intl()->ColCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  Intl()->UnselectCol(aColIdx);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-xpcAccessibleTable::UnselectRow(int32_t aRowIdx) {
-  if (!Intl()) return NS_ERROR_FAILURE;
-
-  if (aRowIdx < 0 || static_cast<uint32_t>(aRowIdx) >= Intl()->RowCount()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  Intl()->UnselectRow(aRowIdx);
   return NS_OK;
 }

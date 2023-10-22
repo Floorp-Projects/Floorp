@@ -2,6 +2,106 @@
   "data": [
     {
       "stash": {
+        "blocked": [],
+        "unblocked": [
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.3.1",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.4.2",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.4.3",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.5.1",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.5.0",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.5.0.1",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.4.1",
+          "{a3928358-883e-4730-858a-5e39aacea6cc}:1.0.0"
+        ]
+      },
+      "schema": 1696854974420,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1696941308520,
+      "id": "45f627bb-142c-4926-90a9-7b6564a39efa",
+      "last_modified": 1696941372538
+    },
+    {
+      "stash": {
+        "blocked": [
+          "jid1-JAzC7z53jemo5Q@jetpack:0.100.1",
+          "jid1-JAzC7z53jemo5Q@jetpack:0.99.65",
+          "jid1-JAzC7z53jemo5Q@jetpack:0.100.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1696497907451,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1696854911162,
+      "id": "1beaf9bb-31c8-4d1d-98e3-1bc4ab38cc9c",
+      "last_modified": 1696854974204
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{8c315f94-f8ed-4aa9-938a-9d9b088878b4}:1.2",
+          "{bcda5c5d-c2c5-4114-b3c2-a95d00b70708}:0.0.10"
+        ],
+        "unblocked": []
+      },
+      "schema": 1695995791541,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1696422910599,
+      "id": "15691613-72c3-47d2-b15d-2cf21b226503",
+      "last_modified": 1696422981455
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{c4ff78d2-349f-41c1-b0da-b31cf9596d79}:3.4.3",
+          "{c4ff78d2-349f-41c1-b0da-b31cf9596d79}:3.3.22"
+        ],
+        "unblocked": []
+      },
+      "schema": 1695818184964,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1695926111010,
+      "id": "74bc4a8e-4ab4-474d-b54f-ce86e6788fd2",
+      "last_modified": 1695926175791
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [
+          "assetview@hammock.co.jp:9.1.2.1005",
+          "konstantinos.georgiou@performance.gr:2.0.5",
+          "assetview@hammock.co.jp:9.2.0.1003",
+          "assetview@hammock.co.jp:13.2.0.1001",
+          "assetview@hammock.co.jp:9.1.2.1002",
+          "assetview@hammock.co.jp:9.2.0.1002",
+          "assetview-web-extension@hammock.co.jp:13.1.2.1001",
+          "konstantinos.georgiou@performance.gr:2.0.4",
+          "konstantinos.georgiou@performance.gr:2.0.3",
+          "assetview.m@hammock.co.jp:1.0.0.1010",
+          "assetview@hammock.co.jp:9.2.0.1001",
+          "PKCS11@KeyController:1.1",
+          "assetview@hammock.co.jp:13.0.0.1002",
+          "konstantinos.georgiou@performance.gr:2.0.6",
+          "konstantinos.georgiou@performance.gr:2.0.2",
+          "assetview-web-extension@hammock.co.jp:13.1.0.1001",
+          "assetview-web-filter@hammock.co.jp:13.0.0.1001",
+          "assetview@hammock.co.jp:13.0.0.1001",
+          "assetview@hammock.co.jp:13.2.0.1002",
+          "PKCS11@KeyController:2.6",
+          "konstantinos.georgiou@performance.gr:2.0.1",
+          "PKCS11@KeyController:2.8",
+          "konstantinos.georgiou@performance.gr:2.0.7",
+          "PKCS11@KeyController:1.2",
+          "assetview-web-filter@hammock.co.jp:13.0.0.1002"
+        ]
+      },
+      "schema": 1695737711260,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1695818112851,
+      "id": "0b962f6c-8d2a-4de6-b8fe-48768a678a88",
+      "last_modified": 1695818184766
+    },
+    {
+      "stash": {
         "blocked": [
           "ebctb@plebicom.xul:3.2.8.0",
           "addon-firefox-WebExt@skysea.skygroup.jp:12.3.0.108",
@@ -2445,5 +2545,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1695407782937
+  "timestamp": 1696941372538
 }

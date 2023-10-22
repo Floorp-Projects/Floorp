@@ -385,6 +385,8 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool SimpleResizeReflow(nscoord aWidth, nscoord aHeight);
 
+  bool CanHandleUserInputEvents(WidgetGUIEvent* aGUIEvent);
+
  public:
   /**
    * Updates pending layout, assuming reasonable (up-to-date, or mid-update for

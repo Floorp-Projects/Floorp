@@ -216,14 +216,13 @@ nsSplitterFrame::nsSplitterFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext)
     : SimpleXULLeafFrame(aStyle, aPresContext, kClassID) {}
 
-void nsSplitterFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                  PostDestroyData& aPostDestroyData) {
+void nsSplitterFrame::Destroy(DestroyContext& aContext) {
   if (mInner) {
     mInner->RemoveListener();
     mInner->Disconnect();
     mInner = nullptr;
   }
-  SimpleXULLeafFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  SimpleXULLeafFrame::Destroy(aContext);
 }
 
 nsresult nsSplitterFrame::AttributeChanged(int32_t aNameSpaceID,

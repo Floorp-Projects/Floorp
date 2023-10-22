@@ -61,8 +61,8 @@
 
     var table = document.getElementById("table");
     shadow = table.attachShadow({mode: "open"});
-    shadow.innerHTML = "<div style='display: table-row'>" +
-      "<div style='display: table-cell'>hi</div>" +
+    shadow.innerHTML = "<div style='display: table-row' role='row'>" +
+      "<div style='display: table-cell' role='cell'>hi</div>" +
       "</div>";
   </script>
 </body>

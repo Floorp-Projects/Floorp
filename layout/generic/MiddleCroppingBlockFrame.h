@@ -52,8 +52,7 @@ class MiddleCroppingBlockFrame : public nsBlockFrame,
    * Updates the displayed value by using aValue.
    */
   void UpdateDisplayedValue(const nsAString& aValue, bool aNotify);
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   RefPtr<dom::Text> mTextNode;
 };

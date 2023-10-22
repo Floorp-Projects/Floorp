@@ -1224,7 +1224,8 @@ void nsFlexContainerFrame::InsertFrames(
                                  std::move(aFrameList));
 }
 
-void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
+void nsFlexContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                       ChildListID aListID,
                                        nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
 
@@ -1232,7 +1233,7 @@ void nsFlexContainerFrame::RemoveFrame(ChildListID aListID,
   SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
 #endif
 
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 
 StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(

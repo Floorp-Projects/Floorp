@@ -102,8 +102,7 @@ class nsPlaceholderFrame final : public nsIFrame {
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
 #if defined(DEBUG) || (defined(MOZ_REFLOW_PERF_DSP) && defined(MOZ_REFLOW_PERF))
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,

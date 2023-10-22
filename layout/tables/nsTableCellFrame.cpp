@@ -81,10 +81,9 @@ void nsTableCellFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-void nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                   PostDestroyData& aPostDestroyData) {
-  nsTableFrame::MaybeUnregisterPositionedTablePart(this, aDestructRoot);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableCellFrame::Destroy(DestroyContext& aContext) {
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this);
+  nsContainerFrame::Destroy(aContext);
 }
 
 // nsIPercentBSizeObserver methods
@@ -225,7 +224,7 @@ void nsTableCellFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   MOZ_CRASH("unsupported operation");
 }
 
-void nsTableCellFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableCellFrame::RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) {
   MOZ_CRASH("unsupported operation");
 }
 #endif

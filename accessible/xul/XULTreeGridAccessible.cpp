@@ -5,6 +5,7 @@
 
 #include "XULTreeGridAccessible.h"
 
+#include <stdint.h>
 #include "AccAttributes.h"
 #include "LocalAccessible-inl.h"
 #include "nsAccCache.h"
@@ -21,6 +22,7 @@
 #include "nsITreeSelection.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TreeColumnBinding.h"
 #include "mozilla/dom/XULTreeElementBinding.h"
@@ -149,23 +151,36 @@ bool XULTreeGridAccessible::IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) {
   return IsRowSelected(aRowIdx);
 }
 
-void XULTreeGridAccessible::SelectRow(uint32_t aRowIdx) {
-  if (!mTreeView) return;
+int32_t XULTreeGridAccessible::ColIndexAt(uint32_t aCellIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    return -1;  // Error: column count is 0 or index out of bounds.
+  }
 
-  nsCOMPtr<nsITreeSelection> selection;
-  mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ASSERTION(selection, "GetSelection() Shouldn't fail!");
-
-  selection->Select(aRowIdx);
+  return static_cast<int32_t>(aCellIdx % colCount);
 }
 
-void XULTreeGridAccessible::UnselectRow(uint32_t aRowIdx) {
-  if (!mTreeView) return;
+int32_t XULTreeGridAccessible::RowIndexAt(uint32_t aCellIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    return -1;  // Error: column count is 0 or index out of bounds.
+  }
 
-  nsCOMPtr<nsITreeSelection> selection;
-  mTreeView->GetSelection(getter_AddRefs(selection));
+  return static_cast<int32_t>(aCellIdx / colCount);
+}
 
-  if (selection) selection->ClearRange(aRowIdx, aRowIdx);
+void XULTreeGridAccessible::RowAndColIndicesAt(uint32_t aCellIdx,
+                                               int32_t* aRowIdx,
+                                               int32_t* aColIdx) {
+  uint32_t colCount = ColCount();
+  if (colCount < 1 || aCellIdx >= colCount * RowCount()) {
+    *aRowIdx = -1;
+    *aColIdx = -1;
+    return;  // Error: column count is 0 or index out of bounds.
+  }
+
+  *aRowIdx = static_cast<int32_t>(aCellIdx / colCount);
+  *aColIdx = static_cast<int32_t>(aCellIdx % colCount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

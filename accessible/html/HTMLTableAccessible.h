@@ -7,8 +7,6 @@
 #define mozilla_a11y_HTMLTableAccessible_h__
 
 #include "HyperTextAccessibleWrap.h"
-#include "TableAccessible.h"
-#include "TableCellAccessible.h"
 
 class nsITableCellLayout;
 class nsTableCellFrame;
@@ -16,15 +14,14 @@ class nsTableWrapperFrame;
 
 namespace mozilla {
 
-enum class TableSelectionMode : uint32_t;
-
 namespace a11y {
+
+class HTMLTableAccessible;
 
 /**
  * HTML table cell accessible (html:td).
  */
-class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
-                                public TableCellAccessible {
+class HTMLTableCellAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLTableCellAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
@@ -33,7 +30,6 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
                                        HyperTextAccessibleWrap)
 
   // LocalAccessible
-  virtual TableCellAccessible* AsTableCell() override { return this; }
   virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual uint64_t NativeInteractiveState() const override;
@@ -44,16 +40,18 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
                                    int32_t aModType,
                                    const nsAttrValue* aOldValue,
                                    uint64_t aOldState) override;
-  // TableCellAccessible
+  // HTMLTableCellAccessible
  public:
-  virtual TableAccessible* Table() const override;
-  virtual uint32_t ColIdx() const override;
-  virtual uint32_t RowIdx() const override;
-  virtual uint32_t ColExtent() const override;
-  virtual uint32_t RowExtent() const override;
-  virtual void ColHeaderCells(nsTArray<Accessible*>* aCells) override;
-  virtual void RowHeaderCells(nsTArray<Accessible*>* aCells) override;
-  virtual bool Selected() override;
+  HTMLTableAccessible* Table() const;
+  uint32_t ColExtent() const;
+  uint32_t RowExtent() const;
+
+  static HTMLTableCellAccessible* GetFrom(LocalAccessible* aAcc) {
+    if (aAcc->IsHTMLTableCell()) {
+      return static_cast<HTMLTableCellAccessible*>(aAcc);
+    }
+    return nullptr;
+  }
 
  protected:
   virtual ~HTMLTableCellAccessible() {}
@@ -62,11 +60,6 @@ class HTMLTableCellAccessible : public HyperTextAccessibleWrap,
    * Return nsITableCellLayout of the table cell frame.
    */
   nsITableCellLayout* GetCellLayout() const;
-
-  /**
-   * Return the table cell frame.
-   */
-  nsTableCellFrame* GetCellFrame() const;
 
   /**
    * Return row and column indices of the cell.
@@ -99,9 +92,6 @@ class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableRowAccessible,
                                        HyperTextAccessibleWrap)
 
-  // LocalAccessible
-  virtual a11y::role NativeRole() const override;
-
  protected:
   virtual ~HTMLTableRowAccessible() {}
 
@@ -118,8 +108,7 @@ class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
 // data vs. layout heuristic
 // #define SHOW_LAYOUT_HEURISTIC
 
-class HTMLTableAccessible : public HyperTextAccessibleWrap,
-                            public TableAccessible {
+class HTMLTableAccessible : public HyperTextAccessibleWrap {
  public:
   HTMLTableAccessible(nsIContent* aContent, DocAccessible* aDoc)
       : HyperTextAccessibleWrap(aContent, aDoc) {
@@ -130,40 +119,23 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLTableAccessible,
                                        HyperTextAccessibleWrap)
 
-  // TableAccessible
-  virtual LocalAccessible* Caption() const override;
-  virtual void Summary(nsString& aSummary) override;
-  virtual uint32_t ColCount() const override;
-  virtual uint32_t RowCount() override;
-  virtual LocalAccessible* CellAt(uint32_t aRowIndex,
-                                  uint32_t aColumnIndex) override;
-  virtual int32_t CellIndexAt(uint32_t aRowIdx, uint32_t aColIdx) override;
-  virtual int32_t ColIndexAt(uint32_t aCellIdx) override;
-  virtual int32_t RowIndexAt(uint32_t aCellIdx) override;
-  virtual void RowAndColIndicesAt(uint32_t aCellIdx, int32_t* aRowIdx,
-                                  int32_t* aColIdx) override;
-  virtual uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx) override;
-  virtual uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx) override;
-  virtual bool IsColSelected(uint32_t aColIdx) override;
-  virtual bool IsRowSelected(uint32_t aRowIdx) override;
-  virtual bool IsCellSelected(uint32_t aRowIdx, uint32_t aColIdx) override;
-  virtual uint32_t SelectedCellCount() override;
-  virtual uint32_t SelectedColCount() override;
-  virtual uint32_t SelectedRowCount() override;
-  virtual void SelectedCells(nsTArray<Accessible*>* aCells) override;
-  virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
-  virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
-  virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
-  virtual void SelectCol(uint32_t aColIdx) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectCol(uint32_t aColIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
-  virtual LocalAccessible* AsAccessible() override { return this; }
+  // HTMLTableAccessible
+  LocalAccessible* Caption() const;
+  uint32_t ColCount() const;
+  uint32_t RowCount();
+  uint32_t ColExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
+  uint32_t RowExtentAt(uint32_t aRowIdx, uint32_t aColIdx);
+  bool IsProbablyLayoutTable();
+
+  static HTMLTableAccessible* GetFrom(LocalAccessible* aAcc) {
+    if (aAcc->IsHTMLTable()) {
+      return static_cast<HTMLTableAccessible*>(aAcc);
+    }
+    return nullptr;
+  }
 
   // LocalAccessible
-  virtual TableAccessible* AsTable() override { return this; }
   virtual void Description(nsString& aDescription) const override;
-  virtual a11y::role NativeRole() const override;
   virtual uint64_t NativeState() const override;
   virtual already_AddRefed<AccAttributes> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) const override;
@@ -182,29 +154,6 @@ class HTMLTableAccessible : public HyperTextAccessibleWrap,
                                    uint64_t aOldState) override;
 
   // HTMLTableAccessible
-
-  /**
-   * Add row or column to selection.
-   *
-   * @param aIndex   [in] index of row or column to be selected
-   * @param aTarget  [in] indicates what should be selected, either row or
-   * column (see nsFrameSelection)
-   */
-  nsresult AddRowOrColumnToSelection(int32_t aIndex,
-                                     TableSelectionMode aTarget);
-
-  /**
-   * Removes rows or columns at the given index or outside it from selection.
-   *
-   * @param  aIndex    [in] row or column index
-   * @param  aTarget   [in] indicates whether row or column should unselected
-   * @param  aIsOuter  [in] indicates whether all rows or column excepting
-   *                    the given one should be unselected or the given one
-   *                    should be unselected only
-   */
-  nsresult RemoveRowsOrColumnsFromSelection(int32_t aIndex,
-                                            TableSelectionMode aTarget,
-                                            bool aIsOuter);
 
 #ifdef SHOW_LAYOUT_HEURISTIC
   nsString mLayoutHeuristic;

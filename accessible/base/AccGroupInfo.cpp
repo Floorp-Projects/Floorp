@@ -4,7 +4,7 @@
 
 #include "AccGroupInfo.h"
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
 
 #include "nsAccUtils.h"
 #include "nsIAccessiblePivot.h"
@@ -14,8 +14,6 @@
 
 using namespace mozilla::a11y;
 
-static bool IsGenericContainer(role aRole);
-static Accessible* GetRelevantParent(const Accessible* aAcc);
 static role BaseRole(role aRole);
 
 // This rule finds candidate siblings for compound widget children.
@@ -37,7 +35,7 @@ class CompoundWidgetSiblingRule : public PivotRule {
 
     // Ignore generic accessibles, but keep searching through the subtree for
     // siblings.
-    if (IsGenericContainer(accRole)) {
+    if (aAcc->IsGeneric()) {
       return nsIAccessibleTraversalRule::FILTER_IGNORE;
     }
 
@@ -57,7 +55,7 @@ AccGroupInfo::AccGroupInfo(const Accessible* aItem, role aRole)
 void AccGroupInfo::Update() {
   mParent = nullptr;
 
-  Accessible* parent = GetRelevantParent(mItem);
+  Accessible* parent = mItem->GetNonGenericParent();
   if (!parent) {
     return;
   }
@@ -173,7 +171,7 @@ void AccGroupInfo::Update() {
   if (mRole == roles::OUTLINEITEM) {
     // Find the relevant grandparent of the item. Use that parent as the root
     // and find the previous outline item sibling within that root.
-    Accessible* grandParent = GetRelevantParent(parent);
+    Accessible* grandParent = parent->GetNonGenericParent();
     MOZ_ASSERT(grandParent);
     Pivot pivot{grandParent};
     CompoundWidgetSiblingRule parentSiblingRule{mRole};
@@ -188,7 +186,7 @@ void AccGroupInfo::Update() {
   // the parent of the item will be a group and containing item of the group is
   // a conceptual parent of the item.
   if (mRole == roles::LISTITEM || mRole == roles::OUTLINEITEM) {
-    Accessible* grandParent = GetRelevantParent(parent);
+    Accessible* grandParent = parent->GetNonGenericParent();
     if (grandParent && grandParent->Role() == mRole) {
       mParent = grandParent;
     }
@@ -271,7 +269,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
           return *val;
         }
       }
-      if (TableAccessibleBase* tableAcc = aContainer->AsTableBase()) {
+      if (TableAccessible* tableAcc = aContainer->AsTable()) {
         return tableAcc->RowCount();
       }
       break;
@@ -282,7 +280,7 @@ uint32_t AccGroupInfo::TotalItemCount(Accessible* aContainer,
             return *val;
           }
         }
-        if (TableAccessibleBase* tableAcc = table->AsTableBase()) {
+        if (TableAccessible* tableAcc = table->AsTable()) {
           return tableAcc->ColCount();
         }
       }
@@ -371,23 +369,6 @@ int32_t AccGroupInfo::GetARIAOrDefaultLevel(const Accessible* aAccessible) {
   if (level != 0) return level;
 
   return aAccessible->GetLevel(true);
-}
-
-static bool IsGenericContainer(role aRole) {
-  return aRole == roles::TEXT || aRole == roles::TEXT_CONTAINER ||
-         aRole == roles::SECTION;
-}
-
-static Accessible* GetRelevantParent(const Accessible* aAcc) {
-  MOZ_ASSERT(aAcc);
-
-  // Search through ancestors until we find a relevant parent, skipping generic
-  // accessibles.
-  Accessible* parent = aAcc->Parent();
-  while (parent && IsGenericContainer(parent->Role())) {
-    parent = parent->Parent();
-  }
-  return parent;
 }
 
 static role BaseRole(role aRole) {

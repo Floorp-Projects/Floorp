@@ -47,6 +47,7 @@ async function testChildAtPoint(dpr, x, y, container, child, grandChild) {
   await untilCacheIs(
     () => {
       actual = getChildAtPoint(container, x, y, false);
+      info(`Got direct child match of ${CommonUtils.prettyName(actual)}`);
       return actual;
     },
     child,
@@ -60,6 +61,7 @@ async function testChildAtPoint(dpr, x, y, container, child, grandChild) {
   await untilCacheIs(
     () => {
       actual = getChildAtPoint(container, x, y, true);
+      info(`Got deepest child match of ${CommonUtils.prettyName(actual)}`);
       return actual;
     },
     grandChild,

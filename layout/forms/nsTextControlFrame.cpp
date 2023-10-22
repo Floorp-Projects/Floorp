@@ -126,8 +126,7 @@ nsIScrollableFrame* nsTextControlFrame::GetScrollTargetFrame() const {
   return do_QueryFrame(mRootNode->GetPrimaryFrame());
 }
 
-void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                     PostDestroyData& aPostDestroyData) {
+void nsTextControlFrame::Destroy(DestroyContext& aContext) {
   RemoveProperty(TextControlInitializer());
 
   // Unbind the text editor state object from the frame.  The editor will live
@@ -166,12 +165,12 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   // If we're a subclass like nsNumberControlFrame, then it owns the root of the
   // anonymous subtree where mRootNode is.
-  aPostDestroyData.AddAnonymousContent(mRootNode.forget());
-  aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
-  aPostDestroyData.AddAnonymousContent(mRevealButton.forget());
+  aContext.AddAnonymousContent(mRootNode.forget());
+  aContext.AddAnonymousContent(mPlaceholderDiv.forget());
+  aContext.AddAnonymousContent(mPreviewDiv.forget());
+  aContext.AddAnonymousContent(mRevealButton.forget());
 
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::Destroy(aContext);
 }
 
 LogicalSize nsTextControlFrame::CalcIntrinsicSize(

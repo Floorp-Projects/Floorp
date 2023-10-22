@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1851829
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Bug 1851829</title>
+  <script>
+  async function timeout (cmd) {
+    const timer = new Promise((resolve, reject) => {
+      const id = setTimeout(() => {
+        clearTimeout(id)
+        reject(new Error('Promise timed out!'))
+      }, 750)
+    })
+    return Promise.race([cmd, timer])
+  }
+
+  window.addEventListener('load', async () => {
+    // <script>window.close()<\/script>
+    const tab = window.open('data:text/plain;charset=utf-8;base64,PHNjcmlwdD53aW5kb3cuY2xvc2UoKTwvc2NyaXB0Pg==')
+    setTimeout(async () => {
+      try { await timeout(tab.navigator.requestMIDIAccess({})) } catch (e) {}
+      window.close()
+      document.documentElement.classList.remove("reftest-wait");
+    }, 400)
+  })
+  </script>
+</head>
+</html>

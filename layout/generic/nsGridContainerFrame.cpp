@@ -9483,7 +9483,8 @@ void nsGridContainerFrame::InsertFrames(
                                  std::move(aFrameList));
 }
 
-void nsGridContainerFrame::RemoveFrame(ChildListID aListID,
+void nsGridContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                       ChildListID aListID,
                                        nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
 
@@ -9491,7 +9492,7 @@ void nsGridContainerFrame::RemoveFrame(ChildListID aListID,
   SetDidPushItemsBitIfNeeded(aListID, aOldFrame);
 #endif
 
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 
 StyleAlignFlags nsGridContainerFrame::CSSAlignmentForAbsPosChild(

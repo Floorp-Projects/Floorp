@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 
+#include "gc/FinalizationObservers.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
@@ -243,7 +244,7 @@ void WeakRefObject::readBarrier(JSContext* cx, Handle<WeakRefObject*> self) {
     MOZ_ASSERT(cx->runtime()->hasReleasedWrapperCallback);
     bool wasReleased = cx->runtime()->hasReleasedWrapperCallback(obj);
     if (wasReleased) {
-      self->clearTarget();
+      obj->zone()->finalizationObservers()->removeWeakRefTarget(obj, self);
       return;
     }
   }

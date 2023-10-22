@@ -210,10 +210,11 @@ void nsTableFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 // the header only has forward declarations of them.
 nsTableFrame::~nsTableFrame() = default;
 
-void nsTableFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                               PostDestroyData& aPostDestroyData) {
-  mColGroups.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableFrame::Destroy(DestroyContext& aContext) {
+  MOZ_ASSERT(!mBits.mIsDestroying);
+  mBits.mIsDestroying = true;
+  mColGroups.DestroyFrames(aContext);
+  nsContainerFrame::Destroy(aContext);
 }
 
 // Make sure any views are positioned properly
@@ -261,7 +262,7 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
     return;
   }
 
-  nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(aFrame);
+  nsTableFrame* tableFrame = GetTableFrame(aFrame);
   MOZ_ASSERT(tableFrame, "Should have a table frame here");
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
 
@@ -284,22 +285,16 @@ void nsTableFrame::PositionedTablePartMaybeChanged(nsIFrame* aFrame,
 }
 
 /* static */
-void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame,
-                                                      nsIFrame* aDestructRoot) {
+void nsTableFrame::MaybeUnregisterPositionedTablePart(nsIFrame* aFrame) {
   if (!aFrame->IsAbsPosContainingBlock()) {
     return;
   }
-  // Retrieve the table frame, and check if we hit aDestructRoot on the way.
-  bool didPassThrough;
-  nsTableFrame* tableFrame =
-      GetTableFramePassingThrough(aDestructRoot, aFrame, &didPassThrough);
-  if (!didPassThrough && !tableFrame->GetPrevContinuation()) {
-    // The table frame will be destroyed, and it's the first im flow (and thus
-    // owning the PositionedTablePartArray), so we don't need to do
-    // anything.
-    return;
-  }
+  nsTableFrame* tableFrame = GetTableFrame(aFrame);
   tableFrame = static_cast<nsTableFrame*>(tableFrame->FirstContinuation());
+
+  if (tableFrame->IsDestroying()) {
+    return;  // We're throwing the table away anyways.
+  }
 
   // Retrieve the positioned parts array for this table.
   FrameTArray* positionedParts =
@@ -572,11 +567,12 @@ void nsTableFrame::InsertCol(nsTableColFrame& aColFrame, int32_t aColIndex) {
                 (nsTableColGroupFrame*)mColGroups.LastChild();
             if (lastColGroup) {
               MOZ_ASSERT(lastColGroup->IsSynthetic());
-              lastColGroup->RemoveChild(*lastCol, false);
+              DestroyContext context(PresShell());
+              lastColGroup->RemoveChild(context, *lastCol, false);
 
               // remove the col group if it is empty
               if (lastColGroup->GetColCount() <= 0) {
-                mColGroups.DestroyFrame((nsIFrame*)lastColGroup);
+                mColGroups.DestroyFrame(context, (nsIFrame*)lastColGroup);
               }
             }
             removedFromCache = true;
@@ -787,13 +783,13 @@ int32_t nsTableFrame::DestroyAnonymousColFrames(int32_t aNumFrames) {
   int32_t endIndex = mColFrames.Length() - 1;
   int32_t startIndex = (endIndex - aNumFrames) + 1;
   int32_t numColsRemoved = 0;
+  DestroyContext context(PresShell());
   for (int32_t colIdx = endIndex; colIdx >= startIndex; colIdx--) {
     nsTableColFrame* colFrame = GetColFrame(colIdx);
     if (colFrame && (eColAnonymousCell == colFrame->GetColType())) {
-      nsTableColGroupFrame* cgFrame =
-          static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
+      auto* cgFrame = static_cast<nsTableColGroupFrame*>(colFrame->GetParent());
       // remove the frame from the colgroup
-      cgFrame->RemoveChild(*colFrame, false);
+      cgFrame->RemoveChild(context, *colFrame, false);
       // remove the frame from the cache, but not the cell map
       RemoveCol(nullptr, colIdx, true, false);
       numColsRemoved++;
@@ -2344,13 +2340,14 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
 #endif
 }
 
-void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableFrame::DoRemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                 nsIFrame* aOldFrame) {
   if (aListID == FrameChildListID::ColGroup) {
     nsIFrame* nextColGroupFrame = aOldFrame->GetNextSibling();
     nsTableColGroupFrame* colGroup = (nsTableColGroupFrame*)aOldFrame;
     int32_t firstColIndex = colGroup->GetStartColumnIndex();
     int32_t lastColIndex = firstColIndex + colGroup->GetColCount() - 1;
-    mColGroups.DestroyFrame(aOldFrame);
+    mColGroups.DestroyFrame(aContext, aOldFrame);
     nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
     int32_t colIdx;
@@ -2399,7 +2396,7 @@ void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     }
 
     // remove the row group frame from the sibling chain
-    mFrames.DestroyFrame(aOldFrame);
+    mFrames.DestroyFrame(aContext, aOldFrame);
 
     // the removal of a row group changes the cellmap, the columns might change
     if (cellMap) {
@@ -2416,7 +2413,8 @@ void nsTableFrame::DoRemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
   }
 }
 
-void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsTableFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                               nsIFrame* aOldFrame) {
   NS_ASSERTION(aListID == FrameChildListID::ColGroup ||
                    mozilla::StyleDisplay::TableColumnGroup !=
                        aOldFrame->StyleDisplay()->mDisplay,
@@ -2429,7 +2427,7 @@ void nsTableFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
     if (parent != lastParent) {
       parent->DrainSelfOverflowList();
     }
-    parent->DoRemoveFrame(aListID, aOldFrame);
+    parent->DoRemoveFrame(aContext, aListID, aOldFrame);
     aOldFrame = oldFrameNextContinuation;
     if (parent != lastParent) {
       // for now, just bail and recalc all of the collapsing borders
@@ -3602,31 +3600,6 @@ nsTableFrame* nsTableFrame::GetTableFrame(nsIFrame* aFrame) {
   }
   MOZ_CRASH("unable to find table parent");
   return nullptr;
-}
-
-nsTableFrame* nsTableFrame::GetTableFramePassingThrough(
-    nsIFrame* aMustPassThrough, nsIFrame* aFrame, bool* aDidPassThrough) {
-  MOZ_ASSERT(aMustPassThrough == aFrame ||
-                 nsLayoutUtils::IsProperAncestorFrame(aMustPassThrough, aFrame),
-             "aMustPassThrough should be an ancestor");
-
-  // Retrieve the table frame, and check if we hit aMustPassThrough on the
-  // way.
-  *aDidPassThrough = false;
-  nsTableFrame* tableFrame = nullptr;
-  for (nsIFrame* ancestor = aFrame; ancestor;
-       ancestor = ancestor->GetParent()) {
-    if (ancestor == aMustPassThrough) {
-      *aDidPassThrough = true;
-    }
-    if (ancestor->IsTableFrame()) {
-      tableFrame = static_cast<nsTableFrame*>(ancestor);
-      break;
-    }
-  }
-
-  MOZ_ASSERT(tableFrame, "Should have a table frame here");
-  return tableFrame;
 }
 
 bool nsTableFrame::IsAutoBSize(WritingMode aWM) {

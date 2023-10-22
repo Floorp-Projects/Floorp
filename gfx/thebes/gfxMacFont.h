@@ -16,21 +16,24 @@ class MacOSFontEntry;
 
 class gfxMacFont final : public gfxFont {
  public:
-  gfxMacFont(const RefPtr<mozilla::gfx::UnscaledFontMac>& aUnscaledFont, MacOSFontEntry* aFontEntry,
-             const gfxFontStyle* aFontStyle);
+  gfxMacFont(const RefPtr<mozilla::gfx::UnscaledFontMac>& aUnscaledFont,
+             MacOSFontEntry* aFontEntry, const gfxFontStyle* aFontStyle);
 
   CGFontRef GetCGFontRef() const { return mCGFont; }
 
   /* override Measure to add padding for antialiasing */
   RunMetrics Measure(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
-                     BoundingBoxType aBoundingBoxType, DrawTarget* aDrawTargetForTightBoundingBox,
-                     Spacing* aSpacing, mozilla::gfx::ShapedTextFlags aOrientation) override;
+                     BoundingBoxType aBoundingBoxType,
+                     DrawTarget* aDrawTargetForTightBoundingBox,
+                     Spacing* aSpacing,
+                     mozilla::gfx::ShapedTextFlags aOrientation) override;
 
   // We need to provide hinted (non-linear) glyph widths if using a font
   // with embedded color bitmaps (Apple Color Emoji), as Core Text renders
   // the glyphs with non-linear scaling at small pixel sizes.
   bool ProvidesGlyphWidths() const override {
-    return mVariationFont || mFontEntry->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
+    return mVariationFont ||
+           mFontEntry->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'));
   }
 
   int32_t GetGlyphWidth(uint16_t aGID) override;
@@ -51,21 +54,15 @@ class gfxMacFont final : public gfxFont {
 
   bool UseNativeColrFontSupport() const override;
 
-  // Helper to create a CTFont from a CGFont, with optional font descriptor
-  // (for features), and copying any variations that were set on the CGFont.
-  // This is public so that gfxCoreTextShaper can also use it.
-  static CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize,
-                                                        bool aInstalledFont,
-                                                        CTFontDescriptorRef aFontDesc = nullptr);
-
  protected:
   ~gfxMacFont() override;
 
   const Metrics& GetHorizontalMetrics() const override { return mMetrics; }
 
   // override to prefer CoreText shaping with fonts that depend on AAT
-  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText, uint32_t aOffset, uint32_t aLength,
-                 Script aScript, nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
+  bool ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
+                 uint32_t aOffset, uint32_t aLength, Script aScript,
+                 nsAtom* aLanguage, bool aVertical, RoundingFlags aRounding,
                  gfxShapedText* aShapedText) override;
 
   void InitMetrics();

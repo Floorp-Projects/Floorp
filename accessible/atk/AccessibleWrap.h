@@ -73,9 +73,9 @@ class AccessibleWrap : public LocalAccessible {
 
   static void GetKeyBinding(Accessible* aAccessible, nsAString& aResult);
 
-  static Accessible* GetColumnHeader(TableAccessibleBase* aAccessible,
+  static Accessible* GetColumnHeader(TableAccessible* aAccessible,
                                      int32_t aColIdx);
-  static Accessible* GetRowHeader(TableAccessibleBase* aAccessible,
+  static Accessible* GetRowHeader(TableAccessible* aAccessible,
                                   int32_t aRowIdx);
 
  protected:

@@ -42,8 +42,8 @@ class nsTableColFrame final : public nsSplittableFrame {
                                               ComputedStyle* aContext);
 
   // nsIFrame overrides
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override {
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override {
     nsSplittableFrame::Init(aContent, aParent, aPrevInFlow);
     if (!aPrevInFlow) {
       mWritingMode = GetTableFrame()->GetWritingMode();
@@ -51,17 +51,17 @@ class nsTableColFrame final : public nsSplittableFrame {
   }
 
   /** @see nsIFrame::DidSetComputedStyle */
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   nsTableColGroupFrame* GetTableColGroupFrame() const {
@@ -260,7 +260,7 @@ class nsTableColFrame final : public nsSplittableFrame {
   void SetFinalISize(nscoord aFinalISize) { mFinalISize = aFinalISize; }
   nscoord GetFinalISize() { return mFinalISize; }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & (eSupportsContainLayoutAndPaint | eSupportsAspectRatio)) {
       return false;
     }
@@ -268,14 +268,12 @@ class nsTableColFrame final : public nsSplittableFrame {
     return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
 
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0,
+  void InvalidateFrame(uint32_t aDisplayItemKey = 0,
+                       bool aRebuildDisplayItems = true) override;
+  void InvalidateFrameWithRect(const nsRect& aRect,
+                               uint32_t aDisplayItemKey = 0,
                                bool aRebuildDisplayItems = true) override;
-  virtual void InvalidateFrameWithRect(
-      const nsRect& aRect, uint32_t aDisplayItemKey = 0,
-      bool aRebuildDisplayItems = true) override;
-  virtual void InvalidateFrameForRemoval() override {
-    InvalidateFrameSubtree();
-  }
+  void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
  protected:
   explicit nsTableColFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);

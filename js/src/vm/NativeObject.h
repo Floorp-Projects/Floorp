@@ -461,6 +461,13 @@ class alignas(HeapSlot) ObjectSlots {
   static inline size_t allocCount(size_t slotCount) {
     static_assert(sizeof(ObjectSlots) ==
                   ObjectSlots::VALUES_PER_HEADER * sizeof(HeapSlot));
+#ifdef MOZ_VALGRIND
+    if (slotCount == 0) {
+      // Add an extra unused slot so that NativeObject::slots_ always points
+      // into the allocation otherwise valgrind thinks this is a leak.
+      slotCount = 1;
+    }
+#endif
     return slotCount + VALUES_PER_HEADER;
   }
 

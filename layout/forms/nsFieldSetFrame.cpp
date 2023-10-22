@@ -109,7 +109,7 @@ class nsDisplayFieldSetBorder final : public nsPaintedDisplayItem {
   }
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayFieldSetBorder)
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -824,7 +824,7 @@ void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 #ifdef DEBUG
-void nsFieldSetFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsFieldSetFrame::RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) {
   MOZ_CRASH("nsFieldSetFrame::RemoveFrame not supported");
 }
 #endif
@@ -894,7 +894,9 @@ void nsFieldSetFrame::EnsureChildContinuation(nsIFrame* aChild,
   if (aStatus.IsFullyComplete()) {
     if (nif) {
       // NOTE: we want to avoid our DEBUG version of RemoveFrame above.
-      nsContainerFrame::RemoveFrame(FrameChildListID::NoReflowPrincipal, nif);
+      DestroyContext context(PresShell());
+      nsContainerFrame::RemoveFrame(context,
+                                    FrameChildListID::NoReflowPrincipal, nif);
       MOZ_ASSERT(!aChild->GetNextInFlow());
     }
   } else {

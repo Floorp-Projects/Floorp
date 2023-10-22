@@ -31,3 +31,4 @@ cd ${hunspell_dir}/src
 patch -p5 < ../patches/bug1410214.patch
 patch -p5 < ../patches/bug1653659.patch
 patch -p5 < ../patches/bug1739761.patch
+patch -p5 < ../patches/bug1838113.patch

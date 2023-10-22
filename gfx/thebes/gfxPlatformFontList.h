@@ -1022,9 +1022,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   nsTHashtable<ShmemCharMapHashEntry> mShmemCharMaps MOZ_GUARDED_BY(mLock);
 
   // data used as part of the font cmap loading process
-  nsTArray<RefPtr<gfxFontFamily>> mFontFamiliesToLoad;
-  uint32_t mStartIndex = 0;
-  uint32_t mNumFamilies = 0;
+  nsTArray<RefPtr<gfxFontFamily>> mFontFamiliesToLoad MOZ_GUARDED_BY(mLock);
+  uint32_t mStartIndex MOZ_GUARDED_BY(mLock) = 0;
+  uint32_t mNumFamilies MOZ_GUARDED_BY(mLock) = 0;
 
   // xxx - info for diagnosing no default font aborts
   // see bugs 636957, 1070983, 1189129
@@ -1055,7 +1055,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   RefPtr<gfxFontEntry> mDefaultFontEntry MOZ_GUARDED_BY(mLock);
 
   RefPtr<mozilla::CancelableRunnable> mLoadCmapsRunnable;
-  uint32_t mStartedLoadingCmapsFrom = 0xffffffffu;
+  uint32_t mStartedLoadingCmapsFrom MOZ_GUARDED_BY(mLock) = 0xffffffffu;
 
   bool mFontFamilyWhitelistActive = false;
 

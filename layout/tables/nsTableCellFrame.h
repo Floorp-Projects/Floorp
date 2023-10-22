@@ -66,8 +66,7 @@ class nsTableCellFrame : public nsContainerFrame,
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
 #ifdef ACCESSIBILITY
   mozilla::a11y::AccType AccessibleType() override;
@@ -86,7 +85,7 @@ class nsTableCellFrame : public nsContainerFrame,
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
 #endif
 
   nsContainerFrame* GetContentInsertionFrame() override {

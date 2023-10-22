@@ -82,11 +82,10 @@ a11y::AccType nsTableWrapperFrame::AccessibleType() {
 }
 #endif
 
-void nsTableWrapperFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                      PostDestroyData& aPostDestroyData) {
-  DestroyAbsoluteFrames(aDestructRoot, aPostDestroyData);
-  mCaptionFrames.DestroyFramesFrom(aDestructRoot, aPostDestroyData);
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+void nsTableWrapperFrame::Destroy(DestroyContext& aContext) {
+  DestroyAbsoluteFrames(aContext);
+  mCaptionFrames.DestroyFrames(aContext);
+  nsContainerFrame::Destroy(aContext);
 }
 
 const nsFrameList& nsTableWrapperFrame::GetChildList(
@@ -162,14 +161,15 @@ void nsTableWrapperFrame::InsertFrames(
   MarkNeedsDisplayItemRebuild();
 }
 
-void nsTableWrapperFrame::RemoveFrame(ChildListID aListID,
+void nsTableWrapperFrame::RemoveFrame(DestroyContext& aContext,
+                                      ChildListID aListID,
                                       nsIFrame* aOldFrame) {
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
   MOZ_ASSERT(FrameChildListID::Caption == aListID, "can't remove inner frame");
 
   // Remove the frame and destroy it
-  mCaptionFrames.DestroyFrame(aOldFrame);
+  mCaptionFrames.DestroyFrame(aContext, aOldFrame);
 
   PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
                                 NS_FRAME_HAS_DIRTY_CHILDREN);

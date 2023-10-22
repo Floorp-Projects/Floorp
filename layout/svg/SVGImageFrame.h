@@ -89,8 +89,8 @@ class SVGImageFrame final : public nsIFrame,
 
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
+
   void DidSetComputedStyle(ComputedStyle* aOldStyle) final;
 
   bool IsSVGTransformed(Matrix* aOwnTransforms = nullptr,

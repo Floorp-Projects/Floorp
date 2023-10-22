@@ -294,4 +294,46 @@ add_task(async function test_onUpdated_after_onRemoved() {
   await extension.unload();
 });
 
+// Regression test for Bug 1852391.
+add_task(async function test_pin_discarded_tab() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["tabs"],
+    },
+    async background() {
+      const url = "http://mochi.test:8888";
+      const newTab = await browser.tabs.create({
+        url,
+        active: false,
+        discarded: true,
+      });
+      browser.tabs.onUpdated.addListener(
+        async (tabId, changeInfo) => {
+          browser.test.assertEq(
+            tabId,
+            newTab.id,
+            "Expect onUpdated to be fired for the expected tab"
+          );
+          browser.test.assertEq(
+            changeInfo.pinned,
+            true,
+            "Expect pinned to be set to true"
+          );
+          await browser.tabs.remove(newTab.id);
+          browser.test.notifyPass("onPinned");
+        },
+        { properties: ["pinned"] }
+      );
+      await browser.tabs.update(newTab.id, { pinned: true }).catch(err => {
+        browser.test.fail(`Got unexpected rejection from tabs.update: ${err}`);
+        browser.test.notifyFail("onPinned");
+      });
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitFinish("onPinned");
+  await extension.unload();
+});
+
 add_task(forceGC);

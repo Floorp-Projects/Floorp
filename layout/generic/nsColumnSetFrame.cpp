@@ -1347,7 +1347,7 @@ void nsColumnSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   MOZ_CRASH("unsupported operation");
 }
 
-void nsColumnSetFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsColumnSetFrame::RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) {
   MOZ_CRASH("unsupported operation");
 }
 #endif

@@ -7,12 +7,15 @@
 #include "ARIAMap.h"
 #include "CachedTableAccessible.h"
 #include "DocAccessible.h"
+#include "RemoteAccessibleBase.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/Platform.h"
 #include "mozilla/a11y/RemoteAccessibleBase.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "mozilla/BinarySearch.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -412,6 +415,60 @@ bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
 }
 
 template <class Derived>
+RemoteAccessible* RemoteAccessibleBase<Derived>::DoFuzzyHittesting() {
+  uint32_t childCount = ChildCount();
+  if (!childCount) {
+    return nullptr;
+  }
+  // Check if this match has a clipped child.
+  // This usually indicates invisible text, and we're
+  // interested in returning the inner text content
+  // even if it doesn't contain the point we're hittesting.
+  RemoteAccessible* clippedContainer = nullptr;
+  for (uint32_t i = 0; i < childCount; i++) {
+    RemoteAccessible* child = RemoteChildAt(i);
+    if (child->Role() == roles::TEXT_CONTAINER) {
+      if (child->IsClipped()) {
+        clippedContainer = child;
+        break;
+      }
+    }
+  }
+  // If we found a clipped container, descend it in search of
+  // meaningful text leaves. Ignore non-text-leaf/text-container
+  // siblings.
+  RemoteAccessible* container = clippedContainer;
+  while (container) {
+    RemoteAccessible* textLeaf = nullptr;
+    bool continueSearch = false;
+    childCount = container->ChildCount();
+    for (uint32_t i = 0; i < childCount; i++) {
+      RemoteAccessible* child = container->RemoteChildAt(i);
+      if (child->Role() == roles::TEXT_CONTAINER) {
+        container = child;
+        continueSearch = true;
+        break;
+      }
+      if (child->IsTextLeaf()) {
+        textLeaf = child;
+        // Don't break here -- it's possible a text container
+        // exists as another sibling, and we should descend as
+        // deep as possible.
+      }
+    }
+    if (textLeaf) {
+      return textLeaf;
+    }
+    if (!continueSearch) {
+      // We didn't find anything useful in this set of siblings.
+      // Don't keep searching
+      break;
+    }
+  }
+  return nullptr;
+}
+
+template <class Derived>
 Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   // Elements that are partially on-screen should have their bounds masked by
@@ -484,6 +541,13 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           // this call shouldn't pass the boundary defined by
           // the acc this call originated on. If we hit `this`,
           // return our most recent match.
+          if (!lastMatch &&
+              BoundsWithOffset(Nothing(), hitTesting).Contains(aX, aY)) {
+            // If we haven't found a match, but `this` contains the point we're
+            // looking for, set it as our temp last match so we can
+            // (potentially) do fuzzy hittesting on it below.
+            lastMatch = acc;
+          }
           break;
         }
 
@@ -494,6 +558,10 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           lastMatch = acc;
           break;
         }
+      }
+      if (lastMatch) {
+        RemoteAccessible* fuzzyMatch = lastMatch->DoFuzzyHittesting();
+        lastMatch = fuzzyMatch ? fuzzyMatch : lastMatch;
       }
     }
   }
@@ -653,6 +721,27 @@ bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
 }
 
 template <class Derived>
+bool RemoteAccessibleBase<Derived>::IsOverflowHidden() const {
+  MOZ_ASSERT(mCachedFields);
+  if (auto maybeOverflow =
+          mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::overflow)) {
+    return *maybeOverflow == nsGkAtoms::hidden;
+  }
+
+  return false;
+}
+
+template <class Derived>
+bool RemoteAccessibleBase<Derived>::IsClipped() const {
+  MOZ_ASSERT(mCachedFields);
+  if (mCachedFields->GetAttribute<bool>(nsGkAtoms::clip_rule)) {
+    return true;
+  }
+
+  return false;
+}
+
+template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     Maybe<nsRect> aOffset, bool aBoundsAreForHittesting) const {
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
@@ -728,11 +817,12 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           // that the bounds we've calculated so far are constrained to the
           // bounds of the scroll area. Without this, we'll "hit" the off-screen
           // portions of accs that are are partially (but not fully) within the
-          // scroll area.
-          if (aBoundsAreForHittesting && hasScrollArea) {
-            nsRect selfRelativeScrollBounds(0, 0, remoteBounds.width,
-                                            remoteBounds.height);
-            bounds = bounds.SafeIntersect(selfRelativeScrollBounds);
+          // scroll area. This is also a problem for accs with overflow:hidden;
+          if (aBoundsAreForHittesting &&
+              (hasScrollArea || remoteAcc->IsOverflowHidden())) {
+            nsRect selfRelativeVisibleBounds(0, 0, remoteBounds.width,
+                                             remoteBounds.height);
+            bounds = bounds.SafeIntersect(selfRelativeVisibleBounds);
           }
         }
         if (remoteAcc->IsDoc()) {
@@ -1386,8 +1476,8 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
       attributes->SetAttribute(nsGkAtoms::display, display);
     }
 
-    if (TableCellAccessibleBase* cell = AsTableCellBase()) {
-      TableAccessibleBase* table = cell->Table();
+    if (TableCellAccessible* cell = AsTableCell()) {
+      TableAccessible* table = cell->Table();
       uint32_t row = cell->RowIdx();
       uint32_t col = cell->ColIdx();
       int32_t cellIdx = table->CellIndexAt(row, col);
@@ -1899,7 +1989,7 @@ void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
 }
 
 template <class Derived>
-TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
+TableAccessible* RemoteAccessibleBase<Derived>::AsTable() {
   if (IsTable()) {
     return CachedTableAccessible::GetFrom(this);
   }
@@ -1907,7 +1997,7 @@ TableAccessibleBase* RemoteAccessibleBase<Derived>::AsTableBase() {
 }
 
 template <class Derived>
-TableCellAccessibleBase* RemoteAccessibleBase<Derived>::AsTableCellBase() {
+TableCellAccessible* RemoteAccessibleBase<Derived>::AsTableCell() {
   if (IsTableCell()) {
     return CachedTableCellAccessible::GetFrom(this);
   }

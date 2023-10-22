@@ -7,8 +7,7 @@
 #define mozilla_a11y_XULListboxAccessible_h__
 
 #include "BaseAccessibles.h"
-#include "TableAccessible.h"
-#include "TableCellAccessible.h"
+#include "mozilla/a11y/TableAccessible.h"
 #include "XULMenuAccessible.h"
 #include "XULSelectControlAccessible.h"
 
@@ -70,8 +69,6 @@ class XULListboxAccessible : public XULSelectControlAccessible,
   virtual void SelectedCellIndices(nsTArray<uint32_t>* aCells) override;
   virtual void SelectedColIndices(nsTArray<uint32_t>* aCols) override;
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
   virtual LocalAccessible* AsAccessible() override { return this; }
 
   // LocalAccessible

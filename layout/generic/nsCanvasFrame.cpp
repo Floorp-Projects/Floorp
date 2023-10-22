@@ -198,19 +198,18 @@ void nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
   }
 }
 
-void nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                PostDestroyData& aPostDestroyData) {
+void nsCanvasFrame::Destroy(DestroyContext& aContext) {
   nsIScrollableFrame* sf =
       PresContext()->GetPresShell()->GetRootScrollFrameAsScrollable();
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
 
-  aPostDestroyData.AddAnonymousContent(mCustomContentContainer.forget());
+  aContext.AddAnonymousContent(mCustomContentContainer.forget());
   if (mTooltipContent) {
-    aPostDestroyData.AddAnonymousContent(mTooltipContent.forget());
+    aContext.AddAnonymousContent(mTooltipContent.forget());
   }
-  nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsContainerFrame::Destroy(aContext);
 }
 
 void nsCanvasFrame::ScrollPositionWillChange(nscoord aX, nscoord aY) {
@@ -273,9 +272,10 @@ void nsCanvasFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
 }
 
 #ifdef DEBUG
-void nsCanvasFrame::RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) {
+void nsCanvasFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
+                                nsIFrame* aOldFrame) {
   MOZ_ASSERT(aListID == FrameChildListID::Principal, "unexpected child list");
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 #endif
 

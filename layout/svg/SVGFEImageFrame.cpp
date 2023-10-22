@@ -42,8 +42,7 @@ class SVGFEImageFrame final : public nsIFrame {
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
                     nsIFrame* aPrevInFlow) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     if (aFlags & eSupportsContainLayoutAndPaint) {
@@ -85,8 +84,7 @@ namespace mozilla {
 NS_IMPL_FRAMEARENA_HELPERS(SVGFEImageFrame)
 
 /* virtual */
-void SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                  PostDestroyData& aPostDestroyData) {
+void SVGFEImageFrame::Destroy(DestroyContext& aContext) {
   DecApproximateVisibleCount();
 
   nsCOMPtr<nsIImageLoadingContent> imageLoader =
@@ -95,7 +93,7 @@ void SVGFEImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
     imageLoader->FrameDestroyed(this);
   }
 
-  nsIFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsIFrame::Destroy(aContext);
 }
 
 void SVGFEImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,

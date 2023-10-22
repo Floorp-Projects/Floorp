@@ -36,11 +36,10 @@ class nsTableWrapperFrame : public nsContainerFrame {
 
   // nsIFrame overrides - see there for a description
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
+  const nsFrameList& GetChildList(ChildListID aListID) const override;
+  void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;
@@ -48,18 +47,18 @@ class nsTableWrapperFrame : public nsContainerFrame {
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override {
+  nsContainerFrame* GetContentInsertionFrame() override {
     return PrincipalChildList().FirstChild()->GetContentInsertionFrame();
   }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListForInnerTable(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists);
@@ -71,8 +70,8 @@ class nsTableWrapperFrame : public nsContainerFrame {
       mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
       BaselineExportContext aExportContext) const override;
 
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   SizeComputationResult ComputeSize(
       gfxContext* aRenderingContext, mozilla::WritingMode aWM,
@@ -93,15 +92,15 @@ class nsTableWrapperFrame : public nsContainerFrame {
   /** process a reflow command for the table.
    * This involves reflowing the caption and the inner table.
    * @see nsIFrame::Reflow */
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual ComputedStyle* GetParentComputedStyle(
+  ComputedStyle* GetParentComputedStyle(
       nsIFrame** aProviderFrame) const override;
 
   /**

@@ -978,16 +978,20 @@ def test_info_testrun_report(command_context, output_file):
     import testinfo
 
     ti = testinfo.TestInfoReport(verbose=True)
-    runcounts = ti.get_runcounts()
-    if output_file:
-        output_file = os.path.abspath(output_file)
-        output_dir = os.path.dirname(output_file)
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
-        with open(output_file, "w") as f:
-            json.dump(runcounts, f)
-    else:
-        print(runcounts)
+    if os.environ.get("GECKO_HEAD_REPOSITORY", "") in [
+        "https://hg.mozilla.org/mozilla-central",
+        "https://hg.mozilla.org/try",
+    ]:
+        runcounts = ti.get_runcounts()
+        if output_file:
+            output_file = os.path.abspath(output_file)
+            output_dir = os.path.dirname(output_file)
+            if not os.path.isdir(output_dir):
+                os.makedirs(output_dir)
+            with open(output_file, "w") as f:
+                json.dump(runcounts, f)
+        else:
+            print(runcounts)
 
 
 @SubCommand(

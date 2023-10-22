@@ -774,15 +774,14 @@ void SVGOuterSVGFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   }
 }
 
-void SVGOuterSVGFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                   PostDestroyData& aPostDestroyData) {
+void SVGOuterSVGFrame::Destroy(DestroyContext& aContext) {
   // This handles both the case when the root <svg> element is made display:none
   // (and thus loses its intrinsic size and aspect ratio), and when the frame
   // is navigated elsewhere & we need to reset parent <object>/<embed>'s
   // recorded intrinsic size/ratio values.
   MaybeSendIntrinsicSizeAndRatioToEmbedder(Nothing(), Nothing());
 
-  SVGDisplayContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  SVGDisplayContainerFrame::Destroy(aContext);
 }
 
 }  // namespace mozilla

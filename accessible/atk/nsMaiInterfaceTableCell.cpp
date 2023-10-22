@@ -6,8 +6,8 @@
 
 #include "InterfaceInitFuncs.h"
 
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccessibilityService.h"
 #include "nsMai.h"
 #include "RemoteAccessible.h"
@@ -24,7 +24,7 @@ static gint GetColumnSpanCB(AtkTableCell* aCell) {
   if (!acc) {
     return 0;
   }
-  return static_cast<gint>(acc->AsTableCellBase()->ColExtent());
+  return static_cast<gint>(acc->AsTableCell()->ColExtent());
 }
 
 static gint GetRowSpanCB(AtkTableCell* aCell) {
@@ -32,7 +32,7 @@ static gint GetRowSpanCB(AtkTableCell* aCell) {
   if (!acc) {
     return 0;
   }
-  return static_cast<gint>(acc->AsTableCellBase()->RowExtent());
+  return static_cast<gint>(acc->AsTableCell()->RowExtent());
 }
 
 static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
@@ -40,7 +40,7 @@ static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
   if (!acc) {
     return false;
   }
-  TableCellAccessibleBase* cell = acc->AsTableCellBase();
+  TableCellAccessible* cell = acc->AsTableCell();
   if (!cell) {
     return false;
   }
@@ -55,7 +55,7 @@ static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
   if (!acc) {
     return false;
   }
-  TableCellAccessibleBase* cellAcc = acc->AsTableCellBase();
+  TableCellAccessible* cellAcc = acc->AsTableCell();
   if (!cellAcc) {
     return false;
   }
@@ -71,7 +71,11 @@ static AtkObject* GetTableCB(AtkTableCell* aTableCell) {
   if (!acc) {
     return nullptr;
   }
-  TableAccessibleBase* table = acc->AsTableCellBase()->Table();
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
+  TableAccessible* table = cell->Table();
   if (!table) {
     return nullptr;
   }
@@ -84,8 +88,12 @@ static GPtrArray* GetColumnHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
   AutoTArray<Accessible*, 10> headers;
-  acc->AsTableCellBase()->ColHeaderCells(&headers);
+  cell->ColHeaderCells(&headers);
   if (headers.IsEmpty()) {
     return nullptr;
   }
@@ -105,8 +113,12 @@ static GPtrArray* GetRowHeaderCellsCB(AtkTableCell* aCell) {
   if (!acc) {
     return nullptr;
   }
+  TableCellAccessible* cell = acc->AsTableCell();
+  if (!cell) {
+    return nullptr;
+  }
   AutoTArray<Accessible*, 10> headers;
-  acc->AsTableCellBase()->RowHeaderCells(&headers);
+  cell->RowHeaderCells(&headers);
   if (headers.IsEmpty()) {
     return nullptr;
   }

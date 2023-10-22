@@ -23,8 +23,7 @@ class nsSplittableFrame : public nsIFrame {
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
             nsIFrame* aPrevInFlow) override;
 
-  void DestroyFrom(nsIFrame* aDestructRoot,
-                   PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   /*
    * Frame continuations can be either fluid or non-fluid.

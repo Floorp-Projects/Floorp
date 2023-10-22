@@ -25,6 +25,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "nsICanvasRenderingContextInternal.h"
@@ -300,6 +301,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   WebGLContextOptions mOptions;
   const uint32_t mPrincipalKey;
   Maybe<webgl::Limits> mLimits;
+  const uint32_t mMaxVertIdsPerDraw =
+      StaticPrefs::webgl_max_vert_ids_per_draw();
 
   bool mIsContextLost = false;
   Atomic<bool> mPendingContextLoss;

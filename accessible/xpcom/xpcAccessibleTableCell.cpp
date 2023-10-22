@@ -7,8 +7,8 @@
 #include "xpcAccessibleTableCell.h"
 
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsIAccessibleTable.h"
 
 #include "nsComponentManagerUtils.h"
@@ -34,7 +34,7 @@ xpcAccessibleTableCell::GetTable(nsIAccessibleTable** aTable) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  TableAccessibleBase* table = Intl()->Table();
+  TableAccessible* table = Intl()->Table();
   if (!table) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessibleTable> xpcTable = do_QueryInterface(

@@ -113,8 +113,10 @@ bool Kernel32ExportsSolver::Resolve() {
 HANDLE SharedSection::sSectionHandle = nullptr;
 SharedSection::Layout* SharedSection::sWriteCopyView = nullptr;
 RTL_RUN_ONCE SharedSection::sEnsureOnce = RTL_RUN_ONCE_INIT;
+nt::SRWLock SharedSection::sLock;
 
 void SharedSection::Reset(HANDLE aNewSectionObject) {
+  nt::AutoExclusiveLock{sLock};
   if (sWriteCopyView) {
     nt::AutoMappedView view(sWriteCopyView);
     sWriteCopyView = nullptr;

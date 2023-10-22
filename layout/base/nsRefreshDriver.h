@@ -440,6 +440,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasVisualViewportResizeEvents = 1 << 4,
     eHasScrollEvents = 1 << 5,
     eHasVisualViewportScrollEvents = 1 << 6,
+    eRootNeedsMoreTicksForUserInput = 1 << 9,
   };
 
   void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
@@ -486,6 +487,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   void RunFrameRequestCallbacks(mozilla::TimeStamp aNowTime);
   void UpdateIntersectionObservations(mozilla::TimeStamp aNowTime);
   void UpdateRelevancyOfContentVisibilityAutoFrames();
+  void MaybeIncreaseMeasuredTicksSinceLoading();
 
   enum class IsExtraTick {
     No,

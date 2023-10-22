@@ -12,16 +12,16 @@
 
 #include "IUnknownImpl.h"
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
 using namespace mozilla::a11y;
 
-TableCellAccessibleBase* ia2AccessibleTableCell::CellAcc() {
+TableCellAccessible* ia2AccessibleTableCell::CellAcc() {
   Accessible* acc = Acc();
-  return acc ? acc->AsTableCellBase() : nullptr;
+  return acc ? acc->AsTableCell() : nullptr;
 }
 
 // IUnknown
@@ -37,10 +37,10 @@ ia2AccessibleTableCell::get_table(IUnknown** aTable) {
   if (!aTable) return E_INVALIDARG;
 
   *aTable = nullptr;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
-  TableAccessibleBase* table = tableCell->Table();
+  TableAccessible* table = tableCell->Table();
   if (!table) return E_FAIL;
 
   Accessible* tableAcc = table->AsAccessible();
@@ -54,7 +54,7 @@ ia2AccessibleTableCell::get_columnExtent(long* aSpan) {
   if (!aSpan) return E_INVALIDARG;
 
   *aSpan = 0;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aSpan = tableCell->ColExtent();
@@ -69,7 +69,7 @@ ia2AccessibleTableCell::get_columnHeaderCells(IUnknown*** aCellAccessibles,
 
   *aCellAccessibles = nullptr;
   *aNColumnHeaderCells = 0;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<Accessible*, 10> cells;
@@ -94,7 +94,7 @@ ia2AccessibleTableCell::get_columnIndex(long* aColIdx) {
   if (!aColIdx) return E_INVALIDARG;
 
   *aColIdx = -1;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aColIdx = tableCell->ColIdx();
@@ -106,7 +106,7 @@ ia2AccessibleTableCell::get_rowExtent(long* aSpan) {
   if (!aSpan) return E_INVALIDARG;
 
   *aSpan = 0;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aSpan = tableCell->RowExtent();
@@ -120,7 +120,7 @@ ia2AccessibleTableCell::get_rowHeaderCells(IUnknown*** aCellAccessibles,
 
   *aCellAccessibles = nullptr;
   *aNRowHeaderCells = 0;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   AutoTArray<Accessible*, 10> cells;
@@ -144,7 +144,7 @@ ia2AccessibleTableCell::get_rowIndex(long* aRowIdx) {
   if (!aRowIdx) return E_INVALIDARG;
 
   *aRowIdx = -1;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aRowIdx = tableCell->RowIdx();
@@ -161,7 +161,7 @@ ia2AccessibleTableCell::get_rowColumnExtents(long* aRowIdx, long* aColIdx,
 
   *aRowIdx = *aColIdx = *aRowExtents = *aColExtents = 0;
   *aIsSelected = false;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aRowIdx = tableCell->RowIdx();
@@ -178,7 +178,7 @@ ia2AccessibleTableCell::get_isSelected(boolean* aIsSelected) {
   if (!aIsSelected) return E_INVALIDARG;
 
   *aIsSelected = false;
-  TableCellAccessibleBase* tableCell = CellAcc();
+  TableCellAccessible* tableCell = CellAcc();
   if (!tableCell) return CO_E_OBJNOTCONNECTED;
 
   *aIsSelected = tableCell->Selected();

@@ -151,7 +151,7 @@ class nsGridContainerFrame final : public nsContainerFrame,
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
   mozilla::StyleAlignFlags CSSAlignmentForAbsPosChild(
       const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const override;
 

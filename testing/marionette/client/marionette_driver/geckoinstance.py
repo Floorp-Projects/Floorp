@@ -49,8 +49,7 @@ class GeckoInstance(object):
         # beta. See Bug 1836093.
         "browser.translations.enable": False,
         # Disable UI tour
-        "browser.uitour.pinnedTabUrl": "http://%(server)s/uitour-dummy/pinnedTab",
-        "browser.uitour.url": "http://%(server)s/uitour-dummy/tour",
+        "browser.uitour.enabled": False,
         # Disable captive portal
         "captivedetect.canonicalURL": "",
         # Defensively disable data reporting systems
@@ -66,6 +65,10 @@ class GeckoInstance(object):
         "dom.disable_beforeunload": True,
         # Enabling the support for File object creation in the content process.
         "dom.file.createInChild": True,
+        # Disable delayed user input event handling
+        "dom.input_events.security.minNumTicks": 0,
+        # Disable delayed user input event handling
+        "dom.input_events.security.minTimeElapsedInMS": 0,
         # Disable the ProcessHangMonitor
         "dom.ipc.reportProcessHangs": False,
         # No slow script dialogs
@@ -146,6 +149,8 @@ class GeckoInstance(object):
         "security.certerrors.mitm.priming.enabled": False,
         # Tests don't wait for the notification button security delay
         "security.notification_enable_delay": 0,
+        # Do not download intermediate certificates
+        "security.remote_settings.intermediates.enabled": False,
         # Ensure blocklist updates don't hit the network
         "services.settings.server": "data:,#remote-settings-dummy/v1",
         # Disable password capture, so that tests that include forms aren"t

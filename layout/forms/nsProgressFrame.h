@@ -28,8 +28,7 @@ class nsProgressFrame final : public nsContainerFrame,
   explicit nsProgressFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsProgressFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void Destroy(DestroyContext&) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

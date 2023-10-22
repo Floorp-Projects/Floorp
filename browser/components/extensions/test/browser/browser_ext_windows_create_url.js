@@ -60,6 +60,7 @@ add_task(async function testWindowCreate() {
 
     async function create(options) {
       browser.test.log(`creating window for ${options.url}`);
+      // Note: may reject
       let window = await browser.windows.create(options);
       let win = windows.get(window.id);
       win.id = window.id;
@@ -67,17 +68,6 @@ add_task(async function testWindowCreate() {
       win.expectedTabs = Array.isArray(options.url) ? options.url.length : 1;
 
       return win.promise;
-    }
-
-    function createFail(options) {
-      return browser.windows
-        .create(options)
-        .then(() => {
-          browser.test.fail(`window opened with ${options.url}`);
-        })
-        .catch(() => {
-          browser.test.succeed(`window could not open with ${options.url}`);
-        });
     }
 
     let TEST_SETS = [
@@ -97,14 +87,33 @@ add_task(async function testWindowCreate() {
         expect: [EXTENSION_URL],
       },
       {
+        // This is primarily for backwards-compatibility, to allow extensions
+        // to open other home pages. This test case opens the home page
+        // explicitly; the implicit case (windows.create({}) without URL) is at
+        // browser_ext_chrome_settings_overrides_home.js.
         name: "Single, absolute, other extension URL",
         url: OTHER_PAGE,
         expect: [OTHER_PAGE],
       },
       {
+        // This is oddly inconsistent with the non-array case, but here we are
+        // intentionally stricter because of lesser backwards-compatibility
+        // concerns.
+        name: "Array, absolute, other extension URL",
+        url: [OTHER_PAGE],
+        expectError: `Illegal URL: ${OTHER_PAGE}`,
+      },
+      {
         name: "Single protocol URL in other extension",
         url: OTHER_PROTO,
         expect: [`${OTHER_PAGE}?val=ext%2Bfoo%3Abar`],
+      },
+      {
+        name: "Single, about:blank",
+        // Added "?" after "about:blank" because the test's tab load detection
+        // ignores about:blank.
+        url: "about:blank?",
+        expect: ["about:blank?"],
       },
       {
         name: "multiple urls",
@@ -116,31 +125,54 @@ add_task(async function testWindowCreate() {
           `${OTHER_PAGE}?val=ext%2Bfoo%3Abar`,
         ],
       },
+      {
+        name: "Reject array of own allowed URLs and other moz-extension:-URL",
+        url: [EXTENSION_URL, EXT_PROTO, "about:blank?#", OTHER_PAGE],
+        expectError: `Illegal URL: ${OTHER_PAGE}`,
+      },
+      {
+        name: "Single, about:robots",
+        url: "about:robots",
+        expectError: "Illegal URL: about:robots",
+      },
+      {
+        name: "Array containing about:robots",
+        url: ["about:robots"],
+        expectError: "Illegal URL: about:robots",
+      },
     ];
+    async function checkCreateResult({ status, value, reason }, testCase) {
+      const window = status === "fulfilled" ? value : null;
+      try {
+        if (testCase.expectError) {
+          let error = reason?.message;
+          browser.test.assertEq(testCase.expectError, error, testCase.name);
+        } else {
+          let tabUrls = [];
+          for (let [tabIndex, tab] of window.tabs) {
+            tabUrls[tabIndex] = tab.url;
+          }
+          browser.test.assertDeepEq(testCase.expect, tabUrls, testCase.name);
+        }
+      } catch (e) {
+        browser.test.fail(`Unexpected failure in ${testCase.name} :: ${e}`);
+      } finally {
+        // Close opened windows, whether they were expected or not.
+        if (window) {
+          await browser.windows.remove(window.id);
+        }
+      }
+    }
     try {
-      let windows = await Promise.all(
+      // First collect all results, in parallel.
+      const results = await Promise.allSettled(
         TEST_SETS.map(t => create({ url: t.url }))
       );
-
-      TEST_SETS.forEach((test, i) => {
-        test.expect.forEach((expectUrl, x) => {
-          browser.test.assertEq(
-            expectUrl,
-            windows[i].tabs.get(x)?.url,
-            TEST_SETS[i].name
-          );
-        });
-      });
-
-      Promise.all(windows.map(({ id }) => browser.windows.remove(id))).then(
-        () => {
-          browser.test.notifyPass("window-create-url");
-        }
+      // Then check the results sequentially
+      await Promise.all(
+        TEST_SETS.map((t, i) => checkCreateResult(results[i], t))
       );
-
-      // Expecting to fail when opening windows with multiple urls that includes
-      // other extension urls.
-      await Promise.all([createFail({ url: [EXTENSION_URL, OTHER_PAGE] })]);
+      browser.test.notifyPass("window-create-url");
     } catch (e) {
       browser.test.fail(`${e} :: ${e.stack}`);
       browser.test.notifyFail("window-create-url");

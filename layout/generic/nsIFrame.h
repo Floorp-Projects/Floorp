@@ -494,6 +494,35 @@ static void ReleaseValue(T* aPropertyValue) {
 
 //----------------------------------------------------------------------
 
+namespace mozilla {
+
+// A simple class to group stuff that we need to keep around when tearing down
+// a frame tree.
+//
+// Native anonymous content created by the frames need to get unbound _after_
+// the frame has been destroyed, see bug 1400618.
+//
+// We destroy the anonymous content bottom-up (so, in reverse order), because
+// it's a bit simpler, though we generally don't have that much nested anonymous
+// content (except for scrollbars).
+struct MOZ_RAII FrameDestroyContext {
+  explicit FrameDestroyContext(PresShell* aPs) : mPresShell(aPs) {}
+
+  void AddAnonymousContent(already_AddRefed<nsIContent>&& aContent) {
+    if (RefPtr<nsIContent> content = aContent) {
+      mAnonymousContent.AppendElement(std::move(content));
+    }
+  }
+
+  ~FrameDestroyContext();
+
+ private:
+  PresShell* const mPresShell;
+  AutoTArray<RefPtr<nsIContent>, 100> mAnonymousContent;
+};
+
+}  // namespace mozilla
+
 /**
  * A frame in the layout model. This interface is supported by all frame
  * objects.
@@ -632,31 +661,7 @@ class nsIFrame : public nsQueryFrame {
 
   void* operator new(size_t, mozilla::PresShell*) MOZ_MUST_OVERRIDE;
 
-  using PostDestroyData = mozilla::PostFrameDestroyData;
-  struct MOZ_RAII AutoPostDestroyData {
-    explicit AutoPostDestroyData(nsPresContext* aPresContext)
-        : mPresContext(aPresContext) {}
-    ~AutoPostDestroyData() {
-      for (auto& content : mozilla::Reversed(mData.mAnonymousContent)) {
-        nsIFrame::DestroyAnonymousContent(mPresContext, content.forget());
-      }
-    }
-    nsPresContext* mPresContext;
-    PostDestroyData mData;
-  };
-  /**
-   * Destroys this frame and each of its child frames (recursively calls
-   * Destroy() for each child). If this frame is a first-continuation, this
-   * also removes the frame from the primary frame map and clears undisplayed
-   * content for its content node.
-   * If the frame is a placeholder, it also ensures the out-of-flow frame's
-   * removal and destruction.
-   */
-  void Destroy() {
-    AutoPostDestroyData data(PresContext());
-    DestroyFrom(this, data.mData);
-    // Note that |this| is deleted at this point.
-  }
+  using DestroyContext = mozilla::FrameDestroyContext;
 
   /**
    * Flags for PeekOffsetCharacter, PeekOffsetNoAmount, PeekOffsetWord return
@@ -690,32 +695,19 @@ class nsIFrame : public nsQueryFrame {
         : mRespectClusters(true), mIgnoreUserStyleAll(false) {}
   };
 
- protected:
-  friend class nsBlockFrame;  // for access to DestroyFrom
+  virtual void Destroy(DestroyContext&);
 
+ protected:
   /**
    * Return true if the frame is part of a Selection.
    * Helper method to implement the public IsSelected() API.
    */
   virtual bool IsFrameSelected() const;
 
-  /**
-   * Implements Destroy(). Do not call this directly except from within a
-   * DestroyFrom() implementation.
-   *
-   * @note This will always be called, so it is not necessary to override
-   *       Destroy() in subclasses of nsFrame, just DestroyFrom().
-   *
-   * @param  aDestructRoot is the root of the subtree being destroyed
-   */
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData);
-  friend class nsFrameList;  // needed to pass aDestructRoot through to children
-  friend class nsLineBox;    // needed to pass aDestructRoot through to children
-  friend class nsContainerFrame;  // needed to pass aDestructRoot through to
-                                  // children
   template <class Source>
   friend class do_QueryFrameHelper;  // to read mClass
+  friend class nsBlockFrame;         // for GetCaretBaseline
+  friend class nsContainerFrame;     // for ReparentFrameViewTo
 
   virtual ~nsIFrame();
 
@@ -4890,9 +4882,6 @@ class nsIFrame : public nsQueryFrame {
   void HandleLastRememberedSize();
 
  protected:
-  static void DestroyAnonymousContent(nsPresContext* aPresContext,
-                                      already_AddRefed<nsIContent>&& aContent);
-
   /**
    * Reparent this frame's view if it has one.
    */

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef TABLE_ACCESSIBLE_BASE_H
-#define TABLE_ACCESSIBLE_BASE_H
+#ifndef TABLE_ACCESSIBLE_H
+#define TABLE_ACCESSIBLE_H
 
 #include "nsString.h"
 #include "nsTArray.h"
@@ -18,7 +18,7 @@ class Accessible;
 /**
  * Accessible table interface.
  */
-class TableAccessibleBase {
+class TableAccessible {
  public:
   /**
    * Return the caption accessible if any for this table.
@@ -154,26 +154,6 @@ class TableAccessibleBase {
    * Get the set of selected row indices.
    */
   virtual void SelectedRowIndices(nsTArray<uint32_t>* aRows) {}
-
-  /**
-   * Select the given column unselecting any other selected columns.
-   */
-  virtual void SelectCol(uint32_t aColIdx) {}
-
-  /**
-   * Select the given row unselecting all other previously selected rows.
-   */
-  virtual void SelectRow(uint32_t aRowIdx) {}
-
-  /**
-   * Unselect the given column leaving other selected columns selected.
-   */
-  virtual void UnselectCol(uint32_t aColIdx) {}
-
-  /**
-   * Unselect the given row leaving other selected rows selected.
-   */
-  virtual void UnselectRow(uint32_t aRowIdx) {}
 
   /**
    * Return true if the table is probably for layout.

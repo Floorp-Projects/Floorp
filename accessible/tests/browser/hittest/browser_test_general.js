@@ -232,3 +232,108 @@ addAccessibleTask(
     iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
   }
 );
+
+/**
+ * Verify that hit testing returns the proper accessible when one acc content
+ * is partially hidden due to overflow:hidden;
+ */
+addAccessibleTask(
+  `
+  <style>
+    div div {
+      overflow: hidden;
+      font-family: monospace;
+      width: 2ch;
+    }
+  </style>
+  <div id="container" style="display: flex; flex-direction: row-reverse;">
+    <div id="aNode">abcde</div><div id="fNode">fghij</div>
+  </div>`,
+  async function (browser, docAcc) {
+    const container = findAccessibleChildByID(docAcc, "container");
+    const aNode = findAccessibleChildByID(docAcc, "aNode");
+    const fNode = findAccessibleChildByID(docAcc, "fNode");
+    const dpr = await getContentDPR(browser);
+    const [, , containerWidth] = Layout.getBounds(container, dpr);
+    const [, , aNodeWidth] = Layout.getBounds(aNode, dpr);
+
+    await testChildAtPoint(
+      dpr,
+      containerWidth - 1,
+      1,
+      container,
+      aNode,
+      aNode.firstChild
+    );
+    await testChildAtPoint(
+      dpr,
+      containerWidth - aNodeWidth - 1,
+      1,
+      container,
+      fNode,
+      fNode.firstChild
+    );
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Verify that hit testing is appropriately fuzzy when working with generics.
+ * If we match on a generic which contains additional generics and a single text
+ * leaf, we should return the text leaf as the deepest match instead of the
+ * generic itself.
+ */
+addAccessibleTask(
+  `
+  <a href="example.com" id="link">
+    <span style="overflow:hidden;" id="generic"><span aria-hidden="true" id="visible">I am some visible text</span><span id="invisible" style="overflow:hidden; height: 1px; width: 1px; position:absolute; clip: rect(0 0 0 0); display:block;">I am some invisible text</span></span>
+  </a>`,
+  async function (browser, docAcc) {
+    const link = findAccessibleChildByID(docAcc, "link");
+    const generic = findAccessibleChildByID(docAcc, "generic");
+    const invisible = findAccessibleChildByID(docAcc, "invisible");
+    const dpr = await getContentDPR(browser);
+
+    await testChildAtPoint(
+      dpr,
+      1,
+      1,
+      link,
+      generic, // Direct Child
+      invisible.firstChild // Deepest Child
+    );
+
+    await testOffsetAtPoint(
+      findAccessibleChildByID(docAcc, "invisible", [Ci.nsIAccessibleText]),
+      1,
+      1,
+      COORDTYPE_PARENT_RELATIVE,
+      0
+    );
+  },
+  { chrome: false, iframe: true, remoteIframe: true }
+);
+
+/**
+ * Verify that hit testing is appropriately fuzzy when working with generics with siblings.
+ * We should return the deepest text leaf as the deepest match instead of the generic itself.
+ */
+addAccessibleTask(
+  `
+<div id="generic"><span aria-hidden="true" id="visible">Mozilla</span><span id="invisible" style="display: block !important;border: 0 !important;clip: rect(0 0 0 0) !important;height: 1px !important;margin: -1px !important;overflow: hidden !important;padding: 0 !important;position: absolute !important;white-space: nowrap !important;width: 1px !important;">hello world<br><div id="extraContainer">Mozilla</div></span><br>I am some other text</div>`,
+  async function (browser, docAcc) {
+    const generic = findAccessibleChildByID(docAcc, "generic");
+    const invisible = findAccessibleChildByID(docAcc, "invisible");
+    const dpr = await getContentDPR(browser);
+
+    await testChildAtPoint(
+      dpr,
+      1,
+      1,
+      generic,
+      invisible, // Direct Child
+      invisible.firstChild // Deepest Child
+    );
+  },
+  { chrome: false, iframe: true, remoteIframe: true }
+);

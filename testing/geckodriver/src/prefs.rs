@@ -32,13 +32,6 @@ lazy_static! {
         ("browser.dom.window.dump.enabled", Pref::new(true)),
         ("devtools.console.stdout.chrome", Pref::new(true)),
 
-        // Disable safebrowsing components
-        ("browser.safebrowsing.blockedURIs.enabled", Pref::new(false)),
-        ("browser.safebrowsing.downloads.enabled", Pref::new(false)),
-        ("browser.safebrowsing.passwords.enabled", Pref::new(false)),
-        ("browser.safebrowsing.malware.enabled", Pref::new(false)),
-        ("browser.safebrowsing.phishing.enabled", Pref::new(false)),
-
         // Do not restore the last open set of tabs if the browser crashed
         ("browser.sessionstore.resume_from_crash", Pref::new(false)),
 

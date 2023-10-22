@@ -51,7 +51,7 @@ class ColumnSetWrapperFrame final : public nsBlockFrame {
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
 
-  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(DestroyContext&, ChildListID, nsIFrame*) override;
 
   void MarkIntrinsicISizesDirty() override;
 

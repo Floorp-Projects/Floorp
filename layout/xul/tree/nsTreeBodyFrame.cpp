@@ -298,8 +298,7 @@ void nsTreeBodyFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 }
 
-void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                  PostDestroyData& aPostDestroyData) {
+void nsTreeBodyFrame::Destroy(DestroyContext& aContext) {
   if (mScrollbarActivity) {
     mScrollbarActivity->Destroy();
     mScrollbarActivity = nullptr;
@@ -314,9 +313,7 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   if (mColumns) mColumns->SetTree(nullptr);
 
-  if (mTree) {
-    mTree->BodyDestroyed(mTopRowIndex);
-  }
+  RefPtr tree = mTree;
 
   if (nsCOMPtr<nsITreeView> view = std::move(mView)) {
     nsCOMPtr<nsITreeSelection> sel;
@@ -327,7 +324,16 @@ void nsTreeBodyFrame::DestroyFrom(nsIFrame* aDestructRoot,
     view->SetTree(nullptr);
   }
 
-  SimpleXULLeafFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  // Make this call now because view->SetTree can run js which can undo this
+  // call.
+  if (tree) {
+    tree->BodyDestroyed(mTopRowIndex);
+  }
+  if (mTree && mTree != tree) {
+    mTree->BodyDestroyed(mTopRowIndex);
+  }
+
+  SimpleXULLeafFrame::Destroy(aContext);
 }
 
 void nsTreeBodyFrame::EnsureView() {

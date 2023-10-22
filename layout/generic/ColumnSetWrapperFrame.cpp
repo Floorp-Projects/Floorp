@@ -136,10 +136,11 @@ void ColumnSetWrapperFrame::InsertFrames(
                              std::move(aFrameList));
 }
 
-void ColumnSetWrapperFrame::RemoveFrame(ChildListID aListID,
+void ColumnSetWrapperFrame::RemoveFrame(DestroyContext& aContext,
+                                        ChildListID aListID,
                                         nsIFrame* aOldFrame) {
   MOZ_ASSERT_UNREACHABLE("Unsupported operation!");
-  nsBlockFrame::RemoveFrame(aListID, aOldFrame);
+  nsBlockFrame::RemoveFrame(aContext, aListID, aOldFrame);
 }
 
 void ColumnSetWrapperFrame::MarkIntrinsicISizesDirty() {

@@ -356,7 +356,6 @@ class FirefoxAndroidWdSpecBrowser(FirefoxWdSpecBrowser):
     def get_env(self, binary, debug_info, headless, chaos_mode_flags):
         env = get_environ(chaos_mode_flags)
         env["RUST_BACKTRACE"] = "1"
-        del env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"]
         return env
 
     def executor_browser(self):

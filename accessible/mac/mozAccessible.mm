@@ -22,7 +22,6 @@
 #include "Relation.h"
 #include "Role.h"
 #include "RootAccessible.h"
-#include "TableAccessible.h"
 #include "mozilla/a11y/PDocAccessible.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "OuterDocAccessible.h"

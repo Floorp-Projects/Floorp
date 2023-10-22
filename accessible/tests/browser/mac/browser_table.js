@@ -363,12 +363,12 @@ addAccessibleTask(
     // after abbr is set we should have a data table again
     await testIsLayout(
       table,
-      "cellOne",
+      "cellThree",
       EVENT_OBJECT_ATTRIBUTE_CHANGED,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
-            .getElementById("cellOne")
+            .getElementById("cellThree")
             .setAttribute("abbr", "hello world");
         });
       },
@@ -379,11 +379,11 @@ addAccessibleTask(
     // after abbr is removed we should have a layout table again
     await testIsLayout(
       table,
-      "cellOne",
+      "cellThree",
       EVENT_OBJECT_ATTRIBUTE_CHANGED,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
-          content.document.getElementById("cellOne").removeAttribute("abbr");
+          content.document.getElementById("cellThree").removeAttribute("abbr");
         });
       },
       true
@@ -393,12 +393,12 @@ addAccessibleTask(
     // after scope is set we should have a data table again
     await testIsLayout(
       table,
-      "cellOne",
+      "cellThree",
       EVENT_OBJECT_ATTRIBUTE_CHANGED,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
           content.document
-            .getElementById("cellOne")
+            .getElementById("cellThree")
             .setAttribute("scope", "col");
         });
       },
@@ -409,11 +409,11 @@ addAccessibleTask(
     // remove scope should give layout
     await testIsLayout(
       table,
-      "cellOne",
+      "cellThree",
       EVENT_OBJECT_ATTRIBUTE_CHANGED,
       async () => {
         await SpecialPowers.spawn(browser, [], () => {
-          content.document.getElementById("cellOne").removeAttribute("scope");
+          content.document.getElementById("cellThree").removeAttribute("scope");
         });
       },
       true

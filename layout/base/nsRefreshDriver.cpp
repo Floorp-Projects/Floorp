@@ -1950,6 +1950,10 @@ auto nsRefreshDriver::GetReasonsToTick() const -> TickReasons {
   if (!mVisualViewportScrollEvents.IsEmpty()) {
     reasons |= TickReasons::eHasVisualViewportScrollEvents;
   }
+  if (mPresContext && mPresContext->IsRoot() &&
+      mPresContext->NeedsMoreTicksForUserInput()) {
+    reasons |= TickReasons::eRootNeedsMoreTicksForUserInput;
+  }
   return reasons;
 }
 
@@ -1982,6 +1986,9 @@ void nsRefreshDriver::AppendTickReasonsToString(TickReasons aReasons,
   }
   if (aReasons & TickReasons::eHasVisualViewportScrollEvents) {
     aStr.AppendLiteral(" HasVisualViewportScrollEvents");
+  }
+  if (aReasons & TickReasons::eRootNeedsMoreTicksForUserInput) {
+    aStr.AppendLiteral(" RootNeedsMoreTicksForUserInput");
   }
 }
 
@@ -2151,6 +2158,12 @@ void nsRefreshDriver::FlushAutoFocusDocuments() {
 
   for (const auto& doc : docs) {
     MOZ_KnownLive(doc)->FlushAutoFocusCandidates();
+  }
+}
+
+void nsRefreshDriver::MaybeIncreaseMeasuredTicksSinceLoading() {
+  if (mPresContext && mPresContext->IsRoot()) {
+    mPresContext->MaybeIncreaseMeasuredTicksSinceLoading();
   }
 }
 
@@ -2604,6 +2617,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       DispatchAnimationEvents();
       RunFullscreenSteps();
       RunFrameRequestCallbacks(aNowTime);
+      MaybeIncreaseMeasuredTicksSinceLoading();
 
       if (mPresContext && mPresContext->GetPresShell()) {
         AutoTArray<PresShell*, 16> observers;

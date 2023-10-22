@@ -59,8 +59,7 @@ void nsFileControlFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   mMouseListener = new DnDListener(this);
 }
 
-void nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
-                                     PostDestroyData& aPostDestroyData) {
+void nsFileControlFrame::Destroy(DestroyContext& aContext) {
   NS_ENSURE_TRUE_VOID(mContent);
 
   // Remove the events.
@@ -69,11 +68,11 @@ void nsFileControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
     mContent->RemoveSystemEventListener(u"dragover"_ns, mMouseListener, false);
   }
 
-  aPostDestroyData.AddAnonymousContent(mTextContent.forget());
-  aPostDestroyData.AddAnonymousContent(mBrowseFilesOrDirs.forget());
+  aContext.AddAnonymousContent(mTextContent.forget());
+  aContext.AddAnonymousContent(mBrowseFilesOrDirs.forget());
 
   mMouseListener->ForgetFrame();
-  nsBlockFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+  nsBlockFrame::Destroy(aContext);
 }
 
 static already_AddRefed<Element> MakeAnonButton(

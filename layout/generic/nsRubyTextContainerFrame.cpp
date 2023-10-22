@@ -81,9 +81,10 @@ void nsRubyTextContainerFrame::InsertFrames(
 }
 
 /* virtual */
-void nsRubyTextContainerFrame::RemoveFrame(ChildListID aListID,
+void nsRubyTextContainerFrame::RemoveFrame(DestroyContext& aContext,
+                                           ChildListID aListID,
                                            nsIFrame* aOldFrame) {
-  nsContainerFrame::RemoveFrame(aListID, aOldFrame);
+  nsContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
   UpdateSpanFlag();
 }
 

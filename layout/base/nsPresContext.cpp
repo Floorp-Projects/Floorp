@@ -249,6 +249,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mFramesReflowed(0),
       mInterruptChecksToSkip(0),
       mNextFrameRateMultiplier(0),
+      mMeasuredTicksSinceLoading(0),
       mViewportScrollStyles(StyleOverflow::Auto, StyleOverflow::Auto),
       // mImageAnimationMode is initialised below, in constructor body
       mImageAnimationModePref(imgIContainer::kNormalAnimMode),
@@ -285,6 +286,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mHadFirstContentfulPaint(false),
       mHadNonTickContentfulPaint(false),
       mHadContentfulPaintComposite(false),
+      mUserInputEventsAllowed(false),
 #ifdef DEBUG
       mInitialized(false),
 #endif
@@ -1217,6 +1219,83 @@ nsRootPresContext* nsPresContext::GetRootPresContext() const {
     pc = parent;
   }
   return pc->IsRoot() ? static_cast<nsRootPresContext*>(pc) : nullptr;
+}
+
+bool nsPresContext::UserInputEventsAllowed() {
+  MOZ_ASSERT(IsRoot());
+  if (mUserInputEventsAllowed) {
+    return true;
+  }
+
+  // Special document
+  if (Document()->IsInitialDocument()) {
+    return true;
+  }
+
+  if (mRefreshDriver->IsThrottled()) {
+    MOZ_ASSERT(!mPresShell->IsVisible());
+    // This implies that the BC is not visibile and users can't
+    // interact with it, so we are okay with handling user inputs here.
+    return true;
+  }
+
+  if (mMeasuredTicksSinceLoading <
+      StaticPrefs::dom_input_events_security_minNumTicks()) {
+    return false;
+  }
+
+  if (!StaticPrefs::dom_input_events_security_minTimeElapsedInMS()) {
+    return true;
+  }
+
+  dom::Document* doc = Document();
+
+  MOZ_ASSERT_IF(StaticPrefs::dom_input_events_security_minNumTicks(),
+                doc->GetReadyStateEnum() >= Document::READYSTATE_LOADING);
+
+  TimeStamp loadingOrRestoredFromBFCacheTime =
+      doc->GetLoadingOrRestoredFromBFCacheTimeStamp();
+  MOZ_ASSERT(!loadingOrRestoredFromBFCacheTime.IsNull());
+
+  TimeDuration elapsed = TimeStamp::Now() - loadingOrRestoredFromBFCacheTime;
+  if (elapsed.ToMilliseconds() >=
+      StaticPrefs::dom_input_events_security_minTimeElapsedInMS()) {
+    mUserInputEventsAllowed = true;
+    return true;
+  }
+
+  return false;
+}
+
+void nsPresContext::MaybeIncreaseMeasuredTicksSinceLoading() {
+  MOZ_ASSERT(IsRoot());
+  if (mMeasuredTicksSinceLoading >=
+      StaticPrefs::dom_input_events_security_minNumTicks()) {
+    return;
+  }
+
+  // We consider READYSTATE_LOADING is the point when the page
+  // becomes interactive
+  if (Document()->GetReadyStateEnum() >= Document::READYSTATE_LOADING ||
+      Document()->IsInitialDocument()) {
+    ++mMeasuredTicksSinceLoading;
+  }
+
+  if (mMeasuredTicksSinceLoading <
+      StaticPrefs::dom_input_events_security_minNumTicks()) {
+    // Here we are forcing refresh driver to run because we can't always
+    // guarantee refresh driver will run enough times to meet the minNumTicks
+    // requirement. i.e. about:blank.
+    if (!RefreshDriver()->HasPendingTick()) {
+      RefreshDriver()->InitializeTimer();
+    }
+  }
+}
+
+bool nsPresContext::NeedsMoreTicksForUserInput() const {
+  MOZ_ASSERT(IsRoot());
+  return mMeasuredTicksSinceLoading <
+         StaticPrefs::dom_input_events_security_minNumTicks();
 }
 
 // Helper function for setting Anim Mode on image

@@ -116,14 +116,16 @@ function doTest() {
           name: "Top 10 Grossing Animated Films of All Time",
          },
       ] },
-      { ROW: [
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Film Title" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Released" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Studio" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Worldwide Gross" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Domestic Gross" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Foreign Gross" } ] },
-        { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Budget" } ] },
+      { TEXT_CONTAINER: [
+        { ROW: [
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Film Title" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Released" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Studio" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Worldwide Gross" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Domestic Gross" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Foreign Gross" } ] },
+          { COLUMNHEADER: [ { role: TEXT_LEAF, name: "Budget" } ] },
+        ] },
       ] },
       { ROW: [
         { role: CELL },

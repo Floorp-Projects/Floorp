@@ -25,6 +25,7 @@ include ../../dom/media/webvtt/test/crashtests/crashtests.list
 skip-if(!webrtc) include ../../dom/media/tests/crashtests/crashtests.list
 skip-if(!webrtc) include ../../dom/media/webrtc/tests/crashtests/crashtests.list
 include ../../dom/media/webspeech/synth/crashtests/crashtests.list
+include ../../dom/midi/crashtests/crashtests.list
 include ../../dom/plugins/test/crashtests/crashtests.list
 include ../../dom/security/test/crashtests/crashtests.list
 include ../../dom/serializers/crashtests/crashtests.list

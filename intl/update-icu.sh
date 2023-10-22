@@ -59,6 +59,7 @@ for patch in \
  bug-1706949-wasi-workaround.diff \
  bug-1790071-ICU-22132-standardize-vtzone-output.diff \
  bug-1838173-ICU-22412-start-time-iso8601.diff \
+ bug-1856428-ICU-22541.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch

@@ -7,8 +7,8 @@
 #ifndef CACHED_TABLE_ACCESSIBLE_H
 #define CACHED_TABLE_ACCESSIBLE_H
 
-#include "mozilla/a11y/TableAccessibleBase.h"
-#include "mozilla/a11y/TableCellAccessibleBase.h"
+#include "mozilla/a11y/TableAccessible.h"
+#include "mozilla/a11y/TableCellAccessible.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTHashMap.h"
 
@@ -20,11 +20,11 @@ class AccIterable;
 
 class CachedTableAccessible;
 
-class CachedTableCellAccessible final : public TableCellAccessibleBase {
+class CachedTableCellAccessible final : public TableCellAccessible {
  public:
   static CachedTableCellAccessible* GetFrom(Accessible* aAcc);
 
-  virtual TableAccessibleBase* Table() const override;
+  virtual TableAccessible* Table() const override;
 
   virtual uint32_t ColIdx() const override {
     return static_cast<int32_t>(mColIdx);
@@ -76,7 +76,7 @@ class CachedTableCellAccessible final : public TableCellAccessibleBase {
 /**
  * TableAccessible implementation which builds and queries a cache.
  */
-class CachedTableAccessible final : public TableAccessibleBase {
+class CachedTableAccessible final : public TableAccessible {
  public:
   static CachedTableAccessible* GetFrom(Accessible* aAcc);
 
@@ -255,11 +255,6 @@ class CachedTableAccessible final : public TableAccessibleBase {
       }
     }
   }
-
-  virtual void SelectCol(uint32_t aColIdx) override;
-  virtual void SelectRow(uint32_t aRowIdx) override;
-  virtual void UnselectCol(uint32_t aColIdx) override;
-  virtual void UnselectRow(uint32_t aRowIdx) override;
 
   virtual Accessible* AsAccessible() override { return mAcc; }
 

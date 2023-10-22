@@ -875,11 +875,6 @@ class FirefoxWdSpecBrowser(WebDriverBrowser):
                           headless,
                           chaos_mode_flags)
         env["RUST_BACKTRACE"] = "1"
-        # This doesn't work with wdspec tests
-        # In particular tests can create a session without passing in the capabilites
-        # and in those cases we get the default geckodriver profile which doesn't
-        # guarantee zero network access
-        del env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"]
         return env
 
     def create_output_handler(self, cmd):

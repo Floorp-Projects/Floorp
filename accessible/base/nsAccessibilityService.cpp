@@ -29,6 +29,7 @@
 #include "nsDOMTokenList.h"
 #include "nsCRT.h"
 #include "nsEventShell.h"
+#include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTextFormatter.h"
@@ -61,6 +62,7 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
+#include "mozilla/a11y/AccTypes.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/EventTarget.h"
@@ -68,6 +70,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 
 #include "XULAlertAccessible.h"
@@ -97,39 +100,38 @@ using namespace mozilla::dom;
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Return true if the role map entry is an ARIA table part.
+ * If the element has an ARIA attribute that requires a specific Accessible
+ * class, create and return it. Otherwise, return null.
  */
-static bool IsARIATablePart(const nsRoleMapEntry* aRoleMapEntry) {
-  return aRoleMapEntry &&
-         (aRoleMapEntry->accTypes & (eTableCell | eTableRow | eTable));
-}
-
-/**
- * Create and return an Accessible for the given content depending on which
- * table part we think it is.
- */
-static LocalAccessible* CreateARIATablePartAcc(
+static LocalAccessible* MaybeCreateSpecificARIAAccessible(
     const nsRoleMapEntry* aRoleMapEntry, const LocalAccessible* aContext,
     nsIContent* aContent, DocAccessible* aDocument) {
-  // In case of ARIA grid or table use table-specific classes if it's not
-  // native table based.
-  if ((aRoleMapEntry->accTypes & eTableCell)) {
-    if (aContext->IsTableRow()) {
+  if (aRoleMapEntry && aRoleMapEntry->accTypes & eTableCell) {
+    if (aContent->IsAnyOfHTMLElements(nsGkAtoms::td, nsGkAtoms::th) &&
+        aContext->IsHTMLTableRow()) {
+      // Don't use ARIAGridCellAccessible for a valid td/th because
+      // HTMLTableCellAccessible can provide additional info; e.g. row/col span
+      // from the layout engine.
+      return nullptr;
+    }
+    // A cell must be in a row.
+    if (aContext->Role() != roles::ROW) {
+      return nullptr;
+    }
+    // That row must be in a table, though there may be an intervening rowgroup.
+    Accessible* parent = aContext->GetNonGenericParent();
+    if (!parent) {
+      return nullptr;
+    }
+    if (!parent->IsTable() && parent->Role() == roles::GROUPING) {
+      parent = parent->GetNonGenericParent();
+      if (!parent) {
+        return nullptr;
+      }
+    }
+    if (parent->IsTable()) {
       return new ARIAGridCellAccessible(aContent, aDocument);
     }
-  } else if (aRoleMapEntry->IsOfType(eTableRow)) {
-    if (aContext->IsTable() ||
-        // There can be an Accessible between a row and its table, but it
-        // can only be a row group or a generic container. This is
-        // consistent with Filters::GetRow and CachedTableAccessible's
-        // TablePartRule.
-        ((aContext->Role() == roles::GROUPING ||
-          (aContext->IsGenericHyperText() && !aContext->ARIARoleMap())) &&
-         aContext->LocalParent() && aContext->LocalParent()->IsTable())) {
-      return new ARIARowAccessible(aContent, aDocument);
-    }
-  } else if (aRoleMapEntry->IsOfType(eTable)) {
-    return new ARIAGridAccessible(aContent, aDocument);
   }
   return nullptr;
 }
@@ -181,16 +183,27 @@ static bool AttributesMustBeAccessible(nsIContent* aContent,
  * marked presentational with role="presentation", etc. MustBeAccessible causes
  * an Accessible to be created as if it weren't marked presentational at all;
  * e.g. <table role="presentation" tabindex="0"> will expose roles::TABLE and
- * support TableAccessibleBase. In contrast, this function causes a generic
+ * support TableAccessible. In contrast, this function causes a generic
  * Accessible to be created; e.g. <table role="presentation" style="position:
  * fixed;"> will expose roles::TEXT_CONTAINER and will not support
- * TableAccessibleBase. This is necessary in certain cases for the
+ * TableAccessible. This is necessary in certain cases for the
  * RemoteAccessible cache.
  */
 static bool MustBeGenericAccessible(nsIContent* aContent,
                                     DocAccessible* aDocument) {
+  if (aContent->IsInNativeAnonymousSubtree() || aContent->IsSVGElement()) {
+    // We should not force create accs for anonymous content.
+    // This is an issue for inputs, which have an intermediate
+    // container with relevant overflow styling between the input
+    // and its internal input content.
+    // We should also avoid this for SVG elements (ie. `<foreignobject>`s
+    // which have default overflow:hidden styling).
+    return false;
+  }
   nsIFrame* frame = aContent->GetPrimaryFrame();
   MOZ_ASSERT(frame);
+  nsAutoCString overflow;
+  frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
   // If the frame has been transformed, and the content has any children, we
   // should create an Accessible so that we can account for the transform when
   // calculating the Accessible's bounds using the parent process cache.
@@ -203,7 +216,9 @@ static bool MustBeGenericAccessible(nsIContent* aContent,
          ((aContent->HasChildren() && frame->IsTransformed()) ||
           frame->IsStickyPositioned() ||
           (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-           nsLayoutUtils::IsReallyFixedPos(frame)));
+           nsLayoutUtils::IsReallyFixedPos(frame)) ||
+          overflow.Equals("auto"_ns) || overflow.Equals("scroll"_ns) ||
+          overflow.Equals("hidden"_ns));
 }
 
 /**
@@ -517,12 +532,14 @@ void nsAccessibilityService::NotifyOfComputedStyleChange(
     // If the content has children and its frame has a transform, create an
     // Accessible so that we can account for the transform when calculating
     // the Accessible's bounds using the parent process cache. Ditto for
-    // position: fixed/sticky.
+    // position: fixed/sticky and content with overflow styling (hidden, auto,
+    // scroll)
     if (const nsIFrame* frame = aContent->GetPrimaryFrame()) {
       const auto& disp = *frame->StyleDisplay();
       if (disp.HasTransform(frame) ||
           disp.mPosition == StylePositionProperty::Fixed ||
-          disp.mPosition == StylePositionProperty::Sticky) {
+          disp.mPosition == StylePositionProperty::Sticky ||
+          disp.IsScrollableOverflow()) {
         document->ContentInserted(aContent, aContent->GetNextSibling());
       }
     }
@@ -1058,28 +1075,25 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   } else if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
     // display:contents element doesn't have a frame, but retains the
     // semantics. All its children are unaffected.
-    const MarkupMapInfo* markupMap = GetMarkupMapInfoFor(content);
-    RefPtr<LocalAccessible> newAcc;
-    if (markupMap && markupMap->new_func) {
-      newAcc = markupMap->new_func(content->AsElement(), aContext);
+    const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(content->AsElement());
+    RefPtr<LocalAccessible> newAcc = MaybeCreateSpecificARIAAccessible(
+        roleMapEntry, aContext, content, document);
+    const MarkupMapInfo* markupMap = nullptr;
+    if (!newAcc) {
+      markupMap = GetMarkupMapInfoFor(content);
+      if (markupMap && markupMap->new_func) {
+        newAcc = markupMap->new_func(content->AsElement(), aContext);
+      }
     }
 
     // Check whether this element has an ARIA role or attribute that requires
     // us to create an Accessible.
-    const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(content->AsElement());
     const bool hasNonPresentationalARIARole =
         roleMapEntry && !roleMapEntry->Is(nsGkAtoms::presentation) &&
         !roleMapEntry->Is(nsGkAtoms::none);
     if (!newAcc && (hasNonPresentationalARIARole ||
                     AttributesMustBeAccessible(content, document))) {
-      // If this element is an ARIA table part, create the proper table part
-      // Accessible. Otherwise, create a generic HyperTextAccessible.
-      if (IsARIATablePart(roleMapEntry)) {
-        newAcc =
-            CreateARIATablePartAcc(roleMapEntry, aContext, content, document);
-      } else {
-        newAcc = new HyperTextAccessibleWrap(content, document);
-      }
+      newAcc = new HyperTextAccessibleWrap(content, document);
     }
 
     // If there's still no Accessible but we do have an entry in the markup
@@ -1214,14 +1228,14 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
   }
 
   if (!newAcc && content->IsHTMLElement()) {  // HTML accessibles
-    const bool isARIATablePart = IsARIATablePart(roleMapEntry);
+    // We should always use OuterDocAccessible for OuterDocs, even if there's a
+    // specific ARIA class we would otherwise use.
+    if (frame->AccessibleType() != eOuterDocType) {
+      newAcc = MaybeCreateSpecificARIAAccessible(roleMapEntry, aContext,
+                                                 content, document);
+    }
 
-    if (!isARIATablePart || frame->AccessibleType() == eHTMLTableCellType ||
-        frame->AccessibleType() == eHTMLTableRowType ||
-        frame->AccessibleType() == eHTMLTableType ||
-        // We should always use OuterDocAccessible for OuterDocs, even for
-        // ARIA table roles.
-        frame->AccessibleType() == eOuterDocType) {
+    if (!newAcc) {
       // Prefer to use markup to decide if and what kind of accessible to
       // create,
       const MarkupMapInfo* markupMap =
@@ -1232,15 +1246,6 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
       if (!newAcc) {  // try by frame accessible type.
         newAcc = CreateAccessibleByFrameType(frame, content, aContext);
-      }
-    }
-
-    // In case of ARIA grid or table use table-specific classes if it's not
-    // native table based.
-    if (isARIATablePart && (!newAcc || newAcc->IsGenericHyperText())) {
-      if (LocalAccessible* tablePartAcc = CreateARIATablePartAcc(
-              roleMapEntry, aContext, content, document)) {
-        newAcc = tablePartAcc;
       }
     }
 
@@ -1595,56 +1600,14 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new HTMLSpinnerAccessible(aContent, document);
       break;
     case eHTMLTableType:
-      if (aContent->IsHTMLElement(nsGkAtoms::table)) {
-        newAcc = new HTMLTableAccessible(aContent, document);
-      } else {
-        newAcc = new HyperTextAccessibleWrap(aContent, document);
-      }
-      break;
     case eHTMLTableCellType:
-      // LocalAccessible HTML table cell should be a child of accessible HTML
-      // table or its row (CSS HTML tables are polite to the used markup at
-      // certain degree).
-      // Otherwise create a generic text accessible to avoid text jamming
-      // when reading by AT.
-      if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable()) {
-        newAcc = new HTMLTableCellAccessible(aContent, document);
-      } else {
-        newAcc = new HyperTextAccessibleWrap(aContent, document);
-      }
+      // We handle markup and ARIA tables elsewhere. If we reach here, this is
+      // a CSS table part. Just create a generic text container.
+      newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
-
-    case eHTMLTableRowType: {
-      // LocalAccessible HTML table row may be a child of tbody/tfoot/thead of
-      // accessible HTML table or a direct child of accessible of HTML table.
-      LocalAccessible* table = aContext->IsTable() ? aContext : nullptr;
-      if (!table && aContext->LocalParent() &&
-          aContext->LocalParent()->IsTable()) {
-        table = aContext->LocalParent();
-      }
-
-      if (table) {
-        nsIContent* parentContent =
-            aContent->GetParentOrShadowHostNode()->AsContent();
-        nsIFrame* parentFrame = nullptr;
-        if (parentContent) {
-          parentFrame = parentContent->GetPrimaryFrame();
-          if (!parentFrame || !parentFrame->IsTableWrapperFrame()) {
-            parentContent =
-                parentContent->GetParentOrShadowHostNode()->AsContent();
-            if (parentContent) {
-              parentFrame = parentContent->GetPrimaryFrame();
-            }
-          }
-        }
-
-        if (parentFrame && parentFrame->IsTableWrapperFrame() &&
-            table->GetContent() == parentContent) {
-          newAcc = new HTMLTableRowAccessible(aContent, document);
-        }
-      }
+    case eHTMLTableRowType:
+      // This is a CSS table row. Don't expose it at all.
       break;
-    }
     case eHTMLTextFieldType:
       newAcc = new HTMLTextFieldAccessible(aContent, document);
       break;
