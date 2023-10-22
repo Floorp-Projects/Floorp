@@ -220,8 +220,8 @@ jobs:
     - name: Change Release Note for Japanese
       if: inputs.release-note-url-ja
       run: |
-        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/#ja|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
-        echo "$(cat ./browser/branding/beta/pref/firefox-branding.js)"
+        sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/#ja|${{inputs.release-note-url-ja}}|g' ./browser/branding/official/pref/firefox-branding.js
+        echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
 
     - name: Change Release Note URL
       if: inputs.release-note-url
