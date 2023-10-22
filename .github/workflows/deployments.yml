@@ -113,7 +113,7 @@ jobs:
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
   Part1-win-x86-build-with-profdata-and-jarlog:
-    if: inputs.lightning-build == 'false'
+    if: ${{ !inputs.lightning-build }}
     needs: [get-buildid]
     uses: ./.github/workflows/windows-build.yml
     with:
