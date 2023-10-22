@@ -8,7 +8,7 @@ ac_add_options --with-mozilla-api-keyfile="$PWD/floorp/apis/api-mozilla-key"
 ac_add_options --with-google-location-service-api-keyfile="$PWD/floorp/apis/api-google-location-service-key"
 ac_add_options --with-google-safebrowsing-api-keyfile="$PWD/floorp/apis/api-google-safe-browsing-key"
 ac_add_options --enable-bootstrap
-ac_add_options --with-l10n-base="$PWD/floorp/browser/locales/l10n-central"
+ac_add_options --with-l10n-base="$PWD/l10n-central/l10n-central"
 ac_add_options --enable-linker=lld
 ac_add_options --enable-optimize="-O3"
 ac_add_options --enable-lto

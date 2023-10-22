@@ -128,6 +128,12 @@ jobs:
       with:
         submodules: 'recursive'
 
+    - name: Clone l10n-central 🧬
+      uses: actions/checkout@v3
+      with:
+        repository: Floorp-Projects/l10n-central
+        path: l10n-central
+
     #! ON UBUNTU RUNNER
     - name: Setup Disk & Swap Space 💿
       if: ${{!inputs.buildjet}}
@@ -177,7 +183,7 @@ jobs:
           echo 'ac_add_options --enable-lightning-build' >> mozconfig
         fi
 
-        echo 'ac_add_options --with-l10n-base=$PWD/floorp/browser/locales/l10n-central' >> mozconfig
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
 
         if [[ $GHA_profgen == 'true' ]]; then
           echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
@@ -252,21 +258,21 @@ jobs:
     - name: Copy l10n files if beta
       if: inputs.beta
       run: |
-          for dir in $(ls -l $PWD/floorp/browser/locales/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta
-            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.dtd
-            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.ftl
-            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.properties
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/beta
+            cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+            cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+            cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
           done
       
     - name: Copy l10n files if lightning
       if: inputs.lightning-build
       run: |
-          for dir in $(ls -l $PWD/floorp/browser/locales/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning
-            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.dtd
-            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.ftl
-            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.properties
+          for dir in $(ls -l $PWD/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+            mkdir -p $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning
+            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.dtd
+            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.ftl
+            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/l10n-central/l10n-central/$dir/browser/branding/lightning/brand.properties
           done
 
     - name: Change Release Note for Japanese
