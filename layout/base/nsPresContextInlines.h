@@ -12,7 +12,7 @@
 #include "nsCSSFrameConstructor.h"
 
 inline mozilla::ServoStyleSet* nsPresContext::StyleSet() const {
-  return mDocument->StyleSetForPresShellOrMediaQueryEvaluation();
+  return mDocument->StyleSetForPresShell();
 }
 
 inline nsCSSFrameConstructor* nsPresContext::FrameConstructor() const {
