@@ -477,7 +477,6 @@ module.exports = {
         "dom/base/test/unit_ipc/**",
         "dom/base/test/jsmodules/**",
         "dom/canvas/test/**",
-        "dom/encoding/test/**",
         "dom/events/test/**",
         "dom/file/ipc/tests/**",
         "dom/file/tests/**",
