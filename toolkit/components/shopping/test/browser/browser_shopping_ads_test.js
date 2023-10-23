@@ -7,7 +7,35 @@ const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
 
-add_task(async function test_ad_attribution() {
+function recommendedAdsEventListener(eventName, sidebar) {
+  return SpecialPowers.spawn(
+    sidebar.querySelector("browser"),
+    [eventName],
+    name => {
+      let shoppingContainer =
+        content.document.querySelector("shopping-container").wrappedJSObject;
+      let adEl = shoppingContainer.recommendedAdEl;
+      return ContentTaskUtils.waitForEvent(adEl, name, false, null, true).then(
+        ev => null
+      );
+    }
+  );
+}
+
+function recommendedAdVisible(sidebar) {
+  return SpecialPowers.spawn(sidebar.querySelector("browser"), [], async () => {
+    await ContentTaskUtils.waitForCondition(() => {
+      let shoppingContainer =
+        content.document.querySelector("shopping-container").wrappedJSObject;
+      return (
+        shoppingContainer?.recommendedAdEl &&
+        ContentTaskUtils.is_visible(shoppingContainer?.recommendedAdEl)
+      );
+    });
+  });
+}
+
+add_setup(async function () {
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();
 
@@ -19,45 +47,9 @@ add_task(async function test_ad_attribution() {
       ["browser.shopping.experience2023.ads.userEnabled", true],
     ],
   });
-  let recommendedAdsEventListener = function (eventName, sidebar) {
-    return SpecialPowers.spawn(
-      sidebar.querySelector("browser"),
-      [eventName],
-      name => {
-        let shoppingContainer =
-          content.document.querySelector("shopping-container").wrappedJSObject;
-        let adEl = shoppingContainer.recommendedAdEl;
-        return new Promise(resolve => {
-          let listener = () => {
-            resolve();
-          };
-          adEl.addEventListener(name, listener, {
-            once: true,
-          });
-        });
-      }
-    );
-  };
+});
 
-  let recommendedAdVisible = async function (sidebar) {
-    await SpecialPowers.spawn(
-      sidebar.querySelector("browser"),
-      [],
-      async () => {
-        await ContentTaskUtils.waitForCondition(() => {
-          let shoppingContainer =
-            content.document.querySelector(
-              "shopping-container"
-            ).wrappedJSObject;
-          return (
-            shoppingContainer?.recommendedAdEl &&
-            ContentTaskUtils.is_visible(shoppingContainer?.recommendedAdEl)
-          );
-        });
-      }
-    );
-  };
-
+add_task(async function test_ad_attribution() {
   await BrowserTestUtils.withNewTab(PRODUCT_TEST_URL, async browser => {
     // Test that impression event is fired when opening sidebar
     let sidebar = gBrowser.getPanel(browser).querySelector("shopping-sidebar");
@@ -233,6 +225,4 @@ add_task(async function test_ad_attribution() {
     gBrowser.removeTab(adTab);
     Services.fog.testResetFOG();
   });
-
-  await SpecialPowers.popPrefEnv();
 });
