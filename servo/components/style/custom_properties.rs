@@ -878,7 +878,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         if let Ok(value) = SpecifiedRegisteredValue::compute(
                             &mut input,
                             registration,
-                            self.stylist,
+                            self.computed_context,
                         ) {
                             map.insert(custom_registration, name.clone(), value);
                         } else {
@@ -1432,7 +1432,7 @@ fn substitute_references_in_value_and_apply(
         } else {
             if let Some(registration) = custom_registration {
                 if let Ok(value) =
-                    SpecifiedRegisteredValue::compute(&mut input, registration, stylist)
+                    SpecifiedRegisteredValue::compute(&mut input, registration, computed_context)
                 {
                     custom_properties.insert(custom_registration, name.clone(), value);
                 } else {
@@ -1548,7 +1548,7 @@ fn substitute_block<'i>(
                                 if let Err(_) = SpecifiedRegisteredValue::compute(
                                     &mut fallback_input,
                                     registration,
-                                    stylist,
+                                    computed_context,
                                 ) {
                                     return Err(input
                                         .new_custom_error(StyleParseErrorKind::UnspecifiedError));
@@ -1577,7 +1577,7 @@ fn substitute_block<'i>(
                             if let Ok(fallback) = SpecifiedRegisteredValue::compute(
                                 &mut fallback_input,
                                 registration,
-                                stylist,
+                                computed_context,
                             ) {
                                 partial_computed_value.push_variable(input, &fallback)?;
                             } else {

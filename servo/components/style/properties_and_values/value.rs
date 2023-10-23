@@ -14,10 +14,7 @@ use super::{
 };
 use crate::custom_properties::ComputedValue as ComputedPropertyValue;
 use crate::parser::{Parse, ParserContext};
-use crate::properties::StyleBuilder;
-use crate::rule_cache::RuleCacheConditions;
-use crate::stylesheets::{container_rule::ContainerSizeQuery, CssRuleType, Origin, UrlExtraData};
-use crate::stylist::Stylist;
+use crate::stylesheets::{CssRuleType, Origin, UrlExtraData};
 use crate::values::{
     computed::{self, ToComputedValue},
     specified, CustomIdent,
@@ -354,7 +351,7 @@ impl SpecifiedValue {
     pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
-        stylist: &Stylist,
+        context: &computed::Context,
     ) -> Result<Arc<ComputedPropertyValue>, ()> {
         let Ok(value) = Self::parse(
             input,
@@ -365,16 +362,9 @@ impl SpecifiedValue {
             return Err(());
         };
 
-        let mut rule_cache_conditions = RuleCacheConditions::default();
-        let context = computed::Context::new(
-            // TODO(zrhoffman, bug 1857674): Pass the existing StyleBuilder from the computed
-            // context.
-            StyleBuilder::new(stylist.device(), Some(stylist), None, None, None, false),
-            stylist.quirks_mode(),
-            &mut rule_cache_conditions,
-            ContainerSizeQuery::none(),
-        );
-        let value = value.to_computed_value(&context);
+        // TODO(zrhoffman, bug 1856522): All font-* properties should already be applied before
+        // computing the value of the registered custom property.
+        let value = value.to_computed_value(context);
         let value = SpecifiedValue::from_computed_value(&value).to_css_string();
 
         let result = {
