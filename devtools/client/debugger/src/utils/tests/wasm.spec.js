@@ -65,7 +65,7 @@ describe("wasm", () => {
       const source = makeMockWasmSourceWithContent(MALFORMED_SIMPLE_WASM);
       const lines = renderWasmText(source.id, source.content.value);
       expect(lines.join("\n")).toEqual(
-        "Error occured during wast conversion : Unknown operator: 6"
+        "Error occured during wast conversion : Unsupported element segment type 96"
       );
       clearWasmStates();
     });

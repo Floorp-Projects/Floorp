@@ -714,7 +714,7 @@
 
     	  return normalize(sourceURL);
     	}
-    	exports.computeSourceURL = computeSourceURL;
+    	exports.computeSourceURL = computeSourceURL; 
     } (util$4));
 
     var arraySet = {};
@@ -1418,14 +1418,10 @@
     	  }
 
     	  return index;
-    	};
+    	}; 
     } (binarySearch$1));
 
-    var readWasmExports = {};
-    var readWasm$2 = {
-      get exports(){ return readWasmExports; },
-      set exports(v){ readWasmExports = v; },
-    };
+    var readWasm$2 = {exports: {}};
 
     var empty = {};
 
@@ -1710,7 +1706,7 @@
                         "before using SourceMapConsumer");
       };
 
-      readWasmExports.initialize = input => mappingsWasm = input;
+      readWasm$2.exports.initialize = input => mappingsWasm = input;
     } else {
       // Node version of reading a wasm file into an array buffer.
       const fs = require$$0;
@@ -1730,10 +1726,12 @@
         });
       };
 
-      readWasmExports.initialize = _ => {
+      readWasm$2.exports.initialize = _ => {
         console.debug("SourceMapConsumer.initialize is a no-op when running in node.js");
       };
     }
+
+    var readWasmExports = readWasm$2.exports;
 
     const readWasm$1 = readWasmExports;
 
@@ -3489,11 +3487,7 @@
     sourceMap$1.SourceMapConsumer = sourceMapConsumer.SourceMapConsumer;
     sourceMap$1.SourceNode = sourceNode.SourceNode;
 
-    var workerUtilsExports = {};
-    var workerUtils = {
-      get exports(){ return workerUtilsExports; },
-      set exports(v){ workerUtilsExports = v; },
-    };
+    var workerUtils = {exports: {}};
 
     (function (module) {
 
@@ -3647,14 +3641,12 @@
     	    WorkerDispatcher,
     	    workerHandler,
     	  };
-    	}
+    	} 
     } (workerUtils));
 
-    var acornExports = {};
-    var acorn$1 = {
-      get exports(){ return acornExports; },
-      set exports(v){ acornExports = v; },
-    };
+    var workerUtilsExports = workerUtils.exports;
+
+    var acorn$1 = {exports: {}};
 
     (function (module, exports) {
     	(function (global, factory) {
@@ -9261,8 +9253,10 @@
     	  exports.tokenizer = tokenizer;
     	  exports.version = version;
 
-    	}));
-    } (acorn$1, acornExports));
+    	})); 
+    } (acorn$1, acorn$1.exports));
+
+    var acornExports = acorn$1.exports;
 
     /* eslint-disable complexity */
 

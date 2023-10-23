@@ -231,11 +231,7 @@
       };
     }
 
-    var workerUtilsExports = {};
-    var workerUtils = {
-      get exports(){ return workerUtilsExports; },
-      set exports(v){ workerUtilsExports = v; },
-    };
+    var workerUtils = {exports: {}};
 
     (function (module) {
 
@@ -389,8 +385,10 @@
     	    WorkerDispatcher,
     	    workerHandler,
     	  };
-    	}
+    	} 
     } (workerUtils));
+
+    var workerUtilsExports = workerUtils.exports;
 
     self.onmessage = workerUtilsExports.workerHandler({ getMatches, findSourceMatches });
 
