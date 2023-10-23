@@ -99,15 +99,15 @@ add_task(
         await openACPopup(popup, browser, "#form-basic-username");
 
         const secondLoginItem = popup.firstChild.getItemAtIndex(1);
-        const secondLoginItemSettingsIcon = secondLoginItem.querySelector(
-          ".ac-settings-button"
+        const secondLoginItemSecondaryAction = secondLoginItem.querySelector(
+          ".ac-secondary-action"
         );
 
         Assert.ok(
-          !secondLoginItemSettingsIcon.checkVisibility({
+          !secondLoginItemSecondaryAction.checkVisibility({
             checkVisibilityCSS: true,
           }),
-          "Gear icon should not be visible initially"
+          "Secondary action should not be visible initially"
         );
 
         await EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -119,10 +119,10 @@ add_task(
         );
 
         Assert.ok(
-          secondLoginItemSettingsIcon.checkVisibility({
+          secondLoginItemSecondaryAction.checkVisibility({
             checkVisibilityCSS: true,
           }),
-          "Gear icon should be visible when login item is active"
+          "Secondary action should be visible when item is active"
         );
 
         const aboutLoginsTabPromise = BrowserTestUtils.waitForNewTab(
@@ -131,7 +131,7 @@ add_task(
           true
         );
 
-        EventUtils.synthesizeMouseAtCenter(secondLoginItemSettingsIcon, {});
+        EventUtils.synthesizeMouseAtCenter(secondLoginItemSecondaryAction, {});
         const aboutLoginsTab = await aboutLoginsTabPromise;
 
         await SpecialPowers.spawn(
