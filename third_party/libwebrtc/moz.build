@@ -310,6 +310,7 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/async_resolver_interface_gn",
     "/third_party/libwebrtc/rtc_base/audio_format_to_string_gn",
     "/third_party/libwebrtc/rtc_base/bit_buffer_gn",
+    "/third_party/libwebrtc/rtc_base/bitrate_tracker_gn",
     "/third_party/libwebrtc/rtc_base/bitstream_reader_gn",
     "/third_party/libwebrtc/rtc_base/buffer_gn",
     "/third_party/libwebrtc/rtc_base/byte_buffer_gn",
