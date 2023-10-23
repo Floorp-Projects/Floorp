@@ -744,10 +744,11 @@ def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_conf
         if "windows10-32" in platform:
             return False
 
-        # Desktop selection only for CaR
-        if "android" not in platform:
-            if "browsertime" in try_name and "custom-car" in try_name:
-                return True
+        # Desktop and Android selection for CaR
+        if "browsertime" in try_name and (
+            "custom-car" in try_name or "cstm-car-m" in try_name
+        ):
+            return True
         return False
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
@@ -1051,6 +1052,7 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
         "toolchain-linux64-custom-car",
         "toolchain-win64-custom-car",
         "toolchain-macosx64-custom-car",
+        "toolchain-android-custom-car",
     ]
 
 
