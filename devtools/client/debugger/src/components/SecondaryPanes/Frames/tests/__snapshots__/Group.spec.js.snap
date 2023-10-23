@@ -324,9 +324,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
   <div
     className="frames-list"
   >
-    <FrameIndent
-      key="frame-indent-0"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -462,6 +459,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       }
       getFrameTitle={[Function]}
       hideLocation={true}
+      isInGroup={true}
       key="1"
       panel="webconsole"
       selectFrame={[MockFunction]}
@@ -598,9 +596,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       }
       shouldMapDisplayName={false}
     />
-    <FrameIndent
-      key="frame-indent-1"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -736,6 +731,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       }
       getFrameTitle={[Function]}
       hideLocation={true}
+      isInGroup={true}
       key="2"
       panel="webconsole"
       selectFrame={[MockFunction]}
@@ -872,9 +868,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       }
       shouldMapDisplayName={false}
     />
-    <FrameIndent
-      key="frame-indent-2"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -1010,6 +1003,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       }
       getFrameTitle={[Function]}
       hideLocation={true}
+      isInGroup={true}
       key="3"
       panel="webconsole"
       selectFrame={[MockFunction]}
@@ -1474,9 +1468,6 @@ exports[`Group renders group with anonymous functions 2`] = `
   <div
     className="frames-list"
   >
-    <FrameIndent
-      key="frame-indent-0"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -1611,6 +1602,7 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       hideLocation={true}
+      isInGroup={true}
       key="1"
       panel="webconsole"
       selectFrame={[MockFunction]}
@@ -1747,9 +1739,6 @@ exports[`Group renders group with anonymous functions 2`] = `
       }
       shouldMapDisplayName={false}
     />
-    <FrameIndent
-      key="frame-indent-1"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -1884,6 +1873,7 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       hideLocation={true}
+      isInGroup={true}
       key="2"
       panel="webconsole"
       selectFrame={[MockFunction]}
@@ -2020,9 +2010,6 @@ exports[`Group renders group with anonymous functions 2`] = `
       }
       shouldMapDisplayName={false}
     />
-    <FrameIndent
-      key="frame-indent-2"
-    />
     <Frame
       disableContextMenu={false}
       displayFullUrl={false}
@@ -2157,6 +2144,7 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       hideLocation={true}
+      isInGroup={true}
       key="3"
       panel="webconsole"
       selectFrame={[MockFunction]}
