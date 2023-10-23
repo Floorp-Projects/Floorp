@@ -24,12 +24,9 @@ xul|tab[visuallyselected] {
    light text. */
 xul|menulist::part(label-box),
 xul|*.radio-label-box,
-xul|*.checkbox-label-box {
+xul|*.checkbox-label-box,
+xul|*.button-menu-dropmarker {
   appearance: none;
-}
-
-xul|button[type="menu"] > xul|*.button-box > xul|*.button-menu-dropmarker {
-  appearance: none !important;
 }
 
 xul|menulist {
