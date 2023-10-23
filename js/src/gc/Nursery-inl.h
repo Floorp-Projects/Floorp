@@ -85,6 +85,67 @@ inline void js::Nursery::setDirectForwardingPointer(void* oldData,
   new (oldData) BufferRelocationOverlay{newData};
 }
 
+inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
+                                          JS::TraceKind kind) {
+  // Ensure there's enough space to replace the contents with a
+  // RelocationOverlay.
+  // MOZ_ASSERT(size >= sizeof(RelocationOverlay));
+  MOZ_ASSERT(size % gc::CellAlignBytes == 0);
+  MOZ_ASSERT(size_t(kind) < gc::NurseryTraceKinds);
+  MOZ_ASSERT_IF(kind == JS::TraceKind::String, canAllocateStrings());
+  MOZ_ASSERT_IF(kind == JS::TraceKind::BigInt, canAllocateBigInts());
+
+  void* ptr = tryAllocate(sizeof(gc::NurseryCellHeader) + size);
+  if (MOZ_UNLIKELY(!ptr)) {
+    return nullptr;
+  }
+
+  new (ptr) gc::NurseryCellHeader(site, kind);
+
+  void* cell =
+      reinterpret_cast<void*>(uintptr_t(ptr) + sizeof(gc::NurseryCellHeader));
+  if (!cell) {
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+        "Successful allocation cannot result in nullptr");
+  }
+
+  // Update the allocation site. This code is also inlined in
+  // MacroAssembler::updateAllocSite.
+  uint32_t allocCount = site->incAllocCount();
+  if (allocCount == 1) {
+    pretenuringNursery.insertIntoAllocatedList(site);
+  }
+  MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
+
+  gc::gcprobes::NurseryAlloc(cell, kind);
+  return cell;
+}
+
+inline void* js::Nursery::tryAllocate(size_t size) {
+  MOZ_ASSERT(isEnabled());
+  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+  MOZ_ASSERT_IF(currentChunk_ == startChunk_, position() >= startPosition_);
+  MOZ_ASSERT(size % gc::CellAlignBytes == 0);
+  MOZ_ASSERT(position() % gc::CellAlignBytes == 0);
+
+  if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
+    return nullptr;
+  }
+
+  void* ptr = reinterpret_cast<void*>(position());
+  if (!ptr) {
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+        "Successful allocation cannot result in nullptr");
+  }
+
+  position_ = position() + size;
+
+  DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
+                  MemCheckKind::MakeUndefined);
+
+  return ptr;
+}
+
 namespace js {
 
 // The allocation methods below will not run the garbage collector. If the
