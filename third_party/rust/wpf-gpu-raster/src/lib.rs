@@ -114,6 +114,15 @@ impl PathBuilder {
             rasterization_truncates: false,
         }
     }
+    fn reset(&mut self) {
+        *self = Self {
+            points: std::mem::take(&mut self.points),
+            types: std::mem::take(&mut self.types),
+            ..Self::new()
+        };
+        self.points.clear();
+        self.types.clear();
+    }
     fn add_point(&mut self, x: f32, y: f32) {
         self.current_point = Some(MilPoint2F{X: x, Y: y});
         // Transform from pixel corner at 0.0 to pixel center at 0.0. Scale into 28.4 range.
@@ -237,8 +246,8 @@ impl PathBuilder {
         if self.valid_range && !self.points.is_empty() && !self.types.is_empty() {
             Some(OutputPath {
                 fill_mode: self.fill_mode,
-                points: std::mem::take(&mut self.points).into_boxed_slice(),
-                types: std::mem::take(&mut self.types).into_boxed_slice(),
+                points: Box::from(self.points.as_slice()),
+                types: Box::from(self.types.as_slice()),
             })
         } else {
             None

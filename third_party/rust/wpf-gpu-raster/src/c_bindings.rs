@@ -8,6 +8,11 @@ pub extern "C" fn wgr_new_builder() -> *mut PathBuilder {
 }
 
 #[no_mangle]
+pub extern "C" fn wgr_builder_reset(pb: &mut PathBuilder) {
+    pb.reset();
+}
+
+#[no_mangle]
 pub extern "C" fn wgr_builder_move_to(pb: &mut PathBuilder, x: f32, y: f32) {
     pb.move_to(x, y);
 }
