@@ -168,17 +168,14 @@ class Nursery {
     return sizeof(gc::NurseryCellHeader);
   }
 
-  // Allocate a buffer for a given zone, using the nursery if possible.
-  void* allocateBuffer(JS::Zone* zone, size_t nbytes);
-
-  // Allocate a buffer for a given object, using the nursery if possible and
-  // obj is in the nursery.
-  void* allocateBuffer(JS::Zone* zone, JSObject* obj, size_t nbytes);
+  // Allocate a buffer for a given GC thing, using the nursery if possible and
+  // |cell| is in the nursery.
+  void* allocateBuffer(JS::Zone* zone, gc::Cell* cell, size_t nbytes);
 
   // Allocate a buffer for a given object, always using the nursery if obj is
   // in the nursery. The requested size must be less than or equal to
   // MaxNurseryBufferSize.
-  void* allocateBufferSameLocation(JSObject* obj, size_t nbytes);
+  void* allocateBufferSameLocation(gc::Cell* cell, size_t nbytes);
 
   // Allocate a zero-initialized buffer for a given zone, using the nursery if
   // possible. If the buffer isn't allocated in the nursery, the given arena is
@@ -189,16 +186,12 @@ class Nursery {
   // Allocate a zero-initialized buffer for a given object, using the nursery if
   // possible and obj is in the nursery. If the buffer isn't allocated in the
   // nursery, the given arena is used.
-  void* allocateZeroedBuffer(JSObject* obj, size_t nbytes,
+  void* allocateZeroedBuffer(gc::Cell* cell, size_t nbytes,
                              arena_id_t arena = js::MallocArena);
 
   // Resize an existing buffer.
   void* reallocateBuffer(JS::Zone* zone, gc::Cell* cell, void* oldBuffer,
                          size_t oldBytes, size_t newBytes);
-
-  // Allocate a digits buffer for a given BigInt, using the nursery if possible
-  // and |bi| is in the nursery.
-  void* allocateBuffer(JS::BigInt* bi, size_t nbytes);
 
   // Free an object buffer.
   void freeBuffer(void* buffer, size_t nbytes);
@@ -670,6 +663,9 @@ class Nursery {
   void clear();
 
   void sweepMapAndSetObjects();
+
+  // Allocate a buffer for a given zone, using the nursery if possible.
+  void* allocateBuffer(JS::Zone* zone, size_t nbytes);
 
   // Change the allocable space provided by the nursery.
   void maybeResizeNursery(JS::GCOptions options, JS::GCReason reason);

@@ -10,12 +10,11 @@
 
 #include "gc/Nursery.h"
 
+#include "gc/GCRuntime.h"
 #include "gc/RelocationOverlay.h"
 #include "js/TracingAPI.h"
 #include "vm/JSContext.h"
-#include "vm/Runtime.h"
-
-#include "vm/JSContext-inl.h"
+#include "vm/NativeObject.h"
 
 inline JSRuntime* js::Nursery::runtime() const { return gc->rt; }
 
@@ -93,70 +92,33 @@ namespace js {
 // instead.
 
 template <typename T>
-static inline T* AllocateObjectBuffer(JSContext* cx, uint32_t count) {
+static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
+                                    uint32_t count) {
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
   auto* buffer =
-      static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), nbytes));
+      static_cast<T*>(cx->nursery().allocateBuffer(cell->zone(), cell, nbytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
-  return buffer;
-}
 
-template <typename T>
-static inline T* AllocateObjectBuffer(JSContext* cx, JSObject* obj,
-                                      uint32_t count) {
-  size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  auto* buffer =
-      static_cast<T*>(cx->nursery().allocateBuffer(cx->zone(), obj, nbytes));
-  if (!buffer) {
-    ReportOutOfMemory(cx);
-  }
   return buffer;
 }
 
 // If this returns null then the old buffer will be left alone.
 template <typename T>
-static inline T* ReallocateObjectBuffer(JSContext* cx, JSObject* obj,
-                                        T* oldBuffer, uint32_t oldCount,
-                                        uint32_t newCount) {
+static inline T* ReallocateCellBuffer(JSContext* cx, gc::Cell* cell,
+                                      T* oldBuffer, uint32_t oldCount,
+                                      uint32_t newCount) {
+  size_t oldBytes = RoundUp(oldCount * sizeof(T), sizeof(Value));
+  size_t newBytes = RoundUp(newCount * sizeof(T), sizeof(Value));
+
   T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
-      obj->zone(), obj, oldBuffer, oldCount * sizeof(T), newCount * sizeof(T)));
+      cell->zone(), cell, oldBuffer, oldBytes, newBytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
 
   return buffer;
-}
-
-static inline JS::BigInt::Digit* AllocateBigIntDigits(JSContext* cx,
-                                                      JS::BigInt* bi,
-                                                      uint32_t length) {
-  size_t nbytes = RoundUp(length * sizeof(JS::BigInt::Digit), sizeof(Value));
-  auto* digits =
-      static_cast<JS::BigInt::Digit*>(cx->nursery().allocateBuffer(bi, nbytes));
-  if (!digits) {
-    ReportOutOfMemory(cx);
-  }
-
-  return digits;
-}
-
-static inline JS::BigInt::Digit* ReallocateBigIntDigits(
-    JSContext* cx, JS::BigInt* bi, JS::BigInt::Digit* oldDigits,
-    uint32_t oldLength, uint32_t newLength) {
-  size_t oldBytes =
-      RoundUp(oldLength * sizeof(JS::BigInt::Digit), sizeof(Value));
-  size_t newBytes =
-      RoundUp(newLength * sizeof(JS::BigInt::Digit), sizeof(Value));
-
-  auto* digits = static_cast<JS::BigInt::Digit*>(cx->nursery().reallocateBuffer(
-      bi->zone(), bi, oldDigits, oldBytes, newBytes));
-  if (!digits) {
-    ReportOutOfMemory(cx);
-  }
-
-  return digits;
 }
 
 }  // namespace js
