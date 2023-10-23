@@ -98,6 +98,7 @@ export default class FrameComponent extends Component {
       frame: PropTypes.object.isRequired,
       getFrameTitle: PropTypes.func,
       hideLocation: PropTypes.bool.isRequired,
+      isInGroup: PropTypes.bool,
       panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
       selectFrame: PropTypes.func.isRequired,
       selectedFrame: PropTypes.object,
@@ -149,6 +150,7 @@ export default class FrameComponent extends Component {
       getFrameTitle,
       disableContextMenu,
       shouldDisplayOriginalLocation,
+      isInGroup,
     } = this.props;
     const { l10n } = this.context;
 
@@ -193,7 +195,10 @@ export default class FrameComponent extends Component {
               className: "clipboard-only",
             })
         ),
-      this.isSelectable && React.createElement(FrameIndent, null),
+      this.isSelectable &&
+        React.createElement(FrameIndent, {
+          indentLevel: isInGroup ? 2 : 1,
+        }),
       React.createElement(FrameTitle, {
         frame,
         options: {
