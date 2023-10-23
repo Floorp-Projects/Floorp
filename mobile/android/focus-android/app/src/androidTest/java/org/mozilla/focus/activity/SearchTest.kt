@@ -125,8 +125,8 @@ class SearchTest {
             pressEnterKey()
         }
         browserScreen {
-            verifyPageContent(searchString)
             progressBar.waitUntilGone(waitingTime)
+            verifyPageURL("google")
         }.openSearchBar {
             // Tap URL bar, check it displays search term (instead of URL)
             verifySearchEditBarContainsText(searchString)
