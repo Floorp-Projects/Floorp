@@ -16,6 +16,7 @@ use super::specified;
 use super::{CSSFloat, CSSInteger};
 use crate::computed_value_flags::ComputedValueFlags;
 use crate::context::QuirksMode;
+use crate::custom_properties::ComputedCustomProperties;
 use crate::font_metrics::{FontMetrics, FontMetricsOrientation};
 use crate::media_queries::Device;
 #[cfg(feature = "gecko")]
@@ -313,6 +314,11 @@ impl<'a> Context<'a> {
     /// The current device.
     pub fn device(&self) -> &Device {
         self.builder.device
+    }
+
+    /// Get the inherited custom properties map.
+    pub fn inherited_custom_properties(&self) -> &ComputedCustomProperties {
+        &self.builder.inherited_custom_properties()
     }
 
     /// Queries font metrics.

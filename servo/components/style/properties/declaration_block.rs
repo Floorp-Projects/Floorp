@@ -956,10 +956,7 @@ impl PropertyDeclarationBlock {
         stylist: &Stylist,
         context: &Context,
     ) -> ComputedCustomProperties {
-        let inherited_custom_properties = context.builder.custom_properties().clone();
-
-        let mut builder =
-            CustomPropertiesBuilder::new(&inherited_custom_properties, stylist, context, false);
+        let mut builder = CustomPropertiesBuilder::new(stylist, context, false);
 
         for declaration in self.normal_declaration_iter() {
             if let PropertyDeclaration::Custom(ref declaration) = *declaration {
