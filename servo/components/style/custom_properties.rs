@@ -793,18 +793,14 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
     reverted: PrecomputedHashMap<&'a Name, (CascadePriority, bool)>,
     stylist: &'a Stylist,
     computed_context: &'a computed::Context<'b>,
-    is_root_element: bool,
 }
 
 impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
-    pub fn new(
-        stylist: &'a Stylist,
-        computed_context: &'a computed::Context<'b>,
-        is_root_element: bool,
-    ) -> Self {
+    pub fn new(stylist: &'a Stylist, computed_context: &'a computed::Context<'b>) -> Self {
         let inherited = computed_context.inherited_custom_properties();
         let initial_values = stylist.get_custom_property_initial_values();
+        let is_root_element = computed_context.is_root_element();
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
@@ -820,7 +816,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             },
             stylist,
             computed_context,
-            is_root_element,
         }
     }
 
@@ -865,7 +860,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                             map,
                             self.stylist,
                             self.computed_context,
-                            self.is_root_element,
                         );
                         return;
                     }
@@ -1033,7 +1027,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 &self.seen,
                 self.stylist,
                 self.computed_context,
-                self.is_root_element,
             );
         }
 
@@ -1075,7 +1068,6 @@ fn substitute_all(
     seen: &PrecomputedHashSet<&Name>,
     stylist: &Stylist,
     computed_context: &computed::Context,
-    is_root_element: bool,
 ) {
     // The cycle dependencies removal in this function is a variant
     // of Tarjan's algorithm. It is mostly based on the pseudo-code
@@ -1117,8 +1109,6 @@ fn substitute_all(
         /// The computed context is used to get inherited custom
         /// properties  and compute registered custom properties.
         computed_context: &'a computed::Context<'b>,
-        /// Whether this is the root element.
-        is_root_element: bool,
     }
 
     /// This function combines the traversal for cycle removal and value
@@ -1264,7 +1254,6 @@ fn substitute_all(
             &mut context.map,
             context.stylist,
             context.computed_context,
-            context.is_root_element,
         );
 
         // All resolved, so return the signal value.
@@ -1283,7 +1272,6 @@ fn substitute_all(
             map: custom_properties_map,
             stylist,
             computed_context,
-            is_root_element,
         };
         traverse(name, &mut context);
     }
@@ -1329,11 +1317,11 @@ fn substitute_references_in_value_and_apply(
     custom_properties: &mut ComputedCustomProperties,
     stylist: &Stylist,
     computed_context: &computed::Context,
-    is_root_element: bool,
 ) {
     debug_assert!(value.has_references());
 
     let inherited = computed_context.inherited_custom_properties();
+    let is_root_element = computed_context.is_root_element();
     let custom_registration = stylist.get_custom_property_registration(&name);
     let mut computed_value = ComputedValue::empty();
 

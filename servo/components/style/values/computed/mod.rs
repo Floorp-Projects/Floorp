@@ -321,6 +321,11 @@ impl<'a> Context<'a> {
         &self.builder.inherited_custom_properties()
     }
 
+    /// Whether the style is for the root element.
+    pub fn is_root_element(&self) -> bool {
+        self.builder.is_root_element
+    }
+
     /// Queries font metrics.
     pub fn query_font_metrics(
         &self,
