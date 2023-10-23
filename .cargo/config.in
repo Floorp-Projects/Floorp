@@ -10,9 +10,9 @@ git = "https://github.com/FirefoxGraphics/aa-stroke"
 rev = "ed4206ea11703580cd1d4fc63371a527b29d8252"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=5ab6fe33d00021325ee920b3c10526dc8301cf46"]
+[source."git+https://github.com/FirefoxGraphics/wpf-gpu-raster?rev=99979da091fd58fba8477e7fcdf5ec0727102916"]
 git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
-rev = "5ab6fe33d00021325ee920b3c10526dc8301cf46"
+rev = "99979da091fd58fba8477e7fcdf5ec0727102916"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/chris-zen/coremidi.git?rev=fc68464b5445caf111e41f643a2e69ccce0b4f83"]
