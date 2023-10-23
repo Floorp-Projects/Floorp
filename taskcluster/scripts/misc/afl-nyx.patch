@@ -1,34 +1,14 @@
-commit 7077ecbdf775aaf2524d07e00e67a78f40638bd5
-Author: Jesse Schwartzentruber <truber@mozilla.com>
-Date:   Fri Jul 28 12:02:05 2023 -0400
-
-    Use CPPFLAGS for C++ too.
-
-diff --git a/GNUmakefile.llvm b/GNUmakefile.llvm
-index 6ffac68f..97ce3825 100644
---- a/GNUmakefile.llvm
-+++ b/GNUmakefile.llvm
-@@ -296,7 +296,7 @@ endif
- ifneq "$(LLVM_CONFIG)" ""
-   CLANG_CFL += -I$(shell dirname $(LLVM_CONFIG))/../include
- endif
--CLANG_CPPFL  = `$(LLVM_CONFIG) --cxxflags` -fno-rtti -fPIC $(CXXFLAGS) -Wno-deprecated-declarations
-+CLANG_CPPFL  = `$(LLVM_CONFIG) --cxxflags` -fno-rtti -fPIC $(CXXFLAGS) $(CPPFLAGS) -Wno-deprecated-declarations
- CLANG_LFL    = `$(LLVM_CONFIG) --ldflags` $(LDFLAGS)
- 
- # wasm fuzzing: disable thread-local storage and unset LLVM debug flag
-
-commit f5ceb29f2f61439de7adbe8494a2e305c586b904
+commit 5609c7644b5a6e400549b01510031eb8d4e27b1c
 Author: Jesse Schwartzentruber <truber@mozilla.com>
 Date:   Fri Jul 14 13:20:02 2023 -0400
 
     Don't set rpath to mozfetch
 
 diff --git a/src/afl-cc.c b/src/afl-cc.c
-index 58d44e5d..4c23d153 100644
+index 037a5c30..eef15fee 100644
 --- a/src/afl-cc.c
 +++ b/src/afl-cc.c
-@@ -1138,22 +1138,6 @@ static void edit_params(u32 argc, char **argv, char **envp) {
+@@ -1144,22 +1144,6 @@ static void edit_params(u32 argc, char **argv, char **envp) {
  
    if (!have_pic) { cc_params[cc_par_cnt++] = "-fPIC"; }
  
@@ -52,22 +32,21 @@ index 58d44e5d..4c23d153 100644
  
      cc_params[cc_par_cnt++] = "-fstack-protector-all";
 
-commit d606e18332b4f919780604b9daf9a3761602b7c5
+commit 1e1e67d0a7d16db0a4331702af713a163c40b87f
 Author: Jesse Schwartzentruber <truber@mozilla.com>
 Date:   Fri Jul 14 11:04:04 2023 -0400
 
     Increase MAP_SIZE for Nyx
 
 diff --git a/include/config.h b/include/config.h
-index 8585041e..6e526717 100644
+index 988e536e..5e9870c0 100644
 --- a/include/config.h
 +++ b/include/config.h
-@@ -445,7 +445,7 @@
+@@ -442,7 +442,7 @@
     problems with complex programs). You need to recompile the target binary
     after changing this - otherwise, SEGVs may ensue. */
  
 -#define MAP_SIZE_POW2 16
 +#define MAP_SIZE_POW2 23
- #define MAP_SIZE (1U << MAP_SIZE_POW2)
  
- /* Maximum allocator request size (keep well under INT_MAX): */
+ /* Do not change this unless you really know what you are doing. */
