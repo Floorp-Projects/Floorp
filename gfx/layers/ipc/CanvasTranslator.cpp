@@ -113,6 +113,9 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
 
 ipc::IPCResult CanvasTranslator::RecvNewBuffer(
     ipc::SharedMemoryBasic::Handle&& aReadHandle) {
+  if (!mTranslationTaskQueue) {
+    return IPC_FAIL(this, "RecvNewBuffer before RecvInitTranslator.");
+  }
   // We need to set the new buffer on the transaltion queue to be sure that the
   // drop buffer event has been processed.
   MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(NS_NewRunnableFunction(
@@ -125,6 +128,9 @@ ipc::IPCResult CanvasTranslator::RecvNewBuffer(
 }
 
 ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
+  if (!mTranslationTaskQueue) {
+    return IPC_FAIL(this, "RecvResumeTranslation before RecvInitTranslator.");
+  }
   if (CheckDeactivated()) {
     // The other side might have sent a resume message before we deactivated.
     return IPC_OK();
@@ -213,8 +219,10 @@ void CanvasTranslator::Deactivate() {
 }
 
 bool CanvasTranslator::TranslateRecording() {
-  MOZ_ASSERT(mTranslationTaskQueue &&
-             mTranslationTaskQueue->IsCurrentThreadIn());
+  if (!mTranslationTaskQueue) {
+    return false;
+  }
+  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
 
   uint8_t eventType = mStream->ReadNextEvent();
   while (mStream->good() && eventType != kDropBufferEventType) {
