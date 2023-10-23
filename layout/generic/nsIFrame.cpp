@@ -2943,8 +2943,8 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
                                             nsIFrame* aMaskedFrame) {
   const nsStyleSVGReset* svgReset = aMaskedFrame->StyleSVGReset();
 
-  SVGUtils::MaskUsage maskUsage;
-  SVGUtils::DetermineMaskUsage(aMaskedFrame, false, maskUsage);
+  SVGUtils::MaskUsage maskUsage =
+      SVGUtils::DetermineMaskUsage(aMaskedFrame, false);
 
   nsPoint offsetToUserSpace =
       nsLayoutUtils::ComputeOffsetToUserSpace(aBuilder, aMaskedFrame);

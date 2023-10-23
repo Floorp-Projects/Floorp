@@ -642,8 +642,8 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
                                     bool& aOutIsMaskComplete) {
   aOutIsMaskComplete = true;
 
-  SVGUtils::MaskUsage maskUsage;
-  SVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity, maskUsage);
+  SVGUtils::MaskUsage maskUsage =
+      SVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity);
   if (!maskUsage.shouldDoSomething()) {
     return false;
   }
@@ -767,8 +767,8 @@ void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
     return;
   }
 
-  SVGUtils::MaskUsage maskUsage;
-  SVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity, maskUsage);
+  SVGUtils::MaskUsage maskUsage =
+      SVGUtils::DetermineMaskUsage(aParams.frame, aParams.handleOpacity);
 
   if (maskUsage.opacity == 0.0f) {
     return;
