@@ -1184,6 +1184,10 @@ void DeviceManagerDx::DisableD3D11AfterCrash() {
 }
 
 RefPtr<ID3D11Device> DeviceManagerDx::GetCompositorDevice() {
+  /// ID3D11Device is thread-safe. We need the lock to read the
+  /// mDeviceLockPointer, but manipulating the pointee outside of the lock is
+  /// safe. See
+  /// https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-render-multi-thread-intro
   MutexAutoLock lock(mDeviceLock);
   return mCompositorDevice;
 }
