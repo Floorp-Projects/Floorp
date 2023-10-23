@@ -26,17 +26,17 @@ namespace js {
 namespace gc {
 
 template <typename T, AllowGC allowGC, typename... Args>
-T* CellAllocator::NewCell(JS::RootingContext* rcx, Args&&... args) {
+T* CellAllocator::NewCell(JSContext* cx, Args&&... args) {
   static_assert(std::is_base_of_v<gc::Cell, T>);
 
   // Objects. See the valid parameter list in NewObject, above.
   if constexpr (std::is_base_of_v<JSObject, T>) {
-    return NewObject<T, allowGC>(rcx, std::forward<Args>(args)...);
+    return NewObject<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 
   // BigInt
   else if constexpr (std::is_base_of_v<JS::BigInt, T>) {
-    return NewBigInt<T, allowGC>(rcx, std::forward<Args>(args)...);
+    return NewBigInt<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 
   // "Normal" strings (all of which can be nursery allocated). Atoms and
@@ -46,25 +46,24 @@ T* CellAllocator::NewCell(JS::RootingContext* rcx, Args&&... args) {
   else if constexpr (std::is_base_of_v<JSString, T> &&
                      !std::is_base_of_v<JSAtom, T> &&
                      !std::is_base_of_v<JSExternalString, T>) {
-    return NewString<T, allowGC>(rcx, std::forward<Args>(args)...);
+    return NewString<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 
   else {
     // Allocate a new tenured GC thing that's not nursery-allocatable. Use
     // cx->newCell<T>(...), where the parameters are forwarded to the type's
     // constructor.
-    return NewTenuredCell<T, allowGC>(rcx, std::forward<Args>(args)...);
+    return NewTenuredCell<T, allowGC>(cx, std::forward<Args>(args)...);
   }
 }
 
 template <typename T, AllowGC allowGC, typename... Args>
 /* static */
-T* CellAllocator::NewString(JS::RootingContext* rcx, gc::Heap heap,
-                            Args&&... args) {
+T* CellAllocator::NewString(JSContext* cx, gc::Heap heap, Args&&... args) {
   static_assert(std::is_base_of_v<JSString, T>);
   gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
   void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::String, allowGC>(
-      rcx, kind, sizeof(T), heap, nullptr);
+      cx, kind, sizeof(T), heap, nullptr);
   if (MOZ_UNLIKELY(!ptr)) {
     return nullptr;
   }
@@ -73,9 +72,9 @@ T* CellAllocator::NewString(JS::RootingContext* rcx, gc::Heap heap,
 
 template <typename T, AllowGC allowGC>
 /* static */
-T* CellAllocator::NewBigInt(JS::RootingContext* rcx, Heap heap) {
+T* CellAllocator::NewBigInt(JSContext* cx, Heap heap) {
   void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::BigInt, allowGC>(
-      rcx, gc::AllocKind::BIGINT, sizeof(T), heap, nullptr);
+      cx, gc::AllocKind::BIGINT, sizeof(T), heap, nullptr);
   if (MOZ_UNLIKELY(!ptr)) {
     return nullptr;
   }
@@ -84,16 +83,15 @@ T* CellAllocator::NewBigInt(JS::RootingContext* rcx, Heap heap) {
 
 template <typename T, AllowGC allowGC>
 /* static */
-T* CellAllocator::NewObject(JS::RootingContext* rcx, gc::AllocKind kind,
-                            gc::Heap heap, const JSClass* clasp,
-                            gc::AllocSite* site) {
+T* CellAllocator::NewObject(JSContext* cx, gc::AllocKind kind, gc::Heap heap,
+                            const JSClass* clasp, gc::AllocSite* site) {
   MOZ_ASSERT(IsObjectAllocKind(kind));
   MOZ_ASSERT_IF(heap != gc::Heap::Tenured && clasp->hasFinalize() &&
                     !clasp->isProxyObject(),
                 CanNurseryAllocateFinalizedClass(clasp));
   size_t thingSize = JSObject::thingSize(kind);
   void* cell = AllocNurseryOrTenuredCell<JS::TraceKind::Object, allowGC>(
-      rcx, kind, thingSize, heap, site);
+      cx, kind, thingSize, heap, site);
   if (MOZ_UNLIKELY(!cell)) {
     return nullptr;
   }
@@ -102,7 +100,7 @@ T* CellAllocator::NewObject(JS::RootingContext* rcx, gc::AllocKind kind,
 
 template <JS::TraceKind traceKind, AllowGC allowGC>
 /* static */
-void* CellAllocator::AllocNurseryOrTenuredCell(JS::RootingContext* rcx,
+void* CellAllocator::AllocNurseryOrTenuredCell(JSContext* cx,
                                                gc::AllocKind allocKind,
                                                size_t thingSize, gc::Heap heap,
                                                AllocSite* site) {
@@ -112,27 +110,27 @@ void* CellAllocator::AllocNurseryOrTenuredCell(JS::RootingContext* rcx,
   MOZ_ASSERT_IF(site && site->initialHeap() == Heap::Tenured,
                 heap == Heap::Tenured);
 
-  if (!PreAllocChecks<allowGC>(rcx, allocKind)) {
+  if (!PreAllocChecks<allowGC>(cx, allocKind)) {
     return nullptr;
   }
 
-  JS::Zone* zone = rcx->zoneUnchecked();
+  JS::Zone* zone = cx->zone();
   gc::Heap minHeapToTenure = CheckedHeap(zone->minHeapToTenure(traceKind));
   if (CheckedHeap(heap) < minHeapToTenure) {
     if (!site) {
       site = zone->unknownAllocSite(traceKind);
     }
 
-    void* ptr = rcx->nursery().tryAllocateCell(site, thingSize, traceKind);
+    void* ptr = cx->nursery().tryAllocateCell(site, thingSize, traceKind);
     if (MOZ_LIKELY(ptr)) {
       return ptr;
     }
 
-    return RetryNurseryAlloc<allowGC>(rcx, traceKind, allocKind, thingSize,
+    return RetryNurseryAlloc<allowGC>(cx, traceKind, allocKind, thingSize,
                                       site);
   }
 
-  return TryNewTenuredCell<allowGC>(rcx, allocKind, thingSize);
+  return TryNewTenuredCell<allowGC>(cx, allocKind, thingSize);
 }
 
 /* static */
@@ -148,9 +146,9 @@ MOZ_ALWAYS_INLINE gc::Heap CellAllocator::CheckedHeap(gc::Heap heap) {
 
 template <typename T, AllowGC allowGC, typename... Args>
 /* static */
-T* CellAllocator::NewTenuredCell(JS::RootingContext* rcx, Args&&... args) {
+T* CellAllocator::NewTenuredCell(JSContext* cx, Args&&... args) {
   gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
-  void* cell = AllocTenuredCell<allowGC>(rcx, kind, sizeof(T));
+  void* cell = AllocTenuredCell<allowGC>(cx, kind, sizeof(T));
   if (MOZ_UNLIKELY(!cell)) {
     return nullptr;
   }
