@@ -206,8 +206,10 @@ void MsaaAccessible::FireWinEvent(Accessible* aTarget, uint32_t aEventType) {
                     nsIAccessibleEvent::EVENT_LAST_ENTRY,
                 "MSAA event map skewed");
 
-  NS_ASSERTION(aEventType > 0 && aEventType < ArrayLength(gWinEventMap),
-               "invalid event type");
+  if (aEventType == 0 || aEventType >= ArrayLength(gWinEventMap)) {
+    MOZ_ASSERT_UNREACHABLE("invalid event type");
+    return;
+  }
 
   uint32_t winEvent = gWinEventMap[aEventType];
   if (!winEvent) return;

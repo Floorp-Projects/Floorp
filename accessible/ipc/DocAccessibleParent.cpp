@@ -323,6 +323,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
   if (mShutdown) {
     return IPC_OK();
   }
+  if (aEventType == 0 || aEventType >= nsIAccessibleEvent::EVENT_LAST_ENTRY) {
+    MOZ_ASSERT_UNREACHABLE("Invalid event");
+    return IPC_FAIL(this, "Invalid event");
+  }
 
   RemoteAccessible* remote = GetAccessible(aID);
   if (!remote) {
@@ -516,6 +520,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvSelectionEvent(
   if (mShutdown) {
     return IPC_OK();
   }
+  if (aType == 0 || aType >= nsIAccessibleEvent::EVENT_LAST_ENTRY) {
+    MOZ_ASSERT_UNREACHABLE("Invalid event");
+    return IPC_FAIL(this, "Invalid event");
+  }
 
   RemoteAccessible* target = GetAccessible(aID);
   RemoteAccessible* widget = GetAccessible(aWidgetID);
@@ -587,6 +595,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) {
     return IPC_OK();
+  }
+  if (aType == 0 || aType >= nsIAccessibleEvent::EVENT_LAST_ENTRY) {
+    MOZ_ASSERT_UNREACHABLE("Invalid event");
+    return IPC_FAIL(this, "Invalid event");
   }
 
   RemoteAccessible* target = GetAccessible(aID);
@@ -763,6 +775,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvRoleChangedEvent(
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) {
     return IPC_OK();
+  }
+  if (!aria::IsRoleMapIndexValid(aRoleMapEntryIndex)) {
+    MOZ_ASSERT_UNREACHABLE("Invalid role map entry index");
+    return IPC_FAIL(this, "Invalid role map entry index");
   }
 
   mRole = aRole;
