@@ -11,7 +11,6 @@ use thin_vec::ThinVec;
 
 pub mod types;
 use types::HpkeConfig;
-use types::PlaintextInputShare;
 use types::Report;
 use types::ReportID;
 use types::ReportMetadata;
@@ -95,50 +94,39 @@ fn hpke_encrypt_wrapper(
 }
 
 trait Shardable {
-    fn shard(
-        &self,
-        nonce: &[u8; 16],
-    ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>>;
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>>;
 }
 
 impl Shardable for ThinVec<u16> {
-    fn shard(
-        &self,
-        nonce: &[u8; 16],
-    ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>> {
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
         let prio = new_prio_vecu16(2, self.len())?;
 
         let measurement: Vec<u128> = self.iter().map(|e| (*e as u128)).collect();
-        let (public_share, input_shares) = prio.shard(&measurement, nonce)?;
+        let (_, input_shares) = prio.shard(&measurement, nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
 
         let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
-        let encoded_public_share = public_share.get_encoded();
-        Ok((encoded_public_share, encoded_input_shares))
+        Ok(encoded_input_shares)
     }
 }
 impl Shardable for u8 {
-    fn shard(
-        &self,
-        nonce: &[u8; 16],
-    ) -> Result<(Vec<u8>, Vec<Vec<u8>>), Box<dyn std::error::Error>> {
+    fn shard(&self, nonce: &[u8; 16]) -> Result<Vec<Vec<u8>>, Box<dyn std::error::Error>> {
         let prio = new_prio_u8(2, 2)?;
 
-        let (public_share, input_shares) = prio.shard(&(*self as u128), nonce)?;
+        let (_, input_shares) = prio.shard(&(*self as u128), nonce)?;
 
         debug_assert_eq!(input_shares.len(), 2);
 
         let encoded_input_shares = input_shares.iter().map(|s| s.get_encoded()).collect();
-        let encoded_public_share = public_share.get_encoded();
-        Ok((encoded_public_share, encoded_input_shares))
+        Ok(encoded_input_shares)
     }
 }
 
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
-    const START: &[u8] = "dap-04 input share".as_bytes();
+    const START: &[u8] = "dap-02 input share".as_bytes();
     info.extend(START);
     const FIXED: u8 = 1;
     info.push(FIXED);
@@ -179,18 +167,8 @@ fn get_dap_report_internal<T: Shardable>(
     let helper_hpke_config = select_hpke_config(helper_hpke_configs)?;
 
     let report_id = ReportID::generate();
-    let (encoded_public_share, encoded_input_shares) = measurement.shard(report_id.as_ref())?;
-
-    let plaintext_input_shares: Vec<Vec<u8>> = encoded_input_shares
-        .into_iter()
-        .map(|encoded_input_share| {
-            PlaintextInputShare {
-                extensions: Vec::new(),
-                payload: encoded_input_share,
-            }
-            .get_encoded()
-        })
-        .collect();
+    let encoded_input_shares = measurement.shard(report_id.as_ref())?;
+    let public_share = Vec::new(); // the encoding wants an empty vector not ()
 
     let metadata = ReportMetadata {
         report_id,
@@ -206,21 +184,21 @@ fn get_dap_report_internal<T: Shardable>(
 
     let mut aad = Vec::from(*task_id);
     metadata.encode(&mut aad);
-    encode_u32_items(&mut aad, &(), &encoded_public_share);
+    encode_u32_items(&mut aad, &(), &public_share);
 
     info.push(Role::Leader as u8);
 
     let leader_payload =
-        hpke_encrypt_wrapper(&plaintext_input_shares[0], &aad, &info, &leader_hpke_config)?;
+        hpke_encrypt_wrapper(&encoded_input_shares[0], &aad, &info, &leader_hpke_config)?;
 
     *info.last_mut().unwrap() = Role::Helper as u8;
 
     let helper_payload =
-        hpke_encrypt_wrapper(&plaintext_input_shares[1], &aad, &info, &helper_hpke_config)?;
+        hpke_encrypt_wrapper(&encoded_input_shares[1], &aad, &info, &helper_hpke_config)?;
 
     Ok(Report {
         metadata,
-        public_share: encoded_public_share,
+        public_share,
         encrypted_input_shares: vec![leader_payload, helper_payload],
     })
 }
