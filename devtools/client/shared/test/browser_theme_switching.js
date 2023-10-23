@@ -4,6 +4,8 @@
 "use strict";
 
 add_task(async function () {
+  await pushPref("devtools.theme", "light");
+
   // For some reason, mochitest spawn a very special default tab,
   // whose WindowGlobal is still the initial about:blank document.
   // This seems to be specific to mochitest, this doesn't reproduce
