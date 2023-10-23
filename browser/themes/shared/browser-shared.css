@@ -66,9 +66,6 @@
   --checkbox-checked-hover-bgcolor: var(--button-primary-hover-bgcolor);
   --checkbox-checked-active-bgcolor: var(--button-primary-active-bgcolor);
 
-  --autocomplete-popup-hover-background: var(--arrowpanel-dimmed);
-  --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 14%, transparent);
-
   --identity-box-margin-inline: 4px;
   --urlbar-box-bgcolor: var(--button-bgcolor);
   --urlbar-box-focus-bgcolor: var(--button-bgcolor);
@@ -111,7 +108,6 @@
 
 @media (prefers-contrast) {
   :root {
-    --autocomplete-popup-separator-color: color-mix(in srgb, currentColor 86%, transparent);
     --urlbar-icon-fill-opacity: 1;
     --checkbox-checked-border-color: var(--checkbox-checked-bgcolor);
   }

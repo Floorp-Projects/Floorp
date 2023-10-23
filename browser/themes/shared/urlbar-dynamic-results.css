@@ -126,12 +126,12 @@
   }
 
   &:hover:not([disabled]):not([selected]) {
-    background-color: var(--autocomplete-popup-hover-background);
+    background-color: var(--urlbarView-hover-background);
   }
 
   &[selected] {
-    background-color: var(--autocomplete-popup-highlight-background);
-    color: var(--autocomplete-popup-highlight-color);
+    background-color: var(--urlbarView-highlight-background);
+    color: var(--urlbarView-highlight-color);
   }
 
   > .urlbarView-label {
