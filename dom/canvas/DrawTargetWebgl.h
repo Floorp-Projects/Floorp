@@ -20,7 +20,7 @@
 namespace WGR {
 struct OutputVertex;
 struct PathBuilder;
-}
+}  // namespace WGR
 
 namespace mozilla {
 
