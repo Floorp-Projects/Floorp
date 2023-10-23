@@ -125,7 +125,7 @@ template void* CellAllocator::RetryNurseryAlloc<CanGC>(JSContext* cx,
                                                        size_t thingSize,
                                                        AllocSite* site);
 
-template <AllowGC allowGC /* = CanGC */>
+template <AllowGC allowGC>
 void* gc::CellAllocator::AllocTenuredCell(JSContext* cx, gc::AllocKind kind,
                                           size_t size) {
   MOZ_ASSERT(!IsNurseryAllocable(kind));

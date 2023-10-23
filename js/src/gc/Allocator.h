@@ -78,13 +78,13 @@ class CellAllocator {
 
   // Allocate a cell in the nursery, unless |heap| is Heap::Tenured or nursery
   // allocation is disabled for |traceKind| in the current zone.
-  template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>
+  template <JS::TraceKind traceKind, AllowGC allowGC>
   static void* AllocNurseryOrTenuredCell(JSContext* cx, gc::AllocKind allocKind,
                                          size_t thingSize, gc::Heap heap,
                                          AllocSite* site);
 
   // Allocate a cell in the tenured heap.
-  template <AllowGC allowGC = CanGC>
+  template <AllowGC allowGC>
   static void* AllocTenuredCell(JSContext* cx, gc::AllocKind kind, size_t size);
 
   // Allocate a string. Use cx->newCell<T>([heap]).
@@ -92,18 +92,18 @@ class CellAllocator {
   // Use for nursery-allocatable strings. Returns a value cast to the correct
   // type. Non-nursery-allocatable strings will go through the fallback
   // tenured-only allocation path.
-  template <typename T, AllowGC allowGC = CanGC, typename... Args>
+  template <typename T, AllowGC allowGC, typename... Args>
   static T* NewString(JSContext* cx, gc::Heap heap, Args&&... args);
 
-  template <typename T, AllowGC allowGC /* = CanGC */>
+  template <typename T, AllowGC allowGC>
   static T* NewBigInt(JSContext* cx, Heap heap);
 
-  template <typename T, AllowGC allowGC = CanGC>
+  template <typename T, AllowGC allowGC>
   static T* NewObject(JSContext* cx, gc::AllocKind kind, gc::Heap heap,
                       const JSClass* clasp, gc::AllocSite* site = nullptr);
 
   // Allocate all other kinds of GC thing.
-  template <typename T, AllowGC allowGC = CanGC, typename... Args>
+  template <typename T, AllowGC allowGC, typename... Args>
   static T* NewTenuredCell(JSContext* cx, Args&&... args);
 };
 
