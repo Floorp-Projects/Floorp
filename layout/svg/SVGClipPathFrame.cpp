@@ -102,8 +102,7 @@ void SVGClipPathFrame::PaintChildren(gfxContext& aMaskContext,
   SVGClipPathFrame* clipPathThatClipsClipPath;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveClipPath(this, &clipPathThatClipsClipPath);
-  SVGUtils::MaskUsage maskUsage;
-  SVGUtils::DetermineMaskUsage(this, true, maskUsage);
+  SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(this, true);
 
   gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aMaskContext);
   if (maskUsage.shouldApplyClipPath) {
@@ -181,8 +180,7 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
     return;
   }
 
-  SVGUtils::MaskUsage maskUsage;
-  SVGUtils::DetermineMaskUsage(aFrame, true, maskUsage);
+  SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(aFrame, true);
   gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aTarget);
   if (maskUsage.shouldApplyClipPath) {
     clipPathThatClipsChild->ApplyClipPath(

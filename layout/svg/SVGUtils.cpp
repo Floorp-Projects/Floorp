@@ -408,11 +408,13 @@ float SVGUtils::ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity) {
   return styleEffects->mOpacity;
 }
 
-void SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
-                                  MaskUsage& aUsage) {
+SVGUtils::MaskUsage SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame,
+                                                 bool aHandleOpacity) {
+  MaskUsage usage;
+
   using ClipPathType = StyleClipPath::Tag;
 
-  aUsage.opacity = ComputeOpacity(aFrame, aHandleOpacity);
+  usage.opacity = ComputeOpacity(aFrame, aHandleOpacity);
 
   nsIFrame* firstFrame =
       nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
@@ -422,7 +424,7 @@ void SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
   nsTArray<SVGMaskFrame*> maskFrames;
   // XXX check return value?
   SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
-  aUsage.shouldGenerateMaskLayer = (maskFrames.Length() > 0);
+  usage.shouldGenerateMaskLayer = (maskFrames.Length() > 0);
 
   SVGClipPathFrame* clipPathFrame;
   // XXX check return value?
@@ -433,25 +435,26 @@ void SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
     case ClipPathType::Url:
       if (clipPathFrame) {
         if (clipPathFrame->IsTrivial()) {
-          aUsage.shouldApplyClipPath = true;
+          usage.shouldApplyClipPath = true;
         } else {
-          aUsage.shouldGenerateClipMaskLayer = true;
+          usage.shouldGenerateClipMaskLayer = true;
         }
       }
       break;
     case ClipPathType::Shape:
     case ClipPathType::Box:
-      aUsage.shouldApplyBasicShapeOrPath = true;
+      usage.shouldApplyBasicShapeOrPath = true;
       break;
     case ClipPathType::None:
-      MOZ_ASSERT(!aUsage.shouldGenerateClipMaskLayer &&
-                 !aUsage.shouldApplyClipPath &&
-                 !aUsage.shouldApplyBasicShapeOrPath);
+      MOZ_ASSERT(!usage.shouldGenerateClipMaskLayer &&
+                 !usage.shouldApplyClipPath &&
+                 !usage.shouldApplyBasicShapeOrPath);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsupported clip-path type.");
       break;
   }
+  return usage;
 }
 
 class MixModeBlender {
@@ -566,8 +569,7 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     return;
   }
 
-  MaskUsage maskUsage;
-  DetermineMaskUsage(aFrame, true, maskUsage);
+  MaskUsage maskUsage = DetermineMaskUsage(aFrame, true);
   if (maskUsage.opacity == 0.0f) {
     return;
   }

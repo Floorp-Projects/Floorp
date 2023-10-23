@@ -555,8 +555,8 @@ class SVGUtils final {
     }
   };
 
-  static void DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
-                                 MaskUsage& aUsage);
+  static MaskUsage DetermineMaskUsage(const nsIFrame* aFrame,
+                                      bool aHandleOpacity);
 
   static float ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity);
 
