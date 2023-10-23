@@ -70,6 +70,8 @@ skip-if = ["os == 'win'"] # Bug 1288839
 
 ["browser_events_textchange.js"]
 
+["browser_file_input.js"]
+
 ["browser_language.js"]
 
 ["browser_obj_group.js"]

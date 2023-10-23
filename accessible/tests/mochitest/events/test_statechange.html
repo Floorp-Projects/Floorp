@@ -61,11 +61,10 @@
     async function stateChangeOnFileInput(aID, aAttr, aValue,
                                     aState, aIsExtraState, aIsEnabled) {
       let fileControlNode = getNode(aID);
-      let fileControl = getAccessible(fileControlNode);
-      let browseButton = fileControl.firstChild;
-      let p = waitForEvents([
-        stateChangeEventArgs(fileControl, aState, aIsEnabled, aIsExtraState),
-        stateChangeEventArgs(browseButton, aState, aIsEnabled, aIsExtraState)])
+      let browseButton = getAccessible(fileControlNode);
+      let p = waitForStateChange(
+        browseButton, aState, aIsEnabled, aIsExtraState
+      );
       fileControlNode.setAttribute(aAttr, aValue);
       await p;
     }

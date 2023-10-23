@@ -38,7 +38,7 @@
       gQueue.push(new changeCurrentItem("checkbox"));
       gQueue.push(new changeCurrentItem("radio1"));
 
-      let fileBrowseButton = getAccessible("file").firstChild;
+      let fileBrowseButton = getAccessible("file");
       gQueue.push(new synthFocus("file", new focusChecker(fileBrowseButton)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
