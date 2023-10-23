@@ -11,7 +11,7 @@
  * and create derivative works of this document.
  */
 
-// http://www.whatwg.org/specs/web-apps/current-work/#the-link-element
+// https://html.spec.whatwg.org/multipage/semantics.html#the-link-element
 [Exposed=Window]
 interface HTMLLinkElement : HTMLElement {
   [HTMLConstructor] constructor();
@@ -39,10 +39,12 @@ interface HTMLLinkElement : HTMLElement {
            attribute USVString imageSrcset;
   [CEReactions, SetterThrows, Pure]
            attribute USVString imageSizes;
+  [Pref="network.fetchpriority.enabled", CEReactions]
+           attribute DOMString fetchPriority;
 };
 HTMLLinkElement includes LinkStyle;
 
-// http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
+// https://html.spec.whatwg.org/multipage/obsolete.html#other-elements%2C-attributes-and-apis
 partial interface HTMLLinkElement {
   [CEReactions, SetterThrows, Pure]
            attribute DOMString charset;
@@ -52,13 +54,13 @@ partial interface HTMLLinkElement {
            attribute DOMString target;
 };
 
-// https://w3c.github.io/webappsec/specs/subresourceintegrity/#htmllinkelement-1
+// https://html.spec.whatwg.org/multipage/semantics.html#the-link-element
 partial interface HTMLLinkElement {
   [CEReactions, SetterThrows]
   attribute DOMString integrity;
 };
 
-//https://w3c.github.io/preload/
+// https://html.spec.whatwg.org/multipage/links.html#link-type-preload
 partial interface HTMLLinkElement {
   [SetterThrows, Pure]
            attribute DOMString as;
