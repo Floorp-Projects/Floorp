@@ -68,6 +68,7 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SafepointIndex-inl.h"
 #include "vm/GeckoProfiler-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Realm-inl.h"
 

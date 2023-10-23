@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 
-#include "vm/JSContext.h"
+#include "vm/JSContext-inl.h"
 
 //=========================================================================
 // WasmStructObject inlineable allocation methods

@@ -16,11 +16,11 @@
 #include "gc/MaybeRooted.h"
 #include "gc/StoreBuffer.h"
 #include "js/UniquePtr.h"
-#include "vm/JSContext.h"
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"
 #include "gc/StoreBuffer-inl.h"
+#include "vm/JSContext-inl.h"
 
 namespace js {
 

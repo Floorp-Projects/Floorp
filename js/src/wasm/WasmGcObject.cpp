@@ -33,6 +33,7 @@
 
 #include "gc/GCContext-inl.h"  // GCContext::removeCellMemory
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSContext-inl.h"
 
 using mozilla::AssertedCast;
 using mozilla::CheckedUint32;

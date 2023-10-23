@@ -11,6 +11,7 @@
 
 #include <type_traits>
 
+#include "gc/Allocator.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
@@ -398,5 +399,11 @@ inline JSScript* JSContext::currentScript(
 }
 
 inline js::RuntimeCaches& JSContext::caches() { return runtime()->caches(); }
+
+template <typename T, js::AllowGC allowGC, typename... Args>
+T* JSContext::newCell(Args&&... args) {
+  return js::gc::CellAllocator::template NewCell<T, allowGC>(
+      this, std::forward<Args>(args)...);
+}
 
 #endif /* vm_JSContext_inl_h */

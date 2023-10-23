@@ -46,6 +46,7 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ErrorObject-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/Stack-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
