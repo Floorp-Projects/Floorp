@@ -307,7 +307,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
   explicit nsTableRowGroupFrame(ComputedStyle* aStyle,
                                 nsPresContext* aPresContext);
 
-  void InitChildReflowInput(nsPresContext& aPresContext, bool aBorderCollapse,
+  void InitChildReflowInput(nsPresContext* aPresContext, bool aBorderCollapse,
                             ReflowInput& aReflowInput);
 
   LogicalSides GetLogicalSkipSides() const override;
@@ -342,10 +342,10 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
                      const ReflowInput& aReflowInput, nsTableFrame* aTableFrame,
                      nsReflowStatus& aStatus, bool aRowForcedPageBreak);
 
-  void SplitSpanningCells(nsPresContext& aPresContext,
+  void SplitSpanningCells(nsPresContext* aPresContext,
                           const ReflowInput& aReflowInput,
-                          nsTableFrame& aTableFrame, nsTableRowFrame& aFirstRow,
-                          nsTableRowFrame& aLastRow, bool aFirstRowIsTopOfPage,
+                          nsTableFrame* aTableFrame, nsTableRowFrame* aFirstRow,
+                          nsTableRowFrame* aLastRow, bool aFirstRowIsTopOfPage,
                           nscoord aSpanningRowBottom,
                           nsTableRowFrame*& aContRowFrame,
                           nsTableRowFrame*& aFirstTruncatedRow,
