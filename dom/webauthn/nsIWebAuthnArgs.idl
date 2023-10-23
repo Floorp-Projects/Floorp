@@ -14,6 +14,8 @@ interface nsIWebAuthnRegisterArgs : nsISupports {
 
     readonly attribute Array<octet> challenge;
 
+    readonly attribute ACString clientDataJSON;
+
     readonly attribute Array<octet> clientDataHash;
 
     // A PublicKeyCredentialRpEntity
@@ -67,6 +69,8 @@ interface nsIWebAuthnSignArgs : nsISupports {
     readonly attribute AString rpId;
 
     readonly attribute Array<octet> challenge;
+
+    readonly attribute ACString clientDataJSON;
 
     readonly attribute Array<octet> clientDataHash;
 

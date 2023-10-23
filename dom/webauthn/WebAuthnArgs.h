@@ -61,12 +61,29 @@ class WebAuthnSignArgs final : public nsIWebAuthnSignArgs {
   NS_DECL_NSIWEBAUTHNSIGNARGS
 
   explicit WebAuthnSignArgs(const WebAuthnGetAssertionInfo& aInfo)
-      : mInfo(aInfo) {}
+      : mInfo(aInfo) {
+    for (const WebAuthnExtension& ext : mInfo.Extensions()) {
+      switch (ext.type()) {
+        case WebAuthnExtension::TWebAuthnExtensionAppId:
+          mAppId = Some(ext.get_WebAuthnExtensionAppId().appIdentifier());
+          break;
+        case WebAuthnExtension::TWebAuthnExtensionCredProps:
+          break;
+        case WebAuthnExtension::TWebAuthnExtensionHmacSecret:
+          break;
+        case WebAuthnExtension::TWebAuthnExtensionMinPinLength:
+          break;
+        case WebAuthnExtension::T__None:
+          break;
+      }
+    }
+  }
 
  private:
   ~WebAuthnSignArgs() = default;
 
   const WebAuthnGetAssertionInfo mInfo;
+  Maybe<nsString> mAppId;
 };
 
 }  // namespace mozilla::dom
