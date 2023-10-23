@@ -60,25 +60,13 @@ function waitForAnimationFrames(frameCount) {
 // frames actually waited because we detected a possibly overflapping SMIL
 // time.
 function observeStyling(frameCount) {
-  var Ci = SpecialPowers.Ci;
-  var docShell = SpecialPowers.wrap(window).docShell;
-
-  docShell.recordProfileTimelineMarkers = true;
-  docShell.popProfileTimelineMarkers();
-
   let priorAnimationTriggeredRestyles = SpecialPowers.DOMWindowUtils.animationTriggeredRestyles;
 
   return new Promise(function(resolve) {
     return waitForAnimationFrames(frameCount).then(framesWaited => {
-      var markers = docShell.popProfileTimelineMarkers();
-      docShell.recordProfileTimelineMarkers = false;
       const restyleCount = SpecialPowers.DOMWindowUtils.animationTriggeredRestyles - priorAnimationTriggeredRestyles;
-      var stylingMarkers = Array.prototype.filter.call(markers, function(marker, index) {
-        return marker.name == 'Styles' && marker.isAnimationOnly;
-      });
-      is(restyleCount, stylingMarkers.length, "Restyle counter should match number of markers recorded");
       resolve({
-        stylingCount: stylingMarkers.length,
+        stylingCount: restyleCount,
         framesWaited: framesWaited,
       });
     });

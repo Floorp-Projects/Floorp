@@ -28,9 +28,6 @@ with Files("browser/*loadDisallowInherit*"):
 with Files("browser/*tab_touch_events*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-with Files("browser/*timelineMarkers*"):
-    BUG_COMPONENT = ("DevTools", "Performance Tools (Profiler/Timeline)")
-
 with Files("browser/*ua_emulation*"):
     BUG_COMPONENT = ("DevTools", "General")
 

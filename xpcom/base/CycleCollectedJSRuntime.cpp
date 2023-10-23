@@ -80,13 +80,10 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/TimelineConsumers.h"
-#include "mozilla/TimelineMarker.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DOMJSClass.h"
 #include "mozilla/dom/JSExecutionManager.h"
-#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/dom/PromiseDebugging.h"
@@ -1135,44 +1132,6 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   }
 }
 
-class MinorGCMarker : public TimelineMarker {
- private:
-  JS::GCReason mReason;
-
- public:
-  MinorGCMarker(MarkerTracingType aTracingType, JS::GCReason aReason)
-      : TimelineMarker("MinorGC", aTracingType, MarkerStackRequest::NO_STACK),
-        mReason(aReason) {
-    MOZ_ASSERT(aTracingType == MarkerTracingType::START ||
-               aTracingType == MarkerTracingType::END);
-  }
-
-  MinorGCMarker(JS::GCNurseryProgress aProgress, JS::GCReason aReason)
-      : TimelineMarker(
-            "MinorGC",
-            aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START
-                ? MarkerTracingType::START
-                : MarkerTracingType::END,
-            MarkerStackRequest::NO_STACK),
-        mReason(aReason) {}
-
-  virtual void AddDetails(JSContext* aCx,
-                          dom::ProfileTimelineMarker& aMarker) override {
-    TimelineMarker::AddDetails(aCx, aMarker);
-
-    if (GetTracingType() == MarkerTracingType::START) {
-      auto reason = JS::ExplainGCReason(mReason);
-      aMarker.mCauseName.Construct(NS_ConvertUTF8toUTF16(reason));
-    }
-  }
-
-  virtual UniquePtr<AbstractTimelineMarker> Clone() override {
-    auto clone = MakeUnique<MinorGCMarker>(GetTracingType(), mReason);
-    clone->SetCustomTime(GetTime());
-    return UniquePtr<AbstractTimelineMarker>(std::move(clone));
-  }
-};
-
 /* static */
 void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
     JSContext* aContext, JS::GCNurseryProgress aProgress, JS::GCReason aReason,
@@ -1180,12 +1139,6 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (!TimelineConsumers::IsEmpty()) {
-    UniquePtr<AbstractTimelineMarker> abstractMarker(
-        MakeUnique<MinorGCMarker>(aProgress, aReason));
-    TimelineConsumers::AddMarkerForAllObservedDocShells(abstractMarker);
-  }
 
   TimeStamp now = TimeStamp::Now();
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {

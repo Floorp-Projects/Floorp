@@ -87,7 +87,6 @@
 #include "VsyncSource.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/Unused.h"
-#include "mozilla/TimelineConsumers.h"
 #include "nsAnimationManager.h"
 #include "nsDisplayList.h"
 #include "nsDOMNavigationTiming.h"
@@ -2138,41 +2137,6 @@ static bool HasPendingAnimations(PresShell* aPresShell) {
   return tracker && tracker->HasPendingAnimations();
 }
 
-/**
- * Return a list of all the child docShells in a given root docShell that are
- * visible and are recording markers for the profilingTimeline
- */
-static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
-                                           nsTArray<nsDocShell*>& aShells) {
-  if (!aRootDocShell) {
-    return;
-  }
-
-  if (TimelineConsumers::IsEmpty()) {
-    return;
-  }
-
-  RefPtr<BrowsingContext> bc = aRootDocShell->GetBrowsingContext();
-  if (!bc) {
-    return;
-  }
-
-  bc->PostOrderWalk([&](BrowsingContext* aContext) {
-    if (!aContext->IsActive()) {
-      return;
-    }
-
-    nsDocShell* shell = nsDocShell::Cast(aContext->GetDocShell());
-    if (!shell || !shell->GetRecordProfileTimelineMarkers()) {
-      // This process isn't painting OOP iframes so we ignore
-      // docshells that are OOP.
-      return;
-    }
-
-    aShells.AppendElement(shell);
-  });
-}
-
 static void TakeFrameRequestCallbacksFrom(
     Document* aDocument, nsTArray<DocumentFrameCallbacks>& aTarget) {
   aTarget.AppendElement(aDocument);
@@ -2793,17 +2757,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       mCompositionPayloads.Clear();
     }
 
-    nsTArray<nsDocShell*> profilingDocShells;
-    GetProfileTimelineSubDocShells(GetDocShell(mPresContext),
-                                   profilingDocShells);
-    for (nsDocShell* docShell : profilingDocShells) {
-      // For the sake of the profile timeline's simplicity, this is flagged as
-      // paint even if it includes creating display lists
-      MOZ_ASSERT(TimelineConsumers::HasConsumer(docShell));
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",
-                                              MarkerTracingType::START);
-    }
-
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       printf_stderr("Starting ProcessPendingUpdates\n");
@@ -2826,12 +2779,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
       printf_stderr("Ending ProcessPendingUpdates\n");
     }
 #endif
-
-    for (nsDocShell* docShell : profilingDocShells) {
-      MOZ_ASSERT(TimelineConsumers::HasConsumer(docShell));
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",
-                                              MarkerTracingType::END);
-    }
 
     dispatchTasksAfterTick = true;
     mHasScheduleFlush = false;
