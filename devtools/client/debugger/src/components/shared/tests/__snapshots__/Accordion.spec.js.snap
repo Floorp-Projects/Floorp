@@ -1,12 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Accordion basic render 1`] = `
-<ul
+<div
   className="accordion"
 >
-  <li
+  <aside
+    aria-labelledby="accordion-item-1"
     className="accordion-item-1"
-    key="0"
+    key="accordion-item-1"
   >
     <h2
       className="_header"
@@ -19,6 +20,7 @@ exports[`Accordion basic render 1`] = `
       />
       <span
         className="header-label"
+        id="accordion-item-1"
       >
         Test Accordion Item 1
       </span>
@@ -28,10 +30,11 @@ exports[`Accordion basic render 1`] = `
     >
       <div />
     </div>
-  </li>
-  <li
+  </aside>
+  <aside
+    aria-labelledby="accordion-item-2"
     className="accordion-item-2"
-    key="1"
+    key="accordion-item-2"
   >
     <h2
       className="_header"
@@ -44,6 +47,7 @@ exports[`Accordion basic render 1`] = `
       />
       <span
         className="header-label"
+        id="accordion-item-2"
       >
         Test Accordion Item 2
       </span>
@@ -54,10 +58,11 @@ exports[`Accordion basic render 1`] = `
         <button />
       </div>
     </h2>
-  </li>
-  <li
+  </aside>
+  <aside
+    aria-labelledby="accordion-item-3"
     className="accordion-item-3"
-    key="2"
+    key="accordion-item-3"
   >
     <h2
       className="_header"
@@ -70,6 +75,7 @@ exports[`Accordion basic render 1`] = `
       />
       <span
         className="header-label"
+        id="accordion-item-3"
       >
         Test Accordion Item 3
       </span>
@@ -79,6 +85,6 @@ exports[`Accordion basic render 1`] = `
     >
       <div />
     </div>
-  </li>
-</ul>
+  </aside>
+</div>
 `;

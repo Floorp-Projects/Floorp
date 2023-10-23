@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { cloneElement, Component } from "react";
-import { li, h2, span, div, ul } from "react-dom-factories";
+import { aside, h2, div, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import AccessibleImage from "./AccessibleImage";
 
@@ -38,10 +38,12 @@ class Accordion extends Component {
 
   renderContainer = (item, i) => {
     const { opened } = item;
-    return li(
+    return aside(
       {
         className: item.className,
-        key: i,
+        key: item.id,
+        "aria-labelledby": item.id,
+        role: item.role,
       },
       h2(
         {
@@ -55,6 +57,7 @@ class Accordion extends Component {
         }),
         span(
           {
+            id: item.id,
             className: "header-label",
           },
           item.header
@@ -79,7 +82,7 @@ class Accordion extends Component {
     );
   };
   render() {
-    return ul(
+    return div(
       {
         className: "accordion",
       },
