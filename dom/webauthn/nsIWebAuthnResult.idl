@@ -23,7 +23,8 @@ interface nsIWebAuthnRegisterResult : nsISupports {
 
     readonly attribute Array<AString> transports;
 
-    readonly attribute bool hmacCreateSecret;
+    // bug 1593571
+    // readonly attribute bool hmacCreateSecret;
 
     [must_use] attribute bool credPropsRk;
 
@@ -56,7 +57,7 @@ interface nsIWebAuthnSignResult : nsISupports {
     [must_use] readonly attribute ACString userName;
 
     // appId field of AuthenticationExtensionsClientOutputs (Optional)
-    [must_use] attribute bool usedAppId;
+    [must_use] readonly attribute bool usedAppId;
 
     [must_use] readonly attribute AString authenticatorAttachment;
 };

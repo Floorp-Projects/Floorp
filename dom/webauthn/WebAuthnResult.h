@@ -7,15 +7,8 @@
 
 #include "nsIWebAuthnResult.h"
 
-#include "mozilla/Maybe.h"
-#include "nsString.h"
-
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/java/WebAuthnTokenManagerNatives.h"
-#endif
-
-#ifdef XP_WIN
-#  include "winwebauthn/webauthn.h"
 #endif
 
 namespace mozilla::dom {
@@ -64,74 +57,6 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   }
 #endif
 
-#ifdef XP_WIN
-  WebAuthnRegisterResult(nsACString& aClientDataJSON,
-                         PCWEBAUTHN_CREDENTIAL_ATTESTATION aResponse)
-      : mClientDataJSON(aClientDataJSON) {
-    mCredentialId.AppendElements(aResponse->pbCredentialId,
-                                 aResponse->cbCredentialId);
-
-    mAttestationObject.AppendElements(aResponse->pbAttestationObject,
-                                      aResponse->cbAttestationObject);
-
-    nsTArray<WebAuthnExtensionResult> extensions;
-    if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_2) {
-      PCWEBAUTHN_EXTENSIONS pExtensionList = &aResponse->Extensions;
-      if (pExtensionList->cExtensions != 0 &&
-          pExtensionList->pExtensions != NULL) {
-        for (DWORD dwIndex = 0; dwIndex < pExtensionList->cExtensions;
-             dwIndex++) {
-          PWEBAUTHN_EXTENSION pExtension =
-              &pExtensionList->pExtensions[dwIndex];
-          if (pExtension->pwszExtensionIdentifier &&
-              (0 == _wcsicmp(pExtension->pwszExtensionIdentifier,
-                             WEBAUTHN_EXTENSIONS_IDENTIFIER_HMAC_SECRET)) &&
-              pExtension->cbExtension == sizeof(BOOL)) {
-            BOOL* pCredentialCreatedWithHmacSecret =
-                (BOOL*)pExtension->pvExtension;
-            if (*pCredentialCreatedWithHmacSecret) {
-              mHmacCreateSecret = Some(true);
-            }
-          }
-        }
-      }
-    }
-
-    if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_3) {
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_USB) {
-        mTransports.AppendElement(u"usb"_ns);
-      }
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_NFC) {
-        mTransports.AppendElement(u"nfc"_ns);
-      }
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_BLE) {
-        mTransports.AppendElement(u"ble"_ns);
-      }
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_INTERNAL) {
-        mTransports.AppendElement(u"internal"_ns);
-      }
-    }
-    // WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_5 corresponds to
-    // WEBAUTHN_API_VERSION_6 which is where WEBAUTHN_CTAP_TRANSPORT_HYBRID was
-    // defined.
-    if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_5) {
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_HYBRID) {
-        mTransports.AppendElement(u"hybrid"_ns);
-      }
-    }
-
-    if (aResponse->dwVersion >= WEBAUTHN_CREDENTIAL_ATTESTATION_VERSION_3) {
-      if (aResponse->dwUsedTransport & WEBAUTHN_CTAP_TRANSPORT_INTERNAL) {
-        mAuthenticatorAttachment = Some(u"platform"_ns);
-      } else {
-        mAuthenticatorAttachment = Some(u"cross-platform"_ns);
-      }
-    }
-  }
-#endif
-
-  nsresult Anonymize();
-
  private:
   ~WebAuthnRegisterResult() = default;
 
@@ -140,7 +65,6 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   nsTArray<nsString> mTransports;
   nsCString mClientDataJSON;
   Maybe<bool> mCredPropsRk;
-  Maybe<bool> mHmacCreateSecret;
   Maybe<nsString> mAuthenticatorAttachment;
 };
 
@@ -192,24 +116,6 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
   }
 #endif
 
-#ifdef XP_WIN
-  WebAuthnSignResult(nsACString& aClientDataJSON,
-                     PCWEBAUTHN_ASSERTION aResponse)
-      : mClientDataJSON(aClientDataJSON) {
-    mSignature.AppendElements(aResponse->pbSignature, aResponse->cbSignature);
-
-    mCredentialId.AppendElements(aResponse->Credential.pbId,
-                                 aResponse->Credential.cbId);
-
-    mUserHandle.AppendElements(aResponse->pbUserId, aResponse->cbUserId);
-
-    mAuthenticatorData.AppendElements(aResponse->pbAuthenticatorData,
-                                      aResponse->cbAuthenticatorData);
-
-    mAuthenticatorAttachment = Nothing();  // not available
-  }
-#endif
-
  private:
   ~WebAuthnSignResult() = default;
 
@@ -219,7 +125,6 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
   nsTArray<uint8_t> mSignature;
   nsTArray<uint8_t> mUserHandle;
   Maybe<nsString> mAuthenticatorAttachment;
-  Maybe<bool> mUsedAppId;
 };
 
 }  // namespace mozilla::dom

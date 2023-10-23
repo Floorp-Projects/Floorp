@@ -76,10 +76,10 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 if CONFIG["OS_TARGET"] == "WINNT":
     EXPORTS.mozilla.dom += [
-        "WinWebAuthnService.h",
+        "WinWebAuthnManager.h",
     ]
     UNIFIED_SOURCES += [
-        "WinWebAuthnService.cpp",
+        "WinWebAuthnManager.cpp",
     ]
 
 MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
