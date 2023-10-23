@@ -100,7 +100,7 @@ function measurementEnded() {
   testResult.names.push(test[testIndex] + "_scale_" + viewMode[viewModeIndex] + "_inclip");
   testResult.values.push(timePerFrame2);
 
-  TalosContentProfiler.subtestEnd("done test " + test[testIndex], true).then(() => {
+  TalosContentProfiler.subtestEnd("Test " + test[testIndex], true).then(() => {
     if (viewMode[viewModeIndex] == "fullscreen") {
       // Exit fullscreen mode
       if (document.exitFullscreen) {
