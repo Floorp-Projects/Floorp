@@ -34,7 +34,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    "nsGenericHTMLElementWithFetchPriorityAttribute.h",
     "TextControlElement.h",
     "TextControlState.h",
     "TextInputListener.h",
@@ -205,7 +204,6 @@ UNIFIED_SOURCES += [
     "nsBrowserElement.cpp",
     "nsDOMStringMap.cpp",
     "nsGenericHTMLElement.cpp",
-    "nsGenericHTMLElementWithFetchPriorityAttribute.cpp",
     "nsGenericHTMLFrameElement.cpp",
     "nsHTMLContentSink.cpp",
     "nsHTMLDocument.cpp",

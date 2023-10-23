@@ -20,6 +20,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_accessibility.h"
+#include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/FormData.h"
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
@@ -187,6 +188,41 @@ static const nsAttrValue::EnumTable kPopoverTable[] = {
 static const nsAttrValue::EnumTable* kPopoverTableInvalidValueDefault =
     &kPopoverTable[2];
 }  // namespace
+
+void nsGenericHTMLElement::GetFetchPriority(nsAString& aFetchPriority) const {
+  // <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
+  GetEnumAttr(nsGkAtoms::fetchpriority, kFetchPriorityAttributeValueAuto,
+              aFetchPriority);
+}
+
+/* static */
+FetchPriority nsGenericHTMLElement::ToFetchPriority(const nsAString& aValue) {
+  nsAttrValue attrValue;
+  ParseFetchPriority(aValue, attrValue);
+  MOZ_ASSERT(attrValue.Type() == nsAttrValue::eEnum);
+  return FetchPriority(attrValue.GetEnumValue());
+}
+
+namespace {
+// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
+static const nsAttrValue::EnumTable kFetchPriorityEnumTable[] = {
+    {kFetchPriorityAttributeValueHigh, FetchPriority::High},
+    {kFetchPriorityAttributeValueLow, FetchPriority::Low},
+    {kFetchPriorityAttributeValueAuto, FetchPriority::Auto},
+    {nullptr, 0}};
+
+// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
+static const nsAttrValue::EnumTable*
+    kFetchPriorityEnumTableInvalidValueDefault = &kFetchPriorityEnumTable[2];
+}  // namespace
+
+/* static */
+void nsGenericHTMLElement::ParseFetchPriority(const nsAString& aValue,
+                                              nsAttrValue& aResult) {
+  aResult.ParseEnumValue(aValue, kFetchPriorityEnumTable,
+                         false /* aCaseSensitive */,
+                         kFetchPriorityEnumTableInvalidValueDefault);
+}
 
 void nsGenericHTMLElement::AddToNameTable(nsAtom* aName) {
   MOZ_ASSERT(HasName(), "Node doesn't have name?");

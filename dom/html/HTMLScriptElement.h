@@ -8,16 +8,15 @@
 #define mozilla_dom_HTMLScriptElement_h
 
 #include "mozilla/dom/FetchPriority.h"
-#include "mozilla/nsGenericHTMLElementWithFetchPriorityAttribute.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ScriptElement.h"
+#include "nsGenericHTMLElement.h"
 #include "nsStringFwd.h"
 
 namespace mozilla::dom {
 
-class HTMLScriptElement final
-    : public nsGenericHTMLElementWithFetchPriorityAttribute,
-      public ScriptElement {
+class HTMLScriptElement final : public nsGenericHTMLElement,
+                                public ScriptElement {
  public:
   using Element::GetText;
 
@@ -133,7 +132,7 @@ class HTMLScriptElement final
   }
 
   // Required for the webidl-binding because `GetFetchPriority` is overloaded.
-  using nsGenericHTMLElementWithFetchPriorityAttribute::GetFetchPriority;
+  using nsGenericHTMLElement::GetFetchPriority;
 
   [[nodiscard]] static bool Supports(const GlobalObject& aGlobal,
                                      const nsAString& aType);
