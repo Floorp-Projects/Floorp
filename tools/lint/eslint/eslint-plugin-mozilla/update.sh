@@ -10,7 +10,7 @@ if [ -z "$TASKCLUSTER_ACCESS_TOKEN" -o -z "$TASKCLUSTER_CLIENT_ID" -o -z "$TASKC
   echo "Please ensure you have run the taskcluster shell correctly to set"
   echo "the TASKCLUSTER_ACCESS_TOKEN, TASKCLUSTER_CLIENT_ID and"
   echo "TASKCLUSTER_ROOT_URL environment variables."
-  echo "See https://firefox-source-docs.mozilla.org/linters/eslint/enabling-rules.html"
+  echo "See https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint/enabling-rules.html"
   exit 1;
 fi
 

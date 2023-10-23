@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -26,7 +26,8 @@
     "eslint-visitor-keys": "^3.3.0",
     "estraverse": "^5.3.0",
     "htmlparser2": "^8.0.1",
-    "multi-ini": "^2.3.2"
+    "multi-ini": "^2.3.2",
+    "toml-eslint-parser": "0.6.0"
   },
   "devDependencies": {
     "eslint": "8.38.0",

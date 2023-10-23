@@ -13,6 +13,7 @@ const estraverse = require("estraverse");
 const path = require("path");
 const fs = require("fs");
 const ini = require("multi-ini");
+const toml = require("toml-eslint-parser");
 const recommendedConfig = require("./configs/recommended");
 
 var gRootDir = null;
@@ -516,19 +517,46 @@ module.exports = {
     }
 
     for (let name of names) {
-      if (!name.endsWith(".ini")) {
-        continue;
+      if (name.endsWith(".ini")) {
+        try {
+          let manifest = this.iniParser.parse(
+            fs.readFileSync(path.join(dir, name), "utf8").split("\n")
+          );
+          manifests.push({
+            file: path.join(dir, name),
+            manifest,
+          });
+        } catch (e) {}
+      } else if (name.endsWith(".toml")) {
+        try {
+          const ast = toml.parseTOML(
+            fs.readFileSync(path.join(dir, name), "utf8")
+          );
+          var manifest = {};
+          ast.body.forEach(top => {
+            if (top.type == "TOMLTopLevelTable") {
+              top.body.forEach(obj => {
+                if (obj.type == "TOMLTable") {
+                  manifest[obj.resolvedKey] = {};
+                }
+              });
+            }
+          });
+          manifests.push({
+            file: path.join(dir, name),
+            manifest,
+          });
+        } catch (e) {
+          console.log(
+            "TOML ERROR: " +
+              e.message +
+              " @line: " +
+              e.lineNumber +
+              ", column: " +
+              e.column
+          );
+        }
       }
-
-      try {
-        let manifest = this.iniParser.parse(
-          fs.readFileSync(path.join(dir, name), "utf8").split("\n")
-        );
-        manifests.push({
-          file: path.join(dir, name),
-          manifest,
-        });
-      } catch (e) {}
     }
 
     directoryManifests.set(dir, manifests);
