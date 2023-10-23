@@ -138,6 +138,9 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["__STD_C"] = True
 
     OS_LIBS += [
+        "crypt32",
+        "iphlpapi",
+        "secur32",
         "winmm"
     ]
 
