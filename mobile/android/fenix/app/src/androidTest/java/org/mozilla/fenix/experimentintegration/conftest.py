@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import json
 import logging
 import os
@@ -9,6 +13,7 @@ import pytest
 import requests
 
 from experimentintegration.gradlewbuild import GradlewBuild
+from experimentintegration.models.models import TelemetryModel
 
 KLAATU_SERVER_URL = "http://localhost:1378"
 KLAATU_LOCAL_SERVER_URL = "http://localhost:1378"
@@ -23,7 +28,6 @@ def pytest_addoption(parser):
     parser.addoption(
         "--stage", action="store_true", default=None, help="Use the stage server"
     )
-
 
 
 @pytest.fixture(name="load_branches")
@@ -68,7 +72,7 @@ def fixture_experiment_data(experiment_url):
         item["style"] = "URGENT"
         for count, trigger in enumerate(item["trigger"]):
             if "USER_EN_SPEAKER" not in trigger:
-                del(item["trigger"][count])
+                del item["trigger"][count]
     return [data]
 
 
@@ -152,14 +156,55 @@ def fixture_send_test_results():
     with open(f"{here.resolve()}/results/index.html", "rb") as f:
         files = {"file": f}
         try:
-            requests.post(f"{KLAATU_SERVER_URL}/test_results", files=files)    
+            requests.post(f"{KLAATU_SERVER_URL}/test_results", files=files)
         except requests.exceptions.ConnectionError:
             pass
 
 
+@pytest.fixture(name="check_ping_for_experiment")
+def fixture_check_ping_for_experiment(experiment_slug, variables):
+    def _check_ping_for_experiment(
+        branch=None, experiment=experiment_slug, reason=None
+    ):
+        model = TelemetryModel(branch=branch, experiment=experiment)
+
+        timeout = time.time() + 60 * 5
+        while time.time() < timeout:
+            data = requests.get(f"{variables['urls']['telemetry_server']}/pings").json()
+            events = []
+            for item in data:
+                event_items = item.get("events")
+                if event_items:
+                    for event in event_items:
+                        if (
+                            "category" in event
+                            and "nimbus_events" in event["category"]
+                            and "extra" in event
+                            and "branch" in event["extra"]
+                        ):
+                            events.append(event)
+            for event in events:
+                event_name = event.get("name")
+                if (reason == "enrollment" and event_name == "enrollment") or (
+                    reason == "unenrollment"
+                    and event_name in ["unenrollment", "disqualification"]
+                ):
+                    telemetry_model = TelemetryModel(
+                        branch=event["extra"]["branch"],
+                        experiment=event["extra"]["experiment"],
+                    )
+                    if model == telemetry_model:
+                        return True
+            time.sleep(5)
+        return False
+
+    return _check_ping_for_experiment
+
+
 @pytest.fixture(name="setup_experiment")
-def fixture_setup_experiment(experiment_slug, json_data, gradlewbuild_log):
+def fixture_setup_experiment(experiment_slug, json_data, gradlewbuild_log, variables):
     def _(branch):
+        requests.delete(f"{variables['urls']['telemetry_server']}/pings")
         logging.info(f"Testing experiment {experiment_slug}, BRANCH: {branch[0]}")
         command = f"nimbus-cli --app fenix --channel developer enroll {experiment_slug} --branch {branch[0]} --file {json_data} --reset-app"
         logging.info(f"Running command {command}")
