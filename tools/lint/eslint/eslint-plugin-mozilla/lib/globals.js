@@ -12,6 +12,7 @@ const path = require("path");
 const fs = require("fs");
 const helpers = require("./helpers");
 const htmlparser = require("htmlparser2");
+const testharnessEnvironment = require("./environments/testharness.js");
 
 const callExpressionDefinitions = [
   /^loader\.lazyGetter\((?:globalThis|this), "(\w+)"/,
@@ -323,6 +324,11 @@ function getGlobalsForScript(src, type, dir) {
     scriptName = path.join(helpers.rootDir, "testing", "mochitest", src);
   } else if (src.startsWith("/tests/")) {
     scriptName = path.join(helpers.rootDir, src.substring(7));
+  } else if (src.startsWith("/resources/testharness.js")) {
+    return Object.keys(testharnessEnvironment.globals).map(name => ({
+      name,
+      writable: true,
+    }));
   } else if (dir) {
     // Fallback to hoping this is a relative path.
     scriptName = path.join(dir, src);
