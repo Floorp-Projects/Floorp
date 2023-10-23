@@ -116,7 +116,6 @@ def get_included_path_overrides():
         "sdk/android/api/org/webrtc/DataChannel.java",
         "sdk/android/api/org/webrtc/audio/JavaAudioDeviceModule.java",
         "sdk/android/api/org/webrtc/audio/AudioDeviceModule.java",
-        "sdk/android/api/org/webrtc/audio/LegacyAudioDeviceModule.java",
         "sdk/android/api/org/webrtc/SessionDescription.java",
         "sdk/android/api/org/webrtc/GlUtil.java",
         "sdk/android/api/org/webrtc/VideoSource.java",
