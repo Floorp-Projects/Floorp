@@ -150,7 +150,6 @@ DIRS += [
     "/third_party/libwebrtc/logging/rtc_event_video_gn",
     "/third_party/libwebrtc/logging/rtc_stream_config_gn",
     "/third_party/libwebrtc/media/codec_gn",
-    "/third_party/libwebrtc/media/delayable_gn",
     "/third_party/libwebrtc/media/media_channel_gn",
     "/third_party/libwebrtc/media/media_channel_impl_gn",
     "/third_party/libwebrtc/media/media_constants_gn",
