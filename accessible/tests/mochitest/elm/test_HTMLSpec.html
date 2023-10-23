@@ -707,10 +707,8 @@
       // HTML:input@type="file"
 
       obj = {
-        GROUPING: [
-          { role: ROLE_PUSHBUTTON },
-          { role: ROLE_LABEL },
-        ],
+        role: ROLE_PUSHBUTTON,
+        actions: "press",
       };
       testElm("input_file", obj);
 

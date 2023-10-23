@@ -60,7 +60,6 @@ class HTMLButtonAccessible : public HyperTextAccessible {
 
   // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual uint64_t State() override;
   virtual uint64_t NativeState() const override;
 
   // ActionAccessible
@@ -135,8 +134,11 @@ class HTMLFileInputAccessible : public HyperTextAccessible {
 
   // LocalAccessible
   virtual mozilla::a11y::role NativeRole() const override;
-  virtual nsresult HandleAccEvent(AccEvent* aAccEvent) override;
-  virtual LocalAccessible* CurrentItem() const override;
+  virtual bool IsAcceptableChild(nsIContent* aEl) const override;
+  virtual ENameValueFlag Name(nsString& aName) const override;
+  virtual bool HasPrimaryAction() const override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool IsWidget() const override;
 };
 
 /**

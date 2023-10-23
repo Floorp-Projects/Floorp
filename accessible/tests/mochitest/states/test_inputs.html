@@ -65,10 +65,9 @@
     testStates("f_input_disabled", STATE_UNAVAILABLE);
 
     // //////////////////////////////////////////////////////////////////////////
-    // inherited from file control
-    var fileBrowseButton = getAccessible("file").firstChild;
+    // file control
+    var fileBrowseButton = getAccessible("file");
     testStates(fileBrowseButton, STATE_UNAVAILABLE | STATE_REQUIRED);
-    // No states on the label.
 
     // //////////////////////////////////////////////////////////////////////////
     // 'invalid' state
