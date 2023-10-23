@@ -291,7 +291,7 @@ void nsTableRowGroupFrame::PlaceChild(
   }
 }
 
-void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext& aPresContext,
+void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext* aPresContext,
                                                 bool aBorderCollapse,
                                                 ReflowInput& aReflowInput) {
   const auto childWM = aReflowInput.GetWritingMode();
@@ -302,7 +302,7 @@ void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext& aPresContext,
     }
   }
   const LogicalMargin zeroPadding(childWM);
-  aReflowInput.Init(&aPresContext, Nothing(), Some(border), Some(zeroPadding));
+  aReflowInput.Init(aPresContext, Nothing(), Some(border), Some(zeroPadding));
 }
 
 static void CacheRowBSizesForPrinting(nsTableRowFrame* aFirstRow,
@@ -366,7 +366,7 @@ void nsTableRowGroupFrame::ReflowChildren(
       ReflowInput kidReflowInput(aPresContext, aReflowInput.mReflowInput,
                                  kidFrame, kidAvailSize, Nothing(),
                                  ReflowInput::InitFlag::CallerWillInit);
-      InitChildReflowInput(*aPresContext, borderCollapse, kidReflowInput);
+      InitChildReflowInput(aPresContext, borderCollapse, kidReflowInput);
 
       // This can indicate that columns were resized.
       if (aReflowInput.mReflowInput.IsIResize()) {
@@ -920,8 +920,8 @@ nsTableRowFrame* nsTableRowGroupFrame::CreateContinuingRowFrame(
 // and end on or after aLastRow. aFirstTruncatedRow is the highest row on the
 // page that contains a cell which cannot split on this page
 void nsTableRowGroupFrame::SplitSpanningCells(
-    nsPresContext& aPresContext, const ReflowInput& aReflowInput,
-    nsTableFrame& aTable, nsTableRowFrame& aFirstRow, nsTableRowFrame& aLastRow,
+    nsPresContext* aPresContext, const ReflowInput& aReflowInput,
+    nsTableFrame* aTable, nsTableRowFrame* aFirstRow, nsTableRowFrame* aLastRow,
     bool aFirstRowIsTopOfPage, nscoord aSpanningRowBEnd,
     nsTableRowFrame*& aContRow, nsTableRowFrame*& aFirstTruncatedRow,
     nscoord& aDesiredBSize) {
@@ -929,19 +929,19 @@ void nsTableRowGroupFrame::SplitSpanningCells(
   aFirstTruncatedRow = nullptr;
   aDesiredBSize = 0;
 
-  const bool borderCollapse = aTable.IsBorderCollapse();
-  int32_t lastRowIndex = aLastRow.GetRowIndex();
+  const bool borderCollapse = aTable->IsBorderCollapse();
+  int32_t lastRowIndex = aLastRow->GetRowIndex();
   bool wasLast = false;
   bool haveRowSpan = false;
   // Iterate the rows between aFirstRow and aLastRow
-  for (nsTableRowFrame* row = &aFirstRow; !wasLast; row = row->GetNextRow()) {
-    wasLast = (row == &aLastRow);
+  for (nsTableRowFrame* row = aFirstRow; !wasLast; row = row->GetNextRow()) {
+    wasLast = (row == aLastRow);
     int32_t rowIndex = row->GetRowIndex();
     nsPoint rowPos = row->GetNormalPosition();
     // Iterate the cells looking for those that have rowspan > 1
     for (nsTableCellFrame* cell = row->GetFirstCell(); cell;
          cell = cell->GetNextCell()) {
-      int32_t rowSpan = aTable.GetEffectiveRowSpan(rowIndex, *cell);
+      int32_t rowSpan = aTable->GetEffectiveRowSpan(rowIndex, *cell);
       // Only reflow rowspan > 1 cells which span aLastRow. Those which don't
       // span aLastRow were reflowed correctly during the unconstrained bsize
       // reflow.
@@ -953,7 +953,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         // start and the end of the page
         nscoord cellAvailBSize = aSpanningRowBEnd - rowPos.y;
         NS_ASSERTION(cellAvailBSize >= 0, "No space for cell?");
-        bool isTopOfPage = (row == &aFirstRow) && aFirstRowIsTopOfPage;
+        bool isTopOfPage = (row == aFirstRow) && aFirstRowIsTopOfPage;
 
         nsRect rowRect = row->GetNormalRect();
         nsSize rowAvailSize(
@@ -963,20 +963,20 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         // CalculateRowBSizes set for it
         rowAvailSize.height = std::min(rowAvailSize.height, rowRect.height);
         ReflowInput rowReflowInput(
-            &aPresContext, aReflowInput, row,
+            aPresContext, aReflowInput, row,
             LogicalSize(row->GetWritingMode(), rowAvailSize), Nothing(),
             ReflowInput::InitFlag::CallerWillInit);
         InitChildReflowInput(aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page
 
         nscoord cellBSize =
-            row->ReflowCellFrame(&aPresContext, rowReflowInput, isTopOfPage,
+            row->ReflowCellFrame(aPresContext, rowReflowInput, isTopOfPage,
                                  cell, cellAvailBSize, status);
         aDesiredBSize = std::max(aDesiredBSize, rowPos.y + cellBSize);
         if (status.IsComplete()) {
           if (cellBSize > cellAvailBSize) {
             aFirstTruncatedRow = row;
-            if ((row != &aFirstRow) || !aFirstRowIsTopOfPage) {
+            if ((row != aFirstRow) || !aFirstRowIsTopOfPage) {
               // return now, since we will be getting another reflow after
               // either (1) row is moved to the next page or (2) the row group
               // is moved to the next page
@@ -985,15 +985,15 @@ void nsTableRowGroupFrame::SplitSpanningCells(
           }
         } else {
           if (!aContRow) {
-            aContRow = CreateContinuingRowFrame(&aLastRow);
+            aContRow = CreateContinuingRowFrame(aLastRow);
           }
           if (aContRow) {
-            if (row != &aLastRow) {
+            if (row != aLastRow) {
               // aContRow needs a continuation for cell, since cell spanned into
               // aLastRow but does not originate there
               nsTableCellFrame* contCell = static_cast<nsTableCellFrame*>(
                   PresShell()->FrameConstructor()->CreateContinuingFrame(
-                      cell, &aLastRow));
+                      cell, aLastRow));
               uint32_t colIndex = cell->ColIndex();
               aContRow->InsertCellFrame(contCell, colIndex);
             }
@@ -1003,7 +1003,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
     }
   }
   if (!haveRowSpan) {
-    aDesiredBSize = aLastRow.GetNormalRect().YMost();
+    aDesiredBSize = aLastRow->GetNormalRect().YMost();
   }
 }
 
@@ -1109,7 +1109,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
             availSize.ConvertTo(rowFrame->GetWritingMode(), wm), Nothing(),
             ReflowInput::InitFlag::CallerWillInit);
 
-        InitChildReflowInput(*aPresContext, borderCollapse, rowReflowInput);
+        InitChildReflowInput(aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page
         ReflowOutput rowMetrics(aReflowInput);
 
@@ -1220,8 +1220,8 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
       // reflow the cells with rowspan >1 that occur on the page
       nsTableRowFrame* firstTruncatedRow;
       nscoord bMost;
-      SplitSpanningCells(*aPresContext, aReflowInput, *aTableFrame,
-                         *firstRowThisPage, *lastRowThisPage,
+      SplitSpanningCells(aPresContext, aReflowInput, aTableFrame,
+                         firstRowThisPage, lastRowThisPage,
                          aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
                          contRow, firstTruncatedRow, bMost);
       if (firstTruncatedRow) {
@@ -1256,8 +1256,8 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
           // Call SplitSpanningCells again with rowBefore as the last row on the
           // page
           SplitSpanningCells(
-              *aPresContext, aReflowInput, *aTableFrame, *firstRowThisPage,
-              *rowBefore, aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
+              aPresContext, aReflowInput, aTableFrame, firstRowThisPage,
+              rowBefore, aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
               contRow, firstTruncatedRow, aDesiredSize.BSize(wm));
           if (firstTruncatedRow) {
             if (aReflowInput.mFlags.mIsTopOfPage) {
@@ -1267,8 +1267,8 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
               contRow = nullptr;
               lastRowThisPage = oldLastRowThisPage;
               spanningRowBEnd = oldSpanningRowBEnd;
-              SplitSpanningCells(*aPresContext, aReflowInput, *aTableFrame,
-                                 *firstRowThisPage, *lastRowThisPage,
+              SplitSpanningCells(aPresContext, aReflowInput, aTableFrame,
+                                 firstRowThisPage, lastRowThisPage,
                                  aReflowInput.mFlags.mIsTopOfPage,
                                  spanningRowBEnd, contRow, firstTruncatedRow,
                                  aDesiredSize.BSize(wm));
