@@ -371,12 +371,13 @@ async function waitForOSKeyStoreLogin(login = false) {
 }
 
 function patchRecordCCNumber(record) {
-  const ccNumberFmt = "****" + record.cc["cc-number"].substr(-4);
-
-  return {
-    cc: Object.assign({}, record.cc, { ccNumberFmt }),
-    expected: record.expected,
+  const number = record["cc-number"];
+  const ccNumberFmt = {
+    affix: "****",
+    label: number.substr(-4),
   };
+
+  return Object.assign({}, record, { ccNumberFmt });
 }
 
 // Utils for registerPopupShownListener(in satchel_common.js) that handles dropdown popup

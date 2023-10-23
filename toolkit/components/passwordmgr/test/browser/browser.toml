@@ -216,7 +216,7 @@ skip-if = [
 ["browser_openPasswordManager.js"]
 
 ["browser_preselect_login.js"]
-fail-if = ["a11y_checks"] # Bug 1854452 clicked ac-secondary-action may not be labeled
+fail-if = ["a11y_checks"] # Bug 1854452 clicked ac-settings-button may not be labeled
 skip-if = [
   "os == 'linux' && (asan || tsan || debug)", # Bug 1840479
   "os == 'win' && (asan || debug)", # Bug 1840479
