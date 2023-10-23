@@ -12,7 +12,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 
-#include "gc/Allocator.h"
+#include "gc/GCEnum.h"
 #include "gc/MaybeRooted.h"
 #include "gc/StoreBuffer.h"
 #include "js/UniquePtr.h"

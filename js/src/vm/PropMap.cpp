@@ -6,9 +6,9 @@
 
 #include "vm/PropMap-inl.h"
 
-#include "gc/Allocator.h"
 #include "gc/HashUtil.h"
 #include "js/GCVector.h"
+#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 
 #include "gc/GCContext-inl.h"

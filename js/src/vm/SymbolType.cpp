@@ -6,7 +6,6 @@
 
 #include "vm/SymbolType.h"
 
-#include "gc/Allocator.h"
 #include "gc/HashUtil.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"

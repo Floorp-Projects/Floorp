@@ -11,7 +11,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Maybe.h"
 
-#include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "gc/Pretenuring.h"
 #include "gc/ZoneAllocator.h"  // AddCellMemory
