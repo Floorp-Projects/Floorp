@@ -6,7 +6,6 @@
 
 #include "DeviceInputTrack.h"
 
-#include "MediaTrackGraphImpl.h"
 #include "Tracing.h"
 
 namespace mozilla {
