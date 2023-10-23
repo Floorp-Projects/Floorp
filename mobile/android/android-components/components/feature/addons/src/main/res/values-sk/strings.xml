@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Ďalšie informácie o povoleniach</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Hodnotenie</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Ďalšie informácie o tomto doplnku</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Nastavenia</string>
     <!-- Indicates the add-on is enabled. -->

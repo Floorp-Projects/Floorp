@@ -74,7 +74,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">Keď zatvoríte všetky súkromné okná, %1$s odstráni vaše súbory cookie, históriu a údaje stránok. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">Keď zatvoríte všetky súkromné okná, %1$s odstráni vaše súbory cookie, históriu a údaje stránok. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">Keď zatvoríte všetky súkromné karty, %1$s odstráni vaše súbory cookie, históriu a údaje stránok. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -331,10 +336,14 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Nastavte si Firefox ako svoj obľúbený prehliadač</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Nastavte si Firefox ako svoj obľúbený prehliadač</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Radi vás držíme v bezpečí</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox upredňostňuje ľudí pred ziskami a chráni vaše súkromie blokovaním sledovacích prvkov tretích strán.\n\nĎalšie informácie nájdete v našom Vyhlásení o ochrane osobných údajov.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox upredňostňuje ľudí pred ziskami a chráni vaše súkromie blokovaním sledovacích prvkov tretích strán.\n\nĎalšie informácie nájdete v našom Vyhlásení o ochrane osobných údajov.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Náš neziskový prehliadač pomáha zabrániť spoločnostiam, aby vás tajne sledovali na webe.\n\nĎalšie informácie nájdete v našom Vyhlásení o ochrane osobných údajov.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">Vyhlásení o ochrane osobných údajov</string>
@@ -343,19 +352,30 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Teraz nie</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Preskočte z telefónu na laptop a späť</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Preskočte z telefónu na laptop a späť</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Pri preskakovaní medzi zariadeniami zostaňte šifrovaní</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Vezmite karty a heslá z ostatných zariadení a pokračujte tam, kde ste prestali.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Vezmite karty a heslá z ostatných zariadení a pokračujte tam, kde ste prestali.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Keď ste prihlásení a synchronizovaní, ste bezpečnejší. Firefox šifruje vaše heslá, záložky a ďalšie položky.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Prihlásiť sa</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Teraz nie</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Upozornenia vám pomôžu vyťažiť z prehliadača Firefox ešte viac</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Upozornenia vám pomôžu vyťažiť z prehliadača Firefox ešte viac</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Upozornenia vám pomôžu zostať s Firefoxom v bezpečí</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Posielajte karty medzi zariadeniami, spravujte sťahovanie súborov a získajte tipy, ako prehliadač Firefox využiť čo najlepšie.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Posielajte karty medzi zariadeniami, spravujte sťahovanie súborov a získajte tipy, ako prehliadač Firefox využiť čo najlepšie.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Bezpečne posielajte karty medzi vašimi zariadeniami a objavte ďalšie funkcie ochrany osobných údajov vo Firefoxe.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Zapnúť upozornenia</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -394,7 +414,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Zvoľte nejaký</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Spravovať skratky vyhľadávania</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Spravovať skratky vyhľadávania</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Spravovať alternatívne vyhľadávacie moduly</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Upraviť vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -405,8 +427,16 @@
     <string name="preferences_search">Vyhľadávanie</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Vyhľadávacie moduly</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Návrhy z vyhľadávačov</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Panel s adresou</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Panel s adresou</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Predvoľby panela s adresou</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Panel s adresou – Návrhy Firefoxu</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Prečítajte si viac o Návrhoch Firefoxu</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Ohodnoťte aplikáciu v Obchode Play</string>
     <!-- Preference linking to about page for Fenix
@@ -994,10 +1024,10 @@
 
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Názov kolekcie</string>
-	<!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Premenovať</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Odstrániť</string>
+    <!-- Text for the menu button to rename a top site -->
+    <string name="rename_top_site">Premenovať</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Odstrániť</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Odstrániť z histórie</string>
@@ -1949,7 +1979,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Upraviť vyhľadávač</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Pridať</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Pridať</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Uložiť</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1958,17 +1988,17 @@
     <string name="search_engine_delete">Odstrániť</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Iný</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Iný</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Názov</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Názov</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Názov</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Názov vyhľadávača</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Adresa URL vyhľadávacieho reťazca</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Výraz vyhľadávania</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Výraz vyhľadávania</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">Adresa URL, ktorá sa má použiť na vyhľadávanie</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2115,14 +2145,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Skratky</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Názov</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Názov</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Názov skratky</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Zrušiť</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Zrušiť</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Nastavenia</string>

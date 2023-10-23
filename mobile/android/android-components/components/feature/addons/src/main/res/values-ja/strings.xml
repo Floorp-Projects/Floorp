@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">権限の詳細情報</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">評価</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">このアドオンの詳細</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">設定</string>
     <!-- Indicates the add-on is enabled. -->

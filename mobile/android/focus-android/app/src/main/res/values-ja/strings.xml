@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">ショートカットから削除</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">新着情報</string>
     <string name="menu_settings">設定</string>
     <string name="menu_about">製品情報</string>
     <string name="menu_help">ヘルプ</string>
@@ -1091,7 +1090,7 @@
 
     !-- This is the title of promote search widget dialog. --&gt;
     <!-- This is the title of promote search widget dialog. -->
-    <string name="promote_search_widget_dialog_title">ブラウジング履歴を消去しました🎉</string>
+    <string name="promote_search_widget_dialog_title">閲覧履歴を消去しました🎉</string>
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;

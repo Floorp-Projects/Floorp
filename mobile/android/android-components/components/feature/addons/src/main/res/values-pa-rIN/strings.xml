@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">ਇਜਾਜ਼ਤਾਂ ਬਾਰੇ ਹੋਰ ਸਿੱਖੋ</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">ਦਰਜਾਬੰਦੀ</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">ਇਸ ਐਡ-ਆਨ ਬਾਰੇ ਹੋਰ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">ਸੈਟਿੰਗਾਂ</string>
     <!-- Indicates the add-on is enabled. -->

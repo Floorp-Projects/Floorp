@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">رازداری ترتیباں  پڑھو تے تبدیل کرو</string>
     <!-- Description for all_urls add-on permission. -->
@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">کھلے ٹیب وچ آپݨے ڈیٹا تائیں رسائی کیتے ڈویلپر دے اوزار ودھاؤ</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ورشن</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">مصنف</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">مصنف</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">مصنف</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">چھیکڑی واری اپ ڈیٹ تھیا</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -116,8 +118,14 @@
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s شامل کروں؟</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ایں وچ تہاݙی اجازت ضروری ہے:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">ایہ چاہندا ہے:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">شامل کرو</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">اجازت ݙیوو</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">انکار کرو</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">منسوخ</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -212,4 +220,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">ایں کوں مینیو وچ کھولو</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ٹھیک ہے، سمجھ آ ڳیا</string>
-</resources>
+    </resources>

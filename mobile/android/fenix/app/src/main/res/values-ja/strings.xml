@@ -76,7 +76,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">すべてのプライベートウィンドウを閉じると、%1$s により Cookie、履歴、サイトデータが削除されます。%2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">すべてのプライベートウィンドウを閉じると、%1$s により Cookie、履歴、サイトデータが削除されます。%2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">すべてのプライベートタブを閉じると、%1$s により Cookie、履歴、サイトデータが削除されます。%2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -250,7 +255,7 @@
 
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
-    <string name="browser_toolbar_erase">ブラウジング履歴を消去</string>
+    <string name="browser_toolbar_erase">閲覧履歴を消去</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">選択した言語</string>
@@ -331,10 +336,10 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Firefox をいつものブラウザーに</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox をいつものブラウザーに</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox はユーザーのことを第一に考え、クロスサイトトラッカーからあなたのプライバシーを守ります。\n\n詳細はプライバシー通知をご覧ください。</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox はユーザーのことを第一に考え、クロスサイトトラッカーからあなたのプライバシーを守ります。\n\n詳細はプライバシー通知をご覧ください。</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">プライバシー通知</string>
@@ -344,19 +349,19 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">後で</string>
 
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">スマートフォンとラップトップの間を行ったり来たり</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">スマートフォンとラップトップの間を行ったり来たり</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">他の端末からタブとパスワードを転送して、中断したところから再開できます。</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">他の端末からタブとパスワードを転送して、中断したところから再開できます。</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ログイン</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">後で</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">通知をオンにして Firefox をさらに活用しましょう</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">通知をオンにして Firefox をさらに活用しましょう</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">通知を使って他の端末にタブを送信したり、ダウンロードを管理したり、Firefox を最大限に活用するためのヒントを受け取れます。</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">通知を使って他の端末にタブを送信したり、ダウンロードを管理したり、Firefox を最大限に活用するためのヒントを受け取れます。</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">通知をオンにする</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -397,7 +402,7 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">一つを選んでください</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">検索ショートカットの管理</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">検索ショートカットの管理</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">検索メニューに表示されるエンジンの編集</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -409,7 +414,7 @@
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">検索エンジン</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">アドレスバー</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">アドレスバー</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play で評価する</string>
     <!-- Preference linking to about page for Fenix
@@ -999,9 +1004,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">コレクション名</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">タイトル変更</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">削除</string>
+    <string name="rename_top_site">タイトル変更</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">削除</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">履歴から削除</string>
@@ -1434,7 +1439,7 @@
     <!-- Title for the data and history items in Delete browsing data -->
     <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">閲覧履歴とサイトデータ</string>
     <!-- Title for the history item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">ブラウジング履歴</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title">閲覧履歴</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d 件のアドレス</string>
@@ -1465,7 +1470,7 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">削除する期間</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">履歴 (他の端末から同期されたものを含む)、Cookie および他のブラウジングデータを削除します。</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">履歴 (他の端末から同期されたものを含む)、Cookie および他の閲覧データを削除します。</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body_2">履歴を削除します (他の端末から同期した履歴を含む)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
@@ -1649,7 +1654,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title_2">クロスサイト Cookie</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">広告ネットワークやアクセス解析サービスが様々なサイトからブラウジングデータを収集するために使用する Cookie をブロックします。</string>
+    <string name="etp_cookies_description">広告ネットワークやアクセス解析サービスが様々なサイトの閲覧データの収集に使用する Cookie をブロックします。</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description_2">包括的 Cookie 保護機能により、現在のサイトに対する Cookie を分離して、サイトを横断してあなたを追跡する Cookie を広告ネットワークなどのトラッカーが利用できないようにします。</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
@@ -1968,7 +1973,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">検索エンジンの編集</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">追加</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">追加</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">保存</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1977,17 +1982,17 @@
     <string name="search_engine_delete">削除</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">その他</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">その他</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">名前</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">検索エンジン名</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">検索エンジン名</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">検索エンジン名</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">検索文字列の URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">検索クエリー文字列</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">検索クエリー文字列</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">検索に使用する URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2135,14 +2140,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">ショートカット</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">タイトル</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">タイトル</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">ショートカット名</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">キャンセル</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">キャンセル</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">設定</string>

@@ -330,9 +330,13 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Wužywajśo Firefox pó droze</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Šćitamy was rad</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox luźi nad wudobytki staja a blokěrujo sedła pśesegajuce slědowaki, aby wašu priwatnosć šćitał.\n\nDalšne informacije w našej powěźeńce priwatnosći.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Naš za wšykne wužytny wobglědowak tomu zajźujo, až pśedewześa wam kšajźu pó interneśe slěduju.\n\nDalšne informacije w našej powěźeńce priwatnosći.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">powěźeńka priwatnosći</string>
@@ -342,8 +346,13 @@
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Nic něnto</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Skócćo wó telefona do laptopa a slědk</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Wóstańśo skoděrowany, gaž někotare rědy wužywaśo</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Wobstarajśo se rejtariki a gronidła z drugich rědow, aby tam pókšacował, źož sćo pśestał.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Gaž sćo se pśizjawił a sćo synchronizěrował, sćo wěsćejšy. Firefox waše gronidła, cytańske znamjenja a wěcej koděrujo.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Pśizjawiś</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -358,6 +367,9 @@
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Sćelśo rejtariki mjazy rědami, zastojśo ześěgnjenja  a dostańśo pokaze, aby nejwěcej z Firefox wuwónoźeł.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Rozesćełajśo rejtariki mjazy swójimi rědami a namakajśo druge funkcije priwatnosći w Firefox. </string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Powěźeńki zmóžniś</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
