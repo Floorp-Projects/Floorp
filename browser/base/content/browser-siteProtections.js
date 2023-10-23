@@ -2137,8 +2137,8 @@ var gProtectionsHandler = {
       document.l10n.setAttributes(
         toggle,
         isPressed
-          ? "protections-panel-etp-on-toggle"
-          : "protections-panel-etp-off-toggle",
+          ? "protections-panel-etp-toggle-on"
+          : "protections-panel-etp-toggle-off",
         { host }
       );
     }
