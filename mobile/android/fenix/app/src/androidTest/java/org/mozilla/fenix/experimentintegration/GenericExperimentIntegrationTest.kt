@@ -33,7 +33,8 @@ class GenericExperimentIntegrationTest {
         TestHelper.appContext.settings().showSecretDebugMenuThisSession = false
     }
 
-    private fun disableStudiesViaStudiesToggle() {
+    @Test
+    fun disableStudiesViaStudiesToggle() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {

@@ -428,8 +428,7 @@ class SettingsRobot {
 
         fun openExperimentsMenu(interact: SettingsSubMenuExperimentsRobot.() -> Unit): SettingsSubMenuExperimentsRobot.Transition {
             scrollToElementByText("Nimbus Experiments")
-            fun nimbusExperimentsButton() = mDevice.findObject(textContains("Nimbus Experiments"))
-            nimbusExperimentsButton().click()
+            onView(withText(getStringResource(R.string.preferences_nimbus_experiments))).click()
 
             SettingsSubMenuExperimentsRobot().interact()
             return SettingsSubMenuExperimentsRobot.Transition()
