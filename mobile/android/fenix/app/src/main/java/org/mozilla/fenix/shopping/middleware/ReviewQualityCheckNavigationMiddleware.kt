@@ -64,5 +64,7 @@ class ReviewQualityCheckNavigationMiddleware(
         is ReviewQualityCheckAction.OpenOnboardingPrivacyPolicyLink -> PRIVACY_POLICY_URL
 
         is ReviewQualityCheckAction.OpenPoweredByLink -> POWERED_BY_URL
+
+        is ReviewQualityCheckAction.OpenRecommendedProduct -> action.productUrl
     }
 }

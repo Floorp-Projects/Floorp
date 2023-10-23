@@ -166,4 +166,11 @@ sealed interface ReviewQualityCheckAction : Action {
      * Triggered when the user reports a product is back in stock.
      */
     object ReportProductBackInStock : TelemetryAction
+
+    /**
+     * Triggered when the user clicks on the recommended product.
+     *
+     * @property productUrl The product's link to open.
+     */
+    data class OpenRecommendedProduct(val productUrl: String) : NavigationMiddlewareAction
 }
