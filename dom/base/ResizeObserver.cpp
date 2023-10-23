@@ -186,10 +186,7 @@ ResizeObservation::ResizeObservation(Element& aTarget,
     : mTarget(&aTarget),
       mObserver(&aObserver),
       mObservedBox(aBox),
-      mLastReportedSize(
-          {StaticPrefs::dom_resize_observer_last_reported_size_invalid()
-               ? LogicalPixelSize(WritingMode(), gfx::Size(-1, -1))
-               : LogicalPixelSize()}) {
+      mLastReportedSize({LogicalPixelSize(WritingMode(), gfx::Size(-1, -1))}) {
   aTarget.BindObject(mObserver);
 }
 
@@ -313,20 +310,6 @@ void ResizeObserver::Observe(Element& aTarget,
   }
 
   observation = new ResizeObservation(aTarget, *this, aOptions.mBox);
-  if (!StaticPrefs::dom_resize_observer_last_reported_size_invalid() &&
-      this == mDocument->GetLastRememberedSizeObserver()) {
-    // Resize observations are initialized with a (0, 0) mLastReportedSize,
-    // this means that the callback won't be called if the element is 0x0.
-    // But we need it called for handling the last remembered size, so set
-    // mLastReportedSize to an invalid size to ensure IsActive() is true
-    // for the current element size.
-    // See https://github.com/w3c/csswg-drafts/issues/3664 about doing this in
-    // the general case, then we won't need this hack for the last remembered
-    // size, and will have consistency with IntersectionObserver.
-    observation->UpdateLastReportedSize(
-        {LogicalPixelSize(WritingMode(), gfx::Size(-1, -1))});
-    MOZ_ASSERT(observation->IsActive());
-  }
   mObservationList.insertBack(observation);
 
   // Per the spec, we need to trigger notification in event loop that
