@@ -83,7 +83,7 @@ the previous batches are not removed from the document.
     }
   }
   addEventListener("load", function() {
-    TalosContentProfiler.resume("hixie-005.xml loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("hixie-005.xml loaded", true).then(() => {
       rAF(runTest);
     });
   });

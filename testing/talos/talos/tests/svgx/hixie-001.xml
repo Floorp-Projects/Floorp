@@ -288,7 +288,7 @@ a circle that only has a fill animates over complex SVG via changes to its
    }
   }
   addEventListener("load", function() {
-    TalosContentProfiler.resume("hixie-001.xml loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("hixie-001.xml loaded", true).then(() => {
       rAF(bounce);
     });
   });

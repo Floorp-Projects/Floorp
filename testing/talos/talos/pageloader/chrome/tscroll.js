@@ -211,7 +211,10 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
         ) {
           let profilerPaused = Promise.resolve();
           if (typeof TalosContentProfiler !== "undefined") {
-            profilerPaused = TalosContentProfiler.pause(testBaseName, true);
+            profilerPaused = TalosContentProfiler.subtestEnd(
+              testBaseName,
+              true
+            );
           }
 
           profilerPaused.then(() => {
@@ -246,7 +249,7 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps) {
       }
 
       if (typeof TalosContentProfiler !== "undefined") {
-        TalosContentProfiler.resume(testBaseName, true).then(() => {
+        TalosContentProfiler.subtestStart(testBaseName, true).then(() => {
           rAF(tick);
         });
       }

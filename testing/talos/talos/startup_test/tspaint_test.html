@@ -20,7 +20,6 @@ async function painted() {
 
   await TalosPowers.loadPromise;
 
-  await TalosContentProfiler.pause();
   await TalosContentProfiler.initFromURLQueryParams(location.search);
   await TalosContentProfiler.finishStartupProfiling();
 

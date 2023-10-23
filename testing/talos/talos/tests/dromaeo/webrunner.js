@@ -94,7 +94,7 @@
 					return;
 				}
 
-				TalosContentProfiler.resume("dromaeo: begin test [" + name + "]", name, true).then(() => {
+				TalosContentProfiler.subtestStart("dromaeo: begin test [" + name + "]", name, true).then(() => {
 					start = performance.now();
 
 					if (runStyle === "runs/s") {
@@ -122,7 +122,7 @@
 						return;
 				  }
 
-					TalosContentProfiler.pause("dromaeo: test [" + name + "]", name, true).then(() => {
+					TalosContentProfiler.subtestEnd("dromaeo: test [" + name + "]", name, true).then(() => {
 						// For making Median and Variance
 						if (runStyle === "runs/s") {
 							times.push((runs * 1000) / (cur - start));
