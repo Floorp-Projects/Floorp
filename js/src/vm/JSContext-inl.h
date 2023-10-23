@@ -11,7 +11,6 @@
 
 #include <type_traits>
 
-#include "gc/Allocator.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
@@ -20,6 +19,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Realm.h"
 
+#include "gc/Allocator-inl.h"
 #include "vm/Activation-inl.h"  // js::Activation::hasWasmExitFP
 
 namespace js {
