@@ -569,7 +569,7 @@ export class FormAutoComplete {
             ...externalEntries.map(
               entry =>
                 new GenericAutocompleteItem(
-                  entry.image,
+                  entry.icon,
                   entry.title,
                   entry.subtitle,
                   entry.fillMessageName,
