@@ -12,11 +12,8 @@ function wrapInputStream(input) {
   return wrapper;
 }
 
-// Make sure that we can read from CRX files as if they were ZIP files.
-function run_test() {
-  // Note: test_crx_dummy.crx is a dummy crx file created for this test. The
-  // public key and signature fields in the header are both empty.
-  let file = do_get_file("data/test_crx_dummy.crx");
+function extract_crx(filepath) {
+  let file = do_get_file(filepath);
 
   let zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(
     Ci.nsIZipReader
@@ -40,4 +37,15 @@ function run_test() {
   Cu.forceGC();
   Assert.ok(!!stream.read(1024).length);
   Assert.ok(!!dirstream.read(100).length);
+}
+
+// Make sure that we can read from CRX files as if they were ZIP files.
+function run_test() {
+  // Note: test_crx_dummy.crx is a dummy crx file created for this test. The
+  // public key and signature fields in the header are both empty.
+  extract_crx("data/test_crx_dummy.crx");
+
+  // Note: test_crx_v3_dummy.crx is a dummy crx file created for this test. The
+  // header length field is set to 4 bytes.
+  extract_crx("data/test_crx_v3_dummy.crx");
 }
