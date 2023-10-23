@@ -53,11 +53,34 @@ inTimeZone("MST", () => {
     "2022-02-29": new Date(2022, Month.March, 1),
     "2022-02-30": new Date(2022, Month.March, 2),
     "2022-02-31": new Date(2022, Month.March, 3),
+
+    // No space before time zone
+    "19999-9-1MST": new Date(19999, Month.September, 1),
+    "19999-9-1GMT-07": new Date(19999, Month.September, 1),
+
+    // Delimiter other than space after prefix
+    "19999-9-1.10:13:14": new Date(19999, Month.September, 1, 10, 13, 14),
+    "19999-9-1,10:13:14": new Date(19999, Month.September, 1, 10, 13, 14),
+    "19999-9-1-10:13:14": new Date(19999, Month.September, 1, 10, 13, 14),
+    "19999-9-1-4:30": new Date(19999, Month.September, 1, 4, 30),
+    "19999-9-1/10:13:14": new Date(19999, Month.September, 1, 10, 13, 14),
+    "19999-9-1()10:13:14": new Date(19999, Month.September, 1, 10, 13, 14),
+    // Open paren only comments out the time
+    "19999-9-1(10:13:14": new Date(19999, Month.September, 1),
   };
   const rejected = [
     "275760-09-12 17:00:01",
     "275760-09-13",
+
+    // Rejected delimiters after prefix
     "19999-09-12T00:00:00",
+    "19999-09-12:00:00:00",
+    "19999-09-12^00:00:00",
+    "19999-09-12|00:00:00",
+    "19999-09-12~00:00:00",
+    "19999-09-12+00:00:00",
+    "19999-09-12=00:00:00",
+    "19999-09-12?00:00:00",
 
     // 13-31 for first number is invalid (after 31 can be parsed as YY-MM-DD),
     // but 32 is still no good if the last number is a YYYY
