@@ -6134,7 +6134,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
             if property.mProperty == nsCSSPropertyID::eCSSPropertyExtra_variable {
                 raw_custom_properties_block = unsafe { &*property.mServoDeclarationBlock.mRawPtr };
                 let guard = raw_custom_properties_block.read_with(&guard);
-                custom_properties = guard.cascade_custom_properties_with_context(&context);
+                custom_properties = guard.cascade_custom_properties(&data.stylist, &context);
                 // There should be one PropertyDeclarationBlock for custom properties.
                 break;
             }
