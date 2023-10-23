@@ -65,6 +65,14 @@ BEGIN_TEST(testChromeBuffer) {
     CHECK(JS_GetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
                                         &oldBaselineJitEnabled));
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE, 0);
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+    uint32_t oldPortableBaselineInterpreterEnabled;
+    CHECK(JS_GetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_PORTABLE_BASELINE_ENABLE,
+        &oldPortableBaselineInterpreterEnabled));
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_PORTABLE_BASELINE_ENABLE,
+                                  0);
+#endif
     {
       JSAutoRealm ar(cx, trusted_glob);
       const char* paramName = "x";
@@ -121,6 +129,10 @@ BEGIN_TEST(testChromeBuffer) {
                                   oldBaselineInterpreterEnabled);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
                                   oldBaselineJitEnabled);
+#ifdef ENABLE_PORTABLE_BASELINE_INTERP
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_PORTABLE_BASELINE_ENABLE,
+                                  oldPortableBaselineInterpreterEnabled);
+#endif
   }
 
   /*
