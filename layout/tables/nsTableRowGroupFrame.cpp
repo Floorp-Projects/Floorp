@@ -1348,10 +1348,11 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
 
   // See if all the frames fit. Do not try to split anything if we're
   // not paginated ... we can't split across columns yet.
+  WritingMode wm = aReflowInput.GetWritingMode();
   if (aReflowInput.mFlags.mTableIsSplittable &&
-      NS_UNCONSTRAINEDSIZE != aReflowInput.AvailableHeight() &&
+      aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
       (aStatus.IsIncomplete() || splitDueToPageBreak ||
-       aDesiredSize.Height() > aReflowInput.AvailableHeight())) {
+       aDesiredSize.BSize(wm) > aReflowInput.AvailableBSize())) {
     // Nope, find a place to split the row group
     auto& mutableRIFlags = const_cast<ReflowInput::Flags&>(aReflowInput.mFlags);
     const bool savedSpecialBSizeReflow = mutableRIFlags.mSpecialBSizeReflow;
@@ -1375,7 +1376,6 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
 
   // Just set our isize to what was available.
   // The table will calculate the isize and not use our value.
-  WritingMode wm = aReflowInput.GetWritingMode();
   aDesiredSize.ISize(wm) = aReflowInput.AvailableISize();
 
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
@@ -1383,7 +1383,7 @@ void nsTableRowGroupFrame::Reflow(nsPresContext* aPresContext,
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
   if (!GetParent()->HasAnyStateBits(NS_FRAME_FIRST_REFLOW) &&
-      nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
+      aDesiredSize.Size(wm) != GetLogicalSize(wm)) {
     InvalidateFrame();
   }
 
