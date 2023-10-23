@@ -4719,13 +4719,6 @@
   value: 5
   mirror: always
 
-# Initialize Resize Observer's last reported size to -1x-1, and not 0x0,
-# as per CSSWG resolution: https://github.com/w3c/csswg-drafts/issues/3664
-- name: dom.resize_observer.last_reported_size_invalid
-  type: bool
-  value: true
-  mirror: always
-
 # Let Resize Observer report the size of all fragments, and not just the
 # first one, as per CSSWG resolution:
 # https://github.com/w3c/csswg-drafts/issues/3673#issuecomment-467221565
