@@ -27,7 +27,7 @@ use selectors::matching::{
     ElementSelectorFlags, MatchingContext, MatchingForInvalidation, MatchingMode,
     NeedsSelectorFlags, QuirksMode, SelectorCaches, VisitedHandlingMode,
 };
-use selectors::parser::SelectorKey;
+use selectors::parser::{Component, SelectorKey};
 use selectors::OpaqueElement;
 use smallvec::SmallVec;
 use std::ops::DerefMut;
@@ -543,10 +543,34 @@ where
         debug_assert!(
             matches!(outer_dependency.invalidation_kind(), DependencyInvalidationKind::Normal(_)),
             "Outer selector of relative selector is relative?");
-        match outer_dependency.parent {
-            Some(ref p) => Self::is_subject(p.as_ref()),
-            None => outer_dependency.selector_offset == 0,
+
+        if let Some(p) = outer_dependency.parent.as_ref() {
+            if !Self::is_subject(p.as_ref()) {
+                // Not subject in outer selector.
+                return false;
+            }
         }
+
+        // Check for the easy cases first
+        if outer_dependency.selector_offset == 0 {
+            return true;
+        }
+        if !outer_dependency.selector.has_pseudo_element() {
+            return false;
+        }
+
+        // Ok, need to traverse right and check that all combinators are pseudo
+        let iter = outer_dependency.selector.iter_raw_parse_order_from(
+            (outer_dependency.selector.len() - 1) - outer_dependency.selector_offset,
+        );
+        for c in iter {
+            if let Component::Combinator(c) = c {
+                if !c.is_pseudo_element() {
+                    return false;
+                }
+            }
+        }
+        true
     }
 }
 
