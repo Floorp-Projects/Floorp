@@ -31,7 +31,7 @@ KNOWN_TEST_MODIFIERS = [
 ]
 NON_FIREFOX_OPTS = ("webrender", "bytecode-cached", "fission")
 NON_FIREFOX_BROWSERS = ("chrome", "chromium", "custom-car", "safari")
-NON_FIREFOX_BROWSERS_MOBILE = ("chrome-m",)
+NON_FIREFOX_BROWSERS_MOBILE = ("chrome-m", "cstm-car-m")
 
 
 @six.add_metaclass(ABCMeta)

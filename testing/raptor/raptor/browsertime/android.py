@@ -9,7 +9,7 @@ import shutil
 import tempfile
 
 import mozcrash
-from cmdline import FIREFOX_ANDROID_APPS
+from cmdline import CHROME_ANDROID_APPS, FIREFOX_ANDROID_APPS
 from logger.logger import RaptorLogger
 from mozdevice import ADBDeviceFactory
 from performance_tuning import tune_performance
@@ -91,7 +91,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             "true",
         ]
 
-        if self.config["app"] == "chrome-m":
+        if self.config["app"] in CHROME_ANDROID_APPS:
             args_list.extend(
                 [
                     "--browser",
@@ -250,7 +250,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     def run_tests(self, tests, test_names):
         self.setup_adb_device()
 
-        if self.config["app"] == "chrome-m":
+        if self.config["app"] in CHROME_ANDROID_APPS:
             # Make sure that chrome is enabled on the device
             self.device.shell_output("pm enable com.android.chrome")
 
