@@ -588,6 +588,7 @@ function _setDarkModeAttributes(doc, root, colors, hasTheme) {
     }
   };
 
+  setAttribute("lwt-tab-selected", "tab_text", "tab_selected");
   setAttribute("lwt-toolbar-field", "toolbar_field_text", "toolbar_field");
   setAttribute(
     "lwt-toolbar-field-focus",

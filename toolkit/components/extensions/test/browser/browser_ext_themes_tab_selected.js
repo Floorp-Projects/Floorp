@@ -30,22 +30,19 @@ add_task(async function test_tab_background_color_property() {
   );
   let selectedTabBackground = selectedTab.querySelector(".tab-background");
 
-  let openTabGradient = window
+  let openTabColor = window
     .getComputedStyle(openTabBackground)
-    .getPropertyValue("background-image");
-  let selectedTabGradient = window
+    .getPropertyValue("background-color");
+  let selectedTabColor = window
     .getComputedStyle(selectedTabBackground)
-    .getPropertyValue("background-image");
-
-  let rgbRegex = /rgb\((\d{1,3}), (\d{1,3}), (\d{1,3})\)/g;
-  let selectedTabColors = selectedTabGradient.match(rgbRegex);
+    .getPropertyValue("background-color");
 
   Assert.equal(
-    selectedTabColors[0],
+    selectedTabColor,
     "rgb(" + hexToRGB(TAB_BACKGROUND_COLOR).join(", ") + ")",
     "Selected tab background color should be set."
   );
-  Assert.equal(openTabGradient, "none");
+  Assert.notEqual(openTabColor, selectedTabColor);
 
   gBrowser.removeTab(selectedTab);
   await extension.unload();
