@@ -20,7 +20,7 @@ from mozbuild.base import MachCommandConditions as Conditions
 
 HERE = os.path.dirname(os.path.realpath(__file__))
 
-ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m"]
+ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m", "cstm-car-m"]
 
 
 class RaptorRunner(MozbuildObject):

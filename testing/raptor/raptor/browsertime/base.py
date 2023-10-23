@@ -58,6 +58,7 @@ class Browsertime(Perftest):
 
         profile_class = "firefox"
         if app in CHROME_ANDROID_APPS:
+            # use the chrome-m profile class for both chrome-m and CaR-m
             profile_class = "chrome-m"
 
         super(Browsertime, self).__init__(
@@ -146,6 +147,7 @@ class Browsertime(Perftest):
             "chrome-m",
             "chromium",
             "custom-car",
+            "cstm-car-m",
         ):
             if (
                 not self.config.get("run_local", None)
@@ -434,7 +436,13 @@ class Browsertime(Perftest):
                     browsertime_options.extend(pairing)
 
         priority1_options = self.browsertime_args
-        if self.config["app"] in ("chrome", "chromium", "chrome-m", "custom-car"):
+        if self.config["app"] in (
+            "chrome",
+            "chromium",
+            "chrome-m",
+            "custom-car",
+            "cstm-car-m",
+        ):
             priority1_options.extend(self.setup_chrome_args(test))
 
         if self.debug_mode:
@@ -494,6 +502,7 @@ class Browsertime(Perftest):
                 "chrome-m",
                 "chrome",
                 "custom-car",
+                "cstm-car-m",
             ):
                 priority1_options.extend(
                     [

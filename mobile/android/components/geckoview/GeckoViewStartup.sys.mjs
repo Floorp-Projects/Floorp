@@ -216,6 +216,18 @@ export class GeckoViewStartup {
             "GeckoView:StorageDelegate:Attached",
           ]);
         }
+
+        GeckoViewUtils.addLazyGetter(this, "GeckoViewTranslationsSettings", {
+          module: "resource://gre/modules/GeckoViewTranslations.sys.mjs",
+          ged: [
+            "GeckoView:Translations:IsTranslationEngineSupported",
+            "GeckoView:Translations:PreferredLanguages",
+            "GeckoView:Translations:ManageModel",
+            "GeckoView:Translations:TranslationInformation",
+            "GeckoView:Translations:ModelInformation",
+          ],
+        });
+
         break;
       }
 

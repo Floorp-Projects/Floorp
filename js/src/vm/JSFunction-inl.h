@@ -9,10 +9,10 @@
 
 #include "vm/JSFunction.h"
 
-#include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

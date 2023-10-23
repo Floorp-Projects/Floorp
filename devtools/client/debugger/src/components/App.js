@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { div } from "react-dom-factories";
+import { div, main } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
 import { prefs } from "../utils/prefs";
@@ -208,7 +208,7 @@ class App extends Component {
     const { startPanelCollapsed, endPanelCollapsed } = this.props;
     const { endPanelSize, startPanelSize } = this.state;
     const horizontal = this.isHorizontal();
-    return div(
+    return main(
       {
         className: "editor-pane",
       },
@@ -279,6 +279,7 @@ class App extends Component {
         splitterSize: 1,
         onResizeEnd: num => {
           prefs.startPanelSize = num;
+          this.triggerEditorPaneResize();
         },
         startPanelCollapsed: startPanelCollapsed,
         startPanel: React.createElement(PrimaryPanes, {

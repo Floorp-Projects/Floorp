@@ -4,44 +4,20 @@
 
 @import url("chrome://global/skin/menulist-shared.css");
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-label:not([native]) {
-  margin: 0 3px;
-}
-
 :host([native]) {
-  appearance: auto;
-  -moz-default-appearance: menulist;
   margin: 5px 2px 3px;
   min-height: 20px;
   color: -moz-DialogText;
-  text-shadow: none;
-  padding: unset;
 }
 
-:host([native][disabled="true"]) {
-  color: GrayText;
-}
-
-:host([native][disabled="true"]) > dropmarker {
-  padding-inline-start: 7px !important;
-}
-
-/* Label box */
-
-#label-box[native] {
-  align-items: center;
-  justify-content: center;
+:host([native]) #label-box {
   margin-bottom: 1px;
 }
 
-label[native] {
-  margin: 1px 3px !important;
+:host([native]) label {
+  margin: 1px 3px;
 }
 
-/* Dropmarker */
-
-dropmarker[native] {
+:host([native]) dropmarker {
   display: none;
 }

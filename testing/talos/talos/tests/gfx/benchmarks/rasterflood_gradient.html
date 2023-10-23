@@ -107,11 +107,11 @@ function startTest() {
 
 addEventListener("load", function() {
   try {
-    TalosContentProfiler.resume("rasterflood_gradient.html loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("rasterflood_gradient.html loaded", true).then(() => {
       startTest();
     });
   } catch (e) {
-    TalosContentProfiler.resume("rasterflood_gradient.html loaded", true);
+    TalosContentProfiler.subtestStart("rasterflood_gradient.html loaded", true);
     startTest();
   }
 });

@@ -10,7 +10,7 @@ include CacheTypes;
 
 include "ipc/ErrorIPCUtils.h";
 
-[MoveOnly] using mozilla::ErrorResult from "mozilla/ErrorResult.h";
+using mozilla::CopyableErrorResult from "mozilla/ErrorResult.h";
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +21,7 @@ protocol PCacheOp
   manager PCache or PCacheStorage;
 
 child:
-  async __delete__(ErrorResult aRv, CacheOpResult aResult);
+  async __delete__(CopyableErrorResult aRv, CacheOpResult aResult);
 };
 
 } // namespace cache

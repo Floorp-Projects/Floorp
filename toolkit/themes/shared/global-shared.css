@@ -213,7 +213,7 @@ button.text-link .button-text {
   margin: 8px 16px 16px;
 }
 
-.panel-footer-button {
+.footer-button {
   appearance: none;
   border: 0;
   border-radius: 4px;
@@ -253,6 +253,16 @@ button.text-link .button-text {
         background-color: var(--button-primary-active-bgcolor);
       }
     }
+  }
+
+  &[type=menu] > .button-box > .button-menu-dropmarker {
+    appearance: none;
+    display: flex;
+    list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+    width: 12px;
+    height: 12px;
+    -moz-context-properties: fill;
+    fill: currentColor;
   }
 }
 

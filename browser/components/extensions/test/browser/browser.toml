@@ -277,6 +277,7 @@ fail-if = ["a11y_checks"] # Bug 1854460 clicked menuitem(s) may not be accessibl
 ["browser_ext_menus_incognito.js"]
 
 ["browser_ext_menus_refresh.js"]
+skip-if = ["a11y_checks"] # Bug 1858041 and 1835079 for causing intermittent crashes
 
 ["browser_ext_menus_replace_menu.js"]
 

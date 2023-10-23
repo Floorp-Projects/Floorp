@@ -291,7 +291,7 @@ changes to its "cx" and "cy" attributes.
   }
 
   addEventListener("load", function() {
-    TalosContentProfiler.resume("hixie-002.xml loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("hixie-002.xml loaded", true).then(() => {
       rAF(bounce);
     });
   });

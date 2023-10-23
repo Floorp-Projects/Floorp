@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/CacheStorageParent.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/CacheOpParent.h"
@@ -89,10 +90,8 @@ mozilla::ipc::IPCResult CacheStorageParent::RecvPCacheOpConstructor(
   }
 
   if (NS_WARN_IF(NS_FAILED(mVerifiedStatus))) {
-    ErrorResult result(mVerifiedStatus);
-
-    QM_WARNONLY_TRY(OkIf(
-        CacheOpParent::Send__delete__(actor, std::move(result), void_t())));
+    QM_WARNONLY_TRY(OkIf(CacheOpParent::Send__delete__(
+        actor, CopyableErrorResult(mVerifiedStatus), void_t())));
     return IPC_OK();
   }
 

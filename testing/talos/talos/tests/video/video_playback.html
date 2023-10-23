@@ -76,7 +76,7 @@ function prepare() {
 }
 
 function startTest() {
-  TalosContentProfiler.resume("start test " + test[testIndex], true).then(() => {
+  TalosContentProfiler.subtestStart("start test " + test[testIndex], true).then(() => {
     vdo.playbackRate = PLAYBACK_RATE;
     start1 = performance.now();
     paintedFramesStart1 = vdo.mozPaintedFrames;
@@ -100,7 +100,7 @@ function measurementEnded() {
   testResult.names.push(test[testIndex] + "_scale_" + viewMode[viewModeIndex] + "_inclip");
   testResult.values.push(timePerFrame2);
 
-  TalosContentProfiler.pause("done test" + test[testIndex], true).then(() => {
+  TalosContentProfiler.subtestEnd("Test " + test[testIndex], true).then(() => {
     if (viewMode[viewModeIndex] == "fullscreen") {
       // Exit fullscreen mode
       if (document.exitFullscreen) {

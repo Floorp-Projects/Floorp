@@ -1,0 +1,14 @@
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  a.setAttribute("width", "0px")
+  setTimeout(() => { window.location.reload(true) }, 100) // helps with repro
+})
+</script>
+<svg id="a">
+<circle id="b">
+</circle>
+<text>
+<textPath xlink:href="#b">
+</textPath>
+<textPath xlink:href="#b">
+A</altGlyph>

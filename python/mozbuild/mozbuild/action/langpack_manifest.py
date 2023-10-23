@@ -27,6 +27,7 @@ import mozversioncontrol
 import requests
 from fluent.syntax.parser import FluentParser
 from mozpack.chrome.manifest import Manifest, ManifestLocale, parse_manifest
+from redo import retry
 
 from mozbuild.configure.util import Version
 
@@ -73,14 +74,18 @@ def get_dt_from_hg(path):
 
     url = pushlog_api_url.format(repo_url, cs)
     session = requests.Session()
-    try:
-        response = session.get(url)
-    except Exception as e:
-        msg = "Failed to retrieve push timestamp using {}\nError: {}".format(url, e)
-        raise Exception(msg)
 
-    data = response.json()
+    def get_pushlog():
+        try:
+            response = session.get(url)
+            response.raise_for_status()
+        except Exception as e:
+            msg = "Failed to retrieve push timestamp using {}\nError: {}".format(url, e)
+            raise Exception(msg)
 
+        return response.json()
+
+    data = retry(get_pushlog)
     try:
         date = data["pushdate"][0]
     except KeyError as exc:

@@ -1061,7 +1061,6 @@ void DisplayListBuilder::Begin(layers::DisplayItemCache* aCache) {
   mActiveFixedPosTracker = nullptr;
   mDisplayItemCache = aCache;
   mCurrentCacheSlot = Nothing();
-  mRemotePipelineIds.Clear();
 }
 
 void DisplayListBuilder::End(BuiltDisplayList& aOutDisplayList) {
@@ -1087,7 +1086,6 @@ void DisplayListBuilder::End(layers::DisplayListData& aOutTransaction) {
   aOutTransaction.mDLSpatialTree.emplace(dlSpatialTree.inner.data,
                                          dlSpatialTree.inner.length,
                                          dlSpatialTree.inner.capacity);
-  aOutTransaction.mRemotePipelineIds = mRemotePipelineIds.Clone();
   dlItems.inner.capacity = 0;
   dlItems.inner.data = nullptr;
   dlCache.inner.capacity = 0;
@@ -1475,7 +1473,6 @@ void DisplayListBuilder::PushIFrame(const LayoutDeviceRect& aDevPxBounds,
                                     bool aIsBackfaceVisible,
                                     PipelineId aPipeline,
                                     bool aIgnoreMissingPipeline) {
-  mRemotePipelineIds.AppendElement(aPipeline);
   // If the incoming bounds size has decimals (As it could when zoom is
   // involved), and is pushed straight through here, the compositor would end up
   // calculating the destination rect to paint the rendered iframe into

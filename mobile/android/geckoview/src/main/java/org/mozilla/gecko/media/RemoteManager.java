@@ -179,11 +179,7 @@ public final class RemoteManager implements IBinder.DeathRecipient {
   private synchronized void handleRemoteDeath() {
     mConnection.waitDisconnect();
 
-    if (init() && recoverRemoteCodec()) {
-      notifyError(false);
-    } else {
-      notifyError(true);
-    }
+    notifyError(!(init() && recoverRemoteCodec()));
   }
 
   private synchronized void notifyError(final boolean fatal) {

@@ -204,21 +204,35 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mNoWrap = !mStyleText->WhiteSpaceCanWrapStyle() || mSuppressLineWrap;
   psd->mWritingMode = aWritingMode;
 
-  // If this is the first line of a block then see if the text-indent
-  // property amounts to anything.
+  // Determine if this is the first line of the block (or first after a hard
+  // line-break, if `each-line` is in effect).
+  nsIFrame* containerFrame = LineContainerFrame();
+  bool isFirstLineOrAfterHardBreak = [&] {
+    if (mLineNumber > 0) {
+      return mStyleText->mTextIndent.each_line && GetLine() &&
+             !GetLine()->prev()->IsLineWrapped();
+    }
+    if (nsBlockFrame* prevBlock =
+            do_QueryFrame(containerFrame->GetPrevInFlow())) {
+      return mStyleText->mTextIndent.each_line &&
+             !prevBlock->LinesEnd().prev()->IsLineWrapped();
+    }
+    return true;
+  }();
 
-  if (0 == mLineNumber && !HasPrevInFlow(LineContainerFrame())) {
+  // Resolve and apply the text-indent value if this line requires it.
+  // The `hanging` option inverts which lines are to be indented.
+  if (isFirstLineOrAfterHardBreak != mStyleText->mTextIndent.hanging) {
     nscoord pctBasis = mLineContainerRI.ComputedISize();
-    mTextIndent = mStyleText->mTextIndent.Resolve(pctBasis);
+    mTextIndent = mStyleText->mTextIndent.length.Resolve(pctBasis);
     psd->mICoord += mTextIndent;
   }
 
-  PerFrameData* pfd = NewPerFrameData(LineContainerFrame());
+  PerFrameData* pfd = NewPerFrameData(containerFrame);
   pfd->mAscent = 0;
   pfd->mSpan = psd;
   psd->mFrame = pfd;
-  nsIFrame* frame = LineContainerFrame();
-  if (frame->IsRubyTextContainerFrame()) {
+  if (containerFrame->IsRubyTextContainerFrame()) {
     // Ruby text container won't be reflowed via ReflowFrame, hence the
     // relative positioning information should be recorded here.
     MOZ_ASSERT(mBaseLineLayout != this);

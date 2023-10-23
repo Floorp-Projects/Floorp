@@ -11,6 +11,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.TranslationsController
+import org.mozilla.geckoview.TranslationsController.Language
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.DOWNLOAD
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.ModelManagementOptions
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.Delegate
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationOptions
 import org.mozilla.geckoview.TranslationsController.SessionTranslation.TranslationState
@@ -25,9 +29,22 @@ class TranslationsTest : BaseSessionTest() {
             mapOf(
                 "browser.translations.enable" to true,
                 "browser.translations.automaticallyPopup" to true,
+                "intl.accept_languages" to "fr-CA, it, de",
             ),
         )
     }
+
+    private var expectedLanguages: List<TranslationsController.Language> = listOf(
+        Language("bg", "Bulgarian"),
+        Language("nl", "Dutch"),
+        Language("en", "English"),
+        Language("fr", "French"),
+        Language("de", "German"),
+        Language("it", "Italian"),
+        Language("pl", "Polish"),
+        Language("pt", "Portuguese"),
+        Language("es", "Spanish"),
+    )
 
     @Test
     fun onExpectedTranslateDelegateTest() {
@@ -131,5 +148,119 @@ class TranslationsTest : BaseSessionTest() {
         var options = TranslationOptions.Builder().downloadModel(true).build()
         assertTrue("TranslationOptions builder options work as expected.", options.downloadModel)
         // ToDo: bug 1853055 will develop this further.
+    }
+
+    @Test
+    fun testIsTranslationsEngineSupported() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("browser.translations.simulateUnsupportedEngine" to false))
+        val isSupportedResult = TranslationsController.RuntimeTranslation.isTranslationsEngineSupported()
+        assertTrue(
+            "The translations engine is correctly reporting as supported.",
+            sessionRule.waitForResult(isSupportedResult),
+        )
+        // ToDo: Bug 1853469
+        // Setting "browser.translations.simulateUnsupportedEngine" to true did not return false.
+    }
+
+    @Test
+    fun testGetPreferredLanguage() {
+        val preferredLanguages = TranslationsController.RuntimeTranslation.preferredLanguages()
+        sessionRule.waitForResult(preferredLanguages).let { languages ->
+            assertTrue(
+                "French is the first language preference.",
+                languages[0] == "fr",
+            )
+            assertTrue(
+                "Italian is the second language preference.",
+                languages[1] == "it",
+            )
+            assertTrue(
+                "German is the third language preference.",
+                languages[2] == "de",
+            )
+            // "en" is likely the 4th preference via system language;
+            // however, this is difficult to guarantee/set in automation.
+        }
+    }
+
+    @Test
+    fun testManageLanguageModel() {
+        // Will revisit during or after Bug 1853469, might also not be advisable to test downloading/deleting full models in automation.
+        val options = ModelManagementOptions.Builder()
+            .languageToManage("en")
+            .operation(TranslationsController.RuntimeTranslation.DOWNLOAD)
+            .build()
+
+        assertTrue("ModelManagementOptions builder options work as expected.", options.language == "en" && options.operation == DOWNLOAD)
+    }
+
+    @Test
+    fun testListSupportedLanguages() {
+        val translationDropdowns = TranslationsController.RuntimeTranslation.listSupportedLanguages()
+        // Bug 1853469 models are not listing in automation, so we do not have information on what models are enabled.
+        try {
+            sessionRule.waitForResult(translationDropdowns)
+            assertTrue("Should not be able to list supported languages.", false)
+        } catch (e: Exception) {
+            assertTrue("Should have an exception.", true)
+        }
+
+//        Enable after ToDo: Bug 1853469
+//        var fromPresent = true
+//        var toPresent = true
+//        sessionRule.waitForResult(translationDropdowns).let { dropdowns ->
+//            // It is okay and expected that additional languages will join these lists over time.
+//            // Test is checking for minimum options are present.
+//            for (expected in expectedLanguages) {
+//                if (!dropdowns.fromLanguages!!.contains(expected)) {
+//                    assertTrue("Language $expected.localizedDisplayName was not in from list", false)
+//                    fromPresent = false
+//                }
+//                if (!dropdowns.toLanguages!!.contains(expected)) {
+//                    assertTrue("Language $expected.localizedDisplayName was not in to list", false)
+//                    toPresent = false
+//                }
+//            }
+//        }
+//        assertTrue(
+//            "All primary from languages are present.",
+//            fromPresent,
+//        )
+//        assertTrue(
+//            "All primary to languages are present.",
+//            toPresent,
+//        )
+    }
+
+    @Test
+    fun testListModelDownloadStates() {
+        var modelStatesResult = TranslationsController.RuntimeTranslation.listModelDownloadStates()
+        // ToDo: Bug 1853469 models not listing in automation, so we do not have information on the state.
+        try {
+            sessionRule.waitForResult(modelStatesResult)
+            assertTrue("Should not be able to list models.", false)
+        } catch (e: Exception) {
+            assertTrue("Should have an exception.", true)
+        }
+
+//        Enable after ToDo: Bug 1853469
+//        sessionRule.waitForResult(modelStatesResult).let { models ->
+//            assertTrue(
+//                "Received information on the state of the models.",
+//                models.size >= expectedLanguages.size,
+//            )
+//            assertTrue(
+//                "Received information on the size in bytes of the first returned model.",
+//                models[0].size > 0,
+//            )
+//            assertTrue(
+//                "Received information on the language of the first returned model.",
+//                models[0].language != null,
+//            )
+//            assertTrue(
+//                "Received information on the download state of the first returned model",
+//                models[0].isDownloaded,
+//            )
+//        }
     }
 }

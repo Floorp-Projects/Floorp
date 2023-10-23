@@ -41,11 +41,11 @@ add_task(async function test_entrypoints() {
   await showThenCloseMigrationWizardViaEntrypoint(
     MigrationUtils.MIGRATION_ENTRYPOINTS.BOOKMARKS
   );
-  let entrypointId = MigrationUtils.getLegacyMigrationEntrypoint(
+  let entrypointIndex = getEntrypointHistogramIndex(
     MigrationUtils.MIGRATION_ENTRYPOINTS.BOOKMARKS
   );
 
-  TelemetryTestUtils.assertHistogram(histogram, entrypointId, 1);
+  TelemetryTestUtils.assertHistogram(histogram, entrypointIndex, 1);
 
   histogram = TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_ID);
 
@@ -54,19 +54,19 @@ add_task(async function test_entrypoints() {
   await showThenCloseMigrationWizardViaEntrypoint(
     MigrationUtils.MIGRATION_ENTRYPOINTS.PREFERENCES
   );
-  entrypointId = MigrationUtils.getLegacyMigrationEntrypoint(
+  entrypointIndex = getEntrypointHistogramIndex(
     MigrationUtils.MIGRATION_ENTRYPOINTS.PREFERENCES
   );
 
-  TelemetryTestUtils.assertHistogram(histogram, entrypointId, 1);
+  TelemetryTestUtils.assertHistogram(histogram, entrypointIndex, 1);
 
   histogram = TelemetryTestUtils.getAndClearHistogram(HISTOGRAM_ID);
 
   // Finally, check the fallback by passing in something invalid as an entrypoint.
   await showThenCloseMigrationWizardViaEntrypoint(undefined);
-  entrypointId = MigrationUtils.getLegacyMigrationEntrypoint(
+  entrypointIndex = getEntrypointHistogramIndex(
     MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN
   );
 
-  TelemetryTestUtils.assertHistogram(histogram, entrypointId, 1);
+  TelemetryTestUtils.assertHistogram(histogram, entrypointIndex, 1);
 });

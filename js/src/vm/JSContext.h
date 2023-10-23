@@ -17,6 +17,7 @@
 #include "builtin/AtomicsObject.h"
 #include "ds/TraceableFifo.h"
 #include "frontend/NameCollections.h"
+#include "gc/GCEnum.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/PcScriptCache.h"
@@ -214,10 +215,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   // Allocate a GC thing.
   template <typename T, js::AllowGC allowGC = js::CanGC, typename... Args>
-  T* newCell(Args&&... args) {
-    return js::gc::CellAllocator::template NewCell<T, allowGC>(
-        this, std::forward<Args>(args)...);
-  }
+  T* newCell(Args&&... args);
 
   /* Clear the pending exception (if any) due to OOM. */
   void recoverFromOutOfMemory();
@@ -294,7 +292,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   JS::Zone* zone() const {
     MOZ_ASSERT_IF(!realm() && zone_, inAtomsZone());
     MOZ_ASSERT_IF(realm(), js::GetRealmZone(realm()) == zone_);
-    return zoneUnchecked();
+    return zone_;
   }
 
   // For JIT use.

@@ -33,8 +33,10 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_computed_default_tab.js"]
 
 ["browser_computed_getNodeInfo.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
-skip-if = ["!debug && os == 'mac'"] #Bug 1559033
+skip-if = [
+  "!debug && os == 'mac'", #Bug 1559033
+  "a11y_checks", # Bugs 1849028 and 1858041 to investigate intermittent a11y_checks results
+]
 
 ["browser_computed_keybindings_01.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

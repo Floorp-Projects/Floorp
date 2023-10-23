@@ -14,7 +14,6 @@
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable, frontend::ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/Stencil.h"
-#include "gc/Allocator.h"
 #include "util/StringBuffer.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorReporting.h"  // MaybePrintAndClearPendingException
@@ -25,6 +24,7 @@
 #include "gc/GCContext-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "gc/TraceMethods-inl.h"
+#include "vm/JSContext-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
 using namespace js;

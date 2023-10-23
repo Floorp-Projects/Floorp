@@ -804,6 +804,29 @@ void nsBlockFrame::CheckIntrinsicCacheAgainstShrinkWrapState() {
   }
 }
 
+// Whether this line is indented by the text-indent amount.
+bool nsBlockFrame::TextIndentAppliesTo(const LineIterator& aLine) const {
+  const auto& textIndent = StyleText()->mTextIndent;
+
+  bool isFirstLineOrAfterHardBreak = [&] {
+    if (aLine != LinesBegin()) {
+      // If not the first line of the block, but 'each-line' is in effect,
+      // check if the previous line was not wrapped.
+      return textIndent.each_line && !aLine.prev()->IsLineWrapped();
+    }
+    if (nsBlockFrame* prevBlock = do_QueryFrame(GetPrevInFlow())) {
+      // There's a prev-in-flow, so this only counts as a first-line if
+      // 'each-line' and the prev-in-flow's last line was not wrapped.
+      return textIndent.each_line &&
+             !prevBlock->LinesEnd().prev()->IsLineWrapped();
+    }
+    return true;
+  }();
+
+  // The 'hanging' option inverts which lines are/aren't indented.
+  return isFirstLineOrAfterHardBreak != textIndent.hanging;
+}
+
 /* virtual */
 nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
   nsIFrame* firstInFlow = FirstContinuation();
@@ -864,9 +887,8 @@ nscoord nsBlockFrame::GetMinISize(gfxContext* aRenderingContext) {
             aRenderingContext, line->mFirstChild, IntrinsicISizeType::MinISize);
         data.ForceBreak();
       } else {
-        if (!curFrame->GetPrevContinuation() &&
-            line == curFrame->LinesBegin()) {
-          data.mCurrentLine += StyleText()->mTextIndent.Resolve(0);
+        if (!curFrame->GetPrevContinuation() && TextIndentAppliesTo(line)) {
+          data.mCurrentLine += StyleText()->mTextIndent.length.Resolve(0);
         }
         data.mLine = &line;
         data.SetLineContainer(curFrame);
@@ -959,9 +981,8 @@ nscoord nsBlockFrame::GetPrefISize(gfxContext* aRenderingContext) {
             IntrinsicISizeType::PrefISize);
         data.ForceBreak();
       } else {
-        if (!curFrame->GetPrevContinuation() &&
-            line == curFrame->LinesBegin()) {
-          nscoord indent = StyleText()->mTextIndent.Resolve(0);
+        if (!curFrame->GetPrevContinuation() && TextIndentAppliesTo(line)) {
+          nscoord indent = StyleText()->mTextIndent.length.Resolve(0);
           data.mCurrentLine += indent;
           // XXXmats should the test below be indent > 0?
           if (indent != nscoord(0)) {
@@ -1026,9 +1047,8 @@ nsresult nsBlockFrame::GetPrefWidthTightBounds(gfxContext* aRenderingContext,
         *aX = std::min(*aX, childX);
         *aXMost = std::max(*aXMost, childXMost);
       } else {
-        if (!curFrame->GetPrevContinuation() &&
-            line == curFrame->LinesBegin()) {
-          data.mCurrentLine += StyleText()->mTextIndent.Resolve(0);
+        if (!curFrame->GetPrevContinuation() && TextIndentAppliesTo(line)) {
+          data.mCurrentLine += StyleText()->mTextIndent.length.Resolve(0);
         }
         data.mLine = &line;
         data.SetLineContainer(curFrame);
@@ -1869,7 +1889,7 @@ nsReflowStatus nsBlockFrame::TrialReflow(nsPresContext* aPresContext,
   // parent resizing.
   if (!HasAnyStateBits(NS_FRAME_IS_DIRTY) && aReflowInput.mCBReflowInput &&
       aReflowInput.mCBReflowInput->IsIResize() &&
-      StyleText()->mTextIndent.HasPercent() && !mLines.empty()) {
+      StyleText()->mTextIndent.length.HasPercent() && !mLines.empty()) {
     mLines.front()->MarkDirty();
   }
 

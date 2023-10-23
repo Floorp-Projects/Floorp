@@ -19,6 +19,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Realm.h"
 
+#include "gc/Allocator-inl.h"
 #include "vm/Activation-inl.h"  // js::Activation::hasWasmExitFP
 
 namespace js {
@@ -398,5 +399,11 @@ inline JSScript* JSContext::currentScript(
 }
 
 inline js::RuntimeCaches& JSContext::caches() { return runtime()->caches(); }
+
+template <typename T, js::AllowGC allowGC, typename... Args>
+T* JSContext::newCell(Args&&... args) {
+  return js::gc::CellAllocator::template NewCell<T, allowGC>(
+      this, std::forward<Args>(args)...);
+}
 
 #endif /* vm_JSContext_inl_h */

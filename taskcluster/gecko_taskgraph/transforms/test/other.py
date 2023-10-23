@@ -369,6 +369,7 @@ def setup_browsertime(config, tasks):
             "windows.*aarch64.*": ["win32-chromium"],
             "windows.*-32.*": ["win32-chromium"],
             "windows.*-64.*": ["win64-chromium"],
+            "android.*": ["linux64-chromium"],
         }
 
         cd_extracted_name = {
@@ -381,7 +382,11 @@ def setup_browsertime(config, tasks):
             # Only add the chromedriver fetches when chrome is running
             for platform in cd_fetches:
                 fs["by-test-platform"][platform].extend(cd_fetches[platform])
-        if "--app=chromium" in extra_options or "--app=custom-car" in extra_options:
+        if (
+            "--app=chromium" in extra_options
+            or "--app=custom-car" in extra_options
+            or "--app=cstm-car-m" in extra_options
+        ):
             for platform in chromium_fetches:
                 fs["by-test-platform"][platform].extend(chromium_fetches[platform])
 
@@ -395,7 +400,7 @@ def setup_browsertime(config, tasks):
             }
 
         # Disable the Raptor install step
-        if "--app=chrome-m" in extra_options:
+        if "--app=chrome-m" in extra_options or "--app=cstm-car-m" in extra_options:
             extra_options.append("--noinstall")
 
         task.setdefault("fetches", {}).setdefault("fetch", []).extend(
@@ -455,7 +460,7 @@ def get_mobile_project(task):
     if not task["build-platform"].startswith("android"):
         return
 
-    mobile_projects = ("fenix", "geckoview", "refbrow", "chrome-m")
+    mobile_projects = ("fenix", "geckoview", "refbrow", "chrome-m", "cstm-car-m")
 
     for name in mobile_projects:
         if name in task["test-name"]:

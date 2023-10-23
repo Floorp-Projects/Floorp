@@ -13,13 +13,12 @@
 
 #include <type_traits>
 
-#include "gc/Allocator.h"
+#include "gc/GCEnum.h"
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "vm/Compartment.h"
 #include "vm/Iteration.h"
-#include "vm/JSContext.h"
 #include "vm/PlainObject.h"
 #include "vm/PropertyResult.h"
 #include "vm/StringType.h"
@@ -29,6 +28,7 @@
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
 #include "vm/Compartment-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/Shape-inl.h"

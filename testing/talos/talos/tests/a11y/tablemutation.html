@@ -121,7 +121,7 @@ function mutateTable() {
 
   ensureAccessibleTreeForId("start");
 
-  TalosContentProfiler.resume("tablemutation start", true).then(() => {
+  TalosContentProfiler.subtestStart("tablemutation start", true).then(() => {
     let start = window.performance.now();
 
     // Cause all kinds of crazy events
@@ -136,7 +136,7 @@ function mutateTable() {
 
 function postProcessingRecord(startTime) {
   let delta = window.performance.now() - startTime;
-  TalosContentProfiler.pause("a11y test: tablemutation", true).then(() => {
+  TalosContentProfiler.subtestEnd("a11y test: tablemutation", true).then(() => {
     tpRecordTime(delta, window.performance.timing.navigationStart + startTime);
   });
 }

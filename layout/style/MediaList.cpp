@@ -10,6 +10,7 @@
 
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
@@ -124,8 +125,7 @@ void MediaList::Delete(const nsACString& aOldMedium, ErrorResult& aRv) {
 }
 
 bool MediaList::Matches(const Document& aDocument) const {
-  const auto* rawData =
-      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
+  const auto* rawData = aDocument.EnsureStyleSet().RawData();
   MOZ_ASSERT(rawData, "The per doc data should be valid!");
   return Servo_MediaList_Matches(mRawList, rawData);
 }

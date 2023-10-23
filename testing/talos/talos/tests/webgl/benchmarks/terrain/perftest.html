@@ -197,7 +197,7 @@
     gCurrentTimestamp = 0;
     gResultTimestamps = new Array(WARMUP_TIMESTAMPS + MEASURED_FRAMES);
 
-    TalosContentProfiler.resume("Starting requestAnimationFrame loop", true).then(() => {
+    TalosContentProfiler.subtestStart("Starting requestAnimationFrame loop", true).then(() => {
       requestAnimationFrame(draw);
     });
   }
@@ -212,7 +212,7 @@
     gResultTimestamps[gCurrentTimestamp++] = performance.now();
     var recordedTimestamps = gCurrentTimestamp;
     if (recordedTimestamps >= WARMUP_TIMESTAMPS + MEASURED_FRAMES) {
-      TalosContentProfiler.pause("Stopping requestAnimationFrame loop", true).then(() => {
+      TalosContentProfiler.subtestEnd("requestAnimationFrame loop", true).then(() => {
         var intervals = [];
         var lastWarmupTimestampId = WARMUP_TIMESTAMPS - 1;
         for (var i = lastWarmupTimestampId + 1; i < gResultTimestamps.length; i++) {

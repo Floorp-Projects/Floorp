@@ -99,7 +99,7 @@ struct StackVal {
   uint64_t value;
 
   explicit StackVal(uint64_t v) : value(v) {}
-  explicit StackVal(Value v) : value(v.asRawBits()) {}
+  explicit StackVal(const Value& v) : value(v.asRawBits()) {}
 
   uint64_t asUInt64() const { return value; }
   Value asValue() const { return Value::fromRawBits(value); }
@@ -154,7 +154,7 @@ struct Stack {
   StackVal* top;
   StackVal* unwindingSP;
 
-  Stack(PortableBaselineStack& pbs)
+  explicit Stack(PortableBaselineStack& pbs)
       : fp(reinterpret_cast<StackVal*>(pbs.top)),
         base(reinterpret_cast<StackVal*>(pbs.base)),
         top(reinterpret_cast<StackVal*>(pbs.top)),
@@ -309,7 +309,7 @@ struct State {
   RootedFunction fun0;
   Rooted<Scope*> scope0;
 
-  State(JSContext* cx)
+  explicit State(JSContext* cx)
       : value0(cx),
         value1(cx),
         value2(cx),
@@ -1845,8 +1845,10 @@ ICInterpretOps(BaselineFrame* frame, VMFrameManager& frameMgr, State& state,
   CACHEOP_CASE_UNIMPL(CallDOMFunction)
   CACHEOP_CASE_UNIMPL(CallClassHook)
   CACHEOP_CASE_UNIMPL(CallInlinedFunction)
+#ifdef JS_PUNBOX64
   CACHEOP_CASE_UNIMPL(CallScriptedProxyGetResult)
   CACHEOP_CASE_UNIMPL(CallScriptedProxyGetByValueResult)
+#endif
   CACHEOP_CASE_UNIMPL(MetaScriptedThisShape)
   CACHEOP_CASE_UNIMPL(BindFunctionResult)
   CACHEOP_CASE_UNIMPL(SpecializedBindFunctionResult)
@@ -3321,20 +3323,21 @@ PBIResult PortableBaselineInterpret(JSContext* cx_, State& state, Stack& stack,
       if (sp[0].asValue().isString()) {
         END_OP(ToString);
       }
-      FakeRooted s(nullptr, sp[0].asValue());
-      if (JSString* result =
-              ToStringSlow<NoGC>(frameMgr.cxForLocalUseOnly(), s)) {
-        sp[0] = StackVal(StringValue(result));
-      } else {
+      {
         ReservedRooted<Value> value0(&state.value0, POP().asValue());
-        {
-          PUSH_EXIT_FRAME();
-          result = ToString<CanGC>(cx, value0);
-          if (!result) {
-            goto error;
+        if (JSString* result =
+                ToStringSlow<NoGC>(frameMgr.cxForLocalUseOnly(), value0)) {
+          PUSH(StackVal(StringValue(result)));
+        } else {
+          {
+            PUSH_EXIT_FRAME();
+            result = ToString<CanGC>(cx, value0);
+            if (!result) {
+              goto error;
+            }
           }
+          PUSH(StackVal(StringValue(result)));
         }
-        PUSH(StackVal(StringValue(result)));
       }
       END_OP(ToString);
     }

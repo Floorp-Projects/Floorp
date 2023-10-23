@@ -3,13 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import csv
 import math
 import os
 import re
 import shutil
 import sys
 import tempfile
-from typing import Callable, Iterable, List, Mapping, Optional, Tuple
+from typing import Callable, Iterable, List, Mapping, Optional, Set, Tuple
 
 repos = ["autoland", "mozilla-central", "try", "mozilla-central", "mozilla-beta", "wpt"]
 
@@ -64,25 +65,73 @@ def get_parser_interop_score() -> argparse.Namespace:
         dest="category_filters",
         help="Regex filter applied to category names. Filters starting ! must not match. Filters starting ^ (after any !) match the entire task name, otherwise any substring can match. Multiple filters must all match",
     )
+    parser.add_argument(
+        "--expected-failures",
+        help="Path to a file containing a list of tests which are not expected to pass",
+    )
     return parser
 
 
 def print_scores(
     runs: Iterable[Tuple[str, str]],
-    results_by_category: Mapping[str, int],
+    results_by_category: Mapping[str, List[int]],
+    expected_failures_by_category: Optional[Mapping[str, List[Tuple[int, int]]]],
     include_total: bool,
 ):
-    tab = "\t"  # For f-string
-    header = "\t".join(f"{repo}:{commit}" for repo, commit in runs)
-    print(f"\t{header}")
-    totals = [0] * len(runs)
+    include_expected_failures = expected_failures_by_category is not None
+
+    writer = csv.writer(sys.stdout, delimiter="\t")
+
+    headers = ["Category"]
+    for repo, commit in runs:
+        prefix = f"{repo}:{commit}"
+        headers.append(f"{prefix}-score")
+        if include_expected_failures:
+            headers.append(f"{prefix}-expected-failures")
+            headers.append(f"{prefix}-adjusted-score")
+
+    writer.writerow(headers)
+
+    totals = {"score": [0.0] * len(runs)}
+    if include_expected_failures:
+        totals["expected_failures"] = [0.0] * len(runs)
+        totals["adjusted_score"] = [0.0] * len(runs)
+
     for category, category_results in results_by_category.items():
-        for i, result in enumerate(category_results):
-            totals[i] += result
-        print(f"{category}\t{tab.join(str(item / 10) for item in category_results)}")
+        category_row = []
+        category_row.append(category)
+        for category_index, result in enumerate(category_results):
+            for run_index, run_score in enumerate(category_results):
+                category_row.append(f"{run_score / 10:.1f}")
+                totals["score"][run_index] += run_score
+                if include_expected_failures:
+                    expected_failures, adjusted_score = expected_failures_by_category[
+                        category
+                    ][run_index]
+                    category_row.append(f"{expected_failures / 10:.1f}")
+                    category_row.append(f"{adjusted_score / 10:.1f}")
+                    totals["expected_failures"][run_index] += expected_failures
+                    totals["adjusted_score"][run_index] += adjusted_score
+        writer.writerow(category_row)
+
     if include_total:
-        totals = [math.floor(float(item) / len(results_by_category)) for item in totals]
-        print(f"Total\t{tab.join(str(item / 10) for item in totals)}")
+
+        def get_total(score, floor=True):
+            total = float(score) / (len(results_by_category))
+            if floor:
+                total = math.floor(total)
+            total /= 10.0
+            return total
+
+        totals_row = ["Total"]
+        for i in range(len(runs)):
+            totals_row.append(f"{get_total(totals['score'][i]):.1f}")
+            if include_expected_failures:
+                totals_row.append(
+                    f"{get_total(totals['expected_failures'][i], floor=False):.1f}"
+                )
+                totals_row.append(f"{get_total(totals['adjusted_score'][i]):.1f}")
+        writer.writerow(totals_row)
 
 
 def get_wptreports(
@@ -161,6 +210,36 @@ def fetch_logs(
         get_wptreports(repo, commit, task_filters, log_dir, check_complete)
 
 
+def get_expected_failures(path: str) -> Mapping[str, Set[Optional[str]]]:
+    expected_failures = {}
+    with open(path) as f:
+        for i, entry in enumerate(csv.reader(f)):
+            entry = [item.strip() for item in entry]
+            if not any(item for item in entry) or entry[0][0] == "#":
+                continue
+            if len(entry) > 2:
+                raise ValueError(
+                    f"{path}:{i+1} expected at most two columns, got {len(entry)}"
+                )
+            if entry[0][0] != "/":
+                raise ValueError(
+                    f'{path}:{i+1} "{entry[0]}" is not a valid test id (must start with "/")'
+                )
+            test_id = entry[0]
+            if test_id not in expected_failures:
+                expected_failures[test_id] = set()
+            if len(entry) == 2:
+                subtest_id = entry[1]
+                if subtest_id == "":
+                    print(
+                        f"Warning: {path}:{i+1} got empty string subtest id, remove the trailing comma to make this apply to the full test"
+                    )
+                expected_failures[test_id].add(subtest_id)
+            else:
+                expected_failures[test_id].add(None)
+    return expected_failures
+
+
 def score_runs(
     commits: List[str],
     task_filters: List[str],
@@ -168,6 +247,7 @@ def score_runs(
     year: int,
     check_complete: bool,
     category_filters: Optional[List[str]],
+    expected_failures: Optional[str],
     **kwargs,
 ):
     from wpt_interop import score
@@ -180,6 +260,11 @@ def score_runs(
         log_dir = temp_dir
 
     try:
+        if expected_failures is not None:
+            expected_failures_data = get_expected_failures(expected_failures)
+        else:
+            expected_failures_data = None
+
         run_logs = []
         for repo, commit in runs:
             if not task_filters:
@@ -205,10 +290,13 @@ def score_runs(
             get_category_filter(category_filters) if category_filters else None
         )
 
-        scores = score.score_wptreports(
-            run_logs, year=year, category_filter=category_filter
+        scores, expected_failure_scores = score.score_wptreports(
+            run_logs,
+            year=year,
+            category_filter=category_filter,
+            expected_failures=expected_failures_data,
         )
-        print_scores(runs, scores, include_total)
+        print_scores(runs, scores, expected_failure_scores, include_total)
     finally:
         if temp_dir is not None:
             shutil.rmtree(temp_dir, True)

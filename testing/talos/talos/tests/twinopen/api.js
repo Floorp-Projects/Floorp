@@ -41,7 +41,7 @@ function waitForBrowserPaint() {
 }
 
 async function startTest(context) {
-  await TalosParentProfiler.resume("twinopen", true);
+  TalosParentProfiler.subtestStart("twinopen");
   Cu.forceGC();
   Cu.forceCC();
   Cu.forceShrinkingGC();
@@ -54,6 +54,7 @@ async function startTest(context) {
   let start = win.performance.timing.fetchStart + win.performance.now();
   let newWin = win.OpenBrowserWindow();
   let end = await mozAfterPaint;
+  TalosParentProfiler.subtestEnd("twinopen");
   newWin.close();
   return end - start;
 }

@@ -276,7 +276,8 @@ nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
 // This function finds the start of the ZIP data. If the file is a regular ZIP,
 // this is just the start of the file. If the file is a CRX file, the start of
 // the data is after the CRX header.
-// CRX header reference: (CRX version 2)
+//
+// CRX header reference, version 2:
 //    Header requires little-endian byte ordering with 4-byte alignment.
 //    32 bits       : magicNumber   - Defined as a |char m[] = "Cr24"|.
 //                                    Equivilant to |uint32_t m = 0x34327243|.
@@ -290,6 +291,16 @@ nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
 //    sigLength     : signature     - Signature of the ZIP content.
 //                                    Signature is created using the RSA
 //                                    algorithm with the SHA-1 hash function.
+//
+// CRX header reference, version 3:
+//    Header requires little-endian byte ordering with 4-byte alignment.
+//    32 bits       : magicNumber   - Defined as a |char m[] = "Cr24"|.
+//                                    Equivilant to |uint32_t m = 0x34327243|.
+//    32 bits       : version       - Unsigned integer representing the CRX file
+//                                    format version. Currently equal to 3.
+//    32 bits       : headerLength  - Unsigned integer representing the length
+//                                    of the CRX header in bytes.
+//    headerLength  : header        - CRXv3 header.
 nsresult nsZipHandle::findDataStart() {
   // In the CRX header, integers are 32 bits. Our pointer to the file is of
   // type |uint8_t|, which is guaranteed to be 8 bits.
@@ -298,11 +309,21 @@ nsresult nsZipHandle::findDataStart() {
   MMAP_FAULT_HANDLER_BEGIN_HANDLE(this)
   if (mTotalLen > CRXIntSize * 4 && xtolong(mFileStart) == kCRXMagic) {
     const uint8_t* headerData = mFileStart;
-    headerData += CRXIntSize * 2;  // Skip magic number and version number
-    uint32_t pubKeyLength = xtolong(headerData);
-    headerData += CRXIntSize;
-    uint32_t sigLength = xtolong(headerData);
-    uint32_t headerSize = CRXIntSize * 4 + pubKeyLength + sigLength;
+    headerData += CRXIntSize;  // Skip magic number
+    uint32_t version = xtolong(headerData);
+    headerData += CRXIntSize;  // Skip version
+    uint32_t headerSize = CRXIntSize * 2;
+    if (version == 3) {
+      uint32_t subHeaderSize = xtolong(headerData);
+      headerSize += CRXIntSize + subHeaderSize;
+    } else if (version < 3) {
+      uint32_t pubKeyLength = xtolong(headerData);
+      headerData += CRXIntSize;
+      uint32_t sigLength = xtolong(headerData);
+      headerSize += CRXIntSize * 2 + pubKeyLength + sigLength;
+    } else {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
     if (mTotalLen > headerSize) {
       mLen = mTotalLen - headerSize;
       mFileData = mFileStart + headerSize;

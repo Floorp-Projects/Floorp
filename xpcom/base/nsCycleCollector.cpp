@@ -167,7 +167,6 @@
 
 #include "js/SliceBudget.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/AutoGlobalTimelineMarker.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -2689,12 +2688,6 @@ void nsCycleCollector::ForgetSkippable(js::SliceBudget& aBudget,
     return;
   }
 
-  mozilla::Maybe<mozilla::AutoGlobalTimelineMarker> marker;
-  if (NS_IsMainThread()) {
-    marker.emplace("nsCycleCollector::ForgetSkippable",
-                   MarkerStackRequest::NO_STACK);
-  }
-
   // If we remove things from the purple buffer during graph building, we may
   // lose track of an object that was mutated during graph building.
   MOZ_ASSERT(IsIdle());
@@ -3452,11 +3445,6 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
   mActivelyCollecting = true;
 
   MOZ_ASSERT(!IsIncrementalGCInProgress());
-
-  mozilla::Maybe<mozilla::AutoGlobalTimelineMarker> marker;
-  if (NS_IsMainThread()) {
-    marker.emplace("nsCycleCollector::Collect", MarkerStackRequest::NO_STACK);
-  }
 
   bool startedIdle = IsIdle();
   bool collectedAny = false;

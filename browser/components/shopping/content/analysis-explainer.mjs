@@ -130,7 +130,7 @@ class AnalysisExplainer extends MozLitElement {
               })}"
             ></p>
             <p
-              data-l10n-id="shopping-analysis-explainer-learn-more"
+              data-l10n-id="shopping-analysis-explainer-learn-more2"
               @click=${this.handleReviewQualityUrlClicked}
             >
               <a

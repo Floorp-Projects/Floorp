@@ -196,6 +196,7 @@ class Raptor(
                         "fenix",
                         "safari",
                         "custom-car",
+                        "cstm-car-m",
                     ],
                     "dest": "app",
                     "help": "Name of the application we are testing (default: firefox).",
@@ -718,7 +719,10 @@ class Raptor(
         self.debug_mode = self.config.get("debug_mode", False)
         self.chromium_dist_path = None
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
-        self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
+        self.android_browsers = self.firefox_android_browsers + [
+            "chrome-m",
+            "cstm-car-m",
+        ]
         self.browsertime_visualmetrics = self.config.get("browsertime_visualmetrics")
         self.browsertime_node = self.config.get("browsertime_node")
         self.browsertime_user_args = self.config.get("browsertime_user_args")
@@ -778,7 +782,7 @@ class Raptor(
 
     def install_chrome_android(self):
         """Install Google Chrome for Android in production from tooltool"""
-        if self.app != "chrome-m":
+        if self.app not in ("chrome-m", "cstm-car-m"):
             self.info("Google Chrome for Android not required")
             return
         if self.config.get("run_local"):
@@ -822,9 +826,19 @@ class Raptor(
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""
         linux, mac, win = "linux", "mac", "win"
-        chrome, chromium, chromium_release = "chrome", "chromium", "custom-car"
+        chrome, chromium, chromium_release, chromium_release_android = (
+            "chrome",
+            "chromium",
+            "custom-car",
+            "cstm-car-m",
+        )
 
-        available_chromium_dists = [chrome, chromium, chromium_release]
+        available_chromium_dists = [
+            chrome,
+            chromium,
+            chromium_release,
+            chromium_release_android,
+        ]
         binary_location = {
             chromium: {
                 linux: ["chrome-linux", "chrome"],
@@ -835,6 +849,9 @@ class Raptor(
                 linux: ["chromium", "Default", "chrome"],
                 win: ["chromium", "Default", "chrome.exe"],
                 mac: ["chromium", "Chromium.app", "Contents", "MacOS", "chromium"],
+            },
+            chromium_release_android: {
+                linux: ["chromium", "apks", "ChromePublic.apk"],
             },
         }
 

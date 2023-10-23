@@ -133,6 +133,12 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
 }
 
 void Buffer::Drop() {
+  if (!mValid) {
+    return;
+  }
+
+  mValid = false;
+
   AbortMapRequest();
 
   if (mMapped && !mMapped->mArrayBuffers.IsEmpty()) {
@@ -146,13 +152,11 @@ void Buffer::Drop() {
   }
   mMapped.reset();
 
-  if (mValid && GetDevice().IsBridgeAlive()) {
-    GetDevice().GetBridge()->SendBufferDrop(mId);
-  }
-
   GetDevice().UntrackBuffer(this);
 
-  mValid = false;
+  if (GetDevice().IsBridgeAlive()) {
+    GetDevice().GetBridge()->SendBufferDrop(mId);
+  }
 }
 
 void Buffer::SetMapped(BufferAddress aOffset, BufferAddress aSize,

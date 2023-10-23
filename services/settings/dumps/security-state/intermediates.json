@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1697726891469,
+      "derHash": "Gix1/QluBJnp/2rHTlJvYequPt/IwupENv7gwk2LfQ4=",
+      "subject": "CN=TWCA Secure SSL Certification Authority,O=TAIWAN-CA,C=TW",
+      "subjectDN": "MFMxCzAJBgNVBAYTAlRXMRIwEAYDVQQKEwlUQUlXQU4tQ0ExMDAuBgNVBAMTJ1RXQ0EgU2VjdXJlIFNTTCBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6915db4e2c315f0ef561152eb43c24a83ff0b2a53b17f99b0016401498bd9a2d",
+        "size": 2060,
+        "filename": "9VZ7Yd685RTXsE6rL_puuMbnejYaXwaZasGL7c-Uolc=.pem",
+        "location": "security-state-staging/intermediates/47927f74-196f-42a4-a2a8-51f6c9298cd2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9VZ7Yd685RTXsE6rL/puuMbnejYaXwaZasGL7c+Uolc=",
+      "crlite_enrolled": false,
+      "id": "8fe8f35b-1038-4072-85b5-c2e317a0be57",
+      "last_modified": 1697727423154
+    },
+    {
       "schema": 1697644096445,
       "derHash": "Ag7smKPB7S1b4hGTNJrLl1HeBx1rRSpImmqGfOm2M+k=",
       "subject": "CN=GlobalSign Atlas R6 EV TLS CA 2024 Q1,O=GlobalSign nv-sa,C=BE",
@@ -23581,150 +23599,6 @@
       "last_modified": 1648695444528
     },
     {
-      "schema": 1648111717634,
-      "derHash": "+RIKcdUGl7mZKnNXoKmg3cS/w1mPy08BZClkgk088nY=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "55b021920e8c5ede7d6276ecd04c19991d898f6e51bf0b3fa08bf1ba9c248d76",
-        "size": 1158,
-        "filename": "1LpfjVSH8hoztBgfd_gZFjiC7v6eaAkVkgVTeL6pRpE=.pem",
-        "location": "security-state-staging/intermediates/09ea17e8-1bcd-4681-ae0a-939f779f73f5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1LpfjVSH8hoztBgfd/gZFjiC7v6eaAkVkgVTeL6pRpE=",
-      "crlite_enrolled": false,
-      "id": "d3ec162b-c1f0-4f2e-9614-fb27671a17d5",
-      "last_modified": 1648112256044
-    },
-    {
-      "schema": 1648111716671,
-      "derHash": "QwsXKm9xRrFqdbzFv6HWDGHe6qKrrGG0OU5KaykcSMw=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q3,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "40b0a9828f0b77973e246b7191d21a16f9d6c06c204f416a697608d3d700bba6",
-        "size": 1158,
-        "filename": "optwe1ocGkg7DXck7jODG5z_v8Zt72fvYBoDzURXOiY=.pem",
-        "location": "security-state-staging/intermediates/b3076cf4-85f5-4d34-9510-ccbf6447dd9b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "optwe1ocGkg7DXck7jODG5z/v8Zt72fvYBoDzURXOiY=",
-      "crlite_enrolled": false,
-      "id": "8997acb0-7a65-451b-a771-31209f4b4920",
-      "last_modified": 1648112256036
-    },
-    {
-      "schema": 1648111715739,
-      "derHash": "p9z9PQk3fDm6On9jDgUuxZPpcm0dpXIp5ZnRWtbcyns=",
-      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fc8007f8fd12fae7c462817756a3e12831260d0dde7d99df37fcee4450ed101a",
-        "size": 2304,
-        "filename": "c6w0LUIRbkLD8fbDDHL4ho_7XkZ8zf-WWqAOlcGpo0M=.pem",
-        "location": "security-state-staging/intermediates/26ee5bc1-166e-4810-a513-c2d03f359dcd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "c6w0LUIRbkLD8fbDDHL4ho/7XkZ8zf+WWqAOlcGpo0M=",
-      "crlite_enrolled": false,
-      "id": "828f577c-a1ed-4ffa-823c-6216c3661d68",
-      "last_modified": 1648112256027
-    },
-    {
-      "schema": 1648111714755,
-      "derHash": "tR2FoI+ssG+X/fWFY3SQAwM+533Vg5hiBEmRl8qOcHc=",
-      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q4,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRNA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b70bccb91e1382127d552db2218d3a4b5e694b6e46ae394de9c13a65ed772ebb",
-        "size": 2304,
-        "filename": "tZABsMMctDxN2dVCN6e8jDISb-XBcMxhQzt38VfbuDA=.pem",
-        "location": "security-state-staging/intermediates/198954ce-3ffd-4df5-a2d7-24ae0c2dbb7a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "tZABsMMctDxN2dVCN6e8jDISb+XBcMxhQzt38VfbuDA=",
-      "crlite_enrolled": false,
-      "id": "d0055faf-7e7a-4a03-84ca-236e7e150355",
-      "last_modified": 1648112256018
-    },
-    {
-      "schema": 1648111713814,
-      "derHash": "9MXzlWN5STgw3nRW4KVdb7wbjqCLdWSI/wBbbDlKacc=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q2,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "12544f05eaffecc66cfb2fd647c6958cb03982233cd8545c013c9e090e9f5dd2",
-        "size": 1158,
-        "filename": "EBZTs8K9zMMECCBtTU0HgF-x0sx96tVwP0f33u8CVo0=.pem",
-        "location": "security-state-staging/intermediates/88ba5f96-66e2-4cd3-bc6e-d3081fefa6ae.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "EBZTs8K9zMMECCBtTU0HgF+x0sx96tVwP0f33u8CVo0=",
-      "crlite_enrolled": false,
-      "id": "7a907fba-b773-47d5-8980-b6cd09c503c8",
-      "last_modified": 1648112256010
-    },
-    {
-      "schema": 1648111712861,
-      "derHash": "LaUid2Ytwcd54kOfr1j4X4fbpz4PFvGw6zEKSRnPw7o=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2023Q4,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjNRNA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a12414bc2af80f20737582694f4b964c09b82a8a591161834841e526e2b81b1a",
-        "size": 1158,
-        "filename": "DfmbgsrIxe8_N5Um3tZ6V_47ptPmpy9zNMbCxXcTx4A=.pem",
-        "location": "security-state-staging/intermediates/4cd1861b-a0c2-4b30-b872-3a0486efe22e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DfmbgsrIxe8/N5Um3tZ6V/47ptPmpy9zNMbCxXcTx4A=",
-      "crlite_enrolled": false,
-      "id": "128d47d0-7ee8-4a5b-a937-07239a7df9b7",
-      "last_modified": 1648112256001
-    },
-    {
-      "schema": 1648111711870,
-      "derHash": "pAyR5GbWLNsytxOeh0jw61qBf2u4qfmZp6m/QwbW1dU=",
-      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q2,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "89bfa9e3815fb5f762d3f1a7dda4de7cab2aba8f41b814e8507ab9ca1852bed0",
-        "size": 2304,
-        "filename": "3ZySFXFHb5Plo7dM_NSw8nKNUlgm3wVrp1r970Tmy9I=.pem",
-        "location": "security-state-staging/intermediates/1120dfd8-15c7-44a1-86a4-3c4e97f1ab63.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "3ZySFXFHb5Plo7dM/NSw8nKNUlgm3wVrp1r970Tmy9I=",
-      "crlite_enrolled": false,
-      "id": "672ee5db-ce74-426e-90b7-b7dc55c91fc6",
-      "last_modified": 1648112255993
-    },
-    {
-      "schema": 1648111710874,
-      "derHash": "KchA0GKshi200gko0q79g7NaRr1FM5lf8u/T4+6M/9k=",
-      "subject": "CN=GlobalSign Atlas R46 EV QWAC CA 2023Q3,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIFI0NiBFViBRV0FDIENBIDIwMjNRMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "76651c35cbddf6690564ab5eca531b747c955d30a7cfaa53c117394757cb101a",
-        "size": 2304,
-        "filename": "RQ8YAl2HjeVi53YGXKYDqOxAqWE8GxAl626WJwuAffU=.pem",
-        "location": "security-state-staging/intermediates/5748ec6c-c33e-4b62-9fc6-b745dc8e5611.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "RQ8YAl2HjeVi53YGXKYDqOxAqWE8GxAl626WJwuAffU=",
-      "crlite_enrolled": false,
-      "id": "eb1340fa-a150-40a9-af2e-a3bdd28002a1",
-      "last_modified": 1648112255984
-    },
-    {
       "schema": 1648025321155,
       "derHash": "B0hA46Z9zSYAtrAE4Rh6yAvf6JbK9JPflMw9mjymiBQ=",
       "subject": "CN=TWCA InfoSec User CA,OU=User CA,O=TAIWAN-CA Inc.,C=TW",
@@ -24067,24 +23941,6 @@
       "last_modified": 1645578268720
     },
     {
-      "schema": 1645577338494,
-      "derHash": "JQr6ULYNMNEhfQDn3YzOa1H1wLamNpMkhCw33rRPlxU=",
-      "subject": "CN=GlobalSign Atlas R3 EV QWAC CA 2022Q2,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIEVWIFFXQUMgQ0EgMjAyMlEy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cff78244ab26e56b5e483f99e0aed0e0311dc636fd96d257b29926744a6dc6b5",
-        "size": 1963,
-        "filename": "LC6FP_nCl4VodRD45_zlvw8dX_dh1YzWJuNbo8QdMS0=.pem",
-        "location": "security-state-staging/intermediates/c4d837bc-e1d0-403d-ba4d-a6ff8a19568d.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "LC6FP/nCl4VodRD45/zlvw8dX/dh1YzWJuNbo8QdMS0=",
-      "crlite_enrolled": false,
-      "id": "23d91633-cdd3-4e38-a8e1-ed279a2f5845",
-      "last_modified": 1645578268699
-    },
-    {
       "schema": 1645577339845,
       "derHash": "ttVvPdJqyETlfIv+kFT1cGE1CpCJS5nNmBHppUX8hMU=",
       "subject": "CN=SwissSign RSA SMIME Root CA 2021 - 1,O=SwissSign AG,C=CH",
@@ -24101,24 +23957,6 @@
       "crlite_enrolled": false,
       "id": "303a3d11-64e5-4b50-83d5-660aa76829be",
       "last_modified": 1645578268688
-    },
-    {
-      "schema": 1645577342520,
-      "derHash": "RR+joYBktN0Drf6Li78WJYy5ihpv7l1rCjfJigteba4=",
-      "subject": "CN=GlobalSign Atlas R3 EV QWAC CA 2022Q4,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIEVWIFFXQUMgQ0EgMjAyMlE0",
-      "whitelist": false,
-      "attachment": {
-        "hash": "fe92651abf55682a49b2236e7ff9d8836009622c7e297c52898897b83d226038",
-        "size": 1963,
-        "filename": "aIsqGvSMskHZ0L8v036H9jAIm-bd92TA5I_QGE0X9dw=.pem",
-        "location": "security-state-staging/intermediates/a7156ea9-590b-4766-bcd2-bc524dcf023c.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "aIsqGvSMskHZ0L8v036H9jAIm+bd92TA5I/QGE0X9dw=",
-      "crlite_enrolled": false,
-      "id": "0dc34415-ce03-44e3-aa22-8f7364b54060",
-      "last_modified": 1645578268665
     },
     {
       "schema": 1645577343844,
@@ -24155,24 +23993,6 @@
       "crlite_enrolled": false,
       "id": "02bf75eb-e74f-44f4-8318-55d1097a8849",
       "last_modified": 1645578268568
-    },
-    {
-      "schema": 1645577360091,
-      "derHash": "DaWCD9/k/Pm5+UwUDbDwbWcNhvyxvdlZe8qHMVMvNTw=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2022Q3,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjJRMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e9f7cf118bf8eb814bbbbd3c6051143988df04f75449edeba292e14a4ed68a5b",
-        "size": 1158,
-        "filename": "MZzMneI7SnySeEGP9Azna74KVCSVyd8Y4I4b0tkHtLI=.pem",
-        "location": "security-state-staging/intermediates/eb036943-a32f-4760-89c7-f6b41a4ea4b8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "MZzMneI7SnySeEGP9Azna74KVCSVyd8Y4I4b0tkHtLI=",
-      "crlite_enrolled": false,
-      "id": "bdf72262-6812-4fce-aa9f-8a7a2d68ef29",
-      "last_modified": 1645578268527
     },
     {
       "schema": 1645577377719,
@@ -24301,24 +24121,6 @@
       "last_modified": 1645578268188
     },
     {
-      "schema": 1645577407059,
-      "derHash": "7Stsb2xmnuxsFYsP1h5EVBhcQoQlI4ZvOz7psfD2KII=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2022Q2,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjJRMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "e96bd736e0a92c76fa064fa072262d7ff36e4513629861f6efee106de04b979a",
-        "size": 1158,
-        "filename": "rWexWDTKAICJTdJ_qPQnC7qVB05XEkpjwEDXGmHE3a8=.pem",
-        "location": "security-state-staging/intermediates/f4cf151f-36c5-40ff-ab06-aa85908a4c91.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "rWexWDTKAICJTdJ/qPQnC7qVB05XEkpjwEDXGmHE3a8=",
-      "crlite_enrolled": false,
-      "id": "4ec278c9-4fc7-48bd-9aae-1833cdd31cbe",
-      "last_modified": 1645578268168
-    },
-    {
       "schema": 1645577412454,
       "derHash": "GGJqO3IREo1WNGnGVFV9E8k2bX/OyLlNtPCqfgWUQEE=",
       "subject": "CN=Trustwave Global Extended Validation CA\\, Level 1,O=Trustwave Holdings\\, Inc.,L=Chicago,ST=Illinois,C=US",
@@ -24425,24 +24227,6 @@
       "crlite_enrolled": false,
       "id": "8e045253-b803-4d74-b99c-8e5da4c8a8e6",
       "last_modified": 1645578267856
-    },
-    {
-      "schema": 1645577458278,
-      "derHash": "8rw3mx70ViTY+CK241lQLUcPOE5TwIL3riGGnBOl00U=",
-      "subject": "CN=GlobalSign Atlas R3 EV QWAC CA 2022Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIEVWIFFXQUMgQ0EgMjAyMlEx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "5523fb67ae8ff11453b90dc3ca83b50472d41586bfbb5ccf8c0dde8f635b8f6a",
-        "size": 1963,
-        "filename": "26N20SHnSgcXvfI3VgyG02EeOlaqQQzhteiNlN6jqmw=.pem",
-        "location": "security-state-staging/intermediates/3db62490-3f0e-45c1-b32e-72a8327a43d8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "26N20SHnSgcXvfI3VgyG02EeOlaqQQzhteiNlN6jqmw=",
-      "crlite_enrolled": false,
-      "id": "55f0fec1-fce0-4b97-a48f-5d65ebeaaef3",
-      "last_modified": 1645578267783
     },
     {
       "schema": 1645577462286,
@@ -24641,24 +24425,6 @@
       "crlite_enrolled": false,
       "id": "188137fb-bf8f-4c7e-ade5-b6d58a130896",
       "last_modified": 1645578267065
-    },
-    {
-      "schema": 1645577555224,
-      "derHash": "TYHRjVfNqWRAy/0PoFzDh7fGneOp5otANuEWjuK3vSE=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2022Q1,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjJRMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "75b0c649ffa3eddcd7af7acb6d84ada814147f170c7fc733d9a9bb75db8744a5",
-        "size": 1158,
-        "filename": "RyNVhV1C5-xXlpHR5ULqzOutN2wlUTNVMaW4DIZEnpI=.pem",
-        "location": "security-state-staging/intermediates/1c8c86d1-02d5-4709-837a-501f5fccecd6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "RyNVhV1C5+xXlpHR5ULqzOutN2wlUTNVMaW4DIZEnpI=",
-      "crlite_enrolled": false,
-      "id": "1ca9d1f2-d790-410c-9cc3-03796bf2d9c7",
-      "last_modified": 1645578267045
     },
     {
       "schema": 1645577557948,
@@ -24895,24 +24661,6 @@
       "last_modified": 1645578266763
     },
     {
-      "schema": 1645577597113,
-      "derHash": "nVHcJ1ChO9Yn2Z/cxyDRkE/oEFkRC7neEbA5pLLspTE=",
-      "subject": "CN=GlobalSign Atlas R3 EV QWAC CA 2022Q3,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIEVWIFFXQUMgQ0EgMjAyMlEz",
-      "whitelist": false,
-      "attachment": {
-        "hash": "455a59c7f0cc18e5465e32a727030ffe82dee17147419daa6e1ce5a0aa2be7dd",
-        "size": 1963,
-        "filename": "HsaiS7rZzMDqaWnwW9Yzu-FKNTzibOKBw0sgXsj44II=.pem",
-        "location": "security-state-staging/intermediates/2fa11d0c-0ac4-48a7-8170-73714379ed7e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HsaiS7rZzMDqaWnwW9Yzu+FKNTzibOKBw0sgXsj44II=",
-      "crlite_enrolled": false,
-      "id": "efa8b88c-e123-4d66-9be0-624573773bba",
-      "last_modified": 1645578266743
-    },
-    {
       "schema": 1645577614499,
       "derHash": "ugMS97cva2S0zO40tfYoz2Wh87nxa43+etqQxU5HWhw=",
       "subject": "CN=HARICA QWAC ECC SubCA R1,OU=Hellenic Academic and Research Institutions CA,O=Greek Universities Network (GUnet),L=Athens,C=GR",
@@ -25073,24 +24821,6 @@
       "crlite_enrolled": false,
       "id": "e9029e2d-ef55-4f66-8731-cd2fd887c56d",
       "last_modified": 1645578266284
-    },
-    {
-      "schema": 1645577665545,
-      "derHash": "TvmeaosU9pk4cVNxsdhTRyU0y/WVp0POmT57OG+ZuJU=",
-      "subject": "CN=GlobalSign Atlas E46 EV QWAC CA 2022Q4,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS8wLQYDVQQDEyZHbG9iYWxTaWduIEF0bGFzIEU0NiBFViBRV0FDIENBIDIwMjJRNA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f98af2e42c56f6a4473891c4156bddc8368905af06fb3ca10ed31101887d0533",
-        "size": 1158,
-        "filename": "7tQTps_FyNq84m772RNWbg0YtohVhTi87YZahsdnoc4=.pem",
-        "location": "security-state-staging/intermediates/07fece26-4fa6-4e1f-a7ab-08f03750954b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "7tQTps/FyNq84m772RNWbg0YtohVhTi87YZahsdnoc4=",
-      "crlite_enrolled": false,
-      "id": "1a25d233-42a5-4da8-b64f-a49818f0f72c",
-      "last_modified": 1645578266223
     },
     {
       "schema": 1645577666924,
@@ -26153,24 +25883,6 @@
       "crlite_enrolled": false,
       "id": "ee033ab1-7bfc-4f08-b26a-b3b2bce86767",
       "last_modified": 1601517444135
-    },
-    {
-      "schema": 1601376769580,
-      "derHash": "rY6zLJ2pHdyFXzgnRZkBR9xvI9n7sE/J1Hax7iD8cdg=",
-      "subject": "CN=DigiCert Trusted Root G4,OU=www.digicert.com,O=DigiCert Inc,C=US",
-      "subjectDN": "MGIxCzAJBgNVBAYTAlVTMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5jb20xITAfBgNVBAMTGERpZ2lDZXJ0IFRydXN0ZWQgUm9vdCBHNA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "12cc0d0e07a0ce9a1fae8bc81a3c9918619e6044dedda6d70c56fec58c5aa0d5",
-        "size": 2024,
-        "filename": "Wd8xe_qfTwq3ylFNd3IpaqLHZbh2ZNCLluVzmeNkcpw=.pem",
-        "location": "security-state-staging/intermediates/40ac2caf-9799-41cc-9949-62fe94bd7c8f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Wd8xe/qfTwq3ylFNd3IpaqLHZbh2ZNCLluVzmeNkcpw=",
-      "crlite_enrolled": false,
-      "id": "9702b5ab-ac3b-478f-8641-763a8b97d8df",
-      "last_modified": 1601517444080
     },
     {
       "schema": 1601376755836,
@@ -29179,5 +28891,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1697644623321
+  "timestamp": 1697990223009
 }

@@ -24,7 +24,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
-#include "gc/Allocator.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"
@@ -47,6 +46,7 @@
 
 #include "debugger/DebugAPI-inl.h"
 #include "vm/ErrorObject-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/Stack-inl.h"
 #include "wasm/WasmInstance-inl.h"
 

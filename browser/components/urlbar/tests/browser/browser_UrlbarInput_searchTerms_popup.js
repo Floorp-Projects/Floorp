@@ -92,7 +92,7 @@ add_task(async function generic_popup_when_persist_is_enabled() {
 
   Assert.equal(
     gURLBar.value,
-    expectedSearchUrl,
+    UrlbarTestUtils.trimURL(expectedSearchUrl),
     "Search url should be in the urlbar."
   );
 

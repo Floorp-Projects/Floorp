@@ -91,7 +91,7 @@ this.cpstartup = class extends ExtensionAPI {
 
   async openTab(gBrowser, url) {
     // Start the timer and the profiler right before the tab open on the parent side.
-    TalosParentProfiler.resume("cpstartup: Begin Tab Open");
+    TalosParentProfiler.subtestStart("cpstartup: Begin Tab Open");
     let startTime = Cu.now();
 
     this.startStamp = Services.telemetry.msSystemNow();
@@ -102,7 +102,7 @@ this.cpstartup = class extends ExtensionAPI {
     this.tab = gBrowser.selectedTab = gBrowser.addTrustedTab(newDomainURL);
 
     let { tab, delta } = await this.whenTabReady();
-    TalosParentProfiler.pause("cpstartup: Tab Open", startTime);
+    TalosParentProfiler.subtestEnd("cpstartup: Tab Open", startTime);
     await this.removeTab(tab);
     return delta;
   }

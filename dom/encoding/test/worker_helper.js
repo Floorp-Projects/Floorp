@@ -2,6 +2,11 @@
  * worker_helper.js
  * bug 764234 tests
  */
+
+// The undefined items here are used in the tests within the worker that this
+// runs.
+/* eslint-disable no-undef */
+
 function runTestInWorker(files) {
   function workerRun() {
     var tests = [];
@@ -41,7 +46,7 @@ function runTestInWorker(files) {
     event.data.forEach(function (t) {
       test(function () {
         t.asserts.forEach(function (a) {
-          func = a.shift();
+          let func = a.shift();
           self[func].apply(self, a);
         });
       }, "worker " + t.msg);

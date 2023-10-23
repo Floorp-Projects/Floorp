@@ -269,6 +269,7 @@ class SecondaryPanes extends Component {
   getWatchItem() {
     return {
       header: L10N.getStr("watchExpressions.header"),
+      id: "watch-expressions-pane",
       className: "watch-expressions-pane",
       buttons: this.watchExpressionHeaderButtons(),
       component: React.createElement(Expressions, {
@@ -287,6 +288,7 @@ class SecondaryPanes extends Component {
 
     return {
       header: L10N.getStr("xhrBreakpoints.header"),
+      id: "xhr-breakpoints-pane",
       className: "xhr-breakpoints-pane",
       buttons: this.xhrBreakpointsHeaderButtons(),
       component: React.createElement(XHRBreakpoints, {
@@ -303,6 +305,7 @@ class SecondaryPanes extends Component {
   getCallStackItem() {
     return {
       header: L10N.getStr("callStack.header"),
+      id: "call-stack-pane",
       className: "call-stack-pane",
       component: React.createElement(Frames, {
         panel: "debugger",
@@ -317,6 +320,7 @@ class SecondaryPanes extends Component {
   getThreadsItem() {
     return {
       header: L10N.getStr("threadsHeader"),
+      id: "threads-pane",
       className: "threads-pane",
       component: React.createElement(Threads, null),
       opened: prefs.threadsVisible,
@@ -338,6 +342,7 @@ class SecondaryPanes extends Component {
 
     return {
       header: L10N.getStr("breakpoints.header"),
+      id: "breakpoints-pane",
       className: "breakpoints-pane",
       buttons: this.breakpointsHeaderButtons(),
       component: React.createElement(Breakpoints, {
@@ -364,6 +369,7 @@ class SecondaryPanes extends Component {
 
     return {
       header: L10N.getStr("eventListenersHeader1"),
+      id: "event-listeners-pane",
       className: "event-listeners-pane",
       buttons: this.getEventButtons(),
       component: React.createElement(EventListeners, null),
@@ -379,6 +385,7 @@ class SecondaryPanes extends Component {
 
     return {
       header: L10N.getStr("domMutationHeader"),
+      id: "dom-mutations-pane",
       className: "dom-mutations-pane",
       buttons: [],
       component: React.createElement(DOMMutationBreakpoints, null),
