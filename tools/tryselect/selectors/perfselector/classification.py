@@ -37,6 +37,7 @@ class Apps(ClassificationEnum):
     CHROME_M = {"value": "chrome-m", "index": 5}
     SAFARI = {"value": "safari", "index": 6}
     CHROMIUM_RELEASE = {"value": "custom-car", "index": 7}
+    CHROMIUM_RELEASE_M = {"value": "cstm-car-m", "index": 8}
 
 
 class Suites(ClassificationEnum):
@@ -123,7 +124,7 @@ class ClassificationProvider:
     def apps(self):
         return {
             Apps.FIREFOX.value: {
-                "query": "!chrom !geckoview !fenix !safari !custom-car",
+                "query": "!chrom !geckoview !fenix !safari !m-car",
                 "platforms": [Platforms.DESKTOP.value],
             },
             Apps.CHROME.value: {
@@ -159,14 +160,20 @@ class ClassificationProvider:
                 "platforms": [Platforms.MACOSX.value],
             },
             Apps.CHROMIUM_RELEASE.value: {
-                "query": "'custom-car",
-                "negation": "!custom-car",
+                "query": "'m-car",
+                "negation": "!m-car",
                 "restriction": check_for_custom_car,
                 "platforms": [
                     Platforms.LINUX.value,
                     Platforms.WINDOWS.value,
                     Platforms.MACOSX.value,
                 ],
+            },
+            Apps.CHROMIUM_RELEASE_M.value: {
+                "query": "'m-car",
+                "negation": "!m-car",
+                "restriction": check_for_custom_car,
+                "platforms": [Platforms.ANDROID.value],
             },
         }
 
