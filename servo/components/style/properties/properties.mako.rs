@@ -20,7 +20,6 @@ use std::mem;
 
 use cssparser::{Parser, ParserInput, TokenSerializationType};
 #[cfg(feature = "servo")] use euclid::SideOffsets2D;
-use crate::context::QuirksMode;
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::{self, nsCSSPropertyID};
 #[cfg(feature = "servo")] use crate::logical_geometry::LogicalMargin;
 #[cfg(feature = "servo")] use crate::computed_values;
@@ -1723,9 +1722,7 @@ impl UnparsedValue {
     pub(super) fn substitute_variables<'cache>(
         &self,
         longhand_id: LonghandId,
-        writing_mode: WritingMode,
         custom_properties: &crate::custom_properties::ComputedCustomProperties,
-        quirks_mode: QuirksMode,
         stylist: &Stylist,
         computed_context: &computed::Context,
         shorthand_cache: &'cache mut ShorthandsWithPropertyReferencesCache,
@@ -1776,7 +1773,7 @@ impl UnparsedValue {
             &self.url_data,
             None,
             ParsingMode::DEFAULT,
-            quirks_mode,
+            computed_context.quirks_mode,
             /* namespaces = */ Default::default(),
             None,
             None,
@@ -1809,6 +1806,7 @@ impl UnparsedValue {
         for declaration in decls.declarations.drain(..) {
             let longhand = declaration.id().as_longhand().unwrap();
             if longhand.is_logical() {
+                let writing_mode = computed_context.builder.writing_mode;
                 shorthand_cache.insert((shorthand, longhand.to_physical(writing_mode)), declaration.clone());
             }
             shorthand_cache.insert((shorthand, longhand), declaration);
