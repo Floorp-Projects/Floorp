@@ -726,6 +726,7 @@ fn parse_and_substitute_fallback<'i>(
     input: &mut Parser<'i, '_>,
     custom_properties: &ComputedCustomProperties,
     stylist: &Stylist,
+    computed_context: &computed::Context,
 ) -> Result<ComputedValue, ParseError<'i>> {
     input.skip_whitespace();
     let after_comma = input.state();
@@ -743,6 +744,7 @@ fn parse_and_substitute_fallback<'i>(
         &mut fallback,
         custom_properties,
         stylist,
+        computed_context,
     )?;
     fallback.push_from(input, position, last_token_type)?;
     Ok(fallback)
@@ -865,6 +867,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                             map,
                             self.inherited,
                             self.stylist,
+                            self.computed_context,
                             self.is_root_element,
                         );
                         return;
@@ -1258,6 +1261,7 @@ fn substitute_all(
             &mut context.map,
             context.inherited,
             context.stylist,
+            context.computed_context,
             context.is_root_element,
         );
 
@@ -1324,6 +1328,7 @@ fn substitute_references_in_value_and_apply(
     custom_properties: &mut ComputedCustomProperties,
     inherited: &ComputedCustomProperties,
     stylist: &Stylist,
+    computed_context: &computed::Context,
     is_root_element: bool,
 ) {
     debug_assert!(value.has_references());
@@ -1342,6 +1347,7 @@ fn substitute_references_in_value_and_apply(
             &mut computed_value,
             custom_properties,
             stylist,
+            computed_context,
         );
 
         let last_token_type = match last_token_type {
@@ -1465,6 +1471,7 @@ fn substitute_block<'i>(
     partial_computed_value: &mut ComputedValue,
     custom_properties: &ComputedCustomProperties,
     stylist: &Stylist,
+    computed_context: &computed::Context,
 ) -> Result<TokenSerializationType, ParseError<'i>> {
     let mut last_token_type = TokenSerializationType::nothing();
     let mut set_position_at_next_iteration = false;
@@ -1534,6 +1541,7 @@ fn substitute_block<'i>(
                                     input,
                                     custom_properties,
                                     stylist,
+                                    computed_context,
                                 )?;
                                 let mut fallback_input = ParserInput::new(&fallback.css);
                                 let mut fallback_input = Parser::new(&mut fallback_input);
@@ -1555,8 +1563,12 @@ fn substitute_block<'i>(
                         partial_computed_value.push_variable(input, v)?;
                     } else {
                         input.expect_comma()?;
-                        let fallback =
-                            parse_and_substitute_fallback(input, custom_properties, stylist)?;
+                        let fallback = parse_and_substitute_fallback(
+                            input,
+                            custom_properties,
+                            stylist,
+                            computed_context,
+                        )?;
                         last_token_type = fallback.last_token_type;
 
                         if let Some(registration) = registration {
@@ -1592,6 +1604,7 @@ fn substitute_block<'i>(
                         partial_computed_value,
                         custom_properties,
                         stylist,
+                        computed_context,
                     )
                 })?;
                 // It's the same type for CloseCurlyBracket and CloseSquareBracket.
@@ -1618,6 +1631,7 @@ pub fn substitute<'i>(
     first_token_type: TokenSerializationType,
     custom_properties: &ComputedCustomProperties,
     stylist: &Stylist,
+    computed_context: &computed::Context,
 ) -> Result<String, ParseError<'i>> {
     let mut substituted = ComputedValue::empty();
     let mut input = ParserInput::new(input);
@@ -1629,6 +1643,7 @@ pub fn substitute<'i>(
         &mut substituted,
         custom_properties,
         stylist,
+        computed_context,
     )?;
     substituted.push_from(&input, position, last_token_type)?;
     Ok(substituted.css)

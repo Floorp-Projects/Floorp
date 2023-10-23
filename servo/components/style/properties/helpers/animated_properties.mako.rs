@@ -381,6 +381,7 @@ impl AnimationValue {
                         custom_properties,
                         context.quirks_mode,
                         context.builder.stylist.unwrap(),
+                        context,
                         &mut cache,
                     )
                 };

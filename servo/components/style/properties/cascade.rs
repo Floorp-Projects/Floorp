@@ -684,6 +684,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.context.builder.custom_properties(),
             self.context.quirks_mode,
             self.context.builder.stylist.unwrap(),
+            self.context,
             shorthand_cache,
         )
     }
