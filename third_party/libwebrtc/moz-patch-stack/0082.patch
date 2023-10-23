@@ -1,66 +1,27 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 23 May 2023 06:14:00 +0000
-Subject: Bug 1809672 - Refactor TabCapturerWebrtc creation.
- r=ng,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-This restores libwebrtc's DesktopCapturer to their upstream state as far as
-the tab capturer is concerned.
-
-Differential Revision: https://phabricator.services.mozilla.com/D174290
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3778b2a0e3f93a2077303b91739cdd2eeb590726
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 -----------
- modules/desktop_capture/desktop_capturer.h  |  8 --------
- 2 files changed, 19 deletions(-)
+ video/video_stream_encoder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 1af19a1fd2..7f601821fc 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -128,17 +128,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
- }
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index 1e2409372a..0782a5f5f2 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1404,7 +1404,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
--// static
--std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
--    const DesktopCaptureOptions& options) {
--  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
--  if (capturer && options.detect_updated_region()) {
--    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
--  }
--
--  return capturer;
--}
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index 64f3187f51..5efd2efc0f 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -191,10 +191,6 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
- 
--  // Creates a DesktopCapturer instance which targets to capture tab.
--  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
--      const DesktopCaptureOptions& options);
--
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
- 
-@@ -225,10 +221,6 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
--
--  // Creates a DesktopCapturer instance which targets to capture tabs
--  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
--      const DesktopCaptureOptions& options);
- };
- 
- }  // namespace webrtc
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;
 -- 
-2.37.3
+2.34.1
 

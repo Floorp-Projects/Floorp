@@ -425,6 +425,17 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   if (media_receiver_info.nacks_sent.has_value()) {
     inbound_stats->nack_count = *media_receiver_info.nacks_sent;
   }
+  if (media_receiver_info.fec_packets_received.has_value()) {
+    inbound_stats->fec_packets_received =
+        *media_receiver_info.fec_packets_received;
+  }
+  if (media_receiver_info.fec_packets_discarded.has_value()) {
+    inbound_stats->fec_packets_discarded =
+        *media_receiver_info.fec_packets_discarded;
+  }
+  if (media_receiver_info.fec_bytes_received.has_value()) {
+    inbound_stats->fec_bytes_received = *media_receiver_info.fec_bytes_received;
+  }
 }
 
 std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
@@ -483,10 +494,6 @@ std::unique_ptr<RTCInboundRtpStreamStats> CreateInboundAudioStreamStats(
     inbound_audio->estimated_playout_timestamp = static_cast<double>(
         *voice_receiver_info.estimated_playout_ntp_timestamp_ms);
   }
-  inbound_audio->fec_packets_received =
-      voice_receiver_info.fec_packets_received;
-  inbound_audio->fec_packets_discarded =
-      voice_receiver_info.fec_packets_discarded;
   inbound_audio->packets_discarded = voice_receiver_info.packets_discarded;
   inbound_audio->jitter_buffer_flushes =
       voice_receiver_info.jitter_buffer_flushes;
@@ -660,16 +667,28 @@ CreateInboundRTPStreamStatsFromVideoReceiverInfo(
   }
   // TODO(bugs.webrtc.org/10529): When info's `content_info` is optional
   // support the "unspecified" value.
-  if (video_receiver_info.content_type == VideoContentType::SCREENSHARE)
+  if (videocontenttypehelpers::IsScreenshare(video_receiver_info.content_type))
     inbound_video->content_type = "screenshare";
-  if (!video_receiver_info.decoder_implementation_name.empty()) {
+  if (video_receiver_info.decoder_implementation_name.has_value()) {
     inbound_video->decoder_implementation =
-        video_receiver_info.decoder_implementation_name;
+        *video_receiver_info.decoder_implementation_name;
   }
   if (video_receiver_info.power_efficient_decoder.has_value()) {
     inbound_video->power_efficient_decoder =
         *video_receiver_info.power_efficient_decoder;
   }
+  for (const auto& ssrc_group : video_receiver_info.ssrc_groups) {
+    if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
+        ssrc_group.ssrcs.size() == 2) {
+      inbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
+    } else if (ssrc_group.semantics == cricket::kFecFrSsrcGroupSemantics &&
+               ssrc_group.ssrcs.size() == 2) {
+      // TODO(bugs.webrtc.org/15002): the ssrc-group might be >= 2 with
+      // multistream support.
+      inbound_video->fec_ssrc = ssrc_group.ssrcs[1];
+    }
+  }
+
   return inbound_video;
 }
 
@@ -801,11 +820,11 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
       video_sender_info.quality_limitation_resolution_changes;
   // TODO(https://crbug.com/webrtc/10529): When info's `content_info` is
   // optional, support the "unspecified" value.
-  if (video_sender_info.content_type == VideoContentType::SCREENSHARE)
+  if (videocontenttypehelpers::IsScreenshare(video_sender_info.content_type))
     outbound_video->content_type = "screenshare";
-  if (!video_sender_info.encoder_implementation_name.empty()) {
+  if (video_sender_info.encoder_implementation_name.has_value()) {
     outbound_video->encoder_implementation =
-        video_sender_info.encoder_implementation_name;
+        *video_sender_info.encoder_implementation_name;
   }
   if (video_sender_info.rid.has_value()) {
     outbound_video->rid = *video_sender_info.rid;
@@ -817,6 +836,12 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
   if (video_sender_info.scalability_mode) {
     outbound_video->scalability_mode = std::string(
         ScalabilityModeToString(*video_sender_info.scalability_mode));
+  }
+  for (const auto& ssrc_group : video_sender_info.ssrc_groups) {
+    if (ssrc_group.semantics == cricket::kFidSsrcGroupSemantics &&
+        ssrc_group.ssrcs.size() == 2) {
+      outbound_video->rtx_ssrc = ssrc_group.ssrcs[1];
+    }
   }
   return outbound_video;
 }
@@ -1394,7 +1419,11 @@ void RTCStatsCollector::ProduceDataChannelStats_n(
         "D" + rtc::ToString(stats.internal_id), timestamp);
     data_channel_stats->label = std::move(stats.label);
     data_channel_stats->protocol = std::move(stats.protocol);
-    data_channel_stats->data_channel_identifier = stats.id;
+    if (stats.id >= 0) {
+      // Do not set this value before the DTLS handshake is finished
+      // and filter out the magic value -1.
+      data_channel_stats->data_channel_identifier = stats.id;
+    }
     data_channel_stats->state = DataStateToRTCDataChannelState(stats.state);
     data_channel_stats->messages_sent = stats.messages_sent;
     data_channel_stats->bytes_sent = stats.bytes_sent;

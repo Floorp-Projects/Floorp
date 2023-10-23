@@ -65,6 +65,7 @@ using ::testing::DoAll;
 using ::testing::InSequence;
 using ::testing::InvokeArgument;
 using ::testing::InvokeWithoutArgs;
+using ::testing::MockFunction;
 using ::testing::Return;
 using ::testing::ReturnRef;
 using ::testing::SaveArg;
@@ -3415,6 +3416,38 @@ TEST_F(P2PTransportChannelMultihomedTest, TestVpnOnlyVpn) {
   clock.AdvanceTime(webrtc::TimeDelta::Millis(kDefaultTimeout));
   EXPECT_TRUE_SIMULATED_WAIT(!CheckConnected(ep1_ch1(), ep2_ch1()),
                              kDefaultTimeout, clock);
+}
+
+TEST_F(P2PTransportChannelMultihomedTest, StunDictionaryPerformsSync) {
+  rtc::ScopedFakeClock clock;
+  AddAddress(0, kPublicAddrs[0], "eth0", rtc::ADAPTER_TYPE_CELLULAR);
+  AddAddress(0, kAlternateAddrs[0], "vpn0", rtc::ADAPTER_TYPE_VPN,
+             rtc::ADAPTER_TYPE_ETHERNET);
+  AddAddress(1, kPublicAddrs[1]);
+
+  // Create channels and let them go writable, as usual.
+  CreateChannels();
+
+  MockFunction<void(IceTransportInternal*, const StunDictionaryView&,
+                    rtc::ArrayView<uint16_t>)>
+      view_updated_func;
+  ep2_ch1()->AddDictionaryViewUpdatedCallback(
+      "tag", view_updated_func.AsStdFunction());
+  MockFunction<void(IceTransportInternal*, const StunDictionaryWriter&)>
+      writer_synced_func;
+  ep1_ch1()->AddDictionaryWriterSyncedCallback(
+      "tag", writer_synced_func.AsStdFunction());
+  auto& dict_writer = ep1_ch1()->GetDictionaryWriter()->get();
+  dict_writer.SetByteString(12)->CopyBytes("keso");
+  EXPECT_CALL(view_updated_func, Call)
+      .WillOnce([&](auto* channel, auto& view, auto keys) {
+        EXPECT_EQ(keys.size(), 1u);
+        EXPECT_EQ(keys[0], 12);
+        EXPECT_EQ(view.GetByteString(12)->string_view(), "keso");
+      });
+  EXPECT_CALL(writer_synced_func, Call).Times(1);
+  EXPECT_TRUE_SIMULATED_WAIT(CheckConnected(ep1_ch1(), ep2_ch1()),
+                             kMediumTimeout, clock);
 }
 
 // A collection of tests which tests a single P2PTransportChannel by sending

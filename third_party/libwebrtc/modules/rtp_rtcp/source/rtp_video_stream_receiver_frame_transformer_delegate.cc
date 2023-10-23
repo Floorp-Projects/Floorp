@@ -48,6 +48,9 @@ class TransformableVideoReceiverFrame
   uint8_t GetPayloadType() const override { return frame_->PayloadType(); }
   uint32_t GetSsrc() const override { return metadata_.GetSsrc(); }
   uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
+  void SetRTPTimestamp(uint32_t timestamp) override {
+    frame_->SetTimestamp(timestamp);
+  }
 
   bool IsKeyFrame() const override {
     return frame_->FrameType() == VideoFrameType::kVideoFrameKey;

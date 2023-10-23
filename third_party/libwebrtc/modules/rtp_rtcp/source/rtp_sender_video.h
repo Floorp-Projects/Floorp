@@ -24,6 +24,8 @@
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/transport/rtp/dependency_descriptor.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame_type.h"
 #include "api/video/video_layers_allocation.h"
@@ -35,9 +37,10 @@
 #include "modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.h"
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/rtp_rtcp/source/video_fec_generator.h"
+#include "rtc_base/bitrate_tracker.h"
+#include "rtc_base/frequency_tracker.h"
 #include "rtc_base/one_time_event.h"
 #include "rtc_base/race_checker.h"
-#include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -61,7 +64,7 @@ enum RetransmissionMode : uint8_t {
 
 class RTPSenderVideo : public RTPVideoFrameSenderInterface {
  public:
-  static constexpr int64_t kTLRateWindowSizeMs = 2500;
+  static constexpr TimeDelta kTLRateWindowSize = TimeDelta::Millis(2'500);
 
   struct Config {
     Config() = default;
@@ -89,35 +92,27 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
 
   virtual ~RTPSenderVideo();
 
-  // expected_retransmission_time_ms.has_value() -> retransmission allowed.
-  // `capture_time_ms` and `clock::CurrentTime` should be using the same epoch.
+  // `capture_time` and `clock::CurrentTime` should be using the same epoch.
+  // `expected_retransmission_time.IsFinite()` -> retransmission allowed.
+  // `encoder_output_size` is the size of the video frame as it came out of the
+  // video encoder, excluding any additional overhead.
   // Calls to this method are assumed to be externally serialized.
   bool SendVideo(int payload_type,
                  absl::optional<VideoCodecType> codec_type,
                  uint32_t rtp_timestamp,
-                 int64_t capture_time_ms,
-                 rtc::ArrayView<const uint8_t> payload,
-                 RTPVideoHeader video_header,
-                 absl::optional<int64_t> expected_retransmission_time_ms);
-  // `encoder_output_size` is the size of the video frame as it came out of the
-  // video encoder, excluding any additional overhead.
-  bool SendVideo(int payload_type,
-                 absl::optional<VideoCodecType> codec_type,
-                 uint32_t rtp_timestamp,
-                 int64_t capture_time_ms,
+                 Timestamp capture_time,
                  rtc::ArrayView<const uint8_t> payload,
                  size_t encoder_output_size,
                  RTPVideoHeader video_header,
-                 absl::optional<int64_t> expected_retransmission_time_ms,
+                 TimeDelta expected_retransmission_time,
                  std::vector<uint32_t> csrcs) override;
 
-  bool SendEncodedImage(
-      int payload_type,
-      absl::optional<VideoCodecType> codec_type,
-      uint32_t rtp_timestamp,
-      const EncodedImage& encoded_image,
-      RTPVideoHeader video_header,
-      absl::optional<int64_t> expected_retransmission_time_ms);
+  bool SendEncodedImage(int payload_type,
+                        absl::optional<VideoCodecType> codec_type,
+                        uint32_t rtp_timestamp,
+                        const EncodedImage& encoded_image,
+                        RTPVideoHeader video_header,
+                        TimeDelta expected_retransmission_time);
 
   // Configures video structures produced by encoder to send using the
   // dependency descriptor rtp header extension. Next call to SendVideo should
@@ -157,18 +152,12 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   static uint8_t GetTemporalId(const RTPVideoHeader& header);
   bool AllowRetransmission(uint8_t temporal_id,
                            int32_t retransmission_settings,
-                           int64_t expected_retransmission_time_ms);
+                           TimeDelta expected_retransmission_time);
 
  private:
   struct TemporalLayerStats {
-    TemporalLayerStats()
-        : frame_rate_fp1000s(kTLRateWindowSizeMs, 1000 * 1000),
-          last_frame_time_ms(0) {}
-    // Frame rate, in frames per 1000 seconds. This essentially turns the fps
-    // value into a fixed point value with three decimals. Improves precision at
-    // low frame rates.
-    RateStatistics frame_rate_fp1000s;
-    int64_t last_frame_time_ms;
+    FrequencyTracker frame_rate{kTLRateWindowSize};
+    Timestamp last_frame_time = Timestamp::Zero();
   };
 
   enum class SendVideoLayersAllocation {
@@ -196,7 +185,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   bool red_enabled() const { return red_payload_type_.has_value(); }
 
   bool UpdateConditionalRetransmit(uint8_t temporal_id,
-                                   int64_t expected_retransmission_time_ms)
+                                   TimeDelta expected_retransmission_time)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(stats_mutex_);
 
   void MaybeUpdateCurrentPlayoutDelay(const RTPVideoHeader& header)
@@ -238,7 +227,7 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
   const size_t fec_overhead_bytes_;  // Per packet max FEC overhead.
 
   mutable Mutex stats_mutex_;
-  RateStatistics post_encode_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
+  BitrateTracker post_encode_overhead_bitrate_ RTC_GUARDED_BY(stats_mutex_);
 
   std::map<int, TemporalLayerStats> frame_stats_by_temporal_layer_
       RTC_GUARDED_BY(stats_mutex_);

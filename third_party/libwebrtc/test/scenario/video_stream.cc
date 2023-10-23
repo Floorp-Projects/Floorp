@@ -419,6 +419,7 @@ SendVideoStream::SendVideoStream(CallClient* sender,
   send_config.suspend_below_min_bitrate =
       config.encoder.suspend_below_min_bitrate;
 
+  video_capturer_->Start();
   sender_->SendTask([&] {
     if (config.stream.fec_controller_factory) {
       send_stream_ = sender_->call_->CreateVideoSendStream(

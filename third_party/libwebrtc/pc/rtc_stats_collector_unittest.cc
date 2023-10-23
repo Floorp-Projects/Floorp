@@ -1549,6 +1549,10 @@ TEST_F(RTCStatsCollectorTest, CertificateStatsCache) {
 }
 
 TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
+  // Note: The test assumes data channel IDs are predictable.
+  // This is not a safe assumption, but in order to make it work for
+  // the test, we reset the ID allocator at test start.
+  SctpDataChannel::ResetInternalIdAllocatorForTesting(-1);
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), /*id=*/-1,
       DataChannelInterface::kConnecting));
@@ -1557,6 +1561,20 @@ TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
       DataChannelInterface::kConnecting));
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
+  RTCDataChannelStats expected_data_channel0("D0", Timestamp::Zero());
+  // Default values from MockDataChannel.
+  expected_data_channel0.label = "MockSctpDataChannel";
+  expected_data_channel0.protocol = "someProtocol";
+  expected_data_channel0.state = "connecting";
+  expected_data_channel0.messages_sent = 0;
+  expected_data_channel0.bytes_sent = 0;
+  expected_data_channel0.messages_received = 0;
+  expected_data_channel0.bytes_received = 0;
+
+  ASSERT_TRUE(report->Get(expected_data_channel0.id()));
+  EXPECT_EQ(
+      expected_data_channel0,
+      report->Get(expected_data_channel0.id())->cast_to<RTCDataChannelStats>());
 }
 
 TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
@@ -1566,10 +1584,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   SctpDataChannel::ResetInternalIdAllocatorForTesting(-1);
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 0, "MockSctpDataChannel0",
-      DataChannelInterface::kConnecting, "udp", 1, 2, 3, 4));
+      DataChannelInterface::kConnecting, "proto1", 1, 2, 3, 4));
   RTCDataChannelStats expected_data_channel0("D0", Timestamp::Zero());
   expected_data_channel0.label = "MockSctpDataChannel0";
-  expected_data_channel0.protocol = "udp";
+  expected_data_channel0.protocol = "proto1";
   expected_data_channel0.data_channel_identifier = 0;
   expected_data_channel0.state = "connecting";
   expected_data_channel0.messages_sent = 1;
@@ -1579,10 +1597,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 1, "MockSctpDataChannel1",
-      DataChannelInterface::kOpen, "tcp", 5, 6, 7, 8));
+      DataChannelInterface::kOpen, "proto2", 5, 6, 7, 8));
   RTCDataChannelStats expected_data_channel1("D1", Timestamp::Zero());
   expected_data_channel1.label = "MockSctpDataChannel1";
-  expected_data_channel1.protocol = "tcp";
+  expected_data_channel1.protocol = "proto2";
   expected_data_channel1.data_channel_identifier = 1;
   expected_data_channel1.state = "open";
   expected_data_channel1.messages_sent = 5;
@@ -1592,10 +1610,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 2, "MockSctpDataChannel2",
-      DataChannelInterface::kClosing, "udp", 9, 10, 11, 12));
+      DataChannelInterface::kClosing, "proto1", 9, 10, 11, 12));
   RTCDataChannelStats expected_data_channel2("D2", Timestamp::Zero());
   expected_data_channel2.label = "MockSctpDataChannel2";
-  expected_data_channel2.protocol = "udp";
+  expected_data_channel2.protocol = "proto1";
   expected_data_channel2.data_channel_identifier = 2;
   expected_data_channel2.state = "closing";
   expected_data_channel2.messages_sent = 9;
@@ -1605,10 +1623,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
       data_channel_controller_->weak_ptr(), 3, "MockSctpDataChannel3",
-      DataChannelInterface::kClosed, "tcp", 13, 14, 15, 16));
+      DataChannelInterface::kClosed, "proto3", 13, 14, 15, 16));
   RTCDataChannelStats expected_data_channel3("D3", Timestamp::Zero());
   expected_data_channel3.label = "MockSctpDataChannel3";
-  expected_data_channel3.protocol = "tcp";
+  expected_data_channel3.protocol = "proto3";
   expected_data_channel3.data_channel_identifier = 3;
   expected_data_channel3.state = "closed";
   expected_data_channel3.messages_sent = 13;
@@ -2343,11 +2361,17 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   video_media_info.receivers[0].content_type = VideoContentType::UNSPECIFIED;
   video_media_info.receivers[0].estimated_playout_ntp_timestamp_ms =
       absl::nullopt;
-  video_media_info.receivers[0].decoder_implementation_name = "";
+  video_media_info.receivers[0].decoder_implementation_name = absl::nullopt;
   video_media_info.receivers[0].min_playout_delay_ms = 50;
   video_media_info.receivers[0].power_efficient_decoder = false;
   video_media_info.receivers[0].retransmitted_packets_received = 17;
   video_media_info.receivers[0].retransmitted_bytes_received = 62;
+  video_media_info.receivers[0].fec_packets_received = 32;
+  video_media_info.receivers[0].fec_bytes_received = 54;
+  video_media_info.receivers[0].ssrc_groups.push_back(
+      {cricket::kFidSsrcGroupSemantics, {1, 4404}});
+  video_media_info.receivers[0].ssrc_groups.push_back(
+      {cricket::kFecFrSsrcGroupSemantics, {1, 5505}});
 
   // Note: these two values intentionally differ,
   // only the decoded one should show up.
@@ -2412,6 +2436,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Video) {
   expected_video.power_efficient_decoder = false;
   expected_video.retransmitted_packets_received = 17;
   expected_video.retransmitted_bytes_received = 62;
+  expected_video.fec_packets_received = 32;
+  expected_video.fec_bytes_received = 54;
+  expected_video.rtx_ssrc = 4404;
+  expected_video.fec_ssrc = 5505;
 
   ASSERT_TRUE(report->Get(expected_video.id()));
   EXPECT_EQ(
@@ -2598,7 +2626,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
   video_media_info.senders[0].quality_limitation_resolution_changes = 56u;
   video_media_info.senders[0].qp_sum = absl::nullopt;
   video_media_info.senders[0].content_type = VideoContentType::UNSPECIFIED;
-  video_media_info.senders[0].encoder_implementation_name = "";
+  video_media_info.senders[0].encoder_implementation_name = absl::nullopt;
   video_media_info.senders[0].power_efficient_encoder = false;
   video_media_info.senders[0].send_frame_width = 200;
   video_media_info.senders[0].send_frame_height = 100;
@@ -2607,6 +2635,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
   video_media_info.senders[0].huge_frames_sent = 2;
   video_media_info.senders[0].active = false;
   video_media_info.senders[0].scalability_mode = ScalabilityMode::kL3T3_KEY;
+  video_media_info.senders[0].ssrc_groups.push_back(
+      {cricket::kFidSsrcGroupSemantics, {1, 4404}});
   video_media_info.aggregated_senders.push_back(video_media_info.senders[0]);
   RtpCodecParameters codec_parameters;
   codec_parameters.payload_type = 42;
@@ -2662,6 +2692,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRtpStreamStats_Video) {
   expected_video.active = false;
   expected_video.power_efficient_encoder = false;
   expected_video.scalability_mode = "L3T3_KEY";
+  expected_video.rtx_ssrc = 4404;
   // `expected_video.content_type` should be undefined.
   // `expected_video.qp_sum` should be undefined.
   // `expected_video.encoder_implementation` should be undefined.

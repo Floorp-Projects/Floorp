@@ -824,6 +824,7 @@ rtc_library("transport_api") {
     "call/transport.h",
   ]
   deps = [
+    ":array_view",
     ":refcountedbase",
     ":scoped_refptr",
   ]

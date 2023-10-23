@@ -113,6 +113,52 @@ cricket::RtpHeaderExtensions UnstoppedOrPresentRtpHeaderExtensions(
 
 namespace cricket {
 
+static bool IsRtxCodec(const Codec& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kRtxCodecName);
+}
+
+static bool IsRtxCodec(const webrtc::RtpCodecCapability& capability) {
+  return absl::EqualsIgnoreCase(capability.name, kRtxCodecName);
+}
+
+static bool ContainsRtxCodec(const std::vector<Codec>& codecs) {
+  for (const auto& codec : codecs) {
+    if (IsRtxCodec(codec)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool IsRedCodec(const Codec& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kRedCodecName);
+}
+
+static bool IsRedCodec(const webrtc::RtpCodecCapability& capability) {
+  return absl::EqualsIgnoreCase(capability.name, kRedCodecName);
+}
+
+static bool IsFlexfecCodec(const Codec& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
+}
+
+static bool ContainsFlexfecCodec(const std::vector<Codec>& codecs) {
+  for (const auto& codec : codecs) {
+    if (IsFlexfecCodec(codec)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool IsUlpfecCodec(const Codec& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kUlpfecCodecName);
+}
+
+static bool IsComfortNoiseCodec(const Codec& codec) {
+  return absl::EqualsIgnoreCase(codec.name, kComfortNoiseCodecName);
+}
+
 static RtpTransceiverDirection NegotiateRtpTransceiverDirection(
     RtpTransceiverDirection offer,
     RtpTransceiverDirection wants) {
@@ -152,18 +198,18 @@ static bool CreateCryptoParams(int tag,
   std::string key = rtc::Base64::Encode(master_key);
 
   crypto_out->tag = tag;
-  crypto_out->cipher_suite = cipher;
+  crypto_out->crypto_suite = cipher;
   crypto_out->key_params = kInline;
   crypto_out->key_params += key;
   return true;
 }
 
-static bool AddCryptoParams(const std::string& cipher_suite,
+static bool AddCryptoParams(const std::string& crypto_suite,
                             CryptoParamsVec* cryptos_out) {
   int size = static_cast<int>(cryptos_out->size());
 
   cryptos_out->resize(size + 1);
-  return CreateCryptoParams(size, cipher_suite, &cryptos_out->at(size));
+  return CreateCryptoParams(size, crypto_suite, &cryptos_out->at(size));
 }
 
 void AddMediaCryptos(const CryptoParamsVec& cryptos,
@@ -273,11 +319,11 @@ static bool SelectCrypto(const MediaContentDescription* offer,
 
   for (const CryptoParams& crypto : cryptos) {
     if ((crypto_options.srtp.enable_gcm_crypto_suites &&
-         rtc::IsGcmCryptoSuiteName(crypto.cipher_suite)) ||
-        rtc::kCsAesCm128HmacSha1_80 == crypto.cipher_suite ||
-        (rtc::kCsAesCm128HmacSha1_32 == crypto.cipher_suite && audio &&
+         rtc::IsGcmCryptoSuiteName(crypto.crypto_suite)) ||
+        rtc::kCsAesCm128HmacSha1_80 == crypto.crypto_suite ||
+        (rtc::kCsAesCm128HmacSha1_32 == crypto.crypto_suite && audio &&
          !bundle && crypto_options.srtp.enable_aes128_sha1_32_crypto_cipher)) {
-      return CreateCryptoParams(crypto.tag, crypto.cipher_suite, crypto_out);
+      return CreateCryptoParams(crypto.tag, crypto.crypto_suite, crypto_out);
     }
   }
   return false;
@@ -496,7 +542,7 @@ static bool GetCryptosByName(const SessionDescription* sdesc,
   return true;
 }
 
-// Prunes the `target_cryptos` by removing the crypto params (cipher_suite)
+// Prunes the `target_cryptos` by removing the crypto params (crypto_suite)
 // which are not available in `filter`.
 static void PruneCryptos(const CryptoParamsVec& filter,
                          CryptoParamsVec* target_cryptos) {
@@ -506,11 +552,11 @@ static void PruneCryptos(const CryptoParamsVec& filter,
 
   target_cryptos->erase(
       std::remove_if(target_cryptos->begin(), target_cryptos->end(),
-                     // Returns true if the `crypto`'s cipher_suite is not
+                     // Returns true if the `crypto`'s crypto_suite is not
                      // found in `filter`.
                      [&filter](const CryptoParams& crypto) {
                        for (const CryptoParams& entry : filter) {
-                         if (entry.cipher_suite == crypto.cipher_suite)
+                         if (entry.crypto_suite == crypto.crypto_suite)
                            return false;
                        }
                        return true;
@@ -608,51 +654,6 @@ static std::vector<const ContentInfo*> GetActiveContents(
     }
   }
   return active_contents;
-}
-
-template <class C>
-static bool ContainsRtxCodec(const std::vector<C>& codecs) {
-  for (const auto& codec : codecs) {
-    if (IsRtxCodec(codec)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-template <class C>
-static bool IsRedCodec(const C& codec) {
-  return absl::EqualsIgnoreCase(codec.name, kRedCodecName);
-}
-
-template <class C>
-static bool IsRtxCodec(const C& codec) {
-  return absl::EqualsIgnoreCase(codec.name, kRtxCodecName);
-}
-
-template <class C>
-static bool ContainsFlexfecCodec(const std::vector<C>& codecs) {
-  for (const auto& codec : codecs) {
-    if (IsFlexfecCodec(codec)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-template <class C>
-static bool IsFlexfecCodec(const C& codec) {
-  return absl::EqualsIgnoreCase(codec.name, kFlexfecCodecName);
-}
-
-template <class C>
-static bool IsUlpfecCodec(const C& codec) {
-  return absl::EqualsIgnoreCase(codec.name, kUlpfecCodecName);
-}
-
-template <class C>
-static bool IsComfortNoiseCodec(const C& codec) {
-  return absl::EqualsIgnoreCase(codec.name, kComfortNoiseCodecName);
 }
 
 // Create a media content to be offered for the given `sender_options`,

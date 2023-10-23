@@ -60,7 +60,9 @@ RTCEncodedAudioFrame::RTCEncodedAudioFrame(
       Unused << mMetadata.mContributingSources.Value().AppendElement(csrc,
                                                                      fallible);
     }
-    mMetadata.mSequenceNumber.Construct(audioFrame.GetHeader().sequenceNumber);
+    if (const auto optionalSeqNum = audioFrame.SequenceNumber()) {
+      mMetadata.mSequenceNumber.Construct(*optionalSeqNum);
+    }
   }
 
   // Base class needs this, but can't do it itself because of an assertion in

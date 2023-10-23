@@ -352,7 +352,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:videocapture_objc",
         "../sdk:videocodec_objc",
       ]
-      if (rtc_ios_macos_use_opengl_rendering) {
+      if (rtc_ios_use_opengl_rendering) {
         deps += [ "../sdk:opengl_ui_objc" ]
       }
 
@@ -509,7 +509,7 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:videotoolbox_objc",
       ]
 
-      if (rtc_ios_macos_use_opengl_rendering) {
+      if (rtc_ios_use_opengl_rendering) {
         deps += [ "../sdk:opengl_ui_objc" ]
       }
     }
@@ -548,7 +548,6 @@ if (is_ios || (is_mac && target_cpu != "x86")) {
         "../sdk:helpers_objc",
         "../sdk:mediaconstraints_objc",
         "../sdk:metal_objc",
-        "../sdk:opengl_ui_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:peerconnectionfactory_base_objc",
         "../sdk:videocapture_objc",

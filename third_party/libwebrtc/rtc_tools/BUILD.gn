@@ -428,7 +428,11 @@ if (!build_with_chromium) {
   rtc_executable("video_encoder") {
     visibility = [ "*" ]
     testonly = true
-    sources = [ "video_encoder/video_encoder.cc" ]
+    sources = [
+      "video_encoder/encoded_image_file_writer.cc",
+      "video_encoder/encoded_image_file_writer.h",
+      "video_encoder/video_encoder.cc",
+    ]
     deps = [
       "//api:create_frame_generator",
       "//api:frame_generator_api",
@@ -440,6 +444,7 @@ if (!build_with_chromium) {
       "//modules/video_coding/codecs/av1:av1_svc_config",
       "//modules/video_coding/svc:scalability_mode_util",
       "//rtc_base:logging",
+      "//test:y4m_frame_generator",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
       "//third_party/abseil-cpp/absl/flags:usage",

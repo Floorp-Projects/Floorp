@@ -36,9 +36,10 @@
 // WebRTC.framework with their own prefix in case symbol clashing is a
 // problem.
 //
-// This macro must only be defined here and not on via compiler flag to
-// ensure it has a unique value.
+// This macro must be defined uniformily across all the translation units.
+#ifndef RTC_OBJC_TYPE_PREFIX
 #define RTC_OBJC_TYPE_PREFIX
+#endif
 
 // RCT_OBJC_TYPE
 //

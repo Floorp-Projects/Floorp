@@ -36,6 +36,8 @@ class TransformableFrameInterface {
   virtual uint8_t GetPayloadType() const = 0;
   virtual uint32_t GetSsrc() const = 0;
   virtual uint32_t GetTimestamp() const = 0;
+  virtual void SetRTPTimestamp(uint32_t timestamp) = 0;
+
   // TODO(https://bugs.webrtc.org/14878): Change this to pure virtual after it
   // is implemented everywhere.
   virtual absl::optional<Timestamp> GetCaptureTimeIdentifier() const {
@@ -69,13 +71,9 @@ class TransformableAudioFrameInterface : public TransformableFrameInterface {
  public:
   virtual ~TransformableAudioFrameInterface() = default;
 
-  virtual void SetRTPTimestamp(uint32_t timestamp) = 0;
-  // Exposes the frame header, enabling the interface clients to use the
-  // information in the header as needed, for example to compile the list of
-  // csrcs.
-  // TODO(crbug.com/1453226): Deprecate and remove once callers have migrated to
-  // the getters for specific fields.
-  virtual const RTPHeader& GetHeader() const = 0;
+  // TODO(crbug.com/1453226): Remove after a few weeks.
+  [[deprecated("Use specific getters instead.")]] virtual const RTPHeader&
+  GetHeader() const = 0;
 
   virtual rtc::ArrayView<const uint32_t> GetContributingSources() const = 0;
 
@@ -84,6 +82,18 @@ class TransformableAudioFrameInterface : public TransformableFrameInterface {
   virtual const absl::optional<uint16_t> SequenceNumber() const {
     return absl::nullopt;
   }
+
+  // TODO(crbug.com/1456628): Change this to pure virtual after it
+  // is implemented everywhere.
+  virtual absl::optional<uint64_t> AbsoluteCaptureTimestamp() const {
+    return absl::nullopt;
+  }
+
+  enum class FrameType { kEmptyFrame, kAudioFrameSpeech, kAudioFrameCN };
+
+  // TODO(crbug.com/1456628): Change this to pure virtual after it
+  // is implemented everywhere.
+  virtual FrameType Type() const { return FrameType::kEmptyFrame; }
 };
 
 // Objects implement this interface to be notified with the transformed frame.
