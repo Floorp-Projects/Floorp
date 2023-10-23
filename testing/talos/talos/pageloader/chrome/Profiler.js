@@ -32,6 +32,10 @@ var Profiler;
   // The subtest name that beginTest() was called with.
   var currentTest = "";
 
+  // Start time of the current subtest. It will be used to create a duration
+  // marker at the end of the subtest.
+  var profilerSubtestStartTime;
+
   // Profiling settings.
   var profiler_interval,
     profiler_entries,
@@ -170,27 +174,46 @@ var Profiler;
         _profiler.StopProfiler();
       }
     },
+
+    /**
+     * Set a marker indicating the start of the subtest.
+     *
+     * It will also set the `profilerSubtestStartTime` to be used later by
+     * `subtestEnd`.
+     */
     subtestStart: function Profiler__subtestStart(name, explicit) {
+      profilerSubtestStartTime = Cu.now();
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
-          explicit ? name : 'Start of test "' + (name || test_name) + '"',
-          { category: "Test" }
+          "Talos",
+          { category: "Test" },
+          explicit ? name : 'Start of test "' + (name || test_name) + '"'
         );
       }
     },
+
+    /**
+     * Set a marker indicating the duration of the subtest.
+     *
+     * This will take the `profilerSubtestStartTime` that was set by
+     * `subtestStart` and will create a duration marker by setting the `endTime`
+     * to the current time.
+     */
     subtestEnd: function Profiler__subtestEnd(name, explicit) {
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
-          explicit ? name : 'End of test "' + (name || test_name) + '"',
-          { category: "Test" }
+          "Talos",
+          { startTime: profilerSubtestStartTime, category: "Test" },
+          explicit ? name : 'Test "' + (name || test_name) + '"'
         );
       }
     },
     mark: function Profiler__mark(marker, explicit) {
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
-          explicit ? marker : 'Profiler: "' + (marker || test_name) + '"',
-          { category: "Test" }
+          "Talos",
+          { category: "Test" },
+          explicit ? marker : 'Profiler: "' + (marker || test_name) + '"'
         );
       }
     },
