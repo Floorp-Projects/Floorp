@@ -44,6 +44,10 @@ class SandboxPrivate final : public nsIGlobalObject,
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(sbp.forget().take());
     JS::SetObjectISupports(global, sop);
+
+    JS::SetRealmReduceTimerPrecisionCallerType(
+        js::GetNonCCWObjectRealm(global),
+        RTPCallerTypeToToken(GetPrivate(global)->GetRTPCallerType()));
   }
 
   static SandboxPrivate* GetPrivate(JSObject* obj) {

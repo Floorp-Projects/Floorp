@@ -3621,6 +3621,12 @@ void nsGlobalWindowInner::RefreshRealmPrincipal() {
                          nsJSPrincipals::get(mDoc->NodePrincipal()));
 }
 
+void nsGlobalWindowInner::RefreshReduceTimerPrecisionCallerType() {
+  JS::SetRealmReduceTimerPrecisionCallerType(
+      js::GetNonCCWObjectRealm(GetWrapperPreserveColor()),
+      RTPCallerTypeToToken(GetRTPCallerType()));
+}
+
 already_AddRefed<nsIWidget> nsGlobalWindowInner::GetMainWidget() {
   FORWARD_TO_OUTER(GetMainWidget, (), nullptr);
 }
