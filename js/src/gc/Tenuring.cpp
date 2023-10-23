@@ -644,40 +644,20 @@ size_t js::gc::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
     return 0;
   }
 
-  Zone* zone = src->nurseryZone();
   size_t count = src->numDynamicSlots();
-
-  uint64_t uid = src->maybeUniqueId();
-
   size_t allocSize = ObjectSlots::allocSize(count);
 
-  ObjectSlots* srcHeader = src->getSlotsHeader();
-  if (!nursery().isInside(srcHeader)) {
-    AddCellMemory(dst, allocSize, MemoryUse::ObjectSlots);
-    nursery().removeMallocedBufferDuringMinorGC(srcHeader);
+  ObjectSlots* header = src->getSlotsHeader();
+  Nursery::WasBufferMoved result = nursery().maybeMoveBufferOnPromotion(
+      &header, dst, allocSize, MemoryUse::ObjectSlots);
+  if (result == Nursery::BufferNotMoved) {
     return 0;
   }
 
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    HeapSlot* allocation =
-        zone->pod_malloc<HeapSlot>(ObjectSlots::allocCount(count));
-    if (!allocation) {
-      oomUnsafe.crash(allocSize, "Failed to allocate slots while tenuring.");
-    }
-
-    ObjectSlots* slotsHeader = new (allocation)
-        ObjectSlots(count, srcHeader->dictionarySlotSpan(), uid);
-    dst->slots_ = slotsHeader->slots();
-  }
-
-  AddCellMemory(dst, allocSize, MemoryUse::ObjectSlots);
-
-  PodCopy(dst->slots_, src->slots_, count);
+  dst->slots_ = header->slots();
   if (count) {
     nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
   }
-
   return allocSize;
 }
 
@@ -688,31 +668,19 @@ size_t js::gc::TenuringTracer::moveElementsToTenured(NativeObject* dst,
     return 0;
   }
 
-  Zone* zone = src->nurseryZone();
-
   ObjectElements* srcHeader = src->getElementsHeader();
   size_t nslots = srcHeader->numAllocatedElements();
   size_t allocSize = nslots * sizeof(HeapSlot);
 
-  void* srcAllocatedHeader = src->getUnshiftedElementsHeader();
-
-  /* TODO Bug 874151: Prefer to put element data inline if we have space. */
-  if (!nursery().isInside(srcAllocatedHeader)) {
-    MOZ_ASSERT(src->elements_ == dst->elements_);
-    nursery().removeMallocedBufferDuringMinorGC(srcAllocatedHeader);
-
-    AddCellMemory(dst, allocSize, MemoryUse::ObjectElements);
-
-    return 0;
-  }
-
   // Shifted elements are copied too.
   uint32_t numShifted = srcHeader->numShiftedElements();
+
+  void* unshiftedHeader = src->getUnshiftedElementsHeader();
 
   /* Unlike other objects, Arrays and Tuples can have fixed elements. */
   if (src->canHaveFixedElements() && nslots <= GetGCKindSlots(dstKind)) {
     dst->as<NativeObject>().setFixedElements();
-    js_memcpy(dst->getElementsHeader(), srcAllocatedHeader, allocSize);
+    js_memcpy(dst->getElementsHeader(), unshiftedHeader, allocSize);
     dst->elements_ += numShifted;
     dst->getElementsHeader()->flags |= ObjectElements::FIXED;
     nursery().setElementsForwardingPointer(srcHeader, dst->getElementsHeader(),
@@ -720,22 +688,16 @@ size_t js::gc::TenuringTracer::moveElementsToTenured(NativeObject* dst,
     return allocSize;
   }
 
-  MOZ_ASSERT(nslots >= 2);
+  /* TODO Bug 874151: Prefer to put element data inline if we have space. */
 
-  ObjectElements* dstHeader;
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    dstHeader =
-        reinterpret_cast<ObjectElements*>(zone->pod_malloc<HeapSlot>(nslots));
-    if (!dstHeader) {
-      oomUnsafe.crash(allocSize, "Failed to allocate elements while tenuring.");
-    }
+  Nursery::WasBufferMoved result = nursery().maybeMoveBufferOnPromotion(
+      &unshiftedHeader, dst, allocSize, MemoryUse::ObjectElements);
+  if (result == Nursery::BufferNotMoved) {
+    return 0;
   }
 
-  AddCellMemory(dst, allocSize, MemoryUse::ObjectElements);
-
-  js_memcpy(dstHeader, srcAllocatedHeader, allocSize);
-  dst->elements_ = dstHeader->elements() + numShifted;
+  dst->elements_ =
+      static_cast<ObjectElements*>(unshiftedHeader)->elements() + numShifted;
   dst->getElementsHeader()->flags &= ~ObjectElements::FIXED;
   nursery().setElementsForwardingPointer(srcHeader, dst->getElementsHeader(),
                                          srcHeader->capacity);
@@ -1014,29 +976,18 @@ size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
 
   MOZ_ASSERT(dst->zone() == src->nurseryZone());
 
-  if (src->hasHeapDigits()) {
-    size_t length = dst->digitLength();
-    if (!nursery().isInside(src->heapDigits_)) {
-      nursery().removeMallocedBufferDuringMinorGC(src->heapDigits_);
-    } else {
-      Zone* zone = src->nurseryZone();
-      {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        dst->heapDigits_ = zone->pod_malloc<JS::BigInt::Digit>(length);
-        if (!dst->heapDigits_) {
-          oomUnsafe.crash(sizeof(JS::BigInt::Digit) * length,
-                          "Failed to allocate digits while tenuring.");
-        }
-      }
+  if (!src->hasHeapDigits()) {
+    return size;
+  }
 
-      PodCopy(dst->heapDigits_, src->heapDigits_, length);
-      nursery().setDirectForwardingPointer(src->heapDigits_, dst->heapDigits_);
+  size_t length = dst->digitLength();
+  size_t nbytes = length * sizeof(JS::BigInt::Digit);
 
-      size += length * sizeof(JS::BigInt::Digit);
-    }
-
-    AddCellMemory(dst, length * sizeof(JS::BigInt::Digit),
-                  MemoryUse::BigIntDigits);
+  Nursery::WasBufferMoved result = nursery().maybeMoveBufferOnPromotion(
+      &dst->heapDigits_, dst, nbytes, MemoryUse::BigIntDigits);
+  if (result == Nursery::BufferMoved) {
+    nursery().setDirectForwardingPointer(src->heapDigits_, dst->heapDigits_);
+    size += nbytes;
   }
 
   return size;
