@@ -111,31 +111,23 @@ export default class Group extends Component {
       {
         className: "frames-list",
       },
-      group.reduce((acc, frame, i) => {
-        if (this.isSelectable) {
-          acc.push(
-            React.createElement(FrameIndent, {
-              key: `frame-indent-${i}`,
-            })
-          );
-        }
-        return acc.concat(
-          React.createElement(FrameComponent, {
-            frame: frame,
-            showFrameContextMenu: showFrameContextMenu,
-            hideLocation: true,
-            key: frame.id,
-            selectedFrame: selectedFrame,
-            selectFrame: selectFrame,
-            selectLocation: selectLocation,
-            shouldMapDisplayName: false,
-            displayFullUrl: displayFullUrl,
-            getFrameTitle: getFrameTitle,
-            disableContextMenu: disableContextMenu,
-            panel: panel,
-          })
-        );
-      }, [])
+      group.map(frame =>
+        React.createElement(FrameComponent, {
+          frame: frame,
+          showFrameContextMenu: showFrameContextMenu,
+          hideLocation: true,
+          key: frame.id,
+          selectedFrame: selectedFrame,
+          selectFrame: selectFrame,
+          selectLocation: selectLocation,
+          shouldMapDisplayName: false,
+          displayFullUrl: displayFullUrl,
+          getFrameTitle: getFrameTitle,
+          disableContextMenu: disableContextMenu,
+          panel: panel,
+          isInGroup: true,
+        })
+      )
     );
   }
 

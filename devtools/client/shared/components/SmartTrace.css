@@ -25,7 +25,11 @@
 }
 
 .frames .frame {
-  display: contents;
+  /* Parent is a grid container whose grid template we want to use, so span the whole line */
+  grid-column: 1 / -1;
+  display: grid;
+  /* Grid is defined in `.frames [role="list"]` rule  */
+  grid-template-columns: subgrid;
   cursor: pointer;
   white-space: normal;
 }
@@ -76,7 +80,6 @@
 }
 
 .frames .frames-group .frames-list {
-  grid-column: 1 / -1;
   margin-block-start: 2px;
   /*
    * We want to display each frame name on its own row, without having new lines in the
@@ -87,7 +90,7 @@
 }
 
 .frames .frames-group .frames-list .frame {
-  padding-inline-start: 16px;
+  padding-inline-start: 0;
   text-overflow: ellipsis;
 }
 

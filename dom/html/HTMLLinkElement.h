@@ -12,8 +12,8 @@
 #include "mozilla/dom/LinkStyle.h"
 #include "mozilla/dom/Link.h"
 #include "mozilla/WeakPtr.h"
-#include "nsGenericHTMLElement.h"
 #include "nsDOMTokenList.h"
+#include "nsGenericHTMLElement.h"
 
 namespace mozilla {
 class EventChainPostVisitor;

@@ -31,14 +31,14 @@ protections-panel-etp-off-header = Enhanced Tracking Protection is OFF for this 
 ## custom element code.
 ##   $host (String): the hostname of the site that is being displayed.
 
-protections-panel-etp-on-toggle =
+protections-panel-etp-toggle-on =
   .label = Enhanced Tracking Protection
   .description = On for this site
-  .aria-label = Disable protections for { $host }
-protections-panel-etp-off-toggle =
+  .aria-label = Enhanced Tracking Protection: On for { $host }
+protections-panel-etp-toggle-off =
   .label = Enhanced Tracking Protection
   .description = Off for this site
-  .aria-label = Enable protections for { $host }
+  .aria-label = Enhanced Tracking Protection: Off for { $host }
 
 # The link to be clicked to open the sub-panel view
 protections-panel-site-not-working = Site not working?

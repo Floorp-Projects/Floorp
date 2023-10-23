@@ -370,7 +370,7 @@ const OPTIN_DEFAULT = {
             type: "text",
             text: {
               string_id:
-                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use",
+                "shopping-onboarding-opt-in-privacy-policy-and-terms-of-use2",
             },
             link_keys: ["privacy_policy", "terms_of_use"],
             font_styles: "legal",

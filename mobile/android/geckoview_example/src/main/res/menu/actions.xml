@@ -21,5 +21,6 @@
     <item android:title="Poll Until Analysis Completed" android:id="@+id/poll_shopping_analysis_status"/>
     <item android:title="@string/translate" android:id="@+id/translate"/>
     <item android:title="@string/translate_restore" android:id="@+id/translate_restore"/>
+    <item android:title="@string/translate_manage" android:id="@+id/translate_manage"/>
     <item android:title="@string/settings" android:id="@+id/settings" app:showAsAction="never" />
 </menu>

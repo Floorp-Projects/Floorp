@@ -13,12 +13,12 @@
 #include "js/friend/WindowProxy.h"  // js::IsWindow
 #include "js/HashTable.h"
 #include "js/UniquePtr.h"
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/ShapeZone.h"
 #include "vm/Watchtower.h"
 
 #include "gc/StableCellHasher-inl.h"
+#include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 

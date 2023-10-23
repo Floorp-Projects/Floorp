@@ -390,12 +390,8 @@ public final class HardwareCodecCapabilityUtils {
       return true;
     }
 
-    if (Build.VERSION.SDK_INT >= 29
+    return Build.VERSION.SDK_INT >= 29
         && ((profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2HDR10Plus)
-            || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3HDR10Plus))) {
-      return true;
-    }
-
-    return false;
+            || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3HDR10Plus));
   }
 }

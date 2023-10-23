@@ -200,7 +200,7 @@ def run_tools(mach_cmd, kwargs):
     install_package(mach_cmd.virtualenv_manager, "opencv-python==4.5.4.60")
     install_package(
         mach_cmd.virtualenv_manager,
-        "mozperftest-tools==0.2.6",
+        "mozperftest-tools==0.2.8",
     )
 
     log_level = logging.INFO

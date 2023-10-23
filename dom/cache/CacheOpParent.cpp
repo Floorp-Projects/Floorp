@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/cache/CacheOpParent.h"
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/AutoUtils.h"
@@ -46,8 +47,8 @@ void CacheOpParent::Execute(const SafeRefPtr<ManagerId>& aManagerId) {
 
   auto managerOrErr = cache::Manager::AcquireCreateIfNonExistent(aManagerId);
   if (NS_WARN_IF(managerOrErr.isErr())) {
-    ErrorResult result(managerOrErr.unwrapErr());
-    Unused << Send__delete__(this, std::move(result), void_t());
+    (void)Send__delete__(this, CopyableErrorResult(managerOrErr.unwrapErr()),
+                         void_t());
     return;
   }
 
@@ -128,8 +129,7 @@ void CacheOpParent::OnPrincipalVerified(
   mVerifier = nullptr;
 
   if (NS_WARN_IF(NS_FAILED(aRv))) {
-    ErrorResult result(aRv);
-    Unused << Send__delete__(this, std::move(result), void_t());
+    (void)Send__delete__(this, CopyableErrorResult(aRv), void_t());
     return;
   }
 
@@ -147,7 +147,7 @@ void CacheOpParent::OnOpComplete(ErrorResult&& aRv,
   // Never send an op-specific result if we have an error.  Instead, send
   // void_t() to ensure that we don't leak actors on the child side.
   if (NS_WARN_IF(aRv.Failed())) {
-    Unused << Send__delete__(this, std::move(aRv), void_t());
+    (void)Send__delete__(this, CopyableErrorResult(std::move(aRv)), void_t());
     return;
   }
 
@@ -155,7 +155,7 @@ void CacheOpParent::OnOpComplete(ErrorResult&& aRv,
     ProcessCrossOriginResourcePolicyHeader(aRv,
                                            aStreamInfo->mSavedResponseList);
     if (NS_WARN_IF(aRv.Failed())) {
-      Unused << Send__delete__(this, std::move(aRv), void_t());
+      (void)Send__delete__(this, CopyableErrorResult(std::move(aRv)), void_t());
       return;
     }
   }
@@ -190,7 +190,8 @@ void CacheOpParent::OnOpComplete(ErrorResult&& aRv,
     }
   }
 
-  Unused << Send__delete__(this, std::move(aRv), result.SendAsOpResult());
+  (void)Send__delete__(this, CopyableErrorResult(std::move(aRv)),
+                       result.SendAsOpResult());
 }
 
 already_AddRefed<nsIInputStream> CacheOpParent::DeserializeCacheStream(

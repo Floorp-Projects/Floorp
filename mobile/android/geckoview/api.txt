@@ -49,6 +49,7 @@ import java.io.InputStream;
 import java.lang.Boolean;
 import java.lang.CharSequence;
 import java.lang.Class;
+import java.lang.Comparable;
 import java.lang.Deprecated;
 import java.lang.Double;
 import java.lang.Exception;
@@ -2215,6 +2216,63 @@ package org.mozilla.geckoview {
 
   public class TranslationsController {
     ctor public TranslationsController();
+  }
+
+  public static class TranslationsController.Language implements Comparable<TranslationsController.Language> {
+    ctor public Language(@NonNull String, @Nullable String);
+    method @AnyThread public int compareTo(@Nullable TranslationsController.Language);
+    field @NonNull public final String code;
+    field @Nullable public final String localizedDisplayName;
+  }
+
+  public static class TranslationsController.RuntimeTranslation {
+    ctor public RuntimeTranslation();
+    method @AnyThread @NonNull public static GeckoResult<Long> checkPairDownloadSize(@NonNull String, @NonNull String);
+    method @AnyThread @NonNull public static GeckoResult<Long> checkPairDownloadSize(@NonNull TranslationsController.SessionTranslation.TranslationPair);
+    method @AnyThread @NonNull public static GeckoResult<Boolean> isTranslationsEngineSupported();
+    method @AnyThread @NonNull public static GeckoResult<List<TranslationsController.RuntimeTranslation.LanguageModel>> listModelDownloadStates();
+    method @AnyThread @NonNull public static GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport> listSupportedLanguages();
+    method @AnyThread @NonNull public static GeckoResult<Void> manageLanguageModel(@NonNull TranslationsController.RuntimeTranslation.ModelManagementOptions);
+    method @AnyThread @NonNull public static GeckoResult<List<String>> preferredLanguages();
+    field public static final String ALL = "all";
+    field public static final String CACHE = "cache";
+    field public static final String DELETE = "delete";
+    field public static final String DOWNLOAD = "download";
+    field public static final String LANGUAGE = "language";
+  }
+
+  public static class TranslationsController.RuntimeTranslation.LanguageModel {
+    ctor public LanguageModel(@Nullable TranslationsController.Language, Boolean, long);
+    field @NonNull public final Boolean isDownloaded;
+    field @Nullable public final TranslationsController.Language language;
+    field public final long size;
+  }
+
+  @AnyThread public static class TranslationsController.RuntimeTranslation.ModelManagementOptions {
+    ctor protected ModelManagementOptions(@NonNull TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder);
+    field @Nullable public final String language;
+    field @NonNull public final String operation;
+    field @NonNull public final String operationLevel;
+  }
+
+  @AnyThread public static class TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder {
+    ctor public Builder();
+    method @AnyThread @NonNull public TranslationsController.RuntimeTranslation.ModelManagementOptions build();
+    method @NonNull public TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder languageToManage(@NonNull String);
+    method @NonNull public TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder operation(@NonNull String);
+    method @NonNull public TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder operationLevel(@NonNull String);
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface TranslationsController.RuntimeTranslation.ModelOperation {
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface TranslationsController.RuntimeTranslation.OperationLevel {
+  }
+
+  public static class TranslationsController.RuntimeTranslation.TranslationSupport {
+    ctor public TranslationSupport(@Nullable List<TranslationsController.Language>, @Nullable List<TranslationsController.Language>);
+    field @Nullable public final List<TranslationsController.Language> fromLanguages;
+    field @Nullable public final List<TranslationsController.Language> toLanguages;
   }
 
   public static class TranslationsController.SessionTranslation {

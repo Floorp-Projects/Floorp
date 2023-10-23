@@ -159,7 +159,7 @@ fn derive_struct_fields<'a>(
                 .ident
                 .as_ref()
                 .expect("only named field should use represents_keyword");
-            values.push(cg::to_css_identifier(&ident.to_string()));
+            values.push(cg::to_css_identifier(&ident.to_string()).replace("_", "-"));
             return None;
         }
         if let Some(if_empty) = css_attrs.if_empty {

@@ -127,7 +127,7 @@ function test_utf_roundtrip() {
   var MAX_CODEPOINT = 0x10ffff;
   var BLOCK_SIZE = 0x1000;
 
-  var block, block_tag, i, j, encoded, decoded, exp_encoded, exp_decoded;
+  var block, block_tag, i, encoded, decoded, exp_encoded, exp_decoded;
 
   var TD_U16LE = new TextDecoder("UTF-16LE");
 

@@ -4719,13 +4719,6 @@
   value: 5
   mirror: always
 
-# Initialize Resize Observer's last reported size to -1x-1, and not 0x0,
-# as per CSSWG resolution: https://github.com/w3c/csswg-drafts/issues/3664
-- name: dom.resize_observer.last_reported_size_invalid
-  type: bool
-  value: true
-  mirror: always
-
 # Let Resize Observer report the size of all fragments, and not just the
 # first one, as per CSSWG resolution:
 # https://github.com/w3c/csswg-drafts/issues/3673#issuecomment-467221565
@@ -8231,14 +8224,6 @@
   mirror: always
   rust: true
 
-# Whether the rule hash is applied to attribute names too, not
-# only classes / id / namespaces / etc.
-- name: layout.css.bucket-attribute-names.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Set the number of device pixels per CSS pixel. A value <= 0 means choose
 # automatically based on user settings for the platform (e.g., "UI scale factor"
 # on Mac). If browser.display.os-zoom-behavior == 1, then a positive value
@@ -8773,6 +8758,13 @@
   value: 50 # 50%
   mirror: always
 
+# Whether the `hanging` and `each-line` keywords are supported by `text-indent`
+- name: layout.css.text-indent-keywords.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether the "modern" uppercase mapping of ß to ẞ (rather than SS) is used.
 - name: layout.css.text-transform.uppercase-eszett.enabled
   type: bool
@@ -8781,7 +8773,7 @@
 
 - name: layout.css.text-wrap-balance.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Maximum number of lines to try balancing.

@@ -14,8 +14,8 @@
 
 #include "jstypes.h"
 
-#include "gc/Allocator.h"  // AllowGC
 #include "gc/Cell.h"       // gc::TenuredCellWithNonGCPointer
+#include "gc/GCEnum.h"     // AllowGC
 #include "js/TraceKind.h"  // JS::TraceKind
 #include "js/UbiNode.h"    // ubi::{TracerConcrete, Size, CourseType}
 

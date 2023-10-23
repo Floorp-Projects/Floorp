@@ -23,7 +23,7 @@ async function runTest(callback, locationSearch) {
         }
 
         if (marker) {
-          Profiler.pause(marker);
+          Profiler.subtestEnd(marker);
         }
         window.removeEventListener("MozAfterPaint", painted, true);
         let time = event.paintTimeStamp - startTime;
@@ -31,7 +31,7 @@ async function runTest(callback, locationSearch) {
       }
       window.addEventListener("MozAfterPaint", painted, true);
       if (marker) {
-        Profiler.resume(marker);
+        Profiler.subtestStart(marker);
       }
       startTime = window.performance.now();
       action();

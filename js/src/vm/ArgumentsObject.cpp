@@ -36,7 +36,7 @@ RareArgumentsData* RareArgumentsData::create(JSContext* cx,
                                              ArgumentsObject* obj) {
   size_t bytes = RareArgumentsData::bytesRequired(obj->initialLength());
 
-  uint8_t* data = AllocateObjectBuffer<uint8_t>(cx, obj, bytes);
+  uint8_t* data = AllocateCellBuffer<uint8_t>(cx, obj, bytes);
   if (!data) {
     return nullptr;
   }
@@ -307,7 +307,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   }
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
-      AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+      AllocateCellBuffer<uint8_t>(cx, obj, numBytes));
   if (!data) {
     // Make the object safe for GC.
     obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
@@ -415,7 +415,7 @@ ArgumentsObject* ArgumentsObject::finishPure(
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
-      AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+      AllocateCellBuffer<uint8_t>(cx, obj, numBytes));
   if (!data) {
     // Make the object safe for GC. Don't report OOM, the slow path will
     // retry the allocation.
@@ -1059,44 +1059,25 @@ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
   Nursery& nursery = dst->runtimeFromMainThread()->gc.nursery();
 
   size_t nbytesTotal = 0;
-  uint32_t nDataBytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
-  if (!nursery.isInside(nsrc->data())) {
-    nursery.removeMallocedBufferDuringMinorGC(nsrc->data());
-  } else {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nDataBytes);
-    if (!data) {
-      oomUnsafe.crash(
-          "Failed to allocate ArgumentsObject data while tenuring.");
-    }
-    ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
 
-    mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()),
-                     nDataBytes);
+  ArgumentsData* data = nsrc->data();
+  uint32_t nDataBytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
+  Nursery::WasBufferMoved result = nursery.maybeMoveBufferOnPromotion(
+      &data, dst, nDataBytes, MemoryUse::ArgumentsData);
+  if (result == Nursery::BufferMoved) {
+    ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
     nbytesTotal += nDataBytes;
   }
 
-  AddCellMemory(ndst, nDataBytes, MemoryUse::ArgumentsData);
-
-  if (RareArgumentsData* srcRareData = nsrc->maybeRareData()) {
-    uint32_t nbytes = RareArgumentsData::bytesRequired(nsrc->initialLength());
-    if (!nursery.isInside(srcRareData)) {
-      nursery.removeMallocedBufferDuringMinorGC(srcRareData);
-    } else {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      uint8_t* dstRareData = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
-      if (!dstRareData) {
-        oomUnsafe.crash(
-            "Failed to allocate RareArgumentsData data while tenuring.");
-      }
-      ndst->data()->rareData = (RareArgumentsData*)dstRareData;
-
-      mozilla::PodCopy(dstRareData, reinterpret_cast<uint8_t*>(srcRareData),
-                       nbytes);
-      nbytesTotal += nbytes;
+  if (RareArgumentsData* rareData = nsrc->maybeRareData()) {
+    uint32_t nRareBytes =
+        RareArgumentsData::bytesRequired(nsrc->initialLength());
+    Nursery::WasBufferMoved result = nursery.maybeMoveBufferOnPromotion(
+        &rareData, dst, nRareBytes, MemoryUse::RareArgumentsData);
+    if (result == Nursery::BufferMoved) {
+      ndst->data()->rareData = rareData;
+      nbytesTotal += nRareBytes;
     }
-
-    AddCellMemory(ndst, nbytes, MemoryUse::RareArgumentsData);
   }
 
   return nbytesTotal;

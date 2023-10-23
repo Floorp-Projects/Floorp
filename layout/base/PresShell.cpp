@@ -9502,15 +9502,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // schedule a similar paint when a frame is deleted.
   target->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
 
-  nsDocShell* docShell =
-      static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
-  bool isTimelineRecording = TimelineConsumers::HasConsumer(docShell);
-
-  if (isTimelineRecording) {
-    TimelineConsumers::AddMarkerForDocShell(docShell, "Reflow",
-                                            MarkerTracingType::START);
-  }
-
   Maybe<uint64_t> innerWindowID;
   if (auto* window = mDocument->GetInnerWindow()) {
     innerWindowID = Some(window->WindowID());
@@ -9709,11 +9700,6 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                        eLog_reflow, nullptr);
     }
     tp->Accumulate();
-  }
-
-  if (isTimelineRecording) {
-    TimelineConsumers::AddMarkerForDocShell(docShell, "Reflow",
-                                            MarkerTracingType::END);
   }
 
   return !interrupted;

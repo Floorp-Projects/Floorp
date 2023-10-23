@@ -95,6 +95,9 @@ async function testVal(aExpected, overflowSide = "") {
 }
 
 add_task(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.trimHttps", false]],
+  });
   // We use a new tab for the test to be sure all the tab switching and loading
   // is complete before starting, otherwise onLocationChange for this tab could
   // override the value we set with an empty value.

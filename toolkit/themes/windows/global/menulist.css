@@ -4,55 +4,27 @@
 
 @import url("chrome://global/skin/menulist-shared.css");
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-label {
-  margin: 0 3px;
-}
-
 :host([native]) {
-  appearance: auto;
-  -moz-default-appearance: menulist;
   margin: 2px 4px;
   color: FieldText;
-  text-shadow: none;
 }
 
-:host([native][disabled="true"]) {
-  background-color: -moz-Dialog;
-  color: GrayText;
+@media (prefers-contrast) {
+  :host([native]:not([open="true"]):focus) > #label-box {
+    background-color: SelectedItem;
+    color: SelectedItemText;
+  }
 }
 
-/* Label box */
-
-#label-box[native] {
-  align-items: center;
-  justify-content: center;
-}
-
-:host([native]:not([open="true"]):focus) > #label-box {
-  background-color: SelectedItem;
-  color: SelectedItemText;
-}
-
-:host([native]:not([open="true"]):-moz-focusring) > #label-box {
+:host([native]:not([open="true"]):focus-visible) > #label-box {
   outline: var(--default-focusring);
 }
 
+:host([native]) :is(image, label) {
+  margin-block: -1px;
+}
 
-@media not (prefers-contrast) {
-  #label-box[native] {
-    background-color: transparent !important;
-    color: inherit !important;
-  }
-
-  image[native],
-  label[native] {
-    margin-block: -1px !important;
-  }
-
-  dropmarker[native] {
-    margin-top: -2px;
-    margin-inline: 3px -3px;
-  }
+:host([native]) dropmarker {
+  margin-top: -2px;
+  margin-inline: 3px -3px;
 }

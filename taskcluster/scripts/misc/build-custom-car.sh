@@ -10,6 +10,11 @@ shift
 # Use the rest of the arguments as the build config for gn
 CONFIG=$(echo $* | tr -d "'")
 
+# Android build flag
+if [[ "$ARTIFACT_NAME" == *"android"* ]]; then
+  IS_ANDROID=true
+fi
+
 mkdir custom_car
 cd custom_car
 CUSTOM_CAR_DIR=$PWD
@@ -19,30 +24,45 @@ git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH="$PATH:$CUSTOM_CAR_DIR/depot_tools"
 
 # Set up some env variables depending on the target OS
-# Linux is the default case
+# Linux is the default case, with minor adjustments for
+# android since it is built with a linux host
 
 # Final folder structure before compressing is
 # the same for linux and windows
 FINAL_BIN_PATH="src/out/Default"
 
-# unique substring for PGO data for Linux
+# Final binary name for autoninja build sequence
+FINAL_BIN=chrome
+
+# Unique substring for PGO data for Linux
 PGO_SUBSTR="chrome-linux-main"
+
+# Default (non android) fetch name for upstream src
+FETCH_NAME=chromium
+
+# Android specific vars
+if [ "$IS_ANDROID" = true ]; then
+  FETCH_NAME=android
+  PGO_SUBSTR="android64"
+  FINAL_BIN_PATH="src/out/Default/apks"
+  FINAL_BIN=chrome_public_apk
+fi
 
 # Logic for macosx64
 if [[ $(uname -s) == "Darwin" ]]; then
-  # modify the config with fetched sdk path
+  # Modify the config with fetched sdk path
   export MACOS_SYSROOT="$MOZ_FETCHES_DIR/MacOSX14.0.sdk"
 
   # Use the fetched toolchain python instead as it is a higher version
   # than the system python
   export PATH="$MOZ_FETCHES_DIR/python/bin/:$PATH"
 
-  # set the SDK path for build, which is technically a higher version
-  # than what is associated with the current OS version (10.15)
-  # this should work as long as MACOSX_DEPLOYMENT_TARGET is set correctly
+  # Set the SDK path for build, which is technically a higher version
+  # than what is associated with the current OS version (10.15).
+  # This should work as long as MACOSX_DEPLOYMENT_TARGET is set correctly
   CONFIG=$(echo $CONFIG mac_sdk_path='"'$MACOS_SYSROOT'"')
 
-  # ensure we don't use ARM64 profdata with this unique sub string
+  # Ensure we don't use ARM64 profdata with this unique sub string
   PGO_SUBSTR="chrome-mac-main"
 
   # macOS final build folder is different than linux/win
@@ -51,10 +71,10 @@ fi
 
 # Logic for win64 using the mingw environment
 if [[ $(uname -o) == "Msys" ]]; then
-  # setup VS 2022
+  # Setup VS 2022
   . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
 
-  # setup some environment variables for chromium build scripts
+  # Setup some environment variables for chromium build scripts
   export DEPOT_TOOLS_WIN_TOOLCHAIN=0
   export GYP_MSVS_OVERRIDE_PATH="$MOZ_FETCHES_DIR/VS"
   export GYP_MSVS_VERSION=2022
@@ -65,7 +85,7 @@ if [[ $(uname -o) == "Msys" ]]; then
   # Fool GYP
   touch "$MOZ_FETCHES_DIR/VS/VC/vcvarsall.bat"
 
-  # construct some of our own dirs and move VS dlls + other files
+  # Construct some of our own dirs and move VS dlls + other files
   # to a path that chromium build files & scripts are expecting
   mkdir chrome_dll
   cd chrome_dll
@@ -78,24 +98,30 @@ if [[ $(uname -o) == "Msys" ]]; then
   mv "$WINDOWSSDKDIR/App Certification Kit/"* "$WINDOWSSDKDIR"/Debuggers/x64/
   export WINDIR="$PWD/chrome_dll"
 
-  # run glcient once first to get some windows deps
+  # Run glcient once first to get some windows deps
   gclient
 
-  # ensure we don't use WIN32 profdata with this unique sub string
+  # Ensure we don't use WIN32 profdata with this unique sub string
   PGO_SUBSTR="chrome-win64-main"
 fi
 
 # Get chromium source code and dependencies
 mkdir chromium
 cd chromium
-fetch --no-history --nohooks chromium
 
-# setup the .gclient file to ensure pgo profiles are downloaded
-# for some reason we need to set --name flag even though it already exists.
-# currently the gclient.py file does NOT recognize --custom-var as it's own argument
+fetch --no-history --nohooks $FETCH_NAME
+
+# Setup the .gclient file to ensure pgo profiles are downloaded.
+# For some reason we need to set --name flag even though it already exists.
+# Currently the gclient.py file does NOT recognize --custom-var as it's own argument
 gclient config --name src "https://chromium.googlesource.com/chromium/src.git" --custom-var="checkout_pgo_profiles=True" --unmanaged
 
 cd src
+
+# Amend gclient file
+if [ "$IS_ANDROID" = true ]; then
+  echo "target_os = [ 'android' ]" >> ../.gclient
+fi
 
 if [[ $(uname -o) == "Msys" ]]; then
   # For fast fetches it seems we will be missing some dummy files in windows.
@@ -114,7 +140,12 @@ if [[ $(uname -s) == "Linux" ]] || [[ $(uname -s) == "Darwin" ]]; then
   cipd_bin_setup
 fi
 
-# now we can run hooks and fetch PGO + everything else
+# Sync again for android, after cipd bin setup
+if [ "$IS_ANDROID" = true ]; then
+  gclient sync
+fi
+
+# Now we can run hooks and fetch PGO + everything else
 gclient runhooks
 
 # PGO data should be in src/chrome/build/pgo_profiles/ 
@@ -133,16 +164,17 @@ done
 
 PGO_FILE=$PGO_DATA_PATH
 if [[ $(uname -o) == "Msys" ]]; then
-  # compute a relative path that the build scripts looks for.
-  # this odd pathing seems to only happen on windows
+  # Compute a relative path that the build scripts looks for.
+  # This odd pathing seems to only happen on windows
   PGO_FILE=${PGO_DATA_PATH#*/*/*/*/*/*/*/*/*/}
   mv $PGO_DATA_PATH build/config/compiler/pgo/
 fi
+
 CONFIG=$(echo $CONFIG pgo_data_path='"'$PGO_FILE'"')
 
-# set up then build chrome
+# Set up then build chrome
 gn gen out/Default --args="$CONFIG"
-autoninja -C out/Default chrome # skips test binaries
+autoninja -C out/Default $FINAL_BIN
 
 # Gather binary and related files into a zip, and upload it
 cd ..

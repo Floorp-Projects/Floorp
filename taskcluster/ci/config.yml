@@ -44,6 +44,7 @@ treeherder:
         'Btime-refbrow': 'Browsertime performance tests on the reference browser'
         'Btime-Saf': 'Browsertime performance tests on Safari'
         'Btime-CaR': 'Browsertime performance tests on Chromium-as-Release'
+        'Btime-nofis-CaR': 'Browsertime performance tests on Chromium-as-Release without fission enabled'
         'Fetch': 'Fetch and store content'
         'Fxfn': 'Firefox functional tests'
         'Fxfn-nofis': 'Firefox functional tests without fission enabled'

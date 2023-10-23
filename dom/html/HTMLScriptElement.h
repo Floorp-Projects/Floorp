@@ -8,9 +8,9 @@
 #define mozilla_dom_HTMLScriptElement_h
 
 #include "mozilla/dom/FetchPriority.h"
-#include "nsGenericHTMLElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ScriptElement.h"
+#include "nsGenericHTMLElement.h"
 #include "nsStringFwd.h"
 
 namespace mozilla::dom {
@@ -131,14 +131,8 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
     GetEnumAttr(nsGkAtoms::referrerpolicy, "", aReferrerPolicy);
   }
 
-  void GetFetchPriority(nsAString& aFetchPriority) const;
-
-  void SetFetchPriority(const nsAString& aFetchPriority) {
-    SetHTMLAttr(nsGkAtoms::fetchpriority, aFetchPriority);
-  }
-
-  // <https://html.spec.whatwg.org/#fetch-priority-attribute>.
-  static FetchPriority ToFetchPriority(const nsAString& aValue);
+  // Required for the webidl-binding because `GetFetchPriority` is overloaded.
+  using nsGenericHTMLElement::GetFetchPriority;
 
   [[nodiscard]] static bool Supports(const GlobalObject& aGlobal,
                                      const nsAString& aType);
@@ -156,9 +150,6 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
 
   // ScriptElement
   virtual bool HasScriptContent() override;
-
- private:
-  static void ParseFetchPriority(const nsAString& aValue, nsAttrValue& aResult);
 };
 
 }  // namespace mozilla::dom

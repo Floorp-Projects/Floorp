@@ -133,7 +133,7 @@ function startTest() {
 
 addEventListener("load", function() {
   try {
-    TalosContentProfiler.resume("rasterflood_svg.html loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("rasterflood_svg.html loaded", true).then(() => {
       startTest();
     });
   } catch (e) {

@@ -675,8 +675,6 @@ class MigrationUtils {
    *   source-selection page will be displayed, either with the default
    *   browser selected, if it could be detected and if there is a
    *   migrator for it, or with the first option selected as a fallback
-   *   (The first option is hardcoded to be the most common browser for
-   *    the OS we run on.  See migration.xhtml).
    * @param {string|null} [aProfileToMigrate=null]
    *   If set, the migration wizard will import from the profile indicated.
    * @throws
@@ -1071,12 +1069,12 @@ class MigrationUtils {
    * Enum for the entrypoint that is being used to start migration.
    * Callers can use the MIGRATION_ENTRYPOINTS getter to use these.
    *
-   * These values are what's written into the FX_MIGRATION_ENTRY_POINT
-   * histogram after a migration.
+   * These values are what's written into the
+   * FX_MIGRATION_ENTRY_POINT_CATEGORICAL histogram after a migration.
    *
    * @see MIGRATION_ENTRYPOINTS
    * @readonly
-   * @enum {number}
+   * @enum {string}
    */
   #MIGRATION_ENTRYPOINTS_ENUM = Object.freeze({
     /** The entrypoint was not supplied */
@@ -1124,54 +1122,8 @@ class MigrationUtils {
   }
 
   /**
-   * Translates an entrypoint string into the proper numeric value for the legacy
-   * FX_MIGRATION_ENTRY_POINT histogram.
-   *
-   * @param {string} entrypoint
-   *   The entrypoint to translate from MIGRATION_ENTRYPOINTS.
-   * @returns {number}
-   *   The numeric value for the legacy FX_MIGRATION_ENTRY_POINT histogram.
-   */
-  getLegacyMigrationEntrypoint(entrypoint) {
-    switch (entrypoint) {
-      case this.MIGRATION_ENTRYPOINTS.FIRSTRUN: {
-        return 1;
-      }
-      case this.MIGRATION_ENTRYPOINTS.FXREFRESH: {
-        return 2;
-      }
-      case this.MIGRATION_ENTRYPOINTS.PLACES: {
-        return 3;
-      }
-      case this.MIGRATION_ENTRYPOINTS.PASSWORDS: {
-        return 4;
-      }
-      case this.MIGRATION_ENTRYPOINTS.NEWTAB: {
-        return 5;
-      }
-      case this.MIGRATION_ENTRYPOINTS.FILE_MENU: {
-        return 6;
-      }
-      case this.MIGRATION_ENTRYPOINTS.HELP_MENU: {
-        return 7;
-      }
-      case this.MIGRATION_ENTRYPOINTS.BOOKMARKS_TOOLBAR: {
-        return 8;
-      }
-      case this.MIGRATION_ENTRYPOINTS.PREFERENCES: {
-        return 9;
-      }
-      case this.MIGRATION_ENTRYPOINTS.UNKNOWN:
-      // Intentional fall-through
-      default: {
-        return 0; // Unknown
-      }
-    }
-  }
-
-  /**
-   * Enum for the numeric value written to the FX_MIGRATION_SOURCE_BROWSER,
-   * and FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER histograms.
+   * Enum for the numeric value written to the FX_MIGRATION_SOURCE_BROWSER.
+   * histogram
    *
    * @see getSourceIdForTelemetry
    * @readonly

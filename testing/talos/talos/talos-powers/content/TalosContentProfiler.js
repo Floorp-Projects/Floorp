@@ -171,14 +171,12 @@ var TalosContentProfiler;
 
     /**
      * A Talos test is about to start. This will return a Promise that
-     * resolves once the Profiler has been initialized. Note that the
-     * Gecko Profiler will be paused immediately after starting and that
-     * resume() should be called in order to collect samples.
+     * resolves once the Profiler has been initialized.
      *
      * @param testName (string)
      *        The name of the test to use in Profiler markers.
      * @returns Promise
-     *        Resolves once the Gecko Profiler has been initialized and paused.
+     *        Resolves once the Gecko Profiler has been initialized.
      *        If the TalosContentProfiler is not initialized, then this resolves
      *        without doing anything.
      */
@@ -232,7 +230,7 @@ var TalosContentProfiler;
     },
 
     /**
-     * Resumes the Gecko Profiler sampler. Can also simultaneously set a marker.
+     * Add a marker to the profiler to indicate the start of the subtest.
      *
      * @param marker (string, optional)
      *        If non-empty, will set a marker immediately after resuming.
@@ -241,20 +239,20 @@ var TalosContentProfiler;
      *        for us, and we can skip the initialization check. This is usually
      *        true for pageloader tests.
      * @returns Promise
-     *        Resolves once the Gecko Profiler has resumed.
+     *        Resolves once the marker has been set.
      */
-    resume(marker = "", inittedInParent = false) {
+    subtestStart(marker = "", inittedInParent = false) {
       if (initted || inittedInParent) {
-        return sendEventAndWait("Profiler:Resume", { marker });
+        return sendEventAndWait("Profiler:SubtestStart", { marker });
       }
       return Promise.resolve();
     },
 
     /**
-     * Pauses the Gecko Profiler sampler. Can also simultaneously set a marker.
+     * Add a marker to the profiler to indicate the subtest duration.
      *
      * @param marker (string, optional)
-     *        If non-empty, will set a marker immediately before pausing.
+     *        If non-empty, will set a marker immediately.
      * @param inittedInParent (bool, optional)
      *        If true, it is assumed that the parent has already started profiling
      *        for us, and we can skip the initialization check. This is usually
@@ -263,11 +261,11 @@ var TalosContentProfiler;
      *        Start time, used to create an interval profile marker. If
      *        undefined, a single instance marker will be placed.
      * @returns Promise
-     *        Resolves once the Gecko Profiler has paused.
+     *        Resolves once the marker has been set.
      */
-    pause(marker = "", inittedInParent = false, startTime = undefined) {
+    subtestEnd(marker = "", inittedInParent = false, startTime = undefined) {
       if (initted || inittedInParent) {
-        return sendEventAndWait("Profiler:Pause", { marker, startTime });
+        return sendEventAndWait("Profiler:SubtestEnd", { marker, startTime });
       }
 
       return Promise.resolve();
@@ -277,7 +275,7 @@ var TalosContentProfiler;
      * Adds a marker to the profile.
      *
      * @param marker (string)
-     *        If non-empty, will set a marker immediately before pausing.
+     *        If non-empty, will set a marker immediately.
      * @param inittedInParent (bool, optional)
      *        If true, it is assumed that the parent has already started profiling
      *        for us, and we can skip the initialization check. This is usually

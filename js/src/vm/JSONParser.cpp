@@ -22,7 +22,7 @@
 
 #include "builtin/Array.h"            // NewDenseCopiedArray
 #include "ds/IdValuePair.h"           // IdValuePair
-#include "gc/Allocator.h"             // CanGC
+#include "gc/GCEnum.h"                // CanGC
 #include "gc/Tracer.h"                // JS::TraceRoot
 #include "js/AllocPolicy.h"           // ReportOutOfMemory
 #include "js/CharacterEncoding.h"     // JS::ConstUTF8CharsZ

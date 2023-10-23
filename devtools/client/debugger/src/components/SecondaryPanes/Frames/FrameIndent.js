@@ -4,9 +4,10 @@
 
 import React from "react";
 
-export default function FrameIndent() {
+export default function FrameIndent({ indentLevel = 1 } = {}) {
   // \xA0 represents the non breakable space &nbsp;
-  const nonBreakableSpaces = "\xA0\xA0\xA0\xA0";
+  const indentWidth = 4 * indentLevel;
+  const nonBreakableSpaces = "\xA0".repeat(indentWidth);
   return React.createElement(
     "span",
     {

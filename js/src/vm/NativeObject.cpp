@@ -274,7 +274,7 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
   ObjectSlots* oldHeaderSlots = ObjectSlots::fromSlots(slots_);
   MOZ_ASSERT(oldHeaderSlots->capacity() == oldCapacity);
 
-  HeapSlot* allocation = ReallocateObjectBuffer<HeapSlot>(
+  HeapSlot* allocation = ReallocateCellBuffer<HeapSlot>(
       cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
       newAllocated);
   if (!allocation) {
@@ -313,7 +313,7 @@ bool NativeObject::growSlotsForNewSlot(JSContext* cx, uint32_t numFixed,
 
 bool NativeObject::allocateInitialSlots(JSContext* cx, uint32_t capacity) {
   uint32_t count = ObjectSlots::allocCount(capacity);
-  HeapSlot* allocation = AllocateObjectBuffer<HeapSlot>(cx, this, count);
+  HeapSlot* allocation = AllocateCellBuffer<HeapSlot>(cx, this, count);
   if (!allocation) {
     // The new object will be unreachable, but we still have to make it safe
     // for finalization. Also we must check for it during GC compartment
@@ -345,7 +345,7 @@ bool NativeObject::allocateSlots(JSContext* cx, uint32_t newCapacity) {
 
   uint32_t dictionarySpan = getSlotsHeader()->dictionarySlotSpan();
 
-  HeapSlot* allocation = AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
+  HeapSlot* allocation = AllocateCellBuffer<HeapSlot>(cx, this, newAllocated);
   if (!allocation) {
     return false;
   }
@@ -442,7 +442,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
 
   uint32_t newAllocated = ObjectSlots::allocCount(newCapacity);
 
-  HeapSlot* allocation = ReallocateObjectBuffer<HeapSlot>(
+  HeapSlot* allocation = ReallocateCellBuffer<HeapSlot>(
       cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
       newAllocated);
   if (!allocation) {
@@ -903,8 +903,8 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     oldAllocated = oldCapacity + ObjectElements::VALUES_PER_HEADER + numShifted;
 
     // Finally, try to resize the buffer.
-    newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(
-        cx, this, oldHeaderSlots, oldAllocated, newAllocated);
+    newHeaderSlots = ReallocateCellBuffer<HeapSlot>(cx, this, oldHeaderSlots,
+                                                    oldAllocated, newAllocated);
     if (!newHeaderSlots) {
       return false;  // If the resizing failed, then we leave elements at its
                      // old size.
@@ -913,7 +913,7 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     // If the object has fixed elements, then we always need to allocate a new
     // buffer, because if we've reached this code, then the requested capacity
     // is greater than the existing inline space available within the object
-    newHeaderSlots = AllocateObjectBuffer<HeapSlot>(cx, this, newAllocated);
+    newHeaderSlots = AllocateCellBuffer<HeapSlot>(cx, this, newAllocated);
     if (!newHeaderSlots) {
       return false;  // Leave elements at its old size.
     }
@@ -985,7 +985,7 @@ void NativeObject::shrinkElements(JSContext* cx, uint32_t reqCapacity) {
 
   HeapSlot* oldHeaderSlots =
       reinterpret_cast<HeapSlot*>(getUnshiftedElementsHeader());
-  HeapSlot* newHeaderSlots = ReallocateObjectBuffer<HeapSlot>(
+  HeapSlot* newHeaderSlots = ReallocateCellBuffer<HeapSlot>(
       cx, this, oldHeaderSlots, oldAllocated, newAllocated);
   if (!newHeaderSlots) {
     cx->recoverFromOutOfMemory();

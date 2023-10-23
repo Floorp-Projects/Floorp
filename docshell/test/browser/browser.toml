@@ -49,9 +49,7 @@ support-files = [
   "file_onbeforeunload_3.html",
   "print_postdata.sjs",
   "test-form_sjis.html",
-  "browser_timelineMarkers-frame-02.js",
   "head.js",
-  "frame-head.js",
   "file_data_load_inherit_csp.html",
   "file_click_link_within_view_source.html",
   "onload_message.html",
@@ -310,11 +308,6 @@ skip-if = [
 ["browser_tab_touch_events.js"]
 
 ["browser_targetTopLevelLinkClicksToBlank.js"]
-
-["browser_timelineMarkers-01.js"]
-
-["browser_timelineMarkers-02.js"]
-skip-if = ["true"] # Bug 1220415
 
 ["browser_title_in_session_history.js"]
 skip-if = ["!sessionHistoryInParent"]

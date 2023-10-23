@@ -615,24 +615,24 @@ void* js::Nursery::allocateBuffer(Zone* zone, size_t nbytes) {
   return buffer;
 }
 
-void* js::Nursery::allocateBuffer(Zone* zone, JSObject* obj, size_t nbytes) {
-  MOZ_ASSERT(obj);
+void* js::Nursery::allocateBuffer(Zone* zone, Cell* cell, size_t nbytes) {
+  MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
 
-  if (!IsInsideNursery(obj)) {
+  if (!IsInsideNursery(cell)) {
     return zone->pod_malloc<uint8_t>(nbytes);
   }
 
   return allocateBuffer(zone, nbytes);
 }
 
-void* js::Nursery::allocateBufferSameLocation(JSObject* obj, size_t nbytes) {
-  MOZ_ASSERT(obj);
+void* js::Nursery::allocateBufferSameLocation(Cell* cell, size_t nbytes) {
+  MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
   MOZ_ASSERT(nbytes <= MaxNurseryBufferSize);
 
-  if (!IsInsideNursery(obj)) {
-    return obj->zone()->pod_malloc<uint8_t>(nbytes);
+  if (!IsInsideNursery(cell)) {
+    return cell->asTenured().zone()->pod_malloc<uint8_t>(nbytes);
   }
 
   return allocate(nbytes);
@@ -659,14 +659,15 @@ void* js::Nursery::allocateZeroedBuffer(
 }
 
 void* js::Nursery::allocateZeroedBuffer(
-    JSObject* obj, size_t nbytes, arena_id_t arena /*= js::MallocArena*/) {
-  MOZ_ASSERT(obj);
+    Cell* cell, size_t nbytes, arena_id_t arena /*= js::MallocArena*/) {
+  MOZ_ASSERT(cell);
   MOZ_ASSERT(nbytes > 0);
 
-  if (!IsInsideNursery(obj)) {
-    return obj->zone()->pod_arena_calloc<uint8_t>(arena, nbytes);
+  if (!IsInsideNursery(cell)) {
+    return cell->asTenured().zone()->pod_arena_calloc<uint8_t>(arena, nbytes);
   }
-  return allocateZeroedBuffer(obj->zone(), nbytes, arena);
+
+  return allocateZeroedBuffer(cell->nurseryZone(), nbytes, arena);
 }
 
 void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
@@ -701,16 +702,6 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
     PodCopy((uint8_t*)newBuffer, (uint8_t*)oldBuffer, oldBytes);
   }
   return newBuffer;
-}
-
-void* js::Nursery::allocateBuffer(JS::BigInt* bi, size_t nbytes) {
-  MOZ_ASSERT(bi);
-  MOZ_ASSERT(nbytes > 0);
-
-  if (!IsInsideNursery(bi)) {
-    return bi->zone()->pod_malloc<uint8_t>(nbytes);
-  }
-  return allocateBuffer(bi->zone(), nbytes);
 }
 
 void js::Nursery::freeBuffer(void* buffer, size_t nbytes) {
@@ -1619,6 +1610,45 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
   }
 
   return true;
+}
+
+/*
+ * Several things may need to happen when a nursery allocated cell with an
+ * external buffer is promoted:
+ *  - the buffer may need to be moved if it is currently in the nursery
+ *  - the buffer may need to be removed from the list of buffers that will be
+ *    freed after nursery collection if it is malloced
+ *  - memory accounting for the buffer needs to be updated
+ */
+Nursery::WasBufferMoved js::Nursery::maybeMoveRawBufferOnPromotion(
+    void** bufferp, gc::Cell* owner, size_t nbytes, MemoryUse use,
+    arena_id_t arena) {
+  MOZ_ASSERT(!IsInsideNursery(owner));
+
+  void* buffer = *bufferp;
+  if (!isInside(buffer)) {
+    // This is a malloced buffer. Remove it from the nursery's list of buffers
+    // so we don't free it and add it to the memory accounting for the zone
+    removeMallocedBufferDuringMinorGC(buffer);
+    AddCellMemory(owner, nbytes, use);
+    return BufferNotMoved;
+  }
+
+  // Copy the nursery-allocated buffer into a new malloc allocation.
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  Zone* zone = owner->asTenured().zone();
+  void* movedBuffer = zone->pod_arena_malloc<uint8_t>(arena, nbytes);
+  if (!movedBuffer) {
+    oomUnsafe.crash("Nursery::updateBufferOnPromotion");
+  }
+
+  memcpy(movedBuffer, buffer, nbytes);
+
+  AddCellMemory(owner, nbytes, use);
+
+  *bufferp = movedBuffer;
+  return BufferMoved;
 }
 
 void Nursery::requestMinorGC(JS::GCReason reason) {

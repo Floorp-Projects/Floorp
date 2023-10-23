@@ -5,6 +5,7 @@
 //! Generic types for text properties.
 
 use crate::parser::ParserContext;
+use crate::Zero;
 use cssparser::Parser;
 use style_traits::ParseError;
 
@@ -100,4 +101,48 @@ pub enum GenericTextDecorationLength<L> {
     LengthPercentage(L),
     Auto,
     FromFont,
+}
+
+/// Implements type for text-indent
+/// which takes the grammar of [<length-percentage>] && hanging? && each-line?
+///
+/// https://drafts.csswg.org/css-text/#propdef-text-indent
+#[repr(C)]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+pub struct GenericTextIndent<LengthPercentage> {
+    /// The amount of indent to be applied to the inline-start of the first line.
+    pub length: LengthPercentage,
+    /// Apply indent to non-first lines instead of first.
+    #[animation(constant)]
+    #[css(represents_keyword)]
+    pub hanging: bool,
+    /// Apply to each line after a hard break, not only first in block.
+    #[animation(constant)]
+    #[css(represents_keyword)]
+    pub each_line: bool,
+}
+
+impl<LengthPercentage: Zero> GenericTextIndent<LengthPercentage> {
+    /// Return the initial zero value.
+    pub fn zero() -> Self {
+        Self {
+            length: LengthPercentage::zero(),
+            hanging: false,
+            each_line: false,
+        }
+    }
 }

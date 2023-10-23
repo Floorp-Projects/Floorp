@@ -101,22 +101,10 @@ popupnotificationcontent {
 }
 
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker {
-  /* This is to override the linux !important */
-  appearance: none !important;
+  appearance: none;
   display: flex;
   padding: 0;
   margin: 0;
-}
-
-@media (-moz-platform: windows) {
-  /* Override default icon size which is too small for this dropdown */
-  .popup-notification-dropmarker > .button-box > .button-menu-dropmarker {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-.popup-notification-dropmarker > .button-box > .button-menu-dropmarker::part(icon) {
   width: 16px;
   height: 16px;
   list-style-image: url(chrome://global/skin/icons/arrow-down.svg);

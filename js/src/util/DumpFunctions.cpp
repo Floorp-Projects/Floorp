@@ -15,9 +15,9 @@
 #include "jsfriendapi.h"  // js::WeakMapTracer
 #include "jstypes.h"      // JS_PUBLIC_API
 
-#include "gc/Allocator.h"         // js::CanGC
 #include "gc/Cell.h"              // js::gc::Cell, js::gc::TenuredCell
 #include "gc/GC.h"                // js::TraceRuntimeWithoutEviction
+#include "gc/GCEnum.h"            // js::CanGC
 #include "gc/Heap.h"              // js::gc::Arena
 #include "gc/Tracer.h"            // js::TraceChildren
 #include "gc/WeakMap.h"           // js::IterateHeapUnbarriered, js::WeakMapBase

@@ -8,10 +8,10 @@
 #include "ScriptLoadHandler.h"
 #include "ScriptTrace.h"
 #include "ModuleLoader.h"
+#include "nsGenericHTMLElement.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/FetchPriority.h"
-#include "mozilla/dom/HTMLScriptElement.h"
 #include "mozilla/dom/RequestBinding.h"
 #include "nsIChildChannel.h"
 #include "zlib.h"
@@ -3892,7 +3892,7 @@ void ScriptLoader::PreloadURI(
   GetSRIMetadata(aIntegrity, &sriMetadata);
 
   const auto requestPriority = FetchPriorityToRequestPriority(
-      HTMLScriptElement::ToFetchPriority(aFetchPriority));
+      nsGenericHTMLElement::ToFetchPriority(aFetchPriority));
 
   // For link type "modulepreload":
   // https://html.spec.whatwg.org/multipage/links.html#link-type-modulepreload

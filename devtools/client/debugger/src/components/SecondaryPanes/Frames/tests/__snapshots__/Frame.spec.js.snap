@@ -11,7 +11,9 @@ exports[`Frame getFrameTitle 1`] = `
   tabIndex={0}
   title="Jump to https://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com/assets/src/js/foo-view.js:10"
 >
-  <FrameIndent />
+  <FrameIndent
+    indentLevel={1}
+  />
   <FrameTitle
     frame={
       Object {
@@ -301,7 +303,9 @@ exports[`Frame library frame 1`] = `
   role="listitem"
   tabIndex={0}
 >
-  <FrameIndent />
+  <FrameIndent
+    indentLevel={1}
+  />
   <FrameTitle
     frame={
       Object {
@@ -593,7 +597,9 @@ exports[`Frame user frame (not selected) 1`] = `
   role="listitem"
   tabIndex={0}
 >
-  <FrameIndent />
+  <FrameIndent
+    indentLevel={1}
+  />
   <FrameTitle
     frame={
       Object {
@@ -883,7 +889,9 @@ exports[`Frame user frame 1`] = `
   role="listitem"
   tabIndex={0}
 >
-  <FrameIndent />
+  <FrameIndent
+    indentLevel={1}
+  />
   <FrameTitle
     frame={
       Object {

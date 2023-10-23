@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "wasm/WasmGcObject.h"
+#include "wasm/WasmGcObject-inl.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
@@ -33,6 +33,7 @@
 
 #include "gc/GCContext-inl.h"  // GCContext::removeCellMemory
 #include "gc/ObjectKind-inl.h"
+#include "vm/JSContext-inl.h"
 
 using mozilla::AssertedCast;
 using mozilla::CheckedUint32;

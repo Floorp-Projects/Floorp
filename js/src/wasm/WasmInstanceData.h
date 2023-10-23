@@ -23,7 +23,6 @@
 
 #include "NamespaceImports.h"
 
-#include "gc/Allocator.h"
 #include "gc/Pretenuring.h"
 #include "js/Utility.h"
 #include "wasm/WasmInstance.h"

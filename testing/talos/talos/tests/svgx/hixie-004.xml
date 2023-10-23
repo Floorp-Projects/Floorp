@@ -77,7 +77,7 @@ removed from the document.
     }
   }
   addEventListener("load", function() {
-    TalosContentProfiler.resume("hixie-004.xml loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("hixie-004.xml loaded", true).then(() => {
       rAF(runTest);
     });
   });

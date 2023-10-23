@@ -99,13 +99,13 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--autocomplete-popup-highlight-background",
+    "--urlbarView-highlight-background",
     {
       lwtProperty: "popup_highlight",
     },
   ],
   [
-    "--autocomplete-popup-highlight-color",
+    "--urlbarView-highlight-color",
     {
       lwtProperty: "popup_highlight_text",
     },
@@ -128,14 +128,12 @@ export const ThemeVariableMap = [
     "--sidebar-text-color",
     {
       lwtProperty: "sidebar_text",
-      optionalElementID: "sidebar-box",
     },
   ],
   [
     "--sidebar-border-color",
     {
       lwtProperty: "sidebar_border",
-      optionalElementID: "browser",
     },
   ],
   [

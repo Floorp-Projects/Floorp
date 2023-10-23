@@ -16,7 +16,7 @@
       return;
     }
 
-    TalosContentProfiler.resume("a11y: Begin dhtml test", true).then(() => {
+    TalosContentProfiler.subtestStart("a11y: Begin dhtml test", true).then(() => {
       var container = document.getElementById("container");
       var lastchild = document.getElementById("lastchild");
 
@@ -48,7 +48,7 @@
 
   function postProcessingRecord(start) {
     let delta = window.performance.now() - start;
-    TalosContentProfiler.pause("a11y: dhtml test", true, startTime).then(() => {
+    TalosContentProfiler.subtestEnd("a11y: dhtml test", true, startTime).then(() => {
       tpRecordTime(delta, window.performance.timing.navigationStart + start);
     });
   }

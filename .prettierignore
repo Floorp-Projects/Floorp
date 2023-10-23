@@ -59,7 +59,6 @@ browser/base/content/pageinfo/pageInfo.xhtml
 browser/base/content/webext-panels.xhtml
 browser/base/content/webrtcLegacyIndicator.xhtml
 browser/components/downloads/content/contentAreaDownloadsView.xhtml
-browser/components/migration/content/migration.xhtml
 browser/components/places/content/bookmarkProperties.xhtml
 browser/components/places/content/bookmarksSidebar.xhtml
 browser/components/places/content/historySidebar.xhtml

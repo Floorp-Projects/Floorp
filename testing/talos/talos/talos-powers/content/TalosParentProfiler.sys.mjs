@@ -110,9 +110,7 @@ export const TalosParentProfiler = {
   },
 
   /**
-   * A Talos test is about to start. Note that the Gecko Profiler will be
-   * paused immediately after starting and that resume() should be called
-   * in order to collect samples.
+   * A Talos test is about to start.
    *
    * @param testName (string)
    *        The name of the test to use in Profiler markers.
@@ -173,31 +171,27 @@ export const TalosParentProfiler = {
   },
 
   /**
-   * Resumes the Gecko Profiler sampler. Can also simultaneously set a marker.
+   * Set a marker indicating the start of the subtest.
    *
-   * @returns Promise
-   *          Resolves once the Gecko Profiler has resumed.
    */
-  resume(marker = "") {
+  subtestStart(marker = "") {
     if (this.initted) {
-      this.TalosPowers.profilerResume(marker);
+      this.TalosPowers.profilerSubtestStart(marker);
     }
   },
 
   /**
-   * Pauses the Gecko Profiler sampler. Can also simultaneously set a marker.
+   * Set a marker indicating the duration of the subtest.
    *
    * @param marker (string, optional)
-   *        If non-empty, will set a marker immediately before pausing.
+   *        If non-empty, will set a marker immediately.
    * @param startTime (number, optional)
    *        Start time, used to create an interval profile marker. If
    *        undefined, a single instance marker will be placed.
-   * @returns Promise
-   *          Resolves once the Gecko Profiler has resumed.
    */
-  pause(marker = "", startTime = undefined) {
+  subtestEnd(marker = "", startTime = undefined) {
     if (this.initted) {
-      this.TalosPowers.profilerPause(marker, startTime);
+      this.TalosPowers.profilerSubtestEnd(marker, startTime);
     }
   },
 
@@ -205,7 +199,7 @@ export const TalosParentProfiler = {
    * Adds a marker to the profile.
    *
    * @param marker (string, optional)
-   *        If non-empty, will set a marker immediately before pausing.
+   *        If non-empty, will set a marker immediately.
    * @param startTime (number, optional)
    *        Start time, used to create an interval profile marker. If
    *        undefined, a single instance marker will be placed.

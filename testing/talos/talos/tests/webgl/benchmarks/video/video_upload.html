@@ -21,7 +21,7 @@ function init() {
 }
 
 function content_focused() {
-  TalosContentProfiler.resume("glvideo start", true).then(() => {
+  TalosContentProfiler.subtestStart("glvideo start", true).then(() => {
     video.play();
   });
 }
@@ -36,7 +36,7 @@ var tickCount = 0;
 function tick() {
   if (tickCount >= kTotalTicks) {
     var elapsed = performance.now() - start;
-    TalosContentProfiler.pause("glvideo end", true).then(() => {
+    TalosContentProfiler.subtestEnd("glvideo", true).then(() => {
       reportResult(elapsed, kTotalTicks);
     });
     return;

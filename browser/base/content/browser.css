@@ -1148,15 +1148,6 @@ toolbarpaletteitem[dragover] {
   flex-wrap: wrap;
 }
 
-#customization-toolbar-visibility-button > .box-inherit > .button-menu-dropmarker {
-  display: flex;
-}
-
-#customization-lwtheme-button > .box-inherit > .button-menu-dropmarker,
-#customization-uidensity-button > .box-inherit > .button-menu-dropmarker {
-  display: flex;
-}
-
 toolbarpaletteitem[place="palette"] {
   flex-direction: column;
   width: 7em;

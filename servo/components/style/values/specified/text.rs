@@ -10,7 +10,7 @@ use crate::values::computed::text::TextEmphasisStyle as ComputedTextEmphasisStyl
 use crate::values::computed::text::TextOverflow as ComputedTextOverflow;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::{GenericTextDecorationLength, Spacing};
+use crate::values::generics::text::{GenericTextDecorationLength, GenericTextIndent, Spacing};
 use crate::values::specified::length::{Length, LengthPercentage};
 use crate::values::specified::{AllowQuirks, Integer, Number};
 use cssparser::{Parser, Token};
@@ -175,7 +175,21 @@ impl ToComputedValue for TextOverflow {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    Serialize,
+    SpecifiedValueInfo,
+    ToCss,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[css(bitflags(single = "none", mixed = "underline,overline,line-through,blink"))]
 #[repr(C)]
 /// Specified keyword values for the text-decoration-line property.
@@ -359,7 +373,21 @@ pub enum TextTransformCase {
     MathAuto,
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    Serialize,
+    SpecifiedValueInfo,
+    ToCss,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[css(bitflags(mixed = "full-width,full-size-kana"))]
 #[repr(C)]
 /// Specified keyword values for non-case transforms in the text-transform property. (Non-exclusive.)
@@ -700,9 +728,26 @@ impl Parse for TextEmphasisStyle {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, Parse, Serialize, SpecifiedValueInfo, ToCss, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    Parse,
+    Serialize,
+    SpecifiedValueInfo,
+    ToCss,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(C)]
-#[css(bitflags(mixed="over,under,left,right", validate_mixed="Self::validate_and_simplify"))]
+#[css(bitflags(
+    mixed = "over,under,left,right",
+    validate_mixed = "Self::validate_and_simplify"
+))]
 /// Values for text-emphasis-position:
 /// <https://drafts.csswg.org/css-text-decor/#text-emphasis-position-property>
 pub struct TextEmphasisPosition(u8);
@@ -870,6 +915,60 @@ pub enum OverflowWrap {
     Anywhere,
 }
 
+/// A specified value for the `text-indent` property
+/// which takes the grammar of [<length-percentage>] && hanging? && each-line?
+///
+/// https://drafts.csswg.org/css-text/#propdef-text-indent
+pub type TextIndent = GenericTextIndent<LengthPercentage>;
+
+impl Parse for TextIndent {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        let mut length = None;
+        let mut hanging = false;
+        let mut each_line = false;
+
+        // The length-percentage and the two possible keywords can occur in any order.
+        while !input.is_exhausted() {
+            // If we haven't seen a length yet, try to parse one.
+            if length.is_none() {
+                if let Ok(len) = input
+                    .try_parse(|i| LengthPercentage::parse_quirky(context, i, AllowQuirks::Yes))
+                {
+                    length = Some(len);
+                    continue;
+                }
+            }
+
+            if static_prefs::pref!("layout.css.text-indent-keywords.enabled") {
+                // Check for the keywords (boolean flags).
+                try_match_ident_ignore_ascii_case! { input,
+                    "hanging" if !hanging => hanging = true,
+                    "each-line" if !each_line => each_line = true,
+                }
+                continue;
+            }
+
+            // If we reach here, there must be something that we failed to parse;
+            // just break and let the caller deal with it.
+            break;
+        }
+
+        // The length-percentage value is required for the declaration to be valid.
+        if let Some(length) = length {
+            Ok(Self {
+                length,
+                hanging,
+                each_line,
+            })
+        } else {
+            Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
+        }
+    }
+}
+
 /// Implements text-decoration-skip-ink which takes the keywords auto | none | all
 ///
 /// https://drafts.csswg.org/css-text-decor-4/#text-decoration-skip-ink-property
@@ -913,7 +1012,18 @@ impl TextDecorationLength {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[value_info(other_values = "auto,from-font,under,left,right")]
 #[repr(C)]
 /// Specified keyword values for the text-underline-position property.

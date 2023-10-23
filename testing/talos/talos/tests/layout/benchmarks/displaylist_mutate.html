@@ -53,7 +53,7 @@ function startTest() {
 
 addEventListener("load", function() {
   if (window.TalosContentProfiler) {
-    TalosContentProfiler.resume("displaylist_mutate.html loaded", true).then(startTest);
+    TalosContentProfiler.subtestStart("displaylist_mutate.html loaded", true).then(startTest);
   } else {
     startTest();
   }

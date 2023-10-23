@@ -11,6 +11,7 @@ describe("Accordion", () => {
   const testItems = [
     {
       header: "Test Accordion Item 1",
+      id: "accordion-item-1",
       className: "accordion-item-1",
       component: React.createElement("div", null),
       opened: false,
@@ -18,6 +19,7 @@ describe("Accordion", () => {
     },
     {
       header: "Test Accordion Item 2",
+      id: "accordion-item-2",
       className: "accordion-item-2",
       component: React.createElement("div", null),
       buttons: React.createElement("button", null),
@@ -26,6 +28,7 @@ describe("Accordion", () => {
     },
     {
       header: "Test Accordion Item 3",
+      id: "accordion-item-3",
       className: "accordion-item-3",
       component: React.createElement("div", null),
       opened: true,

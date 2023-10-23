@@ -67,7 +67,7 @@ void PresShell::SetNeedThrottledAnimationFlush() {
 }
 
 ServoStyleSet* PresShell::StyleSet() const {
-  return mDocument->StyleSetForPresShellOrMediaQueryEvaluation();
+  return mDocument->StyleSetForPresShell();
 }
 
 /* static */

@@ -148,6 +148,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_fenix_runtime_node_picker.js"]
+skip-if = ["a11y_checks"] # Bug 1849028, 1858041, and 1849179 for causing crashes
 
 ["browser_aboutdebugging_hidden_addons.js"]
 
@@ -248,6 +249,7 @@ skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_telemetry_inspect.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1849179 for causing crashes
 
 ["browser_aboutdebugging_telemetry_navigate.js"]
 
