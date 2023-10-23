@@ -1031,6 +1031,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 self.inherited,
                 &self.seen,
                 self.stylist,
+                self.computed_context,
                 self.is_root_element,
             );
         }
@@ -1066,6 +1067,7 @@ fn substitute_all(
     inherited: &ComputedCustomProperties,
     seen: &PrecomputedHashSet<&Name>,
     stylist: &Stylist,
+    computed_context: &computed::Context,
     is_root_element: bool,
 ) {
     // The cycle dependencies removal in this function is a variant
@@ -1090,7 +1092,7 @@ fn substitute_all(
     }
     /// Context struct for traversing the variable graph, so that we can
     /// avoid referencing all the fields multiple times.
-    struct Context<'a> {
+    struct Context<'a, 'b: 'a> {
         /// Number of variables visited. This is used as the order index
         /// when we visit a new unresolved variable.
         count: usize,
@@ -1107,6 +1109,8 @@ fn substitute_all(
         /// The stylist is used to get registered properties, and to resolve the environment to
         /// substitute `env()` variables.
         stylist: &'a Stylist,
+        /// The computed context is used to compute registered custom properties.
+        computed_context: &'a computed::Context<'b>,
         /// Whether this is the root element.
         is_root_element: bool,
     }
@@ -1129,7 +1133,7 @@ fn substitute_all(
     ///   doesn't have reference at all in specified value, or it has
     ///   been completely resolved.
     /// * There is no such variable at all.
-    fn traverse<'a>(name: &Name, context: &mut Context<'a>) -> Option<usize> {
+    fn traverse<'a, 'b>(name: &Name, context: &mut Context<'a, 'b>) -> Option<usize> {
         // Some shortcut checks.
         let (name, value) = {
             let value = context.map.get(context.stylist, name)?;
@@ -1273,6 +1277,7 @@ fn substitute_all(
             map: custom_properties_map,
             inherited,
             stylist,
+            computed_context,
             is_root_element,
         };
         traverse(name, &mut context);
