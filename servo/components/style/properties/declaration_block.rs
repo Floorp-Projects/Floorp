@@ -908,6 +908,7 @@ impl PropertyDeclarationBlock {
                         &context.builder.custom_properties,
                         QuirksMode::NoQuirks,
                         stylist,
+                        &context,
                         &mut Default::default(),
                     )
                     .to_css(dest)
