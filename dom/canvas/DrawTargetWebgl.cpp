@@ -265,6 +265,10 @@ DrawTargetWebgl::SharedContext::~SharedContext() {
   if (mWebgl) {
     mWebgl->ActiveTexture(LOCAL_GL_TEXTURE0);
   }
+  if (mWGRPathBuilder) {
+    WGR::wgr_builder_release(mWGRPathBuilder);
+    mWGRPathBuilder = nullptr;
+  }
   ClearAllTextures();
   UnlinkSurfaceTextures();
   UnlinkGlyphCaches();
@@ -474,6 +478,8 @@ bool DrawTargetWebgl::SharedContext::Initialize() {
     mWebgl = nullptr;
     return false;
   }
+
+  mWGRPathBuilder = WGR::wgr_new_builder();
 
   return true;
 }
@@ -2762,14 +2768,15 @@ bool QuantizedPath::operator==(const QuantizedPath& aOther) const {
 // Generate a quantized path from the Skia path using WGR. The supplied
 // transform will be applied to the path. The path is stored relative to its
 // bounds origin to support translation later.
-static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
-                                                  const Rect& aBounds,
-                                                  const Matrix& aTransform) {
-  WGR::PathBuilder* pb = WGR::wgr_new_builder();
-  if (!pb) {
+static Maybe<QuantizedPath> GenerateQuantizedPath(
+    WGR::PathBuilder* aPathBuilder, const SkPath& aPath, const Rect& aBounds,
+    const Matrix& aTransform) {
+  if (!aPathBuilder) {
     return Nothing();
   }
-  WGR::wgr_builder_set_fill_mode(pb,
+
+  WGR::wgr_builder_reset(aPathBuilder);
+  WGR::wgr_builder_set_fill_mode(aPathBuilder,
                                  aPath.getFillType() == SkPathFillType::kWinding
                                      ? WGR::FillMode::Winding
                                      : WGR::FillMode::EvenOdd);
@@ -2786,12 +2793,12 @@ static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
     switch (currentVerb) {
       case SkPath::kMove_Verb: {
         Point p0 = transform.TransformPoint(SkPointToPoint(params[0]));
-        WGR::wgr_builder_move_to(pb, p0.x, p0.y);
+        WGR::wgr_builder_move_to(aPathBuilder, p0.x, p0.y);
         break;
       }
       case SkPath::kLine_Verb: {
         Point p1 = transform.TransformPoint(SkPointToPoint(params[1]));
-        WGR::wgr_builder_line_to(pb, p1.x, p1.y);
+        WGR::wgr_builder_line_to(aPathBuilder, p1.x, p1.y);
         break;
       }
       case SkPath::kCubic_Verb: {
@@ -2800,14 +2807,15 @@ static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
         Point p3 = transform.TransformPoint(SkPointToPoint(params[3]));
         // printf_stderr("cubic (%f, %f), (%f, %f), (%f, %f)\n", p1.x, p1.y,
         // p2.x, p2.y, p3.x, p3.y);
-        WGR::wgr_builder_curve_to(pb, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+        WGR::wgr_builder_curve_to(aPathBuilder, p1.x, p1.y, p2.x, p2.y, p3.x,
+                                  p3.y);
         break;
       }
       case SkPath::kQuad_Verb: {
         Point p1 = transform.TransformPoint(SkPointToPoint(params[1]));
         Point p2 = transform.TransformPoint(SkPointToPoint(params[2]));
         // printf_stderr("quad (%f, %f), (%f, %f)\n", p1.x, p1.y, p2.x, p2.y);
-        WGR::wgr_builder_quad_to(pb, p1.x, p1.y, p2.x, p2.y);
+        WGR::wgr_builder_quad_to(aPathBuilder, p1.x, p1.y, p2.x, p2.y);
         break;
       }
       case SkPath::kConic_Verb: {
@@ -2822,24 +2830,22 @@ static Maybe<QuantizedPath> GenerateQuantizedPath(const SkPath& aPath,
           Point q2 = quads[2 * i + 2];
           // printf_stderr("conic quad (%f, %f), (%f, %f)\n", q1.x, q1.y, q2.x,
           // q2.y);
-          WGR::wgr_builder_quad_to(pb, q1.x, q1.y, q2.x, q2.y);
+          WGR::wgr_builder_quad_to(aPathBuilder, q1.x, q1.y, q2.x, q2.y);
         }
         break;
       }
       case SkPath::kClose_Verb:
         // printf_stderr("close\n");
-        WGR::wgr_builder_close(pb);
+        WGR::wgr_builder_close(aPathBuilder);
         break;
       default:
         MOZ_ASSERT(false);
         // Unexpected verb found in path!
-        WGR::wgr_builder_release(pb);
         return Nothing();
     }
   }
 
-  WGR::Path p = WGR::wgr_builder_get_path(pb);
-  WGR::wgr_builder_release(pb);
+  WGR::Path p = WGR::wgr_builder_get_path(aPathBuilder);
   if (!p.num_points || !p.num_types) {
     WGR::wgr_path_release(p);
     return Nothing();
@@ -3191,7 +3197,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
     // Use a quantized, relative (to its bounds origin) version of the path as
     // a cache key to help limit cache bloat.
     Maybe<QuantizedPath> qp = GenerateQuantizedPath(
-        pathSkia->GetPath(), quantBounds, currentTransform);
+        mWGRPathBuilder, pathSkia->GetPath(), quantBounds, currentTransform);
     if (!qp) {
       return false;
     }
@@ -3293,7 +3299,7 @@ bool DrawTargetWebgl::SharedContext::DrawPathAccel(
           //     int(fillPath.countVerbs()),
           //     int(fillPath.countPoints()));
           if (Maybe<QuantizedPath> qp = GenerateQuantizedPath(
-                  fillPath, quantBounds, currentTransform)) {
+                  mWGRPathBuilder, fillPath, quantBounds, currentTransform)) {
             wgrVB = GeneratePathVertexBuffer(
                 *qp, IntRect(-intBounds.TopLeft(), mViewportSize),
                 mRasterizationTruncates, outputBuffer, outputBufferCapacity);
