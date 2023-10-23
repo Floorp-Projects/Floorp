@@ -2958,14 +2958,14 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
   aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
 
   Maybe<gfxRect> combinedClip;
-  if (maskUsage.shouldApplyBasicShapeOrPath) {
+  if (maskUsage.ShouldApplyBasicShapeOrPath()) {
     Maybe<Rect> result =
         CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
             aMaskedFrame, svgReset->mClipPath);
     if (result) {
       combinedClip = Some(ThebesRect(*result));
     }
-  } else if (maskUsage.shouldApplyClipPath) {
+  } else if (maskUsage.ShouldApplyClipPath()) {
     gfxRect result = SVGUtils::GetBBox(
         aMaskedFrame,
         SVGUtils::eBBoxIncludeClipped | SVGUtils::eBBoxIncludeFill |
