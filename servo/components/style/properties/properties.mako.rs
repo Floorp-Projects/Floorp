@@ -4013,6 +4013,12 @@ impl<'a> StyleBuilder<'a> {
         &self.custom_properties
     }
 
+
+    /// Get the inherited custom properties map.
+    pub fn inherited_custom_properties(&self) -> &crate::custom_properties::ComputedCustomProperties {
+        &self.inherited_style.custom_properties
+    }
+
     /// Access to various information about our inherited styles.  We don't
     /// expose an inherited ComputedValues directly, because in the
     /// ::first-line case some of the inherited information needs to come from

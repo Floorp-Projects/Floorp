@@ -321,12 +321,8 @@ where
         },
         CascadeMode::Unvisited { visited_rules } => {
             cascade.context.builder.custom_properties = {
-                let mut builder = CustomPropertiesBuilder::new(
-                    inherited_style.custom_properties(),
-                    stylist,
-                    cascade.context,
-                    is_root_element,
-                );
+                let mut builder =
+                    CustomPropertiesBuilder::new(stylist, cascade.context, is_root_element);
                 iter_declarations(iter, &mut declarations, Some(&mut builder));
                 builder.build()
             };

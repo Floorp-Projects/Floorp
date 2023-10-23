@@ -790,7 +790,6 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
     seen: PrecomputedHashSet<&'a Name>,
     may_have_cycles: bool,
     custom_properties: ComputedCustomProperties,
-    inherited: &'a ComputedCustomProperties,
     reverted: PrecomputedHashMap<&'a Name, (CascadePriority, bool)>,
     stylist: &'a Stylist,
     computed_context: &'a computed::Context<'b>,
@@ -800,11 +799,11 @@ pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
 impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
     pub fn new(
-        inherited: &'a ComputedCustomProperties,
         stylist: &'a Stylist,
         computed_context: &'a computed::Context<'b>,
         is_root_element: bool,
     ) -> Self {
+        let inherited = computed_context.inherited_custom_properties();
         let initial_values = stylist.get_custom_property_initial_values();
         Self {
             seen: PrecomputedHashSet::default(),
@@ -819,7 +818,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 },
                 non_inherited: initial_values.non_inherited.clone(),
             },
-            inherited,
             stylist,
             computed_context,
             is_root_element,
@@ -865,7 +863,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                             name,
                             unparsed_value,
                             map,
-                            self.inherited,
                             self.stylist,
                             self.computed_context,
                             self.is_root_element,
@@ -919,7 +916,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         "Should've been handled earlier"
                     );
                     if let Some(inherited_value) = self
-                        .inherited
+                        .computed_context
+                        .inherited_custom_properties()
                         .non_inherited
                         .as_ref()
                         .and_then(|m| m.get(name))
@@ -999,7 +997,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 // Don't bother adding it to self.custom_properties.non_inherited
                 // if the key is also absent from self.inherited.non_inherited.
                 if self
-                    .inherited
+                    .computed_context
+                    .inherited_custom_properties()
                     .non_inherited
                     .as_ref()
                     .map_or(true, |m| !m.contains_key(name))
@@ -1031,7 +1030,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         if self.may_have_cycles {
             substitute_all(
                 &mut self.custom_properties,
-                self.inherited,
                 &self.seen,
                 self.stylist,
                 self.computed_context,
@@ -1047,8 +1045,15 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
         // map in that case.
         let initial_values = self.stylist.get_custom_property_initial_values();
         ComputedCustomProperties {
-            inherited: if self.inherited.inherited_equal(&self.custom_properties) {
-                self.inherited.inherited.clone()
+            inherited: if self
+                .computed_context
+                .inherited_custom_properties()
+                .inherited_equal(&self.custom_properties)
+            {
+                self.computed_context
+                    .inherited_custom_properties()
+                    .inherited
+                    .clone()
             } else {
                 self.custom_properties.inherited.take()
             },
@@ -1067,7 +1072,6 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
 /// It does cycle dependencies removal at the same time as substitution.
 fn substitute_all(
     custom_properties_map: &mut ComputedCustomProperties,
-    inherited: &ComputedCustomProperties,
     seen: &PrecomputedHashSet<&Name>,
     stylist: &Stylist,
     computed_context: &computed::Context,
@@ -1107,12 +1111,11 @@ fn substitute_all(
         /// all unfinished strong connected components.
         stack: SmallVec<[usize; 5]>,
         map: &'a mut ComputedCustomProperties,
-        /// The inherited custom properties to handle wide keywords.
-        inherited: &'a ComputedCustomProperties,
         /// The stylist is used to get registered properties, and to resolve the environment to
         /// substitute `env()` variables.
         stylist: &'a Stylist,
-        /// The computed context is used to compute registered custom properties.
+        /// The computed context is used to get inherited custom
+        /// properties  and compute registered custom properties.
         computed_context: &'a computed::Context<'b>,
         /// Whether this is the root element.
         is_root_element: bool,
@@ -1259,7 +1262,6 @@ fn substitute_all(
             &name,
             &value,
             &mut context.map,
-            context.inherited,
             context.stylist,
             context.computed_context,
             context.is_root_element,
@@ -1279,7 +1281,6 @@ fn substitute_all(
             stack: SmallVec::new(),
             var_info: SmallVec::new(),
             map: custom_properties_map,
-            inherited,
             stylist,
             computed_context,
             is_root_element,
@@ -1326,13 +1327,13 @@ fn substitute_references_in_value_and_apply(
     name: &Name,
     value: &VariableValue,
     custom_properties: &mut ComputedCustomProperties,
-    inherited: &ComputedCustomProperties,
     stylist: &Stylist,
     computed_context: &computed::Context,
     is_root_element: bool,
 ) {
     debug_assert!(value.has_references());
 
+    let inherited = computed_context.inherited_custom_properties();
     let custom_registration = stylist.get_custom_property_registration(&name);
     let mut computed_value = ComputedValue::empty();
 
