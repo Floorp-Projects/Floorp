@@ -118,6 +118,9 @@ add_setup(async function setup() {
   httpServer.start(-1);
 
   Services.prefs.setBoolPref("network.trr.use_ohttp", true);
+  // On windows the TTL fetch will race with clearing the cache
+  // to refresh the cache entry.
+  Services.prefs.setBoolPref("network.dns.get-ttl", false);
 
   registerCleanupFunction(async () => {
     trr_clear_prefs();
@@ -125,6 +128,7 @@ add_setup(async function setup() {
     Services.prefs.clearUserPref("network.trr.ohttp.config_uri");
     Services.prefs.clearUserPref("network.trr.ohttp.relay_uri");
     Services.prefs.clearUserPref("network.trr.ohttp.uri");
+    Services.prefs.clearUserPref("network.dns.get-ttl");
     await new Promise((resolve, reject) => {
       httpServer.stop(resolve);
     });
