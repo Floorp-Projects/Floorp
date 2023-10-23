@@ -1020,8 +1020,6 @@ class RootingContext {
 
   js::GeckoProfilerThread& geckoProfiler() { return geckoProfiler_; }
 
-  JS::Zone* zoneUnchecked() const { return zone_; }
-
   js::Nursery& nursery() const {
     MOZ_ASSERT(nursery_);
     return *nursery_;

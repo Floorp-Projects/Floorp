@@ -292,7 +292,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   JS::Zone* zone() const {
     MOZ_ASSERT_IF(!realm() && zone_, inAtomsZone());
     MOZ_ASSERT_IF(realm(), js::GetRealmZone(realm()) == zone_);
-    return zoneUnchecked();
+    return zone_;
   }
 
   // For JIT use.
