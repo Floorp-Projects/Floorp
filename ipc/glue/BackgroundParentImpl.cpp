@@ -146,6 +146,12 @@ void BackgroundParentImpl::ProcessingError(Result aCode, const char* aReason) {
     if (CanSend()) {
       GetIPCChannel()->InduceConnectionError();
     }
+  } else {
+    nsDependentCString reason(aReason);
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::ipc_channel_error, reason);
+
+    MOZ_CRASH("in-process BackgroundParent abort due to IPC error");
   }
 }
 

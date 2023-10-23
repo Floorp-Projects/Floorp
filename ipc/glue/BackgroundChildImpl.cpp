@@ -138,6 +138,10 @@ void BackgroundChildImpl::ProcessingError(Result aCode, const char* aReason) {
       MOZ_CRASH("Unknown error code!");
   }
 
+  nsDependentCString reason(aReason);
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::ipc_channel_error, reason);
+
   MOZ_CRASH_UNSAFE_PRINTF("%s: %s", abortMessage.get(), aReason);
 }
 
