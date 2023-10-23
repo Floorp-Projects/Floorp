@@ -41,7 +41,8 @@ JSObject* HTMLScriptElement::WrapNode(JSContext* aCx,
 HTMLScriptElement::HTMLScriptElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLElement(std::move(aNodeInfo)), ScriptElement(aFromParser) {
+    : nsGenericHTMLElementWithFetchPriorityAttribute(std::move(aNodeInfo)),
+      ScriptElement(aFromParser) {
   AddMutationObserver(this);
 }
 
@@ -63,19 +64,6 @@ nsresult HTMLScriptElement::BindToTree(BindContext& aContext,
   return NS_OK;
 }
 
-namespace {
-// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-static const nsAttrValue::EnumTable kFetchPriorityEnumTable[] = {
-    {kFetchPriorityAttributeValueHigh, FetchPriority::High},
-    {kFetchPriorityAttributeValueLow, FetchPriority::Low},
-    {kFetchPriorityAttributeValueAuto, FetchPriority::Auto},
-    {nullptr, 0}};
-
-// <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-static const nsAttrValue::EnumTable*
-    kFetchPriorityEnumTableInvalidValueDefault = &kFetchPriorityEnumTable[2];
-}  // namespace
-
 bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsIPrincipal* aMaybeScriptedPrincipal,
@@ -90,15 +78,10 @@ bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       aResult.ParseStringOrAtom(aValue);
       return true;
     }
-
-    if (aAttribute == nsGkAtoms::fetchpriority) {
-      HTMLScriptElement::ParseFetchPriority(aValue, aResult);
-      return true;
-    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
-                                              aMaybeScriptedPrincipal, aResult);
+  return nsGenericHTMLElementWithFetchPriorityAttribute::ParseAttribute(
+      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
 }
 
 nsresult HTMLScriptElement::Clone(dom::NodeInfo* aNodeInfo,
@@ -245,20 +228,6 @@ bool HTMLScriptElement::HasScriptContent() {
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 
-void HTMLScriptElement::GetFetchPriority(nsAString& aFetchPriority) const {
-  // <https://html.spec.whatwg.org/multipage/urls-and-fetching.html#fetch-priority-attributes>.
-  GetEnumAttr(nsGkAtoms::fetchpriority, kFetchPriorityAttributeValueAuto,
-              aFetchPriority);
-}
-
-/* static */
-FetchPriority HTMLScriptElement::ToFetchPriority(const nsAString& aValue) {
-  nsAttrValue attrValue;
-  HTMLScriptElement::ParseFetchPriority(aValue, attrValue);
-  MOZ_ASSERT(attrValue.Type() == nsAttrValue::eEnum);
-  return FetchPriority(attrValue.GetEnumValue());
-}
-
 // https://html.spec.whatwg.org/multipage/scripting.html#dom-script-supports
 /* static */
 bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
@@ -267,14 +236,6 @@ bool HTMLScriptElement::Supports(const GlobalObject& aGlobal,
   return aType.EqualsLiteral("classic") || aType.EqualsLiteral("module") ||
          (StaticPrefs::dom_importMaps_enabled() &&
           aType.EqualsLiteral("importmap"));
-}
-
-/* static */
-void HTMLScriptElement::ParseFetchPriority(const nsAString& aValue,
-                                           nsAttrValue& aResult) {
-  aResult.ParseEnumValue(aValue, kFetchPriorityEnumTable,
-                         false /* aCaseSensitive */,
-                         kFetchPriorityEnumTableInvalidValueDefault);
 }
 
 }  // namespace mozilla::dom
