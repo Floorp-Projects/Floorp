@@ -224,7 +224,7 @@ Tart.prototype = {
     function startRecord() {
       if (self._config.controlProfiler) {
         if (isReportResult) {
-          Profiler.resume(name);
+          Profiler.subtestStart(name);
         }
       } else {
         Profiler.mark("Start: " + (isReportResult ? name : "[warmup]"), true);
@@ -261,7 +261,7 @@ Tart.prototype = {
         window.performance.now() - startRecordTimestamp;
       if (self._config.controlProfiler) {
         if (isReportResult) {
-          Profiler.pause(name);
+          Profiler.subtestEnd(name);
         }
       } else {
         Profiler.mark("End: " + (isReportResult ? name : "[warmup]"), true);

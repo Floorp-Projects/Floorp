@@ -126,7 +126,7 @@ this.tabpaint = class extends ExtensionAPI {
   async openTabFromParent(gBrowser, target) {
     let win = BrowserWindowTracker.getTopWindow();
 
-    TalosParentProfiler.resume("TabPaint Parent Start");
+    TalosParentProfiler.subtestStart("TabPaint Parent Start");
     let startTime = Cu.now();
 
     gBrowser.selectedTab = gBrowser.addTab(
@@ -141,7 +141,7 @@ this.tabpaint = class extends ExtensionAPI {
     );
 
     let { tab, delta } = await this.whenTabShown();
-    TalosParentProfiler.pause(
+    TalosParentProfiler.subtestEnd(
       "Talos - Tabpaint: Open Tab from Parent",
       startTime
     );
@@ -161,13 +161,13 @@ this.tabpaint = class extends ExtensionAPI {
    *         with the time (in ms) it took to open the tab from content.
    */
   async openTabFromContent(gBrowser) {
-    TalosParentProfiler.resume("TabPaint Content Start");
+    TalosParentProfiler.subtestStart("TabPaint Content Start");
     let start_time = Cu.now();
 
     Services.mm.broadcastAsyncMessage("TabPaint:OpenFromContent");
 
     let { tab, delta } = await this.whenTabShown();
-    TalosParentProfiler.pause(
+    TalosParentProfiler.subtestEnd(
       "Talos - Tabpaint: Open Tab from Content",
       start_time
     );

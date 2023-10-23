@@ -275,7 +275,7 @@ contains many 'path' elements with fill and stroke.
     }
   }
   addEventListener("load", function() {
-    TalosContentProfiler.resume("hixie-007.xml loaded", true).then(() => {
+    TalosContentProfiler.subtestStart("hixie-007.xml loaded", true).then(() => {
       rAF(runTest);
     });
   });

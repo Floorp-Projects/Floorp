@@ -355,11 +355,7 @@ Damp.prototype = {
       this._reportAllResults();
     }
 
-    ChromeUtils.addProfilerMarker("DAMP", {
-      startTime: this._startTimestamp,
-      category: "Test",
-    });
-    this.TalosParentProfiler.pause();
+    this.TalosParentProfiler.subtestEnd("DAMP");
 
     this._unregisterDampLoadActors();
   },
@@ -488,8 +484,7 @@ Damp.prototype = {
 
       this.waitBeforeRunningTests()
         .then(() => {
-          this._startTimestamp = Cu.now();
-          this.TalosParentProfiler.resume();
+          this.TalosParentProfiler.subtestStart("Begin DAMP");
           this._doSequence(sequenceArray, this._doneInternal);
         })
         .catch(e => {

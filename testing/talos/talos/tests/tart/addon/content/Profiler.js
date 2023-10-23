@@ -105,7 +105,6 @@ var Profiler;
           profiler_featuresArray,
           profiler_threadsArray
         );
-        _profiler.PauseSampling();
       }
     },
     finishTest: function Profiler__finishTest() {
@@ -123,22 +122,20 @@ var Profiler;
         _profiler.StopProfiler();
       }
     },
-    resume: function Profiler__resume(name, explicit) {
+    subtestStart: function Profiler__subtestStart(name, explicit) {
       if (_profiler) {
-        _profiler.ResumeSampling();
         ChromeUtils.addProfilerMarker(
           explicit ? name : 'Start of test "' + (name || test_name) + '"',
           { category: "Test" }
         );
       }
     },
-    pause: function Profiler__pause(name, explicit) {
+    subtestEnd: function Profiler__subtestEnd(name, explicit) {
       if (_profiler) {
         ChromeUtils.addProfilerMarker(
           explicit ? name : 'End of test "' + (name || test_name) + '"',
           { category: "Test" }
         );
-        _profiler.PauseSampling();
       }
     },
     mark: function Profiler__mark(marker, explicit) {

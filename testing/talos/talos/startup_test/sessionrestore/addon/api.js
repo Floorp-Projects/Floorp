@@ -92,7 +92,7 @@ this.sessionrestore = class extends ExtensionAPI {
       this.TalosParentProfiler.initFromURLQueryParams(url.search);
     }
 
-    await this.TalosParentProfiler.pause(msg);
+    await this.TalosParentProfiler.subtestEnd(msg);
     await this.TalosParentProfiler.finishStartupProfiling();
   }
 

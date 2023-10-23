@@ -264,9 +264,9 @@ export class TalosTabSwitchParent extends JSWindowActorParent {
       await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
 
       await this.forceGC(win);
-      TalosParentProfiler.resume();
+      TalosParentProfiler.subtestStart();
       let time = await this.switchToTab(tab);
-      TalosParentProfiler.pause(
+      TalosParentProfiler.subtestEnd(
         "TabSwitch Test: " + tab.linkedBrowser.currentURI.spec
       );
       dump(`${tab.linkedBrowser.currentURI.spec}: ${time}ms\n`);
