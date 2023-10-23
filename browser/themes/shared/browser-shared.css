@@ -355,7 +355,6 @@ menupopup::part(drop-indicator) {
 .browserContainer > findbar {
   background-color: var(--toolbar-bgcolor);
   color: var(--toolbar-color);
-  color-scheme: var(--toolbar-color-scheme);
   border-top-color: var(--chrome-content-separator-color, ThreeDShadow);
 }
 
