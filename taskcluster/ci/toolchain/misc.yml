@@ -229,6 +229,36 @@ macosx64-custom-car:
             - MacOSX14.0.sdk
             - macosx64-python-3.8
 
+android-custom-car:
+    description: "Custom chromium-as-release build for Android"
+    treeherder:
+        symbol: TL(custom-car-android)
+    worker:
+        docker-image: {in-tree: custom-car-android}
+        max-run-time: 20000
+    run:
+        script: build-custom-car.sh
+        arguments: [
+            car_android.tar.zst,
+            blink_symbol_level=0,
+            chrome_pgo_phase=2,
+            dcheck_always_on=false,
+            enable_nacl=false,
+            enable_resource_allowlist_generation=false,
+            is_chrome_branded=false,
+            is_clang=true,
+            is_component_build=false,
+            is_debug=false,
+            is_official_build=true,
+            symbol_level=0,
+            target_cpu="arm64",
+            target_os="android",
+            is_android=true,
+            is_high_end_android=true,
+            v8_symbol_level=0
+        ]
+        toolchain-artifact: public/build/car_android.tar.zst
+
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
     treeherder:
