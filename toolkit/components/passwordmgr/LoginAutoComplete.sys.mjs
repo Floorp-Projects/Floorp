@@ -148,6 +148,7 @@ class LoginAutocompleteItem extends AutocompleteItem {
     this.value = hasBeenTypePassword ? login.password : login.username;
     this.comment = JSON.stringify({
       guid: login.guid,
+      login,
       isDuplicateUsername,
       isOriginMatched,
       comment:
@@ -155,7 +156,6 @@ class LoginAutocompleteItem extends AutocompleteItem {
           ? getLocalizedString("displaySameOrigin")
           : login.displayOrigin,
     });
-    this.image = `page-icon:${login.origin}`;
   }
 
   removeFromStorage() {
@@ -175,12 +175,13 @@ class GeneratedPasswordAutocompleteItem extends AutocompleteItem {
     super("generatedPassword");
 
     this.label = getLocalizedString("useASecurelyGeneratedPassword");
+
     this.value = generatedPassword;
+
     this.comment = JSON.stringify({
       generatedPassword,
       willAutoSaveGeneratedPassword,
     });
-    this.image = "chrome://browser/skin/login.svg";
   }
 }
 
@@ -336,7 +337,7 @@ export class LoginAutoCompleteResult {
           ...autocompleteItems.map(
             item =>
               new GenericAutocompleteItem(
-                item.image,
+                item.icon,
                 item.title,
                 item.subtitle,
                 item.fillMessageName,
@@ -443,7 +444,7 @@ export class LoginAutoCompleteResult {
 
   getImageAt(index) {
     this.#throwOnBadIndex(index);
-    return this.#rows[index].image ?? "";
+    return "";
   }
 
   getFinalCompleteValueAt(index) {

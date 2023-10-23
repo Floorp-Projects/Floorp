@@ -83,6 +83,7 @@
       return `
         <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box">
           <div class="profile-label-col profile-item-col">
+            <span class="profile-label-affix"></span>
             <span class="profile-label"></span>
           </div>
           <div class="profile-comment-col profile-item-col">
@@ -102,6 +103,7 @@
       this.appendChild(this.constructor.fragment);
 
       this._itemBox = this.querySelector(".autofill-item-box");
+      this._labelAffix = this.querySelector(".profile-label-affix");
       this._label = this.querySelector(".profile-label");
       this._comment = this.querySelector(".profile-comment");
 
@@ -137,12 +139,13 @@
         `url(${this.getAttribute("ac-image")})`
       );
 
-      let { primary, secondary, ariaLabel } = JSON.parse(
+      let { primaryAffix, primary, secondary, ariaLabel } = JSON.parse(
         this.getAttribute("ac-value")
       );
 
-      this._label.textContent = primary.replaceAll("*", "•");
-      this._comment.textContent = secondary.replaceAll("*", "•");
+      this._labelAffix.textContent = primaryAffix;
+      this._label.textContent = primary;
+      this._comment.textContent = secondary;
       if (ariaLabel) {
         this.setAttribute("aria-label", ariaLabel);
       }
