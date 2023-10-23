@@ -58,7 +58,6 @@
 #include "ActiveLayerTracker.h"
 #include "AnimationCommon.h"
 #include "LayerAnimationInfo.h"
-#include "mozilla/TimelineConsumers.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/PromiseDebugging.h"

@@ -479,23 +479,12 @@ interface nsIDocShell : nsIDocShellTreeItem
     out nsIPrincipal parentCharsetPrincipal);
 
   /**
-   * Whether the docShell records profile timeline markers at the moment
-   */
-  [infallible] attribute boolean recordProfileTimelineMarkers;
-
-  /**
    * Return a DOMHighResTimeStamp representing the number of
    * milliseconds from an arbitrary point in time.  The reference
    * point is shared by all DocShells and is also used by timestamps
    * on markers.
    */
   DOMHighResTimeStamp now();
-
-  /**
-   * Returns and flushes the profile timeline markers gathered by the docShell
-   */
-  [implicit_jscontext]
-  jsval popProfileTimelineMarkers();
 
   /**
    * Add an observer to the list of parties to be notified when this docshell's
@@ -621,19 +610,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript,notxpcom,nostdcall] nsIScriptGlobalObject GetScriptGlobalObject();
 
   [noscript,notxpcom,nostdcall] Document getExtantDocument();
-
-  /**
-   * Notify DocShell when the browser is about to start executing JS, and after
-   * that execution has stopped.  This only occurs when the Timeline devtool
-   * is collecting information.
-   */
-  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStart(in string aReason,
-                                                                  in AString functionName,
-                                                                  in AString fileName,
-                                                                  in unsigned long lineNumber,
-                                                                  in jsval asyncStack,
-                                                                  in string asyncCause);
-  [noscript,notxpcom,nostdcall] void notifyJSRunToCompletionStop();
 
   /**
    * This attribute determines whether a document which is not about:blank has
