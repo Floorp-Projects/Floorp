@@ -1925,6 +1925,7 @@ feltPrivacy:
 attribution:
   description: Prefs related to install attribution
   hasExposure: false
+  isEarlyStartup: true
   variables:
     macosEnabled:
       type: boolean
@@ -1941,4 +1942,3 @@ phc:
       description: Whether to enable PHC
       type: boolean
       setPref: memory.phc.enabled
-
