@@ -6,8 +6,9 @@
 
 #include "vm/GetterSetter.h"
 
-#include "vm/JSContext.h"
 #include "vm/JSObject.h"
+
+#include "vm/JSContext-inl.h"
 
 using namespace js;
 
