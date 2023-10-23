@@ -13,7 +13,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/TypedEnumBits.h"
-#include "js/RealmOptions.h"
 #include "nsHashtablesFwd.h"
 #include "nsICookieJarSettings.h"
 #include "nsIFingerprintingWebCompatService.h"
@@ -139,19 +138,6 @@ enum class RTPCallerType : uint8_t {
   CrossOriginIsolated = (1 << 2)
 };
 
-inline JS::RTPCallerTypeToken RTPCallerTypeToToken(RTPCallerType aType) {
-  return JS::RTPCallerTypeToken{uint8_t(aType)};
-}
-
-inline RTPCallerType RTPCallerTypeFromToken(JS::RTPCallerTypeToken aToken) {
-  MOZ_RELEASE_ASSERT(
-      aToken.value == uint8_t(RTPCallerType::Normal) ||
-      aToken.value == uint8_t(RTPCallerType::SystemPrincipal) ||
-      aToken.value == uint8_t(RTPCallerType::ResistFingerprinting) ||
-      aToken.value == uint8_t(RTPCallerType::CrossOriginIsolated));
-  return static_cast<RTPCallerType>(aToken.value);
-}
-
 enum TimerPrecisionType {
   DangerouslyNone = 1,
   UnconditionalAKAHighRes = 2,
@@ -211,6 +197,10 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   static double ReduceTimePrecisionAsSecsRFPOnly(double aTime,
                                                  int64_t aContextMixin,
                                                  RTPCallerType aRTPCallerType);
+
+  // Used by the JS Engine, as it doesn't know about the TimerPrecisionType enum
+  static double ReduceTimePrecisionAsUSecsWrapper(double aTime, JSContext* aCx);
+
   // Public only for testing purposes
   static double ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
                                         double aResolutionUSec,
@@ -357,10 +347,6 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
       sSpoofingKeyboardCodes;
 
   // --------------------------------------------------------------------------
-
-  // Used by the JS Engine
-  static double ReduceTimePrecisionAsUSecsWrapper(
-      double aTime, JS::RTPCallerTypeToken aCallerType, JSContext* aCx);
 
   static TimerPrecisionType GetTimerPrecisionType(RTPCallerType aRTPCallerType);
 

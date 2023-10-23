@@ -16295,12 +16295,6 @@ bool Document::RecomputeResistFingerprinting() {
           ("Finished RecomputeResistFingerprinting with result %x",
            mShouldResistFingerprinting));
 
-  if (previous != mShouldResistFingerprinting) {
-    if (auto win = nsGlobalWindowInner::Cast(GetInnerWindow())) {
-      win->RefreshReduceTimerPrecisionCallerType();
-    }
-  }
-
   return previous != mShouldResistFingerprinting;
 }
 

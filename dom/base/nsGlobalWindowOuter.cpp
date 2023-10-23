@@ -2414,8 +2414,6 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   MOZ_RELEASE_ASSERT(newInnerWindow->mDoc == aDocument);
 
-  newInnerWindow->RefreshReduceTimerPrecisionCallerType();
-
   if (!aState) {
     if (reUseInnerWindow) {
       // The StorageAccess state may have changed. Invalidate the cached
@@ -2490,7 +2488,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
         &nsGlobalWindowInner::FireOnNewGlobalObject));
   }
 
-  if (!newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
+  if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
     // We should probably notify. However if this is the, arguably bad,
     // situation when we're creating a temporary non-chrome-about-blank
     // document in a chrome docshell, don't notify just yet. Instead wait
