@@ -28,7 +28,7 @@ private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): Product
         }
     } else {
         val mappedRating = adjustedRating?.toFloat()
-        val mappedGrade = grade?.toGrade()
+        val mappedGrade = grade?.asEnumOrDefault<ReviewQualityCheckState.Grade>()
         val mappedHighlights = highlights?.toHighlights()?.toSortedMap()
 
         if (mappedGrade == null && mappedRating == null && mappedHighlights == null) {
@@ -47,13 +47,6 @@ private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): Product
                 highlights = mappedHighlights,
             )
         }
-    }
-
-private fun String.toGrade(): ReviewQualityCheckState.Grade? =
-    try {
-        ReviewQualityCheckState.Grade.valueOf(this)
-    } catch (e: IllegalArgumentException) {
-        null
     }
 
 private fun Boolean.toAnalysisStatus(): AnalysisStatus =
