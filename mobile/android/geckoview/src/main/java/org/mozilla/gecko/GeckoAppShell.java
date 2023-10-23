@@ -56,6 +56,7 @@ import android.webkit.MimeTypeMap;
 import androidx.annotation.Nullable;
 import androidx.collection.SimpleArrayMap;
 import androidx.core.content.res.ResourcesCompat;
+import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -1300,11 +1301,14 @@ public class GeckoAppShell {
       return "DIRECT";
     }
 
+    final InetSocketAddress proxyAddress = (InetSocketAddress) proxy.address();
+    final String proxyString = proxyAddress.getHostString() + ":" + proxyAddress.getPort();
+
     switch (proxy.type()) {
       case HTTP:
-        return "PROXY " + proxy.address().toString();
+        return "PROXY " + proxyString;
       case SOCKS:
-        return "SOCKS " + proxy.address().toString();
+        return "SOCKS " + proxyString;
     }
 
     return "DIRECT";
