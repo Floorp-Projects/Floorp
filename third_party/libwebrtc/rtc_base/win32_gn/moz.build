@@ -58,8 +58,7 @@ LOCAL_INCLUDES += [
 OS_LIBS += [
     "crypt32",
     "iphlpapi",
-    "secur32",
-    "winmm"
+    "secur32"
 ]
 
 UNIFIED_SOURCES += [

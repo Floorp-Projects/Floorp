@@ -129,8 +129,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     OS_LIBS += [
         "crypt32",
         "iphlpapi",
-        "secur32",
-        "winmm"
+        "secur32"
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
