@@ -107,6 +107,11 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("MFMediaEngine decoder %s requested type '%s'",
            supports ? "supports" : "rejects", aParams.MimeType().get()));
+  // We only support HEVC hardware decoding.
+  if (supports && type == WMFStreamType::HEVC) {
+    return media::DecodeSupport::HardwareDecode;
+  }
+  // TODO : find a way to report accurate result.
   return supports ? media::DecodeSupport::SoftwareDecode
                   : media::DecodeSupportSet{};
 }
