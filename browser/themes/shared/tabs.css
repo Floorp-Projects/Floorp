@@ -448,6 +448,7 @@
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tabbrowser-tab:is([selected], [multiselected]) {
   color: var(--tab-selected-textcolor, var(--toolbar-color));
+  color-scheme: var(--toolbar-color-scheme);
 }
 
 @media (prefers-contrast) {

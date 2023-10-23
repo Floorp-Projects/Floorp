@@ -23,6 +23,7 @@
 #customization-container {
   background-color: var(--toolbar-non-lwt-bgcolor);
   color: var(--toolbar-color);
+  color-scheme: var(--toolbar-color-scheme);
 }
 
 #customization-container:-moz-lwtheme {
