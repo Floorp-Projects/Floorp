@@ -1518,11 +1518,18 @@ void gfxDWriteFontList::ReadFaceNamesForFamily(
       }
 
       nsAutoCString psname, fullname;
-      if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
-              data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, psname))) {
-        ToLowerCase(psname);
-        mLocalNameTable.InsertOrUpdate(
-            psname, fontlist::LocalFaceRec::InitData(key, i));
+      // Bug 1854090: don't load PSname if the family name ends with ".tmp",
+      // as some PDF-related software appears to pollute the font collection
+      // with spurious re-encoded versions of standard fonts like Arial, fails
+      // to alter the PSname, and thus can result in garbled rendering because
+      // the wrong resource may be found via src:local(...).
+      if (!StringEndsWith(key, ".tmp"_ns)) {
+        if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
+                data, size, gfxFontUtils::NAME_ID_POSTSCRIPT, psname))) {
+          ToLowerCase(psname);
+          mLocalNameTable.InsertOrUpdate(
+              psname, fontlist::LocalFaceRec::InitData(key, i));
+        }
       }
       if (NS_SUCCEEDED(gfxFontUtils::ReadCanonicalName(
               data, size, gfxFontUtils::NAME_ID_FULL, fullname))) {
