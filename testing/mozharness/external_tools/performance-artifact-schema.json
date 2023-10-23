@@ -14,7 +14,8 @@
             "refbrow",
             "fenix",
             "safari",
-            "custom-car"
+            "custom-car",
+            "cstm-car-m"
           ],
           "maxLength": 10,
           "type": "string"
