@@ -148,7 +148,8 @@ function needHomepageOverride(prefb) {
 
   if (buildID != savedBuildID) {
     prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
-    return OVERRIDE_NEW_BUILD_ID;
+    // Floorp Injections
+    return OVERRIDE_NEW_MSTONE;
   }
 
   return OVERRIDE_NONE;
