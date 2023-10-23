@@ -31,12 +31,6 @@ export const ThemeVariableMap = [
     },
   ],
   [
-    "--tab-selected-bgcolor",
-    {
-      lwtProperty: "tab_selected",
-    },
-  ],
-  [
     "--tab-selected-textcolor",
     {
       lwtProperty: "tab_text",
@@ -96,6 +90,12 @@ export const ThemeVariableMap = [
     "--toolbarbutton-active-background",
     {
       lwtProperty: "button_background_active",
+    },
+  ],
+  [
+    "--lwt-selected-tab-background-color",
+    {
+      lwtProperty: "tab_selected",
     },
   ],
   [
