@@ -816,34 +816,24 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-
 var _propTypes = _interopRequireDefault(__webpack_require__(0));
-
 var _react = _interopRequireDefault(__webpack_require__(6));
-
 var _tab = _interopRequireDefault(__webpack_require__(711));
-
 var _tabList = _interopRequireDefault(__webpack_require__(958));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 class TabList extends _react.default.Component {
   constructor(props) {
     super(props);
-
     const childrenCount = _react.default.Children.count(props.children);
-
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.tabRefs = new Array(childrenCount).fill(0).map(() => /*#__PURE__*/_react.default.createRef());
     this.handlers = this.getHandlers(props.vertical);
   }
-
   componentDidUpdate(prevProps) {
     if (prevProps.activeIndex !== this.props.activeIndex) {
       this.tabRefs[this.props.activeIndex].current.focus();
     }
   }
-
   getHandlers(vertical) {
     if (vertical) {
       return {
@@ -851,37 +841,29 @@ class TabList extends _react.default.Component {
         ArrowUp: this.previous.bind(this)
       };
     }
-
     return {
       ArrowLeft: this.previous.bind(this),
       ArrowRight: this.next.bind(this)
     };
   }
-
   wrapIndex(index) {
     const count = _react.default.Children.count(this.props.children);
-
     return (index + count) % count;
   }
-
   handleKeyPress(event) {
     const handler = this.handlers[event.key];
-
     if (handler) {
       handler();
     }
   }
-
   previous() {
     const newIndex = this.wrapIndex(this.props.activeIndex - 1);
     this.props.onActivateTab(newIndex);
   }
-
   next() {
     const newIndex = this.wrapIndex(this.props.activeIndex + 1);
     this.props.onActivateTab(newIndex);
   }
-
   render() {
     const {
       accessibleId,
@@ -898,7 +880,6 @@ class TabList extends _react.default.Component {
       if (child.type !== _tab.default) {
         throw new Error('Direct children of a <TabList> must be a <Tab>');
       }
-
       const active = index === activeIndex;
       const tabRef = this.tabRefs[index];
       return /*#__PURE__*/_react.default.cloneElement(child, {
@@ -909,9 +890,7 @@ class TabList extends _react.default.Component {
       });
     }));
   }
-
 }
-
 exports.default = TabList;
 TabList.propTypes = {
   accessibleId: _propTypes.default.string,
@@ -942,17 +921,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = Tab;
-
 var _propTypes = _interopRequireDefault(__webpack_require__(0));
-
 var _react = _interopRequireDefault(__webpack_require__(6));
-
 var _ref = _interopRequireDefault(__webpack_require__(938));
-
 var _tab = _interopRequireDefault(__webpack_require__(957));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function Tab({
   accessibleId,
   active,
@@ -972,7 +945,6 @@ function Tab({
     tabIndex: active ? 0 : undefined
   }, children);
 }
-
 Tab.propTypes = {
   accessibleId: _propTypes.default.string,
   active: _propTypes.default.bool,
@@ -1001,13 +973,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = TabPanels;
-
 var _propTypes = _interopRequireDefault(__webpack_require__(0));
-
 var _react = _interopRequireDefault(__webpack_require__(6));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function TabPanels({
   accessibleId,
   activeIndex,
@@ -1022,7 +990,6 @@ function TabPanels({
     tabIndex: hasFocusableContent ? undefined : 0
   }, _react.default.Children.toArray(children)[activeIndex]);
 }
-
 TabPanels.propTypes = {
   accessibleId: _propTypes.default.string,
   activeIndex: _propTypes.default.number,
@@ -1056,17 +1023,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.vendored = void 0;
-
 var fuzzaldrinPlus = _interopRequireWildcard(__webpack_require__(931));
-
 var transition = _interopRequireWildcard(__webpack_require__(934));
-
 var reactAriaComponentsTabs = _interopRequireWildcard(__webpack_require__(937));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+function _getRequireWildcardCache(e) { if ("function" != typeof WeakMap) return null; var r = new WeakMap(), t = new WeakMap(); return (_getRequireWildcardCache = function (e) { return e ? t : r; })(e); }
+function _interopRequireWildcard(e, r) { if (!r && e && e.__esModule) return e; if (null === e || "object" != typeof e && "function" != typeof e) return { default: e }; var t = _getRequireWildcardCache(r); if (t && t.has(e)) return t.get(e); var n = { __proto__: null }, a = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var u in e) if ("default" !== u && Object.prototype.hasOwnProperty.call(e, u)) { var i = a ? Object.getOwnPropertyDescriptor(e, u) : null; i && (i.get || i.set) ? Object.defineProperty(n, u, i) : n[u] = e[u]; } return n.default = e, t && t.set(e, n), n; }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1082,16 +1043,16 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
  *
  * Both are fine, but cannot be mixed for the same module.
  */
+
 // We cannot directly export literals containing special characters
 // (eg. "my-module/Test") which is why they are nested in "vendored".
 // The keys of the vendored object should match the module names
 // !!! Should remain synchronized with .babel/transform-mc.js !!!
-const vendored = {
+const vendored = exports.vendored = {
   "fuzzaldrin-plus": fuzzaldrinPlus,
   "react-aria-components/src/tabs": reactAriaComponentsTabs,
   "react-transition-group/Transition": transition
 };
-exports.vendored = vendored;
 
 /***/ }),
 
@@ -2321,6 +2282,12 @@ exports.classNamesShape = classNamesShape;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+Object.defineProperty(exports, "Tab", {
+  enumerable: true,
+  get: function () {
+    return _tab.default;
+  }
+});
 Object.defineProperty(exports, "TabList", {
   enumerable: true,
   get: function () {
@@ -2333,27 +2300,16 @@ Object.defineProperty(exports, "TabPanels", {
     return _tabPanels.default;
   }
 });
-Object.defineProperty(exports, "Tab", {
-  enumerable: true,
-  get: function () {
-    return _tab.default;
-  }
-});
 Object.defineProperty(exports, "Tabs", {
   enumerable: true,
   get: function () {
     return _tabs.default;
   }
 });
-
 var _tabList = _interopRequireDefault(__webpack_require__(710));
-
 var _tabPanels = _interopRequireDefault(__webpack_require__(712));
-
 var _tab = _interopRequireDefault(__webpack_require__(711));
-
 var _tabs = _interopRequireDefault(__webpack_require__(941));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /***/ }),
@@ -2368,13 +2324,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-
 var _propTypes = _interopRequireDefault(__webpack_require__(0));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = _propTypes.default.object;
-exports.default = _default;
+var _default = exports.default = _propTypes.default.object;
 
 /***/ }),
 
@@ -2388,25 +2340,17 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-
 var _propTypes = _interopRequireDefault(__webpack_require__(0));
-
 var _react = _interopRequireDefault(__webpack_require__(6));
-
 var _uniqueId = _interopRequireDefault(__webpack_require__(942));
-
 var _tabList = _interopRequireDefault(__webpack_require__(710));
-
 var _tabPanels = _interopRequireDefault(__webpack_require__(712));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 class Tabs extends _react.default.Component {
   constructor() {
     super();
     this.accessibleId = (0, _uniqueId.default)();
   }
-
   render() {
     const {
       activeIndex,
@@ -2421,7 +2365,6 @@ class Tabs extends _react.default.Component {
       if (!child) {
         return child;
       }
-
       switch (child.type) {
         case _tabList.default:
           return /*#__PURE__*/_react.default.cloneElement(child, {
@@ -2429,21 +2372,17 @@ class Tabs extends _react.default.Component {
             activeIndex,
             onActivateTab
           });
-
         case _tabPanels.default:
           return /*#__PURE__*/_react.default.cloneElement(child, {
             accessibleId,
             activeIndex
           });
-
         default:
           return child;
       }
     }));
   }
-
 }
-
 exports.default = Tabs;
 Tabs.propTypes = {
   activeIndex: _propTypes.default.number.isRequired,
@@ -2470,7 +2409,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = uniqueId;
 let counter = 0;
-
 function uniqueId() {
   counter += 1;
   return `$rac$${counter}`;

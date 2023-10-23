@@ -87,7 +87,7 @@ describe("mapOriginalExpression", () => {
       }
     );
     expect(generatedExpression).toEqual(
-      "window.thing = function fn() {\n  var a;\n  a;\n  _b;\n};\n\n_a;\n_b;"
+      "window.thing = function fn() {\n  var a;\n  a;\n  _b;\n};\n_a;\n_b;"
     );
   });
 });
