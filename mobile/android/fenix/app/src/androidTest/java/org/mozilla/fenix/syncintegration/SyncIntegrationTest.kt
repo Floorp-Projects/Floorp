@@ -26,11 +26,9 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.ext.toUri
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.ui.robots.accountSettings
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.settingsSubMenuLoginsAndPassword
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -55,9 +53,10 @@ class SyncIntegrationTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/352905
     // History item Desktop -> Fenix
     @Test
-    fun checkHistoryFromDesktopTest() {
+    fun syncHistoryBetweenMobileAndDesktopTest() {
         signInFxSync()
         tapReturnToPreviousApp()
         // Let's wait until homescreen is shown to go to three dot menu
@@ -70,9 +69,10 @@ class SyncIntegrationTest {
         historyAfterSyncIsShown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/330146
     // Bookmark item Desktop -> Fenix
     @Test
-    fun checkBookmarkFromDesktopTest() {
+    fun syncBookmarksTest() {
         signInFxSync()
         tapReturnToPreviousApp()
         homeScreen {
@@ -81,9 +81,10 @@ class SyncIntegrationTest {
         bookmarkAfterSyncIsShown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243353
     @SmokeTest
     @Test
-    fun checkAccountSettings() {
+    fun manageAccountSettingsTest() {
         signInFxSync()
         mDevice.waitNotNull(Until.findObjects(By.text("Account")), TestAssetHelper.waitingTime)
 
@@ -104,9 +105,10 @@ class SyncIntegrationTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/466387
     // Login item Desktop -> Fenix
     @Test
-    fun checkLoginsFromDesktopTest() {
+    fun synLoginsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -133,44 +135,6 @@ class SyncIntegrationTest {
             // After checking the synced logins
             // on Logins and Passwords menu the Sync logins option is set to On
             verifyDefaultViewAfterSync()
-        }
-    }
-
-    // Bookmark item Fenix -> Desktop
-    @Test
-    fun checkBookmarkFromDeviceTest() {
-        val defaultWebPage = "example.com".toUri()!!
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage) {
-        }.openThreeDotMenu {
-        }.bookmarkPage {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openTurnOnSyncMenu {
-            useEmailInsteadButton()
-            typeEmail()
-            tapOnContinueButton()
-            typePassword()
-            sleep(TestAssetHelper.waitingTimeShort)
-            tapOnSignIn()
-        }
-    }
-
-    // History item Fenix -> Desktop
-    @Test
-    fun checkHistoryFromDeviceTest() {
-        val defaultWebPage = "example.com".toUri()!!
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage) {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openTurnOnSyncMenu {
-            useEmailInsteadButton()
-            typeEmail()
-            tapOnContinueButton()
-            typePassword()
-            sleep(TestAssetHelper.waitingTimeShort)
-            tapOnSignIn()
         }
     }
 
