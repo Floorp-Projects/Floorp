@@ -50,7 +50,7 @@ add_task(async function () {
     {
       line: 50,
       column: 47,
-      expression: "Foo.#privateStatic",
+      expression: "#privateStatic",
       fields: [
         ["first", `"a"`],
         ["second", `"b"`],
