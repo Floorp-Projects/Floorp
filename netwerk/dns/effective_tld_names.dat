@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-09-30T15:11:25Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-10-20T15:11:50Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7492,10 +7492,6 @@ citic
 // https://www.iana.org/domains/root/db/city.html
 city
 
-// cityeats : Lifestyle Domain Holdings, Inc.
-// https://www.iana.org/domains/root/db/cityeats.html
-cityeats
-
 // claims : Binky Moon, LLC
 // https://www.iana.org/domains/root/db/claims.html
 claims
@@ -8163,10 +8159,6 @@ frl
 // frogans : OP3FT
 // https://www.iana.org/domains/root/db/frogans.html
 frogans
-
-// frontdoor : Lifestyle Domain Holdings, Inc.
-// https://www.iana.org/domains/root/db/frontdoor.html
-frontdoor
 
 // frontier : Frontier Communications Corporation
 // https://www.iana.org/domains/root/db/frontier.html
@@ -9672,7 +9664,7 @@ promo
 // https://www.iana.org/domains/root/db/properties.html
 properties
 
-// property : Internet Naming Company LLC
+// property : Digital Property Infrastructure Limited
 // https://www.iana.org/domains/root/db/property.html
 property
 
