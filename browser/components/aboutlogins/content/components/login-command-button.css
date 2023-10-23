@@ -25,9 +25,14 @@ img {
 :host([data-copied]) .copied-button-text {
   background-image: url(chrome://global/skin/icons/check.svg);
   background-repeat: no-repeat;
+  background-position: left center;
   -moz-context-properties: fill;
   fill: currentColor;
   padding-inline-start: 22px;
+}
+
+:host([data-copied]) .copied-button-text:dir(rtl) {
+  background-position-x: right;
 }
 
 :host(.create-login-button) img {
