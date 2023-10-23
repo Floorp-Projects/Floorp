@@ -57,7 +57,19 @@ job-defaults:
         by-app:
             chrome-m:
                 - .*shippable-qr.*
+            cstm-car-m:
+                - .*shippable-qr.*
             default: []
+    fetches:
+        toolchain:
+            by-app:
+                cstm-car-m:
+                    - android-custom-car
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                default:
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
 
 browsertime-tp6m:
     <<: &tp6m-defaults
@@ -296,7 +308,7 @@ browsertime-benchmark-speedometer-mobile:
     description: Browsertime Speedometer on Android
     run-without-variant: false
     raptor:
-        apps: [geckoview, fenix, chrome-m]
+        apps: [geckoview, fenix, chrome-m, cstm-car-m]
     tier:
         by-app:
             fenix: 1
@@ -318,7 +330,7 @@ browsertime-benchmark-speedometer3-mobile:
     description: Browsertime Speedometer 3 on Android
     run-without-variant: false
     raptor:
-        apps: [geckoview, fenix, chrome-m]
+        apps: [geckoview, fenix, chrome-m, cstm-car-m]
     tier:
         by-app:
             fenix: 2

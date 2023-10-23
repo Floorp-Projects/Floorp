@@ -80,6 +80,7 @@ def split_apps(config, tests):
         "refbrow": "refbrow",
         "safari": "Saf",
         "custom-car": "CaR",
+        "cstm-car-m": "CaR",
     }
 
     for test in tests:
@@ -90,9 +91,13 @@ def split_apps(config, tests):
 
         for app in apps:
             # Ignore variants for non-Firefox or non-mobile applications.
-            if app not in ["firefox", "geckoview", "fenix", "chrome-m"] and test[
-                "attributes"
-            ].get("unittest_variant"):
+            if app not in [
+                "firefox",
+                "geckoview",
+                "fenix",
+                "chrome-m",
+                "cstm-car-m",
+            ] and test["attributes"].get("unittest_variant"):
                 continue
 
             atest = copy_task(test)
