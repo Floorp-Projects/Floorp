@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 120.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..main)
+# 121.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v120..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 120.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..releases_v120)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/.config.yml)
 
 * **feature-tabs**
   * Adds parameter to `TabCounterToolbarButton` to show the mask while in private browsing mode.
