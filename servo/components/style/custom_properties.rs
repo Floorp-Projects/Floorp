@@ -13,6 +13,7 @@ use crate::properties_and_values::registry::PropertyRegistration;
 use crate::properties_and_values::value::SpecifiedValue as SpecifiedRegisteredValue;
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, PrecomputedHasher};
 use crate::stylist::Stylist;
+use crate::values::computed;
 use crate::Atom;
 use cssparser::{
     CowRcStr, Delimiter, Parser, ParserInput, SourcePosition, Token, TokenSerializationType,
@@ -783,21 +784,23 @@ fn parse_env_function<'i, 't>(
 
 /// A struct that takes care of encapsulating the cascade process for custom
 /// properties.
-pub struct CustomPropertiesBuilder<'a> {
+pub struct CustomPropertiesBuilder<'a, 'b: 'a> {
     seen: PrecomputedHashSet<&'a Name>,
     may_have_cycles: bool,
     custom_properties: ComputedCustomProperties,
     inherited: &'a ComputedCustomProperties,
     reverted: PrecomputedHashMap<&'a Name, (CascadePriority, bool)>,
     stylist: &'a Stylist,
+    computed_context: &'a computed::Context<'b>,
     is_root_element: bool,
 }
 
-impl<'a> CustomPropertiesBuilder<'a> {
+impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
     pub fn new(
         inherited: &'a ComputedCustomProperties,
         stylist: &'a Stylist,
+        computed_context: &'a computed::Context<'b>,
         is_root_element: bool,
     ) -> Self {
         let initial_values = stylist.get_custom_property_initial_values();
@@ -816,6 +819,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
             },
             inherited,
             stylist,
+            computed_context,
             is_root_element,
         }
     }
@@ -953,7 +957,7 @@ impl<'a> CustomPropertiesBuilder<'a> {
             _ => {},
         }
 
-        let existing_value = self.custom_properties.get(&self.stylist, &name);
+        let existing_value = self.custom_properties.get(self.stylist, &name);
         match (existing_value, value) {
             (None, &CustomDeclarationValue::CSSWideKeyword(CSSWideKeyword::Initial)) => {
                 debug_assert!(

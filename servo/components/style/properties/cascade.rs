@@ -233,7 +233,7 @@ pub enum CascadeMode<'a, 'b> {
 fn iter_declarations<'builder, 'decls: 'builder>(
     iter: impl Iterator<Item = (&'decls PropertyDeclaration, CascadePriority)>,
     declarations: &mut Declarations<'decls>,
-    mut custom_builder: Option<&mut CustomPropertiesBuilder<'builder>>,
+    mut custom_builder: Option<&mut CustomPropertiesBuilder<'builder, 'decls>>,
 ) {
     for (declaration, priority) in iter {
         if let PropertyDeclaration::Custom(ref declaration) = *declaration {
@@ -250,23 +250,23 @@ fn iter_declarations<'builder, 'decls: 'builder>(
 /// NOTE: This function expects the declaration with more priority to appear
 /// first.
 pub fn apply_declarations<'a, E, I>(
-    stylist: &Stylist,
-    pseudo: Option<&PseudoElement>,
+    stylist: &'a Stylist,
+    pseudo: Option<&'a PseudoElement>,
     rules: &StrongRuleNode,
     guards: &StylesheetGuards,
     iter: I,
-    originating_element_style: Option<&ComputedValues>,
-    parent_style: Option<&ComputedValues>,
+    originating_element_style: Option<&'a ComputedValues>,
+    parent_style: Option<&'a ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
-    first_line_reparenting: FirstLineReparenting,
+    first_line_reparenting: FirstLineReparenting<'a>,
     cascade_mode: CascadeMode,
     cascade_input_flags: ComputedValueFlags,
-    rule_cache: Option<&RuleCache>,
-    rule_cache_conditions: &mut RuleCacheConditions,
+    rule_cache: Option<&'a RuleCache>,
+    rule_cache_conditions: &'a mut RuleCacheConditions,
     element: Option<E>,
 ) -> Arc<ComputedValues>
 where
-    E: TElement,
+    E: TElement + 'a,
     I: Iterator<Item = (&'a PropertyDeclaration, CascadePriority)>,
 {
     debug_assert_eq!(
@@ -316,12 +316,17 @@ where
             // try to avoid gathering the declarations. That'd be:
             //      unvisited_context.builder.rules.as_ref() == Some(rules)
             iter_declarations(iter, &mut declarations, None);
+
             LonghandIdSet::visited_dependent()
         },
         CascadeMode::Unvisited { visited_rules } => {
             cascade.context.builder.custom_properties = {
-                let mut builder =
-                    CustomPropertiesBuilder::new(inherited_style.custom_properties(), stylist, is_root_element);
+                let mut builder = CustomPropertiesBuilder::new(
+                    inherited_style.custom_properties(),
+                    stylist,
+                    cascade.context,
+                    is_root_element,
+                );
                 iter_declarations(iter, &mut declarations, Some(&mut builder));
                 builder.build()
             };
