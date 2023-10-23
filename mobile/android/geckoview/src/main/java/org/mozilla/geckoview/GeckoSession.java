@@ -2710,18 +2710,12 @@ public class GeckoSession {
           return false;
         }
 
-        if (mIndex >= mState.getHistoryEntries().length) {
-          return false;
-        }
-        return true;
+        return mIndex < mState.getHistoryEntries().length;
       }
 
       @Override /* ListIterator */
       public boolean hasPrevious() {
-        if (mIndex <= 0) {
-          return false;
-        }
-        return true;
+        return mIndex > 0;
       }
 
       @Override /* ListIterator */
@@ -6231,10 +6225,7 @@ public class GeckoSession {
        */
       @UiThread
       public @NonNull PromptResponse confirm(@NonNull final AllowOrDeny response) {
-        boolean res = false;
-        if (AllowOrDeny.ALLOW == response) {
-          res = true;
-        }
+        final boolean res = AllowOrDeny.ALLOW == response;
         ensureResult().putBoolean("response", res);
         return super.confirm();
       }

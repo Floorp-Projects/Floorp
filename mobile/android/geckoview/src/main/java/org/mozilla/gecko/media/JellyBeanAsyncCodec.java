@@ -186,11 +186,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         return false;
       }
 
-      if (mInputEnded && (what == MSG_POLL_INPUT_BUFFERS)) {
-        return false;
-      }
-
-      return true;
+      return !(mInputEnded && (what == MSG_POLL_INPUT_BUFFERS));
     }
 
     protected boolean handleMessageLocked(final Message msg) {
