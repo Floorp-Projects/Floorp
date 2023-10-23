@@ -17,10 +17,11 @@
 #include "gc/Allocator.h"
 
 #include "gc/Cell.h"
-#include "gc/Nursery.h"
 #include "gc/Zone.h"
 #include "js/Class.h"
 #include "js/RootingAPI.h"
+
+#include "gc/Nursery-inl.h"
 
 namespace js {
 namespace gc {

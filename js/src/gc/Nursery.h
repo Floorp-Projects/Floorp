@@ -124,40 +124,8 @@ class Nursery {
 
   // Allocate and return a pointer to a new GC thing. Returns nullptr if the
   // handleAllocationFailure() needs to be called before retrying.
-  void* tryAllocateCell(gc::AllocSite* site, size_t size, JS::TraceKind kind) {
-    // Ensure there's enough space to replace the contents with a
-    // RelocationOverlay.
-    // MOZ_ASSERT(size >= sizeof(RelocationOverlay));
-    MOZ_ASSERT(size % gc::CellAlignBytes == 0);
-    MOZ_ASSERT(size_t(kind) < gc::NurseryTraceKinds);
-    MOZ_ASSERT_IF(kind == JS::TraceKind::String, canAllocateStrings());
-    MOZ_ASSERT_IF(kind == JS::TraceKind::BigInt, canAllocateBigInts());
-
-    void* ptr = tryAllocate(sizeof(gc::NurseryCellHeader) + size);
-    if (MOZ_UNLIKELY(!ptr)) {
-      return nullptr;
-    }
-
-    new (ptr) gc::NurseryCellHeader(site, kind);
-
-    void* cell =
-        reinterpret_cast<void*>(uintptr_t(ptr) + sizeof(gc::NurseryCellHeader));
-    if (!cell) {
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
-          "Successful allocation cannot result in nullptr");
-    }
-
-    // Update the allocation site. This code is also inlined in
-    // MacroAssembler::updateAllocSite.
-    uint32_t allocCount = site->incAllocCount();
-    if (allocCount == 1) {
-      pretenuringNursery.insertIntoAllocatedList(site);
-    }
-    MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
-
-    gc::gcprobes::NurseryAlloc(cell, kind);
-    return cell;
-  }
+  inline void* tryAllocateCell(gc::AllocSite* site, size_t size,
+                               JS::TraceKind kind);
 
   // Attempt to handle the failure of tryAllocate. Returns a GCReason if minor
   // GC is required, or NO_REASON if the failure was handled and allocation will
@@ -600,30 +568,7 @@ class Nursery {
 
   // Common internal allocator function. If this fails, call
   // handleAllocationFailure to see whether it's possible to retry.
-  void* tryAllocate(size_t size) {
-    MOZ_ASSERT(isEnabled());
-    MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-    MOZ_ASSERT_IF(currentChunk_ == startChunk_, position() >= startPosition_);
-    MOZ_ASSERT(size % gc::CellAlignBytes == 0);
-    MOZ_ASSERT(position() % gc::CellAlignBytes == 0);
-
-    if (MOZ_UNLIKELY(currentEnd() < position() + size)) {
-      return nullptr;
-    }
-
-    void* ptr = reinterpret_cast<void*>(position());
-    if (!ptr) {
-      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
-          "Successful allocation cannot result in nullptr");
-    }
-
-    position_ = position() + size;
-
-    DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
-                    MemCheckKind::MakeUndefined);
-
-    return ptr;
-  }
+  inline void* tryAllocate(size_t size);
 
   [[nodiscard]] bool moveToNextChunk();
 
