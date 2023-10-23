@@ -118,7 +118,7 @@ class ReviewQualityCheckNetworkMiddleware(
                     } else {
                         // poll succeeded, update state
                         val productAnalysis = reviewQualityCheckService.fetchProductReview()
-                        val productReviewState = productAnalysis.toProductReviewState(false)
+                        val productReviewState = productAnalysis.toProductReviewState()
                         store.updateProductReviewState(productReviewState)
                     }
 

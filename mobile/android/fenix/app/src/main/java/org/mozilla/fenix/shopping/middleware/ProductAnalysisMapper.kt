@@ -15,10 +15,10 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
  */
-fun ProductAnalysis?.toProductReviewState(isInitialAnalysis: Boolean = true): ProductReviewState =
-    this?.toProductReview(isInitialAnalysis) ?: ProductReviewState.Error.GenericError
+fun ProductAnalysis?.toProductReviewState(): ProductReviewState =
+    this?.toProductReview() ?: ProductReviewState.Error.GenericError
 
-private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): ProductReviewState =
+private fun ProductAnalysis.toProductReview(): ProductReviewState =
     if (pageNotSupported) {
         ProductReviewState.Error.UnsupportedProductTypeError
     } else if (productId == null) {
@@ -27,17 +27,15 @@ private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): Product
         } else {
             ProductReviewState.Error.GenericError
         }
+    } else if (notEnoughReviews && !needsAnalysis) {
+        ProductReviewState.Error.NotEnoughReviews
     } else {
         val mappedRating = adjustedRating?.toFloat()
         val mappedGrade = grade?.asEnumOrDefault<ReviewQualityCheckState.Grade>()
         val mappedHighlights = highlights?.toHighlights()?.toSortedMap()
 
         if (mappedGrade == null && mappedRating == null && mappedHighlights == null) {
-            if (isInitialAnalysis) {
-                ProductReviewState.NoAnalysisPresent()
-            } else {
-                ProductReviewState.Error.NotEnoughReviews
-            }
+            ProductReviewState.NoAnalysisPresent()
         } else {
             ProductReviewState.AnalysisPresent(
                 productId = productId!!,

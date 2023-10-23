@@ -2591,6 +2591,7 @@ class GeckoEngineSessionTest {
             .analysisUrl(analysisURL)
             .needsAnalysis(true)
             .pageNotSupported(false)
+            .notEnoughReviews(false)
             .highlights(null)
             .lastAnalysisTime(lastAnalysisTime)
             .deletedProductReported(true)

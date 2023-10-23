@@ -752,6 +752,7 @@ class GeckoEngineSession(
                 response.adjustedRating,
                 response.needsAnalysis,
                 response.pageNotSupported,
+                response.notEnoughReviews,
                 response.lastAnalysisTime,
                 response.deletedProductReported,
                 response.deletedProduct,

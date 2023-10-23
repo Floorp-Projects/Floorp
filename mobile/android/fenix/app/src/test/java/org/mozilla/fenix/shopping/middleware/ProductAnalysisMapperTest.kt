@@ -141,25 +141,11 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN grade, rating and highlights are all null and it is initial analysis THEN it is mapped to no analysis present`() {
-        val actual =
-            ProductAnalysisTestData.productAnalysis(
-                grade = null,
-                adjustedRating = null,
-                highlights = null,
-            ).toProductReviewState(isInitialAnalysis = true)
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()
-
-        assertEquals(expected, actual)
-    }
-
-    @Test
-    fun `WHEN grade, rating and highlights are all null and it is not initial analysis THEN not enough reviews card is visible`() {
+    fun `WHEN there are not enough reviews and no analysis needed THEN not enough reviews card is visible`() {
         val actual = ProductAnalysisTestData.productAnalysis(
-            grade = null,
-            adjustedRating = null,
-            highlights = null,
-        ).toProductReviewState(isInitialAnalysis = false)
+            notEnoughReviews = true,
+            needsAnalysis = false,
+        ).toProductReviewState()
 
         val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.NotEnoughReviews
 
@@ -167,12 +153,62 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN only rating is available it is not initial analysis THEN it is mapped to AnalysisPresent`() {
+    fun `WHEN there are enough reviews and no analysis needed THEN it is mapped to AnalysisPresent`() {
+        val actual = ProductAnalysisTestData.productAnalysis(
+            notEnoughReviews = false,
+            needsAnalysis = false,
+        ).toProductReviewState()
+
+        val expected = ProductAnalysisTestData.analysisPresent(
+            productId = "1",
+            reviewGrade = ReviewQualityCheckState.Grade.A,
+            analysisStatus = AnalysisStatus.UP_TO_DATE,
+            adjustedRating = 4.5f,
+            productUrl = "https://test.com",
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `WHEN there are not enough reviews and analysis is needed THEN it is mapped to AnalysisPresent with NEEDS_ANALYSIS status`() {
+        val actual = ProductAnalysisTestData.productAnalysis(
+            notEnoughReviews = true,
+            needsAnalysis = true,
+        ).toProductReviewState()
+
+        val expected = ProductAnalysisTestData.analysisPresent(
+            productId = "1",
+            reviewGrade = ReviewQualityCheckState.Grade.A,
+            analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
+            adjustedRating = 4.5f,
+            productUrl = "https://test.com",
+            highlightsInfo = null,
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `WHEN grade, rating and highlights are all null THEN it is mapped to no analysis present`() {
+        val actual =
+            ProductAnalysisTestData.productAnalysis(
+                grade = null,
+                adjustedRating = null,
+                highlights = null,
+            ).toProductReviewState()
+        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent()
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `WHEN only rating is available THEN it is mapped to AnalysisPresent`() {
         val actual = ProductAnalysisTestData.productAnalysis(
             grade = null,
             adjustedRating = 3.5,
             highlights = null,
-        ).toProductReviewState(isInitialAnalysis = false)
+        ).toProductReviewState()
 
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
@@ -184,12 +220,12 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN only grade is available it is not initial analysis THEN it is mapped to AnalysisPresent`() {
+    fun `WHEN only grade is available THEN it is mapped to AnalysisPresent`() {
         val actual = ProductAnalysisTestData.productAnalysis(
             grade = "B",
             adjustedRating = null,
             highlights = null,
-        ).toProductReviewState(isInitialAnalysis = false)
+        ).toProductReviewState()
 
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = ReviewQualityCheckState.Grade.B,
@@ -201,7 +237,7 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN only highlights are available it is not initial analysis THEN it is mapped to AnalysisPresent`() {
+    fun `WHEN only highlights are available THEN it is mapped to AnalysisPresent`() {
         val actual = ProductAnalysisTestData.productAnalysis(
             grade = null,
             adjustedRating = null,
@@ -212,7 +248,7 @@ class ProductAnalysisMapperTest {
                 appearance = listOf("appearance"),
                 competitiveness = listOf("competitiveness"),
             ),
-        ).toProductReviewState(isInitialAnalysis = false)
+        ).toProductReviewState()
 
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
@@ -230,7 +266,7 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN highlights and grade are available it is not initial analysis THEN it is mapped to AnalysisPresent`() {
+    fun `WHEN highlights and grade are available THEN it is mapped to AnalysisPresent`() {
         val actual = ProductAnalysisTestData.productAnalysis(
             grade = "B",
             adjustedRating = null,
@@ -241,7 +277,7 @@ class ProductAnalysisMapperTest {
                 appearance = listOf("appearance"),
                 competitiveness = listOf("competitiveness"),
             ),
-        ).toProductReviewState(isInitialAnalysis = false)
+        ).toProductReviewState()
 
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = ReviewQualityCheckState.Grade.B,
@@ -259,7 +295,7 @@ class ProductAnalysisMapperTest {
     }
 
     @Test
-    fun `WHEN highlights and rating are available it is not initial analysis THEN it is mapped to AnalysisPresent`() {
+    fun `WHEN highlights and rating are available THEN it is mapped to AnalysisPresent`() {
         val actual = ProductAnalysisTestData.productAnalysis(
             grade = null,
             adjustedRating = 3.4,
@@ -270,7 +306,7 @@ class ProductAnalysisMapperTest {
                 appearance = listOf("appearance"),
                 competitiveness = listOf("competitiveness"),
             ),
-        ).toProductReviewState(isInitialAnalysis = false)
+        ).toProductReviewState()
 
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,

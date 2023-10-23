@@ -657,7 +657,7 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `GIVEN reanalysis and status api call succeeds WHEN analysis fetched has grade, rating and highlights as null THEN not enough reviews card is displayed`() =
+    fun `GIVEN reanalysis and status api call succeeds WHEN notEnoughReviews is true THEN not enough reviews card is displayed`() =
         runTest {
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
@@ -665,9 +665,7 @@ class ReviewQualityCheckStoreTest {
                     reviewQualityCheckService = FakeReviewQualityCheckService(
                         productAnalysis = {
                             ProductAnalysisTestData.productAnalysis(
-                                grade = null,
-                                adjustedRating = null,
-                                highlights = null,
+                                notEnoughReviews = true,
                             )
                         },
                         reanalysis = AnalysisStatusDto.PENDING,
