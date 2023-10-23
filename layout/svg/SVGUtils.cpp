@@ -421,10 +421,10 @@ SVGUtils::MaskUsage SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame,
 
   const nsStyleSVGReset* svgReset = firstFrame->StyleSVGReset();
 
-  nsTArray<SVGMaskFrame*> maskFrames;
-  // XXX check return value?
-  SVGObserverUtils::GetAndObserveMasks(firstFrame, &maskFrames);
-  usage.mShouldGenerateMaskLayer = (maskFrames.Length() > 0);
+  if (SVGObserverUtils::GetAndObserveMasks(firstFrame, nullptr) !=
+      SVGObserverUtils::eHasNoRefs) {
+    usage.mShouldGenerateMaskLayer = true;
+  }
 
   SVGClipPathFrame* clipPathFrame;
   // XXX check return value?
@@ -441,7 +441,14 @@ SVGUtils::MaskUsage SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame,
         }
       }
       break;
-    case ClipPathType::Shape:
+    case ClipPathType::Shape: {
+      usage.mShouldApplyBasicShapeOrPath = true;
+      const auto& shape = svgReset->mClipPath.AsShape()._0;
+      usage.mIsSimpleClipShape =
+          !usage.mShouldGenerateMaskLayer &&
+          (shape->IsRect() || shape->IsCircle() || shape->IsEllipse());
+      break;
+    }
     case ClipPathType::Box:
       usage.mShouldApplyBasicShapeOrPath = true;
       break;
@@ -604,13 +611,8 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
   const bool hasInvalidFilter =
       SVGObserverUtils::GetAndObserveFilters(aFrame, &filterFrames) ==
       SVGObserverUtils::eHasRefsSomeInvalid;
-  if (SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame) ==
-          SVGObserverUtils::eHasRefsSomeInvalid ||
-      SVGObserverUtils::GetAndObserveMasks(aFrame, &maskFrames) ==
-          SVGObserverUtils::eHasRefsSomeInvalid) {
-    // Some resource is invalid. We shouldn't paint anything.
-    return;
-  }
+  SVGObserverUtils::GetAndObserveClipPath(aFrame, &clipPathFrame);
+  SVGObserverUtils::GetAndObserveMasks(aFrame, &maskFrames);
 
   SVGMaskFrame* maskFrame = maskFrames.IsEmpty() ? nullptr : maskFrames[0];
 

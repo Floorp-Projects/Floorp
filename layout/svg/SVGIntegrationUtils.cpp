@@ -163,26 +163,6 @@ bool SVGIntegrationUtils::UsingEffectsForFrame(const nsIFrame* aFrame) {
          style->HasClipPath() || style->HasMask();
 }
 
-bool SVGIntegrationUtils::UsingMaskOrClipPathForFrame(const nsIFrame* aFrame) {
-  const nsStyleSVGReset* style = aFrame->StyleSVGReset();
-  return style->HasClipPath() || style->HasMask();
-}
-
-bool SVGIntegrationUtils::UsingSimpleClipPathForFrame(const nsIFrame* aFrame) {
-  const nsStyleSVGReset* style = aFrame->StyleSVGReset();
-  if (!style->HasClipPath() || style->HasMask()) {
-    return false;
-  }
-
-  const auto& clipPath = style->mClipPath;
-  if (!clipPath.IsShape()) {
-    return false;
-  }
-
-  const auto& shape = clipPath.AsShape()._0;
-  return shape->IsRect() || shape->IsCircle() || shape->IsEllipse();
-}
-
 nsPoint SVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     // Do NOT call GetAllInFlowRectsUnion for SVG - it will get the
@@ -742,9 +722,12 @@ bool SVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams,
 template <class T>
 void PaintMaskAndClipPathInternal(const PaintFramesParams& aParams,
                                   const T& aPaintChild) {
-  MOZ_ASSERT(SVGIntegrationUtils::UsingMaskOrClipPathForFrame(aParams.frame),
+#ifdef DEBUG
+  const nsStyleSVGReset* style = aParams.frame->StyleSVGReset();
+  MOZ_ASSERT(style->HasClipPath() || style->HasMask(),
              "Should not use this method when no mask or clipPath effect"
              "on this frame");
+#endif
 
   /* SVG defines the following rendering model:
    *

@@ -1017,13 +1017,13 @@ void SVGMaskObserverList::ResolveImage(uint32_t aIndex) {
   const nsStyleSVGReset* svgReset = mFrame->StyleSVGReset();
   MOZ_ASSERT(aIndex < svgReset->mMask.mImageCount);
 
-  auto& image = const_cast<StyleImage&>(svgReset->mMask.mLayers[aIndex].mImage);
+  const auto& image = svgReset->mMask.mLayers[aIndex].mImage;
   if (image.IsResolved()) {
     return;
   }
   MOZ_ASSERT(image.IsImageRequestType());
   Document* doc = mFrame->PresContext()->Document();
-  image.ResolveImage(*doc, nullptr);
+  const_cast<StyleImage&>(image).ResolveImage(*doc, nullptr);
   if (imgRequestProxy* req = image.GetImageRequest()) {
     // FIXME(emilio): What disassociates this request?
     doc->StyleImageLoader()->AssociateRequestToFrame(req, mFrame);
@@ -1417,7 +1417,7 @@ SVGObserverUtils::ReferenceState SVGObserverUtils::GetAndObserveClipPath(
           LayoutFrameType::SVGClipPath, &frameTypeOK));
   // Note that, unlike for filters, a reference to an ID that doesn't exist
   // is not invalid for clip-path or mask.
-  if (!frameTypeOK || (frame && !frame->IsValid())) {
+  if (!frameTypeOK) {
     return eHasRefsSomeInvalid;
   }
   if (aClipPathFrame) {

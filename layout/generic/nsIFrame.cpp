@@ -2939,12 +2939,10 @@ static void WrapSeparatorTransform(nsDisplayListBuilder* aBuilder,
 // that will be built for |aMaskedFrame|. If we're not able to compute
 // one, return an empty Maybe.
 // The returned clip rect, if there is one, is relative to |aMaskedFrame|.
-static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
-                                            nsIFrame* aMaskedFrame) {
+static Maybe<nsRect> ComputeClipForMaskItem(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aMaskedFrame,
+    const SVGUtils::MaskUsage& aMaskUsage) {
   const nsStyleSVGReset* svgReset = aMaskedFrame->StyleSVGReset();
-
-  SVGUtils::MaskUsage maskUsage =
-      SVGUtils::DetermineMaskUsage(aMaskedFrame, false);
 
   nsPoint offsetToUserSpace =
       nsLayoutUtils::ComputeOffsetToUserSpace(aBuilder, aMaskedFrame);
@@ -2958,14 +2956,14 @@ static Maybe<nsRect> ComputeClipForMaskItem(nsDisplayListBuilder* aBuilder,
   aBuilder->FindReferenceFrameFor(aMaskedFrame, &toReferenceFrame);
 
   Maybe<gfxRect> combinedClip;
-  if (maskUsage.ShouldApplyBasicShapeOrPath()) {
+  if (aMaskUsage.ShouldApplyBasicShapeOrPath()) {
     Maybe<Rect> result =
         CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
             aMaskedFrame, svgReset->mClipPath);
     if (result) {
       combinedClip = Some(ThebesRect(*result));
     }
-  } else if (maskUsage.ShouldApplyClipPath()) {
+  } else if (aMaskUsage.ShouldApplyClipPath()) {
     gfxRect result = SVGUtils::GetBBox(
         aMaskedFrame,
         SVGUtils::eBBoxIncludeClipped | SVGUtils::eBBoxIncludeFill |
@@ -3285,7 +3283,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   }
 
   bool usingFilter = effects->HasFilters() && !style.IsRootElementStyle();
-  bool usingMask = SVGIntegrationUtils::UsingMaskOrClipPathForFrame(this);
+  SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(this, false);
+  bool usingMask = maskUsage.UsingMaskOrClipPath();
   bool usingSVGEffects = usingFilter || usingMask;
 
   nsRect visibleRectOutsideSVGEffects = visibleRect;
@@ -3419,7 +3418,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     // Filters are a containing block for fixed and absolute descendants,
     // so the masked content cannot move with an ancestor ASR.
     if (usingMask && !usingFilter) {
-      clipForMask = ComputeClipForMaskItem(aBuilder, this);
+      clipForMask = ComputeClipForMaskItem(aBuilder, this, maskUsage);
       if (clipForMask) {
         aBuilder->IntersectDirtyRect(*clipForMask);
         aBuilder->IntersectVisibleRect(*clipForMask);
@@ -11146,11 +11145,12 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
   // Anything that didn't match the above conditions is visible to hit-testing.
   result = CompositorHitTestFlags::eVisibleToHitTest;
-  if (SVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+  SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(this, false);
+  if (maskUsage.UsingMaskOrClipPath()) {
     // If WebRender is enabled, simple clip-paths can be converted into WR
     // clips that WR knows how to hit-test against, so we don't need to mark
     // it as an irregular area.
-    if (!SVGIntegrationUtils::UsingSimpleClipPathForFrame(this)) {
+    if (!maskUsage.IsSimpleClipShape()) {
       result += CompositorHitTestFlags::eIrregularArea;
     }
   }
