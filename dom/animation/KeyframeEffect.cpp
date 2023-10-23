@@ -7,6 +7,7 @@
 #include "mozilla/dom/KeyframeEffect.h"
 
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/KeyframeAnimationOptionsBinding.h"
 // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/KeyframeEffectBinding.h"
@@ -1146,7 +1147,7 @@ static void CreatePropertyValue(
 void KeyframeEffect::GetProperties(
     nsTArray<AnimationPropertyDetails>& aProperties, ErrorResult& aRv) const {
   const StylePerDocumentStyleData* rawData =
-      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
+      mDocument->EnsureStyleSet().RawData();
 
   for (const AnimationProperty& property : mProperties) {
     AnimationPropertyDetails propertyDetails;
@@ -1252,7 +1253,7 @@ void KeyframeEffect::GetKeyframes(JSContext* aCx, nsTArray<JSObject*>& aResult,
   }
 
   const StylePerDocumentStyleData* rawData =
-      mDocument->StyleSetForPresShellOrMediaQueryEvaluation()->RawData();
+      mDocument->EnsureStyleSet().RawData();
 
   for (const Keyframe& keyframe : mKeyframes) {
     // Set up a dictionary object for the explicit members
