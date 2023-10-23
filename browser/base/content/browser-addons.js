@@ -288,31 +288,6 @@ function buildNotificationAction(msg, callback) {
 }
 
 var gXPInstallObserver = {
-  _findChildShell(aDocShell, aSoughtShell) {
-    if (aDocShell == aSoughtShell) {
-      return aDocShell;
-    }
-
-    var node = aDocShell.QueryInterface(Ci.nsIDocShellTreeItem);
-    for (var i = 0; i < node.childCount; ++i) {
-      var docShell = node.getChildAt(i);
-      docShell = this._findChildShell(docShell, aSoughtShell);
-      if (docShell == aSoughtShell) {
-        return docShell;
-      }
-    }
-    return null;
-  },
-
-  _getBrowser(aDocShell) {
-    for (let browser of gBrowser.browsers) {
-      if (this._findChildShell(browser.docShell, aDocShell)) {
-        return browser;
-      }
-    }
-    return null;
-  },
-
   pendingInstalls: new WeakMap(),
 
   showInstallConfirmation(browser, installInfo, height = undefined) {
