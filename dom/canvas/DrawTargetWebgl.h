@@ -19,6 +19,7 @@
 
 namespace WGR {
 struct OutputVertex;
+struct PathBuilder;
 }
 
 namespace mozilla {
@@ -196,8 +197,11 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     bool mPathAAStroke = true;
     // Whether to accelerate stroked paths with WGR.
     bool mPathWGRStroke = false;
+
+    WGR::PathBuilder* mWGRPathBuilder = nullptr;
     // Temporary buffer for generating WGR output into.
     UniquePtr<WGR::OutputVertex[]> mWGROutputBuffer;
+
     RefPtr<WebGLProgramJS> mSolidProgram;
     RefPtr<WebGLUniformLocationJS> mSolidProgramViewport;
     RefPtr<WebGLUniformLocationJS> mSolidProgramAA;

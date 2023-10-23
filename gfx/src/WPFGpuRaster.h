@@ -42,6 +42,7 @@ struct VertexBuffer {
 
 extern "C" {
 PathBuilder* wgr_new_builder();
+void wgr_builder_reset(PathBuilder* pb);
 void wgr_builder_move_to(PathBuilder* pb, float x, float y);
 void wgr_builder_line_to(PathBuilder* pb, float x, float y);
 void wgr_builder_curve_to(PathBuilder* pb, float c1x, float c1y, float c2x,
