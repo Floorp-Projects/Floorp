@@ -36,7 +36,7 @@ RareArgumentsData* RareArgumentsData::create(JSContext* cx,
                                              ArgumentsObject* obj) {
   size_t bytes = RareArgumentsData::bytesRequired(obj->initialLength());
 
-  uint8_t* data = AllocateObjectBuffer<uint8_t>(cx, obj, bytes);
+  uint8_t* data = AllocateCellBuffer<uint8_t>(cx, obj, bytes);
   if (!data) {
     return nullptr;
   }
@@ -307,7 +307,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   }
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
-      AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+      AllocateCellBuffer<uint8_t>(cx, obj, numBytes));
   if (!data) {
     // Make the object safe for GC.
     obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
@@ -415,7 +415,7 @@ ArgumentsObject* ArgumentsObject::finishPure(
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(
-      AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+      AllocateCellBuffer<uint8_t>(cx, obj, numBytes));
   if (!data) {
     // Make the object safe for GC. Don't report OOM, the slow path will
     // retry the allocation.
