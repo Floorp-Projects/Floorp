@@ -13,6 +13,7 @@ support-files = [
 ]
 
 ["browser_shopping_ads_test.js"]
+["browser_shopping_ad_not_available.js"]
 ["browser_shopping_integration.js"]
 support-files = [
   "analysis.sjs",
