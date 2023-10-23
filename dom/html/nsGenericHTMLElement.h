@@ -20,6 +20,8 @@
 #include "mozilla/dom/PopoverData.h"
 #include "mozilla/dom/ToggleEvent.h"
 
+#include <cstdint>
+
 class nsDOMTokenList;
 class nsIFormControlFrame;
 class nsIFrame;
