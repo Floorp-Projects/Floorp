@@ -42,6 +42,7 @@ class PresState;
 namespace dom {
 class ElementInternals;
 class HTMLFormElement;
+enum class FetchPriority : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -683,7 +684,19 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     GetAttr(nsGkAtoms::value, aResult);
   }
 
+  // <https://html.spec.whatwg.org/#fetch-priority-attribute>.
+  static mozilla::dom::FetchPriority ToFetchPriority(const nsAString& aValue);
+
+  void GetFetchPriority(nsAString& aFetchPriority) const;
+
+  void SetFetchPriority(const nsAString& aFetchPriority) {
+    SetHTMLAttr(nsGkAtoms::fetchpriority, aFetchPriority);
+  }
+
  protected:
+  static void ParseFetchPriority(const nsAString& aValue, nsAttrValue& aResult);
+
+ private:
   /**
    * Add/remove this element to the documents name cache
    */

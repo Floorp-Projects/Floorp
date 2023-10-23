@@ -41,8 +41,7 @@ JSObject* HTMLScriptElement::WrapNode(JSContext* aCx,
 HTMLScriptElement::HTMLScriptElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
     FromParser aFromParser)
-    : nsGenericHTMLElementWithFetchPriorityAttribute(std::move(aNodeInfo)),
-      ScriptElement(aFromParser) {
+    : nsGenericHTMLElement(std::move(aNodeInfo)), ScriptElement(aFromParser) {
   AddMutationObserver(this);
 }
 
@@ -78,10 +77,15 @@ bool HTMLScriptElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       aResult.ParseStringOrAtom(aValue);
       return true;
     }
+
+    if (aAttribute == nsGkAtoms::fetchpriority) {
+      ParseFetchPriority(aValue, aResult);
+      return true;
+    }
   }
 
-  return nsGenericHTMLElementWithFetchPriorityAttribute::ParseAttribute(
-      aNamespaceID, aAttribute, aValue, aMaybeScriptedPrincipal, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aMaybeScriptedPrincipal, aResult);
 }
 
 nsresult HTMLScriptElement::Clone(dom::NodeInfo* aNodeInfo,
