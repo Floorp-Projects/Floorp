@@ -260,8 +260,8 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
    */
   MediaTrackGraphImpl* GraphImpl();
   const MediaTrackGraphImpl* GraphImpl() const;
-  MediaTrackGraph* Graph();
-  const MediaTrackGraph* Graph() const;
+  MediaTrackGraph* Graph() { return mGraph; }
+  const MediaTrackGraph* Graph() const { return mGraph; }
   /**
    * Sets the graph that owns this track.  Should only be called once.
    */
@@ -504,12 +504,12 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
 
   bool IsSuspended() const { return mSuspendedCount > 0; }
   /**
-   * Increment suspend count and move it to mGraph->mSuspendedTracks if
+   * Increment suspend count and move it to GraphImpl()->mSuspendedTracks if
    * necessary.  Graph thread.
    */
   void IncrementSuspendCount();
   /**
-   * Increment suspend count on aTrack and move it to mGraph->mTracks if
+   * Increment suspend count on aTrack and move it to GraphImpl()->mTracks if
    * necessary.  GraphThread.
    */
   virtual void DecrementSuspendCount();
@@ -632,7 +632,7 @@ class MediaTrack : public mozilla::LinkedListElement<MediaTrack> {
   bool mMainThreadDestroyed;
 
   // Our media track graph.  null if destroyed on the graph thread.
-  MediaTrackGraphImpl* mGraph;
+  MediaTrackGraph* mGraph;
 };
 
 /**

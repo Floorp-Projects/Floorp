@@ -10,7 +10,7 @@
 
 #include "AudioConverter.h"
 #include "MediaManager.h"
-#include "MediaTrackGraphImpl.h"
+#include "MediaTrackGraph.h"
 #include "MediaTrackConstraints.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
