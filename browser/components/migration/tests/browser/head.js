@@ -485,3 +485,50 @@ function assertQuantitiesShown(
     }
   }
 }
+
+/**
+ * Translates an entrypoint string into the proper numeric value for the
+ * FX_MIGRATION_ENTRY_POINT_CATEGORICAL histogram.
+ *
+ * @param {string} entrypoint
+ *   The entrypoint to translate from MIGRATION_ENTRYPOINTS.
+ * @returns {number}
+ *   The numeric index value for the FX_MIGRATION_ENTRY_POINT_CATEGORICAL
+ *   histogram.
+ */
+function getEntrypointHistogramIndex(entrypoint) {
+  switch (entrypoint) {
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.FIRSTRUN: {
+      return 1;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.FXREFRESH: {
+      return 2;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.PLACES: {
+      return 3;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.PASSWORDS: {
+      return 4;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.NEWTAB: {
+      return 5;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.FILE_MENU: {
+      return 6;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.HELP_MENU: {
+      return 7;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.BOOKMARKS_TOOLBAR: {
+      return 8;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.PREFERENCES: {
+      return 9;
+    }
+    case MigrationUtils.MIGRATION_ENTRYPOINTS.UNKNOWN:
+    // Intentional fall-through
+    default: {
+      return 0; // Unknown
+    }
+  }
+}

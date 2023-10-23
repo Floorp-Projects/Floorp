@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-*  content/browser/migration/migration.xhtml                  (content/migration.xhtml)
-   content/browser/migration/migration.js                     (content/migration.js)
    content/browser/aboutWelcomeBack.xhtml                     (content/aboutWelcomeBack.xhtml)
    content/browser/migration/migration-dialog-window.html     (content/migration-dialog-window.html)
    content/browser/migration/migration-dialog-window.js       (content/migration-dialog-window.js)

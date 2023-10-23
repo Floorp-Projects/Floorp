@@ -8670,17 +8670,6 @@
     "kind": "boolean",
     "description": "THUMBNAILS: Thumbnail found"
   },
-  "FX_MIGRATION_ENTRY_POINT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [731025, 1584261, 1643431, 1665442, 1678204],
-    "alert_emails": ["gijs@mozilla.com", "mak@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 10,
-    "releaseChannelCollection": "opt-out",
-    "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager, 5=New tab, 6=File menu, 7=Help menu, 8=Bookmarks toolbar"
-  },
   "FX_MIGRATION_ENTRY_POINT_CATEGORICAL": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
@@ -8915,52 +8904,6 @@
     "labels": ["added", "modified", "error", "no_change"],
     "releaseChannelCollection": "opt-out",
     "description": "Results of login import from a CSV/TSV file, by category"
-  },
-  "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1275114],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
-    "kind": "enumerated",
-    "n_values": 15,
-    "releaseChannelCollection": "opt-out",
-    "description": "Number of browsers from which the user could migrate on initial profile migration. Only available on release builds during firstrun."
-  },
-  "FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1275114],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
-    "kind": "enumerated",
-    "n_values": 15,
-    "releaseChannelCollection": "opt-out",
-    "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
-  },
-  "FX_STARTUP_MIGRATION_DATA_RECENCY": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1276694],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
-    "keyed": true,
-    "kind": "exponential",
-    "n_buckets": 50,
-    "high": 8760,
-    "releaseChannelCollection": "opt-out",
-    "description": "The 'last modified' time of the data we imported on the initial profile migration (time delta with 'now' at the time of migration, in hours). Collected for all browsers for which migration data is available, and stored keyed by browser identifier (e.g. 'ie', 'edge', 'safari', etc.)."
-  },
-  "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1276694],
-    "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "65",
-    "keyed": true,
-    "kind": "boolean",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
   },
   "FX_ABOUTHOME_CACHE_CONSTRUCTION": {
     "record_in_processes": ["content"],
