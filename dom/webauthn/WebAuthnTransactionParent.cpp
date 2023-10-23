@@ -13,12 +13,28 @@
 #include "nsThreadUtils.h"
 #include "WebAuthnArgs.h"
 
+#ifdef XP_WIN
+#  include "WinWebAuthnManager.h"
+#endif
+
 namespace mozilla::dom {
 
 mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
     const uint64_t& aTransactionId,
     const WebAuthnMakeCredentialInfo& aTransactionInfo) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+#ifdef XP_WIN
+  bool usingTestToken =
+      StaticPrefs::security_webauth_webauthn_enable_softtoken();
+  if (!usingTestToken && WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
+    if (mgr) {
+      mgr->Register(this, aTransactionId, aTransactionInfo);
+    }
+    return IPC_OK();
+  }
+#endif
 
   // If there's an ongoing transaction, abort it.
   if (mTransactionId.isSome()) {
@@ -101,18 +117,6 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestRegister(
                   WebAuthnExtensionResultCredProps(credPropsRk));
             }
 
-            bool hmacCreateSecret;
-            rv = aValue->GetHmacCreateSecret(&hmacCreateSecret);
-            if (rv != NS_ERROR_NOT_AVAILABLE) {
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                Unused << parent->SendAbort(aTransactionId,
-                                            NS_ERROR_DOM_NOT_ALLOWED_ERR);
-                return;
-              }
-              extensions.AppendElement(
-                  WebAuthnExtensionResultHmacSecret(hmacCreateSecret));
-            }
-
             WebAuthnMakeCredentialResult result(
                 clientData, attObj, credentialId, transports, extensions,
                 authenticatorAttachment);
@@ -146,6 +150,18 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestSign(
     const uint64_t& aTransactionId,
     const WebAuthnGetAssertionInfo& aTransactionInfo) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
+
+#ifdef XP_WIN
+  bool usingTestToken =
+      StaticPrefs::security_webauth_webauthn_enable_softtoken();
+  if (!usingTestToken && WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
+    if (mgr) {
+      mgr->Sign(this, aTransactionId, aTransactionInfo);
+    }
+    return IPC_OK();
+  }
+#endif
 
   if (mTransactionId.isSome()) {
     mRegisterPromiseRequest.DisconnectIfExists();
@@ -262,6 +278,16 @@ mozilla::ipc::IPCResult WebAuthnTransactionParent::RecvRequestCancel(
     const Tainted<uint64_t>& aTransactionId) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
+#ifdef XP_WIN
+  if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
+    if (mgr) {
+      mgr->Cancel(this, aTransactionId);
+    }
+  }
+  // fall through in case the virtual token was used.
+#endif
+
   if (mTransactionId.isNothing() ||
       !MOZ_IS_VALID(aTransactionId, mTransactionId.ref() == aTransactionId)) {
     return IPC_OK();
@@ -303,6 +329,16 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
 
   // Called either by Send__delete__() in RecvDestroyMe() above, or when
   // the channel disconnects. Ensure the token manager forgets about us.
+
+#ifdef XP_WIN
+  if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
+    WinWebAuthnManager* mgr = WinWebAuthnManager::Get();
+    if (mgr) {
+      mgr->MaybeClearTransaction(this);
+    }
+  }
+  // fall through in case the virtual token was used.
+#endif
 
   if (mTransactionId.isSome()) {
     mRegisterPromiseRequest.DisconnectIfExists();

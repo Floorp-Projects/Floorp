@@ -26,12 +26,6 @@ WebAuthnRegisterArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
 }
 
 NS_IMETHODIMP
-WebAuthnRegisterArgs::GetClientDataJSON(nsACString& aClientDataJSON) {
-  aClientDataJSON = mInfo.ClientDataJSON();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WebAuthnRegisterArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   nsresult rv = HashCString(mInfo.ClientDataJSON(), aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -180,12 +174,6 @@ WebAuthnSignArgs::GetChallenge(nsTArray<uint8_t>& aChallenge) {
 }
 
 NS_IMETHODIMP
-WebAuthnSignArgs::GetClientDataJSON(nsACString& aClientDataJSON) {
-  aClientDataJSON = mInfo.ClientDataJSON();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WebAuthnSignArgs::GetClientDataHash(nsTArray<uint8_t>& aClientDataHash) {
   nsresult rv = HashCString(mInfo.ClientDataJSON(), aClientDataHash);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -229,11 +217,14 @@ WebAuthnSignArgs::GetHmacCreateSecret(bool* aHmacCreateSecret) {
 
 NS_IMETHODIMP
 WebAuthnSignArgs::GetAppId(nsAString& aAppId) {
-  if (mAppId.isNothing()) {
-    return NS_ERROR_NOT_AVAILABLE;
+  for (const WebAuthnExtension& ext : mInfo.Extensions()) {
+    if (ext.type() == WebAuthnExtension::TWebAuthnExtensionAppId) {
+      aAppId = ext.get_WebAuthnExtensionAppId().appIdentifier();
+      return NS_OK;
+    }
   }
-  aAppId = mAppId.ref();
-  return NS_OK;
+
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP

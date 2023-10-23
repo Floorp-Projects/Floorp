@@ -16,7 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 #ifdef XP_WIN
-#  include "WinWebAuthnService.h"
+#  include "WinWebAuthnManager.h"
 #endif
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -129,7 +129,7 @@ PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
 // have other UVPAAs available at this time.
 #ifdef XP_WIN
 
-  if (WinWebAuthnService::IsUserVerifyingPlatformAuthenticatorAvailable()) {
+  if (WinWebAuthnManager::IsUserVerifyingPlatformAuthenticatorAvailable()) {
     promise->MaybeResolve(true);
     return promise.forget();
   }
@@ -183,7 +183,7 @@ PublicKeyCredential::IsExternalCTAP2SecurityKeySupported(GlobalObject& aGlobal,
   }
 
 #ifdef XP_WIN
-  if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
+  if (WinWebAuthnManager::AreWebAuthNApisAvailable()) {
     promise->MaybeResolve(true);
   } else {
     promise->MaybeResolve(StaticPrefs::security_webauthn_ctap2());
