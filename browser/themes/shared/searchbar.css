@@ -91,13 +91,13 @@
 /* We don't handle `:active` because it doesn't work on the search or settings
    buttons due to event.preventDefault() in SearchOneOffs._on_mousedown(). */
 .searchbar-engine-one-off-item:not([selected]):hover {
-  background-color: var(--autocomplete-popup-hover-background);
+  background-color: var(--urlbarView-hover-background);
   color: inherit;
 }
 
 .searchbar-engine-one-off-item[selected] {
-  background-color: var(--autocomplete-popup-highlight-background);
-  color: var(--autocomplete-popup-highlight-color);
+  background-color: var(--urlbarView-highlight-background);
+  color: var(--urlbarView-highlight-color);
 }
 
 .searchbar-engine-one-off-item > .button-box > .button-text {
@@ -120,7 +120,7 @@
 }
 
 .search-panel-tree > .autocomplete-richlistitem:hover {
-  background-color: var(--autocomplete-popup-hover-background);
+  background-color: var(--urlbarView-hover-background);
 }
 
 .search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
@@ -146,7 +146,7 @@
   margin: var(--panel-separator-margin);
   padding: 0;
   border: 0;
-  border-top: 1px solid var(--autocomplete-popup-separator-color);
+  border-top: 1px solid var(--urlbarView-separator-color);
   color: inherit;
 }
 
