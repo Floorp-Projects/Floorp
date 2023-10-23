@@ -344,67 +344,6 @@ class Nursery {
   mozilla::TimeStamp lastCollectionEndTime() const;
 
  private:
-  // Fields used during allocation fast path are grouped first:
-
-  // Pointer to the first unallocated byte in the nursery.
-  uintptr_t position_;
-
-  // Pointer to the last byte of space in the current chunk.
-  uintptr_t currentEnd_;
-
-  // Other fields not necessarily used during allocation follow:
-
-  gc::GCRuntime* const gc;
-
-  // Vector of allocated chunks to allocate from.
-  Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
-
-  // The index of the chunk that is currently being allocated from.
-  uint32_t currentChunk_;
-
-  // These fields refer to the beginning of the nursery. They're normally 0
-  // and chunk(0).start() respectively. Except when a generational GC zeal
-  // mode is active, then they may be arbitrary (see Nursery::clear()).
-  uint32_t startChunk_;
-  uintptr_t startPosition_;
-
-  // The current nursery capacity measured in bytes. It may grow up to this
-  // value without a collection, allocating chunks on demand. This limit may be
-  // changed by maybeResizeNursery() each collection. It includes chunk headers.
-  size_t capacity_;
-
-  gc::PretenuringNursery pretenuringNursery;
-
-  mozilla::TimeDuration timeInChunkAlloc_;
-
-  // Report minor collections taking at least this long, if enabled.
-  bool enableProfiling_ = false;
-  bool profileWorkers_ = false;
-
-  mozilla::TimeDuration profileThreshold_;
-
-  // Whether we will nursery-allocate strings.
-  bool canAllocateStrings_;
-
-  // Whether we will nursery-allocate BigInts.
-  bool canAllocateBigInts_;
-
-  // Report how many strings were deduplicated.
-  bool reportDeduplications_;
-
-  // Whether to report information on pretenuring, and if so the allocation
-  // threshold at which to report details of each allocation site.
-  bool reportPretenuring_;
-  size_t reportPretenuringThreshold_;
-
-  // Whether and why a collection of this nursery has been requested. When this
-  // happens |prevPosition_| is set to the current position and |position_| set
-  // to the end of the chunk to force the next allocation to fail.
-  JS::GCReason minorGCTriggerReason_;
-  uintptr_t prevPosition_;
-
-  // Profiling data.
-
   enum class ProfileKey {
 #define DEFINE_TIME_KEY(name, text) name,
     FOR_EACH_NURSERY_PROFILE_TIME(DEFINE_TIME_KEY)
@@ -419,26 +358,6 @@ class Nursery {
       mozilla::EnumeratedArray<ProfileKey, ProfileKey::KeyCount,
                                mozilla::TimeDuration>;
 
-  ProfileTimes startTimes_;
-  ProfileDurations profileDurations_;
-  ProfileDurations totalDurations_;
-
-  // Data about the previous collection.
-  struct PreviousGC {
-    JS::GCReason reason = JS::GCReason::NO_REASON;
-    size_t nurseryCapacity = 0;
-    size_t nurseryCommitted = 0;
-    size_t nurseryUsedBytes = 0;
-    size_t nurseryUsedChunkCount = 0;
-    size_t tenuredBytes = 0;
-    size_t tenuredCells = 0;
-    mozilla::TimeStamp endTime;
-  };
-  PreviousGC previousGC;
-
-  bool hasRecentGrowthData;
-  double smoothedTargetSize;
-
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
   // promotion rate is accurate enough (the nursery was full enough) to be
@@ -447,60 +366,7 @@ class Nursery {
   // Must only be called if the previousGC data is initialised.
   double calcPromotionRate(bool* validForTenuring) const;
 
-  // The set of externally malloced buffers potentially kept live by objects
-  // stored in the nursery. Any external buffers that do not belong to a
-  // tenured thing at the end of a minor GC must be freed.
-  using BufferRelocationOverlay = void*;
-  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
-  BufferSet mallocedBuffers;
-  size_t mallocedBufferBytes = 0;
-
-  // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
-  // ::registerTrailer and ::unregisterTrailer.
-  Vector<PointerAndUint7, 0, SystemAllocPolicy> trailersAdded_;
-  Vector<void*, 0, SystemAllocPolicy> trailersRemoved_;
-  size_t trailersRemovedUsed_ = 0;
-  size_t trailerBytes_ = 0;
-
   void freeTrailerBlocks();
-
-  // During a collection most hoisted slot and element buffers indicate their
-  // new location with a forwarding pointer at the base. This does not work
-  // for buffers whose length is less than pointer width, or when different
-  // buffers might overlap each other. For these, an entry in the following
-  // table is used.
-  using ForwardedBufferMap =
-      HashMap<void*, void*, PointerHasher<void*>, SystemAllocPolicy>;
-  ForwardedBufferMap forwardedBuffers;
-
-  // When we assign a unique id to cell in the nursery, that almost always
-  // means that the cell will be in a hash table, and thus, held live,
-  // automatically moving the uid from the nursery to its new home in
-  // tenured. It is possible, if rare, for an object that acquired a uid to
-  // be dead before the next collection, in which case we need to know to
-  // remove it when we sweep.
-  //
-  // Note: we store the pointers as Cell* here, resulting in an ugly cast in
-  //       sweep. This is because this structure is used to help implement
-  //       stable object hashing and we have to break the cycle somehow.
-  using CellsWithUniqueIdVector = Vector<gc::Cell*, 8, SystemAllocPolicy>;
-  CellsWithUniqueIdVector cellsWithUid_;
-
-  // Lists of map and set objects allocated in the nursery or with iterators
-  // allocated there. Such objects need to be swept after minor GC.
-  Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
-  Vector<SetObject*, 0, SystemAllocPolicy> setsWithNurseryMemory_;
-
-  UniquePtr<NurseryDecommitTask> decommitTask;
-
-  // A cache of small C++-heap allocated blocks associated with this Nursery.
-  // This provided so as to provide cheap allocation/deallocation of
-  // out-of-line storage areas as used by WasmStructObject and
-  // WasmArrayObject, although the mechanism is general and not specific to
-  // these object types.  Regarding lifetimes, because the cache holds only
-  // blocks that are not currently in use, it can be flushed at any point with
-  // no correctness impact, only a performance impact.
-  gc::MallocedBlockCache mallocedBlockCache_;
 
   NurseryChunk& chunk(unsigned index) const { return *chunks_[index]; }
 
@@ -614,6 +480,141 @@ class Nursery {
                                     Sprinter& sprinter);
 
   mozilla::TimeStamp collectionStartTime() const;
+
+ private:
+  // Fields used during allocation fast path are grouped first:
+
+  // Pointer to the first unallocated byte in the nursery.
+  uintptr_t position_;
+
+  // Pointer to the last byte of space in the current chunk.
+  uintptr_t currentEnd_;
+
+  // Other fields not necessarily used during allocation follow:
+
+  gc::GCRuntime* const gc;
+
+  // Vector of allocated chunks to allocate from.
+  Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
+
+  // The index of the chunk that is currently being allocated from.
+  uint32_t currentChunk_;
+
+  // These fields refer to the beginning of the nursery. They're normally 0
+  // and chunk(0).start() respectively. Except when a generational GC zeal
+  // mode is active, then they may be arbitrary (see Nursery::clear()).
+  uint32_t startChunk_;
+  uintptr_t startPosition_;
+
+  // The current nursery capacity measured in bytes. It may grow up to this
+  // value without a collection, allocating chunks on demand. This limit may be
+  // changed by maybeResizeNursery() each collection. It includes chunk headers.
+  size_t capacity_;
+
+  gc::PretenuringNursery pretenuringNursery;
+
+  mozilla::TimeDuration timeInChunkAlloc_;
+
+  // Report minor collections taking at least this long, if enabled.
+  bool enableProfiling_ = false;
+  bool profileWorkers_ = false;
+
+  mozilla::TimeDuration profileThreshold_;
+
+  // Whether we will nursery-allocate strings.
+  bool canAllocateStrings_;
+
+  // Whether we will nursery-allocate BigInts.
+  bool canAllocateBigInts_;
+
+  // Report how many strings were deduplicated.
+  bool reportDeduplications_;
+
+  // Whether to report information on pretenuring, and if so the allocation
+  // threshold at which to report details of each allocation site.
+  bool reportPretenuring_;
+  size_t reportPretenuringThreshold_;
+
+  // Whether and why a collection of this nursery has been requested. When this
+  // happens |prevPosition_| is set to the current position and |position_| set
+  // to the end of the chunk to force the next allocation to fail.
+  JS::GCReason minorGCTriggerReason_;
+  uintptr_t prevPosition_;
+
+  // Profiling data.
+
+  ProfileTimes startTimes_;
+  ProfileDurations profileDurations_;
+  ProfileDurations totalDurations_;
+
+  // Data about the previous collection.
+  struct PreviousGC {
+    JS::GCReason reason = JS::GCReason::NO_REASON;
+    size_t nurseryCapacity = 0;
+    size_t nurseryCommitted = 0;
+    size_t nurseryUsedBytes = 0;
+    size_t nurseryUsedChunkCount = 0;
+    size_t tenuredBytes = 0;
+    size_t tenuredCells = 0;
+    mozilla::TimeStamp endTime;
+  };
+  PreviousGC previousGC;
+
+  bool hasRecentGrowthData;
+  double smoothedTargetSize;
+
+  // The set of externally malloced buffers potentially kept live by objects
+  // stored in the nursery. Any external buffers that do not belong to a
+  // tenured thing at the end of a minor GC must be freed.
+  using BufferRelocationOverlay = void*;
+  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
+  BufferSet mallocedBuffers;
+  size_t mallocedBufferBytes = 0;
+
+  // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
+  // ::registerTrailer and ::unregisterTrailer.
+  Vector<PointerAndUint7, 0, SystemAllocPolicy> trailersAdded_;
+  Vector<void*, 0, SystemAllocPolicy> trailersRemoved_;
+  size_t trailersRemovedUsed_ = 0;
+  size_t trailerBytes_ = 0;
+
+  // During a collection most hoisted slot and element buffers indicate their
+  // new location with a forwarding pointer at the base. This does not work
+  // for buffers whose length is less than pointer width, or when different
+  // buffers might overlap each other. For these, an entry in the following
+  // table is used.
+  using ForwardedBufferMap =
+      HashMap<void*, void*, PointerHasher<void*>, SystemAllocPolicy>;
+  ForwardedBufferMap forwardedBuffers;
+
+  // When we assign a unique id to cell in the nursery, that almost always
+  // means that the cell will be in a hash table, and thus, held live,
+  // automatically moving the uid from the nursery to its new home in
+  // tenured. It is possible, if rare, for an object that acquired a uid to
+  // be dead before the next collection, in which case we need to know to
+  // remove it when we sweep.
+  //
+  // Note: we store the pointers as Cell* here, resulting in an ugly cast in
+  //       sweep. This is because this structure is used to help implement
+  //       stable object hashing and we have to break the cycle somehow.
+  using CellsWithUniqueIdVector = Vector<gc::Cell*, 8, SystemAllocPolicy>;
+  CellsWithUniqueIdVector cellsWithUid_;
+
+  // Lists of map and set objects allocated in the nursery or with iterators
+  // allocated there. Such objects need to be swept after minor GC.
+  Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
+  Vector<SetObject*, 0, SystemAllocPolicy> setsWithNurseryMemory_;
+
+  UniquePtr<NurseryDecommitTask> decommitTask;
+
+  // A cache of small C++-heap allocated blocks associated with this Nursery.
+  // This provided so as to provide cheap allocation/deallocation of
+  // out-of-line storage areas as used by WasmStructObject and
+  // WasmArrayObject, although the mechanism is general and not specific to
+  // these object types.  Regarding lifetimes, because the cache holds only
+  // blocks that are not currently in use, it can be flushed at any point with
+  // no correctness impact, only a performance impact.
+  gc::MallocedBlockCache mallocedBlockCache_;
 
   friend class gc::GCRuntime;
   friend class gc::TenuringTracer;
