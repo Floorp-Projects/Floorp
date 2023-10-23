@@ -1174,10 +1174,7 @@ import org.mozilla.geckoview.SessionTextInput.EditableListener.IMEState;
     }
     // BaseKeyListener returns false even if it handled these keys for us,
     // so we skip the key listener entirely and handle these ourselves
-    if (keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL) {
-      return true;
-    }
-    return false;
+    return keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
   }
 
   private static KeyEvent translateSonyXperiaGamepadKeys(final int keyCode, final KeyEvent event) {
