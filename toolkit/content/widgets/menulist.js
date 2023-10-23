@@ -87,12 +87,10 @@
 
     static get inheritedAttributes() {
       return {
-        "#label-box": "native",
-        image: "src=image,native",
-        "#label": "value=label,crop,accesskey,highlightable,native",
-        "#highlightable-label":
-          "text=label,crop,accesskey,highlightable,native",
-        dropmarker: "disabled,open,native",
+        image: "src=image",
+        "#label": "value=label,crop,accesskey",
+        "#highlightable-label": "text=label,crop,accesskey",
+        dropmarker: "disabled,open",
       };
     }
 
