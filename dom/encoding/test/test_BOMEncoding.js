@@ -3,6 +3,8 @@
  * bug 764234 tests
  */
 
+/* eslint-env mozilla/testharness */
+
 function runTextDecoderBOMEnoding() {
   test(testDecodeValidBOMUTF16, "testDecodeValidBOMUTF16");
   test(testBOMEncodingUTF8, "testBOMEncodingUTF8");
