@@ -657,6 +657,7 @@
         ".line1-label": "text=ac-value",
         // getCommentAt:
         ".line2-label": "text=ac-label",
+        ".ac-site-icon": "src=ac-image",
       };
     }
 
@@ -684,29 +685,9 @@
     handleOverUnderflow() {}
   }
 
-  class MozAutocompleteGenericRichlistitem extends MozAutocompleteTwoLineRichlistitem {
-    static get inheritedAttributes() {
-      return {};
-    }
-
-    _adjustAcItem() {
-      super._adjustAcItem();
-
-      try {
-        const details = JSON.parse(this.getAttribute("ac-label"));
-        this.querySelector(".ac-site-icon").src = details.icon;
-        this.querySelector(".line1-label").textContent = details.title;
-        this.querySelector(".line2-label").textContent = details.subtitle;
-      } catch {
-        // Update item content only when expected JSON is provided
-      }
-    }
-  }
-
   class MozAutocompleteLoginRichlistitem extends MozAutocompleteTwoLineRichlistitem {
     connectedCallback() {
       super.connectedCallback();
-
       this.firstChild.classList.add("ac-login-item");
     }
 
@@ -722,6 +703,7 @@
         // getLabelAt:
         ".line1-label": "text=ac-value",
         // Don't inherit ac-label with getCommentAt since the label is JSON.
+        ".ac-site-icon": "src=ac-image",
       };
     }
 
@@ -730,9 +712,6 @@
 
       let details = JSON.parse(this.getAttribute("ac-label"));
       this.querySelector(".line2-label").textContent = details.comment;
-      this.querySelector(
-        ".ac-site-icon"
-      ).src = `page-icon:${details.login?.origin}`;
     }
   }
 
@@ -831,14 +810,6 @@
   customElements.define(
     "autocomplete-richlistitem",
     MozElements.MozAutocompleteRichlistitem,
-    {
-      extends: "richlistitem",
-    }
-  );
-
-  customElements.define(
-    "autocomplete-generic-richlistitem",
-    MozAutocompleteGenericRichlistitem,
     {
       extends: "richlistitem",
     }
