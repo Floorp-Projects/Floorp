@@ -5,9 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import shutil
 import sys
-import tarfile
 import traceback
 
 import mozinfo
@@ -170,11 +168,8 @@ def main(args=sys.argv[1:]):
     if args.browsertime and not args.run_local:
         result_dir = raptor.results_handler.result_dir()
         if os.path.exists(result_dir):
-            LOG.info("Creating tarball at %s" % result_dir + ".tgz")
-            with tarfile.open(result_dir + ".tgz", "w:gz") as tar:
-                tar.add(result_dir, arcname=os.path.basename(result_dir))
-            LOG.info("Removing %s" % result_dir)
-            shutil.rmtree(result_dir)
+            is_profiling_job = True if args.gecko_profile else False
+            raptor.results_handler.archive_raptor_artifacts(is_profiling_job)
 
     # when running raptor locally with gecko profiling on, use the view-gecko-profile
     # tool to automatically load the latest gecko profile in profiler.firefox.com
