@@ -105,6 +105,7 @@ void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
 
 dom::Promise* Device::GetLost(ErrorResult& aRv) {
+  aRv = NS_OK;
   if (!mLostPromise) {
     mLostPromise = dom::Promise::Create(GetParentObject(), aRv);
     if (mLostPromise && !mBridge->CanSend()) {
@@ -118,7 +119,7 @@ dom::Promise* Device::GetLost(ErrorResult& aRv) {
 
 void Device::ResolveLost(Maybe<dom::GPUDeviceLostReason> aReason,
                          const nsAString& aMessage) {
-  ErrorResult rv;
+  IgnoredErrorResult rv;
   dom::Promise* lostPromise = GetLost(rv);
   if (!lostPromise) {
     // Promise doesn't exist? Maybe out of memory.
@@ -374,6 +375,8 @@ void Device::Destroy() {
     for (const auto& buffer : mTrackedBuffers) {
       buffer->Unmap(jsapi.cx(), rv);
     }
+
+    mTrackedBuffers.Clear();
   }
 
   mBridge->SendDeviceDestroy(mId);
