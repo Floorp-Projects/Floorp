@@ -146,6 +146,34 @@ inline void* js::Nursery::tryAllocate(size_t size) {
   return ptr;
 }
 
+inline bool js::Nursery::registerTrailer(PointerAndUint7 blockAndListID,
+                                         size_t nBytes) {
+  MOZ_ASSERT(trailersAdded_.length() == trailersRemoved_.length());
+  MOZ_ASSERT(nBytes > 0);
+  if (MOZ_UNLIKELY(!trailersAdded_.append(blockAndListID))) {
+    return false;
+  }
+  if (MOZ_UNLIKELY(!trailersRemoved_.append(nullptr))) {
+    trailersAdded_.popBack();
+    return false;
+  }
+
+  // This is a clone of the logic in ::registerMallocedBuffer.  It may be
+  // that some other heuristic is better, once we know more about the
+  // typical behaviour of wasm-GC applications.
+  trailerBytes_ += nBytes;
+  if (MOZ_UNLIKELY(trailerBytes_ > capacity() * 8)) {
+    requestMinorGC(JS::GCReason::NURSERY_TRAILERS);
+  }
+  return true;
+}
+
+inline void js::Nursery::unregisterTrailer(void* block) {
+  MOZ_ASSERT(trailersRemovedUsed_ < trailersRemoved_.length());
+  trailersRemoved_[trailersRemovedUsed_] = block;
+  trailersRemovedUsed_++;
+}
+
 namespace js {
 
 // The allocation methods below will not run the garbage collector. If the

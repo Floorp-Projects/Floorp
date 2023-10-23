@@ -12,6 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 
+#include "gc/Nursery-inl.h"
 #include "vm/JSContext-inl.h"
 
 //=========================================================================
