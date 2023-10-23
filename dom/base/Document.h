@@ -1590,12 +1590,9 @@ class Document : public nsINode,
   // Get the "head" element in the sense of document.head.
   HTMLSharedElement* GetHead();
 
-  ServoStyleSet* StyleSetForPresShell() const {
-    MOZ_ASSERT(!!mStyleSet.get());
+  ServoStyleSet* StyleSetForPresShellOrMediaQueryEvaluation() const {
     return mStyleSet.get();
   }
-
-  inline ServoStyleSet& EnsureStyleSet() const;
 
   // ShadowRoot has APIs that can change styles. This notifies the shell that
   // stlyes applicable in the shadow tree have potentially changed.

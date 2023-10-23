@@ -16,7 +16,6 @@
 #include "nsIContentInlines.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Document.h"
-#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "ChildIterator.h"
 #include "nsComputedDOMStyle.h"
@@ -861,8 +860,9 @@ void InspectorUtils::GetCSSRegisteredProperties(
     GlobalObject& aGlobalObject, Document& aDocument,
     nsTArray<InspectorCSSPropertyDefinition>& aResult) {
   nsTArray<StylePropDef> result;
-  Servo_GetRegisteredCustomProperties(aDocument.EnsureStyleSet().RawData(),
-                                      &result);
+  Servo_GetRegisteredCustomProperties(
+      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawData(),
+      &result);
   for (const auto& propDef : result) {
     InspectorCSSPropertyDefinition& property = *aResult.AppendElement();
 
