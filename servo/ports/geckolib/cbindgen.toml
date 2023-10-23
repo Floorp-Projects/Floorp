@@ -190,6 +190,7 @@ include = [
   "TextTransform",
   "TextJustify",
   "TextOverflow",
+  "TextIndent",
   "MozControlCharacterVisibility",
   "RubyPosition",
   "Owned",
@@ -759,6 +760,13 @@ renaming_overrides_prefixing = true
     : first(StyleTextOverflowSide::Clip()),
       second(StyleTextOverflowSide::Clip()),
       sides_are_logical(true) {}
+"""
+
+"GenericTextIndent" = """
+  StyleGenericTextIndent()
+    : length(StyleLengthPercentage::Zero()),
+      hanging(false),
+      each_line(false) {}
 """
 
 "UrlExtraData" = """

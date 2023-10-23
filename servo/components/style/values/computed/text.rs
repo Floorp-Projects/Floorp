@@ -9,7 +9,7 @@ use crate::properties::StyleBuilder;
 use crate::values::computed::length::{Length, LengthPercentage};
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::text::InitialLetter as GenericInitialLetter;
-use crate::values::generics::text::{GenericTextDecorationLength, Spacing};
+use crate::values::generics::text::{GenericTextDecorationLength, GenericTextIndent, Spacing};
 use crate::values::specified::text::{self as specified, TextOverflowSide};
 use crate::values::specified::text::{TextEmphasisFillMode, TextEmphasisShapeKeyword};
 use crate::values::{CSSFloat, CSSInteger};
@@ -33,6 +33,9 @@ pub type TextDecorationLength = GenericTextDecorationLength<LengthPercentage>;
 
 /// The computed value of `text-align`.
 pub type TextAlign = specified::TextAlignKeyword;
+
+/// The computed value of `text-indent`.
+pub type TextIndent = GenericTextIndent<LengthPercentage>;
 
 /// A computed value for the `letter-spacing` property.
 #[repr(transparent)]

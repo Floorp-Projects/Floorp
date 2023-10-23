@@ -274,6 +274,9 @@ class nsBlockFrame : public nsContainerFrame {
   void MarkIntrinsicISizesDirty() override;
 
  private:
+  // Whether CSS text-indent should be applied to the given line.
+  bool TextIndentAppliesTo(const LineIterator& aLine) const;
+
   void CheckIntrinsicCacheAgainstShrinkWrapState();
 
   template <typename LineIteratorType>
