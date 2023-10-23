@@ -923,12 +923,13 @@ void nsTableRowGroupFrame::SplitSpanningCells(
     nsPresContext* aPresContext, const ReflowInput& aReflowInput,
     nsTableFrame* aTable, nsTableRowFrame* aFirstRow, nsTableRowFrame* aLastRow,
     bool aFirstRowIsTopOfPage, nscoord aSpanningRowBEnd,
-    nsTableRowFrame*& aContRow, nsTableRowFrame*& aFirstTruncatedRow,
-    nscoord& aDesiredBSize) {
+    const nsSize& aContainerSize, nsTableRowFrame*& aContRow,
+    nsTableRowFrame*& aFirstTruncatedRow, nscoord& aDesiredBSize) {
   NS_ASSERTION(aSpanningRowBEnd >= 0, "Can't split negative bsizes");
   aFirstTruncatedRow = nullptr;
   aDesiredBSize = 0;
 
+  const WritingMode wm = aReflowInput.GetWritingMode();
   const bool borderCollapse = aTable->IsBorderCollapse();
   int32_t lastRowIndex = aLastRow->GetRowIndex();
   bool wasLast = false;
@@ -937,7 +938,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
   for (nsTableRowFrame* row = aFirstRow; !wasLast; row = row->GetNextRow()) {
     wasLast = (row == aLastRow);
     int32_t rowIndex = row->GetRowIndex();
-    nsPoint rowPos = row->GetNormalPosition();
+    const LogicalRect rowRect = row->GetLogicalNormalRect(wm, aContainerSize);
     // Iterate the cells looking for those that have rowspan > 1
     for (nsTableCellFrame* cell = row->GetFirstCell(); cell;
          cell = cell->GetNextCell()) {
@@ -951,20 +952,20 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         // Ask the row to reflow the cell to the bsize of all the rows it spans
         // up through aLastRow cellAvailBSize is the space between the row group
         // start and the end of the page
-        nscoord cellAvailBSize = aSpanningRowBEnd - rowPos.y;
+        const nscoord cellAvailBSize = aSpanningRowBEnd - rowRect.BStart(wm);
         NS_ASSERTION(cellAvailBSize >= 0, "No space for cell?");
         bool isTopOfPage = (row == aFirstRow) && aFirstRowIsTopOfPage;
 
-        nsRect rowRect = row->GetNormalRect();
-        nsSize rowAvailSize(
-            aReflowInput.AvailableWidth(),
-            std::max(aReflowInput.AvailableHeight() - rowRect.y, 0));
-        // don't let the available height exceed what
-        // CalculateRowBSizes set for it
-        rowAvailSize.height = std::min(rowAvailSize.height, rowRect.height);
+        LogicalSize rowAvailSize(
+            wm, aReflowInput.AvailableISize(),
+            std::max(aReflowInput.AvailableBSize() - rowRect.BStart(wm), 0));
+        // Don't let the available block-size exceed what CalculateRowBSizes set
+        // for it.
+        rowAvailSize.BSize(wm) =
+            std::min(rowAvailSize.BSize(wm), rowRect.BSize(wm));
         ReflowInput rowReflowInput(
             aPresContext, aReflowInput, row,
-            LogicalSize(row->GetWritingMode(), rowAvailSize), Nothing(),
+            rowAvailSize.ConvertTo(row->GetWritingMode(), wm), Nothing(),
             ReflowInput::InitFlag::CallerWillInit);
         InitChildReflowInput(aPresContext, borderCollapse, rowReflowInput);
         rowReflowInput.mFlags.mIsTopOfPage = isTopOfPage;  // set top of page
@@ -972,7 +973,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
         nscoord cellBSize =
             row->ReflowCellFrame(aPresContext, rowReflowInput, isTopOfPage,
                                  cell, cellAvailBSize, status);
-        aDesiredBSize = std::max(aDesiredBSize, rowPos.y + cellBSize);
+        aDesiredBSize = std::max(aDesiredBSize, rowRect.BStart(wm) + cellBSize);
         if (status.IsComplete()) {
           if (cellBSize > cellAvailBSize) {
             aFirstTruncatedRow = row;
@@ -1003,7 +1004,7 @@ void nsTableRowGroupFrame::SplitSpanningCells(
     }
   }
   if (!haveRowSpan) {
-    aDesiredBSize = aLastRow->GetNormalRect().YMost();
+    aDesiredBSize = aLastRow->GetLogicalNormalRect(wm, aContainerSize).BEnd(wm);
   }
 }
 
@@ -1223,7 +1224,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
       SplitSpanningCells(aPresContext, aReflowInput, aTableFrame,
                          firstRowThisPage, lastRowThisPage,
                          aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
-                         contRow, firstTruncatedRow, bMost);
+                         containerSize, contRow, firstTruncatedRow, bMost);
       if (firstTruncatedRow) {
         // A rowspan >1 cell did not fit (and could not split) in the space we
         // gave it
@@ -1255,10 +1256,11 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
 
           // Call SplitSpanningCells again with rowBefore as the last row on the
           // page
-          SplitSpanningCells(
-              aPresContext, aReflowInput, aTableFrame, firstRowThisPage,
-              rowBefore, aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
-              contRow, firstTruncatedRow, aDesiredSize.BSize(wm));
+          SplitSpanningCells(aPresContext, aReflowInput, aTableFrame,
+                             firstRowThisPage, rowBefore,
+                             aReflowInput.mFlags.mIsTopOfPage, spanningRowBEnd,
+                             containerSize, contRow, firstTruncatedRow,
+                             aDesiredSize.BSize(wm));
           if (firstTruncatedRow) {
             if (aReflowInput.mFlags.mIsTopOfPage) {
               // We were better off with the 1st call to SplitSpanningCells, do
@@ -1270,8 +1272,8 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
               SplitSpanningCells(aPresContext, aReflowInput, aTableFrame,
                                  firstRowThisPage, lastRowThisPage,
                                  aReflowInput.mFlags.mIsTopOfPage,
-                                 spanningRowBEnd, contRow, firstTruncatedRow,
-                                 aDesiredSize.BSize(wm));
+                                 spanningRowBEnd, containerSize, contRow,
+                                 firstTruncatedRow, aDesiredSize.BSize(wm));
               NS_WARNING("data loss in a row spanned cell");
             } else {
               // Let our parent reflow us again with more space
