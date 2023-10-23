@@ -33,7 +33,7 @@ var tests = [
       gURLBar.handleRevert();
       is(
         gURLBar.value,
-        "example.com",
+        UrlbarTestUtils.trimURL("http://example.com"),
         "URL bar had user/pass stripped after reverting"
       );
       gBrowser.removeTab(tab);
@@ -49,7 +49,7 @@ var tests = [
           closeToolbarCustomizationUI(function () {
             is(
               win.gURLBar.value,
-              "example.com",
+              UrlbarTestUtils.trimURL("http://example.com"),
               "URL bar had user/pass stripped after customize"
             );
             win.close();
@@ -70,7 +70,7 @@ var tests = [
       tab.linkedBrowser.stop();
       is(
         gURLBar.value,
-        "example.com",
+        UrlbarTestUtils.trimURL("http://example.com"),
         "URL bar had user/pass stripped after load error"
       );
       gBrowser.removeTab(tab);
@@ -90,7 +90,7 @@ function loadTabInWindow(win, callback) {
     info("Tab loaded");
     is(
       win.gURLBar.value,
-      "example.com",
+      UrlbarTestUtils.trimURL("http://example.com"),
       "URL bar had user/pass stripped initially"
     );
     callback(tab);
