@@ -481,6 +481,7 @@ cbindgen-types = [
     { gecko = "StyleOverscrollBehavior", servo = "crate::values::computed::OverscrollBehavior" },
     { gecko = "StyleTextAlign", servo = "crate::values::computed::TextAlign" },
     { gecko = "StyleTextAlignLast", servo = "crate::values::computed::text::TextAlignLast" },
+    { gecko = "StyleTextIndent", servo = "crate::values::computed::text::TextIndent" },
     { gecko = "StyleTextOverflow", servo = "crate::values::computed::TextOverflow" },
     { gecko = "StyleOverflow", servo = "crate::values::computed::Overflow" },
     { gecko = "StyleOverflowAnchor", servo = "crate::values::computed::OverflowAnchor" },

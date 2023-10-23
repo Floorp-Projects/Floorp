@@ -8758,6 +8758,13 @@
   value: 50 # 50%
   mirror: always
 
+# Whether the `hanging` and `each-line` keywords are supported by `text-indent`
+- name: layout.css.text-indent-keywords.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether the "modern" uppercase mapping of ß to ẞ (rather than SS) is used.
 - name: layout.css.text-transform.uppercase-eszett.enabled
   type: bool
