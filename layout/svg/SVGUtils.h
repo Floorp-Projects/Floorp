@@ -567,11 +567,18 @@ class SVGUtils final {
       return mShouldApplyBasicShapeOrPath;
     }
 
+    bool IsSimpleClipShape() const { return mIsSimpleClipShape; }
+
     bool IsOpaque() const { return mOpacity == 1.0f; }
 
     bool IsTransparent() const { return mOpacity == 0.0f; }
 
     float Opacity() const { return mOpacity; }
+
+    bool UsingMaskOrClipPath() const {
+      return mShouldGenerateMaskLayer || mShouldGenerateClipMaskLayer ||
+             mShouldApplyClipPath || mShouldApplyBasicShapeOrPath;
+    }
 
     bool ShouldDoSomething() const {
       return mShouldGenerateMaskLayer || mShouldGenerateClipMaskLayer ||
@@ -587,6 +594,7 @@ class SVGUtils final {
     bool mShouldGenerateClipMaskLayer = false;
     bool mShouldApplyClipPath = false;
     bool mShouldApplyBasicShapeOrPath = false;
+    bool mIsSimpleClipShape = false;
   };
 
   static float ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity);
