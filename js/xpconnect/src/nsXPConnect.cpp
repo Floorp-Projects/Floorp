@@ -552,10 +552,6 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
   // If this changes, ShouldRFP needs to be updated accordingly.
   MOZ_RELEASE_ASSERT(aPrincipal->IsSystemPrincipal());
 
-  // Similarly we can thus hardcode the RTPCallerType.
-  aOptions.behaviors().setReduceTimerPrecisionCallerType(
-      RTPCallerTypeToToken(RTPCallerType::SystemPrincipal));
-
   InitGlobalObjectOptions(aOptions, /* aSystemPrincipal */ true,
                           /* aSecureContext */ true,
                           /* aForceUTC */ false, /* aAlwaysUseFdlibm */ false,

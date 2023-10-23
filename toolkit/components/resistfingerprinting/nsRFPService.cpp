@@ -661,16 +661,13 @@ double nsRFPService::ReduceTimePrecisionAsSecsRFPOnly(
 }
 
 /* static */
-double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(
-    double aTime, JS::RTPCallerTypeToken aCallerType, JSContext* aCx) {
+double nsRFPService::ReduceTimePrecisionAsUSecsWrapper(double aTime,
+                                                       JSContext* aCx) {
   MOZ_ASSERT(aCx);
 
-#ifdef DEBUG
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
-  MOZ_ASSERT(global->GetRTPCallerType() == RTPCallerTypeFromToken(aCallerType));
-#endif
-
-  RTPCallerType callerType = RTPCallerTypeFromToken(aCallerType);
+  MOZ_ASSERT(global);
+  RTPCallerType callerType = global->GetRTPCallerType();
   return nsRFPService::ReduceTimePrecisionImpl(
       aTime, MicroSeconds, TimerResolution(callerType),
       0, /* For absolute timestamps (all the JS engine does), supply zero
