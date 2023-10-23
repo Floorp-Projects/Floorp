@@ -1001,16 +1001,27 @@ items from that key's value."
         return False
 
     def _load_build_resources(self):
-        p = self.config.get("build_resources_path") % self.query_abs_dirs()
+        p = self.config.get("profile_build_resources_path") % self.query_abs_dirs()
         if not os.path.exists(p):
-            self.info("%s does not exist; not loading build resources" % p)
+            self.info("%s does not exist; not loading build profile data" % p)
             return None
 
         with open(p, "r") as fh:
-            resources = json.load(fh)
+            profile = json.load(fh)
 
-        if "duration" not in resources:
-            self.info("resource usage lacks duration; ignoring")
+        try:
+            thread = profile.get("threads", [])[0]
+            times = thread.get("samples", {}).get("time", [])
+            duration = times[-1] / 1000
+            markers = thread["markers"]
+            phases = {}
+            for n, marker in enumerate(markers["data"]):
+                if marker.get("type") == "Phase":
+                    phases[marker["phase"]] = (
+                        markers["endTime"][n] - markers["startTime"][n]
+                    ) / 1000
+        except Exception:
+            self.info("build profile lacks data; ignoring")
             return None
 
         # We want to always collect metrics. But alerts with sccache enabled
@@ -1019,19 +1030,17 @@ items from that key's value."
 
         data = {
             "name": "build times",
-            "value": resources["duration"],
+            "value": duration,
             "extraOptions": self.perfherder_resource_options(),
             "shouldAlert": should_alert,
             "subtests": [],
         }
 
-        for phase in resources["phases"]:
-            if "duration" not in phase:
-                continue
+        for name, duration in phases.items():
             data["subtests"].append(
                 {
-                    "name": phase["name"],
-                    "value": phase["duration"],
+                    "name": name,
+                    "value": duration,
                 }
             )
 
