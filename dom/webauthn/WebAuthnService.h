@@ -12,6 +12,10 @@
 #  include "AndroidWebAuthnService.h"
 #endif
 
+#ifdef XP_WIN
+#  include "WinWebAuthnService.h"
+#endif
+
 namespace mozilla::dom {
 
 already_AddRefed<nsIWebAuthnService> NewWebAuthnService();
@@ -23,7 +27,13 @@ class WebAuthnService final : public nsIWebAuthnService {
 
   WebAuthnService() {
     Unused << authrs_service_constructor(getter_AddRefs(mTestService));
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(XP_WIN)
+    if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
+      mPlatformService = new WinWebAuthnService();
+    } else {
+      mPlatformService = mTestService;
+    }
+#elif defined(MOZ_WIDGET_ANDROID)
     mPlatformService = new AndroidWebAuthnService();
 #else
     mPlatformService = mTestService;
