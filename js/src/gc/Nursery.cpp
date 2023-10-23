@@ -1612,6 +1612,45 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
   return true;
 }
 
+/*
+ * Several things may need to happen when a nursery allocated cell with an
+ * external buffer is promoted:
+ *  - the buffer may need to be moved if it is currently in the nursery
+ *  - the buffer may need to be removed from the list of buffers that will be
+ *    freed after nursery collection if it is malloced
+ *  - memory accounting for the buffer needs to be updated
+ */
+Nursery::WasBufferMoved js::Nursery::maybeMoveRawBufferOnPromotion(
+    void** bufferp, gc::Cell* owner, size_t nbytes, MemoryUse use,
+    arena_id_t arena) {
+  MOZ_ASSERT(!IsInsideNursery(owner));
+
+  void* buffer = *bufferp;
+  if (!isInside(buffer)) {
+    // This is a malloced buffer. Remove it from the nursery's list of buffers
+    // so we don't free it and add it to the memory accounting for the zone
+    removeMallocedBufferDuringMinorGC(buffer);
+    AddCellMemory(owner, nbytes, use);
+    return BufferNotMoved;
+  }
+
+  // Copy the nursery-allocated buffer into a new malloc allocation.
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  Zone* zone = owner->asTenured().zone();
+  void* movedBuffer = zone->pod_arena_malloc<uint8_t>(arena, nbytes);
+  if (!movedBuffer) {
+    oomUnsafe.crash("Nursery::updateBufferOnPromotion");
+  }
+
+  memcpy(movedBuffer, buffer, nbytes);
+
+  AddCellMemory(owner, nbytes, use);
+
+  *bufferp = movedBuffer;
+  return BufferMoved;
+}
+
 void Nursery::requestMinorGC(JS::GCReason reason) {
   MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));

@@ -11,6 +11,7 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 
+#include "gc/GCEnum.h"
 #include "gc/GCProbes.h"
 #include "gc/Heap.h"
 #include "gc/MallocedBlockCache.h"
@@ -20,6 +21,7 @@
 #include "js/GCAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)      \
@@ -183,6 +185,25 @@ class Nursery {
                                         void* newData, bool direct);
   inline void setForwardingPointerWhileTenuring(void* oldData, void* newData,
                                                 bool direct);
+
+  // Handle an external buffer when a cell is promoted. Updates the pointer to
+  // the (possibly moved) buffer and returns whether it was moved.
+  enum WasBufferMoved : bool { BufferNotMoved = false, BufferMoved = true };
+  WasBufferMoved maybeMoveRawBufferOnPromotion(void** bufferp, gc::Cell* owner,
+                                               size_t nbytes, MemoryUse use,
+                                               arena_id_t arena);
+  template <typename T>
+  WasBufferMoved maybeMoveBufferOnPromotion(T** bufferp, gc::Cell* owner,
+                                            size_t nbytes, MemoryUse use,
+                                            arena_id_t arena) {
+    return maybeMoveRawBufferOnPromotion(reinterpret_cast<void**>(bufferp),
+                                         owner, nbytes, use, arena);
+  }
+  template <typename T>
+  WasBufferMoved maybeMoveBufferOnPromotion(T** bufferp, gc::Cell* owner,
+                                            size_t nbytes, MemoryUse use) {
+    return maybeMoveBufferOnPromotion(bufferp, owner, nbytes, use, MallocArena);
+  }
 
   // Register a malloced buffer that is held by a nursery object, which
   // should be freed at the end of a minor GC. Buffers are unregistered when

@@ -2066,6 +2066,9 @@ size_t ArrayBufferObject::objectMoved(JSObject* obj, JSObject* old) {
   ArrayBufferObject& dst = obj->as<ArrayBufferObject>();
   const ArrayBufferObject& src = old->as<ArrayBufferObject>();
 
+  MOZ_ASSERT(
+      !obj->runtimeFromMainThread()->gc.nursery().isInside(src.dataPointer()));
+
   // Fix up possible inline data pointer.
   if (src.hasInlineData()) {
     dst.setFixedSlot(DATA_SLOT, PrivateValue(dst.inlineDataPointer()));

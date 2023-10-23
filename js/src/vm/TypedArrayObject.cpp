@@ -210,18 +210,12 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   }
 
   Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
-  if (!nursery.isInside(buf)) {
-    nursery.removeMallocedBufferDuringMinorGC(buf);
-    size_t nbytes = RoundUp(newObj->byteLength(), sizeof(Value));
-    AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
-    return 0;
-  }
 
   // Determine if we can use inline data for the target array. If this is
   // possible, the nursery will have picked an allocation size that is large
   // enough.
   size_t nbytes = oldObj->byteLength();
-  MOZ_ASSERT(nbytes <= Nursery::MaxNurseryBufferSize);
+  bool canUseDirectForward = nbytes >= sizeof(uintptr_t);
 
   constexpr size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
@@ -230,7 +224,8 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   MOZ_ASSERT_IF(nbytes == 0,
                 headerSize + sizeof(uint8_t) <= GetGCKindBytes(newAllocKind));
 
-  if (headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
+  if (nursery.isInside(buf) &&
+      headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
     MOZ_ASSERT(oldObj->hasInlineElements());
 #ifdef DEBUG
     if (nbytes == 0) {
@@ -239,31 +234,34 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
     }
 #endif
     newObj->setInlineElements();
-  } else {
-    MOZ_ASSERT(!oldObj->hasInlineElements());
+    mozilla::PodCopy(newObj->elements(), oldObj->elements(), nbytes);
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    nbytes = RoundUp(nbytes, sizeof(Value));
-    void* data = newObj->zone()->pod_arena_malloc<uint8_t>(
-        js::ArrayBufferContentsArena, nbytes);
-    if (!data) {
-      oomUnsafe.crash(
-          "Failed to allocate typed array elements while tenuring.");
-    }
-    MOZ_ASSERT(!nursery.isInside(data));
-    newObj->setReservedSlot(DATA_SLOT, PrivateValue(data));
-    AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
+    // Set a forwarding pointer for the element buffers in case they were
+    // preserved on the stack by Ion.
+    nursery.setForwardingPointerWhileTenuring(
+        oldObj->elements(), newObj->elements(), canUseDirectForward);
+
+    return 0;
   }
 
-  mozilla::PodCopy(newObj->elements(), oldObj->elements(), nbytes);
+  // Non-inline allocations are rounded up.
+  nbytes = RoundUp(nbytes, sizeof(Value));
 
-  // Set a forwarding pointer for the element buffers in case they were
-  // preserved on the stack by Ion.
-  nursery.setForwardingPointerWhileTenuring(
-      oldObj->elements(), newObj->elements(),
-      /* direct = */ nbytes >= sizeof(uintptr_t));
+  Nursery::WasBufferMoved result = nursery.maybeMoveBufferOnPromotion(
+      &buf, newObj, nbytes, MemoryUse::TypedArrayElements,
+      ArrayBufferContentsArena);
+  if (result == Nursery::BufferMoved) {
+    newObj->setReservedSlot(DATA_SLOT, PrivateValue(buf));
 
-  return newObj->hasInlineElements() ? 0 : nbytes;
+    // Set a forwarding pointer for the element buffers in case they were
+    // preserved on the stack by Ion.
+    nursery.setForwardingPointerWhileTenuring(
+        oldObj->elements(), newObj->elements(), canUseDirectForward);
+
+    return nbytes;
+  }
+
+  return 0;
 }
 
 bool TypedArrayObject::hasInlineElements() const {
