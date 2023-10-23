@@ -10,11 +10,7 @@
 
 #import "RTCDefaultShader.h"
 
-#if TARGET_OS_IPHONE
 #import <OpenGLES/ES3/gl.h>
-#else
-#import <OpenGL/gl3.h>
-#endif
 
 #import "RTCOpenGLDefines.h"
 #import "RTCShader.h"
@@ -139,9 +135,7 @@ static const char kNV12FragmentShaderSource[] =
     RTCLog(@"Failed to setup vertex buffer");
     return NO;
   }
-#if !TARGET_OS_IPHONE
-  glBindVertexArray(_vertexArray);
-#endif
+
   glBindBuffer(GL_ARRAY_BUFFER, _vertexBuffer);
   if (!_currentRotation || rotation != *_currentRotation) {
     _currentRotation = absl::optional<RTCVideoRotation>(rotation);

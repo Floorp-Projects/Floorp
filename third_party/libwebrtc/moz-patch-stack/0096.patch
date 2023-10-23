@@ -1,31 +1,33 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Sat, 12 Aug 2023 18:57:00 +0000
-Subject: Bug 1848045 - to upstream - fix misuse of rtc::strcpyn in
- ApmDataDumper::SetOutputDirectory. r=ng,webrtc-reviewers
+Date: Thu, 5 Oct 2023 14:21:00 +0000
+Subject: Bug 1857037 - pt1 - add shim gni files to limit BUILD.gn changes.
+ r=ng,webrtc-reviewers
 
-rtc::strcpyn second param should be the size of the destination buffer,
-not the size of the source string.  This has been masked because FormFileName
-helpfully adds a trailing path separator if one is missing.
-
-Differential Revision: https://phabricator.services.mozilla.com/D185862
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5d935bb2573445a198af03cd3d5186243880ecdf
+Differential Revision: https://phabricator.services.mozilla.com/D190104
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a84d39db037cbe34aa19588b0d18335eb5e2d79b
 ---
- modules/audio_processing/logging/apm_data_dumper.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ testing/libfuzzer/fuzzer_test.gni | 2 ++
+ testing/test.gni                  | 2 ++
+ 2 files changed, 4 insertions(+)
+ create mode 100644 testing/libfuzzer/fuzzer_test.gni
+ create mode 100644 testing/test.gni
 
-diff --git a/modules/audio_processing/logging/apm_data_dumper.h b/modules/audio_processing/logging/apm_data_dumper.h
-index 4ab6baad83..76f8b34c0b 100644
---- a/modules/audio_processing/logging/apm_data_dumper.h
-+++ b/modules/audio_processing/logging/apm_data_dumper.h
-@@ -91,7 +91,7 @@ class ApmDataDumper {
-   static void SetOutputDirectory(absl::string_view output_dir) {
- #if WEBRTC_APM_DEBUG_DUMP == 1
-     RTC_CHECK_LT(output_dir.size(), kOutputDirMaxLength);
--    rtc::strcpyn(output_dir_, output_dir.size(), output_dir);
-+    rtc::strcpyn(output_dir_, kOutputDirMaxLength, output_dir);
- #endif
-   }
- 
+diff --git a/testing/libfuzzer/fuzzer_test.gni b/testing/libfuzzer/fuzzer_test.gni
+new file mode 100644
+index 0000000000..8fdf3cdad2
+--- /dev/null
++++ b/testing/libfuzzer/fuzzer_test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/libfuzzer
++# to allow BUILD.gn imports to succeed.
+diff --git a/testing/test.gni b/testing/test.gni
+new file mode 100644
+index 0000000000..f46fa82778
+--- /dev/null
++++ b/testing/test.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new testing/test.gni
++# to allow BUILD.gn imports to succeed.
 -- 
-2.37.3
+2.34.1
 

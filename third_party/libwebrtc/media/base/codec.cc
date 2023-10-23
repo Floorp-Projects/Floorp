@@ -12,6 +12,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/strings/match.h"
+#include "api/audio_codecs/audio_format.h"
 #include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/vp9_profile.h"
@@ -130,6 +131,11 @@ Codec::Codec(Type type,
       channels(channels) {}
 
 Codec::Codec(Type type) : Codec(type, 0, "", 0) {}
+
+Codec::Codec(const webrtc::SdpAudioFormat& c)
+    : Codec(Type::kAudio, 0, c.name, c.clockrate_hz, c.num_channels) {
+  params = c.parameters;
+}
 
 Codec::Codec(const webrtc::SdpVideoFormat& c)
     : Codec(Type::kVideo, 0, c.name, kVideoCodecClockrate) {
@@ -440,6 +446,10 @@ Codec CreateAudioCodec(int id,
                        int clockrate,
                        size_t channels) {
   return Codec(Codec::Type::kAudio, id, name, clockrate, channels);
+}
+
+Codec CreateAudioCodec(const webrtc::SdpAudioFormat& c) {
+  return Codec(c);
 }
 
 Codec CreateVideoCodec(const std::string& name) {

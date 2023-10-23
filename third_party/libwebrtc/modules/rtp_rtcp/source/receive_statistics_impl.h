@@ -22,9 +22,9 @@
 #include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
+#include "rtc_base/bitrate_tracker.h"
 #include "rtc_base/containers/flat_map.h"
 #include "rtc_base/numerics/sequence_number_unwrapper.h"
-#include "rtc_base/rate_statistics.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -80,7 +80,7 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
   Clock* const clock_;
   // Delta used to map internal timestamps to Unix epoch ones.
   const TimeDelta delta_internal_unix_epoch_;
-  RateStatistics incoming_bitrate_;
+  BitrateTracker incoming_bitrate_;
   // In number of packets or sequence numbers.
   int max_reordering_threshold_;
   bool enable_retransmit_detection_;

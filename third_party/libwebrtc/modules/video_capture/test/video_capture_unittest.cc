@@ -191,10 +191,9 @@ class VideoCaptureTest : public ::testing::Test {
   unsigned int number_of_devices_;
 };
 
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
-// Currently fails on Mac 64-bit and Linux rel, see
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406 and
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=15229
+#ifdef WEBRTC_MAC
+// Currently fails on Mac 64-bit, see
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
 #define MAYBE_CreateDelete DISABLED_CreateDelete
 #else
 #define MAYBE_CreateDelete CreateDelete
@@ -234,10 +233,9 @@ TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
   }
 }
 
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
-// Currently fails on Mac 64-bit and Linux rel, see
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406 and
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=15229
+#ifdef WEBRTC_MAC
+// Currently fails on Mac 64-bit, see
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
 #define MAYBE_Capabilities DISABLED_Capabilities
 #else
 #define MAYBE_Capabilities Capabilities
@@ -344,10 +342,8 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
   EXPECT_EQ(0, module1->StopCapture());
 }
 
-#if defined(WEBRTC_MAC) || defined(WEBRTC_LINUX)
+#ifdef WEBRTC_MAC
 // No VideoCaptureImpl on Mac.
-// Currently fails on Mac Linux rel, see
-// https://bugs.chromium.org/p/webrtc/issues/detail?id=15229
 #define MAYBE_ConcurrentAccess DISABLED_ConcurrentAccess
 #else
 #define MAYBE_ConcurrentAccess ConcurrentAccess

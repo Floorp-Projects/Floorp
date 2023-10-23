@@ -1050,6 +1050,12 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedPacketMs() const {
   return absl::nullopt;
 }
 
+absl::optional<uint32_t>
+RtpVideoStreamReceiver2::LastReceivedFrameRtpTimestamp() const {
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  return last_received_rtp_timestamp_;
+}
+
 absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
     const {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);

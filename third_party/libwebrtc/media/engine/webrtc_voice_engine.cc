@@ -49,6 +49,7 @@
 #include "call/rtp_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "media/base/audio_source.h"
+#include "media/base/codec.h"
 #include "media/base/media_constants.h"
 #include "media/base/stream_params.h"
 #include "media/engine/adm_helpers.h"
@@ -483,29 +484,6 @@ WebRtcVoiceEngine::CreateReceiveChannel(
     webrtc::AudioCodecPairId codec_pair_id) {
   return std::make_unique<WebRtcVoiceReceiveChannel>(
       this, config, options, crypto_options, call, codec_pair_id);
-}
-
-VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
-    MediaChannel::Role role,
-    webrtc::Call* call,
-    const MediaConfig& config,
-    const AudioOptions& options,
-    const webrtc::CryptoOptions& crypto_options,
-    webrtc::AudioCodecPairId codec_pair_id) {
-  RTC_DCHECK_RUN_ON(call->worker_thread());
-  std::unique_ptr<VoiceMediaSendChannelInterface> send_channel;
-  std::unique_ptr<VoiceMediaReceiveChannelInterface> receive_channel;
-  if (role == MediaChannel::Role::kSend || role == MediaChannel::Role::kBoth) {
-    send_channel =
-        CreateSendChannel(call, config, options, crypto_options, codec_pair_id);
-  }
-  if (role == MediaChannel::Role::kReceive ||
-      role == MediaChannel::Role::kBoth) {
-    receive_channel = CreateReceiveChannel(call, config, options,
-                                           crypto_options, codec_pair_id);
-  }
-  return new VoiceMediaShimChannel(std::move(send_channel),
-                                   std::move(receive_channel));
 }
 
 void WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
@@ -1285,7 +1263,7 @@ bool WebRtcVoiceSendChannel::SetOptions(const AudioOptions& options) {
 }
 
 bool WebRtcVoiceSendChannel::SetSendParameters(
-    const AudioSendParameters& params) {
+    const AudioSenderParameter& params) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetSendParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetSendParameters: "
@@ -1328,6 +1306,13 @@ bool WebRtcVoiceSendChannel::SetSendParameters(
     return false;
   }
   return SetOptions(params.options);
+}
+
+absl::optional<Codec> WebRtcVoiceSendChannel::GetSendCodec() const {
+  if (send_codec_spec_) {
+    return CreateAudioCodec(send_codec_spec_->format);
+  }
+  return absl::nullopt;
 }
 
 // Utility function called from SetSendParameters() to extract current send
@@ -1537,7 +1522,7 @@ bool WebRtcVoiceSendChannel::AddSendStream(const StreamParams& sp) {
       ssrc, mid_, sp.cname, sp.id, send_codec_spec_, ExtmapAllowMixed(),
       send_rtp_extensions_, max_send_bitrate_bps_,
       audio_config_.rtcp_report_interval_ms, audio_network_adaptor_config,
-      call_, this, engine()->encoder_factory_, codec_pair_id_, nullptr,
+      call_, transport(), engine()->encoder_factory_, codec_pair_id_, nullptr,
       crypto_options_);
   send_streams_.insert(std::make_pair(ssrc, stream));
   if (ssrc_list_changed_callback_) {
@@ -1791,18 +1776,6 @@ void WebRtcVoiceSendChannel::SetEncoderToPacketizerFrameTransformer(
       std::move(frame_transformer));
 }
 
-bool WebRtcVoiceSendChannel::SendRtp(const uint8_t* data,
-                                     size_t len,
-                                     const webrtc::PacketOptions& options) {
-  MediaChannelUtil::SendRtp(data, len, options);
-  return true;
-}
-
-bool WebRtcVoiceSendChannel::SendRtcp(const uint8_t* data, size_t len) {
-  MediaChannelUtil::SendRtcp(data, len);
-  return true;
-}
-
 webrtc::RtpParameters WebRtcVoiceSendChannel::GetRtpSendParameters(
     uint32_t ssrc) const {
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -2025,7 +1998,7 @@ WebRtcVoiceReceiveChannel::~WebRtcVoiceReceiveChannel() {
 }
 
 bool WebRtcVoiceReceiveChannel::SetRecvParameters(
-    const AudioRecvParameters& params) {
+    const AudioReceiverParameters& params) {
   TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetRecvParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
   RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetRecvParameters: "
@@ -2257,8 +2230,9 @@ bool WebRtcVoiceReceiveChannel::AddRecvStream(const StreamParams& sp) {
   // Create a new channel for receiving audio data.
   auto config = BuildReceiveStreamConfig(
       ssrc, receiver_reports_ssrc_, recv_nack_enabled_, enable_non_sender_rtt_,
-      sp.stream_ids(), recv_rtp_extensions_, this, engine()->decoder_factory_,
-      decoder_map_, codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
+      sp.stream_ids(), recv_rtp_extensions_, transport(),
+      engine()->decoder_factory_, decoder_map_, codec_pair_id_,
+      engine()->audio_jitter_buffer_max_packets_,
       engine()->audio_jitter_buffer_fast_accelerate_,
       engine()->audio_jitter_buffer_min_delay_ms_, unsignaled_frame_decryptor_,
       crypto_options_, unsignaled_frame_transformer_);
@@ -2682,18 +2656,6 @@ void WebRtcVoiceReceiveChannel::SetDepacketizerToDecoderFrameTransformer(
   }
   matching_stream->second->SetDepacketizerToDecoderFrameTransformer(
       std::move(frame_transformer));
-}
-
-bool WebRtcVoiceReceiveChannel::SendRtp(const uint8_t* data,
-                                        size_t len,
-                                        const webrtc::PacketOptions& options) {
-  MediaChannelUtil::SendRtp(data, len, options);
-  return true;
-}
-
-bool WebRtcVoiceReceiveChannel::SendRtcp(const uint8_t* data, size_t len) {
-  MediaChannelUtil::SendRtcp(data, len);
-  return true;
 }
 
 bool WebRtcVoiceReceiveChannel::MaybeDeregisterUnsignaledRecvStream(

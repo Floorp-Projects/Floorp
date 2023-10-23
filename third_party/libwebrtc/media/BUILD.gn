@@ -150,40 +150,6 @@ rtc_library("rtc_media_base") {
   }
 }
 
-rtc_library("media_channel_shim") {
-  sources = [
-    "base/media_channel_shim.cc",
-    "base/media_channel_shim.h",
-  ]
-  deps = [
-    ":codec",
-    ":media_channel",
-    ":media_channel_impl",
-    ":stream_params",
-    "../api:frame_transformer_interface",
-    "../api:rtc_error",
-    "../api:rtp_headers",
-    "../api:rtp_parameters",
-    "../api:rtp_sender_interface",
-    "../api:scoped_refptr",
-    "../api/crypto:frame_decryptor_interface",
-    "../api/crypto:frame_encryptor_interface",
-    "../api/transport/rtp:rtp_source",
-    "../api/video:recordable_encoded_frame",
-    "../api/video:video_frame",
-    "../api/video_codecs:video_codecs_api",
-    "../modules/rtp_rtcp:rtp_rtcp_format",
-    "../rtc_base:checks",
-    "../rtc_base:network_route",
-    "../rtc_base/network:sent_packet",
-  ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/functional:any_invocable",
-    "//third_party/abseil-cpp/absl/strings",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
 rtc_library("media_channel_impl") {
 if (!build_with_mozilla) {
   sources = [
@@ -241,7 +207,6 @@ rtc_source_set("media_channel") {
   sources = [ "base/media_channel.h" ]
   deps = [
     ":codec",
-    ":delayable",
     ":media_constants",
     ":rtp_utils",
     ":stream_params",
@@ -290,11 +255,6 @@ rtc_source_set("media_channel") {
   ]
 }
 
-rtc_source_set("delayable") {
-  sources = [ "base/delayable.h" ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
-
 rtc_library("codec") {
   sources = [
     "base/codec.cc",
@@ -304,6 +264,7 @@ rtc_library("codec") {
     ":media_constants",
     "../api:field_trials_view",
     "../api:rtp_parameters",
+    "../api/audio_codecs:audio_codecs_api",
     "../api/video_codecs:video_codecs_api",
     "../rtc_base:checks",
     "../rtc_base:logging",
@@ -506,7 +467,6 @@ rtc_library("rtc_audio_video") {
     ":codec",
     ":media_channel",
     ":media_channel_impl",
-    ":media_channel_shim",
     ":media_constants",
     ":rid_description",
     ":rtc_media_base",
@@ -570,6 +530,7 @@ rtc_library("rtc_audio_video") {
     "../modules/audio_processing:audio_processing_statistics",
     "../modules/audio_processing/aec_dump",
     "../modules/audio_processing/agc:gain_control_interface",
+    "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../modules/video_coding",
     "../modules/video_coding:video_codec_interface",
@@ -768,6 +729,7 @@ if (rtc_include_tests) {
     deps = [
       ":codec",
       ":media_channel",
+      ":media_channel_impl",
       ":media_constants",
       ":rtc_audio_video",
       ":rtc_internal_video_codecs",
@@ -778,6 +740,7 @@ if (rtc_include_tests) {
       ":stream_params",
       "../api:call_api",
       "../api:fec_controller_api",
+      "../api:rtp_parameters",
       "../api:scoped_refptr",
       "../api/task_queue",
       "../api/task_queue:pending_task_safety_flag",
@@ -821,6 +784,7 @@ if (rtc_include_tests) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/functional:any_invocable",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
@@ -868,7 +832,7 @@ if (rtc_include_tests) {
       defines = []
       deps = [
         ":codec",
-        ":media_channel_shim",
+        ":media_channel",
         ":media_constants",
         ":rtc_audio_video",
         ":rtc_internal_video_codecs",

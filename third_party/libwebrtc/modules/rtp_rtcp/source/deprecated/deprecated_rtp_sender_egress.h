@@ -25,7 +25,7 @@
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_interface.h"
 #include "modules/rtp_rtcp/source/rtp_sequence_number_map.h"
-#include "rtc_base/rate_statistics.h"
+#include "rtc_base/bitrate_tracker.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 
@@ -136,7 +136,7 @@ class DEPRECATED_RtpSenderEgress {
   StreamDataCounters rtp_stats_ RTC_GUARDED_BY(lock_);
   StreamDataCounters rtx_rtp_stats_ RTC_GUARDED_BY(lock_);
   // One element per value in RtpPacketMediaType, with index matching value.
-  std::vector<RateStatistics> send_rates_ RTC_GUARDED_BY(lock_);
+  std::vector<BitrateTracker> send_rates_ RTC_GUARDED_BY(lock_);
 
   // Maps sent packets' sequence numbers to a tuple consisting of:
   // 1. The timestamp, without the randomizing offset mandated by the RFC.

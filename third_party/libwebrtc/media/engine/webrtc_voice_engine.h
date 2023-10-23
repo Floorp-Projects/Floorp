@@ -53,7 +53,6 @@
 #include "media/base/codec.h"
 #include "media/base/media_channel.h"
 #include "media/base/media_channel_impl.h"
-#include "media/base/media_channel_shim.h"
 #include "media/base/media_config.h"
 #include "media/base/media_engine.h"
 #include "media/base/rtp_utils.h"
@@ -115,14 +114,6 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
       webrtc::AudioCodecPairId codec_pair_id) override;
 
   std::unique_ptr<VoiceMediaReceiveChannelInterface> CreateReceiveChannel(
-      webrtc::Call* call,
-      const MediaConfig& config,
-      const AudioOptions& options,
-      const webrtc::CryptoOptions& crypto_options,
-      webrtc::AudioCodecPairId codec_pair_id) override;
-
-  VoiceMediaChannel* CreateMediaChannel(
-      MediaChannel::Role role,
       webrtc::Call* call,
       const MediaConfig& config,
       const AudioOptions& options,
@@ -195,8 +186,7 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
 };
 
 class WebRtcVoiceSendChannel final : public MediaChannelUtil,
-                                     public VoiceMediaSendChannelInterface,
-                                     public webrtc::Transport {
+                                     public VoiceMediaSendChannelInterface {
  public:
   WebRtcVoiceSendChannel(WebRtcVoiceEngine* engine,
                          const MediaConfig& config,
@@ -218,6 +208,8 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
   }
   VoiceMediaSendChannelInterface* AsVoiceSendChannel() override { return this; }
 
+  absl::optional<Codec> GetSendCodec() const override;
+
   // Functions imported from MediaChannelUtil
   void SetInterface(MediaChannelNetworkInterface* iface) override {
     MediaChannelUtil::SetInterface(iface);
@@ -235,7 +227,7 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
 
   const AudioOptions& options() const { return options_; }
 
-  bool SetSendParameters(const AudioSendParameters& params) override;
+  bool SetSendParameters(const AudioSenderParameter& params) override;
   webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const override;
   webrtc::RTCError SetRtpSendParameters(
       uint32_t ssrc,
@@ -276,13 +268,6 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
-
-  // implements Transport interface
-  bool SendRtp(const uint8_t* data,
-               size_t len,
-               const webrtc::PacketOptions& options) override;
-
-  bool SendRtcp(const uint8_t* data, size_t len) override;
 
   bool SenderNackEnabled() const override {
     if (!send_codec_spec_) {
@@ -361,8 +346,7 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
 
 class WebRtcVoiceReceiveChannel final
     : public MediaChannelUtil,
-      public VoiceMediaReceiveChannelInterface,
-      public webrtc::Transport {
+      public VoiceMediaReceiveChannelInterface {
  public:
   WebRtcVoiceReceiveChannel(WebRtcVoiceEngine* engine,
                             const MediaConfig& config,
@@ -393,7 +377,7 @@ class WebRtcVoiceReceiveChannel final
   void SetInterface(MediaChannelNetworkInterface* iface) override {
     MediaChannelUtil::SetInterface(iface);
   }
-  bool SetRecvParameters(const AudioRecvParameters& params) override;
+  bool SetRecvParameters(const AudioReceiverParameters& params) override;
   webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override;
   webrtc::RtpParameters GetDefaultRtpReceiveParameters() const override;
 
@@ -443,13 +427,6 @@ class WebRtcVoiceReceiveChannel final
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
-
-  // implements Transport interface
-  bool SendRtp(const uint8_t* data,
-               size_t len,
-               const webrtc::PacketOptions& options) override;
-
-  bool SendRtcp(const uint8_t* data, size_t len) override;
 
   void SetReceiveNackEnabled(bool enabled) override;
   void SetReceiveNonSenderRttEnabled(bool enabled) override;

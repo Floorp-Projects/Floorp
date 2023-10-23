@@ -9,7 +9,13 @@
 {
   'basic_suites': {
     'android_junit_tests': {
-      'android_examples_junit_tests': {},
+      'android_examples_junit_tests': {
+        'args': [
+          # Force number of shards to be one because of none hermetic tests
+          # in TCPChannelClientTest and DirectRTCClientTest.
+          '--shards=1',
+        ]
+      },
       'android_sdk_junit_tests': {},
     },
     'android_tests': {
@@ -25,7 +31,6 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
-      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },
@@ -64,7 +69,6 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
-      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },

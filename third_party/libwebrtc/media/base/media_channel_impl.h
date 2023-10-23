@@ -59,15 +59,11 @@
 #include "rtc_base/socket.h"
 #include "rtc_base/thread_annotations.h"
 // This file contains the base classes for classes that implement
-// the MediaChannel interfaces.
+// the channel interfaces.
 // These implementation classes used to be the exposed interface names,
 // but this is in the process of being changed.
-// TODO(bugs.webrtc.org/13931): Remove the MediaChannel class.
 
 namespace cricket {
-
-class VoiceMediaChannel;
-class VideoMediaChannel;
 
 // The `MediaChannelUtil` class provides functionality that is used by
 // multiple MediaChannel-like objects, of both sending and receiving
@@ -79,7 +75,11 @@ class MediaChannelUtil {
   virtual ~MediaChannelUtil();
   // Returns the absolute sendtime extension id value from media channel.
   virtual int GetRtpSendTimeExtnId() const;
-  // Base method to send packet using MediaChannelNetworkInterface.
+
+  webrtc::Transport* transport() { return &transport_; }
+
+  // Base methods to send packet using MediaChannelNetworkInterface.
+  // These methods are used by some tests only.
   bool SendPacket(rtc::CopyOnWriteBuffer* packet,
                   const rtc::PacketOptions& options);
 
@@ -121,260 +121,77 @@ class MediaChannelUtil {
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer);
 
  protected:
-  int SetOptionLocked(MediaChannelNetworkInterface::SocketType type,
-                      rtc::Socket::Option opt,
-                      int option) RTC_RUN_ON(network_thread_);
-
   bool DscpEnabled() const;
 
-  // This is the DSCP value used for both RTP and RTCP channels if DSCP is
-  // enabled. It can be changed at any time via `SetPreferredDscp`.
-  rtc::DiffServCodePoint PreferredDscp() const;
   void SetPreferredDscp(rtc::DiffServCodePoint new_dscp);
 
-  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety();
-
-  // Utility implementation for derived classes (video/voice) that applies
-  // the packet options and passes the data onwards to `SendPacket`.
-  void SendRtp(const uint8_t* data,
-               size_t len,
-               const webrtc::PacketOptions& options);
-
-  void SendRtcp(const uint8_t* data, size_t len);
-
  private:
-  // Apply the preferred DSCP setting to the underlying network interface RTP
-  // and RTCP channels. If DSCP is disabled, then apply the default DSCP value.
-  void UpdateDscp() RTC_RUN_ON(network_thread_);
+  // Implementation of the webrtc::Transport interface required
+  // by Call().
+  class TransportForMediaChannels : public webrtc::Transport {
+   public:
+    TransportForMediaChannels(webrtc::TaskQueueBase* network_thread,
+                              bool enable_dscp);
 
-  bool DoSendPacket(rtc::CopyOnWriteBuffer* packet,
-                    bool rtcp,
-                    const rtc::PacketOptions& options);
+    virtual ~TransportForMediaChannels();
 
-  const bool enable_dscp_;
-  const rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
-      RTC_PT_GUARDED_BY(network_thread_);
-  webrtc::TaskQueueBase* const network_thread_;
-  MediaChannelNetworkInterface* network_interface_
-      RTC_GUARDED_BY(network_thread_) = nullptr;
-  rtc::DiffServCodePoint preferred_dscp_ RTC_GUARDED_BY(network_thread_) =
-      rtc::DSCP_DEFAULT;
-  bool extmap_allow_mixed_ = false;
-};
+    // Implementation of webrtc::Transport
+    bool SendRtp(const uint8_t* packet,
+                 size_t length,
+                 const webrtc::PacketOptions& options) override;
+    bool SendRtcp(const uint8_t* packet, size_t length) override;
+    bool SendRtp(rtc::ArrayView<const uint8_t> packet,
+                 const webrtc::PacketOptions& options) override;
+    bool SendRtcp(rtc::ArrayView<const uint8_t> packet) override;
 
-// The `MediaChannel` class implements both the SendChannel and
-// ReceiveChannel interface. It is used in legacy code that does not
-// use the split interfaces.
-class MediaChannel : public MediaChannelUtil,
-                     public MediaSendChannelInterface,
-                     public MediaReceiveChannelInterface {
- public:
-  // Role of the channel. Used to describe which interface it supports.
-  // This is temporary until we stop using the same implementation for both
-  // interfaces.
-  enum class Role {
-    kSend,
-    kReceive,
-    kBoth  // Temporary value for non-converted test and downstream code
-    // TODO(bugs.webrtc.org/13931): Remove kBoth when usage is removed.
+    // Not implementation of webrtc::Transport
+    void SetInterface(MediaChannelNetworkInterface* iface);
+
+    int SetOption(MediaChannelNetworkInterface::SocketType type,
+                  rtc::Socket::Option opt,
+                  int option);
+
+    bool DoSendPacket(rtc::CopyOnWriteBuffer* packet,
+                      bool rtcp,
+                      const rtc::PacketOptions& options);
+
+    bool HasNetworkInterface() const {
+      RTC_DCHECK_RUN_ON(network_thread_);
+      return network_interface_ != nullptr;
+    }
+    bool DscpEnabled() const { return enable_dscp_; }
+
+    void SetPreferredDscp(rtc::DiffServCodePoint new_dscp);
+
+   private:
+    // This is the DSCP value used for both RTP and RTCP channels if DSCP is
+    // enabled. It can be changed at any time via `SetPreferredDscp`.
+    rtc::DiffServCodePoint PreferredDscp() const {
+      RTC_DCHECK_RUN_ON(network_thread_);
+      return preferred_dscp_;
+    }
+
+    // Apply the preferred DSCP setting to the underlying network interface RTP
+    // and RTCP channels. If DSCP is disabled, then apply the default DSCP
+    // value.
+    void UpdateDscp() RTC_RUN_ON(network_thread_);
+
+    int SetOptionLocked(MediaChannelNetworkInterface::SocketType type,
+                        rtc::Socket::Option opt,
+                        int option) RTC_RUN_ON(network_thread_);
+
+    const rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> network_safety_
+        RTC_PT_GUARDED_BY(network_thread_);
+    webrtc::TaskQueueBase* const network_thread_;
+    const bool enable_dscp_;
+    MediaChannelNetworkInterface* network_interface_
+        RTC_GUARDED_BY(network_thread_) = nullptr;
+    rtc::DiffServCodePoint preferred_dscp_ RTC_GUARDED_BY(network_thread_) =
+        rtc::DSCP_DEFAULT;
   };
 
-  explicit MediaChannel(Role role,
-                        webrtc::TaskQueueBase* network_thread,
-                        bool enable_dscp = false);
-  virtual ~MediaChannel() = default;
-
-  Role role() const { return role_; }
-
-  // Downcasting to the subclasses.
-  virtual VideoMediaChannel* AsVideoChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-
-  virtual VoiceMediaChannel* AsVoiceChannel() {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  // Must declare the methods inherited from the base interface template,
-  // even when abstract, to tell the compiler that all instances of the name
-  // referred to by subclasses of this share the same implementation.
-  cricket::MediaType media_type() const override = 0;
-  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
-  void OnPacketSent(const rtc::SentPacket& sent_packet) override = 0;
-  void OnReadyToSend(bool ready) override = 0;
-  void OnNetworkRouteChanged(absl::string_view transport_name,
-                             const rtc::NetworkRoute& network_route) override =
-      0;
-  void SetSendCodecChangedCallback(
-      absl::AnyInvocable<void()> callback) override = 0;
-
-  // Methods from the APIs that are implemented in MediaChannelUtil
-  using MediaChannelUtil::ExtmapAllowMixed;
-  using MediaChannelUtil::HasNetworkInterface;
-  using MediaChannelUtil::SetExtmapAllowMixed;
-  using MediaChannelUtil::SetInterface;
-
- private:
-  const Role role_;
-};
-
-// Base class for implementation classes
-
-class VideoMediaChannel : public MediaChannel,
-                          public VideoMediaSendChannelInterface,
-                          public VideoMediaReceiveChannelInterface {
- public:
-  explicit VideoMediaChannel(MediaChannel::Role role,
-                             webrtc::TaskQueueBase* network_thread,
-                             bool enable_dscp = false)
-      : MediaChannel(role, network_thread, enable_dscp) {}
-  ~VideoMediaChannel() override {}
-
-  // Downcasting to the implemented interfaces.
-  VideoMediaSendChannelInterface* AsVideoSendChannel() override { return this; }
-  VoiceMediaSendChannelInterface* AsVoiceSendChannel() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-
-  VideoMediaReceiveChannelInterface* AsVideoReceiveChannel() override {
-    return this;
-  }
-  VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  cricket::MediaType media_type() const override;
-
-  // Downcasting to the subclasses.
-  VideoMediaChannel* AsVideoChannel() override { return this; }
-
-  void SetExtmapAllowMixed(bool mixed) override {
-    MediaChannel::SetExtmapAllowMixed(mixed);
-  }
-  bool ExtmapAllowMixed() const override {
-    return MediaChannel::ExtmapAllowMixed();
-  }
-  void SetInterface(MediaChannelNetworkInterface* iface) override {
-    return MediaChannel::SetInterface(iface);
-  }
-  // Declared here in order to avoid "found by multiple paths" compile error
-  bool AddSendStream(const StreamParams& sp) override = 0;
-  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override = 0;
-  void SetSsrcListChangedCallback(
-      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override =
-      0;
-  bool AddRecvStream(const StreamParams& sp) override = 0;
-  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
-  void SetEncoderSelector(uint32_t ssrc,
-                          webrtc::VideoEncoderFactory::EncoderSelectorInterface*
-                              encoder_selector) override {}
-
-  // This fills the "bitrate parts" (rtx, video bitrate) of the
-  // BandwidthEstimationInfo, since that part that isn't possible to get
-  // through webrtc::Call::GetStats, as they are statistics of the send
-  // streams.
-  // TODO(holmer): We should change this so that either BWE graphs doesn't
-  // need access to bitrates of the streams, or change the (RTC)StatsCollector
-  // so that it's getting the send stream stats separately by calling
-  // GetStats(), and merges with BandwidthEstimationInfo by itself.
-  void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) override = 0;
-  // Gets quality stats for the channel.
-  virtual bool GetSendStats(VideoMediaSendInfo* info) = 0;
-  virtual bool GetReceiveStats(VideoMediaReceiveInfo* info) = 0;
-  bool GetStats(VideoMediaSendInfo* info) override {
-    return GetSendStats(info);
-  }
-  bool GetStats(VideoMediaReceiveInfo* info) override {
-    return GetReceiveStats(info);
-  }
-
-  // TODO(bugs.webrtc.org/13931): Remove when configuration is more sensible
-  void SetSendCodecChangedCallback(
-      absl::AnyInvocable<void()> callback) override = 0;
-  // Enable network condition based codec switching.
-  // Note: should have been pure virtual.
-  void SetVideoCodecSwitchingEnabled(bool enabled) override;
-
- private:
-  // Functions not implemented on this interface
-  bool HasNetworkInterface() const override {
-    return MediaChannel::HasNetworkInterface();
-  }
-};
-
-// Base class for implementation classes
-class VoiceMediaChannel : public MediaChannel,
-                          public VoiceMediaSendChannelInterface,
-                          public VoiceMediaReceiveChannelInterface {
- public:
-  MediaType media_type() const override;
-  VoiceMediaChannel(MediaChannel::Role role,
-                    webrtc::TaskQueueBase* network_thread,
-                    bool enable_dscp = false)
-      : MediaChannel(role, network_thread, enable_dscp) {}
-  ~VoiceMediaChannel() override {}
-
-  // Downcasting to the implemented interfaces.
-  VoiceMediaSendChannelInterface* AsVoiceSendChannel() override { return this; }
-
-  VoiceMediaReceiveChannelInterface* AsVoiceReceiveChannel() override {
-    return this;
-  }
-
-  VoiceMediaChannel* AsVoiceChannel() override { return this; }
-
-  VideoMediaSendChannelInterface* AsVideoSendChannel() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-  VideoMediaReceiveChannelInterface* AsVideoReceiveChannel() override {
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
-  }
-
-  // Declared here in order to avoid "found by multiple paths" compile error
-  bool AddSendStream(const StreamParams& sp) override = 0;
-  bool AddRecvStream(const StreamParams& sp) override = 0;
-  void OnPacketReceived(const webrtc::RtpPacketReceived& packet) override = 0;
-  void SetEncoderSelector(uint32_t ssrc,
-                          webrtc::VideoEncoderFactory::EncoderSelectorInterface*
-                              encoder_selector) override {}
-  void ChooseReceiverReportSsrc(const std::set<uint32_t>& choices) override = 0;
-  void SetSsrcListChangedCallback(
-      absl::AnyInvocable<void(const std::set<uint32_t>&)> callback) override =
-      0;
-  webrtc::RtpParameters GetRtpSendParameters(uint32_t ssrc) const override = 0;
-  webrtc::RTCError SetRtpSendParameters(
-      uint32_t ssrc,
-      const webrtc::RtpParameters& parameters,
-      webrtc::SetParametersCallback callback = nullptr) override = 0;
-
-  void SetExtmapAllowMixed(bool mixed) override {
-    MediaChannel::SetExtmapAllowMixed(mixed);
-  }
-  bool ExtmapAllowMixed() const override {
-    return MediaChannel::ExtmapAllowMixed();
-  }
-  void SetInterface(MediaChannelNetworkInterface* iface) override {
-    return MediaChannel::SetInterface(iface);
-  }
-  bool HasNetworkInterface() const override {
-    return MediaChannel::HasNetworkInterface();
-  }
-
-  // Gets quality stats for the channel.
-  virtual bool GetSendStats(VoiceMediaSendInfo* info) = 0;
-  virtual bool GetReceiveStats(VoiceMediaReceiveInfo* info,
-                               bool get_and_clear_legacy_stats) = 0;
-  bool GetStats(VoiceMediaSendInfo* info) override {
-    return GetSendStats(info);
-  }
-  bool GetStats(VoiceMediaReceiveInfo* info,
-                bool get_and_clear_legacy_stats) override {
-    return GetReceiveStats(info, get_and_clear_legacy_stats);
-  }
+  bool extmap_allow_mixed_ = false;
+  TransportForMediaChannels transport_;
 };
 
 }  // namespace cricket

@@ -49,9 +49,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
   ~RemoteBitrateEstimatorAbsSendTime() override;
 
-  void IncomingPacket(int64_t arrival_time_ms,
-                      size_t payload_size,
-                      const RTPHeader& header) override;
+  void IncomingPacket(const RtpPacketReceived& rtp_packet) override;
   TimeDelta Process() override;
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
   void RemoveStream(uint32_t ssrc) override;
@@ -88,11 +86,6 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
 
   static void MaybeAddCluster(const Cluster& cluster_aggregate,
                               std::list<Cluster>& clusters);
-
-  void IncomingPacketInfo(Timestamp arrival_time,
-                          uint32_t send_time_24bits,
-                          DataSize payload_size,
-                          uint32_t ssrc);
 
   std::list<Cluster> ComputeClusters() const;
 

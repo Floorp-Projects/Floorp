@@ -413,7 +413,7 @@ index 54132bcdbb..cf8b3ad3dc 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index c40cfcf28e..63a3a2d53d 100644
+index 39cbc0a9c1..2e8a997fc4 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -435,7 +435,7 @@ index c40cfcf28e..63a3a2d53d 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 48a1ad0758..372fe211d0 100644
+index 12f6bf60c8..542067d30c 100644
 --- a/call/video_receive_stream.h
 +++ b/call/video_receive_stream.h
 @@ -206,6 +206,8 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
@@ -497,7 +497,7 @@ index 9f78aca6e2..115bfcf97b 100644
    }
    max_extrapolation_samples_ = 7 * fs_hz / 100;
 diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index fd884f13ff..f39852b58e 100644
+index 9c7ecc78f4..2c9c419bcd 100644
 --- a/modules/desktop_capture/desktop_capturer.h
 +++ b/modules/desktop_capture/desktop_capturer.h
 @@ -82,6 +82,7 @@ class RTC_EXPORT DesktopCapturer {
@@ -774,7 +774,7 @@ index 3745e9cba5..f68cfb94c1 100644
        device_names->push_back(rtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 75f403d6fa..c62c65506a 100644
+index e057005b16..c14332aca6 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
 @@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
@@ -787,7 +787,7 @@ index 75f403d6fa..c62c65506a 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 81961c69aa..a57d9e7f62 100644
+index 75e3e3c412..88815b5601 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
 @@ -446,6 +446,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
@@ -863,7 +863,7 @@ index 04b2cd63a6..e085f89c03 100644
  // Subclasses must defined kId and kUri static constexpr members.
  class BaseRtpStringExtension {
 diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index 6c7dff322b..9495841984 100644
+index 2a95a3a816..b152cdbd9e 100644
 --- a/modules/rtp_rtcp/source/rtp_packet.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet.cc
 @@ -205,6 +205,10 @@ void RtpPacket::ZeroMutableExtensions() {
@@ -939,7 +939,7 @@ index 3e6aa3baae..9ac7696ce9 100644
  constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
  }  // namespace webrtc
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 8c0b2dda0a..a60d742dd4 100644
+index 967d38a8e0..f3d90e3c0b 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -128,6 +128,10 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -1562,10 +1562,10 @@ index 0474e7bc17..1953923f81 100644
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index ac27ee8251..0005503341 100644
+index f3810fdd36..b8113bd4bc 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -423,6 +423,12 @@ rtc_library("logging") {
+@@ -458,6 +458,12 @@ rtc_library("logging") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  
@@ -1625,7 +1625,7 @@ index 61a3c667ba..ad2303735e 100644
  // The list of logging streams currently configured.
  // Note: we explicitly do not clean this up, because of the uncertain ordering
 diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index d59b9a0ef7..73a8bf7454 100644
+index b171cfe11e..df7f173f58 100644
 --- a/rtc_base/logging.h
 +++ b/rtc_base/logging.h
 @@ -581,6 +581,12 @@ class LogMessage {
@@ -1681,10 +1681,10 @@ index 0a9226ef6f..620c1c02f3 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 5e4a5d3c81..928a59104b 100644
+index 097ad4a377..9c67f61aaa 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -122,7 +122,7 @@ declare_args() {
+@@ -126,7 +126,7 @@ declare_args() {
  
    # Selects whether debug dumps for the audio processing module
    # should be generated.
@@ -1694,5 +1694,5 @@ index 5e4a5d3c81..928a59104b 100644
    # Selects whether the audio processing module should be excluded.
    rtc_exclude_audio_processing_module = false
 -- 
-2.37.3
+2.34.1
 

@@ -1,31 +1,42 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 4 Jul 2023 08:34:00 +0000
-Subject: Bug 1839829 - WebRTC backport: PipeWire video capture - initialize
- pw_stream raw pointer member r=webrtc-reviewers,ng
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-This is a simple backport of an WebRTC upstream change.
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
 
-Upstream commit: e21745a78b430ed4f2119b6342acbaa30a52b406
-
-Differential Revision: https://phabricator.services.mozilla.com/D182671
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2174ddbbb4733a8f9b9cef34d2e6c3a1ceb244d4
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- modules/video_capture/linux/video_capture_pipewire.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/linux/video_capture_pipewire.h b/modules/video_capture/linux/video_capture_pipewire.h
-index fe39f1dd92..316fb2449d 100644
---- a/modules/video_capture/linux/video_capture_pipewire.h
-+++ b/modules/video_capture/linux/video_capture_pipewire.h
-@@ -50,7 +50,7 @@ class VideoCaptureModulePipeWire : public VideoCaptureImpl {
-       RTC_GUARDED_BY(capture_checker_);
-   bool started_ RTC_GUARDED_BY(api_lock_);
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index f784b8eebc..528ed6c616 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -281,12 +281,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    }
+   }
  
--  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_);
-+  struct pw_stream* stream_ RTC_GUARDED_BY(capture_checker_) = nullptr;
-   struct spa_hook stream_listener_ RTC_GUARDED_BY(capture_checker_);
- };
- }  // namespace videocapturemodule
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
+   }
+ 
+  private:
 -- 
-2.37.3
+2.34.1
 

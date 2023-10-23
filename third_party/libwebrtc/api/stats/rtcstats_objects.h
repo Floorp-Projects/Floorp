@@ -248,13 +248,18 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
   RTCStatsMember<uint32_t> packets_received;
   RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<uint64_t> fec_packets_received;
+  RTCStatsMember<uint64_t> fec_bytes_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
+  // Inbound FEC SSRC. Only present if a mechanism like FlexFEC is negotiated.
+  RTCStatsMember<uint32_t> fec_ssrc;
   RTCStatsMember<uint64_t> bytes_received;
   RTCStatsMember<uint64_t> header_bytes_received;
   // Inbound RTX stats. Only defined when RTX is used and it is therefore
   // possible to distinguish retransmissions.
   RTCStatsMember<uint64_t> retransmitted_packets_received;
   RTCStatsMember<uint64_t> retransmitted_bytes_received;
+  RTCStatsMember<uint32_t> rtx_ssrc;
+
   RTCStatsMember<double> last_packet_received_timestamp;
   RTCStatsMember<double> jitter_buffer_delay;
   RTCStatsMember<double> jitter_buffer_target_delay;
@@ -367,6 +372,9 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
   // In JavaScript, this is only exposed if HW exposure is allowed.
   RTCStatsMember<bool> power_efficient_encoder;
   RTCStatsMember<std::string> scalability_mode;
+
+  // RTX ssrc. Only present if RTX is negotiated.
+  RTCStatsMember<uint32_t> rtx_ssrc;
 };
 
 // https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*

@@ -287,8 +287,8 @@
 
     __block RTC_OBJC_TYPE(RTCPeerConnectionFactory) * factory;
     __block RTC_OBJC_TYPE(RTCPeerConnection) * pc1;
-    RTCSessionDescription *rollback = [[RTCSessionDescription alloc] initWithType:RTCSdpTypeRollback
-                                                                              sdp:@""];
+    RTC_OBJC_TYPE(RTCSessionDescription) *rollback =
+        [[RTC_OBJC_TYPE(RTCSessionDescription) alloc] initWithType:RTCSdpTypeRollback sdp:@""];
 
     @autoreleasepool {
       factory = [[RTC_OBJC_TYPE(RTCPeerConnectionFactory) alloc] init];

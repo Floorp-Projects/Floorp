@@ -1695,7 +1695,7 @@ void BuildRtpContentAttributes(const MediaContentDescription* media_desc,
   for (const CryptoParams& crypto_params : media_desc->cryptos()) {
     InitAttrLine(kAttributeCrypto, &os);
     os << kSdpDelimiterColon << crypto_params.tag << " "
-       << crypto_params.cipher_suite << " " << crypto_params.key_params;
+       << crypto_params.crypto_suite << " " << crypto_params.key_params;
     if (!crypto_params.session_params.empty()) {
       os << " " << crypto_params.session_params;
     }
@@ -2654,12 +2654,11 @@ static std::unique_ptr<C> ParseContentDescription(
   for (int pt : payload_types) {
     payload_type_preferences[pt] = preference--;
   }
-  std::vector<typename C::CodecType> codecs = media_desc->codecs();
-  absl::c_sort(
-      codecs, [&payload_type_preferences](const typename C::CodecType& a,
-                                          const typename C::CodecType& b) {
-        return payload_type_preferences[a.id] > payload_type_preferences[b.id];
-      });
+  std::vector<cricket::Codec> codecs = media_desc->codecs();
+  absl::c_sort(codecs, [&payload_type_preferences](const cricket::Codec& a,
+                                                   const cricket::Codec& b) {
+    return payload_type_preferences[a.id] > payload_type_preferences[b.id];
+  });
   media_desc->set_codecs(codecs);
   return media_desc;
 }

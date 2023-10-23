@@ -59,6 +59,10 @@ declare_args() {
 }
 
 declare_args() {
+  # If set to true, C++ code will refer to the new JNI Generator symbols.
+  # If set to false the old ones will be used (to provide a nice update path).
+  rtc_jni_generator_legacy_symbols = false
+
   # Setting this to true, will make RTC_DLOG() expand to log statements instead
   # of being removed by the preprocessor.
   # This is useful for example to be able to get RTC_DLOGs on a release build.
@@ -211,9 +215,8 @@ declare_args() {
     rtc_apprtcmobile_broadcast_extension = false
   }
 
-  # Determines whether OpenGL is available on iOS/macOS.
-  rtc_ios_macos_use_opengl_rendering =
-      !(is_ios && target_environment == "catalyst")
+  # Determines whether OpenGL is available on iOS.
+  rtc_ios_use_opengl_rendering = is_ios && target_environment != "catalyst"
 
   # When set to false, builtin audio encoder/decoder factories and all the
   # audio codecs they depend on will not be included in libwebrtc.{a|lib}
@@ -247,6 +250,11 @@ declare_args() {
   #  "warn": RTC_LOGs a message with LS_WARNING severity if the field trial
   #          hasn't been registered.
   rtc_strict_field_trials = ""
+
+  # If different from "", symbols exported with RTC_OBJC_EXPORT will be prefixed
+  # with this string.
+  # See the definition of RTC_OBJC_TYPE_PREFIX in the code.
+  rtc_objc_prefix = ""
 }
 
 if (!build_with_mozilla) {
@@ -362,7 +370,10 @@ webrtc_root = get_path_info(".", "abspath")
 rtc_common_configs = [ webrtc_root + ":common_config" ]
 
 if (is_mac || is_ios) {
-  rtc_common_configs += [ "//build/config/compiler:enable_arc" ]
+  if (filter_include(default_compiler_configs,
+                     [ "//build/config/compiler:enable_arc" ]) == []) {
+    rtc_common_configs += [ "//build/config/compiler:enable_arc" ]
+  }
 }
 
 # Global public configuration that should be applied to all WebRTC targets. You

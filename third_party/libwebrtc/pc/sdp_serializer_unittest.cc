@@ -63,7 +63,7 @@ void ExpectEqual(const std::map<TKey, TValue>& expected,
   ASSERT_EQ(expected.size(), actual.size());
   // Maps have unique keys, so if size is equal, it is enough to check
   // that all the keys (and values) from one map exist in the other.
-  for (const std::pair<TKey, TValue>& pair : expected) {
+  for (const auto& pair : expected) {
     const_iterator iter = actual.find(pair.first);
     EXPECT_NE(iter, actual.end()) << "Key: " << pair.first << " not found";
     EXPECT_EQ(pair.second, iter->second);

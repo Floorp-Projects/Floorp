@@ -50,7 +50,7 @@
 
 #define ASSERT_CRYPTO(cd, s, cs)      \
   ASSERT_EQ(s, cd->cryptos().size()); \
-  ASSERT_EQ(cs, cd->cryptos()[0].cipher_suite)
+  ASSERT_EQ(cs, cd->cryptos()[0].crypto_suite)
 
 typedef std::vector<cricket::Candidate> Candidates;
 
@@ -423,8 +423,8 @@ void PreferGcmCryptoParameters(CryptoParamsVec* cryptos) {
   cryptos->erase(
       std::remove_if(cryptos->begin(), cryptos->end(),
                      [](const cricket::CryptoParams& crypto) {
-                       return crypto.cipher_suite != kCsAeadAes256Gcm &&
-                              crypto.cipher_suite != kCsAeadAes128Gcm;
+                       return crypto.crypto_suite != kCsAeadAes256Gcm &&
+                              crypto.crypto_suite != kCsAeadAes128Gcm;
                      }),
       cryptos->end());
 }
@@ -486,7 +486,7 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
     if (c1.size() != c2.size())
       return false;
     for (size_t i = 0; i < c1.size(); ++i)
-      if (c1[i].tag != c2[i].tag || c1[i].cipher_suite != c2[i].cipher_suite ||
+      if (c1[i].tag != c2[i].tag || c1[i].crypto_suite != c2[i].crypto_suite ||
           c1[i].key_params != c2[i].key_params ||
           c1[i].session_params != c2[i].session_params)
         return false;
@@ -632,7 +632,7 @@ class MediaSessionDescriptionFactoryTest : public ::testing::Test {
                                     video_media_desc->cryptos()));
     EXPECT_EQ(1u, audio_media_desc->cryptos().size());
     EXPECT_EQ(kDefaultSrtpCryptoSuite,
-              audio_media_desc->cryptos()[0].cipher_suite);
+              audio_media_desc->cryptos()[0].crypto_suite);
 
     // Verify the selected crypto is one from the reference audio
     // media content.

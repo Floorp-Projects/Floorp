@@ -19,6 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/rtp_packet_infos.h"
 #include "api/scoped_refptr.h"
+#include "api/units/timestamp.h"
 #include "api/video/color_space.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_content_type.h"
@@ -86,6 +87,8 @@ class RTC_EXPORT EncodedImage {
   uint32_t Timestamp() const { return timestamp_rtp_; }
 
   void SetEncodeTime(int64_t encode_start_ms, int64_t encode_finish_ms);
+
+  webrtc::Timestamp CaptureTime() const;
 
   int64_t NtpTimeMs() const { return ntp_time_ms_; }
 

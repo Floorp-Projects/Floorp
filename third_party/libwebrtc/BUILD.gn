@@ -64,12 +64,12 @@ if (!build_with_chromium && !build_with_mozilla) {
         "modules/video_capture:video_capture_internal_impl",
         "modules/video_coding:video_codec_perf_tests",
         "net/dcsctp:dcsctp_unittests",
-        "pc:peer_connection_mediachannel_split_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
         "pc:slow_peer_connection_unittests",
         "pc:svc_tests",
         "rtc_tools:rtp_generator",
+        "rtc_tools:video_encoder",
         "rtc_tools:video_replay",
         "stats:rtc_stats_unittests",
         "system_wrappers:system_wrappers_unittests",
@@ -137,6 +137,14 @@ config("common_inherited_config") {
   defines = []
   cflags = []
   ldflags = []
+
+  if (rtc_jni_generator_legacy_symbols) {
+    defines += [ "RTC_JNI_GENERATOR_LEGACY_SYMBOLS" ]
+  }
+
+  if (rtc_objc_prefix != "") {
+    defines += [ "RTC_OBJC_TYPE_PREFIX=${rtc_objc_prefix}" ]
+  }
 
   if (rtc_dlog_always_on) {
     defines += [ "DLOG_ALWAYS_ON" ]

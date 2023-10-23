@@ -307,11 +307,14 @@ WEBRTC_RTCSTATS_IMPL(
     &packets_received,
     &packets_discarded,
     &fec_packets_received,
+    &fec_bytes_received,
     &fec_packets_discarded,
+    &fec_ssrc,
     &bytes_received,
     &header_bytes_received,
     &retransmitted_packets_received,
     &retransmitted_bytes_received,
+    &rtx_ssrc,
     &last_packet_received_timestamp,
     &jitter_buffer_delay,
     &jitter_buffer_target_delay,
@@ -371,11 +374,14 @@ RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(std::string id,
       packets_received("packetsReceived"),
       packets_discarded("packetsDiscarded"),
       fec_packets_received("fecPacketsReceived"),
+      fec_bytes_received("fecBytesReceived"),
       fec_packets_discarded("fecPacketsDiscarded"),
+      fec_ssrc("fecSsrc"),
       bytes_received("bytesReceived"),
       header_bytes_received("headerBytesReceived"),
       retransmitted_packets_received("retransmittedPacketsReceived"),
       retransmitted_bytes_received("retransmittedBytesReceived"),
+      rtx_ssrc("rtxSsrc"),
       last_packet_received_timestamp("lastPacketReceivedTimestamp"),
       jitter_buffer_delay("jitterBufferDelay"),
       jitter_buffer_target_delay("jitterBufferTargetDelay"),
@@ -460,7 +466,8 @@ WEBRTC_RTCSTATS_IMPL(
     &qp_sum,
     &active,
     &power_efficient_encoder,
-    &scalability_mode)
+    &scalability_mode,
+    &rtx_ssrc)
 // clang-format on
 
 RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(std::string id,
@@ -496,7 +503,8 @@ RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(std::string id,
       qp_sum("qpSum"),
       active("active"),
       power_efficient_encoder("powerEfficientEncoder"),
-      scalability_mode("scalabilityMode") {}
+      scalability_mode("scalabilityMode"),
+      rtx_ssrc("rtxSsrc") {}
 
 RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(
     const RTCOutboundRtpStreamStats& other) = default;
