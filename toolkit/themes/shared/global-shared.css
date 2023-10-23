@@ -96,15 +96,14 @@
 
 /* Lightweight theme roots */
 
-:root:-moz-lwtheme {
-  toolbar,
-  &[lwt-popup="light"] panel {
-    color-scheme: light;
-  }
-  toolbar[brighttext],
-  &[lwt-popup="dark"] panel {
-    color-scheme: dark;
-  }
+toolbar,
+:root[lwt-popup="light"] panel {
+  color-scheme: light;
+}
+
+toolbar[brighttext],
+:root[lwt-popup="dark"] panel {
+  color-scheme: dark;
 }
 
 :root[lwtheme-image] {
