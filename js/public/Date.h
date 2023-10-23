@@ -32,7 +32,7 @@
 #include "mozilla/FloatingPoint.h"  // mozilla::{IsFinite,}, mozilla::UnspecifiedNaN
 #include "mozilla/MathAlgorithms.h"  // mozilla::Abs
 
-#include "js/Conversions.h"  // JS::ToInteger
+#include "js/Conversions.h"   // JS::ToInteger
 #include "js/RealmOptions.h"  // JS::RTPCallerTypeToken
 #include "js/TypeDecls.h"
 #include "js/Value.h"  // JS::CanonicalizeNaN, JS::DoubleValue, JS::Value
