@@ -534,29 +534,60 @@ class SVGUtils final {
                                const gfxMatrix& aToCanvas,
                                const nsPresContext* presContext);
 
-  struct MaskUsage {
-    bool shouldGenerateMaskLayer;
-    bool shouldGenerateClipMaskLayer;
-    bool shouldApplyClipPath;
-    bool shouldApplyBasicShapeOrPath;
-    float opacity;
-
-    MaskUsage()
-        : shouldGenerateMaskLayer(false),
-          shouldGenerateClipMaskLayer(false),
-          shouldApplyClipPath(false),
-          shouldApplyBasicShapeOrPath(false),
-          opacity(0.0) {}
-
-    bool shouldDoSomething() {
-      return shouldGenerateMaskLayer || shouldGenerateClipMaskLayer ||
-             shouldApplyClipPath || shouldApplyBasicShapeOrPath ||
-             opacity != 1.0;
-    }
-  };
-
+  struct MaskUsage;
   static MaskUsage DetermineMaskUsage(const nsIFrame* aFrame,
                                       bool aHandleOpacity);
+
+  struct MOZ_STACK_CLASS MaskUsage {
+    friend MaskUsage SVGUtils::DetermineMaskUsage(const nsIFrame* aFrame,
+                                                  bool aHandleOpacity);
+
+    bool ShouldGenerateMaskLayer() const { return mShouldGenerateMaskLayer; }
+
+    bool ShouldGenerateClipMaskLayer() const {
+      return mShouldGenerateClipMaskLayer;
+    }
+
+    bool ShouldGenerateLayer() const {
+      return mShouldGenerateMaskLayer || mShouldGenerateClipMaskLayer;
+    }
+
+    bool ShouldGenerateMask() const {
+      return mShouldGenerateMaskLayer || mShouldGenerateClipMaskLayer ||
+             !IsOpaque();
+    }
+
+    bool ShouldApplyClipPath() const { return mShouldApplyClipPath; }
+
+    bool HasSVGClip() const {
+      return mShouldGenerateClipMaskLayer || mShouldApplyClipPath;
+    }
+
+    bool ShouldApplyBasicShapeOrPath() const {
+      return mShouldApplyBasicShapeOrPath;
+    }
+
+    bool IsOpaque() const { return mOpacity == 1.0f; }
+
+    bool IsTransparent() const { return mOpacity == 0.0f; }
+
+    float Opacity() const { return mOpacity; }
+
+    bool ShouldDoSomething() const {
+      return mShouldGenerateMaskLayer || mShouldGenerateClipMaskLayer ||
+             mShouldApplyClipPath || mShouldApplyBasicShapeOrPath ||
+             mOpacity != 1.0f;
+    }
+
+   private:
+    MaskUsage() = default;
+
+    float mOpacity = 0.0f;
+    bool mShouldGenerateMaskLayer = false;
+    bool mShouldGenerateClipMaskLayer = false;
+    bool mShouldApplyClipPath = false;
+    bool mShouldApplyBasicShapeOrPath = false;
+  };
 
   static float ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity);
 

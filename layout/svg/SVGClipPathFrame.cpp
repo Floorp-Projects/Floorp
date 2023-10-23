@@ -105,10 +105,10 @@ void SVGClipPathFrame::PaintChildren(gfxContext& aMaskContext,
   SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(this, true);
 
   gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aMaskContext);
-  if (maskUsage.shouldApplyClipPath) {
+  if (maskUsage.ShouldApplyClipPath()) {
     clipPathThatClipsClipPath->ApplyClipPath(aMaskContext, aClippedFrame,
                                              aMatrix);
-  } else if (maskUsage.shouldGenerateClipMaskLayer) {
+  } else if (maskUsage.ShouldGenerateClipMaskLayer()) {
     RefPtr<SourceSurface> maskSurface = clipPathThatClipsClipPath->GetClipMask(
         aMaskContext, aClippedFrame, aMatrix);
     // We want the mask to be untransformed so use the inverse of the current
@@ -124,7 +124,7 @@ void SVGClipPathFrame::PaintChildren(gfxContext& aMaskContext,
     PaintFrameIntoMask(kid, aClippedFrame, aMaskContext);
   }
 
-  if (maskUsage.shouldApplyClipPath) {
+  if (maskUsage.ShouldApplyClipPath()) {
     aMaskContext.PopClip();
   }
 }
@@ -182,11 +182,11 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
 
   SVGUtils::MaskUsage maskUsage = SVGUtils::DetermineMaskUsage(aFrame, true);
   gfxGroupForBlendAutoSaveRestore autoGroupForBlend(&aTarget);
-  if (maskUsage.shouldApplyClipPath) {
+  if (maskUsage.ShouldApplyClipPath()) {
     clipPathThatClipsChild->ApplyClipPath(
         aTarget, aClippedFrame,
         SVGUtils::GetTransformMatrixInUserSpace(aFrame) * mMatrixForChildren);
-  } else if (maskUsage.shouldGenerateClipMaskLayer) {
+  } else if (maskUsage.ShouldGenerateClipMaskLayer()) {
     RefPtr<SourceSurface> maskSurface = clipPathThatClipsChild->GetClipMask(
         aTarget, aClippedFrame,
         SVGUtils::GetTransformMatrixInUserSpace(aFrame) * mMatrixForChildren);
@@ -216,7 +216,7 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   // only the geometry (opaque black) if set.
   frame->PaintSVG(aTarget, toChildsUserSpace, imgParams);
 
-  if (maskUsage.shouldApplyClipPath) {
+  if (maskUsage.ShouldApplyClipPath()) {
     aTarget.PopClip();
   }
 }
