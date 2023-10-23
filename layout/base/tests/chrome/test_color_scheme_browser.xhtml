@@ -74,8 +74,11 @@
             b.addProgressListener(listener);
           });
           info(`Calling b.loadURI for ${b.parentNode.id}`);
+          // Keep the listener alive, since it's a weak ref otherwise.
+          window.ALIVE_LISTENER = listener;
           b.loadURI(null /*blank*/, { triggeringPrincipal });
           await loaded;
+          delete window.ALIVE_LISTENER;
         }
       });
       async function getBrowserColorScheme(browser) {
