@@ -10,16 +10,451 @@ import android.util.Log;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
 /**
  * The translations controller coordinates the session and runtime messaging between GeckoView and
- * the translations toolkit. Initial runtime component will be added in ToDo: bug 1852313.
+ * the translations toolkit.
  */
 public class TranslationsController {
   private static final boolean DEBUG = false;
   private static final String LOGTAG = "TranslationsController";
+
+  /**
+   * Runtime translation coordinates runtime messaging between the translations toolkit actor and
+   * GeckoView.
+   *
+   * <p>Performs translations actions that are not dependent on the page. Typical usage is for
+   * setting preferences, managing downloads, and getting information on language models available.
+   */
+  public static class RuntimeTranslation {
+
+    // Events Dispatched to Toolkit Translations
+    private static final String ENGINE_SUPPORTED_EVENT =
+        "GeckoView:Translations:IsTranslationEngineSupported";
+
+    private static final String PREFERRED_LANGUAGES_EVENT =
+        "GeckoView:Translations:PreferredLanguages";
+
+    private static final String MANAGE_MODEL_EVENT = "GeckoView:Translations:ManageModel";
+
+    private static final String TRANSLATION_INFORMATION_EVENT =
+        "GeckoView:Translations:TranslationInformation";
+    private static final String MODEL_INFORMATION_EVENT = "GeckoView:Translations:ModelInformation";
+
+    /**
+     * Checks if the device can use the supplied model binary files for translations.
+     *
+     * <p>Use to check if translations are ever possible.
+     *
+     * @return true if translations are supported on the device, or false if not.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Boolean> isTranslationsEngineSupported() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting if the translations engine supports the device.");
+      }
+      return EventDispatcher.getInstance().queryBoolean(ENGINE_SUPPORTED_EVENT);
+    }
+
+    /**
+     * Returns the preferred languages of the user in the following order: 1. App languages 2. Web
+     * requested languages 3. OS language
+     *
+     * @return a GeckoResult with a user's preferred language(s) or null or an exception
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<List<String>> preferredLanguages() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting the user's preferred languages.");
+      }
+      return EventDispatcher.getInstance()
+          .queryBundle(PREFERRED_LANGUAGES_EVENT)
+          .map(
+              bundle -> {
+                try {
+                  final String[] languages = bundle.getStringArray("preferredLanguages");
+                  if (languages != null) {
+                    return Arrays.asList(languages);
+                  }
+                } catch (final Exception e) {
+                  Log.w(LOGTAG, "Could not deserialize preferredLanguages: " + e);
+                  return null;
+                }
+                return null;
+              });
+    }
+
+    /**
+     * Manage the language model or models. Options are to download or delete a BCP 47 language or
+     * all or cache.
+     *
+     * <p>Bug 1854691 will add an option for deleting translations model "cache".
+     *
+     * @param options contain language, operation, and operation level to perform on the model
+     * @return the request proceeded as expected or an exception.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Void> manageLanguageModel(
+        final @NonNull ModelManagementOptions options) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting management of the language model.");
+      }
+      return EventDispatcher.getInstance().queryVoid(MANAGE_MODEL_EVENT, options.toBundle());
+    }
+
+    /**
+     * List languages that can be translated to and from. Use is populating language selection.
+     *
+     * @return a GeckoResult with a TranslationSupport object with "to" and "from" languages or an
+     *     exception.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<TranslationSupport> listSupportedLanguages() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting information on the language options.");
+      }
+      return EventDispatcher.getInstance()
+          .queryBundle(TRANSLATION_INFORMATION_EVENT)
+          .map(
+              bundle -> {
+                return TranslationSupport.fromBundle(bundle);
+              });
+    }
+
+    /**
+     * When `translate()` is called on a given pair, then the system will downloaded the necessary
+     * models to complete the translation. This method is to check the exact size of those
+     * downloads. Typical case is informing the user of the download size for users in a low-data
+     * mode.
+     *
+     * <p>If no download is required, will return 0.
+     *
+     * <p>Will be implemented in bug 1854691.
+     *
+     * @param fromLanguage from BCP 47 code
+     * @param toLanguage from BCP 47 code
+     * @return The size of the file size in bytes. If no download is required, will return 0.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Long> checkPairDownloadSize(
+        @NonNull final String fromLanguage, @NonNull final String toLanguage) {
+      final GeckoResult<Long> result = new GeckoResult<>();
+      result.completeExceptionally(
+          new UnsupportedOperationException("Will be implemented in Bug 1854691."));
+      return result;
+    }
+
+    /**
+     * Convenience method for {@link #checkPairDownloadSize(String, String)}.
+     *
+     * @param pair language pair that will be used by `translate()`
+     * @return The size of the necessary file size in bytes. If no download is required, will return
+     *     0.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Long> checkPairDownloadSize(
+        @NonNull final SessionTranslation.TranslationPair pair) {
+      return checkPairDownloadSize(pair.fromLanguage, pair.toLanguage);
+    }
+
+    /**
+     * Creates a list of all of the available language models, their size for a full download, and
+     * download state. Expected use is for displaying model state for user management.
+     *
+     * @return A GeckoResult with a list of the available language model's and their states or an
+     *     exception.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<List<LanguageModel>> listModelDownloadStates() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting information on the language model.");
+      }
+      return EventDispatcher.getInstance()
+          .queryBundle(MODEL_INFORMATION_EVENT)
+          .map(
+              bundle -> {
+                try {
+                  final GeckoBundle[] models = bundle.getBundleArray("models");
+                  if (models != null) {
+                    final List<LanguageModel> list = new ArrayList<>();
+                    for (final var item : models) {
+                      list.add(LanguageModel.fromBundle(item));
+                    }
+                    return list;
+                  }
+                } catch (final Exception e) {
+                  Log.d(LOGTAG, "Could not deserialize the model states.");
+                  return null;
+                }
+                return null;
+              });
+    }
+
+    /** Options for managing the translation language models. */
+    @AnyThread
+    public static class ModelManagementOptions {
+      /** BCP 47 language or null for global operations. */
+      public final @Nullable String language;
+
+      /** Operation to perform on the language model. */
+      public final @NonNull @ModelOperation String operation;
+
+      /** Level of operation */
+      public final @NonNull @OperationLevel String operationLevel;
+
+      /**
+       * Options for managing the toolkit provided language model binaries.
+       *
+       * @param builder model management options builder
+       */
+      protected ModelManagementOptions(
+          final @NonNull RuntimeTranslation.ModelManagementOptions.Builder builder) {
+        this.language = builder.mLanguage;
+        this.operation = builder.mOperation;
+        this.operationLevel = builder.mOperationLevel;
+      }
+
+      /** Serializer for Model Management Options */
+      /* package */ @NonNull
+      GeckoBundle toBundle() {
+        final GeckoBundle bundle = new GeckoBundle(2);
+        if (language != null) {
+          bundle.putString("language", language);
+        }
+        bundle.putString("operation", operation.toString());
+        bundle.putString("operationLevel", operationLevel.toString());
+
+        return bundle;
+      }
+
+      /** Builder for Model Management Options */
+      @AnyThread
+      public static class Builder {
+        /* package */ String mLanguage = null;
+        /* package */ @ModelOperation String mOperation;
+        /* package */ @OperationLevel String mOperationLevel = ALL;
+
+        /**
+         * Language builder setter.
+         *
+         * @param language that should be managed. No need to set in the case of a global operation
+         *     level.
+         * @return the language parameter for the constructor
+         */
+        public @NonNull RuntimeTranslation.ModelManagementOptions.Builder languageToManage(
+            final @NonNull String language) {
+          mLanguage = language;
+          return this;
+        }
+
+        /**
+         * Operation builder setter.
+         *
+         * @param operation that should be performed
+         * @return the operation parameter for the constructor
+         */
+        public @NonNull RuntimeTranslation.ModelManagementOptions.Builder operation(
+            final @NonNull @ModelOperation String operation) {
+          mOperation = operation;
+          return this;
+        }
+
+        /**
+         * Operation level builder setter.
+         *
+         * @param operationLevel the level of the operation, e.g., language, all, or cache Default
+         *     is to operate on all.
+         * @return the operation level parameter for the constructor
+         */
+        public @NonNull RuntimeTranslation.ModelManagementOptions.Builder operationLevel(
+            final @NonNull @OperationLevel String operationLevel) {
+          mOperationLevel = operationLevel;
+          return this;
+        }
+
+        /**
+         * Builder for Model Management Options.
+         *
+         * @return a constructed ModelManagementOptions populated from builder options
+         */
+        @AnyThread
+        public @NonNull ModelManagementOptions build() {
+          return new ModelManagementOptions(this);
+        }
+      }
+    }
+
+    /** Operations toolkit can perform on the language models. */
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef(value = {DOWNLOAD, DELETE})
+    public @interface ModelOperation {}
+
+    /** The download operation is for downloading models. */
+    public static final String DOWNLOAD = "download";
+
+    /** The delete operation is for deleting models. */
+    public static final String DELETE = "delete";
+
+    /** Operation type for toolkit to operate on. */
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef(value = {LANGUAGE, CACHE, ALL})
+    public @interface OperationLevel {}
+
+    /**
+     * The language type indicates the operation should be performed only on the specified language.
+     */
+    public static final String LANGUAGE = "language";
+
+    /**
+     * The cache type indicates that the operation should be performed on model files that do not
+     * make up a suit.
+     */
+    public static final String CACHE = "cache";
+
+    /** The all type indicates that the operation should be performed on all model files */
+    public static final String ALL = "all";
+
+    /** Language translation options. */
+    public static class TranslationSupport {
+      /** Languages we can translate from. */
+      public final @Nullable List<Language> fromLanguages;
+
+      /** Languages we can translate to. */
+      public final @Nullable List<Language> toLanguages;
+
+      /**
+       * Construction for translation support, will usually be constructed from deserialize toolkit
+       * information.
+       *
+       * @param fromLanguages list of from languages to list as translation options
+       * @param toLanguages list of to languages to list as translation options
+       */
+      public TranslationSupport(
+          @Nullable final List<Language> fromLanguages,
+          @Nullable final List<Language> toLanguages) {
+        this.fromLanguages = fromLanguages;
+        this.toLanguages = toLanguages;
+      }
+
+      @Override
+      public String toString() {
+        return "TranslationSupport {"
+            + "fromLanguages="
+            + fromLanguages
+            + ", toLanguages="
+            + toLanguages
+            + '}';
+      }
+
+      /**
+       * Convenience method for deserializing support information.
+       *
+       * @param bundle contains language support information
+       * @return support object
+       */
+      /* package */
+      static @Nullable TranslationSupport fromBundle(final GeckoBundle bundle) {
+        if (bundle == null) {
+          return null;
+        }
+        final List<Language> fromLanguages = new ArrayList<>();
+        final List<Language> toLanguages = new ArrayList<>();
+        try {
+          final GeckoBundle[] fromBundle = bundle.getBundleArray("fromLanguages");
+          for (final var item : fromBundle) {
+            final var result = Language.fromBundle(item);
+            if (result != null) {
+              fromLanguages.add(result);
+            }
+          }
+
+          final GeckoBundle[] toBundle = bundle.getBundleArray("toLanguages");
+          for (final var item : toBundle) {
+            final var result = Language.fromBundle(item);
+            if (result != null) {
+              toLanguages.add(result);
+            }
+          }
+        } catch (final Exception e) {
+          Log.w(
+              LOGTAG,
+              "An issue occurred while deserializing translation support information: " + e);
+        }
+
+        return new TranslationSupport(fromLanguages, toLanguages);
+      }
+    }
+
+    /** Information about a language model. */
+    public static class LanguageModel {
+      /** Display language. */
+      public final @Nullable Language language;
+
+      /** Model download state */
+      public final @NonNull Boolean isDownloaded;
+
+      /** Size in bytes for displaying download information. */
+      public final long size;
+
+      /**
+       * Constructor for the language model.
+       *
+       * @param language the language the model is for.
+       * @param isDownloaded if the model is currently downloaded or not.
+       * @param size the size in bytes of the model.
+       */
+      public LanguageModel(
+          @Nullable final Language language, final Boolean isDownloaded, final long size) {
+        this.language = language;
+        this.isDownloaded = isDownloaded;
+        this.size = size;
+      }
+
+      @Override
+      public String toString() {
+        return "LanguageModel {"
+            + "language="
+            + language
+            + ", isDownloaded="
+            + isDownloaded
+            + ", size="
+            + size
+            + '}';
+      }
+
+      /**
+       * Convenience method for deserializing language model information.
+       *
+       * @param bundle contains language model information
+       * @return language object
+       */
+      /* package */
+      static @Nullable LanguageModel fromBundle(final GeckoBundle bundle) {
+        if (bundle == null) {
+          return null;
+        }
+        try {
+          final var language = Language.fromBundle(bundle);
+          final var isDownloaded = bundle.getBoolean("isDownloaded");
+          final var size = bundle.getLong("size");
+          return new LanguageModel(language, isDownloaded, size);
+        } catch (final Exception e) {
+          Log.w(LOGTAG, "Could not deserialize LanguageModel object: " + e);
+          return null;
+        }
+      }
+    }
+  }
 
   /**
    * Session translation coordinates session messaging between the translations toolkit actor and
@@ -72,7 +507,7 @@ public class TranslationsController {
      * @param fromLanguage BCP 47 language tag that the page should be translated from. Usually will
      *     be the suggested detected language or user specified.
      * @param toLanguage BCP 47 language tag that the page should be translated to. Usually will be
-     *     the suggested preference language (will be added in ToDo: bug 1852313) or user specified.
+     *     the suggested preference language or user specified.
      * @param options no-op, ToDo: bug 1853055 will add options
      * @return if translate process begins or exceptionally if an issue occurs.
      */
@@ -438,13 +873,108 @@ public class TranslationsController {
               && translationState.detectedLanguages != null
               && translationState.detectedLanguages.docLangTag != null
               && translationState.detectedLanguages.userLangTag != null
-              && translationState.detectedLanguages.isDocLangTagSupported)
-          // Also check if engine is supported when runtime functions are added in ToDo: bug 1852313
-          {
-            delegate.onExpectedTranslate(mSession);
+              && translationState.detectedLanguages.isDocLangTagSupported) {
+            TranslationsController.RuntimeTranslation.isTranslationsEngineSupported()
+                .then(
+                    (GeckoResult.OnValueListener<Boolean, Void>)
+                        value -> {
+                          if (value) {
+                            delegate.onExpectedTranslate(mSession);
+                          }
+                          return null;
+                        });
+            return;
           }
-          return;
         }
+      }
+    }
+  }
+
+  /** Language display information. */
+  public static class Language implements Comparable<Language> {
+    /** Language BCP 47 code. */
+    public final @NonNull String code;
+
+    /** Language localized display name. */
+    public final @Nullable String localizedDisplayName;
+
+    /**
+     * Language constructor.
+     *
+     * @param code BCP 47 language code
+     * @param localizedDisplayName how the language should be referred to in the UI.
+     */
+    public Language(@NonNull final String code, @Nullable final String localizedDisplayName) {
+      this.code = code;
+      this.localizedDisplayName = localizedDisplayName;
+    }
+
+    @Override
+    public String toString() {
+      if (localizedDisplayName != null) {
+        return localizedDisplayName;
+      }
+      return code;
+    }
+
+    /**
+     * Comparator for sorting language objects is based on alphabetizing display language {@link
+     * #localizedDisplayName}.
+     *
+     * @param otherLanguage other language being compared
+     * @return 1 if this object is earlier, 0 if equal, -1 if this object should be later for
+     *     sorting
+     */
+    @Override
+    @AnyThread
+    public int compareTo(@Nullable final Language otherLanguage) {
+      return this.localizedDisplayName.compareTo(otherLanguage.localizedDisplayName);
+    }
+
+    /**
+     * Equality checker for language objects is based on BCP 47 code equality {@link #code}.
+     *
+     * @param otherLanguage other language being compared
+     * @return true if the BCP 47 codes match, false if they do not
+     */
+    @Override
+    public boolean equals(@Nullable final Object otherLanguage) {
+      if (otherLanguage instanceof Language) {
+        return this.code.equals(((Language) otherLanguage).code);
+      }
+      return false;
+    }
+
+    /**
+     * Required for overriding equals.
+     *
+     * @return object hash.
+     */
+    @Override
+    public int hashCode() {
+      return Objects.hash(code);
+    }
+
+    /**
+     * Convenience method for deserializing language information.
+     *
+     * @param bundle contains language information
+     * @return language for display
+     */
+    /* package */
+    static @Nullable Language fromBundle(final GeckoBundle bundle) {
+      if (bundle == null) {
+        return null;
+      }
+      try {
+        final String code = bundle.getString("langTag", "");
+        if (code.equals("")) {
+          Log.w(LOGTAG, "Deserialized an empty language code.");
+        }
+        return new Language(code, bundle.getString("displayName"));
+      } catch (final Exception e) {
+        Log.w(LOGTAG, "Could not deserialize language object: " + e);
+        return null;
       }
     }
   }

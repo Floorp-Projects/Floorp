@@ -38,10 +38,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -62,6 +64,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -1316,6 +1320,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.translate_restore:
         translateRestore(session);
         break;
+      case R.id.translate_manage:
+        translateManage();
+        break;
       default:
         return super.onOptionsItemSelected(item);
     }
@@ -1427,20 +1434,73 @@ public class GeckoViewActivity extends AppCompatActivity
   private void translate(GeckoSession session) {
     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
     builder.setTitle(R.string.translate);
+    Spinner fromSelect = new Spinner(this);
+    Spinner toSelect = new Spinner(this);
 
-    // Bug 1844518 - Change to dropdowns with language pairs
-    final EditText fromSelect = new EditText(this);
-    fromSelect.setText(mDetectedLanguage);
-    final EditText toSelect = new EditText(this);
-    // Bug 1844518 - Detect to language preference
-    toSelect.setText("en");
-    builder.setView(translateLayout(fromSelect, toSelect));
+    // Set spinners with data
+    TranslationsController.RuntimeTranslation.listSupportedLanguages()
+        .then(
+            supportedLanguages -> {
+              // Just a check if sorting is working on the Language object by reversing, Languages
+              // should generally come from the API in the display order.
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Collections.reverse(supportedLanguages.fromLanguages);
+              }
+              ArrayAdapter<TranslationsController.Language> fromData =
+                  new ArrayAdapter<TranslationsController.Language>(
+                      this.getBaseContext(),
+                      android.R.layout.simple_spinner_item,
+                      supportedLanguages.fromLanguages);
+              fromSelect.setAdapter(fromData);
+              // Set detected language
+              final int index =
+                  fromData.getPosition(
+                      new TranslationsController.Language(mDetectedLanguage, null));
+              fromSelect.setSelection(index);
+
+              ArrayAdapter<TranslationsController.Language> toData =
+                  new ArrayAdapter<TranslationsController.Language>(
+                      this.getBaseContext(),
+                      android.R.layout.simple_spinner_item,
+                      supportedLanguages.toLanguages);
+              toSelect.setAdapter(toData);
+              // Set preferred language
+              TranslationsController.RuntimeTranslation.preferredLanguages()
+                  .then(
+                      preferredList -> {
+                        Log.d(LOGTAG, "Preferred Translation Languages: " + preferredList);
+                        // Reorder dropdown listing based on preferences
+                        for (int i = preferredList.size() - 1; i >= 0; i--) {
+                          final int langIndex =
+                              toData.getPosition(
+                                  new TranslationsController.Language(preferredList.get(i), null));
+                          TranslationsController.Language displayLanguage =
+                              toData.getItem(langIndex);
+                          toData.remove(displayLanguage);
+                          toData.insert(displayLanguage, 0);
+                          if (i == 0) {
+                            toSelect.setSelection(0);
+                          }
+                        }
+                        return null;
+                      });
+              return null;
+            });
+    builder.setView(
+        translateLayout(
+            fromSelect,
+            R.string.translate_language_from_hint,
+            toSelect,
+            R.string.translate_language_to_hint,
+            -1));
     builder.setPositiveButton(
         R.string.translate_action,
         (dialog, which) -> {
-          final String fromLang = fromSelect.getText().toString();
-          final String toLang = toSelect.getText().toString();
-          session.getSessionTranslation().translate(fromLang, toLang, null);
+          final TranslationsController.Language fromLang =
+              (TranslationsController.Language) fromSelect.getSelectedItem();
+          final TranslationsController.Language toLang =
+              (TranslationsController.Language) toSelect.getSelectedItem();
+          session.getSessionTranslation().translate(fromLang.code, toLang.code, null);
           mTranslateRestore = true;
         });
     builder.setNegativeButton(
@@ -1453,7 +1513,6 @@ public class GeckoViewActivity extends AppCompatActivity
   }
 
   private void translateRestore(GeckoSession session) {
-
     session
         .getSessionTranslation()
         .restoreOriginalPage()
@@ -1468,16 +1527,108 @@ public class GeckoViewActivity extends AppCompatActivity
             });
   }
 
-  private RelativeLayout translateLayout(EditText fromSelect, EditText toSelect) {
+  private void translateManage() {
+    Spinner languageSelect = new Spinner(this);
+    Spinner operationSelect = new Spinner(this);
+    // Should match ModelOperation choices
+    List<String> operationChoices =
+        new ArrayList<>(
+            Arrays.asList(
+                new String[] {
+                  TranslationsController.RuntimeTranslation.DELETE.toString(),
+                  TranslationsController.RuntimeTranslation.DOWNLOAD.toString()
+                }));
+    ArrayAdapter<String> operationData =
+        new ArrayAdapter<String>(
+            this.getBaseContext(), android.R.layout.simple_spinner_item, operationChoices);
+    operationSelect.setAdapter(operationData);
+
+    // Get current model states
+    GeckoResult<List<TranslationsController.RuntimeTranslation.LanguageModel>> currentStates =
+        TranslationsController.RuntimeTranslation.listModelDownloadStates();
+    currentStates.then(
+        models -> {
+          List<TranslationsController.Language> languages =
+              new ArrayList<TranslationsController.Language>();
+          // Pseudo container of "all" just to simplify spinner for GVE
+          languages.add(new TranslationsController.Language("all", "All Models"));
+          for (var model : models) {
+            Log.i(LOGTAG, "Translate Model State: " + model);
+            languages.add(model.language);
+          }
+          ArrayAdapter<TranslationsController.Language> languageData =
+              new ArrayAdapter<TranslationsController.Language>(
+                  this.getBaseContext(), android.R.layout.simple_spinner_item, languages);
+          languageSelect.setAdapter(languageData);
+          return null;
+        });
+
+    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    builder.setTitle(R.string.translate_manage);
+    builder.setView(
+        translateLayout(
+            languageSelect,
+            R.string.translate_manage_languages,
+            operationSelect,
+            R.string.translate_manage_operations,
+            R.string.translate_display_hint));
+    builder.setPositiveButton(
+        R.string.translate_manage_action,
+        (dialog, which) -> {
+          final TranslationsController.Language selectedLanguage =
+              (TranslationsController.Language) languageSelect.getSelectedItem();
+
+          final String operation = (String) operationSelect.getSelectedItem();
+
+          String operationLevel = TranslationsController.RuntimeTranslation.LANGUAGE;
+          // Pseudo option for ease of GVE
+          if (selectedLanguage.code.equals("all")) {
+            operationLevel = TranslationsController.RuntimeTranslation.ALL;
+          }
+          TranslationsController.RuntimeTranslation.ModelManagementOptions options =
+              new TranslationsController.RuntimeTranslation.ModelManagementOptions.Builder()
+                  .languageToManage(selectedLanguage.code)
+                  .operation(operation)
+                  .operationLevel(operationLevel)
+                  .build();
+
+          // Complete Operation
+          GeckoResult<Void> requestOperation =
+              TranslationsController.RuntimeTranslation.manageLanguageModel(options);
+          requestOperation.then(
+              opt -> {
+                // Log Changes
+                GeckoResult<List<TranslationsController.RuntimeTranslation.LanguageModel>>
+                    reportChanges =
+                        TranslationsController.RuntimeTranslation.listModelDownloadStates();
+                reportChanges.then(
+                    models -> {
+                      for (var model : models) {
+                        Log.i(LOGTAG, "Translate Model State: " + model);
+                      }
+                      return null;
+                    });
+                return null;
+              });
+        });
+    builder.setNegativeButton(
+        R.string.cancel,
+        (dialog, which) -> {
+          // Nothing to do
+        });
+
+    builder.show();
+  }
+
+  private RelativeLayout translateLayout(
+      Spinner spinnerA, int labelA, Spinner spinnerB, int labelB, int labelInfo) {
     // From fields
     TextView fromLangLabel = new TextView(this);
-    fromLangLabel.setText(R.string.translate_language_from_hint);
-    fromSelect.setInputType(InputType.TYPE_CLASS_TEXT);
-    fromSelect.setHint(R.string.translate_language_from_hint);
+    fromLangLabel.setText(labelA);
     LinearLayout from = new LinearLayout(this);
     from.setId(View.generateViewId());
     from.addView(fromLangLabel);
-    from.addView(fromSelect);
+    from.addView(spinnerA);
     RelativeLayout.LayoutParams fromParams =
         new RelativeLayout.LayoutParams(
             RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -1485,13 +1636,11 @@ public class GeckoViewActivity extends AppCompatActivity
 
     // To fields
     TextView toLangLabel = new TextView(this);
-    toLangLabel.setText(R.string.translate_language_to_hint);
-    toSelect.setInputType(InputType.TYPE_CLASS_TEXT);
-    toSelect.setHint(R.string.translate_language_to_hint);
+    toLangLabel.setText(labelB);
     LinearLayout to = new LinearLayout(this);
     to.setId(View.generateViewId());
     to.addView(toLangLabel);
-    to.addView(toSelect);
+    to.addView(spinnerB);
     RelativeLayout.LayoutParams toParams =
         new RelativeLayout.LayoutParams(
             RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -1502,6 +1651,18 @@ public class GeckoViewActivity extends AppCompatActivity
     RelativeLayout layout = new RelativeLayout(this);
     layout.addView(from, fromParams);
     layout.addView(to, toParams);
+
+    // Hint
+    TextView info = new TextView(this);
+    if (labelInfo != -1) {
+      RelativeLayout.LayoutParams infoParams =
+          new RelativeLayout.LayoutParams(
+              RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+      infoParams.setMarginStart(30);
+      infoParams.addRule(RelativeLayout.BELOW, to.getId());
+      info.setText(labelInfo);
+      layout.addView(info, infoParams);
+    }
 
     return layout;
   }

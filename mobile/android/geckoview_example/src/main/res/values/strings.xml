@@ -57,6 +57,12 @@
     <string name="translate_language_from_hint">From Language</string>
     <string name="translate_language_to_hint">To Language</string>
     <string name="translate_action">Translate</string>
+    <string name="translate_manage">Manage Translate</string>
+    <string name="translate_manage_languages">Languages</string>
+    <string name="translate_manage_operations">Operations</string>
+    <string name="translate_display_hint">See Logcat for State</string>
+    <string name="translate_manage_action">Update</string>
+
 
     # Preferences
     <string name="key_tracking_protection">tracking_protection</string>
