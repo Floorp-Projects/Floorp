@@ -137,7 +137,8 @@ class PerfParser(CompareParser):
             {
                 "action": "store_true",
                 "default": False,
-                "help": "Show tests available for Custom Chromium-as-Release (disabled by default).",
+                "help": "Show tests available for Custom Chromium-as-Release (disabled by default). "
+                "Use with --android flag to select Custom CaR android tests (cstm-car-m)",
             },
         ],
         [
