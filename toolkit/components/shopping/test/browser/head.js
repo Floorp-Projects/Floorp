@@ -9,11 +9,7 @@ const OTHER_PRODUCT_TEST_URL =
 const BAD_PRODUCT_TEST_URL = "https://example.com/Bad-Product/dp/0000000000";
 const NEEDS_ANALYSIS_TEST_URL = "https://example.com/Bad-Product/dp/OPQRSTU789";
 
-async function promiseSidebarUpdated(
-  sidebar,
-  expectedProduct,
-  eventName = "Update"
-) {
+async function promiseSidebarUpdated(sidebar, expectedProduct) {
   let browser = sidebar.querySelector("browser");
   if (
     !browser.currentURI?.equals(Services.io.newURI("about:shoppingsidebar"))
@@ -24,42 +20,34 @@ async function promiseSidebarUpdated(
       "about:shoppingsidebar"
     );
   }
-  return SpecialPowers.spawn(
-    browser,
-    [expectedProduct, eventName],
-    (prod, expectedEvent) => {
-      function isProductCurrent() {
-        let actor =
-          content.windowGlobalChild.getExistingActor("ShoppingSidebar");
-        return actor?.getProductURI()?.spec == prod;
-      }
-      if (
-        isProductCurrent() &&
-        !!content.document.querySelector("shopping-container").wrappedJSObject
-          .data
-      ) {
-        info("Product already loaded.");
-        return true;
-      }
-      info(
-        "Waiting for product to be updated. Document: " +
-          content.document.location.href
-      );
-      return ContentTaskUtils.waitForEvent(
-        content.document,
-        expectedEvent,
-        true,
-        e => {
-          info("Sidebar updated for product: " + JSON.stringify(e.detail));
-          if (!isProductCurrent()) {
-            return false;
-          }
-          return expectedEvent != "Update" || !!e.detail.data;
-        },
-        true
-      ).then(e => true);
+  return SpecialPowers.spawn(browser, [expectedProduct], prod => {
+    function isProductCurrent() {
+      let actor = content.windowGlobalChild.getExistingActor("ShoppingSidebar");
+      return actor?.getProductURI()?.spec == prod;
     }
-  );
+    if (
+      isProductCurrent() &&
+      !!content.document.querySelector("shopping-container").wrappedJSObject
+        .data
+    ) {
+      info("Product already loaded.");
+      return true;
+    }
+    info(
+      "Waiting for product to be updated. Document: " +
+        content.document.location.href
+    );
+    return ContentTaskUtils.waitForEvent(
+      content.document,
+      "Update",
+      true,
+      e => {
+        info("Sidebar updated for product: " + JSON.stringify(e.detail));
+        return !!e.detail.data && isProductCurrent();
+      },
+      true
+    ).then(e => true);
+  });
 }
 
 async function verifyProductInfo(sidebar, expectedProductInfo) {
