@@ -9,8 +9,8 @@
 
 #include "vm/ArrayObject.h"
 
-#include "gc/Allocator.h"
 #include "gc/GCProbes.h"
+#include "vm/JSContext.h"
 
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

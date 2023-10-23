@@ -9,8 +9,8 @@
 
 #include "vm/JSFunction.h"
 
-#include "gc/Allocator.h"
 #include "gc/GCProbes.h"
+#include "vm/JSContext.h"
 
 #include "gc/ObjectKind-inl.h"
 #include "vm/JSObject-inl.h"

@@ -17,6 +17,7 @@
 #include "builtin/AtomicsObject.h"
 #include "ds/TraceableFifo.h"
 #include "frontend/NameCollections.h"
+#include "gc/Allocator.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
 #include "jit/PcScriptCache.h"

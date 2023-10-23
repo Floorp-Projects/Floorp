@@ -24,7 +24,6 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
-#include "gc/Allocator.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "jit/MacroAssembler.h"

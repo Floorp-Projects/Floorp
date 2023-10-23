@@ -13,7 +13,7 @@
 
 #include <type_traits>
 
-#include "gc/Allocator.h"
+#include "gc/GCEnum.h"
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*

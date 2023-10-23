@@ -22,7 +22,6 @@
 #include "jstypes.h"
 
 #include "ds/Sort.h"
-#include "gc/Allocator.h"
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "js/Conversions.h"

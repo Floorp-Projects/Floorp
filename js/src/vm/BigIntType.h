@@ -14,8 +14,8 @@
 
 #include "jstypes.h"
 
-#include "gc/Allocator.h"
 #include "gc/Cell.h"
+#include "gc/GCEnum.h"
 #include "gc/StoreBuffer.h"
 #include "js/Result.h"
 #include "js/RootingAPI.h"
@@ -25,6 +25,7 @@
 namespace js {
 
 namespace gc {
+class CellAllocator;
 class TenuringTracer;
 }  // namespace gc
 

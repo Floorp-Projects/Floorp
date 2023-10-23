@@ -6,7 +6,6 @@
 
 #include "vm/GetterSetter.h"
 
-#include "gc/Allocator.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 

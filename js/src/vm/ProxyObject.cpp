@@ -6,12 +6,12 @@
 
 #include "vm/ProxyObject.h"
 
-#include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
 #include "proxy/DeadObjectProxy.h"
 #include "vm/Compartment.h"
+#include "vm/JSContext.h"
 #include "vm/Realm.h"
 
 #include "gc/ObjectKind-inl.h"
