@@ -98,7 +98,8 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   };
 
   WorkerLoadContext(Kind aKind, const Maybe<ClientInfo>& aClientInfo,
-                    workerinternals::loader::WorkerScriptLoader* aScriptLoader);
+                    workerinternals::loader::WorkerScriptLoader* aScriptLoader,
+                    bool aOnlyExistingCachedResourcesAllowed);
 
   // Used to detect if the `is top-level` bit is set on a given module.
   bool IsTopLevel() {
@@ -162,6 +163,11 @@ class WorkerLoadContext : public JS::loader::LoadContextBase {
   };
 
   CacheStatus mCacheStatus = Uncached;
+
+  // If the requested script is not currently in the cache, should we initiate
+  // a request to fetch and cache it?  Only ServiceWorkers that are being
+  // installed are allowed to go to the network (and then cache the result).
+  bool mOnlyExistingCachedResourcesAllowed = false;
 
   bool IsAwaitingPromise() const { return bool(mCachePromise); }
 };

@@ -621,8 +621,22 @@ already_AddRefed<ScriptLoadRequest> WorkerScriptLoader::CreateScriptLoadRequest(
 
   Maybe<ClientInfo> clientInfo = GetGlobal()->GetClientInfo();
 
-  RefPtr<WorkerLoadContext> loadContext =
-      new WorkerLoadContext(kind, clientInfo, this);
+  // (For non-serviceworkers, this variable does not matter, but false best
+  // captures their behavior.)
+  bool onlyExistingCachedResourcesAllowed = false;
+  if (mWorkerRef->Private()->IsServiceWorker()) {
+    // https://w3c.github.io/ServiceWorker/#importscripts step 4:
+    // > 4. If serviceWorker’s state is not "parsed" or "installing":
+    // >    1. Return map[url] if it exists and a network error otherwise.
+    //
+    // So if our state is beyond installing, it's too late to make a request
+    // that would perform a new fetch which would be cached.
+    onlyExistingCachedResourcesAllowed =
+        mWorkerRef->Private()->GetServiceWorkerDescriptor().State() >
+        ServiceWorkerState::Installing;
+  }
+  RefPtr<WorkerLoadContext> loadContext = new WorkerLoadContext(
+      kind, clientInfo, this, onlyExistingCachedResourcesAllowed);
 
   // Create ScriptLoadRequests for this WorkerScriptLoader
   ReferrerPolicy referrerPolicy = mWorkerRef->Private()->GetReferrerPolicy();
@@ -1363,7 +1377,8 @@ nsresult ScriptLoaderRunnable::Run() {
     handle->mRunnable = this;
     WorkerLoadContext* loadContext = handle->GetContext();
     mCacheCreator->AddLoader(MakeNotNull<RefPtr<CacheLoadHandler>>(
-        mWorkerRef, handle, loadContext->IsTopLevel(), mScriptLoader));
+        mWorkerRef, handle, loadContext->IsTopLevel(),
+        loadContext->mOnlyExistingCachedResourcesAllowed, mScriptLoader));
   }
 
   // The worker may have a null principal on first load, but in that case its
