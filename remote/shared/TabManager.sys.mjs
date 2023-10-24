@@ -309,11 +309,17 @@ export var TabManager = {
    *     Window whose <code>tabs</code> need to be returned.
    *
    * @returns {Array<Tab>}
-   *     The list of tabs. Will return an empty list if tab browser is not available.
+   *     The list of tabs. Will return an empty list if tab browser is not available
+   *     or tabs are undefined.
    */
   getTabsForWindow(win) {
     const tabBrowser = this.getTabBrowser(win);
-    return tabBrowser ? tabBrowser.tabs : [];
+    // For web-platform reftests a faked tabbrowser is used,
+    // which does not actually have tabs.
+    if (tabBrowser && tabBrowser.tabs) {
+      return tabBrowser.tabs;
+    }
+    return [];
   },
 
   getWindowForTab(tab) {
