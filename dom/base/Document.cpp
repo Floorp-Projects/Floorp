@@ -40,7 +40,6 @@
 #include "mozAutoDocUpdate.h"
 #include "mozIDOMWindow.h"
 #include "mozIThirdPartyUtil.h"
-#include "mozilla/AbstractTimelineMarker.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/ArrayUtils.h"
@@ -54,7 +53,7 @@
 #include "mozilla/ContentPrincipal.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/DocLoadingTimelineMarker.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/AttributeStyles.h"
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/EditorBase.h"
@@ -134,7 +133,6 @@
 #include "mozilla/TelemetryScalarEnums.h"
 #include "mozilla/TextControlElement.h"
 #include "mozilla/TextEditor.h"
-#include "mozilla/TimelineConsumers.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/URLDecorationStripper.h"
 #include "mozilla/URLExtraData.h"
@@ -8048,14 +8046,6 @@ void Document::DispatchContentLoadedEvents() {
 
   if (MayStartLayout()) {
     MaybeResolveReadyForIdle();
-  }
-
-  nsIDocShell* docShell = GetDocShell();
-
-  if (TimelineConsumers::HasConsumer(docShell)) {
-    TimelineConsumers::AddMarkerForDocShell(
-        docShell,
-        MakeUnique<DocLoadingTimelineMarker>("document::DOMContentLoaded"));
   }
 
   if (mTiming) {

@@ -67,8 +67,6 @@
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/ThreadSafety.h"
 #include "mozilla/ThrottledEventQueue.h"
-#include "mozilla/TimelineConsumers.h"
-#include "mozilla/WorkerTimelineMarker.h"
 #include "nsCycleCollector.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIDUtils.h"
@@ -4716,18 +4714,6 @@ void WorkerPrivate::PostMessageToParent(
   RefPtr<MessageEventRunnable> runnable = new MessageEventRunnable(
       this, WorkerRunnable::ParentThreadUnchangedBusyCount);
 
-  UniquePtr<AbstractTimelineMarker> start;
-  UniquePtr<AbstractTimelineMarker> end;
-  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
-
-  if (isTimelineRecording) {
-    start = MakeUnique<WorkerTimelineMarker>(
-        NS_IsMainThread()
-            ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
-            : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
-        MarkerTracingType::START);
-  }
-
   JS::CloneDataPolicy clonePolicy;
 
   // Parent and dedicated workers are always part of the same cluster.
@@ -4738,16 +4724,6 @@ void WorkerPrivate::PostMessageToParent(
   }
 
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
-
-  if (isTimelineRecording) {
-    end = MakeUnique<WorkerTimelineMarker>(
-        NS_IsMainThread()
-            ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
-            : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
-        MarkerTracingType::END);
-    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
-    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
-  }
 
   if (NS_WARN_IF(aRv.Failed())) {
     return;
