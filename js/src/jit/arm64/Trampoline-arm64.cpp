@@ -659,9 +659,6 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.callWithABI(nativeFun, MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-  // SP is used to transfer stack across call boundaries.
-  masm.initPseudoStackPtr();
-
   // Test for failure.
   switch (f.failType()) {
     case Type_Cell:
