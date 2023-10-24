@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { WebFrame, WebWindow } from "./web-reference.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -10,8 +12,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   ShadowRoot: "chrome://remote/content/marionette/web-reference.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   WebElement: "chrome://remote/content/marionette/web-reference.sys.mjs",
+  WebFrame: "chrome://remote/content/marionette/web-reference.sys.mjs",
   WebReference: "chrome://remote/content/marionette/web-reference.sys.mjs",
+  WebWindow: "chrome://remote/content/marionette/web-reference.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logger", () =>
@@ -107,6 +112,7 @@ function cloneObject(value, seen, cloneAlgorithm) {
  */
 json.clone = function (value, nodeCache) {
   const seenNodeIds = new Map();
+  let hasSerializedWindows = false;
 
   function cloneJSON(value, seen) {
     if (seen === undefined) {
@@ -125,13 +131,15 @@ json.clone = function (value, nodeCache) {
     }
 
     // Evaluation of code might take place in mutable sandboxes, which are
-    // created to waive XRays by default. As such DOM nodes would have to be
-    // unwaived before accessing properties like "ownerGlobal" is possible.
+    // created to waive XRays by default. As such DOM nodes and windows
+    // have to be unwaived before accessing properties like "ownerGlobal"
+    // is possible.
     //
     // Until bug 1743788 is fixed there might be the possibility that more
     // objects might need to be unwaived as well.
     const isNode = Node.isInstance(value);
-    if (isNode) {
+    const isWindow = Window.isInstance(value);
+    if (isNode || isWindow) {
       value = Cu.unwaiveXrays(value);
     }
 
@@ -165,6 +173,20 @@ json.clone = function (value, nodeCache) {
       return lazy.WebReference.from(value, nodeRef).toJSON();
     }
 
+    if (isWindow) {
+      // Convert window instances to WebReference references.
+      let reference;
+
+      if (value.browsingContext.parent == null) {
+        reference = new WebWindow(value.browsingContext.browserId.toString());
+        hasSerializedWindows = true;
+      } else {
+        reference = new WebFrame(value.browsingContext.id.toString());
+      }
+
+      return reference.toJSON();
+    }
+
     if (typeof value.toJSON == "function") {
       // custom JSON representation
       let unsafeJSON;
@@ -181,7 +203,11 @@ json.clone = function (value, nodeCache) {
     return cloneObject(value, seen, cloneJSON);
   }
 
-  return { seenNodeIds, serializedValue: cloneJSON(value, new Set()) };
+  return {
+    seenNodeIds,
+    serializedValue: cloneJSON(value, new Set()),
+    hasSerializedWindows,
+  };
 };
 
 /**
@@ -233,8 +259,31 @@ json.deserialize = function (value, nodeCache, browsingContext) {
             return getKnownElement(browsingContext, webRef.uuid, nodeCache);
           }
 
-          // WebFrame and WebWindow not supported yet
-          throw new lazy.error.UnsupportedOperationError();
+          if (webRef instanceof lazy.WebFrame) {
+            const browsingContext = BrowsingContext.get(webRef.uuid);
+
+            if (browsingContext === null || browsingContext.parent === null) {
+              throw new lazy.error.NoSuchWindowError(
+                `Unable to locate frame with id: ${webRef.uuid}`
+              );
+            }
+
+            return browsingContext.window;
+          }
+
+          if (webRef instanceof lazy.WebWindow) {
+            const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
+              webRef.uuid
+            );
+
+            if (browsingContext === null) {
+              throw new lazy.error.NoSuchWindowError(
+                `Unable to locate window with id: ${webRef.uuid}`
+              );
+            }
+
+            return browsingContext.window;
+          }
         }
 
         return cloneObject(value, seen, deserializeJSON);
@@ -242,6 +291,72 @@ json.deserialize = function (value, nodeCache, browsingContext) {
   }
 
   return deserializeJSON(value, new Set());
+};
+
+/**
+ * Convert unique navigable ids to internal browser ids.
+ *
+ * @param {object} serializedData
+ *     The data to process.
+ *
+ * @returns {object}
+ *     The processed data.
+ */
+json.mapFromNavigableIds = function (serializedData) {
+  function _processData(data) {
+    if (lazy.WebReference.isReference(data)) {
+      const webRef = lazy.WebReference.fromJSON(data);
+
+      if (webRef instanceof lazy.WebWindow) {
+        const browser = lazy.TabManager.getBrowserById(webRef.uuid);
+        if (browser) {
+          webRef.uuid = browser?.browserId.toString();
+          data = webRef.toJSON();
+        }
+      }
+    } else if (typeof data === "object") {
+      for (const entry in data) {
+        data[entry] = _processData(data[entry]);
+      }
+    }
+
+    return data;
+  }
+
+  return _processData(serializedData);
+};
+
+/**
+ * Convert browser ids to unique navigable ids.
+ *
+ * @param {object} serializedData
+ *     The data to process.
+ *
+ * @returns {object}
+ *     The processed data.
+ */
+json.mapToNavigableIds = function (serializedData) {
+  function _processData(data) {
+    if (lazy.WebReference.isReference(data)) {
+      const webRef = lazy.WebReference.fromJSON(data);
+      if (webRef instanceof lazy.WebWindow) {
+        const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
+          webRef.uuid
+        );
+
+        webRef.uuid = lazy.TabManager.getIdForBrowsingContext(browsingContext);
+        data = webRef.toJSON();
+      }
+    } else if (typeof data == "object") {
+      for (const entry in data) {
+        data[entry] = _processData(data[entry]);
+      }
+    }
+
+    return data;
+  }
+
+  return _processData(serializedData);
 };
 
 /**

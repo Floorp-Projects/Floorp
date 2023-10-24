@@ -166,14 +166,16 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
         await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
       }
 
-      const { seenNodeIds, serializedValue } = lazy.json.clone(
-        result,
-        this.#processActor.getNodeCache()
-      );
+      const { seenNodeIds, serializedValue, hasSerializedWindows } =
+        lazy.json.clone(result, this.#processActor.getNodeCache());
 
       // Because in WebDriver classic nodes can only be returned from the same
       // browsing context, we only need the seen unique ids as flat array.
-      return { seenNodeIds: [...seenNodeIds.values()].flat(), serializedValue };
+      return {
+        seenNodeIds: [...seenNodeIds.values()].flat(),
+        serializedValue,
+        hasSerializedWindows,
+      };
     } catch (e) {
       // Always wrap errors as WebDriverError
       return { error: lazy.error.wrap(e).toJSON() };
