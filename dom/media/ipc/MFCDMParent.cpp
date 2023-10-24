@@ -710,12 +710,17 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       cdmService->GetService(MF_CONTENTDECRYPTIONMODULE_SERVICE,
                              IID_PPV_ARGS(&pmpHost)),
       NS_ERROR_FAILURE);
-  MFCDM_REJECT_IF_FAILED(
-      SUCCEEDED(MakeAndInitialize<MFPMPHostWrapper>(&mPMPHostWrapper, pmpHost)),
-      NS_ERROR_FAILURE);
-  MFCDM_REJECT_IF_FAILED(mCDM->SetPMPHostApp(mPMPHostWrapper.Get()),
-                         NS_ERROR_FAILURE);
-  MFCDM_PARENT_LOG("Set PMPHostWrapper on CDM!");
+
+  // This is only required by PlayReady.
+  if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
+    MFCDM_REJECT_IF_FAILED(SUCCEEDED(MakeAndInitialize<MFPMPHostWrapper>(
+                               &mPMPHostWrapper, pmpHost)),
+                           NS_ERROR_FAILURE);
+    MFCDM_REJECT_IF_FAILED(mCDM->SetPMPHostApp(mPMPHostWrapper.Get()),
+                           NS_ERROR_FAILURE);
+    MFCDM_PARENT_LOG("Set PMPHostWrapper on CDM!");
+  }
+
   aResolver(MFCDMInitIPDL{mId});
   return IPC_OK();
 }
