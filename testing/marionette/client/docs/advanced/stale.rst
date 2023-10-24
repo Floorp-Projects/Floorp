@@ -7,7 +7,7 @@ is send commands to the Marionette server which queries the DOM on the client's
 behalf. References to elements are also not passed from server to client. A
 unique id is generated for each element that gets referenced and a mapping of
 id to element object is stored on the server. When commands such as
-:func:`~HTMLElement.click` are run, the client sends the element's id along
+:func:`~WebElement.click` are run, the client sends the element's id along
 with the command. The server looks up the proper DOM element in its reference
 table and executes the command on it.
 

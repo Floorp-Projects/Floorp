@@ -4,7 +4,7 @@
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
-from marionette_driver.marionette import HTMLElement
+from marionette_driver.marionette import WebElement
 
 from marionette_harness import MarionetteTestCase, parameterized, WindowManagerMixin
 
@@ -31,7 +31,7 @@ class TestElementIDChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
 
         found_el_new = self.marionette.find_element(By.ID, "textInput")
         self.assertEqual(found_el_new.id, found_el.id)
@@ -43,7 +43,7 @@ class TestElementIDChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
 
         self.marionette.delete_session()
         self.marionette.start_session()
@@ -63,7 +63,7 @@ class TestElementIDChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
 
         self.marionette.switch_to_window(original_handle)
 
@@ -79,7 +79,7 @@ class TestElementIDChrome(WindowManagerMixin, MarionetteTestCase):
         self.marionette.switch_to_window(win)
 
         found_el = self.marionette.find_element(By.ID, "textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
 
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(original_handle)

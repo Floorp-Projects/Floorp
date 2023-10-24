@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException, InvalidSelectorException
-from marionette_driver.marionette import HTMLElement
+from marionette_driver.marionette import WebElement
 
 from marionette_harness import MarionetteTestCase
 
@@ -38,7 +38,7 @@ class TestElementID(MarionetteTestCase):
     def test_id_identical_for_the_same_element(self):
         self.marionette.navigate(id_html)
         found = self.marionette.find_element(By.ID, "foo")
-        self.assertIsInstance(found, HTMLElement)
+        self.assertIsInstance(found, WebElement)
 
         found_again = self.marionette.find_element(By.ID, "foo")
         self.assertEqual(found_again, found)
@@ -46,7 +46,7 @@ class TestElementID(MarionetteTestCase):
     def test_id_unique_per_session(self):
         self.marionette.navigate(id_html)
         found = self.marionette.find_element(By.ID, "foo")
-        self.assertIsInstance(found, HTMLElement)
+        self.assertIsInstance(found, WebElement)
 
         self.marionette.delete_session()
         self.marionette.start_session()

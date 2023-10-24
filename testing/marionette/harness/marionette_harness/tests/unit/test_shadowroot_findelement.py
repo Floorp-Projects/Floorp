@@ -6,7 +6,7 @@ from marionette_driver.errors import (
     NoSuchElementException,
     NoSuchShadowRootException,
 )
-from marionette_driver.marionette import HTMLElement, ShadowRoot
+from marionette_driver.marionette import WebElement, ShadowRoot
 
 from marionette_harness import MarionetteTestCase
 
@@ -42,7 +42,7 @@ class TestShadowDOMFindElement(MarionetteTestCase):
         custom_element = self.marionette.find_element(By.CSS_SELECTOR, "custom-element")
         shadow_root = custom_element.shadow_root
         found = shadow_root.find_element(By.CSS_SELECTOR, "a")
-        self.assertIsInstance(found, HTMLElement)
+        self.assertIsInstance(found, WebElement)
 
         el = self.marionette.execute_script(
             """
@@ -95,7 +95,7 @@ class TestShadowDOMFindElements(MarionetteTestCase):
         )
 
         for i in range(len(found)):
-            self.assertIsInstance(found[i], HTMLElement)
+            self.assertIsInstance(found[i], WebElement)
             self.assertEqual(found[i], els[i])
 
     def test_detached_shadow_root(self):

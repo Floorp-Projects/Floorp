@@ -8,10 +8,10 @@ Marionette
 .. autoclass:: marionette_driver.marionette.Marionette
    :members:
 
-HTMLElement
+WebElement
 -----------
-.. py:currentmodule:: marionette_driver.marionette.HTMLElement
-.. autoclass:: marionette_driver.marionette.HTMLElement
+.. py:currentmodule:: marionette_driver.marionette.WebElement
+.. autoclass:: marionette_driver.marionette.WebElement
    :members:
 
 DateTimeValue
