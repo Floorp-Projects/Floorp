@@ -593,13 +593,6 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.loadJSContext(cxreg);
   masm.enterExitFrame(cxreg, regs.getAny(), id);
 
-  // Save the current stack pointer as the base for copying arguments.
-  Register argsBase = InvalidReg;
-  if (f.explicitArgs) {
-    argsBase = regs.takeAny();
-    masm.lea(Operand(esp, ExitFrameLayout::SizeWithFooter()), argsBase);
-  }
-
   // Reserve space for the outparameter.
   Register outReg = InvalidReg;
   switch (f.outParam) {
@@ -637,33 +630,33 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.setupUnalignedABICall(regs.getAny());
   masm.passABIArg(cxreg);
 
-  size_t argDisp = 0;
+  size_t argDisp = ExitFrameLayout::Size();
 
   // Copy arguments.
   for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
     switch (f.argProperties(explicitArg)) {
       case VMFunctionData::WordByValue:
-        masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp), MoveOp::GENERAL);
         argDisp += sizeof(void*);
         break;
       case VMFunctionData::DoubleByValue:
         // We don't pass doubles in float registers on x86, so no need
         // to check for argPassedInFloatReg.
-        masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp), MoveOp::GENERAL);
         argDisp += sizeof(void*);
-        masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp), MoveOp::GENERAL);
         argDisp += sizeof(void*);
         break;
       case VMFunctionData::WordByRef:
-        masm.passABIArg(
-            MoveOperand(argsBase, argDisp, MoveOperand::Kind::EffectiveAddress),
-            MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp,
+                                    MoveOperand::Kind::EffectiveAddress),
+                        MoveOp::GENERAL);
         argDisp += sizeof(void*);
         break;
       case VMFunctionData::DoubleByRef:
-        masm.passABIArg(
-            MoveOperand(argsBase, argDisp, MoveOperand::Kind::EffectiveAddress),
-            MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp,
+                                    MoveOperand::Kind::EffectiveAddress),
+                        MoveOp::GENERAL);
         argDisp += 2 * sizeof(void*);
         break;
     }
