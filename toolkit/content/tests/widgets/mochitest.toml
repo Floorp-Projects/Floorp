@@ -3,6 +3,8 @@ support-files = [
   "audio.wav",
   "audio.ogg",
   "file_videocontrols_jsdisabled.html",
+  "image.png",
+  "image-zh.png",
   "seek_with_sound.ogg",
   "video.ogg",
   "head.js",
@@ -32,6 +34,15 @@ support-files = [
 ["test_bug898940.html"]
 
 ["test_bug1654500.html"]
+
+["test_image_recognition.html"]
+run-if = ["os == 'mac'"] # Mac only feature.
+
+["test_image_recognition_unsupported.html"]
+skip-if = ["os == 'mac'"]
+
+["test_image_recognition_zh.html"]
+run-if = ["os == 'mac' && os_version != '10.15'"] # Mac only feature, requires > 10.15 to support multilingual results.
 
 ["test_mousecapture_area.html"]
 

@@ -2,10 +2,10 @@
 <html>
 <head>
   <title>Image recognition unsupported</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -24,7 +24,7 @@
 
     info("Recognizing the current image text is not supported on this platform.");
     try {
-      await img.recognizeCurrentImageText();
+      await SpecialPowers.wrap(img).recognizeCurrentImageText();
       ok(false, "Recognizing the text should not be supported.");
     } catch (error) {
       ok(error, "Expected unsupported message: " + error.message);

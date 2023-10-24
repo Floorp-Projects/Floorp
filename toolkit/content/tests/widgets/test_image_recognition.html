@@ -2,10 +2,10 @@
 <html>
 <head>
   <title>Image recognition test</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -16,7 +16,7 @@
 
 <pre id="test">
 <script class="testbody">
-  const { TestUtils } = ChromeUtils.importESModule(
+  const { TestUtils } = SpecialPowers.ChromeUtils.importESModule(
     "resource://testing-common/TestUtils.sys.mjs"
   );
 
@@ -36,7 +36,7 @@
     const img = document.querySelector("#content img");
 
     info("Recognizing the image text");
-    const result = await img.recognizeCurrentImageText();
+    const result = await SpecialPowers.wrap(img).recognizeCurrentImageText();
     is(result.length, 2, "Two words were found.");
     const mozilla = result.find(r => r.string === "Mozilla");
     const firefox = result.find(r => r.string === "Firefox");
