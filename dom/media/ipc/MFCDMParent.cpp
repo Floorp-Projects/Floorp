@@ -17,6 +17,7 @@
 #include "MFMediaEngineUtils.h"
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
 #include "SpecialSystemDirectory.h"  // For temp dir
+#include "WMFUtils.h"
 
 using Microsoft::WRL::ComPtr;
 using Microsoft::WRL::MakeAndInitialize;
@@ -358,17 +359,62 @@ MFCDMParent::~MFCDMParent() {
   Unregister();
 }
 
+LPCWSTR MFCDMParent::GetCDMLibraryName() const {
+  // PlayReady is a built-in CDM on Windows, no need to load external library.
+  if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
+    return L"";
+  }
+  // TODO : support Widevine
+  // TODO : support ClearKey
+  return L"Unknown";
+}
+
 HRESULT MFCDMParent::LoadFactory() {
-  ComPtr<IMFMediaEngineClassFactory4> clsFactory;
-  MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
-                                          nullptr, CLSCTX_INPROC_SERVER,
-                                          IID_PPV_ARGS(&clsFactory)));
+  LPCWSTR libraryName = GetCDMLibraryName();
+  const bool loadFromPlatform = wcslen(libraryName) == 0;
+  MFCDM_PARENT_LOG("Load factory for %s (libraryName=%ls)",
+                   NS_ConvertUTF16toUTF8(mKeySystem).get(), libraryName);
 
+  MFCDM_PARENT_LOG("Create factory for %s",
+                   NS_ConvertUTF16toUTF8(mKeySystem).get());
   ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
-  MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
-      mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
+  if (loadFromPlatform) {
+    ComPtr<IMFMediaEngineClassFactory4> clsFactory;
+    MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
+                                            nullptr, CLSCTX_INPROC_SERVER,
+                                            IID_PPV_ARGS(&clsFactory)));
+    MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
+        mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
+    mFactory.Swap(cdmFactory);
+    MFCDM_PARENT_LOG("Loaded CDM from platform!");
+    return S_OK;
+  }
 
-  mFactory.Swap(cdmFactory);
+  HMODULE handle = LoadLibraryW(libraryName);
+  if (!handle) {
+    MFCDM_PARENT_LOG("Failed to load library %ls!", libraryName);
+    return E_FAIL;
+  }
+
+  using DllGetActivationFactoryFunc =
+      HRESULT(WINAPI*)(_In_ HSTRING, _COM_Outptr_ IActivationFactory**);
+  DllGetActivationFactoryFunc pDllGetActivationFactory =
+      (DllGetActivationFactoryFunc)GetProcAddress(handle,
+                                                  "DllGetActivationFactory");
+  if (!pDllGetActivationFactory) {
+    MFCDM_PARENT_LOG("Failed to get activation function!");
+    return E_FAIL;
+  }
+
+  ScopedHString classId(mKeySystem);
+  ComPtr<IActivationFactory> pFactory = NULL;
+  MFCDM_RETURN_IF_FAILED(
+      pDllGetActivationFactory(classId.Get(), pFactory.GetAddressOf()));
+
+  ComPtr<IInspectable> pInspectable;
+  MFCDM_RETURN_IF_FAILED(pFactory->ActivateInstance(&pInspectable));
+  MFCDM_RETURN_IF_FAILED(pInspectable.As(&mFactory));
+  MFCDM_PARENT_LOG("Loaded %ls CDM from external library!", libraryName);
   return S_OK;
 }
 
