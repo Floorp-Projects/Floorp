@@ -11,11 +11,13 @@ import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.hardware.input.InputManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.InputDevice;
+import androidx.annotation.RequiresApi;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -95,6 +97,7 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
     mContentObserver = null;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
   @WrapForJNI(calledFrom = "gecko")
   /**
    * For prefers-reduced-motion media queries feature.
@@ -102,12 +105,17 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
    * <p>Uses `Settings.Global` which was introduced in API version 17.
    */
   private static boolean prefersReducedMotion() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+      return false;
+    }
+
     final ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
     return Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1)
         == 0.0f;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
   @WrapForJNI(calledFrom = "gecko")
   /**
    * For inverted-colors queries feature.
@@ -116,6 +124,10 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
    * version 21.
    */
   private static boolean isInvertedColors() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+      return false;
+    }
+
     final ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
     return Settings.Secure.getInt(
@@ -123,6 +135,7 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
         == 1;
   }
 
+  @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
   @WrapForJNI(calledFrom = "gecko")
   /**
    * For prefers-contrast queries feature.
@@ -131,6 +144,10 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
    * version 21.
    */
   private static boolean prefersContrast() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+      return false;
+    }
+
     final ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
     return Settings.Secure.getInt(
