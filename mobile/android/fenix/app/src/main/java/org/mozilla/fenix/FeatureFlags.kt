@@ -72,5 +72,5 @@ object FeatureFlags {
     /**
      * Allows users to enable Firefox Suggest.
      */
-    val fxSuggest = Config.channel.isNightlyOrDebug
+    const val fxSuggest = true
 }
