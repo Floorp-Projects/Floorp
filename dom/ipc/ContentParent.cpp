@@ -5219,6 +5219,11 @@ mozilla::ipc::IPCResult ContentParent::RecvCopyFavicon(
 mozilla::ipc::IPCResult ContentParent::RecvFindImageText(
     IPCImage&& aImage, nsTArray<nsCString>&& aLanguages,
     FindImageTextResolver&& aResolver) {
+  if (!TextRecognition::IsSupported() ||
+      !Preferences::GetBool("dom.text-recognition.enabled")) {
+    return IPC_FAIL(this, "Text recognition not available.");
+  }
+
   RefPtr<DataSourceSurface> surf =
       nsContentUtils::IPCImageToSurface(std::move(aImage));
   if (!surf) {
