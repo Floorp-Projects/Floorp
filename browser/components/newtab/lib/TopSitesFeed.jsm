@@ -530,7 +530,7 @@ class TopSitesFeed {
 
     // Read defaults from remote settings.
     this._useRemoteSetting = true;
-    let remoteSettingData = [];
+    let remoteSettingData = await this._getRemoteConfig();
 
     const sponsoredBlocklist = JSON.parse(
       Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
