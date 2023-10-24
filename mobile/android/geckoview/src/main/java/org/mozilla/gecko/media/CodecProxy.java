@@ -407,11 +407,6 @@ public final class CodecProxy {
       return false;
     }
 
-    if (android.os.Build.VERSION.SDK_INT < 19) {
-      Log.w(LOGTAG, "this api was added in API level 19");
-      return false;
-    }
-
     if (mRemote == null) {
       Log.w(LOGTAG, "codec already ended");
       return true;

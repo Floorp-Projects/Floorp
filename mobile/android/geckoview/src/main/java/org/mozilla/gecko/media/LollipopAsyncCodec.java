@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.media;
 
-import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 
-@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 /* package */ final class LollipopAsyncCodec implements AsyncCodec {
   private final MediaCodec mCodec;
 

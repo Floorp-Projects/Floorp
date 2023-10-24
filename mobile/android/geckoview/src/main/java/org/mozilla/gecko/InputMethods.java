@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import android.content.Context;
-import android.os.Build;
 import android.provider.Settings.Secure;
 import android.view.View;
 import android.view.inputmethod.InputMethodInfo;
@@ -72,9 +71,8 @@ public final class InputMethods {
 
   public static boolean needsSoftResetWorkaround(final String inputMethod) {
     // Stock latin IME on Android 4.2 and above
-    return Build.VERSION.SDK_INT >= 17
-        && (METHOD_ANDROID_LATINIME.equals(inputMethod)
-            || METHOD_GOOGLE_LATINIME.equals(inputMethod));
+    return (METHOD_ANDROID_LATINIME.equals(inputMethod)
+        || METHOD_GOOGLE_LATINIME.equals(inputMethod));
   }
 
   /**

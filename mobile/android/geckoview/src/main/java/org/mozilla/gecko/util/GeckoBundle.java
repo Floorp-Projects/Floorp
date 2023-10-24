@@ -8,7 +8,6 @@ package org.mozilla.gecko.util;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -960,19 +959,9 @@ public final class GeckoBundle implements Parcelable {
           jsonArray.put(element == null ? JSONObject.NULL : element.toJSONObject());
         }
         jsonValue = jsonArray;
-      } else if (Build.VERSION.SDK_INT >= 19) {
+      } else {
         final Object wrapped = JSONObject.wrap(value);
         jsonValue = wrapped != null ? wrapped : value.toString();
-      } else if (value == null) {
-        jsonValue = JSONObject.NULL;
-      } else if (value.getClass().isArray()) {
-        final JSONArray jsonArray = new JSONArray();
-        for (int j = 0; j < Array.getLength(value); j++) {
-          jsonArray.put(Array.get(value, j));
-        }
-        jsonValue = jsonArray;
-      } else {
-        jsonValue = value;
       }
       out.put(mMap.keyAt(i), jsonValue);
     }

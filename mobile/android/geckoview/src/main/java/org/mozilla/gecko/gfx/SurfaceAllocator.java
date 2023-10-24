@@ -77,10 +77,6 @@ import org.mozilla.gecko.process.GeckoServiceChildProcess;
         return null;
       }
 
-      if (singleBufferMode && !GeckoSurfaceTexture.isSingleBufferSupported()) {
-        return null;
-      }
-
       final GeckoSurface surface = sAllocator.acquireSurface(width, height, singleBufferMode);
       if (surface == null) {
         Log.w(LOGTAG, "Failed to acquire GeckoSurface: RemoteSurfaceAllocator returned null");
