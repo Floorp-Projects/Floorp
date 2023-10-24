@@ -260,14 +260,35 @@ export class ShoppingSidebarChild extends RemotePageChild {
               isAnalysisInProgress,
             });
           }
-          await this.#product.pollForAnalysisCompleted({
-            pollInitialWait: analysisStatus == "in_progress" ? 0 : undefined,
-          });
+          analysisStatusResponse = await this.#product.pollForAnalysisCompleted(
+            {
+              pollInitialWait: analysisStatus == "in_progress" ? 0 : undefined,
+            }
+          );
+          analysisStatus = analysisStatusResponse?.status;
           isAnalysisInProgress = false;
         }
-        data = await this.#product.requestAnalysis();
+
+        // Use the analysis status instead of re-requesting unnecessarily,
+        // or throw if the status from the last analysis was an error.
+        switch (analysisStatus) {
+          case "not_analyzable":
+          case "page_not_supported":
+            data = { page_not_supported: true };
+            break;
+          case "unprocessable":
+          case "stale":
+            throw new Error(analysisStatus, { cause: analysisStatus });
+          default:
+          // Status is "completed" or "not_found" (no analysis status),
+          // so we should request the analysis data.
+        }
+
         if (!data) {
-          throw new Error("request failed");
+          data = await this.#product.requestAnalysis();
+          if (!data) {
+            throw new Error("request failed");
+          }
         }
       } catch (err) {
         console.error("Failed to fetch product analysis data", err);
