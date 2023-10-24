@@ -73,8 +73,8 @@ where
     /// a relative selector invalidation.
     dependencies: FxHashMap<E, ElementDependencies<'a>>,
     /// Dependencies that created an invalidation right away.
-    /// Maps an invalidation into its scope, selector offset, and its outer dependency.
-    invalidations: FxHashMap<InvalidationKey, (Option<OpaqueElement>, usize, &'a Dependency)>,
+    /// Maps an invalidation into the affected element, and its scope & dependency.
+    invalidations: FxHashMap<InvalidationKey, (E, Option<OpaqueElement>, &'a Dependency)>,
     /// The top element in the subtree being invalidated.
     top: E,
 }
@@ -113,20 +113,20 @@ where
     fn insert_invalidation(
         &mut self,
         key: InvalidationKey,
-        offset: usize,
-        outer: &'a Dependency,
+        element: E,
+        dependency: &'a Dependency,
         host: Option<OpaqueElement>,
     ) {
         self.invalidations
             .entry(key)
-            .and_modify(|(h, o, d)| {
+            .and_modify(|(e, h, d)| {
                 // Just keep one.
-                if *o <= offset {
+                if d.selector_offset <= dependency.selector_offset {
                     return;
                 }
-                (*h, *o, *d) = (host, offset, outer);
+                (*e, *h, *d) = (element, host, dependency);
             })
-            .or_insert_with(|| (host, offset, outer));
+            .or_insert_with(|| (element, host, dependency));
     }
 
     /// Add this dependency, if it is unique (i.e. Different outer dependency or same outer dependency
@@ -157,28 +157,9 @@ where
                 }
                 self.insert_invalidation(
                     InvalidationKey(SelectorKey::new(&dependency.selector), dependency.invalidation_kind()),
-                    dependency.selector_offset,
-                    dependency.parent.as_ref().unwrap(),
+                    element,
+                    dependency,
                     host);
-                // We move the invalidation up to the top of the subtree to avoid unnecessary traveral, but
-                // this means that we need to take ancestor-earlier sibling invalidations into account, as
-                // they'd look into earlier siblings of the top of the subtree as well.
-                if element != self.top && matches!(kind, RelativeDependencyInvalidationKind::AncestorEarlierSibling |
-                    RelativeDependencyInvalidationKind::AncestorPrevSibling)
-                {
-                    self.insert_invalidation(
-                        InvalidationKey(
-                            SelectorKey::new(&dependency.selector),
-                            if matches!(kind, RelativeDependencyInvalidationKind::AncestorPrevSibling) {
-                                DependencyInvalidationKind::Relative(RelativeDependencyInvalidationKind::PrevSibling)
-                            } else {
-                                DependencyInvalidationKind::Relative(RelativeDependencyInvalidationKind::EarlierSibling)
-                            }
-                        ),
-                        dependency.selector_offset,
-                        dependency.parent.as_ref().unwrap(),
-                        host);
-                }
             },
         };
     }
@@ -186,11 +167,33 @@ where
     /// Get the dependencies in a list format.
     fn get(self) -> ToInvalidate<'a, E> {
         let mut result = ToInvalidate::default();
-        for (key, (host, _offset, dependency)) in self.invalidations {
+        for (key, (element, host, relative_dependency)) in self.invalidations {
             match key.1 {
                 DependencyInvalidationKind::Normal(_) => unreachable!("Inner selector in invalidation?"),
-                DependencyInvalidationKind::Relative(kind) =>
-                    result.invalidations.push(RelativeSelectorInvalidation { kind, host, dependency }),
+                DependencyInvalidationKind::Relative(kind) => {
+                    let dependency = relative_dependency.parent.as_ref().unwrap();
+                    result.invalidations.push(RelativeSelectorInvalidation {
+                        kind,
+                        host,
+                        dependency,
+                    });
+                    // We move the invalidation up to the top of the subtree to avoid unnecessary traveral, but
+                    // this means that we need to take ancestor-earlier sibling invalidations into account, as
+                    // they'd look into earlier siblings of the top of the subtree as well.
+                    if element != self.top && matches!(kind, RelativeDependencyInvalidationKind::AncestorEarlierSibling |
+                        RelativeDependencyInvalidationKind::AncestorPrevSibling)
+                    {
+                        result.invalidations.push(RelativeSelectorInvalidation {
+                            kind: if matches!(kind, RelativeDependencyInvalidationKind::AncestorPrevSibling) {
+                                RelativeDependencyInvalidationKind::PrevSibling
+                            } else {
+                                RelativeDependencyInvalidationKind::EarlierSibling
+                            },
+                            host,
+                            dependency,
+                        });
+                    }
+                },
             };
         }
         for (key, element_dependencies) in self.dependencies {
