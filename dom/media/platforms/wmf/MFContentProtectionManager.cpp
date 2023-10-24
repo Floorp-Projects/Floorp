@@ -4,7 +4,6 @@
 
 #include "MFContentProtectionManager.h"
 
-#include <hstring.h>
 #include <winnt.h>
 
 #include "MFMediaEngineUtils.h"
@@ -17,18 +16,6 @@ using Microsoft::WRL::ComPtr;
 #define LOG(msg, ...)                         \
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
           ("MFContentProtectionManager=%p, " msg, this, ##__VA_ARGS__))
-
-class ScopedHString final {
- public:
-  explicit ScopedHString(const WCHAR aCharArray[]) {
-    WindowsCreateString(aCharArray, wcslen(aCharArray), &mString);
-  }
-  ~ScopedHString() { WindowsDeleteString(mString); }
-  const HSTRING& Get() { return mString; }
-
- private:
-  HSTRING mString;
-};
 
 MFContentProtectionManager::MFContentProtectionManager() {
   MOZ_COUNT_CTOR(MFContentProtectionManager);
