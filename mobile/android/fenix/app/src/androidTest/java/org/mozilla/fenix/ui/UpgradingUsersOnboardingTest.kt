@@ -24,7 +24,7 @@ class UpgradingUsersOnboardingTest {
         HomeActivityIntentTestRule(isHomeOnboardingDialogEnabled = true),
     ) { it.activity }
 
-    // https://testrail.stage.mozaws.net/index.php?/cases/view/1913592
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1913592
     @Test
     fun upgradingUsersOnboardingScreensTest() {
         homeScreen {
@@ -34,7 +34,7 @@ class UpgradingUsersOnboardingTest {
         }
     }
 
-    // https://testrail.stage.mozaws.net/index.php?/cases/view/1913591
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1913591
     @Test
     fun upgradingUsersOnboardingCanBeSkippedTest() {
         homeScreen {
@@ -50,7 +50,7 @@ class UpgradingUsersOnboardingTest {
         }
     }
 
-    // https://testrail.stage.mozaws.net/index.php?/cases/view/1932156
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1932156
     @Test
     fun upgradingUsersOnboardingSignInButtonTest() {
         homeScreen {

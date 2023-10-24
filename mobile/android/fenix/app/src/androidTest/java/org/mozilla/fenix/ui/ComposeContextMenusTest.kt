@@ -75,6 +75,7 @@ class ComposeContextMenusTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243837
     @Test
     fun verifyOpenLinkNewTabContextMenuOptionTest() {
         val pageLinks =
@@ -98,6 +99,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244655
     @Test
     fun verifyOpenLinkInNewPrivateTabContextMenuOptionTest() {
         val pageLinks =
@@ -120,6 +122,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243832
     @Test
     fun verifyCopyLinkContextMenuOptionTest() {
         val pageLinks =
@@ -140,6 +143,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243838
     @Test
     fun verifyShareLinkContextMenuOptionTest() {
         val pageLinks =
@@ -159,6 +163,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243833
     @Test
     fun verifyOpenImageNewTabContextMenuOptionTest() {
         val pageLinks =
@@ -178,6 +183,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243834
     @Test
     fun verifyCopyImageLocationContextMenuOptionTest() {
         val pageLinks =
@@ -198,6 +204,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243835
     @Test
     fun verifySaveImageContextMenuOptionTest() {
         val pageLinks =
@@ -221,6 +228,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/352050
     @Test
     fun verifyContextMenuLinkVariationsTest() {
         val pageLinks =
@@ -244,6 +252,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2333840
     @Test
     fun verifyPDFContextMenuLinkVariationsTest() {
         val genericURL =
@@ -264,6 +273,7 @@ class ComposeContextMenusTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/832094
     @Test
     fun verifyOpenLinkInAppContextMenuOptionTest() {
         val defaultWebPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)

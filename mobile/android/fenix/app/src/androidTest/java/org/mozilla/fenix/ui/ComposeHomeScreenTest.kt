@@ -146,22 +146,6 @@ class ComposeHomeScreenTest {
         }
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569867
-    @Test
-    fun verifyJumpBackInContextualHintTest() {
-        activityTestRule.activityRule.applySettingsExceptions {
-            it.isJumpBackInCFREnabled = true
-        }
-
-        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericPage.url) {
-        }.goToHomescreen {
-            verifyJumpBackInMessage(activityTestRule)
-        }
-    }
-
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569839
     @Test
     fun verifyCustomizeHomepageButtonTest() {

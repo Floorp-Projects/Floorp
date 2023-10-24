@@ -77,7 +77,7 @@ class TabbedBrowsingTest {
         mockWebServer.shutdown()
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903599
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903599
     @Test
     fun closeAllTabsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -110,7 +110,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903604
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903604
     @Test
     fun closingTabsMethodsTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -151,7 +151,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903591
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903591
     @Test
     fun closingPrivateTabsMethodsTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -194,7 +194,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903606
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903606
     @SmokeTest
     @Test
     fun tabMediaControlButtonTest() {
@@ -235,7 +235,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903598
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903598
     @SmokeTest
     @Test
     fun shareTabsFromTabsTrayTest() {
@@ -269,6 +269,7 @@ class TabbedBrowsingTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903602
     @Test
     fun verifyTabTrayNotShowingStateHalfExpanded() {
         navigationToolbar {
@@ -292,7 +293,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903600
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903600
     @Test
     fun verifyEmptyTabTray() {
         navigationToolbar {
@@ -307,7 +308,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903585
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903585
     @Test
     fun verifyEmptyPrivateTabsTrayTest() {
         navigationToolbar {
@@ -323,7 +324,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903601
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903601
     @Test
     fun verifyTabsTrayWithOpenTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -349,7 +350,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903587
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903587
     @SmokeTest
     @Test
     fun verifyPrivateTabsTrayWithOpenTabTest() {
@@ -374,7 +375,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/927315
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/927315
     @Test
     fun tabsCounterShortcutMenuTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -409,7 +410,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/927314
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/927314
     @Test
     fun privateTabsCounterShortcutMenuTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -447,7 +448,7 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/1046683
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1046683
     @Test
     fun verifySyncedTabsWhenUserIsNotSignedInTest() {
         navigationToolbar {

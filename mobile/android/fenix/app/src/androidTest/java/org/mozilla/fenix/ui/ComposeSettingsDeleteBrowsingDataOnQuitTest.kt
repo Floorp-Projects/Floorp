@@ -67,6 +67,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416048
     @Test
     fun deleteBrowsingDataOnQuitSettingTest() {
         homeScreen {
@@ -95,6 +96,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416049
     @Test
     fun deleteOpenTabsOnQuitTest() {
         val testPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -119,6 +121,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416050
     @Test
     fun deleteBrowsingHistoryOnQuitTest() {
         val genericPage =
@@ -182,6 +185,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1243096
     @SmokeTest
     @Test
     fun deleteDownloadsOnQuitTest() {
@@ -215,6 +219,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         deleteDownloadedFileOnStorage("smallZip.zip")
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416053
     @SmokeTest
     @Test
     fun deleteSitePermissionsOnQuitTest() {
@@ -250,6 +255,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416052
     @Test
     fun deleteCachedFilesOnQuitTest() {
         val pocketTopArticles = TestHelper.getStringResource(R.string.pocket_pinned_top_articles)

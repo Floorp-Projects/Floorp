@@ -58,6 +58,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         mockWebServer.shutdown()
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/937561
     @Test
     fun deleteBrowsingDataOptionStatesTest() {
         homeScreen {
@@ -116,6 +117,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/517811
     @Test
     fun deleteOpenTabsBrowsingDataWithNoOpenTabsTest() {
         homeScreen {
@@ -133,6 +135,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/353531
     @SmokeTest
     @Test
     fun deleteOpenTabsBrowsingDataTest() {
@@ -165,6 +168,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/378864
     @SmokeTest
     @Test
     fun deleteBrowsingHistoryTest() {
@@ -195,6 +199,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416041
     @SmokeTest
     @Test
     fun deleteCookiesAndSiteDataTest() {
@@ -233,6 +238,7 @@ class ComposeSettingsDeleteBrowsingDataTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416042
     @SmokeTest
     @Test
     fun deleteCachedFilesTest() {

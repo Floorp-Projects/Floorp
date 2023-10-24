@@ -139,7 +139,7 @@ class ComposeMediaNotificationTest {
         mDevice.pressBack()
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903595
+    // TestRail: https://testrail.stage.mozaws.net/index.php?/cases/view/903595
     @Test
     fun mediaSystemNotificationInPrivateModeTest() {
         val audioTestPage = TestAssetHelper.getAudioPageAsset(mockWebServer)

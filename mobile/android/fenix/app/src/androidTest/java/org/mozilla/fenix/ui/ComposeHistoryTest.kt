@@ -74,6 +74,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243285
     @Test
     fun verifyEmptyHistoryMenuTest() {
         homeScreen {
@@ -85,6 +86,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2302742
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     @SmokeTest
@@ -110,6 +112,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243288
     @Test
     fun deleteHistoryItemTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -130,6 +133,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1848881
     @SmokeTest
     @Test
     fun deleteAllHistoryTest() {
@@ -154,6 +158,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339690
     @SmokeTest
     @Test
     fun historyMultiSelectionToolbarItemsTest() {
@@ -182,6 +187,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339696
     @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun openMultipleSelectedHistoryItemsInANewTabTest() {
@@ -212,6 +218,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/346098
     @Test
     fun openMultipleSelectedHistoryItemsInPrivateTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -237,6 +244,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/346099
     @Test
     fun deleteMultipleSelectedHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -271,6 +279,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/339701
     @Test
     fun shareMultipleSelectedHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -297,6 +306,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715627
     @Test
     fun verifySearchHistoryViewTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -339,6 +349,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715631
     @Test
     fun verifyVoiceSearchInHistoryTest() {
         homeScreen {
@@ -351,6 +362,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715632
     @Test
     fun verifySearchForHistoryItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -376,6 +388,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715634
     @Test
     fun verifyDeletedHistoryItemsCanNotBeSearchedTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -418,6 +431,7 @@ class ComposeHistoryTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903590
     // Test running on beta/release builds in CI:
     // caution when making changes to it, so they don't block the builds
     @SmokeTest

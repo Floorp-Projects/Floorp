@@ -10,6 +10,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -17,8 +18,10 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  *  Tests for verifying the presence of home screen and first-run homescreen elements
@@ -164,6 +167,41 @@ class HomeScreenTest {
             clickJumpBackInButton()
         }.goBackToHomeScreen {
             verifyCustomizeHomepageButton(true)
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/414970
+    @Ignore("Failure, more details at: https://bugzilla.mozilla.org/show_bug.cgi?id=1830005")
+    @SmokeTest
+    @Test
+    fun addPrivateBrowsingShortcutFromHomeScreenCFRTest() {
+        homeScreen {
+        }.triggerPrivateBrowsingShortcutPrompt {
+            verifyNoThanksPrivateBrowsingShortcutButton(activityTestRule)
+            verifyAddPrivateBrowsingShortcutButton(activityTestRule)
+            clickAddPrivateBrowsingShortcutButton(activityTestRule)
+            clickAddAutomaticallyButton()
+        }.openHomeScreenShortcut("Private ${TestHelper.appName}") {}
+        searchScreen {
+            verifySearchView()
+        }.dismissSearchBar {
+            verifyCommonMythsLink()
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1569867
+    @Test
+    fun verifyJumpBackInContextualHintTest() {
+        activityTestRule.activityRule.applySettingsExceptions {
+            it.isJumpBackInCFREnabled = true
+        }
+
+        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+        }.goToHomescreen {
+            verifyJumpBackInMessage(activityTestRule)
         }
     }
 }

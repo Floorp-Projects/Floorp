@@ -45,7 +45,7 @@ class DownloadFileTypesTest(fileName: String) {
         )
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251028&group_by=cases:section_id&group_id=31659&group_order=asc
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/251028
     @SmokeTest
     @Test
     fun allFilesAppearInDownloadsMenuTest() {

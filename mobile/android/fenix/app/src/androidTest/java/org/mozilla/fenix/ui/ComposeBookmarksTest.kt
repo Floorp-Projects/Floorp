@@ -78,6 +78,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/522919
     @Test
     fun verifyEmptyBookmarksMenuTest() {
         homeScreen {
@@ -101,6 +102,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/522920
     @Test
     fun cancelCreateBookmarkFolderTest() {
         homeScreen {
@@ -114,6 +116,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2299619
     @Test
     fun cancelingChangesInEditModeAreNotSavedTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -138,6 +141,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325633
     @SmokeTest
     @Test
     fun editBookmarksNameAndUrlTest() {
@@ -165,6 +169,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/341696
     @Test
     fun copyBookmarkURLTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -191,8 +196,9 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325634
     @Test
-    fun threeDotMenuShareBookmarkTest() {
+    fun shareBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
@@ -211,6 +217,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325636
     @Test
     fun openBookmarkInNewTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -229,6 +236,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1919261
     @Test
     fun verifyOpenAllInNewTabsOptionTest() {
         val webPages = listOf(
@@ -271,6 +279,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1919262
     @Test
     fun verifyOpenAllInPrivateTabsTest() {
         val webPages = listOf(
@@ -306,6 +315,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325637
     @Test
     fun openBookmarkInPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -324,6 +334,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325635
     @Test
     fun deleteBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -351,6 +362,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2300275
     @Test
     fun bookmarksMultiSelectionToolbarItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -376,6 +388,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2300276
     @SmokeTest
     @Test
     fun openMultipleSelectedBookmarksInANewTabTest() {
@@ -406,6 +419,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2300277
     @Test
     fun openMultipleSelectedBookmarksInPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -429,6 +443,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325644
     @SmokeTest
     @Test
     fun deleteMultipleSelectedBookmarksTest() {
@@ -476,8 +491,9 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2301355
     @Test
-    fun multipleSelectionShareButtonTest() {
+    fun shareMultipleSelectedBookmarksTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
@@ -500,6 +516,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325639
     @Test
     fun createBookmarkFolderTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -524,6 +541,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325645
     @Test
     fun navigateBookmarksFoldersTest() {
         homeScreen {
@@ -547,8 +565,9 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/374855
     @Test
-    fun cantSelectDesktopFoldersTest() {
+    fun cantSelectDefaultFoldersTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
@@ -561,6 +580,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2299703
     @Test
     fun deleteBookmarkInEditModeTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -583,6 +603,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715710
     @Test
     fun verifySearchBookmarksViewTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -654,6 +675,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1715711
     @Test
     fun verifyVoiceSearchInBookmarksTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -707,6 +729,7 @@ class ComposeBookmarksTest {
         }
     }
 
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/325642
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
     @SmokeTest
     @Test
