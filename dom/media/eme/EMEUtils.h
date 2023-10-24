@@ -55,6 +55,8 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem);
 
 #ifdef MOZ_WMF_CDM
 bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem);
+
+bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem);
 #endif
 
 // Note: Primetime is now unsupported, but we leave it in the enum so
