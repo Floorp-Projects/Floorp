@@ -64,6 +64,7 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
         initialExperiments = R.raw.initial_experiments
         timeoutLoadingExperiment = TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS
         usePreviewCollection = context.settings().nimbusUsePreview
+        sharedPreferences = context.settings().preferences
         isFirstRun = isAppFirstRun
         featureManifest = FxNimbus
         onFetchCallback = {

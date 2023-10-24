@@ -69,6 +69,7 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
         initialExperiments = R.raw.initial_experiments
         timeoutLoadingExperiment = TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS
         usePreviewCollection = context.settings.shouldUseNimbusPreview
+        sharedPreferences = context.settings.preferences
         isFirstRun = isAppFirstRun
         featureManifest = FocusNimbus
     }.build(appInfo)
