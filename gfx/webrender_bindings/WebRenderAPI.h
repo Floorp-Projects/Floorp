@@ -323,7 +323,8 @@ class WebRenderAPI final {
   void WaitFlushed();
 
   void UpdateDebugFlags(uint32_t aFlags);
-  bool CheckIsRemoteTextureReady(layers::RemoteTextureInfoList* aList);
+  bool CheckIsRemoteTextureReady(layers::RemoteTextureInfoList* aList,
+                                 const TimeStamp& aTimeStamp);
   void WaitRemoteTextureReady(layers::RemoteTextureInfoList* aList);
 
   enum class RemoteTextureWaitType : uint8_t {
@@ -341,6 +342,7 @@ class WebRenderAPI final {
       PendingRemoteTextures,
     };
     const Tag mTag;
+    const TimeStamp mTimeStamp;
 
     struct TransactionWrapper {
       TransactionWrapper(wr::Transaction* aTxn, bool aUseSceneBuilderThread)
@@ -359,13 +361,16 @@ class WebRenderAPI final {
    private:
     WrTransactionEvent(const Tag aTag,
                        UniquePtr<TransactionWrapper>&& aTransaction)
-        : mTag(aTag), mTransaction(std::move(aTransaction)) {
+        : mTag(aTag),
+          mTimeStamp(TimeStamp::Now()),
+          mTransaction(std::move(aTransaction)) {
       MOZ_ASSERT(mTag == Tag::Transaction);
     }
     WrTransactionEvent(
         const Tag aTag,
         UniquePtr<layers::RemoteTextureInfoList>&& aPendingRemoteTextures)
         : mTag(aTag),
+          mTimeStamp(TimeStamp::Now()),
           mPendingRemoteTextures(std::move(aPendingRemoteTextures)) {
       MOZ_ASSERT(mTag == Tag::PendingRemoteTextures);
     }
