@@ -1792,7 +1792,7 @@
     <string name="preferences_passwords_save_logins_never_save">Aníke eñongatu</string>
 
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill2">Emyenyhẽjey %1$s-pe</string>
+    <string name="preferences_passwords_autofill2">Emyanyhẽjey %1$s-pe</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ñanduti rendápe eiporu aja %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
@@ -1943,7 +1943,7 @@
     <string name="credit_cards_number_validation_error_message">Ikatúpiko ehai kuatia’atã ñemurã papapy oikóva</string>
 
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Ikatúpiko emyenyhẽ ko kora</string>
+    <string name="credit_cards_name_on_card_validation_error_message">Ikatúpiko emyanyhẽ ko kora</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Embojuruja ehecha hag̃ua kuatia’atã ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->

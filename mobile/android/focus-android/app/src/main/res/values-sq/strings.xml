@@ -53,7 +53,6 @@
     <string name="menu_remove_from_shortcuts">Hiqe nga Shkurtoret</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Ç’ka të Re</string>
     <string name="menu_settings">Rregullime</string>
     <string name="menu_about">Rreth</string>
     <string name="menu_help">Ndihmë</string>
@@ -351,7 +350,7 @@
     <string name="preference_mozilla_telemetry_summary2">Mozilla rreket të grumbullojë vetëm sa na duhen për të ofruar dhe përmirësuar %1$s-in për këdo.</string>
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
-    <string name="preference_privacy_notice">Shënim Mbi Privatësinë</string>
+    <string name="preference_privacy_notice">Shënim Privatësie</string>
 
     <!-- In-app link (in settings) to Focus licensing information. -->
     <string name="preference_licensing_info">Hollësi licencimi</string>

@@ -310,7 +310,7 @@
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox-i vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">shënim mbi privatësinë</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">shënim privatësie</string>
     <!-- Text for the button to set firefox as default browser on the device -->
     <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Vëre si shfletuesin parazgjedhje</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1620,7 +1620,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Vithisje</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Shënim mbi privatësinë</string>
+    <string name="about_privacy_notice">Shënim privatësie</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Njihni të drejtat tuaja</string>
     <!-- About page link text to open licensing information link -->

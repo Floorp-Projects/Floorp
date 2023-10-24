@@ -343,6 +343,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox ਫ਼ਾਇਦੇ ਨਾਲੋਂ ਲੋਕਾਂ ਨੂੰ ਪਹਿਲ ਦਿੰਦਾ ਹੈ ਅਤੇ ਅੰਤਰ-ਸਾਈਟ ਟਰੈਕਰਾਂ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾ ਕੇ ਤੁਹਾਡੇ ਪਰਦੇਦਾਰੀ ਨੂੰ ਬਚਾਉਂਦਾ ਹੈ।\n\nਹੋਰ ਜਾਣਕਾਰੀ ਸਾਡੀ ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ ਨੂੰ ਪੜ੍ਹੋ।</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">ਸਾਡਾ ਗ਼ੈਰ-ਮੁਨਾਫ਼ਾ ਸਮਰੱਥ ਬਰਾਊਜ਼ਰ ਕੰਪਨੀਆਂ ਨੂੰ ਵੈੱਬ ਉੱਤੇ ਚੋਰੀ ਛਿਪੇ ਪਿੱਛਾ ਕਰਨ ਤੋਂ ਰੋਕਣ ਲਈ ਮਦਦ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ ਪਰਦੇਦਾਰੀ ਨੋਟਿਸ ਬਾਰੇ ਹੋਰ ਸਿੱਖੋ।</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
@@ -367,9 +369,15 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ ਤੁਹਾਨੂੰ Firefox ਨਾਲ ਵੱਧ ਕੰਮ ਦੀ ਮਦਦ ਕਰਦੇ ਹਨ</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ Firefox ਨਾਲ ਤੁਹਾਨੂੰ ਸੁਰੱਖਿਅਤ ਰਹਿਣ ਲਈ ਮਦਦ ਕਰਦੇ ਹਨ</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ਟੈਬਾਂ ਨੂੰ ਡਿਵਾਈਸਾਂ ਵਿਚਾਲੇ ਭੇਜੋ, ਡਾਊਨਲੋਡ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ ਅਤੇ Firefox ਦਾ ਪੂਰਾ ਫ਼ਾਇਦਾ ਲੈਣ ਲਈ ਸੁਝਾਅ ਲਵੋ।</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">ਟੈਬਾਂ ਨੂੰ ਸੁਰੱਖਿਅਤ ਰੂਪ ਵਿੱਚ ਆਪਣੇ ਡਿਵਾਈਸਾਂ ਉੱਤੇ ਭੇਜੋ ਅਤੇ Firefox ਵਿੱਚ ਹੋਰ ਪਰਦੇਦਾਰੀ ਫ਼ੀਚਰ ਬਾਰੇ ਜਾਣੋ।</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਚਾਲੂ ਕਰੋ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -409,6 +417,8 @@
     <string name="preferences_category_select_default_search_engine">ਇੱਕ ਚੁਣੋ</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">ਖੋਜ ਸ਼ਾਰਟਕੱਟਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">ਬਦਲਵੇਂ ਖੋਜ ਇੰਜਣਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰੋ</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">ਖੋਜ ਮੇਨੂ ਵਿੱਚ ਦਿਸਣ ਵਾਲੇ ਇੰਜਣਾਂ ਨੂੰ ਸੋਧੋ</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -427,6 +437,8 @@
     <string name="preferences_settings_address_bar">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਲਈ ਪਸੰਦਾਂ</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">ਸਿਰਨਾਵਾਂ ਪੱਟੀ - Firefox ਸੁਝਾਅ</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Firefox ਸੁਝਾਅ ਬਾਰੇ ਹੋਰ ਜਾਣੋ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">ਗੂਗਲ ਪਲੇਅ ‘ਤੇ ਦਰਜਾ ਦਿਓ</string>
     <!-- Preference linking to about page for Fenix
