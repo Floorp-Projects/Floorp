@@ -127,15 +127,15 @@ struct ReplaceMalloc {
 #  endif
 
 #  ifdef MOZ_PHC
-typedef MozJemallocPHC CanonicalMalloc;
+using CanonicalMalloc = MozJemallocPHC;
 #  else
-typedef MozJemalloc CanonicalMalloc;
+using CanonicalMalloc = MozJemalloc;
 #  endif
 
 #  ifdef MOZ_REPLACE_MALLOC
-typedef ReplaceMalloc DefaultMalloc;
+using DefaultMalloc = ReplaceMalloc;
 #  else
-typedef CanonicalMalloc DefaultMalloc;
+using DefaultMalloc = CanonicalMalloc;
 #  endif
 
 // Poison - write "poison" to cells upon deallocation.
