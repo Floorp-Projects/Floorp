@@ -263,9 +263,9 @@ echo "Done checking for new mercurial changes in third_party/libwebrtc"
 REMAINING_STEPS=$"
 The rebase process is complete.  The following steps must be completed manually:
 $PATCH_STACK_FIXUP
-  ./mach bootstrap --application=browser --no-system-changes
-  ./mach build
-  hg push -r tip --force
+  ./mach bootstrap --application=browser --no-system-changes && \\
+  ./mach build && \\
+  hg push -r tip --force && \\
   hg push -B $MOZ_BOOKMARK
 "
 echo "$REMAINING_STEPS"
