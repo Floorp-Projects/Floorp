@@ -34,6 +34,7 @@ class AutoContainsBlendModeCapturer;
 
 namespace mozilla {
 class PresShell;
+enum class StyleScrollbarWidth : uint8_t;
 struct ScrollReflowInput;
 struct StyleScrollSnapAlign;
 namespace layers {
@@ -198,6 +199,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
       nsIScrollableFrame::ScrollbarSizesOptions aOptions =
           nsIScrollableFrame::ScrollbarSizesOptions::NONE) const final;
   nsMargin GetDesiredScrollbarSizes() const final;
+  static nscoord GetNonOverlayScrollbarSize(const nsPresContext*,
+                                            mozilla::StyleScrollbarWidth);
   nsSize GetLayoutSize() const final {
     if (mIsUsingMinimumScaleSize) {
       return mICBSize;

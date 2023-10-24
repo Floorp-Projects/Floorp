@@ -1687,13 +1687,13 @@ nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes() const {
   ScrollStyles styles = GetScrollStyles();
   nsMargin result(0, 0, 0, 0);
 
-  auto size = pc->DevPixelsToAppUnits(
-      pc->Theme()->GetScrollbarSize(pc, scrollbarWidth, nsITheme::Overlay::No));
+  auto size = GetNonOverlayScrollbarSize(pc, scrollbarWidth);
   if (styles.mVertical != StyleOverflow::Hidden) {
-    if (IsScrollbarOnRight())
+    if (IsScrollbarOnRight()) {
       result.left = size;
-    else
+    } else {
       result.right = size;
+    }
   }
 
   if (styles.mHorizontal != StyleOverflow::Hidden) {
@@ -1705,13 +1705,10 @@ nsMargin nsHTMLScrollFrame::GetDesiredScrollbarSizes() const {
   return result;
 }
 
-nscoord nsIScrollableFrame::GetNondisappearingScrollbarWidth(nsPresContext* aPc,
-                                                             WritingMode aWM) {
-  // We use this to size the combobox dropdown button. For that, we need to have
-  // the proper big, non-overlay scrollbar size, regardless of whether we're
-  // using e.g. scrollbar-width: thin, or overlay scrollbars.
-  auto size = aPc->Theme()->GetScrollbarSize(aPc, StyleScrollbarWidth::Auto,
-                                             nsITheme::Overlay::No);
+nscoord nsHTMLScrollFrame::GetNonOverlayScrollbarSize(
+    const nsPresContext* aPc, StyleScrollbarWidth aScrollbarWidth) {
+  const auto size = aPc->Theme()->GetScrollbarSize(aPc, aScrollbarWidth,
+                                                   nsITheme::Overlay::No);
   return aPc->DevPixelsToAppUnits(size);
 }
 
@@ -6652,23 +6649,19 @@ void nsHTMLScrollFrame::LayoutScrollbars(ScrollReflowInput& aState,
     auto scrollbarWidth = nsLayoutUtils::StyleForScrollbar(this)
                               ->StyleUIReset()
                               ->ScrollbarWidth();
-    auto scrollbarSize = pc->Theme()->GetScrollbarSize(pc, scrollbarWidth,
-                                                       nsITheme::Overlay::No);
+    const nscoord scrollbarSize =
+        GetNonOverlayScrollbarSize(pc, scrollbarWidth);
     ReflowInput resizerRI(pc, aState.mReflowInput, mResizerBox,
                           LogicalSize(mResizerBox->GetWritingMode()));
     nsSize resizerMinSize = {resizerRI.ComputedMinWidth(),
                              resizerRI.ComputedMinHeight()};
 
     nsRect r;
-    nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(scrollbarSize);
-    r.width =
-        std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
+    r.width = std::max(std::max(r.width, scrollbarSize), resizerMinSize.width);
     r.x = scrollbarOnLeft ? aInsideBorderArea.x
                           : aInsideBorderArea.XMost() - r.width;
-
-    nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(scrollbarSize);
     r.height =
-        std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
+        std::max(std::max(r.height, scrollbarSize), resizerMinSize.height);
     r.y = aInsideBorderArea.YMost() - r.height;
 
     LayoutScrollbarPartAtRect(aState, resizerRI, r);
