@@ -435,6 +435,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   void OnAfterLastPart(const nsresult& aStatus);
   void MaybeConnectToSocketProcess();
   void OnDetachStreamFilters();
+  void SendOnDataFinished(const nsresult& aChannelStatus);
 
   // Create a a new channel to be used in a redirection, based on the provided
   // response headers.
