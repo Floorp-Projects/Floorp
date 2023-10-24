@@ -5,7 +5,6 @@
 
 #include "nsMultiMixedConv.h"
 #include "nsIHttpChannel.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetCID.h"
 #include "nsMimeTypes.h"
 #include "nsIStringStream.h"
@@ -403,7 +402,7 @@ nsPartChannel::GetBaseChannel(nsIChannel** aReturn) {
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener,
-                  nsIThreadRetargetableStreamListener, nsIRequestObserver)
+                  nsIRequestObserver)
 
 // nsIStreamConverter implementation
 
@@ -553,12 +552,6 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest* request, nsIInputStream* inStr,
 
   return NS_FAILED(rv_send) ? rv_send : rv_feed;
 }
-
-NS_IMETHODIMP
-nsMultiMixedConv::OnDataFinished(nsresult aStatus) { return NS_OK; }
-
-NS_IMETHODIMP
-nsMultiMixedConv::CheckListenerChain() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 nsMultiMixedConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {

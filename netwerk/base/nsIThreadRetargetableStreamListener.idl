@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIStreamListener.idl"
+
 /**
  * nsIThreadRetargetableStreamListener
  *
  * To be used by classes which implement nsIStreamListener and whose
  * OnDataAvailable callback may be retargeted for delivery off the main thread.
  */
-[scriptable, uuid(fb2304b8-f82f-4433-af68-d874a2ebbdc1)]
-interface nsIThreadRetargetableStreamListener : nsIStreamListener
+[uuid(fb2304b8-f82f-4433-af68-d874a2ebbdc1)]
+interface nsIThreadRetargetableStreamListener : nsISupports
 {
   /**
    * Checks this listener and any next listeners it may have to verify that
@@ -29,11 +29,4 @@ interface nsIThreadRetargetableStreamListener : nsIStreamListener
    * fails.
    */
   void checkListenerChain();
-
-/**
-* Used for sending OMT notifications to listeners to notify them about data stop.
-* After this notification, the listeners could potentially start processing the data OMT.
-*/
-
-  void onDataFinished(in nsresult aStatusCode);
 };

@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIStreamListener.h"
 #include "nsIStringBundle.h"
 #include "nsIThreadRetargetableStreamListener.h"
 
@@ -96,7 +95,8 @@ class MediaDocument : public nsHTMLDocument {
   bool mDidInitialDocumentSetup;
 };
 
-class MediaDocumentStreamListener : public nsIThreadRetargetableStreamListener {
+class MediaDocumentStreamListener : public nsIStreamListener,
+                                    public nsIThreadRetargetableStreamListener {
  protected:
   virtual ~MediaDocumentStreamListener();
 

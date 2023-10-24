@@ -8,7 +8,6 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/intl/LocaleService.h"
-#include "nsIThreadRetargetableStreamListener.h"
 #include "nsNetUtil.h"
 #include "netCore.h"
 #include "nsStringStream.h"
@@ -32,8 +31,7 @@ using mozilla::intl::LocaleService;
 using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsIndexedToHTML, nsIDirIndexListener, nsIStreamConverter,
-                  nsIThreadRetargetableStreamListener, nsIRequestObserver,
-                  nsIStreamListener)
+                  nsIRequestObserver, nsIStreamListener)
 
 static void AppendNonAsciiToNCR(const nsAString& in, nsCString& out) {
   nsAString::const_iterator start, end;
@@ -615,25 +613,6 @@ NS_IMETHODIMP
 nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInput,
                                  uint64_t aOffset, uint32_t aCount) {
   return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
-}
-
-NS_IMETHODIMP
-nsIndexedToHTML::OnDataFinished(nsresult aStatus) {
-  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
-      do_QueryInterface(mListener);
-
-  if (listener) {
-    return listener->OnDataFinished(aStatus);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIndexedToHTML::CheckListenerChain() {
-  // nsIndexedToHTML does not support OnDataAvailable to run OMT. This class
-  // should only pass-through OnDataFinished notification.
-  return NS_ERROR_NO_INTERFACE;
 }
 
 static nsresult FormatTime(

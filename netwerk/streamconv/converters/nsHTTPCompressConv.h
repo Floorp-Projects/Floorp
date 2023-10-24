@@ -41,7 +41,8 @@ namespace net {
 class BrotliWrapper;
 
 class nsHTTPCompressConv : public nsIStreamConverter,
-                           public nsICompressConvStats {
+                           public nsICompressConvStats,
+                           public nsIThreadRetargetableStreamListener {
  public:
   // nsISupports methods
   NS_DECL_THREADSAFE_ISUPPORTS
