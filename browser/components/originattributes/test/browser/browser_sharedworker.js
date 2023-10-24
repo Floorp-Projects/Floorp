@@ -10,7 +10,7 @@ const TEST_PAGE = TEST_PATH + "file_sharedworker.html";
 async function getResultFromSharedworker(aBrowser) {
   let response = await SpecialPowers.spawn(aBrowser, [], async function () {
     let worker = new content.SharedWorker(
-      "file_sharedworker.js",
+      "file_shared.worker.js",
       "isolationSharedWorkerTest"
     );
 

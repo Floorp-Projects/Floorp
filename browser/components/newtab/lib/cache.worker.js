@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env worker */
-
 /* global ReactDOMServer, NewtabRenderUtils */
 
 const PAGE_TEMPLATE_RESOURCE_PATH =
@@ -34,7 +32,7 @@ importScripts("resource://gre/modules/workers/require.js");
   // a Worker. So we temporarily clear ChromeUtils so that activity-stream.bundle.js
   // thinks its being loaded in content scope.
   //
-  // eslint-disable-next-line no-global-assign
+  // eslint-disable-next-line no-implicit-globals, no-global-assign
   ChromeUtils = undefined;
 
   /* import-globals-from ../vendor/react.js */
@@ -56,7 +54,7 @@ importScripts("resource://gre/modules/workers/require.js");
     "resource://activity-stream/data/content/activity-stream.bundle.js"
   );
 
-  // eslint-disable-next-line no-global-assign
+  // eslint-disable-next-line no-global-assign, no-implicit-globals
   ChromeUtils = oldChromeUtils;
 }
 

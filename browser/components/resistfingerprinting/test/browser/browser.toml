@@ -6,7 +6,7 @@ support-files = [
   "file_dummy.html",
   "file_keyBoardEvent.sjs",
   "file_navigator.html",
-  "file_navigatorWorker.js",
+  "file_navigator.worker.js",
   "file_workerNetInfo.js",
   "file_workerPerformance.js",
   "head.js",
