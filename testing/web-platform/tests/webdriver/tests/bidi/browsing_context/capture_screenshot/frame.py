@@ -1,4 +1,5 @@
 import pytest
+
 from tests.support.image import png_dimensions
 from tests.support.screenshot import (
     DEFAULT_CONTENT,
