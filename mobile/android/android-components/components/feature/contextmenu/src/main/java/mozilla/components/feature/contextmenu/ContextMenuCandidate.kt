@@ -359,12 +359,7 @@ data class ContextMenuCandidate(
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
-                    DownloadState(
-                        hitResult.src,
-                        skipConfirmation = true,
-                        private = tab.content.private,
-                        referrerUrl = tab.content.url,
-                    ),
+                    DownloadState(hitResult.src, skipConfirmation = true, private = tab.content.private),
                 )
             },
         )
@@ -395,7 +390,6 @@ data class ContextMenuCandidate(
                     ShareInternetResourceState(
                         url = hitResult.src,
                         private = tab.content.private,
-                        referrerUrl = tab.content.url,
                     ),
                 )
             },
@@ -424,12 +418,7 @@ data class ContextMenuCandidate(
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
-                    DownloadState(
-                        hitResult.src,
-                        skipConfirmation = true,
-                        private = tab.content.private,
-                        referrerUrl = tab.content.url,
-                    ),
+                    DownloadState(hitResult.src, skipConfirmation = true, private = tab.content.private),
                 )
             },
         )
@@ -457,12 +446,7 @@ data class ContextMenuCandidate(
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
-                    DownloadState(
-                        hitResult.src,
-                        skipConfirmation = true,
-                        private = tab.content.private,
-                        referrerUrl = tab.content.url,
-                    ),
+                    DownloadState(hitResult.src, skipConfirmation = true, private = tab.content.private),
                 )
             },
         )
@@ -526,7 +510,6 @@ data class ContextMenuCandidate(
                     ShareInternetResourceState(
                         url = hitResult.src,
                         private = tab.content.private,
-                        referrerUrl = tab.content.url,
                     ),
                 )
             },

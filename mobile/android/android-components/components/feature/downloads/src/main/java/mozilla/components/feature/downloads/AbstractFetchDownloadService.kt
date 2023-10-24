@@ -703,7 +703,6 @@ abstract class AbstractFetchDownloadService : Service() {
             download.url.sanitizeURL(),
             headers = headers,
             private = download.private,
-            referrerUrl = download.referrerUrl,
         )
         // When resuming a download we need to use the httpClient as
         // download.response doesn't support adding headers.

@@ -285,22 +285,6 @@ class GeckoViewFetchUnitTestCases : FetchTestCases() {
     }
 
     @Test
-    fun get200WithReferrerUrl() {
-        mockResponse(200)
-
-        val request = mock<Request>()
-        whenever(request.url).thenReturn("https://mozilla.org")
-        whenever(request.method).thenReturn(Request.Method.GET)
-        whenever(request.referrerUrl).thenReturn("https://mozilla.org")
-        createNewClient().fetch(request)
-
-        val captor = ArgumentCaptor.forClass(WebRequest::class.java)
-
-        verify(geckoWebExecutor)!!.fetch(captor.capture(), eq(GeckoWebExecutor.FETCH_FLAGS_NONE))
-        assertEquals("https://mozilla.org", captor.value.referrer)
-    }
-
-    @Test
     fun toResponseMustReturn200ForDataUrls() {
         val builder = WebResponse.Builder("data:,Hello%2C%20World!").statusCode(0).build()
         assertEquals(Response.SUCCESS, builder.toResponse().status)

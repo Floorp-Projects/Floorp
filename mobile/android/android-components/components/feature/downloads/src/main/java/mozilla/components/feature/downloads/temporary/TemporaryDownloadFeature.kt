@@ -78,11 +78,7 @@ abstract class TemporaryDownloadFeature(
     @WorkerThread
     @VisibleForTesting
     internal fun download(internetResource: ShareInternetResourceState): File {
-        val request = Request(
-            internetResource.url.sanitizeURL(),
-            private = internetResource.private,
-            referrerUrl = internetResource.referrerUrl,
-        )
+        val request = Request(internetResource.url.sanitizeURL(), private = internetResource.private)
         val response = if (internetResource.response == null) {
             httpClient.fetch(request)
         } else {
