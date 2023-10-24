@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <ostream>
+
 #include "gtest/gtest-param-test.h"
 #include "gtest/gtest.h"
 
@@ -24,6 +26,7 @@ LinkHeader LinkHeaderSetAll(nsAString const& v) {
   l.mCrossOrigin = v;
   l.mReferrerPolicy = v;
   l.mAs = v;
+  l.mFetchPriority = v;
   return l;
 }
 
@@ -42,11 +45,36 @@ LinkHeader LinkHeaderSetMinimum(nsAString const& v) {
   return l;
 }
 
+void PrintTo(const nsTArray<LinkHeader>& aLinkHeaders, std::ostream* aOs) {
+  bool first = true;
+  for (const auto& header : aLinkHeaders) {
+    if (!first) {
+      *aOs << ", ";
+    }
+    first = false;
+
+    *aOs << "(mHref=" << header.mHref << ", "
+         << "mRel=" << header.mRel << ", "
+         << "mTitle=" << header.mTitle << ", "
+         << "mNonce=" << header.mNonce << ", "
+         << "mIntegrity=" << header.mIntegrity << ", "
+         << "mSrcset=" << header.mSrcset << ", "
+         << "mSizes=" << header.mSizes << ", "
+         << "mType=" << header.mType << ", "
+         << "mMedia=" << header.mMedia << ", "
+         << "mAnchor=" << header.mAnchor << ", "
+         << "mCrossOrigin=" << header.mCrossOrigin << ", "
+         << "mReferrerPolicy=" << header.mReferrerPolicy << ", "
+         << "mAs=" << header.mAs << ", "
+         << "mFetchPriority=" << header.mFetchPriority << ")";
+  }
+}
+
 TEST(TestLinkHeader, MultipleLinkHeaders)
 {
   nsString link =
-      u"<a>; rel=a; title=a; integrity=a; imagesrcset=a; imagesizes=a; type=a; media=a; anchor=a; crossorigin=a; referrerpolicy=a; as=a,"_ns
-      u"<b>; rel=b; title=b; integrity=b; imagesrcset=b; imagesizes=b; type=b; media=b; anchor=b; crossorigin=b; referrerpolicy=b; as=b,"_ns
+      u"<a>; rel=a; title=a; integrity=a; imagesrcset=a; imagesizes=a; type=a; media=a; anchor=a; crossorigin=a; referrerpolicy=a; as=a; fetchpriority=a,"_ns
+      u"<b>; rel=b; title=b; integrity=b; imagesrcset=b; imagesizes=b; type=b; media=b; anchor=b; crossorigin=b; referrerpolicy=b; as=b; fetchpriority=b,"_ns
       u"<c>; rel=c"_ns;
 
   nsTArray<LinkHeader> linkHeaders = ParseLinkHeader(link);
@@ -83,6 +111,14 @@ struct SimpleParseTestData {
   nsString url;
   nsString rel;
   nsString as;
+  nsString fetchpriority;
+
+  friend void PrintTo(const SimpleParseTestData& aData, std::ostream* aOs) {
+    *aOs << "link=" << aData.link << ", valid=" << aData.valid
+         << ", url=" << aData.url << ", rel=" << aData.rel
+         << ", as=" << aData.as << ", fetchpriority=" << aData.fetchpriority
+         << ")";
+  }
 };
 
 class SimpleParseTest : public ::testing::TestWithParam<SimpleParseTestData> {};
@@ -98,13 +134,26 @@ TEST_P(SimpleParseTest, Simple) {
     EXPECT_EQ(test.url, linkHeaders[0].mHref);
     EXPECT_EQ(test.rel, linkHeaders[0].mRel);
     EXPECT_EQ(test.as, linkHeaders[0].mAs);
+    EXPECT_EQ(test.fetchpriority, linkHeaders[0].mFetchPriority);
   }
 }
 
-// Test copied and adapted from
+// Some test data copied and adapted from
 // https://source.chromium.org/chromium/chromium/src/+/main:components/link_header_util/link_header_util_unittest.cc
 // the different behavior of the parser is commented above each test case.
 const SimpleParseTestData simple_parse_tests[] = {
+    {u"<s.css>; rel=stylesheet; fetchpriority=\"auto\""_ns, true, u"s.css"_ns,
+     u"stylesheet"_ns, u""_ns, u"auto"_ns},
+    {u"<s.css>; rel=stylesheet; fetchpriority=\"low\""_ns, true, u"s.css"_ns,
+     u"stylesheet"_ns, u""_ns, u"low"_ns},
+    {u"<s.css>; rel=stylesheet; fetchpriority=\"high\""_ns, true, u"s.css"_ns,
+     u"stylesheet"_ns, u""_ns, u"high"_ns},
+    {u"<s.css>; rel=stylesheet; fetchpriority=\"foo\""_ns, true, u"s.css"_ns,
+     u"stylesheet"_ns, u""_ns, u"foo"_ns},
+    {u"<s.css>; rel=stylesheet; fetchpriority=\"\""_ns, true, u"s.css"_ns,
+     u"stylesheet"_ns, u""_ns, u""_ns},
+    {u"<s.css>; rel=stylesheet; fetchpriority=fooWithoutDoubleQuotes"_ns, true,
+     u"s.css"_ns, u"stylesheet"_ns, u""_ns, u"fooWithoutDoubleQuotes"_ns},
     {u"</images/cat.jpg>; rel=prefetch"_ns, true, u"/images/cat.jpg"_ns,
      u"prefetch"_ns, u""_ns},
     {u"</images/cat.jpg>;rel=prefetch"_ns, true, u"/images/cat.jpg"_ns,
