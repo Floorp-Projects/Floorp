@@ -30,7 +30,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MediaFeatureChange.h"
-#include "mozilla/ObservedDocShell.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
@@ -70,7 +69,6 @@
 #include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PopupBlocker.h"
-#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
@@ -243,7 +241,6 @@
 #include "mozpkix/pkix.h"
 #include "NSSErrorsService.h"
 
-#include "timeline/JavascriptTimelineMarker.h"
 #include "nsDocShellTelemetryUtils.h"
 
 #ifdef MOZ_PLACES
@@ -335,7 +332,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
       mLoadType(0),
       mFailedLoadType(0),
-      mJSRunToCompletionDepth(0),
       mMetaViewportOverride(nsIDocShell::META_VIEWPORT_OVERRIDE_NONE),
       mChannelToDisconnectOnPageHide(0),
       mCreatingDocument(false),
@@ -388,8 +384,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
 }
 
 nsDocShell::~nsDocShell() {
-  MOZ_ASSERT(!mObserved);
-
   // Avoid notifying observers while we're in the dtor.
   mIsBeingDestroyed = true;
 
@@ -2233,49 +2227,6 @@ nsresult nsDocShell::HistoryEntryRemoved(int32_t aIndex) {
     if (shell) {
       static_cast<nsDocShell*>(shell.get())->HistoryEntryRemoved(aIndex);
     }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetRecordProfileTimelineMarkers(bool aValue) {
-  bool currentValue = nsIDocShell::GetRecordProfileTimelineMarkers();
-  if (currentValue == aValue) {
-    return NS_OK;
-  }
-
-  if (aValue) {
-    MOZ_ASSERT(!TimelineConsumers::HasConsumer(this));
-    TimelineConsumers::AddConsumer(this);
-    MOZ_ASSERT(TimelineConsumers::HasConsumer(this));
-    UseEntryScriptProfiling();
-  } else {
-    MOZ_ASSERT(TimelineConsumers::HasConsumer(this));
-    TimelineConsumers::RemoveConsumer(this);
-    MOZ_ASSERT(!TimelineConsumers::HasConsumer(this));
-    UnuseEntryScriptProfiling();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetRecordProfileTimelineMarkers(bool* aValue) {
-  *aValue = !!mObserved;
-  return NS_OK;
-}
-
-nsresult nsDocShell::PopProfileTimelineMarkers(
-    JSContext* aCx, JS::MutableHandle<JS::Value> aOut) {
-  nsTArray<dom::ProfileTimelineMarker> store;
-  SequenceRooter<dom::ProfileTimelineMarker> rooter(aCx, &store);
-
-  TimelineConsumers::PopMarkers(this, aCx, store);
-
-  if (!ToJSValue(aCx, store, aOut)) {
-    JS_ClearPendingException(aCx);
-    return NS_ERROR_UNEXPECTED;
   }
 
   return NS_OK;
@@ -4526,9 +4477,6 @@ nsDocShell::Destroy() {
 
   // Brak the cycle with the initial client, if present.
   mInitialClientSource.reset();
-
-  // Make sure we don't record profile timeline markers anymore
-  SetRecordProfileTimelineMarkers(false);
 
   // Make sure to blow away our mLoadingURI just in case.  No loads
   // from inside this pagehide.
@@ -13481,34 +13429,6 @@ void nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI) {
 bool nsDocShell::IsInvisible() { return mInvisible; }
 
 void nsDocShell::SetInvisible(bool aInvisible) { mInvisible = aInvisible; }
-
-// The caller owns |aAsyncCause| here.
-void nsDocShell::NotifyJSRunToCompletionStart(const char* aReason,
-                                              const nsAString& aFunctionName,
-                                              const nsAString& aFilename,
-                                              const uint32_t aLineNumber,
-                                              JS::Handle<JS::Value> aAsyncStack,
-                                              const char* aAsyncCause) {
-  // If first start, mark interval start.
-  if (mJSRunToCompletionDepth == 0 && TimelineConsumers::HasConsumer(this)) {
-    TimelineConsumers::AddMarkerForDocShell(
-        this, mozilla::MakeUnique<JavascriptTimelineMarker>(
-                  aReason, aFunctionName, aFilename, aLineNumber,
-                  MarkerTracingType::START, aAsyncStack, aAsyncCause));
-  }
-
-  mJSRunToCompletionDepth++;
-}
-
-void nsDocShell::NotifyJSRunToCompletionStop() {
-  mJSRunToCompletionDepth--;
-
-  // If last stop, mark interval end.
-  if (mJSRunToCompletionDepth == 0 && TimelineConsumers::HasConsumer(this)) {
-    TimelineConsumers::AddMarkerForDocShell(this, "Javascript",
-                                            MarkerTracingType::END);
-  }
-}
 
 /* static */
 void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,

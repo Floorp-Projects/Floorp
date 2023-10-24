@@ -74,12 +74,7 @@ add_task(async () => {
   );
 
   // Collect restyling markers in 5 frames.
-  const [markers, counter] = await observeStylingInTargetWindow(
-    panel.ownerGlobal,
-    5
-  );
-
-  Assert.equal(markers.length, counter);
+  const restyleCount = await observeStylingInTargetWindow(panel.ownerGlobal, 5);
 
   // On non WebRender we observe two restyling markers because we get the second
   // jank report from the compositor thread before a new pre-rendered result,
@@ -90,6 +85,6 @@ add_task(async () => {
   // KeyframeEffect::OverflowRegionRefreshInterval (200ms) on very slow
   // platforms (e.g. TSAN builds), if it happens we should allow the additional
   // restyling here.
-  Assert.greaterOrEqual(markers.length, 1);
-  Assert.lessOrEqual(markers.length, 2);
+  Assert.greaterOrEqual(restyleCount, 1);
+  Assert.lessOrEqual(restyleCount, 2);
 });
