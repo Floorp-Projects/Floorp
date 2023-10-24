@@ -491,7 +491,18 @@ class TopSitesFeed {
     let hasContileTiles = false;
     if (contileEnabled) {
       let sponsoredPosition = 1;
-      for (let site of this._contile.sites) {
+
+      let sponsorsList = [
+        {
+          "id": 0,
+          "name": "CubeSoft",
+          "url": "https://www.cube-soft.jp",
+          "image_url": "https://raw.githubusercontent.com/cube-soft/cube.assets/master/cubesoft/logo/256px.png",
+          "image_size": 200
+        }
+      ]
+
+      for (let site of sponsorsList) {
         let hostname = shortURL(site);
         let link = {
           isDefault: true,
@@ -519,13 +530,7 @@ class TopSitesFeed {
 
     // Read defaults from remote settings.
     this._useRemoteSetting = true;
-    let remoteSettingData = [
-      {
-        url: "https://www.cube-soft.jp",
-        order: 120,
-        title: "CubeSoft",
-      },
-    ]
+    let remoteSettingData = [];
 
     const sponsoredBlocklist = JSON.parse(
       Services.prefs.getStringPref(TOP_SITES_BLOCKED_SPONSORS_PREF, "[]")
