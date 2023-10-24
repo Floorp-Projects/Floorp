@@ -5,7 +5,7 @@
 const TEST_PAGE =
   "http://mochi.test:8888/browser/browser/components/" +
   "originattributes/test/browser/file_firstPartyBasic.html";
-const SCRIPT_WORKER_BLOBIFY = "worker_blobify.js";
+const SCRIPT_WORKER_BLOBIFY = "blobify.worker.js";
 
 function page_blobify(browser, input) {
   return SpecialPowers.spawn(browser, [input], function (contentInput) {

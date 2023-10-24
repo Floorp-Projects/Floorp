@@ -1,6 +1,7 @@
 [DEFAULT]
 tags = "usercontextid firstpartyisolation originattributes"
 support-files = [
+  "blobify.worker.js",
   "dummy.html",
   "file_broadcastChannel.html",
   "file_broadcastChanneliFrame.html",
@@ -16,7 +17,7 @@ support-files = [
   "file_postMessageSender.html",
   "file_saveAs.sjs",
   "file_sharedworker.html",
-  "file_sharedworker.js",
+  "file_shared.worker.js",
   "file_thirdPartyChild.audio.ogg",
   "file_thirdPartyChild.embed.png",
   "file_thirdPartyChild.fetch.html",
@@ -60,7 +61,6 @@ support-files = [
   "window2.html",
   "window3.html",
   "window_redirect.html",
-  "worker_blobify.js",
   "!/toolkit/content/tests/browser/common/mockTransfer.js",
 ]
 # We don't want to run tests using BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN

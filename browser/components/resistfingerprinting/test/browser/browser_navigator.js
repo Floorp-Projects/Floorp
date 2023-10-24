@@ -265,7 +265,7 @@ async function testWorkerNavigator() {
     [],
     async function () {
       let worker = new content.SharedWorker(
-        "file_navigatorWorker.js",
+        "file_navigator.worker.js",
         "WorkerNavigatorTest"
       );
 

@@ -65,7 +65,7 @@ module.exports = {
     {
       // Use a configuration that's appropriate for modules, workers and
       // non-production files.
-      files: ["*.jsm", "lib/cache-worker.js", "test/**"],
+      files: ["*.jsm", "lib/cache.worker.js", "test/**"],
       rules: {
         "no-implicit-globals": "off",
       },

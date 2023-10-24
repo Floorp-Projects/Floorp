@@ -45,7 +45,7 @@ ChromeUtils.defineESModuleGetters(this, {
   BasePromiseWorker: "resource://gre/modules/PromiseWorker.sys.mjs",
 });
 
-const CACHE_WORKER_URL = "resource://activity-stream/lib/cache-worker.js";
+const CACHE_WORKER_URL = "resource://activity-stream/lib/cache.worker.js";
 const NEWTAB_RENDER_URL =
   "resource://activity-stream/data/content/newtab-render.js";
 
