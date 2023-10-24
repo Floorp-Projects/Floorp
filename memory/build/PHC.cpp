@@ -207,6 +207,8 @@ class StackTrace : public phc::StackTrace {
 void StackTrace::Fill() {
   mLength = 0;
 
+// These ifdefs should be kept in sync with the conditions in
+// phc_implies_frame_pointers in build/moz.configure/memory.configure
 #if defined(XP_WIN) && defined(_M_IX86)
   // This avoids MozStackWalk(), which causes unusably slow startup on Win32
   // when it is called during static initialization (see bug 1241684).

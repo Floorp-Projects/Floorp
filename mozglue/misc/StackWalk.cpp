@@ -639,6 +639,9 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
 }
 
 // i386 or PPC Linux stackwalking code
+//
+// Changes to to OS/Architecture support here should be reflected in
+// build/moz.configure/memory.configure
 #elif HAVE_DLADDR &&                                           \
     (HAVE__UNWIND_BACKTRACE || MOZ_STACKWALK_SUPPORTS_LINUX || \
      MOZ_STACKWALK_SUPPORTS_MACOSX)
@@ -680,6 +683,9 @@ void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen) {
 }  // namespace mozilla
 
 // {x86, ppc} x {Linux, Mac} stackwalking code.
+//
+// Changes to to OS/Architecture support here should be reflected in
+// build/moz.configure/memory.configure
 #  if ((defined(__i386) || defined(PPC) || defined(__ppc__)) && \
        (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX))
 
