@@ -50,6 +50,25 @@ async function promiseSidebarUpdated(sidebar, expectedProduct) {
   });
 }
 
+async function promiseSidebarAdsUpdated(sidebar, expectedProduct) {
+  await promiseSidebarUpdated(sidebar, expectedProduct);
+  let browser = sidebar.querySelector("browser");
+  return SpecialPowers.spawn(browser, [], () => {
+    let container =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    if (container.recommendationData) {
+      return true;
+    }
+    return ContentTaskUtils.waitForEvent(
+      content.document,
+      "UpdateRecommendations",
+      true,
+      null,
+      true
+    ).then(e => true);
+  });
+}
+
 async function verifyProductInfo(sidebar, expectedProductInfo) {
   await SpecialPowers.spawn(
     sidebar.querySelector("browser"),

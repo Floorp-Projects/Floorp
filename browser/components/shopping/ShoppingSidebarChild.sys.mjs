@@ -347,6 +347,11 @@ export class ShoppingSidebarChild extends RemotePageChild {
       return;
     }
 
+    if (!recommendationData.length) {
+      // We tried to fetch an ad, but didn't get one.
+      Glean.shopping.surfaceNoAdsAvailable.record();
+    }
+
     this.sendToContent("UpdateRecommendations", {
       recommendationData,
     });
