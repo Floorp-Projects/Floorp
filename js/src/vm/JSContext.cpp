@@ -1298,7 +1298,7 @@ void AutoEnterOOMUnsafeRegion::crash(const char* reason) {
   // In non-DEBUG builds MOZ_CRASH normally doesn't print to stderr so we have
   // to do this explicitly (the jit-test allow-unhandlable-oom annotation and
   // fuzzers depend on it).
-  MOZ_ReportCrash(msgbuf, __FILE__, __LINE__);
+  fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", msgbuf, __FILE__, __LINE__);
 #endif
   MOZ_CRASH_UNSAFE(msgbuf);
 }
