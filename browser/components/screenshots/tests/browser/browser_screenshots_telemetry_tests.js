@@ -333,4 +333,4 @@ add_task(async function test_content_events() {
       await assertScreenshotsEvents(CONTENT_EVENTS, "content");
     }
   );
-}).skip();
+});
