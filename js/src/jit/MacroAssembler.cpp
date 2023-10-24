@@ -4109,6 +4109,12 @@ void MacroAssembler::setupWasmABICall() {
   dynamicAlignment_ = false;
 }
 
+void MacroAssembler::setupUnalignedABICallDontSaveRestoreSP() {
+  andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
+  setFramePushed(0);  // Required for aligned callWithABI.
+  setupAlignedABICall();
+}
+
 void MacroAssembler::setupAlignedABICall() {
   MOZ_ASSERT(!IsCompilingWasm(), "wasm should use setupWasmABICall");
   setupNativeABICall();

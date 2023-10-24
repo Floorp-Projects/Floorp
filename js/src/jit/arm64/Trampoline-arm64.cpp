@@ -616,7 +616,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   // Reserve space for the outparameter.
   masm.reserveVMFunctionOutParamSpace(f);
 
-  masm.setupUnalignedABICall(regs.getAny());
+  masm.setupUnalignedABICallDontSaveRestoreSP();
   masm.passABIArg(reg_cx);
 
   size_t argDisp = ExitFrameLayout::Size();

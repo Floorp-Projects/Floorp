@@ -783,6 +783,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // scratch register.
   void setupUnalignedABICall(Register scratch) PER_ARCH;
 
+  // Like setupUnalignedABICall, but more efficient because it doesn't push/pop
+  // the unaligned stack pointer. The caller is responsible for restoring SP
+  // after the callWithABI, for example using the frame pointer register.
+  void setupUnalignedABICallDontSaveRestoreSP();
+
   // Arguments must be assigned to a C/C++ call in order. They are moved
   // in parallel immediately before performing the call. This process may
   // temporarily use more stack, in which case esp-relative addresses will be
