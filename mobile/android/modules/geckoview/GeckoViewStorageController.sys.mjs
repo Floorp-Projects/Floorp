@@ -168,7 +168,7 @@ export const GeckoViewStorageController = {
         const principal = lazy.E10SUtils.deserializePrincipal(aData.principal);
         let key = aData.perm;
         if (key == "storage-access") {
-          key = "3rdPartyStorage^" + aData.thirdPartyOrigin;
+          key = "3rdPartyFrameStorage^" + aData.thirdPartyOrigin;
         }
         if (aData.allowPermanentPrivateBrowsing) {
           Services.perms.addFromPrincipalAndPersistInPrivateBrowsing(

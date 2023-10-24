@@ -1916,8 +1916,6 @@ pref("privacy.trackingprotection.cryptomining.enabled", true);
 
 pref("browser.contentblocking.database.enabled", true);
 
-pref("dom.storage_access.frame_only", true);
-
 // Enable URL query stripping and strip on share in Nightly.
 #ifdef NIGHTLY_BUILD
 pref("privacy.query_stripping.enabled", true);

@@ -3907,7 +3907,7 @@
 
 - name: dom.storage_access.frame_only
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Only grant storage access to secure contexts.
