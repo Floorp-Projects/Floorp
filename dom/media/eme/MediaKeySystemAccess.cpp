@@ -128,8 +128,7 @@ MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
   }
 
 #ifdef MOZ_WMF_CDM
-  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-       IsWidevineExperimentKeySystemAndSupported(aKeySystem)) &&
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
       KeySystemConfig::Supports(aKeySystem)) {
     return MediaKeySystemStatus::Available;
   }
@@ -178,8 +177,6 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
 #ifdef MOZ_WMF_CDM
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
-      NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
-      NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
 #endif
   };
   for (const auto& name : keySystemNames) {
@@ -193,7 +190,7 @@ static bool GetKeySystemConfigs(
     nsTArray<KeySystemConfig>& aOutKeySystemConfig) {
   bool foundConfigs = false;
   for (auto& config : GetSupportedKeySystems()) {
-    if (config.IsSameKeySystem(aKeySystem)) {
+    if (config.mKeySystem.Equals(aKeySystem)) {
       aOutKeySystemConfig.AppendElement(std::move(config));
       foundConfigs = true;
     }
@@ -729,11 +726,6 @@ static bool GetSupportedConfig(
     MediaKeySystemConfiguration& aOutConfig,
     DecoderDoctorDiagnostics* aDiagnostics, bool aInPrivateBrowsing,
     const std::function<void(const char*)>& aDeprecationLogFn) {
-#ifdef DEBUG
-  EME_LOG("Compare implementation '%s'\n with request '%s'",
-          NS_ConvertUTF16toUTF8(aKeySystem.GetDebugInfo()).get(),
-          ToCString(aCandidate).get());
-#endif
   // Let accumulated configuration be a new MediaKeySystemConfiguration
   // dictionary.
   MediaKeySystemConfiguration config;

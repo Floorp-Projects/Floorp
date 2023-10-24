@@ -159,10 +159,6 @@ struct KeySystemConfig {
   nsString GetDebugInfo() const;
 #endif
 
-  // Return true if the given key system is equal to `mKeySystem`, or it can be
-  // mapped to the same key system
-  bool IsSameKeySystem(const nsAString& aKeySystem) const;
-
   nsString mKeySystem;
   nsTArray<nsString> mInitDataTypes;
   Requirement mPersistentState = Requirement::NotAllowed;

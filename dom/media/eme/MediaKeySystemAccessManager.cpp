@@ -375,7 +375,6 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   if (!IsWidevineKeySystem(aRequest->mKeySystem) &&
 #ifdef MOZ_WMF_CDM
       !IsPlayReadyKeySystemAndSupported(aRequest->mKeySystem) &&
-      !IsWidevineExperimentKeySystemAndSupported(aRequest->mKeySystem) &&
 #endif
       !IsClearkeyKeySystem(aRequest->mKeySystem)) {
     // Not to inform user, because nothing to do if the keySystem is not

@@ -428,10 +428,7 @@ class MediaKeysGMPCrashHelper : public GMPCrashHelper {
 };
 
 already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
-  const bool isHardwareDecryptionSupported =
-      IsHardwareDecryptionSupported(mConfig);
-  EME_LOG("MediaKeys[%p]::CreateCDMProxy(), isHardwareDecryptionSupported=%d",
-          this, isHardwareDecryptionSupported);
+  EME_LOG("MediaKeys[%p]::CreateCDMProxy()", this);
   RefPtr<CDMProxy> proxy;
 #ifdef MOZ_WIDGET_ANDROID
   if (IsWidevineKeySystem(mKeySystem)) {
@@ -442,9 +439,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
   } else
 #endif
 #ifdef MOZ_WMF_CDM
-      if (IsPlayReadyKeySystemAndSupported(mKeySystem) ||
-          IsWidevineExperimentKeySystemAndSupported(mKeySystem) ||
-          (IsWidevineKeySystem(mKeySystem) && isHardwareDecryptionSupported)) {
+      if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
     proxy = new WMFCDMProxy(this, mKeySystem, mConfig);
   } else
 #endif
