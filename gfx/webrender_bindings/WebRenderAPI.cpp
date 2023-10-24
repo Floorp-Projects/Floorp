@@ -481,7 +481,7 @@ layers::RemoteTextureInfoList* WebRenderAPI::GetPendingRemoteTextureInfoList() {
 }
 
 bool WebRenderAPI::CheckIsRemoteTextureReady(
-    layers::RemoteTextureInfoList* aList) {
+    layers::RemoteTextureInfoList* aList, const TimeStamp& aTimeStamp) {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aList);
   MOZ_ASSERT(gfx::gfxVars::UseCanvasRenderThread());
@@ -497,11 +497,25 @@ bool WebRenderAPI::CheckIsRemoteTextureReady(
     layers::CompositorThread()->Dispatch(runnable.forget());
   };
 
+  const auto maxWaitDurationMs = 10000;
+  const auto now = TimeStamp::Now();
+  const auto waitDurationMs =
+      static_cast<uint32_t>((now - aTimeStamp).ToMilliseconds());
+
+  const auto isTimeout = waitDurationMs > maxWaitDurationMs;
+  if (isTimeout) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNote << "RemoteTexture ready timeout";
+  }
+
   bool isReady = true;
   while (!aList->mList.empty() && isReady) {
     auto& front = aList->mList.front();
     isReady &= layers::RemoteTextureMap::Get()->CheckRemoteTextureReady(
         front, callback);
+    if (isTimeout) {
+      isReady = true;
+    }
     if (isReady) {
       aList->mList.pop();
     }
@@ -546,7 +560,8 @@ void WebRenderAPI::HandleWrTransactionEvents(RemoteTextureWaitType aType) {
       case WrTransactionEvent::Tag::PendingRemoteTextures:
         bool isReady = true;
         if (aType == RemoteTextureWaitType::AsyncWait) {
-          isReady = CheckIsRemoteTextureReady(front.RemoteTextureInfoList());
+          isReady = CheckIsRemoteTextureReady(front.RemoteTextureInfoList(),
+                                              front.mTimeStamp);
         } else if (aType == RemoteTextureWaitType::FlushWithWait) {
           WaitRemoteTextureReady(front.RemoteTextureInfoList());
         } else {
