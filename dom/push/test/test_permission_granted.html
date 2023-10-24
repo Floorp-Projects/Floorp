@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+Tests PushManager.subscribe behavior based on permission state.
+https://bugzilla.mozilla.org/show_bug.cgi?id=1847217
+TODO: Move this to WPT when we get test_driver.set_permission (bug 1524074) and Push testing infra in WPT.
+-->
+<meta charset="utf-8">
+<title>Push permission granted test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/dom/push/test/test_utils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script>
+  let registration;
+  add_task(async function start() {
+    const url = "worker.js?" + Math.random();
+    registration = await navigator.serviceWorker.register(url, { scope: "." });
+    await waitForActive(registration);
+  });
+
+  add_task(async function test_notifications_permission_error() {
+    await setPushPermission(false);
+
+    try {
+      await registration.pushManager.subscribe();
+      ok(false, "No permission, should never proceed");
+    } catch (err) {
+      is(err.name, "NotAllowedError", "A permission error should occur");
+    }
+  });
+
+  add_task(async function test_notifications_permission_granted() {
+    await setPushPermission(true);
+
+    try {
+      await registration.pushManager.subscribe();
+      ok(false, "For now this should not proceed because of dom.push.connection.enabled=false (default for all tests)");
+    } catch (err) {
+      is(err.name, "AbortError", "For now a connection error should occur");
+    }
+  });
+
+  add_task(async function unregister() {
+    const result = await registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
+</script>

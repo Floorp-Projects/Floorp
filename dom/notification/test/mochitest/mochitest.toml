@@ -6,7 +6,6 @@ support-files = [
   "MockServices.js",
   "NotificationTest.js",
 ]
-skip-if = ["os == 'android'"] # Bug 1531097
 
 ["test_notification_basics.html"]
 skip-if = ["xorigin"] # Bug 1792790

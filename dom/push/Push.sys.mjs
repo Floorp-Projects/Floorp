@@ -83,6 +83,18 @@ Push.prototype = {
       this._window.document.hasValidTransientUserGestureActivation;
 
     return this.createPromise((resolve, reject) => {
+      // Test permission before requesting to support GeckoView:
+      // * GeckoViewPermissionChild wants to return early when requested without user activation
+      //   before doing actual permission check:
+      //   https://searchfox.org/mozilla-central/rev/0ba4632ee85679a1ccaf652df79c971fa7e9b9f7/mobile/android/actors/GeckoViewPermissionChild.sys.mjs#46-56
+      //   which is partly because:
+      // * GeckoView test runner has no real permission check but just returns VALUE_ALLOW.
+      //   https://searchfox.org/mozilla-central/rev/6e5b9a5a1edab13a1b2e2e90944b6e06b4d8149c/mobile/android/test_runner/src/main/java/org/mozilla/geckoview/test_runner/TestRunnerActivity.java#108-123
+      if (this._testPermission() === Ci.nsIPermissionManager.ALLOW_ACTION) {
+        resolve();
+        return;
+      }
+
       let permissionDenied = () => {
         reject(
           new this._window.DOMException(
