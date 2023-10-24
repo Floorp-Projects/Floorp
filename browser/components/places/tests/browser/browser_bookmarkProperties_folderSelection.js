@@ -122,7 +122,11 @@ add_task(async function test_selectChoose() {
   );
   ok(input.hidden, "Folder tree should still not be broken.");
 
-  await hideBookmarksPanel();
+  const promiseCancel = promisePopupHidden(
+    document.getElementById("editBookmarkPanel")
+  );
+  document.getElementById("editBookmarkPanelRemoveButton").click();
+  await promiseCancel;
   Assert.ok(!folderTree.view, "The view should have been disconnected");
 });
 
@@ -187,5 +191,31 @@ add_task(async function test_selectBookmarksMenu() {
     "Should have kept the same menu label"
   );
 
+  // Switch back to the toolbar folder.
+  const { toolbarGuid } = PlacesUtils.bookmarks;
+  promisePopup = BrowserTestUtils.waitForEvent(
+    menuList.menupopup,
+    "popupshown"
+  );
+  EventUtils.synthesizeMouseAtCenter(menuList, {});
+  await promisePopup;
+  EventUtils.synthesizeMouseAtCenter(
+    document.getElementById("editBMPanel_toolbarFolderItem"),
+    {}
+  );
+  await TestUtils.waitForCondition(
+    () => menuList.getAttribute("selectedGuid") == toolbarGuid,
+    "Should select the toolbar folder item"
+  );
+
+  // Save the bookmark.
+  const promiseBookmarkAdded =
+    PlacesTestUtils.waitForNotification("bookmark-added");
   await hideBookmarksPanel();
+  const [{ parentGuid }] = await promiseBookmarkAdded;
+  Assert.equal(
+    parentGuid,
+    toolbarGuid,
+    "Should have saved the bookmark in the correct folder."
+  );
 });
