@@ -7,6 +7,7 @@ import textwrap
 import traceback
 from collections import defaultdict
 from enum import Enum
+from html.parser import HTMLParser
 from pathlib import Path
 
 import esprima
@@ -54,6 +55,12 @@ class MissingFieldError(Exception):
         self.field = field
 
 
+class MissingPerfMetadataError(Exception):
+    def __init__(self, script):
+        super().__init__("Missing `perfMetadata` variable")
+        self.script = script
+
+
 class ParseError(Exception):
     def __init__(self, script, exception):
         super().__init__(f"Cannot parse {script}")
@@ -74,6 +81,17 @@ class ParseError(Exception):
 class ScriptType(Enum):
     xpcshell = 1
     browsertime = 2
+    mochitest = 3
+
+
+class HTMLScriptParser(HTMLParser):
+    def handle_data(self, data):
+        if self.script_content is None:
+            self.script_content = []
+        if "perfMetadata" in data:
+            self.script_content.append(data)
+        if any(func_name in data for func_name in XPCSHELL_FUNCS):
+            self.script_content.append(data)
 
 
 class ScriptInfo(defaultdict):
@@ -82,7 +100,11 @@ class ScriptInfo(defaultdict):
     def __init__(self, path):
         super(ScriptInfo, self).__init__()
         try:
-            self._parse_file(path)
+            self.script = Path(path).resolve()
+            if self.script.suffix == ".html":
+                self._parse_html_file()
+            else:
+                self._parse_js_file()
         except Exception as e:
             raise ParseError(path, e)
 
@@ -93,14 +115,20 @@ class ScriptInfo(defaultdict):
             if field not in self:
                 raise MissingFieldError(path, field)
 
-    def _parse_file(self, path):
-        self.script = Path(path).resolve()
+    def _set_script_content(self):
         self["filename"] = str(self.script)
+        self.script_content = self.script.read_text()
+
+    def _parse_js_file(self):
         self.script_type = ScriptType.browsertime
-        with self.script.open() as f:
-            self.parsed = esprima.parseScript(f.read())
+        self._set_script_content()
+        self._parse_script_content()
+
+    def _parse_script_content(self):
+        self.parsed = esprima.parseScript(self.script_content)
 
         # looking for the exports statement
+        found_perfmetadata = False
         for stmt in self.parsed.body:
             #  detecting if the script has add_task()
             if (
@@ -130,6 +158,7 @@ class ScriptInfo(defaultdict):
                         or decl.init is None
                     ):
                         continue
+                    found_perfmetadata = True
                     self.scan_properties(decl.init.properties)
                     continue
 
@@ -145,7 +174,40 @@ class ScriptInfo(defaultdict):
                 continue
 
             # now scanning the properties
+            found_perfmetadata = True
             self.scan_properties(stmt.expression.right.properties)
+
+        if not found_perfmetadata:
+            raise MissingPerfMetadataError(self.script)
+
+    def _parse_html_file(self):
+        self._set_script_content()
+
+        html_parser = HTMLScriptParser()
+        html_parser.script_content = None
+        html_parser.feed(self.script_content)
+
+        if not html_parser.script_content:
+            raise MissingPerfMetadataError(self.script)
+
+        # Pass through all the scripts and gather up the data such as
+        # the test itself, and the perfMetadata. These can be in separate
+        # scripts, but later scripts override earlier ones if there
+        # are redefinitions.
+        found_perfmetadata = False
+        for script_content in html_parser.script_content:
+            self.script_content = script_content
+            try:
+                self._parse_script_content()
+                found_perfmetadata = True
+            except MissingPerfMetadataError:
+                pass
+        if not found_perfmetadata:
+            raise MissingPerfMetadataError()
+
+        # Mochitest gets detected as xpcshell during parsing
+        # since they use similar methods to run tests
+        self.script_type = ScriptType.mochitest
 
     def parse_value(self, value):
         if value.type == "Identifier":
@@ -199,7 +261,7 @@ class ScriptInfo(defaultdict):
                     if isinstance(val, bool):
                         res.append(f" --{key.replace('_', '-')}")
                     else:
-                        val = _render(val, level + 1)
+                        val = _render(val, level + 1)  # noqa
                         res.append(f" --{key.replace('_', '-')} {val}")
 
                 return "\n".join(res)
@@ -266,4 +328,7 @@ class ScriptInfo(defaultdict):
 
         if self.script_type == ScriptType.xpcshell:
             result["flavor"] = "xpcshell"
+        if self.script_type == ScriptType.mochitest:
+            result["flavor"] = "mochitest"
+
         return result

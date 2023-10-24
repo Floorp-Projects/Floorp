@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Sample mochitest performance test</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="utils.js"></script>
+<script>
+
+  // Used for testing ScriptInfo HTML Parsing in mozperftest
+  var perfMetadata = {
+    owner: "Performance Team",
+    name: "Test test",
+    description: "N/A",
+    options: {
+      default: {
+        perfherder: true,
+        perfherder_metrics: [
+          { name: "Registration", unit: "ms" },
+        ],
+        verbose: true,
+        manifest: "mochitest-common.ini",
+        manifest_flavor: "plain",
+      },
+    },
+  };
+
+  add_task(async () => {});
+
+</script>
+<body>
+</body>
+</html>
