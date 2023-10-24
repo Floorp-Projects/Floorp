@@ -33,6 +33,7 @@
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"
 #include "nsDOMNavigationTiming.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsStringStream.h"
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -801,6 +802,29 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
   }
 }
 
+void HttpChannelChild::SendOnDataFinished(const nsresult& aChannelStatus) {
+  LOG(("HttpChannelChild::SendOnDataFinished [this=%p]\n", this));
+  if (mCanceled) return;
+
+  if (mListener) {
+    nsCOMPtr<nsIThreadRetargetableStreamListener> omtEventListener =
+        do_QueryInterface(mListener);
+    if (omtEventListener) {
+      LOG(
+          ("HttpChannelChild::SendOnDataFinished sending data end "
+           "notification[this=%p]\n",
+           this));
+      omtEventListener->OnDataFinished(aChannelStatus);
+    } else {
+      LOG(
+          ("HttpChannelChild::SendOnDataFinished missing "
+           "nsIThreadRetargetableStreamListener "
+           "implementation [this=%p]\n",
+           this));
+    }
+  }
+}
+
 void HttpChannelChild::ProcessOnStopRequest(
     const nsresult& aChannelStatus, const ResourceTimingStructArgs& aTiming,
     const nsHttpHeaderArray& aResponseTrailers,
@@ -812,6 +836,15 @@ void HttpChannelChild::ProcessOnStopRequest(
        this, aFromSocketProcess));
   MOZ_ASSERT(OnSocketThread());
 
+  if (StaticPrefs::network_send_OnDataFinished()) {
+    mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
+        [self = UnsafePtr<HttpChannelChild>(this)]() {
+          return self->GetODATarget();
+        },
+        [self = UnsafePtr<HttpChannelChild>(this), status = aChannelStatus]() {
+          self->SendOnDataFinished(status);
+        }));
+  }
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
              aResponseTrailers,
