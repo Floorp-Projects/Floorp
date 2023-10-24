@@ -274,7 +274,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
 
     case IntID::ScrollbarFadeDuration:
-      aResult = 0;
+      aResult = 300;
       break;
 
     case IntID::ScrollButtonLeftMouseButtonAction:
