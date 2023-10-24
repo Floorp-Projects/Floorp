@@ -106,6 +106,11 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   }
 #endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
 
+  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
+  if (!actorChild || !actorChild->CanSend()) {
+    return nullptr;
+  }
+
   nsAutoString name;
   WorkerType workerType = WorkerType::Classic;
   RequestCredentials credentials = RequestCredentials::Omit;
@@ -209,8 +214,6 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   SerializeURI(loadInfo.mBaseURI, baseURL);
 
   // Register this component to PBackground.
-  PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
-
   bool isSecureContext = JS::GetIsSecureContext(js::GetContextRealm(cx));
 
   Maybe<IPCClientInfo> ipcClientInfo;
@@ -252,9 +255,12 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier.release());
+  if (!pActor) {
+    MOZ_ASSERT_UNREACHABLE("We already checked PBackground above.");
+    return nullptr;
+  }
 
   RefPtr<SharedWorkerChild> actor = static_cast<SharedWorkerChild*>(pActor);
-  MOZ_ASSERT(actor);
 
   RefPtr<SharedWorker> sharedWorker =
       new SharedWorker(window, actor, channel->Port2());
