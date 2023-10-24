@@ -309,6 +309,10 @@ check_and_add_warning("-Werror=unguarded-availability-new", when=target_is_osx)
 # fixed, disable the new warning.
 check_and_add_warning("-Wno-error=builtin-macro-redefined")
 
+# clang 18 has a new warning about VLAs being an extension in C++, but we
+# have a number of them.
+check_and_add_warning("-Wno-vla-cxx-extension", cxx_compiler)
+
 # Please keep the following last in this file
 
 # Avoid requiring complicated logic for extra warning flags in moz.build files.
