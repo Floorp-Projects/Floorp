@@ -173,8 +173,6 @@ enum WidgetNodeType : int {
   MOZ_GTK_TEXT_VIEW_TEXT_SELECTION,
   /* Paints a GtkOptionMenu. */
   MOZ_GTK_DROPDOWN,
-  /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */
-  MOZ_GTK_DROPDOWN_ARROW,
   /* Paints an entry in an editable option menu */
   MOZ_GTK_DROPDOWN_ENTRY,
 
@@ -437,15 +435,6 @@ void moz_gtk_get_scale_metrics(GtkOrientation orient, gint* scale_width,
  */
 gint moz_gtk_get_scalethumb_metrics(GtkOrientation orient, gint* thumb_length,
                                     gint* thumb_height);
-
-/**
- * Get the desired size of a dropdown arrow button
- * width:   [OUT] the desired width
- * height:  [OUT] the desired height
- *
- * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
- */
-gint moz_gtk_get_combo_box_entry_button_size(gint* width, gint* height);
 
 /**
  * Get the desired size of a scroll arrow widget
