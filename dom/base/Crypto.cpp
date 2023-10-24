@@ -73,7 +73,8 @@ void Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     }
 
     if (aData.Length() > 65536) {
-      aRv.Throw(NS_ERROR_DOM_QUOTA_EXCEEDED_ERR);
+      aRv.ThrowQuotaExceededError(
+          "getRandomValues can only generate maximum 65536 bytes");
       return;
     }
 
