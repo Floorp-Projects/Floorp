@@ -2838,7 +2838,7 @@ class AnnotationEditor {
     fakeEditor._uiManager.addToAnnotationStorage(fakeEditor);
   }
   static initialize(l10n, options = null) {
-    AnnotationEditor._l10nPromise ||= new Map(["editor_alt_text_button_label", "editor_alt_text_edit_button_label", "editor_alt_text_decorative_tooltip", "editor_resizer_label_topLeft", "editor_resizer_label_topMiddle", "editor_resizer_label_topRight", "editor_resizer_label_middleRight", "editor_resizer_label_bottomRight", "editor_resizer_label_bottomMiddle", "editor_resizer_label_bottomLeft", "editor_resizer_label_middleLeft"].map(str => [str, l10n.get(str)]));
+    AnnotationEditor._l10nPromise ||= new Map(["pdfjs-editor-alt-text-button-label", "pdfjs-editor-alt-text-edit-button-label", "pdfjs-editor-alt-text-decorative-tooltip", "pdfjs-editor-resizer-label-topLeft", "pdfjs-editor-resizer-label-topMiddle", "pdfjs-editor-resizer-label-topRight", "pdfjs-editor-resizer-label-middleRight", "pdfjs-editor-resizer-label-bottomRight", "pdfjs-editor-resizer-label-bottomMiddle", "pdfjs-editor-resizer-label-bottomLeft", "pdfjs-editor-resizer-label-middleLeft"].map(str => [str, l10n.get(str.replaceAll(/([A-Z])/g, c => `-${c.toLowerCase()}`))]));
     if (options?.strings) {
       for (const str of options.strings) {
         AnnotationEditor._l10nPromise.set(str, l10n.get(str));
@@ -3326,7 +3326,7 @@ class AnnotationEditor {
     }
     const altText = this.#altTextButton = document.createElement("button");
     altText.className = "altText";
-    const msg = await AnnotationEditor._l10nPromise.get("editor_alt_text_button_label");
+    const msg = await AnnotationEditor._l10nPromise.get("pdfjs-editor-alt-text-button-label");
     altText.textContent = msg;
     altText.setAttribute("aria-label", msg);
     altText.tabIndex = "0";
@@ -3364,7 +3364,7 @@ class AnnotationEditor {
       return;
     }
     button.classList.add("done");
-    AnnotationEditor._l10nPromise.get("editor_alt_text_edit_button_label").then(msg => {
+    AnnotationEditor._l10nPromise.get("pdfjs-editor-alt-text-edit-button-label").then(msg => {
       button.setAttribute("aria-label", msg);
     });
     let tooltip = this.#altTextTooltip;
@@ -3399,7 +3399,7 @@ class AnnotationEditor {
         this.#altTextTooltip?.classList.remove("show");
       });
     }
-    tooltip.innerText = this.#altTextDecorative ? await AnnotationEditor._l10nPromise.get("editor_alt_text_decorative_tooltip") : this.#altText;
+    tooltip.innerText = this.#altTextDecorative ? await AnnotationEditor._l10nPromise.get("pdfjs-editor-alt-text-decorative-tooltip") : this.#altText;
     if (!tooltip.parentNode) {
       button.append(tooltip);
     }
@@ -3663,7 +3663,7 @@ class AnnotationEditor {
         div.addEventListener("keydown", boundResizerKeydown);
         div.addEventListener("blur", boundResizerBlur);
         div.addEventListener("focus", this.#resizerFocus.bind(this, name));
-        AnnotationEditor._l10nPromise.get(`editor_resizer_label_${name}`).then(msg => div.setAttribute("aria-label", msg));
+        AnnotationEditor._l10nPromise.get(`pdfjs-editor-resizer-label-${name}`).then(msg => div.setAttribute("aria-label", msg));
       }
     }
     const first = this.#allResizerDivs[0];
@@ -3689,7 +3689,7 @@ class AnnotationEditor {
       for (const child of children) {
         const div = this.#allResizerDivs[i++];
         const name = div.getAttribute("data-resizer-name");
-        AnnotationEditor._l10nPromise.get(`editor_resizer_label_${name}`).then(msg => child.setAttribute("aria-label", msg));
+        AnnotationEditor._l10nPromise.get(`pdfjs-editor-resizer-label-${name}`).then(msg => child.setAttribute("aria-label", msg));
       }
     }
     this.#setResizerTabIndex(0);
@@ -5690,15 +5690,13 @@ class CanvasGraphics {
     }
     let maskToCanvas = Util.transform(currentTransform, [1 / width, 0, 0, -1 / height, 0, 0]);
     maskToCanvas = Util.transform(maskToCanvas, [1, 0, 0, 1, 0, -height]);
-    const cord1 = Util.applyTransform([0, 0], maskToCanvas);
-    const cord2 = Util.applyTransform([width, height], maskToCanvas);
-    const rect = Util.normalizeRect([cord1[0], cord1[1], cord2[0], cord2[1]]);
-    const drawnWidth = Math.round(rect[2] - rect[0]) || 1;
-    const drawnHeight = Math.round(rect[3] - rect[1]) || 1;
+    const [minX, minY, maxX, maxY] = Util.getAxialAlignedBoundingBox([0, 0, width, height], maskToCanvas);
+    const drawnWidth = Math.round(maxX - minX) || 1;
+    const drawnHeight = Math.round(maxY - minY) || 1;
     const fillCanvas = this.cachedCanvases.getCanvas("fillCanvas", drawnWidth, drawnHeight);
     const fillCtx = fillCanvas.context;
-    const offsetX = Math.min(cord1[0], cord2[0]);
-    const offsetY = Math.min(cord1[1], cord2[1]);
+    const offsetX = minX;
+    const offsetY = minY;
     fillCtx.translate(-offsetX, -offsetY);
     fillCtx.transform(...maskToCanvas);
     if (!scaled) {
@@ -8048,7 +8046,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.67',
+    apiVersion: '4.0.107',
     data,
     password,
     disableAutoFetch,
@@ -9672,8 +9670,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.67';
-const build = '5c45dfa0a';
+const version = '4.0.107';
+const build = '377af6892';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -10291,7 +10289,6 @@ class XfaLayer {
 
 
 
-
 const DEFAULT_TAB_INDEX = 1000;
 const annotation_layer_DEFAULT_FONT_SIZE = 9;
 const GetElementsByNameSet = new WeakSet();
@@ -10900,7 +10897,7 @@ class LinkAnnotationElement extends AnnotationElement {
   #bindAttachment(link, attachment, dest = null) {
     link.href = this.linkService.getAnchorUrl("");
     link.onclick = () => {
-      this.downloadManager?.openOrDownloadData(this.container, attachment.content, attachment.filename, dest);
+      this.downloadManager?.openOrDownloadData(attachment.content, attachment.filename, dest);
       return false;
     };
     this.#setInternalLink();
@@ -11050,11 +11047,10 @@ class TextAnnotationElement extends AnnotationElement {
     this.container.classList.add("textAnnotation");
     const image = document.createElement("img");
     image.src = this.imageResourcesPath + "annotation-" + this.data.name.toLowerCase() + ".svg";
-    image.alt = "[{{type}} Annotation]";
-    image.dataset.l10nId = "text_annotation_type";
-    image.dataset.l10nArgs = JSON.stringify({
+    image.setAttribute("data-l10n-id", "pdfjs-text-annotation-type");
+    image.setAttribute("data-l10n-args", JSON.stringify({
       type: this.data.name
-    });
+    }));
     if (!this.data.popupRef && this.hasPopupData) {
       this._createPopup();
     }
@@ -11932,7 +11928,6 @@ class PopupAnnotationElement extends AnnotationElement {
   }
 }
 class PopupElement {
-  #dateTimePromise = null;
   #boundKeyDown = this.#keyDown.bind(this);
   #boundHide = this.#hide.bind(this);
   #boundShow = this.#show.bind(this);
@@ -11940,6 +11935,7 @@ class PopupElement {
   #color = null;
   #container = null;
   #contentsObj = null;
+  #dateObj = null;
   #elements = null;
   #parent = null;
   #parentRect = null;
@@ -11971,13 +11967,7 @@ class PopupElement {
     this.#rect = rect;
     this.#parentRect = parentRect;
     this.#elements = elements;
-    const dateObject = PDFDateString.toDateObject(modificationDate);
-    if (dateObject) {
-      this.#dateTimePromise = parent.l10n.get("annotation_date_string", {
-        date: dateObject.toLocaleDateString(),
-        time: dateObject.toLocaleTimeString()
-      });
-    }
+    this.#dateObj = PDFDateString.toDateObject(modificationDate);
     this.trigger = elements.flatMap(e => e.getElementsToTriggerPopup());
     for (const element of this.trigger) {
       element.addEventListener("click", this.#boundToggle);
@@ -12025,12 +12015,14 @@ class PopupElement {
       str: title.textContent
     } = this.#titleObj);
     popup.append(header);
-    if (this.#dateTimePromise) {
+    if (this.#dateObj) {
       const modificationDate = document.createElement("span");
       modificationDate.classList.add("popupDate");
-      this.#dateTimePromise.then(localized => {
-        modificationDate.textContent = localized;
-      });
+      modificationDate.setAttribute("data-l10n-id", "pdfjs-annotation-date-string");
+      modificationDate.setAttribute("data-l10n-args", JSON.stringify({
+        date: this.#dateObj.toLocaleDateString(),
+        time: this.#dateObj.toLocaleTimeString()
+      }));
       header.append(modificationDate);
     }
     const contentsObj = this.#contentsObj;
@@ -12542,7 +12534,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
     this.container.classList.add("highlightArea");
   }
   #download() {
-    this.downloadManager?.openOrDownloadData(this.container, this.content, this.filename);
+    this.downloadManager?.openOrDownloadData(this.content, this.filename);
   }
 }
 class AnnotationLayer {
@@ -12553,14 +12545,12 @@ class AnnotationLayer {
     div,
     accessibilityManager,
     annotationCanvasMap,
-    l10n,
     page,
     viewport
   }) {
     this.div = div;
     this.#accessibilityManager = accessibilityManager;
     this.#annotationCanvasMap = annotationCanvasMap;
-    this.l10n = l10n;
     this.page = page;
     this.viewport = viewport;
     this.zIndex = 0;
@@ -12636,7 +12626,6 @@ class AnnotationLayer {
       this.#appendElement(rendered, data.id);
     }
     this.#setAnnotationCanvasMap();
-    await this.l10n.translate(layer);
   }
   update({
     viewport
@@ -12744,7 +12733,7 @@ class FreeTextEditor extends AnnotationEditor {
   }
   static initialize(l10n) {
     AnnotationEditor.initialize(l10n, {
-      strings: ["free_text2_default_content", "editor_free_text2_aria_label"]
+      strings: ["pdfjs-free-text-default-content"]
     });
     const style = getComputedStyle(document.documentElement);
     this._internalPadding = parseFloat(style.getPropertyValue("--freetext-padding"));
@@ -13016,9 +13005,9 @@ class FreeTextEditor extends AnnotationEditor {
     this.editorDiv = document.createElement("div");
     this.editorDiv.className = "internal";
     this.editorDiv.setAttribute("id", this.#editorDivId);
+    this.editorDiv.setAttribute("data-l10n-id", "pdfjs-free-text");
     this.enableEditing();
-    AnnotationEditor._l10nPromise.get("editor_free_text2_aria_label").then(msg => this.editorDiv?.setAttribute("aria-label", msg));
-    AnnotationEditor._l10nPromise.get("free_text2_default_content").then(msg => this.editorDiv?.setAttribute("default-content", msg));
+    AnnotationEditor._l10nPromise.get("pdfjs-free-text-default-content").then(msg => this.editorDiv?.setAttribute("default-content", msg));
     this.editorDiv.contentEditable = true;
     const {
       style
@@ -13237,9 +13226,7 @@ class InkEditor extends AnnotationEditor {
     this._willKeepAspectRatio = true;
   }
   static initialize(l10n) {
-    AnnotationEditor.initialize(l10n, {
-      strings: ["editor_ink_canvas_aria_label", "editor_ink2_aria_label"]
-    });
+    AnnotationEditor.initialize(l10n);
   }
   static updateDefaultParams(type, value) {
     switch (type) {
@@ -13667,7 +13654,7 @@ class InkEditor extends AnnotationEditor {
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.canvas.height = 0;
     this.canvas.className = "inkEditorCanvas";
-    AnnotationEditor._l10nPromise.get("editor_ink_canvas_aria_label").then(msg => this.canvas?.setAttribute("aria-label", msg));
+    this.canvas.setAttribute("data-l10n-id", "pdfjs-ink-canvas");
     this.div.append(this.canvas);
     this.ctx = this.canvas.getContext("2d");
   }
@@ -13693,7 +13680,7 @@ class InkEditor extends AnnotationEditor {
       baseY = this.y;
     }
     super.render();
-    AnnotationEditor._l10nPromise.get("editor_ink2_aria_label").then(msg => this.div?.setAttribute("aria-label", msg));
+    this.div.setAttribute("data-l10n-id", "pdfjs-ink");
     const [x, y, w, h] = this.#getInitialBBox();
     this.setAt(x, y, 0, 0);
     this.setDims(w, h);
@@ -14856,8 +14843,8 @@ class AnnotationEditorLayer {
 
 
 
-const pdfjsVersion = '4.0.67';
-const pdfjsBuild = '5c45dfa0a';
+const pdfjsVersion = '4.0.107';
+const pdfjsBuild = '377af6892';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

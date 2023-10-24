@@ -2479,9 +2479,10 @@ body{
 }
 
 .dropdownToolbarButton{
-  --scale-select-width:140px;
-
-  width:var(--scale-select-width);
+  display:flex;
+  width:-moz-fit-content;
+  width:fit-content;
+  min-width:140px;
   padding:0;
   background-color:var(--dropdown-btn-bg-color);
   border:var(--dropdown-btn-border);
@@ -2496,12 +2497,13 @@ body{
 .dropdownToolbarButton > select{
   appearance:none;
   width:inherit;
+  min-width:inherit;
   height:28px;
   font-size:12px;
   color:var(--main-color);
   margin:0;
-  padding:1px 0 2px;
-  padding-inline-start:6px;
+  padding-block:1px 2px;
+  padding-inline:6px 38px;
   border:none;
   background-color:var(--dropdown-btn-bg-color);
 }
