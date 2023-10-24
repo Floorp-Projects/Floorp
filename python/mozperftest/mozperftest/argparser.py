@@ -22,7 +22,14 @@ from mozperftest.system import get_layers as system_layers  # noqa
 from mozperftest.test import get_layers as test_layers  # noqa
 from mozperftest.utils import convert_day  # noqa
 
-FLAVORS = "desktop-browser", "mobile-browser", "doc", "xpcshell", "webpagetest"
+FLAVORS = (
+    "desktop-browser",
+    "mobile-browser",
+    "doc",
+    "xpcshell",
+    "webpagetest",
+    "mochitest",
+)
 
 
 class Options:
@@ -101,10 +108,10 @@ for layer in system_layers() + test_layers() + metrics_layers():
     }
 
     for option, value in layer.arguments.items():
-        option = "--%s-%s" % (layer.name, option.replace("_", "-"))
-        if option in Options.args:
-            raise KeyError("%s option already defined!" % option)
-        Options.args[option] = value
+        parsed_option = "--%s-%s" % (layer.name, option.replace("_", "-"))
+        if parsed_option in Options.args:
+            raise KeyError("%s option already defined!" % parsed_option)
+        Options.args[parsed_option] = value
 
 
 class PerftestArgumentParser(ArgumentParser):

@@ -7,7 +7,7 @@ import pytest
 from mozperftest import utils
 from mozperftest.environment import METRICS, SYSTEM, TEST
 from mozperftest.test import xpcshell
-from mozperftest.test.xpcshell import NoPerfMetricsError, XPCShellTestError
+from mozperftest.test.xpcshell import XPCShellTestError
 from mozperftest.tests.support import (
     EXAMPLE_XPCSHELL_TEST,
     MOZINFO,
@@ -110,7 +110,7 @@ def test_xpcshell_metrics_fail(*mocked):
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTestsNoPerfMetrics)
 def test_xpcshell_no_perfmetrics(*mocked):
-    return _test_xpcshell_fail(NoPerfMetricsError, *mocked)
+    return _test_xpcshell_fail(utils.NoPerfMetricsError, *mocked)
 
 
 @mock.patch("runxpcshelltests.XPCShellTests", new=XPCShellTests)

@@ -41,7 +41,7 @@ if "SHELL" not in os.environ:
     os.environ["SHELL"] = "/bin/bash"
 
 
-def _activate_virtualenvs():
+def _activate_virtualenvs(flavor):
     """Adds all available dependencies in the path.
 
     This is done so the runner can be used with no prior
@@ -87,8 +87,16 @@ def _activate_virtualenvs():
 
     if TASKCLUSTER:
         # In CI, the directory structure is different: xpcshell code is in
-        # "$topsrcdir/xpcshell/" rather than "$topsrcdir/testing/xpcshell".
-        sys.path.append("xpcshell")
+        # "$topsrcdir/xpcshell/" rather than "$topsrcdir/testing/xpcshell". The
+        # same is true for mochitest. It also needs additional settings for some
+        # dependencies.
+        if flavor == "xpcshell":
+            print("Setting up xpcshell python paths...")
+            sys.path.append("xpcshell")
+        elif flavor == "mochitest":
+            print("Setting up mochitest python paths...")
+            sys.path.append("mochitest")
+            sys.path.append(str(Path("tools", "geckoprocesstypes_generator")))
 
 
 def _create_artifacts_dir(kwargs, artifacts):
@@ -230,7 +238,10 @@ def run_tools(mach_cmd, kwargs):
 
 def main(argv=sys.argv[1:]):
     """Used when the runner is directly called from the shell"""
-    _activate_virtualenvs()
+    flavor = "desktop-browser"
+    if "--flavor" in argv:
+        flavor = argv[argv.index("--flavor") + 1]
+    _activate_virtualenvs(flavor)
 
     from mach.logging import LoggingManager
     from mach.util import get_state_dir

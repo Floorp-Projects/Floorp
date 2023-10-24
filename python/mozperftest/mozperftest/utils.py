@@ -8,6 +8,7 @@ import inspect
 import logging
 import os
 import pathlib
+import re
 import shlex
 import shutil
 import subprocess
@@ -28,6 +29,58 @@ MULTI_REVISION_ROOT = f"{API_ROOT}/namespaces"
 MULTI_TASK_ROOT = f"{API_ROOT}/tasks"
 ON_TRY = "MOZ_AUTOMATION" in os.environ
 DOWNLOAD_TIMEOUT = 30
+METRICS_MATCHER = re.compile(r"(perfMetrics\s.*)")
+
+
+class NoPerfMetricsError(Exception):
+    """Raised when perfMetrics were not found, or were not output
+    during a test run."""
+
+    def __init__(self, flavor):
+        super().__init__(
+            f"No perftest results were found in the {flavor} test. Results must be "
+            'reported using:\n info("perfMetrics", { metricName: metricValue });'
+        )
+
+
+class LogProcessor:
+    def __init__(self, matcher):
+        self.buf = ""
+        self.stdout = sys.__stdout__
+        self.matcher = matcher
+        self._match = []
+
+    @property
+    def match(self):
+        return self._match
+
+    def write(self, buf):
+        while buf:
+            try:
+                newline_index = buf.index("\n")
+            except ValueError:
+                # No newline, wait for next call
+                self.buf += buf
+                break
+
+            # Get data up to next newline and combine with previously buffered data
+            data = self.buf + buf[: newline_index + 1]
+            buf = buf[newline_index + 1 :]
+
+            # Reset buffer then output line
+            self.buf = ""
+            if data.strip() == "":
+                continue
+            self.stdout.write(data.strip("\n") + "\n")
+
+            # Check if a temporary commit wa created
+            match = self.matcher.match(data)
+            if match:
+                # Last line found is the revision we want
+                self._match.append(match.group(1))
+
+    def flush(self):
+        pass
 
 
 @contextlib.contextmanager
@@ -232,7 +285,10 @@ def install_requirements_file(
 # see - python/mozbuild/mozbuild/action/test_archive.py
 # this mapping will map paths when running there.
 # The key is the source path, and the value the ci path
-_TRY_MAPPING = {Path("netwerk"): Path("xpcshell", "tests", "netwerk")}
+_TRY_MAPPING = {
+    Path("netwerk"): Path("xpcshell", "tests", "netwerk"),
+    Path("dom"): Path("mochitest", "tests", "dom"),
+}
 
 
 def build_test_list(tests):
@@ -259,20 +315,20 @@ def build_test_list(tests):
         if ON_TRY and not p_test.resolve().exists():
             # until we have pathlib.Path.is_relative_to() (3.9)
             for src_path, ci_path in _TRY_MAPPING.items():
-                src_path, ci_path = str(src_path), str(ci_path)
+                src_path, ci_path = str(src_path), str(ci_path)  # noqa
                 if test.startswith(src_path):
                     p_test = Path(test.replace(src_path, ci_path))
                     break
 
-        test = p_test.resolve()
+        resolved_test = p_test.resolve()
 
-        if test.is_file():
-            res.append(str(test))
-        elif test.is_dir():
-            for file in test.rglob("perftest_*.js"):
+        if resolved_test.is_file():
+            res.append(str(resolved_test))
+        elif resolved_test.is_dir():
+            for file in resolved_test.rglob("perftest_*.js"):
                 res.append(str(file))
         else:
-            raise FileNotFoundError(str(test))
+            raise FileNotFoundError(str(resolved_test))
     res.sort()
     return res, temp_dir
 
