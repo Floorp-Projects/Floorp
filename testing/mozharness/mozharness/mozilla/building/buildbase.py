@@ -1001,27 +1001,16 @@ items from that key's value."
         return False
 
     def _load_build_resources(self):
-        p = self.config.get("profile_build_resources_path") % self.query_abs_dirs()
+        p = self.config.get("build_resources_path") % self.query_abs_dirs()
         if not os.path.exists(p):
-            self.info("%s does not exist; not loading build profile data" % p)
+            self.info("%s does not exist; not loading build resources" % p)
             return None
 
         with open(p, "r") as fh:
-            profile = json.load(fh)
+            resources = json.load(fh)
 
-        try:
-            thread = profile.get("threads", [])[0]
-            times = thread.get("samples", {}).get("time", [])
-            duration = times[-1] / 1000
-            markers = thread["markers"]
-            phases = {}
-            for n, marker in enumerate(markers["data"]):
-                if marker.get("type") == "Phase":
-                    phases[marker["phase"]] = (
-                        markers["endTime"][n] - markers["startTime"][n]
-                    ) / 1000
-        except Exception:
-            self.info("build profile lacks data; ignoring")
+        if "duration" not in resources:
+            self.info("resource usage lacks duration; ignoring")
             return None
 
         # We want to always collect metrics. But alerts with sccache enabled
@@ -1030,17 +1019,19 @@ items from that key's value."
 
         data = {
             "name": "build times",
-            "value": duration,
+            "value": resources["duration"],
             "extraOptions": self.perfherder_resource_options(),
             "shouldAlert": should_alert,
             "subtests": [],
         }
 
-        for name, duration in phases.items():
+        for phase in resources["phases"]:
+            if "duration" not in phase:
+                continue
             data["subtests"].append(
                 {
-                    "name": name,
-                    "value": duration,
+                    "name": phase["name"],
+                    "value": phase["duration"],
                 }
             )
 
