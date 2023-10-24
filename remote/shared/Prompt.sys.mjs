@@ -210,4 +210,18 @@ modal.Dialog = class {
     }
     return this.ui.infoBody.textContent;
   }
+
+  /**
+   * Returns text of the prompt input.
+   *
+   * @returns {string}
+   *     Returns string on desktop and Promise on Android.
+   */
+  async getInputText() {
+    if (lazy.AppInfo.isAndroid) {
+      const textPromise = await this.window.getInputText();
+      return textPromise;
+    }
+    return this.ui.loginTextbox.value;
+  }
 };
