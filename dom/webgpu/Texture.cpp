@@ -67,9 +67,6 @@ already_AddRefed<TextureView> Texture::CreateView(
   return view.forget();
 }
 
-void Texture::Destroy() {
-  // TODO: we don't have to implement it right now, but it's used by the
-  // examples
-}
+void Texture::Destroy() { Cleanup(); }
 
 }  // namespace mozilla::webgpu
