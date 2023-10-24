@@ -16,7 +16,15 @@
     "queryParamName": {
       "type": "string",
       "title": "Search Query Parameter Name",
-      "description": "The name of the query parameter for the user's search string."
+      "description": "The name of the query parameter for the user's search string. This is deprecated, in preference to queryParamNames, but still defined for older clients (pre Firefox 121)."
+    },
+    "queryParamNames": {
+      "type": "array",
+      "title": "Search Query Parameter Names",
+      "description": "An array of query parameters that may be used for the user's search string.",
+      "items": {
+        "type": "string"
+      }
     },
     "codeParamName": {
       "type": "string",
