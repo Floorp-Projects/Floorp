@@ -15,7 +15,6 @@ skip-if = ["true"] # Bug 1783684
 ["browser_entrypoint_management.js"]
 
 ["browser_feature_callout.js"]
-fail-if = ["a11y_checks"] # Bug 1854625 clicked brand-logo(s) may not be focusable
 
 ["browser_feature_callout_position.js"]
 skip-if = ["os == 'linux'"] # Bug 1784343
