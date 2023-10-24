@@ -5,7 +5,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.RectF;
 import android.os.Handler;
@@ -253,7 +252,6 @@ public final class SessionTextInput {
       }
     }
 
-    @TargetApi(21)
     @Override
     public void updateCursorAnchorInfo(
         @NonNull final GeckoSession session, @NonNull final CursorAnchorInfo info) {

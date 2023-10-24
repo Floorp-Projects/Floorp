@@ -51,13 +51,7 @@ public class Environment {
   }
 
   public boolean isX86() {
-    final String abi;
-    if (Build.VERSION.SDK_INT >= 21) {
-      abi = Build.SUPPORTED_ABIS[0];
-    } else {
-      abi = Build.CPU_ABI;
-    }
-
+    final String abi = Build.SUPPORTED_ABIS[0];
     return abi.startsWith("x86");
   }
 

@@ -243,11 +243,7 @@ public final class GeckoRuntime implements Parcelable {
     mContentBlockingController = new ContentBlockingController();
     mAutocompleteStorageProxy = new Autocomplete.StorageProxy();
     mProfilerController = new ProfilerController();
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      mScreenChangeListener = new GeckoScreenChangeListener();
-    } else {
-      mScreenChangeListener = null;
-    }
+    mScreenChangeListener = new GeckoScreenChangeListener();
 
     if (sRuntime != null) {
       throw new IllegalStateException("Only one GeckoRuntime instance is allowed");
@@ -417,29 +413,27 @@ public final class GeckoRuntime implements Parcelable {
     Map<String, Object> prefs = settings.getPrefsMap();
 
     // Older versions have problems with SnakeYaml
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-      String configFilePath = settings.getConfigFilePath();
-      if (configFilePath == null) {
-        // Default to /data/local/tmp/$PACKAGE-geckoview-config.yaml if android:debuggable="true"
-        // or if this application is the current Android "debug_app", and to not read configuration
-        // from a file otherwise.
-        if (isApplicationDebuggable(context) || isApplicationCurrentDebugApp(context)) {
-          configFilePath =
-              String.format(CONFIG_FILE_PATH_TEMPLATE, context.getApplicationInfo().packageName);
-        }
+    String configFilePath = settings.getConfigFilePath();
+    if (configFilePath == null) {
+      // Default to /data/local/tmp/$PACKAGE-geckoview-config.yaml if android:debuggable="true"
+      // or if this application is the current Android "debug_app", and to not read configuration
+      // from a file otherwise.
+      if (isApplicationDebuggable(context) || isApplicationCurrentDebugApp(context)) {
+        configFilePath =
+            String.format(CONFIG_FILE_PATH_TEMPLATE, context.getApplicationInfo().packageName);
       }
+    }
 
-      if (configFilePath != null && !configFilePath.isEmpty()) {
-        try {
-          final DebugConfig debugConfig = DebugConfig.fromFile(new File(configFilePath));
-          Log.i(LOGTAG, "Adding debug configuration from: " + configFilePath);
-          prefs = debugConfig.mergeIntoPrefs(prefs);
-          args = debugConfig.mergeIntoArgs(args);
-          extras = debugConfig.mergeIntoExtras(extras);
-        } catch (final DebugConfig.ConfigException e) {
-          Log.w(LOGTAG, "Failed to add debug configuration from: " + configFilePath, e);
-        } catch (final FileNotFoundException e) {
-        }
+    if (configFilePath != null && !configFilePath.isEmpty()) {
+      try {
+        final DebugConfig debugConfig = DebugConfig.fromFile(new File(configFilePath));
+        Log.i(LOGTAG, "Adding debug configuration from: " + configFilePath);
+        prefs = debugConfig.mergeIntoPrefs(prefs);
+        args = debugConfig.mergeIntoArgs(args);
+        extras = debugConfig.mergeIntoExtras(extras);
+      } catch (final DebugConfig.ConfigException e) {
+        Log.w(LOGTAG, "Failed to add debug configuration from: " + configFilePath, e);
+      } catch (final FileNotFoundException e) {
       }
     }
 
@@ -506,14 +500,8 @@ public final class GeckoRuntime implements Parcelable {
   private boolean isApplicationCurrentDebugApp(final @NonNull Context context) {
     final ApplicationInfo applicationInfo = context.getApplicationInfo();
 
-    final String currentDebugApp;
-    if (Build.VERSION.SDK_INT >= 17) {
-      currentDebugApp =
-          Settings.Global.getString(context.getContentResolver(), Settings.Global.DEBUG_APP);
-    } else {
-      currentDebugApp =
-          Settings.System.getString(context.getContentResolver(), Settings.System.DEBUG_APP);
-    }
+    final String currentDebugApp =
+        Settings.Global.getString(context.getContentResolver(), Settings.Global.DEBUG_APP);
     return applicationInfo.packageName.equals(currentDebugApp);
   }
 

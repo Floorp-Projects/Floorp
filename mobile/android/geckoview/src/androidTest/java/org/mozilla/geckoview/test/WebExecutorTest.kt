@@ -4,10 +4,8 @@
 
 package org.mozilla.geckoview.test
 
-import android.os.Build
 import android.os.SystemClock
 import androidx.test.filters.MediumTest
-import androidx.test.filters.SdkSuppress
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -377,7 +375,6 @@ class WebExecutorTest {
     }
 
     @Test
-    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.LOLLIPOP)
     fun testResolveV6() {
         val addresses = executor.resolve("ip6-localhost").pollDefault()!!
         assertThat(

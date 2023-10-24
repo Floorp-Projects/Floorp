@@ -7,7 +7,6 @@ package org.mozilla.gecko.media;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
-import android.os.Build;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -25,7 +24,6 @@ import org.mozilla.thirdparty.com.google.android.exoplayer2.util.MimeTypes;
 public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
   public GeckoHlsAudioRenderer(final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
     super(C.TRACK_TYPE_AUDIO, eventDispatcher);
-    assertTrue(Build.VERSION.SDK_INT >= 16);
     LOGTAG = getClass().getSimpleName();
     DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
   }
@@ -73,11 +71,10 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
      *         if there's no sampleRate/channelCount in format.
      */
     final boolean decoderCapable =
-        (Build.VERSION.SDK_INT < 21)
-            || ((format.sampleRate == Format.NO_VALUE
-                    || info.isAudioSampleRateSupportedV21(format.sampleRate))
-                && (format.channelCount == Format.NO_VALUE
-                    || info.isAudioChannelCountSupportedV21(format.channelCount)));
+        ((format.sampleRate == Format.NO_VALUE
+                || info.isAudioSampleRateSupportedV21(format.sampleRate))
+            && (format.channelCount == Format.NO_VALUE
+                || info.isAudioChannelCountSupportedV21(format.channelCount)));
     return RendererCapabilities.create(
         decoderCapable ? FORMAT_HANDLED : FORMAT_EXCEEDS_CAPABILITIES,
         ADAPTIVE_NOT_SEAMLESS,

@@ -5,14 +5,11 @@
 
 package org.mozilla.gecko;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
-import android.os.Build;
 import android.util.Log;
 import android.view.Display;
 
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 public class GeckoScreenChangeListener implements DisplayManager.DisplayListener {
   private static final String LOGTAG = "ScreenChangeListener";
   private static final boolean DEBUG = false;

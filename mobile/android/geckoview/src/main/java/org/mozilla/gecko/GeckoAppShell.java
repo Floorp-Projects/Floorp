@@ -1090,7 +1090,7 @@ public class GeckoAppShell {
       android.R.attr.colorBackground,
       android.R.attr.panelColorForeground,
       android.R.attr.panelColorBackground,
-      Build.VERSION.SDK_INT >= 21 ? android.R.attr.colorAccent : 0,
+      android.R.attr.colorAccent,
     };
 
     final int[] result = new int[attrsAppearance.length];
@@ -1403,23 +1403,6 @@ public class GeckoAppShell {
     int getRotation();
   }
 
-  @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-  private static class JellyBeanScreenCompat implements ScreenCompat {
-    public Rect getScreenSize() {
-      final WindowManager wm =
-          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-      final Display disp = wm.getDefaultDisplay();
-      return new Rect(0, 0, disp.getWidth(), disp.getHeight());
-    }
-
-    public int getRotation() {
-      final WindowManager wm =
-          (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-      return wm.getDefaultDisplay().getRotation();
-    }
-  }
-
-  @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
   private static class JellyBeanMR1ScreenCompat implements ScreenCompat {
     public Rect getScreenSize() {
       final WindowManager wm =
@@ -1468,10 +1451,8 @@ public class GeckoAppShell {
   static {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       sScreenCompat = new AndroidSScreenCompat();
-    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      sScreenCompat = new JellyBeanMR1ScreenCompat();
     } else {
-      sScreenCompat = new JellyBeanScreenCompat();
+      sScreenCompat = new JellyBeanMR1ScreenCompat();
     }
   }
 
@@ -1492,9 +1473,6 @@ public class GeckoAppShell {
   public static int getAudioOutputFramesPerBuffer() {
     final int DEFAULT = 512;
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      return DEFAULT;
-    }
     final AudioManager am =
         (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
     if (am == null) {
@@ -1511,9 +1489,6 @@ public class GeckoAppShell {
   public static int getAudioOutputSampleRate() {
     final int DEFAULT = 44100;
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-      return DEFAULT;
-    }
     final AudioManager am =
         (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
     if (am == null) {
@@ -1578,12 +1553,7 @@ public class GeckoAppShell {
     }
     final String[] locales = new String[1];
     final Locale locale = Locale.getDefault();
-    if (Build.VERSION.SDK_INT >= 21) {
-      locales[0] = locale.toLanguageTag();
-      return locales;
-    }
-
-    locales[0] = getLanguageTag(locale);
+    locales[0] = locale.toLanguageTag();
     return locales;
   }
 
@@ -1636,9 +1606,6 @@ public class GeckoAppShell {
 
   @SuppressLint("NewApi")
   public static boolean isIsolatedProcess() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-      return false;
-    }
     // This method was added in SDK 16 but remained hidden until SDK 28, meaning we are okay to call
     // this on any SDK level but must suppress the new API lint.
     return android.os.Process.isIsolated();

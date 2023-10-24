@@ -138,19 +138,17 @@ public final class GeckoLoader {
         putenv("PUBLIC_STORAGE=" + f.getPath());
       }
 
-      if (Build.VERSION.SDK_INT >= 17) {
-        final android.os.UserManager um =
-            (android.os.UserManager) context.getSystemService(Context.USER_SERVICE);
-        if (um != null) {
-          putenv(
-              "MOZ_ANDROID_USER_SERIAL_NUMBER="
-                  + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
-        } else {
-          Log.d(
-              LOGTAG,
-              "Unable to obtain user manager service on a device with SDK version "
-                  + Build.VERSION.SDK_INT);
-        }
+      final android.os.UserManager um =
+          (android.os.UserManager) context.getSystemService(Context.USER_SERVICE);
+      if (um != null) {
+        putenv(
+            "MOZ_ANDROID_USER_SERIAL_NUMBER="
+                + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
+      } else {
+        Log.d(
+            LOGTAG,
+            "Unable to obtain user manager service on a device with SDK version "
+                + Build.VERSION.SDK_INT);
       }
 
       setupInitialPrefs(prefs);
@@ -277,18 +275,13 @@ public final class GeckoLoader {
       }
     }
 
-    if (Build.VERSION.SDK_INT >= 21) {
-      final String[] abis = Build.SUPPORTED_ABIS;
-      for (final String abi : abis) {
-        if (tryLoadWithABI(lib, outDir, apkPath, abi)) {
-          return true;
-        }
+    final String[] abis = Build.SUPPORTED_ABIS;
+    for (final String abi : abis) {
+      if (tryLoadWithABI(lib, outDir, apkPath, abi)) {
+        return true;
       }
-      return false;
-    } else {
-      final String abi = getCPUABI();
-      return tryLoadWithABI(lib, outDir, apkPath, abi);
     }
+    return false;
   }
 
   private static boolean tryLoadWithABI(
