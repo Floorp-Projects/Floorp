@@ -32,6 +32,31 @@ use selectors::OpaqueElement;
 use smallvec::SmallVec;
 use std::ops::DerefMut;
 
+/// Kind of DOM mutation this relative selector invalidation is being carried out in.
+#[derive(Clone, Copy)]
+pub enum DomMutationOperation {
+    /// Insertion operation, can cause side effect, but presumed already happened.
+    Insert,
+    /// Append operation, cannot cause side effect.
+    Append,
+    /// Removal operation, can cause side effect, but presumed already happened. Sibling relationships are destroyed.
+    Remove,
+    /// Invalidating for side effect of a DOM operation, for the previous sibling.
+    SideEffectPrevSibling,
+    /// Invalidating for side effect of a DOM operation, for the next sibling.
+    SideEffectNextSibling,
+}
+
+impl DomMutationOperation {
+    fn accept(&self, d: &Dependency) -> bool {
+        match self {
+            Self::Insert | Self::Append | Self::Remove => true,
+            Self::SideEffectPrevSibling => d.right_combinator_is_next_sibling(),
+            Self::SideEffectNextSibling => d.dependency_is_relative_with_single_next_sibling(),
+        }
+    }
+}
+
 /// Overall invalidator for handling relative selector invalidations.
 pub struct RelativeSelectorInvalidator<'a, 'b, E>
 where
@@ -208,14 +233,14 @@ where
         scope: Option<OpaqueElement>,
         quirks_mode: QuirksMode,
         map: &'a RelativeSelectorInvalidationMap,
-        accept: fn(&Dependency) -> bool,
+        operation: DomMutationOperation,
     ) {
         element
             .id()
             .map(|v| match map.map.id_to_selector.get(v, quirks_mode) {
                 Some(v) => {
                     for dependency in v {
-                        if !accept(dependency) {
+                        if !operation.accept(dependency) {
                             continue;
                         }
                         self.add_dependency(dependency, element, scope);
@@ -226,7 +251,7 @@ where
         element.each_class(|v| match map.map.class_to_selector.get(v, quirks_mode) {
             Some(v) => {
                 for dependency in v {
-                    if !accept(dependency) {
+                    if !operation.accept(dependency) {
                         continue;
                     }
                     self.add_dependency(dependency, element, scope);
@@ -238,7 +263,7 @@ where
             |v| match map.map.other_attribute_affecting_selectors.get(v) {
                 Some(v) => {
                     for dependency in v {
-                        if !accept(dependency) {
+                        if !operation.accept(dependency) {
                             continue;
                         }
                         self.add_dependency(dependency, element, scope);
@@ -258,7 +283,7 @@ where
                 if !dependency.state.intersects(state) {
                     return true;
                 }
-                if !accept(&dependency.dep) {
+                if !operation.accept(&dependency.dep) {
                     return true;
                 }
                 self.add_dependency(&dependency.dep, element, scope);
@@ -268,7 +293,7 @@ where
 
         if let Some(v) = map.type_to_selector.get(element.local_name()) {
             for dependency in v {
-                if !accept(dependency) {
+                if !operation.accept(dependency) {
                     continue;
                 }
                 self.add_dependency(dependency, element, scope);
@@ -276,7 +301,7 @@ where
         }
 
         for dependency in &map.any_to_selector {
-            if !accept(dependency) {
+            if !operation.accept(dependency) {
                 continue;
             }
             self.add_dependency(dependency, element, scope);
@@ -334,7 +359,7 @@ where
         subtree: bool,
         stylist: &'a Stylist,
         inherited_search_path: ElementSelectorFlags,
-        accept: fn(&Dependency) -> bool,
+        operation: DomMutationOperation,
     ) {
         let mut collector = RelativeSelectorDependencyCollector::<'a, E>::new(self.element);
         let mut traverse_subtree = false;
@@ -345,7 +370,7 @@ where
                 return;
             }
             traverse_subtree |= map.needs_ancestors_traversal;
-            collector.collect_all_dependencies_for_element(self.element, scope.map(|e| e.opaque()), self.quirks_mode, map, accept);
+            collector.collect_all_dependencies_for_element(self.element, scope.map(|e| e.opaque()), self.quirks_mode, map, operation);
         });
 
         if subtree && traverse_subtree {
@@ -360,7 +385,7 @@ where
                     if !map.used {
                         return;
                     }
-                    collector.collect_all_dependencies_for_element(descendant, scope.map(|e| e.opaque()), self.quirks_mode, map, accept);
+                    collector.collect_all_dependencies_for_element(descendant, scope.map(|e| e.opaque()), self.quirks_mode, map, operation);
                 });
             }
         }

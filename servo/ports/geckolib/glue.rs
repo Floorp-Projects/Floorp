@@ -100,7 +100,7 @@ use style::global_style_data::{
 use style::invalidation::element::invalidation_map::{RelativeSelectorInvalidationMap, TSStateForInvalidation};
 use style::invalidation::element::invalidator::{InvalidationResult, SiblingTraversalMap};
 use style::invalidation::element::relative_selector::{
-    RelativeSelectorDependencyCollector, RelativeSelectorInvalidator,
+    DomMutationOperation, RelativeSelectorDependencyCollector, RelativeSelectorInvalidator,
 };
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
@@ -7093,7 +7093,7 @@ fn invalidate_relative_selector_prev_sibling_side_effect(
         false,
         &stylist,
         ElementSelectorFlags::empty(),
-        |d| d.right_combinator_is_next_sibling(),
+        DomMutationOperation::SideEffectPrevSibling,
     );
 }
 
@@ -7115,7 +7115,7 @@ fn invalidate_relative_selector_next_sibling_side_effect(
         false,
         &stylist,
         ElementSelectorFlags::empty(),
-        |d| d.dependency_is_relative_with_single_next_sibling(),
+        DomMutationOperation::SideEffectNextSibling,
     );
 }
 
@@ -7277,7 +7277,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
         true,
         &data.stylist,
         inherited,
-        |_| true,
+        DomMutationOperation::Insert,
     );
 }
 
@@ -7312,7 +7312,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForAppend(
             true,
             &data.stylist,
             inherited,
-            |_| true,
+            DomMutationOperation::Append,
         );
         element = e.next_sibling_element();
     }
@@ -7367,7 +7367,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
         true,
         &data.stylist,
         inherited,
-        |_| true,
+        DomMutationOperation::Remove,
     );
 }
 
