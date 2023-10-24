@@ -757,8 +757,8 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
     masm.speculationBarrier();
   }
 
-  // Pop ExitFooterFrame and the frame pointer.
-  masm.leaveExitFrame(0);
+  // Pop frame and restore frame pointer.
+  masm.moveToStackPtr(FramePointer);
   masm.pop(FramePointer);
 
   // Return. Subtract sizeof(void*) for the frame pointer.
