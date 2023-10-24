@@ -121,9 +121,9 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
       wgpu_client_use_external_texture_in_swapChain(
           aConfig.mDevice->mId,
           WebGPUChild::ConvertTextureFormat(aConfig.mFormat));
-  mTexture = aConfig.mDevice->InitSwapChain(aConfig, *mRemoteTextureOwnerId,
-                                            mUseExternalTextureInSwapChain,
-                                            mGfxFormat, mCanvasSize);
+  mTexture = aConfig.mDevice->InitSwapChain(
+      mConfig.get(), mRemoteTextureOwnerId.ref(),
+      mUseExternalTextureInSwapChain, mGfxFormat, mCanvasSize);
   if (!mTexture) {
     Unconfigure();
     return;
@@ -166,6 +166,17 @@ RefPtr<Texture> CanvasContext::GetCurrentTexture(ErrorResult& aRv) {
     aRv.ThrowOperationError("Canvas not configured");
     return nullptr;
   }
+
+  MOZ_ASSERT(mConfig);
+  MOZ_ASSERT(mRemoteTextureOwnerId.isSome());
+
+  if (mNewTextureRequested) {
+    mNewTextureRequested = false;
+
+    mTexture = mConfig->mDevice->CreateTextureForSwapChain(
+        mConfig.get(), mCanvasSize, mRemoteTextureOwnerId.ref());
+    mTexture->mTargetContext = this;
+  }
   return mTexture;
 }
 
@@ -189,6 +200,10 @@ void CanvasContext::SwapChainPresent() {
   mLastRemoteTextureId = Some(layers::RemoteTextureId::GetNext());
   mBridge->SwapChainPresent(mTexture->mId, *mLastRemoteTextureId,
                             *mRemoteTextureOwnerId);
+  if (mUseExternalTextureInSwapChain) {
+    mTexture->Destroy();
+    mNewTextureRequested = true;
+  }
 }
 
 bool CanvasContext::UpdateWebRenderCanvasData(

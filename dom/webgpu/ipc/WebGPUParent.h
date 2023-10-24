@@ -131,7 +131,7 @@ class WebGPUParent final : public PWebGPUParent {
 
   bool UseExternalTextureForSwapChain(ffi::WGPUSwapChainId aSwapChainId);
 
-  bool CreateExternalTextureForSwapChain(ffi::WGPUSwapChainId aSwapChainId,
+  bool EnsureExternalTextureForSwapChain(ffi::WGPUSwapChainId aSwapChainId,
                                          ffi::WGPUDeviceId aDeviceId,
                                          ffi::WGPUTextureId aTextureId,
                                          uint32_t aWidth, uint32_t aHeight,
@@ -143,6 +143,11 @@ class WebGPUParent final : public PWebGPUParent {
       const struct ffi::WGPUTextureFormat aFormat);
 
   std::shared_ptr<ExternalTexture> GetExternalTexture(ffi::WGPUTextureId aId);
+
+  void PostExternalTexture(
+      const std::shared_ptr<ExternalTexture>&& aExternalTexture,
+      const layers::RemoteTextureId aRemoteTextureId,
+      const layers::RemoteTextureOwnerId aOwnerId);
 
  private:
   static void MapCallback(ffi::WGPUBufferMapAsyncStatus aStatus,

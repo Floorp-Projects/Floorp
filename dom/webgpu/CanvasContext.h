@@ -101,6 +101,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   Maybe<layers::RemoteTextureId> mLastRemoteTextureId;
   Maybe<layers::RemoteTextureOwnerId> mRemoteTextureOwnerId;
   bool mUseExternalTextureInSwapChain = false;
+  bool mNewTextureRequested = false;
 };
 
 }  // namespace webgpu
