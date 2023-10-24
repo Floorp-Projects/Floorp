@@ -133,24 +133,16 @@ bool ToastNotification::EnsureAumidRegistered() {
 }
 
 bool ToastNotification::AssignIfMsixAumid(Maybe<nsAutoString>& aAumid) {
-  // `GetCurrentApplicationUserModelId` added in Windows 8.
-  DynamicallyLinkedFunctionPtr<decltype(&GetCurrentApplicationUserModelId)>
-      pGetCurrentApplicationUserModelId(L"kernel32.dll",
-                                        "GetCurrentApplicationUserModelId");
-  if (!pGetCurrentApplicationUserModelId) {
-    return false;
-  }
-
   UINT32 len = 0;
   // ERROR_INSUFFICIENT_BUFFER signals that we're in an MSIX package, and
   // therefore should use the package's AUMID.
-  if (pGetCurrentApplicationUserModelId(&len, nullptr) !=
+  if (GetCurrentApplicationUserModelId(&len, nullptr) !=
       ERROR_INSUFFICIENT_BUFFER) {
     MOZ_LOG(sWASLog, LogLevel::Debug, ("Not an MSIX package"));
     return false;
   }
   mozilla::Buffer<wchar_t> buffer(len);
-  LONG success = pGetCurrentApplicationUserModelId(&len, buffer.Elements());
+  LONG success = GetCurrentApplicationUserModelId(&len, buffer.Elements());
   NS_ENSURE_TRUE(success == ERROR_SUCCESS, false);
 
   aAumid.emplace(buffer.Elements());
