@@ -7214,6 +7214,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
 
     let inherited =
         inherit_relative_selector_search_direction(&element, element.prev_sibling_element());
+    // Technically, we're not handling breakouts, where the anchor is a (later-sibling) descendant.
+    // For descendant case, we're ok since it's a descendant of an element yet to be styled.
+    // For later-sibling descendant, `HAS_SLOW_SELECTOR_LATER_SIBLINGS` is set anyway.
     if inherited.is_empty() {
         return;
     }

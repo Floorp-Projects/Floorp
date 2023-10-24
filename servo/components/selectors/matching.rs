@@ -1098,11 +1098,8 @@ where
         },
         Component::RelativeSelectorAnchor => {
             let anchor = context.shared.relative_selector_anchor();
-            debug_assert!(
-                anchor.is_some(),
-                "Relative selector outside of relative selector matching?"
-            );
-            anchor.map_or(false, |a| a == element.opaque())
+            // We may match inner relative selectors, in which case we want to always match.
+            anchor.map_or(true, |a| a == element.opaque())
         },
         Component::Invalid(..) => false,
     }

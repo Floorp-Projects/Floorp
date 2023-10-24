@@ -2096,6 +2096,30 @@ impl<Impl: SelectorImpl> Component<Impl> {
 
         true
     }
+
+    // Returns true if this has any selector that requires an index calculation. e.g.
+    // :nth-child, :first-child, etc. For nested selectors, return true only if the
+    // indexed selector is in its subject compound.
+    pub fn has_indexed_selector_in_subject(&self) -> bool {
+        match *self {
+            Component::NthOf(..) | Component::Nth(..) => return true,
+            Component::Is(ref selectors) |
+            Component::Where(ref selectors) |
+            Component::Negation(ref selectors) => {
+                // Check the subject compound.
+                for selector in selectors.slice() {
+                    let mut iter = selector.iter();
+                    while let Some(c) = iter.next() {
+                        if c.has_indexed_selector_in_subject() {
+                            return true;
+                        }
+                    }
+                }
+            }
+            _ => (),
+        };
+        false
+    }
 }
 
 #[derive(Clone, Eq, PartialEq, ToShmem)]
