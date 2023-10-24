@@ -8,7 +8,7 @@ from marionette_driver.errors import (
     NoSuchElementException,
     ScriptTimeoutException,
 )
-from marionette_driver.marionette import HTMLElement
+from marionette_driver.marionette import WebElement
 
 from marionette_harness import MarionetteTestCase, run_if_manage_instance
 
@@ -54,7 +54,7 @@ class TestTimeouts(MarionetteTestCase):
         button.click()
         self.marionette.timeout.implicit = 8
         self.assertEqual(
-            HTMLElement, type(self.marionette.find_element(By.ID, "newDiv"))
+            WebElement, type(self.marionette.find_element(By.ID, "newDiv"))
         )
 
     def test_search_timeout_found(self):

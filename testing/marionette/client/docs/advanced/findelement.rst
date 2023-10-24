@@ -68,8 +68,8 @@ The strategies are:
 Chaining Searches
 -----------------
 
-In addition to the methods on the Marionette object, HTMLElement objects also
-provide :func:`~HTMLElement.find_element` and :func:`~HTMLElement.find_elements`
+In addition to the methods on the Marionette object, WebElement objects also
+provide :func:`~WebElement.find_element` and :func:`~WebElement.find_elements`
 methods. The difference is that only child nodes of the element will be searched.
 Consider the following html snippet::
 

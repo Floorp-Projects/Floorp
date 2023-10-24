@@ -4,7 +4,7 @@
 
 from marionette_driver.by import By
 from marionette_driver.errors import NoSuchElementException
-from marionette_driver.marionette import HTMLElement, WEB_ELEMENT_KEY
+from marionette_driver.marionette import WebElement, WEB_ELEMENT_KEY
 
 from marionette_harness import MarionetteTestCase, parameterized, WindowManagerMixin
 
@@ -34,7 +34,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             "return window.document.getElementById('textInput');"
         )
         found_el = self.marionette.find_element(By.ID, "textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -48,7 +48,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             "return window.document.getElementById('textInput');"
         )
         found_el = self.marionette.find_element(By.CSS_SELECTOR, "#textInput")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -61,7 +61,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
         el = self.marionette.find_element(By.ID, "textInput")
         parent = self.marionette.find_element(By.ID, "things")
         found_el = parent.find_element(By.TAG_NAME, "input")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -87,7 +87,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
         )
         found_el = self.marionette.find_element(By.TAG_NAME, "vbox")
         self.assertEqual("vbox", found_el.tag_name)
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -101,7 +101,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             "return window.document.getElementsByClassName('asdf')[0];"
         )
         found_el = self.marionette.find_element(By.CLASS_NAME, "asdf")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -115,7 +115,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             "return window.document.getElementById('testBox');"
         )
         found_el = self.marionette.find_element(By.XPATH, "id('testBox')")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
         self.assertEqual(el, found_el)
 
@@ -159,7 +159,7 @@ class TestElementsChrome(WindowManagerMixin, MarionetteTestCase):
             }, 1000); """
         )
         found_el = self.marionette.find_element(By.ID, "myid")
-        self.assertEqual(HTMLElement, type(found_el))
+        self.assertEqual(WebElement, type(found_el))
         self.assertEqual(WEB_ELEMENT_KEY, found_el.kind)
 
         self.marionette.execute_script(

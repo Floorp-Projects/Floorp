@@ -3,7 +3,7 @@ import os
 from six.moves.urllib.parse import quote
 
 from marionette_driver import By, errors
-from marionette_driver.marionette import Alert, HTMLElement
+from marionette_driver.marionette import Alert, WebElement
 from marionette_driver.wait import Wait
 
 from marionette_harness import MarionetteTestCase, WindowManagerMixin
@@ -74,7 +74,7 @@ class TestExecuteContent(MarionetteTestCase):
         )
 
     def assert_is_web_element(self, element):
-        self.assertIsInstance(element, HTMLElement)
+        self.assertIsInstance(element, WebElement)
 
     def test_return_number(self):
         self.assertEqual(1, self.marionette.execute_script("return 1"))

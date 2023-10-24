@@ -130,9 +130,9 @@ using the :func:`~Marionette.find_element` or :func:`~Marionette.find_elements`
 methods:
 
 .. parsed-literal::
-   from marionette_driver.marionette import HTMLElement
+   from marionette_driver.marionette import WebElement
    element = client.find_element(By.ID, 'my-id')
-   assert type(element) == HTMLElement
+   assert type(element) == WebElement
    elements = client.find_elements(By.TAG_NAME, 'a')
    assert type(elements) == list
 
@@ -145,7 +145,7 @@ Now that an element has been found, it's possible to manipulate it:
    element.send_keys('hello!')
    print(element.get_attribute('style'))
 
-For the full list of possible commands, see the :class:`HTMLElement`
+For the full list of possible commands, see the :class:`WebElement`
 reference.
 
 Be warned that a reference to an element object can become stale if it was
