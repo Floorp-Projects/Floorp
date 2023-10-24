@@ -390,6 +390,44 @@ static DynFn GetVMFunctionTarget(VMFunctionId id) {
 
 size_t NumVMFunctions() { return size_t(VMFunctionId::Count); }
 
+size_t VMFunctionData::sizeOfOutParamStackSlot() const {
+  switch (outParam) {
+    case Type_Value:
+      return sizeof(Value);
+
+    case Type_Pointer:
+    case Type_Int32:
+    case Type_Bool:
+      return sizeof(uintptr_t);
+
+    case Type_Double:
+      return sizeof(double);
+
+    case Type_Handle:
+      switch (outParamRootType) {
+        case RootNone:
+          MOZ_CRASH("Handle must have root type");
+        case RootObject:
+        case RootString:
+        case RootCell:
+        case RootBigInt:
+        case RootId:
+          return sizeof(uintptr_t);
+        case RootValue:
+          return sizeof(Value);
+      }
+      MOZ_CRASH("Invalid type");
+
+    case Type_Void:
+      return 0;
+
+    case Type_Cell:
+      MOZ_CRASH("Unexpected outparam type");
+  }
+
+  MOZ_CRASH("Invalid type");
+}
+
 bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
                                     PerfSpewerRangeRecorder& rangeRecorder) {
   // Generate all VM function wrappers.

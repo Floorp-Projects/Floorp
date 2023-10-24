@@ -578,8 +578,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void PopFlags() DEFINED_ON(x86_shared);
   void PopStackPtr()
       DEFINED_ON(arm, mips_shared, x86_shared, loong64, riscv64, wasm32);
-  void popRooted(VMFunctionData::RootType rootType, Register cellReg,
-                 const ValueOperand& valueReg);
 
   // Move the stack pointer based on the requested amount.
   void adjustStack(int amount);
@@ -648,6 +646,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // Useful for dealing with two-valued returns.
   void moveRegPair(Register src0, Register src1, Register dst0, Register dst1,
                    MoveOp::Type type = MoveOp::GENERAL);
+
+  void reserveVMFunctionOutParamSpace(const VMFunctionData& f);
+  void loadVMFunctionOutParam(const VMFunctionData& f, const Address& addr);
 
  public:
   // ===============================================================

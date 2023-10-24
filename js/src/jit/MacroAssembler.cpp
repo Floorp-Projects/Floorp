@@ -3968,24 +3968,6 @@ void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
   }
 }
 
-void MacroAssembler::popRooted(VMFunctionData::RootType rootType,
-                               Register cellReg, const ValueOperand& valueReg) {
-  switch (rootType) {
-    case VMFunctionData::RootNone:
-      MOZ_CRASH("Handle must have root type");
-    case VMFunctionData::RootObject:
-    case VMFunctionData::RootString:
-    case VMFunctionData::RootCell:
-    case VMFunctionData::RootId:
-    case VMFunctionData::RootBigInt:
-      Pop(cellReg);
-      break;
-    case VMFunctionData::RootValue:
-      Pop(valueReg);
-      break;
-  }
-}
-
 void MacroAssembler::adjustStack(int amount) {
   if (amount > 0) {
     freeStack(amount);
@@ -4003,6 +3985,76 @@ void MacroAssembler::freeStack(uint32_t amount) {
 }
 
 void MacroAssembler::freeStack(Register amount) { addToStackPtr(amount); }
+
+void MacroAssembler::reserveVMFunctionOutParamSpace(const VMFunctionData& f) {
+  switch (f.outParam) {
+    case Type_Handle:
+      PushEmptyRooted(f.outParamRootType);
+      break;
+
+    case Type_Value:
+    case Type_Double:
+    case Type_Pointer:
+    case Type_Int32:
+    case Type_Bool:
+      reserveStack(f.sizeOfOutParamStackSlot());
+      break;
+
+    case Type_Void:
+      break;
+
+    case Type_Cell:
+      MOZ_CRASH("Unexpected outparam type");
+  }
+}
+
+void MacroAssembler::loadVMFunctionOutParam(const VMFunctionData& f,
+                                            const Address& addr) {
+  switch (f.outParam) {
+    case Type_Handle:
+      switch (f.outParamRootType) {
+        case VMFunctionData::RootNone:
+          MOZ_CRASH("Handle must have root type");
+        case VMFunctionData::RootObject:
+        case VMFunctionData::RootString:
+        case VMFunctionData::RootCell:
+        case VMFunctionData::RootBigInt:
+        case VMFunctionData::RootId:
+          loadPtr(addr, ReturnReg);
+          break;
+        case VMFunctionData::RootValue:
+          loadValue(addr, JSReturnOperand);
+          break;
+      }
+      break;
+
+    case Type_Value:
+      loadValue(addr, JSReturnOperand);
+      break;
+
+    case Type_Int32:
+      load32(addr, ReturnReg);
+      break;
+
+    case Type_Bool:
+      load8ZeroExtend(addr, ReturnReg);
+      break;
+
+    case Type_Double:
+      loadDouble(addr, ReturnDoubleReg);
+      break;
+
+    case Type_Pointer:
+      loadPtr(addr, ReturnReg);
+      break;
+
+    case Type_Void:
+      break;
+
+    case Type_Cell:
+      MOZ_CRASH("Unexpected outparam type");
+  }
+}
 
 // ===============================================================
 // ABI function calls.
