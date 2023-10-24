@@ -7813,7 +7813,7 @@ mozilla::ipc::IPCResult ContentParent::RecvNotifyOnHistoryReload(
   bool canReload = false;
   Maybe<NotNull<RefPtr<nsDocShellLoadState>>> loadState;
   Maybe<bool> reloadActiveEntry;
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     aContext.get_canonical()->NotifyOnHistoryReload(
         aForceReload, canReload, loadState, reloadActiveEntry);
   }
@@ -7846,7 +7846,7 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
     const MaybeDiscarded<BrowsingContext>& aContext, int32_t aOffset,
     uint64_t aHistoryEpoch, bool aRequireUserInteraction, bool aUserActivation,
     HistoryGoResolver&& aResolveRequestedIndex) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     RefPtr<CanonicalBrowsingContext> canonical = aContext.get_canonical();
     aResolveRequestedIndex(
         canonical->HistoryGo(aOffset, aHistoryEpoch, aRequireUserInteraction,
@@ -8036,7 +8036,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,
     uint32_t aLoadType, uint32_t aUpdatedCacheKey, const nsID& aChangeID) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     aContext.get_canonical()->SetActiveSessionHistoryEntry(
         aPreviousScrollPos, &aInfo, aLoadType, aUpdatedCacheKey, aChangeID);
   }
@@ -8046,7 +8046,7 @@ mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntry(
 mozilla::ipc::IPCResult ContentParent::RecvReplaceActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext,
     SessionHistoryInfo&& aInfo) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     aContext.get_canonical()->ReplaceActiveSessionHistoryEntry(&aInfo);
   }
   return IPC_OK();
@@ -8055,7 +8055,7 @@ mozilla::ipc::IPCResult ContentParent::RecvReplaceActiveSessionHistoryEntry(
 mozilla::ipc::IPCResult
 ContentParent::RecvRemoveDynEntriesFromActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     aContext.get_canonical()->RemoveDynEntriesFromActiveSessionHistoryEntry();
   }
   return IPC_OK();
@@ -8063,7 +8063,7 @@ ContentParent::RecvRemoveDynEntriesFromActiveSessionHistoryEntry(
 
 mozilla::ipc::IPCResult ContentParent::RecvRemoveFromSessionHistory(
     const MaybeDiscarded<BrowsingContext>& aContext, const nsID& aChangeID) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     aContext.get_canonical()->RemoveFromSessionHistory(aChangeID);
   }
   return IPC_OK();
@@ -8072,7 +8072,7 @@ mozilla::ipc::IPCResult ContentParent::RecvRemoveFromSessionHistory(
 mozilla::ipc::IPCResult ContentParent::RecvHistoryReload(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const uint32_t aReloadFlags) {
-  if (!aContext.IsDiscarded()) {
+  if (!aContext.IsNullOrDiscarded()) {
     nsCOMPtr<nsISHistory> shistory =
         aContext.get_canonical()->GetSessionHistory();
     if (shistory) {
