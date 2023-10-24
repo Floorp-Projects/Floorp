@@ -177,6 +177,14 @@ impl WebAuthnRegisterResult {
         }
     }
 
+    xpcom_method!(get_hmac_create_secret => GetHmacCreateSecret() -> bool);
+    fn get_hmac_create_secret(&self) -> Result<bool, nsresult> {
+        let Some(hmac_create_secret) = self.result.extensions.hmac_create_secret else {
+            return Err(NS_ERROR_NOT_AVAILABLE);
+        };
+        Ok(hmac_create_secret)
+    }
+
     xpcom_method!(get_cred_props_rk => GetCredPropsRk() -> bool);
     fn get_cred_props_rk(&self) -> Result<bool, nsresult> {
         let Some(cred_props) = &self.result.extensions.cred_props else {
@@ -301,6 +309,11 @@ impl WebAuthnSignResult {
     xpcom_method!(get_used_app_id => GetUsedAppId() -> bool);
     fn get_used_app_id(&self) -> Result<bool, nsresult> {
         self.result.extensions.app_id.ok_or(NS_ERROR_NOT_AVAILABLE)
+    }
+
+    xpcom_method!(set_used_app_id => SetUsedAppId(aUsedAppId: bool));
+    fn set_used_app_id(&self, _used_app_id: bool) -> Result<(), nsresult> {
+        Err(NS_ERROR_NOT_IMPLEMENTED)
     }
 }
 
