@@ -20,7 +20,7 @@ var gTest = {
     // Very big buffer that results in an OOM
     try {
       var buffer = context.createBuffer(2, 300000000, context.sampleRate)
-      var channel = buffer.getChannelData(0);
+      buffer.getChannelData(0);
     } catch(e) {
       // OOM when attempting to create the buffer, this can happen on 32bits
       // OSes. Simply return here.

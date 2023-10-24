@@ -7,6 +7,7 @@
 <pre id="test">
 
 <script>
+/* import-globals-from ../../webrtc/tests/mochitests/mediaStreamPlayback.js */
 createHTML({
   title: "Parallel MTG by setting AudioContextParam sample rate",
   bug: "1387454",
@@ -66,7 +67,7 @@ runTest(async () => {
   // Two AudioContext with the same sample rate can communicate.
   const ac3 = new AudioContext({sampleRate: 48000});
   const dest_ac3 = ac3.createMediaStreamDestination();
-  const source_ac2 = ac2.createMediaStreamSource(dest_ac3.stream);
+  ac2.createMediaStreamSource(dest_ac3.stream);
   ok(true, "Connect nodes with the same sample rate is ok");
 
   mustThrowWith("Invalid zero samplerate", "NotSupportedError",

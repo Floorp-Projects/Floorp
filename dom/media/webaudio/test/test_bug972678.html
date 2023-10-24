@@ -35,7 +35,7 @@ var gTest = {
         source.start((offsetIdx * LENGTH + i + offset) / context.sampleRate);
       }
 
-      buffer = context.createBuffer(1, LENGTH, context.sampleRate);
+      let buffer = context.createBuffer(1, LENGTH, context.sampleRate);
       c = buffer.getChannelData(0);
       for (var i = 0; i < buffer.length; ++i) {
         c[i] = i % 2 == 0 ? -1 : 1;

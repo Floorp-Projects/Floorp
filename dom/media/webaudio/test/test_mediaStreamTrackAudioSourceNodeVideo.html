@@ -17,7 +17,7 @@
   let track = canvas.captureStream().getTracks()[0];
 
   expectException(() => {
-    let mediaStreamTrackSource = new MediaStreamTrackAudioSourceNode(
+    new MediaStreamTrackAudioSourceNode(
       context,
       { mediaStreamTrack: track });
   }, DOMException.INVALID_STATE_ERR);

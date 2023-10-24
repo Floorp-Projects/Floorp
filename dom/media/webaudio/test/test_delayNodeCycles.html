@@ -110,7 +110,7 @@ addLoadEvent(function() {
   }
 
   function checkNoisyBuffer(e, aDelayFrames) {
-    delayFrames = Math.max(128, aDelayFrames);
+    let delayFrames = Math.max(128, aDelayFrames);
 
     var expected = new Float32Array(e.renderedBuffer.length);
     for (var i = delayFrames; i < expected.length; i += delayFrames) {

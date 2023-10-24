@@ -30,7 +30,6 @@ addLoadEvent(function() {
   function getAnalyserData() {
     gain.gain.setValueAtTime(currentGain, context.currentTime);
     analyser.getByteTimeDomainData(array);
-    var inrange = true;
     var max = -1;
     for (var i = 0; i < array.length; i++) {
       if (array[i] > max) {

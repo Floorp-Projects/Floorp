@@ -37,7 +37,6 @@ var gTest = {
     return gain;
   },
   createExpectedBuffers(context) {
-    var T1 = 2048 / context.sampleRate;
     var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
     for (var i = 0; i < 2048; ++i) {
       var t = i / context.sampleRate;

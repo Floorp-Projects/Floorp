@@ -14,6 +14,7 @@ SimpleTest.waitForExplicitFinish();
 const CROSS_ORIGIN_URL = "http://example.org:80/tests/dom/media/webaudio/test/sine-440-10s.opus"
 let iterationCount = 0;
 let context = null;
+let sp;
 
 function processSamples(e) {
   ++iterationCount;

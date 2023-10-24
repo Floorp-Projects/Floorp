@@ -62,7 +62,7 @@ function prepareTest() {
   const delayTime = 0.3 * bufferSize / ctx.sampleRate;
   testDelay = ctx.createDelay(delayTime);
   testDelay.delayTime.value = delayTime;
-  monoDelay = ctx.createDelay(delayTime);
+  let monoDelay = ctx.createDelay(delayTime);
   monoDelay.delayTime.value = delayTime;
   stereoDelay = ctx.createDelay(delayTime);
   stereoDelay.delayTime.value = delayTime;

@@ -372,6 +372,7 @@ module.exports = {
     MediaStreamAudioSourceNode: false,
     MediaStreamEvent: false,
     MediaStreamTrack: false,
+    MediaStreamTrackAudioSourceNode: false,
     MediaStreamTrackEvent: false,
     MerchantValidationEvent: false,
     MessageBroadcaster: false,

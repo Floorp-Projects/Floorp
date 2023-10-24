@@ -244,7 +244,6 @@
 
   // Returns true if the memory buffers are less different that |fuzz| bytes
   function fuzzyMemcmp(buf1, buf2, fuzz) {
-    var result = true;
     var difference = 0;
     is(buf1.length, buf2.length, "same length");
     for (var i = 0; i < buf1.length; ++i) {
@@ -315,7 +314,7 @@
 
     // Playback the buffer in the original context, to resample back to the
     // original rate and compare with the decoded buffer without resampling.
-    cx = test.nativeContext;
+    let cx = test.nativeContext;
     var expected = cx.createBufferSource();
     expected.buffer = test.expectedBuffer;
     expected.start();

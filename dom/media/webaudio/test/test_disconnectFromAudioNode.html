@@ -39,7 +39,7 @@
     return gain3;
   },
         createExpectedBuffers(context) {
-    expectedBuffer = context.createBuffer(1, 256, context.sampleRate);
+    let expectedBuffer = context.createBuffer(1, 256, context.sampleRate);
     for (var i = 0; i < 256; ++i) {
       expectedBuffer.getChannelData(0)[i] = 1.0;
     }

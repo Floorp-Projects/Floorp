@@ -42,7 +42,7 @@
     return merger;
   },
         createExpectedBuffers(context) {
-    expectedBuffer = context.createBuffer(2, 256, context.sampleRate);
+    let expectedBuffer = context.createBuffer(2, 256, context.sampleRate);
     for (var i = 0; i < 256; ++i) {
       expectedBuffer.getChannelData(0)[i] = 0;
       expectedBuffer.getChannelData(1)[i] = 3;

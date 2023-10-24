@@ -37,7 +37,6 @@ var gTest = {
     return gain;
   },
   createExpectedBuffers(context) {
-    var T1 = 2048 / context.sampleRate;
     var expectedBuffer = context.createBuffer(1, 2048, context.sampleRate);
     expectedBuffer.getChannelData(0)[0] = V0;
     for (var i = 1; i < 2048; ++i) {
