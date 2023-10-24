@@ -75,8 +75,7 @@ nsHtml5StreamListener::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   if (MOZ_UNLIKELY(!mDelegate)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return ((nsHtml5StreamParser*)mDelegate)
-      ->OnStopRequest(aRequest, aStatus, autoEnter);
+  return ((nsHtml5StreamParser*)mDelegate)->OnStopRequest(aRequest, aStatus);
 }
 
 NS_IMETHODIMP
@@ -90,16 +89,4 @@ nsHtml5StreamListener::OnDataAvailable(nsIRequest* aRequest,
   }
   return ((nsHtml5StreamParser*)mDelegate)
       ->OnDataAvailable(aRequest, aInStream, aSourceOffset, aLength);
-}
-
-NS_IMETHODIMP
-nsHtml5StreamListener::OnDataFinished(nsresult aStatus) {
-  mozilla::ReentrantMonitorAutoEnter autoEnter(mDelegateMonitor);
-
-  if (MOZ_UNLIKELY(!mDelegate)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return ((nsHtml5StreamParser*)mDelegate)
-      ->OnStopRequest(nullptr, aStatus, autoEnter);
 }

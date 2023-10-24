@@ -104,9 +104,6 @@ nsresult ChannelMediaResource::Listener::AsyncOnChannelRedirect(
 
 nsresult ChannelMediaResource::Listener::CheckListenerChain() { return NS_OK; }
 
-NS_IMETHODIMP
-ChannelMediaResource::Listener::OnDataFinished(nsresult) { return NS_OK; }
-
 nsresult ChannelMediaResource::Listener::GetInterface(const nsIID& aIID,
                                                       void** aResult) {
   return QueryInterface(aIID, aResult);

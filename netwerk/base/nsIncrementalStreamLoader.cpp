@@ -183,6 +183,3 @@ void nsIncrementalStreamLoader::ReleaseData() { mData.clearAndFree(); }
 
 NS_IMETHODIMP
 nsIncrementalStreamLoader::CheckListenerChain() { return NS_OK; }
-
-NS_IMETHODIMP
-nsIncrementalStreamLoader::OnDataFinished(nsresult aStatus) { return NS_OK; }

@@ -17,7 +17,8 @@ class nsIRequest;
 namespace mozilla {
 namespace net {
 
-class nsStreamLoader final : public nsIStreamLoader {
+class nsStreamLoader final : public nsIStreamLoader,
+                             public nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLOADER

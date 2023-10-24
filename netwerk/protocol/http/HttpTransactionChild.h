@@ -32,6 +32,7 @@ class nsProxyInfo;
 // manages the real nsHttpTransaction and transaction pump.
 //-----------------------------------------------------------------------------
 class HttpTransactionChild final : public PHttpTransactionChild,
+                                   public nsIStreamListener,
                                    public nsITransportEventSink,
                                    public nsIThrottledInputChannel,
                                    public nsIThreadRetargetableStreamListener,

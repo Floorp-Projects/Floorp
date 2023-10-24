@@ -161,9 +161,6 @@ StreamLoader::OnDataAvailable(nsIRequest*, nsIInputStream* aInputStream,
   return aInputStream->ReadSegments(WriteSegmentFun, this, aCount, &dummy);
 }
 
-NS_IMETHODIMP
-StreamLoader::OnDataFinished(nsresult aStatus) { return NS_OK; }
-
 void StreamLoader::HandleBOM() {
   MOZ_ASSERT(mEncodingFromBOM.isNothing());
   MOZ_ASSERT(mBytes.IsEmpty());

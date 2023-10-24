@@ -24,7 +24,6 @@
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/InputStreamLengthHelper.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/PermissionManager.h"
 #include "mozilla/Components.h"
@@ -1768,7 +1767,6 @@ HttpBaseChannel::GetThirdPartyClassificationFlags(uint32_t* aFlags) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetTransferSize(uint64_t* aTransferSize) {
-  MutexAutoLock lock(mOnDataFinishedMutex);
   *aTransferSize = mTransferSize;
   return NS_OK;
 }
@@ -1787,7 +1785,6 @@ HttpBaseChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
-  MutexAutoLock lock(mOnDataFinishedMutex);
   *aEncodedBodySize = mEncodedBodySize;
   return NS_OK;
 }

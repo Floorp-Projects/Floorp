@@ -1082,9 +1082,6 @@ nsWebBrowserPersist::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP nsWebBrowserPersist::CheckListenerChain() { return NS_OK; }
 
-NS_IMETHODIMP
-nsWebBrowserPersist::OnDataFinished(nsresult) { return NS_OK; }
-
 //*****************************************************************************
 // nsWebBrowserPersist::nsIProgressEventSink
 //*****************************************************************************

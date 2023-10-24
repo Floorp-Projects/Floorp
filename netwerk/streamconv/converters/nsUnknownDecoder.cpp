@@ -108,8 +108,7 @@ NS_INTERFACE_MAP_BEGIN(nsUnknownDecoder)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY(nsIContentSniffer)
   NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports,
-                                   nsIThreadRetargetableStreamListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
 NS_INTERFACE_MAP_END
 
 // ----
@@ -795,20 +794,6 @@ nsUnknownDecoder::CheckListenerChain() {
   }
 
   return listener->CheckListenerChain();
-}
-
-NS_IMETHODIMP
-nsUnknownDecoder::OnDataFinished(nsresult aStatus) {
-  nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
-  {
-    MutexAutoLock lock(mMutex);
-    listener = do_QueryInterface(mNextListener);
-  }
-  if (listener) {
-    return listener->OnDataFinished(aStatus);
-  }
-
-  return NS_OK;
 }
 
 void nsBinaryDetector::DetermineContentType(nsIRequest* aRequest) {

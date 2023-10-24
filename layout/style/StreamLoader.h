@@ -17,7 +17,8 @@ class nsIInputStream;
 
 namespace mozilla::css {
 
-class StreamLoader : public nsIThreadRetargetableStreamListener {
+class StreamLoader : public nsIStreamListener,
+                     public nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
