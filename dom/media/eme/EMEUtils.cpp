@@ -55,6 +55,19 @@ bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem) {
   return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
          aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware);
 }
+
+bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem) {
+  if (!StaticPrefs::media_eme_widevine_experiment_enabled()) {
+    return false;
+  }
+  // 1=enabled encrypted and clear, 2=enabled encrytped.
+  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
+      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
+    return false;
+  }
+  return aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
+         aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName);
+}
 #endif
 
 nsString KeySystemToProxyName(const nsAString& aKeySystem) {
@@ -67,6 +80,9 @@ nsString KeySystemToProxyName(const nsAString& aKeySystem) {
 #ifdef MOZ_WMF_CDM
   if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     return u"mfcdm-playready"_ns;
+  }
+  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
+    return u"mfcdm-widevine"_ns;
   }
 #endif
   MOZ_ASSERT_UNREACHABLE("Not supported key system!");
