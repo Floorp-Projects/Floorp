@@ -95,6 +95,39 @@ async function waitForPdfJSSandbox(browser) {
   return loadPromise;
 }
 
+async function waitForSelector(browser, selector, message) {
+  return SpecialPowers.spawn(
+    browser,
+    [selector, message],
+    async function (sel, msg) {
+      const { ContentTaskUtils } = ChromeUtils.importESModule(
+        "resource://testing-common/ContentTaskUtils.sys.mjs"
+      );
+      const { document } = content;
+
+      await ContentTaskUtils.waitForCondition(
+        () => !!document.querySelector(sel),
+        `${sel} must be displayed`
+      );
+
+      await ContentTaskUtils.waitForCondition(
+        () => ContentTaskUtils.is_visible(document.querySelector(sel)),
+        msg
+      );
+    }
+  );
+}
+
+async function click(browser, selector) {
+  await SpecialPowers.spawn(browser, [selector], async function (sel) {
+    const el = content.document.querySelector(sel);
+    await new Promise(r => {
+      el.addEventListener("click", r, { once: true });
+      el.click();
+    });
+  });
+}
+
 /**
  * Enable an editor (Ink, FreeText, ...).
  * @param {Object} browser
