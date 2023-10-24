@@ -376,8 +376,8 @@ export class WebDriverSession {
 }
 
 /**
- * Get a WebDriver session corresponding to the session id.
- * Get the list of seen nodes for the given browsing context.
+ * Get the list of seen nodes for the given browsing context unique to a
+ * WebDriver session.
  *
  * @param {string} sessionId
  *     The id of the WebDriver session to use.
