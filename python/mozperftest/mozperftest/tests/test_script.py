@@ -13,10 +13,13 @@ from mozperftest.script import (
     ScriptType,
 )
 from mozperftest.tests.support import (
+    EXAMPLE_MOCHITEST_TEST,
+    EXAMPLE_MOCHITEST_TEST2,
     EXAMPLE_TEST,
     EXAMPLE_XPCSHELL_TEST,
     EXAMPLE_XPCSHELL_TEST2,
     HERE,
+    temp_file,
 )
 
 
@@ -40,6 +43,31 @@ def test_scriptinfo_bt():
     assert "The description of the example test." in display
     assert info.script_type == ScriptType.browsertime
     check_options(info)
+
+
+@pytest.mark.parametrize("script", [EXAMPLE_MOCHITEST_TEST, EXAMPLE_MOCHITEST_TEST2])
+def test_scriptinfo_mochitest(script):
+    info = ScriptInfo(script)
+    assert info["author"] == "N/A"
+
+    display = str(info)
+    assert "N/A" in display
+    assert "Performance Team" in display
+    assert "Test test" in display
+    assert info.script_type == ScriptType.mochitest
+
+    assert info["options"]["default"]["manifest"] == "mochitest-common.ini"
+    assert info["options"]["default"]["manifest_flavor"] == "plain"
+    assert info["options"]["default"]["perfherder_metrics"] == [
+        {"name": "Registration", "unit": "ms"}
+    ]
+
+
+def test_scriptinfo_mochitest_missing_perfmetadata():
+    with temp_file(name="sample.html", content="<html></html>") as temp:
+        with pytest.raises(ParseError) as exc_info:
+            ScriptInfo(temp)
+        assert "MissingPerfMetadata" in str(exc_info.value)
 
 
 @pytest.mark.parametrize("script", [EXAMPLE_XPCSHELL_TEST, EXAMPLE_XPCSHELL_TEST2])
