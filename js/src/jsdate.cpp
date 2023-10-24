@@ -1415,7 +1415,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   // If we don't check this here, the keywords check later will think that the
   // 'T' in e.g. "1-20-2012T10:00:00" is an abbreviation for "Thursday" and
   // allow it when it should be rejected.
-  if (isDashedDate && s[index] == 'T') {
+  if (isDashedDate && index < length && s[index] == 'T') {
     return false;
   }
 
