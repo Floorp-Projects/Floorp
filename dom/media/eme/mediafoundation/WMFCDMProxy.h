@@ -46,7 +46,7 @@ class WMFCDMProxy : public CDMProxy {
                    const nsAString& aSessionId) override;
 
   void SetServerCertificate(PromiseId aPromiseId,
-                            nsTArray<uint8_t>& aCert) override {}
+                            nsTArray<uint8_t>& aCert) override;
 
   void UpdateSession(const nsAString& aSessionId, PromiseId aPromiseId,
                      nsTArray<uint8_t>& aResponse) override;
