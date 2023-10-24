@@ -9,6 +9,8 @@
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/WorkerTimelineMarker.h"
 #include "nsQueryObject.h"
 #include "WorkerScope.h"
 
@@ -45,6 +47,18 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
   JS::Rooted<JS::Value> messageData(aCx);
   IgnoredErrorResult rv;
 
+  UniquePtr<AbstractTimelineMarker> start;
+  UniquePtr<AbstractTimelineMarker> end;
+  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
+
+  if (isTimelineRecording) {
+    start = MakeUnique<WorkerTimelineMarker>(
+        aIsMainThread
+            ? ProfileTimelineWorkerOperationType::DeserializeDataOnMainThread
+            : ProfileTimelineWorkerOperationType::DeserializeDataOffMainThread,
+        MarkerTracingType::START);
+  }
+
   JS::CloneDataPolicy cloneDataPolicy;
   if (parent->GetClientInfo().isSome() &&
       parent->GetClientInfo()->AgentClusterId().isSome() &&
@@ -58,6 +72,16 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
   }
 
   Read(parent, aCx, &messageData, cloneDataPolicy, rv);
+
+  if (isTimelineRecording) {
+    end = MakeUnique<WorkerTimelineMarker>(
+        aIsMainThread
+            ? ProfileTimelineWorkerOperationType::DeserializeDataOnMainThread
+            : ProfileTimelineWorkerOperationType::DeserializeDataOffMainThread,
+        MarkerTracingType::END);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
+  }
 
   if (NS_WARN_IF(rv.Failed())) {
     DispatchError(aCx, aTarget);

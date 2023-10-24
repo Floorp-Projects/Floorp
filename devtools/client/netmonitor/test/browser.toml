@@ -388,6 +388,8 @@ skip-if = ["os == 'win'"] # bug 1391264
 
 ["browser_net_reload-button.js"]
 
+["browser_net_reload-markers.js"]
+
 ["browser_net_req-resp-bodies.js"]
 
 ["browser_net_resend.js"]

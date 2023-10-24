@@ -10,7 +10,9 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/TimelineConsumers.h"
 #include "mozilla/Unused.h"
+#include "mozilla/WorkerTimelineMarker.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "WorkerPrivate.h"
@@ -122,6 +124,18 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   RefPtr<MessageEventRunnable> runnable = new MessageEventRunnable(
       mWorkerPrivate, WorkerRunnable::WorkerThreadModifyBusyCount);
 
+  UniquePtr<AbstractTimelineMarker> start;
+  UniquePtr<AbstractTimelineMarker> end;
+  bool isTimelineRecording = !TimelineConsumers::IsEmpty();
+
+  if (isTimelineRecording) {
+    start = MakeUnique<WorkerTimelineMarker>(
+        NS_IsMainThread()
+            ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
+            : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
+        MarkerTracingType::START);
+  }
+
   JS::CloneDataPolicy clonePolicy;
   // DedicatedWorkers are always part of the same agent cluster.
   clonePolicy.allowIntraClusterClonableSharedObjects();
@@ -142,6 +156,16 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   if (!mWorkerPrivate || mWorkerPrivate->ParentStatusProtected() > Running) {
     return;
+  }
+
+  if (isTimelineRecording) {
+    end = MakeUnique<WorkerTimelineMarker>(
+        NS_IsMainThread()
+            ? ProfileTimelineWorkerOperationType::SerializeDataOnMainThread
+            : ProfileTimelineWorkerOperationType::SerializeDataOffMainThread,
+        MarkerTracingType::END);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(start);
+    TimelineConsumers::AddMarkerForAllObservedDocShells(end);
   }
 
   if (NS_WARN_IF(aRv.Failed())) {
