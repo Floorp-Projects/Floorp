@@ -8,7 +8,6 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo.CodecCapabilities;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -314,11 +313,10 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
   @Override
   public boolean isTunneledPlaybackSupported(final String mimeType) {
     try {
-      return android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP
-          && mCodec
-              .getCodecInfo()
-              .getCapabilitiesForType(mimeType)
-              .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
+      return mCodec
+          .getCodecInfo()
+          .getCapabilitiesForType(mimeType)
+          .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
     } catch (final Exception e) {
       return false;
     }
@@ -351,11 +349,9 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
   @Override
   public final void setBitrate(final int bps) {
-    if (android.os.Build.VERSION.SDK_INT >= 19) {
-      final Bundle params = new Bundle();
-      params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bps);
-      mCodec.setParameters(params);
-    }
+    final Bundle params = new Bundle();
+    params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bps);
+    mCodec.setParameters(params);
   }
 
   @Override
@@ -369,8 +365,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
     mInputEnded = (flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
 
-    if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-        && ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
+    if (((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
       final Bundle params = new Bundle();
       params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
       mCodec.setParameters(params);

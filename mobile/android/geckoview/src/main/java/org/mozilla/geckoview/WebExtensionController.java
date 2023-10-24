@@ -5,7 +5,6 @@
 package org.mozilla.geckoview;
 
 import android.annotation.SuppressLint;
-import android.os.Build;
 import android.util.Log;
 import android.util.SparseArray;
 import androidx.annotation.AnyThread;
@@ -1525,11 +1524,7 @@ public class WebExtensionController {
     }
 
     private static boolean equals(final Object a, final Object b) {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-        return Objects.equals(a, b);
-      }
-
-      return (a == b) || (a != null && a.equals(b));
+      return Objects.equals(a, b);
     }
 
     @Override

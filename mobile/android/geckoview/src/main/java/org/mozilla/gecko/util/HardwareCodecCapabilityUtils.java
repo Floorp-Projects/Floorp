@@ -101,12 +101,8 @@ public final class HardwareCodecCapabilityUtils {
   private static MediaCodecInfo[] getCodecList() {
     final MediaCodecInfo[] codecList;
     try {
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-        codecList = getCodecListWithOldAPI();
-      } else {
-        final MediaCodecList list = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
-        codecList = list.getCodecInfos();
-      }
+      final MediaCodecList list = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
+      codecList = list.getCodecInfos();
     } catch (final RuntimeException e) {
       Log.e(LOGTAG, "Failed to retrieve media codec support list", e);
       return new MediaCodecInfo[0];
@@ -182,9 +178,7 @@ public final class HardwareCodecCapabilityUtils {
 
   public static boolean checkSupportsAdaptivePlayback(
       final MediaCodec aCodec, final String aMimeType) {
-    // isFeatureSupported supported on API level >= 19.
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT
-        || isAdaptivePlaybackBlacklisted(aMimeType)) {
+    if (isAdaptivePlaybackBlacklisted(aMimeType)) {
       return false;
     }
 
@@ -222,65 +216,63 @@ public final class HardwareCodecCapabilityUtils {
 
   // Check if a given MIME Type has HW decode or encode support.
   public static boolean getHWCodecCapability(final String aMimeType, final boolean aIsEncoder) {
-    if (Build.VERSION.SDK_INT >= 20) {
-      for (final MediaCodecInfo info : getCodecList()) {
-        if (info.isEncoder() != aIsEncoder) {
-          continue;
+    for (final MediaCodecInfo info : getCodecList()) {
+      if (info.isEncoder() != aIsEncoder) {
+        continue;
+      }
+      String name = null;
+      for (final String mimeType : info.getSupportedTypes()) {
+        if (mimeType.equals(aMimeType)) {
+          name = info.getName();
+          break;
         }
-        String name = null;
-        for (final String mimeType : info.getSupportedTypes()) {
-          if (mimeType.equals(aMimeType)) {
-            name = info.getName();
-            break;
-          }
-        }
-        if (name == null) {
-          continue; // No HW support in this codec; try the next one.
-        }
-        Log.d(LOGTAG, "Found candidate" + (aIsEncoder ? " encoder " : " decoder ") + name);
+      }
+      if (name == null) {
+        continue; // No HW support in this codec; try the next one.
+      }
+      Log.d(LOGTAG, "Found candidate" + (aIsEncoder ? " encoder " : " decoder ") + name);
 
-        // Check if this is supported codec.
-        final String[] hwList = getSupportedHWCodecPrefixes(aMimeType, aIsEncoder);
-        if (hwList == null) {
-          continue;
+      // Check if this is supported codec.
+      final String[] hwList = getSupportedHWCodecPrefixes(aMimeType, aIsEncoder);
+      if (hwList == null) {
+        continue;
+      }
+      boolean supportedCodec = false;
+      for (final String codecPrefix : hwList) {
+        if (name.startsWith(codecPrefix)) {
+          supportedCodec = true;
+          break;
         }
-        boolean supportedCodec = false;
-        for (final String codecPrefix : hwList) {
-          if (name.startsWith(codecPrefix)) {
-            supportedCodec = true;
-            break;
-          }
-        }
-        if (!supportedCodec) {
-          continue;
-        }
+      }
+      if (!supportedCodec) {
+        continue;
+      }
 
-        // Check if codec supports either yuv420 or nv12.
-        final CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
-        for (final int colorFormat : capabilities.colorFormats) {
-          Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
-        }
-        if (Build.VERSION.SDK_INT >= 24) {
-          for (final MediaCodecInfo.CodecProfileLevel pl : capabilities.profileLevels) {
-            Log.v(
-                LOGTAG,
-                "   Profile: 0x"
-                    + Integer.toHexString(pl.profile)
-                    + "/Level=0x"
-                    + Integer.toHexString(pl.level));
-          }
-        }
-        final int codecColorFormat = getSupportsYUV420orNV12(capabilities);
-        if (codecColorFormat != COLOR_FORMAT_NOT_SUPPORTED) {
-          Log.d(
+      // Check if codec supports either yuv420 or nv12.
+      final CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
+      for (final int colorFormat : capabilities.colorFormats) {
+        Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
+      }
+      if (Build.VERSION.SDK_INT >= 24) {
+        for (final MediaCodecInfo.CodecProfileLevel pl : capabilities.profileLevels) {
+          Log.v(
               LOGTAG,
-              "Found target"
-                  + (aIsEncoder ? " encoder " : " decoder ")
-                  + name
-                  + ". Color: 0x"
-                  + Integer.toHexString(codecColorFormat));
-          return true;
+              "   Profile: 0x"
+                  + Integer.toHexString(pl.profile)
+                  + "/Level=0x"
+                  + Integer.toHexString(pl.level));
         }
+      }
+      final int codecColorFormat = getSupportsYUV420orNV12(capabilities);
+      if (codecColorFormat != COLOR_FORMAT_NOT_SUPPORTED) {
+        Log.d(
+            LOGTAG,
+            "Found target"
+                + (aIsEncoder ? " encoder " : " decoder ")
+                + name
+                + ". Color: 0x"
+                + Integer.toHexString(codecColorFormat));
+        return true;
       }
     }
     // No HW codec.

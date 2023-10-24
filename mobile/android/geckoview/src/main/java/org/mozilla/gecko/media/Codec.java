@@ -10,7 +10,6 @@ import android.media.MediaCodecInfo.VideoCapabilities;
 import android.media.MediaCodecList;
 import android.media.MediaCrypto;
 import android.media.MediaFormat;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -492,16 +491,11 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         // API 21+ provide a method to query whether supplied size is supported. For
         // older version, just avoid software video encoders.
         if (isEncoder && width > 0 && height > 0) {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            final VideoCapabilities c =
-                info.getCapabilitiesForType(mimeType).getVideoCapabilities();
-            if (c != null && !c.isSizeSupported(width, height)) {
-              if (DEBUG) {
-                Log.d(LOGTAG, name + ": " + width + "x" + height + " not supported");
-              }
-              continue;
+          final VideoCapabilities c = info.getCapabilitiesForType(mimeType).getVideoCapabilities();
+          if (c != null && !c.isSizeSupported(width, height)) {
+            if (DEBUG) {
+              Log.d(LOGTAG, name + ": " + width + "x" + height + " not supported");
             }
-          } else if (name.startsWith(SW_CODEC_PREFIX)) {
             continue;
           }
         }

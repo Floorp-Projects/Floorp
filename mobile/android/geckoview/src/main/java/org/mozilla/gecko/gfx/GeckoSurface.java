@@ -138,8 +138,7 @@ public final class GeckoSurface implements Parcelable {
     if (GeckoSurfaceTexture.lookup(mHandle) != null) {
       throw new AssertionError("texture#" + mHandle + " already in use.");
     }
-    final GeckoSurfaceTexture texture =
-        GeckoSurfaceTexture.acquire(GeckoSurfaceTexture.isSingleBufferSupported(), mHandle);
+    final GeckoSurfaceTexture texture = GeckoSurfaceTexture.acquire(true, mHandle);
     if (texture != null) {
       texture.setDefaultBufferSize(width, height);
       texture.track(mHandle);

@@ -381,13 +381,8 @@ import org.mozilla.gecko.util.ThreadUtils;
         });
   }
 
-  @TargetApi(21)
   @Override // SessionTextInput.EditableListener
   public void updateCompositionRects(final RectF[] rects, final RectF caretRect) {
-    if (!(Build.VERSION.SDK_INT >= 21)) {
-      return;
-    }
-
     final View view = getView();
     if (view == null) {
       return;
@@ -418,7 +413,6 @@ import org.mozilla.gecko.util.ThreadUtils;
         });
   }
 
-  @TargetApi(21)
   /* package */ void updateCompositionRectsOnUi(
       final View view, final RectF[] rects, final RectF caretRect, final CharSequence composition) {
     if (mCursorAnchorInfoBuilder == null) {
@@ -722,13 +716,9 @@ import org.mozilla.gecko.util.ThreadUtils;
         // Does the same thing as Chromium
         // https://chromium.googlesource.com/chromium/src/+/49.0.2623.67/chrome/android/java/src/org/chromium/chrome/browser/tab/TabWebContentsDelegateAndroid.java#445
         // These are all the keys dispatchMediaKeyEvent supports.
-        if (Build.VERSION.SDK_INT >= 19) {
-          // dispatchMediaKeyEvent is only available on Android 4.4+
-          final Context viewContext = getView().getContext();
-          final AudioManager am =
-              (AudioManager) viewContext.getSystemService(Context.AUDIO_SERVICE);
-          am.dispatchMediaKeyEvent(event);
-        }
+        final Context viewContext = getView().getContext();
+        final AudioManager am = (AudioManager) viewContext.getSystemService(Context.AUDIO_SERVICE);
+        am.dispatchMediaKeyEvent(event);
         break;
     }
   }

@@ -142,10 +142,6 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub
   }
 
   RemoteMediaDrmBridgeStub(final String keySystem, final String stubId) throws RemoteException {
-    if (Build.VERSION.SDK_INT < 21) {
-      Log.e(LOGTAG, "Pre-Lollipop should never enter here!!");
-      throw new RemoteException("Error, unsupported version!");
-    }
     try {
       if (Build.VERSION.SDK_INT < 23) {
         mBridge = new GeckoMediaDrmBridgeV21(keySystem);
