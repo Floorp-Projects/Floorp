@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
+#include "mozilla/EMEUtils.h"
 #include "mozilla/WMFCDMProxyCallback.h"
 #include "WMFCDMImpl.h"
 #include "WMFCDMProxyCallback.h"
@@ -103,6 +104,8 @@ WMFCDMProxy::GenerateMFCDMMediaCapabilities(
     const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities) {
   CopyableTArray<MFCDMMediaCapability> outCapabilites;
   for (const auto& capabilities : aCapabilities) {
+    EME_LOG("WMFCDMProxy::Init %p, robustness=%s", this,
+            NS_ConvertUTF16toUTF8(capabilities.mRobustness).get());
     outCapabilites.AppendElement(MFCDMMediaCapability{
         capabilities.mContentType, capabilities.mRobustness});
   }
@@ -306,6 +309,10 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
         NS_ConvertUTF16toUTF8(aSessionId).get());
     session->SetExpiration(static_cast<double>(aExpiryTime));
   }
+}
+
+bool WMFCDMProxy::IsHardwareDecryptionSupported() const {
+  return mozilla::IsHardwareDecryptionSupported(mConfig);
 }
 
 uint64_t WMFCDMProxy::GetCDMProxyId() const {
