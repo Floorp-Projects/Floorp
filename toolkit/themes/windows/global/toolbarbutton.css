@@ -44,9 +44,10 @@ toolbarbutton:where([disabled="true"]) {
 .toolbarbutton-menu-dropmarker,
 .toolbarbutton-combined-buttons-dropmarker {
   appearance: none;
-  content: url("chrome://global/skin/icons/arrow-down-12.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
   -moz-context-properties: fill;
   fill: currentColor;
+  width: auto;
 }
 
 /* ::::: toolbarbutton badged ::::: */
