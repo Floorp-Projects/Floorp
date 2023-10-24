@@ -331,6 +331,10 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
         mEditorBase != originalEventTargetNode->OwnerDoc()->GetHTMLEditor()) {
       return NS_OK;
     }
+    if (!originalEventTargetNode && internalEvent->mMessage == eFocus &&
+        aEvent->GetCurrentTarget()->IsRootWindow()) {
+      return NS_OK;
+    }
   }
 
   switch (internalEvent->mMessage) {
