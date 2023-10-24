@@ -109,4 +109,23 @@ const char* ToMediaKeyStatusStr(dom::MediaKeyStatus aStatus) {
 
 #undef ENUM_TO_STR
 
+bool IsHardwareDecryptionSupported(
+    const dom::MediaKeySystemConfiguration& aConfig) {
+  bool supportHardwareDecryption = false;
+  for (const auto& capabilities : aConfig.mAudioCapabilities) {
+    if (capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL")) {
+      supportHardwareDecryption = true;
+      break;
+    }
+  }
+  for (const auto& capabilities : aConfig.mVideoCapabilities) {
+    if (capabilities.mRobustness.EqualsLiteral("3000") ||
+        capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL")) {
+      supportHardwareDecryption = true;
+      break;
+    }
+  }
+  return supportHardwareDecryption;
+}
+
 }  // namespace mozilla

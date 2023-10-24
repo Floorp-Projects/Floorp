@@ -9,6 +9,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"
+#include "mozilla/dom/MediaKeySystemAccessBinding.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -72,6 +73,10 @@ enum CDMType {
 CDMType ToCDMTypeTelemetryEnum(const nsString& aKeySystem);
 
 const char* ToMediaKeyStatusStr(dom::MediaKeyStatus aStatus);
+
+// Return true if given config supports hardware decryption (SL3000 or L1).
+bool IsHardwareDecryptionSupported(
+    const dom::MediaKeySystemConfiguration& aConfig);
 
 }  // namespace mozilla
 
