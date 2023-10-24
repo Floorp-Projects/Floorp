@@ -14,6 +14,7 @@
 #include "mozilla/NonBlockingAsyncInputStream.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SlicedInputStream.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
 #include "nsNetCID.h"
@@ -650,6 +651,14 @@ uint32_t nsInputStreamPump::OnStateStop() {
   if (!NS_IsMainThread() && !mOffMainThread) {
     // This method can be called on a different thread if nsInputStreamPump
     // is used off the main-thread.
+    if (NS_SUCCEEDED(mStatus) && mListener &&
+        mozilla::StaticPrefs::network_send_OnDataFinished_nsInputStreamPump()) {
+      nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+          do_QueryInterface(mListener);
+      if (retargetableListener) {
+        retargetableListener->OnDataFinished(mStatus);
+      }
+    }
     nsresult rv = mLabeledMainThreadTarget->Dispatch(
         mozilla::NewRunnableMethod("nsInputStreamPump::CallOnStateStop", this,
                                    &nsInputStreamPump::CallOnStateStop));
