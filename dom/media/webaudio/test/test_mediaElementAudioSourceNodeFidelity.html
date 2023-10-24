@@ -82,7 +82,7 @@ var an = ac.createAnalyser();
 // getFloatFrequencyData() calls.  Non-seamless looping would introduce noise,
 // and smoothing would spread this into calls after the loop point.
 an.smoothingTimeConstant = 0;
-frequencyArray = new Float32Array(an.frequencyBinCount);
+let frequencyArray = new Float32Array(an.frequencyBinCount);
 
 // Uncomment this to check what the analyser is doing.
 // debugCanvas(an);

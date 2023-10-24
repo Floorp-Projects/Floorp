@@ -1,5 +1,8 @@
 // Helpers for Web Audio tests
 
+// It is expected that the test defines this.
+/* global gTest */
+
 function expectException(func, exceptionCode) {
   var threw = false;
   try {

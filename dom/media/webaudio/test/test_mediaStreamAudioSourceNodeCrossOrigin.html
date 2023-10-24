@@ -18,7 +18,6 @@ audio.onloadedmetadata = function() {
   var node = context.createMediaStreamSource(audio.mozCaptureStreamUntilEnded());
   var sp = context.createScriptProcessor(2048, 1);
   node.connect(sp);
-  var nonzeroSampleCount = 0;
   var complete = false;
   var iterationCount = 0;
 

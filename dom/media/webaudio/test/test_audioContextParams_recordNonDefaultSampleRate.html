@@ -11,13 +11,13 @@
 <script class="testbody" type="text/javascript">
 function startTest() {
   let ctx = new AudioContext({sampleRate: 32000});
-  oscillator = ctx.createOscillator();
+  let oscillator = ctx.createOscillator();
   let dest = ctx.createMediaStreamDestination();
   oscillator.connect(dest);
   oscillator.start();
   let stream = dest.stream;
 
-  recorder = new MediaRecorder(stream);
+  let recorder = new MediaRecorder(stream);
   recorder.ondataavailable = (e) => {
       ok(true, 'recorder ondataavailable event');
       if (recorder.state == 'recording') {

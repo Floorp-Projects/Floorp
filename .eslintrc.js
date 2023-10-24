@@ -482,7 +482,6 @@ module.exports = {
         "dom/file/tests/**",
         "dom/html/test/**",
         "dom/media/tests/**",
-        "dom/media/webaudio/test/**",
         "dom/media/webrtc/tests/**",
         "dom/media/webspeech/recognition/test/**",
         "dom/media/webspeech/synth/test/**",

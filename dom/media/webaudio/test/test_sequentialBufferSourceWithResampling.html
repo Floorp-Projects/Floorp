@@ -47,8 +47,8 @@ function do_test(context_rate, buffer_rate, start_offset) {
 
   return context.startRendering().
     then((buffer) => {
-      series_output = buffer.getChannelData(0);
-      expected = buffer.getChannelData(1);
+      let series_output = buffer.getChannelData(0);
+      let expected = buffer.getChannelData(1);
 
       for (var i = 0; i < buffer.length; ++i) {
         assert_approx_equals(series_output[i], expected[i], EPSILON,

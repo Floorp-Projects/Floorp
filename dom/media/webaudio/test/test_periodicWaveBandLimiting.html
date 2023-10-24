@@ -26,7 +26,7 @@ const oscillatorCount = oscillatorFactors.length;
 function magnitude(array) {
   var mag = 0
   for (var i = 0; i < array.length; ++i) {
-    sample = array[i];
+    let sample = array[i];
     mag += sample * sample;
   }
   return Math.sqrt(2 * mag / array.length);
