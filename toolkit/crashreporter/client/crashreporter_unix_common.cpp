@@ -58,11 +58,11 @@ void UIPruneSavedDumps(const string& directory) {
   while (dumpfiles.size() > kSaveCount) {
     // get the path of the oldest file
     string path = dumpfiles[dumpfiles.size() - 1].path;
-    UIDeleteFile(path.c_str());
+    UIDeleteFile(path);
 
     // s/.dmp/.extra/
     path.replace(path.size() - 4, 4, ".extra");
-    UIDeleteFile(path.c_str());
+    UIDeleteFile(path);
 
     dumpfiles.pop_back();
   }
