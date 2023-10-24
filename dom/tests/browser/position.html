@@ -5,12 +5,10 @@
     var result = null;
 
     function handlePosition(position) {
-      // eslint-disable-next-line no-unsanitized/property
       result.innerHTML = position.coords.latitude + " " + position.coords.longitude;
     }
 
     function handleError(error) {
-      // eslint-disable-next-line no-unsanitized/property
       result.innerHTML = error.message;
     }
 

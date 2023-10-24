@@ -25,7 +25,6 @@ SimpleTest.waitForExplicitFinish();
     // 2) as DocumentFragment
     let temp = document.createElement('template');
     // asking eslint to skip this: innerHTML is safe for template elements.
-    // eslint-disable-next-line no-unsanitized/property
     temp.innerHTML = inputStr;
     yield ({testInput: temp.content, testType: "DocumentFragment" });
     // 3) as HTMLDocument

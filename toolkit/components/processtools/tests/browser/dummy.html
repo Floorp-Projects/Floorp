@@ -11,7 +11,6 @@
   let text = "";
   for (let i = 0; i < 1000; i++) {
     text += "more";
-    // eslint-disable-next-line no-unsanitized/property
     document.getElementById("holder").innerHTML = text;
   }
   document.getElementById("holder").classList.add("loaded");

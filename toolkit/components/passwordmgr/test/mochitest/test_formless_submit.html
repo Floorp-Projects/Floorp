@@ -182,7 +182,6 @@ async function testFormlessSubmit(tc) {
   info("Starting testcase: " + JSON.stringify(tc));
 
   let formsProcessed = promiseFormsProcessedInSameProcess(tc.expectedFormsCount);
-  // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = tc.document;
   await formsProcessed;
   // We eliminate no user input as a reason for not capturing by modifying the value

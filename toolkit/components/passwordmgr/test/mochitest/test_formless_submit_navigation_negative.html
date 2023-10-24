@@ -105,7 +105,6 @@ async function testFormlesSubmitNavigationNegative(tc, scriptName) {
   await loadedPromise;
 
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
-  // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = tc.document;
   // We eliminate no user input as a reason for not capturing by modifying the value
   setUserInputValues(frameDoc.documentElement, tc.selectorValues);

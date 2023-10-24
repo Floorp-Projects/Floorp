@@ -37,7 +37,6 @@ function shouldThrowException(fun, exception) {
     fun.call();
     return false;
   } catch (e) {
-    // eslint-disable-next-line no-unsanitized/property
     $("display").innerHTML += "<br/>OK thrown: "+e.message;
     return (e instanceof Components.Exception &&
             e.result === exception)
@@ -49,7 +48,6 @@ function doesntThrowException(fun) {
 
 var baseWindow = getBaseWindowInterface(this);
 var nativeHandle = baseWindow.nativeHandle;
-// eslint-disable-next-line no-unsanitized/property
 $("display").innerHTML = "found nativeHandle for this window: "+nativeHandle;
 
 var win = Services.wm.getMostRecentWindow("navigator:browser");

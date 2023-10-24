@@ -70,7 +70,6 @@ add_task(async function test_autoscroll_links() {
       "https://example.com/browser/toolkit/content/tests/browser/file_empty.html",
       async function (browser) {
         await SpecialPowers.spawn(browser, [markup], html => {
-          // eslint-disable-next-line no-unsanitized/property
           content.document.body.innerHTML = html;
           content.document.documentElement.scrollTop = 1;
           content.document.documentElement.scrollTop; // Flush layout.

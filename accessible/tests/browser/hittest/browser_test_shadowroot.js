@@ -50,7 +50,6 @@ addAccessibleTask(
       var shadow = component.attachShadow({mode: "open"});
       for (var child = component.firstChild; child; child = child.nextSibling) {
         if (child.nodeType === 8)
-          // eslint-disable-next-line no-unsanitized/property
           shadow.innerHTML = child.data;
       }
     }

@@ -97,7 +97,6 @@ function makeFragmentTestChecker(input, expected, errors, fragment, testframe) {
         fragment
       );
     }
-    // eslint-disable-next-line no-unsanitized/property
     context.innerHTML = input;
     var domAsString = fragmentToTestOutput(context);
     is(domAsString, expected, "HTML5 expected success. " + new Date());

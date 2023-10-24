@@ -10000,7 +10000,6 @@ async function runIMEContentObserverTest()
         break;
       case "p":
       case "div":
-        // eslint-disable-next-line no-unsanitized/property
         aElement.innerHTML = "<" + aDefaultParagraphSeparator + "></" + aDefaultParagraphSeparator + ">";
         sel.collapse(aElement.firstChild, 0);
         offsetAtContainer = offsetAtStart + kLFLen;

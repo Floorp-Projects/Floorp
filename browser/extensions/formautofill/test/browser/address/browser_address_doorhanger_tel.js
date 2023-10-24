@@ -89,7 +89,6 @@ add_task(async function test_save_doorhanger_tel_concatenated() {
     { gBrowser, url: EMPTY_URL },
     async function (browser) {
       await SpecialPowers.spawn(browser, [MARKUP], doc => {
-        // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = doc;
       });
 

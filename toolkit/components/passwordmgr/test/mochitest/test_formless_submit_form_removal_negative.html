@@ -133,7 +133,6 @@ async function testFormlesSubmitNavigationNegative(tc, scriptName, heuristic) {
 
   let frameDoc = SpecialPowers.wrap(loginFrame.contentWindow).document;
   let formsProcessed = promiseFormsProcessed();
-  // eslint-disable-next-line no-unsanitized/property
   frameDoc.documentElement.innerHTML = tc.document;
   await formsProcessed;
 
