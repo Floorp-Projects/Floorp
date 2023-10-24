@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 kind-dependencies:
     - build-apk
+    - build-bundle
     - build-components
     - build-samples-browser
     - docker-image
