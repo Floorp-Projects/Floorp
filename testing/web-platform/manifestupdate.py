@@ -3,17 +3,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import configparser
 import errno
 import hashlib
 import os
 import sys
 
 import manifestdownload
-import six
 from mach.util import get_state_dir
 from mozfile import load_source
 from mozlog.structured import commandline
-from six.moves import configparser
 from wptrunner import wptcommandline
 
 manifest = None
@@ -113,7 +112,7 @@ def run(src_root, obj_root, logger=None, **kwargs):
 
     test_paths = wptcommandline.get_test_paths(wptcommandline.config.read(config_path))
 
-    for paths in six.itervalues(test_paths):
+    for paths in test_paths.values():
         if "manifest_path" not in paths:
             paths["manifest_path"] = os.path.join(
                 paths["metadata_path"], "MANIFEST.json"
@@ -151,7 +150,7 @@ def run(src_root, obj_root, logger=None, **kwargs):
 
 
 def ensure_manifest_directories(logger, test_paths):
-    for paths in six.itervalues(test_paths):
+    for paths in test_paths.values():
         manifest_dir = os.path.dirname(paths["manifest_path"])
         if not os.path.exists(manifest_dir):
             logger.info("Creating directory %s" % manifest_dir)
@@ -231,7 +230,7 @@ def load_and_update(
 ):
     rv = {}
     wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir).encode()).hexdigest()
-    for url_base, paths in six.iteritems(test_paths):
+    for url_base, paths in test_paths.items():
         manifest_path = paths["manifest_path"]
         this_cache_root = os.path.join(
             cache_root, wptdir_hash, os.path.dirname(paths["manifest_rel_path"])
