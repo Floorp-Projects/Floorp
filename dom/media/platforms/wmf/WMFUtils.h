@@ -105,6 +105,9 @@ void AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
 
 class ScopedHString final {
  public:
+  explicit ScopedHString(const nsAString& aStr) {
+    WindowsCreateString(PromiseFlatString(aStr).get(), aStr.Length(), &mString);
+  }
   explicit ScopedHString(const WCHAR aCharArray[]) {
     WindowsCreateString(aCharArray, wcslen(aCharArray), &mString);
   }
