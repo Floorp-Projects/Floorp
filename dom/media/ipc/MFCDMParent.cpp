@@ -286,6 +286,13 @@ static nsString GetOriginalKeySystem(const nsString& aKeySystem) {
   return aKeySystem;
 }
 
+static nsString MapKeySystem(const nsString& aKeySystem) {
+  if (IsWidevineKeySystem(aKeySystem)) {
+    return nsString(u"com.widevine.alpha.experiment");
+  }
+  return aKeySystem;
+}
+
 void MFCDMParent::Register() {
   MOZ_ASSERT(!sRegisteredCDMs.Contains(this->mId));
   sRegisteredCDMs.InsertOrUpdate(this->mId, this);
@@ -310,7 +317,8 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
       mExpirationEvents(aManagerThread) {
   // TODO : add ClearKey CDM support
   MOZ_ASSERT(IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-             IsWidevineExperimentKeySystemAndSupported(aKeySystem));
+             IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+             IsWidevineKeySystem(mKeySystem));
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aManagerThread);
   MOZ_ASSERT(XRE_IsUtilityProcess());
@@ -374,7 +382,8 @@ LPCWSTR MFCDMParent::GetCDMLibraryName() const {
   if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
     return L"";
   }
-  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
+  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem) ||
+      IsWidevineKeySystem(mKeySystem)) {
     // TODO : return real Widevine Dll name in bug 1858546
     return L"";
   }
@@ -423,7 +432,8 @@ HRESULT MFCDMParent::LoadFactory() {
   // "<key_system>.ContentDecryptionModuleFactory". In addition, when querying
   // factory, need to use original Widevine key system name.
   nsString stringId;
-  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
+  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem) ||
+      IsWidevineKeySystem(mKeySystem)) {
     stringId.AppendLiteral("com.widevine.alpha.ContentDecryptionModuleFactory");
   }
   MFCDM_PARENT_LOG("Query factory by classId '%s",
@@ -533,7 +543,8 @@ static bool IsKeySystemHWSecure(
       }
     }
   }
-  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
+  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+      IsWidevineKeySystem(aKeySystem)) {
     // We only support Widevine HWDRM.
     return true;
   }
@@ -696,9 +707,9 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
   MOZ_ASSERT(mFactory->IsTypeSupported(GetOriginalKeySystem(mKeySystem).get(),
                                        nullptr));
 
-  MFCDM_REJECT_IF_FAILED(
-      CreateContentDecryptionModule(mFactory, mKeySystem, aParams, mCDM),
-      NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(CreateContentDecryptionModule(
+                             mFactory, MapKeySystem(mKeySystem), aParams, mCDM),
+                         NS_ERROR_FAILURE);
   MOZ_ASSERT(mCDM);
   MFCDM_PARENT_LOG("Created a CDM!");
 

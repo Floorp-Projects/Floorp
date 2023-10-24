@@ -110,6 +110,8 @@ class WMFCDMProxy : public CDMProxy {
 
   WMFCDMProxy* AsWMFCDMProxy() override { return this; }
 
+  bool IsHardwareDecryptionSupported() const override;
+
   // Can only be called after initialization succeeded.
   uint64_t GetCDMProxyId() const;
 

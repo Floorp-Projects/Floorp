@@ -199,6 +199,18 @@ bool KeySystemConfig::CreateKeySystemConfigs(
   return false;
 }
 
+bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
+#ifdef MOZ_WMF_CDM
+  // We want to map Widevine experiment key system to normal Widevine key system
+  // as well.
+  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
+    return mKeySystem.Equals(aKeySystem) ||
+           aKeySystem.EqualsLiteral(kWidevineKeySystemName);
+  }
+#endif
+  return mKeySystem.Equals(aKeySystem);
+}
+
 #ifdef DEBUG
 nsString KeySystemConfig::GetDebugInfo() const {
   nsString debugInfo;
