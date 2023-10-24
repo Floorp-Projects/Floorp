@@ -15,7 +15,7 @@ def get_layers():
 
 
 def pick_system(env, flavor, mach_cmd):
-    if flavor in ("desktop-browser", "xpcshell"):
+    if flavor in ("desktop-browser", "xpcshell", "mochitest"):
         return Layers(
             env,
             mach_cmd,
