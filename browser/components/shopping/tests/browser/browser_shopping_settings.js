@@ -201,6 +201,34 @@ add_task(async function test_settings_toggle_ad_and_multiple_tabs() {
     await shoppingContainer.updateComplete;
     await adVisiblePromise;
 
+    let adEl = shoppingContainer.recommendedAdEl;
+    await adEl.updateComplete;
+    is(
+      adEl.priceEl.textContent,
+      "$" + mockRecommendationData[0].price,
+      "Price is shown correctly"
+    );
+    is(
+      adEl.linkEl.title,
+      mockRecommendationData[0].name,
+      "Title in link is shown correctly"
+    );
+    is(
+      adEl.linkEl.href,
+      mockRecommendationData[0].url,
+      "URL for link is correct"
+    );
+    is(
+      adEl.ratingEl.rating,
+      mockRecommendationData[0].adjusted_rating,
+      "MozFiveStar rating is shown correctly"
+    );
+    is(
+      adEl.letterGradeEl.letter,
+      mockRecommendationData[0].grade,
+      "LetterGrade letter is shown correctly"
+    );
+
     let shoppingSettings = shoppingContainer.settingsEl;
     ok(shoppingSettings, "Got the shopping-settings element");
 

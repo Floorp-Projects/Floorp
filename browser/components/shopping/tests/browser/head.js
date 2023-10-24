@@ -118,6 +118,7 @@ const MOCK_RECOMMENDED_ADS_RESPONSE = [
     grade: "A",
     adjusted_rating: 4.6,
     sponsored: true,
+    image_blob: new Blob(new Uint8Array(), { type: "image/jpeg" }),
   },
 ];
 
