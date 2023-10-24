@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/MediaKeySession.h"
 #include "mozilla/dom/MediaKeySystemAccessBinding.h"
-#include "mozilla/EMEUtils.h"
 #include "mozilla/WMFCDMProxyCallback.h"
 #include "WMFCDMImpl.h"
 #include "WMFCDMProxyCallback.h"
@@ -104,8 +103,6 @@ WMFCDMProxy::GenerateMFCDMMediaCapabilities(
     const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities) {
   CopyableTArray<MFCDMMediaCapability> outCapabilites;
   for (const auto& capabilities : aCapabilities) {
-    EME_LOG("WMFCDMProxy::Init %p, robustness=%s", this,
-            NS_ConvertUTF16toUTF8(capabilities.mRobustness).get());
     outCapabilites.AppendElement(MFCDMMediaCapability{
         capabilities.mContentType, capabilities.mRobustness});
   }
@@ -309,31 +306,6 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
         NS_ConvertUTF16toUTF8(aSessionId).get());
     session->SetExpiration(static_cast<double>(aExpiryTime));
   }
-}
-
-void WMFCDMProxy::SetServerCertificate(PromiseId aPromiseId,
-                                       nsTArray<uint8_t>& aCert) {
-  MOZ_ASSERT(NS_IsMainThread());
-  RETURN_IF_SHUTDOWN();
-  EME_LOG("WMFCDMProxy::SetServerCertificate(this=%p, pid=%" PRIu32 ")", this,
-          aPromiseId);
-  mCDM->SetServerCertificate(aPromiseId, aCert)
-      ->Then(
-          mMainThread, __func__,
-          [self = RefPtr{this}, this, aPromiseId]() {
-            RETURN_IF_SHUTDOWN();
-            ResolvePromise(aPromiseId);
-          },
-          [self = RefPtr{this}, this, aPromiseId]() {
-            RETURN_IF_SHUTDOWN();
-            RejectPromiseWithStateError(
-                aPromiseId,
-                nsLiteralCString("WMFCDMProxy::SetServerCertificate failed!"));
-          });
-}
-
-bool WMFCDMProxy::IsHardwareDecryptionSupported() const {
-  return mozilla::IsHardwareDecryptionSupported(mConfig);
 }
 
 uint64_t WMFCDMProxy::GetCDMProxyId() const {

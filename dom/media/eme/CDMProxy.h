@@ -253,8 +253,6 @@ class CDMProxy {
   virtual WMFCDMProxy* AsWMFCDMProxy() { return nullptr; }
 #endif
 
-  virtual bool IsHardwareDecryptionSupported() const { return false; }
-
  protected:
   // Main thread only.
   CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,

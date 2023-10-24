@@ -42,8 +42,7 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
   }
 #endif
 #if MOZ_WMF_CDM
-  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-       IsWidevineExperimentKeySystemAndSupported(aKeySystem)) &&
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
       WMFCDMImpl::Supports(aKeySystem)) {
     return true;
   }
@@ -190,25 +189,12 @@ bool KeySystemConfig::CreateKeySystemConfigs(
     return true;
   }
 #ifdef MOZ_WMF_CDM
-  if (IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-      IsWidevineExperimentKeySystemAndSupported(aKeySystem)) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
     RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
     return cdm->GetCapabilities(aOutConfigs);
   }
 #endif
   return false;
-}
-
-bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
-#ifdef MOZ_WMF_CDM
-  // We want to map Widevine experiment key system to normal Widevine key system
-  // as well.
-  if (IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
-    return mKeySystem.Equals(aKeySystem) ||
-           aKeySystem.EqualsLiteral(kWidevineKeySystemName);
-  }
-#endif
-  return mKeySystem.Equals(aKeySystem);
 }
 
 #ifdef DEBUG

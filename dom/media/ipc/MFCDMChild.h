@@ -60,9 +60,6 @@ class MFCDMChild final : public PMFCDMChild {
   RefPtr<GenericPromise> RemoveSession(uint32_t aPromiseId,
                                        const nsAString& aSessionId);
 
-  RefPtr<GenericPromise> SetServerCertificate(uint32_t aPromiseId,
-                                              nsTArray<uint8_t>& aCert);
-
   mozilla::ipc::IPCResult RecvOnSessionKeyMessage(
       const MFCDMKeyMessage& aMessage);
   mozilla::ipc::IPCResult RecvOnSessionKeyStatusesChanged(
