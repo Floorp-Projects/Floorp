@@ -463,10 +463,6 @@ class ContentParent final : public PContentParent,
 
   PRemoteSpellcheckEngineParent* AllocPRemoteSpellcheckEngineParent();
 
-  mozilla::ipc::IPCResult RecvRecordingDeviceEvents(
-      const nsAString& aRecordingStatus, const nsAString& aPageURL,
-      const bool& aIsAudio, const bool& aIsVideo);
-
   bool CycleCollectWithLogs(bool aDumpAllTraces,
                             nsICycleCollectorLogSink* aSink,
                             nsIDumpGCAndCCLogsCallback* aCallback);
