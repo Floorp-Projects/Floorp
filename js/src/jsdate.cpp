@@ -1152,7 +1152,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
   size_t i = 0;
 
   size_t mday;
-  if (!ParseDigitsNOrLess(4, &mday, s, &i, length)) {
+  if (!ParseDigitsNOrLess(6, &mday, s, &i, length)) {
     return false;
   }
   size_t mdayDigits = i;
@@ -1196,7 +1196,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
 
   size_t pre = i;
   size_t year;
-  if (!ParseDigitsNOrLess(4, &year, s, &i, length)) {
+  if (!ParseDigitsNOrLess(6, &year, s, &i, length)) {
     return false;
   }
   size_t yearDigits = i - pre;
@@ -1205,7 +1205,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
     return false;
   }
 
-  // Swap the mday and year iff the year wasn't specified in full.
+  // Swap the mday and year if the year wasn't specified in full.
   if (mday > 31 && year <= 31 && yearDigits < 4) {
     std::swap(mday, year);
     std::swap(mdayDigits, yearDigits);
@@ -1412,11 +1412,16 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       TryParseDashedDatePrefix(s, length, &index, &year, &mon, &mday) ||
       TryParseDashedNumericDatePrefix(s, length, &index, &year, &mon, &mday);
 
-  // If we don't check this here, the keywords check later will think that the
-  // 'T' in e.g. "1-20-2012T10:00:00" is an abbreviation for "Thursday" and
-  // allow it when it should be rejected.
-  if (isDashedDate && s[index] == 'T') {
-    return false;
+  if (isDashedDate && index < length) {
+    if (strchr("T:+", s[index])) {
+      return false;
+    }
+
+    // If the next char is a '-', we need to skip it so that the next number
+    // doesn't get parsed as a time zone
+    if (s[index] == '-') {
+      index++;
+    }
   }
 
   while (index < length) {
