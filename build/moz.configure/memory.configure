@@ -62,24 +62,19 @@ set_config("MOZ_REPLACE_MALLOC_STATIC", replace_malloc_static)
 # In general, it only makes sense for PHC to run on the platforms that have a
 # crash reporter.
 @depends(
-    milestone,
     build_project,
     target,
     when="--enable-jemalloc",
 )
-def phc_default(milestone, build_project, target):
-    # Nightly or early beta only because PHC has a non-negligible performance cost.
-    if not milestone.is_early_beta_or_earlier:
-        return False
-
+def phc_default(build_project, target):
     if build_project == "js":
         return False
 
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
-    return (
-        (target.os == "GNU" and target.kernel == "Linux" and target.bitness == 64)
-        or (target.kernel == "WINNT" and target.bitness == 64)
+    return (target.cpu in ("x86_64", "aarch64")) and (
+        (target.os == "GNU" and target.kernel == "Linux")
+        or (target.kernel == "WINNT")
         or (target.os == "OSX")
     )
 
