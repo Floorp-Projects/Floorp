@@ -51,7 +51,7 @@ class CanvasRenderThread final {
   /// Can be called from any thread, may return nullptr late in shutdown.
   static already_AddRefed<nsIThread> GetCanvasRenderThread();
 
-  static already_AddRefed<TaskQueue> CreateTaskQueue(bool aPreferWorkers);
+  static already_AddRefed<TaskQueue> CreateWorkerTaskQueue();
 
   static void Dispatch(already_AddRefed<nsIRunnable> aRunnable);
 

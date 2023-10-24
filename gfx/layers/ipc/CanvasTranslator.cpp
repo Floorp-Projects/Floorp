@@ -79,6 +79,22 @@ CanvasTranslator::~CanvasTranslator() {
   mBaseDT = nullptr;
 }
 
+void CanvasTranslator::DispatchToTaskQueue(
+    already_AddRefed<nsIRunnable> aRunnable) {
+  if (mTranslationTaskQueue) {
+    MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(std::move(aRunnable)));
+  } else {
+    gfx::CanvasRenderThread::Dispatch(std::move(aRunnable));
+  }
+}
+
+bool CanvasTranslator::IsInTaskQueue() const {
+  if (mTranslationTaskQueue) {
+    return mTranslationTaskQueue->IsCurrentThreadIn();
+  }
+  return gfx::CanvasRenderThread::IsInCanvasRenderThread();
+}
+
 mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
     const TextureType& aTextureType,
     ipc::SharedMemoryBasic::Handle&& aReadHandle,
@@ -96,39 +112,41 @@ mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
   if (!mStream->InitReader(std::move(aReadHandle), std::move(aReaderSem),
                            std::move(aWriterSem),
                            MakeUnique<RingBufferReaderServices>(this))) {
+    mStream = nullptr;
     return IPC_FAIL(this, "Failed to initialize ring buffer reader.");
   }
 
 #if defined(XP_WIN)
   if (!CheckForFreshCanvasDevice(__LINE__)) {
     gfxCriticalNote << "GFX: CanvasTranslator failed to get device";
+    mStream = nullptr;
     return IPC_OK();
   }
 #endif
 
-  mTranslationTaskQueue =
-      gfx::CanvasRenderThread::CreateTaskQueue(!aUseIPDLThread);
+  if (!aUseIPDLThread) {
+    mTranslationTaskQueue = gfx::CanvasRenderThread::CreateWorkerTaskQueue();
+  }
   return RecvResumeTranslation();
 }
 
 ipc::IPCResult CanvasTranslator::RecvNewBuffer(
     ipc::SharedMemoryBasic::Handle&& aReadHandle) {
-  if (!mTranslationTaskQueue) {
+  if (!mStream) {
     return IPC_FAIL(this, "RecvNewBuffer before RecvInitTranslator.");
   }
-  // We need to set the new buffer on the transaltion queue to be sure that the
+  // We need to set the new buffer on the translation queue to be sure that the
   // drop buffer event has been processed.
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(NS_NewRunnableFunction(
+  DispatchToTaskQueue(NS_NewRunnableFunction(
       "CanvasTranslator SetNewBuffer",
       [self = RefPtr(this), readHandle = std::move(aReadHandle)]() mutable {
         self->mStream->SetNewBuffer(std::move(readHandle));
-      })));
-
+      }));
   return RecvResumeTranslation();
 }
 
 ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
-  if (!mTranslationTaskQueue) {
+  if (!mStream) {
     return IPC_FAIL(this, "RecvResumeTranslation before RecvInitTranslator.");
   }
   if (CheckDeactivated()) {
@@ -136,10 +154,9 @@ ipc::IPCResult CanvasTranslator::RecvResumeTranslation() {
     return IPC_OK();
   }
 
-  MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
-      NewRunnableMethod("CanvasTranslator::StartTranslation", this,
-                        &CanvasTranslator::StartTranslation)));
-
+  DispatchToTaskQueue(NewRunnableMethod("CanvasTranslator::StartTranslation",
+                                        this,
+                                        &CanvasTranslator::StartTranslation));
   return IPC_OK();
 }
 
@@ -148,9 +165,9 @@ void CanvasTranslator::StartTranslation() {
                      "StartTranslation called before buffer has been set.");
 
   if (!TranslateRecording() && CanSend()) {
-    MOZ_ALWAYS_SUCCEEDS(mTranslationTaskQueue->Dispatch(
-        NewRunnableMethod("CanvasTranslator::StartTranslation", this,
-                          &CanvasTranslator::StartTranslation)));
+    DispatchToTaskQueue(NewRunnableMethod("CanvasTranslator::StartTranslation",
+                                          this,
+                                          &CanvasTranslator::StartTranslation));
   }
 
   // If the stream has been marked as bad and the Writer hasn't failed,
@@ -166,7 +183,10 @@ void CanvasTranslator::ActorDestroy(ActorDestroyReason why) {
   MOZ_ASSERT(gfx::CanvasRenderThread::IsInCanvasRenderThread());
 
   if (!mTranslationTaskQueue) {
-    return FinishShutdown();
+    gfx::CanvasRenderThread::Dispatch(
+        NewRunnableMethod("CanvasTranslator::FinishShutdown", this,
+                          &CanvasTranslator::FinishShutdown));
+    return;
   }
 
   mTranslationTaskQueue->BeginShutdown()->Then(
@@ -219,10 +239,11 @@ void CanvasTranslator::Deactivate() {
 }
 
 bool CanvasTranslator::TranslateRecording() {
-  if (!mTranslationTaskQueue) {
+  MOZ_ASSERT(IsInTaskQueue());
+
+  if (!mStream) {
     return false;
   }
-  MOZ_ASSERT(mTranslationTaskQueue->IsCurrentThreadIn());
 
   uint8_t eventType = mStream->ReadNextEvent();
   while (mStream->good() && eventType != kDropBufferEventType) {

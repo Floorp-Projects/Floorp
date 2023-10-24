@@ -205,16 +205,10 @@ already_AddRefed<nsIThread> CanvasRenderThread::GetCanvasRenderThread() {
   return thread.forget();
 }
 
-/* static */ already_AddRefed<TaskQueue> CanvasRenderThread::CreateTaskQueue(
-    bool aPreferWorkers) {
-  if (!sCanvasRenderThread) {
+/* static */ already_AddRefed<TaskQueue>
+CanvasRenderThread::CreateWorkerTaskQueue() {
+  if (!sCanvasRenderThread || !sCanvasRenderThread->mWorkers) {
     return nullptr;
-  }
-
-  if (!aPreferWorkers || !sCanvasRenderThread->mWorkers) {
-    return TaskQueue::Create(do_AddRef(sCanvasRenderThread->mThread),
-                             "CanvasWorker")
-        .forget();
   }
 
   return TaskQueue::Create(do_AddRef(sCanvasRenderThread->mWorkers),

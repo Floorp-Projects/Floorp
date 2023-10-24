@@ -35,6 +35,19 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   CanvasTranslator();
 
   /**
+   * Dispatches a runnable to the preferred task queue or thread.
+   *
+   * @param aRunnable the runnable to dispatch
+   */
+  void DispatchToTaskQueue(already_AddRefed<nsIRunnable> aRunnable);
+
+  /**
+   * @returns true if running in the preferred task queue or thread for
+   * translation.
+   */
+  bool IsInTaskQueue() const;
+
+  /**
    * Initialize the canvas translator for a particular TextureType and
    * CanvasEventRingBuffer.
    *
