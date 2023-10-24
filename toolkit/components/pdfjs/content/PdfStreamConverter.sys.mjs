@@ -91,28 +91,6 @@ function getActor(window) {
   }
 }
 
-function getLocalizedStrings(path) {
-  var stringBundle = Services.strings.createBundle(
-    "chrome://pdf.js/locale/" + path
-  );
-
-  var map = {};
-  for (let string of stringBundle.getSimpleEnumeration()) {
-    var key = string.key,
-      property = "textContent";
-    var i = key.lastIndexOf(".");
-    if (i >= 0) {
-      property = key.substring(i + 1);
-      key = key.substring(0, i);
-    }
-    if (!(key in map)) {
-      map[key] = {};
-    }
-    map[key][property] = string.value;
-  }
-  return map;
-}
-
 function isValidMatchesCount(data) {
   if (typeof data !== "object" || data === null) {
     return false;
@@ -295,20 +273,12 @@ class ChromeActions {
     });
   }
 
-  getLocale() {
-    return Services.locale.requestedLocale || "en-US";
-  }
-
-  getStrings() {
-    try {
-      // Lazy initialization of localizedStrings
-      this.localizedStrings ||= getLocalizedStrings("viewer.properties");
-
-      return this.localizedStrings;
-    } catch (e) {
-      log("Unable to retrieve localized strings: " + e);
-      return null;
-    }
+  getLocaleProperties(_data, sendResponse) {
+    const { requestedLocale, defaultLocale, isAppLocaleRTL } = Services.locale;
+    sendResponse({
+      lang: requestedLocale || defaultLocale,
+      isRTL: isAppLocaleRTL,
+    });
   }
 
   supportsIntegratedFind() {
