@@ -113,7 +113,7 @@ def run(src_root, obj_root, logger=None, **kwargs):
     test_paths = wptcommandline.get_test_paths(wptcommandline.config.read(config_path))
 
     for paths in test_paths.values():
-        if "manifest_path" not in paths:
+        if isinstance(paths, dict) and "manifest_path" not in paths:
             paths["manifest_path"] = os.path.join(
                 paths["metadata_path"], "MANIFEST.json"
             )
@@ -151,7 +151,10 @@ def run(src_root, obj_root, logger=None, **kwargs):
 
 def ensure_manifest_directories(logger, test_paths):
     for paths in test_paths.values():
-        manifest_dir = os.path.dirname(paths["manifest_path"])
+        manifest_path = (
+            paths["manifest_path"] if isinstance(paths, dict) else paths.manifest_path
+        )
+        manifest_dir = os.path.dirname(manifest_path)
         if not os.path.exists(manifest_dir):
             logger.info("Creating directory %s" % manifest_dir)
             # Even though we just checked the path doesn't exist, there's a chance
@@ -231,7 +234,9 @@ def load_and_update(
     rv = {}
     wptdir_hash = hashlib.sha256(os.path.abspath(wpt_dir).encode()).hexdigest()
     for url_base, paths in test_paths.items():
-        manifest_path = paths["manifest_path"]
+        manifest_path = (
+            paths["manifest_path"] if isinstance(paths, dict) else paths.manifest_path
+        )
         this_cache_root = os.path.join(
             cache_root, wptdir_hash, os.path.dirname(paths["manifest_rel_path"])
         )
