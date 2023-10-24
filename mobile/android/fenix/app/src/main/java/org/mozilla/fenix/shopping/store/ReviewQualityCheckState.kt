@@ -171,6 +171,7 @@ sealed interface ReviewQualityCheckState : State {
         /**
          * The state when the recommended product is available.
          *
+         * @property aid The unique identifier of the product.
          * @property name The name of the product.
          * @property productUrl The url of the product.
          * @property imageUrl The url of the image of the product.
@@ -181,6 +182,7 @@ sealed interface ReviewQualityCheckState : State {
          * @property analysisUrl The url of the analysis of the product.
          */
         data class Product(
+            val aid: String,
             val name: String,
             val productUrl: String,
             val imageUrl: String,

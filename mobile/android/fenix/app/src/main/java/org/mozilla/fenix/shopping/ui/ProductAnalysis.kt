@@ -564,6 +564,7 @@ private class ProductAnalysisPreviewModelParameterProvider :
             ProductAnalysisPreviewModel(
                 productRecommendationsEnabled = true,
                 recommendedProductState = RecommendedProductState.Product(
+                    aid = "aid",
                     name = "The best desk ever with a really really really long product name that " +
                         "forces the preview to wrap its text to at least 4 lines.",
                     productUrl = "www.mozilla.com",

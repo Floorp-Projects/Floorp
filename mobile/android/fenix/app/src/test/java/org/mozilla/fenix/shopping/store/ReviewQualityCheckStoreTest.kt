@@ -20,6 +20,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.shopping.ShoppingState
 import org.mozilla.fenix.shopping.ProductAnalysisTestData
+import org.mozilla.fenix.shopping.ProductRecommendationTestData
 import org.mozilla.fenix.shopping.fake.FakeNetworkChecker
 import org.mozilla.fenix.shopping.fake.FakeReviewQualityCheckPreferences
 import org.mozilla.fenix.shopping.fake.FakeReviewQualityCheckService
@@ -32,6 +33,7 @@ import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckPreferencesMiddle
 import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckService
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
+import java.util.Locale
 
 class ReviewQualityCheckStoreTest {
 
@@ -180,8 +182,15 @@ class ReviewQualityCheckStoreTest {
                         isEnabled = true,
                         isProductRecommendationsEnabled = true,
                     ),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                        productRecommendation = ProductRecommendationTestData.productRecommendation(),
+                    ),
                 ),
             )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
             tested.waitUntilIdle()
             dispatcher.scheduler.advanceUntilIdle()
             tested.dispatch(ReviewQualityCheckAction.ToggleProductRecommendation).joinBlocking()
@@ -191,6 +200,9 @@ class ReviewQualityCheckStoreTest {
             val expected = ReviewQualityCheckState.OptedIn(
                 productRecommendationsPreference = false,
                 productVendor = ProductVendor.BEST_BUY,
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    recommendedProductState = ReviewQualityCheckState.RecommendedProductState.Initial,
+                ),
             )
             assertEquals(expected, tested.state)
         }
@@ -539,6 +551,98 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Test
+    fun `GIVEN product recommendations are enabled WHEN a product analysis is fetched successfully THEN product recommendation should also be fetched and displayed if available`() =
+        runTest {
+            setAndResetLocale {
+                val tested = ReviewQualityCheckStore(
+                    middleware = provideReviewQualityCheckMiddleware(
+                        reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                            isEnabled = true,
+                            isProductRecommendationsEnabled = true,
+                        ),
+                        reviewQualityCheckService = FakeReviewQualityCheckService(
+                            productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                            productRecommendation = ProductRecommendationTestData.productRecommendation(),
+                        ),
+                    ),
+                )
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+                tested.waitUntilIdle()
+                tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+                tested.waitUntilIdle()
+                dispatcher.scheduler.advanceUntilIdle()
+
+                val expected = ReviewQualityCheckState.OptedIn(
+                    productReviewState = ProductAnalysisTestData.analysisPresent(
+                        recommendedProductState = ProductRecommendationTestData.product(),
+                    ),
+                    productRecommendationsPreference = true,
+                    productVendor = ProductVendor.BEST_BUY,
+                )
+                assertEquals(expected, tested.state)
+            }
+        }
+
+    @Test
+    fun `GIVEN product recommendations are enabled WHEN a product analysis is fetched successfully and product recommendation fails THEN product recommendations state should be error`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                        isEnabled = true,
+                        isProductRecommendationsEnabled = true,
+                    ),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                        productRecommendation = null,
+                    ),
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productReviewState = ProductAnalysisTestData.analysisPresent(
+                    recommendedProductState = ReviewQualityCheckState.RecommendedProductState.Error,
+                ),
+                productRecommendationsPreference = true,
+                productVendor = ProductVendor.BEST_BUY,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
+    fun `GIVEN product recommendations are enabled WHEN product analysis fails THEN product recommendations should not be fetched`() =
+        runTest {
+            val captureActionsMiddleware = CaptureActionsMiddleware<ReviewQualityCheckState, ReviewQualityCheckAction>()
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                        isEnabled = true,
+                        isProductRecommendationsEnabled = true,
+                    ),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = { null },
+                        productRecommendation = ProductRecommendationTestData.productRecommendation(),
+                    ),
+                ) + captureActionsMiddleware,
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            captureActionsMiddleware.assertNotDispatched(ReviewQualityCheckAction.UpdateRecommendedProduct::class)
+        }
+
     private fun provideReviewQualityCheckMiddleware(
         reviewQualityCheckPreferences: ReviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(),
         reviewQualityCheckVendorsService: FakeReviewQualityCheckVendorsService = FakeReviewQualityCheckVendorsService(),
@@ -559,5 +663,12 @@ class ReviewQualityCheckStoreTest {
                 scope = this.scope,
             ),
         )
+    }
+
+    private fun setAndResetLocale(locale: Locale = Locale.US, block: () -> Unit) {
+        val initialLocale = Locale.getDefault()
+        Locale.setDefault(locale)
+        block()
+        Locale.setDefault(initialLocale)
     }
 }

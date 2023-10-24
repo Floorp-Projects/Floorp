@@ -36,6 +36,7 @@ private fun reducer(
     return state
 }
 
+@Suppress("LongMethod")
 private fun mapStateForUpdateAction(
     state: ReviewQualityCheckState,
     action: ReviewQualityCheckAction.UpdateAction,
@@ -51,6 +52,7 @@ private fun mapStateForUpdateAction(
                 )
             }
         }
+
         is ReviewQualityCheckAction.OptOutCompleted -> {
             ReviewQualityCheckState.NotOptedIn(action.productVendors)
         }
@@ -61,7 +63,19 @@ private fun mapStateForUpdateAction(
 
         ReviewQualityCheckAction.ToggleProductRecommendation -> {
             if (state is ReviewQualityCheckState.OptedIn && state.productRecommendationsPreference != null) {
-                state.copy(productRecommendationsPreference = !state.productRecommendationsPreference)
+                if (state.productReviewState is ProductReviewState.AnalysisPresent &&
+                    state.productRecommendationsPreference
+                ) {
+                    // Removes any existing product recommendation from UI
+                    state.copy(
+                        productRecommendationsPreference = false,
+                        productReviewState = state.productReviewState.copy(
+                            recommendedProductState = ReviewQualityCheckState.RecommendedProductState.Initial,
+                        ),
+                    )
+                } else {
+                    state.copy(productRecommendationsPreference = !state.productRecommendationsPreference)
+                }
             } else {
                 state
             }
@@ -95,6 +109,22 @@ private fun mapStateForUpdateAction(
                     else -> {
                         it
                     }
+                }
+            }
+        }
+
+        is ReviewQualityCheckAction.UpdateRecommendedProduct -> {
+            state.mapIfOptedIn {
+                if (it.productReviewState is ProductReviewState.AnalysisPresent &&
+                    it.productRecommendationsPreference == true
+                ) {
+                    it.copy(
+                        productReviewState = it.productReviewState.copy(
+                            recommendedProductState = action.recommendedProductState,
+                        ),
+                    )
+                } else {
+                    it
                 }
             }
         }
