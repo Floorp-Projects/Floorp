@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-17T14:34:37.762523'
+updated_at: '2023-10-19T09:25:16.095176'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -639,6 +639,10 @@ people:
     bmo_id: 649193
     name: Lougenia Bailey
     nick: lougenia
+  - &lsalzman
+    bmo_id: 536714
+    name: Lee Salzman
+    nick: lsalzman
   - &luke
     bmo_id: 347312
     name: Luke Wagner
@@ -1744,6 +1748,7 @@ modules:
       - *jnicol
       - *rhunt
       - *gw
+      - *lsalzman
     machine_name: core_graphics
 
   - name: 'Core: HAL'
@@ -4207,5 +4212,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: fab1e28e32eca300488081d2fc9b7c0769b3552d
-  export: 23925624c95ce06293fe26987721d8cc8764177c
+  config: ecd3ee3642ee717b15e97acc76347c17a7762563
+  export: cba0947f844d6b980a0bf78c34a6f50ed5585555
