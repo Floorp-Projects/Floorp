@@ -25,5 +25,6 @@
 }
 
 :host([native]) dropmarker {
+  margin-top: -2px;
   margin-inline: 3px -3px;
 }
