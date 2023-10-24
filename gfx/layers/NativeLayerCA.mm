@@ -1638,7 +1638,6 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mContentCALayer = nil;
     [mOpaquenessTintLayer release];
     mOpaquenessTintLayer = nil;
-    [mWrappingCALayer removeFromSuperlayer];
     [mWrappingCALayer release];
     mWrappingCALayer = nil;
   }
