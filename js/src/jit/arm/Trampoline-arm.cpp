@@ -616,42 +616,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.enterExitFrame(cxreg, regs.getAny(), id);
 
   // Reserve space for the outparameter.
-  Register outReg = InvalidReg;
-  switch (f.outParam) {
-    case Type_Value:
-      outReg = r4;
-      regs.take(outReg);
-      masm.reserveStack(sizeof(Value));
-      masm.ma_mov(sp, outReg);
-      break;
-
-    case Type_Handle:
-      outReg = r4;
-      regs.take(outReg);
-      masm.PushEmptyRooted(f.outParamRootType);
-      masm.ma_mov(sp, outReg);
-      break;
-
-    case Type_Int32:
-    case Type_Pointer:
-    case Type_Bool:
-      outReg = r4;
-      regs.take(outReg);
-      masm.reserveStack(sizeof(int32_t));
-      masm.ma_mov(sp, outReg);
-      break;
-
-    case Type_Double:
-      outReg = r4;
-      regs.take(outReg);
-      masm.reserveStack(sizeof(double));
-      masm.ma_mov(sp, outReg);
-      break;
-
-    default:
-      MOZ_ASSERT(f.outParam == Type_Void);
-      break;
-  }
+  masm.reserveVMFunctionOutParamSpace(f);
 
   masm.setupUnalignedABICall(regs.getAny());
   masm.passABIArg(cxreg);
@@ -688,8 +653,12 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   }
 
   // Copy the implicit outparam, if any.
-  if (outReg != InvalidReg) {
-    masm.passABIArg(outReg);
+  const int32_t outParamOffset =
+      -int32_t(ExitFooterFrame::Size()) - f.sizeOfOutParamStackSlot();
+  if (f.outParam != Type_Void) {
+    masm.passABIArg(MoveOperand(FramePointer, outParamOffset,
+                                MoveOperand::Kind::EffectiveAddress),
+                    MoveOp::GENERAL);
   }
 
   masm.callWithABI(nativeFun, MoveOp::GENERAL,
@@ -709,37 +678,8 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       MOZ_CRASH("unknown failure kind");
   }
 
-  // Load the outparam and free any allocated stack.
-  switch (f.outParam) {
-    case Type_Handle:
-      masm.popRooted(f.outParamRootType, ReturnReg, JSReturnOperand);
-      break;
-
-    case Type_Value:
-      masm.loadValue(Address(sp, 0), JSReturnOperand);
-      masm.freeStack(sizeof(Value));
-      break;
-
-    case Type_Int32:
-    case Type_Pointer:
-      masm.load32(Address(sp, 0), ReturnReg);
-      masm.freeStack(sizeof(int32_t));
-      break;
-
-    case Type_Bool:
-      masm.load8ZeroExtend(Address(sp, 0), ReturnReg);
-      masm.freeStack(sizeof(int32_t));
-      break;
-
-    case Type_Double:
-      masm.loadDouble(Address(sp, 0), ReturnDoubleReg);
-      masm.freeStack(sizeof(double));
-      break;
-
-    default:
-      MOZ_ASSERT(f.outParam == Type_Void);
-      break;
-  }
+  // Load the outparam.
+  masm.loadVMFunctionOutParam(f, Address(FramePointer, outParamOffset));
 
   // Until C++ code is instrumented against Spectre, prevent speculative
   // execution from returning any private data.

@@ -300,6 +300,8 @@ struct VMFunctionData {
     return count;
   }
 
+  size_t sizeOfOutParamStackSlot() const;
+
   constexpr VMFunctionData(const char* name, uint32_t explicitArgs,
                            uint32_t argumentProperties,
                            uint32_t argumentPassedInFloatRegs,
