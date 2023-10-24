@@ -1212,8 +1212,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
  * We break the reference cycle in OnStartRequest by clearing mElement.
  */
 class HTMLMediaElement::MediaLoadListener final
-    : public nsIStreamListener,
-      public nsIChannelEventSink,
+    : public nsIChannelEventSink,
       public nsIInterfaceRequestor,
       public nsIObserver,
       public nsIThreadRetargetableStreamListener {
@@ -1361,6 +1360,20 @@ HTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest* aRequest,
     return NS_BINDING_ABORTED;
   }
   return mNextListener->OnDataAvailable(aRequest, aStream, aOffset, aCount);
+}
+
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::OnDataFinished(nsresult aStatus) {
+  if (!mNextListener) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+      do_QueryInterface(mNextListener);
+  if (retargetable) {
+    return retargetable->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

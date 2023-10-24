@@ -1363,3 +1363,14 @@ nsJARChannel::CheckListenerChain() {
 
   return listener->CheckListenerChain();
 }
+
+NS_IMETHODIMP
+nsJARChannel::OnDataFinished(nsresult aStatus) {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+      do_QueryInterface(mListener);
+  if (listener) {
+    return listener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}

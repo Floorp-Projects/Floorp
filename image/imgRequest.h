@@ -41,8 +41,7 @@ class ProgressTracker;
 
 struct NewPartResult;
 
-class imgRequest final : public nsIStreamListener,
-                         public nsIThreadRetargetableStreamListener,
+class imgRequest final : public nsIThreadRetargetableStreamListener,
                          public nsIChannelEventSink,
                          public nsIInterfaceRequestor,
                          public nsIAsyncVerifyRedirectCallback {

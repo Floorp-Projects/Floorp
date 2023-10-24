@@ -17,8 +17,7 @@ class nsIEventTarget;
 namespace mozilla::dom {
 
 class MutableBlobStreamListener final
-    : public nsIStreamListener,
-      public nsIThreadRetargetableStreamListener {
+    : public nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
