@@ -58,5 +58,9 @@ module.exports = {
     // available.
     "mozilla/use-chromeutils-generateqi": "off",
     "no-shadow": "error",
+    // Turn off no-unsanitized for tests, as we do want to be able to use
+    // these for testing.
+    "no-unsanitized/method": "off",
+    "no-unsanitized/property": "off",
   },
 };

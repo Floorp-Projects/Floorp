@@ -57,5 +57,9 @@ module.exports = {
     // We mis-predict globals for HTML test files in directories shared
     // with browser tests.
     "mozilla/no-redeclare-with-import-autofix": "off",
+    // Turn off no-unsanitized for tests, as we do want to be able to use
+    // these for testing.
+    "no-unsanitized/method": "off",
+    "no-unsanitized/property": "off",
   },
 };
