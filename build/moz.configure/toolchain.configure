@@ -2335,6 +2335,7 @@ def ub_unsigned_overflow_san():
 
 add_old_configure_assignment("MOZ_UNSIGNED_OVERFLOW_SANITIZE", ub_unsigned_overflow_san)
 
+
 # Security Hardening
 # ==============================================================
 
@@ -2536,6 +2537,15 @@ def frame_pointer_flags(enable, flags):
 
 
 set_config("MOZ_FRAMEPTR_FLAGS", frame_pointer_flags)
+
+
+# Stack unwinding without frame pointers
+# ==============================================================
+
+
+have_unwind = check_symbol(
+    "_Unwind_Backtrace", when=check_header("unwind.h", when=target_is_unix)
+)
 
 
 # Code Coverage
