@@ -2,10 +2,10 @@
 <html>
 <head>
   <title>Image recognition test for Chinese</title>
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <script src="head.js"></script>
-  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
@@ -29,7 +29,7 @@
 
     info("Recognizing the image text, but not as Chinese");
     {
-      const result = await img.recognizeCurrentImageText();
+      const result = await SpecialPowers.wrap(img).recognizeCurrentImageText();
       for (const { string } of result) {
         isnot(string, "火狐", 'The results are (as expected) incorrect, as Chinese was not set as the language.');
       }
@@ -40,7 +40,7 @@
 
     info("Recognizing the image text");
     {
-      const result = await img.recognizeCurrentImageText();
+      const result = await SpecialPowers.wrap(img).recognizeCurrentImageText();
       is(result.length, 1, "One word was found.");
       is(result[0].string, "火狐", "The Chinese characters for Firefox are found.");
     }
