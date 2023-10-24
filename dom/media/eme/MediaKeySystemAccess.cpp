@@ -128,7 +128,8 @@ MediaKeySystemStatus MediaKeySystemAccess::GetKeySystemStatus(
   }
 
 #ifdef MOZ_WMF_CDM
-  if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
+  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
+       IsWidevineExperimentKeySystemAndSupported(aKeySystem)) &&
       KeySystemConfig::Supports(aKeySystem)) {
     return MediaKeySystemStatus::Available;
   }
@@ -177,6 +178,8 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
 #ifdef MOZ_WMF_CDM
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
       NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+      NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
+      NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
 #endif
   };
   for (const auto& name : keySystemNames) {

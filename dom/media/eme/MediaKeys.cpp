@@ -439,7 +439,8 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
   } else
 #endif
 #ifdef MOZ_WMF_CDM
-      if (IsPlayReadyKeySystemAndSupported(mKeySystem)) {
+      if (IsPlayReadyKeySystemAndSupported(mKeySystem) ||
+          IsWidevineExperimentKeySystemAndSupported(mKeySystem)) {
     proxy = new WMFCDMProxy(this, mKeySystem, mConfig);
   } else
 #endif
