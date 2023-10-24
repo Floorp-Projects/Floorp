@@ -78,6 +78,8 @@ class MFCDMParent final : public PMFCDMParent {
  private:
   ~MFCDMParent();
 
+  LPCWSTR GetCDMLibraryName() const;
+
   HRESULT LoadFactory();
 
   void Register();
