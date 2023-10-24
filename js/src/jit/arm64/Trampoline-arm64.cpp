@@ -613,17 +613,6 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.loadJSContext(reg_cx);
   masm.enterExitFrame(reg_cx, regs.getAny(), id);
 
-  // Save the current stack pointer as the base for copying arguments.
-  Register argsBase = InvalidReg;
-  if (f.explicitArgs) {
-    // argsBase can't be an argument register. Bad things would happen if
-    // the MoveResolver didn't throw an assertion failure first.
-    argsBase = r8;
-    regs.take(argsBase);
-    masm.Add(ARMRegister(argsBase, 64), masm.GetStackPointer64(),
-             Operand(ExitFrameLayout::SizeWithFooter()));
-  }
-
   // Reserve space for any outparameter.
   Register outReg = InvalidReg;
   switch (f.outParam) {
@@ -666,22 +655,22 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   masm.setupUnalignedABICall(regs.getAny());
   masm.passABIArg(reg_cx);
 
-  size_t argDisp = 0;
+  size_t argDisp = ExitFrameLayout::Size();
 
   // Copy arguments.
   for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
     switch (f.argProperties(explicitArg)) {
       case VMFunctionData::WordByValue:
-        masm.passABIArg(MoveOperand(argsBase, argDisp),
+        masm.passABIArg(MoveOperand(FramePointer, argDisp),
                         (f.argPassedInFloatReg(explicitArg) ? MoveOp::DOUBLE
                                                             : MoveOp::GENERAL));
         argDisp += sizeof(void*);
         break;
 
       case VMFunctionData::WordByRef:
-        masm.passABIArg(
-            MoveOperand(argsBase, argDisp, MoveOperand::Kind::EffectiveAddress),
-            MoveOp::GENERAL);
+        masm.passABIArg(MoveOperand(FramePointer, argDisp,
+                                    MoveOperand::Kind::EffectiveAddress),
+                        MoveOp::GENERAL);
         argDisp += sizeof(void*);
         break;
 
