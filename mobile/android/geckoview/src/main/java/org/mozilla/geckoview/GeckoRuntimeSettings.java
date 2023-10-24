@@ -966,7 +966,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
     final String[] locales = new String[1];
     final Locale locale = Locale.getDefault();
-    locales[0] = locale.toLanguageTag();
+    if (VERSION.SDK_INT >= 21) {
+      locales[0] = locale.toLanguageTag();
+      return locales;
+    }
+
+    locales[0] = getLanguageTag(locale);
     return locales;
   }
 

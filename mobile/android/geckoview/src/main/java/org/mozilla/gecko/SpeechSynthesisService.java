@@ -69,7 +69,10 @@ public class SpeechSynthesisService {
               Log.w(LOGTAG, "TextToSpeech is not initialized");
               return;
             }
-            final Locale defaultLocale = tss.getDefaultLanguage();
+            final Locale defaultLocale =
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
+                    ? tss.getDefaultLanguage()
+                    : tss.getLanguage();
             for (final Locale locale : getAvailableLanguages()) {
               final Set<String> features = tss.getFeatures(locale);
               final boolean isLocal =
