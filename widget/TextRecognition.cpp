@@ -35,6 +35,11 @@ auto TextRecognition::FindText(imgIContainer& aImage,
 auto TextRecognition::FindText(gfx::DataSourceSurface& aSurface,
                                const nsTArray<nsCString>& aLanguages)
     -> RefPtr<NativePromise> {
+  if (!IsSupported()) {
+    return NativePromise::CreateAndReject("Text recognition not available"_ns,
+                                          __func__);
+  }
+
   if (XRE_IsContentProcess()) {
     auto* contentChild = ContentChild::GetSingleton();
     auto image = nsContentUtils::SurfaceToIPCImage(aSurface);
@@ -108,10 +113,7 @@ void TextRecognition::FillShadow(ShadowRoot& aShadow,
 auto TextRecognition::DoFindText(gfx::DataSourceSurface&,
                                  const nsTArray<nsCString>&)
     -> RefPtr<NativePromise> {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess(),
-                     "This should only run in the parent process");
-  return NativePromise::CreateAndReject("Text recognition not available"_ns,
-                                        __func__);
+  MOZ_CRASH("DoFindText is not implemented on this platform");
 }
 #endif
 
