@@ -12,7 +12,9 @@
         "in_progress",
         "completed",
         "not_analyzable",
-        "unprocessable"
+        "unprocessable",
+        "page_not_supported",
+        "not_enough_reviews"
       ]
     }
   },
