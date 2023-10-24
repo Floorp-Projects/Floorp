@@ -27,7 +27,6 @@ namespace net {
   }
 
 class ParentChannelListener final : public nsIInterfaceRequestor,
-                                    public nsIStreamListener,
                                     public nsIMultiPartChannelListener,
                                     public nsINetworkInterceptController,
                                     public nsIThreadRetargetableStreamListener,

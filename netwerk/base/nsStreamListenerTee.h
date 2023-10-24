@@ -17,7 +17,6 @@ namespace mozilla {
 namespace net {
 
 class nsStreamListenerTee : public nsIStreamListenerTee,
-                            public nsIThreadRetargetableStreamListener,
                             public nsIMultiPartChannelListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

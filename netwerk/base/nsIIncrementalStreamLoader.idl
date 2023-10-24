@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIStreamListener.idl"
+#include "nsIThreadRetargetableStreamListener.idl"
 
 interface nsIRequest;
 interface nsIIncrementalStreamLoader;
@@ -77,7 +77,7 @@ interface nsIIncrementalStreamLoaderObserver : nsISupports
  * XXX define behaviour for sizes >4 GB
  */
 [scriptable, uuid(a023b060-ba23-431a-b449-2dd63e220554)]
-interface nsIIncrementalStreamLoader : nsIStreamListener
+interface nsIIncrementalStreamLoader : nsIThreadRetargetableStreamListener
 {
     /**
      * Initialize this stream loader, and start loading the data.

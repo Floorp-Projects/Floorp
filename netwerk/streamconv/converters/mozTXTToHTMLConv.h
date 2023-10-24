@@ -12,6 +12,7 @@
 #define _mozTXTToHTMLConv_h__
 
 #include "mozITXTToHTMLConv.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
@@ -30,6 +31,7 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
   NS_DECL_MOZITXTTOHTMLCONV
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSISTREAMCONVERTER
 
   /**
