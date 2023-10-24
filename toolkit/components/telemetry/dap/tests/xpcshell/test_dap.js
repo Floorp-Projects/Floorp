@@ -69,9 +69,10 @@ function uploadHandler(request, response) {
   );
 
   let body = new BinaryInputStream(request.bodyInputStream);
+  console.log(body.available());
   Assert.equal(
     true,
-    body.available() == 366 || body.available() == 20654,
+    body.available() == 410 || body.available() == 20698,
     "Wrong request body size."
   );
   received = true;

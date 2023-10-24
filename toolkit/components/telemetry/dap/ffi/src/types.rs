@@ -119,6 +119,23 @@ impl ExtensionType {
     }
 }
 
+/// struct {
+///     Extension extensions<0..2^16-1>;
+///     opaque payload<0..2^32-1>;
+/// } PlaintextInputShare;
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#section-4.3.2-9
+pub struct PlaintextInputShare {
+    pub extensions: Vec<Extension>,
+    pub payload: Vec<u8>,
+}
+
+impl Encode for PlaintextInputShare {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        encode_u16_items(bytes, &(), &self.extensions);
+        encode_u32_items(bytes, &(), &self.payload);
+    }
+}
+
 /// Identifier for a server's HPKE configuration
 /// uint8 HpkeConfigId;
 /// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-protocol-definition
