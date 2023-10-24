@@ -46,5 +46,9 @@ module.exports = {
     "mozilla/no-arbitrary-setTimeout": "error",
     "mozilla/no-useless-run-test": "error",
     "no-shadow": "error",
+    // Turn off no-unsanitized for tests, as we do want to be able to use
+    // these for testing.
+    "no-unsanitized/method": "off",
+    "no-unsanitized/property": "off",
   },
 };
