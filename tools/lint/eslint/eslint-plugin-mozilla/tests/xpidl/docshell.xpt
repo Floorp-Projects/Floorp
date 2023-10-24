@@ -2503,6 +2503,39 @@
       },
       {
         "flags": [
+          "getter",
+          "hasretval"
+        ],
+        "name": "recordProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "setter"
+        ],
+        "name": "recordProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_BOOL"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
           "hasretval"
         ],
         "name": "now",
@@ -2513,6 +2546,23 @@
             ],
             "type": {
               "tag": "TD_DOUBLE"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "jscontext",
+          "hasretval"
+        ],
+        "name": "popProfileTimelineMarkers",
+        "params": [
+          {
+            "flags": [
+              "out"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
             }
           }
         ]
@@ -2948,6 +2998,69 @@
             }
           }
         ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyJSRunToCompletionStart",
+        "params": [
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_ASTRING"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_UINT32"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_JSVAL"
+            }
+          },
+          {
+            "flags": [
+              "in"
+            ],
+            "type": {
+              "tag": "TD_PSTRING"
+            }
+          }
+        ]
+      },
+      {
+        "flags": [
+          "hidden"
+        ],
+        "name": "notifyJSRunToCompletionStop",
+        "params": []
       },
       {
         "flags": [

@@ -8,6 +8,8 @@
 
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/AutoRestyleTimelineMarker.h"
+#include "mozilla/AutoTimelineMarker.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/DocumentStyleRootIterator.h"
@@ -2419,6 +2421,8 @@ void RestyleManager::PostRestyleEventForAnimations(Element* aElement,
 
   mPresContext->TriggeredAnimationRestyle();
 
+  AutoRestyleTimelineMarker marker(mPresContext->GetDocShell(),
+                                   true /* animation-only */);
   Servo_NoteExplicitHints(elementToRestyle, aRestyleHint, nsChangeHint(0));
 }
 
@@ -3209,6 +3213,8 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     nsTArray<RefPtr<Element>> anchorsToSuppress;
 
     {
+      // This marker is not used for testing, so can be removed
+      AutoRestyleTimelineMarker marker(presContext->GetDocShell(), false);
       DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
       while (Element* root = iter.GetNextStyleRoot()) {
         nsTArray<nsIFrame*> wrappersToRestyle;
@@ -3239,6 +3245,8 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     // processing existing ones. We redirect those into a secondary queue and
     // iterate until there's nothing left.
     {
+      AutoTimelineMarker marker(presContext->GetDocShell(),
+                                "StylesApplyChanges");
       ReentrantChangeList newChanges;
       mReentrantChanges = &newChanges;
       while (!currentChanges.IsEmpty()) {

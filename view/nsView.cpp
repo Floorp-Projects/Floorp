@@ -26,6 +26,8 @@
 #include "nsContentUtils.h"  // for nsAutoScriptBlocker
 #include "nsDocShell.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/TimelineConsumers.h"
+#include "mozilla/CompositeTimelineMarker.h"
 #include "mozilla/StartupTimeline.h"
 
 using namespace mozilla;
@@ -1099,6 +1101,17 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
   // event which wouldn't be terribly useful to display.
   if (aCompositeStart == aCompositeEnd) {
     return;
+  }
+
+  nsIDocShell* docShell = context->GetDocShell();
+
+  if (TimelineConsumers::HasConsumer(docShell)) {
+    TimelineConsumers::AddMarkerForDocShell(
+        docShell, MakeUnique<CompositeTimelineMarker>(
+                      aCompositeStart, MarkerTracingType::START));
+    TimelineConsumers::AddMarkerForDocShell(
+        docShell, MakeUnique<CompositeTimelineMarker>(aCompositeEnd,
+                                                      MarkerTracingType::END));
   }
 }
 
