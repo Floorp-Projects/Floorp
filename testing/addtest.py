@@ -44,13 +44,7 @@ add_task(async function test_TODO() {
         return self.template_body
 
     def update_manifest(self):
-        manifest_file = os.path.join(os.path.dirname(self.test), "xpcshell.ini")
-        filename = os.path.basename(self.test)
-
-        if not os.path.isfile(manifest_file):
-            print("Could not open manifest file {}".format(manifest_file))
-            return
-        write_to_ini_file(manifest_file, filename)
+        update_toml_or_ini("xpcshell", self.test)
 
 
 class MochitestCreator(Creator):
@@ -92,19 +86,13 @@ class MochitestCreator(Creator):
 
     def update_manifest(self):
         # attempt to insert into the appropriate manifest
-        guessed_ini = {
-            "mochitest-plain": "mochitest.ini",
-            "mochitest-chrome": "chrome.ini",
-            "mochitest-browser-chrome": "browser.ini",
+        guessed_prefix = {
+            "mochitest-plain": "mochitest",
+            "mochitest-chrome": "chrome",
+            "mochitest-browser-chrome": "browser",
         }[self.suite]
-        manifest_file = os.path.join(os.path.dirname(self.test), guessed_ini)
-        filename = os.path.basename(self.test)
 
-        if not os.path.isfile(manifest_file):
-            print("Could not open manifest file {}".format(manifest_file))
-            return
-
-        write_to_ini_file(manifest_file, filename)
+        update_toml_or_ini(guessed_prefix, self.test)
 
 
 class WebPlatformTestsCreator(Creator):
@@ -308,10 +296,23 @@ testing/web-platform/mozilla/tests for Gecko-only tests"""
         return url_base + rel_path.replace(os.path.sep, "/")
 
 
+# Insert a new test in the right place
+def update_toml_or_ini(manifest_prefix, testpath):
+    basedir = os.path.dirname(testpath)
+    manifest_file = os.path.join(basedir, manifest_prefix + ".toml")
+    if not os.path.isfile(manifest_file):
+        manifest_file = os.path.join(basedir, manifest_prefix + ".ini")
+        if not os.path.isfile(manifest_file):
+            print("Could not open manifest file {}".format(manifest_file))
+            return
+    filename = os.path.basename(testpath)
+    write_to_manifest_file(manifest_file, filename)
+
+
 # Insert a new test in the right place within a given manifest file
-def write_to_ini_file(manifest_file, filename):
-    # Insert a new test in the right place within a given manifest file
-    manifest = manifestparser.TestManifest(manifests=[manifest_file])
+def write_to_manifest_file(manifest_file, filename):
+    use_toml = manifest_file.endswith(".toml")
+    manifest = manifestparser.TestManifest(manifests=[manifest_file], use_toml=use_toml)
     insert_before = None
 
     if any(t["name"] == filename for t in manifest.tests):
@@ -326,12 +327,13 @@ def write_to_ini_file(manifest_file, filename):
     with open(manifest_file, "r") as f:
         contents = f.readlines()
 
-    filename = "[{}]\n".format(filename)
+    entry_line = '["{}"]\n' if use_toml else "[{}]"
+    filename = (entry_line + "\n").format(filename)
 
     if not insert_before:
         contents.append(filename)
     else:
-        insert_before = "[{}]".format(insert_before)
+        insert_before = entry_line.format(insert_before)
         for i in range(len(contents)):
             if contents[i].startswith(insert_before):
                 contents.insert(i, filename)
