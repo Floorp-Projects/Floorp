@@ -102,9 +102,6 @@ if (AppConstants.NIGHTLY_BUILD) {
 // referencing the listed file in a way that the test can't detect, or a
 // bug number to remove or use the file if it is indeed currently unreferenced.
 var allowlist = [
-  // toolkit/components/pdfjs/content/PdfStreamConverter.sys.mjs
-  { file: "chrome://pdf.js/locale/viewer.properties" },
-
   // security/manager/pki/resources/content/device_manager.js
   { file: "chrome://pippki/content/load_device.xhtml" },
 
