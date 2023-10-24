@@ -126,7 +126,10 @@ def run(src_root, obj_root, logger=None, **kwargs):
         manifest_rel_path = os.path.join(
             local_config.get(section, "metadata"), "MANIFEST.json"
         )
-        test_paths[url_base]["manifest_rel_path"] = manifest_rel_path
+        if isinstance(test_paths[url_base], dict):
+            test_paths[url_base]["manifest_rel_path"] = manifest_rel_path
+        else:
+            test_paths[url_base].manifest_rel_path = manifest_rel_path
 
     if not kwargs["rebuild"] and kwargs["download"] is not False:
         force_download = False if kwargs["download"] is None else True
@@ -237,11 +240,19 @@ def load_and_update(
         manifest_path = (
             paths["manifest_path"] if isinstance(paths, dict) else paths.manifest_path
         )
+        manifest_rel_path = (
+            paths["manifest_rel_path"]
+            if isinstance(paths, dict)
+            else paths.manifest_rel_path
+        )
+        tests_path = (
+            paths["tests_path"] if isinstance(paths, dict) else paths.tests_path
+        )
         this_cache_root = os.path.join(
-            cache_root, wptdir_hash, os.path.dirname(paths["manifest_rel_path"])
+            cache_root, wptdir_hash, os.path.dirname(manifest_rel_path)
         )
         m = manifest.manifest.load_and_update(
-            paths["tests_path"],
+            tests_path,
             manifest_path,
             url_base,
             update=update,
@@ -250,7 +261,12 @@ def load_and_update(
             cache_root=this_cache_root,
         )
         path_data = {"url_base": url_base}
-        path_data.update(paths)
+        if isinstance(paths, dict):
+            path_data.update(paths)
+        else:
+            for key, value in paths.__dict__.items():
+                path_data[key] = value
+
         rv[m] = path_data
 
     return rv
