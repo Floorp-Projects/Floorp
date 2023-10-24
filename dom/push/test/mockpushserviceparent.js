@@ -171,9 +171,15 @@ var MockService = {
 };
 
 async function replaceService(service) {
-  await pushService.service.uninit();
+  // `?.` because `service` can be null
+  // (either by calling this function with null, or the push module doesn't have the
+  // field at all e.g. in GeckoView)
+  // Passing null here resets it to the default implementation on desktop
+  // (so `.service` never becomes null there) but not for GeckoView.
+  // XXX(krosylight): we need to remove this deviation.
+  await pushService.service?.uninit();
   pushService.service = service;
-  await pushService.service.init();
+  await pushService.service?.init();
 }
 
 addMessageListener("service-replace", function () {

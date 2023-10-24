@@ -1,5 +1,4 @@
 [DEFAULT]
-skip-if = ["os == 'android'"]
 tags = "condprof"
 support-files = [
   "worker.js",
@@ -13,45 +12,71 @@ support-files = [
 
 
 ["test_data.html"]
-skip-if = ["os == 'win'"] # Bug 1373346
+skip-if = [
+  "os == 'android'",
+  "os == 'win'", # Bug 1373346
+]
 scheme = "https"
 
 ["test_error_reporting.html"]
-skip-if = ["serviceworker_e10s"]
+skip-if = [
+  "serviceworker_e10s",
+  "os == 'android'",
+]
 
 ["test_has_permissions.html"]
+skip-if = ["os == 'android'"]
 
 ["test_multiple_register.html"]
+skip-if = ["os == 'android'"]
 
 ["test_multiple_register_different_scope.html"]
+skip-if = ["os == 'android'"]
 
 ["test_multiple_register_during_service_activation.html"]
 skip-if = [
+  "os == 'android'",
   "os == 'win'",
   "os == 'linux'",
   "os == 'mac'", #Bug 1274773
 ]
 
 ["test_permissions.html"]
+skip-if = ["os == 'android'"]
+
+["test_permission_granted.html"]
+scheme = "https"
 
 ["test_register.html"]
-skip-if = ["os == 'win'"] # Bug 1373346
+skip-if = [
+  "os == 'android'",
+  "os == 'win'" # Bug 1373346
+]
 
 ["test_register_key.html"]
+skip-if = ["os == 'android'"]
 scheme = "https"
 
 ["test_serviceworker_lifetime.html"]
 skip-if = [
   "serviceworker_e10s",
+  "os == 'android'",
   "os == 'win'", # Bug 1373346
   "os =='linux' && bits == 64", # Bug 1578374
   "os =='mac'", # Bug 1578333
 ]
 
 ["test_subscription_change.html"]
-skip-if = ["os == 'win'"] # Bug 1373346
+skip-if = [
+  "os == 'android'",
+  "os == 'win'" # Bug 1373346
+]
 
 ["test_try_registering_offline_disabled.html"]
-skip-if = ["os == 'win'"] # Bug 1373346
+skip-if = [
+  "os == 'android'",
+  "os == 'win'" # Bug 1373346
+]
 
 ["test_unregister.html"]
+skip-if = ["os == 'android'"]
