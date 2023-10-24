@@ -315,7 +315,13 @@ static_assert((kPhcAlign % kPageSize) == 0);
 //
 // These page kinds are interleaved; each allocation page has a guard page on
 // either side.
+#ifdef EARLY_BETA_OR_EARLIER
 static const size_t kNumAllocPages = kPageSize == 4096 ? 4096 : 1024;
+#else
+// This will use between 82KiB and 1.1MiB per process (depending on how many
+// objects are currently allocated).  We will tune this in the future.
+static const size_t kNumAllocPages = kPageSize == 4096 ? 256 : 64;
+#endif
 static const size_t kNumAllPages = kNumAllocPages * 2 + 1;
 
 // The total size of the allocation pages and guard pages.
