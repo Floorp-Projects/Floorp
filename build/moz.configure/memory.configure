@@ -90,12 +90,33 @@ option(
     default=phc_default,
     when="--enable-jemalloc",
     help="{Enable|Disable} PHC (Probabilistic Memory Checker). "
-    "Also enables frame pointers",
+    "Also enables frame pointers when needed",
 )
-imply_option("--enable-frame-pointers", True, when="--enable-phc")
-
 
 set_config("MOZ_PHC", True, when="--enable-phc")
+
+
+# PHC parses stacks using frame pointers on these systems.
+@depends("--enable-phc", target, have_unwind, when="--enable-jemalloc")
+def phc_implies_frame_pointers(phc, target, have_unwind):
+    if not phc:
+        return False
+
+    # This should be kept in sync with the ifdefs in memory/build/PHC.cpp
+    # that control stack walking.
+    # This is true for the first two options in PHC.cpp
+    if (target.os == "WINNT" and target.cpu == "x86") or target.kernel == "Darwin":
+        return True
+
+    # This should match the #defines in mozglue/misc/StackWalk.cpp
+    if (target.cpu in ("x86", "ppc")) and (target.kernel in ("Darwin", "Linux")):
+        return not have_unwind
+
+    return False
+
+
+imply_option("--enable-frame-pointers", True, when=phc_implies_frame_pointers)
+
 
 with only_when(depends(target.os)(lambda os: os != "WINNT")):
     set_define("HAVE_STRNDUP", check_symbol("strndup"))
