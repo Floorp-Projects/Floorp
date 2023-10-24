@@ -192,8 +192,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         aAppearance == StyleAppearance::Dualbutton ||
         aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
         aAppearance == StyleAppearance::Menulist ||
-        aAppearance == StyleAppearance::MenulistButton ||
-        aAppearance == StyleAppearance::MozMenulistArrowButton) {
+        aAppearance == StyleAppearance::MenulistButton) {
       aState->active &= aState->inHover;
     } else if (aAppearance == StyleAppearance::Treetwisty ||
                aAppearance == StyleAppearance::Treetwistyopen) {
@@ -224,20 +223,11 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
           aAppearance == StyleAppearance::Dualbutton ||
           aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
           aAppearance == StyleAppearance::Menulist ||
-          aAppearance == StyleAppearance::MenulistButton ||
-          aAppearance == StyleAppearance::MozMenulistArrowButton) {
+          aAppearance == StyleAppearance::MenulistButton) {
         bool menuOpen = IsOpenButton(aFrame);
         aState->depressed = IsCheckedButton(aFrame) || menuOpen;
         // we must not highlight buttons with open drop down menus on hover.
         aState->inHover = aState->inHover && !menuOpen;
-      }
-
-      // When the input field of the drop down button has focus, some themes
-      // should draw focus for the drop down button as well.
-      if ((aAppearance == StyleAppearance::MenulistButton ||
-           aAppearance == StyleAppearance::MozMenulistArrowButton) &&
-          aWidgetFlags) {
-        *aWidgetFlags = CheckBooleanAttr(aFrame, nsGkAtoms::parentfocused);
       }
     }
 
@@ -361,9 +351,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       if (aWidgetFlags)
         *aWidgetFlags =
             IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XHTML);
-      break;
-    case StyleAppearance::MozMenulistArrowButton:
-      aGtkWidgetType = MOZ_GTK_DROPDOWN_ARROW;
       break;
     case StyleAppearance::ToolbarbuttonDropdown:
     case StyleAppearance::ButtonArrowDown:
@@ -998,7 +985,6 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
     case StyleAppearance::Dualbutton:
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward:
-    case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::ToolbarbuttonDropdown:
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
@@ -1072,6 +1058,12 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
   return NonNative::BecauseColorMismatch;
 }
 
+bool nsNativeThemeGTK::IsWidgetAlwaysNonNative(nsIFrame* aFrame,
+                                               StyleAppearance aAppearance) {
+  return Theme::IsWidgetAlwaysNonNative(aFrame, aAppearance) ||
+         aAppearance == StyleAppearance::MozMenulistArrowButton;
+}
+
 LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
     nsPresContext* aPresContext, nsIFrame* aFrame,
     StyleAppearance aAppearance) {
@@ -1100,9 +1092,6 @@ LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
     case StyleAppearance::TabScrollArrowBack:
     case StyleAppearance::TabScrollArrowForward: {
       moz_gtk_get_tab_scroll_arrow_size(&result.width, &result.height);
-    } break;
-    case StyleAppearance::MozMenulistArrowButton: {
-      moz_gtk_get_combo_box_entry_button_size(&result.width, &result.height);
     } break;
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio: {
@@ -1273,8 +1262,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame,
       aAttribute == nsGkAtoms::visuallyselected ||
       aAttribute == nsGkAtoms::focused || aAttribute == nsGkAtoms::readonly ||
       aAttribute == nsGkAtoms::_default ||
-      aAttribute == nsGkAtoms::menuactive || aAttribute == nsGkAtoms::open ||
-      aAttribute == nsGkAtoms::parentfocused) {
+      aAttribute == nsGkAtoms::menuactive || aAttribute == nsGkAtoms::open) {
     *aShouldRepaint = true;
     return NS_OK;
   }
@@ -1360,17 +1348,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::MozWindowTitlebarMaximized:
     case StyleAppearance::MozWindowDecorations:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
-
-    case StyleAppearance::MozMenulistArrowButton:
-      if (aFrame && aFrame->GetWritingMode().IsVertical()) {
-        return false;
-      }
-      // "Native" dropdown buttons cause padding and margin problems, but only
-      // in HTML so allow them in XUL.
-      return (!aFrame ||
-              IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
-             !IsWidgetStyled(aPresContext, aFrame, aAppearance);
-
     default:
       break;
   }
@@ -1381,8 +1358,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
 NS_IMETHODIMP_(bool)
 nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   // XXXdwh At some point flesh all of this out.
-  if (aAppearance == StyleAppearance::MozMenulistArrowButton ||
-      aAppearance == StyleAppearance::Radio ||
+  if (aAppearance == StyleAppearance::Radio ||
       aAppearance == StyleAppearance::RangeThumb ||
       aAppearance == StyleAppearance::Checkbox ||
       aAppearance == StyleAppearance::TabScrollArrowBack ||
