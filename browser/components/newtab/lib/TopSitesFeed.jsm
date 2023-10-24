@@ -94,7 +94,7 @@ const ROWS_PREF = "topSitesRows";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 // The default total number of sponsored top sites to fetch from Contile
 // and Pocket.
-const MAX_NUM_SPONSORED = 2;
+const MAX_NUM_SPONSORED = 1;
 // Nimbus variable for the total number of sponsored top sites including
 // both Contile and Pocket sources.
 // The default will be `MAX_NUM_SPONSORED` if this variable is unspecified.
