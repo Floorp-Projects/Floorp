@@ -86,6 +86,12 @@ class WMFCDMImpl final {
     return mCDM->RemoveSession(aPromiseId, aSessionId);
   }
 
+  RefPtr<GenericPromise> SetServerCertificate(uint32_t aPromiseId,
+                                              nsTArray<uint8_t>& aCert) {
+    MOZ_DIAGNOSTIC_ASSERT(mCDM);
+    return mCDM->SetServerCertificate(aPromiseId, aCert);
+  }
+
   uint64_t Id() {
     MOZ_DIAGNOSTIC_ASSERT(mCDM,
                           "Should be called only after Init() is resolved");

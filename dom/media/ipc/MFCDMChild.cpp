@@ -434,6 +434,49 @@ RefPtr<GenericPromise> MFCDMChild::RemoveSession(uint32_t aPromiseId,
   return mPendingGenericPromises[aPromiseId].Ensure(__func__);
 }
 
+RefPtr<GenericPromise> MFCDMChild::SetServerCertificate(
+    uint32_t aPromiseId, nsTArray<uint8_t>& aCert) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  if (mShutdown) {
+    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+  }
+
+  MOZ_ASSERT(mPendingGenericPromises.find(aPromiseId) ==
+             mPendingGenericPromises.end());
+  mPendingGenericPromises.emplace(aPromiseId,
+                                  MozPromiseHolder<GenericPromise>{});
+  mManagerThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [self = RefPtr{this}, this, cert = std::move(aCert), aPromiseId] {
+        SendSetServerCertificate(cert)->Then(
+            mManagerThread, __func__,
+            [self, this, aPromiseId](
+                PMFCDMChild::SetServerCertificatePromise::ResolveOrRejectValue&&
+                    aResult) {
+              auto iter = mPendingGenericPromises.find(aPromiseId);
+              if (iter == mPendingGenericPromises.end()) {
+                return;
+              }
+              auto& promiseHolder = iter->second;
+              if (aResult.IsResolve()) {
+                if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                  promiseHolder.ResolveIfExists(true, __func__);
+                } else {
+                  promiseHolder.RejectIfExists(aResult.ResolveValue(),
+                                               __func__);
+                }
+              } else {
+                // IPC died
+                promiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
+              }
+              mPendingGenericPromises.erase(iter);
+            });
+      }));
+  return mPendingGenericPromises[aPromiseId].Ensure(__func__);
+}
+
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
     const MFCDMKeyMessage& aMessage) {
   LOG("RecvOnSessionKeyMessage, sessionId=%s",

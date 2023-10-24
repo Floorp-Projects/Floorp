@@ -843,6 +843,20 @@ mozilla::ipc::IPCResult MFCDMParent::RecvRemoveSession(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFCDMParent::RecvSetServerCertificate(
+    const CopyableTArray<uint8_t>& aCertificate,
+    UpdateSessionResolver&& aResolver) {
+  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
+  nsresult rv = NS_OK;
+  MFCDM_PARENT_LOG("Set server certificate");
+  MFCDM_REJECT_IF_FAILED(mCDM->SetServerCertificate(
+                             static_cast<const BYTE*>(aCertificate.Elements()),
+                             aCertificate.Length()),
+                         NS_ERROR_DOM_MEDIA_CDM_ERR);
+  aResolver(rv);
+  return IPC_OK();
+}
+
 void MFCDMParent::ConnectSessionEvents(MFCDMSession* aSession) {
   // TODO : clear session's event source when the session gets removed.
   mKeyMessageEvents.Forward(aSession->KeyMessageEvent());

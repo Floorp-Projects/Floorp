@@ -106,6 +106,7 @@ parent:
   async UpdateSession(nsString sessionId, uint8_t[] response) returns (nsresult result);
   async CloseSession(nsString sessionId) returns (nsresult result);
   async RemoveSession(nsString sessionId) returns (nsresult result);
+  async SetServerCertificate(uint8_t[] certificate) returns (nsresult result);
   async __delete__();
 
 child:

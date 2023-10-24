@@ -311,6 +311,27 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
 }
 
+void WMFCDMProxy::SetServerCertificate(PromiseId aPromiseId,
+                                       nsTArray<uint8_t>& aCert) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
+  EME_LOG("WMFCDMProxy::SetServerCertificate(this=%p, pid=%" PRIu32 ")", this,
+          aPromiseId);
+  mCDM->SetServerCertificate(aPromiseId, aCert)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            RETURN_IF_SHUTDOWN();
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            RETURN_IF_SHUTDOWN();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString("WMFCDMProxy::SetServerCertificate failed!"));
+          });
+}
+
 bool WMFCDMProxy::IsHardwareDecryptionSupported() const {
   return mozilla::IsHardwareDecryptionSupported(mConfig);
 }
