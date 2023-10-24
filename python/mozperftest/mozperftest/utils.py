@@ -4,8 +4,10 @@
 import contextlib
 import functools
 import importlib
+import inspect
 import logging
 import os
+import pathlib
 import shlex
 import shutil
 import subprocess
@@ -169,6 +171,59 @@ def install_package(virtualenv_manager, package, ignore_failure=False):
         except Exception:
             if not ignore_failure:
                 raise
+    return False
+
+
+def install_requirements_file(
+    virtualenv_manager, requirements_file, ignore_failure=False
+):
+    """Installs a package using the virtualenv manager.
+
+    Makes sure the package is really installed when the user already has it
+    in their local installation.
+
+    Returns True on success, or re-raise the error. If ignore_failure
+    is set to True, ignore the error and return False
+    """
+
+    # Ensure that we are looking in the right places for packages. This
+    # is required in CI because pip installs in an area that is not in
+    # the search path.
+    venv_site_lib = str(Path(virtualenv_manager.bin_path, "..", "lib").resolve())
+    venv_site_packages = str(
+        Path(
+            venv_site_lib,
+            f"python{sys.version_info.major}.{sys.version_info.minor}",
+            "site-packages",
+        )
+    )
+    if venv_site_packages not in sys.path and ON_TRY:
+        sys.path.insert(0, venv_site_packages)
+
+    with silence():
+        cwd = os.getcwd()
+        try:
+            os.chdir(Path(requirements_file).parent)
+            subprocess.check_call(
+                [
+                    virtualenv_manager.python_path,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--no-deps",
+                    "-r",
+                    requirements_file,
+                    "--no-index",
+                    "--find-links",
+                    "https://pypi.pub.build.mozilla.org/pub/",
+                ]
+            )
+            return True
+        except Exception:
+            if not ignore_failure:
+                raise
+        finally:
+            os.chdir(cwd)
     return False
 
 
@@ -347,6 +402,34 @@ def load_class(path):
     except AttributeError:
         raise ImportError(f"Can't find '{klass_name}' in '{mod_name}'")
     return klass
+
+
+def load_class_from_path(klass_name, path):
+    """This function returns a Transformer class with the given path.
+
+    :param str path: The path points to the custom transformer.
+    :param bool ret_members: If true then return inspect.getmembers().
+    :return Transformer if not ret_members else inspect.getmembers().
+    """
+    file = pathlib.Path(path)
+
+    if not file.exists():
+        raise ImportError(f"The class path {path} does not exist.")
+
+    # Importing a source file directly
+    spec = importlib.util.spec_from_file_location(name=file.name, location=path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    members = inspect.getmembers(
+        module,
+        lambda c: inspect.isclass(c) and c.__name__ == klass_name,
+    )
+
+    if not members:
+        raise ImportError(f"The path {path} was found but it was not a valid class.")
+
+    return members[0][-1]
 
 
 def run_script(cmd, cmd_args=None, verbose=False, display=False, label=None):
