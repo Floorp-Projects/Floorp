@@ -13,7 +13,7 @@
 #include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsAttrValueInlines.h"
+#include "nsSubDocumentFrame.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
 #include "nsSandboxFlags.h"
@@ -363,6 +363,9 @@ void HTMLIFrameElement::StopLazyLoading() {
   LoadSrc();
 
   mLazyLoadState.Clear();
+  if (nsSubDocumentFrame* ourFrame = do_QueryFrame(GetPrimaryFrame())) {
+    ourFrame->ResetFrameLoader(nsSubDocumentFrame::RetainPaintData::No);
+  }
 }
 
 void HTMLIFrameElement::NodeInfoChanged(Document* aOldDoc) {
