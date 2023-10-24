@@ -7,7 +7,6 @@ package org.mozilla.gecko.media;
 import android.media.MediaCodec;
 import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodec.CryptoInfo;
-import android.os.Build;
 import android.util.Log;
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -54,7 +53,6 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
   public GeckoHlsVideoRenderer(final GeckoHlsPlayer.ComponentEventDispatcher eventDispatcher) {
     super(C.TRACK_TYPE_VIDEO, eventDispatcher);
-    assertTrue(Build.VERSION.SDK_INT >= 16);
     LOGTAG = getClass().getSimpleName();
     DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
   }
@@ -111,22 +109,8 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
       }
     }
     if (decoderCapable && format.width > 0 && format.height > 0) {
-      if (Build.VERSION.SDK_INT < 21) {
-        try {
-          decoderCapable =
-              format.width * format.height <= MediaCodecUtil.maxH264DecodableFrameSize();
-        } catch (final MediaCodecUtil.DecoderQueryException e) {
-          Log.e(LOGTAG, e.getMessage());
-        }
-        if (!decoderCapable) {
-          if (DEBUG) {
-            Log.d(LOGTAG, "Check [legacyFrameSize, " + format.width + "x" + format.height + "]");
-          }
-        }
-      } else {
-        decoderCapable =
-            info.isVideoSizeAndRateSupportedV21(format.width, format.height, format.frameRate);
-      }
+      decoderCapable =
+          info.isVideoSizeAndRateSupportedV21(format.width, format.height, format.frameRate);
     }
 
     return RendererCapabilities.create(

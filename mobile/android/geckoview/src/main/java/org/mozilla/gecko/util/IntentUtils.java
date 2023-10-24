@@ -6,7 +6,6 @@
 
 package org.mozilla.gecko.util;
 
-import android.annotation.TargetApi;
 import android.content.Intent;
 import android.net.Uri;
 import java.net.URISyntaxException;
@@ -111,7 +110,6 @@ public class IntentUtils {
   }
 
   // We create a separate method to better encapsulate the @TargetApi use.
-  @TargetApi(15)
   private static void nullIntentSelector(final Intent intent) {
     intent.setSelector(null);
   }

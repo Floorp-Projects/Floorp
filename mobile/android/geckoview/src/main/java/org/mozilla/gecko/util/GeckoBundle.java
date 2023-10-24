@@ -961,17 +961,22 @@ public final class GeckoBundle implements Parcelable {
         }
         jsonValue = jsonArray;
       } else if (Build.VERSION.SDK_INT >= 19) {
+        // gradle task (testWithGeckoBinariesDebugUnitTest) won't use this since that unit test
+        // runs on build task.
         final Object wrapped = JSONObject.wrap(value);
         jsonValue = wrapped != null ? wrapped : value.toString();
       } else if (value == null) {
+        // This is used by UnitTest only
         jsonValue = JSONObject.NULL;
       } else if (value.getClass().isArray()) {
+        // This is used by UnitTest only
         final JSONArray jsonArray = new JSONArray();
         for (int j = 0; j < Array.getLength(value); j++) {
           jsonArray.put(Array.get(value, j));
         }
         jsonValue = jsonArray;
       } else {
+        // This is used by UnitTest only
         jsonValue = value;
       }
       out.put(mMap.keyAt(i), jsonValue);

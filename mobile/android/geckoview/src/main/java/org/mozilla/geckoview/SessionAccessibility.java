@@ -184,7 +184,7 @@ public class SessionAccessibility {
                 + " mAttached="
                 + mAttached);
         node = AccessibilityNodeInfo.obtain(mView, View.NO_ID);
-        if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
+        if (mView.getDisplay() != null) {
           // When running junit tests we don't have a display
           mView.onInitializeAccessibilityNodeInfo(node);
         }
@@ -325,10 +325,7 @@ public class SessionAccessibility {
             return false;
           }
           final String value =
-              arguments.getString(
-                  Build.VERSION.SDK_INT >= 21
-                      ? AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE
-                      : ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
+              arguments.getString(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE);
           if (mAttached) {
             nativeProvider.setText(virtualViewId, value);
           }
@@ -459,7 +456,7 @@ public class SessionAccessibility {
   }
 
   private boolean isInTest() {
-    return Build.VERSION.SDK_INT >= 17 && mView != null && mView.getDisplay() == null;
+    return mView != null && mView.getDisplay() == null;
   }
 
   private void requestViewFocus() {
@@ -487,10 +484,8 @@ public class SessionAccessibility {
       accessibilityManager.addAccessibilityStateChangeListener(
           enabled -> updateAccessibilitySettings());
 
-      if (Build.VERSION.SDK_INT >= 19) {
-        accessibilityManager.addTouchExplorationStateChangeListener(
-            enabled -> updateAccessibilitySettings());
-      }
+      accessibilityManager.addTouchExplorationStateChangeListener(
+          enabled -> updateAccessibilitySettings());
     }
 
     public static boolean isEnabled() {
@@ -731,7 +726,7 @@ public class SessionAccessibility {
 
       final boolean isRoot = id == View.NO_ID;
       if (isRoot) {
-        if (Build.VERSION.SDK_INT < 17 || mView.getDisplay() != null) {
+        if (mView.getDisplay() != null) {
           // When running junit tests we don't have a display
           mView.onInitializeAccessibilityNodeInfo(node);
         }
@@ -797,61 +792,51 @@ public class SessionAccessibility {
         node.addChild(mView, childId);
       }
 
-      // SDK 18 and above
-      if (Build.VERSION.SDK_INT >= 18) {
-        node.setViewIdResourceName(viewIdResourceName);
+      node.setViewIdResourceName(viewIdResourceName);
 
-        if ((flags & FLAG_EDITABLE) != 0) {
-          node.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
-          node.addAction(AccessibilityNodeInfo.ACTION_CUT);
-          node.addAction(AccessibilityNodeInfo.ACTION_COPY);
-          node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
-          node.setEditable(true);
-        }
+      if ((flags & FLAG_EDITABLE) != 0) {
+        node.addAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
+        node.addAction(AccessibilityNodeInfo.ACTION_CUT);
+        node.addAction(AccessibilityNodeInfo.ACTION_COPY);
+        node.addAction(AccessibilityNodeInfo.ACTION_PASTE);
+        node.setEditable(true);
       }
 
-      // SDK 19 and above
-      if (Build.VERSION.SDK_INT >= 19) {
-        node.setMultiLine((flags & FLAG_MULTI_LINE) != 0);
-        node.setContentInvalid((flags & FLAG_CONTENT_INVALID) != 0);
+      node.setMultiLine((flags & FLAG_MULTI_LINE) != 0);
+      node.setContentInvalid((flags & FLAG_CONTENT_INVALID) != 0);
 
-        // Set bundle keys like role and hint
-        final Bundle bundle = node.getExtras();
-        if (hint != null) {
-          bundle.putCharSequence("AccessibilityNodeInfo.hint", hint);
-          if (Build.VERSION.SDK_INT >= 26) {
-            node.setHintText(hint);
-          }
-        }
-        if (geckoRole != null) {
-          bundle.putCharSequence("AccessibilityNodeInfo.geckoRole", geckoRole);
-        }
-        if (roleDescription != null) {
-          bundle.putCharSequence("AccessibilityNodeInfo.roleDescription", roleDescription);
-        }
-        if (isRoot) {
-          // Argument values for ACTION_NEXT_HTML_ELEMENT/ACTION_PREVIOUS_HTML_ELEMENT.
-          // This is mostly here to let TalkBack know we are a legit "WebView".
-          bundle.putCharSequence(
-              "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES",
-              TextUtils.join(",", sHtmlGranularities));
-        }
-
-        if (inputType != InputType.TYPE_NULL) {
-          node.setInputType(inputType);
+      // Set bundle keys like role and hint
+      final Bundle bundle = node.getExtras();
+      if (hint != null) {
+        bundle.putCharSequence("AccessibilityNodeInfo.hint", hint);
+        if (Build.VERSION.SDK_INT >= 26) {
+          node.setHintText(hint);
         }
       }
+      if (geckoRole != null) {
+        bundle.putCharSequence("AccessibilityNodeInfo.geckoRole", geckoRole);
+      }
+      if (roleDescription != null) {
+        bundle.putCharSequence("AccessibilityNodeInfo.roleDescription", roleDescription);
+      }
+      if (isRoot) {
+        // Argument values for ACTION_NEXT_HTML_ELEMENT/ACTION_PREVIOUS_HTML_ELEMENT.
+        // This is mostly here to let TalkBack know we are a legit "WebView".
+        bundle.putCharSequence(
+            "ACTION_ARGUMENT_HTML_ELEMENT_STRING_VALUES", TextUtils.join(",", sHtmlGranularities));
+      }
 
-      // SDK 21 and above
-      if (Build.VERSION.SDK_INT >= 21) {
-        if ((flags & FLAG_EXPANDABLE) != 0) {
-          if ((flags & FLAG_EXPANDED) != 0) {
-            node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
-          } else {
-            node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
-            node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
-          }
+      if (inputType != InputType.TYPE_NULL) {
+        node.setInputType(inputType);
+      }
+
+      if ((flags & FLAG_EXPANDABLE) != 0) {
+        if ((flags & FLAG_EXPANDED) != 0) {
+          node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
+          node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
+        } else {
+          node.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_COLLAPSE);
+          node.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_EXPAND);
         }
       }
 
@@ -881,9 +866,7 @@ public class SessionAccessibility {
         final int selectionMode,
         final boolean isHierarchical) {
       final CollectionInfo collectionInfo =
-          Build.VERSION.SDK_INT >= 21
-              ? CollectionInfo.obtain(rowCount, columnCount, isHierarchical, selectionMode)
-              : CollectionInfo.obtain(rowCount, columnCount, isHierarchical);
+          CollectionInfo.obtain(rowCount, columnCount, isHierarchical, selectionMode);
       node.setCollectionInfo(collectionInfo);
     }
 
