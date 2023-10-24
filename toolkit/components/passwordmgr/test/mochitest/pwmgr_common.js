@@ -44,7 +44,7 @@ let authPromptIsCommonDialog =
  * and internal state for the elements are removed.
  */
 function recreateTree(element) {
-  // eslint-disable-next-line no-unsanitized/property, no-self-assign
+  // eslint-disable-next-line no-self-assign
   element.outerHTML = element.outerHTML;
 }
 
@@ -779,7 +779,6 @@ async function loadFormIntoWindow(origin, html, win, expectedCount = 1, task) {
     win,
     [html, task?.toString()],
     function (contentHtml, contentTask = null) {
-      // eslint-disable-next-line no-unsanitized/property
       this.content.document.documentElement.innerHTML = contentHtml;
       // Similar to the invokeContentTask helper in accessible/tests/browser/shared-head.js
       if (contentTask) {
@@ -980,7 +979,6 @@ function setFormAndWaitForFieldFilled(
   form,
   { fieldSelector, fieldValue, formId }
 ) {
-  // eslint-disable-next-line no-unsanitized/property
   document.querySelector("#content").innerHTML = form;
   return SimpleTest.promiseWaitForCondition(() => {
     let ancestor = formId
@@ -1107,14 +1105,12 @@ function setContentForTask(html) {
   const content = document.querySelector("#content");
   const innerHTMLBefore = content.innerHTML || "";
   SimpleTest.registerCurrentTaskCleanupFunction(
-    // eslint-disable-next-line no-unsanitized/property
     () => (content.innerHTML = innerHTMLBefore)
   );
   if (html.content?.cloneNode) {
     const clone = html.content.cloneNode(true);
     content.replaceChildren(clone);
   } else {
-    // eslint-disable-next-line no-unsanitized/property
     content.innerHTML = html;
   }
   return content.firstElementChild;

@@ -91,7 +91,6 @@ async function postFrom(start, target) {
 
       // Create the form element in our loaded URI.
       await SpecialPowers.spawn(browser, [{ target }], function ({ target }) {
-        // eslint-disable-next-line no-unsanitized/property
         content.document.body.innerHTML = `
         <form method="post" action="${target}">
           <input type="text" name="initialRemoteType" value="${Services.appinfo.remoteType}">

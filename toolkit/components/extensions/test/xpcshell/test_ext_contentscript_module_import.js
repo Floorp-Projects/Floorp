@@ -12,7 +12,7 @@ server.registerPathHandler("/script.js", (request, response) => {
   ok(false, "Unexpected request to /script.js");
 });
 
-/* eslint-disable no-unsanitized/method, no-eval, no-implied-eval */
+/* eslint-disable no-eval, no-implied-eval */
 
 const MODULE1 = `
   import {foo} from "./module2.js";

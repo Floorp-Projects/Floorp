@@ -10,7 +10,6 @@
         window.onpagehide = null;
         pageHideAsserts = {};
         pageHideAsserts.persisted = event.persisted;
-        // eslint-disable-next-line no-unsanitized/property
         pageHideAsserts.innerHTML = window.document.body.innerHTML;
       };
       window.location.href = msg.testUrl2;
@@ -22,7 +21,6 @@
   }
   window.onpageshow = function(e) {
     var msg = {command: "child1PageShow", persisted: e.persisted, pageHideAsserts};
-    // eslint-disable-next-line no-unsanitized/property
     msg.innerHTML = window.document.body.innerHTML;
     bc.postMessage(msg);
   };

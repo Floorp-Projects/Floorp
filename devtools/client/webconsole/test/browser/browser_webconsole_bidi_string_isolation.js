@@ -23,7 +23,6 @@ add_task(async function () {
     console.log(new Map([[null, rtlOverride + "msg07"]]));
 
     const parser = content.document.createElement("div");
-    // eslint-disable-next-line no-unsanitized/property
     parser.innerHTML = `
       <div data-test="${rtlOverride}msg08"></div>
       <div data-${rtlOverride}="msg09"></div>

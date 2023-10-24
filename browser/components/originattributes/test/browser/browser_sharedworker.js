@@ -16,7 +16,6 @@ async function getResultFromSharedworker(aBrowser) {
 
     let result = await new content.Promise(resolve => {
       worker.port.onmessage = function (e) {
-        // eslint-disable-next-line no-unsanitized/property
         content.document.getElementById("display").innerHTML = e.data;
         resolve(e.data);
       };

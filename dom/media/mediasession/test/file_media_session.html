@@ -20,7 +20,6 @@ const MediaSessionActions = [
 
 for (const action of MediaSessionActions) {
   navigator.mediaSession.setActionHandler(action, () => {
-  	// eslint-disable-next-line no-unsanitized/property
     document.getElementById("result").innerHTML = action;
     document.getElementById("result").dispatchEvent(new CustomEvent("actionChanged"));
   });

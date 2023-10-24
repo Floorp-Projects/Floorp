@@ -62,7 +62,6 @@ async function doTest(
           // Add the link for the child tab to the page.
           let mainDiv = content.document.createElement("div");
 
-          // eslint-disable-next-line no-unsanitized/property
           mainDiv.innerHTML =
             '<p><a id="linkToOpenInNewTab" href="' +
             childTabSpecContent +

@@ -13,7 +13,6 @@ function populateScroller() {
   for (let i = 1; i < 100; i++) {
       text += 'line ' + i + '<br>';
   }
-  /* eslint-disable no-unsanitized/property */
   document.querySelector('#scroller').contentDocument.body.innerHTML = text;
 }
 

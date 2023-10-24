@@ -41,7 +41,6 @@ function runTest() {
 }
 
 function continuation1() {
-  // eslint-disable-next-line no-unsanitized/property
   document.getElementById("content").innerHTML = initialState;
   setTimeout(continuation2, 1);
 }

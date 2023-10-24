@@ -528,7 +528,6 @@ function testInlineCSS() {
     // Test creating <style> element from the extension side and then appending
     // to it using insertAdjacentHTML, with the same rules as above.
     testModifyAfterInject("insertAdjacentHTML", (style, css) => {
-      // eslint-disable-next-line no-unsanitized/method
       style.insertAdjacentHTML("beforeend", css);
     });
 

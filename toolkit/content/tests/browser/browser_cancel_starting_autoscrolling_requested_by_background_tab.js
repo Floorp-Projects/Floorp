@@ -25,7 +25,6 @@ add_task(async function testStopStartingAutoScroll() {
         aExpectedActiveElement,
       }) {
         await SpecialPowers.spawn(browser, [aInnerHTML], async contentHTML => {
-          // eslint-disable-next-line no-unsanitized/property
           content.document.body.innerHTML = contentHTML;
           content.document.documentElement.scrollTop; // Flush layout.
           const iframe = content.document.querySelector("iframe");

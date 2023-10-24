@@ -10,7 +10,6 @@
 <script type="text/javascript">
 let bc = new BroadcastChannel("testBroadcastChannel");
 bc.onmessage = function(e) {
-  // eslint-disable-next-line no-unsanitized/property
   document.getElementById("display").innerHTML = e.data;
 };
 </script>

@@ -50,9 +50,8 @@ const availableLogins = {
 
 async function recreateTreeInWindow(formNum) {
   await SpecialPowers.spawn(win, [formNum], (formNumF) => {
-    // eslint-disable-next-line no-unsanitized/property
     let form = this.content.document.querySelector(`#form${formNumF}`);
-    // eslint-disable-next-line no-unsanitized/property, no-self-assign
+    // eslint-disable-next-line no-self-assign
     form.outerHTML = form.outerHTML;
   });
 }

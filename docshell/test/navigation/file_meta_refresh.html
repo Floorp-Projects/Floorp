@@ -4,7 +4,6 @@
   <body>
     <script>
       function addMetaRefresh() {
-        // eslint-disable-next-line no-unsanitized/property
         document.head.innerHTML = "<meta http-equiv='refresh' content='5; url=" +
           location.href.replace("?initial", "?refresh") + "'>";
       }

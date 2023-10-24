@@ -21,7 +21,6 @@
   function elem(name) {
     return function(str) {
       const element = document.createXULElement(name);
-      // eslint-disable-next-line no-unsanitized/property
       element.innerHTML = str;
       return element;
     };
