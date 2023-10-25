@@ -300,6 +300,3 @@ index 67a0ad5f69..75eccd3002 100644
        nack_periodic_processor_(nack_periodic_processor),
        complete_frame_callback_(complete_frame_callback),
        keyframe_request_method_(config_.rtp.keyframe_method),
--- 
-2.34.1
-

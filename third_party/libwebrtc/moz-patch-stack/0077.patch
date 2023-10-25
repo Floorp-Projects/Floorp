@@ -22,6 +22,3 @@ index cd109c2932..6dd7b47f17 100644
    RTC_DCHECK(!scheduled_rtp_.has_value())
        << "Can not schedule two frames for release at the same time.";
    RTC_DCHECK(cb);
--- 
-2.34.1
-

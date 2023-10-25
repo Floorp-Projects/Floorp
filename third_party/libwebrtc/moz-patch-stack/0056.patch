@@ -65,6 +65,3 @@ index 31ba1feca3..05a4b184c2 100644
      case VideoType::kNV12:
        return libyuv::FOURCC_NV12;
    }
--- 
-2.34.1
-

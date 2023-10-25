@@ -19,7 +19,7 @@ diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/deskto
 index 8b9af35193..76fec13a39 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -357,7 +357,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+@@ -357,7 +357,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
    for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
         it != desktop_config_.displays.end();
         ++it) {
@@ -51,6 +51,3 @@ index 5d881662ea..989ec7ea54 100644
              // Once the window with empty title has been removed no other empty
              // windows are allowed for the same pid.
              if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
--- 
-2.34.1
-

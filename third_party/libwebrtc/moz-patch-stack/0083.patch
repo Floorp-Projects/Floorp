@@ -22,6 +22,3 @@ index 11f76de10b..0a7b56a303 100644
      rtc_enable_avx2 = true
    } else {
      rtc_enable_avx2 = false
--- 
-2.34.1
-

@@ -148,6 +148,3 @@ index eff720371a..94aed09c48 100644
    number_of_cores = static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
    if (number_of_cores <= 0) {
      RTC_LOG(LS_ERROR) << "Failed to get number of cores";
--- 
-2.34.1
-

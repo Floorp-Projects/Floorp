@@ -58,6 +58,3 @@ index 04caaea592..abd2886f85 100644
  namespace webrtc {
  namespace videocapturemodule {
  #ifdef WEBRTC_LINUX
--- 
-2.34.1
-

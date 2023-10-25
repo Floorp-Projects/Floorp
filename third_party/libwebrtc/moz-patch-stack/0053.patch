@@ -86,6 +86,3 @@ index f47db9bec4..11f76de10b 100644
      ((is_linux || is_chromeos) && (rtc_use_x11_extensions || rtc_use_pipewire))
  
  ###############################################################################
--- 
-2.34.1
-

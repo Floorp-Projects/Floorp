@@ -32,6 +32,3 @@ index 7894659926..7b4b809ab1 100644
    private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
      if (Build.VERSION.SDK_INT < 23) {
        return;
--- 
-2.34.1
-

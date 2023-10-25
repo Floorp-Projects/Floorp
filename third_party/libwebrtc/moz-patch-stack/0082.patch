@@ -22,6 +22,3 @@ index 1e2409372a..0782a5f5f2 100644
      if (encoder_config_.simulcast_layers[i].active) {
        single_stream_or_non_first_inactive = false;
        break;
--- 
-2.34.1
-

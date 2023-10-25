@@ -44,6 +44,3 @@ index df7f173f58..a3733d7543 100644
 +#endif
 +
  #endif  // RTC_BASE_LOGGING_H_
--- 
-2.34.1
-

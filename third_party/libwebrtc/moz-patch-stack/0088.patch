@@ -36,6 +36,3 @@ index 8d872a80e1..ded31d2283 100644
  }
  
  std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
--- 
-2.34.1
-

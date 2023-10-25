@@ -143,6 +143,3 @@ index 7a70c2ff88..00cede01cb 100644
        // not event on camera handle
        return true;
      }
--- 
-2.34.1
-

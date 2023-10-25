@@ -33,6 +33,3 @@ index 556204ac89..71a9f1b224 100644
          SetPriority(attributes.priority);
          thread_function();
        });
--- 
-2.34.1
-

@@ -32,6 +32,3 @@ index ad2303735e..9c2d3b0a39 100644
    if (severity >= g_dbg_sev || severity >= g_min_sev)
      return false;
    return streams_empty_.load(std::memory_order_relaxed);
--- 
-2.34.1
-
