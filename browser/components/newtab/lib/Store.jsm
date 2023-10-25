@@ -15,8 +15,8 @@ const { Prefs } = ChromeUtils.import(
 const { reducers } = ChromeUtils.importESModule(
   "resource://activity-stream/common/Reducers.sys.mjs"
 );
-const { redux } = ChromeUtils.import(
-  "resource://activity-stream/vendor/Redux.jsm"
+const { redux } = ChromeUtils.importESModule(
+  "resource://activity-stream/vendor/Redux.sys.mjs"
 );
 
 /**

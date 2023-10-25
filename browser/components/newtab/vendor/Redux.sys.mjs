@@ -4,10 +4,9 @@
  * This file was imported from https://unpkg.com/redux@4.0.1/dist/redux.js
  * and reformatted as a Javascript Core Module
  */
-var EXPORTED_SYMBOLS = ["redux"];
 var self = this;
 
-this.redux = (function (global, factory) {
+export const redux = (function (global, factory) {
   var exports = {};
   factory(exports);
   return exports;
@@ -41,6 +40,8 @@ this.redux = (function (global, factory) {
     root = self;
   } else if (typeof global !== 'undefined') {
     root = global;
+  } else {
+    root = { "Symbol": undefined };
   }
 
   var result = symbolObservablePonyfill(root);
