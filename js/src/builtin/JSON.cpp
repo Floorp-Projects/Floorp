@@ -1709,9 +1709,9 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
 }
 
 /* https://262.ecma-international.org/14.0/#sec-internalizejsonproperty */
-// TODO Bug 1860185 rename to InternalizeJSONProperty()
-static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
-                 HandleValue reviver, MutableHandleValue vp) {
+static bool InternalizeJSONProperty(JSContext* cx, HandleObject holder,
+                                    HandleId name, HandleValue reviver,
+                                    MutableHandleValue vp) {
   AutoCheckRecursionLimit recursion(cx);
   if (!recursion.check(cx)) {
     return false;
@@ -1752,7 +1752,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
         }
 
         /* Step 2a(iii)(1). */
-        if (!Walk(cx, obj, id, reviver, &newElement)) {
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, &newElement)) {
           return false;
         }
 
@@ -1791,7 +1791,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 
         /* Step 2c(ii)(1). */
         id = keys[i];
-        if (!Walk(cx, obj, id, reviver, &newElement)) {
+        if (!InternalizeJSONProperty(cx, obj, id, reviver, &newElement)) {
           return false;
         }
 
@@ -1837,7 +1837,7 @@ static bool Revive(JSContext* cx, HandleValue reviver, MutableHandleValue vp) {
   }
 
   Rooted<jsid> id(cx, NameToId(cx->names().empty_));
-  return Walk(cx, obj, id, reviver, vp);
+  return InternalizeJSONProperty(cx, obj, id, reviver, vp);
 }
 
 template <typename CharT>
