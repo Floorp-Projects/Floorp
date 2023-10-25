@@ -412,11 +412,9 @@ var gSitePermissionsManager = {
     richlistitem.setAttribute("origin", permissionGroup.origin);
     let row = document.createXULElement("hbox");
 
-    let hbox = document.createXULElement("hbox");
     let website = document.createXULElement("label");
-    website.setAttribute("value", permissionGroup.origin);
-    hbox.setAttribute("class", "website-name");
-    hbox.appendChild(website);
+    website.textContent = permissionGroup.origin;
+    website.className = "website-name";
 
     let states = SitePermissions.getAvailableStates(this._type).filter(
       state => state != SitePermissions.UNKNOWN
@@ -429,12 +427,14 @@ var gSitePermissionsManager = {
     let siteStatus;
     if (states.length == 1) {
       // Only a single state is available.  Show a label.
-      siteStatus = document.createXULElement("hbox");
-      let label = document.createXULElement("label");
-      siteStatus.appendChild(label);
+      siteStatus = document.createXULElement("label");
       document.l10n.setAttributes(
-        label,
-        this._getCapabilityL10nId(label, this._type, permissionGroup.capability)
+        siteStatus,
+        this._getCapabilityL10nId(
+          siteStatus,
+          this._type,
+          permissionGroup.capability
+        )
       );
     } else {
       // Multiple states are available.  Show a menulist.
@@ -450,10 +450,10 @@ var gSitePermissionsManager = {
         this.onPermissionChange(permissionGroup, Number(siteStatus.value));
       });
     }
-    siteStatus.setAttribute("class", "website-status");
+    siteStatus.className = "website-status";
     siteStatus.value = permissionGroup.capability;
 
-    row.appendChild(hbox);
+    row.appendChild(website);
     row.appendChild(siteStatus);
     richlistitem.appendChild(row);
     return richlistitem;
