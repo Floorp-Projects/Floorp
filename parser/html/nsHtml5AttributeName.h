@@ -56,7 +56,6 @@ class nsHtml5Portability;
 class nsHtml5AttributeName {
  public:
   static int32_t* ALL_NO_NS;
-  static nsStaticAtom** SAME_LOCAL_NULL;
 
  private:
   static int32_t* XMLNS_NS;
@@ -70,13 +69,8 @@ class nsHtml5AttributeName {
   static nsStaticAtom** XMLNS_PREFIX;
   static nsStaticAtom** XLINK_PREFIX;
   static nsStaticAtom** XML_PREFIX;
-  static nsStaticAtom** SVG_DIFFERENT(nsStaticAtom* name, nsStaticAtom* camel);
-  static nsStaticAtom** MATH_DIFFERENT(nsStaticAtom* name, nsStaticAtom* camel);
-  static nsStaticAtom** COLONIFIED_LOCAL(nsStaticAtom* name,
-                                         nsStaticAtom* suffix);
 
  public:
-  static nsStaticAtom** SAME_LOCAL(nsStaticAtom* name);
   inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
                                                int32_t key) {
     int32_t n = data.length;
@@ -158,8 +152,8 @@ class nsHtml5AttributeName {
   jInlineArray<nsAtom*, 3> local;
   jInlineArray<nsStaticAtom*, 3> prefix;
   bool custom;
-  nsHtml5AttributeName(int32_t* uri, nsStaticAtom** local,
-                       nsStaticAtom** prefix);
+  nsHtml5AttributeName(int32_t* uri, nsStaticAtom* html, nsStaticAtom* mathml,
+                       nsStaticAtom* svg, nsStaticAtom** prefix);
 
  public:
   nsHtml5AttributeName();

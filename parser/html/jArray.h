@@ -124,6 +124,8 @@ class autoJArray {
 template <class T, size_t S>
 class jInlineArray : public std::array<T, S> {
  public:
+  using std::array<T, S>::array;
+
   template <typename U>
   explicit jInlineArray(U* aData) {
     T* data = this->data();
