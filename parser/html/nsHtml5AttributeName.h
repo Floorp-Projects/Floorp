@@ -56,6 +56,7 @@ class nsHtml5Portability;
 class nsHtml5AttributeName {
  public:
   static int32_t* ALL_NO_NS;
+  static nsStaticAtom** SAME_LOCAL_NULL;
 
  private:
   static int32_t* XMLNS_NS;

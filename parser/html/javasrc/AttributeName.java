@@ -69,6 +69,8 @@ public final class AttributeName
     // ]NOCPP]
     };
 
+    // CPPONLY: static final @NoLength @StaticLocal String[] SAME_LOCAL_NULL = { null, null, null, };
+
     /**
      * An array that has no namespace for the HTML mode but the XMLNS namespace
      * for the SVG and MathML modes.
@@ -439,8 +441,8 @@ public final class AttributeName
     }
 
     // CPPONLY: public AttributeName() {
-    // CPPONLY:     this.uri = AttributeName.ALL_NO_NS;
-    // CPPONLY:     this.local = AttributeName.SAME_LOCAL(null);
+    // CPPONLY:     this.uri = ALL_NO_NS;
+    // CPPONLY:     this.local = SAME_LOCAL_NULL;
     // CPPONLY:     this.prefix = ALL_NO_PREFIX;
     // CPPONLY:     this.custom = true;
     // CPPONLY: }
