@@ -45,45 +45,46 @@ nsStaticAtom** nsHtml5AttributeName::ALL_NO_PREFIX = 0;
 nsStaticAtom** nsHtml5AttributeName::XMLNS_PREFIX = 0;
 nsStaticAtom** nsHtml5AttributeName::XLINK_PREFIX = 0;
 nsStaticAtom** nsHtml5AttributeName::XML_PREFIX = 0;
-RefPtr<nsAtom>* nsHtml5AttributeName::SVG_DIFFERENT(nsAtom* name,
-                                                    nsAtom* camel) {
-  RefPtr<nsAtom>* arr = new RefPtr<nsAtom>[4];
+nsStaticAtom** nsHtml5AttributeName::SVG_DIFFERENT(nsStaticAtom* name,
+                                                   nsStaticAtom* camel) {
+  nsStaticAtom** arr = new nsStaticAtom*[4];
   arr[0] = name;
   arr[1] = name;
   arr[2] = camel;
   return arr;
 }
 
-RefPtr<nsAtom>* nsHtml5AttributeName::MATH_DIFFERENT(nsAtom* name,
-                                                     nsAtom* camel) {
-  RefPtr<nsAtom>* arr = new RefPtr<nsAtom>[4];
+nsStaticAtom** nsHtml5AttributeName::MATH_DIFFERENT(nsStaticAtom* name,
+                                                    nsStaticAtom* camel) {
+  nsStaticAtom** arr = new nsStaticAtom*[4];
   arr[0] = name;
   arr[1] = camel;
   arr[2] = name;
   return arr;
 }
 
-RefPtr<nsAtom>* nsHtml5AttributeName::COLONIFIED_LOCAL(nsAtom* name,
-                                                       nsAtom* suffix) {
-  RefPtr<nsAtom>* arr = new RefPtr<nsAtom>[4];
+nsStaticAtom** nsHtml5AttributeName::COLONIFIED_LOCAL(nsStaticAtom* name,
+                                                      nsStaticAtom* suffix) {
+  nsStaticAtom** arr = new nsStaticAtom*[4];
   arr[0] = name;
   arr[1] = suffix;
   arr[2] = suffix;
   return arr;
 }
 
-RefPtr<nsAtom>* nsHtml5AttributeName::SAME_LOCAL(nsAtom* name) {
-  RefPtr<nsAtom>* arr = new RefPtr<nsAtom>[4];
+nsStaticAtom** nsHtml5AttributeName::SAME_LOCAL(nsStaticAtom* name) {
+  nsStaticAtom** arr = new nsStaticAtom*[4];
   arr[0] = name;
   arr[1] = name;
   arr[2] = name;
   return arr;
 }
 
-nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri, RefPtr<nsAtom>* local,
+nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri, nsStaticAtom** local,
                                            nsStaticAtom** prefix)
     : uri(uri), local(local), prefix(prefix), custom(false) {
   MOZ_COUNT_CTOR(nsHtml5AttributeName);
+  delete[] local;
 }
 
 nsHtml5AttributeName::nsHtml5AttributeName()
@@ -94,15 +95,11 @@ nsHtml5AttributeName::nsHtml5AttributeName()
   MOZ_COUNT_CTOR(nsHtml5AttributeName);
 }
 
-nsHtml5AttributeName* nsHtml5AttributeName::createAttributeName(nsAtom* name) {
-  return new nsHtml5AttributeName(nsHtml5AttributeName::ALL_NO_NS,
-                                  nsHtml5AttributeName::SAME_LOCAL(name),
-                                  ALL_NO_PREFIX);
-}
-
 nsHtml5AttributeName::~nsHtml5AttributeName() {
   MOZ_COUNT_DTOR(nsHtml5AttributeName);
-  delete[] local;
+  if (custom) {
+    NS_IF_RELEASE(local[0]);
+  }
 }
 
 int32_t nsHtml5AttributeName::getUri(int32_t mode) { return uri[mode]; }

@@ -23,9 +23,9 @@
 #ifndef jArray_h
 #define jArray_h
 
+#include <array>
 #include "mozilla/Attributes.h"
 #include "mozilla/BinarySearch.h"
-#include "nsDebug.h"
 
 template <class T, class L>
 struct staticJArray {
@@ -118,6 +118,18 @@ class autoJArray {
     delete[] arr;
     arr = nullptr;
     length = 0;
+  }
+};
+
+template <class T, size_t S>
+class jInlineArray : public std::array<T, S> {
+ public:
+  template <typename U>
+  explicit jInlineArray(U* aData) {
+    T* data = this->data();
+    for (size_t i = 0; i < S; ++i) {
+      data[i] = aData[i];
+    }
   }
 };
 
