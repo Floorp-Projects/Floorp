@@ -382,7 +382,7 @@ TEST(PHC, TestPHCDisablingGlobal)
 // {
 void DisabledPHCExhaustionTest() {
   // PHC hardcodes the amount of allocations to track.
-#if defined(XP_MACOSX) && defined(__aarch64__)
+#if defined(XP_DARWIN) && defined(__aarch64__)
   const unsigned NUM_ALLOCATIONS = 1024;
 #else
   const unsigned NUM_ALLOCATIONS = 4096;
