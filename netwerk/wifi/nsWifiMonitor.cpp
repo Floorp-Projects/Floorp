@@ -17,7 +17,6 @@
 #include "nsQueryObject.h"
 #include "nsNetCID.h"
 
-#include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/DelayedRunnable.h"
 #include "mozilla/IntegerPrintfMacros.h"
