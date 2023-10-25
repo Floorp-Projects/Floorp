@@ -47,10 +47,9 @@
     // 2) it's greater than the first scroll amount + the height of the inserted
     //    element.
     ok(window.scrollY > firstScrollAmount * 2,
-       "the scroll amount should be greater than double of the first scroll amount");
+       `the scroll amount ${window.scrollY} should be greater than double of the first scroll amount ${firstScrollAmount*2}`);
     ok(window.scrollY > firstScrollAmount + 500,
-       "the scroll amount should also be greater than the first scroll amount + " +
-       "the inserted element height");
+       `the scroll amount ${window.scrollY} should also be greater than the first scroll amount + the inserted element height  ${firstScrollAmount+500}`);
   }
 
   waitUntilApzStable()
