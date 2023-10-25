@@ -30,7 +30,7 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
 ]
 
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
+MOCHITEST_MANIFESTS += ["tests/mochitest.toml"]
 
 BROWSER_CHROME_MANIFESTS += ["tests/browser.toml"]
 

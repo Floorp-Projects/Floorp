@@ -1,0 +1,86 @@
+[DEFAULT]
+support-files = [
+  "inert_style.css",
+  "dummy_page.html",
+  "head.js",
+]
+
+["test_bug900724.html"]
+
+["test_bug1017896.html"]
+
+["test_bug1269155.html"]
+
+["test_bug1276240.html"]
+
+["test_custom_element_callback_innerhtml.html"]
+
+["test_custom_element_define.html"]
+
+["test_custom_element_define_parser.html"]
+
+["test_custom_element_get.html"]
+
+["test_custom_element_htmlconstructor.html"]
+support-files = [
+  "htmlconstructor_autonomous_tests.js",
+  "htmlconstructor_builtin_tests.js",
+]
+
+["test_custom_element_in_shadow.html"]
+
+["test_custom_element_lifecycle.html"]
+
+["test_custom_element_set_element_creation_callback.html"]
+
+["test_custom_element_stack.html"]
+
+["test_custom_element_template.html"]
+
+["test_custom_element_throw_on_dynamic_markup_insertion.html"]
+
+["test_custom_element_uncatchable_exception.html"]
+run-if = ["debug"] # TestFunctions only applied in debug builds
+
+["test_custom_element_upgrade.html"]
+support-files = [
+  "test_upgrade_page.html",
+  "upgrade_tests.js",
+]
+
+["test_custom_element_when_defined.html"]
+
+["test_detached_style.html"]
+
+["test_document_adoptnode.html"]
+
+["test_document_importnode.html"]
+
+["test_event_composed.html"]
+
+["test_event_retarget.html"]
+
+["test_event_stopping.html"]
+
+["test_link_prefetch.html"]
+
+["test_shadowdom_active_pseudo_class.html"]
+support-files = ["!/gfx/layers/apz/test/mochitest/apz_test_utils.js"]
+
+["test_shadowdom_ime.html"]
+
+["test_shadowroot.html"]
+
+["test_shadowroot_clonenode.html"]
+
+["test_shadowroot_inert_element.html"]
+
+["test_shadowroot_style.html"]
+
+["test_shadowroot_style_order.html"]
+
+["test_style_fallback_content.html"]
+
+["test_template.html"]
+
+["test_template_xhtml.html"]

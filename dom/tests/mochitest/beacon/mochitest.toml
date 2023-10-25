@@ -1,0 +1,37 @@
+[DEFAULT]
+support-files = [
+  "beacon-frame.html",
+  "beacon-handler.sjs",
+  "beacon-preflight-handler.sjs",
+  "beacon-originheader-handler.sjs",
+  "beacon-redirect-handler.sjs",
+]
+
+["test_beacon.html"]
+
+["test_beaconContentPolicy.html"]
+
+["test_beaconFrame.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_beaconOriginHeader.html"]
+skip-if = [
+  "verify",
+  "http3",
+  "http2",
+]
+
+["test_beaconPreflightWithCustomContentType.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_beaconRedirect.html"]
+skip-if = [
+  "http3",
+  "http2",
+]

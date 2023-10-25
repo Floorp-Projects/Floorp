@@ -1,0 +1,33 @@
+[DEFAULT]
+skip-if = ["os == 'android'"]
+support-files = [
+  "data/worker.js",
+  "data/worker_fileReader.js",
+  "data/chrome.manifest",
+]
+
+["test_ext_redirects_sw_scripts.js"]
+# The following firefox-appdir make sure that ExtensionTestUtils.loadExtension
+# will be able to successfully start the background page (it does fail without
+# it because there wouldn't be a global.tabTracker implementation as we would
+# expect in a real Firefox, Fenix or Thunderbird instance).
+firefox-appdir = "browser"
+
+["test_ext_worker_offline_fetch.js"]
+firefox-appdir = "browser"
+
+["test_fileReader.js"]
+
+["test_remoteworker_launch_new_process.js"]
+# The following firefox-appdir make sure that this xpcshell test will run
+# with e10s enabled (which is needed to make sure that the test case is
+# going to launch the expected new processes)
+firefox-appdir = "browser"
+# Disable plugin loading to make it rr able to record and replay this test.
+prefs = ["plugin.disable=true"]
+skip-if = ["socketprocess_networking"] # Bug 1759035
+
+
+["test_workers.js"]
+
+["test_workers_clone_error.js"]

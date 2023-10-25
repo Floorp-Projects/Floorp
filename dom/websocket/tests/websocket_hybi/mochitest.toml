@@ -1,0 +1,18 @@
+[DEFAULT]
+skip-if = [
+  "os == 'android'",
+  "http3",
+  "http2",
+]
+support-files = [
+  "file_binary-frames_wsh.py",
+  "file_check-binary-messages_wsh.py",
+]
+
+["test_receive-arraybuffer.html"]
+
+["test_receive-blob.html"]
+
+["test_send-arraybuffer.html"]
+
+["test_send-blob.html"]
