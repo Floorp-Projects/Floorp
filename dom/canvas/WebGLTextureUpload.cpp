@@ -1882,6 +1882,7 @@ void WebGLTexture::CopyTexImage(GLenum imageTarget, uint32_t level,
                            level, srcOffset.x, srcOffset.y, srcTotalWidth,
                            srcTotalHeight, srcUsage, dstOffset.x, dstOffset.y,
                            dstOffset.z, size.x, size.y, dstUsage)) {
+    Truncate();
     return;
   }
 
