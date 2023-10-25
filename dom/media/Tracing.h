@@ -35,13 +35,13 @@ void StopAudioCallbackTracing();
 #  define TRACE_COMMENT(aName, aFmt, ...)              \
     AutoTracer trace(gAudioCallbackTraceLogger, aName, \
                      AutoTracer::EventType::DURATION, aFmt, ##__VA_ARGS__);
-#  define TRACE_AUDIO_CALLBACK_BUDGET(id, aFrames, aSampleRate) \
-    AutoTracer budget(gAudioCallbackTraceLogger, id,            \
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aLocation, aFrames, aSampleRate) \
+    AutoTracer budget(gAudioCallbackTraceLogger, aLocation,            \
                       AutoTracer::EventType::BUDGET, aFrames, aSampleRate);
 #else
 #  define TRACE(aName)
 #  define TRACE_COMMENT(aFmt, ...)
-#  define TRACE_AUDIO_CALLBACK_BUDGET(aFrames, aSampleRate)
+#  define TRACE_AUDIO_CALLBACK_BUDGET(aLocation, aFrames, aSampleRate)
 #endif
 
 class MOZ_RAII AutoTracer {
