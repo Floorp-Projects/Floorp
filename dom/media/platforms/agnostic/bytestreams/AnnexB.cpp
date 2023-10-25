@@ -457,33 +457,36 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
 }
 
 /* static */
-bool AnnexB::ConvertSampleToHVCC(mozilla::MediaRawData* aSample) {
+Result<mozilla::Ok, nsresult> AnnexB::ConvertSampleToHVCC(
+    mozilla::MediaRawData* aSample) {
   if (IsHVCC(aSample)) {
-    return ConvertHVCCTo4BytesHVCC(aSample).isOk();
+    return ConvertHVCCTo4BytesHVCC(aSample);
   }
   if (!IsAnnexB(aSample)) {
     // Not AnnexB, nothing to convert.
-    return true;
+    return Ok();
   }
 
   nsTArray<uint8_t> nalu;
   ByteWriter<BigEndian> writer(nalu);
   BufferReader reader(aSample->Data(), aSample->Size());
-  if (ParseNALUnits(writer, reader).isErr()) {
+  if (auto rv = ParseNALUnits(writer, reader); rv.isErr()) {
     LOG("Failed fo parse AnnexB NALU for HVCC");
-    return false;
+    return rv;
   }
   UniquePtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
   if (!samplewriter->Replace(nalu.Elements(), nalu.Length())) {
     LOG("Failed fo replace NALU");
-    return false;
+    return Err(NS_ERROR_OUT_OF_MEMORY);
   }
-  MOZ_DIAGNOSTIC_ASSERT_IF(aSample->mExtraData,
-                           HVCCConfig::Parse(aSample).isOk());
+  if (aSample->mExtraData && HVCCConfig::Parse(aSample).isErr()) {
+    LOG("Failed to parse invalid hvcc extradata");
+    return Err(NS_ERROR_DOM_MEDIA_METADATA_ERR);
+  }
   // TODO : currently we don't set the fake header because we expect the sample
   // already has a valid extradata. (set by the media change monitor) We can
   // support setting a specific/fake header if we want to support HEVC encoding.
-  return true;
+  return Ok();
 }
 
 /* static */

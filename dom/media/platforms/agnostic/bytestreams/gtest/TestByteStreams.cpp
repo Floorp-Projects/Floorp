@@ -695,7 +695,7 @@ TEST(H265, AnnexBToHVCC)
       << "The sample should be AnnexB following conversion";
 
   auto rv = AnnexB::ConvertSampleToHVCC(rawDataClone);
-  EXPECT_TRUE(rv) << "AnnexB to HVCC Conversion should succeed";
+  EXPECT_TRUE(rv.isOk()) << "AnnexB to HVCC Conversion should succeed";
   EXPECT_TRUE(AnnexB::IsHVCC(rawDataClone))
       << "The sample should be HVCC following conversion";
 }
