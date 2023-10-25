@@ -12,10 +12,21 @@
 //!
 //! Converts between a string (such as an URL’s query string)
 //! and a sequence of (name, value) pairs.
+#![no_std]
 
+// For forwards compatibility
+#[cfg(feature = "std")]
+extern crate std as _;
+
+extern crate alloc;
+
+#[cfg(not(feature = "alloc"))]
+compile_error!("the `alloc` feature must currently be enabled");
+
+use alloc::borrow::{Borrow, Cow, ToOwned};
+use alloc::string::String;
+use core::str;
 use percent_encoding::{percent_decode, percent_encode_byte};
-use std::borrow::{Borrow, Cow};
-use std::str;
 
 /// Convert a byte string in the `application/x-www-form-urlencoded` syntax
 /// into a iterator of (name, value) pairs.
@@ -186,7 +197,7 @@ impl Target for String {
 
 impl<'a> Target for &'a mut String {
     fn as_mut_string(&mut self) -> &mut String {
-        &mut **self
+        self
     }
     fn finish(self) -> Self {
         self
@@ -282,7 +293,7 @@ impl<'a, T: Target> Serializer<'a, T> {
         {
             let string = string(&mut self.target);
             for pair in iter {
-                let &(ref k, ref v) = pair.borrow();
+                let (k, v) = pair.borrow();
                 append_pair(
                     string,
                     self.start_position,
