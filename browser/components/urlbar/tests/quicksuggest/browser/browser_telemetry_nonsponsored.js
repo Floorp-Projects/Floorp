@@ -19,9 +19,7 @@ const REMOTE_SETTINGS_RESULT = {
   url: "https://example.com/nonsponsored",
   title: "Non-sponsored suggestion",
   keywords: ["nonsponsored"],
-  click_url: "https://example.com/click",
-  impression_url: "https://example.com/impression",
-  advertiser: "testadvertiser",
+  advertiser: "Wikipedia",
   iab_category: "5 - Education",
 };
 
@@ -40,8 +38,14 @@ add_setup(async function () {
   });
 });
 
-add_task(async function nonsponsored() {
+add_tasks_with_rust(async function nonsponsored() {
   let match_type = "firefox-suggest";
+  let advertiser = REMOTE_SETTINGS_RESULT.advertiser.toLowerCase();
+  let reporting_url = undefined;
+  let source = UrlbarPrefs.get("quicksuggest.rustEnabled")
+    ? "rust"
+    : "remote-settings";
+  let block_id = source == "rust" ? undefined : REMOTE_SETTINGS_RESULT.id;
 
   // Make sure `improve_suggest_experience_checked` is recorded correctly
   // depending on the value of the related pref.
@@ -75,14 +79,16 @@ add_task(async function nonsponsored() {
         ping: {
           type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
           payload: {
+            source,
             match_type,
             position,
+            block_id,
+            advertiser,
+            reporting_url,
             suggested_index: -1,
             suggested_index_relative_to_group: true,
             improve_suggest_experience_checked,
             is_clicked: false,
-            block_id: REMOTE_SETTINGS_RESULT.id,
-            advertiser: REMOTE_SETTINGS_RESULT.advertiser,
           },
         },
       },
@@ -106,26 +112,30 @@ add_task(async function nonsponsored() {
           {
             type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
             payload: {
+              source,
               match_type,
               position,
+              block_id,
+              advertiser,
+              reporting_url,
               suggested_index: -1,
               suggested_index_relative_to_group: true,
               improve_suggest_experience_checked,
               is_clicked: true,
-              block_id: REMOTE_SETTINGS_RESULT.id,
-              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
           {
             type: CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION,
             payload: {
+              source,
               match_type,
               position,
+              block_id,
+              advertiser,
+              reporting_url,
               suggested_index: -1,
               suggested_index_relative_to_group: true,
               improve_suggest_experience_checked,
-              block_id: REMOTE_SETTINGS_RESULT.id,
-              advertiser: REMOTE_SETTINGS_RESULT.advertiser,
             },
           },
         ],
@@ -152,26 +162,29 @@ add_task(async function nonsponsored() {
             {
               type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
               payload: {
+                source,
                 match_type,
                 position,
+                block_id,
+                advertiser,
+                reporting_url,
                 suggested_index: -1,
                 suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 is_clicked: false,
-                block_id: REMOTE_SETTINGS_RESULT.id,
-                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
             {
               type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
               payload: {
+                source,
                 match_type,
                 position,
+                block_id,
+                advertiser,
                 suggested_index: -1,
                 suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
-                block_id: REMOTE_SETTINGS_RESULT.id,
-                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
                 iab_category: REMOTE_SETTINGS_RESULT.iab_category,
               },
             },
@@ -198,14 +211,16 @@ add_task(async function nonsponsored() {
             {
               type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
               payload: {
+                source,
                 match_type,
                 position,
+                block_id,
+                advertiser,
+                reporting_url,
                 suggested_index: -1,
                 suggested_index_relative_to_group: true,
                 improve_suggest_experience_checked,
                 is_clicked: false,
-                block_id: REMOTE_SETTINGS_RESULT.id,
-                advertiser: REMOTE_SETTINGS_RESULT.advertiser,
               },
             },
           ],
