@@ -231,6 +231,10 @@ export class NetworkEventRecord {
    */
   addServerTimings(serverTimings) {}
 
+  onAuthPrompt(authDetails, authCallbacks) {
+    this.#emitAuthRequired(authCallbacks);
+  }
+
   /**
    * Convert the provided request timing to a timing relative to the beginning
    * of the request. All timings are numbers representing high definition
@@ -252,6 +256,22 @@ export class NetworkEventRecord {
     }
 
     return timing - requestTime;
+  }
+
+  #emitAuthRequired(authCallbacks) {
+    this.#updateDataFromTimedChannel();
+
+    this.#networkListener.emit("auth-required", {
+      authCallbacks,
+      contextId: this.#contextId,
+      isNavigationRequest: this.#isMainDocumentChannel,
+      requestChannel: this.#requestChannel,
+      redirectCount: this.#redirectCount,
+      requestData: this.#requestData,
+      responseChannel: this.#responseChannel,
+      responseData: this.#responseData,
+      timestamp: Date.now(),
+    });
   }
 
   #emitBeforeRequestSent() {
