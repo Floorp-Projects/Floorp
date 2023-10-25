@@ -44,7 +44,7 @@ def save_patch_stack(
     merge_base = stdout_lines[0]
 
     # grab patch stack
-    cmd = "git format-patch --keep-subject --output-directory {} {}..{}".format(
+    cmd = "git format-patch --keep-subject --no-signature --output-directory {} {}..{}".format(
         patch_directory, merge_base, github_branch
     )
     run_git(cmd, github_path)
