@@ -6,8 +6,8 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.attribution:resolve_keyed_by_transforms
-    - gecko_taskgraph.transforms.attribution:transforms
     - taskgraph.transforms.task_context
+    - gecko_taskgraph.transforms.attribution:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 

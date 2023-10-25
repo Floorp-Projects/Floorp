@@ -59,8 +59,11 @@ def mac_attribution(config, jobs):
             # Last argument of command should be the attribution data
             command = job["run"]["command"]
             attribution_arg = command[-1]
-            while len(attribution_arg) < 1024:
+            # Attribution length should be aligned with ATTR_CODE_MAX_LENGTH
+            #   from browser/components/attribution/AttributionCode.sys
+            while len(attribution_arg) < 1010:
                 attribution_arg += "\t"
-            command[-1] = attribution_arg
+            # Wrap attribution value in quotes to prevent run-task from removing tabs
+            command[-1] = "'" + attribution_arg + "'"
             job["run"]["command"] = " ".join(command)
         yield job
