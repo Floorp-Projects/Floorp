@@ -7,22 +7,6 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
-  class MozDropmarker extends MozXULElement {
-    constructor() {
-      super();
-      let shadowRoot = this.attachShadow({ mode: "open" });
-      let stylesheet = document.createElement("link");
-      stylesheet.rel = "stylesheet";
-      stylesheet.href = "chrome://global/skin/dropmarker.css";
-
-      let image = document.createXULElement("image");
-      image.part = "icon";
-      shadowRoot.append(stylesheet, image);
-    }
-  }
-
-  customElements.define("dropmarker", MozDropmarker);
-
   class MozCommandSet extends MozXULElement {
     connectedCallback() {
       if (this.getAttribute("commandupdater") === "true") {
