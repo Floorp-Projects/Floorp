@@ -42,6 +42,9 @@ class PsutilStub(object):
             ],
         )
 
+    def cpu_count(self, logical=True):
+        return 0
+
     def cpu_percent(self, a, b):
         return [0]
 
