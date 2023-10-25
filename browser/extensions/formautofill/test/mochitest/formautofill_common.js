@@ -139,7 +139,8 @@ async function checkFormFieldsStyle(profile, isPreviewing = true) {
       previewValue = "";
     } else {
       fillableValue = profile && profile[elem.id];
-      previewValue = (isPreviewing && fillableValue) || "";
+      previewValue =
+        (isPreviewing && fillableValue?.toString().replaceAll("*", "•")) || "";
     }
     await checkFieldHighlighted(elem, !!fillableValue);
     await checkFieldPreview(elem, previewValue);

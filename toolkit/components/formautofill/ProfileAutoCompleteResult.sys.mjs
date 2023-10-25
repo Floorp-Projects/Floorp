@@ -417,7 +417,11 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
         const ccTypeName = ccTypeL10nId
           ? lazy.l10n.formatValueSync(ccTypeL10nId)
           : ccType ?? ""; // Unknown card type
-        const ariaLabel = [ccTypeName, primary.toString().replaceAll("*", ""), secondary]
+        const ariaLabel = [
+          ccTypeName,
+          primary.toString().replaceAll("*", ""),
+          secondary,
+        ]
           .filter(chunk => !!chunk) // Exclude empty chunks.
           .join(" ");
         return {
