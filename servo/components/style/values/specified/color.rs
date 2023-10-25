@@ -5,6 +5,9 @@
 //! Specified color values.
 
 use super::AllowQuirks;
+use crate::color::parsing::{
+    self, AngleOrNumber, Color as CSSParserColor, FromParsedColor, NumberOrPercentage,
+};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorFlags, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
@@ -15,8 +18,7 @@ use crate::values::generics::color::{
 use crate::values::specified::calc::CalcNode;
 use crate::values::specified::Percentage;
 use crate::values::{normalize, CustomIdent};
-use crate::color::parsing::{AngleOrNumber, Color as CSSParserColor, NumberOrPercentage, FromParsedColor, self};
-use cssparser::{Parser, Token, BasicParseErrorKind, ParseErrorKind, color::PredefinedColorSpace};
+use cssparser::{color::PredefinedColorSpace, BasicParseErrorKind, ParseErrorKind, Parser, Token};
 use itoa;
 use std::fmt::{self, Write};
 use std::io::Write as IoWrite;
@@ -726,7 +728,7 @@ impl Color {
         match *self {
             Self::InheritFromBodyQuirk => false,
             Self::CurrentColor | Color::System(..) => true,
-            Self::Absolute(ref absolute) => allow_transparent && absolute.color.alpha() == 0.0,
+            Self::Absolute(ref absolute) => allow_transparent && absolute.color.is_transparent(),
             Self::LightDark(ref ld) => {
                 ld.light.honored_in_forced_colors_mode(allow_transparent) &&
                     ld.dark.honored_in_forced_colors_mode(allow_transparent)
@@ -775,8 +777,10 @@ impl Color {
         })
     }
 
-
-    fn parse_hash<'i>(bytes: &[u8], loc: &cssparser::SourceLocation) -> Result<Self, ParseError<'i>> {
+    fn parse_hash<'i>(
+        bytes: &[u8],
+        loc: &cssparser::SourceLocation,
+    ) -> Result<Self, ParseError<'i>> {
         match cssparser::color::parse_hash_color(bytes) {
             Ok((r, g, b, a)) => Ok(Self::from_rgba(r, g, b, a)),
             Err(()) => Err(loc.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
@@ -802,7 +806,7 @@ impl Color {
                 if ident.len() != 3 && ident.len() != 6 {
                     return Err(location.new_custom_error(StyleParseErrorKind::UnspecifiedError));
                 }
-                return Self::parse_hash(ident.as_bytes(), &location)
+                return Self::parse_hash(ident.as_bytes(), &location);
             },
             ref t => {
                 return Err(location.new_unexpected_token_error(t.clone()));
@@ -869,9 +873,7 @@ impl Color {
                 }
 
                 // Computed RGB and XYZ components can not be NaN.
-                if !color.is_legacy_syntax() &&
-                    (color.color_space.is_rgb_like() || color.color_space.is_xyz_like())
-                {
+                if !color.is_legacy_syntax() && color.color_space.is_rgb_or_xyz_like() {
                     color.components = color.components.map(normalize);
                 }
 
@@ -1031,7 +1033,19 @@ impl Parse for CaretColor {
 
 /// Various flags to represent the color-scheme property in an efficient
 /// way.
-#[derive(Clone, Copy, Debug, Default, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[repr(C)]
 #[value_info(other_values = "light,dark,only")]
 pub struct ColorSchemeFlags(u8);

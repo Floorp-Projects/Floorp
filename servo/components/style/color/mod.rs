@@ -129,24 +129,20 @@ impl ColorSpace {
         matches!(self, Self::Hsl | Self::Hwb | Self::Lch | Self::Oklch)
     }
 
-    /// Returns true if the color has RGB components.
+    /// Returns true if the color has RGB or XYZ components.
     #[inline]
-    pub fn is_rgb_like(&self) -> bool {
-        matches!(
-            self,
+    pub fn is_rgb_or_xyz_like(&self) -> bool {
+        match self {
             Self::Srgb |
-                Self::SrgbLinear |
-                Self::DisplayP3 |
-                Self::A98Rgb |
-                Self::ProphotoRgb |
-                Self::Rec2020
-        )
-    }
-
-    /// Returns true if the color has RGB components.
-    #[inline]
-    pub fn is_xyz_like(&self) -> bool {
-        matches!(self, Self::XyzD50 | Self::XyzD65)
+            Self::SrgbLinear |
+            Self::DisplayP3 |
+            Self::A98Rgb |
+            Self::ProphotoRgb |
+            Self::Rec2020 |
+            Self::XyzD50 |
+            Self::XyzD65 => true,
+            _ => false,
+        }
     }
 
     /// Returns an index of the hue component in the color space, otherwise
@@ -171,17 +167,17 @@ impl ColorSpace {
 pub struct ColorFlags(u8);
 bitflags! {
     impl ColorFlags : u8 {
+        /// Whether the 1st color component is `none`.
+        const C0_IS_NONE = 1 << 0;
+        /// Whether the 2nd color component is `none`.
+        const C1_IS_NONE = 1 << 1;
+        /// Whether the 3rd color component is `none`.
+        const C2_IS_NONE = 1 << 2;
+        /// Whether the alpha component is `none`.
+        const ALPHA_IS_NONE = 1 << 3;
         /// Marks that this color is in the legacy color format. This flag is
         /// only valid for the `Srgb` color space.
-        const IS_LEGACY_SRGB = 1 << 0;
-        /// Whether the 1st color component is `none`.
-        const C1_IS_NONE = 1 << 1;
-        /// Whether the 2nd color component is `none`.
-        const C2_IS_NONE = 1 << 2;
-        /// Whether the 3rd color component is `none`.
-        const C3_IS_NONE = 1 << 3;
-        /// Whether the alpha component is `none`.
-        const ALPHA_IS_NONE = 1 << 4;
+        const IS_LEGACY_SRGB = 1 << 4;
     }
 }
 
@@ -311,9 +307,9 @@ impl AbsoluteColor {
         }
 
         let mut components = ColorComponents(
-            cd!(c1, ColorFlags::C1_IS_NONE),
-            cd!(c2, ColorFlags::C2_IS_NONE),
-            cd!(c3, ColorFlags::C3_IS_NONE),
+            cd!(c1, ColorFlags::C0_IS_NONE),
+            cd!(c2, ColorFlags::C1_IS_NONE),
+            cd!(c3, ColorFlags::C2_IS_NONE),
         );
 
         let alpha = cd!(alpha, ColorFlags::ALPHA_IS_NONE);
@@ -386,10 +382,50 @@ impl AbsoluteColor {
         }
     }
 
-    /// Return the alpha component.
+    /// Returns true if this color is fully transparent.
     #[inline]
-    pub fn alpha(&self) -> f32 {
-        self.alpha
+    pub fn is_transparent(&self) -> bool {
+        self.flags.contains(ColorFlags::ALPHA_IS_NONE) || self.alpha == 0.0
+    }
+
+    /// Return an optional first component.
+    #[inline]
+    pub fn c0(&self) -> Option<f32> {
+        if self.flags.contains(ColorFlags::C0_IS_NONE) {
+            None
+        } else {
+            Some(self.components.0)
+        }
+    }
+
+    /// Return an optional second component.
+    #[inline]
+    pub fn c1(&self) -> Option<f32> {
+        if self.flags.contains(ColorFlags::C1_IS_NONE) {
+            None
+        } else {
+            Some(self.components.1)
+        }
+    }
+
+    /// Return an optional second component.
+    #[inline]
+    pub fn c2(&self) -> Option<f32> {
+        if self.flags.contains(ColorFlags::C2_IS_NONE) {
+            None
+        } else {
+            Some(self.components.2)
+        }
+    }
+
+    /// Return an optional alpha component.
+    #[inline]
+    pub fn alpha(&self) -> Option<f32> {
+        if self.flags.contains(ColorFlags::ALPHA_IS_NONE) {
+            None
+        } else {
+            Some(self.alpha)
+        }
     }
 
     /// Convert this color to the specified color space.
@@ -400,78 +436,93 @@ impl AbsoluteColor {
             return self.clone();
         }
 
-        // We have simplified conversions that do not need to convert to XYZ first.  This improves
-        // performance, because it skips at least 2 matrix multiplications and reduces float
-        // rounding errors.
-        match (self.color_space, color_space) {
-            (Srgb, Hsl) => {
-                let hsl = convert::rgb_to_hsl(&self.components);
-                return Self::new(color_space, hsl.0, hsl.1, hsl.2, self.alpha);
-            },
-
-            (Srgb, Hwb) => {
-                let hwb = convert::rgb_to_hwb(&self.components);
-                return Self::new(color_space, hwb.0, hwb.1, hwb.2, self.alpha);
-            },
-
-            (Hsl, Srgb) => {
-                let srgb = convert::hsl_to_rgb(&self.components);
-                return Self::new(color_space, srgb.0, srgb.1, srgb.2, self.alpha);
-            },
-
-            (Hwb, Srgb) => {
-                let srgb = convert::hwb_to_rgb(&self.components);
-                return Self::new(color_space, srgb.0, srgb.1, srgb.2, self.alpha);
-            },
-
-            (Lab, Lch) | (Oklab, Oklch) => {
-                let lch = convert::orthogonal_to_polar(&self.components);
-                return Self::new(color_space, lch.0, lch.1, lch.2, self.alpha);
-            },
-
-            (Lch, Lab) | (Oklch, Oklab) => {
-                let lab = convert::polar_to_orthogonal(&self.components);
-                return Self::new(color_space, lab.0, lab.1, lab.2, self.alpha);
-            },
-
-            _ => {},
+        // Conversion functions doesn't handle NAN component values, so they are
+        // converted to 0.0. They do however need to know if a component is
+        // missing, so we use NAN as the marker for that.
+        macro_rules! missing_to_nan {
+            ($c:expr) => {{
+                if let Some(v) = $c {
+                    crate::values::normalize(v)
+                } else {
+                    f32::NAN
+                }
+            }};
         }
 
-        let (xyz, white_point) = match self.color_space {
-            Lab => convert::to_xyz::<convert::Lab>(&self.components),
-            Lch => convert::to_xyz::<convert::Lch>(&self.components),
-            Oklab => convert::to_xyz::<convert::Oklab>(&self.components),
-            Oklch => convert::to_xyz::<convert::Oklch>(&self.components),
-            Srgb => convert::to_xyz::<convert::Srgb>(&self.components),
-            Hsl => convert::to_xyz::<convert::Hsl>(&self.components),
-            Hwb => convert::to_xyz::<convert::Hwb>(&self.components),
-            SrgbLinear => convert::to_xyz::<convert::SrgbLinear>(&self.components),
-            DisplayP3 => convert::to_xyz::<convert::DisplayP3>(&self.components),
-            A98Rgb => convert::to_xyz::<convert::A98Rgb>(&self.components),
-            ProphotoRgb => convert::to_xyz::<convert::ProphotoRgb>(&self.components),
-            Rec2020 => convert::to_xyz::<convert::Rec2020>(&self.components),
-            XyzD50 => convert::to_xyz::<convert::XyzD50>(&self.components),
-            XyzD65 => convert::to_xyz::<convert::XyzD65>(&self.components),
+        let components = ColorComponents(
+            missing_to_nan!(self.c0()),
+            missing_to_nan!(self.c1()),
+            missing_to_nan!(self.c2()),
+        );
+
+        let result = match (self.color_space, color_space) {
+            // We have simplified conversions that do not need to convert to XYZ
+            // first. This improves performance, because it skips at least 2
+            // matrix multiplications and reduces float rounding errors.
+            (Srgb, Hsl) => convert::rgb_to_hsl(&components),
+            (Srgb, Hwb) => convert::rgb_to_hwb(&components),
+            (Hsl, Srgb) => convert::hsl_to_rgb(&components),
+            (Hwb, Srgb) => convert::hwb_to_rgb(&components),
+            (Lab, Lch) | (Oklab, Oklch) => convert::orthogonal_to_polar(&components),
+            (Lch, Lab) | (Oklch, Oklab) => convert::polar_to_orthogonal(&components),
+
+            // All other conversions need to convert to XYZ first.
+            _ => {
+                let (xyz, white_point) = match self.color_space {
+                    Lab => convert::to_xyz::<convert::Lab>(&components),
+                    Lch => convert::to_xyz::<convert::Lch>(&components),
+                    Oklab => convert::to_xyz::<convert::Oklab>(&components),
+                    Oklch => convert::to_xyz::<convert::Oklch>(&components),
+                    Srgb => convert::to_xyz::<convert::Srgb>(&components),
+                    Hsl => convert::to_xyz::<convert::Hsl>(&components),
+                    Hwb => convert::to_xyz::<convert::Hwb>(&components),
+                    SrgbLinear => convert::to_xyz::<convert::SrgbLinear>(&components),
+                    DisplayP3 => convert::to_xyz::<convert::DisplayP3>(&components),
+                    A98Rgb => convert::to_xyz::<convert::A98Rgb>(&components),
+                    ProphotoRgb => convert::to_xyz::<convert::ProphotoRgb>(&components),
+                    Rec2020 => convert::to_xyz::<convert::Rec2020>(&components),
+                    XyzD50 => convert::to_xyz::<convert::XyzD50>(&components),
+                    XyzD65 => convert::to_xyz::<convert::XyzD65>(&components),
+                };
+
+                match color_space {
+                    Lab => convert::from_xyz::<convert::Lab>(&xyz, white_point),
+                    Lch => convert::from_xyz::<convert::Lch>(&xyz, white_point),
+                    Oklab => convert::from_xyz::<convert::Oklab>(&xyz, white_point),
+                    Oklch => convert::from_xyz::<convert::Oklch>(&xyz, white_point),
+                    Srgb => convert::from_xyz::<convert::Srgb>(&xyz, white_point),
+                    Hsl => convert::from_xyz::<convert::Hsl>(&xyz, white_point),
+                    Hwb => convert::from_xyz::<convert::Hwb>(&xyz, white_point),
+                    SrgbLinear => convert::from_xyz::<convert::SrgbLinear>(&xyz, white_point),
+                    DisplayP3 => convert::from_xyz::<convert::DisplayP3>(&xyz, white_point),
+                    A98Rgb => convert::from_xyz::<convert::A98Rgb>(&xyz, white_point),
+                    ProphotoRgb => convert::from_xyz::<convert::ProphotoRgb>(&xyz, white_point),
+                    Rec2020 => convert::from_xyz::<convert::Rec2020>(&xyz, white_point),
+                    XyzD50 => convert::from_xyz::<convert::XyzD50>(&xyz, white_point),
+                    XyzD65 => convert::from_xyz::<convert::XyzD65>(&xyz, white_point),
+                }
+            },
         };
 
-        let result = match color_space {
-            Lab => convert::from_xyz::<convert::Lab>(&xyz, white_point),
-            Lch => convert::from_xyz::<convert::Lch>(&xyz, white_point),
-            Oklab => convert::from_xyz::<convert::Oklab>(&xyz, white_point),
-            Oklch => convert::from_xyz::<convert::Oklch>(&xyz, white_point),
-            Srgb => convert::from_xyz::<convert::Srgb>(&xyz, white_point),
-            Hsl => convert::from_xyz::<convert::Hsl>(&xyz, white_point),
-            Hwb => convert::from_xyz::<convert::Hwb>(&xyz, white_point),
-            SrgbLinear => convert::from_xyz::<convert::SrgbLinear>(&xyz, white_point),
-            DisplayP3 => convert::from_xyz::<convert::DisplayP3>(&xyz, white_point),
-            A98Rgb => convert::from_xyz::<convert::A98Rgb>(&xyz, white_point),
-            ProphotoRgb => convert::from_xyz::<convert::ProphotoRgb>(&xyz, white_point),
-            Rec2020 => convert::from_xyz::<convert::Rec2020>(&xyz, white_point),
-            XyzD50 => convert::from_xyz::<convert::XyzD50>(&xyz, white_point),
-            XyzD65 => convert::from_xyz::<convert::XyzD65>(&xyz, white_point),
-        };
+        // A NAN value coming from a conversion function means the the component
+        // is missing, so we convert it to None.
+        macro_rules! nan_to_missing {
+            ($v:expr) => {{
+                if $v.is_nan() {
+                    None
+                } else {
+                    Some($v)
+                }
+            }};
+        }
 
-        Self::new(color_space, result.0, result.1, result.2, self.alpha)
+        Self::new(
+            color_space,
+            nan_to_missing!(result.0),
+            nan_to_missing!(result.1),
+            nan_to_missing!(result.2),
+            self.alpha(),
+        )
     }
 }
 
@@ -495,21 +546,6 @@ impl ToCss for AbsoluteColor {
     where
         W: Write,
     {
-        macro_rules! value_or_none {
-            ($v:expr,$flag:tt) => {{
-                if self.flags.contains(ColorFlags::$flag) {
-                    None
-                } else {
-                    Some($v)
-                }
-            }};
-        }
-
-        let maybe_c1 = value_or_none!(self.components.0, C1_IS_NONE);
-        let maybe_c2 = value_or_none!(self.components.1, C2_IS_NONE);
-        let maybe_c3 = value_or_none!(self.components.2, C3_IS_NONE);
-        let maybe_alpha = value_or_none!(self.alpha, ALPHA_IS_NONE);
-
         match self.color_space {
             ColorSpace::Srgb if self.flags.contains(ColorFlags::IS_LEGACY_SRGB) => {
                 // The "none" keyword is not supported in the rgb/rgba legacy syntax.
@@ -525,19 +561,19 @@ impl ToCss for AbsoluteColor {
             },
             ColorSpace::Hsl | ColorSpace::Hwb => self.into_srgb_legacy().to_css(dest),
             ColorSpace::Lab => cssparser::ToCss::to_css(
-                &parsing::Lab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Lab::new(self.c0(), self.c1(), self.c2(), self.alpha()),
                 dest,
             ),
             ColorSpace::Lch => cssparser::ToCss::to_css(
-                &parsing::Lch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Lch::new(self.c0(), self.c1(), self.c2(), self.alpha()),
                 dest,
             ),
             ColorSpace::Oklab => cssparser::ToCss::to_css(
-                &parsing::Oklab::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Oklab::new(self.c0(), self.c1(), self.c2(), self.alpha()),
                 dest,
             ),
             ColorSpace::Oklch => cssparser::ToCss::to_css(
-                &parsing::Oklch::new(maybe_c1, maybe_c2, maybe_c3, maybe_alpha),
+                &parsing::Oklch::new(self.c0(), self.c1(), self.c2(), self.alpha()),
                 dest,
             ),
             _ => {
@@ -564,10 +600,10 @@ impl ToCss for AbsoluteColor {
 
                 let color_function = parsing::ColorFunction {
                     color_space,
-                    c1: maybe_c1,
-                    c2: maybe_c2,
-                    c3: maybe_c3,
-                    alpha: maybe_alpha,
+                    c1: self.c0(),
+                    c2: self.c1(),
+                    c3: self.c2(),
+                    alpha: self.alpha(),
                 };
                 let color = parsing::Color::ColorFunction(color_function);
                 cssparser::ToCss::to_css(&color, dest)
