@@ -34,7 +34,12 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
             FirefoxTheme {
                 TranslationSettings(
                     translationSwitchList = getTranslationSettingsSwitchList(),
-                    onAutomaticTranslationClicked = {},
+                    onAutomaticTranslationClicked = {
+                        findNavController().navigate(
+                            TranslationSettingsFragmentDirections
+                                .actionTranslationSettingsFragmentToAutomaticTranslationPreferenceFragment(),
+                        )
+                    },
                     onDownloadLanguageClicked = {},
                     onNeverTranslationClicked = {},
                 )

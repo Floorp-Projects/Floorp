@@ -39,6 +39,7 @@ private val ICON_SIZE = 24.dp
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
@@ -50,6 +51,7 @@ private val ICON_SIZE = 24.dp
 fun TextListItem(
     label: String,
     modifier: Modifier = Modifier,
+    maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
     onClick: (() -> Unit)? = null,
@@ -59,6 +61,7 @@ fun TextListItem(
 ) {
     ListItem(
         label = label,
+        maxLabelLines = maxLabelLines,
         modifier = modifier,
         description = description,
         maxDescriptionLines = maxDescriptionLines,
@@ -206,6 +209,7 @@ fun IconListItem(
  *
  * @param label The label in the list item.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param maxLabelLines An optional maximum number of lines for the label text to span.
  * @param description An optional description text below the label.
  * @param maxDescriptionLines An optional maximum number of lines for the description text to span.
  * @param onClick Called when the user clicks on the item.
@@ -216,6 +220,7 @@ fun IconListItem(
 private fun ListItem(
     label: String,
     modifier: Modifier = Modifier,
+    maxLabelLines: Int = 1,
     description: String? = null,
     maxDescriptionLines: Int = 1,
     onClick: (() -> Unit)? = null,
@@ -242,7 +247,7 @@ private fun ListItem(
                 text = label,
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.subtitle1,
-                maxLines = 1,
+                maxLines = maxLabelLines,
             )
 
             description?.let {

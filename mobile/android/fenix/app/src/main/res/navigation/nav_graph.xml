@@ -1443,6 +1443,23 @@
                 app:destination="@id/translationsDialogFragment"
                 app:popUpTo="@id/translationSettingsFragment"
                 app:popUpToInclusive="true" />
+            <action
+                android:id="@+id/action_translationSettingsFragment_to_automaticTranslationPreferenceFragment"
+                app:destination="@id/automaticTranslationPreferenceFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/automaticTranslationPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.automatic.AutomaticTranslationPreferenceFragment">
+            <action
+                android:id="@+id/action_automaticTranslationPreference_to_automaticTranslationOptionsPreference"
+                app:destination="@id/automaticTranslationOptionsPreferenceFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/automaticTranslationOptionsPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.automatic.AutomaticTranslationOptionsPreferenceFragment">
+            <argument
+                android:name="selectedTranslationOptionPreference"
+                app:argType="org.mozilla.fenix.translations.preferences.automatic.AutomaticTranslationItemPreference" />
         </fragment>
     </navigation>
 </navigation>
