@@ -1110,6 +1110,7 @@ class AsyncPanZoomController {
   // notification.
   CSSToParentLayerScale mLastNotifiedZoom;
 
+  // Accessing mAnimation needs to be protected by mRecursiveMutex
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   UniquePtr<OverscrollEffectBase> mOverscrollEffect;

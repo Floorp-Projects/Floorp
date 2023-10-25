@@ -2753,9 +2753,9 @@ AsyncPanZoomController::GetDisplacementsForPanGesture(
 nsEventStatus AsyncPanZoomController::OnPan(
     const PanGestureInput& aEvent, FingersOnTouchpad aFingersOnTouchpad) {
   APZC_LOG_DETAIL("got a pan-pan in state %s\n", this,
-                  ToString(mState).c_str());
+                  ToString(GetState()).c_str());
 
-  if (mState == SMOOTHMSD_SCROLL) {
+  if (GetState() == SMOOTHMSD_SCROLL) {
     if (aFingersOnTouchpad == FingersOnTouchpad::No) {
       // When a SMOOTHMSD_SCROLL scroll is being processed on a frame, mouse
       // wheel and trackpad momentum scroll position updates will not cancel the
@@ -2769,7 +2769,7 @@ nsEventStatus AsyncPanZoomController::OnPan(
     CancelAnimation();
   }
 
-  if (mState == NOTHING) {
+  if (GetState() == NOTHING) {
     // This event block was interrupted by something else. If the user's fingers
     // are still on on the touchpad we want to resume scrolling, otherwise we
     // ignore the rest of the scroll gesture.
@@ -2784,25 +2784,31 @@ nsEventStatus AsyncPanZoomController::OnPan(
   auto [logicalPanDisplacement, physicalPanDisplacement] =
       GetDisplacementsForPanGesture(aEvent);
 
-  MOZ_ASSERT_IF(mState == OVERSCROLL_ANIMATION, mAnimation);
-  if (mState == OVERSCROLL_ANIMATION && mAnimation &&
-      aFingersOnTouchpad == FingersOnTouchpad::No) {
-    // If there is an on-going overscroll animation, we tell the animation
-    // whether the displacements should be handled by the animation or not.
-    MOZ_ASSERT(mAnimation->AsOverscrollAnimation());
-    if (RefPtr<OverscrollAnimation> overscrollAnimation =
-            mAnimation->AsOverscrollAnimation()) {
-      overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
-      // And then as a result of the above call, if the animation is currently
-      // affecting on the axis, drop the displacement value on the axis so that
-      // we stop further oversrolling on the axis.
-      if (overscrollAnimation->IsManagingXAxis()) {
-        logicalPanDisplacement.x = 0;
-        physicalPanDisplacement.x = 0;
-      }
-      if (overscrollAnimation->IsManagingYAxis()) {
-        logicalPanDisplacement.y = 0;
-        physicalPanDisplacement.y = 0;
+  {
+    // Grab the lock to protect the animation from being canceled on the updater
+    // thread.
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    MOZ_ASSERT_IF(GetState() == OVERSCROLL_ANIMATION, mAnimation);
+
+    if (GetState() == OVERSCROLL_ANIMATION && mAnimation &&
+        aFingersOnTouchpad == FingersOnTouchpad::No) {
+      // If there is an on-going overscroll animation, we tell the animation
+      // whether the displacements should be handled by the animation or not.
+      MOZ_ASSERT(mAnimation->AsOverscrollAnimation());
+      if (RefPtr<OverscrollAnimation> overscrollAnimation =
+              mAnimation->AsOverscrollAnimation()) {
+        overscrollAnimation->HandlePanMomentum(logicalPanDisplacement);
+        // And then as a result of the above call, if the animation is currently
+        // affecting on the axis, drop the displacement value on the axis so
+        // that we stop further oversrolling on the axis.
+        if (overscrollAnimation->IsManagingXAxis()) {
+          logicalPanDisplacement.x = 0;
+          physicalPanDisplacement.x = 0;
+        }
+        if (overscrollAnimation->IsManagingYAxis()) {
+          logicalPanDisplacement.y = 0;
+          physicalPanDisplacement.y = 0;
+        }
       }
     }
   }
@@ -2864,7 +2870,7 @@ nsEventStatus AsyncPanZoomController::OnPan(
   }
 
   if (aFingersOnTouchpad == FingersOnTouchpad::No) {
-    if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
+    if (IsOverscrolled() && GetState() != OVERSCROLL_ANIMATION) {
       StartOverscrollAnimation(velocity, GetOverscrollSideBits());
     } else if (!consumed) {
       // If there is unconsumed scroll and we're in the momentum part of the
