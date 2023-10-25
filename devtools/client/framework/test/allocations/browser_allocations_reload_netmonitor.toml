@@ -1,0 +1,20 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "!/devtools/shared/test-helpers/allocation-tracker.js",
+  "head.js",
+  "reload-test.js",
+  "reloaded-page.html",
+  "reloaded.png",
+]
+
+# Each metrics tests is loaded in a separate .ini file. This way the test is executed
+# individually, without any other test being executed before or after.
+
+["browser_allocations_reload_netmonitor.js"]
+run-if = ["os == 'linux'"] # Results should be platform agnostic - only run on linux64-opt
+skip-if = [
+  "debug",
+  "asan",
+]
