@@ -78,8 +78,11 @@ class WorkerManagerCreatedRunnable final : public Runnable {
   Run() {
     AssertIsOnBackgroundThread();
 
-    if (NS_WARN_IF(!mManagerWrapper->Manager()->MaybeCreateRemoteWorker(
-            mData, mWindowID, mPortIdentifier, mActor->OtherPid()))) {
+    if (NS_WARN_IF(
+            !mActor->CanSend() ||
+            !mManagerWrapper->Manager()->MaybeCreateRemoteWorker(
+                mData, mWindowID, mPortIdentifier, mActor->OtherPid()))) {
+      // If we cannot send, the error won't arrive, but we may log something.
       mActor->ErrorPropagation(NS_ERROR_FAILURE);
       return NS_OK;
     }
