@@ -2452,25 +2452,6 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   return NS_OK;
 }
 
-void nsFrameLoader::PropagateIsUnderHiddenEmbedderElement(
-    bool aIsUnderHiddenEmbedderElement) {
-  bool isUnderHiddenEmbedderElement = true;
-  if (Document* ownerDoc = GetOwnerDoc()) {
-    if (PresShell* presShell = ownerDoc->GetPresShell()) {
-      isUnderHiddenEmbedderElement = presShell->IsUnderHiddenEmbedderElement();
-    }
-  }
-
-  isUnderHiddenEmbedderElement |= aIsUnderHiddenEmbedderElement;
-
-  BrowsingContext* browsingContext = GetExtantBrowsingContext();
-  if (browsingContext && browsingContext->IsUnderHiddenEmbedderElement() !=
-                             isUnderHiddenEmbedderElement) {
-    Unused << browsingContext->SetIsUnderHiddenEmbedderElement(
-        isUnderHiddenEmbedderElement);
-  }
-}
-
 void nsFrameLoader::UpdateRemoteStyle(
     mozilla::StyleImageRendering aImageRendering) {
   MOZ_DIAGNOSTIC_ASSERT(IsRemoteFrame());

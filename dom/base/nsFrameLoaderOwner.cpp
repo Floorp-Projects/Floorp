@@ -220,12 +220,6 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
         *aOwner, u"XULFrameLoaderCreated"_ns, mozilla::CanBubble::eYes,
         mozilla::ChromeOnlyDispatch::eYes);
   }
-
-  if (mFrameLoader) {
-    mFrameLoader->PropagateIsUnderHiddenEmbedderElement(
-        !aOwner->GetPrimaryFrame() ||
-        !aOwner->GetPrimaryFrame()->StyleVisibility()->IsVisible());
-  }
 }
 
 void nsFrameLoaderOwner::UpdateFocusAndMouseEnterStateAfterFrameLoaderChange() {
