@@ -133,6 +133,7 @@
 
       // Button labelled by a text child.
       testName("button_text", "Text");
+      testName("toolbarbutton_text", "Text");
 
       // ARIA role option is presented allowing the name calculation from
       // the visible children (bug 443081)
@@ -303,6 +304,7 @@
   <!-- name from children -->
   <box id="box_children" role="button">14</box>
   <button id="button_text">Text</button>
+  <toolbarbutton id="toolbarbutton_text">Text</toolbarbutton>
 
   <!-- name from children, hidden children -->
   <vbox role="listbox" tabindex="0">
