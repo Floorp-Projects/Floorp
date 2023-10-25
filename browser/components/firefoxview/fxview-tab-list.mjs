@@ -273,7 +273,7 @@ export default class FxviewTabList extends MozLitElement {
               .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
               .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
               .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
-              .sourceWindowId==${ifDefined(tabItem.sourceWindowId)}
+              .sourceWindowId=${ifDefined(tabItem.sourceWindowId)}
               .tabElement=${ifDefined(tabItem.tabElement)}
               .time=${ifDefined(time)}
               .timeMsPref=${ifDefined(this.timeMsPref)}
