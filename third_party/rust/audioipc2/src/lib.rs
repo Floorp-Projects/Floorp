@@ -40,11 +40,7 @@ pub type PlatformHandleType = libc::c_int;
 #[derive(Debug)]
 pub struct PlatformHandle(PlatformHandleType);
 
-#[cfg(unix)]
 pub const INVALID_HANDLE_VALUE: PlatformHandleType = -1isize as PlatformHandleType;
-
-#[cfg(windows)]
-pub const INVALID_HANDLE_VALUE: PlatformHandleType = winapi::um::handleapi::INVALID_HANDLE_VALUE;
 
 #[cfg(unix)]
 fn valid_handle(handle: PlatformHandleType) -> bool {
@@ -110,26 +106,31 @@ unsafe fn close_platform_handle(handle: PlatformHandleType) {
 }
 
 #[cfg(windows)]
-unsafe fn close_platform_handle(handle: PlatformHandleType) {
-    winapi::um::handleapi::CloseHandle(handle);
-}
+use windows_sys::Win32::{
+    Foundation::{
+        CloseHandle, DuplicateHandle, DUPLICATE_CLOSE_SOURCE, DUPLICATE_SAME_ACCESS, FALSE,
+        S_FALSE, S_OK,
+    },
+    System::Com::{CoInitializeEx, COINIT_MULTITHREADED},
+    System::Threading::{GetCurrentProcess, OpenProcess, PROCESS_DUP_HANDLE},
+};
 
 #[cfg(windows)]
-use winapi::shared::minwindef::{DWORD, FALSE};
-#[cfg(windows)]
-use winapi::um::{handleapi, processthreadsapi, winnt};
+unsafe fn close_platform_handle(handle: PlatformHandleType) {
+    CloseHandle(handle as _);
+}
 
 // Duplicate `source_handle` to `target_pid`.  Returns the value of the new handle inside the target process.
 // If `target_pid` is `None`, `source_handle` is duplicated in the current process.
 #[cfg(windows)]
 pub(crate) unsafe fn duplicate_platform_handle(
     source_handle: PlatformHandleType,
-    target_pid: Option<DWORD>,
+    target_pid: Option<u32>,
 ) -> Result<PlatformHandleType> {
-    let source_process = processthreadsapi::GetCurrentProcess();
+    let source_process = GetCurrentProcess();
     let target_process = if let Some(pid) = target_pid {
-        let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, pid);
-        if !valid_handle(target) {
+        let target = OpenProcess(PROCESS_DUP_HANDLE, FALSE, pid);
+        if !valid_handle(target as _) {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "invalid target process",
@@ -140,18 +141,18 @@ pub(crate) unsafe fn duplicate_platform_handle(
         None
     };
 
-    let mut target_handle = std::ptr::null_mut();
-    let ok = handleapi::DuplicateHandle(
+    let mut target_handle = windows_sys::Win32::Foundation::INVALID_HANDLE_VALUE;
+    let ok = DuplicateHandle(
         source_process,
-        source_handle,
+        source_handle as _,
         target_process.unwrap_or(source_process),
         &mut target_handle,
         0,
         FALSE,
-        winnt::DUPLICATE_SAME_ACCESS,
+        DUPLICATE_SAME_ACCESS,
     );
     if let Some(target) = target_process {
-        handleapi::CloseHandle(target);
+        CloseHandle(target);
     };
     if ok == FALSE {
         return Err(std::io::Error::new(
@@ -159,7 +160,7 @@ pub(crate) unsafe fn duplicate_platform_handle(
             "DuplicateHandle failed",
         ));
     }
-    Ok(target_handle)
+    Ok(target_handle as _)
 }
 
 // Close `target_handle_to_close` inside target process `target_pid` using a
@@ -168,27 +169,26 @@ pub(crate) unsafe fn duplicate_platform_handle(
 #[cfg(windows)]
 pub(crate) unsafe fn close_target_handle(
     target_handle_to_close: PlatformHandleType,
-    target_pid: DWORD,
+    target_pid: u32,
 ) -> Result<()> {
-    let target_process =
-        processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, target_pid);
-    if !valid_handle(target_process) {
+    let target_process = OpenProcess(PROCESS_DUP_HANDLE, FALSE, target_pid);
+    if !valid_handle(target_process as _) {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
             "invalid target process",
         ));
     }
 
-    let ok = handleapi::DuplicateHandle(
+    let ok = DuplicateHandle(
         target_process,
-        target_handle_to_close,
-        std::ptr::null_mut(),
+        target_handle_to_close as _,
+        0,
         std::ptr::null_mut(),
         0,
         FALSE,
-        winnt::DUPLICATE_CLOSE_SOURCE,
+        DUPLICATE_CLOSE_SOURCE,
     );
-    handleapi::CloseHandle(target_process);
+    CloseHandle(target_process);
     if ok == FALSE {
         return Err(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -200,13 +200,9 @@ pub(crate) unsafe fn close_target_handle(
 
 #[cfg(windows)]
 pub fn server_platform_init() {
-    use winapi::shared::winerror;
-    use winapi::um::combaseapi;
-    use winapi::um::objbase;
-
     unsafe {
-        let r = combaseapi::CoInitializeEx(std::ptr::null_mut(), objbase::COINIT_MULTITHREADED);
-        assert!(winerror::SUCCEEDED(r));
+        let r = CoInitializeEx(std::ptr::null_mut(), COINIT_MULTITHREADED);
+        assert!(r == S_OK || r == S_FALSE);
     }
 }
 

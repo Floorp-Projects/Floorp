@@ -264,11 +264,7 @@ impl ContextOps for ClientContext {
         assert_not_in_callback();
         unsafe {
             let coll = &mut *collection.as_ptr();
-            let mut devices = Vec::from_raw_parts(
-                coll.device as *mut ffi::cubeb_device_info,
-                coll.count,
-                coll.count,
-            );
+            let mut devices = Vec::from_raw_parts(coll.device, coll.count, coll.count);
             for dev in &mut devices {
                 if !dev.device_id.is_null() {
                     let _ = CString::from_raw(dev.device_id as *mut _);
