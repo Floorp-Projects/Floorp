@@ -25,7 +25,6 @@ const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
-const MIN_PERSONALIZATION_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
 const FETCH_TIMEOUT = 45 * 1000;
 const SPOCS_URL = "https://spocs.getpocket.com/spocs";
@@ -56,9 +55,6 @@ const PREF_COLLECTIONS_ENABLED =
   "discoverystream.sponsored-collections.enabled";
 const PREF_POCKET_BUTTON = "extensions.pocket.enabled";
 const PREF_COLLECTION_DISMISSIBLE = "discoverystream.isCollectionDismissible";
-const PREF_PERSONALIZATION = "discoverystream.personalization.enabled";
-const PREF_PERSONALIZATION_OVERRIDE =
-  "discoverystream.personalization.override";
 
 let getHardcodedLayout;
 
@@ -177,29 +173,7 @@ class DiscoveryStreamFeed {
   }
 
   get personalized() {
-    // If stories are not displayed, no point in trying to personalize them.
-    if (!this.showStories) {
-      return false;
-    }
-    const spocsPersonalized =
-      this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
-    const recsPersonalized =
-      this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
-    const personalization =
-      this.store.getState().Prefs.values[PREF_PERSONALIZATION];
-
-    // There is a server sent flag to keep personalization on.
-    // If the server stops sending this, we turn personalization off,
-    // until the server starts returning the signal.
-    const overrideState =
-      this.store.getState().Prefs.values[PREF_PERSONALIZATION_OVERRIDE];
-
-    return (
-      personalization &&
-      !overrideState &&
-      !!this.recommendationProvider &&
-      (spocsPersonalized || recsPersonalized)
-    );
+    return this.recommendationProvider.personalized;
   }
 
   get recommendationProvider() {
@@ -901,38 +875,6 @@ class DiscoveryStreamFeed {
     };
   }
 
-  // This turns personalization on/off if the server sends the override command.
-  // The server sends a true signal to keep personalization on. So a malfunctioning
-  // server would more likely mistakenly turn off personalization, and not turn it on.
-  // This is safer, because the override is for cases where personalization is causing issues.
-  // So having it mistakenly go off is safe, but it mistakenly going on could be bad.
-  personalizationOverride(overrideCommand) {
-    // Are we currently in an override state.
-    // This is useful to know if we want to do a cleanup.
-    const overrideState =
-      this.store.getState().Prefs.values[PREF_PERSONALIZATION_OVERRIDE];
-
-    // Is this profile currently set to be personalized.
-    const personalization =
-      this.store.getState().Prefs.values[PREF_PERSONALIZATION];
-
-    // If we have an override command, profile is currently personalized,
-    // and is not currently being overridden, we can set the override pref.
-    if (overrideCommand && personalization && !overrideState) {
-      this.store.dispatch(ac.SetPref(PREF_PERSONALIZATION_OVERRIDE, true));
-    }
-
-    // This is if we need to revert an override and do cleanup.
-    // We do this if we are in an override state,
-    // but not currently receiving the override signal.
-    if (!overrideCommand && overrideState) {
-      this.store.dispatch({
-        type: at.CLEAR_PREF,
-        data: { name: PREF_PERSONALIZATION_OVERRIDE },
-      });
-    }
-  }
-
   updateSponsoredCollectionsPref(collectionEnabled = false) {
     const currentState =
       this.store.getState().Prefs.values[PREF_COLLECTIONS_ENABLED];
@@ -1018,11 +960,13 @@ class DiscoveryStreamFeed {
           };
 
           if (spocsResponse.settings && spocsResponse.settings.feature_flags) {
-            this.personalizationOverride(
-              // The server's old signal was for a version override.
-              // When we removed version 1, version 2 was now the defacto only version.
-              // Without a version 1, the override is now a command to turn off personalization.
-              !spocsResponse.settings.feature_flags.spoc_v2
+            this.store.dispatch(
+              ac.OnlyToMain({
+                type: at.DISCOVERY_STREAM_PERSONALIZATION_OVERRIDE,
+                data: {
+                  override: !spocsResponse.settings.feature_flags.spoc_v2,
+                },
+              })
             );
             this.updateSponsoredCollectionsPref(
               spocsResponse.settings.feature_flags.collections
@@ -1072,10 +1016,8 @@ class DiscoveryStreamFeed {
 
               const { data: blockedResults } = this.filterBlocked(capResult);
 
-              const { data: scoredResults } = await this.scoreItems(
-                blockedResults,
-                "spocs"
-              );
+              const { data: scoredResults, personalized } =
+                await this.scoreItems(blockedResults, "spocs");
 
               spocsState.spocs = {
                 ...spocsState.spocs,
@@ -1084,6 +1026,7 @@ class DiscoveryStreamFeed {
                   context,
                   sponsor,
                   sponsored_by_override,
+                  personalized,
                   items: scoredResults,
                 },
               };
@@ -1144,76 +1087,8 @@ class DiscoveryStreamFeed {
     });
   }
 
-  /*
-   * This just re hydrates the provider from cache.
-   * We can call this on startup because it's generally fast.
-   * It reports to devtools the last time the data in the cache was updated.
-   */
-  async loadPersonalizationScoresCache(isStartup = false) {
-    const cachedData = (await this.cache.get()) || {};
-    const { personalization } = cachedData;
-
-    if (this.personalized && personalization && personalization.scores) {
-      this.recommendationProvider.setProvider(personalization.scores);
-
-      this.personalizationLastUpdated = personalization._timestamp;
-
-      this.store.dispatch(
-        ac.BroadcastToContent({
-          type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
-          data: {
-            lastUpdated: this.personalizationLastUpdated,
-          },
-          meta: {
-            isStartup,
-          },
-        })
-      );
-    }
-  }
-
-  /*
-   * This creates a new recommendationProvider using fresh data,
-   * It's run on a last updated timer. This is the opposite of loadPersonalizationScoresCache.
-   * This is also much slower so we only trigger this in the background on idle-daily.
-   * It causes new profiles to pick up personalization slowly because the first time
-   * a new profile is run you don't have any old cache to use, so it needs to wait for the first
-   * idle-daily. Older profiles can rely on cache during the idle-daily gap. Idle-daily is
-   * usually run once every 24 hours.
-   */
-  async updatePersonalizationScores() {
-    if (
-      !this.personalized ||
-      Date.now() - this.personalizationLastUpdated <
-        MIN_PERSONALIZATION_UPDATE_TIME
-    ) {
-      return;
-    }
-
-    this.recommendationProvider.setProvider();
-
-    await this.recommendationProvider.init();
-
-    const personalization = { scores: this.recommendationProvider.getScores() };
-    this.personalizationLastUpdated = Date.now();
-
-    this.store.dispatch(
-      ac.BroadcastToContent({
-        type: at.DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED,
-        data: {
-          lastUpdated: this.personalizationLastUpdated,
-        },
-      })
-    );
-    personalization._timestamp = this.personalizationLastUpdated;
-    this.cache.set("personalization", personalization);
-  }
-
   observe(subject, topic, data) {
     switch (topic) {
-      case "idle-daily":
-        this.updatePersonalizationScores();
-        break;
       case "nsPref:changed":
         // If the Pocket button was turned on or off, we need to update the cards
         // because cards show menu options for the Pocket button that need to be removed.
@@ -1261,6 +1136,8 @@ class DiscoveryStreamFeed {
       this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
     const personalizedByType =
       type === "feed" ? recsPersonalized : spocsPersonalized;
+    // If this is initialized, we are ready to go.
+    const personalized = this.store.getState().Personalization.initialized;
 
     const data = (
       await Promise.all(
@@ -1270,7 +1147,7 @@ class DiscoveryStreamFeed {
       // Sort by highest scores.
       .sort(this.sortItem);
 
-    return { data };
+    return { data, personalized };
   }
 
   async scoreItem(item, personalizedByType) {
@@ -1448,7 +1325,7 @@ class DiscoveryStreamFeed {
             raw_image_src: item.imageUrl,
           }));
         }
-        const { data: scoredItems } = await this.scoreItems(
+        const { data: scoredItems, personalized } = await this.scoreItems(
           recommendations,
           "feed"
         );
@@ -1457,6 +1334,7 @@ class DiscoveryStreamFeed {
         this.componentFeedFetched = true;
         feed = {
           lastUpdated: Date.now(),
+          personalized,
           data: {
             settings,
             recommendations: rotatedItems,
@@ -1492,78 +1370,22 @@ class DiscoveryStreamFeed {
     }
   }
 
-  /**
-   * @typedef {Object} RefreshAll
-   * @property {boolean} updateOpenTabs - Sends updates to open tabs immediately if true,
-   *                                      updates in background if false
-   * @property {boolean} isStartup - When the function is called at browser startup
-   *
-   * Refreshes component feeds, and spocs in order if caches have expired.
-   * @param {RefreshAll} options
-   */
-  async refreshAll(options = {}) {
-    const personalizationCacheLoadPromise = this.loadPersonalizationScoresCache(
-      options.isStartup
-    );
-
-    const spocsPersonalized =
-      this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
-    const recsPersonalized =
-      this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
-
-    let expirationPerComponent = {};
-    if (this.personalized) {
-      // We store this before we refresh content.
-      // This way, we can know what and if something got updated,
-      // so we can know to score the results.
-      expirationPerComponent = await this._checkExpirationPerComponent();
-    }
-    await this.refreshContent(options);
-
-    if (this.personalized) {
-      // personalizationCacheLoadPromise is probably done, because of the refreshContent await above,
-      // but to be sure, we should check that it's done, without making the parent function wait.
-      personalizationCacheLoadPromise.then(() => {
-        // If we don't have expired stories or feeds, we don't need to score after init.
-        // If we do have expired stories, we want to score after init.
-        // In both cases, we don't want these to block the parent function.
-        // This is why we store the promise, and call then to do our scoring work.
-        const initPromise = this.recommendationProvider.init();
-        initPromise.then(() => {
-          // Both scoreFeeds and scoreSpocs are promises,
-          // but they don't need to wait for each other.
-          // We can just fire them and forget at this point.
-          const { feeds, spocs } = this.store.getState().DiscoveryStream;
-          if (
-            recsPersonalized &&
-            feeds.loaded &&
-            expirationPerComponent.feeds
-          ) {
-            this.scoreFeeds(feeds);
-          }
-          if (
-            spocsPersonalized &&
-            spocs.loaded &&
-            expirationPerComponent.spocs
-          ) {
-            this.scoreSpocs(spocs);
-          }
-        });
-      });
-    }
-  }
-
   async scoreFeeds(feedsState) {
     if (feedsState.data) {
       const feeds = {};
       const feedsPromises = Object.keys(feedsState.data).map(url => {
         let feed = feedsState.data[url];
+        if (feed.personalized) {
+          // Feed was previously personalized then cached, we don't need to do this again.
+          return Promise.resolve();
+        }
         const feedPromise = this.scoreItems(feed.data.recommendations, "feed");
-        feedPromise.then(({ data: scoredItems }) => {
+        feedPromise.then(({ data: scoredItems, personalized }) => {
           const { recsExpireTime } = feed.data.settings;
           const recommendations = this.rotate(scoredItems, recsExpireTime);
           feed = {
             ...feed,
+            personalized,
             data: {
               ...feed.data,
               recommendations,
@@ -1594,16 +1416,20 @@ class DiscoveryStreamFeed {
       const nextSpocs = spocsState.data[placement.name] || {};
       const { items } = nextSpocs;
 
-      if (!items || !items.length) {
+      if (nextSpocs.personalized || !items || !items.length) {
         return;
       }
 
-      const { data: scoreResult } = await this.scoreItems(items, "spocs");
+      const { data: scoreResult, personalized } = await this.scoreItems(
+        items,
+        "spocs"
+      );
 
       spocsState.data = {
         ...spocsState.data,
         [placement.name]: {
           ...nextSpocs,
+          personalized,
           items: scoreResult,
         },
       };
@@ -1627,7 +1453,16 @@ class DiscoveryStreamFeed {
     );
   }
 
-  async refreshContent(options = {}) {
+  /**
+   * @typedef {Object} RefreshAll
+   * @property {boolean} updateOpenTabs - Sends updates to open tabs immediately if true,
+   *                                      updates in background if false
+   * @property {boolean} isStartup - When the function is called at browser startup
+   *
+   * Refreshes component feeds, and spocs in order if caches have expired.
+   * @param {RefreshAll} options
+   */
+  async refreshAll(options = {}) {
     const { updateOpenTabs, isStartup } = options;
 
     const dispatch = updateOpenTabs
@@ -1693,16 +1528,12 @@ class DiscoveryStreamFeed {
 
   async enable() {
     await this.refreshAll({ updateOpenTabs: true, isStartup: true });
-    Services.obs.addObserver(this, "idle-daily");
     this.loaded = true;
   }
 
   async reset() {
     this.resetDataPrefs();
     await this.resetCache();
-    if (this.loaded) {
-      Services.obs.removeObserver(this, "idle-daily");
-    }
     this.resetState();
   }
 
@@ -1718,7 +1549,6 @@ class DiscoveryStreamFeed {
 
   async resetAllCache() {
     await this.resetContentCache();
-    await this.cache.set("personalization", {});
     // Reset in-memory caches.
     this._isBff = undefined;
     this._spocsCacheUpdateTime = undefined;
@@ -1745,7 +1575,6 @@ class DiscoveryStreamFeed {
         },
       })
     );
-    this.personalizationLastUpdated = null;
     this.loaded = false;
   }
 
@@ -1873,7 +1702,6 @@ class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_SPOCS_ENDPOINT_QUERY:
-      case PREF_PERSONALIZATION:
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
@@ -1962,9 +1790,6 @@ class DiscoveryStreamFeed {
           await this.refreshAll({ updateOpenTabs: false });
         }
         break;
-      case at.DISCOVERY_STREAM_DEV_IDLE_DAILY:
-        Services.obs.notifyObservers(null, "idle-daily");
-        break;
       case at.DISCOVERY_STREAM_DEV_SYNC_RS:
         lazy.RemoteSettings.pollChanges();
         break;
@@ -1988,6 +1813,21 @@ class DiscoveryStreamFeed {
         break;
       case at.DISCOVERY_STREAM_POCKET_STATE_INIT:
         this.setupPocketState(action.meta.fromTarget);
+        break;
+      case at.DISCOVERY_STREAM_PERSONALIZATION_UPDATED:
+        if (this.personalized) {
+          const { feeds, spocs } = this.store.getState().DiscoveryStream;
+          const spocsPersonalized =
+            this.store.getState().Prefs.values?.pocketConfig?.spocsPersonalized;
+          const recsPersonalized =
+            this.store.getState().Prefs.values?.pocketConfig?.recsPersonalized;
+          if (recsPersonalized && feeds.loaded) {
+            this.scoreFeeds(feeds);
+          }
+          if (spocsPersonalized && spocs.loaded) {
+            this.scoreSpocs(spocs);
+          }
+        }
         break;
       case at.DISCOVERY_STREAM_CONFIG_RESET:
         // This is a generic config reset likely related to an external feed pref.
