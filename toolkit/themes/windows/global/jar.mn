@@ -14,6 +14,7 @@ toolkit.jar:
   skin/classic/global/printPageSetup.css
   skin/classic/global/richlistbox.css
   skin/classic/global/toolbar.css
+  skin/classic/global/toolbarbutton.css
   skin/classic/global/icons/Landscape.png                  (icons/Landscape.png)
   skin/classic/global/icons/menu-check.svg                 (icons/menu-check.svg)
   skin/classic/global/icons/Portrait.png                   (icons/Portrait.png)

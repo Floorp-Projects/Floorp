@@ -105,7 +105,7 @@
           <label id="label" part="label" crop="end" flex="1" role="none"/>
           <label id="highlightable-label" part="label" crop="end" flex="1" role="none"/>
         </hbox>
-        <dropmarker part="dropmarker" type="menu" role="none"/>
+        <dropmarker part="dropmarker" exportparts="icon: dropmarker-icon" type="menu" role="none"/>
         <html:slot/>
     `;
     }
