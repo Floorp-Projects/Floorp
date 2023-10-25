@@ -112,6 +112,14 @@ already_AddRefed<IAccessible> LazyInstantiator::GetRootAccessible(HWND aHwnd) {
  */
 /* static */
 void LazyInstantiator::EnableBlindAggregation(HWND aHwnd) {
+  if (GetAccService()) {
+    // The accessibility service is already running. That means that
+    // LazyInstantiator::GetRootAccessible returned the real MsaaRootAccessible,
+    // rather than returning a LazyInstantiator with blind aggregation disabled.
+    // Thus, we have nothing to do here.
+    return;
+  }
+
   LazyInstantiator* existingInstantiator = reinterpret_cast<LazyInstantiator*>(
       ::GetProp(aHwnd, kLazyInstantiatorProp));
 
