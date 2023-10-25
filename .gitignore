@@ -191,6 +191,9 @@ lextab.py
 !.vscode/tasks.json
 *.user
 
+# Thunderbird source tree
+/comm/
+
 # Ignore various raptor performance framework files
 testing/raptor/.raptor-venv
 testing/raptor/raptor-venv
