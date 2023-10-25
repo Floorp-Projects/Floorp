@@ -362,8 +362,12 @@ inline size_t CopyArgImpl_(wchar_t* d, const wchar_t* s) {
   };
 
   bool hasDoubleQuote = wcschr(s, L'"') != nullptr;
-  // Only add doublequotes if the string contains a space or a tab
-  bool addDoubleQuotes = wcspbrk(s, kCommandLineDelimiter) != nullptr;
+  // Only add doublequotes if...
+  bool addDoubleQuotes =
+      // ... the string is empty, or...
+      *s == '\0' ||
+      // ... the string contains a space or a tab.
+      wcspbrk(s, kCommandLineDelimiter) != nullptr;
 
   if (addDoubleQuotes) {
     appendChar('"');
