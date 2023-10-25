@@ -295,7 +295,7 @@ class KeyStringifier<HandleId> {
 /*
  * https://262.ecma-international.org/14.0/#sec-serializejsonproperty, steps
  * 2-4, extracted to enable preprocessing of property values when stringifying
- * objects in JO.
+ * objects in SerializeJSONObject.
  */
 template <typename KeyType>
 static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
@@ -436,8 +436,8 @@ enum class JOType { Record, Object };
 template <JOType type = JOType::Object>
 #endif
 /* https://262.ecma-international.org/14.0/#sec-serializejsonobject */
-// TODO Bug 1860185 rename SerializeJSONObject
-static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
+static bool SerializeJSONObject(JSContext* cx, HandleObject obj,
+                                StringifyContext* scx) {
   /*
    * This method implements the SerializeJSONObject algorithm, but:
    *
@@ -445,7 +445,7 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
    *     be streamed into a single buffer, rather than be created and copied
    *     into place incrementally as the algorithm specifies it.  This
    *     requires moving portions of the Str call in 8a into this algorithm
-   *     (and in JA as well).
+   *     (and in SerializeJSONArray as well).
    */
 
 #ifdef ENABLE_RECORD_TUPLE
@@ -607,8 +607,8 @@ static MOZ_ALWAYS_INLINE bool GetLengthPropertyForArrayLike(JSContext* cx,
 }
 
 /* https://262.ecma-international.org/14.0/#sec-serializejsonarray */
-// TODO Bug 1860185 rename SerializeJSONArray
-static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
+static bool SerializeJSONArray(JSContext* cx, HandleObject obj,
+                               StringifyContext* scx) {
   /*
    * This method implements the SerializeJSONArray algorithm, but:
    *
@@ -616,7 +616,7 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
    *     be streamed into a single buffer, rather than be created and copied
    *     into place incrementally as the algorithm specifies it.  This
    *     requires moving portions of the Str call in 8a into this algorithm
-   *     (and in JO as well).
+   *     (and in SerializeJSONObject as well).
    */
 
   /* Steps 1-2, 11. */
@@ -725,10 +725,11 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
    *   * We move property retrieval (step 1) into callers to stream the
    *     stringification process and avoid constantly copying strings.
    *   * We move the preprocessing in steps 2-4 into a helper function to
-   *     allow both JO and JA to use this method.  While JA could use it
-   *     without this move, JO must omit any |undefined|-valued property per
-   *     so it can't stream out a value using the Str method exactly as
-   *     defined by the spec.
+   *     allow both SerializeJSONObject and SerializeJSONArray to use this
+   * method.  While SerializeJSONArray could use it without this move,
+   * SerializeJSONObject must omit any |undefined|-valued property per so it
+   * can't stream out a value using the Str method exactly as defined by the
+   * spec.
    *   * We move step 12 into callers, again to ease streaming.
    */
 
@@ -788,10 +789,10 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
 #ifdef ENABLE_RECORD_TUPLE
   if (v.isExtendedPrimitive()) {
     if (obj->is<RecordType>()) {
-      return JO<JOType::Record>(cx, obj, scx);
+      return SerializeJSONObject<JOType::Record>(cx, obj, scx);
     }
     if (obj->is<TupleType>()) {
-      return JA(cx, obj, scx);
+      return SerializeJSONArray(cx, obj, scx);
     }
     MOZ_CRASH("Unexpected extended primitive - boxes cannot be stringified.");
   }
@@ -802,7 +803,8 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
     return false;
   }
 
-  return isArray ? JA(cx, obj, scx) : JO(cx, obj, scx);
+  return isArray ? SerializeJSONArray(cx, obj, scx)
+                 : SerializeJSONObject(cx, obj, scx);
 }
 
 static bool CanFastStringifyObject(NativeObject* obj) {
