@@ -154,6 +154,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
     return mChildMessageManager;
   }
   nsresult UpdatePositionAndSize(nsSubDocumentFrame* aIFrame);
+  void PropagateIsUnderHiddenEmbedderElement(
+      bool aIsUnderHiddenEmbedderElement);
 
   void UpdateRemoteStyle(mozilla::StyleImageRendering aImageRendering);
 
