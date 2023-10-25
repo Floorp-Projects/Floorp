@@ -24,6 +24,7 @@ use std::ops;
 use crate::span::{AddSpan as _, WithSpan};
 pub use analyzer::{ExpressionInfo, FunctionInfo, GlobalUse, Uniformity, UniformityRequirements};
 pub use compose::ComposeError;
+pub use expression::{validate_literal, LiteralError};
 pub use expression::{ConstExpressionError, ExpressionError};
 pub use function::{CallError, FunctionError, LocalVariableError};
 pub use interface::{EntryPointError, GlobalVariableError, VaryingError};
@@ -112,14 +113,16 @@ bitflags::bitflags! {
         const MULTISAMPLED_SHADING = 0x800;
         /// Support for ray queries and acceleration structures.
         const RAY_QUERY = 0x1000;
-        /// Support for generating two sources for blending from fragement shaders
+        /// Support for generating two sources for blending from fragement shaders.
         const DUAL_SOURCE_BLENDING = 0x2000;
+        /// Support for arrayed cube textures.
+        const CUBE_ARRAY_TEXTURES = 0x4000;
     }
 }
 
 impl Default for Capabilities {
     fn default() -> Self {
-        Self::MULTISAMPLED_SHADING
+        Self::MULTISAMPLED_SHADING | Self::CUBE_ARRAY_TEXTURES
     }
 }
 
@@ -173,7 +176,7 @@ pub struct Validator {
     types: Vec<r#type::TypeInfo>,
     layouter: Layouter,
     location_mask: BitSet,
-    bind_group_masks: Vec<BitSet>,
+    ep_resource_bindings: FastHashSet<crate::ResourceBinding>,
     #[allow(dead_code)]
     switch_values: FastHashSet<crate::SwitchValue>,
     valid_expression_list: Vec<Handle<crate::Expression>>,
@@ -289,7 +292,7 @@ impl Validator {
             types: Vec::new(),
             layouter: Layouter::default(),
             location_mask: BitSet::new(),
-            bind_group_masks: Vec::new(),
+            ep_resource_bindings: FastHashSet::default(),
             switch_values: FastHashSet::default(),
             valid_expression_list: Vec::new(),
             valid_expression_set: BitSet::new(),
@@ -301,7 +304,7 @@ impl Validator {
         self.types.clear();
         self.layouter.clear();
         self.location_mask.clear();
-        self.bind_group_masks.clear();
+        self.ep_resource_bindings.clear();
         self.switch_values.clear();
         self.valid_expression_list.clear();
         self.valid_expression_set.clear();

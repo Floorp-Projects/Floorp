@@ -127,10 +127,7 @@ static Maybe<ffi::WGPUFeatures> ToWGPUFeatures(
       return Some(WGPUFeatures_RG11B10UFLOAT_RENDERABLE);
 
     case dom::GPUFeatureName::Bgra8unorm_storage:
-#ifdef WGPUFeatures_BGRA8UNORM_STORAGE
-#  error fix todo
-#endif
-      return Nothing();  // TODO
+      return Some(WGPUFeatures_BGRA8UNORM_STORAGE);
 
     case dom::GPUFeatureName::Float32_filterable:
 #ifdef WGPUFeatures_FLOAT32_FILTERABLE

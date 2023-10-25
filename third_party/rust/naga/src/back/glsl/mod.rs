@@ -327,7 +327,7 @@ impl IdGenerator {
 /// Helper wrapper used to get a name for a varying
 ///
 /// Varying have different naming schemes depending on their binding:
-/// - Varyings with builtin bindings get the from [`glsl_built_in`](glsl_built_in).
+/// - Varyings with builtin bindings get the from [`glsl_built_in`].
 /// - Varyings with location bindings are named `_S_location_X` where `S` is a
 ///   prefix identifying which pipeline stage the varying connects, and `X` is
 ///   the location.
@@ -826,6 +826,19 @@ impl<'a, W: Write> Writer<'a, W> {
             }
 
             let fun_info = &self.info[handle];
+
+            // Skip functions that that are not compatible with this entry point's stage.
+            //
+            // When validation is enabled, it rejects modules whose entry points try to call
+            // incompatible functions, so if we got this far, then any functions incompatible
+            // with our selected entry point must not be used.
+            //
+            // When validation is disabled, `fun_info.available_stages` is always just
+            // `ShaderStages::all()`, so this will write all functions in the module, and
+            // the downstream GLSL compiler will catch any problems.
+            if !fun_info.available_stages.contains(ep_info.available_stages) {
+                continue;
+            }
 
             // Write the function
             self.write_function(back::FunctionType::Function(handle), function, fun_info)?;
@@ -1605,7 +1618,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 // Write the constant
                 // `write_constant` adds no trailing or leading space/newline
-                self.write_const_expr(init)?;
+                self.write_expr(init, &ctx)?;
             } else if is_value_init_supported(self.module, local.ty) {
                 write!(self.out, " = ")?;
                 self.write_zero_init_value(local.ty)?;
@@ -1709,7 +1722,7 @@ impl<'a, W: Write> Writer<'a, W> {
         arg: Handle<crate::Expression>,
         arg1: Handle<crate::Expression>,
         size: usize,
-        ctx: &back::FunctionCtx<'_>,
+        ctx: &back::FunctionCtx,
     ) -> BackendResult {
         // Write parantheses around the dot product expression to prevent operators
         // with different precedences from applying earlier.
@@ -2254,9 +2267,12 @@ impl<'a, W: Write> Writer<'a, W> {
     /// [`Expression`]: crate::Expression
     /// [`Module`]: crate::Module
     fn write_const_expr(&mut self, expr: Handle<crate::Expression>) -> BackendResult {
-        self.write_possibly_const_expr(expr, &self.module.const_expressions, |writer, expr| {
-            writer.write_const_expr(expr)
-        })
+        self.write_possibly_const_expr(
+            expr,
+            &self.module.const_expressions,
+            |expr| &self.info[expr],
+            |writer, expr| writer.write_const_expr(expr),
+        )
     }
 
     /// Write [`Expression`] variants that can occur in both runtime and const expressions.
@@ -2277,13 +2293,15 @@ impl<'a, W: Write> Writer<'a, W> {
     /// Adds no newlines or leading/trailing whitespace
     ///
     /// [`Expression`]: crate::Expression
-    fn write_possibly_const_expr<E>(
-        &mut self,
+    fn write_possibly_const_expr<'w, I, E>(
+        &'w mut self,
         expr: Handle<crate::Expression>,
         expressions: &crate::Arena<crate::Expression>,
+        info: I,
         write_expression: E,
     ) -> BackendResult
     where
+        I: Fn(Handle<crate::Expression>) -> &'w proc::TypeResolution,
         E: Fn(&mut Self, Handle<crate::Expression>) -> BackendResult,
     {
         use crate::Expression;
@@ -2331,6 +2349,14 @@ impl<'a, W: Write> Writer<'a, W> {
                 }
                 write!(self.out, ")")?
             }
+            // `Splat` needs to actually write down a vector, it's not always inferred in GLSL.
+            Expression::Splat { size: _, value } => {
+                let resolved = info(expr).inner_with(&self.module.types);
+                self.write_value_type(resolved)?;
+                write!(self.out, "(")?;
+                write_expression(self, value)?;
+                write!(self.out, ")")?
+            }
             _ => unreachable!(),
         }
 
@@ -2344,7 +2370,7 @@ impl<'a, W: Write> Writer<'a, W> {
     fn write_expr(
         &mut self,
         expr: Handle<crate::Expression>,
-        ctx: &back::FunctionCtx<'_>,
+        ctx: &back::FunctionCtx,
     ) -> BackendResult {
         use crate::Expression;
 
@@ -2357,10 +2383,14 @@ impl<'a, W: Write> Writer<'a, W> {
             Expression::Literal(_)
             | Expression::Constant(_)
             | Expression::ZeroValue(_)
-            | Expression::Compose { .. } => {
-                self.write_possibly_const_expr(expr, ctx.expressions, |writer, expr| {
-                    writer.write_expr(expr, ctx)
-                })?;
+            | Expression::Compose { .. }
+            | Expression::Splat { .. } => {
+                self.write_possibly_const_expr(
+                    expr,
+                    ctx.expressions,
+                    |expr| &ctx.info[expr].ty,
+                    |writer, expr| writer.write_expr(expr, ctx),
+                )?;
             }
             // `Access` is applied to arrays, vectors and matrices and is written as indexing
             Expression::Access { base, index } => {
@@ -2406,14 +2436,6 @@ impl<'a, W: Write> Writer<'a, W> {
                     }
                     ref other => return Err(Error::Custom(format!("Cannot index {other:?}"))),
                 }
-            }
-            // `Splat` needs to actually write down a vector, it's not always inferred in GLSL.
-            Expression::Splat { size: _, value } => {
-                let resolved = ctx.info[expr].ty.inner_with(&self.module.types);
-                self.write_value_type(resolved)?;
-                write!(self.out, "(")?;
-                self.write_expr(value, ctx)?;
-                write!(self.out, ")")?
             }
             // `Swizzle` adds a few letters behind the dot.
             Expression::Swizzle {
@@ -2753,38 +2775,18 @@ impl<'a, W: Write> Writer<'a, W> {
 
                 write!(self.out, ")")?;
             }
-            // `Unary` is pretty straightforward
-            // "-" - for `Negate`
-            // "~" - for `Not` if it's an integer
-            // "!" - for `Not` if it's a boolean
-            //
-            // We also wrap the everything in parentheses to avoid precedence issues
             Expression::Unary { op, expr } => {
-                use crate::{ScalarKind as Sk, UnaryOperator as Uo};
-
-                let ty = ctx.info[expr].ty.inner_with(&self.module.types);
-
-                match *ty {
-                    TypeInner::Vector { kind: Sk::Bool, .. } => {
-                        write!(self.out, "not(")?;
+                let operator_or_fn = match op {
+                    crate::UnaryOperator::Negate => "-",
+                    crate::UnaryOperator::LogicalNot => {
+                        match *ctx.info[expr].ty.inner_with(&self.module.types) {
+                            TypeInner::Vector { .. } => "not",
+                            _ => "!",
+                        }
                     }
-                    _ => {
-                        let operator = match op {
-                            Uo::Negate => "-",
-                            Uo::Not => match ty.scalar_kind() {
-                                Some(Sk::Sint) | Some(Sk::Uint) => "~",
-                                Some(Sk::Bool) => "!",
-                                ref other => {
-                                    return Err(Error::Custom(format!(
-                                        "Cannot apply not to type {other:?}"
-                                    )))
-                                }
-                            },
-                        };
-
-                        write!(self.out, "{operator}(")?;
-                    }
-                }
+                    crate::UnaryOperator::BitwiseNot => "~",
+                };
+                write!(self.out, "{operator_or_fn}(")?;
 
                 self.write_expr(expr, ctx)?;
 
@@ -2992,12 +2994,8 @@ impl<'a, W: Write> Writer<'a, W> {
                 use crate::RelationalFunction as Rf;
 
                 let fun_name = match fun {
-                    // There's no specific function for this but we can invert the result of `isinf`
-                    Rf::IsFinite => "!isinf",
                     Rf::IsInf => "isinf",
                     Rf::IsNan => "isnan",
-                    // There's also no function for this but we can invert `isnan`
-                    Rf::IsNormal => "!isnan",
                     Rf::All => "all",
                     Rf::Any => "any",
                 };
@@ -4065,7 +4063,7 @@ impl<'a, W: Write> Writer<'a, W> {
     }
 }
 
-/// Structure returned by [`glsl_scalar`](glsl_scalar)
+/// Structure returned by [`glsl_scalar`]
 ///
 /// It contains both a prefix used in other types and the full type name
 struct ScalarString<'a> {
@@ -4077,7 +4075,7 @@ struct ScalarString<'a> {
 
 /// Helper function that returns scalar related strings
 ///
-/// Check [`ScalarString`](ScalarString) for the information provided
+/// Check [`ScalarString`] for the information provided
 ///
 /// # Errors
 /// If a [`Float`](crate::ScalarKind::Float) with an width that isn't 4 or 8

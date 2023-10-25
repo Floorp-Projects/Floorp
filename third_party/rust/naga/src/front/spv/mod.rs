@@ -54,17 +54,13 @@ pub const SUPPORTED_CAPABILITIES: &[spirv::Capability] = &[
     spirv::Capability::CullDistance,
     spirv::Capability::SampleRateShading,
     spirv::Capability::DerivativeControl,
-    spirv::Capability::InterpolationFunction,
     spirv::Capability::Matrix,
     spirv::Capability::ImageQuery,
     spirv::Capability::Sampled1D,
     spirv::Capability::Image1D,
     spirv::Capability::SampledCubeArray,
     spirv::Capability::ImageCubeArray,
-    spirv::Capability::ImageMSArray,
     spirv::Capability::StorageImageExtendedFormats,
-    spirv::Capability::Sampled1D,
-    spirv::Capability::SampledCubeArray,
     spirv::Capability::Int8,
     spirv::Capability::Int16,
     spirv::Capability::Int64,
@@ -789,7 +785,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         id: spirv::Word,
         lookup: &LookupExpression,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         body_idx: BodyIndex,
     ) -> Handle<crate::Expression> {
@@ -851,7 +847,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_unary_op(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -880,7 +876,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_binary_op(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -914,7 +910,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_unary_op_sign_adjusted(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -969,7 +965,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_binary_op_sign_adjusted(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -1047,7 +1043,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_int_comparison(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -1118,7 +1114,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_shift_op(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -1161,7 +1157,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
     fn parse_expr_derivative(
         &mut self,
         ctx: &mut BlockContext,
-        emitter: &mut super::Emitter,
+        emitter: &mut crate::proc::Emitter,
         block: &mut crate::Block,
         block_id: spirv::Word,
         body_idx: usize,
@@ -1292,7 +1288,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             })
         }
 
-        let mut emitter = super::Emitter::default();
+        let mut emitter = crate::proc::Emitter::default();
         emitter.start(ctx.expressions);
 
         // Find the `Body` to which this block contributes.
@@ -1395,7 +1391,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         let init_id = self.next()?;
                         let lconst = self.lookup_constant.lookup(init_id)?;
                         Some(
-                            ctx.const_expressions
+                            ctx.expressions
                                 .append(crate::Expression::Constant(lconst.handle), span),
                         )
                     } else {
@@ -2559,7 +2555,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         &mut block,
                         block_id,
                         body_idx,
-                        crate::UnaryOperator::Not,
+                        crate::UnaryOperator::BitwiseNot,
                     )?;
                 }
                 Op::ShiftRightLogical => {
@@ -2953,7 +2949,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         Glo::InverseSqrt => Mf::InverseSqrt,
                         Glo::MatrixInverse => Mf::Inverse,
                         Glo::Determinant => Mf::Determinant,
-                        Glo::Modf => Mf::Modf,
+                        Glo::ModfStruct => Mf::Modf,
                         Glo::FMin | Glo::UMin | Glo::SMin | Glo::NMin => Mf::Min,
                         Glo::FMax | Glo::UMax | Glo::SMax | Glo::NMax => Mf::Max,
                         Glo::FClamp | Glo::UClamp | Glo::SClamp | Glo::NClamp => Mf::Clamp,
@@ -2961,7 +2957,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         Glo::Step => Mf::Step,
                         Glo::SmoothStep => Mf::SmoothStep,
                         Glo::Fma => Mf::Fma,
-                        Glo::Frexp => Mf::Frexp, //TODO: FrexpStruct?
+                        Glo::FrexpStruct => Mf::Frexp,
                         Glo::Ldexp => Mf::Ldexp,
                         Glo::Length => Mf::Length,
                         Glo::Distance => Mf::Distance,
@@ -2982,7 +2978,16 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         Glo::UnpackSnorm2x16 => Mf::Unpack2x16snorm,
                         Glo::FindILsb => Mf::FindLsb,
                         Glo::FindUMsb | Glo::FindSMsb => Mf::FindMsb,
-                        _ => return Err(Error::UnsupportedExtInst(inst_id)),
+                        // TODO: https://github.com/gfx-rs/naga/issues/2526
+                        Glo::Modf | Glo::Frexp => return Err(Error::UnsupportedExtInst(inst_id)),
+                        Glo::IMix
+                        | Glo::PackDouble2x32
+                        | Glo::UnpackDouble2x32
+                        | Glo::InterpolateAtCentroid
+                        | Glo::InterpolateAtSample
+                        | Glo::InterpolateAtOffset => {
+                            return Err(Error::UnsupportedExtInst(inst_id))
+                        }
                     };
 
                     let arg_count = fun.argument_count();
@@ -3033,7 +3038,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 // Relational and Logical Instructions
                 Op::LogicalNot => {
                     inst.expect(4)?;
-                    parse_expr_op!(crate::UnaryOperator::Not, UNARY)?;
+                    parse_expr_op!(crate::UnaryOperator::LogicalNot, UNARY)?;
                 }
                 Op::LogicalOr => {
                     inst.expect(5)?;
@@ -3249,7 +3254,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                                 } else {
                                     ctx.expressions.append(
                                         crate::Expression::Unary {
-                                            op: crate::UnaryOperator::Not,
+                                            op: crate::UnaryOperator::LogicalNot,
                                             expr: condition,
                                         },
                                         span,
@@ -5282,7 +5287,7 @@ fn make_index_literal(
     ctx: &mut BlockContext,
     index: u32,
     block: &mut crate::Block,
-    emitter: &mut super::Emitter,
+    emitter: &mut crate::proc::Emitter,
     index_type: Handle<crate::Type>,
     index_type_id: spirv::Word,
     span: crate::Span,

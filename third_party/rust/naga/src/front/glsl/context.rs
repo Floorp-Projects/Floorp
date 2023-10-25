@@ -8,10 +8,9 @@ use super::{
     Frontend, Result,
 };
 use crate::{
-    front::{Emitter, Typifier},
-    AddressSpace, Arena, BinaryOperator, Block, Expression, FastHashMap, FunctionArgument, Handle,
-    Literal, LocalVariable, RelationalFunction, ScalarKind, Span, Statement, Type, TypeInner,
-    VectorSize,
+    front::Typifier, proc::Emitter, AddressSpace, Arena, BinaryOperator, Block, Expression,
+    FastHashMap, FunctionArgument, Handle, Literal, LocalVariable, RelationalFunction, ScalarKind,
+    Span, Statement, Type, TypeInner, VectorSize,
 };
 use std::ops::Index;
 
@@ -71,15 +70,19 @@ pub struct Context<'a> {
     pub symbol_table: crate::front::SymbolTable<String, VariableReference>,
     pub samplers: FastHashMap<Handle<Expression>, Handle<Expression>>,
 
+    pub const_typifier: Typifier,
     pub typifier: Typifier,
     emitter: Emitter,
     stmt_ctx: Option<StmtContext>,
     pub body: Block,
     pub module: &'a mut crate::Module,
+    pub is_const: bool,
+    /// Tracks the constness of `Expression`s residing in `self.expressions`
+    pub expression_constness: crate::proc::ExpressionConstnessTracker,
 }
 
 impl<'a> Context<'a> {
-    pub fn new(frontend: &Frontend, module: &'a mut crate::Module) -> Result<Self> {
+    pub fn new(frontend: &Frontend, module: &'a mut crate::Module, is_const: bool) -> Result<Self> {
         let mut this = Context {
             expressions: Arena::new(),
             locals: Arena::new(),
@@ -91,11 +94,14 @@ impl<'a> Context<'a> {
             symbol_table: crate::front::SymbolTable::default(),
             samplers: FastHashMap::default(),
 
+            const_typifier: Typifier::new(),
             typifier: Typifier::new(),
             emitter: Emitter::default(),
             stmt_ctx: Some(StmtContext::new()),
             body: Block::new(),
             module,
+            is_const: false,
+            expression_constness: crate::proc::ExpressionConstnessTracker::new(),
         };
 
         this.emit_start();
@@ -103,6 +109,7 @@ impl<'a> Context<'a> {
         for &(ref name, lookup) in frontend.global_variables.iter() {
             this.add_global(name, lookup)?
         }
+        this.is_const = is_const;
 
         Ok(this)
     }
@@ -241,15 +248,41 @@ impl<'a> Context<'a> {
     }
 
     pub fn add_expression(&mut self, expr: Expression, meta: Span) -> Result<Handle<Expression>> {
-        let needs_pre_emit = expr.needs_pre_emit();
-        if needs_pre_emit {
-            self.emit_end();
+        let mut eval = if self.is_const {
+            crate::proc::ConstantEvaluator::for_glsl_module(self.module)
+        } else {
+            crate::proc::ConstantEvaluator::for_glsl_function(
+                self.module,
+                &mut self.expressions,
+                &mut self.expression_constness,
+                &mut self.emitter,
+                &mut self.body,
+            )
+        };
+
+        let res = eval.try_eval_and_append(&expr, meta).map_err(|e| Error {
+            kind: e.into(),
+            meta,
+        });
+
+        match res {
+            Ok(expr) => Ok(expr),
+            Err(e) => {
+                if self.is_const {
+                    Err(e)
+                } else {
+                    let needs_pre_emit = expr.needs_pre_emit();
+                    if needs_pre_emit {
+                        self.body.extend(self.emitter.finish(&self.expressions));
+                    }
+                    let h = self.expressions.append(expr, meta);
+                    if needs_pre_emit {
+                        self.emitter.start(&self.expressions);
+                    }
+                    Ok(h)
+                }
+            }
         }
-        let handle = self.expressions.append(expr, meta);
-        if needs_pre_emit {
-            self.emit_start();
-        }
-        Ok(handle)
     }
 
     /// Add variable to current scope
@@ -363,20 +396,21 @@ impl<'a> Context<'a> {
         Ok(())
     }
 
-    /// Returns a [`StmtContext`](StmtContext) to be used in parsing and lowering
+    /// Returns a [`StmtContext`] to be used in parsing and lowering
     ///
     /// # Panics
-    /// - If more than one [`StmtContext`](StmtContext) are active at the same
-    /// time or if the previous call didn't use it in lowering.
+    ///
+    /// - If more than one [`StmtContext`] are active at the same time or if the
+    /// previous call didn't use it in lowering.
     #[must_use]
     pub fn stmt_ctx(&mut self) -> StmtContext {
         self.stmt_ctx.take().unwrap()
     }
 
-    /// Lowers a [`HirExpr`](HirExpr) which might produce a [`Expression`](Expression).
+    /// Lowers a [`HirExpr`] which might produce a [`Expression`].
     ///
-    /// consumes a [`StmtContext`](StmtContext) returning it to the context so
-    /// that it can be used again later.
+    /// consumes a [`StmtContext`] returning it to the context so that it can be
+    /// used again later.
     pub fn lower(
         &mut self,
         mut stmt: StmtContext,
@@ -393,10 +427,10 @@ impl<'a> Context<'a> {
     }
 
     /// Similar to [`lower`](Self::lower) but returns an error if the expression
-    /// returns void (ie. doesn't produce a [`Expression`](Expression)).
+    /// returns void (ie. doesn't produce a [`Expression`]).
     ///
-    /// consumes a [`StmtContext`](StmtContext) returning it to the context so
-    /// that it can be used again later.
+    /// consumes a [`StmtContext`] returning it to the context so that it can be
+    /// used again later.
     pub fn lower_expect(
         &mut self,
         mut stmt: StmtContext,
@@ -513,13 +547,16 @@ impl<'a> Context<'a> {
 
         let handle = match *kind {
             HirExprKind::Access { base, index } => {
-                let (index, index_meta) =
-                    self.lower_expect_inner(stmt, frontend, index, ExprPos::Rhs)?;
+                let (index, _) = self.lower_expect_inner(stmt, frontend, index, ExprPos::Rhs)?;
                 let maybe_constant_index = match pos {
                     // Don't try to generate `AccessIndex` if in a LHS position, since it
                     // wouldn't produce a pointer.
                     ExprPos::Lhs => None,
-                    _ => self.solve_constant(index, index_meta).ok(),
+                    _ => self
+                        .module
+                        .to_ctx()
+                        .eval_expr_to_u32_from(index, &self.expressions)
+                        .ok(),
                 };
 
                 let base = self
@@ -532,15 +569,7 @@ impl<'a> Context<'a> {
                     .0;
 
                 let pointer = maybe_constant_index
-                    .and_then(|const_expr| {
-                        Some(self.add_expression(
-                            Expression::AccessIndex {
-                                base,
-                                index: self.module.to_ctx().eval_expr_to_u32(const_expr).ok()?,
-                            },
-                            meta,
-                        ))
-                    })
+                    .map(|index| self.add_expression(Expression::AccessIndex { base, index }, meta))
                     .unwrap_or_else(|| {
                         self.add_expression(Expression::Access { base, index }, meta)
                     })?;
@@ -582,8 +611,8 @@ impl<'a> Context<'a> {
                 self.typifier_grow(left, left_meta)?;
                 self.typifier_grow(right, right_meta)?;
 
-                let left_inner = self.typifier.get(left, &self.module.types);
-                let right_inner = self.typifier.get(right, &self.module.types);
+                let left_inner = self.get_type(left);
+                let right_inner = self.get_type(right);
 
                 match (left_inner, right_inner) {
                     (
@@ -988,18 +1017,16 @@ impl<'a> Context<'a> {
                     // pointer type which is required for dynamic indexing
                     if !constant_index {
                         if let Some((constant, ty)) = var.constant {
-                            let local =
-                                self.locals.append(
-                                    LocalVariable {
-                                        name: None,
-                                        ty,
-                                        init: Some(self.module.const_expressions.append(
-                                            Expression::Constant(constant),
-                                            Span::default(),
-                                        )),
-                                    },
-                                    Span::default(),
-                                );
+                            let init = self
+                                .add_expression(Expression::Constant(constant), Span::default())?;
+                            let local = self.locals.append(
+                                LocalVariable {
+                                    name: None,
+                                    ty,
+                                    init: Some(init),
+                                },
+                                Span::default(),
+                            );
 
                             self.add_expression(Expression::LocalVariable(local), Span::default())?
                         } else {
@@ -1012,7 +1039,13 @@ impl<'a> Context<'a> {
                 _ if var.load => {
                     self.add_expression(Expression::Load { pointer: var.expr }, meta)?
                 }
-                ExprPos::Rhs => var.expr,
+                ExprPos::Rhs => {
+                    if let Some((constant, _)) = self.is_const.then_some(var.constant).flatten() {
+                        self.add_expression(Expression::Constant(constant), meta)?
+                    } else {
+                        var.expr
+                    }
+                }
             },
             HirExprKind::Call(ref call) if pos != ExprPos::Lhs => {
                 let maybe_expr = frontend.function_or_constructor_call(
@@ -1486,7 +1519,7 @@ impl Index<Handle<Expression>> for Context<'_> {
 #[derive(Debug)]
 pub struct StmtContext {
     /// A arena of high level expressions which can be lowered through a
-    /// [`Context`](Context) to naga's [`Expression`](crate::Expression)s
+    /// [`Context`] to Naga's [`Expression`]s
     pub hir_exprs: Arena<HirExpr>,
 }
 
