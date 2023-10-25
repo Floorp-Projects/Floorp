@@ -267,6 +267,7 @@ jobs:
     with:
       beta: false
       mar: true
+      lightning: ${{ inputs.lightning-build }}
       x86_64_artifact_name: floorp-mac-x86_64-package
       aarch64_artifact_name: floorp-mac-aarch64-package
       display_version: ${{needs.get-display-version.outputs.display-version}} 
