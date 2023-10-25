@@ -1751,6 +1751,50 @@ class _ASRouter {
     }));
   }
 
+  resetScreenImpressions() {
+    const newScreenImpressions = {};
+    this._storage.set("screenImpressions", newScreenImpressions);
+    return this.setState(() => ({ screenImpressions: newScreenImpressions }));
+  }
+
+  /**
+   * Edit the ASRouter state directly. For use by the ASRouter devtools.
+   * Requires browser.newtabpage.activity-stream.asrouter.devtoolsEnabled
+   * @param {string} key Key of the property to edit, one of:
+   *   | "groupImpressions"
+   *   | "messageImpressions"
+   *   | "screenImpressions"
+   *   | "messageBlockList"
+   * @param {object|string[]} value New value to set for state[key]
+   * @returns {Promise<unknown>} The new value in state
+   */
+  async editState(key, value) {
+    if (!lazy.ASRouterPreferences.devtoolsEnabled) {
+      throw new Error("Editing state is only allowed in devtools mode");
+    }
+    switch (key) {
+      case "groupImpressions":
+      case "messageImpressions":
+      case "screenImpressions":
+        if (typeof value !== "object") {
+          throw new Error("Invalid impression data");
+        }
+        break;
+      case "messageBlockList":
+        if (!Array.isArray(value)) {
+          throw new Error("Invalid message block list");
+        }
+        break;
+      default:
+        throw new Error("Invalid state key");
+    }
+    const newState = await this.setState(() => {
+      this._storage.set(key, value);
+      return { [key]: value };
+    });
+    return newState[key];
+  }
+
   _validPreviewEndpoint(url) {
     try {
       const endpoint = new URL(url);

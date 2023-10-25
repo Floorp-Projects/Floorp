@@ -11,6 +11,7 @@ import { connect } from "react-redux";
 import React from "react";
 import { SimpleHashRouter } from "./SimpleHashRouter";
 import { CopyButton } from "./CopyButton";
+import { ImpressionsSection } from "./ImpressionsSection";
 
 const Row = props => (
   <tr className="message-item" {...props}>
@@ -1703,6 +1704,17 @@ export class ASRouterAdminInner extends React.PureComponent {
             {this.renderMessagesByGroup()}
           </React.Fragment>
         );
+      case "impressions":
+        return (
+          <React.Fragment>
+            <h2>Impressions</h2>
+            <ImpressionsSection
+              messageImpressions={this.state.messageImpressions}
+              groupImpressions={this.state.groupImpressions}
+              screenImpressions={this.state.screenImpressions}
+            />
+          </React.Fragment>
+        );
       case "ds":
         return (
           <React.Fragment>
@@ -1766,6 +1778,9 @@ export class ASRouterAdminInner extends React.PureComponent {
             </li>
             <li>
               <a href="#devtools-groups">Message Groups</a>
+            </li>
+            <li>
+              <a href="#devtools-impressions">Impressions</a>
             </li>
             <li>
               <a href="#devtools-ds">Discovery Stream</a>

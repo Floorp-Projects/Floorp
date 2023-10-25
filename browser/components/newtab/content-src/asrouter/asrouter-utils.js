@@ -64,6 +64,12 @@ export const ASRouterUtils = {
       data: { id },
     });
   },
+  editState(key, value) {
+    return ASRouterUtils.sendMessage({
+      type: msg.EDIT_STATE,
+      data: { [key]: value },
+    });
+  },
   sendTelemetry(ping) {
     return ASRouterUtils.sendMessage(ac.ASRouterUserEvent(ping));
   },
