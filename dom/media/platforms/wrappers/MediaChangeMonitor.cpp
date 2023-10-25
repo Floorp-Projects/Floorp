@@ -189,12 +189,12 @@ class HEVCChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
 
   MediaResult CheckForChange(MediaRawData* aSample) override {
     // To be usable we need to convert the sample to 4 bytes NAL size HVCC.
-    if (!AnnexB::ConvertSampleToHVCC(aSample)) {
+    if (auto rv = AnnexB::ConvertSampleToHVCC(aSample); rv.isErr()) {
       // We need HVCC content to be able to later parse the SPS.
       // This is a no-op if the data is already HVCC.
       nsPrintfCString msg("Failed to convert to HVCC");
       LOG("%s", msg.get());
-      return MediaResult(NS_ERROR_OUT_OF_MEMORY, msg);
+      return MediaResult(rv.unwrapErr(), msg);
     }
 
     if (!AnnexB::IsHVCC(aSample)) {
