@@ -411,6 +411,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
 
 #ifdef SCTP_DTLS_SUPPORTED
   std::string mTransportId;
+  bool mConnectedToTransportHandler = false;
   RefPtr<MediaTransportHandler> mTransportHandler;
   nsCOMPtr<nsIEventTarget> mSTS;
 #endif
