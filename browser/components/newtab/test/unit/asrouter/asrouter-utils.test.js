@@ -91,6 +91,15 @@ describe("ASRouterUtils", () => {
       );
     });
   });
+  describe("editState", () => {
+    it("default", () => {
+      ASRouterUtils.editState("foo", "bar");
+      assert.calledWith(
+        globals.ASRouterMessage,
+        sinon.match({ data: { foo: "bar" } })
+      );
+    });
+  });
   describe("sendTelemetry", () => {
     it("default", () => {
       ASRouterUtils.sendTelemetry({ foo: "bar" });

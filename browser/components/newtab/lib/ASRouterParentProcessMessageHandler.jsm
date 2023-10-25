@@ -171,6 +171,16 @@ class ASRouterParentProcessMessageHandler {
           .resetGroupsState(data)
           .then(() => this._router.loadMessagesFromAllProviders());
       }
+      case msg.RESET_MESSAGE_STATE: {
+        return this._router.resetMessageState();
+      }
+      case msg.RESET_SCREEN_IMPRESSIONS: {
+        return this._router.resetScreenImpressions();
+      }
+      case msg.EDIT_STATE: {
+        const [[key, value]] = Object.entries(data);
+        return this._router.editState(key, value);
+      }
       default: {
         return Promise.reject(new Error(`Unknown message received: ${name}`));
       }
