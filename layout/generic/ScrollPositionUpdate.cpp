@@ -93,6 +93,20 @@ ScrollPositionUpdate ScrollPositionUpdate::NewPureRelativeScroll(
   return ret;
 }
 
+/*static*/
+ScrollPositionUpdate ScrollPositionUpdate::NewMergeableScroll(
+    ScrollOrigin aOrigin, nsPoint aDestination) {
+  MOZ_ASSERT(aOrigin == ScrollOrigin::AnchorAdjustment);
+
+  ScrollPositionUpdate ret;
+  ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
+  ret.mType = ScrollUpdateType::MergeableAbsolute;
+  ret.mScrollMode = ScrollMode::Instant;
+  ret.mScrollOrigin = aOrigin;
+  ret.mDestination = CSSPoint::FromAppUnits(aDestination);
+  return ret;
+}
+
 bool ScrollPositionUpdate::operator==(
     const ScrollPositionUpdate& aOther) const {
   // instances are immutable, and all the fields are set when the generation
@@ -112,6 +126,7 @@ ScrollOrigin ScrollPositionUpdate::GetOrigin() const { return mScrollOrigin; }
 
 CSSPoint ScrollPositionUpdate::GetDestination() const {
   MOZ_ASSERT(mType == ScrollUpdateType::Absolute ||
+             mType == ScrollUpdateType::MergeableAbsolute ||
              mType == ScrollUpdateType::Relative);
   return mDestination;
 }

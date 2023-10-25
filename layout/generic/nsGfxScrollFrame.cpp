@@ -2220,7 +2220,12 @@ void nsHTMLScrollFrame::AsyncScroll::InitSmoothScroll(
     case ScrollOrigin::Apz:
       // Likewise we should never get APZ-triggered scrolls here, and if that
       // changes something is likely broken somewhere.
-      MOZ_ASSERT(false);
+      MOZ_ASSERT_UNREACHABLE(
+          "APZ scroll position updates should never be smooth");
+      break;
+    case ScrollOrigin::AnchorAdjustment:
+      MOZ_ASSERT_UNREACHABLE(
+          "scroll anchor adjustments should never be smooth");
       break;
     default:
       break;
@@ -2993,6 +2998,7 @@ void nsHTMLScrollFrame::ScrollToImpl(
       (mLastScrollOrigin != ScrollOrigin::None &&
        mLastScrollOrigin != ScrollOrigin::NotSpecified &&
        mLastScrollOrigin != ScrollOrigin::Relative &&
+       mLastScrollOrigin != ScrollOrigin::AnchorAdjustment &&
        mLastScrollOrigin != ScrollOrigin::Apz)) {
     aOrigin = ScrollOrigin::Other;
   }
@@ -3142,6 +3148,8 @@ void nsHTMLScrollFrame::ScrollToImpl(
         // result a point far from the desired point.
         GetLayoutScrollRange().ClampPoint(mApzScrollPos), pt));
     mApzScrollPos = pt;
+  } else if (aOrigin == ScrollOrigin::AnchorAdjustment) {
+    AppendScrollUpdate(ScrollPositionUpdate::NewMergeableScroll(aOrigin, pt));
   } else if (aOrigin != ScrollOrigin::Apz) {
     AppendScrollUpdate(ScrollPositionUpdate::NewScroll(mLastScrollOrigin, pt));
   }
