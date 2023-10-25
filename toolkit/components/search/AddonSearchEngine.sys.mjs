@@ -104,16 +104,20 @@ export class AddonSearchEngine extends SearchEngine {
    *   may be overriding some of the WebExtension's settings.
    * @param {object} [options.extension]
    *   The extension associated with this search engine, if known.
+   * @param {object} [options.manifest]
+   *   The extension's manifest associated with this search engine, if known.
    * @param {string} [options.locale]
    *   The locale to use from the extension for getting details of the search
    *   engine.
    */
-  async update({ configuration, extension, locale } = {}) {
-    let { baseURI, manifest } = await this.#getExtensionDetailsForLocale(
-      extension,
-      locale
-    );
-
+  async update({ configuration, extension, manifest, locale } = {}) {
+    let baseURI = extension?.baseURI;
+    if (!manifest) {
+      ({ baseURI, manifest } = await this.#getExtensionDetailsForLocale(
+        extension,
+        locale
+      ));
+    }
     let originalName = this.name;
     let name = manifest.chrome_settings_overrides.search_provider.name.trim();
     if (originalName != name && Services.search.getEngineByName(name)) {
