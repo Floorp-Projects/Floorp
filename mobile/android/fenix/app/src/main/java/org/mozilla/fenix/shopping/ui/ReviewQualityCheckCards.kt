@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -64,10 +65,17 @@ fun ReviewQualityCheckExpandableCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
-                    isExpanded = isExpanded.not()
-                    onExpandToggleClick(isExpanded)
-                }
+                .clickable(
+                    onClickLabel = if (isExpanded) {
+                        stringResource(R.string.a11y_action_label_collapse)
+                    } else {
+                        stringResource(R.string.a11y_action_label_expand)
+                    },
+                    onClick = {
+                        isExpanded = isExpanded.not()
+                        onExpandToggleClick(isExpanded)
+                    },
+                )
                 .padding(defaultCardContentPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -85,7 +93,11 @@ fun ReviewQualityCheckExpandableCard(
 
             Icon(
                 painter = painterResource(id = chevronDrawable),
-                contentDescription = null,
+                contentDescription = if (isExpanded) {
+                    stringResource(R.string.a11y_state_label_expanded)
+                } else {
+                    stringResource(R.string.a11y_state_label_collapsed)
+                },
                 tint = FirefoxTheme.colors.iconPrimary,
             )
         }
