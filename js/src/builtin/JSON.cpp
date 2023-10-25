@@ -241,7 +241,8 @@ class StringifyContext {
 
 } /* anonymous namespace */
 
-static bool Str(JSContext* cx, const Value& v, StringifyContext* scx);
+static bool SerializeJSONProperty(JSContext* cx, const Value& v,
+                                  StringifyContext* scx);
 
 static bool WriteIndent(StringifyContext* scx, uint32_t limit) {
   if (!scx->gap.empty()) {
@@ -390,10 +391,10 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
 /*
  * Determines whether a value which has passed by
  * https://262.ecma-international.org/14.0/#sec-serializejsonproperty steps
- * 1-4's gauntlet will result in Str returning |undefined|.  This function is
- * used to properly omit properties resulting in such values when stringifying
- * objects, while properly stringifying such properties as null when they're
- * encountered in arrays.
+ * 1-4's gauntlet will result in SerializeJSONProperty returning |undefined|.
+ * This function is used to properly omit properties resulting in such values
+ * when stringifying objects, while properly stringifying such properties as
+ * null when they're encountered in arrays.
  */
 static inline bool IsFilteredValue(const Value& v) {
   MOZ_ASSERT_IF(v.isMagic(), v.isMagic(JS_ELEMENTS_HOLE));
@@ -444,8 +445,8 @@ static bool SerializeJSONObject(JSContext* cx, HandleObject obj,
    *   * The algorithm is somewhat reformulated to allow the final string to
    *     be streamed into a single buffer, rather than be created and copied
    *     into place incrementally as the algorithm specifies it.  This
-   *     requires moving portions of the Str call in 8a into this algorithm
-   *     (and in SerializeJSONArray as well).
+   *     requires moving portions of the SerializeJSONProperty call in 8a into
+   *     this algorithm (and in SerializeJSONArray as well).
    */
 
 #ifdef ENABLE_RECORD_TUPLE
@@ -501,10 +502,10 @@ static bool SerializeJSONObject(JSContext* cx, HandleObject obj,
     }
 
     /*
-     * Steps 8a-8b.  Note that the call to Str is broken up into 1) getting
-     * the property; 2) processing for toJSON, calling the replacer, and
-     * handling boxed Number/String/Boolean objects; 3) filtering out
-     * values which process to |undefined|, and 4) stringifying all values
+     * Steps 8a-8b.  Note that the call to SerializeJSONProperty is broken up
+     * into 1) getting the property; 2) processing for toJSON, calling the
+     * replacer, and handling boxed Number/String/Boolean objects; 3) filtering
+     * out values which process to |undefined|, and 4) stringifying all values
      * which pass the filter.
      */
     id = propertyList[i];
@@ -556,7 +557,7 @@ static bool SerializeJSONObject(JSContext* cx, HandleObject obj,
 
     if (!Quote(cx, scx->sb, s) || !scx->sb.append(':') ||
         !(scx->gap.empty() || scx->sb.append(' ')) ||
-        !Str(cx, outputValue, scx)) {
+        !SerializeJSONProperty(cx, outputValue, scx)) {
       return false;
     }
   }
@@ -615,8 +616,8 @@ static bool SerializeJSONArray(JSContext* cx, HandleObject obj,
    *   * The algorithm is somewhat reformulated to allow the final string to
    *     be streamed into a single buffer, rather than be created and copied
    *     into place incrementally as the algorithm specifies it.  This
-   *     requires moving portions of the Str call in 8a into this algorithm
-   *     (and in SerializeJSONObject as well).
+   *     requires moving portions of the SerializeJSONProperty call in 8a into
+   *     this algorithm (and in SerializeJSONObject as well).
    */
 
   /* Steps 1-2, 11. */
@@ -650,10 +651,10 @@ static bool SerializeJSONArray(JSContext* cx, HandleObject obj,
       }
 
       /*
-       * Steps 8a-8c.  Again note how the call to the spec's Str method
-       * is broken up into getting the property, running it past toJSON
-       * and the replacer and maybe unboxing, and interpreting some
-       * values as |null| in separate steps.
+       * Steps 8a-8c.  Again note how the call to the spec's
+       * SerializeJSONProperty method is broken up into getting the property,
+       * running it past toJSON and the replacer and maybe unboxing, and
+       * interpreting some values as |null| in separate steps.
        */
 #ifdef DEBUG
       if (scx->maybeSafely) {
@@ -688,7 +689,7 @@ static bool SerializeJSONArray(JSContext* cx, HandleObject obj,
           return false;
         }
       } else {
-        if (!Str(cx, outputValue, scx)) {
+        if (!SerializeJSONProperty(cx, outputValue, scx)) {
           return false;
         }
       }
@@ -714,8 +715,8 @@ static bool SerializeJSONArray(JSContext* cx, HandleObject obj,
 }
 
 /* https://262.ecma-international.org/14.0/#sec-serializejsonproperty */
-// TODO Bug 1860185 rename SerializeJSONProperty
-static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
+static bool SerializeJSONProperty(JSContext* cx, const Value& v,
+                                  StringifyContext* scx) {
   /* Step 12 must be handled by the caller. */
   MOZ_ASSERT(!IsFilteredValue(v));
 
@@ -728,8 +729,8 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
    *     allow both SerializeJSONObject and SerializeJSONArray to use this
    * method.  While SerializeJSONArray could use it without this move,
    * SerializeJSONObject must omit any |undefined|-valued property per so it
-   * can't stream out a value using the Str method exactly as defined by the
-   * spec.
+   * can't stream out a value using the SerializeJSONProperty method exactly as
+   * defined by the spec.
    *   * We move step 12 into callers, again to ease streaming.
    */
 
@@ -1006,7 +1007,8 @@ class ShapePropertyForwardIterNoGC {
 // Iterator over EnumerableOwnProperties
 // https://262.ecma-international.org/14.0/#sec-enumerableownproperties
 // that fails if it encounters any accessor properties, as they are not handled
-// by JSON FastStr, or if it sees too many properties on one object.
+// by JSON FastSerializeJSONProperty, or if it sees too many properties on one
+// object.
 class OwnNonIndexKeysIterForJSON {
   ShapePropertyForwardIterNoGC shapeIter;
   bool done_ = false;
@@ -1182,13 +1184,14 @@ static bool PreprocessFastValue(JSContext* cx, Value* vp, StringifyContext* scx,
   return true;
 }
 
-// FastStr maintains an explicit stack to handle nested objects. For each
-// object, first the dense elements are iterated, then the named properties
-// (included sparse indexes, which will cause FastStr to bail out.)
+// FastSerializeJSONProperty maintains an explicit stack to handle nested
+// objects. For each object, first the dense elements are iterated, then the
+// named properties (included sparse indexes, which will cause
+// FastSerializeJSONProperty to bail out.)
 //
 // The iterators for each of those parts are not merged into a single common
 // iterator because the interface is different for the two parts, and they are
-// handled separately in the FastStr code.
+// handled separately in the FastSerializeJSONProperty code.
 struct FastStackEntry {
   NativeObject* nobj;
   Variant<DenseElementsIteratorForJSON, OwnNonIndexKeysIterForJSON> iter;
@@ -1220,15 +1223,16 @@ struct FastStackEntry {
 };
 
 /* https://262.ecma-international.org/14.0/#sec-serializejsonproperty */
-// TODO Bug 1860185 rename to FastSerializeJSONProperty
-static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
-                    BailReason* whySlow) {
+static bool FastSerializeJSONProperty(JSContext* cx, Handle<Value> v,
+                                      StringifyContext* scx,
+                                      BailReason* whySlow) {
   MOZ_ASSERT(*whySlow == BailReason::NO_REASON);
   MOZ_ASSERT(v.isObject());
 
   /*
-   * FastStr is an optimistic fast path for the SerializeJSONProperty algorithm
-   * that applies in limited situations. It falls back to Str() if:
+   * FastSerializeJSONProperty is an optimistic fast path for the
+   * SerializeJSONProperty algorithm that applies in limited situations. It
+   * falls back to SerializeJSONProperty() if:
    *
    *   * Any externally visible code attempts to run: getter, enumerate
    *     hook, toJSON property.
@@ -1274,10 +1278,10 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
    *     scanned to bail if any numeric keys are found that could be indexes.
    */
 
-  // FastStr will bail if an interrupt is requested in the middle of an
-  // operation, so handle any interrupts now before starting. Note: this can GC,
-  // but after this point nothing should be able to GC unless something fails,
-  // so rooting is unnecessary.
+  // FastSerializeJSONProperty will bail if an interrupt is requested in the
+  // middle of an operation, so handle any interrupts now before starting. Note:
+  // this can GC, but after this point nothing should be able to GC unless
+  // something fails, so rooting is unnecessary.
   if (!CheckForInterrupt(cx)) {
     return false;
   }
@@ -1653,7 +1657,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
       whySlow = BailReason::PRIMITIVE;
     }
     if (whySlow == BailReason::NO_REASON) {
-      if (!FastStr(cx, vp, &scx, &whySlow)) {
+      if (!FastSerializeJSONProperty(cx, vp, &scx, &whySlow)) {
         return false;
       }
       if (whySlow == BailReason::NO_REASON) {
@@ -1688,7 +1692,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     return true;
   }
 
-  if (!Str(cx, vp, &scx)) {
+  if (!SerializeJSONProperty(cx, vp, &scx)) {
     return false;
   }
 
