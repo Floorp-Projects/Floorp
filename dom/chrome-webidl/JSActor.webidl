@@ -8,8 +8,12 @@
 interface mixin JSActor {
     [Throws]
     undefined sendAsyncMessage(DOMString messageName,
-                               optional any obj);
+                               optional any obj,
+                               optional any transferables);
 
+    /**
+     * Note that transfers are currently not supported by sendQuery. See Bug 1579536.
+     */
     [NewObject]
     Promise<any> sendQuery(DOMString messageName,
                            optional any obj);

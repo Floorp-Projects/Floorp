@@ -203,12 +203,14 @@ static Maybe<ipc::StructuredCloneData> CaptureJSStack(JSContext* aCx) {
 }
 
 void JSActor::SendAsyncMessage(JSContext* aCx, const nsAString& aMessageName,
-                               JS::Handle<JS::Value> aObj, ErrorResult& aRv) {
+                               JS::Handle<JS::Value> aObj,
+                               JS::Handle<JS::Value> aTransfers,
+                               ErrorResult& aRv) {
   profiler_add_marker("SendAsyncMessage", geckoprofiler::category::IPC, {},
                       JSActorMessageMarker{}, mName, aMessageName);
   Maybe<ipc::StructuredCloneData> data{std::in_place};
-  if (!nsFrameMessageManager::GetParamsForMessage(
-          aCx, aObj, JS::UndefinedHandleValue, *data)) {
+  if (!nsFrameMessageManager::GetParamsForMessage(aCx, aObj, aTransfers,
+                                                  *data)) {
     aRv.ThrowDataCloneError(nsPrintfCString(
         "Failed to serialize message '%s::%s'",
         NS_LossyConvertUTF16toASCII(aMessageName).get(), mName.get()));

@@ -137,9 +137,11 @@ There **is no way to send messages synchronously** with ``JSActor``.
 ``sendAsyncMessage``
 ````````````````````
 
-    sendAsyncMessage("SomeMessage", value);
+    sendAsyncMessage("SomeMessage", value[, transferables]);
 
-Where `value` is anything  that can be serialized using the structured clone algorithm. Additionally, a ``nsIPrincipal`` can be sent without having to manually serializing and deserializing it.
+The ``value`` is anything that can be serialized using the structured clone algorithm. Additionally, a ``nsIPrincipal`` can be sent without having to manually serialize and deserialize it.
+
+The ``transferables`` argument is an optional array of `Transferable`_ objects. Note that transferable objects like ``ArrayBuffers`` are not transferable across process and their contents will just be copied into the serialized data. However, ``transferables`` are still useful for objects like ``MessageChannel`` ports, as these can be transferred across process boundaries.
 
 .. note::
     Cross Process Object Wrappers (CPOWs) cannot be sent over JSWindowActors.
@@ -545,3 +547,4 @@ And more
 .. _JSProcessActor.webidl: https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSProcessActor.webidl
 .. _JSWindowActor.webidl: https://searchfox.org/mozilla-central/source/dom/chrome-webidl/JSWindowActor.webidl
 .. _BrowserElementParent.jsm: https://searchfox.org/mozilla-central/rev/ec806131cb7bcd1c26c254d25cd5ab8a61b2aeb6/toolkit/actors/BrowserElementParent.jsm
+.. _Transferable: https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects
