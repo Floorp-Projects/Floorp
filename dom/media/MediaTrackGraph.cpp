@@ -3189,7 +3189,7 @@ void ProcessedMediaTrack::DestroyImpl() {
 
 MediaTrackGraphImpl::MediaTrackGraphImpl(
     GraphDriverType aDriverRequested, GraphRunType aRunTypeRequested,
-    TrackRate aSampleRate, uint32_t aChannelCount,
+    uint64_t aWindowID, TrackRate aSampleRate, uint32_t aChannelCount,
     CubebUtils::AudioDeviceID aOutputDeviceID,
     nsISerialEventTarget* aMainThread)
     : MediaTrackGraph(aSampleRate),
@@ -3201,6 +3201,7 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
       ,
       mEndTime(aDriverRequested == OFFLINE_THREAD_DRIVER ? 0 : GRAPH_TIME_MAX),
       mPortCount(0),
+      mWindowID(aWindowID),
       mOutputDeviceID(aOutputDeviceID),
       mMonitor("MediaTrackGraphImpl"),
       mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED),
@@ -3326,8 +3327,9 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
     // capped to 8.
     uint32_t channelCount =
         std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
-    graph = new MediaTrackGraphImpl(aGraphDriverRequested, runType, aSampleRate,
-                                    channelCount, aOutputDeviceID, aMainThread);
+    graph = new MediaTrackGraphImpl(aGraphDriverRequested, runType, aWindowID,
+                                    aSampleRate, channelCount, aOutputDeviceID,
+                                    aMainThread);
     GraphKey key(aWindowID, aSampleRate, aOutputDeviceID);
     gGraphs.InsertOrUpdate(key, graph);
 
@@ -3360,9 +3362,9 @@ MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
   nsISerialEventTarget* mainThread = GetMainThreadSerialEventTarget();
   // Offline graphs have 0 output channel count: they write the output to a
   // buffer, not an audio output track.
-  MediaTrackGraphImpl* graph =
-      new MediaTrackGraphImpl(OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate,
-                              0, DEFAULT_OUTPUT_DEVICE, mainThread);
+  MediaTrackGraphImpl* graph = new MediaTrackGraphImpl(
+      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, 0, aSampleRate, 0,
+      DEFAULT_OUTPUT_DEVICE, mainThread);
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaTrackGraph %p", graph));
 
