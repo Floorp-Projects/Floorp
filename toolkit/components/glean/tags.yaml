@@ -531,7 +531,7 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Toolkit :: View Source':
   description: The Bugzilla component which applies to this object.
-'Toolkit :: XUL Widgets':
+'Toolkit :: UI Widgets':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: about:memory':
   description: The Bugzilla component which applies to this object.

@@ -2,7 +2,7 @@ schema: 1
 
 bugzilla:
   product: "Toolkit"
-  component: "XUL Widgets"
+  component: "UI Widgets"
 
 origin:
   name: "lit"
