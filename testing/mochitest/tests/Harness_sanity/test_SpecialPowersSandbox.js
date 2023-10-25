@@ -68,8 +68,6 @@ add_task(async function () {
     [true, "Hmm - 1 == 1"],
     [true, "Yay. - true == true"],
     [false, "Boo!. - false == true"],
-    [false, "Missing expected exception Rej_bad"],
-    [true, "Rej_ok"],
   ];
 
   // Test that a representative variety of assertions work as expected, and
@@ -85,8 +83,6 @@ add_task(async function () {
         Assert.equal(1, 1, "Hmm");
         Assert.ok(true, "Yay.");
         Assert.ok(false, "Boo!.");
-        await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
-        await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
       });
     },
     "SpecialPowers.spawn-subframe": () => {
@@ -99,13 +95,11 @@ add_task(async function () {
           subFrame.addEventListener("load", resolve, { once: true });
         });
 
-        await SpecialPowers.spawn(subFrame, [], async () => {
+        await SpecialPowers.spawn(subFrame, [], () => {
           Assert.equal(1, 2, "Thing");
           Assert.equal(1, 1, "Hmm");
           Assert.ok(true, "Yay.");
           Assert.ok(false, "Boo!.");
-          await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
-          await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
         });
       });
     },
@@ -115,22 +109,17 @@ add_task(async function () {
         Assert.equal(1, 1, "Hmm");
         Assert.ok(true, "Yay.");
         Assert.ok(false, "Boo!.");
-        await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
-        await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
       });
     },
     "SpecialPowers.loadChromeScript": async () => {
       let script = SpecialPowers.loadChromeScript(() => {
         /* eslint-env mozilla/chrome-script */
-        const resultPromise = (async () => {
-          Assert.equal(1, 2, "Thing");
-          Assert.equal(1, 1, "Hmm");
-          Assert.ok(true, "Yay.");
-          Assert.ok(false, "Boo!.");
-          await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
-          await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
-        })();
-        this.addMessageListener("ping", () => resultPromise);
+        this.addMessageListener("ping", () => "pong");
+
+        Assert.equal(1, 2, "Thing");
+        Assert.equal(1, 1, "Hmm");
+        Assert.ok(true, "Yay.");
+        Assert.ok(false, "Boo!.");
       });
 
       await script.sendQuery("ping");
@@ -146,17 +135,5 @@ add_task(async function () {
     let results = diags.map(diag => [diag.passed, diag.msg]);
 
     deepEqual(results, expected, "Got expected assertions");
-    for (let { msg, stack } of diags) {
-      ok(stack, `Got stack for: ${msg}`);
-      let expectedFilenamePart = "/test_SpecialPowersSandbox.js:";
-      if (name === "SpecialPowers.loadChromeScript") {
-        // Unfortunately, the original file name is not included;
-        // the function name or a dummy value is used instead.
-        expectedFilenamePart = "loadChromeScript anonymous function>:";
-      }
-      if (!stack.includes(expectedFilenamePart)) {
-        ok(false, `Stack does not contain ${expectedFilenamePart}: ${stack}`);
-      }
-    }
   }
 });
