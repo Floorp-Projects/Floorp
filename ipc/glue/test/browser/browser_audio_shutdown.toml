@@ -1,0 +1,5 @@
+[DEFAULT]
+support-files = ["head.js"]
+
+["browser_utility_audio_shutdown.js"]
+support-files = ["../../../../dom/media/test/small-shot.ogg"]

@@ -1,0 +1,8 @@
+[DEFAULT]
+environment = [
+  "SNAP_INSTANCE_NAME=firefox",
+  "SNAP_NAME=firefox",
+]
+
+["browser_ua_snap_ubuntu.js"]
+run-if = ["os == 'linux' && is_ubuntu"]

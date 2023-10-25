@@ -6,10 +6,10 @@
 
 BROWSER_CHROME_MANIFESTS += [
     "browser.toml",
-    "browser_audio_fallback.ini",
-    "browser_audio_fallback_content.ini",
-    "browser_audio_locked.ini",
-    "browser_audio_shutdown.ini",
-    "browser_child_hang.ini",
+    "browser_audio_fallback.toml",
+    "browser_audio_fallback_content.toml",
+    "browser_audio_locked.toml",
+    "browser_audio_shutdown.toml",
+    "browser_child_hang.toml",
 ]
 MOCHITEST_MANIFESTS += ["mochitest_audio_off.toml", "mochitest_audio_on.toml"]
