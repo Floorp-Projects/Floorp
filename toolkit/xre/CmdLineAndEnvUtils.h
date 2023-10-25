@@ -338,23 +338,39 @@ inline void EnsureCommandlineSafe(
 
 #if defined(XP_WIN)
 namespace internal {
+
 /**
- * Get the length that the string will take and takes into account the
- * additional length if the string needs to be quoted and if characters need to
- * be escaped.
+ * Attempt to copy the string `s` (considered as a command-line argument) into
+ * the buffer `d` with all necessary escaping and quoting. Returns the number of
+ * characters written.
+ *
+ * If `d` is NULL, doesn't actually write anything to `d`, and merely returns
+ * the number of characters that _would_ have been written.
+ *
+ * (This moderately-awkward conflation ensures that the pre-allocation counting
+ * step and post-allocation copying step use the same algorithm.)
  */
-inline int ArgStrLen(const wchar_t* s) {
-  int backslashes = 0;
-  int i = wcslen(s);
+inline size_t CopyArgImpl_(wchar_t* d, const wchar_t* s) {
+  size_t len = 0;
+
+  bool const actuallyCopy = d != nullptr;
+  auto const appendChar = [&](wchar_t c) {
+    if (actuallyCopy) {
+      *d++ = c;
+    }
+    len++;
+  };
+
   bool hasDoubleQuote = wcschr(s, L'"') != nullptr;
   // Only add doublequotes if the string contains a space or a tab
   bool addDoubleQuotes = wcspbrk(s, kCommandLineDelimiter) != nullptr;
 
   if (addDoubleQuotes) {
-    i += 2;  // initial and final duoblequote
+    appendChar('"');
   }
 
   if (hasDoubleQuote) {
+    size_t backslashes = 0;
     while (*s) {
       if (*s == '\\') {
         ++backslashes;
@@ -362,18 +378,39 @@ inline int ArgStrLen(const wchar_t* s) {
         if (*s == '"') {
           // Escape the doublequote and all backslashes preceding the
           // doublequote
-          i += backslashes + 1;
+          for (size_t i = 0; i <= backslashes; ++i) {
+            appendChar('\\');
+          }
         }
 
         backslashes = 0;
       }
 
+      appendChar(*s);
       ++s;
     }
+  } else {
+    // optimization: just blit
+    auto const src_len = wcslen(s);
+    if (actuallyCopy) {
+      ::wcscpy(d, s);
+      d += src_len;
+    }
+    len += src_len;
   }
 
-  return i;
+  if (addDoubleQuotes) {
+    appendChar('"');
+  }
+
+  return len;
 }
+
+/**
+ * Compute the space required for the serialized form of this argument. Includes
+ * any additional space needed for quotes and backslash-escapes.
+ */
+inline size_t ArgStrLen(const wchar_t* s) { return CopyArgImpl_(nullptr, s); }
 
 /**
  * Copy string "s" to string "d", quoting the argument as appropriate and
@@ -385,49 +422,7 @@ inline int ArgStrLen(const wchar_t* s) {
  * @return the end of the string
  */
 inline wchar_t* ArgToString(wchar_t* d, const wchar_t* s) {
-  int backslashes = 0;
-  bool hasDoubleQuote = wcschr(s, L'"') != nullptr;
-  // Only add doublequotes if the string contains a space or a tab
-  bool addDoubleQuotes = wcspbrk(s, kCommandLineDelimiter) != nullptr;
-
-  if (addDoubleQuotes) {
-    *d = '"';  // initial doublequote
-    ++d;
-  }
-
-  if (hasDoubleQuote) {
-    int i;
-    while (*s) {
-      if (*s == '\\') {
-        ++backslashes;
-      } else {
-        if (*s == '"') {
-          // Escape the doublequote and all backslashes preceding the
-          // doublequote
-          for (i = 0; i <= backslashes; ++i) {
-            *d = '\\';
-            ++d;
-          }
-        }
-
-        backslashes = 0;
-      }
-
-      *d = *s;
-      ++d;
-      ++s;
-    }
-  } else {
-    wcscpy(d, s);
-    d += wcslen(s);
-  }
-
-  if (addDoubleQuotes) {
-    *d = '"';  // final doublequote
-    ++d;
-  }
-
-  return d;
+  return d + CopyArgImpl_(d, s);
 }
 
 }  // namespace internal
@@ -445,7 +440,7 @@ inline UniquePtr<wchar_t[]> MakeCommandLine(
     int argc, const wchar_t* const* argv, int aArgcExtra = 0,
     const wchar_t* const* aArgvExtra = nullptr) {
   int i;
-  int len = 0;
+  size_t len = 0;
 
   // The + 1 for each argument reserves space for either a ' ' or the null
   // terminator, depending on the position of the argument.
