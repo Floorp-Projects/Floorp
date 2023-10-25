@@ -201,7 +201,7 @@ void CanvasContext::SwapChainPresent() {
   mBridge->SwapChainPresent(mTexture->mId, *mLastRemoteTextureId,
                             *mRemoteTextureOwnerId);
   if (mUseExternalTextureInSwapChain) {
-    mTexture->Destroy();
+    mTexture->ForceDestroy();
     mNewTextureRequested = true;
   }
 }
