@@ -58,6 +58,7 @@ export class BrowsingContextListener {
 
   destroy() {
     this.stopListening();
+    this.#topContextsToAttach = null;
   }
 
   observe(subject, topic, data) {
