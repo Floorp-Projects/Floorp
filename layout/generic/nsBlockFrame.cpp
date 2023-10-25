@@ -818,7 +818,8 @@ bool nsBlockFrame::TextIndentAppliesTo(const LineIterator& aLine) const {
       // There's a prev-in-flow, so this only counts as a first-line if
       // 'each-line' and the prev-in-flow's last line was not wrapped.
       return textIndent.each_line &&
-             !prevBlock->LinesEnd().prev()->IsLineWrapped();
+             (prevBlock->Lines().empty() ||
+              !prevBlock->LinesEnd().prev()->IsLineWrapped());
     }
     return true;
   }();
