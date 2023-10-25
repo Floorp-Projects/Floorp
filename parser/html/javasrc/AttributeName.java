@@ -27,8 +27,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import nu.validator.htmlparser.annotation.CppInlineLength;
 import nu.validator.htmlparser.annotation.Inline;
 import nu.validator.htmlparser.annotation.Local;
+import nu.validator.htmlparser.annotation.StaticLocal;
+import nu.validator.htmlparser.annotation.WeakLocal;
 import nu.validator.htmlparser.annotation.NoLength;
 import nu.validator.htmlparser.annotation.NsUri;
 import nu.validator.htmlparser.annotation.Prefix;
@@ -181,9 +184,9 @@ public final class AttributeName
      *            the name for the SVG mode
      * @return the initialized name array
      */
-    private static @NoLength @Local String[] SVG_DIFFERENT(@Local String name,
-            @Local String camel) {
-        @NoLength @Local String[] arr = new String[4];
+    private static @NoLength @StaticLocal String[] SVG_DIFFERENT(@StaticLocal String name,
+            @StaticLocal String camel) {
+        @NoLength @StaticLocal String[] arr = new String[4];
         arr[0] = name;
         arr[1] = name;
         arr[2] = camel;
@@ -203,9 +206,9 @@ public final class AttributeName
      *            the name for the MathML mode
      * @return the initialized name array
      */
-    private static @NoLength @Local String[] MATH_DIFFERENT(@Local String name,
-            @Local String camel) {
-        @NoLength @Local String[] arr = new String[4];
+    private static @NoLength @StaticLocal String[] MATH_DIFFERENT(@StaticLocal String name,
+            @StaticLocal String camel) {
+        @NoLength @StaticLocal String[] arr = new String[4];
         arr[0] = name;
         arr[1] = camel;
         arr[2] = name;
@@ -225,9 +228,9 @@ public final class AttributeName
      *            the name for the SVG and MathML modes
      * @return the initialized name array
      */
-    private static @NoLength @Local String[] COLONIFIED_LOCAL(
-            @Local String name, @Local String suffix) {
-        @NoLength @Local String[] arr = new String[4];
+    private static @NoLength @StaticLocal String[] COLONIFIED_LOCAL(
+            @StaticLocal String name, @StaticLocal String suffix) {
+        @NoLength @StaticLocal String[] arr = new String[4];
         arr[0] = name;
         arr[1] = suffix;
         arr[2] = suffix;
@@ -244,8 +247,8 @@ public final class AttributeName
      *            the name
      * @return the initialized name array
      */
-    static @NoLength @Local String[] SAME_LOCAL(@Local String name) {
-        @NoLength @Local String[] arr = new String[4];
+    static @NoLength @StaticLocal String[] SAME_LOCAL(@StaticLocal String name) {
+        @NoLength @StaticLocal String[] arr = new String[4];
         arr[0] = name;
         arr[1] = name;
         arr[2] = name;
@@ -376,17 +379,20 @@ public final class AttributeName
     /**
      * The namespaces indexable by mode.
      */
-    private final @NsUri @NoLength String[] uri;
+    private final @CppInlineLength(3) @NsUri @NoLength String[] uri;
 
     /**
      * The local names indexable by mode.
+     *
+     * These are weak because they're either all static, or
+     * all the same, in wich case we just need to take one reference.
      */
-    private final @Local @NoLength String[] local;
+    private final @CppInlineLength(3) @WeakLocal @NoLength String[] local;
 
     /**
      * The prefixes indexably by mode.
      */
-    private final @Prefix @NoLength String[] prefix;
+    private final @CppInlineLength(3) @Prefix @NoLength String[] prefix;
 
     // CPPONLY: private final boolean custom;
 
@@ -416,7 +422,7 @@ public final class AttributeName
      *            whether this is an xmlns attribute
      */
     private AttributeName(@NsUri @NoLength String[] uri,
-            @Local @NoLength String[] local, @Prefix @NoLength String[] prefix
+            @StaticLocal @NoLength String[] local, @Prefix @NoLength String[] prefix
             // [NOCPP[
             , int flags
     // ]NOCPP]
@@ -429,6 +435,7 @@ public final class AttributeName
         this.flags = flags;
         // ]NOCPP]
         // CPPONLY: this.custom = false;
+        // CPPONLY: Portability.deleteArray(local);
     }
 
     // CPPONLY: public AttributeName() {
@@ -444,6 +451,8 @@ public final class AttributeName
     // CPPONLY:
     // CPPONLY: @Inline public void setNameForNonInterned(@Local String name) {
     // CPPONLY:     assert custom;
+    // CPPONLY:     Portability.addrefIfNonNull(name);
+    // CPPONLY:     Portability.releaseIfNonNull(local[0]);
     // CPPONLY:     local[0] = name;
     // CPPONLY:     local[1] = name;
     // CPPONLY:     local[2] = name;
@@ -458,28 +467,28 @@ public final class AttributeName
      *            whether to check ncnameness
      * @return an <code>AttributeName</code>
      */
-    static AttributeName createAttributeName(@Local String name
     // [NOCPP[
+    static AttributeName createAttributeName(@Local String name
             , boolean checkNcName
-    // ]NOCPP]
     ) {
-        // [NOCPP[
         int flags = NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG;
         if (name.startsWith("xmlns:")) {
             flags = IS_XMLNS;
         } else if (checkNcName && !NCName.isNCName(name)) {
             flags = 0;
         }
-        // ]NOCPP]
         return new AttributeName(AttributeName.ALL_NO_NS,
                 AttributeName.SAME_LOCAL(name), ALL_NO_PREFIX, flags);
     }
+    // ]NOCPP]
 
     /**
      * The C++ destructor.
      */
     @SuppressWarnings("unused") private void destructor() {
-        Portability.deleteArray(local);
+        // CPPONLY: if (custom) {
+        // CPPONLY:     Portability.releaseIfNonNull(local[0]);
+        // CPPONLY: }
     }
 
     // [NOCPP[

@@ -69,12 +69,13 @@ class nsHtml5AttributeName {
   static nsStaticAtom** XMLNS_PREFIX;
   static nsStaticAtom** XLINK_PREFIX;
   static nsStaticAtom** XML_PREFIX;
-  static RefPtr<nsAtom>* SVG_DIFFERENT(nsAtom* name, nsAtom* camel);
-  static RefPtr<nsAtom>* MATH_DIFFERENT(nsAtom* name, nsAtom* camel);
-  static RefPtr<nsAtom>* COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix);
+  static nsStaticAtom** SVG_DIFFERENT(nsStaticAtom* name, nsStaticAtom* camel);
+  static nsStaticAtom** MATH_DIFFERENT(nsStaticAtom* name, nsStaticAtom* camel);
+  static nsStaticAtom** COLONIFIED_LOCAL(nsStaticAtom* name,
+                                         nsStaticAtom* suffix);
 
  public:
-  static RefPtr<nsAtom>* SAME_LOCAL(nsAtom* name);
+  static nsStaticAtom** SAME_LOCAL(nsStaticAtom* name);
   inline static int32_t levelOrderBinarySearch(jArray<int32_t, int32_t> data,
                                                int32_t key) {
     int32_t n = data.length;
@@ -152,11 +153,11 @@ class nsHtml5AttributeName {
   static const int32_t SVG = 2;
 
  private:
-  int32_t* uri;
-  RefPtr<nsAtom>* local;
-  nsStaticAtom** prefix;
+  jInlineArray<int32_t, 3> uri;
+  jInlineArray<nsAtom*, 3> local;
+  jInlineArray<nsStaticAtom*, 3> prefix;
   bool custom;
-  nsHtml5AttributeName(int32_t* uri, RefPtr<nsAtom>* local,
+  nsHtml5AttributeName(int32_t* uri, nsStaticAtom** local,
                        nsStaticAtom** prefix);
 
  public:
@@ -165,12 +166,13 @@ class nsHtml5AttributeName {
 
   inline void setNameForNonInterned(nsAtom* name) {
     MOZ_ASSERT(custom);
+    NS_IF_ADDREF(name);
+    NS_IF_RELEASE(local[0]);
     local[0] = name;
     local[1] = name;
     local[2] = name;
   }
 
-  static nsHtml5AttributeName* createAttributeName(nsAtom* name);
   ~nsHtml5AttributeName();
   int32_t getUri(int32_t mode);
   nsAtom* getLocal(int32_t mode);
