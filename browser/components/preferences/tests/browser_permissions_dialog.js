@@ -18,7 +18,7 @@ function checkMenulistPermissionItem(origin, state) {
   let doc = sitePermissionsDialog.document;
 
   let label = doc.getElementsByTagName("label")[3];
-  Assert.equal(label.value, origin);
+  Assert.equal(label.textContent, origin);
 
   let menulist = doc.getElementsByTagName("menulist")[0];
   Assert.equal(menulist.value, state);
@@ -628,8 +628,7 @@ add_task(async function addSpeakerPermission() {
   );
   // The website status element is not a menulist because all-device allow is
   // not an option.
-  Assert.equal(siteStatus.tagName, "hbox");
-  Assert.equal(siteStatus.firstElementChild.tagName, "label");
+  Assert.equal(siteStatus.tagName, "label");
 
   PermissionTestUtils.remove(URI, devicePermissionId);
   PermissionTestUtils.remove(URI, "speaker");
