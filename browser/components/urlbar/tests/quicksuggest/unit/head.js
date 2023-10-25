@@ -95,6 +95,8 @@ function makeWikipediaResult({
       displayUrl: url.replace(/^https:\/\//, ""),
       isSponsored: false,
       qsSuggestion: keyword,
+      sponsoredAdvertiser: "Wikipedia",
+      sponsoredIabCategory: "5 - Education",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",

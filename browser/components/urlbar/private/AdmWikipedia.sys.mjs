@@ -125,17 +125,26 @@ export class AdmWikipedia extends BaseFeature {
 
   makeResult(queryContext, suggestion, searchString) {
     if (suggestion.source == "rust") {
-      suggestion = {
+      // The Rust backend uses camelCase instead of snake_case, and it excludes
+      // some properties in non-sponsored suggestions that we expect, so convert
+      // the Rust suggestion to a suggestion object we expect here on desktop.
+      let desktopSuggestion = {
         title: suggestion.title,
         url: suggestion.url,
         is_sponsored: suggestion.is_sponsored,
         full_keyword: suggestion.fullKeyword,
-        impression_url: suggestion.impressionUrl,
-        click_url: suggestion.clickUrl,
-        block_id: suggestion.blockId,
-        advertiser: suggestion.advertiser,
-        iab_category: suggestion.iabCategory,
       };
+      if (suggestion.is_sponsored) {
+        desktopSuggestion.impression_url = suggestion.impressionUrl;
+        desktopSuggestion.click_url = suggestion.clickUrl;
+        desktopSuggestion.block_id = suggestion.blockId;
+        desktopSuggestion.advertiser = suggestion.advertiser;
+        desktopSuggestion.iab_category = suggestion.iabCategory;
+      } else {
+        desktopSuggestion.advertiser = "Wikipedia";
+        desktopSuggestion.iab_category = "5 - Education";
+      }
+      suggestion = desktopSuggestion;
     }
 
     // Replace the suggestion's template substrings, but first save the original
