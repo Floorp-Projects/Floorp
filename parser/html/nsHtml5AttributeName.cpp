@@ -38,6 +38,7 @@
 #include "nsHtml5AttributeName.h"
 
 int32_t* nsHtml5AttributeName::ALL_NO_NS = 0;
+nsStaticAtom** nsHtml5AttributeName::SAME_LOCAL_NULL = 0;
 int32_t* nsHtml5AttributeName::XMLNS_NS = 0;
 int32_t* nsHtml5AttributeName::XML_NS = 0;
 int32_t* nsHtml5AttributeName::XLINK_NS = 0;
@@ -88,8 +89,8 @@ nsHtml5AttributeName::nsHtml5AttributeName(int32_t* uri, nsStaticAtom** local,
 }
 
 nsHtml5AttributeName::nsHtml5AttributeName()
-    : uri(nsHtml5AttributeName::ALL_NO_NS),
-      local(nsHtml5AttributeName::SAME_LOCAL(nullptr)),
+    : uri(ALL_NO_NS),
+      local(SAME_LOCAL_NULL),
       prefix(ALL_NO_PREFIX),
       custom(true) {
   MOZ_COUNT_CTOR(nsHtml5AttributeName);
@@ -713,6 +714,10 @@ void nsHtml5AttributeName::initializeStatics() {
   ALL_NO_NS[0] = kNameSpaceID_None;
   ALL_NO_NS[1] = kNameSpaceID_None;
   ALL_NO_NS[2] = kNameSpaceID_None;
+  SAME_LOCAL_NULL = new nsStaticAtom*[3];
+  SAME_LOCAL_NULL[0] = nullptr;
+  SAME_LOCAL_NULL[1] = nullptr;
+  SAME_LOCAL_NULL[2] = nullptr;
   XMLNS_NS = new int32_t[3];
   XMLNS_NS[0] = kNameSpaceID_None;
   XMLNS_NS[1] = kNameSpaceID_XMLNS;
@@ -2354,6 +2359,7 @@ void nsHtml5AttributeName::initializeStatics() {
 
 void nsHtml5AttributeName::releaseStatics() {
   delete[] ALL_NO_NS;
+  delete[] SAME_LOCAL_NULL;
   delete[] XMLNS_NS;
   delete[] XML_NS;
   delete[] XLINK_NS;
