@@ -59,7 +59,7 @@ using mozilla::Variant;
 
 using JS::AutoStableStringChars;
 
-/* ES5 15.12.3 Quote.
+/* https://262.ecma-international.org/14.0/#sec-quotejsonstring
  * Requires that the destination has enough space allocated for src after
  * escaping (that is, `2 + 6 * (srcEnd - srcBegin)` characters).
  */
@@ -293,8 +293,9 @@ class KeyStringifier<HandleId> {
 } /* anonymous namespace */
 
 /*
- * ES5 15.12.3 Str, steps 2-4, extracted to enable preprocessing of property
- * values when stringifying objects in JO.
+ * https://262.ecma-international.org/14.0/#sec-serializejsonproperty, steps
+ * 2-4, extracted to enable preprocessing of property values when stringifying
+ * objects in JO.
  */
 template <typename KeyType>
 static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
@@ -387,11 +388,12 @@ static bool PreprocessValue(JSContext* cx, HandleObject holder, KeyType key,
 }
 
 /*
- * Determines whether a value which has passed by ES5 150.2.3 Str steps 1-4's
- * gauntlet will result in Str returning |undefined|.  This function is used to
- * properly omit properties resulting in such values when stringifying objects,
- * while properly stringifying such properties as null when they're encountered
- * in arrays.
+ * Determines whether a value which has passed by
+ * https://262.ecma-international.org/14.0/#sec-serializejsonproperty steps
+ * 1-4's gauntlet will result in Str returning |undefined|.  This function is
+ * used to properly omit properties resulting in such values when stringifying
+ * objects, while properly stringifying such properties as null when they're
+ * encountered in arrays.
  */
 static inline bool IsFilteredValue(const Value& v) {
   MOZ_ASSERT_IF(v.isMagic(), v.isMagic(JS_ELEMENTS_HOLE));
@@ -433,14 +435,15 @@ class CycleDetector {
 enum class JOType { Record, Object };
 template <JOType type = JOType::Object>
 #endif
-/* ES5 15.12.3 JO. */
+/* https://262.ecma-international.org/14.0/#sec-serializejsonobject */
+// TODO Bug 1860185 rename SerializeJSONObject
 static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   /*
-   * This method implements the JO algorithm in ES5 15.12.3, but:
+   * This method implements the SerializeJSONObject algorithm, but:
    *
    *   * The algorithm is somewhat reformulated to allow the final string to
    *     be streamed into a single buffer, rather than be created and copied
-   *     into place incrementally as the ES5 algorithm specifies it.  This
+   *     into place incrementally as the algorithm specifies it.  This
    *     requires moving portions of the Str call in 8a into this algorithm
    *     (and in JA as well).
    */
@@ -603,14 +606,15 @@ static MOZ_ALWAYS_INLINE bool GetLengthPropertyForArrayLike(JSContext* cx,
   return true;
 }
 
-/* ES5 15.12.3 JA. */
+/* https://262.ecma-international.org/14.0/#sec-serializejsonarray */
+// TODO Bug 1860185 rename SerializeJSONArray
 static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   /*
-   * This method implements the JA algorithm in ES5 15.12.3, but:
+   * This method implements the SerializeJSONArray algorithm, but:
    *
    *   * The algorithm is somewhat reformulated to allow the final string to
    *     be streamed into a single buffer, rather than be created and copied
-   *     into place incrementally as the ES5 algorithm specifies it.  This
+   *     into place incrementally as the algorithm specifies it.  This
    *     requires moving portions of the Str call in 8a into this algorithm
    *     (and in JO as well).
    */
@@ -709,12 +713,14 @@ static bool JA(JSContext* cx, HandleObject obj, StringifyContext* scx) {
   return scx->sb.append(']');
 }
 
+/* https://262.ecma-international.org/14.0/#sec-serializejsonproperty */
+// TODO Bug 1860185 rename SerializeJSONProperty
 static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
-  /* Step 11 must be handled by the caller. */
+  /* Step 12 must be handled by the caller. */
   MOZ_ASSERT(!IsFilteredValue(v));
 
   /*
-   * This method implements the Str algorithm in ES5 15.12.3, but:
+   * This method implements the SerializeJSONProperty algorithm, but:
    *
    *   * We move property retrieval (step 1) into callers to stream the
    *     stringification process and avoid constantly copying strings.
@@ -722,8 +728,8 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
    *     allow both JO and JA to use this method.  While JA could use it
    *     without this move, JO must omit any |undefined|-valued property per
    *     so it can't stream out a value using the Str method exactly as
-   *     defined by ES5.
-   *   * We move step 11 into callers, again to ease streaming.
+   *     defined by the spec.
+   *   * We move step 12 into callers, again to ease streaming.
    */
 
   /* Step 8. */
@@ -755,7 +761,7 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
     return NumberValueToStringBuffer(v, scx->sb);
   }
 
-  /* Step 10 in the BigInt proposal. */
+  /* Step 10. */
   if (v.isBigInt()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_BIGINT_NOT_SERIALIZABLE);
@@ -767,7 +773,7 @@ static bool Str(JSContext* cx, const Value& v, StringifyContext* scx) {
     return false;
   }
 
-  /* Step 10. */
+  /* Step 11. */
   MOZ_ASSERT(v.hasObjectPayload());
   RootedObject obj(cx, &v.getObjectPayload());
 
@@ -889,11 +895,11 @@ class DenseElementsIteratorForJSON {
 
   Value next() {
     // For Arrays, steps 6-8 of
-    // https://262.ecma-international.org/13.0/#sec-serializejsonarray. For
+    // https://262.ecma-international.org/14.0/#sec-serializejsonarray. For
     // non-Arrays, step 6a of
-    // https://262.ecma-international.org/13.0/#sec-serializejsonobject
+    // https://262.ecma-international.org/14.0/#sec-serializejsonobject
     // following the order from
-    // https://262.ecma-international.org/13.0/#sec-ordinaryownpropertykeys
+    // https://262.ecma-international.org/14.0/#sec-ordinaryownpropertykeys
 
     MOZ_ASSERT(!done());
     auto i = element++;
@@ -995,8 +1001,8 @@ class ShapePropertyForwardIterNoGC {
   FakePtr operator->() const { return {get()}; }
 };
 
-// Iterator over EnumerableOwnPropertyNames
-// https://262.ecma-international.org/13.0/#sec-enumerableownpropertynames
+// Iterator over EnumerableOwnProperties
+// https://262.ecma-international.org/14.0/#sec-enumerableownproperties
 // that fails if it encounters any accessor properties, as they are not handled
 // by JSON FastStr, or if it sees too many properties on one object.
 class OwnNonIndexKeysIterForJSON {
@@ -1053,7 +1059,7 @@ class OwnNonIndexKeysIterForJSON {
   }
 };
 
-// Steps from https://262.ecma-international.org/13.0/#sec-serializejsonproperty
+// Steps from https://262.ecma-international.org/14.0/#sec-serializejsonproperty
 static bool EmitSimpleValue(JSContext* cx, StringBuffer& sb, const Value& v) {
   /* Step 8. */
   if (v.isString()) {
@@ -1091,7 +1097,7 @@ static bool EmitSimpleValue(JSContext* cx, StringBuffer& sb, const Value& v) {
   MOZ_CRASH("should have validated printable simple value already");
 }
 
-// https://262.ecma-international.org/13.0/#sec-serializejsonproperty step 8b
+// https://262.ecma-international.org/14.0/#sec-serializejsonproperty step 8b
 // where K is an integer index.
 static bool EmitQuotedIndexColon(StringBuffer& sb, uint32_t index) {
   Int32ToCStringBuf cbuf;
@@ -1115,7 +1121,7 @@ static bool PreprocessFastValue(JSContext* cx, Value* vp, StringifyContext* scx,
   MOZ_ASSERT(!scx->maybeSafely);
 
   // Steps are from
-  // https://262.ecma-international.org/13.0/#sec-serializejsonproperty
+  // https://262.ecma-international.org/14.0/#sec-serializejsonproperty
 
   // Disallow BigInts to avoid caring about BigInt.prototype.toJSON.
   if (vp->isBigInt()) {
@@ -1211,13 +1217,15 @@ struct FastStackEntry {
   }
 };
 
+/* https://262.ecma-international.org/14.0/#sec-serializejsonproperty */
+// TODO Bug 1860185 rename to FastSerializeJSONProperty
 static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
                     BailReason* whySlow) {
   MOZ_ASSERT(*whySlow == BailReason::NO_REASON);
   MOZ_ASSERT(v.isObject());
 
   /*
-   * FastStr is an optimistic fast path for the Str algorithm in ES5 15.12.3
+   * FastStr is an optimistic fast path for the SerializeJSONProperty algorithm
    * that applies in limited situations. It falls back to Str() if:
    *
    *   * Any externally visible code attempts to run: getter, enumerate
@@ -1278,9 +1286,9 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
     return false;
   }
   // Construct an iterator for the object,
-  // https://262.ecma-international.org/13.0/#sec-serializejsonobject step 6:
+  // https://262.ecma-international.org/14.0/#sec-serializejsonobject step 6:
   // EnumerableOwnPropertyNames or
-  // https://262.ecma-international.org/13.0/#sec-serializejsonarray step 7-8.
+  // https://262.ecma-international.org/14.0/#sec-serializejsonarray step 7-8.
   FastStackEntry top(&v.toObject().as<NativeObject>());
   bool wroteMember = false;
 
@@ -1396,7 +1404,7 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
         }
         if (IsFilteredValue(val)) {
           // Undefined check in
-          // https://262.ecma-international.org/13.0/#sec-serializejsonobject
+          // https://262.ecma-international.org/14.0/#sec-serializejsonobject
           // step 8b, covering undefined, symbol
           continue;
         }
@@ -1454,7 +1462,7 @@ static bool FastStr(JSContext* cx, Handle<Value> v, StringifyContext* scx,
   }
 }
 
-/* ES6 24.3.2. */
+/* https://262.ecma-international.org/14.0/#sec-json.stringify */
 bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
                    const Value& space_, StringBuffer& sb,
                    StringifyBehavior stringifyBehavior) {
@@ -1474,7 +1482,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
                  vp.toObject().is<ArrayObject>(),
              "input to JS::ToJSONMaybeSafely must be a plain object or array");
 
-  /* Step 4. */
+  /* Step 5. */
   RootedIdVector propertyList(cx);
   BailReason whySlow = BailReason::NO_REASON;
   if (stringifyBehavior == StringifyBehavior::SlowOnly ||
@@ -1485,13 +1493,13 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     whySlow = BailReason::HAVE_REPLACER;
     bool isArray;
     if (replacer->isCallable()) {
-      /* Step 4a(i): use replacer to transform values.  */
+      /* Step 5a(i): use replacer to transform values.  */
     } else if (!IsArray(cx, replacer, &isArray)) {
       return false;
     } else if (isArray) {
-      /* Step 4b(iii). */
+      /* Step 5b(ii). */
 
-      /* Step 4b(iii)(2-3). */
+      /* Step 5b(ii)(2). */
       uint32_t len;
       if (!GetLengthPropertyForArrayLike(cx, replacer, &len)) {
         return false;
@@ -1505,22 +1513,22 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
       Rooted<GCHashSet<jsid>> idSet(
           cx, GCHashSet<jsid>(cx, std::min(len, MaxInitialSize)));
 
-      /* Step 4b(iii)(4). */
+      /* Step 5b(ii)(3). */
       uint32_t k = 0;
 
-      /* Step 4b(iii)(5). */
+      /* Step 5b(ii)(4). */
       RootedValue item(cx);
       for (; k < len; k++) {
         if (!CheckForInterrupt(cx)) {
           return false;
         }
 
-        /* Step 4b(iii)(5)(a-b). */
+        /* Step 5b(ii)(4)(a-b). */
         if (!GetElement(cx, replacer, k, &item)) {
           return false;
         }
 
-        /* Step 4b(iii)(5)(c-g). */
+        /* Step 5b(ii)(4)(c-g). */
         RootedId id(cx);
         if (item.isNumber() || item.isString()) {
           if (!PrimitiveValueToId<CanGC>(cx, item, &id)) {
@@ -1544,10 +1552,10 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
           id.set(AtomToId(atom));
         }
 
-        /* Step 4b(iii)(5)(g). */
+        /* Step 5b(ii)(4)(g). */
         auto p = idSet.lookupForAdd(id);
         if (!p) {
-          /* Step 4b(iii)(5)(g)(i). */
+          /* Step 5b(ii)(4)(g)(i). */
           if (!idSet.add(p, id) || !propertyList.append(id)) {
             return false;
           }
@@ -1558,7 +1566,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     }
   }
 
-  /* Step 5. */
+  /* Step 6. */
   if (space.isObject()) {
     RootedObject spaceObj(cx, &space.toObject());
 
@@ -1585,7 +1593,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
   StringBuffer gap(cx);
 
   if (space.isNumber()) {
-    /* Step 6. */
+    /* Step 7. */
     double d;
     MOZ_ALWAYS_TRUE(ToInteger(cx, space, &d));
     d = std::min(10.0, d);
@@ -1593,7 +1601,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
       return false;
     }
   } else if (space.isString()) {
-    /* Step 7. */
+    /* Step 8. */
     JSLinearString* str = space.toString()->ensureLinear(cx);
     if (!str) {
       return false;
@@ -1603,7 +1611,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
       return false;
     }
   } else {
-    /* Step 8. */
+    /* Step 9. */
     MOZ_ASSERT(gap.empty());
   }
   if (!gap.empty()) {
@@ -1616,19 +1624,19 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     // We can skip creating the initial wrapper object if no replacer
     // function is present.
 
-    /* Step 9. */
+    /* Step 10. */
     wrapper = NewPlainObject(cx);
     if (!wrapper) {
       return false;
     }
 
-    /* Steps 10-11. */
+    /* Step 11. */
     if (!NativeDefineDataProperty(cx, wrapper, emptyId, vp, JSPROP_ENUMERATE)) {
       return false;
     }
   }
 
-  /* Step 12. */
+  /* Step 13. */
   Rooted<JSAtom*> fastJSON(cx);
   if (whySlow == BailReason::NO_REASON) {
     MOZ_ASSERT(propertyList.empty());
@@ -2059,7 +2067,7 @@ static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
 }
 #endif
 
-/* ES6 24.3.2. */
+/* https://262.ecma-international.org/14.0/#sec-json.stringify */
 bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "JSON", "stringify");
   CallArgs args = CallArgsFromVp(argc, vp);
