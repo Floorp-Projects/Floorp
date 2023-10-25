@@ -1,0 +1,118 @@
+[DEFAULT]
+support-files = [
+  "cbor.js",
+  "u2futil.js",
+  "pkijs/*",
+  "get_assertion_dead_object.html",
+  "empty.html",
+]
+scheme = "https"
+prefs = [
+  "dom.security.featurePolicy.webidl.enabled=true",
+  "security.webauth.webauthn=true",
+  "security.webauth.webauthn_enable_softtoken=true",
+  "security.webauth.webauthn_enable_usbtoken=false",
+  "security.webauthn.ctap2=true",
+]
+
+["test_webauthn_abort_signal.html"]
+fail-if = ["xorigin"]
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "os == 'android'", # Test sets security.webauth.webauthn_enable_usbtoken to true, which isn't applicable to android
+]
+
+["test_webauthn_attestation_conveyance.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_authenticator_selection.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_authenticator_transports.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_crossorigin_featurepolicy.html"]
+fail-if = ["xorigin"] # Cross-origin use of WebAuthn requires a feature policy.
+
+["test_webauthn_get_assertion.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "os == 'android'", # Test sets security.webauth.webauthn_enable_usbtoken to true, which isn't applicable to android
+]
+
+["test_webauthn_get_assertion_dead_object.html"]
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_isexternalctap2securitykeysupported.html"]
+
+["test_webauthn_isplatformauthenticatoravailable.html"]
+
+["test_webauthn_loopback.html"]
+skip-if = [
+  "xorigin", # Hangs, JavaScript error: https://example.org/tests/SimpleTest/SimpleTest.js, line 76: DataCloneError: The object could not be cloned.
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_make_credential.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_no_token.html"]
+skip-if = [
+  "xorigin", # JavaScript error: https://example.org/tests/SimpleTest/SimpleTest.js, line 76: DataCloneError: The object could not be cloned.
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "os == 'android'", # Test disables all tokens, which is an unsupported configuration on android.
+]
+
+["test_webauthn_override_request.html"]
+skip-if = ["os == 'android'"] # Test sets security.webauth.webauthn_enable_usbtoken to true, which isn't applicable to android
+
+["test_webauthn_sameorigin.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_sameoriginwithancestors.html"]
+skip-if = [
+  "xorigin", # this test has its own cross-origin setup
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_serialization.html"]
+fail-if = ["xorigin"]
+
+["test_webauthn_store_credential.html"]
+fail-if = ["xorigin"] # NotAllowedError
+skip-if = [
+  "win10_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+  "win11_2009", # Bug 1718296 (Windows 10 1903+ has its own window and U2F that we cannot control with tests.)
+]
+
+["test_webauthn_webdriver_virtual_authenticator.html"]
+fail-if = ["xorigin"] # Cross-origin use of WebAuthn requires a feature policy.

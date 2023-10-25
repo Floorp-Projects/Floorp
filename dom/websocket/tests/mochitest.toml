@@ -1,0 +1,104 @@
+[DEFAULT]
+skip-if = [
+  "os == 'android'", # bug 982828
+  "http3",
+  "http2",
+]
+support-files = [
+  "!/dom/events/test/event_leak_utils.js",
+  "file_websocket_basic_wsh.py",
+  "file_websocket_hello_wsh.py",
+  "file_websocket_http_resource.txt",
+  "file_websocket_permessage_deflate_wsh.py",
+  "file_websocket_permessage_deflate_disabled_wsh.py",
+  "file_websocket_permessage_deflate_rejected_wsh.py",
+  "file_websocket_permessage_deflate_params_wsh.py",
+  "file_websocket_wsh.py",
+  "websocket_helpers.js",
+  "websocket_tests.js",
+  "websocket_worker_helpers.js",
+]
+
+["test_bug1081686.html"]
+
+["test_bug1384658.html"]
+support-files = [
+  "window_bug1384658.html",
+  "frame_bug1384658.html",
+  "file_bug1384658.html",
+]
+
+["test_event_listener_leaks.html"]
+support-files = ["file_websocket_bigBlob_wsh.py"]
+
+["test_websocket1.html"]
+
+["test_websocket2.html"]
+
+["test_websocket3.html"]
+
+["test_websocket4.html"]
+
+["test_websocket5.html"]
+
+["test_websocket_basic.html"]
+
+["test_websocket_bigBlob.html"]
+support-files = ["file_websocket_bigBlob_wsh.py"]
+
+["test_websocket_hello.html"]
+
+["test_websocket_longString.html"]
+
+["test_websocket_mixed_content.html"]
+scheme = "https"
+support-files = [
+  "iframe_websocket_wss.html",
+  "iframe_webworker_wss.html",
+]
+
+["test_websocket_mixed_content_blob.html"]
+scheme = "https"
+support-files = ["window_websocket_wss.html"]
+
+["test_websocket_mixed_content_opener.html"]
+scheme = "https"
+
+["test_websocket_no_duplicate_packet.html"]
+scheme = "https"
+
+["test_websocket_permessage_deflate.html"]
+
+["test_websocket_sandbox.html"]
+support-files = ["iframe_websocket_sandbox.html"]
+
+["test_websocket_sharedWorker.html"]
+support-files = ["websocket_sharedWorker.js"]
+
+["test_worker_websocket1.html"]
+support-files = ["websocket_worker1.js"]
+
+["test_worker_websocket2.html"]
+support-files = ["websocket_worker2.js"]
+skip-if = ["socketprocess_networking"] # bug 1787044
+
+["test_worker_websocket3.html"]
+support-files = ["websocket_worker3.js"]
+
+["test_worker_websocket4.html"]
+support-files = ["websocket_worker4.js"]
+
+["test_worker_websocket5.html"]
+support-files = ["websocket_worker5.js"]
+
+["test_worker_websocket_basic.html"]
+support-files = ["websocket_basic_worker.js"]
+
+["test_worker_websocket_https.html"]
+support-files = [
+  "websocket_worker_https.html",
+  "websocket_https_worker.js",
+]
+
+["test_worker_websocket_loadgroup.html"]
+support-files = ["websocket_loadgroup_worker.js"]

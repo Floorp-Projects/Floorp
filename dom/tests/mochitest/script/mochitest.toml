@@ -1,0 +1,19 @@
+[DEFAULT]
+support-files = [
+  "file_blocked_script.sjs",
+  "bug1656248_frame.html",
+  "subdir/bug1656248_script.mjs",
+  "subdir/bug1656248_import.mjs",
+  "test_bug1788532_moduleA.mjs",
+  "test_bug1788532_moduleB.mjs",
+  "slow.sjs",
+]
+
+["test_bug1053321.html"]
+
+["test_bug1656248.html"]
+skip-if = ["verify"]
+
+["test_bug1788532.html"]
+
+["test_whitespace.html"]

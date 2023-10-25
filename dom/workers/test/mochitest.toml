@@ -1,0 +1,365 @@
+[DEFAULT]
+support-files = [
+  "WorkerTest_badworker.js",
+  "atob_worker.js",
+  "blank.html",
+  "bug978260_worker.js",
+  "bug1014466_data1.txt",
+  "bug1014466_data2.txt",
+  "bug1014466_worker.js",
+  "bug1020226_worker.js",
+  "bug1020226_frame.html",
+  "bug998474_worker.js",
+  "bug1063538_worker.js",
+  "bug1063538.sjs",
+  "clearTimeouts_worker.js",
+  "clearTimeoutsImplicit_worker.js",
+  "content_worker.js",
+  "console_worker.js",
+  "consoleReplaceable_worker.js",
+  "csp_worker.js",
+  "csp_worker.js^headers^",
+  "dynamicImport_nested.mjs",
+  "dynamicImport_postMessage.mjs",
+  "dynamicImport_worker.js",
+  "404_server.sjs",
+  "errorPropagation_iframe.html",
+  "errorPropagation_worker.js",
+  "errorwarning_worker.js",
+  "eventDispatch_worker.js",
+  "fibonacci_worker.js",
+  "file_bug1010784_worker.js",
+  "foreign.js",
+  "importForeignScripts_worker.js",
+  "importScripts_mixedcontent.html",
+  "importScripts_worker.js",
+  "importScripts_worker_imported1.js",
+  "importScripts_worker_imported2.js",
+  "importScripts_worker_imported3.js",
+  "importScripts_worker_imported4.js",
+  "instanceof_worker.js",
+  "json_worker.js",
+  "loadEncoding_worker.js",
+  "location_worker.js",
+  "longThread_worker.js",
+  "multi_sharedWorker_frame.html",
+  "multi_sharedWorker_sharedWorker.js",
+  "navigator_languages_worker.js",
+  "navigator_worker.js",
+  "newError_worker.js",
+  "notification_worker.js",
+  "notification_worker_child-child.js",
+  "notification_worker_child-parent.js",
+  "notification_permission_worker.js",
+  "onLine_worker.js",
+  "onLine_worker_child.js",
+  "onLine_worker_head.js",
+  "promise_worker.js",
+  "recursion_worker.js",
+  "recursiveOnerror_worker.js",
+  "redirect_to_foreign.sjs",
+  "rvals_worker.js",
+  "sharedWorker_sharedWorker.js",
+  "simpleThread_worker.js",
+  "suspend_window.html",
+  "suspend_worker.js",
+  "terminate_worker.js",
+  "test_csp.html^headers^",
+  "test_csp.js",
+  "referrer_worker.html",
+  "sourcemap_header_iframe.html",
+  "sourcemap_header_worker.js",
+  "sourcemap_header_worker.js^headers^",
+  "threadErrors_worker1.js",
+  "threadErrors_worker2.js",
+  "threadErrors_worker3.js",
+  "threadErrors_worker4.js",
+  "threadTimeouts_worker.js",
+  "throwingOnerror_worker.js",
+  "timeoutTracing_worker.js",
+  "transferable_worker.js",
+  "test_worker_interfaces.js",
+  "worker_driver.js",
+  "worker_wrapper.js",
+  "bug1060621_worker.js",
+  "bug1062920_worker.js",
+  "bug1104064_worker.js",
+  "worker_consoleAndBlobs.js",
+  "bug1132395_sharedWorker.js",
+  "bug1132924_worker.js",
+  "empty.html",
+  "referrer.sjs",
+  "referrer_test_server.sjs",
+  "sharedWorker_ports.js",
+  "sharedWorker_lifetime.js",
+  "worker_referrer.js",
+  "importScripts_3rdParty_worker.js",
+  "invalid.js",
+  "worker_bug1278777.js",
+  "worker_setTimeoutWith0.js",
+  "worker_bug1301094.js",
+  "script_createFile.js",
+  "worker_suspended.js",
+  "window_suspended.html",
+  "suspend_blank.html",
+  "multi_sharedWorker_manager.js",
+  "multi_sharedWorker_frame_nobfcache.html",
+  "multi_sharedWorker_frame_nobfcache.html^headers^",
+  "multi_sharedWorker_frame_bfcache.html",
+  "navigate.html",
+  "!/dom/notification/test/mochitest/MockServices.js",
+  "!/dom/notification/test/mochitest/NotificationTest.js",
+  "!/dom/xhr/tests/relativeLoad_import.js",
+  "!/dom/xhr/tests/relativeLoad_worker.js",
+  "!/dom/xhr/tests/relativeLoad_worker2.js",
+  "!/dom/xhr/tests/subdir/relativeLoad_sub_worker.js",
+  "!/dom/xhr/tests/subdir/relativeLoad_sub_worker2.js",
+  "!/dom/xhr/tests/subdir/relativeLoad_sub_import.js",
+  "!/dom/events/test/event_leak_utils.js",
+]
+
+["test_404.html"]
+
+["test_atob.html"]
+
+["test_blobConstructor.html"]
+
+["test_blobWorkers.html"]
+
+["test_bug949946.html"]
+
+["test_bug978260.html"]
+
+["test_bug998474.html"]
+
+["test_bug1002702.html"]
+
+["test_bug1010784.html"]
+
+["test_bug1014466.html"]
+
+["test_bug1020226.html"]
+
+["test_bug1036484.html"]
+
+["test_bug1060621.html"]
+
+["test_bug1062920.html"]
+
+["test_bug1063538.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_bug1104064.html"]
+
+["test_bug1132395.html"]
+skip-if = ["true"] # bug 1176225
+
+["test_bug1132924.html"]
+
+["test_bug1278777.html"]
+
+["test_bug1301094.html"]
+
+["test_bug1317725.html"]
+support-files = ["test_bug1317725.js"]
+
+["test_bug1824498.html"]
+support-files = ["worker_bug1824498.mjs"]
+
+["test_chromeWorker.html"]
+
+["test_clearTimeouts.html"]
+
+["test_clearTimeoutsImplicit.html"]
+
+["test_console.html"]
+
+["test_consoleAndBlobs.html"]
+
+["test_consoleReplaceable.html"]
+
+["test_contentWorker.html"]
+
+["test_csp.html"]
+
+["test_dataURLWorker.html"]
+
+["test_dynamicImport.html"]
+
+["test_dynamicImport_and_terminate.html"]
+support-files = ["worker_dynamicImport.mjs"]
+
+["test_dynamicImport_early_termination.html"]
+
+["test_errorPropagation.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_errorwarning.html"]
+
+["test_eventDispatch.html"]
+
+["test_fibonacci.html"]
+
+["test_fileReaderSync_when_closing.html"]
+
+["test_importScripts.html"]
+
+["test_importScripts_1.html"]
+
+["test_importScripts_2.html"]
+
+["test_importScripts_3rdparty.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_importScripts_mixedcontent.html"]
+tags = "mcb"
+
+["test_instanceof.html"]
+
+["test_json.html"]
+
+["test_loadEncoding.html"]
+
+["test_loadError.html"]
+
+["test_location.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_longThread.html"]
+
+["test_multi_sharedWorker.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_multi_sharedWorker_lifetimes_bfcache.html"]
+
+["test_multi_sharedWorker_lifetimes_nobfcache.html"]
+
+["test_navigator.html"]
+support-files = [
+  "test_navigator.js",
+  "test_navigator_iframe.html",
+  "test_navigator_iframe.js",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_navigator_languages.html"]
+
+["test_navigator_secureContext.html"]
+scheme = "https"
+support-files = [
+  "test_navigator.js",
+  "test_navigator_iframe.html",
+  "test_navigator_iframe.js",
+]
+
+["test_navigator_workers_hardwareConcurrency.html"]
+
+["test_newError.html"]
+
+["test_notification.html"]
+
+["test_notification_child.html"]
+
+["test_notification_permission.html"]
+
+["test_onLine.html"]
+
+["test_promise.html"]
+
+["test_promise_resolved_with_string.html"]
+
+["test_recursion.html"]
+
+["test_recursiveOnerror.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_referrer.html"]
+
+["test_referrer_header_worker.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_resolveWorker-assignment.html"]
+
+["test_resolveWorker.html"]
+
+["test_rvals.html"]
+
+["test_setTimeoutWith0.html"]
+
+["test_sharedWorker.html"]
+
+["test_sharedWorker_lifetime.html"]
+
+["test_sharedWorker_ports.html"]
+
+["test_sharedWorker_thirdparty.html"]
+support-files = [
+  "sharedWorker_thirdparty_frame.html",
+  "sharedWorker_thirdparty_window.html",
+]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_sharedworker_event_listener_leaks.html"]
+skip-if = [
+  "bits == 64 && os == 'linux' && asan", # Disabled on Linux64 opt asan, bug 1493563
+  "os == 'win' && debug && xorigin", # high frequency intermittent
+]
+
+["test_simpleThread.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_subworkers_suspended.html"]
+scheme = "https"
+
+["test_suspend.html"]
+
+["test_terminate.html"]
+
+["test_threadErrors.html"]
+
+["test_threadTimeouts.html"]
+
+["test_throwingOnerror.html"]
+
+["test_timeoutTracing.html"]
+
+["test_transferable.html"]
+
+["test_worker_interfaces.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_worker_interfaces_secureContext.html"]
+scheme = "https"

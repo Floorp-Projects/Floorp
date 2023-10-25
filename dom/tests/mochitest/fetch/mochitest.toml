@@ -1,0 +1,165 @@
+[DEFAULT]
+tags = "condprof"
+support-files = [
+  "fetch_test_framework.js",
+  "file_fetch_cached_redirect.html",
+  "file_fetch_cached_redirect.html^headers^",
+  "file_fetch_csp_block_frame.html",
+  "file_fetch_csp_block_frame.html^headers^",
+  "test_fetch_basic.js",
+  "test_fetch_basic_http.js",
+  "test_fetch_cached_redirect.js",
+  "test_fetch_cors.js",
+  "file_fetch_observer.html",
+  "test_formdataparsing.js",
+  "test_headers_common.js",
+  "test_request.js",
+  "test_response.js",
+  "utils.js",
+  "nested_worker_wrapper.js",
+  "worker_wrapper.js",
+  "message_receiver.html",
+  "reroute.html",
+  "reroute.js",
+  "reroute.js^headers^",
+  "slow.sjs",
+  "sw_reroute.js",
+  "empty.js",
+  "empty.js^headers^",
+  "worker_temporaryFileBlob.js",
+  "common_temporaryFileBlob.js",
+  "common_readableStreams.js",
+  "worker_readableStreams.js",
+  "iframe_readableStreams.html",
+  "!/dom/xhr/tests/file_XHR_binary1.bin",
+  "!/dom/xhr/tests/file_XHR_binary1.bin^headers^",
+  "!/dom/xhr/tests/file_XHR_binary2.bin",
+  "!/dom/xhr/tests/file_XHR_pass1.xml",
+  "!/dom/xhr/tests/file_XHR_pass2.txt",
+  "!/dom/xhr/tests/file_XHR_pass3.txt",
+  "!/dom/xhr/tests/file_XHR_pass3.txt^headers^",
+  "!/dom/xhr/tests/responseIdentical.sjs",
+  "!/dom/xhr/tests/temporaryFileBlob.sjs",
+  "!/dom/html/test/form_submit_server.sjs",
+  "!/dom/security/test/cors/file_CrossSiteXHR_server.sjs",
+  "!/dom/security/test/csp/file_redirects_resource.sjs",
+  "!/dom/base/test/referrer_helper.js",
+  "!/dom/base/test/referrer_testserver.sjs",
+]
+
+["test_fetch_basic.html"]
+
+["test_fetch_basic_http.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_http2.html"]
+run-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_http2_sw_empty_reroute.html"]
+run-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_http2_sw_reroute.html"]
+run-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_http_sw_empty_reroute.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_http_sw_reroute.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_fetch_basic_sw_empty_reroute.html"]
+
+["test_fetch_basic_sw_reroute.html"]
+
+["test_fetch_cached_redirect.html"]
+
+["test_fetch_cors.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_fetch_cors_sw_empty_reroute.html"]
+skip-if = [
+  "os == 'android'", # Bug 1623134
+  "http3",
+  "http2",
+]
+
+["test_fetch_cors_sw_reroute.html"]
+skip-if = [
+  "os == 'android'", # Bug 1623134
+  "http3",
+  "http2",
+]
+
+["test_fetch_csp_block.html"]
+
+["test_fetch_observer.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_fetch_user_control_rp.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_formdataparsing.html"]
+
+["test_formdataparsing_sw_reroute.html"]
+
+["test_headers.html"]
+
+["test_headers_mainthread.html"]
+
+["test_headers_sw_reroute.html"]
+
+["test_readableStreams.html"]
+scheme = "https"
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_request.html"]
+
+["test_request_context.html"]
+
+["test_request_sw_reroute.html"]
+
+["test_response.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_responseReadyForWasm.html"]
+
+["test_response_sw_reroute.html"]
+skip-if = [
+  "http3",
+  "http2",
+]
+
+["test_temporaryFileBlob.html"]

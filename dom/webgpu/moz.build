@@ -9,7 +9,7 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += [
     "mochitest/mochitest-no-pref.ini",
-    "mochitest/mochitest.ini",
+    "mochitest/mochitest.toml",
 ]
 
 DIRS += []

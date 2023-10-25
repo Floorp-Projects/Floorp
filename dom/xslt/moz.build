@@ -19,5 +19,5 @@ DIRS += [
 ]
 
 if CONFIG["ENABLE_TESTS"]:
-    MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.ini"]
+    MOCHITEST_MANIFESTS += ["tests/mochitest/mochitest.toml"]
     BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]

@@ -1,0 +1,48 @@
+[DEFAULT]
+support-files = [
+  "pointerlock_utils.js",
+  "iframe_differentDOM.html",
+  "!/gfx/layers/apz/test/mochitest/apz_test_utils.js",
+]
+
+["test_closewindow-with-pointerlock.html"]
+
+["test_pointerlock-api.html"]
+tags = "fullscreen"
+skip-if = [
+  "os == 'android'", # Bug 1612553
+  "display == 'wayland' && os_version == '22.04'", # Bug 1857057
+]
+support-files = [
+  "file_pointerlock-api.html",
+  "file_pointerlock-api-with-shadow.html",
+  "file_pointerlockerror.html",
+  "file_escapeKey.html",
+  "file_withoutDOM.html",
+  "file_removedFromDOM.html",
+  "file_pointerLockPref.html",
+  "file_nestedFullScreen.html",
+  "file_doubleLock.html",
+  "file_childIframe.html",
+  "file_movementXY.html",
+  "file_infiniteMovement.html",
+  "file_retargetMouseEvents.html",
+  "file_targetOutOfFocus.html",
+  "file_screenClientXYConst.html",
+  "file_suppressSomeMouseEvents.html",
+  "file_locksvgelement.html",
+  "file_allowPointerLockSandboxFlag.html",
+  "file_changeLockElement.html",
+]
+
+["test_pointerlock_focus.html"]
+
+["test_pointerlock_target_not_in_active_document.html"]
+
+["test_pointerlock_xorigin_iframe.html"]
+support-files = [
+  "file_pointerlock_xorigin_iframe.html",
+  "file_pointerlock_xorigin_iframe_no_user_gesture.html",
+  "file_pointerlock_xorigin_iframe_not_focused.html",
+]
+skip-if = ["display == 'wayland' && os_version == '22.04'"] # Bug 1857057

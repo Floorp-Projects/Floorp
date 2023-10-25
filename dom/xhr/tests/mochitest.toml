@@ -1,0 +1,242 @@
+[DEFAULT]
+support-files = [
+  "echo.sjs",
+  "temporaryFileBlob.sjs",
+  "file_html_in_xhr.html",
+  "file_html_in_xhr.sjs",
+  "file_html_in_xhr2.html",
+  "file_html_in_xhr3.html",
+  "file_XHRDocURI.text",
+  "file_XHRDocURI.text^headers^",
+  "file_XHRDocURI.xml",
+  "file_XHRDocURI.xml^headers^",
+  "file_XHRDocURI.html",
+  "file_XHRDocURI.html^headers^",
+  "file_XHRDocURI.sjs",
+  "file_XHRResponseURL.js",
+  "file_XHRResponseURL.sjs",
+  "file_XHRResponseURL.text",
+  "file_XHRResponseURL.text^headers^",
+  "file_XHRResponseURL_nocors.text",
+  "file_XHRSendData.sjs",
+  "file_XHRSendData_doc.xml",
+  "file_XHRSendData_doc.xml^headers^",
+  "file_XHR_anon.sjs",
+  "file_XHR_binary1.bin",
+  "file_XHR_binary1.bin^headers^",
+  "file_XHR_binary2.bin",
+  "file_XHR_fail1.txt",
+  "file_XHR_fail1.txt^headers^",
+  "file_XHR_header.sjs",
+  "file_XHR_pass1.xml",
+  "file_XHR_pass2.txt",
+  "file_XHR_pass3.txt",
+  "file_XHR_pass3.txt^headers^",
+  "file_XHR_system_redirect.html",
+  "file_XHR_system_redirect.html^headers^",
+  "file_XHR_timeout.sjs",
+  "progressserver.sjs",
+  "worker_terminateSyncXHR_frame.html",
+  "terminateSyncXHR_worker.js",
+  "worker_testXHR.txt",
+  "xhr_worker.js",
+  "xhr2_worker.js",
+  "xhrAbort_worker.js",
+  "test_XHR.js",
+  "test_worker_xhr_parameters.js",
+  "test_worker_xhr_system.js",
+  "worker_xhr_cors_redirect.js",
+  "worker_xhr_cors_redirect.sjs",
+  "worker_xhr_headers_server.sjs",
+  "worker_xhr_headers_worker.js",
+  "worker_file_getcookie.sjs",
+  "xhr_implicit_cancel_worker.js",
+  "relativeLoad_import.js",
+  "relativeLoad_worker.js",
+  "relativeLoad_worker2.js",
+  "responseIdentical.sjs",
+  "subdir/relativeLoad_sub_worker.js",
+  "subdir/relativeLoad_sub_worker2.js",
+  "subdir/relativeLoad_sub_import.js",
+  "common_temporaryFileBlob.js",
+  "worker_temporaryFileBlob.js",
+  "worker_bug1300552.js",
+  "sync_xhr_unload.sjs",
+  "iframe_sync_xhr_unload.html",
+  "empty.html",
+  "file_sync_xhr_document_write_with_iframe.html",
+  "slow.sjs",
+  "!/dom/events/test/event_leak_utils.js",
+  "worker_bug1697539.js",
+]
+
+["test_XHR.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHRDocURI.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHRResponseURL.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHRSendData.html"]
+
+["test_XHR_anon.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHR_header.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHR_http2.html"]
+run-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHR_onuploadprogress.html"]
+
+["test_XHR_parameters.html"]
+
+["test_XHR_system.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_XHR_timeout.html"]
+support-files = ["test_XHR_timeout.js"]
+
+["test_bug1070763.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_bug1300552.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_bug1697539.html"]
+support-files = ["worker_bug1697539.js"]
+
+["test_bug1752863.html"]
+support-files = ["test_bug1752863_worker.js"]
+skip-if = ["os == 'linux' && bits == 64 && !debug"] #  Bug 1755010
+
+["test_bug1788125.html"]
+
+["test_event_listener_leaks.html"]
+
+["test_html_in_xhr.html"]
+
+["test_nestedSyncXHR.html"]
+
+["test_relativeLoad.html"]
+
+["test_sharedworker_xhr.html"]
+support-files = ["xhr_sharedworker.js"]
+
+["test_sync_xhr_document_write_with_iframe.html"]
+skip-if = ["os == 'android' && debug"]
+
+["test_sync_xhr_event_handling.html"]
+support-files = ["file_sync_xhr_event_handling_helper.html"]
+
+["test_sync_xhr_nested.html"]
+support-files = ["file_sync_xhr_nested_helper.html"]
+skip-if = ["release_or_beta"] # Input event will be discarded during sync XHR, thus timeout
+
+["test_sync_xhr_timer.xhtml"]
+
+["test_sync_xhr_unload.html"]
+
+["test_temporaryFileBlob.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_worker_terminateSyncXHR.html"]
+
+["test_worker_xhr.html"]
+
+["test_worker_xhr2.html"]
+
+["test_worker_xhrAbort.html"]
+skip-if = [
+  "os == 'win'",
+  "os == 'mac'",
+]
+
+["test_worker_xhr_3rdparty.html"]
+support-files = ["window_worker_xhr_3rdparty.html"]
+# Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+skip-if = ["xorigin"]
+
+["test_worker_xhr_cors_redirect.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_worker_xhr_doubleSend.html"]
+support-files = ["xhr_worker_doubleSend.js"]
+
+["test_worker_xhr_headers.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_worker_xhr_implicit_cancel.html"]
+
+["test_worker_xhr_parameters.html"]
+
+["test_worker_xhr_responseURL.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_worker_xhr_system.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_worker_xhr_timeout.html"]
+
+["test_xhr_abort_after_load.html"]
+
+["test_xhr_forbidden_headers.html"]
+
+["test_xhr_overridemimetype_throws_on_invalid_state.html"]
+
+["test_xhr_progressevents.html"]
+skip-if = [
+  "http2",
+  "http3",
+]
+
+["test_xhr_send.html"]
+
+["test_xhr_send_readystate.html"]
+
+["test_xhr_withCredentials.html"]
