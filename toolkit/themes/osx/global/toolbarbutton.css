@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+toolbarbutton {
+  margin: 0 2px;
+  padding: 3px 2px;
+  background-color: transparent;
+}
+
+.toolbarbutton-text {
+  margin: 0;
+  padding: 0;
+  vertical-align: middle;
+}
+
+toolbarbutton:where([disabled="true"]) {
+  color: -moz-mac-disabledtoolbartext;
+}
+
+/* ::::: toolbarbutton menu ::::: */
+
+.toolbarbutton-menu-dropmarker,
+.toolbarbutton-combined-buttons-dropmarker {
+  appearance: none;
+  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: auto;
+}
+
+/* ::::: toolbarbutton badged ::::: */
+
+.toolbarbutton-badge {
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: #d90000;
+  font-size: 9px;
+  padding: 1px 2px;
+  color: #fff;
+  text-shadow: none;
+  border-radius: 2px;
+  box-shadow: 0 1px 0 hsla(0, 100%, 100%, .2) inset,
+              0 -1px 0 hsla(0, 0%, 0%, .1) inset,
+              0 1px 0 hsla(206, 50%, 10%, .2);
+  margin: -5px 0 0 !important;
+  margin-inline-end: -4px !important;
+  min-width: 14px;
+  max-width: 20px;
+  line-height: 10px;
+  text-align: center;
+  align-self: start;
+  justify-self: end;
+}
+
+toolbar[mode="icons"] > *|* > .toolbarbutton-badge {
+  margin-inline-end: -10px !important;
+}

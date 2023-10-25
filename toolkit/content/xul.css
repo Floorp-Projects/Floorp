@@ -260,11 +260,6 @@ button {
   appearance: auto;
 }
 
-dropmarker {
-  -moz-default-appearance: -moz-menulist-arrow-button;
-  appearance: auto;
-}
-
 /******** browser, editor, iframe ********/
 
 browser,

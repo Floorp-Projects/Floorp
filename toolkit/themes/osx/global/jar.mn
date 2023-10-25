@@ -15,6 +15,7 @@ toolkit.jar:
   skin/classic/global/tabprompts.css
   skin/classic/global/tabbox.css
   skin/classic/global/toolbar.css
+  skin/classic/global/toolbarbutton.css
   skin/classic/global/wizard.css
   skin/classic/global/arrow/panelarrow-vertical.svg                  (arrow/panelarrow-vertical.svg)
   skin/classic/global/icons/search-textbox.svg                       (icons/search-textbox.svg)

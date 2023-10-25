@@ -718,7 +718,10 @@ menupopup::part(drop-indicator) {
   justify-self: end;
   margin-inline-end: 8px;
   align-self: center;
-  content: url(chrome://global/skin/icons/arrow-down-12.svg);
+}
+
+.ac-dropmarker::part(icon) {
+  list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
   -moz-context-properties: fill;
   fill: var(--input-color, -moz-DialogText);
 }

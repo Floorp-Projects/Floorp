@@ -34,6 +34,7 @@
   skin/classic/global/design-system/tokens-brand.css       (../../shared/design-system/tokens-brand.css)
   skin/classic/global/design-system/tokens-shared.css      (../../shared/design-system/tokens-shared.css)
   skin/classic/global/design-system/tokens-platform.css    (../../shared/design-system/tokens-platform.css)
+  skin/classic/global/dropmarker.css                       (../../shared/dropmarker.css)
   skin/classic/global/error-pages.css                      (../../shared/error-pages.css)
   skin/classic/global/findbar.css                          (../../shared/findbar.css)
   skin/classic/global/global-shared.css                    (../../shared/global-shared.css)
@@ -45,7 +46,6 @@
   skin/classic/global/popup.css                            (../../shared/popup.css)
   skin/classic/global/popupnotification.css                (../../shared/popupnotification.css)
   skin/classic/global/splitter.css                         (../../shared/splitter.css)
-  skin/classic/global/toolbarbutton.css                    (../../shared/toolbarbutton.css)
   skin/classic/global/tree.css                             (../../shared/tree.css)
   skin/classic/global/dirListing/dirListing.css            (../../shared/dirListing/dirListing.css)
 #ifdef XP_MACOSX
