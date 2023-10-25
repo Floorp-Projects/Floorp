@@ -516,15 +516,21 @@ Assert.prototype.rejects = function (promise, expected, message) {
   return new Promise((resolve, reject) => {
     return promise
       .then(
-        () =>
+        () => {
           this.report(
             true,
             null,
             expected,
             "Missing expected exception " + message
-          ),
+          );
+          // this.report() above should raise an AssertionError. If _reporter
+          // has been overridden and doesn't throw an error, just resolve.
+          // Otherwise we'll have a never-resolving promise that got stuck.
+          resolve();
+        },
         err => {
           if (!expectedException(err, expected)) {
+            // TODO bug 1480075: Should report error instead of rejecting.
             reject(err);
             return;
           }
