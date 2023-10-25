@@ -187,6 +187,7 @@ sm-pbl-linux64/opt:
     treeherder:
         symbol: SM(pbl)
         platform: linux64/opt
+        tier: 2
     run:
         spidermonkey-variant: pbl
     fetches:
