@@ -1,0 +1,19 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "head.js",
+  "!/devtools/client/shared/test/shared-head.js",
+  "!/devtools/client/shared/test/telemetry-test-helpers.js",
+]
+
+# Tests counting the numbers of loaded modules have distinct manifest file to execute the test
+# individually, without any other test being executed before or after, as it could impact
+# the number of loaded modules.
+# This manifest file is for all the _other_ tests, where such setup isn't relevant.
+
+["browser_metrics_pool.js"]
+skip-if = [
+  "debug",
+  "asan",
+]

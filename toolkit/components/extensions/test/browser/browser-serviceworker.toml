@@ -1,0 +1,9 @@
+[DEFAULT]
+support-files = [
+  "head_serviceworker.js",
+  "data/**",
+]
+
+prefs = ["extensions.backgroundServiceWorker.enabled=true"]
+
+["browser_ext_background_serviceworker.js"]

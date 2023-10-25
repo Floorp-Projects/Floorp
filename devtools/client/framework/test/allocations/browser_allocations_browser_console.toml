@@ -1,0 +1,17 @@
+[DEFAULT]
+tags = "devtools"
+subsuite = "devtools"
+support-files = [
+  "!/devtools/shared/test-helpers/allocation-tracker.js",
+  "head.js",
+]
+
+# Each metrics tests is loaded in a separate .ini file. This way the test is executed
+# individually, without any other test being executed before or after.
+
+["browser_allocations_browser_console.js"]
+run-if = ["os == 'linux'"] # Results should be platform agnostic - only run on linux64-opt
+skip-if = [
+  "debug",
+  "asan",
+]

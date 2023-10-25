@@ -1,0 +1,6 @@
+[DEFAULT]
+support-files = ["head.js"]
+prefs = ["security.sandbox.content.headless=true"]
+run-if = ["os == 'linux'"] # the pref is only used on linux
+
+["browser_mozicon_file_sandbox_headless.js"]
