@@ -86,7 +86,7 @@ LazyLogModule gReceiverLog("RTCRtpReceiver");
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(RTCRtpReceiver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpReceiver)
-  // We do not do anything here, we wait for BreakCycles to be called
+  tmp->Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpReceiver)
@@ -666,6 +666,12 @@ void RTCRtpReceiver::BreakCycles() {
   mPc = nullptr;
   mTrack = nullptr;
   mTrackSource = nullptr;
+}
+
+void RTCRtpReceiver::Unlink() {
+  if (mTransceiver) {
+    mTransceiver->Unlink();
+  }
 }
 
 void RTCRtpReceiver::UpdateTransport() {

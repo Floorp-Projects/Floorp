@@ -95,6 +95,7 @@ class RTCRtpSender : public nsISupports,
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();
   void BreakCycles();
+  void Unlink();
   // Terminal state, reached through stopping RTCRtpTransceiver.
   void Stop();
   bool HasTrack(const dom::MediaStreamTrack* aTrack) const;

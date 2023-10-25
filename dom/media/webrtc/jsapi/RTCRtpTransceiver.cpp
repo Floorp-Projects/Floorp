@@ -182,10 +182,7 @@ MOZ_MTLOG_MODULE("RTCRtpTransceiver")
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(RTCRtpTransceiver)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCRtpTransceiver)
-  if (tmp->mHandlingUnlink) {
-    tmp->BreakCycles();
-    tmp->mHandlingUnlink = false;
-  }
+  tmp->Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCRtpTransceiver)
@@ -389,6 +386,16 @@ void RTCRtpTransceiver::BreakCycles() {
   mDtlsTransport = nullptr;
   mLastStableDtlsTransport = nullptr;
   mPc = nullptr;
+}
+
+void RTCRtpTransceiver::Unlink() {
+  if (mHandlingUnlink) {
+    BreakCycles();
+    mHandlingUnlink = false;
+  } else if (mPc) {
+    mPc->Close();
+    mPc->BreakCycles();
+  }
 }
 
 // TODO: Only called from one place in PeerConnectionImpl, synchronously, when
