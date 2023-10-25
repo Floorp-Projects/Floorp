@@ -36,6 +36,11 @@ const CONSOLE_ARGS_STYLES = [
   "color: var(--theme-highlight-blue); margin-inline: 2px;",
 ];
 
+const DOM_EVENT_CONSOLE_ARGS_STYLES = [
+  "color: var(--theme-toolbarbutton-checked-hover-background)",
+  "padding-inline: 4px; margin-inline: 2px; background-color: var(--toolbarbutton-checked-background); color: var(--toolbarbutton-checked-color);",
+];
+
 const CONSOLE_THROTTLING_DELAY = 250;
 
 class TracerActor extends Actor {
@@ -73,6 +78,8 @@ class TracerActor extends Actor {
     addTracingListener(this.tracingListener);
     startTracing({
       global: this.targetActor.window || this.targetActor.workerGlobal,
+      // Enable receiving the `currentDOMEvent` being passed to `onTracingFrame`
+      traceDOMEvents: true,
     });
   }
 
@@ -124,10 +131,20 @@ class TracerActor extends Actor {
    *        A human readable name for the current frame.
    * @param {String} prefix
    *        A string to be displayed as a prefix of any logged frame.
+   * @param {String} currentDOMEvent
+   *        If this is a top level frame (depth==0), and we are currently processing
+   *        a DOM Event, this will refer to the name of that DOM Event.
+   *        Note that it may also refer to setTimeout and setTimeout callback calls.
    * @return {Boolean}
    *         Return true, if the JavaScriptTracer should log the frame to stdout.
    */
-  onTracingFrame({ frame, depth, formatedDisplayName, prefix }) {
+  onTracingFrame({
+    frame,
+    depth,
+    formatedDisplayName,
+    prefix,
+    currentDOMEvent,
+  }) {
     const { script } = frame;
     const { lineNumber, columnNumber } = script.getOffsetMetadata(frame.offset);
     const url = script.source.url;
@@ -140,6 +157,21 @@ class TracerActor extends Actor {
     if (this.logMethod == LOG_METHODS.STDOUT) {
       // By returning true, we let JavaScriptTracer class log the message to stdout.
       return true;
+    }
+
+    // We may receive the currently processed DOM event (if this relates to one).
+    // In this case, log a preliminary message, which looks different to highlight it.
+    if (currentDOMEvent && depth == 0) {
+      const DOMEventArgs = [prefix + "—", currentDOMEvent];
+
+      // Create a message object that fits Console Message Watcher expectations
+      this.throttledConsoleMessages.push({
+        arguments: DOMEventArgs,
+        styles: DOM_EVENT_CONSOLE_ARGS_STYLES,
+        level: "logTrace",
+        chromeContext: this.isChromeContext,
+        timeStamp: ChromeUtils.dateNow(),
+      });
     }
 
     const args = [

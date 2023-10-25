@@ -43,6 +43,16 @@ add_task(async function () {
   await waitForSelectedSource(dbg, "simple1.js");
   await waitForSelectedLocation(dbg, 1, 16);
 
+  // Trigger a click to verify we do trace DOM events
+  BrowserTestUtils.synthesizeMouseAtCenter(
+    "button",
+    {},
+    gBrowser.selectedBrowser
+  );
+
+  await hasConsoleMessage(dbg, "DOM(click)");
+  await hasConsoleMessage(dbg, "λ simple");
+
   // Test Blackboxing
   info("Clear the console from previous traces");
   const { hud } = await dbg.toolbox.getPanel("webconsole");
@@ -111,6 +121,7 @@ add_task(async function () {
 
   await hasConsoleMessage(dbg, "λ logMessage");
 
+  // Test clicking on the function to open the precise related location
   const traceMessages2 = await findConsoleMessages(dbg.toolbox, "λ logMessage");
   is(
     traceMessages2.length,
