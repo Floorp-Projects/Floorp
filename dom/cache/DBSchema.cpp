@@ -25,6 +25,7 @@
 #include "mozilla/dom/cache/TypeUtils.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
+#include "mozilla/net/MozURL.h"
 #include "mozilla/psm/TransportSecurityInfo.h"
 #include "nsCOMPtr.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -32,7 +33,6 @@
 #include "nsHttp.h"
 #include "nsIContentPolicy.h"
 #include "nsICryptoHash.h"
-#include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
@@ -1972,12 +1972,11 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
       return Err(NS_ERROR_FAILURE);
     }
 
-    nsCOMPtr<nsIURI> url;
-    QM_TRY(MOZ_TO_RESULT(NS_NewURI(getter_AddRefs(url), specNoSuffix)));
+    RefPtr<net::MozURL> url;
+    QM_TRY(MOZ_TO_RESULT(net::MozURL::Init(getter_AddRefs(url), specNoSuffix)));
 
 #ifdef DEBUG
-    nsAutoCString scheme;
-    QM_TRY(MOZ_TO_RESULT(url->GetScheme(scheme)));
+    nsDependentCSubstring scheme = url->Scheme();
 
     MOZ_ASSERT(
         scheme == "http" || scheme == "https" || scheme == "file" ||
@@ -1999,17 +1998,11 @@ Result<SavedResponse, nsresult> ReadResponse(mozIStorageConnection& aConn,
         scheme == "moz-extension");
 #endif
 
-    nsCOMPtr<nsIPrincipal> principal =
-        BasePrincipal::CreateContentPrincipal(url, attrs);
-    if (!principal) {
-      return Err(NS_ERROR_NULL_POINTER);
-    }
-
     nsCString origin;
-    QM_TRY(MOZ_TO_RESULT(principal->GetOriginNoSuffix(origin)));
+    url->Origin(origin);
 
     nsCString baseDomain;
-    QM_TRY(MOZ_TO_RESULT(principal->GetBaseDomain(baseDomain)));
+    QM_TRY(MOZ_TO_RESULT(url->BaseDomain(baseDomain)));
 
     savedResponse.mValue.principalInfo() =
         Some(mozilla::ipc::ContentPrincipalInfo(attrs, origin, specNoSuffix,
