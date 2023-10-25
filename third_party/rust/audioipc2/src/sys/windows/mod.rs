@@ -14,7 +14,7 @@ use std::io::Result;
 
 use bytes::{Buf, BufMut};
 use mio::windows::NamedPipe;
-use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
+use windows_sys::Win32::Storage::FileSystem::FILE_FLAG_OVERLAPPED;
 
 use crate::PlatformHandle;
 

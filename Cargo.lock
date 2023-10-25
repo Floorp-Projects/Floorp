@@ -250,7 +250,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=0b51291d2483a17dce3e300c7784b369e02bee73#0b51291d2483a17dce3e300c7784b369e02bee73"
+source = "git+https://github.com/mozilla/audioipc?rev=ec6af6ecf8ba50b51f13d18f417de8cfb8460543#ec6af6ecf8ba50b51f13d18f417de8cfb8460543"
 dependencies = [
  "arrayvec",
  "ashmem",
@@ -272,13 +272,13 @@ dependencies = [
  "serde_bytes",
  "serde_derive",
  "slab",
- "winapi",
+ "windows-sys",
 ]
 
 [[package]]
 name = "audioipc2-client"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=0b51291d2483a17dce3e300c7784b369e02bee73#0b51291d2483a17dce3e300c7784b369e02bee73"
+source = "git+https://github.com/mozilla/audioipc?rev=ec6af6ecf8ba50b51f13d18f417de8cfb8460543#ec6af6ecf8ba50b51f13d18f417de8cfb8460543"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -289,7 +289,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/audioipc?rev=0b51291d2483a17dce3e300c7784b369e02bee73#0b51291d2483a17dce3e300c7784b369e02bee73"
+source = "git+https://github.com/mozilla/audioipc?rev=ec6af6ecf8ba50b51f13d18f417de8cfb8460543#ec6af6ecf8ba50b51f13d18f417de8cfb8460543"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",

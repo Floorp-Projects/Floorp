@@ -244,22 +244,22 @@ mod unix {
 
 #[cfg(windows)]
 mod windows {
-    use super::*;
     use std::ptr;
-    use winapi::{
-        shared::{minwindef::DWORD, ntdef::HANDLE},
-        um::{
-            handleapi::CloseHandle,
-            memoryapi::{MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS},
-            winbase::CreateFileMappingA,
-            winnt::PAGE_READWRITE,
+
+    use windows_sys::Win32::{
+        Foundation::{CloseHandle, FALSE, INVALID_HANDLE_VALUE},
+        System::Memory::{
+            CreateFileMappingA, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS,
+            MEMORYMAPPEDVIEW_HANDLE, PAGE_READWRITE,
         },
     };
 
-    use crate::INVALID_HANDLE_VALUE;
+    use crate::valid_handle;
+
+    use super::*;
 
     pub struct SharedMem {
-        handle: HANDLE,
+        handle: MEMORYMAPPEDVIEW_HANDLE,
         view: SharedMemView,
     }
 
@@ -268,10 +268,10 @@ mod windows {
     impl Drop for SharedMem {
         fn drop(&mut self) {
             unsafe {
-                let ok = UnmapViewOfFile(self.view.ptr);
-                assert_ne!(ok, 0);
+                let ok = UnmapViewOfFile(self.view.ptr as _);
+                assert_ne!(ok, FALSE);
                 let ok = CloseHandle(self.handle);
-                assert_ne!(ok, 0);
+                assert_ne!(ok, FALSE);
             }
         }
     }
@@ -284,38 +284,44 @@ mod windows {
                     ptr::null_mut(),
                     PAGE_READWRITE,
                     (size as u64 >> 32).try_into().unwrap(),
-                    (size as u64 & (DWORD::MAX as u64)).try_into().unwrap(),
+                    (size as u64 & (u32::MAX as u64)).try_into().unwrap(),
                     ptr::null(),
                 );
-                if handle.is_null() {
+                if !valid_handle(handle as _) {
                     return Err(std::io::Error::last_os_error().into());
                 }
 
                 let ptr = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
-                if ptr.is_null() {
+                if !valid_handle(ptr as _) {
                     return Err(std::io::Error::last_os_error().into());
                 }
 
                 Ok(SharedMem {
                     handle,
-                    view: SharedMemView { ptr, size },
+                    view: SharedMemView {
+                        ptr: ptr as _,
+                        size,
+                    },
                 })
             }
         }
 
         pub unsafe fn make_handle(&self) -> Result<PlatformHandle> {
-            PlatformHandle::duplicate(self.handle).map_err(|e| e.into())
+            PlatformHandle::duplicate(self.handle as _).map_err(|e| e.into())
         }
 
         pub unsafe fn from(handle: PlatformHandle, size: usize) -> Result<SharedMem> {
             let handle = handle.into_raw();
-            let ptr = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, size);
-            if ptr.is_null() {
+            let ptr = MapViewOfFile(handle as _, FILE_MAP_ALL_ACCESS, 0, 0, size);
+            if !valid_handle(ptr as _) {
                 return Err(std::io::Error::last_os_error().into());
             }
             Ok(SharedMem {
-                handle,
-                view: SharedMemView { ptr, size },
+                handle: handle as _,
+                view: SharedMemView {
+                    ptr: ptr as _,
+                    size,
+                },
             })
         }
 

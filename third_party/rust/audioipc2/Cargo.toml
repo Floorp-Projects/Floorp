@@ -72,11 +72,13 @@ iovec = "0.1"
 libc = "0.2"
 memmap2 = "0.5"
 
-[target."cfg(windows)".dependencies.winapi]
-version = "0.3"
+[target."cfg(windows)".dependencies.windows-sys]
+version = "0.48"
 features = [
-    "combaseapi",
-    "handleapi",
-    "memoryapi",
-    "objbase",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Memory",
+    "Win32_System_Threading",
 ]
