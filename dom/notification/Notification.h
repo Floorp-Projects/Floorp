@@ -11,12 +11,13 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/quota/QuotaCommon.h"
 
 #include "nsIObserver.h"
 #include "nsISupports.h"
 
 #include "nsCycleCollectionParticipant.h"
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
 #include "nsWeakReference.h"
 
 class nsIPrincipal;
@@ -120,11 +121,11 @@ class Notification : public DOMEventTargetHelper,
    * 2) The default binding requires main thread for parsing the JSON from the
    *    string behavior.
    */
-  static Result<already_AddRefed<Notification>, QMResult> ConstructFromFields(
+  static already_AddRefed<Notification> ConstructFromFields(
       nsIGlobalObject* aGlobal, const nsAString& aID, const nsAString& aTitle,
       const nsAString& aDir, const nsAString& aLang, const nsAString& aBody,
       const nsAString& aTag, const nsAString& aIcon, const nsAString& aData,
-      const nsAString& aServiceWorkerRegistrationScope);
+      const nsAString& aServiceWorkerRegistrationScope, ErrorResult& aRv);
 
   void GetID(nsAString& aRetval) { aRetval = mID; }
 
@@ -193,7 +194,7 @@ class Notification : public DOMEventTargetHelper,
   void InitFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aData,
                      ErrorResult& aRv);
 
-  Result<Ok, QMResult> InitFromBase64(const nsAString& aData);
+  void InitFromBase64(const nsAString& aData, ErrorResult& aRv);
 
   void AssertIsOnTargetThread() const { MOZ_ASSERT(IsTargetThread()); }
 
