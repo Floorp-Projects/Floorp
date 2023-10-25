@@ -112,7 +112,8 @@ function getMessage(error, prefix = "") {
  *   actual: actual,
  *   expected: expected,
  *   operator: operator,
- *   truncate: truncate
+ *   truncate: truncate,
+ *   stack: stack, // Optional, defaults to the current stack.
  * });
  *
  */
@@ -123,7 +124,7 @@ Assert.AssertionError = function (options) {
   this.operator = options.operator;
   this.message = getMessage(this, options.message, options.truncate);
   // The part of the stack that comes from this module is not interesting.
-  let stack = Components.stack;
+  let stack = options.stack || Components.stack;
   do {
     stack = stack.asyncCaller || stack.caller;
   } while (
@@ -205,6 +206,9 @@ Assert.prototype.setReporter = function (reporterFunc) {
  *        Operation qualifier used by the assertion method (ex: '==').
  * @param {boolean} [truncate=true]
  *        Whether or not ``actual`` and ``expected`` should be truncated when printing.
+ * @param {nsIStackFrame} [stack]
+ *        The stack trace including the caller of the assertion method,
+ *        if this cannot be inferred automatically (e.g. due to async callbacks).
  */
 Assert.prototype.report = function (
   failed,
@@ -212,7 +216,8 @@ Assert.prototype.report = function (
   expected,
   message,
   operator,
-  truncate = true
+  truncate = true,
+  stack = null // Defaults to Components.stack in AssertionError.
 ) {
   // Although not ideal, we allow a "null" message due to the way some of the extension tests
   // work.
@@ -228,6 +233,7 @@ Assert.prototype.report = function (
     expected,
     operator,
     truncate,
+    stack,
   });
   if (!this._reporter) {
     // If no custom reporter is set, throw the error.
@@ -513,6 +519,8 @@ Assert.prototype.throws = function (block, expected, message) {
  */
 Assert.prototype.rejects = function (promise, expected, message) {
   checkExpectedArgument(this, "rejects", expected);
+  const operator = undefined; // Should we use "rejects" here?
+  const stack = Components.stack;
   return new Promise((resolve, reject) => {
     return promise
       .then(
@@ -521,7 +529,10 @@ Assert.prototype.rejects = function (promise, expected, message) {
             true,
             null,
             expected,
-            "Missing expected exception " + message
+            "Missing expected exception " + message,
+            operator,
+            true,
+            stack
           );
           // this.report() above should raise an AssertionError. If _reporter
           // has been overridden and doesn't throw an error, just resolve.
@@ -534,7 +545,7 @@ Assert.prototype.rejects = function (promise, expected, message) {
             reject(err);
             return;
           }
-          this.report(false, err, expected, message);
+          this.report(false, err, expected, message, operator, truncate, stack);
           resolve();
         }
       )
