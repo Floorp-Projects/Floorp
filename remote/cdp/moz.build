@@ -9,7 +9,7 @@ with Files("**"):
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
-    "test/browser/browser_cdp_only.ini",
+    "test/browser/browser_cdp_only.toml",
     "test/browser/dom/browser.toml",
     "test/browser/emulation/browser.toml",
     "test/browser/fetch/browser.toml",
@@ -19,7 +19,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/network/browser.toml",
     "test/browser/page/browser.toml",
     "test/browser/runtime/browser.toml",
-    "test/browser/runtime/browser_with_default_prefs.ini",
+    "test/browser/runtime/browser_with_default_prefs.toml",
     "test/browser/security/browser.toml",
     "test/browser/systemInfo/browser.toml",
     "test/browser/target/browser.toml",

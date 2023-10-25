@@ -26,9 +26,9 @@ TESTING_JS_MODULES += [
 DIRS += ["schemas"]
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser/browser-private.ini",
+    "test/browser/browser-private.toml",
     "test/browser/browser.toml",
-    "test/browser/browser_legacy_recent_tabs.ini",
+    "test/browser/browser_legacy_recent_tabs.toml",
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]

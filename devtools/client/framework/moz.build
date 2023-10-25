@@ -5,13 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    "test/browser-telemetry-startup.ini",
+    "test/browser-telemetry-startup.toml",
     "test/browser.toml",
-    "test/metrics/browser_metrics.ini",
-    "test/metrics/browser_metrics_debugger.ini",
-    "test/metrics/browser_metrics_inspector.ini",
-    "test/metrics/browser_metrics_netmonitor.ini",
-    "test/metrics/browser_metrics_webconsole.ini",
+    "test/metrics/browser_metrics.toml",
+    "test/metrics/browser_metrics_debugger.toml",
+    "test/metrics/browser_metrics_inspector.toml",
+    "test/metrics/browser_metrics_netmonitor.toml",
+    "test/metrics/browser_metrics_webconsole.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
