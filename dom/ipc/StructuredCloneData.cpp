@@ -61,6 +61,7 @@ StructuredCloneData& StructuredCloneData::operator=(
   mBlobImplArray = std::move(aOther.mBlobImplArray);
   mExternalData = std::move(aOther.mExternalData);
   mSharedData = std::move(aOther.mSharedData);
+  mPortIdentifiers = std::move(aOther.mPortIdentifiers);
   mInitialized = aOther.mInitialized;
 
   return *this;
