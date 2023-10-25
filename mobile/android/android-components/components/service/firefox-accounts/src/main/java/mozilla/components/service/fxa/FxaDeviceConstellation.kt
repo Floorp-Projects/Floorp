@@ -10,6 +10,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.withContext
+import mozilla.appservices.fxaclient.FxaClient
 import mozilla.appservices.fxaclient.FxaException
 import mozilla.appservices.syncmanager.SyncTelemetry
 import mozilla.components.concept.base.crash.CrashReporting
@@ -27,7 +28,6 @@ import mozilla.components.concept.sync.ServiceResult
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.appservices.fxaclient.PersistedFirefoxAccount as FirefoxAccount
 
 internal sealed class FxaDeviceConstellationException : Exception() {
     /**
@@ -37,10 +37,10 @@ internal sealed class FxaDeviceConstellationException : Exception() {
 }
 
 /**
- * Provides an implementation of [DeviceConstellation] backed by a [FirefoxAccount].
+ * Provides an implementation of [DeviceConstellation] backed by a [FxaClient
  */
 class FxaDeviceConstellation(
-    private val account: FirefoxAccount,
+    private val account: FxaClient,
     private val scope: CoroutineScope,
     @get:VisibleForTesting
     internal val crashReporter: CrashReporting? = null,

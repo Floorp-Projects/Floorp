@@ -14,6 +14,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.appservices.fxaclient.FxaConfig
+import mozilla.appservices.fxaclient.FxaServer
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.DeviceConfig
@@ -25,8 +27,6 @@ import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fxa.FirefoxAccount
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.PeriodicSyncConfig
-import mozilla.components.service.fxa.Server
-import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener,
     private val accountManager by lazy {
         FxaAccountManager(
             applicationContext,
-            ServerConfig(Server.RELEASE, CLIENT_ID, REDIRECT_URL),
+            FxaConfig(FxaServer.Release, CLIENT_ID, REDIRECT_URL),
             DeviceConfig("A-C Logins Sync Sample", DeviceType.MOBILE, setOf()),
             SyncConfig(setOf(SyncEngine.Passwords), PeriodicSyncConfig()),
         )

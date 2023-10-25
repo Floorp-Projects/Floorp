@@ -5,8 +5,8 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import mozilla.appservices.fxaclient.FxaServer
 import mozilla.components.service.fxa.ServerConfig
-import mozilla.components.service.fxa.ServerConfig.Server
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.ext.settings
 
@@ -20,18 +20,19 @@ object FxaServer {
 
     fun config(context: Context): ServerConfig {
         // If a server override is configured, use that. Otherwise:
-        // - for all channels other than Mozilla Online, use Server.Release.
-        // - for Mozilla Online channel, if domestic server is allowed, use Server.CHINA; otherwise, use Server.RELEASE
+        // - for all channels other than Mozilla Online, use FxaServer.Release.
+        // - for Mozilla Online channel, if domestic server is allowed, use FxaServer.China; otherwise,
+        //   use FxaServer.Release
         val serverOverride = context.settings().overrideFxAServer
         val tokenServerOverride = context.settings().overrideSyncTokenServer.ifEmpty { null }
         if (serverOverride.isEmpty()) {
             val releaseServer = if (Config.channel.isMozillaOnline && context.settings().allowDomesticChinaFxaServer) {
-                Server.CHINA
+                FxaServer.China
             } else {
-                Server.RELEASE
+                FxaServer.Release
             }
             return ServerConfig(releaseServer, CLIENT_ID, REDIRECT_URL, tokenServerOverride)
         }
-        return ServerConfig(serverOverride, CLIENT_ID, REDIRECT_URL, tokenServerOverride)
+        return ServerConfig(FxaServer.Custom(serverOverride), CLIENT_ID, REDIRECT_URL, tokenServerOverride)
     }
 }

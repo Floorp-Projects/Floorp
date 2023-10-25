@@ -12,6 +12,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import mozilla.appservices.fxaclient.FxaConfig
+import mozilla.appservices.fxaclient.FxaServer
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccessTokenInfo
 import mozilla.components.concept.sync.AccountEventsObserver
@@ -68,7 +70,7 @@ import kotlin.coroutines.CoroutineContext
 internal class TestableStorageWrapper(
     manager: FxaAccountManager,
     accountEventObserverRegistry: ObserverRegistry<AccountEventsObserver>,
-    serverConfig: ServerConfig,
+    serverConfig: FxaConfig,
     private val block: () -> OAuthAccount = {
         val account: OAuthAccount = mock()
         `when`(account.deviceConstellation()).thenReturn(mock())
@@ -84,7 +86,7 @@ internal class TestableStorageWrapper(
 // Instead, we express all of our account-related operations over an interface.
 internal open class TestableFxaAccountManager(
     context: Context,
-    config: ServerConfig,
+    config: FxaConfig,
     private val storage: AccountStorage,
     capabilities: Set<DeviceCapability> = emptySet(),
     syncConfig: SyncConfig? = null,
@@ -200,7 +202,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            FxaConfig(FxaServer.Release, "dummyId", "http://auth-url/redirect"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -236,7 +238,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            FxaConfig(FxaServer.Release, "dummyId", "http://auth-url/redirect"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -276,7 +278,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            FxaConfig(FxaServer.Release, "dummyId", "http://auth-url/redirect"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -315,7 +317,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "http://auth-url/redirect"),
+            FxaConfig(FxaServer.Release, "dummyId", "http://auth-url/redirect"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -353,7 +355,7 @@ class FxaAccountManagerTest {
         // but an actual implementation of the interface.
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -397,7 +399,7 @@ class FxaAccountManagerTest {
         // but an actual implementation of the interface.
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             setOf(DeviceCapability.SEND_TAB),
             null,
@@ -531,7 +533,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         )
@@ -566,7 +568,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         )
@@ -608,7 +610,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             emptySet(),
             null,
@@ -748,7 +750,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = coroutineContext,
         ) {
@@ -1162,7 +1164,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         ) {
@@ -1233,7 +1235,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         ) {
@@ -1293,7 +1295,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         ) {
@@ -1361,7 +1363,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         ) {
@@ -1435,7 +1437,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = this.coroutineContext,
         ) {
@@ -1572,7 +1574,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             capabilities,
             SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), PeriodicSyncConfig()),
@@ -1605,7 +1607,7 @@ class FxaAccountManagerTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            FxaConfig(FxaServer.Release, "dummyId", "bad://url"),
             accountStorage,
             coroutineContext = coroutineContext,
         ) {

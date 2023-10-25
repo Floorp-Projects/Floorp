@@ -7,6 +7,7 @@ package mozilla.components.feature.accounts
 import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
+import mozilla.appservices.fxaclient.FxaServer
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -19,7 +20,6 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FxaAuthData
-import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -107,7 +107,7 @@ class FxaWebChannelFeatureTest {
         val controller: WebExtensionController = mock()
         val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
 
-        whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
+        whenever(serverConfig.server).thenReturn(FxaServer.Custom("https://foo.bar"))
         webchannelFeature.extensionController = controller
 
         webchannelFeature.start()
@@ -135,7 +135,7 @@ class FxaWebChannelFeatureTest {
         val controller: WebExtensionController = mock()
         val webchannelFeature = FxaWebChannelFeature(null, engine, store, accountManager, serverConfig)
 
-        whenever(serverConfig.contentUrl).thenReturn(Server.RELEASE.contentUrl)
+        whenever(serverConfig.server).thenReturn(FxaServer.Release)
         webchannelFeature.extensionController = controller
 
         webchannelFeature.start()
@@ -825,7 +825,7 @@ class FxaWebChannelFeatureTest {
         whenever(accountManager.supportedSyncEngines()).thenReturn(expectedEngines)
         whenever(port.engineSession).thenReturn(engineSession)
         whenever(port.senderUrl()).thenReturn("https://foo.bar/email")
-        whenever(serverConfig.contentUrl).thenReturn("https://foo.bar")
+        whenever(serverConfig.server).thenReturn(FxaServer.Custom("https://foo.bar"))
 
         return spy(FxaWebChannelFeature(null, mock(), store, accountManager, serverConfig, fxaCapabilities))
     }

@@ -5,8 +5,8 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import mozilla.components.service.fxa.ServerConfig
-import mozilla.components.service.fxa.ServerConfig.Server
+import mozilla.appservices.fxaclient.FxaConfig
+import mozilla.appservices.fxaclient.FxaServer
 
 /**
  * Utility to configure Firefox Account stage servers.
@@ -17,7 +17,7 @@ object FxaServer {
     private const val REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel"
 
     @Suppress("UNUSED_PARAMETER")
-    fun config(context: Context): ServerConfig {
-        return ServerConfig(Server.STAGE, CLIENT_ID, REDIRECT_URL)
+    fun config(context: Context): FxaConfig {
+        return FxaConfig(FxaServer.Stage, CLIENT_ID, REDIRECT_URL)
     }
 }

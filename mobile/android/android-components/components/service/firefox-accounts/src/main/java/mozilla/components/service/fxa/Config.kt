@@ -6,8 +6,8 @@ package mozilla.components.service.fxa
 
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 
-typealias ServerConfig = mozilla.appservices.fxaclient.Config
-typealias Server = mozilla.appservices.fxaclient.Config.Server
+typealias ServerConfig = mozilla.appservices.fxaclient.FxaConfig
+typealias Server = mozilla.appservices.fxaclient.FxaServer
 
 /**
  * @property periodMinutes How frequently periodic sync should happen.

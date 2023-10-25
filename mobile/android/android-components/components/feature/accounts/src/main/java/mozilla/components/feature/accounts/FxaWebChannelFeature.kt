@@ -11,6 +11,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import mozilla.appservices.fxaclient.contentUrl
+import mozilla.appservices.fxaclient.isCustom
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
@@ -20,7 +22,6 @@ import mozilla.components.concept.engine.webextension.WebExtensionRuntime
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.service.fxa.FxaAuthData
-import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -170,8 +171,12 @@ class FxaWebChannelFeature(
         private val serverConfig: ServerConfig,
     ) : MessageHandler {
         override fun onPortConnected(port: Port) {
-            if (Server.values().none { it.contentUrl == serverConfig.contentUrl }) {
-                port.postMessage(JSONObject().put("type", "overrideFxAServer").put("url", serverConfig.contentUrl))
+            if (serverConfig.server.isCustom()) {
+                port.postMessage(
+                    JSONObject()
+                        .put("type", "overrideFxAServer")
+                        .put("url", serverConfig.server.contentUrl()),
+                )
             }
         }
     }
@@ -372,7 +377,7 @@ class FxaWebChannelFeature(
 
         private fun isCommunicationAllowed(serverConfig: ServerConfig, port: Port): Boolean {
             val senderOrigin = port.senderUrl()
-            val expectedOrigin = serverConfig.contentUrl
+            val expectedOrigin = serverConfig.server.contentUrl()
             return isCommunicationAllowed(senderOrigin, expectedOrigin)
         }
 

@@ -54,7 +54,7 @@ import org.mockito.Mockito.`when`
 import mozilla.appservices.fxaclient.AccountEvent as ASAccountEvent
 import mozilla.appservices.fxaclient.Device as NativeDevice
 import mozilla.appservices.fxaclient.DevicePushSubscription as NativeDevicePushSubscription
-import mozilla.appservices.fxaclient.PersistedFirefoxAccount as NativeFirefoxAccount
+import mozilla.appservices.fxaclient.FxaClient as NativeFirefoxAccount
 import mozilla.appservices.sync15.DeviceType as RustDeviceType
 
 @ExperimentalCoroutinesApi

@@ -9,6 +9,7 @@ import android.os.Looper.getMainLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
+import mozilla.appservices.fxaclient.FxaServer
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.sync.AccountEventsObserver
 import mozilla.components.concept.sync.AuthFlowUrl
@@ -18,7 +19,6 @@ import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.service.fxa.FxaAuthData
-import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.StorageWrapper
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -257,7 +257,7 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            ServerConfig(FxaServer.Release, "dummyId", "bad://url"),
             setOf("test-scope"),
             coroutineContext,
         ) {
@@ -284,7 +284,7 @@ class FirefoxAccountsAuthFeatureTest {
 
         val manager = TestableFxaAccountManager(
             testContext,
-            ServerConfig(Server.RELEASE, "dummyId", "bad://url"),
+            ServerConfig(FxaServer.Release, "dummyId", "bad://url"),
             setOf("test-scope"),
             coroutineContext,
         ) {
