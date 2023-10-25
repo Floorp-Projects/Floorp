@@ -58,13 +58,12 @@
 
 dropmarker {
   pointer-events: none;
+  flex: 0;
 
   :host(:not([native])) & {
     display: flex;
     appearance: none;
-    width: 12px;
-    height: unset;
-    list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
+    list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
     -moz-context-properties: fill;
     fill: currentColor;
   }
