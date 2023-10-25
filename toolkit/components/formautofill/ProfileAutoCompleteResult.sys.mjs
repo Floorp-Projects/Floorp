@@ -363,10 +363,7 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
 
       if (matching) {
         if (currentFieldName == "cc-number") {
-          let { affix, label } = lazy.CreditCard.formatMaskedNumber(
-            profile[currentFieldName]
-          );
-          return affix + label;
+          return lazy.CreditCard.formatMaskedNumber(profile[currentFieldName]);
         }
         return profile[currentFieldName];
       }
@@ -401,13 +398,10 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
         return !!profile[focusedFieldName];
       })
       .map(profile => {
-        let primaryAffix;
         let primary = profile[focusedFieldName];
 
         if (focusedFieldName == "cc-number") {
-          let { affix, label } = lazy.CreditCard.formatMaskedNumber(primary);
-          primaryAffix = affix;
-          primary = label;
+          primary = lazy.CreditCard.formatMaskedNumber(primary);
         }
         const secondary = this._getSecondaryLabel(
           focusedFieldName,
@@ -423,11 +417,10 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
         const ccTypeName = ccTypeL10nId
           ? lazy.l10n.formatValueSync(ccTypeL10nId)
           : ccType ?? ""; // Unknown card type
-        const ariaLabel = [ccTypeName, primaryAffix, primary, secondary]
+        const ariaLabel = [ccTypeName, primary.toString().replaceAll("*", ""), secondary]
           .filter(chunk => !!chunk) // Exclude empty chunks.
           .join(" ");
         return {
-          primaryAffix,
           primary,
           secondary,
           ariaLabel,
