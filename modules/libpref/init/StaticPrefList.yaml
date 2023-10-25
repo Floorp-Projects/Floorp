@@ -15100,6 +15100,11 @@
   value: 0
   mirror: always
 
+- name: webgl.gl_khr_no_error
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: webgl.lose-context-on-memory-pressure
   type: RelaxedAtomicBool
   value: false
