@@ -12,10 +12,6 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
  * open, if re-opening the panel is due to a translation failure.
  */
 add_task(async function test_translations_telemetry_firstrun_failure() {
-  PromiseTestUtils.expectUncaughtRejection(
-    /Intentionally rejecting downloads./
-  );
-
   const { cleanup, rejectDownloads, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
