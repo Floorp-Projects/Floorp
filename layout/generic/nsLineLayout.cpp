@@ -215,7 +215,8 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
     if (nsBlockFrame* prevBlock =
             do_QueryFrame(containerFrame->GetPrevInFlow())) {
       return mStyleText->mTextIndent.each_line &&
-             !prevBlock->LinesEnd().prev()->IsLineWrapped();
+             (prevBlock->Lines().empty() ||
+              !prevBlock->LinesEnd().prev()->IsLineWrapped());
     }
     return true;
   }();
