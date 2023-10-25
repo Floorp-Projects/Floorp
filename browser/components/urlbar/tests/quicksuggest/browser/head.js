@@ -117,9 +117,6 @@ async function setUpTelemetryTest({
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
 
-  Services.telemetry.clearScalars();
-  Services.telemetry.clearEvents();
-
   // Add a mock engine so we don't hit the network.
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
@@ -200,6 +197,9 @@ async function doTelemetryTest({
       fireInputEvent: true,
     }),
 }) {
+  Services.telemetry.clearScalars();
+  Services.telemetry.clearEvents();
+
   await doImpressionOnlyTest({
     index,
     suggestion,
@@ -624,6 +624,8 @@ function watchGleanPings(pings) {
 function _assertGleanPing(ping) {
   Assert.equal(Glean.quickSuggest.pingType.testGetValue(), ping.type);
   const keymap = {
+    // present in all pings
+    source: Glean.quickSuggest.source,
     match_type: Glean.quickSuggest.matchType,
     position: Glean.quickSuggest.position,
     suggested_index: Glean.quickSuggest.suggestedIndex,
@@ -631,13 +633,64 @@ function _assertGleanPing(ping) {
       Glean.quickSuggest.suggestedIndexRelativeToGroup,
     improve_suggest_experience_checked:
       Glean.quickSuggest.improveSuggestExperience,
-    is_clicked: Glean.quickSuggest.isClicked,
     block_id: Glean.quickSuggest.blockId,
     advertiser: Glean.quickSuggest.advertiser,
+    request_id: Glean.quickSuggest.requestId,
+    context_id: Glean.quickSuggest.contextId,
+    // impression and click pings
+    reporting_url: Glean.quickSuggest.reportingUrl,
+    // impression ping
+    is_clicked: Glean.quickSuggest.isClicked,
+    // block/dismiss ping
     iab_category: Glean.quickSuggest.iabCategory,
   };
   for (const [key, value] of Object.entries(ping.payload)) {
     Assert.ok(key in keymap, `A Glean metric exists for field ${key}`);
-    Assert.equal(value ?? null, keymap[key].testGetValue());
+    Assert.equal(
+      keymap[key].testGetValue(),
+      value ?? null,
+      `Glean metric field ${key} should be the expected value`
+    );
+  }
+}
+
+/**
+ * Adds two tasks: One with the Rust backend disabled and one with it enabled.
+ * The names of the task functions will be the name of the passed-in task
+ * function appended with "_rustDisabled" and "_rustEnabled" respectively. Call
+ * with the usual `add_task()` arguments.
+ *
+ * @param {...any} args
+ *   The usual `add_task()` arguments.
+ */
+function add_tasks_with_rust(...args) {
+  let taskFnIndex = args.findIndex(a => typeof a == "function");
+  let taskFn = args[taskFnIndex];
+
+  for (let rustEnabled of [false, true]) {
+    let newTaskFn = async (...taskFnArgs) => {
+      info("Setting rustEnabled: " + rustEnabled);
+      UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
+      info("Done setting rustEnabled: " + rustEnabled);
+
+      let rv;
+      try {
+        info("Calling original task function: " + taskFn.name);
+        rv = await taskFn(...taskFnArgs);
+      } finally {
+        info("Done calling original task function: " + taskFn.name);
+        info("Clearing rustEnabled");
+        UrlbarPrefs.clear("quicksuggest.rustEnabled");
+        info("Done clearing rustEnabled");
+      }
+      return rv;
+    };
+
+    Object.defineProperty(newTaskFn, "name", {
+      value: taskFn.name + (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
+    });
+    let addTaskArgs = [...args];
+    addTaskArgs[taskFnIndex] = newTaskFn;
+    add_task(...addTaskArgs);
   }
 }
