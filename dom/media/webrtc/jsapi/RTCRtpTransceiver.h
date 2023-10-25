@@ -82,6 +82,7 @@ class RTCRtpTransceiver : public nsISupports, public nsWrapperCache {
   void Close();
 
   void BreakCycles();
+  void Unlink();
 
   bool ConduitHasPluginID(uint64_t aPluginID);
 

@@ -583,6 +583,8 @@ class PeerConnectionImpl final
   static void SetupPreferredRtpExtensions(
       std::vector<RtpExtensionHeader>& aPreferredheaders);
 
+  void BreakCycles();
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
@@ -843,8 +845,6 @@ class PeerConnectionImpl final
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 
   already_AddRefed<nsIHttpChannelInternal> GetChannel() const;
-
-  void BreakCycles();
 
   bool HasPendingSetParameters() const;
   void InvalidateLastReturnedParameters();
