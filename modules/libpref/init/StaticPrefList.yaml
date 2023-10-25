@@ -13027,6 +13027,12 @@
   value: true
   mirror: always
 
+# Disabling this will no-op window.print()
+- name: print.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The maximum amount of time CUPS should spend enumerating print destinations
 # (in milliseconds).
 # The default value chosen here is completely arbitrary.

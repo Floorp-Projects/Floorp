@@ -1863,6 +1863,12 @@ export var Policies = {
     },
   },
 
+  PrintingEnabled: {
+    onBeforeUIStartup(manager, param) {
+      setAndLockPref("print.enabled", param);
+    },
+  },
+
   PromptForDownloadLocation: {
     onBeforeAddons(manager, param) {
       setAndLockPref("browser.download.useDownloadDir", !param);
