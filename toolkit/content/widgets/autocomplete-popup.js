@@ -386,6 +386,15 @@
           .replace(/^\s+/, "")
           .replace(/\s+$/, "");
 
+        // Generic items can pack their details as JSON inside label
+        try {
+          const details = JSON.parse(label);
+          if (details.title) {
+            value = details.title;
+            label = details.subtitle ?? "";
+          }
+        } catch {}
+
         let reusable = false;
         if (itemExists) {
           item = this.richlistbox.children[this._currentIndex];
@@ -438,7 +447,7 @@
               options = { is: "autocomplete-creditcard-insecure-field" };
               break;
             case "generic":
-              options = { is: "autocomplete-generic-richlistitem" };
+              options = { is: "autocomplete-two-line-richlistitem" };
               break;
             case "importableLearnMore":
               options = {
