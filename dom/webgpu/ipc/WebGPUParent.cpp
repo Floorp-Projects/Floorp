@@ -17,6 +17,10 @@
 #include "mozilla/webgpu/ExternalTexture.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 
+#if defined(XP_WIN)
+#  include "mozilla/gfx/DeviceManagerDx.h"
+#endif
+
 namespace mozilla::webgpu {
 
 const uint64_t POLL_TIME_MS = 100;
@@ -385,10 +389,12 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   }
   options.force_fallback_adapter = aOptions.mForceFallbackAdapter;
 
+  auto luid = GetCompositorDeviceLuid();
+
   ErrorBuffer error;
   int8_t index = ffi::wgpu_server_instance_request_adapter(
       mContext.get(), &options, aTargetIds.Elements(), aTargetIds.Length(),
-      error.ToFFI());
+      luid.ptrOr(nullptr), error.ToFFI());
 
   ByteBuf infoByteBuf;
   // Rust side expects an `Option`, so 0 maps to `None`.
@@ -1472,6 +1478,35 @@ std::shared_ptr<ExternalTexture> WebGPUParent::GetExternalTexture(
     return nullptr;
   }
   return it->second;
+}
+
+/* static */
+Maybe<ffi::WGPUFfiLUID> WebGPUParent::GetCompositorDeviceLuid() {
+#if defined(XP_WIN)
+  const RefPtr<ID3D11Device> d3d11Device =
+      gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+  if (!d3d11Device) {
+    gfxCriticalNoteOnce << "CompositorDevice does not exist";
+    return Nothing();
+  }
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  d3d11Device->QueryInterface((IDXGIDevice**)getter_AddRefs(dxgiDevice));
+
+  RefPtr<IDXGIAdapter> dxgiAdapter;
+  dxgiDevice->GetAdapter(getter_AddRefs(dxgiAdapter));
+
+  DXGI_ADAPTER_DESC desc;
+  if (FAILED(dxgiAdapter->GetDesc(&desc))) {
+    gfxCriticalNoteOnce << "Failed to get DXGI_ADAPTER_DESC";
+    return Nothing();
+  }
+
+  return Some(
+      ffi::WGPUFfiLUID{desc.AdapterLuid.LowPart, desc.AdapterLuid.HighPart});
+#else
+  return Nothing();
+#endif
 }
 
 }  // namespace mozilla::webgpu

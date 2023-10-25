@@ -167,6 +167,8 @@ class WebGPUParent final : public PWebGPUParent {
   void ReportError(Maybe<RawId> aDeviceId, GPUErrorFilter,
                    const nsCString& message);
 
+  static Maybe<ffi::WGPUFfiLUID> GetCompositorDeviceLuid();
+
   UniquePtr<ffi::WGPUGlobal> mContext;
   base::RepeatingTimer<WebGPUParent> mTimer;
 
