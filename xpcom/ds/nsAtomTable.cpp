@@ -11,6 +11,7 @@
 #include "mozilla/MruCache.h"
 #include "mozilla/RWLock.h"
 #include "mozilla/TextUtils.h"
+#include "nsHashKeys.h"
 #include "nsThreadUtils.h"
 
 #include "nsAtom.h"
@@ -141,9 +142,16 @@ struct AtomTableKey {
     MOZ_ASSERT(HashString(mUTF16String, mLength) == mHash);
   }
 
+  AtomTableKey(const char16_t* aUTF16String, uint32_t aLength, uint32_t aHash)
+      : mUTF16String(aUTF16String),
+        mUTF8String(nullptr),
+        mLength(aLength),
+        mHash(aHash) {
+    MOZ_ASSERT(HashString(mUTF16String, mLength) == mHash);
+  }
+
   AtomTableKey(const char16_t* aUTF16String, uint32_t aLength)
-      : mUTF16String(aUTF16String), mUTF8String(nullptr), mLength(aLength) {
-    mHash = HashString(mUTF16String, mLength);
+      : AtomTableKey(aUTF16String, aLength, HashString(aUTF16String, aLength)) {
   }
 
   AtomTableKey(const char* aUTF8String, uint32_t aLength, bool* aErr)
@@ -209,7 +217,8 @@ class nsAtomTable {
   nsAtomSubTable& SelectSubTable(AtomTableKey& aKey);
   void AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf, AtomsSizes& aSizes);
   void GC(GCKind aKind);
-  already_AddRefed<nsAtom> Atomize(const nsAString& aUTF16String);
+  already_AddRefed<nsAtom> Atomize(const nsAString& aUTF16String,
+                                   uint32_t aHash);
   already_AddRefed<nsAtom> Atomize(const nsACString& aUTF8String);
   already_AddRefed<nsAtom> AtomizeMainThread(const nsAString& aUTF16String);
   nsStaticAtom* GetStaticAtom(const nsAString& aUTF16String);
@@ -547,7 +556,7 @@ already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsACString& aUTF8String) {
     // and atomize the result.
     nsString str;
     CopyUTF8toUTF16(aUTF8String, str);
-    return Atomize(str);
+    return Atomize(str, HashString(str));
   }
   nsAtomSubTable& table = SelectSubTable(key);
   {
@@ -580,12 +589,12 @@ already_AddRefed<nsAtom> NS_Atomize(const nsACString& aUTF8String) {
 }
 
 already_AddRefed<nsAtom> NS_Atomize(const char16_t* aUTF16String) {
-  MOZ_ASSERT(gAtomTable);
-  return gAtomTable->Atomize(nsDependentString(aUTF16String));
+  return NS_Atomize(nsDependentString(aUTF16String));
 }
 
-already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsAString& aUTF16String) {
-  AtomTableKey key(aUTF16String.Data(), aUTF16String.Length());
+already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsAString& aUTF16String,
+                                              uint32_t aHash) {
+  AtomTableKey key(aUTF16String.Data(), aUTF16String.Length(), aHash);
   nsAtomSubTable& table = SelectSubTable(key);
   {
     AutoReadLock lock(table.mLock);
@@ -608,9 +617,14 @@ already_AddRefed<nsAtom> nsAtomTable::Atomize(const nsAString& aUTF16String) {
   return atom.forget();
 }
 
-already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String) {
+already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String,
+                                    uint32_t aKnownHash) {
   MOZ_ASSERT(gAtomTable);
-  return gAtomTable->Atomize(aUTF16String);
+  return gAtomTable->Atomize(aUTF16String, aKnownHash);
+}
+
+already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String) {
+  return NS_Atomize(aUTF16String, HashString(aUTF16String));
 }
 
 already_AddRefed<nsAtom> nsAtomTable::AtomizeMainThread(

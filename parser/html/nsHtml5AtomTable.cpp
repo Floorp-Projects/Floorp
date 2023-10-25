@@ -11,21 +11,19 @@ nsHtml5AtomTable::nsHtml5AtomTable() : mRecentlyUsedParserAtoms{} {
 #endif
 }
 
-nsHtml5AtomTable::~nsHtml5AtomTable() {}
+nsHtml5AtomTable::~nsHtml5AtomTable() = default;
 
 nsAtom* nsHtml5AtomTable::GetAtom(const nsAString& aKey) {
-#ifdef DEBUG
   MOZ_ASSERT(mPermittedLookupEventTarget->IsOnCurrentThread());
-#endif
-
-  uint32_t index = mozilla::HashString(aKey) % RECENTLY_USED_PARSER_ATOMS_SIZE;
+  uint32_t hash = mozilla::HashString(aKey);
+  uint32_t index = hash % RECENTLY_USED_PARSER_ATOMS_SIZE;
   if (nsAtom* atom = mRecentlyUsedParserAtoms[index]) {
-    if (atom->Equals(aKey)) {
+    if (atom->hash() == hash && atom->Equals(aKey)) {
       return atom;
     }
   }
 
-  RefPtr<nsAtom> atom = NS_Atomize(aKey);
+  RefPtr<nsAtom> atom = NS_Atomize(aKey, hash);
   nsAtom* ret = atom.get();
   mRecentlyUsedParserAtoms[index] = std::move(atom);
   return ret;
