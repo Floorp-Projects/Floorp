@@ -19,10 +19,6 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
  */
 add_task(
   async function test_revisit_view_updates_with_auto_translate_failure() {
-    PromiseTestUtils.expectUncaughtRejection(
-      /Intentionally rejecting downloads./
-    );
-
     const { cleanup, resolveDownloads, rejectDownloads, runInPage } =
       await loadTestPage({
         page: SPANISH_PAGE_URL,

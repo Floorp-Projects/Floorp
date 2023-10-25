@@ -762,13 +762,17 @@ export class TranslationsParent extends JSWindowActorParent {
     const wasmStartTime = Cu.now();
     const bergamotWasmArrayBufferPromise =
       TranslationsParent.#getBergamotWasmArrayBuffer();
-    bergamotWasmArrayBufferPromise.then(() => {
-      ChromeUtils.addProfilerMarker(
-        "TranslationsParent",
-        { innerWindowId: this.innerWindowId, startTime: wasmStartTime },
-        "Loading bergamot wasm array buffer"
-      );
-    });
+    bergamotWasmArrayBufferPromise
+      .then(() => {
+        ChromeUtils.addProfilerMarker(
+          "TranslationsParent",
+          { innerWindowId: this.innerWindowId, startTime: wasmStartTime },
+          "Loading bergamot wasm array buffer"
+        );
+      })
+      .catch(() => {
+        // Do nothing.
+      });
 
     const modelStartTime = Cu.now();
     let files = await TranslationsParent.getLanguageTranslationModelFiles(
