@@ -6,6 +6,7 @@
 #define _MTRANSPORTCHILD_H__
 
 #include "mozilla/dom/PMediaTransportChild.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 class MediaTransportHandlerIPC;
@@ -33,7 +34,11 @@ class MediaTransportChild : public dom::PMediaTransportChild {
 
  private:
   virtual ~MediaTransportChild();
-  RefPtr<MediaTransportHandlerIPC> mUser;
+  friend class MediaTransportHandlerIPC;
+  void Shutdown();
+  // MediaTransportHandlerIPC owns us, and will inform us when it is going away
+  Mutex mMutex;
+  MediaTransportHandlerIPC* mUser;
 #endif  // MOZ_WEBRTC
 };
 
