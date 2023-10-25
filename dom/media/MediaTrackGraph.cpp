@@ -3278,16 +3278,12 @@ void MediaTrackGraphImpl::Destroy() {
 // GTests can create a graph without a window.
 /* static */
 MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstanceIfExists(
-    uint64_t aWindowID, bool aShouldResistFingerprinting, TrackRate aSampleRate,
+    uint64_t aWindowID, TrackRate aSampleRate,
     CubebUtils::AudioDeviceID aOutputDeviceID) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  MOZ_ASSERT(aSampleRate > 0);
 
-  TrackRate sampleRate =
-      aSampleRate
-          ? aSampleRate
-          : CubebUtils::PreferredSampleRate(aShouldResistFingerprinting);
-  GraphKey key(aWindowID, sampleRate, aOutputDeviceID);
-
+  GraphKey key(aWindowID, aSampleRate, aOutputDeviceID);
   return gGraphs.Get(key);
 }
 
@@ -3297,27 +3293,25 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstanceIfExists(
 MediaTrackGraph* MediaTrackGraph::GetInstanceIfExists(
     nsPIDOMWindowInner* aWindow, TrackRate aSampleRate,
     CubebUtils::AudioDeviceID aOutputDeviceID) {
-  return MediaTrackGraphImpl::GetInstanceIfExists(
-      aWindow->WindowID(),
-      aWindow->AsGlobal()->ShouldResistFingerprinting(
-          RFPTarget::AudioSampleRate),
-      aSampleRate, aOutputDeviceID);
+  TrackRate sampleRate =
+      aSampleRate ? aSampleRate
+                  : CubebUtils::PreferredSampleRate(
+                        aWindow->AsGlobal()->ShouldResistFingerprinting(
+                            RFPTarget::AudioSampleRate));
+  return MediaTrackGraphImpl::GetInstanceIfExists(aWindow->WindowID(),
+                                                  sampleRate, aOutputDeviceID);
 }
 
 /* static */
 MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
     GraphDriverType aGraphDriverRequested, uint64_t aWindowID,
-    bool aShouldResistFingerprinting, TrackRate aSampleRate,
-    CubebUtils::AudioDeviceID aOutputDeviceID,
+    TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID,
     nsISerialEventTarget* aMainThread) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+  MOZ_ASSERT(aSampleRate > 0);
 
-  TrackRate sampleRate =
-      aSampleRate
-          ? aSampleRate
-          : CubebUtils::PreferredSampleRate(aShouldResistFingerprinting);
-  MediaTrackGraphImpl* graph = GetInstanceIfExists(
-      aWindowID, aShouldResistFingerprinting, sampleRate, aOutputDeviceID);
+  MediaTrackGraphImpl* graph =
+      GetInstanceIfExists(aWindowID, aSampleRate, aOutputDeviceID);
 
   if (!graph) {
     GraphRunType runType = DIRECT_DRIVER;
@@ -3332,9 +3326,9 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
     // capped to 8.
     uint32_t channelCount =
         std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
-    graph = new MediaTrackGraphImpl(aGraphDriverRequested, runType, sampleRate,
+    graph = new MediaTrackGraphImpl(aGraphDriverRequested, runType, aSampleRate,
                                     channelCount, aOutputDeviceID, aMainThread);
-    GraphKey key(aWindowID, sampleRate, aOutputDeviceID);
+    GraphKey key(aWindowID, aSampleRate, aOutputDeviceID);
     gGraphs.InsertOrUpdate(key, graph);
 
     LOG(LogLevel::Debug,
@@ -3349,11 +3343,14 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
 MediaTrackGraph* MediaTrackGraph::GetInstance(
     GraphDriverType aGraphDriverRequested, nsPIDOMWindowInner* aWindow,
     TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID) {
+  TrackRate sampleRate =
+      aSampleRate ? aSampleRate
+                  : CubebUtils::PreferredSampleRate(
+                        aWindow->AsGlobal()->ShouldResistFingerprinting(
+                            RFPTarget::AudioSampleRate));
   return MediaTrackGraphImpl::GetInstance(
-      aGraphDriverRequested, aWindow->WindowID(),
-      aWindow->AsGlobal()->ShouldResistFingerprinting(
-          RFPTarget::AudioSampleRate),
-      aSampleRate, aOutputDeviceID, GetMainThreadSerialEventTarget());
+      aGraphDriverRequested, aWindow->WindowID(), sampleRate, aOutputDeviceID,
+      GetMainThreadSerialEventTarget());
 }
 
 MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(
