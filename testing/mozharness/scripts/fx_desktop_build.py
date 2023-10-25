@@ -51,7 +51,7 @@ class FxDesktopBuild(BuildScript, object):
                 # jobs have a minimal `hg pull`.
                 "clone_upstream_url": "https://hg.mozilla.org/mozilla-unified",
                 "repo_base": "https://hg.mozilla.org",
-                "build_resources_path": "%(upload_path)s/build_resources.json",
+                "profile_build_resources_path": "%(upload_path)s/profile_build_resources.json",
                 "nightly_promotion_branches": ["mozilla-central", "mozilla-aurora"],
                 # try will overwrite these
                 "clone_with_purge": False,
