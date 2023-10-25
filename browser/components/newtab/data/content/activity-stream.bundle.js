@@ -135,7 +135,10 @@ for (const type of [
   "DISCOVERY_STREAM_LOADED_CONTENT",
   "DISCOVERY_STREAM_PERSONALIZATION_INIT",
   "DISCOVERY_STREAM_PERSONALIZATION_LAST_UPDATED",
+  "DISCOVERY_STREAM_PERSONALIZATION_OVERRIDE",
+  "DISCOVERY_STREAM_PERSONALIZATION_RESET",
   "DISCOVERY_STREAM_PERSONALIZATION_TOGGLE",
+  "DISCOVERY_STREAM_PERSONALIZATION_UPDATED",
   "DISCOVERY_STREAM_POCKET_STATE_INIT",
   "DISCOVERY_STREAM_POCKET_STATE_SET",
   "DISCOVERY_STREAM_PREFS_SETUP",
@@ -10664,7 +10667,7 @@ const INITIAL_STATE = {
     isCollectionDismissible: false,
     feeds: {
       data: {
-        // "https://foo.com/feed1": {lastUpdated: 123, data: []}
+        // "https://foo.com/feed1": {lastUpdated: 123, data: [], personalized: false}
       },
       loaded: false,
     },
@@ -10672,8 +10675,8 @@ const INITIAL_STATE = {
       spocs_endpoint: "",
       lastUpdated: null,
       data: {
-        // "spocs": {title: "", context: "", items: []},
-        // "placement1": {title: "", context: "", items: []},
+        // "spocs": {title: "", context: "", items: [], personalized: false},
+        // "placement1": {title: "", context: "", items: [], personalized: false},
       },
       loaded: false,
       frequency_caps: [],
@@ -11183,6 +11186,8 @@ function Reducers_sys_Personalization(prevState = INITIAL_STATE.Personalization,
         ...prevState,
         initialized: true,
       };
+    case actionTypes.DISCOVERY_STREAM_PERSONALIZATION_RESET:
+      return { ...INITIAL_STATE.Personalization };
     default:
       return prevState;
   }
