@@ -367,9 +367,9 @@ void DocAccessibleParent::FireEvent(RemoteAccessible* aAcc,
                                     const uint32_t& aEventType) {
   if (aEventType == nsIAccessibleEvent::EVENT_REORDER ||
       aEventType == nsIAccessibleEvent::EVENT_INNER_REORDER) {
-    for (RemoteAccessible* child = aAcc->RemoteFirstChild(); child;
-         child = child->RemoteNextSibling()) {
-      child->InvalidateGroupInfo();
+    uint32_t count = aAcc->ChildCount();
+    for (uint32_t c = 0; c < count; ++c) {
+      aAcc->RemoteChildAt(c)->InvalidateGroupInfo();
     }
   } else if (aEventType == nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE &&
              aAcc == this) {
