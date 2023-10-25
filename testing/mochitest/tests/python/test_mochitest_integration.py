@@ -50,7 +50,7 @@ def test_manifest(setup_test_harness, request):
     "flavor,manifest",
     [
         ("plain", "mochitest-args.ini"),
-        ("browser-chrome", "browser-args.ini"),
+        ("browser-chrome", "browser-args.toml"),
     ],
 )
 def test_output_extra_args(flavor, manifest, runtests, test_manifest, test_name):

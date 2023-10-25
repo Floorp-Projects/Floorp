@@ -5,12 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += [
-    "browser_allocations_browser_console.ini",
-    "browser_allocations_reload_debugger.ini",
-    "browser_allocations_reload_inspector.ini",
-    "browser_allocations_reload_netmonitor.ini",
-    "browser_allocations_reload_no_devtools.ini",
-    "browser_allocations_reload_webconsole.ini",
-    "browser_allocations_target.ini",
-    "browser_allocations_toolbox.ini",
+    "browser_allocations_browser_console.toml",
+    "browser_allocations_reload_debugger.toml",
+    "browser_allocations_reload_inspector.toml",
+    "browser_allocations_reload_netmonitor.toml",
+    "browser_allocations_reload_no_devtools.toml",
+    "browser_allocations_reload_webconsole.toml",
+    "browser_allocations_target.toml",
+    "browser_allocations_toolbox.toml",
 ]

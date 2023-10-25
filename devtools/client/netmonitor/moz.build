@@ -10,7 +10,7 @@ XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser.toml",
-    "test/browser_http3.ini",
+    "test/browser_http3.toml",
 ]
 
 with Files("**"):

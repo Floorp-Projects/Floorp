@@ -1,0 +1,17 @@
+[DEFAULT]
+support-files = [
+  "head.js",
+  "head-multiple.js",
+]
+prefs = ["media.allow-audio-non-utility=true"]
+# Set this since we want to continue monitoring the disabling of pref since we
+# still allow it a little bit.
+environment = "MOZ_DONT_LOCK_UTILITY_PLZ_FILE_A_BUG=1"
+
+["browser_utility_multipleAudio_fallback.js"]
+support-files = [
+  "../../../../dom/media/test/small-shot.ogg",
+  "../../../../dom/media/test/small-shot.mp3",
+  "../../../../dom/media/test/small-shot.m4a",
+  "../../../../dom/media/test/small-shot.flac",
+]
