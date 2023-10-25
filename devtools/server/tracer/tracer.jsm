@@ -83,6 +83,9 @@ const customLazy = {
  *        Optional spidermonkey's Debugger instance.
  *        This allows devtools to pass a custom instance and ease worker support
  *        where we can't load jsdebugger.sys.mjs.
+ * @param {Boolean} options.traceDOMEvents
+ *        Optional setting to enable tracing all the DOM events being going through
+ *        dom/events/EventListenerManager.cpp's `EventListenerManager`.
  */
 class JavaScriptTracer {
   constructor(options) {
@@ -91,18 +94,67 @@ class JavaScriptTracer {
     // By default, we would trace only JavaScript related to caller's global.
     // As there is no way to compute the caller's global default to the global of the
     // mandatory options argument.
-    const global = options.global || Cu.getGlobalForObject(options);
+    this.tracedGlobal = options.global || Cu.getGlobalForObject(options);
 
     // Instantiate a brand new Debugger API so that we can trace independently
     // of all other DevTools operations. i.e. we can pause while tracing without any interference.
-    this.dbg = this.makeDebugger(global);
+    this.dbg = this.makeDebugger();
 
     this.depth = 0;
     this.prefix = options.prefix ? `${options.prefix}: ` : "";
 
     this.dbg.onEnterFrame = this.onEnterFrame;
 
+    this.traceDOMEvents = !!options.traceDOMEvents;
+    if (this.traceDOMEvents) {
+      this.startTracingDOMEvents();
+    }
+
     this.notifyToggle(true);
+  }
+
+  startTracingDOMEvents() {
+    this.debuggerNotificationObserver = new DebuggerNotificationObserver();
+    this.eventListener = this.eventListener.bind(this);
+    this.debuggerNotificationObserver.addListener(this.eventListener);
+    this.debuggerNotificationObserver.connect(this.tracedGlobal);
+
+    this.currentDOMEvent = null;
+  }
+
+  stopTracingDOMEvents() {
+    this.debuggerNotificationObserver.removeListener(this.eventListener);
+    this.debuggerNotificationObserver.disconnect(this.tracedGlobal);
+    this.debuggerNotificationObserver = null;
+    this.currentDOMEvent = null;
+  }
+
+  /**
+   * Called by DebuggerNotificationObserver interface when a DOM event start being notified
+   * and after it has been notified.
+   *
+   * @param {DebuggerNotification} notification
+   *        Info about the DOM event. See the related idl file.
+   */
+  eventListener(notification) {
+    // For each event we get two notifications.
+    // One just before firing the listeners and another one just after.
+    //
+    // Update `this.currentDOMEvent` to be refering to the event name
+    // while the DOM event is being notified. It will be null the rest of the time.
+    //
+    // We don't need to maintain a stack of events as that's only consumed by onEnterFrame
+    // which only cares about the very lastest event being currently trigerring some code.
+    if (notification.phase == "pre") {
+      // We get notified about "real" DOM event, but also when some particular callbacks are called like setTimeout.
+      if (notification.type == "domEvent") {
+        this.currentDOMEvent = `DOM(${notification.event.type})`;
+      } else {
+        this.currentDOMEvent = notification.type;
+      }
+    } else {
+      this.currentDOMEvent = null;
+    }
   }
 
   stopTracing() {
@@ -117,6 +169,12 @@ class JavaScriptTracer {
     this.depth = 0;
     this.options = null;
 
+    if (this.traceDOMEvents) {
+      this.stopTracingDOMEvents();
+    }
+
+    this.tracedGlobal = null;
+
     this.notifyToggle(false);
   }
 
@@ -128,15 +186,12 @@ class JavaScriptTracer {
    * Instantiate a Debugger API instance dedicated to each Tracer instance.
    * It will notably be different from the instance used in DevTools.
    * This allows to implement tracing independently of DevTools.
-   *
-   * @param {Object} global
-   *        The global to trace.
    */
-  makeDebugger(global) {
+  makeDebugger() {
     // When this code runs in the worker thread, Cu isn't available
     // and we don't have system principal anyway in this context.
     const { isSystemPrincipal } =
-      typeof Cu == "object" ? Cu.getObjectPrincipal(global) : {};
+      typeof Cu == "object" ? Cu.getObjectPrincipal(this.tracedGlobal) : {};
 
     // When debugging the system modules, we have to use a special instance
     // of Debugger loaded in a distinct system global.
@@ -144,8 +199,9 @@ class JavaScriptTracer {
       ? new customLazy.DistinctCompartmentDebugger()
       : new customLazy.Debugger();
 
-    // By default, only track the global passed as argument
-    dbg.addDebuggee(global);
+    // For now, we only trace calls for one particular global at a time.
+    // See the constructor for its definition.
+    dbg.addDebuggee(this.tracedGlobal);
 
     return dbg;
   }
@@ -225,6 +281,7 @@ class JavaScriptTracer {
               depth: this.depth,
               formatedDisplayName,
               prefix: this.prefix,
+              currentDOMEvent: this.currentDOMEvent,
             });
           }
         }
@@ -238,6 +295,14 @@ class JavaScriptTracer {
           frame.offset
         );
         const padding = "—".repeat(this.depth + 1);
+
+        // If we are tracing DOM events and we are in middle of an event,
+        // and are logging the topmost frame,
+        // then log a preliminary dedicated line to mention that event type.
+        if (this.currentDOMEvent && this.depth == 0) {
+          dump(this.prefix + padding + this.currentDOMEvent + "\n");
+        }
+
         // Use a special URL, including line and column numbers which Firefox
         // interprets as to be opened in the already opened DevTool's debugger
         const href = `${script.source.url}:${lineNumber}:${columnNumber}`;

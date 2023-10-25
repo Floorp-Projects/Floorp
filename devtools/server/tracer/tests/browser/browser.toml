@@ -7,3 +7,5 @@ support-files = [
   "Worker.tracer.js",
   "WorkerDebugger.tracer.js",
 ]
+
+["browser_document_tracer.js"]
