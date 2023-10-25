@@ -95,19 +95,19 @@ with Files("tests/browser/browser_isSynthetic.js"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
 with Files("tests/browser/*mediaPlayback*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("tests/browser/*mute*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("tests/browser/*save*"):
     BUG_COMPONENT = ("Firefox", "File Handling")
 
 with Files("tests/browser/*scroll*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("tests/chrome/**"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("tests/chrome/*networking*"):
     BUG_COMPONENT = ("Core", "Networking")
@@ -190,15 +190,15 @@ with Files("tests/widgets/*capture*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("tests/widgets/*popup*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 with Files("tests/widgets/*tree*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("tests/widgets/*videocontrols*"):
     BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
 
 with Files("widgets/*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("TopLevelVideoDocument.js"):
     BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
@@ -246,22 +246,22 @@ with Files("contentAreaUtils.js"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 with Files("*picker*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("edit*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("globalOverlay.*"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 with Files("plugins*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("resetProfile*"):
     BUG_COMPONENT = ("Firefox", "Migration")
 
 with Files("timepicker*"):
-    BUG_COMPONENT = ("Toolkit", "XUL Widgets")
+    BUG_COMPONENT = ("Toolkit", "UI Widgets")
 
 with Files("treeUtils.js"):
     BUG_COMPONENT = ("Toolkit", "General")
