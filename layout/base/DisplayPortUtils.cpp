@@ -779,21 +779,21 @@ bool DisplayPortUtils::CalculateAndSetDisplayPortMargins(
 bool DisplayPortUtils::MaybeCreateDisplayPort(
     nsDisplayListBuilder* aBuilder, nsIFrame* aScrollFrame,
     nsIScrollableFrame* aScrollFrameAsScrollable, RepaintMode aRepaintMode) {
+  MOZ_ASSERT(aBuilder->IsPaintingToWindow());
+
   nsIContent* content = aScrollFrame->GetContent();
   if (!content) {
     return false;
   }
 
-  bool haveDisplayPort = HasNonMinimalNonZeroDisplayPort(content);
-
   // We perform an optimization where we ensure that at least one
   // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a
   // displayport. If that's not the case yet, and we are async-scrollable, we
   // will get a displayport.
-  if (aBuilder->IsPaintingToWindow() &&
+  if (!aBuilder->HaveScrollableDisplayPort() &&
       nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
-      !aBuilder->HaveScrollableDisplayPort() &&
       aScrollFrameAsScrollable->WantAsyncScroll()) {
+    bool haveDisplayPort = HasNonMinimalNonZeroDisplayPort(content);
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
       // We only use the viewId for logging purposes, but create it
