@@ -177,10 +177,10 @@ jobs:
 
         - name: Create DMG 📦
           run: |
-            if [ ${{ inputs.lightning }} == 'true' ]; then
+            if [ ${{ inputs.lightning }} == true ]; then
               export APP_NAME="Floorp Lightning"
               export INSTALLER_NAME="Floorp-Lightning"
-            elif [ ${{ inputs.beta }} == 'true' ]; then
+            elif [ ${{ inputs.beta }} == true ]; then
               export APP_NAME="Floorp Daylight"
               export INSTALLER_NAME="Floorp-Daylight"
             else
