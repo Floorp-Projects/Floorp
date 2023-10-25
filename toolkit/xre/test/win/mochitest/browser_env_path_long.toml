@@ -1,0 +1,6 @@
+[DEFAULT]
+# This path should expand to >32K characters. See bug 1753910.
+environment = 'PATH="C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;C:/loremipsumdolorsitamet/adipiscingconsectetuerelit/;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%;%PATH%"'
+
+["browser_env_path_long.js"]
+run-if = ["os == 'win'"]

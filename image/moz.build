@@ -16,7 +16,7 @@ with Files("**"):
 
 BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
-    "test/browser/browser_sandbox_headless.ini",
+    "test/browser/browser_sandbox_headless.toml",
 ]
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]

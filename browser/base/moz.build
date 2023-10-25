@@ -54,7 +54,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/statuspanel/browser.toml",
     "content/test/sync/browser.toml",
     "content/test/tabcrashed/browser.toml",
-    "content/test/tabcrashed/browser_aboutRestartRequired.ini",
+    "content/test/tabcrashed/browser_aboutRestartRequired.toml",
     "content/test/tabdialogs/browser.toml",
     "content/test/tabMediaIndicator/browser.toml",
     "content/test/tabPrompts/browser.toml",
