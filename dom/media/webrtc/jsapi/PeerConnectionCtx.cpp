@@ -310,6 +310,8 @@ static void RecordCommonRtpTelemetry(const T& list, const T& lastList,
                                 : WEBRTC_VIDEO_QUALITY_OUTBOUND_PACKETLOSS_RATE)
                      : (isAudio ? WEBRTC_AUDIO_QUALITY_INBOUND_PACKETLOSS_RATE
                                 : WEBRTC_VIDEO_QUALITY_INBOUND_PACKETLOSS_RATE);
+        // Because this is an integer and we would like some extra precision
+        // the unit is per mille (1/1000) instead of percent (1/100).
         Accumulate(id, (s.mPacketsLost.Value() * 1000) / total);
       }
     }
