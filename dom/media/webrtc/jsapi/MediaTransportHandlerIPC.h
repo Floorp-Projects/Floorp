@@ -78,9 +78,9 @@ class MediaTransportHandlerIPC final : public MediaTransportHandler {
  private:
   friend class MediaTransportChild;
   void Destroy() override;
+  virtual ~MediaTransportHandlerIPC();
 
-  // We do not own this; it will tell us when it is going away.
-  dom::PMediaTransportChild* mChild = nullptr;
+  RefPtr<MediaTransportChild> mChild;
 
   // |mChild| can only be initted asynchronously, |mInitPromise| resolves
   // when that happens. The |Then| calls make it convenient to dispatch API
