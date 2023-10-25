@@ -1,0 +1,48 @@
+#!/bin/bash
+# Copyright 2022 The Chromium Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This script is meant to be run once to setup the example demo agent.
+# Run it with one command line argument: the path to a directory where the
+# demo agent will be built. This should be a directory outside the SDK
+# directory tree. By default, if no directory is supplied, a directory
+# named `build` in the project root will be used.
+#
+# Once the build is prepared, the demo binary is built using the command
+# `cmake --build <build-dir>`, where <build-dir> is the same argument given
+# to this script.
+
+set -euo pipefail
+
+export ROOT_DIR=$(realpath $(dirname $0))
+export DEMO_DIR=$(realpath $ROOT_DIR/demo)
+export PROTO_DIR=$(realpath  $ROOT_DIR/proto)
+# Defaults to $ROOT_DIR/build if no argument is provided.
+export BUILD_DIR=$(realpath ${1:-$ROOT_DIR/build})
+
+echo Root dir:   $ROOT_DIR
+echo Build dir:  $BUILD_DIR
+echo Demo dir:   $DEMO_DIR
+echo Proto dir:  $PROTO_DIR
+
+# Prepare build directory
+mkdir -p $BUILD_DIR
+# Prepare protobuf out directory
+mkdir -p $BUILD_DIR/gen
+# Enter build directory
+cd $BUILD_DIR
+
+# Install vcpkg and use it to install Google Protocol Buffers.
+test -d vcpkg || (
+  git clone https://github.com/microsoft/vcpkg
+  ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+)
+# Install any packages we want from vcpkg.
+./vcpkg/vcpkg install protobuf
+./vcpkg/vcpkg install gtest
+
+# Generate the build files.
+export CMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake $ROOT_DIR
+
