@@ -468,6 +468,28 @@ class SystemEngineSession(
         throw UnsupportedOperationException("Requesting product analysis status is not available in this engine")
     }
 
+    /**
+     * See [EngineSession.sendClickAttributionEvent]
+     */
+    override fun sendClickAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Sending click attribution event is not available in this engine")
+    }
+
+    /**
+     * See [EngineSession.requestAnalysisStatus]
+     */
+    override fun sendImpressionAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Sending impression attribution event is not available in this engine")
+    }
+
     override fun hasCookieBannerRuleForSession(
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,

@@ -822,6 +822,62 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.sendClickAttributionEvent]
+     */
+    override fun sendClickAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.sendClickAttributionEvent(aid).then({
+                response ->
+            val errorMessage = "Invalid value: unable to send click attribution event through Gecko Engine."
+            if (response == null) {
+                logger.error(errorMessage)
+                onException(
+                    java.lang.IllegalStateException(errorMessage),
+                )
+                return@then GeckoResult()
+            }
+            onResult(response)
+            GeckoResult<Boolean>()
+        }, {
+                throwable ->
+            logger.error("Sending click attribution event failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
+    }
+
+    /**
+     * See [EngineSession.sendImpressionAttributionEvent]
+     */
+    override fun sendImpressionAttributionEvent(
+        aid: String,
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.sendImpressionAttributionEvent(aid).then({
+                response ->
+            val errorMessage = "Invalid value: unable to send impression attribution event through Gecko Engine."
+            if (response == null) {
+                logger.error(errorMessage)
+                onException(
+                    java.lang.IllegalStateException(errorMessage),
+                )
+                return@then GeckoResult()
+            }
+            onResult(response)
+            GeckoResult<Boolean>()
+        }, {
+                throwable ->
+            logger.error("Sending impression attribution event failed.", throwable)
+            onException(throwable)
+            GeckoResult()
+        })
+    }
+
+    /**
      * Purges the history for the session (back and forward history).
      */
     override fun purgeHistory() {

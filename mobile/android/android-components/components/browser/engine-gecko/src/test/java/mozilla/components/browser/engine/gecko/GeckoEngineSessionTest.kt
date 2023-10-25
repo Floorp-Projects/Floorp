@@ -2757,6 +2757,100 @@ class GeckoEngineSessionTest {
     }
 
     @Test
+    fun `WHEN session sendClickAttributionEvent is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mAid = "AID"
+        val geckoResult = GeckoResult<Boolean?>()
+        geckoResult.complete(true)
+        whenever(geckoSession.sendClickAttributionEvent(mAid))
+            .thenReturn(geckoResult)
+
+        engineSession.sendClickAttributionEvent(
+            mAid,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session sendClickAttributionEvent is not successful THEN onException callback for error is called`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mAid = "AID"
+        val geckoResult = GeckoResult<Boolean?>()
+        whenever(geckoSession.sendClickAttributionEvent(mAid))
+            .thenReturn(geckoResult)
+
+        engineSession.sendClickAttributionEvent(
+            mAid,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        geckoResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(onResultCalled)
+        assertTrue(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session sendImpressionAttributionEvent is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mAid = "AID"
+        val geckoResult = GeckoResult<Boolean?>()
+        geckoResult.complete(true)
+        whenever(geckoSession.sendImpressionAttributionEvent(mAid))
+            .thenReturn(geckoResult)
+
+        engineSession.sendImpressionAttributionEvent(
+            mAid,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session sendImpressionAttributionEvent is not successful THEN onException callback for error is called`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val mAid = "AID"
+        val geckoResult = GeckoResult<Boolean?>()
+        whenever(geckoSession.sendImpressionAttributionEvent(mAid))
+            .thenReturn(geckoResult)
+
+        engineSession.sendImpressionAttributionEvent(
+            mAid,
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        geckoResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertFalse(onResultCalled)
+        assertTrue(onExceptionCalled)
+    }
+
+    @Test
     fun containsFormData() {
         val engineSession = GeckoEngineSession(runtime = mock(), geckoSessionProvider = geckoSessionProvider)
         var formData = false

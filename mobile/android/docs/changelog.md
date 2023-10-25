@@ -65,6 +65,7 @@ permalink: /changelog/
 * **concept-engine**
   * 🌟️️ Add `reanalyzeProduct` API to `EngineSession` to allow reanalyzing product from the engine. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
   * 🌟️️ Add `requestAnalysisStatus` API to `EngineSession` to allow request product analysis status from the engine. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
+  * 🌟️️ Add `sendClickAttributionEvent` and `sendImpressionAttributionEvent` API to `EngineSession` to allow sending attribution events. See more on [Bug 1853309](https://bugzilla.mozilla.org/show_bug.cgi?id=1853309).
 
 * **support-ktx**
   * ⚠️ **This is a breaking change**: the `enterToImmersiveMode()` in `Activity.kt` has been renamed to `enterImmersiveMode()`.

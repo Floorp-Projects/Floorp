@@ -101,6 +101,16 @@ class EngineObserverTest {
                 onResult: (String) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
+            override fun sendClickAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendImpressionAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -187,6 +197,16 @@ class EngineObserverTest {
                 onResult: (String) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
+            override fun sendClickAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendImpressionAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -268,6 +288,16 @@ class EngineObserverTest {
             override fun requestAnalysisStatus(
                 url: String,
                 onResult: (String) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendClickAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
+            override fun sendImpressionAttributionEvent(
+                aid: String,
+                onResult: (Boolean) -> Unit,
                 onException: (Throwable) -> Unit,
             ) {}
             override fun loadUrl(
