@@ -844,7 +844,7 @@ fn inject_standard_builtins(
                 let fun = match name {
                     "all" => MacroCall::Relational(RelationalFunction::All),
                     "any" => MacroCall::Relational(RelationalFunction::Any),
-                    "not" => MacroCall::Unary(UnaryOperator::Not),
+                    "not" => MacroCall::Unary(UnaryOperator::LogicalNot),
                     _ => unreachable!(),
                 };
 
@@ -1408,62 +1408,8 @@ fn inject_common_builtin(
                 declaration.overloads.push(module.add_builtin(args, fun))
             }
         }
-        "modf" | "frexp" => {
-            // bits layout
-            // bit 0 through 1 - dims
-            for bits in 0..0b100 {
-                let size = match bits {
-                    0b00 => None,
-                    0b01 => Some(VectorSize::Bi),
-                    0b10 => Some(VectorSize::Tri),
-                    _ => Some(VectorSize::Quad),
-                };
-
-                let ty = module.types.insert(
-                    Type {
-                        name: None,
-                        inner: match size {
-                            Some(size) => TypeInner::Vector {
-                                size,
-                                kind: Sk::Float,
-                                width: float_width,
-                            },
-                            None => TypeInner::Scalar {
-                                kind: Sk::Float,
-                                width: float_width,
-                            },
-                        },
-                    },
-                    Span::default(),
-                );
-
-                let parameters = vec![ty, ty];
-
-                let fun = match name {
-                    "modf" => MacroCall::MathFunction(MathFunction::Modf),
-                    "frexp" => MacroCall::MathFunction(MathFunction::Frexp),
-                    _ => unreachable!(),
-                };
-
-                declaration.overloads.push(Overload {
-                    parameters,
-                    parameters_info: vec![
-                        ParameterInfo {
-                            qualifier: ParameterQualifier::In,
-                            depth: false,
-                        },
-                        ParameterInfo {
-                            qualifier: ParameterQualifier::Out,
-                            depth: false,
-                        },
-                    ],
-                    kind: FunctionKind::Macro(fun),
-                    defined: false,
-                    internal: true,
-                    void: false,
-                })
-            }
-        }
+        // TODO: https://github.com/gfx-rs/naga/issues/2526
+        // "modf" | "frexp" => { ... }
         "cross" => {
             let args = vec![
                 TypeInner::Vector {
@@ -1795,7 +1741,7 @@ impl MacroCall {
                     true => {
                         let offset_arg = args[num_args];
                         num_args += 1;
-                        match ctx.solve_constant(offset_arg, meta) {
+                        match ctx.lift_up_const_expression(offset_arg) {
                             Ok(v) => Some(v),
                             Err(e) => {
                                 frontend.errors.push(e);

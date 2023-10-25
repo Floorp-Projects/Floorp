@@ -30,14 +30,14 @@ git = "https://github.com/gfx-rs/metal-rs/"
 rev = "d24f1a4"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/naga?rev=33b75a27d93c6574b11b4dd4492b85b5783d6c52"]
+[source."git+https://github.com/gfx-rs/naga?rev=e25280df9316434ef7752970016d01a3aede3f17"]
 git = "https://github.com/gfx-rs/naga"
-rev = "33b75a27d93c6574b11b4dd4492b85b5783d6c52"
+rev = "e25280df9316434ef7752970016d01a3aede3f17"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=858d7d590ef9ebfe1b91f6f0925aacde15cce714"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=75989192a9c8f70893882ce0f4373ac217d380c3"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "858d7d590ef9ebfe1b91f6f0925aacde15cce714"
+rev = "75989192a9c8f70893882ce0f4373ac217d380c3"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]

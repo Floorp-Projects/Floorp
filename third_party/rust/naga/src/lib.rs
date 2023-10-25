@@ -980,7 +980,11 @@ pub struct LocalVariable {
     pub ty: Handle<Type>,
     /// Initial value for this variable.
     ///
-    /// Expression handle lives in const_expressions
+    /// This handle refers to this `LocalVariable`'s function's
+    /// [`expressions`] arena, but it is required to be an evaluated
+    /// constant expression.
+    ///
+    /// [`expressions`]: Function::expressions
     pub init: Option<Handle<Expression>>,
 }
 
@@ -991,7 +995,8 @@ pub struct LocalVariable {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum UnaryOperator {
     Negate,
-    Not,
+    LogicalNot,
+    BitwiseNot,
 }
 
 /// Operation that can be applied on two values.
@@ -1112,8 +1117,6 @@ pub enum RelationalFunction {
     Any,
     IsNan,
     IsInf,
-    IsFinite,
-    IsNormal,
 }
 
 /// Built-in shader function for math.

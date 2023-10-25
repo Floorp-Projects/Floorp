@@ -198,11 +198,15 @@ impl Writer {
         }
     }
 
-    pub(super) fn get_expression_type_id(&mut self, tr: &TypeResolution) -> Word {
-        let lookup_ty = match *tr {
+    pub(super) fn get_expression_lookup_type(&mut self, tr: &TypeResolution) -> LookupType {
+        match *tr {
             TypeResolution::Handle(ty_handle) => LookupType::Handle(ty_handle),
             TypeResolution::Value(ref inner) => LookupType::Local(make_local(inner).unwrap()),
-        };
+        }
+    }
+
+    pub(super) fn get_expression_type_id(&mut self, tr: &TypeResolution) -> Word {
+        let lookup_ty = self.get_expression_lookup_type(tr);
         self.get_type_id(lookup_ty)
     }
 
@@ -333,37 +337,6 @@ impl Writer {
         debug_info: &Option<DebugInfoInner>,
     ) -> Result<Word, Error> {
         let mut function = Function::default();
-
-        for (handle, variable) in ir_function.local_variables.iter() {
-            let id = self.id_gen.next();
-
-            if self.flags.contains(WriterFlags::DEBUG) {
-                if let Some(ref name) = variable.name {
-                    self.debugs.push(Instruction::name(id, name));
-                }
-            }
-
-            let init_word = variable
-                .init
-                .map(|constant| self.constant_ids[constant.index()]);
-            let pointer_type_id =
-                self.get_pointer_id(&ir_module.types, variable.ty, spirv::StorageClass::Function)?;
-            let instruction = Instruction::variable(
-                pointer_type_id,
-                id,
-                spirv::StorageClass::Function,
-                init_word.or_else(|| match ir_module.types[variable.ty].inner {
-                    crate::TypeInner::RayQuery => None,
-                    _ => {
-                        let type_id = self.get_type_id(LookupType::Handle(variable.ty));
-                        Some(self.get_constant_null(type_id))
-                    }
-                }),
-            );
-            function
-                .variables
-                .insert(handle, LocalVariable { id, instruction });
-        }
 
         let prelude_id = self.id_gen.next();
         let mut prelude = Block::new(prelude_id);
@@ -647,12 +620,57 @@ impl Writer {
             // Steal the Writer's temp list for a bit.
             temp_list: std::mem::take(&mut self.temp_list),
             writer: self,
+            expression_constness: crate::proc::ExpressionConstnessTracker::from_arena(
+                &ir_function.expressions,
+            ),
         };
 
-        // fill up the pre-emitted expressions
+        // fill up the pre-emitted and const expressions
         context.cached.reset(ir_function.expressions.len());
         for (handle, expr) in ir_function.expressions.iter() {
-            if expr.needs_pre_emit() {
+            if (expr.needs_pre_emit() && !matches!(*expr, crate::Expression::LocalVariable(_)))
+                || context.expression_constness.is_const(handle)
+            {
+                context.cache_expression_value(handle, &mut prelude)?;
+            }
+        }
+
+        for (handle, variable) in ir_function.local_variables.iter() {
+            let id = context.gen_id();
+
+            if context.writer.flags.contains(WriterFlags::DEBUG) {
+                if let Some(ref name) = variable.name {
+                    context.writer.debugs.push(Instruction::name(id, name));
+                }
+            }
+
+            let init_word = variable.init.map(|constant| context.cached[constant]);
+            let pointer_type_id = context.writer.get_pointer_id(
+                &ir_module.types,
+                variable.ty,
+                spirv::StorageClass::Function,
+            )?;
+            let instruction = Instruction::variable(
+                pointer_type_id,
+                id,
+                spirv::StorageClass::Function,
+                init_word.or_else(|| match ir_module.types[variable.ty].inner {
+                    crate::TypeInner::RayQuery => None,
+                    _ => {
+                        let type_id = context.get_type_id(LookupType::Handle(variable.ty));
+                        Some(context.writer.write_constant_null(type_id))
+                    }
+                }),
+            );
+            context
+                .function
+                .variables
+                .insert(handle, LocalVariable { id, instruction });
+        }
+
+        // cache local variable expressions
+        for (handle, expr) in ir_function.expressions.iter() {
+            if matches!(*expr, crate::Expression::LocalVariable(_)) {
                 context.cache_expression_value(handle, &mut prelude)?;
             }
         }
@@ -1242,6 +1260,7 @@ impl Writer {
         &mut self,
         handle: Handle<crate::Expression>,
         ir_module: &crate::Module,
+        mod_info: &ModuleInfo,
     ) -> Result<Word, Error> {
         let id = match ir_module.const_expressions[handle] {
             crate::Expression::Literal(literal) => self.get_constant_scalar(literal),
@@ -1254,11 +1273,23 @@ impl Writer {
                 self.get_constant_null(type_id)
             }
             crate::Expression::Compose { ty, ref components } => {
-                let component_ids: Vec<_> = components
-                    .iter()
-                    .map(|component| self.constant_ids[component.index()])
-                    .collect();
+                let component_ids: Vec<_> = crate::proc::flatten_compose(
+                    ty,
+                    components,
+                    &ir_module.const_expressions,
+                    &ir_module.types,
+                )
+                .map(|component| self.constant_ids[component.index()])
+                .collect();
                 self.get_constant_composite(LookupType::Handle(ty), component_ids.as_slice())
+            }
+            crate::Expression::Splat { size, value } => {
+                let value_id = self.constant_ids[value.index()];
+                let component_ids = &[value_id; 4][..size as usize];
+
+                let ty = self.get_expression_lookup_type(&mod_info[handle]);
+
+                self.get_constant_composite(ty, component_ids)
             }
             _ => unreachable!(),
         };
@@ -1878,7 +1909,7 @@ impl Writer {
         self.constant_ids
             .resize(ir_module.const_expressions.len(), 0);
         for (handle, _) in ir_module.const_expressions.iter() {
-            self.write_constant_expr(handle, ir_module)?;
+            self.write_constant_expr(handle, ir_module, mod_info)?;
         }
         debug_assert!(self.constant_ids.iter().all(|&id| id != 0));
 
@@ -1919,6 +1950,19 @@ impl Writer {
                 // then we must skip it.
                 if !ep_info.dominates_global_use(info) {
                     log::info!("Skip function {:?}", ir_function.name);
+                    continue;
+                }
+
+                // Skip functions that that are not compatible with this entry point's stage.
+                //
+                // When validation is enabled, it rejects modules whose entry points try to call
+                // incompatible functions, so if we got this far, then any functions incompatible
+                // with our selected entry point must not be used.
+                //
+                // When validation is disabled, `fun_info.available_stages` is always just
+                // `ShaderStages::all()`, so this will write all functions in the module, and
+                // the downstream GLSL compiler will catch any problems.
+                if !info.available_stages.contains(ep_info.available_stages) {
                     continue;
                 }
             }

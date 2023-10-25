@@ -127,10 +127,22 @@ pub enum Error {
     UnsupportedBuiltIn(crate::BuiltIn),
     #[error("capability {0:?} is not supported")]
     CapabilityNotSupported(crate::valid::Capabilities),
-    #[error("address space {0:?} is not supported for target MSL version")]
-    UnsupportedAddressSpace(crate::AddressSpace),
     #[error("attribute '{0}' is not supported for target MSL version")]
     UnsupportedAttribute(String),
+    #[error("function '{0}' is not supported for target MSL version")]
+    UnsupportedFunction(String),
+    #[error("can not use writeable storage buffers in fragment stage prior to MSL 1.2")]
+    UnsupportedWriteableStorageBuffer,
+    #[error("can not use writeable storage textures in {0:?} stage prior to MSL 1.2")]
+    UnsupportedWriteableStorageTexture(crate::ShaderStage),
+    #[error("can not use read-write storage textures prior to MSL 1.2")]
+    UnsupportedRWStorageTexture,
+    #[error("array of '{0}' is not supported for target MSL version")]
+    UnsupportedArrayOf(String),
+    #[error("array of type '{0:?}' is not supported")]
+    UnsupportedArrayOfType(Handle<crate::Type>),
+    #[error("ray tracing is not supported prior to MSL 2.3")]
+    UnsupportedRayTracing,
 }
 
 #[derive(Clone, Debug, PartialEq, thiserror::Error)]
@@ -197,7 +209,7 @@ pub struct Options {
 impl Default for Options {
     fn default() -> Self {
         Options {
-            lang_version: (2, 0),
+            lang_version: (1, 0),
             per_entry_point_map: EntryPointResourceMap::default(),
             inline_samplers: Vec::new(),
             spirv_cross_compatibility: false,
@@ -230,16 +242,30 @@ impl Options {
     ) -> Result<ResolvedBinding, Error> {
         match *binding {
             crate::Binding::BuiltIn(mut built_in) => {
-                if let crate::BuiltIn::Position { ref mut invariant } = built_in {
-                    if *invariant && self.lang_version < (2, 1) {
-                        return Err(Error::UnsupportedAttribute("invariant".to_string()));
-                    }
+                match built_in {
+                    crate::BuiltIn::Position { ref mut invariant } => {
+                        if *invariant && self.lang_version < (2, 1) {
+                            return Err(Error::UnsupportedAttribute("invariant".to_string()));
+                        }
 
-                    // The 'invariant' attribute may only appear on vertex
-                    // shader outputs, not fragment shader inputs.
-                    if !matches!(mode, LocationMode::VertexOutput) {
-                        *invariant = false;
+                        // The 'invariant' attribute may only appear on vertex
+                        // shader outputs, not fragment shader inputs.
+                        if !matches!(mode, LocationMode::VertexOutput) {
+                            *invariant = false;
+                        }
                     }
+                    crate::BuiltIn::BaseInstance if self.lang_version < (1, 2) => {
+                        return Err(Error::UnsupportedAttribute("base_instance".to_string()));
+                    }
+                    crate::BuiltIn::InstanceIndex if self.lang_version < (1, 2) => {
+                        return Err(Error::UnsupportedAttribute("instance_id".to_string()));
+                    }
+                    // macOS: Since Metal 2.2
+                    // iOS: Since Metal 2.3 (check depends on https://github.com/gfx-rs/naga/issues/2164)
+                    crate::BuiltIn::PrimitiveIndex if self.lang_version < (2, 2) => {
+                        return Err(Error::UnsupportedAttribute("primitive_id".to_string()));
+                    }
+                    _ => {}
                 }
 
                 Ok(ResolvedBinding::BuiltIn(built_in))

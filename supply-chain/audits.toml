@@ -2348,6 +2348,11 @@ criteria = "safe-to-deploy"
 delta = "0.12.0@git:b99d58ea435090e561377949f428bce2c18451bb -> 0.12.0@git:76003dc0035d53a474d366dcdf49d2e4d12e921f"
 
 [[audits.naga]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.13.0@git:33b75a27d93c6574b11b4dd4492b85b5783d6c52 -> 0.13.0@git:e25280df9316434ef7752970016d01a3aede3f17"
+
+[[audits.naga]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.13.0@git:6668d0694cc51ee66c71c2ca3a1ab1081956299b -> 0.13.0@git:33b75a27d93c6574b11b4dd4492b85b5783d6c52"
@@ -4117,6 +4122,11 @@ criteria = "safe-to-deploy"
 delta = "0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e -> 0.17.0@git:7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 
 [[audits.wgpu-core]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:858d7d590ef9ebfe1b91f6f0925aacde15cce714 -> 0.17.0@git:75989192a9c8f70893882ce0f4373ac217d380c3"
+
+[[audits.wgpu-core]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:9a76c483da4891fb7046c579e36d7c54bdb0b251 -> 0.17.0@git:1495e159faf721cbf87a0634157682f454a963fb"
@@ -4250,6 +4260,11 @@ criteria = "safe-to-deploy"
 delta = "0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e -> 0.17.0@git:7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
 
 [[audits.wgpu-hal]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:858d7d590ef9ebfe1b91f6f0925aacde15cce714 -> 0.17.0@git:75989192a9c8f70893882ce0f4373ac217d380c3"
+
+[[audits.wgpu-hal]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:9a76c483da4891fb7046c579e36d7c54bdb0b251 -> 0.17.0@git:1495e159faf721cbf87a0634157682f454a963fb"
@@ -4381,6 +4396,11 @@ delta = "0.17.0@git:7e0d6c971f900f6a8f01a9de9c41f7894164a82c -> 0.17.0@git:9a76c
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.17.0@git:7fea9e934efd8d5dc03b9aa3e06b775c1ac4a23e -> 0.17.0@git:7e0d6c971f900f6a8f01a9de9c41f7894164a82c"
+
+[[audits.wgpu-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.17.0@git:858d7d590ef9ebfe1b91f6f0925aacde15cce714 -> 0.17.0@git:75989192a9c8f70893882ce0f4373ac217d380c3"
 
 [[audits.wgpu-types]]
 who = "Nicolas Silva <nical@fastmail.com>"

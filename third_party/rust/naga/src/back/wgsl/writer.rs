@@ -292,7 +292,7 @@ impl<W: Write> Writer<W> {
 
                 // Write the constant
                 // `write_constant` adds no trailing or leading space/newline
-                self.write_const_expression(module, init)?;
+                self.write_expr(module, init, func_ctx)?;
             }
 
             // Finish the local with `;` and add a newline (only for readability)
@@ -1599,16 +1599,8 @@ impl<W: Write> Writer<W> {
             Expression::Unary { op, expr } => {
                 let unary = match op {
                     crate::UnaryOperator::Negate => "-",
-                    crate::UnaryOperator::Not => {
-                        match *func_ctx.resolve_type(expr, &module.types) {
-                            TypeInner::Scalar {
-                                kind: crate::ScalarKind::Bool,
-                                ..
-                            }
-                            | TypeInner::Vector { .. } => "!",
-                            _ => "~",
-                        }
-                    }
+                    crate::UnaryOperator::LogicalNot => "!",
+                    crate::UnaryOperator::BitwiseNot => "~",
                 };
 
                 write!(self.out, "{unary}(")?;
