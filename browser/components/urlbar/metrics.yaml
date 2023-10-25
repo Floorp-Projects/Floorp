@@ -695,7 +695,6 @@ quick_suggest:
 
   suggested_index:
     type: string
-    unit: QuickSuggest bi-directional index
     description: >
       A stringified integer value that is the intended index of the suggestion
       being interacted with. If `suggested_index_relative_to_group` is true, the
