@@ -13,7 +13,7 @@ browser.jar:
   res/activity-stream/aboutwelcome/lib/ (./aboutwelcome/lib/*)
   res/activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json (./content-src/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json)
   res/activity-stream/schemas/MessagingExperiment.schema.json (./content-src/asrouter/schemas/MessagingExperiment.schema.json)
-  res/activity-stream/vendor/Redux.jsm (./vendor/Redux.jsm)
+  res/activity-stream/vendor/Redux.sys.mjs (./vendor/Redux.sys.mjs)
   res/activity-stream/vendor/react.js (./vendor/react.js)
   res/activity-stream/vendor/react-dom.js (./vendor/react-dom.js)
   res/activity-stream/vendor/react-dom-server.js (./vendor/react-dom-server.js)

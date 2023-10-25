@@ -346,7 +346,6 @@
   "resource://activity-stream/lib/TopSitesFeed.jsm": "browser/components/newtab/lib/TopSitesFeed.jsm",
   "resource://activity-stream/lib/TopStoriesFeed.jsm": "browser/components/newtab/lib/TopStoriesFeed.jsm",
   "resource://activity-stream/lib/UTEventReporting.jsm": "browser/components/newtab/lib/UTEventReporting.jsm",
-  "resource://activity-stream/vendor/Redux.jsm": "browser/components/newtab/vendor/Redux.jsm",
   "resource://android/assets/web_extensions/test-support/TestSupportChild.jsm": "mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/TestSupportChild.jsm",
   "resource://android/assets/web_extensions/test-support/TestSupportProcessChild.jsm": "mobile/android/geckoview/src/androidTest/assets/web_extensions/test-support/TestSupportProcessChild.jsm",
   "resource://app/modules/SnapshotSelector.jsm": "browser/components/places/SnapshotSelector.jsm",
