@@ -1700,7 +1700,8 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
   return true;
 }
 
-/* ES5 15.12.2 Walk. */
+/* https://262.ecma-international.org/14.0/#sec-internalizejsonproperty */
+// TODO Bug 1860185 rename to InternalizeJSONProperty()
 static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
                  HandleValue reviver, MutableHandleValue vp) {
   AutoCheckRecursionLimit recursion(cx);
@@ -1724,13 +1725,13 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
     }
 
     if (isArray) {
-      /* Step 2a(ii). */
+      /* Step 2b(i). */
       uint32_t length;
       if (!GetLengthPropertyForArrayLike(cx, obj, &length)) {
         return false;
       }
 
-      /* Step 2a(i), 2a(iii-iv). */
+      /* Steps 2b(ii-iii). */
       RootedId id(cx);
       RootedValue newElement(cx);
       for (uint32_t i = 0; i < length; i++) {
@@ -1749,12 +1750,12 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 
         ObjectOpResult ignored;
         if (newElement.isUndefined()) {
-          /* Step 2a(iii)(2). The spec deliberately ignores strict failure. */
+          /* Step 2b(iii)(3). The spec deliberately ignores strict failure. */
           if (!DeleteProperty(cx, obj, id, ignored)) {
             return false;
           }
         } else {
-          /* Step 2a(iii)(3). The spec deliberately ignores strict failure. */
+          /* Step 2b(iii)(4). The spec deliberately ignores strict failure. */
           Rooted<PropertyDescriptor> desc(
               cx, PropertyDescriptor::Data(newElement,
                                            {JS::PropertyAttribute::Configurable,
@@ -1766,13 +1767,13 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
         }
       }
     } else {
-      /* Step 2b(i). */
+      /* Step 2c(i). */
       RootedIdVector keys(cx);
       if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &keys)) {
         return false;
       }
 
-      /* Step 2b(ii). */
+      /* Step 2c(ii). */
       RootedId id(cx);
       RootedValue newElement(cx);
       for (size_t i = 0, len = keys.length(); i < len; i++) {
@@ -1780,7 +1781,7 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
           return false;
         }
 
-        /* Step 2b(ii)(1). */
+        /* Step 2c(ii)(1). */
         id = keys[i];
         if (!Walk(cx, obj, id, reviver, &newElement)) {
           return false;
@@ -1788,12 +1789,12 @@ static bool Walk(JSContext* cx, HandleObject holder, HandleId name,
 
         ObjectOpResult ignored;
         if (newElement.isUndefined()) {
-          /* Step 2b(ii)(2). The spec deliberately ignores strict failure. */
+          /* Step 2c(ii)(2). The spec deliberately ignores strict failure. */
           if (!DeleteProperty(cx, obj, id, ignored)) {
             return false;
           }
         } else {
-          /* Step 2b(ii)(3). The spec deliberately ignores strict failure. */
+          /* Step 2c(ii)(3). The spec deliberately ignores strict failure. */
           Rooted<PropertyDescriptor> desc(
               cx, PropertyDescriptor::Data(newElement,
                                            {JS::PropertyAttribute::Configurable,
@@ -1843,12 +1844,12 @@ template <typename CharT>
 bool js::ParseJSONWithReviver(JSContext* cx,
                               const mozilla::Range<const CharT> chars,
                               HandleValue reviver, MutableHandleValue vp) {
-  /* 15.12.2 steps 2-3. */
+  /* https://262.ecma-international.org/14.0/#sec-json.parse steps 2-10. */
   if (!ParseJSON(cx, chars, vp)) {
     return false;
   }
 
-  /* 15.12.2 steps 4-5. */
+  /* Steps 11-12. */
   if (IsCallable(reviver)) {
     return Revive(cx, reviver, vp);
   }
@@ -1869,7 +1870,7 @@ static bool json_toSource(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-/* ES5 15.12.2. */
+/* https://262.ecma-international.org/14.0/#sec-json.parse */
 static bool json_parse(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "JSON", "parse");
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1893,7 +1894,7 @@ static bool json_parse(JSContext* cx, unsigned argc, Value* vp) {
 
   HandleValue reviver = args.get(1);
 
-  /* Steps 2-5. */
+  /* Steps 2-12. */
   return linearChars.isLatin1()
              ? ParseJSONWithReviver(cx, linearChars.latin1Range(), reviver,
                                     args.rval())
