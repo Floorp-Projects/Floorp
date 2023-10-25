@@ -247,6 +247,11 @@ already_AddRefed<nsAtom> NS_Atomize(const char16_t* aUTF16String);
 // Find an atom that matches the given UTF-16 string. Never returns null.
 already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String);
 
+// Find an atom that matches the given UTF-16 string, with a known
+// already-computed hash via mozilla::HashString. Never returns null.
+already_AddRefed<nsAtom> NS_Atomize(const nsAString& aUTF16String,
+                                    uint32_t aKnownHash);
+
 // An optimized version of the method above for the main thread.
 already_AddRefed<nsAtom> NS_AtomizeMainThread(const nsAString& aUTF16String);
 
