@@ -1398,6 +1398,8 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   bool seenMonthName = false;
   bool seenFullYear = false;
   bool negativeYear = false;
+  // Includes "GMT", "UTC", "UT", and "Z" timezone keywords
+  bool seenGmtAbbr = false;
 
   size_t index = 0;
 
@@ -1412,16 +1414,8 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       TryParseDashedDatePrefix(s, length, &index, &year, &mon, &mday) ||
       TryParseDashedNumericDatePrefix(s, length, &index, &year, &mon, &mday);
 
-  if (isDashedDate && index < length) {
-    if (strchr("T:+", s[index])) {
-      return false;
-    }
-
-    // If the next char is a '-', we need to skip it so that the next number
-    // doesn't get parsed as a time zone
-    if (s[index] == '-') {
-      index++;
-    }
+  if (isDashedDate && index < length && strchr("T:+", s[index])) {
+    return false;
   }
 
   while (index < length) {
@@ -1433,6 +1427,17 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
     // it for backward compatibility reasons.
     if (c == 0x202F) {
       c = ' ';
+    }
+
+    if ((c == '+' || c == '-') &&
+        // Reject + or - after timezone (still allowing for negative year)
+        ((seenPlusMinus && year != -1) ||
+         // Reject timezones like "1995-09-26 -04:30" (if the - is right up
+         // against the previous number, it will get parsed as a time,
+         // see the other comment below)
+         (year != -1 && hour == -1 && !seenGmtAbbr &&
+          !IsAsciiDigit(s[index - 2])))) {
+      return false;
     }
 
     // Spaces, ASCII control characters, periods, and commas are simply ignored.
@@ -1515,7 +1520,10 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         year = n;
         seenFullYear = true;
         negativeYear = true;
-      } else if ((prevc == '+' || prevc == '-') /*  && year>=0 */) {
+      } else if ((prevc == '+' || prevc == '-') &&
+                 // "1995-09-26-04:30" needs to be parsed as a time,
+                 // not a time zone
+                 (seenGmtAbbr || hour != -1)) {
         /* Make ':' case below change tzOffset. */
         seenPlusMinus = true;
 
@@ -1564,8 +1572,9 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         }
       } else if (index < length && c != ',' && c > ' ' && c != '-' &&
                  c != '(' &&
-                 // Allow zulu time e.g. "09/26/1995 16:00Z"
-                 !(hour != -1 && strchr("Zz", c)) &&
+                 // Allow zulu time e.g. "09/26/1995 16:00Z", or
+                 // '+' directly after time e.g. 00:00+0500
+                 !(hour != -1 && strchr("Zz+", c)) &&
                  // Allow '.' after day of month i.e. DD.Mon.YYYY/Mon.DD.YYYY,
                  // or after year/month in YYYY/MM/DD
                  (c != '.' || mday != -1) &&
@@ -1634,6 +1643,10 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         // from them.
         if (action == 0) {
           break;
+        }
+
+        if (action == 10000) {
+          seenGmtAbbr = true;
         }
 
         // Perform action tests from smallest action values to largest.
