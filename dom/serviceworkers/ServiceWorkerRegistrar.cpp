@@ -8,6 +8,7 @@
 #include "ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/net/MozURL.h"
 #include "mozilla/StaticPrefs_dom.h"
 
 #include "nsIEventTarget.h"
@@ -17,7 +18,6 @@
 #include "nsIOutputStream.h"
 #include "nsISafeOutputStream.h"
 #include "nsIServiceWorkerManager.h"
-#include "nsIURI.h"
 #include "nsIWritablePropertyBag2.h"
 
 #include "MainThreadUtils.h"
@@ -66,25 +66,15 @@ StaticRefPtr<ServiceWorkerRegistrar> gServiceWorkerRegistrar;
 
 nsresult GetOriginAndBaseDomain(const nsACString& aURL, nsACString& aOrigin,
                                 nsACString& aBaseDomain) {
-  nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), aURL);
+  RefPtr<net::MozURL> url;
+  nsresult rv = net::MozURL::Init(getter_AddRefs(url), aURL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  OriginAttributes attrs;
-  nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateContentPrincipal(url, attrs);
-  if (!principal) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  url->Origin(aOrigin);
 
-  rv = principal->GetOriginNoSuffix(aOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = principal->GetBaseDomain(aBaseDomain);
+  rv = url->BaseDomain(aBaseDomain);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1403,7 +1393,7 @@ ServiceWorkerRegistrar::GetState(nsIPropertyBag** aBagOut) {
 #define RELEASE_ASSERT_SUCCEEDED(rv, name)                                    \
   do {                                                                        \
     if (NS_FAILED(rv)) {                                                      \
-      if ((rv) == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {               \
+      if (rv == NS_ERROR_XPC_JAVASCRIPT_ERROR_WITH_DETAILS) {                 \
         if (auto* context = CycleCollectedJSContext::Get()) {                 \
           if (RefPtr<Exception> exn = context->GetPendingException()) {       \
             MOZ_CRASH_UNSAFE_PRINTF("Failed to get " name ": %s",             \

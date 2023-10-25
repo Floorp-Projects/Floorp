@@ -8,7 +8,6 @@
 
 use crate::test::TestFn;
 use std::char;
-use std::fmt::Write;
 
 use idna::Errors;
 
@@ -26,10 +25,10 @@ pub fn collect_tests<F: FnMut(String, TestFn)>(add_test: &mut F) {
         };
 
         let mut pieces = line.split(';').map(|x| x.trim()).collect::<Vec<&str>>();
-        let source = unescape(pieces.remove(0));
+        let source = unescape(&pieces.remove(0));
 
         // ToUnicode
-        let mut to_unicode = unescape(pieces.remove(0));
+        let mut to_unicode = unescape(&pieces.remove(0));
         if to_unicode.is_empty() {
             to_unicode = source.clone();
         }
@@ -66,7 +65,7 @@ pub fn collect_tests<F: FnMut(String, TestFn)>(add_test: &mut F) {
         let test_name = format!("UTS #46 line {}", i + 1);
         add_test(
             test_name,
-            TestFn::DynTestFn(Box::new(move || {
+            TestFn::dyn_test_fn(move || {
                 let config = idna::Config::default()
                     .use_std3_ascii_rules(true)
                     .verify_dns_length(true)
@@ -110,7 +109,7 @@ pub fn collect_tests<F: FnMut(String, TestFn)>(add_test: &mut F) {
                     to_ascii_t_result,
                     |e| e.starts_with('C') || e == "V2",
                 );
-            })),
+            }),
         )
     }
 }
@@ -161,8 +160,8 @@ fn unescape(input: &str) -> String {
                             match char::from_u32(((c1 * 16 + c2) * 16 + c3) * 16 + c4) {
                                 Some(c) => output.push(c),
                                 None => {
-                                    write!(&mut output, "\\u{:X}{:X}{:X}{:X}", c1, c2, c3, c4)
-                                        .expect("Could not write to output");
+                                    output
+                                        .push_str(&format!("\\u{:X}{:X}{:X}{:X}", c1, c2, c3, c4));
                                 }
                             };
                         }
