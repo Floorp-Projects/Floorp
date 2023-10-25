@@ -1920,12 +1920,6 @@
     "expectations": ["FAIL", "TIMEOUT"]
   },
   {
-    "testIdPattern": "[frame.spec] Frame specs Frame Management should detach child frames on navigation",
-    "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"]
-  },
-  {
     "testIdPattern": "[frame.spec] Frame specs Frame Management should report different frame instance when frame re-attaches",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["cdp", "firefox"],
@@ -1969,12 +1963,6 @@
   },
   {
     "testIdPattern": "[frame.spec] Frame specs Frame Management should send events when frames are manipulated dynamically",
-    "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"]
-  },
-  {
-    "testIdPattern": "[frame.spec] Frame specs Frame Management should support framesets",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
     "expectations": ["FAIL"]
@@ -2458,12 +2446,6 @@
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["cdp", "firefox"],
     "expectations": ["SKIP"]
-  },
-  {
-    "testIdPattern": "[navigation.spec] navigation Frame.waitForNavigation should fail when frame detaches",
-    "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["TIMEOUT"]
   },
   {
     "testIdPattern": "[navigation.spec] navigation Frame.waitForNavigation should work",
@@ -3134,7 +3116,7 @@
   {
     "testIdPattern": "[page.spec] Page Page.close should not be visible in browser.pages",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["chrome", "webDriverBiDi"],
+    "parameters": ["webDriverBiDi"],
     "expectations": ["PASS"]
   },
   {
@@ -3158,7 +3140,7 @@
   {
     "testIdPattern": "[page.spec] Page Page.Events.Close should work with window.close",
     "platforms": ["darwin", "linux", "win32"],
-    "parameters": ["chrome", "webDriverBiDi"],
+    "parameters": ["webDriverBiDi"],
     "expectations": ["PASS"]
   },
   {

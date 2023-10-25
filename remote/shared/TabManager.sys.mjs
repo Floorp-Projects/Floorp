@@ -6,6 +6,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
+  BrowsingContextListener:
+    "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   generateUUID: "chrome://remote/content/shared/UUID.sys.mjs",
   MobileTabBrowser: "chrome://remote/content/shared/MobileTabBrowser.sys.mjs",
@@ -13,10 +15,31 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 class TabManagerClass {
   #browserUniqueIds;
+  #contextListener;
+  #navigableIds;
 
   constructor() {
     // Maps browser's permanentKey to uuid: WeakMap.<Object, string>
     this.#browserUniqueIds = new WeakMap();
+
+    // Maps browsing contexts to uuid: WeakMap.<BrowsingContext, string>.
+    // It's required as a fallback, since in the case when a context was discarded
+    // embedderElement is gone, and we cannot retrieve
+    // the context id from this.#browserUniqueIds.
+    this.#navigableIds = new WeakMap();
+
+    this.#contextListener = new lazy.BrowsingContextListener();
+    this.#contextListener.on("attached", this.#onContextAttached);
+    this.#contextListener.startListening();
+
+    this.browsers.forEach(browser => {
+      if (this.isValidCanonicalBrowsingContext(browser.browsingContext)) {
+        this.#navigableIds.set(
+          browser.browsingContext,
+          this.getIdForBrowsingContext(browser.browsingContext)
+        );
+      }
+    });
   }
 
   /**
@@ -219,6 +242,10 @@ class TabManagerClass {
     }
 
     const key = browserElement.permanentKey;
+    if (key === undefined) {
+      return null;
+    }
+
     if (!this.#browserUniqueIds.has(key)) {
       this.#browserUniqueIds.set(key, lazy.generateUUID());
     }
@@ -243,7 +270,11 @@ class TabManagerClass {
 
     if (!browsingContext.parent) {
       // Top-level browsing contexts have their own custom unique id.
-      return this.getIdForBrowser(browsingContext.embedderElement);
+      // If a context was discarded, embedderElement is already gone,
+      // so use navigable id instead.
+      return browsingContext.embedderElement
+        ? this.getIdForBrowser(browsingContext.embedderElement)
+        : this.#navigableIds.get(browsingContext);
     }
 
     return browsingContext.id.toString();
@@ -395,6 +426,16 @@ class TabManagerClass {
   supportsTabs() {
     return lazy.AppInfo.isAndroid || lazy.AppInfo.isFirefox;
   }
+
+  #onContextAttached = (eventName, data = {}) => {
+    const { browsingContext } = data;
+    if (this.isValidCanonicalBrowsingContext(browsingContext)) {
+      this.#navigableIds.set(
+        browsingContext,
+        this.getIdForBrowsingContext(browsingContext)
+      );
+    }
+  };
 }
 
 // Expose a shared singleton.
