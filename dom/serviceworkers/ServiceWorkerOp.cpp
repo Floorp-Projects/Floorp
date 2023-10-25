@@ -884,17 +884,18 @@ class NotificationEventOp : public ExtendableEventOp,
     ServiceWorkerNotificationEventOpArgs& args =
         mArgs.get_ServiceWorkerNotificationEventOpArgs();
 
-    auto result = Notification::ConstructFromFields(
+    ErrorResult result;
+    RefPtr<Notification> notification = Notification::ConstructFromFields(
         aWorkerPrivate->GlobalScope(), args.id(), args.title(), args.dir(),
         args.lang(), args.body(), args.tag(), args.icon(), args.data(),
-        args.scope());
+        args.scope(), result);
 
-    if (NS_WARN_IF(result.isErr())) {
+    if (NS_WARN_IF(result.Failed())) {
       return false;
     }
 
     NotificationEventInit init;
-    init.mNotification = result.unwrap();
+    init.mNotification = notification;
     init.mBubbles = false;
     init.mCancelable = false;
 
