@@ -53,6 +53,3 @@ index 5457402542..bceb321951 100644
    denoiser_state = kDenoiserOnYOnly;
  #else
    denoiser_state = kDenoiserOnAdaptive;
--- 
-2.34.1
-

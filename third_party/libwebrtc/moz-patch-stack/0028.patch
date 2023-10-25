@@ -62,6 +62,3 @@ index dc954b62e0..db34d542c8 100644
    public List<CaptureFormat> getSupportedFormats(String deviceName);
  
    public CameraVideoCapturer createCapturer(
--- 
-2.34.1
-

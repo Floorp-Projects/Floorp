@@ -44,6 +44,3 @@ index 98acbb1a51..c236b619d4 100644
      reference_finder_->ClearTo(seq_num);
    }
  }
--- 
-2.34.1
-

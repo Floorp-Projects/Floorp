@@ -29,6 +29,3 @@ index 7e46d58e27..bf55a25c69 100644
  #include "rtc_base/task_queue_win.h"
  
  // clang-format off
--- 
-2.34.1
-

@@ -219,6 +219,3 @@ index 20588fbcad..9da894ab95 100644
        stats_proxy_->OnCompleteFrame(metadata.is_keyframe, metadata.size,
                                      metadata.contentType);
        MaybeScheduleFrameForRelease();
--- 
-2.34.1
-

@@ -27,6 +27,3 @@ index 94de316421..bda6ad9a52 100644
  }
  
  std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
--- 
-2.34.1
-

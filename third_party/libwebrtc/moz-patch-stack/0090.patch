@@ -36,6 +36,3 @@ index 0c26e7a7d5..22aa355e44 100644
                                 ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
                                 : (1 << SPA_DATA_MemFd);
  
--- 
-2.34.1
-

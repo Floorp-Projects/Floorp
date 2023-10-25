@@ -31,6 +31,3 @@ index 6f72f7927e..37965305d9 100644
    bool allow_v4l2_ = false;
  #endif
  #if defined(WEBRTC_USE_PIPEWIRE)
--- 
-2.34.1
-

@@ -24,6 +24,3 @@ index 10a5bcfe7c..fedf9f5961 100644
  
      wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
      if (wd2 > 32767)
--- 
-2.34.1
-

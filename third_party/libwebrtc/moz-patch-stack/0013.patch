@@ -27,6 +27,3 @@ index 33ea941808..2dfdd9a5df 100644
          if (fd > fdmax)
            fdmax = fd;
  
--- 
-2.34.1
-

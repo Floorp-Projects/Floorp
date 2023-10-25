@@ -85,6 +85,3 @@ index 95432a509d..e3c2395f49 100644
  
  #ifdef WEBRTC_LINUX
    void HandleEvent(inotify_event* event, int fd);
--- 
-2.34.1
-

@@ -69,6 +69,3 @@ index 46cfe9bc15..7b79f15a6c 100644
      if (h->flags & SPA_META_HEADER_FLAG_CORRUPTED) {
        RTC_LOG(LS_INFO) << "Dropping corruped frame.";
      } else {
--- 
-2.34.1
-

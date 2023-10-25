@@ -31,6 +31,3 @@ index dec97a2c25..d5ee80c73e 100644
    private void openCamera() {
      checkIsOnCameraThread();
  
--- 
-2.34.1
-

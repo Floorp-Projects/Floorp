@@ -25,6 +25,3 @@ index 0926552e4e..be8ee88c09 100644
    // TODO(bugs.webrtc.org/10336): Allow the sender to ignore key frame requests
    // issued by anything other than the LossNotificationController if it (the
    // sender) is relying on LNTF alone.
--- 
-2.34.1
-

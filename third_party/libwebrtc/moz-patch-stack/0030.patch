@@ -1415,6 +1415,3 @@ index 9c67f61aaa..1861347fa1 100644
    template("rtc_android_library") {
      android_library(target_name) {
        forward_variables_from(invoker,
--- 
-2.34.1
-

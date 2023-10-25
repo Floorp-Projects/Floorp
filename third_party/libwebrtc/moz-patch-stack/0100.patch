@@ -39,6 +39,3 @@ index 02404697ad..1bddaf824d 100644
  }
  
  int32_t VideoCaptureImpl::DeliverCapturedFrame(VideoFrame& captureFrame) {
--- 
-2.34.1
-

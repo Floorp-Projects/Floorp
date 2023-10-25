@@ -41,6 +41,3 @@ index 6c6cbb8941..52c577ba83 100644
    // Old style functions.
    [[deprecated("Use ArrayView version")]] virtual bool
    SendRtp(const uint8_t* packet, size_t length, const PacketOptions& options) {
--- 
-2.34.1
-

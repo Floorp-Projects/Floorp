@@ -25,6 +25,3 @@ index 1bddaf824d..15dfb7fe1f 100644
      dataCallBack->OnFrame(captureFrame);
    }
  
--- 
-2.34.1
-

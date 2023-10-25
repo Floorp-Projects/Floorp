@@ -26,6 +26,3 @@ index 04203033b0..6614032299 100644
   protected:
    ~VideoCaptureModule() override {}
  };
--- 
-2.34.1
-

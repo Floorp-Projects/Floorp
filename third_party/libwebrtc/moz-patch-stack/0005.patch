@@ -47,6 +47,3 @@ index 0b74f2ac0a..5c53f48144 100644
    // We trust signaled SSRC more than payload type which is likely to conflict
    // between streams.
    const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
--- 
-2.34.1
-

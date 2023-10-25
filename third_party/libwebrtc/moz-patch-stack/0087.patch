@@ -165,6 +165,3 @@ index 5dd316e206..5c6b62d068 100644
    VideoFrameMetadata Metadata() const override { return metadata_; }
  
    void SetMetadata(const VideoFrameMetadata&) override {
--- 
-2.34.1
-

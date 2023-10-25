@@ -91,6 +91,3 @@ index 1b52645cde..dc7b9b1a24 100644
  };
  }  // namespace videocapturemodule
  }  // namespace webrtc
--- 
-2.34.1
-

@@ -194,6 +194,3 @@ index 88c99d6a68..f7460b831c 100644
    static Clock* const clock = new RealTimeClock();
    return clock;
  }
--- 
-2.34.1
-

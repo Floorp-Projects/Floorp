@@ -38,6 +38,3 @@ index 877986134a..c1d2d61a71 100644
 -  private static native long nativeCreateEnumeration(String name, int max);
 -  private static native void nativeAddSample(long handle, int sample);
  }
--- 
-2.34.1
-

@@ -32,6 +32,3 @@ index 7071776d0a..02404697ad 100644
    // Setting absolute height (in case it was negative).
    // In Windows, the image starts bottom left, instead of top left.
    // Setting a negative source height, inverts the image (within LibYuv).
--- 
-2.34.1
-

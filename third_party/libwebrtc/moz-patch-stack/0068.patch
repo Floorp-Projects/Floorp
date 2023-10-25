@@ -344,6 +344,3 @@ index bb67304d06..b6d7bd46ae 100644
    VCMVideoProtection protection_mode_
        RTC_GUARDED_BY(&worker_sequence_checker_) = kProtectionNack;
  
--- 
-2.34.1
-

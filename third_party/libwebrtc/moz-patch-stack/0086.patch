@@ -64,6 +64,3 @@ index be8ee88c09..faf5b3f45e 100644
              config_.rtp.remote_ssrc);
      frame_transformer_delegate_->Init();
    }
--- 
-2.34.1
-

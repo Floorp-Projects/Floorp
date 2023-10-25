@@ -27,6 +27,3 @@ index 655b2761ac..c49b83f95f 100644
    return source_tracker_.GetSources();
  }
  
--- 
-2.34.1
-
