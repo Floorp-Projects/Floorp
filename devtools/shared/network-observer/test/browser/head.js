@@ -46,43 +46,18 @@ async function addTab(url) {
 }
 
 /**
- * Base network event owner class implementing all mandatory callbacks and
- * keeping track of which callbacks have been called.
- */
-class NetworkEventOwner {
-  hasEventTimings = false;
-  hasResponseCache = false;
-  hasResponseContent = false;
-  hasResponseStart = false;
-  hasSecurityInfo = false;
-  hasServerTimings = false;
-
-  addEventTimings() {
-    this.hasEventTimings = true;
-  }
-  addResponseCache() {
-    this.hasResponseCache = true;
-  }
-  addResponseContent() {
-    this.hasResponseContent = true;
-  }
-  addResponseStart() {
-    this.hasResponseStart = true;
-  }
-  addSecurityInfo() {
-    this.hasSecurityInfo = true;
-  }
-  addServerTimings() {
-    this.hasServerTimings = true;
-  }
-}
-
-/**
- * Create a simple network event owner, with mock implementations of all
+ * Create a simple network event owner, with empty implementations of all
  * the expected APIs for a NetworkEventOwner.
  */
 function createNetworkEventOwner(event) {
-  return new NetworkEventOwner();
+  return {
+    addEventTimings: () => {},
+    addResponseCache: () => {},
+    addResponseContent: () => {},
+    addResponseStart: () => {},
+    addSecurityInfo: () => {},
+    addServerTimings: () => {},
+  };
 }
 
 /**
@@ -94,25 +69,24 @@ function createNetworkEventOwner(event) {
  * @param {number} expectedRequestsCount
  *     How many different events (requests) are expected.
  * @returns {Promise}
- *     A promise which will resolve with an array of network event owners, when
- *     the expected event count is reached.
+ *     A promise which will resolve with the current count, when the expected
+ *     count is reached.
  */
 async function waitForNetworkEvents(expectedUrl, expectedRequestsCount) {
-  const events = [];
+  let eventsCount = 0;
   const networkObserver = new NetworkObserver({
     ignoreChannelFunction: channel => channel.URI.spec !== expectedUrl,
-    onNetworkEvent: () => {
+    onNetworkEvent: event => {
       info("waitForNetworkEvents received a new event");
-      const owner = createNetworkEventOwner();
-      events.push(owner);
-      return owner;
+      eventsCount++;
+      return createNetworkEventOwner(event);
     },
   });
   registerCleanupFunction(() => networkObserver.destroy());
 
   info("Wait until the events count reaches " + expectedRequestsCount);
   await BrowserTestUtils.waitForCondition(
-    () => events.length >= expectedRequestsCount
+    () => eventsCount >= expectedRequestsCount
   );
-  return events;
+  return eventsCount;
 }
