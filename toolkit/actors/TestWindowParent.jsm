@@ -38,6 +38,11 @@ class TestWindowParent extends JSWindowActorParent {
           aMessage.data.type
         );
         break;
+      case "messagePort": {
+        const { port } = aMessage.data;
+        port.postMessage("Message sent from parent over a MessagePort.");
+        port.close();
+      }
     }
 
     return undefined;

@@ -49,3 +49,23 @@ declTest("asyncMessage without both sides", {
     });
   },
 });
+
+declTest("asyncMessage can transfer MessagePorts", {
+  async test(browser) {
+    await ContentTask.spawn(browser, {}, async function () {
+      let child = content.windowGlobalChild;
+      let actorChild = child.getActor("TestWindow");
+
+      let { port1, port2 } = new MessageChannel();
+      actorChild.sendAsyncMessage("messagePort", { port: port2 }, [port2]);
+      let reply = await new Promise(resolve => {
+        port1.onmessage = message => {
+          resolve(message.data);
+          port1.close();
+        };
+      });
+
+      is(reply, "Message sent from parent over a MessagePort.");
+    });
+  },
+});
