@@ -1941,7 +1941,7 @@
     <!-- The header for the last name of an address -->
     <string name="addresses_last_name">Vezetéknév</string>
     <!-- The header for the street address of an address -->
-    <string name="addresses_street_address">Utca, hászszám</string>
+    <string name="addresses_street_address">Utca, házszám</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Város</string>
     <!-- The header for the subregion of an address when "state" should be used -->

@@ -138,6 +138,8 @@
     <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Bëni hyrjen me një llogari %1$s</string>
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Përdor %1$s si shërbim hyrjesh</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Hyrja te %1$s me një llogari %2$s është subjekt i <a href="%3$s">Rregullave të Privatësisë</a> dhe <a href="%4$s">Kushteve të Shërbimit</a> të tyre]]></string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">Vazhdo</string>
 </resources>

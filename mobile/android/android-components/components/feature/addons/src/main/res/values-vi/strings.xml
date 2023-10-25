@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Tìm hiểu thêm về quyền hạn</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Xếp hạng</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Thông tin thêm về tiện ích</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Cài đặt</string>
     <!-- Indicates the add-on is enabled. -->

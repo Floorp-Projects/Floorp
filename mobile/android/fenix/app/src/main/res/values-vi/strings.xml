@@ -73,7 +73,12 @@
         private mode in our new Total Private Browsing mode.
         The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
         The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
-    <string name="felt_privacy_info_card_subtitle">%1$s xóa cookie, lịch sử và dữ liệu trang web của bạn khi bạn đóng tất cả các cửa sổ riêng tư của mình. %2$s</string>
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s xóa cookie, lịch sử và dữ liệu trang web của bạn khi bạn đóng tất cả các cửa sổ riêng tư của mình. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s xóa cookie, lịch sử và dữ liệu trang web của bạn khi bạn đóng tất cả các thẻ riêng tư. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
@@ -324,10 +329,14 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Đặt Firefox làm trình duyệt của bạn</string>
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Đặt Firefox làm trình duyệt của bạn</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Chúng tôi thích việc giữ an toàn cho bạn</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox đặt mọi người lên trên lợi nhuận và bảo vệ quyền riêng tư của bạn bằng cách chặn các trình theo dõi trên nhiều trang web.\n\nTìm hiểu thêm trong thông báo về quyền riêng tư của chúng tôi.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox đặt mọi người lên trên lợi nhuận và bảo vệ quyền riêng tư của bạn bằng cách chặn các trình theo dõi trên nhiều trang web.\n\nTìm hiểu thêm trong thông báo về quyền riêng tư của chúng tôi.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Trình duyệt được hỗ trợ phi lợi nhuận của chúng tôi giúp ngăn chặn các công ty bí mật theo dõi bạn trên web.\n\nTìm hiểu thêm trong thông báo về quyền riêng tư của chúng tôi.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">thông báo bảo mật</string>
@@ -336,19 +345,30 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Chuyển từ điện thoại sang máy tính xách tay và ngược lại</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Luôn được mã hóa khi bạn chuyển đổi giữa các thiết bị</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Lấy các thẻ và mật khẩu từ các thiết bị khác của bạn để tiếp tục nơi bạn đã dừng lại.</string>
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Lấy các thẻ và mật khẩu từ các thiết bị khác của bạn để tiếp tục nơi bạn đã dừng lại.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Khi bạn đăng nhập và đồng bộ hóa, bạn sẽ an toàn hơn. Firefox mã hóa mật khẩu, dấu trang của bạn và hơn thế nữa.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Đăng nhập</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Không phải bây giờ</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với Firefox</string>
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Thông báo giúp bạn làm được nhiều việc hơn với Firefox</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Thông báo giúp bạn an toàn hơn với Firefox</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
-       Note: The word "Firefox" should NOT be translated   -->
-    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Gửi các thẻ giữa các thiết bị, quản lý tải xuống và nhận các mẹo để tận dụng tối đa Firefox.</string>
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Gửi các thẻ giữa các thiết bị, quản lý tải xuống và nhận các mẹo để tận dụng tối đa Firefox.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">Gửi các thẻ giữa các thiết bị của bạn một cách an toàn và khám phá các tính năng bảo mật khác trong Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Bật thông báo</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -387,7 +407,9 @@
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Chọn một</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts">Quản lý lối tắt tìm kiếm</string>
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">Quản lý lối tắt tìm kiếm</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">Quản lý công cụ tìm kiếm thay thế</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">Chỉnh sửa công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -398,8 +420,16 @@
     <string name="preferences_search">Tìm kiếm</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Công cụ tìm kiếm</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Đề xuất từ công cụ tìm kiếm</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Thanh địa chỉ</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Thanh địa chỉ</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">Tùy chọn thanh địa chỉ</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">Thanh địa chỉ - Đề xuất của Firefox</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Tìm hiểu thêm về đề xuất của Firefox</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Đánh giá trên Google Play</string>
     <!-- Preference linking to about page for Fenix
@@ -980,9 +1010,9 @@
     <!-- Hint for adding name of a collection -->
     <string name="collection_name_hint">Tên bộ sưu tập</string>
     <!-- Text for the menu button to rename a top site -->
-	<string name="rename_top_site">Đổi tên</string>
-	<!-- Text for the menu button to remove a top site -->
-	<string name="remove_top_site">Xóa</string>
+    <string name="rename_top_site">Đổi tên</string>
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Xóa</string>
 
     <!-- Text for the menu button to delete a top site from history -->
     <string name="delete_from_history">Xóa khỏi lịch sử</string>
@@ -1928,7 +1958,7 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Chỉnh sửa công cụ tìm kiếm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Thêm</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Thêm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
     <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Lưu</string>
     <!-- Text for the menu button to edit a search engine -->
@@ -1937,17 +1967,17 @@
     <string name="search_engine_delete">Xóa</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Khác</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Khác</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
     <string name="search_add_custom_engine_name_label">Tên</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Tên</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Tên</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Tên công cụ tìm kiếm</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
     <string name="search_add_custom_engine_url_label">Chuỗi URL tìm kiếm</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Chuỗi tìm kiếm để sử dụng</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL để sử dụng cho tìm kiếm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
@@ -2093,14 +2123,14 @@
 
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Lối tắt</string>
-	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Tên</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">Tên</string>
     <!-- Hint for renaming title of a shortcut -->
     <string name="shortcut_name_hint">Tên lối tắt</string>
-	<!-- Button caption to confirm the renaming of the top site. -->
-	<string name="top_sites_rename_dialog_ok">OK</string>
-	<!-- Dialog button text for canceling the rename top site prompt. -->
-	<string name="top_sites_rename_dialog_cancel">Huỷ bỏ</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">OK</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">Huỷ bỏ</string>
 
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">Cài đặt</string>
