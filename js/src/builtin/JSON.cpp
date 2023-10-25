@@ -64,7 +64,7 @@ using JS::AutoStableStringChars;
  * escaping (that is, `2 + 6 * (srcEnd - srcBegin)` characters).
  */
 template <typename SrcCharT, typename DstCharT>
-static MOZ_ALWAYS_INLINE RangedPtr<DstCharT> InfallibleQuote(
+static MOZ_ALWAYS_INLINE RangedPtr<DstCharT> InfallibleQuoteJSONString(
     RangedPtr<const SrcCharT> srcBegin, RangedPtr<const SrcCharT> srcEnd,
     RangedPtr<DstCharT> dstPtr) {
   // Maps characters < 256 to the value that must follow the '\\' in the quoted
@@ -154,8 +154,8 @@ static MOZ_ALWAYS_INLINE RangedPtr<DstCharT> InfallibleQuote(
 }
 
 template <typename SrcCharT, typename DstCharT>
-static size_t QuoteHelper(const JSLinearString& linear, StringBuffer& sb,
-                          size_t sbOffset) {
+static size_t QuoteJSONStringHelper(const JSLinearString& linear,
+                                    StringBuffer& sb, size_t sbOffset) {
   size_t len = linear.length();
 
   JS::AutoCheckCannotGC nogc;
@@ -163,12 +163,12 @@ static size_t QuoteHelper(const JSLinearString& linear, StringBuffer& sb,
   RangedPtr<DstCharT> dstBegin{sb.begin<DstCharT>(), sb.begin<DstCharT>(),
                                sb.end<DstCharT>()};
   RangedPtr<DstCharT> dstEnd =
-      InfallibleQuote(srcBegin, srcBegin + len, dstBegin + sbOffset);
+      InfallibleQuoteJSONString(srcBegin, srcBegin + len, dstBegin + sbOffset);
 
   return dstEnd - dstBegin;
 }
 
-static bool Quote(JSContext* cx, StringBuffer& sb, JSString* str) {
+static bool QuoteJSONString(JSContext* cx, StringBuffer& sb, JSString* str) {
   JSLinearString* linear = str->ensureLinear(cx);
   if (!linear) {
     return false;
@@ -198,11 +198,14 @@ static bool Quote(JSContext* cx, StringBuffer& sb, JSString* str) {
   size_t newSize;
 
   if (linear->hasTwoByteChars()) {
-    newSize = QuoteHelper<char16_t, char16_t>(*linear, sb, sbInitialLen);
+    newSize =
+        QuoteJSONStringHelper<char16_t, char16_t>(*linear, sb, sbInitialLen);
   } else if (sb.isUnderlyingBufferLatin1()) {
-    newSize = QuoteHelper<Latin1Char, Latin1Char>(*linear, sb, sbInitialLen);
+    newSize = QuoteJSONStringHelper<Latin1Char, Latin1Char>(*linear, sb,
+                                                            sbInitialLen);
   } else {
-    newSize = QuoteHelper<Latin1Char, char16_t>(*linear, sb, sbInitialLen);
+    newSize =
+        QuoteJSONStringHelper<Latin1Char, char16_t>(*linear, sb, sbInitialLen);
   }
 
   sb.shrinkTo(newSize);
@@ -555,7 +558,7 @@ static bool SerializeJSONObject(JSContext* cx, HandleObject obj,
       return false;
     }
 
-    if (!Quote(cx, scx->sb, s) || !scx->sb.append(':') ||
+    if (!QuoteJSONString(cx, scx->sb, s) || !scx->sb.append(':') ||
         !(scx->gap.empty() || scx->sb.append(' ')) ||
         !SerializeJSONProperty(cx, outputValue, scx)) {
       return false;
@@ -736,7 +739,7 @@ static bool SerializeJSONProperty(JSContext* cx, const Value& v,
 
   /* Step 8. */
   if (v.isString()) {
-    return Quote(cx, scx->sb, v.toString());
+    return QuoteJSONString(cx, scx->sb, v.toString());
   }
 
   /* Step 5. */
@@ -1067,7 +1070,7 @@ class OwnNonIndexKeysIterForJSON {
 static bool EmitSimpleValue(JSContext* cx, StringBuffer& sb, const Value& v) {
   /* Step 8. */
   if (v.isString()) {
-    return Quote(cx, sb, v.toString());
+    return QuoteJSONString(cx, sb, v.toString());
   }
 
   /* Step 5. */
@@ -1421,7 +1424,7 @@ static bool FastSerializeJSONProperty(JSContext* cx, Handle<Value> v,
         wroteMember = true;
 
         MOZ_ASSERT(prop.key().isString());
-        if (!Quote(cx, scx->sb, prop.key().toString())) {
+        if (!QuoteJSONString(cx, scx->sb, prop.key().toString())) {
           return false;
         }
 
