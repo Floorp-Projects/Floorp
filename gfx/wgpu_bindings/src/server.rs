@@ -13,13 +13,20 @@ use nsstring::{nsACString, nsCString, nsString};
 
 use wgc::{gfx_select, id};
 use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
+#[allow(unused_imports)]
+use wgh::Instance;
 
 use std::borrow::Cow;
+#[allow(unused_imports)]
+use std::mem;
 use std::os::raw::c_void;
 use std::ptr;
 use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
 
+use std::ffi::{c_long, c_ulong};
+#[cfg(target_os = "windows")]
+use winapi::shared::dxgi;
 #[cfg(target_os = "windows")]
 use winapi::um::d3d12 as d3d12_ty;
 #[cfg(target_os = "windows")]
@@ -113,6 +120,13 @@ pub extern "C" fn wgpu_server_poll_all_devices(global: &Global, force_wait: bool
     global.poll_all_devices(force_wait).unwrap();
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct FfiLUID {
+    low_part: c_ulong,
+    high_part: c_long,
+}
+
 /// Request an adapter according to the specified options.
 /// Provide the list of IDs to pick from.
 ///
@@ -122,15 +136,49 @@ pub extern "C" fn wgpu_server_poll_all_devices(global: &Global, force_wait: bool
 ///
 /// This function is unsafe as there is no guarantee that the given pointer is
 /// valid for `id_length` elements.
+#[allow(unused_variables)]
 #[no_mangle]
 pub unsafe extern "C" fn wgpu_server_instance_request_adapter(
     global: &Global,
     desc: &wgc::instance::RequestAdapterOptions,
     ids: *const id::AdapterId,
     id_length: usize,
+    adapter_luid: Option<&FfiLUID>,
     mut error_buf: ErrorBuffer,
 ) -> i8 {
     let ids = slice::from_raw_parts(ids, id_length);
+
+    // Prefer to use the dx12 backend, if one exists, and use the same DXGI adapter as WebRender.
+    // If wgpu uses a different adapter than WebRender, textures created by
+    // webgpu::ExternalTexture do not work with wgpu.
+    #[cfg(target_os = "windows")]
+    if global.global.instance.dx12.is_some() && adapter_luid.is_some() {
+        let hal = global.global.instance_as_hal::<wgc::api::Dx12>().unwrap();
+        for adapter in hal.enumerate_adapters() {
+            let raw_adapter = adapter.adapter.raw_adapter();
+            let mut desc: dxgi::DXGI_ADAPTER_DESC = unsafe { mem::zeroed() };
+            unsafe {
+                raw_adapter.GetDesc(&mut desc);
+            }
+            let id = ids
+                .iter()
+                .find_map(|id| (id.backend() == wgt::Backend::Dx12).then_some(id));
+            if id.is_some()
+                && desc.AdapterLuid.LowPart == adapter_luid.unwrap().low_part
+                && desc.AdapterLuid.HighPart == adapter_luid.unwrap().high_part
+            {
+                let adapter_id =
+                    global.create_adapter_from_hal::<wgh::api::Dx12>(adapter, id.unwrap().clone());
+                return ids.iter().position(|&i| i == adapter_id).unwrap() as i8;
+            }
+        }
+        error_buf.init(ErrMsg {
+            message: "Failed to create adapter for dx12",
+            r#type: ErrorBufferType::Internal,
+        });
+        return -1;
+    }
+
     match global.request_adapter(
         desc,
         wgc::instance::AdapterInputs::IdSet(ids, |i| i.backend()),
