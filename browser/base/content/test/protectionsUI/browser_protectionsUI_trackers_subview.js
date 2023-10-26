@@ -8,6 +8,8 @@ const { PermissionTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PermissionTestUtils.sys.mjs"
 );
 
+const l10n = new Localization(["browser/siteProtections.ftl"]);
+
 const TRACKING_PAGE =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
@@ -80,6 +82,14 @@ async function assertSitesListed(blocked) {
   await viewShown;
 
   ok(true, "Trackers view was shown");
+
+  const header = trackersView.querySelector(".panel-header > h1 > span");
+  const headerL10nId = blocked
+    ? "protections-blocking-tracking-content"
+    : "protections-not-blocking-tracking-content";
+  const [headerMsg] = await l10n.formatMessages([headerL10nId]);
+  const expHeader = headerMsg.attributes.find(a => a.name === "title").value;
+  is(header.textContent, expHeader, "Trackers view header is correct");
 
   listItems = Array.from(
     trackersView.querySelectorAll(".protections-popup-list-item")
