@@ -55,7 +55,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.setTextColor
-import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.library.history.state.HistoryNavigationMiddleware
 import org.mozilla.fenix.library.history.state.HistoryStorageMiddleware
@@ -117,7 +116,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                         onBackPressed = requireActivity().onBackPressedDispatcher::onBackPressed,
                     ),
                     HistoryTelemetryMiddleware(
-                        isInPrivateMode = requireComponents.appStore.state.mode == Mode.Private,
+                        isInPrivateMode = requireComponents.appStore.state.mode == BrowsingMode.Private,
                     ),
                     HistorySyncMiddleware(
                         accountManager = requireContext().components.backgroundServices.accountManager,

@@ -12,7 +12,6 @@ import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.search.RegionState
@@ -54,6 +53,7 @@ import org.mozilla.fenix.GleanMetrics.RecentTabs
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
@@ -75,7 +75,6 @@ import java.io.File
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 @RunWith(FenixRobolectricTestRunner::class) // For gleanTestRule
-@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultSessionControlControllerTest {
 
     @get:Rule
@@ -139,7 +138,7 @@ class DefaultSessionControlControllerTest {
         every { appStore.state } returns AppState(
             collections = emptyList(),
             expandedCollections = emptySet(),
-            mode = Mode.Normal,
+            mode = BrowsingMode.Normal,
             topSites = emptyList(),
             showCollectionPlaceholder = true,
             recentTabs = emptyList(),

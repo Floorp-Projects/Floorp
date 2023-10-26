@@ -26,7 +26,6 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.privatebrowsing.controller.DefaultPrivateBrowsingController
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
@@ -87,7 +86,7 @@ class DefaultPrivateBrowsingControllerTest {
 
         verify {
             settings.incrementNumTimesPrivateModeOpened()
-            AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            AppAction.ModeChange(newMode)
         }
     }
 
@@ -114,7 +113,7 @@ class DefaultPrivateBrowsingControllerTest {
 
         verify {
             settings.incrementNumTimesPrivateModeOpened()
-            AppAction.ModeChange(Mode.fromBrowsingMode(newMode))
+            AppAction.ModeChange(newMode)
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalSearchDialog(
                     sessionId = null,
@@ -147,7 +146,7 @@ class DefaultPrivateBrowsingControllerTest {
         }
         verify {
             appStore.dispatch(
-                AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
+                AppAction.ModeChange(newMode),
             )
             navController.navigate(
                 BrowserFragmentDirections.actionGlobalSearchDialog(

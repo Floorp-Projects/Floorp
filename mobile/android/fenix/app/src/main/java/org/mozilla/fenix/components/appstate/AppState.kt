@@ -13,9 +13,9 @@ import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import org.mozilla.fenix.browser.StandardSnackbarError
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.shopping.ShoppingState
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -37,7 +37,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  * @property collections The list of [TabCollection] to display in the [HomeFragment].
  * @property expandedCollections A set containing the ids of the [TabCollection] that are expanded
  * in the [HomeFragment].
- * @property mode The state of the [HomeFragment] UI.
+ * @property mode Whether the app is in private browsing mode.
  * @property topSites The list of [TopSite] in the [HomeFragment].
  * @property showCollectionPlaceholder If true, shows a placeholder when there are no collections.
  * @property recentTabs The list of recent [RecentTab] in the [HomeFragment].
@@ -63,7 +63,7 @@ data class AppState(
     val nonFatalCrashes: List<NativeCodeCrash> = emptyList(),
     val collections: List<TabCollection> = emptyList(),
     val expandedCollections: Set<Long> = emptySet(),
-    val mode: Mode = Mode.Normal,
+    val mode: BrowsingMode = BrowsingMode.Normal,
     val topSites: List<TopSite> = emptyList(),
     val showCollectionPlaceholder: Boolean = false,
     val recentTabs: List<RecentTab> = emptyList(),

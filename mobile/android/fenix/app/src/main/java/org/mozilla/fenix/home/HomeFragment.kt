@@ -249,7 +249,7 @@ class HomeFragment : Fragment() {
         val currentWallpaperName = requireContext().settings().currentWallpaperName
         applyWallpaper(wallpaperName = currentWallpaperName, orientationChange = false)
 
-        components.appStore.dispatch(AppAction.ModeChange(Mode.fromBrowsingMode(browsingModeManager.mode)))
+        components.appStore.dispatch(AppAction.ModeChange(browsingModeManager.mode))
 
         lifecycleScope.launch(IO) {
             if (requireContext().settings().showPocketRecommendationsFeature) {
