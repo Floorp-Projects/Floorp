@@ -332,6 +332,9 @@ TEST(JSHolderMap, GCIntegration)
                                       &JS::DefaultGlobalClassOps};
 
   JS::RealmOptions options;
+  // dummy
+  options.behaviors().setReduceTimerPrecisionCallerType(
+      JS::RTPCallerTypeToken{0});
   JS::RootedObject global(cx);
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr,
                               JS::FireOnNewGlobalHook, options);

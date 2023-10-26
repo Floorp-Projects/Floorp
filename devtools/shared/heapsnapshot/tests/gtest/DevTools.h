@@ -70,6 +70,9 @@ struct DevTools : public ::testing::Test {
   JSObject* createGlobal() {
     /* Create the global object. */
     JS::RealmOptions options;
+    // dummy
+    options.behaviors().setReduceTimerPrecisionCallerType(
+        JS::RTPCallerTypeToken{0});
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
                               JS::FireOnNewGlobalHook, options);
   }

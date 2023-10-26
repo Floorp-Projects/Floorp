@@ -16313,7 +16313,13 @@ bool Document::RecomputeResistFingerprinting() {
           ("Finished RecomputeResistFingerprinting with result %x",
            mShouldResistFingerprinting));
 
-  return previous != mShouldResistFingerprinting;
+  bool changed = previous != mShouldResistFingerprinting;
+  if (changed) {
+    if (auto win = nsGlobalWindowInner::Cast(GetInnerWindow())) {
+      win->RefreshReduceTimerPrecisionCallerType();
+    }
+  }
+  return changed;
 }
 
 bool Document::ShouldResistFingerprinting(RFPTarget aTarget) const {
