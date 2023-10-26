@@ -334,6 +334,7 @@ class SystemResourceMonitor(object):
 
         self._process.start()
         self._running = True
+        self.start_time = time.monotonic()
 
     def stop(self):
         """Stop measuring system-wide CPU resource utilization.
@@ -402,10 +403,7 @@ class SystemResourceMonitor(object):
                 self._process.join(10)
 
         self._running = False
-
-        if len(self.measurements):
-            self.start_time = self.measurements[0].start
-            self.end_time = self.measurements[-1].end
+        self.end_time = time.monotonic()
 
     # Methods to record events alongside the monitored data.
 
@@ -782,6 +780,10 @@ class SystemResourceMonitor(object):
                 "symbolicationNotSupported": True,
                 "interval": self.poll_interval * 1000,
                 "startTime": self.start_timestamp * 1000,
+                "profilingStartTime": 0,
+                "profilingEndTime": round(
+                    (self.end_time - self.start_time) * 1000 + 0.0005, 3
+                ),
                 "logicalCPUs": psutil.cpu_count(logical=True),
                 "physicalCPUs": psutil.cpu_count(logical=False),
                 "mainMemory": psutil.virtual_memory()[0],
