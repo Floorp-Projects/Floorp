@@ -32,9 +32,9 @@
 #include "mozilla/scache/StartupCache.h"
 
 #include "crc32c.h"
-#include "js/CompileOptions.h"          // JS::ReadOnlyCompileOptions
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::DecodeStencil
-#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext
+#include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
+#include "js/experimental/JSStencil.h"      // JS::Stencil, JS::DecodeStencil
+#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::ThreadStackQuotaForSize
 #include "js/Transcoding.h"
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
@@ -1202,12 +1202,6 @@ bool ScriptPreloader::StartDecodeTask(
   return NS_SUCCEEDED(rv);
 }
 
-static size_t ThreadStackQuotaForSize(size_t size) {
-  // Set the stack quota to 10% less that the actual size.
-  // NOTE: This follows what JS helper thread does.
-  return size_t(double(size) * 0.9);
-}
-
 NS_IMETHODIMP ScriptPreloader::DecodeTask::Run() {
   auto failure = [&]() {
     RefPtr<JS::Stencil> stencil;
@@ -1225,7 +1219,7 @@ NS_IMETHODIMP ScriptPreloader::DecodeTask::Run() {
   auto cleanup = MakeScopeExit([&]() { JS::DestroyFrontendContext(fc); });
 
   size_t stackSize = TaskController::GetThreadStackSize();
-  JS::SetNativeStackQuota(fc, ThreadStackQuotaForSize(stackSize));
+  JS::SetNativeStackQuota(fc, JS::ThreadStackQuotaForSize(stackSize));
 
   size_t remaining = mDecodingSources.length();
   for (auto& source : mDecodingSources) {

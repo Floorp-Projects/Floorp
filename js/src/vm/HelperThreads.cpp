@@ -20,7 +20,8 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitScript.h"
 #include "js/CompileOptions.h"  // JS::PrefableCompileOptions, JS::ReadOnlyCompileOptions
-#include "js/friend/StackLimits.h"  // js::ReportOverRecursed
+#include "js/experimental/CompileScript.h"  // JS::ThreadStackQuotaForSize
+#include "js/friend/StackLimits.h"          // js::ReportOverRecursed
 #include "js/HelperThreadAPI.h"
 #include "js/Stack.h"
 #include "js/UniquePtr.h"
@@ -118,11 +119,6 @@ void JS::SetProfilingThreadCallbacks(
   HelperThreadState().unregisterThread = unregisterThread;
 }
 
-static size_t ThreadStackQuotaForSize(size_t size) {
-  // Set the stack quota to 10% less that the actual size.
-  return size_t(double(size) * 0.9);
-}
-
 // Bug 1630189: Without MOZ_NEVER_INLINE, Windows PGO builds have a linking
 // error for HelperThreadTaskCallback.
 JS_PUBLIC_API MOZ_NEVER_INLINE void JS::SetHelperThreadTaskCallback(
@@ -142,7 +138,7 @@ void GlobalHelperThreadState::setDispatchTaskCallback(
 
   dispatchTaskCallback = callback;
   this->threadCount = threadCount;
-  this->stackQuota = ThreadStackQuotaForSize(stackSize);
+  this->stackQuota = JS::ThreadStackQuotaForSize(stackSize);
 }
 
 bool js::StartOffThreadWasmCompile(wasm::CompileTask* task,

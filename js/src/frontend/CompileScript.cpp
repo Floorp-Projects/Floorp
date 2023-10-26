@@ -31,6 +31,13 @@ JS_PUBLIC_API void JS::SetNativeStackQuota(JS::FrontendContext* fc,
   fc->setStackQuota(stackSize);
 }
 
+JS_PUBLIC_API JS::NativeStackSize JS::ThreadStackQuotaForSize(
+    size_t stackSize) {
+  // Set the stack quota to 10% less that the actual size.
+  static constexpr double RatioWithoutMargin = 0.9;
+  return JS::NativeStackSize(double(stackSize) * RatioWithoutMargin);
+}
+
 JS_PUBLIC_API bool JS::HadFrontendErrors(JS::FrontendContext* fc) {
   return fc->hadErrors();
 }

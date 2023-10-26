@@ -16,7 +16,7 @@
 #include "jsfriendapi.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions
 #include "js/CompilationAndEvaluation.h"
-#include "js/experimental/CompileScript.h"  // JS::CompileGlobalScriptToStencil, JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors
+#include "js/experimental/CompileScript.h"  // JS::CompileGlobalScriptToStencil, JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::ThreadStackQuotaForSize, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors
 #include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileGlobalScriptToStencil, JS::InstantiateGlobalStencil, JS::CompilationStorage
 #include "js/SourceText.h"              // JS::SourceText
 #include "js/Utility.h"
@@ -113,17 +113,11 @@ class AsyncScriptCompileTask final : public Task {
   }
 
  private:
-  static size_t ThreadStackQuotaForSize(size_t size) {
-    // Set the stack quota to 10% less that the actual size.
-    // NOTE: This follows what JS helper thread does.
-    return size_t(double(size) * 0.9);
-  }
-
   void Compile() {
     // NOTE: The stack limit must be set from the same thread that compiles.
     size_t stackSize = TaskController::GetThreadStackSize();
     JS::SetNativeStackQuota(mFrontendContext,
-                            ThreadStackQuotaForSize(stackSize));
+                            JS::ThreadStackQuotaForSize(stackSize));
 
     JS::CompilationStorage compileStorage;
     mStencil = JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions,
