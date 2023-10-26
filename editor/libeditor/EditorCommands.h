@@ -237,6 +237,7 @@ class EditorCommand : public nsIControllerCommand {
         return EditorCommandParamType::None;
       // ParagraphStateCommand
       case Command::FormatBlock:
+      case Command::ParagraphState:
         return EditorCommandParamType::CString |
                EditorCommandParamType::String |
                EditorCommandParamType::StateAttribute;
@@ -729,6 +730,30 @@ class MultiStateCommandBase : public EditorCommand {
       nsIPrincipal* aPrincipal) const = 0;
 };
 
+/**
+ * The command class for Document.execCommand("formatBlock"),
+ * Document.queryCommandValue("formatBlock") etc.
+ */
+class FormatBlockStateCommand final : public MultiStateCommandBase {
+ public:
+  NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(FormatBlockStateCommand)
+
+ protected:
+  FormatBlockStateCommand() = default;
+  virtual ~FormatBlockStateCommand() = default;
+
+  MOZ_CAN_RUN_SCRIPT nsresult GetCurrentState(
+      HTMLEditor* aHTMLEditor, nsCommandParams& aParams) const final;
+  MOZ_CAN_RUN_SCRIPT nsresult SetState(HTMLEditor* aHTMLEditor,
+                                       const nsAString& aNewState,
+                                       nsIPrincipal* aPrincipal) const final;
+};
+
+/**
+ * The command class for the legacy XUL edit command, cmd_paragraphState.
+ * This command treats only <p>, <pre>, <h1>, <h2>, <h3>, <h4>, <h5>, <h6>,
+ * <address> as a format node.
+ */
 class ParagraphStateCommand final : public MultiStateCommandBase {
  public:
   NS_INLINE_DECL_EDITOR_COMMAND_MAKE_SINGLETON(ParagraphStateCommand)

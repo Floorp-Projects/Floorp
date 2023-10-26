@@ -82,6 +82,7 @@ nsresult HTMLEditorController::RegisterHTMLEditorCommands(
   NS_REGISTER_COMMAND(RemoveListCommand, "cmd_removeList");
 
   // format stuff
+  NS_REGISTER_COMMAND(FormatBlockStateCommand, "cmd_formatBlock");
   NS_REGISTER_COMMAND(ParagraphStateCommand, "cmd_paragraphState");
   NS_REGISTER_COMMAND(FontFaceStateCommand, "cmd_fontFace");
   NS_REGISTER_COMMAND(FontSizeStateCommand, "cmd_fontSize");
@@ -122,6 +123,7 @@ void HTMLEditorController::Shutdown() {
   ListCommand::Shutdown();
   ListItemCommand::Shutdown();
   RemoveListCommand::Shutdown();
+  FormatBlockStateCommand::Shutdown();
   ParagraphStateCommand::Shutdown();
   FontFaceStateCommand::Shutdown();
   FontSizeStateCommand::Shutdown();

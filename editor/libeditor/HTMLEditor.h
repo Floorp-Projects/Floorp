@@ -26,6 +26,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsIHTMLInlineTableEditor.h"
 #include "nsIHTMLObjectResizer.h"
+#include "nsIPrincipal.h"
 #include "nsITableEditor.h"
 #include "nsPoint.h"
 #include "nsStubMutationObserver.h"
@@ -299,7 +300,26 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult
   OutdentAsAction(nsIPrincipal* aPrincipal = nullptr);
 
-  MOZ_CAN_RUN_SCRIPT nsresult SetParagraphFormatAsAction(
+  /**
+   * The Document.execCommand("formatBlock") handler.
+   *
+   * @param aParagraphFormat    Must not be an empty string, and the value must
+   *                            be one of address, article, aside, blockquote,
+   *                            div, footer, h1, h2, h3, h4, h5, h6, header,
+   *                            hgroup, main, nav, p, pre, selection, dt or dd.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult FormatBlockAsAction(
+      const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal = nullptr);
+
+  /**
+   * The cmd_paragraphState command handler.
+   *
+   * @param aParagraphFormat    Can be empty string.  If this is empty string,
+   *                            this removes ancestor format elements.
+   *                            Otherwise, the value must be one of p, pre,
+   *                            h1, h2, h3, h4, h5, h6, address, dt or dl.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult SetParagraphStateAsAction(
       const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal = nullptr);
 
   MOZ_CAN_RUN_SCRIPT nsresult AlignAsAction(const nsAString& aAlignType,
@@ -1344,7 +1364,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   CreateAndInsertElement(
-      WithTransaction aWithTransaction, nsAtom& aTagName,
+      WithTransaction aWithTransaction, const nsAtom& aTagName,
       const EditorDOMPoint& aPointToInsert,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
 
@@ -1401,7 +1421,7 @@ class HTMLEditor final : public EditorBase,
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult>
   MaybeSplitAncestorsForInsertWithTransaction(
-      nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode,
+      const nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode,
       const Element& aEditingHost);
 
   /**
@@ -1430,7 +1450,7 @@ class HTMLEditor final : public EditorBase,
   enum class BRElementNextToSplitPoint { Keep, Delete };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
-      nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
+      const nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
       BRElementNextToSplitPoint aBRElementNextToSplitPoint,
       const Element& aEditingHost,
       const InitializeInsertingElement& aInitializer = DoNothingForNewElement);
@@ -1498,6 +1518,25 @@ class HTMLEditor final : public EditorBase,
       const Element& aEditingHost);
 
   /**
+   * Our traditional formatBlock was same as XUL cmd_paragraphState command.
+   * However, the behavior is pretty different from the others and aligning
+   * the XUL command behavior may break Thunderbird a lot because it handles
+   * <blockquote> in a special path and <div> (generic block element) is not
+   * treated as a format node and these things may be used for designing
+   * current roles of the elements in the email composer of Thunderbird.
+   * Therefore, we create a new mode for HTMLFormatBlockCommand to align
+   * the behavior to the others but does not harm Thunderbird.
+   */
+  enum class FormatBlockMode {
+    // Document.execCommand("formatBlock"). Cannot set new format to "normal"
+    // nor "".  So, the paths to handle these ones are not used in this mode.
+    HTMLFormatBlockCommand,
+    // cmd_paragraphState.  Can set new format to "normal" or "" to remove
+    // ancestor format blocks.
+    XULParagraphStateCommand,
+  };
+
+  /**
    * RemoveBlockContainerElementsWithTransaction() removes all format blocks,
    * table related element, etc in aArrayOfContents from the DOM tree. If
    * aArrayOfContents has a format node, it will be removed and its contents
@@ -1505,36 +1544,44 @@ class HTMLEditor final : public EditorBase,
    * If aArrayOfContents has a table related element, <li>, <blockquote> or
    * <div>, it will be removed and its contents will be moved to where it was.
    *
+   * @param aFormatBlockMode    Whether HTML formatBlock command or XUL
+   *                            paragraphState command.
+   *
    * @return            A suggest point to put caret if succeeded, but it may be
    *                    unset if there is no suggestion.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
   RemoveBlockContainerElementsWithTransaction(
       const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-      BlockInlineCheck aBlockInlineCheck);
+      FormatBlockMode aFormatBlockMode, BlockInlineCheck aBlockInlineCheck);
 
   /**
-   * CreateOrChangeBlockContainerElement() formats all nodes in aArrayOfContents
-   * with block elements whose name is aBlockTag.
+   * CreateOrChangeFormatContainerElement() formats all nodes in
+   * aArrayOfContents with block elements whose name is aNewFormatTagName.
+   *
    * If aArrayOfContents has an inline element, a block element is created and
    * the inline element and following inline elements are moved into the new
    * block element.
-   * If aArrayOfContents has <br> elements, they'll be removed from the DOM
-   * tree and new block element will be created when there are some remaining
-   * inline elements.
-   * If aArrayOfContents has a block element, this calls itself with children
-   * of the block element.  Then, new block element will be created when there
-   * are some remaining inline elements.
+   * If aArrayOfContents has <br> elements, they'll be removed from the DOM tree
+   * and new block element will be created when there are some remaining inline
+   * elements.
+   * If aArrayOfContents has a block element, this calls itself with children of
+   * the block element.  Then, new block element will be created when there are
+   * some remaining inline elements.
    *
    * @param aArrayOfContents    Must be descendants of a node.
-   * @param aBlockTag           The element name of new block elements.
+   * @param aNewFormatTagName   The element name of new block elements.
+   * @param aFormatBlockMode    The replacing block element target type is for
+   *                            whether HTML formatBLock command or XUL
+   *                            paragraphState command.
    * @param aEditingHost        The editing host.
    * @return                    The latest created new block element and a
    *                            suggest point to put caret.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CreateElementResult, nsresult>
-  CreateOrChangeBlockContainerElement(
-      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents, nsAtom& aBlockTag,
+  CreateOrChangeFormatContainerElement(
+      nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
+      const nsStaticAtom& aNewFormatTagName, FormatBlockMode aFormatBlockMode,
       const Element& aEditingHost);
 
   /**
@@ -1545,22 +1592,25 @@ class HTMLEditor final : public EditorBase,
    * @param aSelectionRanges    The ranges which are cloned by selection or
    *                            updated from it with doing something before
    *                            calling this.
-   * @param aBlockType  New block tag name.
-   *                    If nsGkAtoms::normal or nsGkAtoms::_empty,
-   *                    RemoveBlockContainerElementsWithTransaction() will be
-   *                    called.
-   *                    If nsGkAtoms::blockquote,
-   *                    WrapContentsInBlockquoteElementsWithTransaction() will
-   *                    be called.
-   *                    Otherwise, CreateOrChangeBlockContainerElement() will be
-   *                    called.
+   * @param aNewFormatTagName   New block tag name.
+   *                            If nsGkAtoms::normal or nsGkAtoms::_empty,
+   *                            RemoveBlockContainerElementsWithTransaction()
+   *                            will be called.
+   *                            If nsGkAtoms::blockquote,
+   *                            WrapContentsInBlockquoteElementsWithTransaction()
+   *                            will be called.
+   *                            Otherwise, CreateOrChangeBlockContainerElement()
+   *                            will be called.
+   * @param aFormatBlockMode    Whether HTML formatBlock command or XUL
+   *                            paragraphState command.
    * @param aEditingHost        The editing host.
    * @return                    If selection should be finally collapsed in a
    *                            created block element, this returns the element.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   FormatBlockContainerWithTransaction(AutoRangeArray& aSelectionRanges,
-                                      nsAtom& aBlockType,
+                                      const nsStaticAtom& aNewFormatTagName,
+                                      FormatBlockMode aFormatBlockMode,
                                       const Element& aEditingHost);
 
   /**
@@ -1697,6 +1747,9 @@ class HTMLEditor final : public EditorBase,
                         nsAtom& aItemType);
 
   class AutoListElementCreator;
+
+  [[nodiscard]] static bool IsFormatElement(FormatBlockMode aFormatBlockMode,
+                                            const nsIContent& aContent);
 
   /**
    * MakeOrChangeListAndListItemAsSubAction() handles create list commands with
@@ -3866,8 +3919,11 @@ class HTMLEditor final : public EditorBase,
    *
    * @param aTagName            A block level element name.  Must NOT be
    *                            nsGkAtoms::dt nor nsGkAtoms::dd.
+   * @param aFormatBlockMode    Whether HTML formatBlock command or XUL
+   *                            paragraphState command.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerAsSubAction(nsAtom& aTagName);
+  MOZ_CAN_RUN_SCRIPT nsresult FormatBlockContainerAsSubAction(
+      const nsStaticAtom& aTagName, FormatBlockMode aFormatBlockMode);
 
   /**
    * Increase/decrease the font size of selection.
@@ -4629,8 +4685,15 @@ class MOZ_STACK_CLASS AlignStateAtSelection final {
  */
 class MOZ_STACK_CLASS ParagraphStateAtSelection final {
  public:
+  using FormatBlockMode = HTMLEditor::FormatBlockMode;
+
   ParagraphStateAtSelection() = delete;
-  ParagraphStateAtSelection(HTMLEditor& aHTMLEditor, ErrorResult& aRv);
+  /**
+   * @param aFormatBlockMode    Whether HTML formatBlock command or XUL
+   *                            paragraphState command.
+   */
+  ParagraphStateAtSelection(HTMLEditor& aHTMLEditor,
+                            FormatBlockMode aFormatBlockMode, ErrorResult& aRv);
 
   /**
    * GetFirstParagraphStateAtSelection() returns:
@@ -4663,11 +4726,13 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    * @param aArrayOfContents            [in/out] Found descendant format blocks
    *                                    and first inline node in each non-format
    *                                    block will be appended to this.
+   * @param aFormatBlockMode            Whether HTML formatBlock command or XUL
+   *                                    paragraphState command.
    * @param aNonFormatBlockElement      Must be a non-format block element.
    */
   static void AppendDescendantFormatNodesAndFirstInlineNode(
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
-      dom::Element& aNonFormatBlockElement);
+      FormatBlockMode aFormatBlockMode, dom::Element& aNonFormatBlockElement);
 
   /**
    * CollectEditableFormatNodesInSelection() collects only editable nodes

@@ -4912,10 +4912,10 @@ void Document::EnsureInitializeInternalCommandDataHashtable() {
   sInternalCommandDataHashtable->InsertOrUpdate(
       u"formatblock"_ns,
       InternalCommandData(
-          "cmd_paragraphState",
+          "cmd_formatBlock",
           Command::FormatBlock,
           ExecCommandParam::String,
-          ParagraphStateCommand::GetInstance,
+          FormatBlockStateCommand::GetInstance,
           CommandOnTextEditor::Disabled));
   sInternalCommandDataHashtable->InsertOrUpdate(
       u"styleWithCSS"_ns,
@@ -5114,19 +5114,27 @@ Document::InternalCommandData Document::ConvertToInternalCommand(
           static const nsStaticAtom* kFormattableBlockTags[] = {
               // clang-format off
             nsGkAtoms::address,
+            nsGkAtoms::article,
+            nsGkAtoms::aside,
             nsGkAtoms::blockquote,
             nsGkAtoms::dd,
             nsGkAtoms::div,
             nsGkAtoms::dl,
             nsGkAtoms::dt,
+            nsGkAtoms::footer,
             nsGkAtoms::h1,
             nsGkAtoms::h2,
             nsGkAtoms::h3,
             nsGkAtoms::h4,
             nsGkAtoms::h5,
             nsGkAtoms::h6,
+            nsGkAtoms::header,
+            nsGkAtoms::hgroup,
+            nsGkAtoms::main,
+            nsGkAtoms::nav,
             nsGkAtoms::p,
             nsGkAtoms::pre,
+            nsGkAtoms::section,
               // clang-format on
           };
           nsAutoString value(nsDependentSubstring(start, end));
