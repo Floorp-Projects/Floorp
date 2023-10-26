@@ -42,6 +42,12 @@ JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
                                        JS::NativeStackSize stackSize);
 
+// Return the stack quota that can be passed to SetNativeStackQuota, for given
+// stack size.
+// This subtracts a margin from given stack size, to make sure the stack quota
+// check performed internally is sufficient.
+JS_PUBLIC_API JS::NativeStackSize ThreadStackQuotaForSize(size_t stackSize);
+
 // Returns true if there was any error reported to given FrontendContext.
 JS_PUBLIC_API bool HadFrontendErrors(JS::FrontendContext* fc);
 
