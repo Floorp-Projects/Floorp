@@ -795,7 +795,24 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
             self.info("Starting resource monitoring.")
-            self._resource_monitor = SystemResourceMonitor(poll_interval=0.1)
+            metadata = {}
+            if "TASKCLUSTER_WORKER_TYPE" in os.environ:
+                metadata["device"] = os.environ["TASKCLUSTER_WORKER_TYPE"]
+            if "MOZHARNESS_TEST_PATHS" in os.environ:
+                metadata["product"] = " ".join(
+                    json.loads(os.environ["MOZHARNESS_TEST_PATHS"]).keys()
+                )
+            if "MOZ_SOURCE_CHANGESET" in os.environ and "MOZ_SOURCE_REPO" in os.environ:
+                metadata["sourceURL"] = (
+                    os.environ["MOZ_SOURCE_REPO"]
+                    + "/rev/"
+                    + os.environ["MOZ_SOURCE_CHANGESET"]
+                )
+            if "TASK_ID" in os.environ:
+                metadata["appBuildID"] = os.environ["TASK_ID"]
+            self._resource_monitor = SystemResourceMonitor(
+                poll_interval=0.1, metadata=metadata
+            )
             self._resource_monitor.start()
         except Exception:
             self.warning(
