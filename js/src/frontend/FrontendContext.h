@@ -99,6 +99,10 @@ class FrontendContext {
 #ifdef DEBUG
   // The thread ID where the native stack limit is set.
   mozilla::Maybe<size_t> stackLimitThreadId_;
+
+  // The stack pointer where the AutoCheckRecursionLimit check is performed
+  // last time.
+  void* previousStackPointer_ = nullptr;
 #endif
 
  protected:
@@ -215,6 +219,10 @@ class FrontendContext {
 #ifdef DEBUG
   void setNativeStackLimitThread();
   void assertNativeStackLimitThread();
+#endif
+
+#ifdef DEBUG
+  void checkAndUpdateFrontendContextRecursionLimit(void* sp);
 #endif
 
  private:
