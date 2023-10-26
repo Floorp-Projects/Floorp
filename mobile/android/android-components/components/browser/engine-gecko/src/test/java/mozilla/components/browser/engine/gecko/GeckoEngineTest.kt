@@ -315,6 +315,8 @@ class GeckoEngineTest {
         assertEquals(contentBlockingSettings.cookieBannerMode, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
         assertEquals(contentBlockingSettings.cookieBannerModePrivateBrowsing, EngineSession.CookieBannerHandlingMode.DISABLED.mode)
         assertEquals(contentBlockingSettings.cookieBannerDetectOnlyMode, engine.settings.cookieBannerHandlingDetectOnlyMode)
+        assertEquals(contentBlockingSettings.cookieBannerGlobalRulesEnabled, engine.settings.cookieBannerHandlingGlobalRules)
+        assertEquals(contentBlockingSettings.cookieBannerGlobalRulesSubFramesEnabled, engine.settings.cookieBannerHandlingGlobalRulesSubFrames)
 
         try {
             engine.settings.domStorageEnabled
@@ -561,6 +563,46 @@ class GeckoEngineTest {
         engine.settings.cookieBannerHandlingDetectOnlyMode = true
 
         verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerDetectOnlyMode(true)
+    }
+
+    @Test
+    fun `setCookieBannerHandlingGlobalRules is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.cookieBannerHandlingGlobalRules = true
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBannerGlobalRulesEnabled(true)
+
+        reset(settings)
+
+        engine.settings.cookieBannerHandlingGlobalRules = true
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerGlobalRulesEnabled(true)
+    }
+
+    @Test
+    fun `setCookieBannerHandlingGlobalRulesSubFrames is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.cookieBannerHandlingGlobalRulesSubFrames = true
+
+        verify(mockRuntime.settings.contentBlocking).setCookieBannerGlobalRulesSubFramesEnabled(true)
+
+        reset(settings)
+
+        engine.settings.cookieBannerHandlingGlobalRulesSubFrames = true
+
+        verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerGlobalRulesSubFramesEnabled(true)
     }
 
     @Test

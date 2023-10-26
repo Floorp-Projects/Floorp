@@ -71,6 +71,16 @@ abstract class Settings {
     open var cookieBannerHandlingDetectOnlyMode: Boolean by UnsupportedSetting()
 
     /**
+     * Setting to control the cookie banner handling global rules feature.
+     */
+    open var cookieBannerHandlingGlobalRules: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling global rules subFrames feature.
+     */
+    open var cookieBannerHandlingGlobalRulesSubFrames: Boolean by UnsupportedSetting()
+
+    /**
      * Setting to intercept and override requests.
      */
     open var requestInterceptor: RequestInterceptor? by UnsupportedSetting()
@@ -247,6 +257,8 @@ data class DefaultSettings(
     override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
         CookieBannerHandlingMode.DISABLED,
     override var cookieBannerHandlingDetectOnlyMode: Boolean = false,
+    override var cookieBannerHandlingGlobalRules: Boolean = false,
+    override var cookieBannerHandlingGlobalRulesSubFrames: Boolean = false,
 ) : Settings()
 
 class UnsupportedSetting<T> {

@@ -169,6 +169,8 @@ class SettingsTest {
             cookieBannerHandlingMode = EngineSession.CookieBannerHandlingMode.DISABLED,
             cookieBannerHandlingModePrivateBrowsing = EngineSession.CookieBannerHandlingMode.REJECT_ALL,
             cookieBannerHandlingDetectOnlyMode = true,
+            cookieBannerHandlingGlobalRules = true,
+            cookieBannerHandlingGlobalRulesSubFrames = true,
         )
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -204,5 +206,7 @@ class SettingsTest {
         assertEquals(EngineSession.CookieBannerHandlingMode.DISABLED, defaultSettings.cookieBannerHandlingMode)
         assertEquals(EngineSession.CookieBannerHandlingMode.REJECT_ALL, defaultSettings.cookieBannerHandlingModePrivateBrowsing)
         assertTrue(defaultSettings.cookieBannerHandlingDetectOnlyMode)
+        assertTrue(defaultSettings.cookieBannerHandlingGlobalRules)
+        assertTrue(defaultSettings.cookieBannerHandlingGlobalRulesSubFrames)
     }
 }
