@@ -972,10 +972,15 @@ class SystemResourceMonitor(object):
             # For short duration markers, the profiler front-end may show up to
             # 3 digits after the decimal point (ie. µs precision).
             markers["startTime"].append(round((start - start_time) * 1000, precision))
-            markers["endTime"].append(round((end - start_time) * 1000, precision))
+            if end is None:
+                markers["endTime"].append(None)
+                # 0 = Instant marker
+                markers["phase"].append(0)
+            else:
+                markers["endTime"].append(round((end - start_time) * 1000, precision))
+                # 1 = marker with start and end times, 2 = start but no end.
+                markers["phase"].append(1)
             markers["category"].append(0)
-            # 1 = marker with start and end times, 2 = start but no end.
-            markers["phase"].append(1)
             markers["name"].append(name_index)
             markers["data"].append(data)
             markers["length"] = markers["length"] + 1
@@ -1106,5 +1111,16 @@ class SystemResourceMonitor(object):
             if text:
                 markerData["text"] = text
             add_marker(get_string_index(name), start, end, markerData, 3)
+        if self.events:
+            event_string_index = get_string_index("Event")
+            for event_time, text in self.events:
+                if text:
+                    add_marker(
+                        event_string_index,
+                        event_time,
+                        None,
+                        {"type": "Text", "text": text},
+                        3,
+                    )
 
         return profile
