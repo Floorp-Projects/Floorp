@@ -7,6 +7,7 @@
 #ifndef widget_windows_filedialog_WinFileDialogCommands_h__
 #define widget_windows_filedialog_WinFileDialogCommands_h__
 
+#include "ipc/EnumSerializer.h"
 #include "mozilla/widget/filedialog/WinFileDialogCommandsDefn.h"
 
 // Windows interface types, defined in <shobjidl.h>
@@ -35,5 +36,14 @@ mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog*);
 // Requires that Show() has been called and has returned S_OK.
 mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog*);
 }  // namespace mozilla::widget::filedialog
+
+namespace IPC {
+template <>
+struct ParamTraits<mozilla::widget::filedialog::FileDialogType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::widget::filedialog::FileDialogType,
+          mozilla::widget::filedialog::FileDialogType::Open,
+          mozilla::widget::filedialog::FileDialogType::Save> {};
+}  // namespace IPC
 
 #endif  // widget_windows_filedialog_WinFileDialogCommands_h__

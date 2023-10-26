@@ -72,6 +72,9 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   mozilla::ipc::IPCResult RecvStartWindowsUtilsService(
       Endpoint<PWindowsUtilsChild>&& aEndpoint);
 
+  mozilla::ipc::IPCResult RecvStartWinFileDialogService(
+      Endpoint<PWinFileDialogChild>&& aEndpoint);
+
   mozilla::ipc::IPCResult RecvGetUntrustedModulesData(
       GetUntrustedModulesDataResolver&& aResolver);
   mozilla::ipc::IPCResult RecvUnblockUntrustedModulesThread();
@@ -97,6 +100,7 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   RefPtr<dom::JSOracleChild> mJSOracleInstance{};
 #ifdef XP_WIN
   RefPtr<PWindowsUtilsChild> mWindowsUtilsInstance;
+  RefPtr<PWinFileDialogChild> mFileDialogInstance;
 #endif
 
   AsyncBlockers mShutdownBlockers;
