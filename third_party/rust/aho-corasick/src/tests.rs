@@ -1,9 +1,8 @@
-use std::{collections::HashMap, format, string::String, vec::Vec};
+use std::collections::HashMap;
+use std::io;
+use std::usize;
 
-use crate::{
-    AhoCorasick, AhoCorasickBuilder, AhoCorasickKind, Anchored, Input, Match,
-    MatchKind, StartKind,
-};
+use crate::{AhoCorasickBuilder, Match, MatchKind};
 
 /// A description of a single test against an Aho-Corasick automaton.
 ///
@@ -55,13 +54,9 @@ const AC_STANDARD_ANCHORED_NON_OVERLAPPING: TestCollection =
 const AC_STANDARD_OVERLAPPING: TestCollection =
     &[BASICS, OVERLAPPING, REGRESSION];
 
-/*
-Iterators of anchored overlapping searches were removed from the API in
-after 0.7, but we leave the tests commented out for posterity.
 /// Tests for Aho-Corasick's anchored standard overlapping match semantics.
 const AC_STANDARD_ANCHORED_OVERLAPPING: TestCollection =
     &[ANCHORED_BASICS, ANCHORED_OVERLAPPING];
-*/
 
 /// Tests for Aho-Corasick's leftmost-first match semantics.
 const AC_LEFTMOST_FIRST: TestCollection =
@@ -95,8 +90,7 @@ const AC_LEFTMOST_LONGEST_ANCHORED: TestCollection = &[
 /// should produce the same answer.
 const BASICS: &'static [SearchTest] = &[
     t!(basic000, &[], "", &[]),
-    t!(basic001, &[""], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(basic002, &["a"], "", &[]),
+    t!(basic001, &["a"], "", &[]),
     t!(basic010, &["a"], "a", &[(0, 0, 1)]),
     t!(basic020, &["a"], "aa", &[(0, 0, 1), (0, 1, 2)]),
     t!(basic030, &["a"], "aaa", &[(0, 0, 1), (0, 1, 2), (0, 2, 3)]),
@@ -157,18 +151,15 @@ const BASICS: &'static [SearchTest] = &[
 /// produce the same answer.
 const ANCHORED_BASICS: &'static [SearchTest] = &[
     t!(abasic000, &[], "", &[]),
-    t!(abasic001, &[], "a", &[]),
-    t!(abasic002, &[], "abc", &[]),
     t!(abasic010, &[""], "", &[(0, 0, 0)]),
-    t!(abasic020, &[""], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(abasic030, &[""], "abc", &[(0, 0, 0), (0, 1, 1), (0, 2, 2), (0, 3, 3)]),
+    t!(abasic020, &[""], "a", &[(0, 0, 0)]),
+    t!(abasic030, &[""], "abc", &[(0, 0, 0)]),
     t!(abasic100, &["a"], "a", &[(0, 0, 1)]),
-    t!(abasic110, &["a"], "aa", &[(0, 0, 1), (0, 1, 2)]),
-    t!(abasic120, &["a", "b"], "ab", &[(0, 0, 1), (1, 1, 2)]),
-    t!(abasic130, &["a", "b"], "ba", &[(1, 0, 1), (0, 1, 2)]),
+    t!(abasic110, &["a"], "aa", &[(0, 0, 1)]),
+    t!(abasic120, &["a", "b"], "ab", &[(0, 0, 1)]),
+    t!(abasic130, &["a", "b"], "ba", &[(1, 0, 1)]),
     t!(abasic140, &["foo", "foofoo"], "foo", &[(0, 0, 3)]),
     t!(abasic150, &["foofoo", "foo"], "foo", &[(1, 0, 3)]),
-    t!(abasic200, &["foo"], "foofoo foo", &[(0, 0, 3), (0, 3, 6)]),
 ];
 
 /// Tests for non-overlapping standard match semantics.
@@ -202,13 +193,13 @@ const STANDARD_ANCHORED: &'static [SearchTest] = &[
     t!(astandard010, &["abcd", "ab"], "abcd", &[(1, 0, 2)]),
     t!(astandard020, &["abcd", "ab", "abc"], "abcd", &[(1, 0, 2)]),
     t!(astandard030, &["abcd", "abc", "ab"], "abcd", &[(2, 0, 2)]),
-    t!(astandard040, &["a", ""], "a", &[(1, 0, 0), (1, 1, 1)]),
+    t!(astandard040, &["a", ""], "a", &[(1, 0, 0)]),
     t!(astandard050, &["abcd", "bcd", "cd", "b"], "abcd", &[(0, 0, 4)]),
-    t!(astandard410, &["", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(astandard420, &["", "a"], "aa", &[(0, 0, 0), (0, 1, 1), (0, 2, 2)]),
-    t!(astandard430, &["", "a", ""], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(astandard440, &["a", "", ""], "a", &[(1, 0, 0), (1, 1, 1)]),
-    t!(astandard450, &["", "", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
+    t!(astandard410, &["", "a"], "a", &[(0, 0, 0)]),
+    t!(astandard420, &["", "a"], "aa", &[(0, 0, 0)]),
+    t!(astandard430, &["", "a", ""], "a", &[(0, 0, 0)]),
+    t!(astandard440, &["a", "", ""], "a", &[(1, 0, 0)]),
+    t!(astandard450, &["", "", "a"], "a", &[(0, 0, 0)]),
 ];
 
 /// Tests for non-overlapping leftmost match semantics. These should pass for
@@ -217,8 +208,7 @@ const STANDARD_ANCHORED: &'static [SearchTest] = &[
 /// first when constructing the automaton should always be the same.
 const LEFTMOST: &'static [SearchTest] = &[
     t!(leftmost000, &["ab", "ab"], "abcd", &[(0, 0, 2)]),
-    t!(leftmost010, &["a", ""], "a", &[(0, 0, 1)]),
-    t!(leftmost011, &["a", ""], "ab", &[(0, 0, 1), (1, 2, 2)]),
+    t!(leftmost010, &["a", ""], "a", &[(0, 0, 1), (1, 1, 1)]),
     t!(leftmost020, &["", ""], "a", &[(0, 0, 0), (0, 1, 1)]),
     t!(leftmost030, &["a", "ab"], "aa", &[(0, 0, 1), (0, 1, 2)]),
     t!(leftmost031, &["ab", "a"], "aa", &[(1, 0, 1), (1, 1, 2)]),
@@ -270,14 +260,12 @@ const LEFTMOST: &'static [SearchTest] = &[
 /// Like LEFTMOST, but for anchored searches.
 const ANCHORED_LEFTMOST: &'static [SearchTest] = &[
     t!(aleftmost000, &["ab", "ab"], "abcd", &[(0, 0, 2)]),
-    // We shouldn't allow an empty match immediately following a match, right?
     t!(aleftmost010, &["a", ""], "a", &[(0, 0, 1)]),
-    t!(aleftmost020, &["", ""], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(aleftmost030, &["a", "ab"], "aa", &[(0, 0, 1), (0, 1, 2)]),
-    t!(aleftmost031, &["ab", "a"], "aa", &[(1, 0, 1), (1, 1, 2)]),
+    t!(aleftmost020, &["", ""], "a", &[(0, 0, 0)]),
+    t!(aleftmost030, &["a", "ab"], "aa", &[(0, 0, 1)]),
+    t!(aleftmost031, &["ab", "a"], "aa", &[(1, 0, 1)]),
     t!(aleftmost032, &["ab", "a"], "xayabbbz", &[]),
     t!(aleftmost300, &["abcd", "bce", "b"], "abce", &[]),
-    t!(aleftmost301, &["abcd", "bcd", "cd", "b"], "abcd", &[(0, 0, 4)]),
     t!(aleftmost310, &["abcd", "ce", "bc"], "abce", &[]),
     t!(aleftmost320, &["abcd", "bce", "ce", "b"], "abce", &[]),
     t!(aleftmost330, &["abcd", "bce", "cz", "bc"], "abcz", &[]),
@@ -316,8 +304,8 @@ const ANCHORED_LEFTMOST: &'static [SearchTest] = &[
     t!(
         aleftmost410,
         &["z", "abcdefghi", "hz", "abcdefgh"],
-        "abcdefghzyz",
-        &[(3, 0, 8), (0, 8, 9)]
+        "abcdefghz",
+        &[(3, 0, 8)]
     ),
 ];
 
@@ -328,10 +316,8 @@ const LEFTMOST_FIRST: &'static [SearchTest] = &[
     t!(leftfirst000, &["ab", "abcd"], "abcd", &[(0, 0, 2)]),
     t!(leftfirst010, &["", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
     t!(leftfirst011, &["", "a", ""], "a", &[(0, 0, 0), (0, 1, 1),]),
-    t!(leftfirst012, &["a", "", ""], "a", &[(0, 0, 1)]),
-    t!(leftfirst013, &["", "", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(leftfirst014, &["a", ""], "a", &[(0, 0, 1)]),
-    t!(leftfirst015, &["a", ""], "ab", &[(0, 0, 1), (1, 2, 2)]),
+    t!(leftfirst012, &["a", "", ""], "a", &[(0, 0, 1), (1, 1, 1),]),
+    t!(leftfirst013, &["", "", "a"], "a", &[(0, 0, 0), (0, 1, 1),]),
     t!(leftfirst020, &["abcd", "ab"], "abcd", &[(0, 0, 4)]),
     t!(leftfirst030, &["ab", "ab"], "abcd", &[(0, 0, 2)]),
     t!(leftfirst040, &["a", "ab"], "xayabbbz", &[(0, 1, 2), (0, 3, 4)]),
@@ -357,10 +343,10 @@ const LEFTMOST_FIRST: &'static [SearchTest] = &[
 /// Like LEFTMOST_FIRST, but for anchored searches.
 const ANCHORED_LEFTMOST_FIRST: &'static [SearchTest] = &[
     t!(aleftfirst000, &["ab", "abcd"], "abcd", &[(0, 0, 2)]),
-    t!(aleftfirst010, &["", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
-    t!(aleftfirst011, &["", "a", ""], "a", &[(0, 0, 0), (0, 1, 1)]),
+    t!(aleftfirst010, &["", "a"], "a", &[(0, 0, 0)]),
+    t!(aleftfirst011, &["", "a", ""], "a", &[(0, 0, 0)]),
     t!(aleftfirst012, &["a", "", ""], "a", &[(0, 0, 1)]),
-    t!(aleftfirst013, &["", "", "a"], "a", &[(0, 0, 0), (0, 1, 1)]),
+    t!(aleftfirst013, &["", "", "a"], "a", &[(0, 0, 0)]),
     t!(aleftfirst020, &["abcd", "ab"], "abcd", &[(0, 0, 4)]),
     t!(aleftfirst030, &["ab", "ab"], "abcd", &[(0, 0, 2)]),
     t!(aleftfirst040, &["a", "ab"], "xayabbbz", &[]),
@@ -384,12 +370,11 @@ const ANCHORED_LEFTMOST_FIRST: &'static [SearchTest] = &[
 const LEFTMOST_LONGEST: &'static [SearchTest] = &[
     t!(leftlong000, &["ab", "abcd"], "abcd", &[(1, 0, 4)]),
     t!(leftlong010, &["abcd", "bcd", "cd", "b"], "abcd", &[(0, 0, 4),]),
-    t!(leftlong020, &["", "a"], "a", &[(1, 0, 1)]),
-    t!(leftlong021, &["", "a", ""], "a", &[(1, 0, 1)]),
-    t!(leftlong022, &["a", "", ""], "a", &[(0, 0, 1)]),
-    t!(leftlong023, &["", "", "a"], "a", &[(2, 0, 1)]),
-    t!(leftlong024, &["", "a"], "ab", &[(1, 0, 1), (0, 2, 2)]),
-    t!(leftlong030, &["", "a"], "aa", &[(1, 0, 1), (1, 1, 2)]),
+    t!(leftlong020, &["", "a"], "a", &[(1, 0, 1), (0, 1, 1),]),
+    t!(leftlong021, &["", "a", ""], "a", &[(1, 0, 1), (0, 1, 1),]),
+    t!(leftlong022, &["a", "", ""], "a", &[(0, 0, 1), (1, 1, 1),]),
+    t!(leftlong023, &["", "", "a"], "a", &[(2, 0, 1), (0, 1, 1),]),
+    t!(leftlong030, &["", "a"], "aa", &[(1, 0, 1), (1, 1, 2), (0, 2, 2),]),
     t!(leftlong040, &["a", "ab"], "a", &[(0, 0, 1)]),
     t!(leftlong050, &["a", "ab"], "ab", &[(1, 0, 2)]),
     t!(leftlong060, &["ab", "a"], "a", &[(1, 0, 1)]),
@@ -416,7 +401,7 @@ const ANCHORED_LEFTMOST_LONGEST: &'static [SearchTest] = &[
     t!(aleftlong021, &["", "a", ""], "a", &[(1, 0, 1)]),
     t!(aleftlong022, &["a", "", ""], "a", &[(0, 0, 1)]),
     t!(aleftlong023, &["", "", "a"], "a", &[(2, 0, 1)]),
-    t!(aleftlong030, &["", "a"], "aa", &[(1, 0, 1), (1, 1, 2)]),
+    t!(aleftlong030, &["", "a"], "aa", &[(1, 0, 1)]),
     t!(aleftlong040, &["a", "ab"], "a", &[(0, 0, 1)]),
     t!(aleftlong050, &["a", "ab"], "ab", &[(1, 0, 2)]),
     t!(aleftlong060, &["ab", "a"], "a", &[(1, 0, 1)]),
@@ -459,15 +444,10 @@ const ANCHORED_NON_OVERLAPPING: &'static [SearchTest] = &[
     t!(anover010, &["abcd", "bcd", "cd"], "abcd", &[(0, 0, 4),]),
     t!(anover020, &["bcd", "cd", "abcd"], "abcd", &[(2, 0, 4),]),
     t!(anover030, &["abc", "bc"], "zazabcz", &[]),
-    t!(
-        anover100,
-        &["ab", "ba"],
-        "abababa",
-        &[(0, 0, 2), (0, 2, 4), (0, 4, 6)]
-    ),
+    t!(anover100, &["ab", "ba"], "abababa", &[(0, 0, 2)]),
     t!(anover200, &["foo", "foo"], "foobarfoo", &[(0, 0, 3)]),
-    t!(anover300, &["", ""], "", &[(0, 0, 0)]),
-    t!(anover310, &["", ""], "a", &[(0, 0, 0), (0, 1, 1)]),
+    t!(anover300, &["", ""], "", &[(0, 0, 0),]),
+    t!(anover310, &["", ""], "a", &[(0, 0, 0)]),
 ];
 
 /// Tests for overlapping match semantics.
@@ -552,9 +532,6 @@ const OVERLAPPING: &'static [SearchTest] = &[
     ),
 ];
 
-/*
-Iterators of anchored overlapping searches were removed from the API in
-after 0.7, but we leave the tests commented out for posterity.
 /// Like OVERLAPPING, but for anchored searches.
 const ANCHORED_OVERLAPPING: &'static [SearchTest] = &[
     t!(aover000, &["abcd", "bcd", "cd", "b"], "abcd", &[(0, 0, 4)]),
@@ -573,7 +550,6 @@ const ANCHORED_OVERLAPPING: &'static [SearchTest] = &[
     t!(aover350, &["", "", "a"], "a", &[(0, 0, 0), (1, 0, 0), (2, 0, 1)]),
     t!(aover360, &["foo", "foofoo"], "foofoo", &[(0, 0, 3), (1, 0, 6)]),
 ];
-*/
 
 /// Tests for ASCII case insensitivity.
 ///
@@ -651,33 +627,15 @@ const REGRESSION: &'static [SearchTest] = &[
 // each one turns a different knob on AhoCorasickBuilder.
 
 macro_rules! testconfig {
-    (anchored, $name:ident, $collection:expr, $kind:ident, $with:expr) => {
-        #[test]
-        fn $name() {
-            run_search_tests($collection, |test| {
-                let mut builder = AhoCorasick::builder();
-                $with(&mut builder);
-                let input = Input::new(test.haystack).anchored(Anchored::Yes);
-                builder
-                    .match_kind(MatchKind::$kind)
-                    .build(test.patterns)
-                    .unwrap()
-                    .try_find_iter(input)
-                    .unwrap()
-                    .collect()
-            });
-        }
-    };
     (overlapping, $name:ident, $collection:expr, $kind:ident, $with:expr) => {
         #[test]
         fn $name() {
             run_search_tests($collection, |test| {
-                let mut builder = AhoCorasick::builder();
+                let mut builder = AhoCorasickBuilder::new();
                 $with(&mut builder);
                 builder
                     .match_kind(MatchKind::$kind)
                     .build(test.patterns)
-                    .unwrap()
                     .find_overlapping_iter(test.haystack)
                     .collect()
             });
@@ -686,17 +644,14 @@ macro_rules! testconfig {
     (stream, $name:ident, $collection:expr, $kind:ident, $with:expr) => {
         #[test]
         fn $name() {
-            run_stream_search_tests($collection, |test| {
-                let buf = std::io::BufReader::with_capacity(
-                    1,
-                    test.haystack.as_bytes(),
-                );
-                let mut builder = AhoCorasick::builder();
+            run_search_tests($collection, |test| {
+                let buf =
+                    io::BufReader::with_capacity(1, test.haystack.as_bytes());
+                let mut builder = AhoCorasickBuilder::new();
                 $with(&mut builder);
                 builder
                     .match_kind(MatchKind::$kind)
                     .build(test.patterns)
-                    .unwrap()
                     .stream_find_iter(buf)
                     .map(|result| result.unwrap())
                     .collect()
@@ -707,12 +662,11 @@ macro_rules! testconfig {
         #[test]
         fn $name() {
             run_search_tests($collection, |test| {
-                let mut builder = AhoCorasick::builder();
+                let mut builder = AhoCorasickBuilder::new();
                 $with(&mut builder);
                 builder
                     .match_kind(MatchKind::$kind)
                     .build(test.patterns)
-                    .unwrap()
                     .find_iter(test.haystack)
                     .collect()
             });
@@ -725,84 +679,29 @@ macro_rules! testcombo {
         mod $name {
             use super::*;
 
-            testconfig!(default, $collection, $kind, |_| ());
+            testconfig!(nfa_default, $collection, $kind, |_| ());
             testconfig!(
-                nfa_default,
+                nfa_no_prefilter,
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::NoncontiguousNFA));
+                    b.prefilter(false);
                 }
             );
             testconfig!(
-                nfa_noncontig_no_prefilter,
+                nfa_all_sparse,
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-                        .prefilter(false);
+                    b.dense_depth(0);
                 }
             );
             testconfig!(
-                nfa_noncontig_all_sparse,
+                nfa_all_dense,
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-                        .dense_depth(0);
-                }
-            );
-            testconfig!(
-                nfa_noncontig_all_dense,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-                        .dense_depth(usize::MAX);
-                }
-            );
-            testconfig!(
-                nfa_contig_default,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::ContiguousNFA));
-                }
-            );
-            testconfig!(
-                nfa_contig_no_prefilter,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::ContiguousNFA))
-                        .prefilter(false);
-                }
-            );
-            testconfig!(
-                nfa_contig_all_sparse,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::ContiguousNFA))
-                        .dense_depth(0);
-                }
-            );
-            testconfig!(
-                nfa_contig_all_dense,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::ContiguousNFA))
-                        .dense_depth(usize::MAX);
-                }
-            );
-            testconfig!(
-                nfa_contig_no_byte_class,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::ContiguousNFA))
-                        .byte_classes(false);
+                    b.dense_depth(usize::MAX);
                 }
             );
             testconfig!(
@@ -810,16 +709,7 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA));
-                }
-            );
-            testconfig!(
-                dfa_start_both,
-                $collection,
-                $kind,
-                |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA))
-                        .start_kind(StartKind::Both);
+                    b.dfa(true);
                 }
             );
             testconfig!(
@@ -827,17 +717,23 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA)).prefilter(false);
+                    b.dfa(true).prefilter(false);
                 }
             );
             testconfig!(
-                dfa_start_both_no_prefilter,
+                dfa_all_sparse,
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA))
-                        .start_kind(StartKind::Both)
-                        .prefilter(false);
+                    b.dfa(true).dense_depth(0);
+                }
+            );
+            testconfig!(
+                dfa_all_dense,
+                $collection,
+                $kind,
+                |b: &mut AhoCorasickBuilder| {
+                    b.dfa(true).dense_depth(usize::MAX);
                 }
             );
             testconfig!(
@@ -845,25 +741,36 @@ macro_rules! testcombo {
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA)).byte_classes(false);
+                    // TODO: remove tests when option is removed.
+                    #[allow(deprecated)]
+                    b.dfa(true).byte_classes(false);
                 }
             );
             testconfig!(
-                dfa_start_both_no_byte_class,
+                dfa_no_premultiply,
                 $collection,
                 $kind,
                 |b: &mut AhoCorasickBuilder| {
-                    b.kind(Some(AhoCorasickKind::DFA))
-                        .start_kind(StartKind::Both)
-                        .byte_classes(false);
+                    // TODO: remove tests when option is removed.
+                    #[allow(deprecated)]
+                    b.dfa(true).premultiply(false);
+                }
+            );
+            testconfig!(
+                dfa_no_byte_class_no_premultiply,
+                $collection,
+                $kind,
+                |b: &mut AhoCorasickBuilder| {
+                    // TODO: remove tests when options are removed.
+                    #[allow(deprecated)]
+                    b.dfa(true).byte_classes(false).premultiply(false);
                 }
             );
         }
     };
 }
 
-// Write out the various combinations of match semantics given the variety of
-// configurations tested by 'testcombo!'.
+// Write out the combinations.
 testcombo!(search_leftmost_longest, AC_LEFTMOST_LONGEST, LeftmostLongest);
 testcombo!(search_leftmost_first, AC_LEFTMOST_FIRST, LeftmostFirst);
 testcombo!(
@@ -875,63 +782,27 @@ testcombo!(
 // Write out the overlapping combo by hand since there is only one of them.
 testconfig!(
     overlapping,
-    search_standard_overlapping_default,
+    search_standard_overlapping_nfa_default,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |_| ()
 );
 testconfig!(
     overlapping,
-    search_standard_overlapping_nfa_noncontig_default,
+    search_standard_overlapping_nfa_all_sparse,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA));
+        b.dense_depth(0);
     }
 );
 testconfig!(
     overlapping,
-    search_standard_overlapping_nfa_noncontig_no_prefilter,
+    search_standard_overlapping_nfa_all_dense,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA)).prefilter(false);
-    }
-);
-testconfig!(
-    overlapping,
-    search_standard_overlapping_nfa_contig_default,
-    AC_STANDARD_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA));
-    }
-);
-testconfig!(
-    overlapping,
-    search_standard_overlapping_nfa_contig_no_prefilter,
-    AC_STANDARD_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA)).prefilter(false);
-    }
-);
-testconfig!(
-    overlapping,
-    search_standard_overlapping_nfa_contig_all_sparse,
-    AC_STANDARD_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA)).dense_depth(0);
-    }
-);
-testconfig!(
-    overlapping,
-    search_standard_overlapping_nfa_contig_all_dense,
-    AC_STANDARD_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA)).dense_depth(usize::MAX);
+        b.dense_depth(usize::MAX);
     }
 );
 testconfig!(
@@ -940,36 +811,25 @@ testconfig!(
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA));
+        b.dfa(true);
     }
 );
 testconfig!(
     overlapping,
-    search_standard_overlapping_dfa_start_both,
+    search_standard_overlapping_dfa_all_sparse,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).start_kind(StartKind::Both);
+        b.dfa(true).dense_depth(0);
     }
 );
 testconfig!(
     overlapping,
-    search_standard_overlapping_dfa_no_prefilter,
+    search_standard_overlapping_dfa_all_dense,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).prefilter(false);
-    }
-);
-testconfig!(
-    overlapping,
-    search_standard_overlapping_dfa_start_both_no_prefilter,
-    AC_STANDARD_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA))
-            .start_kind(StartKind::Both)
-            .prefilter(false);
+        b.dfa(true).dense_depth(usize::MAX);
     }
 );
 testconfig!(
@@ -978,209 +838,125 @@ testconfig!(
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).byte_classes(false);
+        // TODO: remove tests when option is removed.
+        #[allow(deprecated)]
+        b.dfa(true).byte_classes(false);
     }
 );
 testconfig!(
     overlapping,
-    search_standard_overlapping_dfa_start_both_no_byte_class,
+    search_standard_overlapping_dfa_no_premultiply,
     AC_STANDARD_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA))
-            .start_kind(StartKind::Both)
-            .byte_classes(false);
+        // TODO: remove tests when option is removed.
+        #[allow(deprecated)]
+        b.dfa(true).premultiply(false);
+    }
+);
+testconfig!(
+    overlapping,
+    search_standard_overlapping_dfa_no_byte_class_no_premultiply,
+    AC_STANDARD_OVERLAPPING,
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        // TODO: remove tests when options are removed.
+        #[allow(deprecated)]
+        b.dfa(true).byte_classes(false).premultiply(false);
     }
 );
 
 // Also write out tests manually for streams, since we only test the standard
 // match semantics. We also don't bother testing different automaton
 // configurations, since those are well covered by tests above.
-#[cfg(feature = "std")]
 testconfig!(
     stream,
-    search_standard_stream_default,
+    search_standard_stream_nfa_default,
     AC_STANDARD_NON_OVERLAPPING,
     Standard,
     |_| ()
 );
-#[cfg(feature = "std")]
-testconfig!(
-    stream,
-    search_standard_stream_nfa_noncontig_default,
-    AC_STANDARD_NON_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA));
-    }
-);
-#[cfg(feature = "std")]
-testconfig!(
-    stream,
-    search_standard_stream_nfa_contig_default,
-    AC_STANDARD_NON_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA));
-    }
-);
-#[cfg(feature = "std")]
 testconfig!(
     stream,
     search_standard_stream_dfa_default,
     AC_STANDARD_NON_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA));
+        b.dfa(true);
     }
 );
 
 // Same thing for anchored searches. Write them out manually.
 testconfig!(
-    anchored,
-    search_standard_anchored_default,
+    search_standard_anchored_nfa_default,
     AC_STANDARD_ANCHORED_NON_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored);
+        b.anchored(true);
     }
 );
 testconfig!(
-    anchored,
-    search_standard_anchored_nfa_noncontig_default,
-    AC_STANDARD_ANCHORED_NON_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::NoncontiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
-    search_standard_anchored_nfa_contig_default,
-    AC_STANDARD_ANCHORED_NON_OVERLAPPING,
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::ContiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
     search_standard_anchored_dfa_default,
     AC_STANDARD_ANCHORED_NON_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored).kind(Some(AhoCorasickKind::DFA));
+        b.anchored(true).dfa(true);
     }
 );
 testconfig!(
-    anchored,
-    search_standard_anchored_dfa_start_both,
-    AC_STANDARD_ANCHORED_NON_OVERLAPPING,
+    overlapping,
+    search_standard_anchored_overlapping_nfa_default,
+    AC_STANDARD_ANCHORED_OVERLAPPING,
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Both).kind(Some(AhoCorasickKind::DFA));
+        b.anchored(true);
     }
 );
 testconfig!(
-    anchored,
-    search_leftmost_first_anchored_default,
+    overlapping,
+    search_standard_anchored_overlapping_dfa_default,
+    AC_STANDARD_ANCHORED_OVERLAPPING,
+    Standard,
+    |b: &mut AhoCorasickBuilder| {
+        b.anchored(true).dfa(true);
+    }
+);
+testconfig!(
+    search_leftmost_first_anchored_nfa_default,
     AC_LEFTMOST_FIRST_ANCHORED,
     LeftmostFirst,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored);
+        b.anchored(true);
     }
 );
 testconfig!(
-    anchored,
-    search_leftmost_first_anchored_nfa_noncontig_default,
-    AC_LEFTMOST_FIRST_ANCHORED,
-    LeftmostFirst,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::NoncontiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
-    search_leftmost_first_anchored_nfa_contig_default,
-    AC_LEFTMOST_FIRST_ANCHORED,
-    LeftmostFirst,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::ContiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
     search_leftmost_first_anchored_dfa_default,
     AC_LEFTMOST_FIRST_ANCHORED,
     LeftmostFirst,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored).kind(Some(AhoCorasickKind::DFA));
+        b.anchored(true).dfa(true);
     }
 );
 testconfig!(
-    anchored,
-    search_leftmost_first_anchored_dfa_start_both,
-    AC_LEFTMOST_FIRST_ANCHORED,
-    LeftmostFirst,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Both).kind(Some(AhoCorasickKind::DFA));
-    }
-);
-testconfig!(
-    anchored,
-    search_leftmost_longest_anchored_default,
+    search_leftmost_longest_anchored_nfa_default,
     AC_LEFTMOST_LONGEST_ANCHORED,
     LeftmostLongest,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored);
+        b.anchored(true);
     }
 );
 testconfig!(
-    anchored,
-    search_leftmost_longest_anchored_nfa_noncontig_default,
-    AC_LEFTMOST_LONGEST_ANCHORED,
-    LeftmostLongest,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::NoncontiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
-    search_leftmost_longest_anchored_nfa_contig_default,
-    AC_LEFTMOST_LONGEST_ANCHORED,
-    LeftmostLongest,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored)
-            .kind(Some(AhoCorasickKind::ContiguousNFA));
-    }
-);
-testconfig!(
-    anchored,
     search_leftmost_longest_anchored_dfa_default,
     AC_LEFTMOST_LONGEST_ANCHORED,
     LeftmostLongest,
     |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Anchored).kind(Some(AhoCorasickKind::DFA));
-    }
-);
-testconfig!(
-    anchored,
-    search_leftmost_longest_anchored_dfa_start_both,
-    AC_LEFTMOST_LONGEST_ANCHORED,
-    LeftmostLongest,
-    |b: &mut AhoCorasickBuilder| {
-        b.start_kind(StartKind::Both).kind(Some(AhoCorasickKind::DFA));
+        b.anchored(true).dfa(true);
     }
 );
 
 // And also write out the test combinations for ASCII case insensitivity.
 testconfig!(
-    acasei_standard_default,
+    acasei_standard_nfa_default,
     &[ASCII_CASE_INSENSITIVE],
     Standard,
     |b: &mut AhoCorasickBuilder| {
@@ -1188,60 +964,20 @@ testconfig!(
     }
 );
 testconfig!(
-    acasei_standard_nfa_noncontig_default,
-    &[ASCII_CASE_INSENSITIVE],
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-            .prefilter(false)
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    acasei_standard_nfa_contig_default,
-    &[ASCII_CASE_INSENSITIVE],
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA))
-            .prefilter(false)
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
     acasei_standard_dfa_default,
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).ascii_case_insensitive(true);
+        b.ascii_case_insensitive(true).dfa(true);
     }
 );
 testconfig!(
     overlapping,
-    acasei_standard_overlapping_default,
+    acasei_standard_overlapping_nfa_default,
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
     Standard,
     |b: &mut AhoCorasickBuilder| {
         b.ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    overlapping,
-    acasei_standard_overlapping_nfa_noncontig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    overlapping,
-    acasei_standard_overlapping_nfa_contig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
-    Standard,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA))
-            .ascii_case_insensitive(true);
     }
 );
 testconfig!(
@@ -1250,33 +986,15 @@ testconfig!(
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_OVERLAPPING],
     Standard,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).ascii_case_insensitive(true);
+        b.ascii_case_insensitive(true).dfa(true);
     }
 );
 testconfig!(
-    acasei_leftmost_first_default,
+    acasei_leftmost_first_nfa_default,
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
     LeftmostFirst,
     |b: &mut AhoCorasickBuilder| {
         b.ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    acasei_leftmost_first_nfa_noncontig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
-    LeftmostFirst,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    acasei_leftmost_first_nfa_contig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
-    LeftmostFirst,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA))
-            .ascii_case_insensitive(true);
     }
 );
 testconfig!(
@@ -1284,11 +1002,11 @@ testconfig!(
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
     LeftmostFirst,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).ascii_case_insensitive(true);
+        b.ascii_case_insensitive(true).dfa(true);
     }
 );
 testconfig!(
-    acasei_leftmost_longest_default,
+    acasei_leftmost_longest_nfa_default,
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
     LeftmostLongest,
     |b: &mut AhoCorasickBuilder| {
@@ -1296,29 +1014,11 @@ testconfig!(
     }
 );
 testconfig!(
-    acasei_leftmost_longest_nfa_noncontig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
-    LeftmostLongest,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::NoncontiguousNFA))
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
-    acasei_leftmost_longest_nfa_contig_default,
-    &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
-    LeftmostLongest,
-    |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::ContiguousNFA))
-            .ascii_case_insensitive(true);
-    }
-);
-testconfig!(
     acasei_leftmost_longest_dfa_default,
     &[ASCII_CASE_INSENSITIVE, ASCII_CASE_INSENSITIVE_NON_OVERLAPPING],
     LeftmostLongest,
     |b: &mut AhoCorasickBuilder| {
-        b.kind(Some(AhoCorasickKind::DFA)).ascii_case_insensitive(true);
+        b.ascii_case_insensitive(true).dfa(true);
     }
 );
 
@@ -1330,42 +1030,11 @@ fn run_search_tests<F: FnMut(&SearchTest) -> Vec<Match>>(
         |matches: Vec<Match>| -> Vec<(usize, usize, usize)> {
             matches
                 .into_iter()
-                .map(|m| (m.pattern().as_usize(), m.start(), m.end()))
+                .map(|m| (m.pattern(), m.start(), m.end()))
                 .collect()
         };
     for &tests in which {
         for test in tests {
-            assert_eq!(
-                test.matches,
-                get_match_triples(f(&test)).as_slice(),
-                "test: {}, patterns: {:?}, haystack: {:?}",
-                test.name,
-                test.patterns,
-                test.haystack
-            );
-        }
-    }
-}
-
-// Like 'run_search_tests', but we skip any tests that contain the empty
-// pattern because stream searching doesn't support it.
-#[cfg(feature = "std")]
-fn run_stream_search_tests<F: FnMut(&SearchTest) -> Vec<Match>>(
-    which: TestCollection,
-    mut f: F,
-) {
-    let get_match_triples =
-        |matches: Vec<Match>| -> Vec<(usize, usize, usize)> {
-            matches
-                .into_iter()
-                .map(|m| (m.pattern().as_usize(), m.start(), m.end()))
-                .collect()
-        };
-    for &tests in which {
-        for test in tests {
-            if test.patterns.iter().any(|p| p.is_empty()) {
-                continue;
-            }
             assert_eq!(
                 test.matches,
                 get_match_triples(f(&test)).as_slice(),
@@ -1404,129 +1073,55 @@ fn search_tests_have_unique_names() {
     assert("REGRESSION", REGRESSION);
 }
 
-#[cfg(feature = "std")]
 #[test]
 #[should_panic]
 fn stream_not_allowed_leftmost_first() {
-    let fsm = AhoCorasick::builder()
+    let fsm = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostFirst)
-        .build(None::<String>)
-        .unwrap();
+        .build(None::<String>);
     assert_eq!(fsm.stream_find_iter(&b""[..]).count(), 0);
 }
 
-#[cfg(feature = "std")]
 #[test]
 #[should_panic]
 fn stream_not_allowed_leftmost_longest() {
-    let fsm = AhoCorasick::builder()
+    let fsm = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostLongest)
-        .build(None::<String>)
-        .unwrap();
+        .build(None::<String>);
     assert_eq!(fsm.stream_find_iter(&b""[..]).count(), 0);
 }
 
 #[test]
 #[should_panic]
 fn overlapping_not_allowed_leftmost_first() {
-    let fsm = AhoCorasick::builder()
+    let fsm = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostFirst)
-        .build(None::<String>)
-        .unwrap();
+        .build(None::<String>);
     assert_eq!(fsm.find_overlapping_iter("").count(), 0);
 }
 
 #[test]
 #[should_panic]
 fn overlapping_not_allowed_leftmost_longest() {
-    let fsm = AhoCorasick::builder()
+    let fsm = AhoCorasickBuilder::new()
         .match_kind(MatchKind::LeftmostLongest)
-        .build(None::<String>)
-        .unwrap();
+        .build(None::<String>);
     assert_eq!(fsm.find_overlapping_iter("").count(), 0);
 }
 
-// This tests that if we build an AC matcher with an "unanchored" start kind,
-// then we can't run an anchored search even if the underlying searcher
-// supports it.
-//
-// The key bit here is that both of the NFAs in this crate unconditionally
-// support both unanchored and anchored searches, but the DFA does not because
-// of the added cost of doing so. To avoid the top-level AC matcher sometimes
-// supporting anchored and sometimes not (depending on which searcher it
-// chooses to use internally), we ensure that the given 'StartKind' is always
-// respected.
 #[test]
-fn anchored_not_allowed_even_if_technically_available() {
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::NoncontiguousNFA))
-        .start_kind(StartKind::Unanchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::Yes)).is_err());
-
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::ContiguousNFA))
-        .start_kind(StartKind::Unanchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::Yes)).is_err());
-
-    // For completeness, check that the DFA returns an error too.
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::DFA))
-        .start_kind(StartKind::Unanchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::Yes)).is_err());
-}
-
-// This is like the test aboved, but with unanchored and anchored flipped. That
-// is, we asked for an AC searcher with anchored support and we check that
-// unanchored searches return an error even if the underlying searcher would
-// technically support it.
-#[test]
-fn unanchored_not_allowed_even_if_technically_available() {
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::NoncontiguousNFA))
-        .start_kind(StartKind::Anchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::No)).is_err());
-
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::ContiguousNFA))
-        .start_kind(StartKind::Anchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::No)).is_err());
-
-    // For completeness, check that the DFA returns an error too.
-    let ac = AhoCorasick::builder()
-        .kind(Some(AhoCorasickKind::DFA))
-        .start_kind(StartKind::Anchored)
-        .build(&["foo"])
-        .unwrap();
-    assert!(ac.try_find(Input::new("foo").anchored(Anchored::No)).is_err());
-}
-
-// This tests that a prefilter does not cause a search to report a match
-// outside the bounds provided by the caller.
-//
-// This is a regression test for a bug I introduced during the rewrite of most
-// of the crate after 0.7. It was never released. The tricky part here is
-// ensuring we get a prefilter that can report matches on its own (such as the
-// packed searcher). Otherwise, prefilters that report false positives might
-// have searched past the bounds provided by the caller, but confirming the
-// match would subsequently fail.
-#[test]
-fn prefilter_stays_in_bounds() {
-    let ac = AhoCorasick::builder()
-        .match_kind(MatchKind::LeftmostFirst)
-        .build(&["sam", "frodo", "pippin", "merry", "gandalf", "sauron"])
-        .unwrap();
-    let haystack = "foo gandalf";
-    assert_eq!(None, ac.find(Input::new(haystack).range(0..10)));
+fn state_id_too_small() {
+    let mut patterns = vec![];
+    for c1 in (b'a'..b'z').map(|b| b as char) {
+        for c2 in (b'a'..b'z').map(|b| b as char) {
+            for c3 in (b'a'..b'z').map(|b| b as char) {
+                patterns.push(format!("{}{}{}", c1, c2, c3));
+            }
+        }
+    }
+    let result =
+        AhoCorasickBuilder::new().build_with_size::<u8, _, _>(&patterns);
+    assert!(result.is_err());
 }
 
 // See: https://github.com/BurntSushi/aho-corasick/issues/44
@@ -1535,10 +1130,9 @@ fn prefilter_stays_in_bounds() {
 // visit an exponential number of states when filling in failure transitions.
 #[test]
 fn regression_ascii_case_insensitive_no_exponential() {
-    let ac = AhoCorasick::builder()
+    let ac = AhoCorasickBuilder::new()
         .ascii_case_insensitive(true)
-        .build(&["Tsubaki House-Triple Shot Vol01校花三姐妹"])
-        .unwrap();
+        .build(&["Tsubaki House-Triple Shot Vol01校花三姐妹"]);
     assert!(ac.find("").is_none());
 }
 
@@ -1551,23 +1145,24 @@ fn regression_ascii_case_insensitive_no_exponential() {
 fn regression_rare_byte_prefilter() {
     use crate::AhoCorasick;
 
-    let ac = AhoCorasick::new(&["ab/j/", "x/"]).unwrap();
+    let ac = AhoCorasick::new_auto_configured(&["ab/j/", "x/"]);
     assert!(ac.is_match("ab/j/"));
 }
 
 #[test]
 fn regression_case_insensitive_prefilter() {
+    use crate::AhoCorasickBuilder;
+
     for c in b'a'..b'z' {
         for c2 in b'a'..b'z' {
             let c = c as char;
             let c2 = c2 as char;
             let needle = format!("{}{}", c, c2).to_lowercase();
             let haystack = needle.to_uppercase();
-            let ac = AhoCorasick::builder()
+            let ac = AhoCorasickBuilder::new()
                 .ascii_case_insensitive(true)
                 .prefilter(true)
-                .build(&[&needle])
-                .unwrap();
+                .build(&[&needle]);
             assert_eq!(
                 1,
                 ac.find_iter(&haystack).count(),
@@ -1583,7 +1178,6 @@ fn regression_case_insensitive_prefilter() {
 // See: https://github.com/BurntSushi/aho-corasick/issues/64
 //
 // This occurs when the rare byte prefilter is active.
-#[cfg(feature = "std")]
 #[test]
 fn regression_stream_rare_byte_prefilter() {
     use std::io::Read;
@@ -1592,9 +1186,9 @@ fn regression_stream_rare_byte_prefilter() {
     const MAGIC: [u8; 5] = *b"1234j";
 
     // NOTE: The test fails for value in 8188..=8191 These value put the string
-    // to search accross two call to read because the buffer size is 64KB by
+    // to search accross two call to read because the buffer size is 8192 by
     // default.
-    const BEGIN: usize = 65_535;
+    const BEGIN: usize = 8191;
 
     /// This is just a structure that implements Reader. The reader
     /// implementation will simulate a file filled with 0, except for the MAGIC
@@ -1605,7 +1199,8 @@ fn regression_stream_rare_byte_prefilter() {
     }
 
     impl Read for R {
-        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        fn read(&mut self, buf: &mut [u8]) -> ::std::io::Result<usize> {
+            //dbg!(buf.len());
             if self.read > 100000 {
                 return Ok(0);
             }
@@ -1636,21 +1231,16 @@ fn regression_stream_rare_byte_prefilter() {
         }
     }
 
-    fn run() -> std::io::Result<()> {
-        let aut = AhoCorasick::builder()
-            // Enable byte classes to make debugging the automaton easier. It
-            // should have no effect on the test result.
-            .byte_classes(false)
-            .build(&[&MAGIC])
-            .unwrap();
+    fn run() -> ::std::io::Result<()> {
+        let aut = AhoCorasickBuilder::new().build(&[&MAGIC]);
 
         // While reading from a vector, it works:
-        let mut buf = alloc::vec![];
+        let mut buf = vec![];
         R::default().read_to_end(&mut buf)?;
         let from_whole = aut.find_iter(&buf).next().unwrap().start();
 
-        // But using stream_find_iter fails!
-        let mut file = std::io::BufReader::new(R::default());
+        //But using stream_find_iter fails!
+        let mut file = R::default();
         let begin = aut
             .stream_find_iter(&mut file)
             .next()
