@@ -226,6 +226,7 @@ var pktUI = (function () {
   function onShowSignup() {
     // Ensure opening the signup panel clears the icon state from any previous sessions.
     SaveToPocket.itemDeleted();
+    pktTelemetry.submitPocketButtonPing("click", "save_button");
     // A successful button click, for logged out users.
     pktTelemetry.sendStructuredIngestionEvent(
       pktTelemetry.createPingPayload({
@@ -240,6 +241,7 @@ var pktUI = (function () {
   }
 
   async function onShowHome() {
+    pktTelemetry.submitPocketButtonPing("click", "home_button");
     // A successful home button click.
     pktTelemetry.sendStructuredIngestionEvent(
       pktTelemetry.createPingPayload({
@@ -300,6 +302,7 @@ var pktUI = (function () {
       return;
     }
 
+    pktTelemetry.submitPocketButtonPing("click", "save_button");
     // A successful button click, for logged in users.
     pktTelemetry.sendStructuredIngestionEvent(
       pktTelemetry.createPingPayload({
@@ -451,6 +454,7 @@ var pktUI = (function () {
     // We don't track every click, only clicks with a known source.
     if (data.source) {
       const { position, source, model } = data;
+      pktTelemetry.submitPocketButtonPing("click", source, position, model);
       const payload = pktTelemetry.createPingPayload({
         ...(model ? { model } : {}),
         events: [
@@ -485,6 +489,12 @@ var pktUI = (function () {
     const { url, position, model } = data;
     // Check to see if we need to and can fire valid telemetry.
     if (model && (position || position === 0)) {
+      pktTelemetry.submitPocketButtonPing(
+        "click",
+        "on_save_recs",
+        position,
+        model
+      );
       const payload = pktTelemetry.createPingPayload({
         model,
         events: [
