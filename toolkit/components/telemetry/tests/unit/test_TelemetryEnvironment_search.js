@@ -391,14 +391,16 @@ add_task(async function test_defaultSearchEngine_paramsChanged() {
     );
   });
 
-  engine.wrappedJSObject.update({
-    manifest: SearchTestUtils.createEngineManifest({
-      name: "TestEngine",
-      version: "1.2",
-      search_url: "https://www.google.com/fake2",
-    }),
+  let manifest = SearchTestUtils.createEngineManifest({
+    name: "TestEngine",
+    version: "1.2",
+    search_url: "https://www.google.com/fake2",
   });
-
+  await extension.upgrade({
+    useAddonManager: "permanent",
+    manifest,
+  });
+  await AddonTestUtils.waitForSearchProviderStartup(extension);
   await promise;
 
   data = TelemetryEnvironment.currentEnvironment;
