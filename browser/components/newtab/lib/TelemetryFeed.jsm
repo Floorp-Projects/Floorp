@@ -1175,6 +1175,24 @@ class TelemetryFeed {
       case at.UNINIT:
         this.uninit();
         break;
+      case at.ABOUT_SPONSORED_TOP_SITES:
+        this.handleAboutSponsoredTopSites(action);
+        break;
+    }
+  }
+
+  handleAboutSponsoredTopSites(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    const { data } = action;
+    const { position, advertiser_name, tile_id } = data;
+
+    if (session) {
+      Glean.topsites.showPrivacyClick.record({
+        advertiser_name,
+        tile_id: tile_id.toString(),
+        newtab_visit_id: session.session_id,
+        position,
+      });
     }
   }
 
