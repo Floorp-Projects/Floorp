@@ -6,7 +6,7 @@
 use rusqlite::{Connection, Transaction};
 use sql_support::open_database::{self, ConnectionInitializer};
 
-pub const VERSION: u32 = 6;
+pub const VERSION: u32 = 8;
 
 pub const SQL: &str = "
     CREATE TABLE meta(
@@ -21,10 +21,10 @@ pub const SQL: &str = "
         PRIMARY KEY (keyword, suggestion_id)
     ) WITHOUT ROWID;
 
-    CREATE TABLE pocket_keywords( 
+    CREATE TABLE prefix_keywords(
         keyword_prefix TEXT NOT NULL,
         keyword_suffix TEXT NOT NULL DEFAULT '',
-        confidence INTEGER NOT NULL,
+        confidence INTEGER NOT NULL DEFAULT 0,
         rank INTEGER NOT NULL,
         suggestion_id INTEGER NOT NULL REFERENCES suggestions(id),
         PRIMARY KEY (keyword_prefix, keyword_suffix, suggestion_id) 
@@ -110,7 +110,7 @@ impl ConnectionInitializer for SuggestConnectionInitializer {
 
     fn upgrade_from(&self, _db: &Transaction<'_>, version: u32) -> open_database::Result<()> {
         match version {
-            1..=5 => {
+            1..=7 => {
                 // These schema versions were used during development, and never
                 // shipped in any applications. Treat these databases as
                 // corrupt, so that they'll be replaced.

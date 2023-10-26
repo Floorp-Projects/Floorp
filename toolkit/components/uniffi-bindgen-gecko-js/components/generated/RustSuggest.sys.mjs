@@ -270,6 +270,34 @@ export class FfiConverterU8 extends FfiConverter {
 }
 
 // Export the FFIConverter object to make external types work.
+export class FfiConverterI32 extends FfiConverter {
+    static checkType(value) {
+        super.checkType(value);
+        if (!Number.isInteger(value)) {
+            throw new UniFFITypeError(`${value} is not an integer`);
+        }
+        if (value < -2147483648 || value > 2147483647) {
+            throw new UniFFITypeError(`${value} exceeds the I32 bounds`);
+        }
+    }
+    static computeSize() {
+        return 4;
+    }
+    static lift(value) {
+        return value;
+    }
+    static lower(value) {
+        return value;
+    }
+    static write(dataStream, value) {
+        dataStream.writeInt32(value)
+    }
+    static read(dataStream) {
+        return dataStream.readInt32()
+    }
+}
+
+// Export the FFIConverter object to make external types work.
 export class FfiConverterU64 extends FfiConverter {
     static checkType(value) {
         super.checkType(value);
@@ -598,7 +626,7 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
 }
 
 export class SuggestionQuery {
-    constructor(keyword,providers) {
+    constructor(keyword,providers,limit = null) {
         try {
             FfiConverterString.checkType(keyword)
         } catch (e) {
@@ -615,13 +643,23 @@ export class SuggestionQuery {
             }
             throw e;
         }
+        try {
+            FfiConverterOptionali32.checkType(limit)
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart("limit");
+            }
+            throw e;
+        }
         this.keyword = keyword;
         this.providers = providers;
+        this.limit = limit;
     }
     equals(other) {
         return (
             this.keyword == other.keyword &&
-            this.providers == other.providers
+            this.providers == other.providers &&
+            this.limit == other.limit
         )
     }
 }
@@ -631,18 +669,21 @@ export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
     static read(dataStream) {
         return new SuggestionQuery(
             FfiConverterString.read(dataStream), 
-            FfiConverterSequenceTypeSuggestionProvider.read(dataStream)
+            FfiConverterSequenceTypeSuggestionProvider.read(dataStream), 
+            FfiConverterOptionali32.read(dataStream)
         );
     }
     static write(dataStream, value) {
         FfiConverterString.write(dataStream, value.keyword);
         FfiConverterSequenceTypeSuggestionProvider.write(dataStream, value.providers);
+        FfiConverterOptionali32.write(dataStream, value.limit);
     }
 
     static computeSize(value) {
         let totalSize = 0;
         totalSize += FfiConverterString.computeSize(value.keyword);
         totalSize += FfiConverterSequenceTypeSuggestionProvider.computeSize(value.providers);
+        totalSize += FfiConverterOptionali32.computeSize(value.limit);
         return totalSize
     }
 
@@ -661,6 +702,14 @@ export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
         } catch (e) {
             if (e instanceof UniFFITypeError) {
                 e.addItemDescriptionPart(".providers");
+            }
+            throw e;
+        }
+        try {
+            FfiConverterOptionali32.checkType(value.limit);
+        } catch (e) {
+            if (e instanceof UniFFITypeError) {
+                e.addItemDescriptionPart(".limit");
             }
             throw e;
         }
@@ -1006,6 +1055,43 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
     }
 }
 
+
+// Export the FFIConverter object to make external types work.
+export class FfiConverterOptionali32 extends FfiConverterArrayBuffer {
+    static checkType(value) {
+        if (value !== undefined && value !== null) {
+            FfiConverterI32.checkType(value)
+        }
+    }
+
+    static read(dataStream) {
+        const code = dataStream.readUint8(0);
+        switch (code) {
+            case 0:
+                return null
+            case 1:
+                return FfiConverterI32.read(dataStream)
+            default:
+                throw UniFFIError(`Unexpected code: ${code}`);
+        }
+    }
+
+    static write(dataStream, value) {
+        if (value === null || value === undefined) {
+            dataStream.writeUint8(0);
+            return;
+        }
+        dataStream.writeUint8(1);
+        FfiConverterI32.write(dataStream, value)
+    }
+
+    static computeSize(value) {
+        if (value === null || value === undefined) {
+            return 1;
+        }
+        return 1 + FfiConverterI32.computeSize(value)
+    }
+}
 
 // Export the FFIConverter object to make external types work.
 export class FfiConverterOptionalu64 extends FfiConverterArrayBuffer {
