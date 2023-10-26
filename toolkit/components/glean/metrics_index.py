@@ -43,6 +43,7 @@ firefox_desktop_metrics = [
     "browser/components/metrics.yaml",
     "browser/components/migration/metrics.yaml",
     "browser/components/newtab/metrics.yaml",
+    "browser/components/pocket/metrics.yaml",
     "browser/components/preferences/metrics.yaml",
     "browser/components/privatebrowsing/metrics.yaml",
     "browser/components/search/metrics.yaml",
@@ -106,6 +107,7 @@ gecko_pings = [
 # Order is lexicographical, enforced by t/c/glean/tests/pytest/test_yaml_indices.py
 firefox_desktop_pings = [
     "browser/components/newtab/pings.yaml",
+    "browser/components/pocket/pings.yaml",
     "browser/components/urlbar/pings.yaml",
     "toolkit/components/crashes/pings.yaml",
     "toolkit/components/telemetry/pings.yaml",

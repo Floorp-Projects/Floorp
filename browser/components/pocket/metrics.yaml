@@ -1,0 +1,144 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: Pocket'
+
+pocket.button:
+  impression_id:
+    type: uuid
+    description: >
+      A UUID representing this profile.
+      This isn't client_id, nor can it be used to link to a client_id.
+      This also means it should never be sent in a ping with a client_id.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  pocket_logged_in_status:
+    type: boolean
+    description: >
+      Whether there was a logged-in Pocket account in the Pocket-Firefox
+      integration at the point in time this action occurred.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  profile_creation_date:
+    type: quantity
+    unit: days_since_jan_1_1970
+    description: >
+      The days since Jan 1, 1970 that the oldest file in the profile dir was
+      modified. Or created. Or just the day and time of the first thing to ask
+      for the profile age called in. Or something earlier or later than that.
+
+      You may not want to use this.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  event_action:
+    type: string
+    description: >
+      The action that was taken, like "click" or... actually, it might only
+      ever be "click".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  event_source:
+    type: string
+    description: >
+      The source of the taken action, like "save_button", "home_button",
+      "on_save_recs", or the like.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  event_position:
+    type: quantity
+    unit: index
+    description: >
+      0-based index of the item on which the action was performed.
+      Not always provided.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
+
+  model:
+    type: string
+    description: >
+      A string that identifies the ML model (if any) used to generate on-save
+      recommendations. Like "doc2vec-incremental-best-article-pubspread".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - chutten@mozilla.com
+      - kdemtchouk@mozilla.com
+      - sdowne@mozilla.com
+    expires: never
+    send_in_pings: [ pocket-button ]
