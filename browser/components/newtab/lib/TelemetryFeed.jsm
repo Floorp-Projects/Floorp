@@ -870,7 +870,7 @@ class TelemetryFeed {
       if (session) {
         Glean.topsites.impression.record({
           advertiser_name,
-          tile_id: tile_id.toString(),
+          tile_id,
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
@@ -886,7 +886,7 @@ class TelemetryFeed {
       if (session) {
         Glean.topsites.click.record({
           advertiser_name,
-          tile_id: tile_id.toString(),
+          tile_id,
           newtab_visit_id: session.session_id,
           is_sponsored: true,
           position,
@@ -1205,7 +1205,7 @@ class TelemetryFeed {
       const { position, advertiser_name, tile_id, isSponsoredTopSite } = datum;
       Glean.topsites.dismiss.record({
         advertiser_name,
-        tile_id: tile_id?.toString(),
+        tile_id,
         newtab_visit_id: session.session_id,
         is_sponsored: !!isSponsoredTopSite,
         position,
@@ -1221,7 +1221,7 @@ class TelemetryFeed {
     if (session) {
       Glean.topsites.showPrivacyClick.record({
         advertiser_name,
-        tile_id: tile_id.toString(),
+        tile_id,
         newtab_visit_id: session.session_id,
         position,
       });
