@@ -259,6 +259,8 @@ class SystemResourceMonitor(object):
     # collection stops, it flushes all that data to a pipe to be read by
     # the parent process.
 
+    instance = None
+
     def __init__(self, poll_interval=1.0, metadata={}):
         """Instantiate a system resource monitor instance.
 
@@ -335,6 +337,7 @@ class SystemResourceMonitor(object):
         self._process.start()
         self._running = True
         self.start_time = time.monotonic()
+        SystemResourceMonitor.instance = self
 
     def stop(self):
         """Stop measuring system-wide CPU resource utilization.
@@ -404,36 +407,48 @@ class SystemResourceMonitor(object):
 
         self._running = False
         self.end_time = time.monotonic()
+        SystemResourceUsage.instance = None
 
     # Methods to record events alongside the monitored data.
 
-    def record_event(self, name):
+    @staticmethod
+    def record_event(name):
         """Record an event as occuring now.
 
         Events are actions that occur at a specific point in time. If you are
         looking for an action that has a duration, see the phase API below.
         """
-        self.events.append((time.monotonic(), name))
+        if SystemResourceMonitor.instance:
+            SystemResourceMonitor.instance.events.append((time.monotonic(), name))
 
-    def record_marker(self, name, start, end, text):
+    @staticmethod
+    def record_marker(name, start, end, text):
         """Record a marker with a duration and an optional text
 
         Markers are typically used to record when a single command happened.
         For actions with a longer duration that justifies tracking resource use
         see the phase API below.
         """
-        self.markers.append((name, start, end, text))
+        if SystemResourceMonitor.instance:
+            SystemResourceMonitor.instance.markers.append((name, start, end, text))
 
-    def begin_marker(self, name, text):
-        self._active_markers[name + ":" + text] = time.monotonic()
+    @staticmethod
+    def begin_marker(name, text):
+        if SystemResourceMonitor.instance:
+            SystemResourceMonitor.instance._active_markers[
+                name + ":" + text
+            ] = time.monotonic()
 
-    def end_marker(self, name, text):
+    @staticmethod
+    def end_marker(name, text):
+        if not SystemResourceMonitor.instance:
+            return
         end = time.monotonic()
         id = name + ":" + text
-        if not id in self._active_markers:
+        if not id in SystemResourceMonitor.instance._active_markers:
             return
-        start = self._active_markers.pop(id)
-        self.record_marker(name, start, end, text)
+        start = SystemResourceMonitor.instance._active_markers.pop(id)
+        SystemResourceMonitor.instance.record_marker(name, start, end, text)
 
     @contextmanager
     def phase(self, name):
