@@ -316,8 +316,15 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Save to PDF") {
                 sessionUseCases.saveToPdf.invoke()
             },
+            SimpleBrowserMenuItem("Translate Spanish to English") {
+                // Will update to translate based on best defaults when APIs are available.
+                sessionUseCases.translate.invoke(fromLanguage = "es", toLanguage = "en", options = null)
+            },
             SimpleBrowserMenuItem("Print") {
                 sessionUseCases.printContent.invoke()
+            },
+            SimpleBrowserMenuItem("Restore after Translate") {
+                sessionUseCases.translateRestore.invoke()
             },
             SimpleBrowserMenuItem("Restore after crash") {
                 sessionUseCases.crashRecovery.invoke()

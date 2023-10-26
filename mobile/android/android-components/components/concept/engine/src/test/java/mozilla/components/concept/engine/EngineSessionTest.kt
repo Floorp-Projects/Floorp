@@ -14,6 +14,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductRecommendation
+import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -1042,6 +1043,14 @@ open class DummyEngineSession : EngineSession() {
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,
     ) {}
+
+    override fun requestTranslate(
+        fromLanguage: String,
+        toLanguage: String,
+        options: TranslationOptions?,
+    ) {}
+
+    override fun requestTranslationRestore() {}
 
     override fun findAll(text: String) {}
 

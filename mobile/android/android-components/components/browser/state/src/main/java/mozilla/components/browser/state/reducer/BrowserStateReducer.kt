@@ -31,6 +31,7 @@ import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.action.TabGroupAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.action.UndoAction
 import mozilla.components.browser.state.action.WebExtensionAction
 import mozilla.components.browser.state.state.BrowserState
@@ -62,6 +63,7 @@ internal object BrowserStateReducer {
             is TabListAction -> TabListReducer.reduce(state, action)
             is TabGroupAction -> TabGroupReducer.reduce(state, action)
             is TrackingProtectionAction -> TrackingProtectionStateReducer.reduce(state, action)
+            is TranslationsAction -> TranslationsStateReducer.reduce(state, action)
             is CookieBannerAction -> CookieBannerStateReducer.reduce(state, action)
             is WebExtensionAction -> WebExtensionReducer.reduce(state, action)
             is MediaSessionAction -> MediaSessionReducer.reduce(state, action)

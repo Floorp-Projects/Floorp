@@ -26,6 +26,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductRecommendation
+import mozilla.components.concept.engine.translate.TranslationOptions
 import kotlin.reflect.KProperty
 
 internal val xRequestHeader = mapOf(
@@ -488,6 +489,24 @@ class SystemEngineSession(
         onException: (Throwable) -> Unit,
     ) {
         throw UnsupportedOperationException("Sending impression attribution event is not available in this engine")
+    }
+
+    /**
+     * See [EngineSession.requestTranslate]
+     */
+    override fun requestTranslate(
+        fromLanguage: String,
+        toLanguage: String,
+        options: TranslationOptions?,
+    ) {
+        throw UnsupportedOperationException("Translate support is not available in this engine")
+    }
+
+    /**
+     * See [EngineSession.requestTranslationRestore]
+     */
+    override fun requestTranslationRestore() {
+        throw UnsupportedOperationException("Translate restore support is not available in this engine")
     }
 
     override fun hasCookieBannerRuleForSession(

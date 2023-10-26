@@ -35,6 +35,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Headers
 import mozilla.components.concept.fetch.Response
@@ -93,6 +94,7 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.GeckoSession.ProgressDelegate.SecurityInformation
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.SessionFinder
+import org.mozilla.geckoview.TranslationsController
 import org.mozilla.geckoview.WebRequestError
 import org.mozilla.geckoview.WebRequestError.ERROR_CATEGORY_UNKNOWN
 import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
@@ -2848,6 +2850,132 @@ class GeckoEngineSessionTest {
 
         assertFalse(onResultCalled)
         assertTrue(onExceptionCalled)
+    }
+
+    @Test
+    fun `WHEN session requestTranslate is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val mockedGeckoController: TranslationsController.SessionTranslation = mock()
+
+        val geckoResult = GeckoResult<Void>()
+        val fromLanguage = "en"
+        val toLanguage = "es"
+        val options = null
+
+        geckoResult.complete(null)
+        whenever(geckoSession.sessionTranslation).thenReturn(mockedGeckoController)
+        whenever(geckoSession.sessionTranslation!!.translate(fromLanguage, toLanguage, options)).thenReturn(geckoResult)
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTranslateComplete(operation: TranslationOperation) {
+                assert(true) { "We should notify of a successful translation." }
+            }
+
+            override fun onTranslateException(
+                operation: TranslationOperation,
+                throwable: Throwable,
+            ) {
+                assert(false) { "We should not notify of a failure." }
+            }
+        })
+
+        engineSession.requestTranslate(
+            fromLanguage = fromLanguage,
+            toLanguage = toLanguage,
+            options = options,
+        )
+
+        shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `WHEN session requestTranslationRestore is successful THEN notify of completion`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val mockedGeckoController: TranslationsController.SessionTranslation = mock()
+
+        val geckoResult = GeckoResult<Void>()
+        geckoResult.complete(null)
+        whenever(geckoSession.sessionTranslation).thenReturn(mockedGeckoController)
+        whenever(geckoSession.sessionTranslation!!.restoreOriginalPage()).thenReturn(geckoResult)
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTranslateComplete(operation: TranslationOperation) {
+                assert(true) { "We should notify of a successful translation." }
+            }
+            override fun onTranslateException(
+                operation: TranslationOperation,
+                throwable: Throwable,
+            ) {
+                assert(false) { "We should not notify of a failure." }
+            }
+        })
+
+        engineSession.requestTranslationRestore()
+
+        shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `WHEN session requestTranslate is unsuccessful THEN notify of failure`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val mockedGeckoController: TranslationsController.SessionTranslation = mock()
+
+        val geckoResult = GeckoResult<Void>()
+        val fromLanguage = "en"
+        val toLanguage = "es"
+        val options = null
+
+        geckoResult.completeExceptionally(Exception())
+        whenever(geckoSession.sessionTranslation).thenReturn(mockedGeckoController)
+        whenever(geckoSession.sessionTranslation!!.translate(fromLanguage, toLanguage, options)).thenReturn(geckoResult)
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTranslateComplete(operation: TranslationOperation) {
+                assert(false) { "We should not notify of a successful translation." }
+            }
+
+            override fun onTranslateException(
+                operation: TranslationOperation,
+                throwable: Throwable,
+            ) {
+                assert(true) { "We should notify of a failure." }
+            }
+        })
+
+        engineSession.requestTranslate(
+            fromLanguage = fromLanguage,
+            toLanguage = toLanguage,
+            options = options,
+        )
+
+        shadowOf(getMainLooper()).idle()
+    }
+
+    @Test
+    fun `WHEN session requestTranslationRestore is unsuccessful THEN notify of failure`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+        val mockedGeckoController: TranslationsController.SessionTranslation = mock()
+
+        val geckoResult = GeckoResult<Void>()
+        geckoResult.completeExceptionally(Exception())
+        whenever(geckoSession.sessionTranslation).thenReturn(mockedGeckoController)
+        whenever(geckoSession.sessionTranslation!!.restoreOriginalPage()).thenReturn(geckoResult)
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onTranslateComplete(operation: TranslationOperation) {
+                assert(false) { "We should not notify of a successful translation." }
+            }
+            override fun onTranslateException(
+                operation: TranslationOperation,
+                throwable: Throwable,
+            ) {
+                assert(true) { "We should notify of a failure." }
+            }
+        })
+
+        engineSession.requestTranslationRestore()
+
+        shadowOf(getMainLooper()).idle()
     }
 
     @Test

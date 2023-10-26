@@ -111,7 +111,7 @@ class AddressPickerTest {
     @Test
     fun `GIVEN a custom tab and a prompt request WHEN handleSelectAddressRequest is called THEN the prompt is shown with the provided addresses`() {
         val customTabContent: ContentState = mock()
-        val customTab = CustomTabSessionState("custom-tab", customTabContent, mock(), mock())
+        val customTab = CustomTabSessionState(id = "custom-tab", content = customTabContent, trackingProtection = mock(), config = mock())
         whenever(customTabContent.promptRequests).thenReturn(listOf(promptRequest))
         whenever(state.customTabs).thenReturn(listOf(customTab))
 

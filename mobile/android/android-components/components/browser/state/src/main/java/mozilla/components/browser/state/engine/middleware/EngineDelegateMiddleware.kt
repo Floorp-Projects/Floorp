@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.ActionWithTab
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.TranslationsAction
 import mozilla.components.browser.state.action.lookupTabIn
 import mozilla.components.browser.state.action.toBrowserAction
 import mozilla.components.browser.state.selector.allTabs
@@ -43,6 +44,8 @@ internal class EngineDelegateMiddleware(
             is EngineAction.ExitFullScreenModeAction -> exitFullScreen(context.store, action)
             is EngineAction.SaveToPdfAction -> saveToPdf(context.store, action)
             is EngineAction.PrintContentAction -> printContent(context.store, action)
+            is TranslationsAction.TranslateAction -> translate(context.store, action)
+            is TranslationsAction.TranslateRestoreAction -> translateRestoreOriginal(context.store, action)
             is EngineAction.ClearDataAction -> clearData(context.store, action)
             is EngineAction.PurgeHistoryAction -> purgeHistory(context.state)
             else -> next(action)
@@ -149,6 +152,22 @@ internal class EngineDelegateMiddleware(
     ) = scope.launch {
         getEngineSessionOrDispatch(store, action)
             ?.requestPrintContent()
+    }
+
+    private fun translate(
+        store: Store<BrowserState, BrowserAction>,
+        action: TranslationsAction.TranslateAction,
+    ) = scope.launch {
+        getEngineSessionOrDispatch(store, action)
+            ?.requestTranslate(action.fromLanguage, action.toLanguage, action.options)
+    }
+
+    private fun translateRestoreOriginal(
+        store: Store<BrowserState, BrowserAction>,
+        action: TranslationsAction.TranslateRestoreAction,
+    ) = scope.launch {
+        getEngineSessionOrDispatch(store, action)
+            ?.requestTranslationRestore()
     }
 
     private fun clearData(

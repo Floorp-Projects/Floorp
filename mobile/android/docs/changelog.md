@@ -10,6 +10,12 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **browser-state**:
+  * Added `TranslationsState` to track translation and translation restoration status. [Bug 1844523](https://bugzilla.mozilla.org/show_bug.cgi?id=1844523)
+
+* **browser-engine-gecko**:
+  * Added support for translating and restoring a translated page on the engine. [Bug 1844523](https://bugzilla.mozilla.org/show_bug.cgi?id=1844523)
+
 # 120.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..releases_v120)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

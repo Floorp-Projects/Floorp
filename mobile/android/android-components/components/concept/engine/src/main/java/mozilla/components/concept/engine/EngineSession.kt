@@ -17,6 +17,8 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import mozilla.components.concept.engine.shopping.ProductRecommendation
+import mozilla.components.concept.engine.translate.TranslationOperation
+import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.support.base.observer.Observable
@@ -329,6 +331,21 @@ abstract class EngineSession(
          * @param throwable The throwable from the exception.
          */
         fun onCheckForFormDataException(throwable: Throwable) = Unit
+
+        /**
+         * Event to indicate that the translation operation completed successfully.
+         *
+         * @param operation The operation that the translation engine completed.
+         */
+        fun onTranslateComplete(operation: TranslationOperation) = Unit
+
+        /**
+         * Event to indicate that the translation operation was unsuccessful.
+         *
+         * @param operation The operation that the translation engine attempted.
+         * @param throwable The exception that occurred during the operation.
+         */
+        fun onTranslateException(operation: TranslationOperation, throwable: Throwable) = Unit
     }
 
     /**
@@ -919,6 +936,25 @@ abstract class EngineSession(
         onResult: (Boolean) -> Unit,
         onException: (Throwable) -> Unit,
     )
+
+    /**
+     * Requests the [EngineSession] to translate the current session's contents.
+     *
+     * @param fromLanguage The BCP 47 language tag that the page should be translated from.
+     * @param toLanguage The BCP 47 language tag that the page should be translated to.
+     * @param options Options for how the translation should be processed.
+     */
+    abstract fun requestTranslate(
+        fromLanguage: String,
+        toLanguage: String,
+        options: TranslationOptions?,
+    )
+
+    /**
+     * Requests the [EngineSession] to restore the current session's contents.
+     * Will be a no-op on the Gecko side if the page is not translated.
+     */
+    abstract fun requestTranslationRestore()
 
     /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.

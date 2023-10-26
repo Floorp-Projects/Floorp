@@ -17,6 +17,7 @@ import java.util.UUID
  * @property id the ID of this tab and session.
  * @property content the [ContentState] of this tab.
  * @property trackingProtection the [TrackingProtectionState] of this tab.
+ * @property translationsState the [TranslationsState] of this tab.
  * @property cookieBanner the [CookieBannerHandlingStatus] of this tab.
  * @property parentId the parent ID of this tab or null if this tab has no
  * parent. The parent tab is usually the tab that initiated opening this
@@ -36,6 +37,7 @@ data class TabSessionState(
     override val id: String = UUID.randomUUID().toString(),
     override val content: ContentState,
     override val trackingProtection: TrackingProtectionState = TrackingProtectionState(),
+    override val translationsState: TranslationsState = TranslationsState(),
     override val cookieBanner: CookieBannerHandlingStatus = CookieBannerHandlingStatus.NO_DETECTED,
     override val engineState: EngineState = EngineState(),
     override val extensionState: Map<String, WebExtensionState> = emptyMap(),
@@ -55,6 +57,7 @@ data class TabSessionState(
         id: String,
         content: ContentState,
         trackingProtection: TrackingProtectionState,
+        translationsState: TranslationsState,
         engineState: EngineState,
         extensionState: Map<String, WebExtensionState>,
         mediaSessionState: MediaSessionState?,
@@ -64,6 +67,7 @@ data class TabSessionState(
         id = id,
         content = content,
         trackingProtection = trackingProtection,
+        translationsState = translationsState,
         engineState = engineState,
         extensionState = extensionState,
         mediaSessionState = mediaSessionState,
