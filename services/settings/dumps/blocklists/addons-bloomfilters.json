@@ -3,6 +3,33 @@
     {
       "stash": {
         "blocked": [
+          "assinador@quicksoft.com.br:0.4.3",
+          "assinador@quicksoft.com.br:0.4.0",
+          "addonY143@manualslibrary.co:1.23.918",
+          "{df235bcf-c888-4cd8-948c-368ad1f21f31}:4.1.57",
+          "assinador@quicksoft.com.br:0.4.4",
+          "{bff3f372-c165-41d9-bf56-7e2c03f8d3ac}:0.8",
+          "{bff3f372-c165-41d9-bf56-7e2c03f8d3ac}:0.9",
+          "{93f2cbe2-9794-400a-a5d9-3ca61c1a7245}:1.65.0",
+          "{be27f84b-b03d-48e4-9a1c-36fbd0d2c800}:1.0.5",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.2",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.1",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.3",
+          "assinador@quicksoft.com.br:0.4.1",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.3.1",
+          "assinador@quicksoft.com.br:0.4.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1697632578853,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1698150908561,
+      "id": "565e0e99-b036-4bd6-88fc-7c51b312fe0b",
+      "last_modified": 1698150973785
+    },
+    {
+      "stash": {
+        "blocked": [
           "adguard-vpn@adguard.com:0.6.20",
           "adguard-vpn@adguard.com:0.8.21"
         ],
@@ -2559,5 +2586,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1697632578677
+  "timestamp": 1698150973785
 }
