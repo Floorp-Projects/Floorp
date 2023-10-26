@@ -122,6 +122,13 @@ def guess_mozinfo_from_task(task, repo=""):
             value = any("xorigin" in key for key in runtime_keys)
 
         info[tag] = value
+
+    # wpt has canvas and webgpu as tags, lets find those
+    for tag in ["canvas", "webgpu"]:
+        if tag in task["test-name"]:
+            info[tag] = True
+        else:
+            info[tag] = False
     return info
 
 
@@ -237,7 +244,14 @@ class DefaultLoader(BaseManifestLoader):
         if "web-platform-tests" in suite:
             manifests = set()
             for t in tests:
-                manifests.add(t["manifest"])
+                if mozinfo["canvas"]:
+                    if "html/canvas" in t["manifest"]:
+                        manifests.add(t["manifest"])
+                elif mozinfo["webgpu"]:
+                    if "_mozilla/webgpu" in t["manifest"]:
+                        manifests.add(t["manifest"])
+                else:
+                    manifests.add(t["manifest"])
             return {
                 "active": list(manifests),
                 "skipped": [],
