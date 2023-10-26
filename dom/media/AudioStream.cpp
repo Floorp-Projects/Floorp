@@ -11,6 +11,7 @@
 #include "AudioStream.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/AudioDeviceInfo.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Sprintf.h"
@@ -251,6 +252,10 @@ nsresult AudioStream::Init(AudioDeviceInfo* aSinkInfo)
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
+
+  mozilla::glean::fog_validation::gvsv_audio_stream_init.Get("inits"_ns).Add();
+  Telemetry::AccumulateCategorical(
+      mozilla::Telemetry::LABELS_GVSV_AUDIO_STREAM_INITS::inits);
 
   return OpenCubeb(cubebContext, params, startTime,
                    CubebUtils::GetFirstStream());

@@ -18060,5 +18060,16 @@
     "n_buckets": 50,
     "keyed": true,
     "description": "LongTask events for parent process (keys: event name): time the event ran in ms"
+  },
+  "GVSV_AUDIO_STREAM_INITS": {
+    "bug_numbers": [1858954],
+    "description": "Incremented when an audio stream is initialized. For use as part of the GeckoView Streaming Validation.",
+    "expires_in_version": "121",
+    "kind": "categorical",
+    "alert_emails": ["pmcmanis@mozilla.com"],
+    "products": ["firefox", "geckoview_streaming"],
+    "record_in_processes": ["all"],
+    "labels": ["inits"],
+    "releaseChannelCollection": "opt-out"
   }
 }

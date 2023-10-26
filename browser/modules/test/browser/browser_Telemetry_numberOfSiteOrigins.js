@@ -23,6 +23,8 @@ const { TimedPromise } = ChromeUtils.importESModule(
 );
 
 async function run_test(count) {
+  Services.fog.testResetFOG();
+
   const histogram = TelemetryTestUtils.getAndClearHistogram(
     "FX_NUMBER_OF_UNIQUE_SITE_ORIGINS_ALL_TABS"
   );
@@ -46,6 +48,11 @@ async function run_test(count) {
     TelemetryTestUtils.assertHistogram(histogram, 2, 1);
     await BrowserTestUtils.removeTab(newTab);
   }
+
+  await Services.fog.testFlushAllChildren();
+  const data =
+    Glean.fogValidation.gvsvNumberOfUniqueSiteOriginsAllTabs.testGetValue();
+  Assert.equal(data.sum, 2);
 }
 
 add_task(async function test_telemetryMoreSiteOrigin() {
