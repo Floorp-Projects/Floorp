@@ -1446,6 +1446,7 @@ class DiscoveryStreamFeed {
             publisher: item.publisher,
             time_to_read: item.timeToRead,
             raw_image_src: item.imageUrl,
+            recommendation_id: item.recommendationId,
           }));
         }
         const { data: scoredItems } = await this.scoreItems(

@@ -185,7 +185,10 @@ export class _DSCard extends React.PureComponent {
           event: "CLICK",
           source: this.props.type.toUpperCase(),
           action_position: this.props.pos,
-          value: { card_type: this.props.flightId ? "spoc" : "organic" },
+          value: {
+            card_type: this.props.flightId ? "spoc" : "organic",
+            recommendation_id: this.props.recommendation_id,
+          },
         })
       );
 
@@ -203,6 +206,7 @@ export class _DSCard extends React.PureComponent {
                 ? { shim: this.props.shim.click }
                 : {}),
               type: this.props.flightId ? "spoc" : "organic",
+              recommendation_id: this.props.recommendation_id,
             },
           ],
         })
@@ -224,7 +228,10 @@ export class _DSCard extends React.PureComponent {
           event: "SAVE_TO_POCKET",
           source: "CARDGRID_HOVER",
           action_position: this.props.pos,
-          value: { card_type: this.props.flightId ? "spoc" : "organic" },
+          value: {
+            card_type: this.props.flightId ? "spoc" : "organic",
+            recommendation_id: this.props.recommendation_id,
+          },
         })
       );
 
@@ -239,6 +246,7 @@ export class _DSCard extends React.PureComponent {
               ...(this.props.shim && this.props.shim.save
                 ? { shim: this.props.shim.save }
                 : {}),
+              recommendation_id: this.props.recommendation_id,
             },
           ],
         })
@@ -419,6 +427,7 @@ export class _DSCard extends React.PureComponent {
                 ...(this.props.shim && this.props.shim.impression
                   ? { shim: this.props.shim.impression }
                   : {}),
+                recommendation_id: this.props.recommendation_id,
               },
             ]}
             dispatch={this.props.dispatch}

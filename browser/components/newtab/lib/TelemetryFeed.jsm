@@ -971,19 +971,21 @@ class TelemetryFeed {
     const session = this.sessions.get(au.getPortIdOfSender(action));
     switch (action.data?.event) {
       case "CLICK":
+        const { card_type, topic, recommendation_id } = action.data.value ?? {};
         if (
           action.data.source === "POPULAR_TOPICS" ||
-          action.data.value?.card_type === "topics_widget"
+          card_type === "topics_widget"
         ) {
           Glean.pocket.topicClick.record({
             newtab_visit_id: session.session_id,
-            topic: action.data.value?.topic,
+            topic,
           });
-        } else if (["spoc", "organic"].includes(action.data.value?.card_type)) {
+        } else if (["spoc", "organic"].includes(card_type)) {
           Glean.pocket.click.record({
             newtab_visit_id: session.session_id,
-            is_sponsored: action.data.value?.card_type === "spoc",
+            is_sponsored: card_type === "spoc",
             position: action.data.action_position,
+            recommendation_id,
           });
         }
         break;
@@ -992,6 +994,7 @@ class TelemetryFeed {
           newtab_visit_id: session.session_id,
           is_sponsored: action.data.value?.card_type === "spoc",
           position: action.data.action_position,
+          recommendation_id: action.data.value?.recommendation_id,
         });
         break;
     }
@@ -1262,6 +1265,7 @@ class TelemetryFeed {
         newtab_visit_id: session.session_id,
         is_sponsored: tile.type === "spoc",
         position: tile.pos,
+        recommendation_id: tile.recommendation_id,
       });
     });
     impressionSets[source] = impressions;

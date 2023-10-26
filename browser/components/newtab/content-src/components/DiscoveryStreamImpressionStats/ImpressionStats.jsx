@@ -99,6 +99,7 @@ export class ImpressionStats extends React.PureComponent {
             pos: link.pos,
             type: this.props.flightId ? "spoc" : "organic",
             ...(link.shim ? { shim: link.shim } : {}),
+            recommendation_id: link.recommendation_id,
           })),
         })
       );
