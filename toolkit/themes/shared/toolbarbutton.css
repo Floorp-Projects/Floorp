@@ -3,19 +3,54 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 toolbarbutton {
-  margin: 0 2px;
-  padding: 3px 2px;
+  appearance: auto;
+  -moz-default-appearance: toolbarbutton;
   background-color: transparent;
+  margin: 0;
+  padding: 3px;
+
+  @media (-moz-platform: macos) {
+    appearance: none;
+    margin-inline: 2px;
+    padding-inline: 2px;
+  }
+
+  &:where([disabled="true"]) {
+    color: GrayText;
+    text-shadow: none;
+  }
+
+  @media not (prefers-contrast) {
+    :root[lwtheme-image] & {
+      text-shadow: none;
+    }
+  }
+
+  @media (-moz-platform: windows) {
+    &:focus-visible {
+      outline: var(--default-focusring);
+      outline-offset: calc(-1 * var(--default-focusring-width) - 1px);
+    }
+  }
+
+  @media (-moz-platform: linux) {
+    &:where(:hover) {
+      color: -moz-buttonhovertext;
+    }
+    &:where(
+      [checked="true"],
+      :hover:active:not([disabled="true"]),
+      [open="true"]
+    ) {
+      color: ButtonText;
+    }
+  }
 }
 
 .toolbarbutton-text {
   margin: 0;
   padding: 0;
   vertical-align: middle;
-}
-
-toolbarbutton:where([disabled="true"]) {
-  color: -moz-mac-disabledtoolbartext;
 }
 
 /* ::::: toolbarbutton menu ::::: */
@@ -42,8 +77,8 @@ toolbarbutton:where([disabled="true"]) {
   overflow: hidden;
   white-space: nowrap;
   background-color: #d90000;
-  font-size: 9px;
-  padding: 1px 2px;
+  font-size: 10px;
+  padding: 0 2px 1px;
   color: #fff;
   text-shadow: none;
   border-radius: 2px;
@@ -58,8 +93,24 @@ toolbarbutton:where([disabled="true"]) {
   text-align: center;
   align-self: start;
   justify-self: end;
+
+  @media (-moz-platform: windows) {
+    font-weight: bold;
+  }
+  @media (-moz-platform: macos) {
+    font-size: 9px;
+    padding-top: 1px;
+  }
 }
 
-toolbar[mode="icons"] > *|* > .toolbarbutton-badge {
-  margin-inline-end: -10px !important;
+@media not (-moz-platform: macos) {
+  .toolbarbutton-badge-stack > .toolbarbutton-icon[label]:not([label=""]) {
+    margin-inline-end: 0;
+  }
+}
+
+@media (-moz-platform: macos) {
+  toolbar[mode="icons"] > *|* > .toolbarbutton-badge {
+    margin-inline-end: -10px !important;
+  }
 }
