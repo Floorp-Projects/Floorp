@@ -127,20 +127,18 @@ const nsCOMPtr<T> nsMaybeWeakPtr<T>::GetValue() const {
 
   if (mWeak) {
     nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(mPtr);
-    if (weakRef) {
-      ref = do_QueryReferent(weakRef, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        return ref;
-      }
+    if (NS_WARN_IF(!weakRef)) {
+      return nullptr;
     }
+    ref = do_QueryReferent(weakRef, &rv);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv) || rv == NS_ERROR_NULL_POINTER,
+                         "QueryReferent failed with non-null pointer");
   } else {
     ref = do_QueryInterface(mPtr, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      return ref;
-    }
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "QueryInterface failed with non-null pointer");
   }
-
-  return nullptr;
+  return ref;
 }
 
 template <typename T>
