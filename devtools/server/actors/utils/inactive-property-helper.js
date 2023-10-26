@@ -510,7 +510,9 @@ class InactivePropertyHelper {
           // because the text-wrap: balance; property only applies to
           // the first block. And fragmented elements (with multiple
           // blocks) are excluded from line balancing for the time being.
-          return blockLineCounts[0] > TEXT_WRAP_BALANCE_LIMIT;
+          return (
+            blockLineCounts && blockLineCounts[0] > TEXT_WRAP_BALANCE_LIMIT
+          );
         },
         fixId: "inactive-css-text-wrap-balance-lines-exceeded-fix",
         msgId: "inactive-css-text-wrap-balance-lines-exceeded",
@@ -524,7 +526,7 @@ class InactivePropertyHelper {
             return false;
           }
           const blockLineCounts = InspectorUtils.getBlockLineCounts(this.node);
-          const isFragmented = blockLineCounts.length > 1;
+          const isFragmented = blockLineCounts && blockLineCounts.length > 1;
           return isFragmented;
         },
         fixId: "inactive-css-text-wrap-balance-fragmented-fix",
