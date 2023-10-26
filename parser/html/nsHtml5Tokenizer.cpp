@@ -292,8 +292,7 @@ void nsHtml5Tokenizer::strBufToElementNameString() {
       tagName = nonInternedTagName;
     }
   } else {
-    tagName =
-        nsHtml5ElementName::elementNameByBuffer(strBuf, strBufLen, interner);
+    tagName = nsHtml5ElementName::elementNameByBuffer(strBuf, strBufLen);
     if (!tagName) {
       nonInternedTagName->setNameForNonInterned(
           nsHtml5Portability::newLocalNameFromBuffer(strBuf, strBufLen,
