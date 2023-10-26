@@ -9,7 +9,7 @@ PACKAGE_VERSION = "2.2.6"
 
 DEPS = [
     "mozlog >= 6.0",
-    "toml >= 0.10.2",
+    "tomlkit >= 0.11.8",
 ]
 setup(
     name=PACKAGE_NAME,
