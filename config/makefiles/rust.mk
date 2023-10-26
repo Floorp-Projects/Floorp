@@ -533,7 +533,7 @@ force-cargo-host-library-build:
 	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 	$(call BUILDSTATUS,END_Rust $(notdir $(HOST_RUST_LIBRARY_FILE)))
 
-$(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build ;
+$(eval $(call make_cargo_rule,$(HOST_RUST_LIBRARY_FILE),force-cargo-host-library-build))
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-host-library-%:
@@ -582,7 +582,7 @@ force-cargo-host-program-build:
 	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag) $(host_program_features_flag)
 	$(call BUILDSTATUS,END_Rust $(HOST_RUST_CARGO_PROGRAMS))
 
-$(HOST_RUST_PROGRAMS): force-cargo-host-program-build ;
+$(foreach HOST_RUST_PROGRAM,$(HOST_RUST_PROGRAMS), $(eval $(call make_cargo_rule,$(HOST_RUST_PROGRAM),force-cargo-host-program-build)))
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-host-program-%:
