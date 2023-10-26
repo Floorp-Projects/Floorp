@@ -4745,9 +4745,13 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    * `HTMLEditor::CollectEditTargetNodes()`, see its document for the detail).
    * If it includes list, list item or table related elements, they will be
    * replaced their children.
+   *
+   * @param aFormatBlockMode            Whether HTML formatBlock command or XUL
+   *                                    paragraphState command.
    */
   static nsresult CollectEditableFormatNodesInSelection(
-      HTMLEditor& aHTMLEditor, const dom::Element& aEditingHost,
+      HTMLEditor& aHTMLEditor, FormatBlockMode aFormatBlockMode,
+      const dom::Element& aEditingHost,
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   RefPtr<nsAtom> mFirstParagraphState;

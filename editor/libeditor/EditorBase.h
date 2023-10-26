@@ -1206,6 +1206,7 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eOutdent:
         case EditSubAction::eSetOrClearAlignment:
         case EditSubAction::eCreateOrRemoveBlock:
+        case EditSubAction::eFormatBlockForHTMLCommand:
         case EditSubAction::eMergeBlockContents:
         case EditSubAction::eRemoveList:
         case EditSubAction::eCreateOrChangeDefinitionListItem:

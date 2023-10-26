@@ -495,7 +495,8 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   nsresult rv = CollectEditableFormatNodesInSelection(
-      aHTMLEditor, *editingHostOrBodyOrDocumentElement, arrayOfContents);
+      aHTMLEditor, aFormatBlockMode, *editingHostOrBodyOrDocumentElement,
+      arrayOfContents);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "ParagraphStateAtSelection::CollectEditableFormatNodesInSelection() "
@@ -661,19 +662,26 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
 
 // static
 nsresult ParagraphStateAtSelection::CollectEditableFormatNodesInSelection(
-    HTMLEditor& aHTMLEditor, const Element& aEditingHost,
+    HTMLEditor& aHTMLEditor, FormatBlockMode aFormatBlockMode,
+    const Element& aEditingHost,
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents) {
   {
     AutoRangeArray extendedSelectionRanges(aHTMLEditor.SelectionRef());
     extendedSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-        EditSubAction::eCreateOrRemoveBlock, aEditingHost);
+        aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
+            ? EditSubAction::eFormatBlockForHTMLCommand
+            : EditSubAction::eCreateOrRemoveBlock,
+        aEditingHost);
     nsresult rv = extendedSelectionRanges.CollectEditTargetNodes(
-        aHTMLEditor, aArrayOfContents, EditSubAction::eCreateOrRemoveBlock,
+        aHTMLEditor, aArrayOfContents,
+        aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
+            ? EditSubAction::eFormatBlockForHTMLCommand
+            : EditSubAction::eCreateOrRemoveBlock,
         AutoRangeArray::CollectNonEditableNodes::Yes);
     if (NS_FAILED(rv)) {
       NS_WARNING(
-          "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-          "eCreateOrRemoveBlock, CollectNonEditableNodes::Yes) failed");
+          "AutoRangeArray::CollectEditTargetNodes("
+          "CollectNonEditableNodes::Yes) failed");
       return rv;
     }
   }
