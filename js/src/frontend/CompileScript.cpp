@@ -10,6 +10,7 @@
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil,CompilationInput}
 #include "frontend/FrontendContext.h"    // frontend::FrontendContext
 #include "frontend/ScopeBindingCache.h"  // frontend::NoScopeBindingCache
+#include "js/friend/StackLimits.h"       // js::StackLimitMargin
 #include "js/SourceText.h"               // JS::SourceText
 
 using namespace js;
@@ -35,6 +36,10 @@ JS_PUBLIC_API JS::NativeStackSize JS::ThreadStackQuotaForSize(
     size_t stackSize) {
   // Set the stack quota to 10% less that the actual size.
   static constexpr double RatioWithoutMargin = 0.9;
+
+  MOZ_ASSERT(double(stackSize) * (1 - RatioWithoutMargin) >
+             js::MinimumStackLimitMargin);
+
   return JS::NativeStackSize(double(stackSize) * RatioWithoutMargin);
 }
 
