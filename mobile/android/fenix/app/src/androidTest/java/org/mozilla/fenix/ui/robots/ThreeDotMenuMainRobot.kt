@@ -469,6 +469,16 @@ class ThreeDotMenuMainRobot {
             ShareOverlayRobot().interact()
             return ShareOverlayRobot.Transition()
         }
+
+        fun clickPrintButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            threeDotMenuRecyclerView().perform(swipeUp())
+            threeDotMenuRecyclerView().perform(swipeUp())
+            printButton.waitForExists(waitingTime)
+            printButton.click()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
     }
 }
 private fun threeDotMenuRecyclerView() =
@@ -596,3 +606,4 @@ private val backButton = itemWithDescription(getStringResource(R.string.browser_
 private val forwardButton = itemWithDescription(getStringResource(R.string.browser_menu_forward))
 private val shareButton = itemWithDescription(getStringResource(R.string.share_button_content_description))
 private val refreshButton = itemWithDescription(getStringResource(R.string.browser_menu_refresh))
+private val printButton = itemWithText("Print")

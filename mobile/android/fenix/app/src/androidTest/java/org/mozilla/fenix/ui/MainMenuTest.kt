@@ -16,10 +16,12 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.PackageName.PRINT_SPOOLER
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -349,6 +351,35 @@ class MainMenuTest {
             verifyThreeDotMenuExists()
         }.forceRefreshPage {
             verifyPageContent("REFRESHED")
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2282411
+    @Test
+    fun printWebPageFromMainMenuTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.clickPrintButton {
+            assertNativeAppOpens(PRINT_SPOOLER)
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2282408
+    @Test
+    fun printWebPageFromShareMenuTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.clickShareButton {
+        }.clickPrintButton {
+            assertNativeAppOpens(PRINT_SPOOLER)
         }
     }
 }
