@@ -6,9 +6,3 @@
   appearance: auto;
   -moz-default-appearance: -moz-menulist-arrow-button;
 }
-@media not (-moz-platform: linux) {
-  :host {
-    width: 16px;
-    height: 16px;
-  }
-}
