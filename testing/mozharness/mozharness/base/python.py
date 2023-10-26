@@ -795,7 +795,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
             self.info("Starting resource monitoring.")
-            self._resource_monitor = SystemResourceMonitor(poll_interval=1.0)
+            self._resource_monitor = SystemResourceMonitor(poll_interval=0.1)
             self._resource_monitor.start()
         except Exception:
             self.warning(
@@ -834,6 +834,14 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
             with open(os.path.join(upload_dir, "resource-usage.json"), "w") as fh:
                 json.dump(
                     self._resource_monitor.as_dict(), fh, sort_keys=True, indent=4
+                )
+            with open(
+                os.path.join(upload_dir, "profile_resource-usage.json"), "w"
+            ) as fh:
+                json.dump(
+                    self._resource_monitor.as_profile(),
+                    fh,
+                    separators=(",", ":"),
                 )
         except (AttributeError, KeyError):
             self.exception("could not upload resource usage JSON", level=WARNING)
