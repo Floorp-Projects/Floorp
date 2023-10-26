@@ -343,7 +343,7 @@ ARCHIVE_FILES = {
         },
         {
             "source": buildconfig.topsrcdir,
-            "base": "third_party/python/tomlkit",
+            "base": "third_party/python/toml",
             "pattern": "**",
         },
         {
