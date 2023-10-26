@@ -44,7 +44,11 @@ uint8_t* GetPHCAllocation(size_t aSize, size_t aAlignment = 1) {
   return nullptr;
 }
 
+#if defined(XP_DARWIN) && defined(__aarch64__)
+static const size_t kPageSize = 16384;
+#else
 static const size_t kPageSize = 4096;
+#endif
 
 TEST(PHC, TestPHCAllocations)
 {
@@ -71,15 +75,9 @@ TEST(PHC, TestPHCAllocations)
 #else
   ASSERT_POS(8U, 8U);
 #endif
-  ASSERT_POS(16U, 16U);
-  ASSERT_POS(32U, 32U);
-  ASSERT_POS(64U, 64U);
-  ASSERT_POS(128U, 128U);
-  ASSERT_POS(256U, 256U);
-  ASSERT_POS(512U, 512U);
-  ASSERT_POS(1024U, 1024U);
-  ASSERT_POS(2048U, 2048U);
-  ASSERT_POS(4096U, 4096U);
+  for (unsigned i = 16; i <= kPageSize; i *= 2) {
+    ASSERT_POS(i, i);
+  }
 
   free(p);
 
@@ -106,15 +104,9 @@ TEST(PHC, TestPHCAllocations)
 #else
   ASSERT_ALIGN(8U, 8U);
 #endif
-  ASSERT_ALIGN(16U, 16U);
-  ASSERT_ALIGN(32U, 32U);
-  ASSERT_ALIGN(64U, 64U);
-  ASSERT_ALIGN(128U, 128U);
-  ASSERT_ALIGN(256U, 256U);
-  ASSERT_ALIGN(512U, 512U);
-  ASSERT_ALIGN(1024U, 1024U);
-  ASSERT_ALIGN(2048U, 2048U);
-  ASSERT_ALIGN(4096U, 4096U);
+  for (unsigned i = 16; i <= kPageSize; i *= 2) {
+    ASSERT_ALIGN(i, i);
+  }
 
 #undef ASSERT_ALIGN
 }
@@ -311,7 +303,7 @@ TEST(PHC, TestPHCDisablingThread)
   // The small realloc is fulfilled within the same page, but it does move.
   ASSERT_TRUE(p2 == p - 96);
   ASSERT_TRUE(mozilla::phc::IsPHCAllocation(p2, nullptr));
-  uint8_t* p3 = (uint8_t*)realloc(p2, 8192);
+  uint8_t* p3 = (uint8_t*)realloc(p2, 2 * kPageSize);
   // The big realloc is not in-place, and the result is not a PHC allocation.
   ASSERT_TRUE(p3 != p2);
   ASSERT_FALSE(mozilla::phc::IsPHCAllocation(p3, nullptr));
@@ -354,7 +346,7 @@ TEST(PHC, TestPHCDisablingGlobal)
   ASSERT_TRUE(p3 != p1);
   ASSERT_FALSE(mozilla::phc::IsPHCAllocation(p3, nullptr));
   free(p3);
-  uint8_t* p4 = (uint8_t*)realloc(p2, 8192);
+  uint8_t* p4 = (uint8_t*)realloc(p2, 2 * kPageSize);
   // The big realloc is not in-place, and the result is not a PHC
   // allocation, regardless of PHC's state.
   ASSERT_TRUE(p4 != p2);
