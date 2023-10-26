@@ -234,6 +234,29 @@ public class ContentBlocking {
       }
 
       /**
+       * When set to true, enable the use of global CookieBannerRules.
+       *
+       * @param enabled A boolean indicating whether to enable the use of global CookieBannerRules.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder cookieBannerGlobalRulesEnabled(final boolean enabled) {
+        getSettings().setCookieBannerGlobalRulesEnabled(enabled);
+        return this;
+      }
+
+      /**
+       * When set to true, enable the use of global CookieBannerRules in sub-frames.
+       *
+       * @param enabled A boolean indicating whether to enable the use of global CookieBannerRules
+       *     in sub-frames.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder cookieBannerGlobalRulesSubFramesEnabled(final boolean enabled) {
+        getSettings().setCookieBannerGlobalRulesSubFramesEnabled(enabled);
+        return this;
+      }
+
+      /**
        * Set the Cookie Banner Handling Mode for private browsing.
        *
        * @param mode The mode of the Cookie Banner Handling one of the {@link CBCookieBannerMode}.
@@ -309,7 +332,12 @@ public class ContentBlocking {
 
     /* package */ final Pref<Boolean> mChbDetectOnlyMode =
         new Pref<Boolean>("cookiebanners.service.detectOnly", false);
+    /* package */
+    final Pref<Boolean> mCbhGlobalRulesEnabled =
+        new Pref<Boolean>("cookiebanners.service.enableGlobalRules", false);
 
+    final Pref<Boolean> mCbhGlobalRulesSubFramesEnabled =
+        new Pref<Boolean>("cookiebanners.service.enableGlobalRules.subFrames", false);
     /* package */ final Pref<String> mSafeBrowsingMalwareTable =
         new Pref<>(
             "urlclassifier.malwareTable",
@@ -646,6 +674,48 @@ public class ContentBlocking {
     public @NonNull Settings setCookieBannerDetectOnlyMode(final boolean enabled) {
       mChbDetectOnlyMode.commit(enabled);
       return this;
+    }
+
+    /**
+     * Enables/disables the use of global CookieBannerRules, which apply to all sites. This enable
+     * handling of CMPs across sites without the use of site-specific rules.
+     *
+     * @param enabled A boolean indicating whether or not to enable.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setCookieBannerGlobalRulesEnabled(final boolean enabled) {
+      mCbhGlobalRulesEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if global CookieBannerRules is enabled or not.
+     *
+     * @return Indicates if global CookieBannerRule is enabled or disabled.
+     */
+    public boolean getCookieBannerGlobalRulesEnabled() {
+      return mCbhGlobalRulesEnabled.get();
+    }
+
+    /**
+     * Whether global rules are allowed to run in sub-frames. Running query selectors in every
+     * sub-frame may negatively impact performance, but is required for some CMPs.
+     *
+     * @param enabled A boolean indicating whether or not to enable.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setCookieBannerGlobalRulesSubFramesEnabled(final boolean enabled) {
+      mCbhGlobalRulesSubFramesEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if global CookieBannerRules is enabled or not in sub-frames.
+     *
+     * @return Indicates if global CookieBannerRules is enabled or disabled in sub-frames.
+     */
+    public boolean getCookieBannerGlobalRulesSubFramesEnabled() {
+      return mCbhGlobalRulesSubFramesEnabled.get();
     }
 
     /**
