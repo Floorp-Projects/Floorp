@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Edge",
+      "schema": 1698192307176,
+      "status": "nightly",
+      "version": "120",
+      "browserid": "edge",
+      "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
+      "last_modified": 1698223476280
+    },
+    {
+      "name": "Edge",
+      "schema": 1698192307005,
+      "status": "current",
+      "version": "118",
+      "browserid": "edge",
+      "id": "36c856c4-dd23-4793-9bb0-827e7a56697c",
+      "last_modified": 1698223476277
+    },
+    {
+      "name": "Edge",
+      "schema": 1698192307072,
+      "status": "beta",
+      "version": "119",
+      "browserid": "edge",
+      "id": "eff1cf87-5add-4876-95db-5b84238437ab",
+      "last_modified": 1698223476272
+    },
+    {
       "name": "Chrome",
       "schema": 1696637108664,
       "status": "nightly",
@@ -163,33 +190,6 @@
       "last_modified": 1695880503534
     },
     {
-      "name": "Edge",
-      "schema": 1695859508246,
-      "status": "nightly",
-      "version": "119",
-      "browserid": "edge",
-      "id": "eff1cf87-5add-4876-95db-5b84238437ab",
-      "last_modified": 1695880503526
-    },
-    {
-      "name": "Edge",
-      "schema": 1695859508121,
-      "status": "current",
-      "version": "117",
-      "browserid": "edge",
-      "id": "ca91473a-c03b-4e16-8008-b9cec23ce674",
-      "last_modified": 1695880503520
-    },
-    {
-      "name": "Edge",
-      "schema": 1695859508183,
-      "status": "beta",
-      "version": "118",
-      "browserid": "edge",
-      "id": "36c856c4-dd23-4793-9bb0-827e7a56697c",
-      "last_modified": 1695880503515
-    },
-    {
       "name": "Node.js",
       "schema": 1695216243625,
       "status": "esr",
@@ -271,15 +271,6 @@
       "last_modified": 1692814731119
     },
     {
-      "name": "Edge",
-      "schema": 1691241843053,
-      "status": "planned",
-      "version": "120",
-      "browserid": "edge",
-      "id": "74e217cb-3eb9-44b3-82d4-c14d54e78187",
-      "last_modified": 1691389490462
-    },
-    {
       "name": "Samsung Internet",
       "schema": 1690982642139,
       "status": "current",
@@ -343,5 +334,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1696863920660
+  "timestamp": 1698223476280
 }
