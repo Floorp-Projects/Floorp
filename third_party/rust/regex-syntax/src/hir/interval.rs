@@ -1,6 +1,8 @@
-use core::{char, cmp, fmt::Debug, slice};
-
-use alloc::vec::Vec;
+use std::char;
+use std::cmp;
+use std::fmt::Debug;
+use std::slice;
+use std::u8;
 
 use crate::unicode;
 
@@ -30,38 +32,9 @@ use crate::unicode;
 //
 // Tests on this are relegated to the public API of HIR in src/hir.rs.
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IntervalSet<I> {
-    /// A sorted set of non-overlapping ranges.
     ranges: Vec<I>,
-    /// While not required at all for correctness, we keep track of whether an
-    /// interval set has been case folded or not. This helps us avoid doing
-    /// redundant work if, for example, a set has already been cased folded.
-    /// And note that whether a set is folded or not is preserved through
-    /// all of the pairwise set operations. That is, if both interval sets
-    /// have been case folded, then any of difference, union, intersection or
-    /// symmetric difference all produce a case folded set.
-    ///
-    /// Note that when this is true, it *must* be the case that the set is case
-    /// folded. But when it's false, the set *may* be case folded. In other
-    /// words, we only set this to true when we know it to be case, but we're
-    /// okay with it being false if it would otherwise be costly to determine
-    /// whether it should be true. This means code cannot assume that a false
-    /// value necessarily indicates that the set is not case folded.
-    ///
-    /// Bottom line: this is a performance optimization.
-    folded: bool,
-}
-
-impl<I: Interval> Eq for IntervalSet<I> {}
-
-// We implement PartialEq manually so that we don't consider the set's internal
-// 'folded' property to be part of its identity. The 'folded' property is
-// strictly an optimization.
-impl<I: Interval> PartialEq for IntervalSet<I> {
-    fn eq(&self, other: &IntervalSet<I>) -> bool {
-        self.ranges.eq(&other.ranges)
-    }
 }
 
 impl<I: Interval> IntervalSet<I> {
@@ -71,10 +44,7 @@ impl<I: Interval> IntervalSet<I> {
     /// The given ranges do not need to be in any specific order, and ranges
     /// may overlap.
     pub fn new<T: IntoIterator<Item = I>>(intervals: T) -> IntervalSet<I> {
-        let ranges: Vec<I> = intervals.into_iter().collect();
-        // An empty set is case folded.
-        let folded = ranges.is_empty();
-        let mut set = IntervalSet { ranges, folded };
+        let mut set = IntervalSet { ranges: intervals.into_iter().collect() };
         set.canonicalize();
         set
     }
@@ -85,10 +55,6 @@ impl<I: Interval> IntervalSet<I> {
         // it preserves canonicalization.
         self.ranges.push(interval);
         self.canonicalize();
-        // We don't know whether the new interval added here is considered
-        // case folded, so we conservatively assume that the entire set is
-        // no longer case folded if it was previously.
-        self.folded = false;
     }
 
     /// Return an iterator over all intervals in this set.
@@ -113,9 +79,6 @@ impl<I: Interval> IntervalSet<I> {
     /// This returns an error if the necessary case mapping data is not
     /// available.
     pub fn case_fold_simple(&mut self) -> Result<(), unicode::CaseFoldError> {
-        if self.folded {
-            return Ok(());
-        }
         let len = self.ranges.len();
         for i in 0..len {
             let range = self.ranges[i];
@@ -125,19 +88,14 @@ impl<I: Interval> IntervalSet<I> {
             }
         }
         self.canonicalize();
-        self.folded = true;
         Ok(())
     }
 
     /// Union this set with the given set, in place.
     pub fn union(&mut self, other: &IntervalSet<I>) {
-        if other.ranges.is_empty() || self.ranges == other.ranges {
-            return;
-        }
         // This could almost certainly be done more efficiently.
         self.ranges.extend(&other.ranges);
         self.canonicalize();
-        self.folded = self.folded && other.folded;
     }
 
     /// Intersect this set with the given set, in place.
@@ -147,8 +105,6 @@ impl<I: Interval> IntervalSet<I> {
         }
         if other.ranges.is_empty() {
             self.ranges.clear();
-            // An empty set is case folded.
-            self.folded = true;
             return;
         }
 
@@ -178,7 +134,6 @@ impl<I: Interval> IntervalSet<I> {
             }
         }
         self.ranges.drain(..drain_end);
-        self.folded = self.folded && other.folded;
     }
 
     /// Subtract the given set from this set, in place.
@@ -271,7 +226,6 @@ impl<I: Interval> IntervalSet<I> {
             a += 1;
         }
         self.ranges.drain(..drain_end);
-        self.folded = self.folded && other.folded;
     }
 
     /// Compute the symmetric difference of the two sets, in place.
@@ -297,8 +251,6 @@ impl<I: Interval> IntervalSet<I> {
         if self.ranges.is_empty() {
             let (min, max) = (I::Bound::min_value(), I::Bound::max_value());
             self.ranges.push(I::create(min, max));
-            // The set containing everything must case folded.
-            self.folded = true;
             return;
         }
 
@@ -324,19 +276,6 @@ impl<I: Interval> IntervalSet<I> {
             self.ranges.push(I::create(lower, I::Bound::max_value()));
         }
         self.ranges.drain(..drain_end);
-        // We don't need to update whether this set is folded or not, because
-        // it is conservatively preserved through negation. Namely, if a set
-        // is not folded, then it is possible that its negation is folded, for
-        // example, [^☃]. But we're fine with assuming that the set is not
-        // folded in that case. (`folded` permits false negatives but not false
-        // positives.)
-        //
-        // But what about when a set is folded, is its negation also
-        // necessarily folded? Yes. Because if a set is folded, then for every
-        // character in the set, it necessarily included its equivalence class
-        // of case folded characters. Negating it in turn means that all
-        // equivalence classes in the set are negated, and any equivalence
-        // class that was previously not in the set is now entirely in the set.
     }
 
     /// Converts this set into a canonical ordering.
@@ -542,7 +481,7 @@ impl Bound for u8 {
         u8::MAX
     }
     fn as_u32(self) -> u32 {
-        u32::from(self)
+        self as u32
     }
     fn increment(self) -> Self {
         self.checked_add(1).unwrap()
@@ -560,20 +499,20 @@ impl Bound for char {
         '\u{10FFFF}'
     }
     fn as_u32(self) -> u32 {
-        u32::from(self)
+        self as u32
     }
 
     fn increment(self) -> Self {
         match self {
             '\u{D7FF}' => '\u{E000}',
-            c => char::from_u32(u32::from(c).checked_add(1).unwrap()).unwrap(),
+            c => char::from_u32((c as u32).checked_add(1).unwrap()).unwrap(),
         }
     }
 
     fn decrement(self) -> Self {
         match self {
             '\u{E000}' => '\u{D7FF}',
-            c => char::from_u32(u32::from(c).checked_sub(1).unwrap()).unwrap(),
+            c => char::from_u32((c as u32).checked_sub(1).unwrap()).unwrap(),
         }
     }
 }
