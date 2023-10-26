@@ -700,3 +700,39 @@ add_task(async function includingProtocol() {
   await PlacesUtils.history.clear();
   await PlacesTestUtils.clearInputHistory();
 });
+
+add_task(async function loadingPageInBlank() {
+  const home = `${TEST_BASE_URL}file_copying_home.html`;
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, home);
+  const onNewTabCreated = waitForNewTabWithLoadRequest();
+  SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+    content.document.querySelector("a").click();
+  });
+  const newtab = await onNewTabCreated;
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      newtab.linkedBrowser.browsingContext.mostRecentLoadingSessionHistoryEntry
+  );
+  gURLBar.focus();
+  window.goDoCommand("cmd_selectAll");
+  await SimpleTest.promiseClipboardChange(
+    "https://example.com/browser/browser/components/urlbar/tests/browser/wait-a-bit.sjs",
+    () => goDoCommand("cmd_copy")
+  );
+  Assert.ok(true, "Expected value is copied");
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(newtab);
+});
+
+async function waitForNewTabWithLoadRequest() {
+  return new Promise(resolve =>
+    gBrowser.addTabsProgressListener({
+      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+          gBrowser.removeTabsProgressListener(this);
+          resolve(gBrowser.getTabForBrowser(aBrowser));
+        }
+      },
+    })
+  );
+}
