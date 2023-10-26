@@ -1,17 +1,15 @@
-use alloc::{
-    format,
-    string::{String, ToString},
-    vec,
-    vec::Vec,
-};
+use std::cmp;
+use std::error;
+use std::fmt;
+use std::result;
 
-use crate::{ast, hir};
+use crate::ast;
+use crate::hir;
+
+/// A type alias for dealing with errors returned by this crate.
+pub type Result<T> = result::Result<T, Error>;
 
 /// This error type encompasses any error that can be returned by this crate.
-///
-/// This error type is marked as `non_exhaustive`. This means that adding a
-/// new variant is not considered a breaking change.
-#[non_exhaustive]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Error {
     /// An error that occurred while translating concrete syntax into abstract
@@ -20,6 +18,13 @@ pub enum Error {
     /// An error that occurred while translating abstract syntax into a high
     /// level intermediate representation (HIR).
     Translate(hir::Error),
+    /// Hints that destructuring should not be exhaustive.
+    ///
+    /// This enum may grow additional variants, so this makes sure clients
+    /// don't count on exhaustive matching. (Otherwise, adding a new variant
+    /// could break existing code.)
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 impl From<ast::Error> for Error {
@@ -34,14 +39,24 @@ impl From<hir::Error> for Error {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Error {}
+impl error::Error for Error {
+    // TODO: Remove this method entirely on the next breaking semver release.
+    #[allow(deprecated)]
+    fn description(&self) -> &str {
+        match *self {
+            Error::Parse(ref x) => x.description(),
+            Error::Translate(ref x) => x.description(),
+            _ => unreachable!(),
+        }
+    }
+}
 
-impl core::fmt::Display for Error {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
             Error::Parse(ref x) => x.fmt(f),
             Error::Translate(ref x) => x.fmt(f),
+            _ => unreachable!(),
         }
     }
 }
@@ -86,8 +101,8 @@ impl<'e> From<&'e hir::Error> for Formatter<'e, hir::ErrorKind> {
     }
 }
 
-impl<'e, E: core::fmt::Display> core::fmt::Display for Formatter<'e, E> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+impl<'e, E: fmt::Display> fmt::Display for Formatter<'e, E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let spans = Spans::from_formatter(self);
         if self.pattern.contains('\n') {
             let divider = repeat_char('~', 79);
@@ -153,7 +168,7 @@ struct Spans<'p> {
 
 impl<'p> Spans<'p> {
     /// Build a sequence of spans from a formatter.
-    fn from_formatter<'e, E: core::fmt::Display>(
+    fn from_formatter<'e, E: fmt::Display>(
         fmter: &'p Formatter<'e, E>,
     ) -> Spans<'p> {
         let mut line_count = fmter.pattern.lines().count();
@@ -233,7 +248,7 @@ impl<'p> Spans<'p> {
                 pos += 1;
             }
             let note_len = span.end.column.saturating_sub(span.start.column);
-            for _ in 0..core::cmp::max(1, note_len) {
+            for _ in 0..cmp::max(1, note_len) {
                 notes.push('^');
                 pos += 1;
             }
@@ -266,13 +281,11 @@ impl<'p> Spans<'p> {
 }
 
 fn repeat_char(c: char, count: usize) -> String {
-    core::iter::repeat(c).take(count).collect()
+    ::std::iter::repeat(c).take(count).collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use alloc::string::ToString;
-
     use crate::ast::parse::Parser;
 
     fn assert_panic_message(pattern: &str, expected_msg: &str) {
