@@ -57,8 +57,15 @@ skip-if = [
   "ccov",
 ]
 
+["browser_utility_filepicker_crashed.js"]
+run-if = ["os == 'win'"]
+skip-if = [
+  "!crashreporter",
+  "ccov",
+]
+
 ["browser_utility_geolocation_crashed.js"]
-run-if = ["os == 'win'"] # Geolocation is remoted only on Windows 8+
+run-if = ["os == 'win'"]
 skip-if = [
   "!crashreporter",
   "ccov",

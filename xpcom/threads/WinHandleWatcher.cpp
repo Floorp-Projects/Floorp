@@ -281,6 +281,9 @@ HandleWatcher::~HandleWatcher() {
   }
 }
 
+HandleWatcher::HandleWatcher(HandleWatcher&&) noexcept = default;
+HandleWatcher& HandleWatcher::operator=(HandleWatcher&&) noexcept = default;
+
 void HandleWatcher::Watch(HANDLE aHandle, nsIEventTarget* aTarget,
                           already_AddRefed<nsIRunnable> aRunnable) {
   auto impl = Impl::Create(aHandle, aTarget, std::move(aRunnable));

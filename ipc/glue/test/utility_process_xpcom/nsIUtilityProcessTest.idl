@@ -11,7 +11,7 @@ interface nsIUtilityProcessTest : nsISupports
   /**
    * ** Test-only Method **
    *
-   * Allowing to start Utility Process from JS code.
+   * Start a generic utility process from JS code.
    *
    * actorsToAdd: An array of actor names, taken from WebIDLUtilityActorName.
    * Unlike normal utility processes, test processes launched this way do not
@@ -19,6 +19,18 @@ interface nsIUtilityProcessTest : nsISupports
    */
   [implicit_jscontext]
   Promise startProcess([optional] in Array<ACString> actorsToAdd);
+
+  /**
+   * ** Test-only Method **
+   *
+   * Report when a child process is actually dead (as opposed to merely having
+   * been removed from our internal list of child processes). Must be called
+   * while the process is still live.
+   *
+   * Only implemented on Windows.
+   */
+  [implicit_jscontext]
+  Promise untilChildProcessDead(in uint32_t pid);
 
   /**
    * ** Test-only Method **

@@ -77,8 +77,8 @@ class HandleWatcher {
   HandleWatcher(HandleWatcher const&) = delete;
   HandleWatcher& operator=(HandleWatcher const&) = delete;
 
-  HandleWatcher(HandleWatcher&&) = default;
-  HandleWatcher& operator=(HandleWatcher&&) = default;
+  HandleWatcher(HandleWatcher&&) noexcept;
+  HandleWatcher& operator=(HandleWatcher&&) noexcept;
 
   // Watches the given Win32 HANDLE, which must be a synchronization object. As
   // soon as the HANDLE is signaled, posts `aRunnable` to `aTarget`.
