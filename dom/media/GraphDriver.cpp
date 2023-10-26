@@ -371,10 +371,8 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
       : mGraph(std::move(aGraph)),
         mOwner(std::move(aOwner)),
         mFallbackDriver(
-            MakeRefPtr<SystemClockDriver>(this, nullptr, aSampleRate)),
-        mIterationEnd(aIterationEnd),
-        mStateComputedTime(aStateComputedTime) {
-    mFallbackDriver->SetState(aStreamName, mIterationEnd, mStateComputedTime);
+            MakeRefPtr<SystemClockDriver>(this, nullptr, aSampleRate)) {
+    mFallbackDriver->SetState(aStreamName, aIterationEnd, aStateComputedTime);
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -424,8 +422,6 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
     AutoInCallback aic(mOwner);
 #endif
 
-    mIterationEnd = aIterationEnd;
-    mStateComputedTime = aStateComputedEnd;
     IterationResult result =
         mGraph->OneIteration(aStateComputedEnd, aIterationEnd, aMixer);
 
@@ -447,12 +443,12 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
     IterationResult stopFallback =
         IterationResult::CreateStop(NS_NewRunnableFunction(
             "AudioCallbackDriver::FallbackDriverStopped",
-            [self = RefPtr<FallbackWrapper>(this), this,
-             result = std::move(result)]() mutable {
+            [self = RefPtr<FallbackWrapper>(this), this, aIterationEnd,
+             aStateComputedEnd, result = std::move(result)]() mutable {
               FallbackDriverState fallbackState =
                   result.IsStillProcessing() ? FallbackDriverState::None
                                              : FallbackDriverState::Stopped;
-              mOwner->FallbackDriverStopped(mIterationEnd, mStateComputedTime,
+              mOwner->FallbackDriverStopped(aIterationEnd, aStateComputedEnd,
                                             fallbackState);
 
               if (fallbackState == FallbackDriverState::Stopped) {
@@ -466,8 +462,8 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
                       ("%p: Switching from fallback to other driver.",
                        mOwner.get()));
                   result.Switched();
-                  nextDriver->SetState(mOwner->mStreamName, mIterationEnd,
-                                       mStateComputedTime);
+                  nextDriver->SetState(mOwner->mStreamName, aIterationEnd,
+                                       aStateComputedEnd);
                   nextDriver->Start();
                 } else if (result.IsStop()) {
                   LOG(LogLevel::Debug,
@@ -491,9 +487,6 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
   // Valid until mFallbackDriver has finished its last iteration.
   RefPtr<AudioCallbackDriver> mOwner;
   RefPtr<SystemClockDriver> mFallbackDriver;
-
-  GraphTime mIterationEnd;
-  GraphTime mStateComputedTime;
 };
 
 NS_IMPL_ISUPPORTS0(AudioCallbackDriver::FallbackWrapper)
