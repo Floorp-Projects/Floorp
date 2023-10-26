@@ -398,6 +398,37 @@ topsites:
     send_in_pings:
       - newtab
 
+  dismiss:
+    type: event
+    description: >
+      Recorded when the "Dismiss" menu item in the three-dots menu of a topsite
+      is clicked.
+      Corresponds to the receipt of a dispatched `BLOCK_URL` action by
+      `TelemetryFeed`.
+      Applies to both sponsored and non-sponsored topsites.
+      `advertiser_name` is only provided for sponsored topsites.
+    bugs:
+      - https://mozilla-hub.atlassian.net/browse/DENG-1363
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity: [interaction]
+    notification_emails:
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - sbetancourt@mozilla.com
+      - kdemtchouk@mozilla.com
+      - mbowerman@mozilla.com
+    expires: never
+    extra_keys:
+      advertiser_name: *advertiser_name
+      tile_id: *tile_id
+      newtab_visit_id: *newtab_visit_id
+      is_sponsored: *is_sponsored
+      position: *topsite_position
+    send_in_pings:
+      - newtab
+
   rows:
     lifetime: application
     type: quantity

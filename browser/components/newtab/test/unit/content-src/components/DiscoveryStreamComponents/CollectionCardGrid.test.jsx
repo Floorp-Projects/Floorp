@@ -107,11 +107,15 @@ describe("<CollectionCardGrid>", () => {
     const thirdCall = dispatchStub.getCall(2);
 
     assert.equal(firstCall.args[0].type, "BLOCK_URL");
-    assert.deepEqual(firstCall.args[0].data, [
-      { url: "123", pocket_id: undefined, isSponsoredTopSite: undefined },
-      { url: "456", pocket_id: undefined, isSponsoredTopSite: undefined },
-      { url: "789", pocket_id: undefined, isSponsoredTopSite: undefined },
-    ]);
+    let expected = ["123", "456", "789"].map(url => ({
+      url,
+      pocket_id: undefined,
+      isSponsoredTopSite: undefined,
+      position: 0,
+      is_pocket_card: false,
+    }));
+
+    assert.deepEqual(firstCall.args[0].data, expected);
 
     assert.equal(secondCall.args[0].type, "DISCOVERY_STREAM_USER_EVENT");
     assert.deepEqual(secondCall.args[0].data, {
