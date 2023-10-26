@@ -15,18 +15,18 @@ struct IFileDialog;
 namespace mozilla::widget::filedialog {
 // Apply the selected commands to the IFileDialog, in preparation for showing
 // it. (The actual showing step is left to the caller.)
-[[nodiscard]] nsresult ApplyCommands(::IFileDialog*,
-                                     nsTArray<Command> const& commands);
+[[nodiscard]] HRESULT ApplyCommands(::IFileDialog*,
+                                    nsTArray<Command> const& commands);
 
 // Extract one or more results from the file-picker dialog.
 //
 // Requires that Show() has been called and has returned S_OK.
-mozilla::Result<Results, nsresult> GetFileResults(::IFileDialog*);
+mozilla::Result<Results, HRESULT> GetFileResults(::IFileDialog*);
 
 // Extract the chosen folder from the folder-picker dialog.
 //
 // Requires that Show() has been called and has returned S_OK.
-mozilla::Result<nsString, nsresult> GetFolderResults(::IFileDialog*);
+mozilla::Result<nsString, HRESULT> GetFolderResults(::IFileDialog*);
 }  // namespace mozilla::widget::filedialog
 
 #endif  // widget_windows_filedialog_WinFileDialogCommands_h__
