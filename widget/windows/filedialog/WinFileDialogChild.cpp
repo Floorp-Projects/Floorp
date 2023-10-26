@@ -9,7 +9,6 @@
 #include <combaseapi.h>
 #include <objbase.h>
 #include <shobjidl.h>
-#include <shobjidl_core.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ipc/ProtocolUtils.h"
