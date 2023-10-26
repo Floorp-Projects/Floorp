@@ -152,23 +152,28 @@ class BrowserToolbarCFRPresenter(
         }
     }
 
+    /**
+     * Decides which Shopping CFR needs to be displayed depending on
+     * participation of user in Review Checker and time elapsed
+     * from last CFR display.
+     */
     private fun whichShoppingCFR(): ToolbarCFR {
         fun Long.isInitialized(): Boolean = this != 0L
-        fun Long.afterOneDay(): Boolean = this.isInitialized() &&
-            System.currentTimeMillis() - this > Settings.ONE_DAY_MS
+        fun Long.afterTwelveHours(): Boolean = this.isInitialized() &&
+            System.currentTimeMillis() - this > Settings.TWELVE_HOURS_MS
 
         val optInTime = settings.reviewQualityCheckOptInTimeInMillis
         val firstCfrShownTime = settings.reviewQualityCheckCfrDisplayTimeInMillis
 
         return when {
-            // First CFR should be displayed on first product page visit
+            // Try Review Checker CFR should be displayed on first product page visit
             !firstCfrShownTime.isInitialized() ->
                 ToolbarCFR.SHOPPING
-            // First CFR should be displayed again 24 hours later only for not opted in users
-            !optInTime.isInitialized() && firstCfrShownTime.afterOneDay() ->
+            // Try Review Checker CFR should be displayed again 12 hours later only for not opted in users
+            !optInTime.isInitialized() && firstCfrShownTime.afterTwelveHours() ->
                 ToolbarCFR.SHOPPING
-            // Second CFR should be shown 24 hours after opt in
-            optInTime.afterOneDay() ->
+            // Already Opted In CFR should be shown 12 hours after opt in
+            optInTime.afterTwelveHours() ->
                 ToolbarCFR.SHOPPING_OPTED_IN
             else -> {
                 ToolbarCFR.NONE

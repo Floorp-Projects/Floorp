@@ -80,6 +80,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         const val FOUR_HOURS_MS = 60 * 60 * 4 * 1000L
         const val ONE_MINUTE_MS = 60 * 1000L
         const val ONE_HOUR_MS = 60 * ONE_MINUTE_MS
+        const val TWELVE_HOURS_MS = 60 * 60 * 12 * 1000L
         const val ONE_DAY_MS = 60 * 60 * 24 * 1000L
         const val TWO_DAYS_MS = 2 * ONE_DAY_MS
         const val THREE_DAYS_MS = 3 * ONE_DAY_MS
@@ -1715,6 +1716,15 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     var reviewQualityCheckOptInTimeInMillis by longPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_review_quality_opt_in_time),
         default = 0L,
+    )
+
+    /**
+     * Counts how many times any Review Checker CFR was closed after being presented to the user.
+     * When closed 3 times, the CFR will not be shown anymore.
+     */
+    var reviewQualityCheckCFRClosedCounter by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_review_quality_cfr_shown_counter),
+        default = 0,
     )
 
     /**

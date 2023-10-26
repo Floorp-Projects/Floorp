@@ -70,6 +70,8 @@ interface BrowserToolbarController {
     fun handleTranslationsButtonClick()
 }
 
+private const val MAX_DISPLAY_NUMBER_SHOPPING_CFR = 3
+
 @Suppress("LongParameterList")
 class DefaultBrowserToolbarController(
     private val store: BrowserStore,
@@ -229,9 +231,16 @@ class DefaultBrowserToolbarController(
         internal const val TELEMETRY_BROWSER_IDENTIFIER = "browserMenu"
     }
 
+    /**
+     * Stop showing the CFR after being displayed three times with
+     * with at least 12 hrs in-between.
+     * As described in: https://bugzilla.mozilla.org/show_bug.cgi?id=1861173#c0
+     */
     private fun updateShoppingCfrSettings() = with(activity.settings()) {
-        if (reviewQualityCheckCfrDisplayTimeInMillis != 0L) {
-            // We want to show the first CFR a second time if the user doesn't opt in the feature
+        reviewQualityCheckCFRClosedCounter.inc()
+        if (reviewQualityCheckCfrDisplayTimeInMillis != 0L &&
+            reviewQualityCheckCFRClosedCounter >= MAX_DISPLAY_NUMBER_SHOPPING_CFR
+        ) {
             shouldShowReviewQualityCheckCFR = false
         } else {
             reviewQualityCheckCfrDisplayTimeInMillis = System.currentTimeMillis()

@@ -55,6 +55,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeScreenViewModel
+import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class DefaultBrowserToolbarControllerTest {
@@ -381,9 +382,10 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleShoppingCfrActionClick() {
+    fun handleShoppingCfrActionClickAfterShowingThreeTimes() {
         val controller = createController()
         every { activity.settings().reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+        every { activity.settings().reviewQualityCheckCFRClosedCounter } returns 3
 
         controller.handleShoppingCfrActionClick()
 
@@ -394,13 +396,54 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleShoppingCfrDismiss() {
+    fun handleShoppingCfrDismissOnce() {
         val controller = createController()
-        every { activity.settings().reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+        val mockSettings = mockk<Settings> {
+            every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+            every { reviewQualityCheckCfrDisplayTimeInMillis = any() } just Runs
+            every { reviewQualityCheckCFRClosedCounter } returns 1
+            every { shouldShowReviewQualityCheckCFR } returns true
+        }
+        every { activity.settings() } returns mockSettings
 
         controller.handleShoppingCfrDismiss()
 
-        assertFalse(activity.settings().shouldShowReviewQualityCheckCFR)
+        verify(exactly = 0) { mockSettings.shouldShowReviewQualityCheckCFR = false }
+        verify { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
+    }
+
+    @Test
+    fun handleShoppingCfrDismissTwice() {
+        val controller = createController()
+        val mockSettings = mockk<Settings> {
+            every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+            every { reviewQualityCheckCfrDisplayTimeInMillis = any() } just Runs
+            every { reviewQualityCheckCFRClosedCounter } returns 2
+            every { shouldShowReviewQualityCheckCFR } returns true
+        }
+        every { activity.settings() } returns mockSettings
+
+        controller.handleShoppingCfrDismiss()
+
+        verify(exactly = 0) { mockSettings.shouldShowReviewQualityCheckCFR = false }
+        verify { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
+    }
+
+    @Test
+    fun handleShoppingCfrDismissThreeTimes() {
+        val controller = createController()
+        val mockSettings = mockk<Settings> {
+            every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
+            every { reviewQualityCheckCFRClosedCounter } returns 3
+            every { shouldShowReviewQualityCheckCFR } returns true
+            every { shouldShowReviewQualityCheckCFR = any() } just Runs
+        }
+        every { activity.settings() } returns mockSettings
+
+        controller.handleShoppingCfrDismiss()
+
+        verify { mockSettings.shouldShowReviewQualityCheckCFR = false }
+        verify(exactly = 0) { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
     }
 
     fun handleTranslationsButtonClick() {

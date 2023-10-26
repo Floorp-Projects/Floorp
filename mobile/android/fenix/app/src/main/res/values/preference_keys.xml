@@ -374,4 +374,5 @@
     <string name="pref_key_should_show_review_quality_cfr">pref_key_should_show_review_quality_cfr</string>
     <string name="pref_key_should_show_review_quality_opt_in_time">pref_key_should_show_review_quality_opt_in_time</string>
     <string name="pref_key_should_show_review_quality_cfr_displayed_time">pref_key_should_show_review_quality_cfr_displayed_time</string>
+    <string name="pref_key_review_quality_cfr_shown_counter">pref_key_review_quality_cfr_shown_counter</string>
 </resources>
