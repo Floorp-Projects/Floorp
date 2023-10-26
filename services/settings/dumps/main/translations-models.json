@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "name": "lex.50.50.enhu.s2t.bin",
+      "schema": 1698157791873,
+      "toLang": "hu",
+      "version": "0.1",
+      "fileType": "lex",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "cd5f4424ab156b158c57707a1491a17922e1b2498e6af47ee324264834e4f319",
+        "size": 4167800,
+        "filename": "lex.50.50.enhu.s2t.bin",
+        "location": "main-workspace/translations-models/f24a9d9e-9749-4c1c-a0c2-27691aad5337.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'nightly' || env.channel == 'default'",
+      "id": "3fc12fec-6f4b-4eeb-9c70-f4c9367cb6d7",
+      "last_modified": 1698173965395
+    },
+    {
+      "name": "model.enhu.intgemm.alphas.bin",
+      "schema": 1698173725483,
+      "toLang": "hu",
+      "version": "0.1",
+      "fileType": "model",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "3c639b9cf912049e4f6bc8cb612ae9d7a8e3a0e7879591b82c644a41dd527c45",
+        "size": 17140898,
+        "filename": "model.enhu.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/9ad83f77-510d-4646-947c-878369a4644f.bin",
+        "mimetype": "application/octet-stream"
+      },
+      "filter_expression": "env.channel == 'nightly' || env.channel == 'default'",
+      "id": "84cc8410-3477-485e-b667-acb1f2cb5b3c",
+      "last_modified": 1698173965392
+    },
+    {
+      "name": "vocab.enhu.spm",
+      "schema": 1698173737909,
+      "toLang": "hu",
+      "version": "0.1",
+      "fileType": "vocab",
+      "fromLang": "en",
+      "attachment": {
+        "hash": "7c29d374a73886fac74a205c6a30dcd3dd7b3199126bee48312c55481b2cf505",
+        "size": 822969,
+        "filename": "vocab.enhu.spm",
+        "location": "main-workspace/translations-models/c947a0f3-0d30-470a-aacd-b4f6be9cc4a2.spm",
+        "mimetype": "application/x-source-rpm"
+      },
+      "filter_expression": "env.channel == 'nightly' || env.channel == 'default'",
+      "id": "024f3696-0f97-43b6-9d09-249821ec83ea",
+      "last_modified": 1698173965388
+    },
+    {
       "name": "lex.50.50.caen.s2t.bin",
       "schema": 1697655965028,
       "toLang": "en",
@@ -1783,5 +1837,5 @@
       "last_modified": 1681500416031
     }
   ],
-  "timestamp": 1697661153378
+  "timestamp": 1698173965395
 }
