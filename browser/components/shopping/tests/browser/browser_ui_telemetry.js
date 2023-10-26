@@ -288,6 +288,33 @@ add_task(async function test_powered_by_fakespot_link() {
   });
 });
 
+add_task(async function test_review_quality_explainer_link() {
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
+
+  await BrowserTestUtils.withNewTab(
+    {
+      url: "about:shoppingsidebar",
+      gBrowser,
+    },
+    async browser => {
+      await clickReviewQualityExplainerLink(
+        browser,
+        MOCK_ANALYZED_PRODUCT_RESPONSE
+      );
+    }
+  );
+
+  await Services.fog.testFlushAllChildren();
+
+  let qualityExplainerEvents =
+    Glean.shopping.surfaceShowQualityExplainerUrlClicked.testGetValue();
+  assertEventMatches(qualityExplainerEvents[0], {
+    category: "shopping",
+    name: "surface_show_quality_explainer_url_clicked",
+  });
+});
+
 function clickReAnalyzeLink(browser, data) {
   return SpecialPowers.spawn(browser, [data], async mockData => {
     let shoppingContainer =
@@ -413,5 +440,24 @@ function clickPoweredByFakespotLink(browser, data) {
     await fakespotLink.updateComplete;
 
     fakespotLink.click();
+  });
+}
+
+function clickReviewQualityExplainerLink(browser, data) {
+  return SpecialPowers.spawn(browser, [data], async mockData => {
+    let shoppingContainer =
+      content.document.querySelector("shopping-container").wrappedJSObject;
+    shoppingContainer.data = Cu.cloneInto(mockData, content);
+    await shoppingContainer.updateComplete;
+
+    let analysisExplainerEl = shoppingContainer.analysisExplainerEl;
+    await analysisExplainerEl.updateComplete;
+    let reviewQualityLink = analysisExplainerEl.reviewQualityExplainerLink;
+
+    // Prevent link navigation for test.
+    reviewQualityLink.href = undefined;
+    await reviewQualityLink.updateComplete;
+
+    reviewQualityLink.click();
   });
 }
