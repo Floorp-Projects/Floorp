@@ -3,19 +3,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import signal
+import subprocess
 from abc import ABC, abstractmethod
 
-from mozprocess import ProcessHandlerMixin
 
-
-class LintProcess(ProcessHandlerMixin, ABC):
+class LintProcess(subprocess.Popen, ABC):
     def __init__(self, config, *args, **kwargs):
         self.config = config
         self.results = []
 
-        kwargs["universal_newlines"] = True
-        kwargs["processOutputLine"] = [self.process_line]
-        ProcessHandlerMixin.__init__(self, *args, **kwargs)
+        kwargs["text"] = True
+        kwargs["stdout"] = subprocess.PIPE
+        kwargs["stderr"] = subprocess.STDOUT
+        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        subprocess.Popen.__init__(self, *args, **kwargs)
+        signal.signal(signal.SIGINT, orig)
 
     @abstractmethod
     def process_line(self, line):
@@ -29,7 +31,6 @@ class LintProcess(ProcessHandlerMixin, ABC):
         """
         pass
 
-    def run(self, *args, **kwargs):
-        orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-        ProcessHandlerMixin.run(self, *args, **kwargs)
-        signal.signal(signal.SIGINT, orig)
+    def run(self):
+        for line in self.stdout:
+            self.process_line(line)
