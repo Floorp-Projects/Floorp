@@ -1,0 +1,255 @@
+// Copyright 2022 The Chromium Authors.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package content_analysis.sdk;
+
+// The values in this enum can be extended in future versions of Chrome to
+// support new analysis triggers.
+enum AnalysisConnector {
+  ANALYSIS_CONNECTOR_UNSPECIFIED = 0;
+  FILE_DOWNLOADED = 1;
+  FILE_ATTACHED = 2;
+  BULK_DATA_ENTRY = 3;
+  PRINT = 4;
+  // This value is not yet implemented in the SDK. It is kept for consistency with the Chromium code.
+  FILE_TRANSFER = 5;
+}
+
+message ContentMetaData {
+  // The URL containing the file download/upload or to which web content is
+  // being uploaded.
+  optional string url = 1;
+
+  // Name of file on user system (if applicable).
+  optional string filename = 2;
+
+  // Sha256 digest of file.
+  optional string digest = 3;
+
+  // Specifically for the download case.
+  optional ClientDownloadRequest csd = 4;
+
+  // Optional email address of user.  This field may be empty if the user
+  // is not signed in.
+  optional string email = 5;
+
+  // Name of tab title.
+  optional string tab_title = 9;
+
+  // Empty for non-print actions.
+  message PrintMetadata {
+    optional string printer_name = 1;
+
+    enum PrinterType {
+      UNKNOWN = 0;
+      CLOUD = 1;
+      LOCAL = 2;
+    }
+    optional PrinterType printer_type = 2;
+  }
+  optional PrintMetadata print_metadata = 11;
+
+  reserved 6 to 8, 10;
+}
+
+message ClientMetadata {
+  // Describes the browser uploading a scan request.
+  message Browser {
+    // This is omitted on scans triggered at the profile level.
+    optional string machine_user = 4;
+
+    reserved 1 to 3;
+  };
+  optional Browser browser = 1;
+
+  reserved 2 to 3;
+};
+
+message ClientDownloadRequest {
+  // Type of the resources stored below.
+  enum ResourceType {
+    // The final URL of the download payload.  The resource URL should
+    // correspond to the URL field above.
+    DOWNLOAD_URL = 0;
+    // A redirect URL that was fetched before hitting the final DOWNLOAD_URL.
+    DOWNLOAD_REDIRECT = 1;
+    // The final top-level URL of the tab that triggered the download.
+    TAB_URL = 2;
+    // A redirect URL thas was fetched before hitting the final TAB_URL.
+    TAB_REDIRECT = 3;
+    // The document URL for a PPAPI plugin instance that initiated the download.
+    // This is the document.url for the container element for the plugin
+    // instance.
+    PPAPI_DOCUMENT = 4;
+    // The plugin URL for a PPAPI plugin instance that initiated the download.
+    PPAPI_PLUGIN = 5;
+  }
+
+  message Resource {
+    required string url = 1;
+    required ResourceType type = 2;
+
+    reserved 3 to 4;
+  }
+
+  repeated Resource resources = 4;
+
+  reserved 1 to 3, 5 to 84;
+}
+
+
+// Analysis request sent from chrome to backend.
+// The proto in the Chromium codebase is the source of truth, the version here
+// should always be in sync with it (https://osscs.corp.google.com/chromium/chromium/src/+/main:components/enterprise/common/proto/connectors.proto;l=87;drc=a8fb6888aff535f27654f03cd1643868ba066de9).
+message ContentAnalysisRequest {
+  // Token used to correlate requests and responses. This is different than the
+  // FCM token in that it is unique for each request.
+  optional string request_token = 5;
+
+  // Which enterprise connector fired this request.
+  optional AnalysisConnector analysis_connector = 9;
+
+  // Information about the data that triggered the content analysis request.
+  optional ContentMetaData request_data = 10;
+
+  // The tags configured for the URL that triggered the content analysis.
+  repeated string tags = 11;
+
+  // Additional information about the browser, device or profile so events can
+  // be reported with device/user identifiable information.
+  optional ClientMetadata client_metadata = 12;
+
+  // Data used to transmit print data from the browser.
+  message PrintData {
+    // A platform-specific handle that can be used to access the printed document.
+    optional int64 handle = 1;
+
+    // The size of the data to be printed.
+    optional int64 size = 2;
+  }
+
+  oneof content_data {
+    // The text content to analyze in local content analysis request.
+    string text_content = 13;
+
+    // The full path to the file to analyze in local content analysis request.
+    // The path is expressed in a platform dependent way.
+    string file_path = 14;
+
+    // The to-be-printed page/document in PDF format.
+    PrintData print_data = 18;
+  }
+
+  // The absolute deadline (seconds since the UTC Epoch time) that Chrome will
+  // wait until a response from the agent is received.
+  optional int64 expires_at = 15;
+
+  // ID for keeping track of analysis requests that belong to the same user
+  // action.
+  optional string user_action_id = 16;
+
+  // Count of analysis requests that belong to the same user action.
+  optional int64 user_action_requests_count = 17;
+
+  // Reserved to make sure there is no overlap with DeepScanningClientRequest.
+  reserved 1 to 4, 6 to 8;
+}
+
+// Verdict response sent from agent to Google Chrome.
+message ContentAnalysisResponse {
+  // Token used to correlate requests and responses. Corresponds to field in
+  // ContentAnalysisRequest with the same name.
+  optional string request_token = 1;
+
+  // Represents the analysis result from a given tag.
+  message Result {
+    optional string tag = 1;
+
+    // The status of this result.
+    enum Status {
+      STATUS_UNKNOWN = 0;
+      SUCCESS = 1;
+      FAILURE = 2;
+    }
+    optional Status status = 2;
+
+    // Identifies the detection rules that were triggered by the analysis.
+    // Only relevant when status is SUCCESS.
+    message TriggeredRule {
+      enum Action {
+        ACTION_UNSPECIFIED = 0;
+        REPORT_ONLY = 1;
+        WARN = 2;
+        BLOCK = 3;
+      }
+      optional Action action = 1;
+      optional string rule_name = 2;
+      optional string rule_id = 3;
+      reserved 4;
+    }
+    repeated TriggeredRule triggered_rules = 3;
+
+    reserved 4 to 7;
+  }
+  repeated Result results = 4;
+
+  reserved 2 to 3;
+}
+
+// An Acknowledgement is sent by the browser following the receipt of a response
+// from the agent.
+message ContentAnalysisAcknowledgement {
+  // Token used to correlate with the corresponding request and response.
+  optional string request_token = 1;
+
+  // The action taken by google Chrome with the content analysis response.
+  enum Status {
+    // The response was handled as specified by the agent.
+    SUCCESS = 1;
+
+    // The response from the agent was not properly formatted.
+    INVALID_RESPONSE = 2;
+
+    // The response from the agent was too late and Google Chrome took the
+    // default action.
+    TOO_LATE = 3;
+  };
+  optional Status status = 2;
+
+  // The final action that chrome took with this request.  This may be different
+  // from the action specified in the response if the response was too late or
+  // if the original request was part of a user action whose overall final
+  // differed from the action of this particular request.
+  enum FinalAction {
+    ACTION_UNSPECIFIED = 0;
+    ALLOW = 1;
+    REPORT_ONLY = 2;
+    WARN = 3;
+    BLOCK = 4;
+  };
+  optional FinalAction final_action = 3;
+}
+
+// A message that asks the agent to cancel all requests with the given user
+// action id.  Note that more that content analysis request may have the given
+// user action id.
+message ContentAnalysisCancelRequests {
+  optional string user_action_id = 1;
+}
+
+// Generic message sent from Chrome to Agent.
+message ChromeToAgent {
+  optional ContentAnalysisRequest request = 1;
+  optional ContentAnalysisAcknowledgement ack = 2;
+  optional ContentAnalysisCancelRequests cancel = 3;
+}
+
+// Generic message sent from Agent to Chrome.
+message AgentToChrome {
+  optional ContentAnalysisResponse response = 1;
+}

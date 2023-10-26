@@ -7,6 +7,9 @@ with Files('moz.build'):
 with Files('aom/**'):
     BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
 
+with Files('content_analysis_sdk/**'):
+    BUG_COMPONENT = ('Firefox', 'Data Loss Prevention')
+
 with Files('cups/**'):
     BUG_COMPONENT = ('Core', 'Printing: Setup')
 
