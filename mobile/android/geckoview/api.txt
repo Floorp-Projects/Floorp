@@ -531,6 +531,8 @@ package org.mozilla.geckoview {
   @AnyThread public static class ContentBlocking.Settings extends RuntimeSettings {
     method public int getAntiTrackingCategories();
     method public boolean getCookieBannerDetectOnlyMode();
+    method public boolean getCookieBannerGlobalRulesEnabled();
+    method public boolean getCookieBannerGlobalRulesSubFramesEnabled();
     method public int getCookieBannerMode();
     method public int getCookieBannerModePrivateBrowsing();
     method public int getCookieBehavior();
@@ -544,6 +546,8 @@ package org.mozilla.geckoview {
     method public boolean getStrictSocialTrackingProtection();
     method @NonNull public ContentBlocking.Settings setAntiTracking(int);
     method @NonNull public ContentBlocking.Settings setCookieBannerDetectOnlyMode(boolean);
+    method @NonNull public ContentBlocking.Settings setCookieBannerGlobalRulesEnabled(boolean);
+    method @NonNull public ContentBlocking.Settings setCookieBannerGlobalRulesSubFramesEnabled(boolean);
     method @NonNull public ContentBlocking.Settings setCookieBannerMode(int);
     method @NonNull public ContentBlocking.Settings setCookieBannerModePrivateBrowsing(int);
     method @NonNull public ContentBlocking.Settings setCookieBehavior(int);
@@ -561,6 +565,8 @@ package org.mozilla.geckoview {
   @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder<ContentBlocking.Settings> {
     ctor public Builder();
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
+    method @NonNull public ContentBlocking.Settings.Builder cookieBannerGlobalRulesEnabled(boolean);
+    method @NonNull public ContentBlocking.Settings.Builder cookieBannerGlobalRulesSubFramesEnabled(boolean);
     method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingDetectOnlyMode(boolean);
     method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingMode(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBannerHandlingModePrivateBrowsing(int);

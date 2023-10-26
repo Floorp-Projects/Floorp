@@ -266,6 +266,56 @@ class ContentBlockingControllerTest : BaseSessionTest() {
     }
 
     @Test
+    fun cookieBannerGlobalRulesEnabledSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.cookieBannerGlobalRulesEnabled,
+            equalTo(false),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.enableGlobalRules",
+        )
+
+        assertThat("Actual value is correct", originalPrefs[0] as Boolean, equalTo(contentBlocking.cookieBannerGlobalRulesEnabled))
+
+        contentBlocking.cookieBannerGlobalRulesEnabled = true
+
+        val actualPrefs = sessionRule.getPrefs("cookiebanners.service.enableGlobalRules")
+
+        assertThat("Actual value is correct", actualPrefs[0] as Boolean, equalTo(contentBlocking.cookieBannerGlobalRulesEnabled))
+    }
+
+    @Test
+    fun cookieBannerGlobalRulesSubFramesEnabledSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.cookieBannerGlobalRulesSubFramesEnabled,
+            equalTo(false),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "cookiebanners.service.enableGlobalRules.subFrames",
+        )
+
+        assertThat("Actual value is correct", originalPrefs[0] as Boolean, equalTo(contentBlocking.cookieBannerGlobalRulesSubFramesEnabled))
+
+        contentBlocking.cookieBannerGlobalRulesSubFramesEnabled = true
+
+        val actualPrefs = sessionRule.getPrefs("cookiebanners.service.enableGlobalRules.subFrames")
+
+        assertThat("Actual value is correct", actualPrefs[0] as Boolean, equalTo(contentBlocking.cookieBannerGlobalRulesSubFramesEnabled))
+    }
+
+    @Test
     fun cookieBannerHandlingDetectOnlyModeSettings() {
         // Check default value
         val contentBlocking = sessionRule.runtime.settings.contentBlocking
