@@ -442,17 +442,6 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
  * ParagraphStateAtSelection
  ****************************************************************************/
 
-// static
-bool ParagraphStateAtSelection::IsFormatElement(
-    FormatBlockMode aFormatBlockMode, const nsIContent& aContent) {
-  if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand &&
-      aContent.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                   nsGkAtoms::dt)) {
-    return false;
-  }
-  return HTMLEditor::IsFormatElement(aFormatBlockMode, aContent);
-}
-
 ParagraphStateAtSelection::ParagraphStateAtSelection(
     HTMLEditor& aHTMLEditor, FormatBlockMode aFormatBlockMode,
     ErrorResult& aRv) {
@@ -512,8 +501,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
     OwningNonNull<nsIContent>& content = arrayOfContents[index];
     if (HTMLEditUtils::IsBlockElement(content,
                                       BlockInlineCheck::UseHTMLDefaultStyle) &&
-        !ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
-                                                    content)) {
+        !HTMLEditor::IsFormatElement(aFormatBlockMode, content)) {
       // XXX This RemoveObject() call has already been commented out and
       //     the above comment explained we're trying to replace non-format
       //     block nodes in the array.  According to the following blocks and
@@ -542,7 +530,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
 
   for (auto& content : Reversed(arrayOfContents)) {
     const Element* formatElement = nullptr;
-    if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode, content)) {
+    if (HTMLEditor::IsFormatElement(aFormatBlockMode, content)) {
       formatElement = content->AsElement();
     }
     // Ignore inline contents since its children have been appended
@@ -560,8 +548,7 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
         if (parentElement == editingHostOrBodyOrDocumentElement) {
           break;
         }
-        if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
-                                                       *parentElement)) {
+        if (HTMLEditor::IsFormatElement(aFormatBlockMode, *parentElement)) {
           MOZ_ASSERT(parentElement->NodeInfo()->NameAtom());
           formatElement = parentElement;
           break;
@@ -584,8 +571,8 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
         if (element->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
           continue;
         }
-        if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
-                                                       *formatElement)) {
+        if (HTMLEditUtils::IsFormatElementForFormatBlockCommand(
+                *formatElement)) {
           return false;
         }
       }
@@ -617,8 +604,8 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
     FormatBlockMode aFormatBlockMode, dom::Element& aNonFormatBlockElement) {
   MOZ_ASSERT(HTMLEditUtils::IsBlockElement(
       aNonFormatBlockElement, BlockInlineCheck::UseHTMLDefaultStyle));
-  MOZ_ASSERT(!ParagraphStateAtSelection::IsFormatElement(
-      aFormatBlockMode, aNonFormatBlockElement));
+  MOZ_ASSERT(
+      !HTMLEditor::IsFormatElement(aFormatBlockMode, aNonFormatBlockElement));
 
   // We only need to place any one inline inside this node onto
   // the list.  They are all the same for purposes of determining
@@ -629,8 +616,8 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
        childContent; childContent = childContent->GetNextSibling()) {
     const bool isBlock = HTMLEditUtils::IsBlockElement(
         *childContent, BlockInlineCheck::UseHTMLDefaultStyle);
-    const bool isFormat = ParagraphStateAtSelection::IsFormatElement(
-        aFormatBlockMode, *childContent);
+    const bool isFormat =
+        HTMLEditor::IsFormatElement(aFormatBlockMode, *childContent);
     // If the child is a non-format block element, let's check its children
     // recursively.
     if (isBlock && !isFormat) {

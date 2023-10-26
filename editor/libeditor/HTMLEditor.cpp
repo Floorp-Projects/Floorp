@@ -2537,7 +2537,13 @@ bool HTMLEditor::IsFormatElement(FormatBlockMode aFormatBlockMode,
   // FYI: Optimize for HTML command because it may run too many times.
   return MOZ_LIKELY(aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand)
              ? HTMLEditUtils::IsFormatElementForFormatBlockCommand(aContent)
-             : HTMLEditUtils::IsFormatElementForParagraphStateCommand(aContent);
+             : (HTMLEditUtils::IsFormatElementForParagraphStateCommand(
+                    aContent) &&
+                // XXX The XUL paragraph state command treats <dl>, <dd> and
+                // <dt> elements but all handlers do not treat them as a format
+                // node.  Therefore, we keep the traditional behavior here.
+                !aContent.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
+                                              nsGkAtoms::dt));
 }
 
 NS_IMETHODIMP HTMLEditor::GetParagraphState(bool* aMixed,
