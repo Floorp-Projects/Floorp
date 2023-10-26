@@ -67,7 +67,7 @@
       "channel": "release",
       "userFacingName": "Android Onboarding - search widget",
       "userFacingDescription": "Copy focused on privacy",
-      "isEnrollmentPaused": false,
+      "isEnrollmentPaused": true,
       "isRollout": false,
       "bucketConfig": {
         "randomizationUnit": "nimbus_id",
@@ -157,7 +157,7 @@
       ],
       "targeting": "((android_sdk_version|versionCompare('26') >= 0)) && (app_version|versionCompare('118.!') >= 0) && (language in ['en'])",
       "startDate": "2023-09-15",
-      "enrollmentEndDate": "2023-10-24",
+      "enrollmentEndDate": "2023-10-26",
       "endDate": null,
       "proposedDuration": 49,
       "proposedEnrollment": 28,
