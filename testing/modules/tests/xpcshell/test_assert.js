@@ -467,4 +467,12 @@ add_task(async function test_rejects() {
   await assert.rejects(Promise.reject("oh no"), /oh no/, "rejected");
   // Wrong message.
   await checkRejectsFails("something else", /oh no/);
+
+  // A non-rejection should also be an assertion failure:
+  try {
+    await assert.rejects(Promise.resolve(), /./, "ReSoLvEd");
+    ok(false, "should have rejected");
+  } catch (ex) {
+    deepEqual(ex.message, "Missing expected exception ReSoLvEd");
+  }
 });

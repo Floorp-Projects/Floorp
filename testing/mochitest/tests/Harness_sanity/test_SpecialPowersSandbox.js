@@ -68,6 +68,8 @@ add_task(async function () {
     [true, "Hmm - 1 == 1"],
     [true, "Yay. - true == true"],
     [false, "Boo!. - false == true"],
+    [false, "Missing expected exception Rej_bad"],
+    [true, "Rej_ok"],
   ];
 
   // Test that a representative variety of assertions work as expected, and
@@ -83,6 +85,8 @@ add_task(async function () {
         Assert.equal(1, 1, "Hmm");
         Assert.ok(true, "Yay.");
         Assert.ok(false, "Boo!.");
+        await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
+        await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
       });
     },
     "SpecialPowers.spawn-subframe": () => {
@@ -95,11 +99,13 @@ add_task(async function () {
           subFrame.addEventListener("load", resolve, { once: true });
         });
 
-        await SpecialPowers.spawn(subFrame, [], () => {
+        await SpecialPowers.spawn(subFrame, [], async () => {
           Assert.equal(1, 2, "Thing");
           Assert.equal(1, 1, "Hmm");
           Assert.ok(true, "Yay.");
           Assert.ok(false, "Boo!.");
+          await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
+          await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
         });
       });
     },
@@ -109,17 +115,22 @@ add_task(async function () {
         Assert.equal(1, 1, "Hmm");
         Assert.ok(true, "Yay.");
         Assert.ok(false, "Boo!.");
+        await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
+        await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
       });
     },
     "SpecialPowers.loadChromeScript": async () => {
       let script = SpecialPowers.loadChromeScript(() => {
         /* eslint-env mozilla/chrome-script */
-        this.addMessageListener("ping", () => "pong");
-
-        Assert.equal(1, 2, "Thing");
-        Assert.equal(1, 1, "Hmm");
-        Assert.ok(true, "Yay.");
-        Assert.ok(false, "Boo!.");
+        const resultPromise = (async () => {
+          Assert.equal(1, 2, "Thing");
+          Assert.equal(1, 1, "Hmm");
+          Assert.ok(true, "Yay.");
+          Assert.ok(false, "Boo!.");
+          await Assert.rejects(Promise.resolve(), /./, "Rej_bad");
+          await Assert.rejects(Promise.reject(new Error("k")), /k/, "Rej_ok");
+        })();
+        this.addMessageListener("ping", () => resultPromise);
       });
 
       await script.sendQuery("ping");
