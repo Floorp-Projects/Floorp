@@ -2437,7 +2437,53 @@ nsresult HTMLEditor::ClearSelection() {
   return error.StealNSResult();
 }
 
-nsresult HTMLEditor::SetParagraphFormatAsAction(
+nsresult HTMLEditor::FormatBlockAsAction(const nsAString& aParagraphFormat,
+                                         nsIPrincipal* aPrincipal) {
+  AutoEditActionDataSetter editActionData(
+      *this, EditAction::eInsertBlockElement, aPrincipal);
+  nsresult rv = editActionData.CanHandleAndMaybeDispatchBeforeInputEvent();
+  if (NS_FAILED(rv)) {
+    NS_WARNING_ASSERTION(rv == NS_ERROR_EDITOR_ACTION_CANCELED,
+                         "CanHandleAndMaybeDispatchBeforeInputEvent(), failed");
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  if (NS_WARN_IF(aParagraphFormat.IsEmpty())) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsAtom> tagName = NS_Atomize(aParagraphFormat);
+  MOZ_ASSERT(tagName);
+  if (NS_WARN_IF(!tagName->IsStatic()) ||
+      NS_WARN_IF(!HTMLEditUtils::IsFormatTagForFormatBlockCommand(
+          *tagName->AsStatic()))) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
+    // MOZ_KnownLive(tagName->AsStatic()) because nsStaticAtom instances live
+    // while the process is running.
+    Result<EditActionResult, nsresult> result =
+        MakeOrChangeListAndListItemAsSubAction(
+            MOZ_KnownLive(*tagName->AsStatic()), u""_ns,
+            SelectAllOfCurrentList::No);
+    if (MOZ_UNLIKELY(result.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::MakeOrChangeListAndListItemAsSubAction("
+          "SelectAllOfCurrentList::No) failed");
+      return EditorBase::ToGenericNSResult(result.unwrapErr());
+    }
+    return NS_OK;
+  }
+
+  rv = FormatBlockContainerAsSubAction(MOZ_KnownLive(*tagName->AsStatic()),
+                                       FormatBlockMode::HTMLFormatBlockCommand);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "HTMLEditor::FormatBlockContainerAsSubAction() failed");
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+nsresult HTMLEditor::SetParagraphStateAsAction(
     const nsAString& aParagraphFormat, nsIPrincipal* aPrincipal) {
   AutoEditActionDataSetter editActionData(
       *this, EditAction::eInsertBlockElement, aPrincipal);
@@ -2458,6 +2504,9 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
   ToLowerCase(lowerCaseTagName);
   RefPtr<nsAtom> tagName = NS_Atomize(lowerCaseTagName);
   MOZ_ASSERT(tagName);
+  if (NS_WARN_IF(!tagName->IsStatic())) {
+    return NS_ERROR_INVALID_ARG;
+  }
   if (tagName == nsGkAtoms::dd || tagName == nsGkAtoms::dt) {
     // MOZ_KnownLive(tagName->AsStatic()) because nsStaticAtom instances live
     // while the process is running.
@@ -2474,10 +2523,21 @@ nsresult HTMLEditor::SetParagraphFormatAsAction(
     return NS_OK;
   }
 
-  rv = FormatBlockContainerAsSubAction(*tagName);
+  rv = FormatBlockContainerAsSubAction(
+      MOZ_KnownLive(*tagName->AsStatic()),
+      FormatBlockMode::XULParagraphStateCommand);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::FormatBlockContainerAsSubAction() failed");
   return EditorBase::ToGenericNSResult(rv);
+}
+
+// static
+bool HTMLEditor::IsFormatElement(FormatBlockMode aFormatBlockMode,
+                                 const nsIContent& aContent) {
+  // FYI: Optimize for HTML command because it may run too many times.
+  return MOZ_LIKELY(aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand)
+             ? HTMLEditUtils::IsFormatElementForFormatBlockCommand(aContent)
+             : HTMLEditUtils::IsFormatElementForParagraphStateCommand(aContent);
 }
 
 NS_IMETHODIMP HTMLEditor::GetParagraphState(bool* aMixed,
@@ -2490,7 +2550,8 @@ NS_IMETHODIMP HTMLEditor::GetParagraphState(bool* aMixed,
   }
 
   ErrorResult error;
-  ParagraphStateAtSelection paragraphState(*this, error);
+  ParagraphStateAtSelection paragraphState(
+      *this, FormatBlockMode::XULParagraphStateCommand, error);
   if (error.Failed()) {
     NS_WARNING("ParagraphStateAtSelection failed");
     return error.StealNSResult();
@@ -2902,7 +2963,8 @@ nsresult HTMLEditor::RemoveListAsAction(const nsAString& aListType,
   return rv;
 }
 
-nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
+nsresult HTMLEditor::FormatBlockContainerAsSubAction(
+    const nsStaticAtom& aTagName, FormatBlockMode aFormatBlockMode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!mInitSucceeded)) {
@@ -2976,7 +3038,7 @@ nsresult HTMLEditor::FormatBlockContainerAsSubAction(nsAtom& aTagName) {
   AutoRangeArray selectionRanges(SelectionRef());
   Result<RefPtr<Element>, nsresult> suggestBlockElementToPutCaretOrError =
       FormatBlockContainerWithTransaction(selectionRanges, aTagName,
-                                          *editingHost);
+                                          aFormatBlockMode, *editingHost);
   if (suggestBlockElementToPutCaretOrError.isErr()) {
     NS_WARNING("HTMLEditor::FormatBlockContainerWithTransaction() failed");
     return suggestBlockElementToPutCaretOrError.unwrapErr();
@@ -3429,7 +3491,7 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
 }
 
 Result<CreateElementResult, nsresult> HTMLEditor::CreateAndInsertElement(
-    WithTransaction aWithTransaction, nsAtom& aTagName,
+    WithTransaction aWithTransaction, const nsAtom& aTagName,
     const EditorDOMPoint& aPointToInsert,
     const InitializeInsertingElement& aInitializer) {
   MOZ_ASSERT(IsEditActionDataAvailable());

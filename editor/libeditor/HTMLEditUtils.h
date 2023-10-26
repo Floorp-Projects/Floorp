@@ -213,7 +213,90 @@ class HTMLEditUtils final {
    * styles.
    */
   static bool IsRemovableInlineStyleElement(Element& aElement);
-  static bool IsFormatNode(const nsINode* aNode);
+
+  /**
+   * Return true if aTagName is one of the format element name of
+   * Document.execCommand("formatBlock").
+   */
+  [[nodiscard]] static bool IsFormatTagForFormatBlockCommand(
+      const nsStaticAtom& aTagName) {
+    return
+        // clang-format off
+        &aTagName == nsGkAtoms::address ||
+        &aTagName == nsGkAtoms::article ||
+        &aTagName == nsGkAtoms::aside ||
+        &aTagName == nsGkAtoms::blockquote ||
+        &aTagName == nsGkAtoms::dd ||
+        &aTagName == nsGkAtoms::div ||
+        &aTagName == nsGkAtoms::dl ||
+        &aTagName == nsGkAtoms::dt ||
+        &aTagName == nsGkAtoms::footer ||
+        &aTagName == nsGkAtoms::h1 ||
+        &aTagName == nsGkAtoms::h2 ||
+        &aTagName == nsGkAtoms::h3 ||
+        &aTagName == nsGkAtoms::h4 ||
+        &aTagName == nsGkAtoms::h5 ||
+        &aTagName == nsGkAtoms::h6 ||
+        &aTagName == nsGkAtoms::header ||
+        &aTagName == nsGkAtoms::hgroup ||
+        &aTagName == nsGkAtoms::main ||
+        &aTagName == nsGkAtoms::nav ||
+        &aTagName == nsGkAtoms::p ||
+        &aTagName == nsGkAtoms::pre ||
+        &aTagName == nsGkAtoms::section;
+    // clang-format on
+  }
+
+  /**
+   * Return true if aContent is a format element of
+   * Document.execCommand("formatBlock").
+   */
+  [[nodiscard]] static bool IsFormatElementForFormatBlockCommand(
+      const nsIContent& aContent) {
+    if (!aContent.IsHTMLElement() ||
+        !aContent.NodeInfo()->NameAtom()->IsStatic()) {
+      return false;
+    }
+    const nsStaticAtom* tagName = aContent.NodeInfo()->NameAtom()->AsStatic();
+    return IsFormatTagForFormatBlockCommand(*tagName);
+  }
+
+  /**
+   * Return true if aTagName is one of the format element name of
+   * cmd_paragraphState.
+   */
+  [[nodiscard]] static bool IsFormatTagForParagraphStateCommand(
+      const nsStaticAtom& aTagName) {
+    return
+        // clang-format off
+        &aTagName == nsGkAtoms::address ||
+        &aTagName == nsGkAtoms::dd ||
+        &aTagName == nsGkAtoms::dl ||
+        &aTagName == nsGkAtoms::dt ||
+        &aTagName == nsGkAtoms::h1 ||
+        &aTagName == nsGkAtoms::h2 ||
+        &aTagName == nsGkAtoms::h3 ||
+        &aTagName == nsGkAtoms::h4 ||
+        &aTagName == nsGkAtoms::h5 ||
+        &aTagName == nsGkAtoms::h6 ||
+        &aTagName == nsGkAtoms::p ||
+        &aTagName == nsGkAtoms::pre;
+    // clang-format on
+  }
+
+  /**
+   * Return true if aContent is a format element of cmd_paragraphState.
+   */
+  [[nodiscard]] static bool IsFormatElementForParagraphStateCommand(
+      const nsIContent& aContent) {
+    if (!aContent.IsHTMLElement() ||
+        !aContent.NodeInfo()->NameAtom()->IsStatic()) {
+      return false;
+    }
+    const nsStaticAtom* tagName = aContent.NodeInfo()->NameAtom()->AsStatic();
+    return IsFormatTagForParagraphStateCommand(*tagName);
+  }
+
   static bool IsNodeThatCanOutdent(nsINode* aNode);
   static bool IsHeader(nsINode& aNode);
   static bool IsListItem(const nsINode* aNode);
@@ -243,7 +326,8 @@ class HTMLEditUtils final {
     return false;
   }
 
-  static bool CanNodeContain(const nsINode& aParent, nsAtom& aChildNodeName) {
+  static bool CanNodeContain(const nsINode& aParent,
+                             const nsAtom& aChildNodeName) {
     switch (aParent.NodeType()) {
       case nsINode::ELEMENT_NODE:
       case nsINode::DOCUMENT_FRAGMENT_NODE:
@@ -253,7 +337,7 @@ class HTMLEditUtils final {
     return false;
   }
 
-  static bool CanNodeContain(nsAtom& aParentNodeName,
+  static bool CanNodeContain(const nsAtom& aParentNodeName,
                              const nsIContent& aChild) {
     switch (aChild.NodeType()) {
       case nsINode::TEXT_NODE:
@@ -269,7 +353,8 @@ class HTMLEditUtils final {
 
   // XXX Only this overload does not check the node type.  Therefore, only this
   //     handle Document and ProcessingInstructionTagName.
-  static bool CanNodeContain(nsAtom& aParentNodeName, nsAtom& aChildNodeName) {
+  static bool CanNodeContain(const nsAtom& aParentNodeName,
+                             const nsAtom& aChildNodeName) {
     nsHTMLTag childTagEnum;
     if (&aChildNodeName == nsGkAtoms::textTagName) {
       childTagEnum = eHTMLTag_text;
@@ -277,10 +362,12 @@ class HTMLEditUtils final {
                &aChildNodeName == nsGkAtoms::cdataTagName) {
       childTagEnum = eHTMLTag_comment;
     } else {
-      childTagEnum = nsHTMLTags::AtomTagToId(&aChildNodeName);
+      childTagEnum =
+          nsHTMLTags::AtomTagToId(const_cast<nsAtom*>(&aChildNodeName));
     }
 
-    nsHTMLTag parentTagEnum = nsHTMLTags::AtomTagToId(&aParentNodeName);
+    nsHTMLTag parentTagEnum =
+        nsHTMLTags::AtomTagToId(const_cast<nsAtom*>(&aParentNodeName));
     return HTMLEditUtils::CanNodeContain(parentTagEnum, childTagEnum);
   }
 
@@ -313,7 +400,7 @@ class HTMLEditUtils final {
    */
   template <typename EditorDOMPointType>
   static EditorDOMPoint GetInsertionPointInInclusiveAncestor(
-      nsAtom& aTagName, const EditorDOMPointType& aPoint,
+      const nsAtom& aTagName, const EditorDOMPointType& aPoint,
       const Element* aAncestorLimit = nullptr) {
     if (MOZ_UNLIKELY(!aPoint.IsInContentNode())) {
       return EditorDOMPoint();
