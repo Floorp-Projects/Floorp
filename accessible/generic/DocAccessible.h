@@ -110,7 +110,7 @@ class DocAccessible : public HyperTextAccessible,
   void DocType(nsAString& aType) const;
 
   /**
-   * Adds an entry to mQueuedCacheUpdates indicating aAcc requires
+   * Adds an entry to queued cache updates indicating aAcc requires
    * a cache update on domain aNewDomain. If we've already queued an update
    * for aAcc, aNewDomain is or'd with the existing domain(s)
    * and the map is updated. Otherwise, the entry is simply inserted.
@@ -525,7 +525,7 @@ class DocAccessible : public HyperTextAccessible,
 
   /**
    * Called from NotificationController to process this doc's
-   * mQueuedCacheUpdates list. For each acc in the map, this function
+   * queued cache updates. For each acc in the map, this function
    * sends a cache update with its corresponding CacheDomain.
    */
   void ProcessQueuedCacheUpdates();
@@ -784,12 +784,21 @@ class DocAccessible : public HyperTextAccessible,
   // Exclusively owned by IPDL so don't manually delete it!
   DocAccessibleChild* mIPCDoc;
 
-  // A hash map between LocalAccessibles and CacheDomains, tracking
-  // cache updates that have been queued during the current tick
-  // but not yet sent. It is possible for this map to contain a reference
-  // to the document it lives on. We clear the list in Shutdown() to
-  // avoid cyclical references.
-  nsTHashMap<RefPtr<LocalAccessible>, uint64_t> mQueuedCacheUpdates;
+  // These data structures map between LocalAccessibles and CacheDomains,
+  // tracking cache updates that have been queued during the current tick but
+  // not yet sent. If there are a lot of nearby text cache updates (e.g. during
+  // a reflow), it is much more performant to process them in order because we
+  // then benefit from the layout line cursor. However, we still only want to
+  // process each LocalAccessible only once. Therefore, we use an array for
+  // ordering and a hash map to avoid duplicates, since Gecko has no ordered
+  // set data structure. The array contains pairs of LocalAccessible and cache
+  // domain. The hash map maps from LocalAccessible to the corresponding index
+  // in the array. These data structures must be kept in sync. It is possible
+  // for these to contain a reference to the document they live on. We clear
+  // them in Shutdown() to avoid cyclical references.
+  nsTArray<std::pair<RefPtr<LocalAccessible>, uint64_t>>
+      mQueuedCacheUpdatesArray;
+  nsTHashMap<LocalAccessible*, size_t> mQueuedCacheUpdatesHash;
 
   // A set of Accessibles moved during this tick. Only used in content
   // processes.
