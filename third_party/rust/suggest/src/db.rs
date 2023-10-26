@@ -126,8 +126,13 @@ impl<'a> SuggestDao<'a> {
     /// Fetches suggestions that match the given query from the database.
     pub fn fetch_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
         let (keyword_prefix, keyword_suffix) = split_keyword(&query.keyword);
+        let suggestions_limit = query.limit.unwrap_or(-1);
 
-        let (mut statement, params) = if query.providers.contains(&SuggestionProvider::Pocket) {
+        let (mut statement, params) = if query
+            .providers
+            .iter()
+            .any(|p| matches!(p, SuggestionProvider::Pocket | SuggestionProvider::Amo))
+        {
             (self.conn.prepare_cached(
                 &format!(
                     "SELECT s.id, k.rank, s.title, s.url, s.provider, NULL as confidence, NULL as keyword_suffix
@@ -138,13 +143,16 @@ impl<'a> SuggestDao<'a> {
                      UNION ALL
                      SELECT s.id, k.rank, s.title, s.url, s.provider, k.confidence, k.keyword_suffix
                      FROM suggestions s
-                     JOIN pocket_keywords k ON k.suggestion_id = s.id
-                     WHERE k.keyword_prefix = :keyword_prefix",
+                     JOIN prefix_keywords k ON k.suggestion_id = s.id
+                     WHERE k.keyword_prefix = :keyword_prefix
+                     ORDER BY s.provider
+                     LIMIT :suggestions_limit",
                     providers_to_sql_list(&query.providers),
                 ),
             )?, vec![
                 (":keyword", &query.keyword as &dyn ToSql),
                 (":keyword_prefix", &keyword_prefix as &dyn ToSql),
+                (":suggestions_limit", &suggestions_limit as &dyn ToSql),
             ])
         } else {
             (self.conn.prepare_cached(
@@ -153,11 +161,14 @@ impl<'a> SuggestDao<'a> {
                      FROM suggestions s
                      JOIN keywords k ON k.suggestion_id = s.id
                      WHERE s.provider IN ({}) AND
-                           k.keyword = :keyword",
+                           k.keyword = :keyword
+                     ORDER BY s.provider
+                     LIMIT :suggestions_limit",
                     providers_to_sql_list(&query.providers),
                 ),
             )?, vec![
                 (":keyword", &query.keyword as &dyn ToSql),
+                (":suggestions_limit", &suggestions_limit as &dyn ToSql),
             ])
         };
 
@@ -227,6 +238,7 @@ impl<'a> SuggestDao<'a> {
                         }))
                     }
                     SuggestionProvider::Amo => {
+                        let full_suffix = row.get::<_, String>("keyword_suffix")?;
                         self.conn.query_row_and_then(
                             "SELECT amo.description, amo.guid, amo.rating, amo.icon_url, amo.number_of_ratings, amo.score
                              FROM amo_custom_details amo
@@ -235,6 +247,7 @@ impl<'a> SuggestDao<'a> {
                                 ":suggestion_id": suggestion_id
                             },
                             |row| {
+                                if full_suffix.starts_with(keyword_suffix) {
                                     Ok(Some(Suggestion::Amo{
                                         title,
                                         url: raw_url,
@@ -245,13 +258,17 @@ impl<'a> SuggestDao<'a> {
                                         guid: row.get("guid")?,
                                         score: row.get("score")?,
                                     }))
+                                } else {
+                                    Ok(None)
+                                }
                             })
                     },
                     SuggestionProvider::Pocket => {
                         let confidence = row.get("confidence")?;
+                        let full_suffix = row.get::<_, String>("keyword_suffix")?;
                         let suffixes_match = match confidence {
-                            KeywordConfidence::Low => row.get::<_, String>("keyword_suffix")?.starts_with(keyword_suffix),
-                            KeywordConfidence::High => row.get::<_, String>("keyword_suffix")? == keyword_suffix,
+                            KeywordConfidence::Low => full_suffix.starts_with(keyword_suffix),
+                            KeywordConfidence::High => full_suffix == keyword_suffix,
                         };
                         if suffixes_match {
                             self.conn.query_row_and_then(
@@ -348,19 +365,23 @@ impl<'a> SuggestDao<'a> {
                 },
             )?;
             for (index, keyword) in suggestion.keywords.iter().enumerate() {
+                let (keyword_prefix, keyword_suffix) = split_keyword(keyword);
                 self.conn.execute(
-                    "INSERT INTO keywords(
-                         keyword,
+                    "INSERT INTO prefix_keywords(
+                         keyword_prefix,
+                         keyword_suffix,
                          suggestion_id,
                          rank
                      )
                      VALUES(
-                         :keyword,
+                         :keyword_prefix,
+                         :keyword_suffix,
                          :suggestion_id,
                          :rank
                      )",
                     named_params! {
-                        ":keyword": keyword,
+                        ":keyword_prefix": keyword_prefix,
+                        ":keyword_suffix": keyword_suffix,
                         ":rank": index,
                         ":suggestion_id": suggestion_id,
                     },
@@ -542,7 +563,7 @@ impl<'a> SuggestDao<'a> {
             {
                 let (keyword_prefix, keyword_suffix) = split_keyword(keyword);
                 self.conn.execute(
-                    "INSERT INTO pocket_keywords(
+                    "INSERT INTO prefix_keywords(
                              keyword_prefix,
                              keyword_suffix,
                              confidence,

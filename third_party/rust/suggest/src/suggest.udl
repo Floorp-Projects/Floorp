@@ -66,6 +66,7 @@ interface Suggestion {
 dictionary SuggestionQuery {
     string keyword;
     sequence<SuggestionProvider> providers;
+    i32? limit = null;
 };
 
 dictionary SuggestIngestionConstraints {
