@@ -910,10 +910,7 @@ var gEditItemOverlay = {
 
     // Move the item
     let containerGuid = this._folderMenuList.selectedItem.folderGuid;
-    if (
-      this._bookmarkState._originalState.parentGuid != containerGuid &&
-      this._bookmarkState._originalState.title != containerGuid
-    ) {
+    if (this._bookmarkState.parentGuid != containerGuid) {
       this._bookmarkState._parentGuidChanged(containerGuid);
 
       // Auto-show the bookmarks toolbar when adding / moving an item there.
