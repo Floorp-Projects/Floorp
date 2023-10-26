@@ -672,6 +672,9 @@ const TEST_GLOBAL = {
       dismiss: {
         record() {},
       },
+      prefChanged: {
+        record() {},
+      },
     },
     topSites: {
       pingType: {
