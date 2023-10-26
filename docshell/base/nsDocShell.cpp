@@ -10453,7 +10453,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     if (context->HasValidTransientUserGestureActivation()) {
       aLoadState->SetHasValidUserGestureActivation(true);
     }
-    aLoadState->SetTriggeringWindowId(context->Id());
+    if (!aLoadState->TriggeringWindowId()) {
+      aLoadState->SetTriggeringWindowId(context->Id());
+    }
     if (!aLoadState->TriggeringStorageAccess()) {
       Document* contextDoc = context->GetExtantDoc();
       if (contextDoc) {

@@ -108,6 +108,9 @@ already_AddRefed<nsDocShellLoadState> LocationBase::CheckURL(
   loadState->SetHasValidUserGestureActivation(
       doc->HasValidTransientUserGestureActivation());
 
+  loadState->SetTriggeringWindowId(doc->InnerWindowID());
+  loadState->SetTriggeringStorageAccess(doc->UsingStorageAccess());
+
   return loadState.forget();
 }
 

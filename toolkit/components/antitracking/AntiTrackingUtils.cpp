@@ -7,6 +7,7 @@
 #include "AntiTrackingUtils.h"
 
 #include "AntiTrackingLog.h"
+#include "HttpBaseChannel.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -28,6 +29,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsQueryObject.h"
 #include "nsRFPService.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
@@ -546,31 +548,46 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::HasStoragePermission;
   }
 
+  WindowContext* wc = bc->GetCurrentWindowContext();
+  if (!wc) {
+    return nsILoadInfo::NoStoragePermission;
+  }
+  WindowGlobalParent* wgp = wc->Canonical();
+  if (!wgp) {
+    return nsILoadInfo::NoStoragePermission;
+  }
+  nsIPrincipal* framePrincipal = wgp->DocumentPrincipal();
+  if (!framePrincipal) {
+    return nsILoadInfo::NoStoragePermission;
+  }
+
   if (policyType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
+    // For loads of framed documents, we only use storage access
+    // if the load is the result of a same-origin, self-initiated
+    // navigation of the frame.
     uint64_t targetWindowIdNoTop = bc->GetCurrentInnerWindowId();
     uint64_t triggeringWindowId;
-    loadInfo->GetTriggeringWindowId(&triggeringWindowId);
-    bool triggeringStorageAccess;
-    loadInfo->GetTriggeringStorageAccess(&triggeringStorageAccess);
-    if (targetWindowIdNoTop == triggeringWindowId && triggeringStorageAccess &&
-        trackingPrincipal->Equals(loadInfo->TriggeringPrincipal())) {
+    rv = loadInfo->GetTriggeringWindowId(&triggeringWindowId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nsILoadInfo::NoStoragePermission;
+    }
+    bool triggeringWindowHasStorageAccess;
+    rv =
+        loadInfo->GetTriggeringStorageAccess(&triggeringWindowHasStorageAccess);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return nsILoadInfo::NoStoragePermission;
+    }
+    RefPtr<net::HttpBaseChannel> httpChannel = do_QueryObject(aChannel);
+
+    if (targetWindowIdNoTop == triggeringWindowId &&
+        triggeringWindowHasStorageAccess &&
+        trackingPrincipal->Equals(framePrincipal) && httpChannel &&
+        !httpChannel->HasRedirectTaintedOrigin()) {
       return nsILoadInfo::HasStoragePermission;
     }
   } else if (!bc->IsTop()) {
     // For subframe resources, check if the document has storage access
     // and that the resource being loaded is same-site to the page.
-    WindowContext* wc = bc->GetCurrentWindowContext();
-    if (!wc) {
-      return nsILoadInfo::NoStoragePermission;
-    }
-    WindowGlobalParent* wgp = wc->Canonical();
-    if (!wgp) {
-      return nsILoadInfo::NoStoragePermission;
-    }
-    nsIPrincipal* framePrincipal = wgp->DocumentPrincipal();
-    if (!framePrincipal) {
-      return nsILoadInfo::NoStoragePermission;
-    }
     bool isThirdParty = true;
     nsresult rv = framePrincipal->IsThirdPartyURI(trackingURI, &isThirdParty);
     if (NS_SUCCEEDED(rv) && wc->GetUsingStorageAccess() && !isThirdParty) {

@@ -714,6 +714,12 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
 
     loadState->SetFirstParty(false);
 
+    Document* ownerDoc = mOwnerContent->OwnerDoc();
+    if (ownerDoc) {
+      loadState->SetTriggeringStorageAccess(ownerDoc->UsingStorageAccess());
+      loadState->SetTriggeringWindowId(ownerDoc->InnerWindowID());
+    }
+
     // If we're loading the default about:blank document in a <browser> element,
     // prevent the load from causing a process switch by explicitly overriding
     // remote type selection.
