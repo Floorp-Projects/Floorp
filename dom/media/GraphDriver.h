@@ -315,8 +315,7 @@ class GraphDriver {
    * Set the state of the driver so it can start at the right point in time,
    * after switching from another driver.
    */
-  void SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
-                GraphTime aStateComputedTime);
+  void SetState(GraphTime aIterationEnd, GraphTime aStateComputedTime);
 
   GraphInterface* Graph() const { return mGraphInterface; }
 
@@ -346,8 +345,6 @@ class GraphDriver {
   }
 
  protected:
-  // Time of the start of this graph iteration.
-  GraphTime mIterationStart = 0;
   // Time of the end of this graph iteration.
   GraphTime mIterationEnd = 0;
   // Time until which the graph has processed data.
@@ -677,7 +674,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
    * will be None. If it stopped after the graph told it to stop, or switch,
    * aState will be Stopped. Hands over state to the audio driver that may
    * iterate the graph after this has been called. */
-  void FallbackDriverStopped(GraphTime aIterationStart, GraphTime aIterationEnd,
+  void FallbackDriverStopped(GraphTime aIterationEnd,
                              GraphTime aStateComputedTime,
                              FallbackDriverState aState);
 
