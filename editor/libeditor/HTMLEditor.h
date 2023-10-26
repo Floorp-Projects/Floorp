@@ -4705,17 +4705,21 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
    *     this may return non-first paragraph state.
    */
   nsAtom* GetFirstParagraphStateAtSelection() const {
-    return mFirstParagraphState;
+    return mIsMixed && mIsInDLElement ? nsGkAtoms::dl
+                                      : mFirstParagraphState.get();
   }
 
   /**
    * If selected nodes are not in same format node nor only in no-format blocks,
    * this returns true.
    */
-  bool IsMixed() const { return mIsMixed; }
+  bool IsMixed() const { return mIsMixed && !mIsInDLElement; }
 
  private:
   using EditorType = EditorBase::EditorType;
+
+  [[nodiscard]] static bool IsFormatElement(FormatBlockMode aFormatBlockMode,
+                                            const nsIContent& aContent);
 
   /**
    * AppendDescendantFormatNodesAndFirstInlineNode() appends descendant
@@ -4747,6 +4751,7 @@ class MOZ_STACK_CLASS ParagraphStateAtSelection final {
       nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents);
 
   RefPtr<nsAtom> mFirstParagraphState;
+  bool mIsInDLElement = false;
   bool mIsMixed = false;
 };
 

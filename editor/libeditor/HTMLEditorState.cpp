@@ -442,6 +442,17 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
  * ParagraphStateAtSelection
  ****************************************************************************/
 
+// static
+bool ParagraphStateAtSelection::IsFormatElement(
+    FormatBlockMode aFormatBlockMode, const nsIContent& aContent) {
+  if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand &&
+      aContent.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
+                                   nsGkAtoms::dt)) {
+    return false;
+  }
+  return HTMLEditor::IsFormatElement(aFormatBlockMode, aContent);
+}
+
 ParagraphStateAtSelection::ParagraphStateAtSelection(
     HTMLEditor& aHTMLEditor, FormatBlockMode aFormatBlockMode,
     ErrorResult& aRv) {
@@ -500,9 +511,8 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
     OwningNonNull<nsIContent>& content = arrayOfContents[index];
     if (HTMLEditUtils::IsBlockElement(content,
                                       BlockInlineCheck::UseHTMLDefaultStyle) &&
-        (content->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                      nsGkAtoms::dt) ||
-         !HTMLEditor::IsFormatElement(aFormatBlockMode, content))) {
+        !ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
+                                                    content)) {
       // XXX This RemoveObject() call has already been commented out and
       //     the above comment explained we're trying to replace non-format
       //     block nodes in the array.  According to the following blocks and
@@ -530,15 +540,13 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
   }
 
   for (auto& content : Reversed(arrayOfContents)) {
-    nsAtom* paragraphStateOfNode = nsGkAtoms::_empty;
-    if (!content->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                      nsGkAtoms::dt) &&
-        HTMLEditor::IsFormatElement(aFormatBlockMode, content)) {
-      MOZ_ASSERT(content->NodeInfo()->NameAtom());
-      paragraphStateOfNode = content->NodeInfo()->NameAtom();
+    const Element* formatElement = nullptr;
+    if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode, content)) {
+      formatElement = content->AsElement();
     }
     // Ignore inline contents since its children have been appended
     // the list above so that we'll handle this descendants later.
+    // XXX: It's odd to ignore block children to consider the mixed state.
     else if (HTMLEditUtils::IsBlockElement(
                  content, BlockInlineCheck::UseHTMLDefaultStyle)) {
       continue;
@@ -551,23 +559,51 @@ ParagraphStateAtSelection::ParagraphStateAtSelection(
         if (parentElement == editingHostOrBodyOrDocumentElement) {
           break;
         }
-        if (!parentElement->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                                nsGkAtoms::dt) &&
-            HTMLEditor::IsFormatElement(aFormatBlockMode, *parentElement)) {
+        if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
+                                                       *parentElement)) {
           MOZ_ASSERT(parentElement->NodeInfo()->NameAtom());
-          paragraphStateOfNode = parentElement->NodeInfo()->NameAtom();
+          formatElement = parentElement;
           break;
         }
       }
     }
 
+    auto FormatElementIsInclusiveDescendantOfFormatDLElement = [&]() {
+      if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand) {
+        return false;
+      }
+      if (!formatElement) {
+        return false;
+      }
+      for (const Element* const element :
+           formatElement->InclusiveAncestorsOfType<Element>()) {
+        if (element->IsHTMLElement(nsGkAtoms::dl)) {
+          return true;
+        }
+        if (element->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
+          continue;
+        }
+        if (ParagraphStateAtSelection::IsFormatElement(aFormatBlockMode,
+                                                       *formatElement)) {
+          return false;
+        }
+      }
+      return false;
+    };
+
     // if this is the first node, we've found, remember it as the format
     if (!mFirstParagraphState) {
-      mFirstParagraphState = paragraphStateOfNode;
+      mFirstParagraphState = formatElement
+                                 ? formatElement->NodeInfo()->NameAtom()
+                                 : nsGkAtoms::_empty;
+      mIsInDLElement = FormatElementIsInclusiveDescendantOfFormatDLElement();
       continue;
     }
+    mIsInDLElement &= FormatElementIsInclusiveDescendantOfFormatDLElement();
     // else make sure it matches previously found format
-    if (mFirstParagraphState != paragraphStateOfNode) {
+    if ((!formatElement && mFirstParagraphState != nsGkAtoms::_empty) ||
+        (formatElement &&
+         !formatElement->IsHTMLElement(mFirstParagraphState))) {
       mIsMixed = true;
       break;
     }
@@ -580,10 +616,8 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
     FormatBlockMode aFormatBlockMode, dom::Element& aNonFormatBlockElement) {
   MOZ_ASSERT(HTMLEditUtils::IsBlockElement(
       aNonFormatBlockElement, BlockInlineCheck::UseHTMLDefaultStyle));
-  MOZ_ASSERT(
-      aNonFormatBlockElement.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                                 nsGkAtoms::dt) ||
-      !HTMLEditor::IsFormatElement(aFormatBlockMode, aNonFormatBlockElement));
+  MOZ_ASSERT(!ParagraphStateAtSelection::IsFormatElement(
+      aFormatBlockMode, aNonFormatBlockElement));
 
   // We only need to place any one inline inside this node onto
   // the list.  They are all the same for purposes of determining
@@ -594,10 +628,8 @@ void ParagraphStateAtSelection::AppendDescendantFormatNodesAndFirstInlineNode(
        childContent; childContent = childContent->GetNextSibling()) {
     const bool isBlock = HTMLEditUtils::IsBlockElement(
         *childContent, BlockInlineCheck::UseHTMLDefaultStyle);
-    const bool isFormat =
-        !childContent->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                           nsGkAtoms::dt) &&
-        HTMLEditor::IsFormatElement(aFormatBlockMode, *childContent);
+    const bool isFormat = ParagraphStateAtSelection::IsFormatElement(
+        aFormatBlockMode, *childContent);
     // If the child is a non-format block element, let's check its children
     // recursively.
     if (isBlock && !isFormat) {
