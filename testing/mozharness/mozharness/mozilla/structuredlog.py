@@ -6,6 +6,8 @@
 import json
 from collections import defaultdict, namedtuple
 
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
+
 from mozharness.base import log
 from mozharness.base.log import ERROR, INFO, WARNING, OutputParser
 from mozharness.mozilla.automation import (
@@ -102,6 +104,17 @@ class StructuredOutputParser(OutputParser):
         self.handler(data)
 
         action = data["action"]
+        if action == "test_start":
+            SystemResourceMonitor.begin_marker("test", data["test"])
+        elif action == "test_end":
+            SystemResourceMonitor.end_marker("test", data["test"])
+        elif action == "suite_start":
+            SystemResourceMonitor.begin_marker("suite", data["source"])
+        elif action == "suite_end":
+            SystemResourceMonitor.end_marker("suite", data["source"])
+        if line.startswith("TEST-UNEXPECTED-FAIL"):
+            SystemResourceMonitor.record_event(line)
+
         if action in ("log", "process_output"):
             if action == "log":
                 message = data["message"]
