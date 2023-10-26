@@ -6,6 +6,9 @@ job-defaults:
     worker-type: t-win10-64-1803-hw
     fetches:
         build:
+            - artifact: target.condprof.tests.tar.gz
+            - artifact: target.common.tests.tar.gz
+            - artifact: target.mochitest.tests.tar.gz
             - artifact: target.perftests.tests.tar.gz
             - artifact: target.zip
         toolchain:
