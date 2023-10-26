@@ -5,15 +5,13 @@
 
 import json
 import logging
+from functools import partial
 
-from taskgraph.util.parameterization import resolve_task_references
 from taskgraph.util.taskcluster import get_artifact, get_task_definition, list_artifacts
-
-from gecko_taskgraph.util.copy_task import copy_task
 
 from .registry import register_callback_action
 from .retrigger import retrigger_action
-from .util import add_args_to_command, create_task_from_def, fetch_graph_and_labels
+from .util import add_args_to_command, create_tasks, fetch_graph_and_labels
 
 logger = logging.getLogger(__name__)
 
@@ -30,28 +28,24 @@ def get_failures(task_id, task_definition):
     """
 
     def fix_wpt_name(test):
-        tests = [test]
         # TODO: find other cases to handle
         if ".any." in test:
-            tests = ["%s.any.js" % test.split(".any.")[0]]
+            test = "%s.any.js" % test.split(".any.")[0]
         if ".window.html" in test:
-            tests = [test.replace(".window.html", ".window.js")]
-        return tests
+            test = test.replace(".window.html", ".window.js")
+
+        if test.startswith("/_mozilla"):
+            test = "testing/web-platform/mozilla/tests" + test[len("_mozilla") :]
+        else:
+            test = "testing/web-platform/tests/" + test.strip("/")
+        # some wpt tests have params, those are not supported
+        test = test.split("?")[0]
+
+        return test
 
     # collect dirs that don't have a specific manifest
-    dirs = set()
-    tests = set()
-
-    # android reftest harness doesn't confirm failure (yet)
-    if (
-        (
-            "reftest" in task_definition["extra"]["suite"]
-            or "crashtest" in task_definition["extra"]["suite"]
-        )
-        and "web-platform" not in task_definition["extra"]["suite"]
-        and "android" in task_definition["extra"]["treeherder"]["machine"]["platform"]
-    ):
-        return {"dirs": sorted(dirs), "tests": sorted(tests)}
+    dirs = []
+    tests = []
 
     artifacts = list_artifacts(task_id)
     for artifact in artifacts:
@@ -71,7 +65,7 @@ def get_failures(task_id, task_definition):
 
             l = json.loads(line)
             if "group_results" in l.keys() and l["status"] != "OK":
-                dirs.add(l["group_results"].group())
+                dirs.append(l["group_results"].group())
 
             elif "test" in l.keys():
                 if not l["test"]:
@@ -79,6 +73,7 @@ def get_failures(task_id, task_definition):
                     continue
 
                 test_path = l["test"].split(" ")[0]
+                found_path = False
 
                 # tests with url params (wpt), will get confused here
                 if "?" not in test_path:
@@ -103,27 +98,25 @@ def get_failures(task_id, task_definition):
 
                 if "signature" in l.keys():
                     # dealing with a crash
-
+                    found_path = True
                     if "web-platform" in task_definition["extra"]["suite"]:
                         test_path = fix_wpt_name(test_path)
-                    else:
-                        test_path = [test_path]
-
-                    if test_path:
-                        tests.update(test_path)
                 else:
                     if "status" not in l and "expected" not in l:
                         continue
 
                     if l["status"] != l["expected"]:
                         if l["status"] not in l.get("known_intermittent", []):
+                            found_path = True
                             if "web-platform" in task_definition["extra"]["suite"]:
                                 test_path = fix_wpt_name(test_path)
-                            else:
-                                test_path = [test_path]
 
-                            if test_path:
-                                tests.update(test_path)
+                if found_path and test_path:
+                    fpath = test_path.replace("\\", "/")
+                    tval = {"path": fpath, "group": l["group"]}
+                    # only store one failure per test
+                    if not [t for t in tests if t["path"] == fpath]:
+                        tests.append(tval)
 
                 # only run the failing test not both test + dir
                 if l["group"] in dirs:
@@ -133,23 +126,11 @@ def get_failures(task_id, task_definition):
             if len(tests) > 10:
                 break
 
-        # turn group into dir by stripping off leafname
-        dirs = set([d.split("/")[0:-1] for d in dirs])
-
-    return {"dirs": sorted(dirs), "tests": sorted(tests)}
+    dirs = [{"path": "", "group": d} for d in list(set(dirs))]
+    return {"dirs": dirs, "tests": tests}
 
 
-def create_confirm_failure_tasks(task_definition, failures, level):
-    """
-    Create tasks to re-run the original task plus tasks to test
-    each failing test directory and individual path.
-
-    """
-    logger.info(f"Confirm Failures task:\n{json.dumps(task_definition, indent=2)}")
-
-    # Operate on a copy of the original task_definition
-    task_definition = copy_task(task_definition)
-
+def get_repeat_args(task_definition, failure_group):
     task_name = task_definition["metadata"]["name"]
     repeatable_task = False
     if (
@@ -162,79 +143,52 @@ def create_confirm_failure_tasks(task_definition, failures, level):
     ):
         repeatable_task = True
 
-    th_dict = task_definition["extra"]["treeherder"]
-    symbol = th_dict["symbol"]
+    repeat_args = ""
+    if not repeatable_task:
+        return repeat_args
 
-    suite = task_definition["extra"]["suite"]
-    if "-coverage" in suite:
-        suite = suite[: suite.index("-coverage")]
-    is_wpt = "web-platform" in suite
+    if failure_group == "dirs":
+        # execute 3 total loops
+        repeat_args = ["--repeat=2"] if repeatable_task else []
+    elif failure_group == "tests":
+        # execute 5 total loops
+        repeat_args = ["--repeat=4"] if repeatable_task else []
 
-    # command is a copy of task_definition['payload']['command'] from the original task.
-    # It is used to create the new version containing the
-    # task_definition['payload']['command'] with repeat_args which is updated every time
-    # through the failure_group loop.
+    return repeat_args
 
-    command = copy_task(task_definition["payload"]["command"])
 
-    th_dict["groupSymbol"] = th_dict["groupSymbol"] + "-cf"
-    th_dict["tier"] = 3
-    th_dict["groupName"] += " (confirm failures)"
-    task_definition["metadata"]["name"] += "-cf"
+def confirm_modifier(task, input):
+    if task.label != input["label"]:
+        return task
 
-    if repeatable_task:
-        task_definition["payload"]["maxRunTime"] = 3600 * 3
+    logger.debug(f"Modifying paths for {task.label}")
 
-    for failure_group in failures:
-        if len(failures[failure_group]) == 0:
-            continue
-        if failure_group == "dirs":
-            failure_group_suffix = "-d"
-            # execute 5 total loops
-            repeat_args = ["--repeat=4"] if repeatable_task else []
-        elif failure_group == "tests":
-            failure_group_suffix = "-t"
-            # execute 10 total loops
-            repeat_args = ["--repeat=9"] if repeatable_task else []
-        else:
-            logger.error(
-                "create_confirm_failure_tasks: Unknown failure_group {}".format(
-                    failure_group
-                )
-            )
-            continue
+    # If the original task has defined test paths
+    suite = input.get("suite")
+    test_path = input.get("test_path")
+    test_group = input.get("test_group")
+    if test_path or test_group:
+        repeat_args = input.get("repeat_args")
 
         if repeat_args:
-            task_definition["payload"]["command"] = add_args_to_command(
-                command, extra_args=repeat_args
+            task.task["payload"]["command"] = add_args_to_command(
+                task.task["payload"]["command"], extra_args=repeat_args
             )
-        else:
-            task_definition["payload"]["command"] = command
 
-        for failure_path in failures[failure_group]:
-            th_dict["symbol"] = symbol + failure_group_suffix
-            fpath = failure_path.replace("\\", "/")
-            if is_wpt:
-                if fpath.startswith("/_mozilla"):
-                    fpath = (
-                        "testing/web-platform/mozilla/tests"
-                        + fpath.split("_mozilla")[1]
-                    )
-                else:
-                    fpath = "testing/web-platform/tests" + fpath
-                # some wpt tests have params, those are not supported
-                fpath = fpath.split("?")[0]
-            task_definition["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
-                {suite: [fpath]}, sort_keys=True
-            )
-            task_definition["payload"]["env"]["MOZLOG_DUMP_ALL_TESTS"] = "1"
+        # TODO: do we need this attribute?
+        task.attributes["test_path"] = test_path
 
-            logger.info(
-                "Creating task for path {} with command {}".format(
-                    fpath, task_definition["payload"]["command"]
-                )
-            )
-            create_task_from_def(task_definition, level)
+        task.task["payload"]["env"]["MOZHARNESS_TEST_PATHS"] = json.dumps(
+            {suite: [test_group]}, sort_keys=True
+        )
+        task.task["payload"]["env"]["MOZHARNESS_CONFIRM_PATHS"] = json.dumps(
+            {suite: [test_path]}, sort_keys=True
+        )
+        task.task["payload"]["env"]["MOZLOG_DUMP_ALL_TESTS"] = "1"
+
+        task.task["metadata"]["name"] = task.label
+        task.task["tags"]["action"] = "confirm-failure"
+    return task
 
 
 @register_callback_action(
@@ -246,33 +200,67 @@ def create_confirm_failure_tasks(task_definition, failures, level):
     context=[{"kind": "test"}],
     schema={
         "type": "object",
-        "properties": {},
+        "properties": {
+            "label": {"type": "string", "description": "A task label"},
+            "suite": {"type": "string", "description": "Test suite"},
+            "test_path": {"type": "string", "description": "A full path to test"},
+            "test_group": {
+                "type": "string",
+                "description": "A full path to group name",
+            },
+            "repeat_args": {
+                "type": "string",
+                "description": "args to pass to test harness",
+            },
+        },
         "additionalProperties": False,
     },
 )
 def confirm_failures(parameters, graph_config, input, task_group_id, task_id):
-    task = get_task_definition(task_id)
+    task_definition = get_task_definition(task_id)
     decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
         parameters, graph_config
     )
 
-    pre_task = full_task_graph.tasks[task["metadata"]["name"]]
+    # create -cf label; ideally make this a common function
+    task_definition["metadata"]["name"].split("-")
+    cfname = "%s-cf" % task_definition["metadata"]["name"]
 
-    # fix up the task's dependencies, similar to how optimization would
-    # have done in the decision
-    dependencies = {
-        name: label_to_taskid[label] for name, label in pre_task.dependencies.items()
-    }
+    if cfname not in full_task_graph.tasks:
+        raise Exception(f"{cfname} was not found in the task-graph")
 
-    task_definition = resolve_task_references(
-        pre_task.label, pre_task.task, task_id, decision_task_id, dependencies
-    )
-    task_definition.setdefault("dependencies", []).extend(dependencies.values())
+    to_run = [cfname]
 
+    suite = task_definition["extra"]["suite"]
+    if "-coverage" in suite:
+        suite = suite[: suite.index("-coverage")]
     failures = get_failures(task_id, task_definition)
+
     if failures["dirs"] == [] and failures["tests"] == []:
-        logger.info("need to retrigger task as no failures found")
+        logger.info("need to retrigger task as no specific test failures found")
         retrigger_action(parameters, graph_config, input, decision_task_id, task_id)
-    else:
-        logger.info("confirm_failures: %s" % failures)
-        create_confirm_failure_tasks(task_definition, failures, parameters["level"])
+        return
+
+    # for each unique failure, create a new confirm failure job
+    for failure_group in failures:
+        for failure_path in failures[failure_group]:
+            repeat_args = get_repeat_args(task_definition, failure_group)
+
+            input = {
+                "label": cfname,
+                "suite": suite,
+                "test_path": failure_path["path"],
+                "test_group": failure_path["group"],
+                "repeat_args": repeat_args,
+            }
+
+            logger.info("confirm_failures: %s" % failures)
+            create_tasks(
+                graph_config,
+                to_run,
+                full_task_graph,
+                label_to_taskid,
+                parameters,
+                decision_task_id,
+                modifier=partial(confirm_modifier, input=input),
+            )
