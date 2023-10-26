@@ -141,6 +141,26 @@ RefPtr<FileSystemSyncAccessHandle> MakeResolution(
   return result;
 }
 
+RefPtr<FileSystemWritableFileStream> MakeResolution(
+    nsIGlobalObject* aGlobal,
+    FileSystemGetWritableFileStreamResponse&& aResponse,
+    const RefPtr<FileSystemWritableFileStream>& /* aReturns */,
+    const FileSystemEntryMetadata& aMetadata,
+    RefPtr<FileSystemManager>& aManager) {
+  auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
+
+  auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
+      properties.writableFileStream().AsChild().get());
+
+  QM_TRY_UNWRAP(RefPtr<FileSystemWritableFileStream> result,
+                FileSystemWritableFileStream::Create(
+                    aGlobal, aManager, std::move(properties.streamParams()),
+                    actor, aMetadata),
+                nullptr);
+
+  return result;
+}
+
 RefPtr<File> MakeResolution(nsIGlobalObject* aGlobal,
                             FileSystemGetFileResponse&& aResponse,
                             const RefPtr<File>& /* aResult */,
@@ -230,47 +250,6 @@ void ResolveCallback(FileSystemResolveResponse&& aResponse,
 
   // Spec says if there is no parent/child relationship, return null
   aPromise->MaybeResolve(JS::NullHandleValue);
-}
-
-// NOLINTNEXTLINE(readability-inconsistent-declaration-parameter-name)
-template <>
-void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
-                     // NOLINTNEXTLINE(performance-unnecessary-value-param)
-                     RefPtr<Promise> aPromise,
-                     RefPtr<FileSystemManager>& aManager,
-                     const FileSystemEntryMetadata& aMetadata) {
-  MOZ_ASSERT(aPromise);
-  QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
-
-  if (FileSystemGetWritableFileStreamResponse::Tnsresult == aResponse.type()) {
-    HandleFailedStatus(aResponse.get_nsresult(), aPromise);
-    return;
-  }
-
-  auto& properties = aResponse.get_FileSystemWritableFileStreamProperties();
-
-  auto* const actor = static_cast<FileSystemWritableFileStreamChild*>(
-      properties.writableFileStream().AsChild().get());
-
-  auto autoDelete = MakeScopeExit([actor = RefPtr(actor)] {
-    PFileSystemWritableFileStreamChild::Send__delete__(actor);
-  });
-
-  mozilla::ipc::RandomAccessStreamParams params =
-      std::move(properties.streamParams());
-
-  FileSystemEntryMetadata metadata = aMetadata;
-
-  autoDelete.release();
-
-  QM_TRY_UNWRAP(
-      RefPtr<FileSystemWritableFileStream> stream,
-      FileSystemWritableFileStream::Create(aPromise->GetParentObject(),
-                                           aManager, std::move(params), actor,
-                                           std::move(metadata)),
-      [aPromise](const nsresult rv) { HandleFailedStatus(rv, aPromise); });
-
-  aPromise->MaybeResolve(stream);
 }
 
 template <class TResponse, class TReturns, class... Args,
@@ -467,8 +446,9 @@ void FileSystemRequestHandler::GetWritable(RefPtr<FileSystemManager>& aManager,
   aManager->BeginRequest(
       [request = FileSystemGetWritableRequest(aFile.entryId(), aKeepData),
        onResolve =
-           SelectResolveCallback<FileSystemGetWritableFileStreamResponse, void>(
-               aPromise, aManager, aFile),
+           SelectResolveCallback<FileSystemGetWritableFileStreamResponse,
+                                 RefPtr<FileSystemWritableFileStream>>(
+               aPromise, aFile, aManager),
        onReject = GetRejectCallback(aPromise)](const auto& actor) mutable {
         actor->SendGetWritable(request, std::move(onResolve),
                                std::move(onReject));

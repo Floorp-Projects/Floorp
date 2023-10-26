@@ -182,7 +182,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
     already_AddRefed<TaskQueue> aTaskQueue,
-    fs::FileSystemEntryMetadata&& aMetadata)
+    const fs::FileSystemEntryMetadata& aMetadata)
     : WritableStream(aGlobal, HoldDropJSObjectsCaller::Explicit),
       mManager(aManager),
       mActor(std::move(aActor)),
@@ -224,7 +224,7 @@ FileSystemWritableFileStream::Create(
     RefPtr<FileSystemManager>& aManager,
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
-    fs::FileSystemEntryMetadata&& aMetadata) {
+    const fs::FileSystemEntryMetadata& aMetadata) {
   MOZ_ASSERT(aGlobal);
 
   QM_TRY_UNWRAP(auto streamTransportService,
@@ -247,7 +247,7 @@ FileSystemWritableFileStream::Create(
   RefPtr<FileSystemWritableFileStream> stream =
       new FileSystemWritableFileStream(
           aGlobal, aManager, std::move(aStreamParams), std::move(aActor),
-          taskQueue.forget(), std::move(aMetadata));
+          taskQueue.forget(), aMetadata);
 
   auto autoClose = MakeScopeExit([stream] {
     stream->mCloseHandler->Close();
