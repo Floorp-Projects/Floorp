@@ -5,11 +5,11 @@
 @import url("chrome://global/skin/in-content/common.css");
 
 :host {
-  --background-term-a: #1BB861;
-  --background-term-b: #0D70DF;
-  --background-term-c: #FFB811;
-  --background-term-d: #F87919;
-  --background-term-f: #D51235;
+  --background-term-a: #B3FFE3;
+  --background-term-b: #80EBFF;
+  --background-term-c: #FFEA80;
+  --background-term-d: #FFB587;
+  --background-term-f: #FF848B;
   --in-content-box-border-color: rgba(0, 0, 0, 0.15);
   --inner-border: 1px solid var(--in-content-box-border-color);
   --letter-grade-width: 1.5rem;
@@ -68,6 +68,7 @@
   box-sizing: border-box;
   display: flex;
   font-size: 0.87rem;
+  font-weight: var(--font-weight-default);
   margin: 0;
   padding: 0.125rem 0.5rem;
 }
@@ -79,17 +80,15 @@
 }
 
 :host([letter="A"]) #letter-grade-description {
-  background-color: color-mix(in srgb, var(--background-term-a) 15%, #FFF);
+  background-color: rgba(231, 255, 246, 1);
 }
 
 :host([letter="B"]) #letter-grade-term {
   background-color: var(--background-term-b);
-  /* Override dark font */
-  color: #FFF;
 }
 
 :host([letter="B"]) #letter-grade-description {
-  background-color: color-mix(in srgb, var(--background-term-b) 15%, #FFF);
+  background-color: rgba(222, 250, 255, 1);
 }
 
 :host([letter="C"]) #letter-grade-term {
@@ -97,7 +96,7 @@
 }
 
 :host([letter="C"]) #letter-grade-description {
-  background-color: color-mix(in srgb, var(--background-term-c) 15%, #FFF);
+  background-color: rgba(255, 249, 218, 1);
 }
 
 :host([letter="D"]) #letter-grade-term {
@@ -105,17 +104,15 @@
 }
 
 :host([letter="D"]) #letter-grade-description {
-  background-color: color-mix(in srgb, var(--background-term-d) 15%, #FFF);
+  background-color: rgba(252, 230, 213, 1);
 }
 
 :host([letter="F"]) #letter-grade-term {
   background-color: var(--background-term-f);
-  /* Override dark font */
-  color: #FFF;
 }
 
 :host([letter="F"]) #letter-grade-description {
-  background-color: color-mix(in srgb, var(--background-term-f) 15%, #FFF);
+  background-color: rgba(255, 228, 230, 1);
 }
 
 @media (prefers-contrast) {
