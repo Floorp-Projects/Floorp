@@ -27,6 +27,7 @@ pub type SuggestApiResult<T> = std::result::Result<T, error::SuggestApiError>;
 pub struct SuggestionQuery {
     pub keyword: String,
     pub providers: Vec<SuggestionProvider>,
+    pub limit: Option<i32>,
 }
 
 uniffi::include_scaffolding!("suggest");
