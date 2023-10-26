@@ -87,6 +87,7 @@ Structure:
           UptimeTS: <duration>, // Seconds since Firefox was started, this can have a fractional component
           User32BeforeBlocklist: "1", // Windows-only, present only if user32.dll was loaded before the DLL blocklist has been initialized
           WindowsErrorReporting: "1", // Windows-only, present only if the crash was intercepted by the WER runtime exception module
+          WindowsFileDialogErrorCode: <error code>, // Windows-only, optional, present only if file-dialog IPC failed
           WindowsPackageFamilyName: <string>, // Windows-only, a string containing the "Package Family Name" of Firefox, if installed through an MSIX package
         },
         hasCrashEnvironment: bool
@@ -260,3 +261,4 @@ Version History
 - Firefox 96: Added WindowsPackageFamilyName (`bug 1738375 <https://bugzilla.mozilla.org/show_bug.cgi?id=1738375>`_).
 - Firefox 103: Removed ContainsMemoryReport (`bug 1776279 <https://bugzilla.mozilla.org/show_bug.cgi?id=1776279>`_).
 - Firefox 107: Added UtilityActorsName (`bug 1788596 <https://bugzilla.mozilla.org/show_bug.cgi?id=1788596>`_).
+- Firefox 119: Added WindowsFileDialogErrorCode (`bug 1837079 <https://bugzilla.mozilla.org/show_bug.cgi?id=1837079>`_)
