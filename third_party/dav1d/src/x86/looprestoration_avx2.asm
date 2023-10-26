@@ -31,11 +31,11 @@
 SECTION_RODATA 32
 
 wiener_l_shuf: db  4,  4,  4,  4,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-pb_0to31:      db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-               db 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+               db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
 wiener_shufA:  db  1,  7,  2,  8,  3,  9,  4, 10,  5, 11,  6, 12,  7, 13,  8, 14
 wiener_shufB:  db  2,  3,  3,  4,  4,  5,  5,  6,  6,  7,  7,  8,  8,  9,  9, 10
 wiener_shufC:  db  6,  5,  7,  6,  8,  7,  9,  8, 10,  9, 11, 10, 12, 11, 13, 12
+sgr_l_shuf:    db  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
 sgr_r_ext:     times 16 db 1
                times 16 db 9
 
@@ -64,7 +64,6 @@ pb_m5:         times 4 db -5
 pb_3:          times 4 db 3
 pw_5_6:        dw 5, 6
 
-sgr_l_shuf:    db  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
 sgr_shuf:      db  1, -1,  2, -1,  3, -1,  4, -1,  5, -1,  6, -1,  7, -1,  8, -1
                db  9, -1, 10, -1, 11, -1, 12, -1
 
@@ -76,6 +75,8 @@ pd_34816:      dd 34816
 pd_m4096:      dd -4096
 pd_0xf00801c7: dd 0xf00801c7
 pd_0xf00800a4: dd 0xf00800a4
+
+cextern pb_0to63
 
 SECTION .text
 
@@ -192,7 +193,7 @@ cglobal wiener_filter7_8bpc, 4, 15, 16, -384*12-16, dst, stride, left, lpf, \
     vpbroadcastd    m0, [pb_3]
     vpbroadcastd    m1, [pb_m5]
     vpbroadcastb    m2, xm2
-    movu            m3, [pb_0to31]
+    mova            m3, [pb_0to63]
     psubb           m0, m2
     psubb           m1, m2
     pminub          m0, m3
@@ -826,7 +827,7 @@ cglobal sgr_filter_5x5_8bpc, 4, 13, 16, 400*24+16, dst, stride, left, lpf, \
     mova            m0, [sgr_r_ext]
     vpbroadcastb    m2, xm2
     psubb           m0, m2
-    pminub          m0, [pb_0to31]
+    pminub          m0, [pb_0to63]
     pshufb          m5, m0
     ret
 .h: ; horizontal boxsum

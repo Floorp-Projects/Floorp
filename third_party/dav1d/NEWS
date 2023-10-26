@@ -1,3 +1,16 @@
+Changes for 1.3.0 'Tundra Peregrine Falcon (Calidus)':
+------------------------------------------------------
+
+1.3.0 is a medium release of dav1d, focus on new APIs and memory usage reduction.
+
+- Reduce memory usage in numerous places
+- ABI break in Dav1dSequenceHeader, Dav1dFrameHeader, Dav1dContentLightLevel structures
+- new API function to check the API version: dav1d_version_api()
+- Rewrite of the SGR functions for ARM64 to be faster
+- NEON implemetation of save_tmvs for ARM32 and ARM64
+- x86 palette DSP for pal_idx_finish function
+
+
 Changes for 1.2.1 'Arctic Peregrine Falcon':
 -------------------------------------------
 

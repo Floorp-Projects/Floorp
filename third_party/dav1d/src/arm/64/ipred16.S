@@ -3664,6 +3664,7 @@ function ipred_z3_fill_padding_neon, export=0
         br              x9
 
 2:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v31.s}[0], [x0],  x1
         subs            w4,  w4,  #4
         st1             {v31.s}[0], [x13], x1
@@ -3682,6 +3683,7 @@ function ipred_z3_fill_padding_neon, export=0
         b               1b
 
 4:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v31.4h}, [x0],  x1
         subs            w4,  w4,  #4
         st1             {v31.4h}, [x13], x1
@@ -3703,6 +3705,7 @@ function ipred_z3_fill_padding_neon, export=0
 16:
 32:
 64:
+        AARCH64_VALID_JUMP_TARGET
         st1             {v31.8h}, [x0],  x1
         subs            w4,  w4,  #4
         st1             {v31.8h}, [x13], x1

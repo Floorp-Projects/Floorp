@@ -303,7 +303,7 @@ COLD int dav1d_mem_pool_init(const enum AllocationType type,
             *ppool = pool;
             return 0;
         }
-        free(pool);
+        dav1d_free(pool);
     }
     *ppool = NULL;
     return DAV1D_ERR(ENOMEM);

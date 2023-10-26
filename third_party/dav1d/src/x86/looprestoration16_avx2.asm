@@ -32,15 +32,15 @@ SECTION_RODATA 32
 
 sgr_lshuf3:    db  0,  1,  0,  1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11
 sgr_lshuf5:    db  0,  1,  0,  1,  0,  1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9
+wiener_lshuf5: db  4,  5,  4,  5,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
+               db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
+wiener_lshuf7: db  8,  9,  8,  9,  8,  9,  8,  9,  8,  9, 10, 11, 12, 13, 14, 15
+               db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
 wiener_shufA:  db  2,  3,  4,  5,  4,  5,  6,  7,  6,  7,  8,  9,  8,  9, 10, 11
 wiener_shufB:  db  6,  7,  4,  5,  8,  9,  6,  7, 10, 11,  8,  9, 12, 13, 10, 11
 wiener_shufC:  db  6,  7,  8,  9,  8,  9, 10, 11, 10, 11, 12, 13, 12, 13, 14, 15
 wiener_shufD:  db  2,  3, -1, -1,  4,  5, -1, -1,  6,  7, -1, -1,  8,  9, -1, -1
 wiener_shufE:  db  0,  1,  8,  9,  2,  3, 10, 11,  4,  5, 12, 13,  6,  7, 14, 15
-wiener_lshuf5: db  4,  5,  4,  5,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-wiener_lshuf7: db  8,  9,  8,  9,  8,  9,  8,  9,  8,  9, 10, 11, 12, 13, 14, 15
-pb_0to31:      db  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-               db 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
 
 wiener_hshift: dw 4, 4, 1, 1
 wiener_vshift: dw 1024, 1024, 4096, 4096
@@ -62,6 +62,7 @@ pd_0xf00801c7: dd 0xf00801c7
 
 %define pw_256 sgr_lshuf5
 
+cextern pb_0to63
 cextern sgr_x_by_x_avx2
 
 SECTION .text
@@ -182,7 +183,7 @@ cglobal wiener_filter7_16bpc, 4, 15, 16, -384*12-16, dst, stride, left, lpf, \
 .extend_right:
     movd           xm1, r10d
     vpbroadcastd    m0, [pb_6_7]
-    movu            m2, [pb_0to31]
+    mova            m2, [pb_0to63]
     vpbroadcastb    m1, xm1
     psubb           m0, m1
     pminub          m0, m2
@@ -406,9 +407,8 @@ cglobal wiener_filter5_16bpc, 4, 13, 16, 384*8+16, dst, stride, left, lpf, \
     vpbroadcastd    m0, [base+wiener_hshift+t3*4]
     vpbroadcastd    m9, [base+wiener_round+t3*4]
     vpbroadcastd   m10, [base+wiener_vshift+t3*4]
-    movu          xm15, [wiener_lshuf5]
+    mova           m15, [wiener_lshuf5]
     pmullw         m11, m0
-    vinserti128    m15, [pb_0to31], 1
     pmullw         m12, m0
     test         edgeb, 4 ; LR_HAVE_TOP
     jz .no_top
@@ -486,7 +486,7 @@ cglobal wiener_filter5_16bpc, 4, 13, 16, 384*8+16, dst, stride, left, lpf, \
     vpbroadcastb    m2, xm2
     psubb           m0, m2
     psubb           m1, m2
-    movu            m2, [pb_0to31]
+    mova            m2, [pb_0to63]
     pminub          m0, m2
     pminub          m1, m2
     pshufb          m3, m0

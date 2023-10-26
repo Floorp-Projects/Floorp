@@ -202,27 +202,27 @@ function save_tmvs_neon, export=1
         ret
 
 10:
-        AARCH64_VALID_JUMP_TARGET
+        AARCH64_VALID_CALL_TARGET
         add             x16, x3,  #4
         st1             {v0.s}[0], [x3]
         st1             {v0.b}[4], [x16]
         add             x3,  x3,  #5
         ret
 20:
-        AARCH64_VALID_JUMP_TARGET
+        AARCH64_VALID_CALL_TARGET
         add             x16, x3,  #8
         st1             {v0.d}[0], [x3]
         st1             {v0.h}[4], [x16]
         add             x3,  x3,  #2*5
         ret
 40:
-        AARCH64_VALID_JUMP_TARGET
+        AARCH64_VALID_CALL_TARGET
         st1             {v0.16b}, [x3]
         str             s1, [x3, #16]
         add             x3,  x3,  #4*5
         ret
 80:
-        AARCH64_VALID_JUMP_TARGET
+        AARCH64_VALID_CALL_TARGET
         // This writes 6 full entries plus 2 extra bytes
         st1             {v0.16b, v1.16b}, [x3]
         // Write the last few, overlapping with the first write.
@@ -230,7 +230,7 @@ function save_tmvs_neon, export=1
         add             x3,  x3,  #8*5
         ret
 160:
-        AARCH64_VALID_JUMP_TARGET
+        AARCH64_VALID_CALL_TARGET
         add             x16, x3,  #6*5
         add             x17, x3,  #12*5
         // This writes 6 full entries plus 2 extra bytes
