@@ -569,18 +569,6 @@ xul|menulist[image]::part(icon) {
   margin-inline-end: 5px;
 }
 
-xul|menulist::part(dropmarker) {
-  appearance: none;
-  margin-inline-end: 4px;
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-  align-items: center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
 xul|menulist > xul|menupopup {
   appearance: none;
 
