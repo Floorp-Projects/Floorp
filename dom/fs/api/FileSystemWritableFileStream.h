@@ -109,6 +109,10 @@ class FileSystemWritableFileStream final : public WritableStream {
   void Write(const T& aData, const Maybe<uint64_t> aPosition,
              const RefPtr<Promise>& aPromise);
 
+  void WriteImpl(nsCOMPtr<nsIInputStream> aInputStream,
+                 const Maybe<uint64_t> aPosition,
+                 const RefPtr<Promise>& aPromise);
+
   void Seek(uint64_t aPosition, const RefPtr<Promise>& aPromise);
 
   void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);

@@ -27,6 +27,7 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WritableStreamDefaultController.h"
+#include "mozilla/dom/fs/TargetPtrHolder.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ipc/RandomAccessStreamUtils.h"
@@ -76,78 +77,6 @@ class WritableFileStreamUnderlyingSinkAlgorithms final
 
   RefPtr<FileSystemWritableFileStream> mStream;
 };
-
-// TODO: Refactor this function, see Bug 1804614
-void WriteImpl(RefPtr<FileSystemWritableFileStream> aStream,
-               const RefPtr<nsISerialEventTarget>& aTaskQueue,
-               nsCOMPtr<nsIInputStream> aInputStream,
-               RefPtr<fs::FileSystemThreadSafeStreamOwner>& aOutStreamOwner,
-               const Maybe<uint64_t> aPosition,
-               const RefPtr<Promise>& aPromise) {
-  auto command = aStream->CreateCommand();
-
-  InvokeAsync(
-      aTaskQueue, __func__,
-      [aTaskQueue, inputStream = std::move(aInputStream), aOutStreamOwner,
-       aPosition]() {
-        if (aPosition.isSome()) {
-          LOG(("%p: Seeking to %" PRIu64, aOutStreamOwner.get(),
-               aPosition.value()));
-
-          QM_TRY(MOZ_TO_RESULT(aOutStreamOwner->Seek(aPosition.value())),
-                 CreateAndRejectInt64Promise);
-        }
-
-        nsCOMPtr<nsIOutputStream> streamSink = aOutStreamOwner->OutputStream();
-
-        auto written = std::make_shared<int64_t>(0);
-        auto writingProgress = [written](uint32_t aDelta) {
-          *written += static_cast<int64_t>(aDelta);
-        };
-
-        auto promiseHolder = MakeUnique<MozPromiseHolder<Int64Promise>>();
-        RefPtr<Int64Promise> promise = promiseHolder->Ensure(__func__);
-
-        auto writingCompletion =
-            [written,
-             promiseHolder = std::move(promiseHolder)](nsresult aStatus) {
-              if (NS_SUCCEEDED(aStatus)) {
-                promiseHolder->ResolveIfExists(*written, __func__);
-                return;
-              }
-
-              promiseHolder->RejectIfExists(aStatus, __func__);
-            };
-
-        QM_TRY(MOZ_TO_RESULT(fs::AsyncCopy(
-                   inputStream, streamSink, aTaskQueue,
-                   nsAsyncCopyMode::NS_ASYNCCOPY_VIA_READSEGMENTS,
-                   /* aCloseSource */ true, /* aCloseSink */ false,
-                   std::move(writingProgress), std::move(writingCompletion))),
-               CreateAndRejectInt64Promise);
-
-        return promise;
-      })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [command,
-           aPromise](const Int64Promise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve()) {
-              aPromise->MaybeResolve(aValue.ResolveValue());
-              return;
-            }
-
-            if (IsFileNotFoundError(aValue.RejectValue())) {
-              aPromise->MaybeRejectWithNotFoundError("File not found");
-            } else if (aValue.RejectValue() == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-              aPromise->MaybeRejectWithQuotaExceededError("Quota exceeded");
-            } else {
-              aPromise->MaybeReject(aValue.RejectValue());
-            }
-
-            aPromise->MaybeReject(aValue.RejectValue());
-          });
-}
 
 }  // namespace
 
@@ -777,8 +706,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
                                                NS_ASSIGNMENT_COPY)),
            rejectAndReturn);
 
-    WriteImpl(this, mTaskQueue, std::move(inputStream), mStreamOwner, aPosition,
-              aPromise);
+    WriteImpl(std::move(inputStream), aPosition, aPromise);
     return;
   }
 
@@ -793,8 +721,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
            })),
            rejectAndReturn);
 
-    WriteImpl(this, mTaskQueue, std::move(inputStream), mStreamOwner, aPosition,
-              aPromise);
+    WriteImpl(std::move(inputStream), aPosition, aPromise);
     return;
   }
 
@@ -813,8 +740,77 @@ void FileSystemWritableFileStream::Write(const T& aData,
                                                 std::move(dataString))),
          rejectAndReturn);
 
-  WriteImpl(this, mTaskQueue, std::move(inputStream), mStreamOwner, aPosition,
-            aPromise);
+  WriteImpl(std::move(inputStream), aPosition, aPromise);
+}
+
+void FileSystemWritableFileStream::WriteImpl(
+    nsCOMPtr<nsIInputStream> aInputStream, const Maybe<uint64_t> aPosition,
+    const RefPtr<Promise>& aPromise) {
+  auto command = CreateCommand();
+
+  InvokeAsync(
+      mTaskQueue, __func__,
+      [selfHolder = fs::TargetPtrHolder(this),
+       inputStream = std::move(aInputStream), aPosition]() {
+        if (aPosition.isSome()) {
+          LOG(("%p: Seeking to %" PRIu64, selfHolder->mStreamOwner.get(),
+               aPosition.value()));
+
+          QM_TRY(
+              MOZ_TO_RESULT(selfHolder->mStreamOwner->Seek(aPosition.value())),
+              CreateAndRejectInt64Promise);
+        }
+
+        nsCOMPtr<nsIOutputStream> streamSink =
+            selfHolder->mStreamOwner->OutputStream();
+
+        auto written = std::make_shared<int64_t>(0);
+        auto writingProgress = [written](uint32_t aDelta) {
+          *written += static_cast<int64_t>(aDelta);
+        };
+
+        auto promiseHolder = MakeUnique<MozPromiseHolder<Int64Promise>>();
+        RefPtr<Int64Promise> promise = promiseHolder->Ensure(__func__);
+
+        auto writingCompletion =
+            [written,
+             promiseHolder = std::move(promiseHolder)](nsresult aStatus) {
+              if (NS_SUCCEEDED(aStatus)) {
+                promiseHolder->ResolveIfExists(*written, __func__);
+                return;
+              }
+
+              promiseHolder->RejectIfExists(aStatus, __func__);
+            };
+
+        QM_TRY(MOZ_TO_RESULT(fs::AsyncCopy(
+                   inputStream, streamSink, selfHolder->mTaskQueue,
+                   nsAsyncCopyMode::NS_ASYNCCOPY_VIA_READSEGMENTS,
+                   /* aCloseSource */ true, /* aCloseSink */ false,
+                   std::move(writingProgress), std::move(writingCompletion))),
+               CreateAndRejectInt64Promise);
+
+        return promise;
+      })
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [command,
+           aPromise](const Int64Promise::ResolveOrRejectValue& aValue) {
+            if (aValue.IsResolve()) {
+              aPromise->MaybeResolve(aValue.ResolveValue());
+              return;
+            }
+
+            if (IsFileNotFoundError(aValue.RejectValue())) {
+              aPromise->MaybeRejectWithNotFoundError("File not found");
+            } else if (aValue.RejectValue() == NS_ERROR_FILE_NO_DEVICE_SPACE) {
+              aPromise->MaybeRejectWithQuotaExceededError("Quota exceeded");
+            } else {
+              aPromise->MaybeReject(aValue.RejectValue());
+            }
+
+            aPromise->MaybeReject(aValue.RejectValue());
+          });
 }
 
 void FileSystemWritableFileStream::Seek(uint64_t aPosition,
