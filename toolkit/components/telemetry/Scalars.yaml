@@ -2657,9 +2657,10 @@ media:
   audio_process_per_codec_name:
     bug_numbers:
       - 1804249
+      - 1861305
     description: >
       Process where audio decoding happens and codec name
-    expires: "122"
+    expires: "132"
     kind: uint
     keyed: true
     notification_emails:
