@@ -53,7 +53,8 @@ class FileSystemWritableFileStream final : public WritableStream {
       RefPtr<FileSystemManager>& aManager,
       RefPtr<FileSystemWritableFileStreamChild> aActor,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
-      fs::FileSystemEntryMetadata&& aMetadata);
+      fs::FileSystemEntryMetadata&& aMetadata,
+      RefPtr<StrongWorkerRef> aBuildWorkerRef);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileSystemWritableFileStream,
@@ -73,8 +74,6 @@ class FileSystemWritableFileStream final : public WritableStream {
   bool IsClosed() const;
 
   [[nodiscard]] RefPtr<BoolPromise> BeginClose();
-
-  void SetWorkerRef(RefPtr<StrongWorkerRef>&& aWorkerRef);
 
   already_AddRefed<Promise> Write(JSContext* aCx, JS::Handle<JS::Value> aChunk,
                                   ErrorResult& aError);
