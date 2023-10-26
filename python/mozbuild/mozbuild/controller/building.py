@@ -1677,6 +1677,7 @@ class BuildDriver(MozbuildObject):
             command.extend(options)
 
         if buildstatus_messages:
+            append_env["MOZ_CONFIGURE_BUILDSTATUS"] = "1"
             line_handler("BUILDSTATUS TIERS configure")
             line_handler("BUILDSTATUS TIER_START configure")
 
