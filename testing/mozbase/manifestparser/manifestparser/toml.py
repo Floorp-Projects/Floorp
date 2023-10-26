@@ -6,7 +6,9 @@ import io
 import os
 import re
 
-import toml
+from tomlkit import parse
+from tomlkit.exceptions import ParseError
+from tomlkit.items import Array
 
 from .ini import combine_fields
 
@@ -51,8 +53,8 @@ def read_toml(
 
     # Use tomlkit to parse the file contents
     try:
-        manifest = toml.loads(contents)
-    except toml.TomlDecodeError as pe:
+        manifest = parse(contents)
+    except ParseError as pe:
         raise IOError(f"Error parsing TOML manifest file {filename}: {pe}")
 
     # handle each section of the manifest
@@ -65,7 +67,7 @@ def read_toml(
                     val = "true"
                 else:
                     val = "false"
-            elif isinstance(val, list):
+            elif isinstance(val, Array):
                 new_vals = ""
                 for v in val:
                     if len(new_vals) > 0:
