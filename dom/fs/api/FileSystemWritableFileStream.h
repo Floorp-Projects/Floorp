@@ -44,11 +44,7 @@ class FileSystemThreadSafeStreamOwner;
 
 class FileSystemWritableFileStream final : public WritableStream {
  public:
-  /* IsExclusive is true to enable move */
-  using CreatePromise =
-      MozPromise<already_AddRefed<FileSystemWritableFileStream>, nsresult,
-                 /* IsExclusive */ true>;
-  static RefPtr<CreatePromise> Create(
+  static Result<RefPtr<FileSystemWritableFileStream>, nsresult> Create(
       const nsCOMPtr<nsIGlobalObject>& aGlobal,
       RefPtr<FileSystemManager>& aManager,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,

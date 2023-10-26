@@ -239,7 +239,6 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
                      RefPtr<Promise> aPromise,
                      RefPtr<FileSystemManager>& aManager,
                      const FileSystemEntryMetadata& aMetadata) {
-  using CreatePromise = FileSystemWritableFileStream::CreatePromise;
   MOZ_ASSERT(aPromise);
   QM_TRY(OkIf(Promise::PromiseState::Pending == aPromise->State()), QM_VOID);
 
@@ -280,27 +279,14 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
 
   autoDelete.release();
 
-  FileSystemWritableFileStream::Create(
-      aPromise->GetParentObject(), aManager, std::move(params), actor,
-      std::move(metadata), std::move(buildWorkerRef))
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [aPromise](CreatePromise::ResolveOrRejectValue&& aValue) {
-               if (aValue.IsResolve()) {
-                 RefPtr<FileSystemWritableFileStream> stream =
-                     aValue.ResolveValue();
+  QM_TRY_UNWRAP(
+      RefPtr<FileSystemWritableFileStream> stream,
+      FileSystemWritableFileStream::Create(
+          aPromise->GetParentObject(), aManager, std::move(params), actor,
+          std::move(metadata), std::move(buildWorkerRef)),
+      [aPromise](const nsresult rv) { HandleFailedStatus(rv, aPromise); });
 
-                 aPromise->MaybeResolve(stream);
-                 return;
-               }
-
-               if (aValue.IsReject()) {
-                 aPromise->MaybeReject(aValue.RejectValue());
-                 return;
-               }
-
-               aPromise->MaybeRejectWithUnknownError(
-                   "Promise chain resolution is empty");
-             });
+  aPromise->MaybeResolve(stream);
 }
 
 template <class TResponse, class TReturns, class... Args,
