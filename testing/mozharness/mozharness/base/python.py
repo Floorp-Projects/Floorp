@@ -771,9 +771,6 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
         super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
 
         self.register_virtualenv_module("psutil>=5.9.0", method="pip", optional=True)
-        self.register_virtualenv_module(
-            "mozsystemmonitor==1.0.1", method="pip", optional=True
-        )
         self.register_virtualenv_module("jsonschema==2.5.1", method="pip")
         self._resource_monitor = None
 
