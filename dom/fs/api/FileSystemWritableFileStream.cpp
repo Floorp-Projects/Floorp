@@ -224,8 +224,7 @@ FileSystemWritableFileStream::Create(
     RefPtr<FileSystemManager>& aManager,
     mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
     RefPtr<FileSystemWritableFileStreamChild> aActor,
-    fs::FileSystemEntryMetadata&& aMetadata,
-    RefPtr<StrongWorkerRef> aBuildWorkerRef) {
+    fs::FileSystemEntryMetadata&& aMetadata) {
   MOZ_ASSERT(aGlobal);
 
   QM_TRY_UNWRAP(auto streamTransportService,
@@ -255,18 +254,26 @@ FileSystemWritableFileStream::Create(
     stream->mActor->SendClose();
   });
 
-  RefPtr<StrongWorkerRef> workerRef;
-  if (aBuildWorkerRef) {
-    workerRef = StrongWorkerRef::Create(
-        aBuildWorkerRef->Private(), "FileSystemWritableFileStream", [stream]() {
-          if (stream->IsOpen()) {
-            // We don't need the promise, we just
-            // begin the closing process.
-            Unused << stream->BeginClose();
-          }
-        });
-    QM_TRY(MOZ_TO_RESULT(workerRef));
-  }
+  QM_TRY_UNWRAP(
+      RefPtr<StrongWorkerRef> workerRef,
+      ([stream]() -> Result<RefPtr<StrongWorkerRef>, nsresult> {
+        WorkerPrivate* const workerPrivate = GetCurrentThreadWorkerPrivate();
+        if (!workerPrivate) {
+          return RefPtr<StrongWorkerRef>();
+        }
+
+        RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+            workerPrivate, "FileSystemWritableFileStream::Create", [stream]() {
+              if (stream->IsOpen()) {
+                // We don't need the promise, we just
+                // begin the closing process.
+                Unused << stream->BeginClose();
+              }
+            });
+        QM_TRY(MOZ_TO_RESULT(workerRef));
+
+        return workerRef;
+      }()));
 
   // Step 3 - 5
   auto algorithms =
