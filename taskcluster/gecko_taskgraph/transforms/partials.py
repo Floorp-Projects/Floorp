@@ -55,7 +55,7 @@ def identify_desired_signing_keys(project, product):
             return "nightly"
         return "release"
     if (
-        project in ["mozilla-release", "comm-beta"]
+        project in ["mozilla-release", "comm-release", "comm-beta"]
         or project.startswith("mozilla-esr")
         or project.startswith("comm-esr")
     ):
