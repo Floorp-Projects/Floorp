@@ -27,6 +27,13 @@ const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 // Exported for tests.
 export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
+export const TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
+  // Units are in milliseconds.
+  base: 3600000,
+  minAdjust: 60000,
+  maxAdjust: 600000,
+  maxTriesPerSession: 2,
+};
 
 const impressionIdsWithoutEngagementsSet = new Set();
 
@@ -1661,6 +1668,22 @@ class DomainToCategoriesMap {
   #onSettingsSync = null;
 
   /**
+   * When downloading an attachment from Remote Settings fails, this will
+   * contain a timer which will eventually attempt to retry downloading
+   * attachments.
+   */
+  #downloadTimer = null;
+
+  /**
+   * Number of times this has attempted to try another download. Will reset
+   * if the categorization preference has been toggled, or a sync event has
+   * been detected.
+   *
+   * @type {number}
+   */
+  #downloadRetries = 0;
+
+  /**
    * Runs at application startup with startup idle tasks. Creates a listener
    * to changes of the SERP categorization preference. Additionally, if the
    * SERP categorization preference is enabled, it creates a Remote Settings
@@ -1685,7 +1708,11 @@ class DomainToCategoriesMap {
   uninit() {
     lazy.logConsole.debug("Un-initialize domain-to-categories map.");
     if (this.#init) {
-      this.#clearClientAndMap();
+      if (this.#map) {
+        this.#clearClientAndMap();
+      } else {
+        this.#cancelAndNullifyTimer();
+      }
       this.#init = false;
       Services.prefs.removeObserver(CATEGORIZATION_PREF, this);
     }
@@ -1699,6 +1726,7 @@ class DomainToCategoriesMap {
       if (lazy.serpEventTelemetryCategorization) {
         this.#setupClientAndMap();
       } else {
+        this.#cancelAndNullifyTimer();
         this.#clearClientAndMap();
       }
     }
@@ -1787,6 +1815,7 @@ class DomainToCategoriesMap {
       this.#client.off("sync", this.#onSettingsSync);
       this.#client = null;
       this.#onSettingsSync = null;
+      this.#downloadRetries = 0;
     }
 
     if (this.#map) {
@@ -1835,6 +1864,11 @@ class DomainToCategoriesMap {
       toDelete.map(record => this.#client.attachments.deleteDownloaded(record))
     );
 
+    // In case a user encountered network failures in the past and kept their
+    // session on, this will ensure the next sync event will retry downloading
+    // again in case there's a new download error.
+    this.#downloadRetries = 0;
+
     this.#clearAndPopulateMap(data?.current);
   }
 
@@ -1854,6 +1888,7 @@ class DomainToCategoriesMap {
     // object will be created.
     this.#map = null;
     this.#version = null;
+    this.#cancelAndNullifyTimer();
 
     if (!records?.length) {
       lazy.logConsole.debug("No records found for domain-to-categories map.");
@@ -1868,6 +1903,7 @@ class DomainToCategoriesMap {
         result = await this.#client.attachments.download(record);
       } catch (ex) {
         lazy.logConsole.error("Could not download file:", ex);
+        this.#createTimerToPopulateMap();
         return;
       }
       fileContents.push(result.buffer);
@@ -1915,6 +1951,48 @@ class DomainToCategoriesMap {
       });
     }
   }
+
+  #cancelAndNullifyTimer() {
+    if (this.#downloadTimer) {
+      lazy.logConsole.debug("Cancel and nullify download timer.");
+      this.#downloadTimer.cancel();
+      this.#downloadTimer = null;
+    }
+  }
+
+  #createTimerToPopulateMap() {
+    if (
+      this.#downloadRetries >=
+      TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxTriesPerSession
+    ) {
+      return;
+    }
+    if (!this.#downloadTimer) {
+      this.#downloadTimer = Cc["@mozilla.org/timer;1"].createInstance(
+        Ci.nsITimer
+      );
+    }
+    lazy.logConsole.debug("Create timer to retry downloading attachments.");
+    let delay =
+      TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.base +
+      randomInteger(
+        TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.minAdjust,
+        TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS.maxAdjust
+      );
+    this.#downloadTimer.initWithCallback(
+      async () => {
+        this.#downloadRetries += 1;
+        let records = await this.#client.get();
+        this.#clearAndPopulateMap(records);
+      },
+      delay,
+      Ci.nsITimer.TYPE_ONE_SHOT
+    );
+  }
+}
+
+function randomInteger(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 export var SearchSERPDomainToCategoriesMap = new DomainToCategoriesMap();
