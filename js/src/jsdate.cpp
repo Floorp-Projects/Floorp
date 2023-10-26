@@ -498,6 +498,11 @@ JS_PUBLIC_API void JS::SetReduceMicrosecondTimePrecisionCallback(
   sReduceMicrosecondTimePrecisionCallback = callback;
 }
 
+JS_PUBLIC_API JS::ReduceMicrosecondTimePrecisionCallback
+JS::GetReduceMicrosecondTimePrecisionCallback() {
+  return sReduceMicrosecondTimePrecisionCallback;
+}
+
 JS_PUBLIC_API void JS::SetTimeResolutionUsec(uint32_t resolution, bool jitter) {
   sResolutionUsec = resolution;
   sJitter = jitter;
@@ -1856,7 +1861,9 @@ static ClippedTime NowAsMillis(JSContext* cx) {
   double now = PRMJ_Now();
   bool clampAndJitter = cx->realm()->behaviors().clampAndJitterTime();
   if (clampAndJitter && sReduceMicrosecondTimePrecisionCallback) {
-    now = sReduceMicrosecondTimePrecisionCallback(now, cx);
+    now = sReduceMicrosecondTimePrecisionCallback(
+        now, cx->realm()->behaviors().reduceTimerPrecisionCallerType().value(),
+        cx);
   } else if (clampAndJitter && sResolutionUsec) {
     double clamped = floor(now / sResolutionUsec) * sResolutionUsec;
 
