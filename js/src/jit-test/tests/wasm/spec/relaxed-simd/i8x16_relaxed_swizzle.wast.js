@@ -15,7 +15,7 @@
 
 // ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:3
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:4
 let $0 = instantiate(`(module
     (func (export "i8x16.relaxed_swizzle") (param v128 v128) (result v128) (i8x16.relaxed_swizzle (local.get 0) (local.get 1)))
 
@@ -25,7 +25,7 @@ let $0 = instantiate(`(module
             (i8x16.relaxed_swizzle (local.get 0) (local.get 1))))
 )`);
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:12
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:13
 assert_return(
   () => invoke($0, `i8x16.relaxed_swizzle`, [
     i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
@@ -39,7 +39,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:19
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:20
 assert_return(
   () => invoke($0, `i8x16.relaxed_swizzle`, [
     i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
@@ -53,7 +53,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:26
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:27
 assert_return(
   () => invoke($0, `i8x16.relaxed_swizzle`, [
     i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
@@ -67,7 +67,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:35
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:36
 assert_return(
   () => invoke($0, `i8x16.relaxed_swizzle_cmp`, [
     i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),
@@ -78,7 +78,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:41
+// ./test/core/relaxed-simd/i8x16_relaxed_swizzle.wast:42
 assert_return(
   () => invoke($0, `i8x16.relaxed_swizzle_cmp`, [
     i8x16([0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf]),

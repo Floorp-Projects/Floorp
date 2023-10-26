@@ -61,11 +61,7 @@ branch = "main"
 parent = "spec"
 # Skip in jit-test when it's not enabled
 directive = "; --wasm-exceptions; skip-if: !wasmExceptionsEnabled()"
-excluded_tests = [
-  # This gets included due to divergence between the proposal repo and the
-  # upstream spec, it can be removed when the repo is rebased.
-  "global.wast"
-]
+excluded_tests = []
 
 [[repos]]
 name = "memory64"
@@ -114,12 +110,7 @@ url = "https://github.com/WebAssembly/extended-const"
 branch = "main"
 parent = "spec"
 directive = "; --wasm-extended-const; --no-wasm-gc; skip-if: !wasmExtendedConstEnabled()"
-excluded_tests = [
-  # Changed order of operands
-  "relaxed_fma_fms.wast",
-  # Different results
-  "i32x4_relaxed_trunc.wast",
-]
+excluded_tests = []
 
 [[repos]]
 name = "tail-call"

@@ -78,7 +78,12 @@ let $0 = instantiate(`(module
       (catch_all (i32.const 1)))
   )
 
-  (func (export "delegate-to-caller")
+  (func (export "delegate-to-caller-trivial")
+    (try
+      (do (throw $$e0))
+      (delegate 0)))
+
+  (func (export "delegate-to-caller-skipping")
     (try (do (try (do (throw $$e0)) (delegate 1))) (catch_all))
   )
 
@@ -108,69 +113,93 @@ let $0 = instantiate(`(module
       (catch $$e1 (i32.const 2))
     )
   )
+
+  (func (export "delegate-correct-targets") (result i32)
+    (try (result i32)
+      (do (try $$l3
+            (do (try $$l2
+                  (do (try $$l1
+                        (do (try $$l0
+                              (do (try
+                                    (do (throw $$e0))
+                                    (delegate $$l1)))
+                              (catch_all unreachable)))
+                        (delegate $$l3)))
+                  (catch_all unreachable)))
+            (catch_all (try
+                         (do (throw $$e0))
+                         (delegate $$l3))))
+          unreachable)
+      (catch_all (i32.const 1))))
 )`);
 
-// ./test/core/try_delegate.wast:97
+// ./test/core/try_delegate.wast:150
 assert_return(() => invoke($0, `delegate-no-throw`, []), [value("i32", 1)]);
 
-// ./test/core/try_delegate.wast:99
+// ./test/core/try_delegate.wast:152
 assert_return(() => invoke($0, `delegate-throw`, [0]), [value("i32", 1)]);
 
-// ./test/core/try_delegate.wast:100
+// ./test/core/try_delegate.wast:153
 assert_return(() => invoke($0, `delegate-throw`, [1]), [value("i32", 2)]);
 
-// ./test/core/try_delegate.wast:102
+// ./test/core/try_delegate.wast:155
 assert_exception(() => invoke($0, `delegate-throw-no-catch`, []));
 
-// ./test/core/try_delegate.wast:104
+// ./test/core/try_delegate.wast:157
 assert_return(() => invoke($0, `delegate-merge`, [1, 0]), [value("i32", 2)]);
 
-// ./test/core/try_delegate.wast:105
+// ./test/core/try_delegate.wast:158
 assert_exception(() => invoke($0, `delegate-merge`, [2, 0]));
 
-// ./test/core/try_delegate.wast:106
+// ./test/core/try_delegate.wast:159
 assert_return(() => invoke($0, `delegate-merge`, [0, 1]), [value("i32", 2)]);
 
-// ./test/core/try_delegate.wast:107
+// ./test/core/try_delegate.wast:160
 assert_exception(() => invoke($0, `delegate-merge`, [0, 2]));
 
-// ./test/core/try_delegate.wast:108
+// ./test/core/try_delegate.wast:161
 assert_return(() => invoke($0, `delegate-merge`, [0, 0]), [value("i32", 1)]);
 
-// ./test/core/try_delegate.wast:110
+// ./test/core/try_delegate.wast:163
 assert_return(() => invoke($0, `delegate-skip`, []), [value("i32", 3)]);
 
-// ./test/core/try_delegate.wast:112
+// ./test/core/try_delegate.wast:165
 assert_return(() => invoke($0, `delegate-to-block`, []), [value("i32", 1)]);
 
-// ./test/core/try_delegate.wast:113
+// ./test/core/try_delegate.wast:166
 assert_return(() => invoke($0, `delegate-to-catch`, []), [value("i32", 1)]);
 
-// ./test/core/try_delegate.wast:115
-assert_exception(() => invoke($0, `delegate-to-caller`, []));
+// ./test/core/try_delegate.wast:168
+assert_exception(() => invoke($0, `delegate-to-caller-trivial`, []));
 
-// ./test/core/try_delegate.wast:117
+// ./test/core/try_delegate.wast:169
+assert_exception(() => invoke($0, `delegate-to-caller-skipping`, []));
+
+// ./test/core/try_delegate.wast:171
+assert_return(() => invoke($0, `delegate-correct-targets`, []), [value("i32", 1)]);
+
+// ./test/core/try_delegate.wast:176
 assert_malformed(() => instantiate(`(module (func (delegate 0))) `), `unexpected token`);
 
-// ./test/core/try_delegate.wast:122
+// ./test/core/try_delegate.wast:181
 assert_malformed(
   () => instantiate(`(module (tag $$e) (func (try (do) (catch $$e) (delegate 0)))) `),
   `unexpected token`,
 );
 
-// ./test/core/try_delegate.wast:127
+// ./test/core/try_delegate.wast:186
 assert_malformed(
   () => instantiate(`(module (func (try (do) (catch_all) (delegate 0)))) `),
   `unexpected token`,
 );
 
-// ./test/core/try_delegate.wast:132
+// ./test/core/try_delegate.wast:191
 assert_malformed(
   () => instantiate(`(module (func (try (do) (delegate) (delegate 0)))) `),
   `unexpected token`,
 );
 
-// ./test/core/try_delegate.wast:137
+// ./test/core/try_delegate.wast:196
 assert_invalid(
   () => instantiate(`(module (func (try (do) (delegate 1))))`),
   `unknown label`,
