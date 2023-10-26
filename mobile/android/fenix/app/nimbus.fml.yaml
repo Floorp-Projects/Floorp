@@ -243,7 +243,10 @@ features:
           {
             "feature-ui": 0,
             "feature-setting-value": 0,
-            "feature-setting-value-pbm": 0
+            "feature-setting-value-pbm": 0,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 0,
+            "feature-setting-global-rules-sub-frames": 0
           }
     defaults:
       - channel: developer
@@ -251,7 +254,10 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "feature-setting-value-pbm": 0
+            "feature-setting-value-pbm": 0,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 0,
+            "feature-setting-global-rules-sub-frames": 0
           }
         }
       - channel: nightly
@@ -259,7 +265,10 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "feature-setting-value-pbm": 0
+            "feature-setting-value-pbm": 0,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 0,
+            "feature-setting-global-rules-sub-frames": 0
           }
         }
   unified-search:
@@ -459,6 +468,16 @@ types:
         feature-setting-value-pbm:
           description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
             0 for setting the value to disabled, 1  for enabling the setting with the value reject_all.
+        feature-setting-detect-only:
+          description: An integer either 0 or 1 indicating if cookie banner detect only mode
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+        feature-setting-global-rules:
+          description: An integer either 0 or 1 indicating if cookie banner global rules
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+        feature-setting-global-rules-sub-frames:
+          description: An integer either 0 or 1 indicating if cookie banner global rules sub-frames
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+
     OnboardingPanel:
       description: The types of onboarding panels in the onboarding page
       variants:
