@@ -20,6 +20,7 @@ import subprocess
 import sys
 
 import six
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 
 import mozharness
 from mozharness.base.config import parse_config_file
@@ -111,6 +112,20 @@ class TalosOutputParser(OutputParser):
             self.critical(" %s" % line)
             self.update_worst_log_and_tbpl_levels(CRITICAL, TBPL_RETRY)
             return  # skip base parse_single_line
+
+        if line.startswith("SUITE-START "):
+            SystemResourceMonitor.begin_marker("suite", "")
+        elif line.startswith("SUITE-END "):
+            SystemResourceMonitor.end_marker("suite", "")
+        elif line.startswith("TEST-"):
+            part = line.split(" | ")
+            if part[0] == "TEST-START":
+                SystemResourceMonitor.begin_marker("test", part[1])
+            elif part[0] in ("TEST-OK", "TEST-UNEXPECTED-ERROR"):
+                SystemResourceMonitor.end_marker("test", part[1])
+        elif line.startswith("Running cycle ") or line.startswith("PROCESS-CRASH "):
+            SystemResourceMonitor.record_event(line)
+
         super(TalosOutputParser, self).parse_single_line(line)
 
 

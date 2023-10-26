@@ -8,6 +8,8 @@
 import os
 import re
 
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
+
 from mozharness.base.log import CRITICAL, ERROR, INFO, WARNING, OutputParser
 from mozharness.mozilla.automation import (
     TBPL_FAILURE,
@@ -186,6 +188,18 @@ class DesktopUnittestOutputParser(OutputParser):
                 TBPL_RETRY, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
             )
             return  # skip base parse_single_line
+        if line.startswith("SUITE-START "):
+            SystemResourceMonitor.begin_marker("suite", "")
+        elif line.startswith("SUITE-END "):
+            SystemResourceMonitor.end_marker("suite", "")
+        elif line.startswith("TEST-"):
+            part = line.split(" | ")
+            if part[0] == "TEST-START":
+                SystemResourceMonitor.begin_marker("test", part[1])
+            elif part[0] in ("TEST-PASS", "TEST-SKIP", "TEST-TIMEOUT"):
+                SystemResourceMonitor.end_marker("test", part[1])
+            else:
+                SystemResourceMonitor.record_event(line)
         super(DesktopUnittestOutputParser, self).parse_single_line(line)
 
     def evaluate_parser(self, return_code, success_codes=None, previous_summary=None):

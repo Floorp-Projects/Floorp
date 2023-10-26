@@ -16,6 +16,7 @@ import sys
 import tempfile
 from shutil import copyfile, rmtree
 
+from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from six import string_types
 
 import mozharness
@@ -1441,4 +1442,6 @@ class RaptorOutputParser(OutputParser):
                 TBPL_RETRY, self.tbpl_status, levels=TBPL_WORST_LEVEL_TUPLE
             )
             return  # skip base parse_single_line
+        if line.startswith("raptor-browsertime Info: "):
+            SystemResourceMonitor.record_event(line[len("raptor-browsertime Info: ") :])
         super(RaptorOutputParser, self).parse_single_line(line)
