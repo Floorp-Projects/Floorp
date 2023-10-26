@@ -142,7 +142,7 @@ class NotificationController final : public EventQueue,
     MOZ_ASSERT(aTextNode->GetPrimaryFrame()->StyleVisibility()->IsVisible(),
                "A text node is not visible");
 
-    mTextHash.Insert(aTextNode);
+    mTextArray.AppendElement(aTextNode);
 
     ScheduleProcessing();
   }
@@ -340,8 +340,11 @@ class NotificationController final : public EventQueue,
 
   /**
    * Pending accessible tree update notifications for rendered text changes.
+   * When there are a lot of nearby text insertions (e.g. during a reflow), it
+   * is much more performant to process them in order because we then benefit
+   * from the layout line cursor. Therefore, we use an array here.
    */
-  nsTHashSet<nsCOMPtrHashKey<nsIContent>> mTextHash;
+  nsTArray<nsCOMPtr<nsIContent>> mTextArray;
 
   /**
    * Other notifications like DOM events. Don't make this an AutoTArray; we

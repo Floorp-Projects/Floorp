@@ -95,7 +95,7 @@ void NotificationController::Shutdown() {
   mDocument = nullptr;
   mPresShell = nullptr;
 
-  mTextHash.Clear();
+  mTextArray.Clear();
   mContentInsertions.Clear();
   mNotifications.Clear();
   mFocusEvent = nullptr;
@@ -465,7 +465,7 @@ bool NotificationController::IsUpdatePending() {
   return mPresShell->IsLayoutFlushObserver() ||
          mObservingState == eRefreshProcessingForUpdate || WaitingForParent() ||
          mContentInsertions.Count() != 0 || mNotifications.Length() != 0 ||
-         mTextHash.Count() != 0 ||
+         !mTextArray.IsEmpty() ||
          !mDocument->HasLoadState(DocAccessible::eTreeConstructed);
 }
 
@@ -735,8 +735,14 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
 
   mDocument->ProcessPendingUpdates();
 
-  // Process rendered text change notifications.
-  for (nsIContent* textNode : mTextHash) {
+  // Process rendered text change notifications. Even though we want to process
+  // them in the order in which they were queued, we still want to avoid
+  // duplicates.
+  nsTHashSet<nsIContent*> textHash;
+  for (nsIContent* textNode : mTextArray) {
+    if (!textHash.EnsureInserted(textNode)) {
+      continue;  // Already processed.
+    }
     LocalAccessible* textAcc = mDocument->GetAccessible(textNode);
 
     // If the text node is not in tree or doesn't have a frame, or placed in
@@ -825,7 +831,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       }
     }
   }
-  mTextHash.Clear();
+  textHash.Clear();
+  mTextArray.Clear();
 
   // Process content inserted notifications to update the tree.
   // Processing an insertion can indirectly run script (e.g. querying a XUL
@@ -1008,7 +1015,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // Stop further processing if there are no new notifications of any kind or
   // events and document load is processed.
   if (mContentInsertions.Count() == 0 && mNotifications.IsEmpty() &&
-      !mFocusEvent && mEvents.IsEmpty() && mTextHash.Count() == 0 &&
+      !mFocusEvent && mEvents.IsEmpty() && mTextArray.IsEmpty() &&
       mHangingChildDocuments.IsEmpty() &&
       mDocument->HasLoadState(DocAccessible::eCompletelyLoaded) &&
       mPresShell->RemoveRefreshObserver(this, FlushType::Display)) {
