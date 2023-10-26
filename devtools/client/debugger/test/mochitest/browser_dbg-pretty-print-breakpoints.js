@@ -81,7 +81,7 @@ add_task(async function () {
   await selectSource(dbg, "pretty.js");
 
   info("Add breakpoint to pretty.js (generated source)");
-  await addBreakpoint(dbg, "pretty.js", 4, 7);
+  await addBreakpoint(dbg, "pretty.js", 4, 8);
 
   await prettyPrint(dbg);
 
@@ -121,6 +121,6 @@ async function assertBreakpointsInNonPrettyAndPrettySources(dbg) {
 
   info("Assert pause and display on the correct line in the minified source");
   const minifiedSource = findSource(dbg, "pretty.js");
-  await assertPausedAtSourceAndLine(dbg, minifiedSource.id, 4, 7);
+  await assertPausedAtSourceAndLine(dbg, minifiedSource.id, 4, 8);
   await assertBreakpoint(dbg, 4);
 }

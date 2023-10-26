@@ -67,18 +67,13 @@ export function fromEditorLine(sourceId, line, sourceIsWasm) {
 }
 
 export function toEditorPosition(location) {
+  // Note that Spidermonkey, Debugger frontend and CodeMirror are all consistant regarding column
+  // and are 0-based. But only CodeMirror consider the line to be 0-based while the two others
+  // consider lines to be 1-based.
   return {
     line: toEditorLine(location.source.id, location.line),
     column:
-      isWasm(location.source.id) || !location.column ? 0 : location.column,
-  };
-}
-
-export function toEditorRange(sourceId, location) {
-  const { start, end } = location;
-  return {
-    start: toEditorPosition({ ...start, sourceId }),
-    end: toEditorPosition({ ...end, sourceId }),
+      isWasm(location.source.id) || (!location.column ? 0 : location.column),
   };
 }
 

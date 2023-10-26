@@ -42,11 +42,11 @@ function testForOf(dbg) {
     dbg,
     "webpack3-babel6",
     "for-of",
-    { line: 5, column: 4 },
+    { line: 5, column: 5 },
     [
       {
         line: 5,
-        column: 7,
+        column: 4,
         expression: "doThing",
         result: "doThing(arg)",
       },
@@ -58,7 +58,7 @@ function testForOf(dbg) {
       },
       {
         line: 8,
-        column: 16,
+        column: 12,
         expression: "doThing",
         result: "doThing(arg)",
       },
@@ -71,7 +71,7 @@ function testShadowing(dbg) {
     dbg,
     "webpack3-babel6",
     "shadowed-vars",
-    { line: 18, column: 6 },
+    { line: 18, column: 7 },
     [
       // These aren't what the user would expect, but we test them anyway since
       // they reflect what this actually returns. These shadowed bindings read
@@ -79,37 +79,37 @@ function testShadowing(dbg) {
       // actual value is different.
       {
         line: 2,
-        column: 9,
+        column: 10,
         expression: "aVar",
         result: '"var3"',
       },
       {
         line: 3,
-        column: 9,
+        column: 10,
         expression: "aLet",
         result: '"let3"',
       },
       {
         line: 4,
-        column: 11,
+        column: 12,
         expression: "aConst",
         result: '"const3"',
       },
       {
         line: 10,
-        column: 11,
+        column: 12,
         expression: "aVar",
         result: '"var3"',
       },
       {
         line: 11,
-        column: 11,
+        column: 12,
         expression: "aLet",
         result: '"let3"',
       },
       {
         line: 12,
-        column: 13,
+        column: 14,
         expression: "aConst",
         result: '"const3"',
       },
@@ -117,19 +117,19 @@ function testShadowing(dbg) {
       // These actually result in the values the user would expect.
       {
         line: 14,
-        column: 13,
+        column: 14,
         expression: "aVar",
         result: '"var3"',
       },
       {
         line: 15,
-        column: 13,
+        column: 14,
         expression: "aLet",
         result: '"let3"',
       },
       {
         line: 16,
-        column: 13,
+        column: 14,
         expression: "aConst",
         result: '"const3"',
       },
@@ -142,35 +142,35 @@ function testImportedBindings(dbg) {
     dbg,
     "webpack3-babel6",
     "esmodules-cjs",
-    { line: 20, column: 2 },
+    { line: 20, column: 3 },
     [
       {
         line: 20,
-        column: 16,
+        column: 17,
         expression: "aDefault",
         result: '"a-default"',
       },
       {
         line: 21,
-        column: 16,
+        column: 17,
         expression: "anAliased",
         result: '"an-original"',
       },
       {
         line: 22,
-        column: 16,
+        column: 17,
         expression: "aNamed",
         result: '"a-named"',
       },
       {
         line: 23,
-        column: 16,
+        column: 17,
         expression: "anotherNamed",
         result: '"a-named"',
       },
       {
         line: 24,
-        column: 16,
+        column: 17,
         expression: "aNamespace",
         fields: [
           ["aNamed", '"a-named"'],
@@ -179,25 +179,25 @@ function testImportedBindings(dbg) {
       },
       {
         line: 29,
-        column: 20,
+        column: 21,
         expression: "aDefault2",
         result: '"a-default2"',
       },
       {
         line: 30,
-        column: 20,
+        column: 21,
         expression: "anAliased2",
         result: '"an-original2"',
       },
       {
         line: 31,
-        column: 20,
+        column: 21,
         expression: "aNamed2",
         result: '"a-named2"',
       },
       {
         line: 32,
-        column: 20,
+        column: 21,
         expression: "anotherNamed2",
         result: '"a-named2"',
       },

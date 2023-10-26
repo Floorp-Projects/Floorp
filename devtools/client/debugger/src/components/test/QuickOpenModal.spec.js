@@ -309,7 +309,7 @@ describe("QuickOpenModal", () => {
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(props.selectSpecificLocation).toHaveBeenCalledWith({
-        column: 12,
+        column: 11,
         line: 34,
         source: {
           id: "foo",
@@ -336,7 +336,7 @@ describe("QuickOpenModal", () => {
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(props.selectSpecificLocation).toHaveBeenCalledWith({
-        column: 12,
+        column: 11,
         line: 34,
         source: {
           id: sourceId,
@@ -507,7 +507,7 @@ describe("QuickOpenModal", () => {
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
       expect(props.selectSpecificLocation).toHaveBeenCalledWith({
-        column: 4,
+        column: 3,
         line: 3,
         source: { id },
         sourceActorId: undefined,

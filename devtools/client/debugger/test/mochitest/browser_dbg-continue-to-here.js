@@ -19,7 +19,7 @@ add_task(async function () {
     dbg,
     findSource(dbg, "pause-points.js").id,
     31,
-    4
+    5
   );
   await resume(dbg);
 
@@ -33,7 +33,7 @@ add_task(async function () {
     dbg,
     findSource(dbg, "pause-points.js").id,
     31,
-    4
+    5
   );
   await resume(dbg);
 });

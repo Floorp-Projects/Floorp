@@ -15,7 +15,7 @@ add_task(async function () {
     dbg,
     "webpack3-babel6",
     "eval-maps",
-    { line: 14, column: 4 },
+    { line: 14, column: 5 },
     ["one === 1", "two === 4", "three === 5"]
   );
 
@@ -23,7 +23,7 @@ add_task(async function () {
     dbg,
     "webpack3-babel6",
     "esmodules-cjs",
-    { line: 18, column: 2 },
+    { line: 18, column: 3 },
     [
       `aDefault === "a-default"`,
       `anAliased === "an-original"`,
@@ -41,7 +41,7 @@ add_task(async function () {
     dbg,
     "webpack3-babel6",
     "shadowed-vars",
-    { line: 18, column: 6 },
+    { line: 18, column: 7 },
     [`aVar === "var3"`, `aLet === "let3"`, `aConst === "const3"`]
   );
 
@@ -49,7 +49,7 @@ add_task(async function () {
     dbg,
     "webpack3-babel6",
     "babel-classes",
-    { line: 8, column: 16 },
+    { line: 8, column: 17 },
     [`this.hasOwnProperty("bound")`]
   );
 });

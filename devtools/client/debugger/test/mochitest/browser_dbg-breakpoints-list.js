@@ -50,7 +50,7 @@ add_task(async function testBreakpointsListForMultipleTargets() {
   );
   is(
     breakpointItems[0].textContent,
-    "func();5:17",
+    "func();5:18",
     "The info displayed for the 1st breakpoint is correct"
   );
 
@@ -66,7 +66,7 @@ add_task(async function testBreakpointsListForMultipleTargets() {
   );
   is(
     breakpointItems[1].textContent,
-    "return x + y;3:4",
+    "return x + y;3:5",
     "The info displayed for the 2nd breakpoint is correct"
   );
 

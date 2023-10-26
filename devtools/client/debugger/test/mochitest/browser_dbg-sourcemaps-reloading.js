@@ -24,8 +24,8 @@ add_task(async function () {
   );
 
   await addBreakpoint(dbg, entrySrc, 5);
-  await addBreakpoint(dbg, entrySrc, 15, 0);
-  await disableBreakpoint(dbg, entrySrc, 15, 0);
+  await addBreakpoint(dbg, entrySrc, 15, 1);
+  await disableBreakpoint(dbg, entrySrc, 15, 1);
 
   // Test reloading the debugger
   const onReloaded = reload(dbg, "opts.js");

@@ -25,7 +25,7 @@ add_task(async function () {
   // We have to remove the first breakpoint, set on the first worker.
   // All the workers use the same source.
   // The first worker is loaded on the html page load.
-  await removeBreakpoint(dbg, workerSource.id, 1, 12);
+  await removeBreakpoint(dbg, workerSource.id, 1, 13);
   await resume(dbg);
 
   // Make sure that suspending activity in the worker when attaching does not
@@ -36,5 +36,5 @@ add_task(async function () {
 
   // We should be paused in the message listener in simple-worker.js
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
-  await removeBreakpoint(dbg, workerSource.id, 10, 2);
+  await removeBreakpoint(dbg, workerSource.id, 10, 3);
 });

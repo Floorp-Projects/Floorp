@@ -16,12 +16,12 @@ add_task(async function () {
     "preview-getter.js"
   );
 
-  await loadAndAddBreakpoint(dbg, "preview-getter.js", 5, 4);
+  await loadAndAddBreakpoint(dbg, "preview-getter.js", 5, 5);
   invokeInTab("funcA");
   await waitForPaused(dbg);
 
   info("Hovers over 'this' token to display the preview.");
-  const { tokenEl } = await tryHovering(dbg, 5, 8, "previewPopup");
+  const { tokenEl } = await tryHovering(dbg, 5, 5, "previewPopup");
 
   info("Wait for properties to be loaded");
   await waitUntil(
