@@ -10,6 +10,7 @@
 #include "nsHyphenationManager.h"
 #include "nsHyphenator.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/LineBreaker.h"  // for LineBreaker::ComputeBreakPositions
 #include "mozilla/intl/Locale.h"
@@ -571,8 +572,24 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
   if (mCurrentWordLanguage && mCurrentWordLanguage != aHyphenationLanguage) {
     mCurrentWordContainsMixedLang = true;
     mScriptIsChineseOrJapanese = false;
-  } else {
-    if (aHyphenationLanguage && !mCurrentWordLanguage) {
+    return;
+  }
+
+  if (aHyphenationLanguage && !mCurrentWordLanguage) {
+    static mozilla::StaticRefPtr<nsAtom> sLastHyphenationLanguage;
+    static bool sLastScriptIsChineseOrJapanese = false;
+    static bool sInit = false;
+
+    if (!sInit) {
+      mozilla::ClearOnShutdown(&sLastHyphenationLanguage);
+      sInit = true;
+    }
+
+    if (sLastHyphenationLanguage == aHyphenationLanguage) {
+      MOZ_ASSERT(nsAtomString(sLastHyphenationLanguage)
+                     .Equals(nsAtomString(aHyphenationLanguage)));
+      mScriptIsChineseOrJapanese = sLastScriptIsChineseOrJapanese;
+    } else {
       Locale loc;
       auto result =
           LocaleParser::TryParse(nsAtomCString(aHyphenationLanguage), loc);
@@ -586,9 +603,12 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
       mScriptIsChineseOrJapanese =
           loc.Script().EqualTo("Hans") || loc.Script().EqualTo("Hant") ||
           loc.Script().EqualTo("Jpan") || loc.Script().EqualTo("Hrkt");
+
+      sLastHyphenationLanguage = aHyphenationLanguage;
+      sLastScriptIsChineseOrJapanese = mScriptIsChineseOrJapanese;
     }
-    mCurrentWordLanguage = aHyphenationLanguage;
   }
+  mCurrentWordLanguage = aHyphenationLanguage;
 }
 
 nsresult nsLineBreaker::AppendInvisibleWhitespace(uint32_t aFlags) {
