@@ -63,7 +63,7 @@ dropmarker {
   :host(:not([native])) & {
     display: flex;
     appearance: none;
-    list-style-image: url(chrome://global/skin/icons/arrow-down-12.svg);
+    content: url(chrome://global/skin/icons/arrow-down-12.svg);
     -moz-context-properties: fill;
     fill: currentColor;
   }
