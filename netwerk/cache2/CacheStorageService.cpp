@@ -1344,10 +1344,12 @@ CacheStorageService::Notify(nsITimer* aTimer) {
 #endif
     mPurgeTimer = nullptr;
 
-    nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod("net::CacheStorageService::PurgeOverMemoryLimit",
-                          this, &CacheStorageService::PurgeOverMemoryLimit);
-    Dispatch(event);
+    if (!mShutdown) {
+      nsCOMPtr<nsIRunnable> event =
+          NewRunnableMethod("net::CacheStorageService::PurgeOverMemoryLimit",
+                            this, &CacheStorageService::PurgeOverMemoryLimit);
+      Dispatch(event);
+    }
   }
 
   return NS_OK;
