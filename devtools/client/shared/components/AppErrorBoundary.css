@@ -11,6 +11,7 @@
   display: flex;
   flex-direction: column;
   font-family: inherit;
+  font-size: 16px;
   margin: 0 0 2rem;
   overflow-y: scroll;
   padding: 1rem 3rem;
@@ -21,7 +22,7 @@
 /* "Has crashed" header */
 .app-error-panel .error-panel-header {
   align-self: center;
-  font-size: 22px;
+  font-size: 1.5em;
   font-weight: 300;
 }
 
@@ -31,7 +32,7 @@
   background-color: var(--blue-60);
   outline: none;
   color: white;
-  font-size: 15px;
+  font-size: 1em;
   font-weight: 400;
   margin-bottom: 14.74px;
   padding: 0.75rem;
@@ -53,7 +54,7 @@
   background-color: var(--theme-body-emphasized-background);
   border: 1px solid var(--theme-toolbar-separator);
   border-block-end: 0;
-  font-size: 17px;
+  font-size: 1.2em;
   font-weight: 500;
   margin: 0;
   padding: 2rem;
@@ -79,7 +80,7 @@
 
 /* Instructions to reopen the toolbox */
 .app-error-panel .error-panel-reload-info {
-  font-size: 15px;
+  font-size: 1em;
   font-weight: 400;
   margin: 2rem 0 1rem;
 }
