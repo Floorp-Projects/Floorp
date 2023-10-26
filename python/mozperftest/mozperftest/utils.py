@@ -243,13 +243,18 @@ def install_requirements_file(
     # is required in CI because pip installs in an area that is not in
     # the search path.
     venv_site_lib = str(Path(virtualenv_manager.bin_path, "..", "lib").resolve())
-    venv_site_packages = str(
-        Path(
+    venv_site_packages = Path(
+        venv_site_lib,
+        f"python{sys.version_info.major}.{sys.version_info.minor}",
+        "site-packages",
+    )
+    if not venv_site_packages.exists():
+        venv_site_packages = Path(
             venv_site_lib,
-            f"python{sys.version_info.major}.{sys.version_info.minor}",
             "site-packages",
         )
-    )
+
+    venv_site_packages = str(venv_site_packages)
     if venv_site_packages not in sys.path and ON_TRY:
         sys.path.insert(0, venv_site_packages)
 
