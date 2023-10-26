@@ -408,8 +408,8 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
   if (mCloseHandler->TestAndSetClosing()) {
     Finish()
         ->Then(mTaskQueue, __func__,
-               [streamOwner = mStreamOwner]() mutable {
-                 streamOwner->Close();
+               [selfHolder = fs::TargetPtrHolder(this)]() mutable {
+                 selfHolder->mStreamOwner->Close();
 
                  return BoolPromise::CreateAndResolve(true, __func__);
                })
@@ -822,8 +822,8 @@ void FileSystemWritableFileStream::Seek(uint64_t aPosition,
   auto command = CreateCommand();
 
   InvokeAsync(mTaskQueue, __func__,
-              [aPosition, streamOwner = mStreamOwner]() mutable {
-                QM_TRY(MOZ_TO_RESULT(streamOwner->Seek(aPosition)),
+              [selfHolder = fs::TargetPtrHolder(this), aPosition]() mutable {
+                QM_TRY(MOZ_TO_RESULT(selfHolder->mStreamOwner->Seek(aPosition)),
                        CreateAndRejectBoolPromise);
 
                 return BoolPromise::CreateAndResolve(true, __func__);
@@ -852,8 +852,8 @@ void FileSystemWritableFileStream::Truncate(uint64_t aSize,
   auto command = CreateCommand();
 
   InvokeAsync(mTaskQueue, __func__,
-              [aSize, streamOwner = mStreamOwner]() mutable {
-                QM_TRY(MOZ_TO_RESULT(streamOwner->Truncate(aSize)),
+              [selfHolder = fs::TargetPtrHolder(this), aSize]() mutable {
+                QM_TRY(MOZ_TO_RESULT(selfHolder->mStreamOwner->Truncate(aSize)),
                        CreateAndRejectBoolPromise);
 
                 return BoolPromise::CreateAndResolve(true, __func__);
