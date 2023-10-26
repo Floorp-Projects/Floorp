@@ -3310,15 +3310,15 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
     nsISerialEventTarget* aMainThread) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
   MOZ_ASSERT(aSampleRate > 0);
+  MOZ_ASSERT(aGraphDriverRequested != OFFLINE_THREAD_DRIVER,
+             "Use CreateNonRealtimeInstance() for offline graphs");
 
   MediaTrackGraphImpl* graph =
       GetInstanceIfExists(aWindowID, aSampleRate, aOutputDeviceID);
 
   if (!graph) {
     GraphRunType runType = DIRECT_DRIVER;
-    if (aGraphDriverRequested != OFFLINE_THREAD_DRIVER &&
-        (Preferences::GetBool("media.audiograph.single_thread.enabled",
-                              true))) {
+    if (Preferences::GetBool("media.audiograph.single_thread.enabled", true)) {
       runType = SINGLE_THREAD;
     }
 
@@ -3572,11 +3572,13 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
     LOG(LogLevel::Info, ("MediaTrackGraph %p, last track %p removed from "
                          "main thread. Graph will shut down.",
                          this, aTrack));
-    // Find the graph in the hash table and remove it.
-    for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
-      if (iter.UserData() == this) {
-        iter.Remove();
-        break;
+    if (mRealtime) {
+      // Find the graph in the hash table and remove it.
+      for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
+        if (iter.UserData() == this) {
+          iter.Remove();
+          break;
+        }
       }
     }
     // The graph thread will shut itself down soon, but won't be able to do
