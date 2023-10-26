@@ -5,6 +5,7 @@
 
 #include "AutoRangeArray.h"
 
+#include "EditAction.h"
 #include "EditorDOMPoint.h"   // for EditorDOMPoint, EditorDOMRange, etc
 #include "EditorForwards.h"   // for CollectChildrenOptions
 #include "HTMLEditUtils.h"    // for HTMLEditUtils
@@ -637,13 +638,23 @@ GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
         aEditSubAction == EditSubAction::eIndent ||
         aEditSubAction == EditSubAction::eOutdent ||
         aEditSubAction == EditSubAction::eSetOrClearAlignment ||
-        aEditSubAction == EditSubAction::eCreateOrRemoveBlock;
+        aEditSubAction == EditSubAction::eCreateOrRemoveBlock ||
+        aEditSubAction == EditSubAction::eFormatBlockForHTMLCommand;
     // XXX So, does this check whether the container is removable or not? It
     //     seems that here can be rewritten as obviously what here tries to
     //     check.
     if (!point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost) &&
         (blockLevelAction ||
          !point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost))) {
+      break;
+    }
+
+    // If we're formatting a block, we should reformat first ancestor format
+    // block.
+    if (aEditSubAction == EditSubAction::eFormatBlockForHTMLCommand &&
+        HTMLEditUtils::IsFormatElementForFormatBlockCommand(
+            *point.ContainerAs<Element>())) {
+      point.Set(point.GetContainer());
       break;
     }
 
@@ -665,7 +676,8 @@ GetPointAtFirstContentOfLineOrParentHTMLBlockIfFirstContentOfBlock(
  *                      point of the block.
  */
 static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
-    const EditorDOMPoint& aPointInLine, const Element& aEditingHost) {
+    const EditorDOMPoint& aPointInLine, EditSubAction aEditSubAction,
+    const Element& aEditingHost) {
   // FYI: This was moved from
   // https://searchfox.org/mozilla-central/rev/3419858c997f422e3e70020a46baae7f0ec6dacc/editor/libeditor/HTMLEditSubActionHandler.cpp#6541
 
@@ -723,8 +735,9 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
   //     This might be different from "block-extend" of execCommand spec.
   //     However, the spec is really unclear.
   // XXX Probably, scanning only editable nodes is wrong for
-  //     EditSubAction::eCreateOrRemoveBlock because it might be better to wrap
-  //     existing inline elements even if it's non-editable.  For example,
+  //     EditSubAction::eCreateOrRemoveBlock and
+  //     EditSubAction::eFormatBlockForHTMLCommand because it might be better to
+  //     wrap existing inline elements even if it's non-editable.  For example,
   //     following examples with insertParagraph causes different result:
   //     * <div contenteditable>foo[]<b contenteditable="false">bar</b></div>
   //     * <div contenteditable>foo[]<b>bar</b></div>
@@ -804,6 +817,15 @@ static EditorDOMPoint GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
     //     when they touch there.
     if (!point.GetContainer()->IsInclusiveDescendantOf(&aEditingHost) &&
         !point.GetContainerParent()->IsInclusiveDescendantOf(&aEditingHost)) {
+      break;
+    }
+
+    // If we're formatting a block, we should reformat first ancestor format
+    // block.
+    if (aEditSubAction == EditSubAction::eFormatBlockForHTMLCommand &&
+        HTMLEditUtils::IsFormatElementForFormatBlockCommand(
+            *point.ContainerAs<Element>())) {
+      point.SetAfter(point.GetContainer());
       break;
     }
 
@@ -912,7 +934,7 @@ nsresult AutoRangeArray::ExtendRangeToWrapStartAndEndLinesContainingBoundaries(
     return NS_ERROR_FAILURE;
   }
   endPoint = GetPointAfterFollowingLineBreakOrAtFollowingHTMLBlock(
-      endPoint, aEditingHost);
+      endPoint, aEditSubAction, aEditingHost);
   const EditorDOMPoint lastRawPoint =
       endPoint.IsStartOfContainer() ? endPoint : endPoint.PreviousPoint();
   // XXX GetPointAfterFollowingLineBreakOrAtFollowingBlock() may return point of
@@ -1077,7 +1099,8 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
   }
 
   switch (aEditSubAction) {
-    case EditSubAction::eCreateOrRemoveBlock: {
+    case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eFormatBlockForHTMLCommand: {
       // Certain operations should not act on li's and td's, but rather inside
       // them.  Alter the list as needed.
       CollectChildrenOptions options = {
@@ -1086,13 +1109,35 @@ nsresult AutoRangeArray::CollectEditTargetNodes(
       if (aCollectNonEditableNodes == CollectNonEditableNodes::No) {
         options += CollectChildrenOption::IgnoreNonEditableChildren;
       }
-      for (const size_t index :
-           Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
-        OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
-        if (HTMLEditUtils::IsListItem(content)) {
-          aOutArrayOfContents.RemoveElementAt(index);
-          HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
-                                         options);
+      if (aEditSubAction == EditSubAction::eCreateOrRemoveBlock) {
+        for (const size_t index :
+             Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+          OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
+          if (HTMLEditUtils::IsListItem(content)) {
+            aOutArrayOfContents.RemoveElementAt(index);
+            HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
+                                           options);
+          }
+        }
+      } else {
+        // <dd> and <dt> are format blocks.  Therefore, we should not handle
+        // their children directly.  They should be replaced with new format
+        // block.
+        MOZ_ASSERT(
+            HTMLEditUtils::IsFormatTagForFormatBlockCommand(*nsGkAtoms::dt));
+        MOZ_ASSERT(
+            HTMLEditUtils::IsFormatTagForFormatBlockCommand(*nsGkAtoms::dd));
+        for (const size_t index :
+             Reversed(IntegerRange(aOutArrayOfContents.Length()))) {
+          OwningNonNull<nsIContent> content = aOutArrayOfContents[index];
+          MOZ_ASSERT_IF(HTMLEditUtils::IsListItem(content),
+                        content->IsAnyOfHTMLElements(
+                            nsGkAtoms::dd, nsGkAtoms::dt, nsGkAtoms::li));
+          if (content->IsHTMLElement(nsGkAtoms::li)) {
+            aOutArrayOfContents.RemoveElementAt(index);
+            HTMLEditUtils::CollectChildren(*content, aOutArrayOfContents, index,
+                                           options);
+          }
         }
       }
       // Empty text node shouldn't be selected if unnecessary

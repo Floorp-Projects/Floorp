@@ -4320,12 +4320,43 @@ HTMLEditor::ReplaceContainerWithTransactionInternal(
     return Err(NS_ERROR_FAILURE);
   }
 
+  // If we're replacing <dd> or <dt> with different type of element, we need to
+  // split the parent <dl>.
+  OwningNonNull<Element> containerElementToDelete = aOldContainer;
+  if (aOldContainer.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt) &&
+      &aTagName != nsGkAtoms::dt && &aTagName != nsGkAtoms::dd &&
+      // aOldContainer always has a parent node because of removable.
+      aOldContainer.GetParentNode()->IsHTMLElement(nsGkAtoms::dl)) {
+    OwningNonNull<Element> const dlElement = *aOldContainer.GetParentElement();
+    if (NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(dlElement)) ||
+        NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(dlElement))) {
+      return Err(NS_ERROR_FAILURE);
+    }
+    Result<SplitRangeOffFromNodeResult, nsresult> splitDLElementResult =
+        SplitRangeOffFromElement(dlElement, aOldContainer, aOldContainer);
+    if (MOZ_UNLIKELY(splitDLElementResult.isErr())) {
+      NS_WARNING("HTMLEditor::SplitRangeOffFromElement() failed");
+      return splitDLElementResult.propagateErr();
+    }
+    splitDLElementResult.inspect().IgnoreCaretPointSuggestion();
+    RefPtr<Element> middleDLElement = aOldContainer.GetParentElement();
+    if (NS_WARN_IF(!middleDLElement) ||
+        NS_WARN_IF(!middleDLElement->IsHTMLElement(nsGkAtoms::dl)) ||
+        NS_WARN_IF(!HTMLEditUtils::IsRemovableNode(*middleDLElement))) {
+      NS_WARNING("The parent <dl> was lost at splitting it");
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
+    containerElementToDelete = std::move(middleDLElement);
+  }
+
   const RefPtr<Element> newContainer = CreateHTMLContent(&aTagName);
   if (NS_WARN_IF(!newContainer)) {
     return Err(NS_ERROR_FAILURE);
   }
 
   // Set or clone attribute if needed.
+  // FIXME: What should we do attributes of <dl> elements if we removed it
+  // above?
   if (aCloneAllAttributes) {
     MOZ_ASSERT(&aAttribute == nsGkAtoms::_empty);
     CloneAttributesWithTransaction(*newContainer, aOldContainer);
@@ -4339,8 +4370,10 @@ HTMLEditor::ReplaceContainerWithTransactionInternal(
     }
   }
 
-  const OwningNonNull<nsINode> parentNode = *aOldContainer.GetParentNode();
-  const nsCOMPtr<nsINode> referenceNode = aOldContainer.GetNextSibling();
+  const OwningNonNull<nsINode> parentNode =
+      *containerElementToDelete->GetParentNode();
+  const nsCOMPtr<nsINode> referenceNode =
+      containerElementToDelete->GetNextSibling();
   AutoReplaceContainerSelNotify selStateNotify(RangeUpdaterRef(), aOldContainer,
                                                *newContainer);
   {
@@ -4356,7 +4389,7 @@ HTMLEditor::ReplaceContainerWithTransactionInternal(
     //       chrome script.
     AutoTransactionsConserveSelection conserveSelection(*this);
     // Move all children from the old container to the new container.
-    // For making all MoveNodeTransactions have a referenc node in the current
+    // For making all MoveNodeTransactions have a reference node in the current
     // parent, move nodes from last one to preceding ones.
     for (const OwningNonNull<nsIContent>& child : Reversed(arrayOfChildren)) {
       Result<MoveNodeResult, nsresult> moveChildResult =
@@ -4372,9 +4405,9 @@ HTMLEditor::ReplaceContainerWithTransactionInternal(
     }
   }
 
-  // Delete aOldContainer from the DOM tree to make it not referred by
-  // InsertNodeTransaction.
-  nsresult rv = DeleteNodeWithTransaction(aOldContainer);
+  // Delete containerElementToDelete from the DOM tree to make it not referred
+  // by InsertNodeTransaction.
+  nsresult rv = DeleteNodeWithTransaction(containerElementToDelete);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
     return Err(rv);

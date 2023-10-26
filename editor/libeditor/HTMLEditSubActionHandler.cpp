@@ -27,6 +27,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/EditorForwards.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MathAlgorithms.h"
@@ -102,6 +103,7 @@ static bool IsPendingStyleCachePreservingSubAction(
     case EditSubAction::eOutdent:
     case EditSubAction::eSetOrClearAlignment:
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eFormatBlockForHTMLCommand:
     case EditSubAction::eMergeBlockContents:
     case EditSubAction::eRemoveList:
     case EditSubAction::eCreateOrChangeDefinitionListItem:
@@ -4618,7 +4620,10 @@ HTMLEditor::FormatBlockContainerWithTransaction(
 
   AutoTArray<OwningNonNull<nsIContent>, 64> arrayOfContents;
   aSelectionRanges.ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
-      EditSubAction::eCreateOrRemoveBlock, aEditingHost);
+      aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
+          ? EditSubAction::eFormatBlockForHTMLCommand
+          : EditSubAction::eCreateOrRemoveBlock,
+      aEditingHost);
   Result<EditorDOMPoint, nsresult> splitResult =
       aSelectionRanges
           .SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
@@ -4630,22 +4635,26 @@ HTMLEditor::FormatBlockContainerWithTransaction(
     return splitResult.propagateErr();
   }
   nsresult rv = aSelectionRanges.CollectEditTargetNodes(
-      *this, arrayOfContents, EditSubAction::eCreateOrRemoveBlock,
+      *this, arrayOfContents,
+      aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
+          ? EditSubAction::eFormatBlockForHTMLCommand
+          : EditSubAction::eCreateOrRemoveBlock,
       AutoRangeArray::CollectNonEditableNodes::Yes);
   if (NS_FAILED(rv)) {
     NS_WARNING(
-        "AutoRangeArray::CollectEditTargetNodes(EditSubAction::"
-        "eCreateOrRemoveBlock, CollectNonEditableNodes::No) failed");
+        "AutoRangeArray::CollectEditTargetNodes(CollectNonEditableNodes::No) "
+        "failed");
     return Err(rv);
   }
 
   Result<EditorDOMPoint, nsresult> splitAtBRElementsResult =
-      MaybeSplitElementsAtEveryBRElement(arrayOfContents,
-                                         EditSubAction::eCreateOrRemoveBlock);
+      MaybeSplitElementsAtEveryBRElement(
+          arrayOfContents,
+          aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand
+              ? EditSubAction::eFormatBlockForHTMLCommand
+              : EditSubAction::eCreateOrRemoveBlock);
   if (MOZ_UNLIKELY(splitAtBRElementsResult.isErr())) {
-    NS_WARNING(
-        "HTMLEditor::MaybeSplitElementsAtEveryBRElement(EditSubAction::"
-        "eCreateOrRemoveBlock) failed");
+    NS_WARNING("HTMLEditor::MaybeSplitElementsAtEveryBRElement() failed");
     return splitAtBRElementsResult.propagateErr();
   }
 
@@ -4660,8 +4669,9 @@ HTMLEditor::FormatBlockContainerWithTransaction(
 
     auto pointToInsertBlock =
         aSelectionRanges.GetFirstRangeStartPoint<EditorDOMPoint>();
-    if (&aNewFormatTagName == nsGkAtoms::normal ||
-        &aNewFormatTagName == nsGkAtoms::_empty) {
+    if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand &&
+        (&aNewFormatTagName == nsGkAtoms::normal ||
+         &aNewFormatTagName == nsGkAtoms::_empty)) {
       if (!pointToInsertBlock.IsInContentNode()) {
         NS_WARNING(
             "HTMLEditor::FormatBlockContainerWithTransaction() couldn't find "
@@ -4682,8 +4692,8 @@ HTMLEditor::FormatBlockContainerWithTransaction(
       }
       if (editableBlockElement->IsAnyOfHTMLElements(
               nsGkAtoms::dd, nsGkAtoms::dl, nsGkAtoms::dt) ||
-          !HTMLEditor::IsFormatElement(aFormatBlockMode,
-                                       *editableBlockElement)) {
+          !HTMLEditUtils::IsFormatElementForParagraphStateCommand(
+              *editableBlockElement)) {
         return RefPtr<Element>();
       }
 
@@ -4791,37 +4801,41 @@ HTMLEditor::FormatBlockContainerWithTransaction(
     }
     return unwrappedCreateNewBlockElementResult.UnwrapNewNode();
   }
-  // Okay, now go through all the nodes and make the right kind of blocks, or
-  // whatever is appropriate.
-  // Note: blockquote is handled a little differently.
-  if (&aNewFormatTagName == nsGkAtoms::blockquote) {
-    Result<CreateElementResult, nsresult>
-        wrapContentsInBlockquoteElementsResult =
-            WrapContentsInBlockquoteElementsWithTransaction(arrayOfContents,
-                                                            aEditingHost);
-    if (MOZ_UNLIKELY(wrapContentsInBlockquoteElementsResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction() "
-          "failed");
-      return wrapContentsInBlockquoteElementsResult.propagateErr();
+
+  if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand) {
+    // Okay, now go through all the nodes and make the right kind of blocks, or
+    // whatever is appropriate.
+    // Note: blockquote is handled a little differently.
+    if (&aNewFormatTagName == nsGkAtoms::blockquote) {
+      Result<CreateElementResult, nsresult>
+          wrapContentsInBlockquoteElementsResult =
+              WrapContentsInBlockquoteElementsWithTransaction(arrayOfContents,
+                                                              aEditingHost);
+      if (MOZ_UNLIKELY(wrapContentsInBlockquoteElementsResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::WrapContentsInBlockquoteElementsWithTransaction() "
+            "failed");
+        return wrapContentsInBlockquoteElementsResult.propagateErr();
+      }
+      wrapContentsInBlockquoteElementsResult.inspect()
+          .IgnoreCaretPointSuggestion();
+      return wrapContentsInBlockquoteElementsResult.unwrap().UnwrapNewNode();
     }
-    wrapContentsInBlockquoteElementsResult.inspect()
-        .IgnoreCaretPointSuggestion();
-    return wrapContentsInBlockquoteElementsResult.unwrap().UnwrapNewNode();
-  }
-  if (&aNewFormatTagName == nsGkAtoms::normal ||
-      &aNewFormatTagName == nsGkAtoms::_empty) {
-    Result<EditorDOMPoint, nsresult> removeBlockContainerElementsResult =
-        RemoveBlockContainerElementsWithTransaction(
-            arrayOfContents, aFormatBlockMode,
-            BlockInlineCheck::UseHTMLDefaultStyle);
-    if (MOZ_UNLIKELY(removeBlockContainerElementsResult.isErr())) {
-      NS_WARNING(
-          "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
-      return removeBlockContainerElementsResult.propagateErr();
+    if (&aNewFormatTagName == nsGkAtoms::normal ||
+        &aNewFormatTagName == nsGkAtoms::_empty) {
+      Result<EditorDOMPoint, nsresult> removeBlockContainerElementsResult =
+          RemoveBlockContainerElementsWithTransaction(
+              arrayOfContents, FormatBlockMode::XULParagraphStateCommand,
+              BlockInlineCheck::UseHTMLDefaultStyle);
+      if (MOZ_UNLIKELY(removeBlockContainerElementsResult.isErr())) {
+        NS_WARNING(
+            "HTMLEditor::RemoveBlockContainerElementsWithTransaction() failed");
+        return removeBlockContainerElementsResult.propagateErr();
+      }
+      return RefPtr<Element>();
     }
-    return RefPtr<Element>();
   }
+
   Result<CreateElementResult, nsresult> wrapContentsInBlockElementResult =
       CreateOrChangeFormatContainerElement(arrayOfContents, aNewFormatTagName,
                                            aFormatBlockMode, aEditingHost);
@@ -7794,6 +7808,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::MaybeSplitElementsAtEveryBRElement(
   // only for operations that might care, like making lists or paragraphs
   switch (aEditSubAction) {
     case EditSubAction::eCreateOrRemoveBlock:
+    case EditSubAction::eFormatBlockForHTMLCommand:
     case EditSubAction::eMergeBlockContents:
     case EditSubAction::eCreateOrChangeList:
     case EditSubAction::eSetOrClearAlignment:
@@ -9022,6 +9037,7 @@ HTMLEditor::RemoveBlockContainerElementsWithTransaction(
     const nsTArray<OwningNonNull<nsIContent>>& aArrayOfContents,
     FormatBlockMode aFormatBlockMode, BlockInlineCheck aBlockInlineCheck) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand);
 
   // Intent of this routine is to be used for converting to/from headers,
   // paragraphs, pre, and address.  Those blocks that pretty much just contain
@@ -9194,6 +9210,9 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
   // paragraphs, pre, and address.  Those blocks that pretty much just contain
   // inline things...
   RefPtr<Element> newBlock, curBlock, blockElementToPutCaret;
+  // If we found a <br> element which should be moved into curBlock, this keeps
+  // storing the <br> element after removing it from the tree.
+  RefPtr<Element> pendingBRElementToMoveCurBlock;
   EditorDOMPoint pointToPutCaret;
   for (auto& content : aArrayOfContents) {
     EditorDOMPoint atContent(content);
@@ -9203,6 +9222,7 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
       // block.
       curBlock = nullptr;
       newBlock = nullptr;
+      pendingBRElementToMoveCurBlock = nullptr;
       continue;
     }
 
@@ -9213,19 +9233,28 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
              content, BlockInlineCheck::UseHTMLDefaultStyle))) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
+      pendingBRElementToMoveCurBlock = nullptr;
       // Do nothing to this block
       continue;
     }
 
-    // If content is a address, p, header, address, or pre, replace it with a
-    // new block of correct type.
+    // If content is a format element, replace it with a new block of correct
+    // type.
     // XXX: pre can't hold everything the others can
     if (HTMLEditUtils::IsMozDiv(content) ||
-        (!content->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
-                                       nsGkAtoms::dt) &&
-         HTMLEditor::IsFormatElement(aFormatBlockMode, content))) {
+        (HTMLEditor::IsFormatElement(aFormatBlockMode, content) &&
+         (aFormatBlockMode == FormatBlockMode::HTMLFormatBlockCommand ||
+          !content->IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dl,
+                                        nsGkAtoms::dt)))) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
+      pendingBRElementToMoveCurBlock = nullptr;
+      RefPtr<Element> expectedContainerOfNewBlock =
+          atContent.IsContainerHTMLElement(nsGkAtoms::dl) &&
+                  HTMLEditUtils::IsSplittableNode(
+                      *atContent.ContainerAs<Element>())
+              ? atContent.GetContainerParentAs<Element>()
+              : atContent.GetContainerAs<Element>();
       Result<CreateElementResult, nsresult> replaceWithNewBlockElementResult =
           ReplaceContainerAndCloneAttributesWithTransaction(
               MOZ_KnownLive(*content->AsElement()), aNewFormatTagName);
@@ -9241,7 +9270,8 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
       // the web app via mutation event listener, we should stop handling this
       // action since we cannot handle each of a lot of edge cases.
       if (NS_WARN_IF(unwrappedReplaceWithNewBlockElementResult.GetNewNode()
-                         ->GetParentNode() != atContent.GetContainer())) {
+                         ->GetParentNode() != expectedContainerOfNewBlock)) {
+        unwrappedReplaceWithNewBlockElementResult.IgnoreCaretPointSuggestion();
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       unwrappedReplaceWithNewBlockElementResult.MoveCaretPointTo(
@@ -9257,6 +9287,7 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
                                      nsGkAtoms::blockquote, nsGkAtoms::div)) {
       // Forget any previous block used for previous inline nodes
       curBlock = nullptr;
+      pendingBRElementToMoveCurBlock = nullptr;
       // Recursion time
       AutoTArray<OwningNonNull<nsIContent>, 24> childContents;
       HTMLEditUtils::CollectAllChildren(*content, childContents);
@@ -9306,11 +9337,19 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
     }
 
     if (content->IsHTMLElement(nsGkAtoms::br)) {
-      // If the node is a break, we honor it by putting further nodes in a new
-      // parent
       if (curBlock) {
-        // Forget any previous block used for previous inline nodes
-        curBlock = nullptr;
+        if (aFormatBlockMode == FormatBlockMode::XULParagraphStateCommand) {
+          // If the node is a break, we honor it by putting further nodes in a
+          // new parent.
+
+          // Forget any previous block used for previous inline nodes.
+          curBlock = nullptr;
+          pendingBRElementToMoveCurBlock = nullptr;
+        } else {
+          // If the node is a break, we need to move it into end of the curBlock
+          // if we'll move following content into curBlock.
+          pendingBRElementToMoveCurBlock = content->AsElement();
+        }
         // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to keep it
         // alive.
         nsresult rv = DeleteNodeWithTransaction(MOZ_KnownLive(*content));
@@ -9328,12 +9367,11 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
               aNewFormatTagName, atContent, BRElementNextToSplitPoint::Keep,
               aEditingHost);
       if (MOZ_UNLIKELY(createNewBlockElementResult.isErr())) {
-        NS_WARNING(
-            nsPrintfCString(
-                "HTMLEditor::"
-                "InsertElementWithSplittingAncestorsWithTransaction(%s) failed",
-                nsAtomCString(&aNewFormatTagName).get())
-                .get());
+        NS_WARNING(nsPrintfCString("HTMLEditor::"
+                                   "InsertElementWithSplittingAncestorsWith"
+                                   "Transaction(%s) failed",
+                                   nsAtomCString(&aNewFormatTagName).get())
+                       .get());
         return createNewBlockElementResult;
       }
       CreateElementResult unwrappedCreateNewBlockElementResult =
@@ -9400,11 +9438,21 @@ HTMLEditor::CreateOrChangeFormatContainerElement(
 
         // Update container of content.
         atContent.Set(content);
-      }
-
-      if (NS_WARN_IF(!atContent.IsSet())) {
-        // This is possible due to mutation events, let's not assert
-        return Err(NS_ERROR_UNEXPECTED);
+        if (NS_WARN_IF(!atContent.IsSet())) {
+          // This is possible due to mutation events, let's not assert
+          return Err(NS_ERROR_UNEXPECTED);
+        }
+      } else if (pendingBRElementToMoveCurBlock) {
+        Result<CreateElementResult, nsresult> insertBRElementResult =
+            InsertNodeWithTransaction<Element>(
+                *pendingBRElementToMoveCurBlock,
+                EditorDOMPoint::AtEndOf(*curBlock));
+        if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
+          NS_WARNING("EditorBase::InsertNodeWithTransaction<Element>() failed");
+          return insertBRElementResult.propagateErr();
+        }
+        insertBRElementResult.inspect().IgnoreCaretPointSuggestion();
+        pendingBRElementToMoveCurBlock = nullptr;
       }
 
       // XXX If content is a br, replace it with a return if going to <pre>

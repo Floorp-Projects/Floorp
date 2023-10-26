@@ -449,6 +449,11 @@ enum class EditSubAction : int32_t {
   // move its descendants to where the block was.
   eCreateOrRemoveBlock,
 
+  // eFormatBlockForHTMLCommand wraps selected lines into format block, replaces
+  // format blocks around selection with new format block or deletes format
+  // blocks around selection.
+  eFormatBlockForHTMLCommand,
+
   // eMergeBlockContents is not an actual sub-action, but this is used by
   // HTMLEditor::MoveBlock() to request special handling in
   // HTMLEditor::MaybeSplitElementsAtEveryBRElement().
