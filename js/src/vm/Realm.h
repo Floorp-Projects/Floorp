@@ -471,6 +471,9 @@ class JS::Realm : public JS::shadow::Realm {
   const JS::RealmBehaviors& behaviors() const { return behaviors_; }
 
   void setNonLive() { behaviors_.setNonLive(); }
+  void setReduceTimerPrecisionCallerType(JS::RTPCallerTypeToken type) {
+    behaviors_.setReduceTimerPrecisionCallerType(type);
+  }
 
   /* Whether to preserve JIT code on non-shrinking GCs. */
   bool preserveJitCode() { return creationOptions_.preserveJitCode(); }
