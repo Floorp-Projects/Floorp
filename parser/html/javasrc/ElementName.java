@@ -158,7 +158,7 @@ public final class ElementName
     }
 
     @Inline static ElementName elementNameByBuffer(@NoLength char[] buf,
-            int length, Interner interner) {
+            int length) {
         @Unsigned int hash = ElementName.bufToHash(buf, length);
         int[] hashes;
         hashes = ElementName.ELEMENT_HASHES;

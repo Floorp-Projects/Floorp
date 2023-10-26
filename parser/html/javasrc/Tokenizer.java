@@ -786,7 +786,7 @@ public class Tokenizer implements Locator, Locator2 {
         }
         @Auto char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
         this.endTagExpectation = ElementName.elementNameByBuffer(asArray,
-                asArray.length, interner);
+                asArray.length);
         assert this.endTagExpectation != null;
         endTagExpectationToArray();
     }
@@ -1227,7 +1227,7 @@ public class Tokenizer implements Locator, Locator2 {
                 tagName = nonInternedTagName;
             }
         } else {
-            tagName = ElementName.elementNameByBuffer(strBuf, strBufLen, interner);
+            tagName = ElementName.elementNameByBuffer(strBuf, strBufLen);
             if (tagName == null) {
                 nonInternedTagName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, strBufLen,
                     interner)
