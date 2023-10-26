@@ -16,7 +16,7 @@ add_task(async function () {
   await waitForSources(dbg, url);
   const source = findSource(dbg, url);
   await selectSource(dbg, source);
-  await addBreakpoint(dbg, source, 20, 2);
+  await addBreakpoint(dbg, source, 20, 3);
   invokeInTab("webpack3Babel6EsmodulesCjs");
   await waitForPaused(dbg);
 
@@ -25,21 +25,21 @@ add_task(async function () {
   await waitForLoadedScopes(dbg);
   ok(getOriginalScope(dbg) != null, "Scopes are now mapped");
 
-  await assertPreviewTextValue(dbg, 20, 16, {
+  await assertPreviewTextValue(dbg, 20, 17, {
     result: '"a-default"',
     expression: "aDefault",
   });
 
   info("3. Hover on a token with mapScopes disabled");
   await toggleMapScopes(dbg);
-  await assertPreviewTextValue(dbg, 21, 16, {
+  await assertPreviewTextValue(dbg, 21, 17, {
     result: "undefined",
     expression: "anAliased",
   });
 
   info("4. StepOver with mapScopes disabled");
   await stepOver(dbg);
-  await assertPreviewTextValue(dbg, 20, 16, {
+  await assertPreviewTextValue(dbg, 20, 17, {
     result: "undefined",
     expression: "aDefault",
   });

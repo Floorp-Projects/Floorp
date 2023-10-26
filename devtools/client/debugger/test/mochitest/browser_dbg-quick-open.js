@@ -132,6 +132,9 @@ function assertColumn(dbg, columnNumber) {
   let value = dbg.selectors.getSelectedLocation().column;
   if (value === undefined) {
     value = null;
+  } else {
+    // column is 0-based, while we want to mention 1-based in the test.
+    value++;
   }
   is(value, columnNumber, `goto column is ${columnNumber}`);
 }

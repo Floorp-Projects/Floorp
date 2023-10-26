@@ -109,7 +109,8 @@ class Breakpoint extends PureComponent {
     const { column, line } = this.selectedLocation;
 
     const isWasm = source?.isWasm;
-    const columnVal = column ? `:${column}` : "";
+    // column is 0-based everywhere, but we want to display 1-based to the user.
+    const columnVal = column ? `:${column + 1}` : "";
     const bpLocation = isWasm
       ? `0x${line.toString(16).toUpperCase()}`
       : `${line}${columnVal}`;

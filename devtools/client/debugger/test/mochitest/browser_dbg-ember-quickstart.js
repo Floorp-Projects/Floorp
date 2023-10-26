@@ -12,7 +12,7 @@ add_task(async function () {
     dbg,
     "mapTestFunction",
     "router.js",
-    { line: 13, column: 2 },
+    { line: 13, column: 3 },
     async () => {
       await assertScopes(dbg, [
         "Module",

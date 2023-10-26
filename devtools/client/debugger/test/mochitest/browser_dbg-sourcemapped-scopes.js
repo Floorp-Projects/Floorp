@@ -148,7 +148,7 @@ async function testBabelBindingsWithFlow(dbg) {
       dbg,
       target,
       "babel-bindings-with-flow",
-      { line: 9, column: 2 },
+      { line: 9, column: 3 },
       [
         "root",
         ["value", '"a-named"'],
@@ -177,7 +177,7 @@ async function testBabelFlowtypeBindings(dbg) {
       dbg,
       target,
       "babel-flowtype-bindings",
-      { line: 9, column: 2 },
+      { line: 9, column: 3 },
       [
         "Module",
         ["aConst", '"a-const"'],
@@ -196,7 +196,7 @@ async function testEvalMaps(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
     const { defaultExport } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: 4 }, [
+    await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: 5 }, [
       "Block",
       ["<this>", "Window"],
       ["three", "5"],
@@ -230,7 +230,7 @@ async function testEvalMaps(dbg) {
       dbg,
       target,
       "eval-maps",
-      { line: 14, column: maybeLineStart(4) },
+      { line: 14, column: maybeLineStart(5) },
       [
         "Block",
         ["three", "5"],
@@ -251,7 +251,7 @@ async function testForOf(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
     const { defaultExport } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "for-of", { line: 5, column: 0 }, [
+    await breakpointScopes(dbg, target, "for-of", { line: 5, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["x", "1"],
@@ -282,7 +282,7 @@ async function testForOf(dbg) {
       dbg,
       target,
       "for-of",
-      { line: 5, column: maybeLineStart(4) },
+      { line: 5, column: maybeLineStart(5) },
       [
         "For",
         ["x", "1"],
@@ -302,7 +302,7 @@ async function testShadowedVars(dbg) {
       dbg,
       target,
       "shadowed-vars",
-      { line: 18, column: 0 },
+      { line: 18, column: 1 },
       [
         "Block",
         ["<this>", "Window"],
@@ -345,7 +345,7 @@ async function testShadowedVars(dbg) {
       dbg,
       target,
       "shadowed-vars",
-      { line: 18, column: maybeLineStart(6) },
+      { line: 18, column: maybeLineStart(7) },
       [
         "Block",
         ["aConst", rollupOptimized || '"const3"'],
@@ -381,7 +381,7 @@ async function testLineStartBindingsES6(dbg) {
       dbg,
       target,
       "line-start-bindings-es6",
-      { line: 19, column: 0 },
+      { line: 19, column: 1 },
       [
         "Block",
         ["<this>", "{\u2026}"],
@@ -421,7 +421,7 @@ async function testLineStartBindingsES6(dbg) {
       dbg,
       target,
       "line-start-bindings-es6",
-      { line: 19, column: maybeLineStart(4) },
+      { line: 19, column: maybeLineStart(5) },
       [
         "Function Body",
         ["<this>", "{\u2026}"],
@@ -442,7 +442,7 @@ async function testThisArgumentsBindings(dbg) {
       dbg,
       target,
       "this-arguments-bindings",
-      { line: 4, column: 0 },
+      { line: 4, column: 1 },
       [
         "Block",
         ["<this>", '"this-value"'],
@@ -467,7 +467,7 @@ async function testThisArgumentsBindings(dbg) {
       dbg,
       target,
       "this-arguments-bindings",
-      { line: 8, column: 0 },
+      { line: 8, column: 1 },
       [
         "Block",
         ["<this>", '"this-value"'],
@@ -508,7 +508,7 @@ async function testThisArgumentsBindings(dbg) {
       dbg,
       target,
       "this-arguments-bindings",
-      { line: 4, column: maybeLineStart(4) },
+      { line: 4, column: maybeLineStart(5) },
       [
         "Function Body",
         ["<this>", '"this-value"'],
@@ -530,7 +530,7 @@ async function testThisArgumentsBindings(dbg) {
       dbg,
       target,
       "this-arguments-bindings",
-      { line: 8, column: maybeLineStart(6) },
+      { line: 8, column: maybeLineStart(7) },
       [
         "arrow",
         ["<this>", '"this-value"'],
@@ -553,7 +553,7 @@ async function testThisArgumentsBindings(dbg) {
 
 async function testClasses(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "classes", { line: 6, column: 0 }, [
+    await breakpointScopes(dbg, target, "classes", { line: 6, column: 1 }, [
       "Block",
       ["<this>", "{}"],
       ["arguments", "Arguments"],
@@ -570,7 +570,7 @@ async function testClasses(dbg) {
       "root()",
     ]);
 
-    await breakpointScopes(dbg, target, "classes", { line: 16, column: 0 }, [
+    await breakpointScopes(dbg, target, "classes", { line: 16, column: 1 }, [
       "Block",
       ["<this>", "{}"],
       ["three", "3"],
@@ -607,7 +607,7 @@ async function testClasses(dbg) {
       dbg,
       target,
       "classes",
-      { line: 6, column: maybeLineStart(6) },
+      { line: 6, column: maybeLineStart(7) },
       [
         "Class",
         target === "rollup" || isParcel
@@ -628,7 +628,7 @@ async function testClasses(dbg) {
       dbg,
       target,
       "classes",
-      { line: 16, column: maybeLineStart(6) },
+      { line: 16, column: maybeLineStart(7) },
       [
         "Function Body",
         ["three", rollupOptimized || "3"],
@@ -648,7 +648,7 @@ async function testClasses(dbg) {
 
 async function testForLoops(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "for-loops", { line: 5, column: 0 }, [
+    await breakpointScopes(dbg, target, "for-loops", { line: 5, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["i", "1"],
@@ -660,7 +660,7 @@ async function testForLoops(dbg) {
       ["module", "(optimized away)"],
       "root()",
     ]);
-    await breakpointScopes(dbg, target, "for-loops", { line: 9, column: 0 }, [
+    await breakpointScopes(dbg, target, "for-loops", { line: 9, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["i", '"2"'],
@@ -672,7 +672,7 @@ async function testForLoops(dbg) {
       ["module", "(optimized away)"],
       "root()",
     ]);
-    await breakpointScopes(dbg, target, "for-loops", { line: 13, column: 0 }, [
+    await breakpointScopes(dbg, target, "for-loops", { line: 13, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["i", "3"],
@@ -702,7 +702,7 @@ async function testForLoops(dbg) {
       dbg,
       target,
       "for-loops",
-      { line: 5, column: maybeLineStart(4) },
+      { line: 5, column: maybeLineStart(5) },
       [
         "For",
         ["i", "1"],
@@ -716,7 +716,7 @@ async function testForLoops(dbg) {
       dbg,
       target,
       "for-loops",
-      { line: 9, column: maybeLineStart(4) },
+      { line: 9, column: maybeLineStart(5) },
       [
         "For",
         ["i", '"2"'],
@@ -730,7 +730,7 @@ async function testForLoops(dbg) {
       dbg,
       target,
       "for-loops",
-      { line: 13, column: maybeLineStart(4) },
+      { line: 13, column: maybeLineStart(5) },
       [
         "For",
         ["i", target === "rollup" ? "3" : rollupOptimized || "3"],
@@ -745,7 +745,7 @@ async function testForLoops(dbg) {
 
 async function testFunctions(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "functions", { line: 6, column: 0 }, [
+    await breakpointScopes(dbg, target, "functions", { line: 6, column: 1 }, [
       "Block",
       ["<this>", "(optimized away)"],
       ["arguments", "Arguments"],
@@ -787,7 +787,7 @@ async function testFunctions(dbg) {
       dbg,
       target,
       "functions",
-      { line: 6, column: maybeLineStart(8) },
+      { line: 6, column: maybeLineStart(9) },
       [
         "arrow",
         ["p3", "undefined"],
@@ -814,7 +814,7 @@ async function testFunctions(dbg) {
 
 async function testSwitches(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "switches", { line: 7, column: 0 }, [
+    await breakpointScopes(dbg, target, "switches", { line: 7, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["val", "2"],
@@ -827,7 +827,7 @@ async function testSwitches(dbg) {
       "root()",
     ]);
 
-    await breakpointScopes(dbg, target, "switches", { line: 10, column: 0 }, [
+    await breakpointScopes(dbg, target, "switches", { line: 10, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["val", "3"],
@@ -859,7 +859,7 @@ async function testSwitches(dbg) {
       dbg,
       target,
       "switches",
-      { line: 7, column: maybeLineStart(6) },
+      { line: 7, column: maybeLineStart(7) },
       [
         "Switch",
         ["val", rollupOptimized || "2"],
@@ -874,7 +874,7 @@ async function testSwitches(dbg) {
       dbg,
       target,
       "switches",
-      { line: 10, column: maybeLineStart(6) },
+      { line: 10, column: maybeLineStart(7) },
       [
         "Block",
         ["val", rollupOptimized || "3"],
@@ -891,7 +891,7 @@ async function testSwitches(dbg) {
 
 async function testTryCatches(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "try-catches", { line: 8, column: 0 }, [
+    await breakpointScopes(dbg, target, "try-catches", { line: 8, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["two", "2"],
@@ -923,7 +923,7 @@ async function testTryCatches(dbg) {
       dbg,
       target,
       "try-catches",
-      { line: 8, column: maybeLineStart(4) },
+      { line: 8, column: maybeLineStart(5) },
       [
         "Block",
         ["two", rollupOptimized || "2"],
@@ -944,7 +944,7 @@ async function testLexAndNonlex(dbg) {
       dbg,
       target,
       "lex-and-nonlex",
-      { line: 3, column: 0 },
+      { line: 3, column: 1 },
       [
         "Block",
         ["<this>", "undefined"],
@@ -977,7 +977,7 @@ async function testLexAndNonlex(dbg) {
       dbg,
       target,
       "lex-and-nonlex",
-      { line: 3, column: maybeLineStart(4) },
+      { line: 3, column: maybeLineStart(5) },
       [
         "Function Body",
         target === "rollup" || target === "parcel" ? "class Thing" : "Thing()",
@@ -1001,7 +1001,7 @@ async function testTypescriptClasses(dbg) {
       dbg,
       target,
       "typescript-classes",
-      { line: 50, column: 2 },
+      { line: 50, column: 3 },
       [
         "Module",
         "AnotherThing()",
@@ -1031,7 +1031,7 @@ async function testTypescriptClasses(dbg) {
 
 async function testTypeModule(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "type-module", { line: 7, column: 0 }, [
+    await breakpointScopes(dbg, target, "type-module", { line: 7, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["arguments", "Arguments"],
@@ -1060,7 +1060,7 @@ async function testTypeModule(dbg) {
       dbg,
       target,
       "type-module",
-      { line: 7, column: maybeLineStart(2) },
+      { line: 7, column: maybeLineStart(3) },
       [
         "Module",
         ["alsoModuleScoped", "2"],
@@ -1077,7 +1077,7 @@ async function testTypeScriptCJS(dbg) {
       dbg,
       target,
       "type-script-cjs",
-      { line: 7, column: 0 },
+      { line: 7, column: 1 },
       [
         "Block",
         ["<this>", "Window"],
@@ -1108,7 +1108,7 @@ async function testTypeScriptCJS(dbg) {
       dbg,
       target,
       "type-script-cjs",
-      { line: 7, column: 2 },
+      { line: 7, column: 3 },
       [
         "Module",
         "alsoModuleScopes",
@@ -1133,7 +1133,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
       dbg,
       target,
       "out-of-order-declarations-cjs",
-      { line: 8, column: 4 },
+      { line: 8, column: 5 },
       [
         "callback",
         "fn(inner)",
@@ -1165,7 +1165,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
 
 async function testModulesCJS(dbg) {
   for (const target of ["webpack3", "webpack4"]) {
-    await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 0 }, [
+    await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 1 }, [
       "Block",
       ["<this>", "Window"],
       ["arguments", "Arguments"],
@@ -1188,7 +1188,7 @@ async function testModulesCJS(dbg) {
     "webpack4-babel6",
     "webpack4-babel7",
   ]) {
-    await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 2 }, [
+    await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 3 }, [
       "Module",
       ["alsoModuleScoped", "2"],
       ["moduleScoped", "1"],
@@ -1202,7 +1202,7 @@ async function testWebpackLineMappings(dbg) {
     dbg,
     "webpack3",
     "webpack-line-mappings",
-    { line: 11, column: 0 },
+    { line: 11, column: 1 },
     [
       "Block",
       ["<this>", '"this-value"'],
@@ -1232,7 +1232,7 @@ async function testWebpackLineMappings(dbg) {
     dbg,
     "webpack4",
     "webpack-line-mappings",
-    { line: 11, column: 0 },
+    { line: 11, column: 1 },
     [
       "Block",
       ["<this>", '"this-value"'],
@@ -1267,7 +1267,7 @@ async function testWebpackFunctions(dbg) {
       dbg,
       target,
       "webpack-functions",
-      { line: 4, column: 0 },
+      { line: 4, column: 1 },
       [
         "Block",
         ["<this>", "{\u2026}"],
@@ -1289,7 +1289,7 @@ async function testESModules(dbg) {
     dbg,
     "webpack3",
     "esmodules",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1319,7 +1319,7 @@ async function testESModules(dbg) {
     dbg,
     "webpack4",
     "esmodules",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1360,7 +1360,7 @@ async function testESModules(dbg) {
       dbg,
       target,
       "esmodules",
-      { line: 20, column: maybeLineStart(2) },
+      { line: 20, column: maybeLineStart(3) },
       [
         "Module",
         ["aDefault", '"a-default"'],
@@ -1388,7 +1388,7 @@ async function testESModules(dbg) {
     // fully and includes the () of the call in the range of the identifier.
     // this means that Rollup, has to map locations for calls to imports,
     // it can fail. This will be addressed in Babel eventually.
-    await breakpointScopes(dbg, target, "esmodules", { line: 20, column: 2 }, [
+    await breakpointScopes(dbg, target, "esmodules", { line: 20, column: 3 }, [
       "root",
       ["<this>", "Window"],
       ["arguments", "Arguments"],
@@ -1416,7 +1416,7 @@ async function testESModulesCJS(dbg) {
     dbg,
     "webpack3",
     "esmodules-cjs",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1446,7 +1446,7 @@ async function testESModulesCJS(dbg) {
     dbg,
     "webpack4",
     "esmodules-cjs",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1484,7 +1484,7 @@ async function testESModulesCJS(dbg) {
       dbg,
       target,
       "esmodules-cjs",
-      { line: 20, column: 2 },
+      { line: 20, column: 3 },
       [
         "Module",
         ["aDefault", '"a-default"'],
@@ -1513,7 +1513,7 @@ async function testESModulesES6(dbg) {
     dbg,
     "webpack3",
     "esmodules-es6",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1543,7 +1543,7 @@ async function testESModulesES6(dbg) {
     dbg,
     "webpack4",
     "esmodules-es6",
-    { line: 20, column: 0 },
+    { line: 20, column: 1 },
     [
       "Block",
       ["<this>", "Window"],
@@ -1584,7 +1584,7 @@ async function testESModulesES6(dbg) {
       dbg,
       target,
       "esmodules-es6",
-      { line: 20, column: maybeLineStart(2) },
+      { line: 20, column: maybeLineStart(3) },
       [
         "Module",
         ["aDefault", '"a-default"'],
@@ -1616,7 +1616,7 @@ async function testESModulesES6(dbg) {
       dbg,
       target,
       "esmodules-es6",
-      { line: 20, column: 2 },
+      { line: 20, column: 3 },
       [
         "root",
         ["<this>", "Window"],

@@ -34,7 +34,7 @@ add_task(async function () {
     dbg,
     findSource(dbg, "pause-points.js").id,
     lineToContinueTo,
-    4
+    5
   );
   ok(true, "Debugger continued to the expected line");
 

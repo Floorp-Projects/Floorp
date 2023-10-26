@@ -53,7 +53,7 @@ add_task(async function () {
     dbg,
     prettySource.id,
     LINE_INDEX_TO_BREAK_ON,
-    15
+    16
   );
   await resume(dbg);
 
@@ -66,7 +66,7 @@ add_task(async function () {
     dbg,
     prettySource.id,
     LINE_INDEX_TO_BREAK_ON,
-    18
+    19
   );
   const assertScopesForSecondColumnBreakpoint = topBlockItems =>
     assertScopes(dbg, [
@@ -89,7 +89,7 @@ add_task(async function () {
     dbg,
     prettySource.id,
     LINE_INDEX_TO_BREAK_ON,
-    18
+    19
   );
   await assertScopesForSecondColumnBreakpoint([["i", "1"]]);
   await resume(dbg);
@@ -103,7 +103,7 @@ add_task(async function () {
     dbg,
     prettySource.id,
     LINE_INDEX_TO_BREAK_ON,
-    18
+    19
   );
   await assertScopesForSecondColumnBreakpoint([["i", "2"]]);
   await resume(dbg);

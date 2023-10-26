@@ -29,7 +29,7 @@ cases(
     {
       name: "line and column",
       query: ":30:90",
-      location: { column: 90, line: 30 },
+      location: { column: 89, line: 30 },
     },
   ]
 );

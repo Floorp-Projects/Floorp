@@ -443,8 +443,10 @@ function assertPausedAtSourceAndLine(
   );
   const pauseColumn = getVisibleSelectedFrameColumn(dbg);
   if (expectedColumn) {
+    // `pauseColumn` is 0-based, coming from internal state,
+    // while `expectedColumn` is manually passed from test scripts and so is 1-based.
     is(
-      pauseColumn,
+      pauseColumn + 1,
       expectedColumn,
       "Redux state for currently selected frame's column is correct"
     );
@@ -475,10 +477,14 @@ function assertPausedAtSourceAndLine(
   );
 
   if (expectedColumn) {
+    // `column` is 0-based, coming from internal state,
+    // while `expectedColumn` is manually passed from test scripts and so is 1-based.
     is(
-      column,
+      column + 1,
       expectedColumn,
-      `Frame paused at column ${column}, but expected column ${expectedColumn}`
+      `Frame paused at column ${
+        column + 1
+      }, but expected column ${expectedColumn}`
     );
   }
 }
@@ -1041,7 +1047,8 @@ async function addBreakpoint(dbg, source, line, column, options) {
   const bpCount = dbg.selectors.getBreakpointCount();
   const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   await dbg.actions.addBreakpoint(
-    createLocation({ source, line, column }),
+    // column is 0-based internally, but tests are using 1-based.
+    createLocation({ source, line, column: column - 1 }),
     options
   );
   await onBreakpoint;
@@ -1064,11 +1071,17 @@ async function addBreakpointViaGutter(dbg, line) {
 }
 
 function disableBreakpoint(dbg, source, line, column) {
-  column = column || getFirstBreakpointColumn(dbg, source, line);
+  if (column === 0) {
+    throw new Error("disableBreakpoint expect a 1-based column argument");
+  }
+  // `internalColumn` is 0-based internally, while `column` manually defined in test scripts is 1-based.
+  const internalColumn = column
+    ? column - 1
+    : getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
     line,
-    column,
+    column: internalColumn,
   });
   const bp = getBreakpointForLocation(dbg, location);
   return dbg.actions.disableBreakpoint(bp);
@@ -1107,13 +1120,16 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   await addBreakpoint(dbg, source, line, column);
 
   is(getBreakpointCount(), 1, "One breakpoint exists");
-  if (!getBreakpoint(createLocation({ source, line, column }))) {
+  // column is 0-based internally, but tests are using 1-based.
+  if (!getBreakpoint(createLocation({ source, line, column: column - 1 }))) {
     const breakpoints = getBreakpointsMap();
     const id = Object.keys(breakpoints).pop();
     const loc = breakpoints[id].location;
     ok(
       false,
-      `Breakpoint has correct line ${line}, column ${column}, but was line ${loc.line} column ${loc.column}`
+      `Breakpoint has correct line ${line}, column ${column}, but was line ${
+        loc.line
+      } column ${loc.column + 1}`
     );
   }
 
@@ -1257,7 +1273,8 @@ async function expandAllSourceNodes(dbg, treeNode) {
  */
 function removeBreakpoint(dbg, sourceId, line, column) {
   const source = dbg.selectors.getSource(sourceId);
-  column = column || getFirstBreakpointColumn(dbg, source, line);
+  // column is 0-based internally, but tests are using 1-based.
+  column = column ? column - 1 : getFirstBreakpointColumn(dbg, source, line);
   const location = createLocation({
     source,
     line,

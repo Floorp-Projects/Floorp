@@ -25,7 +25,7 @@ add_task(async function debuggerStatementOnUnload() {
 
   await waitForPaused(dbg);
   await waitForInlinePreviews(dbg);
-  assertPausedAtSourceAndLine(dbg, findSource(dbg, TEST_URL_1).id, 1, 55);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, TEST_URL_1).id, 1, 56);
 
   await evaluated;
   is(
@@ -66,7 +66,7 @@ add_task(async function exceptionsOnUnload() {
 
   // Cover catching exception on unload
   await waitForPaused(dbg);
-  assertPausedAtSourceAndLine(dbg, findSource(dbg, TEST_URL_2).id, 2, 48);
+  assertPausedAtSourceAndLine(dbg, findSource(dbg, TEST_URL_2).id, 2, 49);
 
   // But also that previous inline exceptions are still visible
   await assertInlineExceptionPreview(dbg, 3, 4, {

@@ -5,7 +5,6 @@
 import {
   toEditorLine,
   toEditorPosition,
-  toEditorRange,
   toSourceLine,
   scrollToPosition,
   markText,
@@ -34,20 +33,6 @@ describe("toEditorPosition", () => {
     expect(toEditorPosition(loc)).toEqual({
       line: 99,
       column: 25,
-    });
-  });
-});
-
-describe("toEditorRange", () => {
-  it("returns an editor range", () => {
-    const testId = "test-123";
-    const loc = {
-      start: { source: { id: testId }, line: 100, column: 25 },
-      end: { source: { id: testId }, line: 200, column: 0 },
-    };
-    expect(toEditorRange(testId, loc)).toEqual({
-      start: { line: 99, column: 25 },
-      end: { line: 199, column: 0 },
     });
   });
 });

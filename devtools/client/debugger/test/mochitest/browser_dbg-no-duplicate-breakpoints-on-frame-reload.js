@@ -95,7 +95,7 @@ function assertBreakpointsList(dbg, source) {
   );
   is(
     breakpointItems[0].textContent,
-    "return x + y;3:4",
+    "return x + y;3:5",
     "The info displayed for the 1st breakpoint is correct"
   );
 }

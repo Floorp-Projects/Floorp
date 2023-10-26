@@ -60,9 +60,11 @@ export default class Exception extends PureComponent {
     }
 
     const location = createLocation({
-      column: columnNumber - 1,
-      line: lineNumber,
       source: selectedSource,
+      line: lineNumber,
+      // Exceptions are reported with column being 1-based
+      // while the frontend uses 0-based column.
+      column: columnNumber - 1,
     });
 
     const { line, column } = toEditorPosition(location);
