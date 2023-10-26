@@ -40,7 +40,7 @@ class nsHttpRequestHead {
   // The following function is only used in HttpChannelParent to avoid
   // copying headers. If you use it be careful to do it only under
   // nsHttpRequestHead lock!!!
-  const nsHttpHeaderArray& Headers() const;
+  const nsHttpHeaderArray& Headers() const MOZ_REQUIRES(mRecursiveMutex);
   void Enter() const MOZ_CAPABILITY_ACQUIRE(mRecursiveMutex) {
     mRecursiveMutex.Lock();
   }

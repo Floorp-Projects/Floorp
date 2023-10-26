@@ -47,7 +47,10 @@ class ServiceWorkerRegistrarTest : public ServiceWorkerRegistrar {
     RegisterServiceWorkerInternal(aData);
   }
 
-  nsTArray<ServiceWorkerRegistrationData>& TestGetData() { return mData; }
+  nsTArray<ServiceWorkerRegistrationData>& TestGetData()
+      MOZ_NO_THREAD_SAFETY_ANALYSIS {
+    return mData;
+  }
 };
 
 already_AddRefed<nsIFile> GetFile() {
