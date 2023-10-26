@@ -448,6 +448,7 @@ endef
 define make_cargo_rule
 $(1)_deps := $$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d)))
 $(1): $(CARGO_FILE) $(3) $$(if $$($(1)_deps),$$($(1)_deps),$(2))
+	$$(REPORT_BUILD)
 	$$(if $$($(1)_deps),+$(MAKE) $(2),:)
 
 $$(foreach dep, $$(call normalize_sep,$$($(1)_deps)),$$(eval $$(call make_default_rule,$$(dep))))
@@ -470,7 +471,6 @@ endif
 # has full visibility into how changes in Rust sources might affect the final
 # build.
 force-cargo-library-build:
-	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(notdir $(RUST_LIBRARY_FILE)))
 	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
 	$(call BUILDSTATUS,END_Rust $(notdir $(RUST_LIBRARY_FILE)))
@@ -528,7 +528,6 @@ ifdef HOST_RUST_LIBRARY_FILE
 host_rust_features_flag := --features '$(if $(HOST_RUST_LIBRARY_FEATURES),$(HOST_RUST_LIBRARY_FEATURES) )mozilla-central-workspace-hack'
 
 force-cargo-host-library-build:
-	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(notdir $(HOST_RUST_LIBRARY_FILE)))
 	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 	$(call BUILDSTATUS,END_Rust $(notdir $(HOST_RUST_LIBRARY_FILE)))
@@ -553,7 +552,6 @@ ifdef RUST_PROGRAMS
 program_features_flag := --features mozilla-central-workspace-hack
 
 force-cargo-program-build: $(call resfile,module)
-	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(RUST_CARGO_PROGRAMS))
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) $(program_features_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module)) $(CARGO_RUSTCFLAGS)
 	$(call BUILDSTATUS,END_Rust $(RUST_CARGO_PROGRAMS))
@@ -577,7 +575,6 @@ ifdef HOST_RUST_PROGRAMS
 host_program_features_flag := --features mozilla-central-workspace-hack
 
 force-cargo-host-program-build:
-	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(HOST_RUST_CARGO_PROGRAMS))
 	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag) $(host_program_features_flag)
 	$(call BUILDSTATUS,END_Rust $(HOST_RUST_CARGO_PROGRAMS))
@@ -586,7 +583,6 @@ $(foreach HOST_RUST_PROGRAM,$(HOST_RUST_PROGRAMS), $(eval $(call make_cargo_rule
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-host-program-%:
-	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(HOST_RUST_CARGO_PROGRAMS))
 	$(call RUN_CARGO,$*) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag) $(host_program_features_flag)
 	$(call BUILDSTATUS,END_Rust $(HOST_RUST_CARGO_PROGRAMS))
