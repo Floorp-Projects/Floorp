@@ -3583,7 +3583,11 @@ pref("webextensions.storage.sync.serverURL", "https://webextensions.settings.ser
 pref("dom.input.fallbackUploadDir", "");
 
 // Turn rewriting of youtube embeds on/off
-pref("plugins.rewrite_youtube_embeds", true);
+#if defined(NIGHTLY_BUILD)
+  pref("plugins.rewrite_youtube_embeds", false);
+#else
+  pref("plugins.rewrite_youtube_embeds", true);
+#endif
 
 // Default media volume
 pref("media.default_volume", "1.0");
