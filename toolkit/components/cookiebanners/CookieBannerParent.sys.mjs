@@ -23,6 +23,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   Ci.nsICookieBannerService.MODE_DISABLED
 );
 
+ChromeUtils.defineLazyGetter(lazy, "CookieBannerL10n", () => {
+  return new Localization([
+    "branding/brand.ftl",
+    "toolkit/global/cookieBannerHandling.ftl",
+  ]);
+});
+
 export class CookieBannerParent extends JSWindowActorParent {
   /**
    * Get the browser associated with this window which is the top level embedder
@@ -69,6 +76,33 @@ export class CookieBannerParent extends JSWindowActorParent {
     windowUtils.dispatchEventToChromeOnly(chromeWin, event);
   }
 
+  /**
+   * Logs a warning to the web console that a cookie banner has been handled.
+   */
+  async #logCookieBannerHandledToWebConsole() {
+    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(
+      Ci.nsIScriptError
+    );
+    let [message] = await lazy.CookieBannerL10n.formatMessages([
+      { id: "cookie-banner-handled-webconsole" },
+    ]);
+
+    if (!this.manager?.innerWindowId) {
+      return;
+    }
+    consoleMsg.initWithWindowID(
+      message.value,
+      this.manager.documentURI?.spec,
+      null,
+      null,
+      null,
+      Ci.nsIScriptError.warningFlag,
+      "cookiebannerhandling",
+      this.manager?.innerWindowId
+    );
+    Services.console.logMessage(consoleMsg);
+  }
+
   async receiveMessage(message) {
     if (message.name == "CookieBanner::Test-FinishClicking") {
       Services.obs.notifyObservers(
@@ -88,6 +122,7 @@ export class CookieBannerParent extends JSWindowActorParent {
     // Forwards cookie banner handled signals to frontend consumers.
     if (message.name == "CookieBanner::HandledBanner") {
       this.#notifyCookieBannerState("cookiebannerhandled");
+      this.#logCookieBannerHandledToWebConsole();
       return undefined;
     }
 
