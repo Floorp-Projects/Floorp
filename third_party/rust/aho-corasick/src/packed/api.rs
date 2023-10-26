@@ -1,9 +1,9 @@
-use alloc::sync::Arc;
+use std::u16;
 
-use crate::{
-    packed::{pattern::Patterns, rabinkarp::RabinKarp, teddy},
-    util::search::{Match, Span},
-};
+use crate::packed::pattern::Patterns;
+use crate::packed::rabinkarp::RabinKarp;
+use crate::packed::teddy::{self, Teddy};
+use crate::Match;
 
 /// This is a limit placed on the total number of patterns we're willing to try
 /// and match at once. As more sophisticated algorithms are added, this number
@@ -13,10 +13,12 @@ const PATTERN_LIMIT: usize = 128;
 /// A knob for controlling the match semantics of a packed multiple string
 /// searcher.
 ///
-/// This differs from the [`MatchKind`](crate::MatchKind) type in the top-level
-/// crate module in that it doesn't support "standard" match semantics,
-/// and instead only supports leftmost-first or leftmost-longest. Namely,
-/// "standard" semantics cannot be easily supported by packed searchers.
+/// This differs from the
+/// [`MatchKind`](../enum.MatchKind.html)
+/// type in the top-level crate module in that it doesn't support
+/// "standard" match semantics, and instead only supports leftmost-first or
+/// leftmost-longest. Namely, "standard" semantics cannot be easily supported
+/// by packed searchers.
 ///
 /// For more information on the distinction between leftmost-first and
 /// leftmost-longest, see the docs on the top-level `MatchKind` type.
@@ -24,7 +26,6 @@ const PATTERN_LIMIT: usize = 128;
 /// Unlike the top-level `MatchKind` type, the default match semantics for this
 /// type are leftmost-first.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-#[non_exhaustive]
 pub enum MatchKind {
     /// Use leftmost-first match semantics, which reports leftmost matches.
     /// When there are multiple possible leftmost matches, the match
@@ -37,6 +38,13 @@ pub enum MatchKind {
     /// When there are multiple possible leftmost matches, the longest match
     /// is chosen.
     LeftmostLongest,
+    /// Hints that destructuring should not be exhaustive.
+    ///
+    /// This enum may grow additional variants, so this makes sure clients
+    /// don't count on exhaustive matching. (Otherwise, adding a new variant
+    /// could break existing code.)
+    #[doc(hidden)]
+    __Nonexhaustive,
 }
 
 impl Default for MatchKind {
@@ -51,8 +59,9 @@ impl Default for MatchKind {
 /// match semantics (leftmost-first or leftmost-longest) of a searcher. In the
 /// future, more knobs may be made available.
 ///
-/// A configuration produces a [`packed::Builder`](Builder), which in turn can
-/// be used to construct a [`packed::Searcher`](Searcher) for searching.
+/// A configuration produces a [`packed::Builder`](struct.Builder.html), which
+/// in turn can be used to construct a
+/// [`packed::Searcher`](struct.Searcher.html) for searching.
 ///
 /// # Example
 ///
@@ -60,7 +69,7 @@ impl Default for MatchKind {
 /// default (leftmost-first).
 ///
 /// ```
-/// use aho_corasick::{packed::{Config, MatchKind}, PatternID};
+/// use aho_corasick::packed::{Config, MatchKind};
 ///
 /// # fn example() -> Option<()> {
 /// let searcher = Config::new()
@@ -69,15 +78,13 @@ impl Default for MatchKind {
 ///     .add("foo")
 ///     .add("foobar")
 ///     .build()?;
-/// let matches: Vec<PatternID> = searcher
+/// let matches: Vec<usize> = searcher
 ///     .find_iter("foobar")
 ///     .map(|mat| mat.pattern())
 ///     .collect();
-/// assert_eq!(vec![PatternID::must(1)], matches);
+/// assert_eq!(vec![1], matches);
 /// # Some(()) }
-/// # if cfg!(all(feature = "std", any(
-/// #     target_arch = "x86_64", target_arch = "aarch64",
-/// # ))) {
+/// # if cfg!(target_arch = "x86_64") {
 /// #     example().unwrap()
 /// # } else {
 /// #     assert!(example().is_none());
@@ -87,9 +94,8 @@ impl Default for MatchKind {
 pub struct Config {
     kind: MatchKind,
     force: Option<ForceAlgorithm>,
-    only_teddy_fat: Option<bool>,
-    only_teddy_256bit: Option<bool>,
-    heuristic_pattern_limits: bool,
+    force_teddy_fat: Option<bool>,
+    force_avx: Option<bool>,
 }
 
 /// An internal option for forcing the use of a particular packed algorithm.
@@ -116,14 +122,15 @@ impl Config {
         Config {
             kind: MatchKind::LeftmostFirst,
             force: None,
-            only_teddy_fat: None,
-            only_teddy_256bit: None,
-            heuristic_pattern_limits: true,
+            force_teddy_fat: None,
+            force_avx: None,
         }
     }
 
     /// Create a packed builder from this configuration. The builder can be
-    /// used to accumulate patterns and create a [`Searcher`] from them.
+    /// used to accumulate patterns and create a
+    /// [`Searcher`](struct.Searcher.html)
+    /// from them.
     pub fn builder(&self) -> Builder {
         Builder::from_config(self.clone())
     }
@@ -140,7 +147,7 @@ impl Config {
     /// should not use it as it is not part of the API stability guarantees of
     /// this crate.
     #[doc(hidden)]
-    pub fn only_teddy(&mut self, yes: bool) -> &mut Config {
+    pub fn force_teddy(&mut self, yes: bool) -> &mut Config {
         if yes {
             self.force = Some(ForceAlgorithm::Teddy);
         } else {
@@ -155,8 +162,8 @@ impl Config {
     /// should not use it as it is not part of the API stability guarantees of
     /// this crate.
     #[doc(hidden)]
-    pub fn only_teddy_fat(&mut self, yes: Option<bool>) -> &mut Config {
-        self.only_teddy_fat = yes;
+    pub fn force_teddy_fat(&mut self, yes: Option<bool>) -> &mut Config {
+        self.force_teddy_fat = yes;
         self
     }
 
@@ -167,8 +174,8 @@ impl Config {
     /// should not use it as it is not part of the API stability guarantees of
     /// this crate.
     #[doc(hidden)]
-    pub fn only_teddy_256bit(&mut self, yes: Option<bool>) -> &mut Config {
-        self.only_teddy_256bit = yes;
+    pub fn force_avx(&mut self, yes: Option<bool>) -> &mut Config {
+        self.force_avx = yes;
         self
     }
 
@@ -178,23 +185,12 @@ impl Config {
     /// should not use it as it is not part of the API stability guarantees of
     /// this crate.
     #[doc(hidden)]
-    pub fn only_rabin_karp(&mut self, yes: bool) -> &mut Config {
+    pub fn force_rabin_karp(&mut self, yes: bool) -> &mut Config {
         if yes {
             self.force = Some(ForceAlgorithm::RabinKarp);
         } else {
             self.force = None;
         }
-        self
-    }
-
-    /// Request that heuristic limitations on the number of patterns be
-    /// employed. This useful to disable for benchmarking where one wants to
-    /// explore how Teddy performs on large number of patterns even if the
-    /// heuristics would otherwise refuse construction.
-    ///
-    /// This is enabled by default.
-    pub fn heuristic_pattern_limits(&mut self, yes: bool) -> &mut Config {
-        self.heuristic_pattern_limits = yes;
         self
     }
 }
@@ -207,22 +203,20 @@ impl Config {
 /// default, leftmost-first match semantics are used.
 ///
 /// ```
-/// use aho_corasick::{packed::{Builder, MatchKind}, PatternID};
+/// use aho_corasick::packed::{Builder, MatchKind};
 ///
 /// # fn example() -> Option<()> {
 /// let searcher = Builder::new()
 ///     .add("foobar")
 ///     .add("foo")
 ///     .build()?;
-/// let matches: Vec<PatternID> = searcher
+/// let matches: Vec<usize> = searcher
 ///     .find_iter("foobar")
 ///     .map(|mat| mat.pattern())
 ///     .collect();
-/// assert_eq!(vec![PatternID::ZERO], matches);
+/// assert_eq!(vec![0], matches);
 /// # Some(()) }
-/// # if cfg!(all(feature = "std", any(
-/// #     target_arch = "x86_64", target_arch = "aarch64",
-/// # ))) {
+/// # if cfg!(target_arch = "x86_64") {
 /// #     example().unwrap()
 /// # } else {
 /// #     assert!(example().is_none());
@@ -256,7 +250,6 @@ impl Builder {
         }
         let mut patterns = self.patterns.clone();
         patterns.set_match_kind(self.config.kind);
-        let patterns = Arc::new(patterns);
         let rabinkarp = RabinKarp::new(&patterns);
         // Effectively, we only want to return a searcher if we can use Teddy,
         // since Teddy is our only fast packed searcher at the moment.
@@ -265,28 +258,23 @@ impl Builder {
         // is to force it using undocumented APIs (for tests/benchmarks).
         let (search_kind, minimum_len) = match self.config.force {
             None | Some(ForceAlgorithm::Teddy) => {
-                debug!("trying to build Teddy packed matcher");
-                let teddy = match self.build_teddy(Arc::clone(&patterns)) {
+                let teddy = match self.build_teddy(&patterns) {
                     None => return None,
                     Some(teddy) => teddy,
                 };
                 let minimum_len = teddy.minimum_len();
                 (SearchKind::Teddy(teddy), minimum_len)
             }
-            Some(ForceAlgorithm::RabinKarp) => {
-                debug!("using Rabin-Karp packed matcher");
-                (SearchKind::RabinKarp, 0)
-            }
+            Some(ForceAlgorithm::RabinKarp) => (SearchKind::RabinKarp, 0),
         };
         Some(Searcher { patterns, rabinkarp, search_kind, minimum_len })
     }
 
-    fn build_teddy(&self, patterns: Arc<Patterns>) -> Option<teddy::Searcher> {
+    fn build_teddy(&self, patterns: &Patterns) -> Option<Teddy> {
         teddy::Builder::new()
-            .only_256bit(self.config.only_teddy_256bit)
-            .only_fat(self.config.only_teddy_fat)
-            .heuristic_pattern_limits(self.config.heuristic_pattern_limits)
-            .build(patterns)
+            .avx(self.config.force_avx)
+            .fat(self.config.force_teddy_fat)
+            .build(&patterns)
     }
 
     /// Add the given pattern to this set to match.
@@ -309,7 +297,7 @@ impl Builder {
             return self;
         }
         // Just in case PATTERN_LIMIT increases beyond u16::MAX.
-        assert!(self.patterns.len() <= core::u16::MAX as usize);
+        assert!(self.patterns.len() <= u16::MAX as usize);
 
         let pattern = pattern.as_ref();
         if pattern.is_empty() {
@@ -344,16 +332,6 @@ impl Builder {
         }
         self
     }
-
-    /// Returns the number of patterns added to this builder.
-    pub fn len(&self) -> usize {
-        self.patterns.len()
-    }
-
-    /// Returns the length, in bytes, of the shortest pattern added.
-    pub fn minimum_len(&self) -> usize {
-        self.patterns.minimum_len()
-    }
 }
 
 impl Default for Builder {
@@ -366,7 +344,8 @@ impl Default for Builder {
 ///
 /// If callers need more flexible construction, or if one wants to change the
 /// match semantics (either leftmost-first or leftmost-longest), then one can
-/// use the [`Config`] and/or [`Builder`] types for more fine grained control.
+/// use the [`Config`](struct.Config.html) and/or
+/// [`Builder`](struct.Builder.html) types for more fine grained control.
 ///
 /// # Example
 ///
@@ -374,19 +353,17 @@ impl Default for Builder {
 /// By default, leftmost-first match semantics are used.
 ///
 /// ```
-/// use aho_corasick::{packed::{MatchKind, Searcher}, PatternID};
+/// use aho_corasick::packed::{MatchKind, Searcher};
 ///
 /// # fn example() -> Option<()> {
 /// let searcher = Searcher::new(["foobar", "foo"].iter().cloned())?;
-/// let matches: Vec<PatternID> = searcher
+/// let matches: Vec<usize> = searcher
 ///     .find_iter("foobar")
 ///     .map(|mat| mat.pattern())
 ///     .collect();
-/// assert_eq!(vec![PatternID::ZERO], matches);
+/// assert_eq!(vec![0], matches);
 /// # Some(()) }
-/// # if cfg!(all(feature = "std", any(
-/// #     target_arch = "x86_64", target_arch = "aarch64",
-/// # ))) {
+/// # if cfg!(target_arch = "x86_64") {
 /// #     example().unwrap()
 /// # } else {
 /// #     assert!(example().is_none());
@@ -394,7 +371,7 @@ impl Default for Builder {
 /// ```
 #[derive(Clone, Debug)]
 pub struct Searcher {
-    patterns: Arc<Patterns>,
+    patterns: Patterns,
     rabinkarp: RabinKarp,
     search_kind: SearchKind,
     minimum_len: usize,
@@ -402,7 +379,7 @@ pub struct Searcher {
 
 #[derive(Clone, Debug)]
 enum SearchKind {
-    Teddy(teddy::Searcher),
+    Teddy(Teddy),
     RabinKarp,
 }
 
@@ -419,19 +396,17 @@ impl Searcher {
     /// Basic usage:
     ///
     /// ```
-    /// use aho_corasick::{packed::{MatchKind, Searcher}, PatternID};
+    /// use aho_corasick::packed::{MatchKind, Searcher};
     ///
     /// # fn example() -> Option<()> {
     /// let searcher = Searcher::new(["foobar", "foo"].iter().cloned())?;
-    /// let matches: Vec<PatternID> = searcher
+    /// let matches: Vec<usize> = searcher
     ///     .find_iter("foobar")
     ///     .map(|mat| mat.pattern())
     ///     .collect();
-    /// assert_eq!(vec![PatternID::ZERO], matches);
+    /// assert_eq!(vec![0], matches);
     /// # Some(()) }
-    /// # if cfg!(all(feature = "std", any(
-    /// #     target_arch = "x86_64", target_arch = "aarch64",
-    /// # ))) {
+    /// # if cfg!(target_arch = "x86_64") {
     /// #     example().unwrap()
     /// # } else {
     /// #     assert!(example().is_none());
@@ -445,20 +420,6 @@ impl Searcher {
         Builder::new().extend(patterns).build()
     }
 
-    /// A convenience function for calling `Config::new()`.
-    ///
-    /// This is useful for avoiding an additional import.
-    pub fn config() -> Config {
-        Config::new()
-    }
-
-    /// A convenience function for calling `Builder::new()`.
-    ///
-    /// This is useful for avoiding an additional import.
-    pub fn builder() -> Builder {
-        Builder::new()
-    }
-
     /// Return the first occurrence of any of the patterns in this searcher,
     /// according to its match semantics, in the given haystack. The `Match`
     /// returned will include the identifier of the pattern that matched, which
@@ -470,27 +431,23 @@ impl Searcher {
     /// Basic usage:
     ///
     /// ```
-    /// use aho_corasick::{packed::{MatchKind, Searcher}, PatternID};
+    /// use aho_corasick::packed::{MatchKind, Searcher};
     ///
     /// # fn example() -> Option<()> {
     /// let searcher = Searcher::new(["foobar", "foo"].iter().cloned())?;
     /// let mat = searcher.find("foobar")?;
-    /// assert_eq!(PatternID::ZERO, mat.pattern());
+    /// assert_eq!(0, mat.pattern());
     /// assert_eq!(0, mat.start());
     /// assert_eq!(6, mat.end());
     /// # Some(()) }
-    /// # if cfg!(all(feature = "std", any(
-    /// #     target_arch = "x86_64", target_arch = "aarch64",
-    /// # ))) {
+    /// # if cfg!(target_arch = "x86_64") {
     /// #     example().unwrap()
     /// # } else {
     /// #     assert!(example().is_none());
     /// # }
     /// ```
-    #[inline]
     pub fn find<B: AsRef<[u8]>>(&self, haystack: B) -> Option<Match> {
-        let haystack = haystack.as_ref();
-        self.find_in(haystack, Span::from(0..haystack.len()))
+        self.find_at(haystack, 0)
     }
 
     /// Return the first occurrence of any of the patterns in this searcher,
@@ -507,40 +464,36 @@ impl Searcher {
     /// Basic usage:
     ///
     /// ```
-    /// use aho_corasick::{packed::{MatchKind, Searcher}, PatternID, Span};
+    /// use aho_corasick::packed::{MatchKind, Searcher};
     ///
     /// # fn example() -> Option<()> {
-    /// let haystack = "foofoobar";
     /// let searcher = Searcher::new(["foobar", "foo"].iter().cloned())?;
-    /// let mat = searcher.find_in(haystack, Span::from(3..haystack.len()))?;
-    /// assert_eq!(PatternID::ZERO, mat.pattern());
+    /// let mat = searcher.find_at("foofoobar", 3)?;
+    /// assert_eq!(0, mat.pattern());
     /// assert_eq!(3, mat.start());
     /// assert_eq!(9, mat.end());
     /// # Some(()) }
-    /// # if cfg!(all(feature = "std", any(
-    /// #     target_arch = "x86_64", target_arch = "aarch64",
-    /// # ))) {
+    /// # if cfg!(target_arch = "x86_64") {
     /// #     example().unwrap()
     /// # } else {
     /// #     assert!(example().is_none());
     /// # }
     /// ```
-    #[inline]
-    pub fn find_in<B: AsRef<[u8]>>(
+    pub fn find_at<B: AsRef<[u8]>>(
         &self,
         haystack: B,
-        span: Span,
+        at: usize,
     ) -> Option<Match> {
         let haystack = haystack.as_ref();
         match self.search_kind {
             SearchKind::Teddy(ref teddy) => {
-                if haystack[span].len() < teddy.minimum_len() {
-                    return self.find_in_slow(haystack, span);
+                if haystack[at..].len() < teddy.minimum_len() {
+                    return self.slow_at(haystack, at);
                 }
-                teddy.find(&haystack[..span.end], span.start)
+                teddy.find_at(&self.patterns, haystack, at)
             }
             SearchKind::RabinKarp => {
-                self.rabinkarp.find_at(&haystack[..span.end], span.start)
+                self.rabinkarp.find_at(&self.patterns, haystack, at)
             }
         }
     }
@@ -553,37 +506,27 @@ impl Searcher {
     /// Basic usage:
     ///
     /// ```
-    /// use aho_corasick::{packed::{MatchKind, Searcher}, PatternID};
+    /// use aho_corasick::packed::{MatchKind, Searcher};
     ///
     /// # fn example() -> Option<()> {
     /// let searcher = Searcher::new(["foobar", "foo"].iter().cloned())?;
-    /// let matches: Vec<PatternID> = searcher
+    /// let matches: Vec<usize> = searcher
     ///     .find_iter("foobar fooba foofoo")
     ///     .map(|mat| mat.pattern())
     ///     .collect();
-    /// assert_eq!(vec![
-    ///     PatternID::must(0),
-    ///     PatternID::must(1),
-    ///     PatternID::must(1),
-    ///     PatternID::must(1),
-    /// ], matches);
+    /// assert_eq!(vec![0, 1, 1, 1], matches);
     /// # Some(()) }
-    /// # if cfg!(all(feature = "std", any(
-    /// #     target_arch = "x86_64", target_arch = "aarch64",
-    /// # ))) {
+    /// # if cfg!(target_arch = "x86_64") {
     /// #     example().unwrap()
     /// # } else {
     /// #     assert!(example().is_none());
     /// # }
     /// ```
-    #[inline]
     pub fn find_iter<'a, 'b, B: ?Sized + AsRef<[u8]>>(
         &'a self,
         haystack: &'b B,
     ) -> FindIter<'a, 'b> {
-        let haystack = haystack.as_ref();
-        let span = Span::from(0..haystack.len());
-        FindIter { searcher: self, haystack, span }
+        FindIter { searcher: self, haystack: haystack.as_ref(), at: 0 }
     }
 
     /// Returns the match kind used by this packed searcher.
@@ -600,15 +543,12 @@ impl Searcher {
     /// // leftmost-first is the default.
     /// assert_eq!(&MatchKind::LeftmostFirst, searcher.match_kind());
     /// # Some(()) }
-    /// # if cfg!(all(feature = "std", any(
-    /// #     target_arch = "x86_64", target_arch = "aarch64",
-    /// # ))) {
+    /// # if cfg!(target_arch = "x86_64") {
     /// #     example().unwrap()
     /// # } else {
     /// #     assert!(example().is_none());
     /// # }
     /// ```
-    #[inline]
     pub fn match_kind(&self) -> &MatchKind {
         self.patterns.match_kind()
     }
@@ -623,18 +563,16 @@ impl Searcher {
     /// want to avoid ever using the slower variant, which one can do by
     /// never passing a haystack shorter than the minimum length returned by
     /// this method.
-    #[inline]
     pub fn minimum_len(&self) -> usize {
         self.minimum_len
     }
 
     /// Returns the approximate total amount of heap used by this searcher, in
     /// units of bytes.
-    #[inline]
-    pub fn memory_usage(&self) -> usize {
-        self.patterns.memory_usage()
-            + self.rabinkarp.memory_usage()
-            + self.search_kind.memory_usage()
+    pub fn heap_bytes(&self) -> usize {
+        self.patterns.heap_bytes()
+            + self.rabinkarp.heap_bytes()
+            + self.search_kind.heap_bytes()
     }
 
     /// Use a slow (non-packed) searcher.
@@ -643,15 +581,15 @@ impl Searcher {
     /// not be used to search a specific haystack. For example, if Teddy was
     /// built but the haystack is smaller than ~34 bytes, then Teddy might not
     /// be able to run.
-    fn find_in_slow(&self, haystack: &[u8], span: Span) -> Option<Match> {
-        self.rabinkarp.find_at(&haystack[..span.end], span.start)
+    fn slow_at(&self, haystack: &[u8], at: usize) -> Option<Match> {
+        self.rabinkarp.find_at(&self.patterns, haystack, at)
     }
 }
 
 impl SearchKind {
-    fn memory_usage(&self) -> usize {
+    fn heap_bytes(&self) -> usize {
         match *self {
-            SearchKind::Teddy(ref ted) => ted.memory_usage(),
+            SearchKind::Teddy(ref ted) => ted.heap_bytes(),
             SearchKind::RabinKarp => 0,
         }
     }
@@ -659,28 +597,28 @@ impl SearchKind {
 
 /// An iterator over non-overlapping matches from a packed searcher.
 ///
-/// The lifetime `'s` refers to the lifetime of the underlying [`Searcher`],
-/// while the lifetime `'h` refers to the lifetime of the haystack being
-/// searched.
+/// The lifetime `'s` refers to the lifetime of the underlying
+/// [`Searcher`](struct.Searcher.html), while the lifetime `'h` refers to the
+/// lifetime of the haystack being searched.
 #[derive(Debug)]
 pub struct FindIter<'s, 'h> {
     searcher: &'s Searcher,
     haystack: &'h [u8],
-    span: Span,
+    at: usize,
 }
 
 impl<'s, 'h> Iterator for FindIter<'s, 'h> {
     type Item = Match;
 
     fn next(&mut self) -> Option<Match> {
-        if self.span.start > self.span.end {
+        if self.at > self.haystack.len() {
             return None;
         }
-        match self.searcher.find_in(&self.haystack, self.span) {
+        match self.searcher.find_at(&self.haystack, self.at) {
             None => None,
-            Some(m) => {
-                self.span.start = m.end();
-                Some(m)
+            Some(c) => {
+                self.at = c.end;
+                Some(c)
             }
         }
     }
