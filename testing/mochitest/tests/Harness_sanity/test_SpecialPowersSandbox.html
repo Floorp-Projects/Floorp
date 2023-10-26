@@ -129,6 +129,23 @@ add_task(async function() {
     let results = diags.map(diag => [diag.condition, diag.name, diag.diag]);
 
     isDeeply(results, expected, "Got expected assertions");
+    for (let { name: diagName, stack } of diags) {
+      ok(stack, `Got stack for: ${diagName}`);
+      // Unlike test_SpecialPowersSandbox.js, expectedFilenamePart does not end
+      // with ":" (separator between file name and line number). This is because
+      // xorigin tests run this test file with a query param ("currentTestURL"),
+      // and the name therefore looks like "test_SpecialPowersSandbox.html?...:"
+      // instead of "test_SpecialPowersSandbox.html:"
+      let expectedFilenamePart = "/test_SpecialPowersSandbox.html";
+      if (name === "SpecialPowers.loadChromeScript") {
+        // Unfortunately, the original file name is not included;
+        // the function name or a dummy value is used instead.
+        expectedFilenamePart = "loadChromeScript anonymous function>";
+      }
+      if (!stack.includes(expectedFilenamePart)) {
+        ok(false, `Stack does not contain ${expectedFilenamePart}: ${stack}`);
+      }
+    }
   }
 });
 </script>

@@ -146,5 +146,20 @@ add_task(async function () {
     let results = diags.map(diag => [diag.passed, diag.msg]);
 
     deepEqual(results, expected, "Got expected assertions");
+    for (let { msg, stack } of diags) {
+      ok(stack, `Got stack for: ${msg}`);
+      // Unlike the html version of this test, this one does not include a "/"
+      // in front of the file name, because somehow Android only includes the
+      // file name, and not the fuller path.
+      let expectedFilenamePart = "test_SpecialPowersSandbox.js:";
+      if (name === "SpecialPowers.loadChromeScript") {
+        // Unfortunately, the original file name is not included;
+        // the function name or a dummy value is used instead.
+        expectedFilenamePart = "loadChromeScript anonymous function>:";
+      }
+      if (!stack.includes(expectedFilenamePart)) {
+        ok(false, `Stack does not contain ${expectedFilenamePart}: ${stack}`);
+      }
+    }
   }
 });
