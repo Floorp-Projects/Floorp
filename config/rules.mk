@@ -399,7 +399,7 @@ endif
 target-objects: $(OBJS) $(PROGOBJS) $(filter-out $(MOZBUILD_NON_DEFAULT_TARGETS),$(RUST_LIBRARY_FILE))
 host-objects: $(HOST_OBJS) $(HOST_PROGOBJS) $(HOST_RUST_LIBRARY_FILE)
 
-syms::
+syms:
 
 include $(MOZILLA_DIR)/config/makefiles/target_binaries.mk
 endif
@@ -637,7 +637,7 @@ $(ASOBJS):
 endif
 
 define syms_template
-syms:: $(2)
+syms: $(2)
 $(2): $(1)
 ifdef MOZ_CRASHREPORTER
 	$$(call py_action,dumpsymbols $$@,$$(abspath $$<) $$(abspath $$@) $$(DUMP_SYMBOLS_FLAGS))
