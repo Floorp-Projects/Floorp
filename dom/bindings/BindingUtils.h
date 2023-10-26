@@ -2954,6 +2954,15 @@ bool CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
     if (!CreateGlobalOptions<T>::PostCreateGlobal(aCx, aGlobal)) {
       return false;
     }
+
+    // Initializing this at this point for nsGlobalWindowInner makes no sense,
+    // because GetRTPCallerType doesn't return the correct result before
+    // the global is completely initialized with a document.
+    if constexpr (!std::is_base_of_v<nsGlobalWindowInner, T>) {
+      JS::SetRealmReduceTimerPrecisionCallerType(
+          js::GetNonCCWObjectRealm(aGlobal),
+          RTPCallerTypeToToken(aNative->GetRTPCallerType()));
+    }
   }
 
   if (aInitStandardClasses && !JS::InitRealmStandardClasses(aCx)) {

@@ -135,6 +135,9 @@ static void CreateGlobalAndRunTest(JSContext* cx) {
                                       &JS::DefaultGlobalClassOps};
 
   JS::RealmOptions options;
+  // dummy
+  options.behaviors().setReduceTimerPrecisionCallerType(
+      JS::RTPCallerTypeToken{0});
   JS::PersistentRootedObject global(cx);
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr,
                               JS::FireOnNewGlobalHook, options);

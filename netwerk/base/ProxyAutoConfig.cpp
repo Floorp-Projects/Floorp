@@ -455,7 +455,10 @@ class JSContextWrapper {
 
     JS::RealmOptions options;
     options.creationOptions().setNewCompartmentInSystemZone();
-    options.behaviors().setClampAndJitterTime(false);
+    options.behaviors()
+        .setClampAndJitterTime(false)
+        .setReduceTimerPrecisionCallerType(
+            RTPCallerTypeToToken(RTPCallerType::Normal));
     mGlobal = JS_NewGlobalObject(mContext, &sGlobalClass, nullptr,
                                  JS::DontFireOnNewGlobalHook, options);
     if (!mGlobal) {

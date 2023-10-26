@@ -139,6 +139,19 @@ enum class RTPCallerType : uint8_t {
   CrossOriginIsolated = (1 << 2)
 };
 
+inline JS::RTPCallerTypeToken RTPCallerTypeToToken(RTPCallerType aType) {
+  return JS::RTPCallerTypeToken{uint8_t(aType)};
+}
+
+inline RTPCallerType RTPCallerTypeFromToken(JS::RTPCallerTypeToken aToken) {
+  MOZ_RELEASE_ASSERT(
+      aToken.value == uint8_t(RTPCallerType::Normal) ||
+      aToken.value == uint8_t(RTPCallerType::SystemPrincipal) ||
+      aToken.value == uint8_t(RTPCallerType::ResistFingerprinting) ||
+      aToken.value == uint8_t(RTPCallerType::CrossOriginIsolated));
+  return static_cast<RTPCallerType>(aToken.value);
+}
+
 enum TimerPrecisionType {
   DangerouslyNone = 1,
   UnconditionalAKAHighRes = 2,
