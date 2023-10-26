@@ -291,9 +291,6 @@ class GraphDriver {
    */
   virtual void EnsureNextIteration() = 0;
 
-  /* Implement the switching of the driver and the necessary updates */
-  void SwitchToDriver(GraphDriver* aDriver);
-
   // Those are simply for accessing the associated pointer. Graph thread only,
   // or if one is not running, main thread.
   GraphDriver* PreviousDriver();
