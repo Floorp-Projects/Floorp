@@ -486,7 +486,7 @@ mochitest-devtools-chrome:
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 12
-            linux.*64-qr/debug: 12
+            linux.*64-qr/debug: 14
             macosx.*64-qr/debug: 8
             .*-asan(-qr)?/opt: 8
             .*-tsan-qr/opt: 16
