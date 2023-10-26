@@ -413,10 +413,7 @@ export class UrlbarInput {
         uri =
           this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
           uri ||
-          (this.window.gBrowser.selectedBrowser.browsingContext.sessionHistory
-            ?.count === 0 &&
-            this.window.gBrowser.selectedBrowser.browsingContext
-              .nonWebControlledBlankURI) ||
+          this.#isOpenedPageInBlankTargetLoading ||
           this.window.gBrowser.currentURI;
         // Strip off usernames and passwords for the location bar
         try {
@@ -2476,7 +2473,10 @@ export class UrlbarInput {
 
     let uri;
     if (this.getAttribute("pageproxystate") == "valid") {
-      uri = this.window.gBrowser.currentURI;
+      uri = this.#isOpenedPageInBlankTargetLoading
+        ? this.window.gBrowser.selectedBrowser.browsingContext
+            .nonWebControlledBlankURI
+        : this.window.gBrowser.currentURI;
     } else {
       // The value could be:
       // 1. a trimmed url, set by selecting a result
@@ -3996,6 +3996,15 @@ export class UrlbarInput {
   #isSchemeless(value) {
     return ["http://", "https://", "file://"].every(
       scheme => !value.trim().startsWith(scheme)
+    );
+  }
+
+  get #isOpenedPageInBlankTargetLoading() {
+    return (
+      this.window.gBrowser.selectedBrowser.browsingContext.sessionHistory
+        ?.count === 0 &&
+      this.window.gBrowser.selectedBrowser.browsingContext
+        .nonWebControlledBlankURI
     );
   }
 }
