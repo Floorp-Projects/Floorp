@@ -3456,6 +3456,7 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed, "fetchFromEndpoint").resolves({
         data: [
           {
+            recommendationId: "decaf-c0ff33",
             tileId: 1234,
             url: "url",
             title: "title",
@@ -3481,6 +3482,7 @@ describe("DiscoveryStreamFeed", () => {
               publisher: "publisher",
               time_to_read: "timeToRead",
               raw_image_src: "imageUrl",
+              recommendation_id: "decaf-c0ff33",
             },
           ],
           status: "success",
