@@ -34,7 +34,6 @@
   skin/classic/global/design-system/tokens-brand.css       (../../shared/design-system/tokens-brand.css)
   skin/classic/global/design-system/tokens-shared.css      (../../shared/design-system/tokens-shared.css)
   skin/classic/global/design-system/tokens-platform.css    (../../shared/design-system/tokens-platform.css)
-  skin/classic/global/dropmarker.css                       (../../shared/dropmarker.css)
   skin/classic/global/error-pages.css                      (../../shared/error-pages.css)
   skin/classic/global/findbar.css                          (../../shared/findbar.css)
   skin/classic/global/global-shared.css                    (../../shared/global-shared.css)

@@ -60,16 +60,3 @@ button.plain {
   margin: 0 !important;
   padding: 0 !important;
 }
-
-button[type="disclosure"] {
-  margin: 0;
-  appearance: none;
-  list-style-image: url("chrome://global/skin/icons/arrow-right-12.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-  min-width: 0;
-}
-
-button[type="disclosure"][open="true"] {
-  list-style-image: url("chrome://global/skin/icons/arrow-down-12.svg");
-}
