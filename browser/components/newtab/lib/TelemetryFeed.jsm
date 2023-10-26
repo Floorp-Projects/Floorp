@@ -1178,6 +1178,35 @@ class TelemetryFeed {
       case at.ABOUT_SPONSORED_TOP_SITES:
         this.handleAboutSponsoredTopSites(action);
         break;
+      case at.BLOCK_URL:
+        this.handleBlockUrl(action);
+        break;
+    }
+  }
+
+  handleBlockUrl(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    // TODO: Do we want to not send this unless there's a newtab_visit_id?
+    if (!session) {
+      return;
+    }
+
+    // Despite the action name, this is actually a bulk dismiss action:
+    // it can be applied to multiple topsites simultaneously.
+    const { data } = action;
+    for (const datum of data) {
+      if (datum.is_pocket_card) {
+        // There is no instrumentation for Pocket dismissals (yet).
+        continue;
+      }
+      const { position, advertiser_name, tile_id, isSponsoredTopSite } = datum;
+      Glean.topsites.dismiss.record({
+        advertiser_name,
+        tile_id: tile_id?.toString(),
+        newtab_visit_id: session.session_id,
+        is_sponsored: !!isSponsoredTopSite,
+        position,
+      });
     }
   }
 

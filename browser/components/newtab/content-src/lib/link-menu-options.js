@@ -98,6 +98,18 @@ export const LinkMenuOptions = {
         // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
         isSponsoredTopSite: site.sponsored_position,
         ...(site.flight_id ? { flight_id: site.flight_id } : {}),
+        // If not sponsored, hostname could be anything (Cat3 Data!).
+        // So only put in advertiser_name for sponsored topsites.
+        ...(site.sponsored_position
+          ? {
+              advertiser_name: (
+                site.label || site.hostname
+              )?.toLocaleLowerCase(),
+            }
+          : {}),
+        position: pos,
+        ...(site.sponsored_tile_id ? { tile_id: site.sponsored_tile_id } : {}),
+        is_pocket_card: site.type === "CardGrid",
       })),
     }),
     impression: ac.ImpressionStats({
