@@ -43,6 +43,7 @@ interface SVGSVGElement : SVGGraphicsElement {
   // NodeList getEnclosureList(SVGRect rect, SVGElement referenceElement);
   // boolean checkIntersection(SVGElement element, SVGRect rect);
   // boolean checkEnclosure(SVGElement element, SVGRect rect);
+  [Deprecated="SVGDeselectAll"]
   undefined deselectAll();
   [NewObject]
   SVGNumber createSVGNumber();
