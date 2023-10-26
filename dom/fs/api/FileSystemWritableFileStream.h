@@ -51,8 +51,8 @@ class FileSystemWritableFileStream final : public WritableStream {
   static RefPtr<CreatePromise> Create(
       const nsCOMPtr<nsIGlobalObject>& aGlobal,
       RefPtr<FileSystemManager>& aManager,
-      RefPtr<FileSystemWritableFileStreamChild> aActor,
       mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+      RefPtr<FileSystemWritableFileStreamChild> aActor,
       fs::FileSystemEntryMetadata&& aMetadata,
       RefPtr<StrongWorkerRef> aBuildWorkerRef);
 
@@ -96,12 +96,13 @@ class FileSystemWritableFileStream final : public WritableStream {
  private:
   class CloseHandler;
 
-  FileSystemWritableFileStream(const nsCOMPtr<nsIGlobalObject>& aGlobal,
-                               RefPtr<FileSystemManager>& aManager,
-                               RefPtr<FileSystemWritableFileStreamChild> aActor,
-                               already_AddRefed<TaskQueue> aTaskQueue,
-                               nsCOMPtr<nsIRandomAccessStream> aStream,
-                               fs::FileSystemEntryMetadata&& aMetadata);
+  FileSystemWritableFileStream(
+      const nsCOMPtr<nsIGlobalObject>& aGlobal,
+      RefPtr<FileSystemManager>& aManager,
+      mozilla::ipc::RandomAccessStreamParams&& aStreamParams,
+      RefPtr<FileSystemWritableFileStreamChild> aActor,
+      already_AddRefed<TaskQueue> aTaskQueue,
+      fs::FileSystemEntryMetadata&& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
 
@@ -117,6 +118,8 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);
 
+  nsresult EnsureStream();
+
   void NoteFinishedCommand();
 
   [[nodiscard]] RefPtr<BoolPromise> Finish();
@@ -130,6 +133,8 @@ class FileSystemWritableFileStream final : public WritableStream {
   RefPtr<fs::FileSystemThreadSafeStreamOwner> mStreamOwner;
 
   RefPtr<StrongWorkerRef> mWorkerRef;
+
+  mozilla::ipc::RandomAccessStreamParams mStreamParams;
 
   fs::FileSystemEntryMetadata mMetadata;
 

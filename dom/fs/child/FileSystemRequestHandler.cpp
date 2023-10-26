@@ -281,7 +281,7 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
   autoDelete.release();
 
   FileSystemWritableFileStream::Create(
-      aPromise->GetParentObject(), aManager, actor, std::move(params),
+      aPromise->GetParentObject(), aManager, std::move(params), actor,
       std::move(metadata), std::move(buildWorkerRef))
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aPromise](CreatePromise::ResolveOrRejectValue&& aValue) {
