@@ -54,6 +54,19 @@ export default [
     isActive: false,
   },
   {
+    info: "text-wrap: balance; does not throw if element is not a block",
+    property: "text-wrap",
+    createTestElement: rootNode => {
+      const element = document.createElement("div");
+      element.textContent = LOREM_IPSUM;
+      rootNode.append(element);
+      return element;
+    },
+    tagName: "div",
+    rules: ["div { text-wrap: balance; display: inline; }"],
+    isActive: true,
+  },
+  {
     info: "text-wrap: initial; is active",
     property: "text-wrap",
     createTestElement: rootNode => {
