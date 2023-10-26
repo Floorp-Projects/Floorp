@@ -41,6 +41,10 @@ hmulC: dd  0,  1,  2,  3, 16, 17, 18, 19, 32, 33, 34, 35, 48, 49, 50, 51
 hmulD: dd  0,  1, 16, 17, 32, 33, 48, 49
 hshuf4:db  0,  4,  8, 12,  1,  5,  9, 13,  2,  6, 10, 14,  3,  7, 11, 15
 
+shift1: dq 0x0204081020408000
+shift3: dq 0x0810204080000000
+shift4: dq 0x1020408000000000
+
 pb_1:    times 4 db 1
 pb_2:    times 4 db 2
 pb_3:    times 4 db 3
@@ -49,9 +53,6 @@ pb_16:   times 4 db 16
 pb_63:   times 4 db 63
 pb_64:   times 4 db 64
 pb_128:  times 4 db 0x80
-pb_240:  times 4 db 0xf0
-pb_248:  times 4 db 0xf8
-pb_254:  times 4 db 0xfe
 pb_2_1:  times 2 db 2, 1
 pb_3_1:  times 2 db 3, 1
 pb_7_1:  times 2 db 7, 1
@@ -482,8 +483,7 @@ SECTION .text
     vpbroadcastb      m1, [lutq+136]
     pminub            m2, m1
     pmaxub            m2, m15               ; I
-    pand              m1, m0, [pb_240]{bcstd}
-    psrlq             m1, 4                 ; H
+    gf2p8affineqb     m1, m0, [shift4]{bcstq}, 0 ; H
     paddd             m0, [pb_2]{bcstd}
     paddb             m0, m0
     paddb             m0, m2                ; E
@@ -534,8 +534,7 @@ SECTION .text
     ABSSUB           m10, m3, m6, m11       ; abs(p1-q1)
     ABSSUB           m11, m4, m5, m2        ; abs(p0-q0)
     paddusb          m11, m11
-    pand             m10, [pb_254]{bcstd}
-    psrlq            m10, 1
+    gf2p8affineqb    m10, m10, [shift1]{bcstq}, 0
     paddusb          m10, m11               ; abs(p0-q0)*2+(abs(p1-q1)>>1)
     vpcmpub       k3{k3}, m10, m0, 2        ; abs(p0-q0)*2+(abs(p1-q1)>>1) <= E
 
@@ -608,12 +607,8 @@ SECTION .text
     paddsb    m10{k3}{z}, m10, m11          ; f=iclip_diff(3*(q0-p0)+f)&fm
     paddsb            m8, m10, m15
     paddsb           m10, m0
-    pand              m8, [pb_248]{bcstd}
-    pand             m10, [pb_248]{bcstd}
-    psrlq             m8, 3
-    psrlq            m10, 3
-    pxor              m8, m12
-    pxor             m10, m12
+    gf2p8affineqb     m8, m8, [shift3]{bcstq}, 16
+    gf2p8affineqb    m10, m10, [shift3]{bcstq}, 16
     psubb             m8, m12               ; f2
     psubb            m10, m12               ; f1
     paddsb            m4, m8
