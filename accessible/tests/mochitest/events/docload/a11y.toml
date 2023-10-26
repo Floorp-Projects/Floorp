@@ -12,11 +12,10 @@ support-files = [
 ['test_docload_iframe.html']
 
 ['test_docload_root.html']
-skip-if = '''
-  os == 'mac' '''  # bug 1456997
+skip-if = ["os == 'mac'"] # bug 1456997
 
 ['test_docload_shutdown.html']
-skip-if = '''
-  os == 'mac'
-  display == 'wayland'
-'''  # mac: bug 1456997, wayland: bug 1850412
+skip-if = [
+  "os == 'mac'", # bug 1456997
+  "display == 'wayland'", # bug 1850412
+]
