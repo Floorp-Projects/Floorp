@@ -219,6 +219,44 @@ TEST(TestAudioTrackGraph, SetOutputDeviceID)
   WaitFor(cubeb->StreamDestroyEvent());
 }
 
+TEST(TestAudioTrackGraph, StreamName)
+{
+  MockCubeb* cubeb = new MockCubeb();
+  CubebUtils::ForceSetCubebContext(cubeb->AsCubebContext());
+
+  // Initialize a graph with a system thread driver to check that the stream
+  // name survives the driver switch.
+  MediaTrackGraphImpl* graph = MediaTrackGraphImpl::GetInstance(
+      MediaTrackGraph::SYSTEM_THREAD_DRIVER, /*Window ID*/ 1,
+      CubebUtils::PreferredSampleRate(/* aShouldResistFingerprinting */ false),
+      /*OutputDeviceID*/ reinterpret_cast<cubeb_devid>(1),
+      GetMainThreadSerialEventTarget());
+  nsLiteralCString name1("name1");
+  graph->CurrentDriver()->SetStreamName(name1);
+
+  // Dummy track to start the graph rolling and switch to an
+  // AudioCallbackDriver.
+  RefPtr<SourceMediaTrack> dummySource;
+  DispatchFunction(
+      [&] { dummySource = graph->CreateSourceTrack(MediaSegment::AUDIO); });
+
+  RefPtr<SmartMockCubebStream> stream = WaitFor(cubeb->StreamInitEvent());
+  EXPECT_STREQ(stream->StreamName(), name1.get());
+
+  // Test a name change on an existing stream.
+  nsLiteralCString name2("name2");
+  DispatchFunction([&] {
+    graph->QueueControlMessageWithNoShutdown(
+        [&] { graph->CurrentDriver()->SetStreamName(name2); });
+  });
+  nsCString name = WaitFor(stream->NameSetEvent());
+  EXPECT_EQ(name, name2);
+
+  // Test has finished. Destroy the track to shutdown the MTG.
+  DispatchMethod(dummySource, &SourceMediaTrack::Destroy);
+  WaitFor(cubeb->StreamDestroyEvent());
+}
+
 TEST(TestAudioTrackGraph, NotifyDeviceStarted)
 {
   MockCubeb* cubeb = new MockCubeb();
