@@ -9,24 +9,25 @@
     <script src="/tests/SimpleTest/SimpleTest.js"></script>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/javascript">
-     SimpleTest.waitForExplicitFinish();
-     let path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/file_youtube_flash_embed.html';
-     onmessage = function(e) {
-       let msg = JSON.parse(e.data);
-       if (msg.fn == "finish") {
-         SimpleTest.finish();
-         return;
-       }
-       self[msg.fn].apply(null, msg.args);
-     }
-     function onLoad() {
-       // The test file must be loaded into youtube.com domain
-       // because it needs unprivileged access to fullscreenEnabled.
-       ifr.src = "https://mochitest.youtube.com" + path;
-     }
+      SimpleTest.waitForExplicitFinish();
+      document.addEventListener("DOMContentLoaded", async function() {
+        await SpecialPowers.pushPrefEnv({ set: [["plugins.rewrite_youtube_embeds", true]] });
+        let path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/file_youtube_flash_embed.html';
+        window.onmessage = function(e) {
+          let msg = JSON.parse(e.data);
+          if (msg.fn == "finish") {
+            SimpleTest.finish();
+            return;
+          }
+          self[msg.fn].apply(null, msg.args);
+        }
+        // The test file must be loaded into youtube.com domain
+        // because it needs unprivileged access to fullscreenEnabled.
+        ifr.src = "https://mochitest.youtube.com" + path;
+      });
     </script>
   </head>
-  <body onload="onLoad()">
+  <body>
     <iframe id="ifr" allowfullscreen></iframe>
   </body>
 </html>
