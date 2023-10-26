@@ -12,7 +12,7 @@ commit = 'a78b98a6'
 
 [[repos]]
 name = 'exception-handling'
-commit = '76419ef8c'
+commit = 'cfe863826'
 
 [[repos]]
 name = 'memory64'
@@ -20,11 +20,11 @@ commit = '8d8f532d3'
 
 [[repos]]
 name = 'relaxed-simd'
-commit = 'c4c9ddaf0'
+commit = '22257c57b'
 
 [[repos]]
 name = 'extended-const'
-commit = 'dd72ab967'
+commit = '7612271a7'
 
 [[repos]]
 name = 'tail-call'
@@ -32,7 +32,7 @@ commit = '6f44ca27a'
 
 [[repos]]
 name = 'multi-memory'
-commit = '4f6b8f53e'
+commit = 'c2c00d81c'
 
 [[repos]]
 name = 'function-references'

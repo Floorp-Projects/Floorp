@@ -167,85 +167,85 @@ let $1 = instantiate(`(module
   )
 )`);
 
-// ./test/core/try_catch.wast:152
+// ./test/core/try_catch.wast:172
 assert_return(() => invoke($1, `empty-catch`, []), []);
 
-// ./test/core/try_catch.wast:154
+// ./test/core/try_catch.wast:174
 assert_return(() => invoke($1, `simple-throw-catch`, [0]), [value("i32", 23)]);
 
-// ./test/core/try_catch.wast:155
+// ./test/core/try_catch.wast:175
 assert_return(() => invoke($1, `simple-throw-catch`, [1]), [value("i32", 42)]);
 
-// ./test/core/try_catch.wast:157
+// ./test/core/try_catch.wast:177
 assert_trap(() => invoke($1, `unreachable-not-caught`, []), `unreachable`);
 
-// ./test/core/try_catch.wast:159
+// ./test/core/try_catch.wast:179
 assert_return(() => invoke($1, `trap-in-callee`, [7, 2]), [value("i32", 3)]);
 
-// ./test/core/try_catch.wast:160
+// ./test/core/try_catch.wast:180
 assert_trap(() => invoke($1, `trap-in-callee`, [1, 0]), `integer divide by zero`);
 
-// ./test/core/try_catch.wast:162
+// ./test/core/try_catch.wast:182
 assert_return(() => invoke($1, `catch-complex-1`, [0]), [value("i32", 3)]);
 
-// ./test/core/try_catch.wast:163
+// ./test/core/try_catch.wast:183
 assert_return(() => invoke($1, `catch-complex-1`, [1]), [value("i32", 4)]);
 
-// ./test/core/try_catch.wast:164
+// ./test/core/try_catch.wast:184
 assert_exception(() => invoke($1, `catch-complex-1`, [2]));
 
-// ./test/core/try_catch.wast:166
+// ./test/core/try_catch.wast:186
 assert_return(() => invoke($1, `catch-complex-2`, [0]), [value("i32", 3)]);
 
-// ./test/core/try_catch.wast:167
+// ./test/core/try_catch.wast:187
 assert_return(() => invoke($1, `catch-complex-2`, [1]), [value("i32", 4)]);
 
-// ./test/core/try_catch.wast:168
+// ./test/core/try_catch.wast:188
 assert_exception(() => invoke($1, `catch-complex-2`, [2]));
 
-// ./test/core/try_catch.wast:170
+// ./test/core/try_catch.wast:190
 assert_return(() => invoke($1, `throw-catch-param-i32`, [0]), [value("i32", 0)]);
 
-// ./test/core/try_catch.wast:171
+// ./test/core/try_catch.wast:191
 assert_return(() => invoke($1, `throw-catch-param-i32`, [1]), [value("i32", 1)]);
 
-// ./test/core/try_catch.wast:172
+// ./test/core/try_catch.wast:192
 assert_return(() => invoke($1, `throw-catch-param-i32`, [10]), [value("i32", 10)]);
 
-// ./test/core/try_catch.wast:174
+// ./test/core/try_catch.wast:194
 assert_return(() => invoke($1, `throw-catch-param-f32`, [value("f32", 5)]), [value("f32", 5)]);
 
-// ./test/core/try_catch.wast:175
+// ./test/core/try_catch.wast:195
 assert_return(() => invoke($1, `throw-catch-param-f32`, [value("f32", 10.5)]), [value("f32", 10.5)]);
 
-// ./test/core/try_catch.wast:177
+// ./test/core/try_catch.wast:197
 assert_return(() => invoke($1, `throw-catch-param-i64`, [5n]), [value("i64", 5n)]);
 
-// ./test/core/try_catch.wast:178
+// ./test/core/try_catch.wast:198
 assert_return(() => invoke($1, `throw-catch-param-i64`, [0n]), [value("i64", 0n)]);
 
-// ./test/core/try_catch.wast:179
+// ./test/core/try_catch.wast:199
 assert_return(() => invoke($1, `throw-catch-param-i64`, [-1n]), [value("i64", -1n)]);
 
-// ./test/core/try_catch.wast:181
+// ./test/core/try_catch.wast:201
 assert_return(() => invoke($1, `throw-catch-param-f64`, [value("f64", 5)]), [value("f64", 5)]);
 
-// ./test/core/try_catch.wast:182
+// ./test/core/try_catch.wast:202
 assert_return(() => invoke($1, `throw-catch-param-f64`, [value("f64", 10.5)]), [value("f64", 10.5)]);
 
-// ./test/core/try_catch.wast:184
+// ./test/core/try_catch.wast:204
 assert_return(() => invoke($1, `catch-param-i32`, [5]), [value("i32", 5)]);
 
-// ./test/core/try_catch.wast:186
+// ./test/core/try_catch.wast:206
 assert_return(() => invoke($1, `catch-imported`, []), [value("i32", 2)]);
 
-// ./test/core/try_catch.wast:188
+// ./test/core/try_catch.wast:208
 assert_return(() => invoke($1, `catchless-try`, [0]), [value("i32", 0)]);
 
-// ./test/core/try_catch.wast:189
+// ./test/core/try_catch.wast:209
 assert_return(() => invoke($1, `catchless-try`, [1]), [value("i32", 1)]);
 
-// ./test/core/try_catch.wast:191
+// ./test/core/try_catch.wast:214
 let $2 = instantiate(`(module
   (func $$imported-throw (import "test" "throw"))
   (tag $$e0)
@@ -266,43 +266,43 @@ let $2 = instantiate(`(module
   )
 )`);
 
-// ./test/core/try_catch.wast:211
+// ./test/core/try_catch.wast:234
 assert_return(() => invoke($2, `imported-mismatch`, []), [value("i32", 3)]);
 
-// ./test/core/try_catch.wast:213
+// ./test/core/try_catch.wast:236
 assert_malformed(() => instantiate(`(module (func (catch_all))) `), `unexpected token`);
 
-// ./test/core/try_catch.wast:218
+// ./test/core/try_catch.wast:241
 assert_malformed(
   () => instantiate(`(module (tag $$e) (func (catch $$e))) `),
   `unexpected token`,
 );
 
-// ./test/core/try_catch.wast:223
+// ./test/core/try_catch.wast:246
 assert_malformed(
   () => instantiate(`(module (func (try (do) (catch_all) (catch_all)))) `),
   `unexpected token`,
 );
 
-// ./test/core/try_catch.wast:230
+// ./test/core/try_catch.wast:253
 assert_invalid(
   () => instantiate(`(module (func (result i32) (try (result i32) (do))))`),
   `type mismatch: instruction requires [i32] but stack has []`,
 );
 
-// ./test/core/try_catch.wast:232
+// ./test/core/try_catch.wast:255
 assert_invalid(
   () => instantiate(`(module (func (result i32) (try (result i32) (do (i64.const 42)))))`),
   `type mismatch: instruction requires [i32] but stack has [i64]`,
 );
 
-// ./test/core/try_catch.wast:234
+// ./test/core/try_catch.wast:257
 assert_invalid(
   () => instantiate(`(module (tag) (func (try (do) (catch 0 (i32.const 42)))))`),
   `type mismatch: block requires [] but stack has [i32]`,
 );
 
-// ./test/core/try_catch.wast:236
+// ./test/core/try_catch.wast:259
 assert_invalid(
   () => instantiate(`(module
                   (tag (param i64))
@@ -311,7 +311,7 @@ assert_invalid(
   `type mismatch: instruction requires [i32] but stack has [i64]`,
 );
 
-// ./test/core/try_catch.wast:241
+// ./test/core/try_catch.wast:264
 assert_invalid(
   () => instantiate(`(module (func (try (do) (catch_all (i32.const 42)))))`),
   `type mismatch: block requires [] but stack has [i32]`,

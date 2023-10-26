@@ -15,7 +15,7 @@
 
 // ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast
 
-// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:2
+// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:4
 let $0 = instantiate(`(module
     (func (export "i16x8.relaxed_q15mulr_s") (param v128 v128) (result v128) (i16x8.relaxed_q15mulr_s (local.get 0) (local.get 1)))
 
@@ -25,7 +25,7 @@ let $0 = instantiate(`(module
             (i16x8.relaxed_q15mulr_s (local.get 0) (local.get 1))))
 )`);
 
-// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:12
+// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:14
 assert_return(
   () => invoke($0, `i16x8.relaxed_q15mulr_s`, [
     i16x8([0x8000, 0x8001, 0x7fff, 0x0, 0x0, 0x0, 0x0, 0x0]),
@@ -39,7 +39,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:21
+// ./test/core/relaxed-simd/i16x8_relaxed_q15mulr_s.wast:23
 assert_return(
   () => invoke($0, `i16x8.relaxed_q15mulr_s_cmp`, [
     i16x8([0x8000, 0x8001, 0x7fff, 0x0, 0x0, 0x0, 0x0, 0x0]),

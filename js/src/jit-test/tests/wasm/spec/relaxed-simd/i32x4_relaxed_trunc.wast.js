@@ -15,7 +15,7 @@
 
 // ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:3
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:4
 let $0 = instantiate(`(module
     (func (export "i32x4.relaxed_trunc_f32x4_s") (param v128) (result v128) (i32x4.relaxed_trunc_f32x4_s (local.get 0)))
     (func (export "i32x4.relaxed_trunc_f32x4_u") (param v128) (result v128) (i32x4.relaxed_trunc_f32x4_u (local.get 0)))
@@ -40,7 +40,7 @@ let $0 = instantiate(`(module
             (i32x4.relaxed_trunc_f64x2_u_zero (local.get 0))))
 )`);
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:35
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:36
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_s`, [
     f32x4([-2147483600, -2147484000, 2, 2147484000]),
@@ -53,7 +53,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:42
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:43
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_s`, [
     bytes('v128', [
@@ -83,7 +83,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:48
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:49
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_u`, [
     f32x4([0, -1, 4294967000, 4294967300]),
@@ -97,7 +97,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:55
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:56
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_u`, [
     bytes('v128', [
@@ -128,7 +128,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:61
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:62
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_s_zero`, [
     f64x2([-2147483904, 2147483904]),
@@ -141,7 +141,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:67
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:68
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_s_zero`, [
     bytes('v128', [
@@ -168,7 +168,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:72
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:73
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_u_zero`, [f64x2([-1, 4294967296])]),
   [
@@ -180,7 +180,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:78
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:79
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_u_zero`, [
     bytes('v128', [
@@ -207,7 +207,7 @@ assert_return(
   ],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:85
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:86
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_s_cmp`, [
     f32x4([-2147483600, -2147484000, 2147483600, 2147484000]),
@@ -215,7 +215,7 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:91
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:92
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_s_cmp`, [
     bytes('v128', [
@@ -240,7 +240,7 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:96
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:97
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_u_cmp`, [
     f32x4([0, -1, 4294967000, 4294967300]),
@@ -248,7 +248,7 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:102
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:103
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f32x4_u_cmp`, [
     bytes('v128', [
@@ -273,7 +273,7 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:107
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:108
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_s_zero_cmp`, [
     f64x2([-2147483904, 2147483904]),
@@ -281,7 +281,7 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:112
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:113
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_s_zero_cmp`, [
     bytes('v128', [
@@ -306,13 +306,13 @@ assert_return(
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:116
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:117
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_u_zero_cmp`, [f64x2([-1, 4294967296])]),
   [i32x4([0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff])],
 );
 
-// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:121
+// ./test/core/relaxed-simd/i32x4_relaxed_trunc.wast:122
 assert_return(
   () => invoke($0, `i32x4.relaxed_trunc_f64x2_u_zero_cmp`, [
     bytes('v128', [
