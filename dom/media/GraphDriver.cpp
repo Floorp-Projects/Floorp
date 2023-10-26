@@ -368,14 +368,6 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
   NS_DECL_THREADSAFE_ISUPPORTS
 
   /* Proxied SystemClockDriver methods */
-  void SetState(GraphTime aIterationStart, GraphTime aIterationEnd,
-                GraphTime aStateComputedTime) {
-    mIterationStart = aIterationStart;
-    mIterationEnd = aIterationEnd;
-    mStateComputedTime = aStateComputedTime;
-    mFallbackDriver->SetState(aIterationStart, aIterationEnd,
-                              aStateComputedTime);
-  }
   void Start() { mFallbackDriver->Start(); }
   MOZ_CAN_RUN_SCRIPT void Shutdown() {
     RefPtr<SystemClockDriver> driver = mFallbackDriver;
