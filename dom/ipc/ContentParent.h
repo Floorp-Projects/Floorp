@@ -1711,8 +1711,6 @@ bool IsWebRemoteType(const nsACString& aContentProcessType);
 
 bool IsWebCoopCoepRemoteType(const nsACString& aContentProcessType);
 
-bool IsPrivilegedMozillaRemoteType(const nsACString& aContentProcessType);
-
 bool IsExtensionRemoteType(const nsACString& aContentProcessType);
 
 inline nsISupports* ToSupports(mozilla::dom::ContentParent* aContentParent) {

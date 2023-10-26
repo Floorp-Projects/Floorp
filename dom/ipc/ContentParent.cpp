@@ -744,10 +744,6 @@ bool IsWebCoopCoepRemoteType(const nsACString& aContentProcessType) {
                           WITH_COOP_COEP_REMOTE_TYPE_PREFIX);
 }
 
-bool IsPrivilegedMozillaRemoteType(const nsACString& aContentProcessType) {
-  return aContentProcessType == PRIVILEGEDMOZILLA_REMOTE_TYPE;
-}
-
 bool IsExtensionRemoteType(const nsACString& aContentProcessType) {
   return aContentProcessType == EXTENSION_REMOTE_TYPE;
 }
