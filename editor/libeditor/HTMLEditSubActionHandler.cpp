@@ -8293,8 +8293,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit,
-                                             GetSplitNodeDirection());
+          return SplitNodeResult::NotHandled(pointToSplit);
         }
         const EditorDOMPoint pointToInsertBR = pointToSplit.ParentPoint();
         MOZ_ASSERT(pointToInsertBR.IsSet());
@@ -8327,8 +8326,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit,
-                                             GetSplitNodeDirection());
+          return SplitNodeResult::NotHandled(pointToSplit);
         }
         const auto pointToInsertBR =
             EditorDOMPoint::After(*pointToSplit.ContainerAs<Text>());
@@ -8350,8 +8348,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::HandleInsertParagraphInParagraph(
       // If insertParagraph does not create a new paragraph, default to
       // insertLineBreak.
       if (!createNewParagraph) {
-        return SplitNodeResult::NotHandled(pointToSplit,
-                                           GetSplitNodeDirection());
+        return SplitNodeResult::NotHandled(pointToSplit);
       }
 
       // If we're splitting the paragraph at middle of a text node, we should
@@ -8444,8 +8441,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::HandleInsertParagraphInParagraph(
         // If insertParagraph does not create a new paragraph, default to
         // insertLineBreak.
         if (!createNewParagraph) {
-          return SplitNodeResult::NotHandled(pointToSplit,
-                                             GetSplitNodeDirection());
+          return SplitNodeResult::NotHandled(pointToSplit);
         }
         Result<CreateElementResult, nsresult> insertBRElementResult =
             InsertBRElement(WithTransaction::Yes, pointToSplit);
@@ -9512,8 +9508,7 @@ HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
   // ancestor nodes.  In this case, we should return the given split point
   // as is.
   if (pointToInsert.GetContainer() == aStartOfDeepestRightNode.GetContainer()) {
-    return SplitNodeResult::NotHandled(aStartOfDeepestRightNode,
-                                       GetSplitNodeDirection());
+    return SplitNodeResult::NotHandled(aStartOfDeepestRightNode);
   }
 
   Result<SplitNodeResult, nsresult> splitNodeResult =
