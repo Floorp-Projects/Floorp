@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIStreamListener.idl"
+#include "nsIThreadRetargetableStreamListener.idl"
 
 interface nsIOutputStream;
 interface nsIRequestObserver;
@@ -13,7 +13,7 @@ interface nsIEventTarget;
  * and then forwarded to the real listener.
  */
 [scriptable, uuid(62b27fc1-6e8c-4225-8ad0-b9d44252973a)]
-interface nsIStreamListenerTee : nsIStreamListener
+interface nsIStreamListenerTee : nsIThreadRetargetableStreamListener
 {
     /**
      * Initalize the tee.

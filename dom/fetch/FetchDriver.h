@@ -94,8 +94,7 @@ class FetchDriverObserver {
 
 class AlternativeDataStreamListener;
 
-class FetchDriver final : public nsIStreamListener,
-                          public nsIChannelEventSink,
+class FetchDriver final : public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
                           public nsINetworkInterceptController,
                           public nsIThreadRetargetableStreamListener,

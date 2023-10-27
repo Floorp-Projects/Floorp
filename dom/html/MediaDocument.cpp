@@ -89,6 +89,20 @@ MediaDocumentStreamListener::OnDataAvailable(nsIRequest* request,
 }
 
 NS_IMETHODIMP
+MediaDocumentStreamListener::OnDataFinished(nsresult aStatus) {
+  if (!mNextStream) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
+      do_QueryInterface(mNextStream);
+  if (retargetable) {
+    return retargetable->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 MediaDocumentStreamListener::CheckListenerChain() {
   nsCOMPtr<nsIThreadRetargetableStreamListener> retargetable =
       do_QueryInterface(mNextStream);

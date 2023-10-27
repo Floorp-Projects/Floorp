@@ -37,7 +37,6 @@ using ClosePromise = mozilla::MozPromise<nsresult, nsresult, true>;
 
 class nsWebBrowserPersist final : public nsIInterfaceRequestor,
                                   public nsIWebBrowserPersist,
-                                  public nsIStreamListener,
                                   public nsIThreadRetargetableStreamListener,
                                   public nsIProgressEventSink,
                                   public nsSupportsWeakReference {

@@ -41,8 +41,7 @@ enum class UpdateType {
   InternalOrHSTSRedirect
 };
 
-class nsCORSListenerProxy final : public nsIStreamListener,
-                                  public nsIInterfaceRequestor,
+class nsCORSListenerProxy final : public nsIInterfaceRequestor,
                                   public nsIChannelEventSink,
                                   public nsIThreadRetargetableStreamListener {
  public:

@@ -99,4 +99,7 @@ nsresult MutableBlobStreamListener::WriteSegmentFun(
 NS_IMETHODIMP
 MutableBlobStreamListener::CheckListenerChain() { return NS_OK; }
 
+NS_IMETHODIMP
+MutableBlobStreamListener::OnDataFinished(nsresult) { return NS_OK; }
+
 }  // namespace mozilla::dom

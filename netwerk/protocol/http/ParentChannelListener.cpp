@@ -18,6 +18,7 @@
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIPrompt.h"
 #include "nsISecureBrowserUI.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsIWindowWatcher.h"
 #include "nsQueryObject.h"
 #include "nsIAuthPrompt.h"
@@ -114,6 +115,20 @@ ParentChannelListener::OnDataAvailable(nsIRequest* aRequest,
   LOG(("ParentChannelListener::OnDataAvailable [this=%p]\n", this));
   return mNextListener->OnDataAvailable(aRequest, aInputStream, aOffset,
                                         aCount);
+}
+
+NS_IMETHODIMP
+ParentChannelListener::OnDataFinished(nsresult aStatus) {
+  if (!mNextListener) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+      do_QueryInterface(mNextListener);
+  if (listener) {
+    return listener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

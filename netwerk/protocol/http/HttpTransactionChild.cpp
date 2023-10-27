@@ -649,6 +649,9 @@ HttpTransactionChild::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
+HttpTransactionChild::OnDataFinished(nsresult aStatus) { return NS_OK; }
+
+NS_IMETHODIMP
 HttpTransactionChild::EarlyHint(const nsACString& aValue,
                                 const nsACString& aReferrerPolicy,
                                 const nsACString& aCSPHeader) {
