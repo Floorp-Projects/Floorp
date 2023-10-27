@@ -9540,6 +9540,84 @@ TEST_F(WebRtcVideoChannelTest,
   EXPECT_TRUE(stream->GetEncoderConfig().is_quality_scaling_allowed);
 }
 
+TEST_F(WebRtcVideoChannelTest, GenerateKeyFrameSinglecast) {
+  FakeVideoSendStream* stream = AddSendStream();
+
+  webrtc::RtpParameters rtp_parameters =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  ASSERT_EQ(1u, rtp_parameters.encodings.size());
+  EXPECT_EQ(rtp_parameters.encodings[0].rid, "");
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(), std::vector<std::string>({}));
+
+  // Manually set the key frames requested to check they are cleared by the next
+  // call.
+  stream->GenerateKeyFrame({"bogus"});
+  rtp_parameters.encodings[0].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(),
+              ElementsAreArray(std::vector<std::string>({})));
+}
+
+TEST_F(WebRtcVideoChannelTest, GenerateKeyFrameSimulcast) {
+  StreamParams stream_params = CreateSimStreamParams("cname", {123, 456, 789});
+
+  std::vector<std::string> rids = {"f", "h", "q"};
+  std::vector<cricket::RidDescription> rid_descriptions;
+  for (const auto& rid : rids) {
+    rid_descriptions.emplace_back(rid, cricket::RidDirection::kSend);
+  }
+  stream_params.set_rids(rid_descriptions);
+  FakeVideoSendStream* stream = AddSendStream(stream_params);
+
+  webrtc::RtpParameters rtp_parameters =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  ASSERT_EQ(3u, rtp_parameters.encodings.size());
+  EXPECT_EQ(rtp_parameters.encodings[0].rid, "f");
+  EXPECT_EQ(rtp_parameters.encodings[1].rid, "h");
+  EXPECT_EQ(rtp_parameters.encodings[2].rid, "q");
+
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(),
+              ElementsAreArray(std::vector<std::string>({})));
+
+  rtp_parameters.encodings[0].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(), ElementsAreArray({"f"}));
+
+  rtp_parameters.encodings[0].request_key_frame = true;
+  rtp_parameters.encodings[1].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(), ElementsAreArray({"f", "h"}));
+
+  rtp_parameters.encodings[0].request_key_frame = true;
+  rtp_parameters.encodings[1].request_key_frame = true;
+  rtp_parameters.encodings[2].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(),
+              ElementsAreArray({"f", "h", "q"}));
+
+  rtp_parameters.encodings[0].request_key_frame = true;
+  rtp_parameters.encodings[1].request_key_frame = false;
+  rtp_parameters.encodings[2].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(), ElementsAreArray({"f", "q"}));
+
+  rtp_parameters.encodings[0].request_key_frame = false;
+  rtp_parameters.encodings[1].request_key_frame = false;
+  rtp_parameters.encodings[2].request_key_frame = true;
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, rtp_parameters).ok());
+  EXPECT_THAT(stream->GetKeyFramesRequested(), ElementsAreArray({"q"}));
+}
+
 class WebRtcVideoChannelSimulcastTest : public ::testing::Test {
  public:
   WebRtcVideoChannelSimulcastTest()

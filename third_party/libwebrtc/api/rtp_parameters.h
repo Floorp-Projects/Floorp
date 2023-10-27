@@ -515,6 +515,7 @@ struct RTC_EXPORT RtpEncodingParameters {
   // Value to use for RID RTP header extension.
   // Called "encodingId" in ORTC.
   std::string rid;
+  bool request_key_frame = false;
 
   // Allow dynamic frame length changes for audio:
   // https://w3c.github.io/webrtc-extensions/#dom-rtcrtpencodingparameters-adaptiveptime
