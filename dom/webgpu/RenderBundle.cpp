@@ -16,11 +16,8 @@ GPU_IMPL_JS_WRAP(RenderBundle)
 
 RenderBundle::RenderBundle(Device* const aParent, RawId aId)
     : ChildOf(aParent), mId(aId) {
-  // If we happened to finish an encoder twice, the second
-  // bundle should be invalid.
-  if (!mId) {
-    mValid = false;
-  }
+  // TODO: we may be running into this if we finish an encoder twice.
+  MOZ_RELEASE_ASSERT(aId);
 }
 
 RenderBundle::~RenderBundle() { Cleanup(); }

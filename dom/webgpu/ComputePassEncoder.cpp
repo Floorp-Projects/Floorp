@@ -27,6 +27,7 @@ void ScopedFfiComputeTraits::release(ffi::WGPUComputePass* raw) {
 
 ffi::WGPUComputePass* BeginComputePass(
     RawId aEncoderId, const dom::GPUComputePassDescriptor& aDesc) {
+  MOZ_RELEASE_ASSERT(aEncoderId);
   ffi::WGPUComputePassDescriptor desc = {};
 
   webgpu::StringHelper label(aDesc.mLabel);

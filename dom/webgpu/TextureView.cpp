@@ -16,7 +16,9 @@ GPU_IMPL_CYCLE_COLLECTION(TextureView, mParent)
 GPU_IMPL_JS_WRAP(TextureView)
 
 TextureView::TextureView(Texture* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
+    : ChildOf(aParent), mId(aId) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
 TextureView::~TextureView() { Cleanup(); }
 

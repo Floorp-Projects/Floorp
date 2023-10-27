@@ -41,7 +41,9 @@ Texture::Texture(Device* const aParent, RawId aId,
       mMipLevelCount(aDesc.mMipLevelCount),
       mSampleCount(aDesc.mSampleCount),
       mDimension(aDesc.mDimension),
-      mUsage(aDesc.mUsage) {}
+      mUsage(aDesc.mUsage) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
 Texture::~Texture() { Cleanup(); }
 

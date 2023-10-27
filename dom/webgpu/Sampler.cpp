@@ -15,7 +15,9 @@ GPU_IMPL_CYCLE_COLLECTION(Sampler, mParent)
 GPU_IMPL_JS_WRAP(Sampler)
 
 Sampler::Sampler(Device* const aParent, RawId aId)
-    : ChildOf(aParent), mId(aId) {}
+    : ChildOf(aParent), mId(aId) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
 Sampler::~Sampler() { Cleanup(); }
 
