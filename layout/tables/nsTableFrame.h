@@ -16,7 +16,6 @@
 #include "TableArea.h"
 
 struct BCPaintBorderAction;
-struct BCPropertyData;
 class nsTableCellFrame;
 class nsTableCellMap;
 class nsTableColFrame;
@@ -30,6 +29,7 @@ namespace mozilla {
 class LogicalMargin;
 class PresShell;
 class WritingMode;
+struct TableBCData;
 struct TableReflowInput;
 
 namespace layers {
@@ -751,11 +751,12 @@ class nsTableFrame : public nsContainerFrame {
 
   nsTArray<nsTableColFrame*>& GetColCache();
 
+  mozilla::TableBCData* GetTableBCData() const;
+
  protected:
   void SetBorderCollapse(bool aValue);
 
-  BCPropertyData* GetBCProperty() const;
-  BCPropertyData* GetOrCreateBCProperty();
+  mozilla::TableBCData* GetOrCreateTableBCData();
   void SetFullBCDamageArea();
   void CalcBCBorders();
 

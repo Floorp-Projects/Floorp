@@ -123,28 +123,21 @@ struct TableReflowInput {
   }
 };
 
+struct TableBCData final {
+  TableArea mDamageArea;
+  BCPixelSize mBStartBorderWidth = 0;
+  BCPixelSize mIEndBorderWidth = 0;
+  BCPixelSize mBEndBorderWidth = 0;
+  BCPixelSize mIStartBorderWidth = 0;
+  BCPixelSize mIStartCellBorderWidth = 0;
+  BCPixelSize mIEndCellBorderWidth = 0;
+};
+
 }  // namespace mozilla
 
 /********************************************************************************
  ** nsTableFrame **
  ********************************************************************************/
-
-struct BCPropertyData {
-  BCPropertyData()
-      : mBStartBorderWidth(0),
-        mIEndBorderWidth(0),
-        mBEndBorderWidth(0),
-        mIStartBorderWidth(0),
-        mIStartCellBorderWidth(0),
-        mIEndCellBorderWidth(0) {}
-  TableArea mDamageArea;
-  BCPixelSize mBStartBorderWidth;
-  BCPixelSize mIEndBorderWidth;
-  BCPixelSize mBEndBorderWidth;
-  BCPixelSize mIStartBorderWidth;
-  BCPixelSize mIStartCellBorderWidth;
-  BCPixelSize mIEndCellBorderWidth;
-};
 
 ComputedStyle* nsTableFrame::GetParentComputedStyle(
     nsIFrame** aProviderFrame) const {
@@ -2468,19 +2461,23 @@ nsMargin nsTableFrame::GetUsedMargin() const {
   return nsMargin(0, 0, 0, 0);
 }
 
-NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCProperty, BCPropertyData)
+// This property is only set on the first-in-flow of nsTableFrame.
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(TableBCDataProperty, TableBCData)
 
-BCPropertyData* nsTableFrame::GetBCProperty() const {
-  return GetProperty(TableBCProperty());
+TableBCData* nsTableFrame::GetTableBCData() const {
+  return FirstInFlow()->GetProperty(TableBCDataProperty());
 }
 
-BCPropertyData* nsTableFrame::GetOrCreateBCProperty() {
-  BCPropertyData* value = GetProperty(TableBCProperty());
+TableBCData* nsTableFrame::GetOrCreateTableBCData() {
+  MOZ_ASSERT(!GetPrevInFlow(),
+             "TableBCProperty should only be set on the first-in-flow!");
+  TableBCData* value = GetProperty(TableBCDataProperty());
   if (!value) {
-    value = new BCPropertyData();
-    SetProperty(TableBCProperty(), value);
+    value = new TableBCData();
+    SetProperty(TableBCDataProperty(), value);
   }
 
+  MOZ_ASSERT(value, "TableBCData must exist!");
   return value;
 }
 
@@ -2495,7 +2492,7 @@ LogicalMargin nsTableFrame::GetOuterBCBorder(const WritingMode aWM) const {
     const_cast<nsTableFrame*>(this)->CalcBCBorders();
   }
   int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  BCPropertyData* propData = GetBCProperty();
+  TableBCData* propData = GetTableBCData();
   if (propData) {
     return LogicalMargin(
         aWM, BC_BORDER_START_HALF_COORD(d2a, propData->mBStartBorderWidth),
@@ -2513,7 +2510,7 @@ LogicalMargin nsTableFrame::GetIncludedOuterBCBorder(
   }
 
   int32_t d2a = PresContext()->AppUnitsPerDevPixel();
-  BCPropertyData* propData = GetBCProperty();
+  TableBCData* propData = GetTableBCData();
   if (propData) {
     return LogicalMargin(
         aWM, BC_BORDER_START_HALF_COORD(d2a, propData->mBStartBorderWidth),
@@ -3816,7 +3813,8 @@ bool nsTableFrame::ColumnHasCellSpacingBefore(int32_t aColIndex) const {
 #endif
 
 void nsTableFrame::AddBCDamageArea(const TableArea& aValue) {
-  NS_ASSERTION(IsBorderCollapse(), "invalid AddBCDamageArea call");
+  MOZ_ASSERT(IsBorderCollapse(),
+             "Why call this if we are not border-collapsed?");
 #ifdef DEBUG
   VerifyDamageRect(aValue);
 #endif
@@ -3824,46 +3822,44 @@ void nsTableFrame::AddBCDamageArea(const TableArea& aValue) {
   SetNeedToCalcBCBorders(true);
   SetNeedToCalcHasBCBorders(true);
   // Get the property
-  BCPropertyData* value = GetOrCreateBCProperty();
-  if (value) {
-#ifdef DEBUG
-    VerifyNonNegativeDamageRect(value->mDamageArea);
-#endif
-    // Clamp the old damage area to the current table area in case it shrunk.
-    int32_t cols = GetColCount();
-    if (value->mDamageArea.EndCol() > cols) {
-      if (value->mDamageArea.StartCol() > cols) {
-        value->mDamageArea.StartCol() = cols;
-        value->mDamageArea.ColCount() = 0;
-      } else {
-        value->mDamageArea.ColCount() = cols - value->mDamageArea.StartCol();
-      }
-    }
-    int32_t rows = GetRowCount();
-    if (value->mDamageArea.EndRow() > rows) {
-      if (value->mDamageArea.StartRow() > rows) {
-        value->mDamageArea.StartRow() = rows;
-        value->mDamageArea.RowCount() = 0;
-      } else {
-        value->mDamageArea.RowCount() = rows - value->mDamageArea.StartRow();
-      }
-    }
+  TableBCData* value = GetOrCreateTableBCData();
 
-    // Construct a union of the new and old damage areas.
-    value->mDamageArea.UnionArea(value->mDamageArea, aValue);
+#ifdef DEBUG
+  VerifyNonNegativeDamageRect(value->mDamageArea);
+#endif
+  // Clamp the old damage area to the current table area in case it shrunk.
+  int32_t cols = GetColCount();
+  if (value->mDamageArea.EndCol() > cols) {
+    if (value->mDamageArea.StartCol() > cols) {
+      value->mDamageArea.StartCol() = cols;
+      value->mDamageArea.ColCount() = 0;
+    } else {
+      value->mDamageArea.ColCount() = cols - value->mDamageArea.StartCol();
+    }
   }
+  int32_t rows = GetRowCount();
+  if (value->mDamageArea.EndRow() > rows) {
+    if (value->mDamageArea.StartRow() > rows) {
+      value->mDamageArea.StartRow() = rows;
+      value->mDamageArea.RowCount() = 0;
+    } else {
+      value->mDamageArea.RowCount() = rows - value->mDamageArea.StartRow();
+    }
+  }
+
+  // Construct a union of the new and old damage areas.
+  value->mDamageArea.UnionArea(value->mDamageArea, aValue);
 }
 
 void nsTableFrame::SetFullBCDamageArea() {
-  NS_ASSERTION(IsBorderCollapse(), "invalid SetFullBCDamageArea call");
+  MOZ_ASSERT(IsBorderCollapse(),
+             "Why call this if we are not border-collapsed?");
 
   SetNeedToCalcBCBorders(true);
   SetNeedToCalcHasBCBorders(true);
 
-  BCPropertyData* value = GetOrCreateBCProperty();
-  if (value) {
-    value->mDamageArea = TableArea(0, 0, GetColCount(), GetRowCount());
-  }
+  TableBCData* value = GetOrCreateTableBCData();
+  value->mDamageArea = TableArea(0, 0, GetColCount(), GetRowCount());
 }
 
 /* BCCellBorder represents a border segment which can be either an inline-dir
@@ -3976,7 +3972,7 @@ struct BCMapCellInfo {
   nsTableFrame* mTableFirstInFlow;
   int32_t mNumTableRows;
   int32_t mNumTableCols;
-  BCPropertyData* mTableBCData;
+  TableBCData* mTableBCData;
   WritingMode mTableWM;
 
   // a cell can only belong to one rowgroup
@@ -4019,7 +4015,7 @@ BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
       mTableFirstInFlow(static_cast<nsTableFrame*>(aTableFrame->FirstInFlow())),
       mNumTableRows(aTableFrame->GetRowCount()),
       mNumTableCols(aTableFrame->GetColCount()),
-      mTableBCData(mTableFrame->GetProperty(TableBCProperty())),
+      mTableBCData(mTableFirstInFlow->GetTableBCData()),
       mTableWM(aTableFrame->Style()),
       mCurrentRowFrame(nullptr),
       mCurrentColGroupFrame(nullptr),
@@ -5326,7 +5322,7 @@ void nsTableFrame::CalcBCBorders() {
   if (!numRows || !numCols) return;  // nothing to do
 
   // Get the property holding the table damage area and border widths
-  BCPropertyData* propData = GetBCProperty();
+  TableBCData* propData = GetTableBCData();
   if (!propData) ABORT0();
 
   // calculate an expanded damage area
