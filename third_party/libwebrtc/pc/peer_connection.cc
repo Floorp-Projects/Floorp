@@ -461,8 +461,7 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
 
   // Interim code: If an AsyncResolverFactory is given, but not an
   // AsyncDnsResolverFactory, wrap it in a WrappingAsyncDnsResolverFactory
-  // If neither is given, create a WrappingAsyncDnsResolverFactory wrapping
-  // a BasicAsyncResolver.
+  // If neither is given, create a BasicAsyncDnsResolverFactory.
   // TODO(bugs.webrtc.org/12598): Remove code once all callers pass a
   // AsyncDnsResolverFactory.
   if (dependencies.async_dns_resolver_factory &&
@@ -478,8 +477,7 @@ RTCErrorOr<rtc::scoped_refptr<PeerConnection>> PeerConnection::Create(
             std::move(dependencies.async_resolver_factory));
   } else {
     dependencies.async_dns_resolver_factory =
-        std::make_unique<WrappingAsyncDnsResolverFactory>(
-            std::make_unique<BasicAsyncResolverFactory>());
+        std::make_unique<BasicAsyncDnsResolverFactory>();
   }
 
   // The PeerConnection constructor consumes some, but not all, dependencies.
