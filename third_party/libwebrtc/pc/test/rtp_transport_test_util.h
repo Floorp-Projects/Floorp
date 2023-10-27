@@ -14,24 +14,26 @@
 #include "call/rtp_packet_sink_interface.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "pc/rtp_transport_internal.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace webrtc {
 
 // Used to handle the signals when the RtpTransport receives an RTP/RTCP packet.
 // Used in Rtp/Srtp/DtlsTransport unit tests.
-class TransportObserver : public RtpPacketSinkInterface,
-                          public sigslot::has_slots<> {
+class TransportObserver : public RtpPacketSinkInterface {
  public:
   TransportObserver() {}
 
   explicit TransportObserver(RtpTransportInternal* rtp_transport) {
-    rtp_transport->SignalRtcpPacketReceived.connect(
-        this, &TransportObserver::OnRtcpPacketReceived);
-    rtp_transport->SignalReadyToSend.connect(this,
-                                             &TransportObserver::OnReadyToSend);
-    rtp_transport->SignalUnDemuxableRtpPacketReceived.connect(
-        this, &TransportObserver::OnUndemuxableRtpPacket);
+    rtp_transport->SubscribeRtcpPacketReceived(
+        this, [this](rtc::CopyOnWriteBuffer* buffer, int64_t packet_time_ms) {
+          OnRtcpPacketReceived(buffer, packet_time_ms);
+        });
+    rtp_transport->SubscribeReadyToSend(
+        this, [this](bool arg) { OnReadyToSend(arg); });
+    rtp_transport->SetUnDemuxableRtpPacketReceivedHandler(
+        [this](webrtc::RtpPacketReceived& packet) {
+          OnUndemuxableRtpPacket(packet);
+        });
   }
 
   // RtpPacketInterface override.

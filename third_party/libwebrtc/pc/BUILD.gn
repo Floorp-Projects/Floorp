@@ -475,9 +475,9 @@ rtc_source_set("rtp_transport_internal") {
     ":session_description",
     "../call:rtp_receiver",
     "../p2p:rtc_p2p",
+    "../rtc_base:callback_list",
     "../rtc_base:network_route",
     "../rtc_base:ssl",
-    "../rtc_base/third_party/sigslot",
   ]
 }
 

@@ -30,9 +30,12 @@ class SignalObserver : public sigslot::has_slots<> {
  public:
   explicit SignalObserver(RtpTransport* transport) {
     transport_ = transport;
-    transport->SignalReadyToSend.connect(this, &SignalObserver::OnReadyToSend);
-    transport->SignalNetworkRouteChanged.connect(
-        this, &SignalObserver::OnNetworkRouteChanged);
+    transport->SubscribeReadyToSend(
+        this, [this](bool ready) { OnReadyToSend(ready); });
+    transport->SubscribeNetworkRouteChanged(
+        this, [this](absl::optional<rtc::NetworkRoute> route) {
+          OnNetworkRouteChanged(route);
+        });
     if (transport->rtp_packet_transport()) {
       transport->rtp_packet_transport()->SignalSentPacket.connect(
           this, &SignalObserver::OnSentPacket);
