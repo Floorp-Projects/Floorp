@@ -471,4 +471,29 @@ class DownloadTest {
         }
         deleteDownloadedFileOnStorage(downloadFile)
     }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244125
+    @Test
+    fun restartDownloadFromAppNotificationAfterConnectionIsInterruptedTest() {
+        downloadFile = "1GB.zip"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+            setNetworkEnabled(false)
+        }.clickDownload {
+            verifyDownloadFailedPrompt(downloadFile)
+            setNetworkEnabled(true)
+            clickTryAgainButton()
+        }
+        browserScreen {
+        }.openNotificationShade {
+            verifySystemNotificationExists("Firefox Fenix")
+            expandNotificationMessage()
+            clickDownloadNotificationControlButton("CANCEL")
+        }
+        deleteDownloadedFileOnStorage(downloadFile)
+    }
 }
