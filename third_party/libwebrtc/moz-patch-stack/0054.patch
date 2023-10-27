@@ -78,10 +78,10 @@ index 380e80ce12..253f8cd7de 100644
  
  std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index 3f47fcded0..114be134ab 100644
+index a511eda7bd..75a4a1cac0 100644
 --- a/call/degraded_call.cc
 +++ b/call/degraded_call.cc
-@@ -129,6 +129,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
+@@ -126,6 +126,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
    return true;
  }
  
@@ -89,7 +89,7 @@ index 3f47fcded0..114be134ab 100644
  DegradedCall::DegradedCall(
      std::unique_ptr<Call> call,
      const std::vector<TimeScopedNetworkConfig>& send_configs,
-@@ -165,6 +166,7 @@ DegradedCall::DegradedCall(
+@@ -162,6 +163,7 @@ DegradedCall::DegradedCall(
      }
    }
  }

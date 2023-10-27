@@ -156,38 +156,33 @@ void FakeNetworkPipe::RemoveActiveTransport(Transport* transport) {
   }
 }
 
-bool FakeNetworkPipe::SendRtp(const uint8_t* packet,
-                              size_t length,
+bool FakeNetworkPipe::SendRtp(rtc::ArrayView<const uint8_t> packet,
                               const PacketOptions& options) {
   RTC_DCHECK(global_transport_);
-  EnqueuePacket(rtc::CopyOnWriteBuffer(packet, length), options, false,
-                global_transport_);
+  EnqueuePacket(rtc::CopyOnWriteBuffer(packet.data(), packet.size()), options,
+                false, global_transport_);
   return true;
 }
 
-bool FakeNetworkPipe::SendRtcp(const uint8_t* packet, size_t length) {
+bool FakeNetworkPipe::SendRtcp(rtc::ArrayView<const uint8_t> packet) {
   RTC_DCHECK(global_transport_);
-  EnqueuePacket(rtc::CopyOnWriteBuffer(packet, length), absl::nullopt, true,
+  EnqueuePacket(rtc::CopyOnWriteBuffer(packet), absl::nullopt, true,
                 global_transport_);
   return true;
 }
 
-bool FakeNetworkPipe::SendRtp(const uint8_t* packet,
-                              size_t length,
+bool FakeNetworkPipe::SendRtp(rtc::ArrayView<const uint8_t> packet,
                               const PacketOptions& options,
                               Transport* transport) {
   RTC_DCHECK(transport);
-  EnqueuePacket(rtc::CopyOnWriteBuffer(packet, length), options, false,
-                transport);
+  EnqueuePacket(rtc::CopyOnWriteBuffer(packet), options, false, transport);
   return true;
 }
 
-bool FakeNetworkPipe::SendRtcp(const uint8_t* packet,
-                               size_t length,
+bool FakeNetworkPipe::SendRtcp(rtc::ArrayView<const uint8_t> packet,
                                Transport* transport) {
   RTC_DCHECK(transport);
-  EnqueuePacket(rtc::CopyOnWriteBuffer(packet, length), absl::nullopt, true,
-                transport);
+  EnqueuePacket(rtc::CopyOnWriteBuffer(packet), absl::nullopt, true, transport);
   return true;
 }
 
