@@ -142,6 +142,9 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
   static MediaTrackGraphImpl* GetInstanceIfExists(
       uint64_t aWindowID, TrackRate aSampleRate,
       CubebUtils::AudioDeviceID aOutputDeviceID);
+  // For GraphHashSet:
+  struct Lookup;
+  operator Lookup() const;
 
   // Intended only for assertions, either on graph thread or not running (in
   // which case we must be on the main thread).

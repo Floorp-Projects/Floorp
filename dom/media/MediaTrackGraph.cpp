@@ -117,12 +117,12 @@ void DeviceInputTrackManager::Remove(DeviceInputTrack* aTrack) {
   }
 }
 
-namespace {
 /**
  * A hash table containing the graph instances, one per Window ID,
  * sample rate, and device ID combination.
  */
-struct GraphLookup final {
+
+struct MediaTrackGraphImpl::Lookup final {
   HashNumber Hash() const {
     return HashGeneric(mWindowID, mSampleRate, mOutputDeviceID);
   }
@@ -131,8 +131,14 @@ struct GraphLookup final {
   const CubebUtils::AudioDeviceID mOutputDeviceID;
 };
 
+// Implicit to support GraphHashSet.lookup(*graph).
+MOZ_IMPLICIT MediaTrackGraphImpl::operator MediaTrackGraphImpl::Lookup() const {
+  return {mWindowID, mSampleRate, mOutputDeviceID};
+}
+
+namespace {
 struct GraphHasher {  // for HashSet
-  using Lookup = const GraphLookup;
+  using Lookup = const MediaTrackGraphImpl::Lookup;
 
   static HashNumber hash(const Lookup& aLookup) { return aLookup.Hash(); }
 
@@ -3600,8 +3606,7 @@ void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
   MediaTrackGraphImpl* graph = static_cast<MediaTrackGraphImpl*>(this);
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (graph->mRealtime) {
-    GraphHashSet::Ptr p = Graphs()->lookup(
-        {graph->mWindowID, GraphRate(), graph->mOutputDeviceID});
+    GraphHashSet::Ptr p = Graphs()->lookup(*graph);
     MOZ_DIAGNOSTIC_ASSERT(p, "Graph must not be shutting down");
   }
 #endif
@@ -3621,8 +3626,7 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
     if (mRealtime) {
       // Find the graph in the hash table and remove it.
       GraphHashSet* graphs = Graphs();
-      GraphHashSet::Ptr p =
-          graphs->lookup({mWindowID, mSampleRate, mOutputDeviceID});
+      GraphHashSet::Ptr p = graphs->lookup(*this);
       MOZ_ASSERT(*p == this);
       graphs->remove(p);
 
