@@ -1352,7 +1352,6 @@ if (!build_with_mozilla) {
     ":timeutils",
     "../api:array_view",
     "network:sent_packet",
-    "third_party/sigslot",
   ]
 }
 }
@@ -1377,7 +1376,6 @@ if (!build_with_mozilla) {
     "../system_wrappers:field_trial",
     "network:sent_packet",
     "system:no_unique_address",
-    "third_party/sigslot",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
