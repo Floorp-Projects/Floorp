@@ -14,3 +14,5 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
 # needed here. Bug 1772575 is filed to implement that.
 if CONFIG["OS_ARCH"] == "Darwin":
     LDFLAGS += ["-Wl,-rpath,@executable_path"]
+
+USE_LIBS += ["nss"]

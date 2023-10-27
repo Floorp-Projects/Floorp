@@ -711,6 +711,13 @@ class TreeMetadataEmitter(LoggingMixin):
 
                     check_unique_binary(program, kind)
                     self._binaries[program] = cls(context, program, cargo_file)
+                    self._linkage.append(
+                        (
+                            context,
+                            self._binaries[program],
+                            kind.replace("RUST_PROGRAMS", "USE_LIBS"),
+                        )
+                    )
                     add_program(self._binaries[program], kind)
 
         for kind, cls in [
