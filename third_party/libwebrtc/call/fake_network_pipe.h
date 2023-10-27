@@ -113,11 +113,6 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
                   PacketReceiver* receiver,
                   uint64_t seed);
 
-  // Use this constructor if you plan to insert packets using SendRt[c?]p().
-  FakeNetworkPipe(Clock* clock,
-                  std::unique_ptr<NetworkBehaviorInterface> network_behavior,
-                  Transport* transport);
-
   ~FakeNetworkPipe() override;
 
   FakeNetworkPipe(const FakeNetworkPipe&) = delete;
@@ -133,14 +128,6 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
   // methods are used to maintain a map of which instances are live.
   void AddActiveTransport(Transport* transport);
   void RemoveActiveTransport(Transport* transport);
-
-  // Implements Transport interface. When/if packets are delivered, they will
-  // be passed to the transport instance given in SetReceiverTransport(). These
-  // methods should only be called if a Transport instance was provided in the
-  // constructor.
-  bool SendRtp(rtc::ArrayView<const uint8_t> packet,
-               const PacketOptions& options);
-  bool SendRtcp(rtc::ArrayView<const uint8_t> packet);
 
   // Methods for use with Transport interface. When/if packets are delivered,
   // they will be passed to the instance specified by the `transport` parameter.
@@ -216,7 +203,6 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
   mutable Mutex config_lock_;
   const std::unique_ptr<NetworkBehaviorInterface> network_behavior_;
   PacketReceiver* receiver_ RTC_GUARDED_BY(config_lock_);
-  Transport* const global_transport_;
 
   // `process_lock` guards the data structures involved in delay and loss
   // processes, such as the packet queues.
