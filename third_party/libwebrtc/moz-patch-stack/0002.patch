@@ -1,35 +1,48 @@
-From: Harald Alvestrand <hta@webrtc.org>
-Date: Thu, 31 Aug 2023 09:25:06 +0000
-Subject: (cherry-pick-branch-heads/5938) [Merge to 117] CHECK against
- overwrites in send_modules_map_
+From: Tommi <tommi@webrtc.org>
+Date: Fri, 25 Aug 2023 01:12:04 +0200
+Subject: (cherry-pick-branch-heads/5938) [M117][SctpDataChannel] Don't use
+ PostTask for observer registration.
 
-(cherry picked from commit 9d8fb97b3ca56ec9920271d8e545ae2ac76b143c)
+Instead, use BlockingCall to match with how unregistration is done.
+This is needed because the ThreadWrapper implementation in Chromium, overriding the Thread implementation in WebRTC, does not order sent (blocking) tasks along with posted tasks.
 
-No-try: true
-Bug: chromium:1477075
-Change-Id: Ia05a868bfab9e99ef66704e8d6bce516a7a43b0a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318440
-Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40673}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319100
-Reviewed-by: Taylor Brandstetter <deadbeef@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5938@{#2}
+That makes the functional difference that Thread1 posting and sending
+tasks to Thread2, can not assume that the tasks run in the order they
+were posted and sent. I.e. in this case:
+
+  // Running on Thread1.
+  thread2->PostTask([](){ Foo(); });
+  thread2->BlockingCall([](){ Bar(); });
+
+Thread2 may actually execute Bar() first, and then Foo().
+
+(cherry picked from commit 70cea9bda8b8815be3c5bae4b6fa8053713efcac)
+
+No-Try: true
+Bug: chromium:1470992
+Change-Id: I1f83f12ce39c09279c0f2b3bc71c3a33e2cb16c5
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/317700
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40624}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318360
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5938@{#1}
 Cr-Branched-From: 82e5f91a2bdf955aa870142008fbdc9ac12f6acd-refs/heads/main@{#40524}
 ---
- modules/pacing/packet_router.cc | 2 +-
+ pc/sctp_data_channel.cc | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/pacing/packet_router.cc b/modules/pacing/packet_router.cc
-index ba133f3d1f..4c986ad027 100644
---- a/modules/pacing/packet_router.cc
-+++ b/modules/pacing/packet_router.cc
-@@ -68,7 +68,7 @@ void PacketRouter::AddSendRtpModule(RtpRtcpInterface* rtp_module,
- void PacketRouter::AddSendRtpModuleToMap(RtpRtcpInterface* rtp_module,
-                                          uint32_t ssrc) {
-   RTC_DCHECK_RUN_ON(&thread_checker_);
--  RTC_DCHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
-+  RTC_CHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
+diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
+index a17008fb3f..8fdbf4cb92 100644
+--- a/pc/sctp_data_channel.cc
++++ b/pc/sctp_data_channel.cc
+@@ -396,7 +396,7 @@ void SctpDataChannel::RegisterObserver(DataChannelObserver* observer) {
+   if (network_thread_ == current_thread) {
+     register_observer();
+   } else {
+-    network_thread_->PostTask(std::move(register_observer));
++    network_thread_->BlockingCall(std::move(register_observer));
+   }
+ }
  
-   // Signal to module that the pacer thread is attached and can send packets.
-   rtp_module->OnPacketSendingThreadSwitched();
