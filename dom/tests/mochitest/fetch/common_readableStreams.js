@@ -407,7 +407,6 @@ function workify(func) {
 
       if (e.data.type == "info") {
         info(e.data.message);
-        return;
       }
     };
   });

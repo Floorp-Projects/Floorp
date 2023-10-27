@@ -94,6 +94,5 @@ function handleRequest(request, response) {
     setSharedState(SHARED_KEY, JSON.stringify(result));
 
     response.write("'hello world'");
-    return;
   }
 }

@@ -128,15 +128,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
       if(scriptLoad) {
         return;
       }
+      if (scriptCount < MAX_COUNT) {
+        scriptCount++;
+        setTimeout(scriptStatus, TIMEOUT_INTERVAL, script);
+      }
       else {
-        if(scriptCount < MAX_COUNT) {
-          scriptCount++;
-          setTimeout(scriptStatus, TIMEOUT_INTERVAL, script);
-        }
-        else {
-          //After we have called setTimeout the maximum number of times, assume script is blocked
-          report("script", "insecure script blocked");
-        }
+        //After we have called setTimeout the maximum number of times, assume script is blocked
+        report("script", "insecure script blocked");
       }
     }
 

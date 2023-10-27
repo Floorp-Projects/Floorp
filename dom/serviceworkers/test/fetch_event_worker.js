@@ -241,6 +241,7 @@ onfetch = function (ev) {
     // Don't handle the request, this will make Necko perform a network request, at
     // which point SetApplyConversion must be re-enabled, otherwise the request
     // will fail.
+    // eslint-disable-next-line no-useless-return
     return;
   } else if (ev.request.url.includes("hello.gz")) {
     ev.respondWith(fetch("fetch/deliver-gzip.sjs"));

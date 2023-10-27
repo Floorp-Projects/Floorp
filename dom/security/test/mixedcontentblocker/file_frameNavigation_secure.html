@@ -46,15 +46,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
     }
     if (loc == "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?insecurePage_navigate_child_response") {
       return;
-    } else {
-      if(counter_test1 < MAX_COUNT) {
-        counter_test1++;
-        setTimeout(navigationStatus, TIMEOUT_INTERVAL, iframe_test1);
-      }
-      else {
-        // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
-        parent.postMessage({"test": "securePage_navigate_child", "msg": "navigating to insecure iframe blocked on secure page"}, "http://mochi.test:8888");
-      }
+    }
+    if (counter_test1 < MAX_COUNT) {
+      counter_test1++;
+      setTimeout(navigationStatus, TIMEOUT_INTERVAL, iframe_test1);
+    }
+    else {
+      // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+      parent.postMessage({"test": "securePage_navigate_child", "msg": "navigating to insecure iframe blocked on secure page"}, "http://mochi.test:8888");
     }
   }
 

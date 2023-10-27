@@ -167,6 +167,5 @@ function handleRequest(request, response) {
     response.setHeader("Access-Control-Allow-Origin", "*", false);
     response.setHeader("Content-Type", "text/html", false);
     response.write("XHR response...");
-    return;
   }
 }

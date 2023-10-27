@@ -47,6 +47,5 @@ function handleRequest(request, response) {
   if (query === "test3a") {
     response.setHeader("Content-Type", "text/html", false);
     response.write(LINK_CLICK_NAVIGATION);
-    return;
   }
 }

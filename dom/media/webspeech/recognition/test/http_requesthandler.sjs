@@ -43,7 +43,9 @@ function handleRequest(request, response) {
       response.finish();
     });
     return;
-  } else if (
+  }
+
+  if (
     request.queryString == "malformedresult=1" ||
     request.queryString == "emptyresult=1"
   ) {

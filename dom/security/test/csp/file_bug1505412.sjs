@@ -31,6 +31,4 @@ function handleRequest(request, response) {
   var content = "info('Script Loaded')";
 
   response.write(content);
-
-  return;
 }

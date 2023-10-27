@@ -31,5 +31,4 @@ function handleRequest(request, response) {
   response.write(
     '<html><head><meta http-equiv="refresh" content="0; url=' + loc + '">'
   );
-  return;
 }

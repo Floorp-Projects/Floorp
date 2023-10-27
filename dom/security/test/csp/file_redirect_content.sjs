@@ -36,6 +36,4 @@ function handleRequest(request, response) {
     '<!DOCTYPE HTML><html><body><img src = "http://some.other.domain.example.com"></body></html>';
 
   response.write(content);
-
-  return;
 }

@@ -1,7 +1,6 @@
 onfetch = function (e) {
   if (/\/clientId$/.test(e.request.url)) {
     e.respondWith(new Response(e.clientId));
-    return;
   }
 };
 

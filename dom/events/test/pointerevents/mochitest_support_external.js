@@ -251,20 +251,20 @@ function runTestInNewWindow(aFile) {
         TouchEventHelper.TOUCH_ID = aEvent.data.message.touchId;
 
         executeTest(testWindow);
-        return;
+        break;
       case "RESULT":
         // Should not perform checking after SimpleTest.finish().
         if (!testDone) {
           ok(aEvent.data.result, aEvent.data.message);
         }
-        return;
+        break;
       case "FIN":
         testDone = true;
         MouseEventHelper.checkExitState();
         TouchEventHelper.checkExitState();
         testWindow.close();
         SimpleTest.finish();
-        return;
+        break;
     }
   });
 }

@@ -43,7 +43,6 @@ Test javascript.options.strict in Workers
       if (e.data.type == 'finish') {
         ok(errors == 0, "Here we are with 0 errors!");
         runTests();
-        return;
       }
     }
 
@@ -68,7 +67,6 @@ Test javascript.options.strict in Workers
       if (e.data.type == 'finish') {
         ok(errors != 0, "Here we are with errors!");
         runTests();
-        return;
       }
     }
 

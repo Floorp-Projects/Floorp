@@ -38,15 +38,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840388
     if (loc == "http://example.com/tests/dom/security/test/mixedcontentblocker/file_frameNavigation_innermost.html?insecurePage_navigate_grandchild_response") {
       return;
     }
+    if(counter < MAX_COUNT) {
+      counter++;
+      setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
+    }
     else {
-      if(counter < MAX_COUNT) {
-        counter++;
-        setTimeout(navigationStatus, TIMEOUT_INTERVAL, child);
-      }
-      else {
-        // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
-        parent.parent.postMessage({"test": "insecurePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on insecure page"}, "http://mochi.test:8888");
-      }
+      // After we have called setTimeout the maximum number of times, assume navigating the iframe is blocked
+      parent.parent.postMessage({"test": "insecurePage_navigate_grandchild", "msg": "navigating to insecure grandchild iframe blocked on insecure page"}, "http://mochi.test:8888");
     }
   }
 

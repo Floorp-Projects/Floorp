@@ -9,6 +9,5 @@ function handleRequest(request, response) {
       "http://test1.example.com/tests/dom/security/test/csp/file_blocked_uri_redirect_frame_src_server.sjs?query#ref2";
     response.setStatusLine("1.1", 302, "Found");
     response.setHeader("Location", newLocation, false);
-    return;
   }
 }
