@@ -44,7 +44,6 @@ bool FakeVp8Decoder::Configure(const Settings& settings) {
 }
 
 int32_t FakeVp8Decoder::Decode(const EncodedImage& input,
-                               bool missing_frames,
                                int64_t render_time_ms) {
   constexpr size_t kMinPayLoadHeaderLength = 10;
   if (input.size() < kMinPayLoadHeaderLength) {

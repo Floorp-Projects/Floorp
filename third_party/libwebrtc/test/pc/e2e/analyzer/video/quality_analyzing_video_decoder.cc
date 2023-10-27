@@ -51,7 +51,6 @@ bool QualityAnalyzingVideoDecoder::Configure(const Settings& settings) {
 }
 
 int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
-                                             bool missing_frames,
                                              int64_t render_time_ms) {
   // Image  extractor extracts id from provided EncodedImage and also returns
   // the image with the original buffer. Buffer can be modified in place, so
@@ -96,8 +95,7 @@ int32_t QualityAnalyzingVideoDecoder::Decode(const EncodedImage& input_image,
   // thread.
   analyzer_->OnFramePreDecode(
       peer_name_, out.id.value_or(VideoFrame::kNotSetId), *origin_image);
-  int32_t result =
-      delegate_->Decode(*origin_image, missing_frames, render_time_ms);
+  int32_t result = delegate_->Decode(*origin_image, render_time_ms);
   if (result != WEBRTC_VIDEO_CODEC_OK) {
     // If delegate decoder failed, then cleanup data for this image.
     VideoQualityAnalyzerInterface::DecoderStats stats;
