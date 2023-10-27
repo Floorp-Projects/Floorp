@@ -5109,8 +5109,8 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
   if (NS_WARN_IF(!newContent) || NS_WARN_IF(!splitContent)) {
     return Err(NS_ERROR_FAILURE);
   }
-  TopLevelEditSubActionDataRef().DidSplitContent(
-      *this, *splitContent, *newContent, transaction->GetSplitNodeDirection());
+  TopLevelEditSubActionDataRef().DidSplitContent(*this, *splitContent,
+                                                 *newContent);
   if (NS_WARN_IF(!newContent->IsInComposedDoc()) ||
       NS_WARN_IF(!splitContent->IsInComposedDoc())) {
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -5554,8 +5554,7 @@ void HTMLEditor::DidJoinNodesTransaction(
             mTextServicesDocument) {
       textServicesDocument->DidJoinContents(
           aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
-          *aTransaction.GetRemovedContent(),
-          aTransaction.GetJoinNodesDirection());
+          *aTransaction.GetRemovedContent());
     }
   }
 
@@ -5563,9 +5562,7 @@ void HTMLEditor::DidJoinNodesTransaction(
     for (auto& listener : mActionListeners.Clone()) {
       DebugOnly<nsresult> rvIgnored = listener->DidJoinContents(
           aTransaction.CreateJoinedPoint<EditorRawDOMPoint>(),
-          aTransaction.GetRemovedContent(),
-          aTransaction.GetJoinNodesDirection() ==
-              JoinNodesDirection::LeftNodeIntoRightNode);
+          aTransaction.GetRemovedContent());
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidJoinContents() failed, but ignored");

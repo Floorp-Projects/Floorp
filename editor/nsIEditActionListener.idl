@@ -50,16 +50,10 @@ interface nsIEditActionListener : nsISupports
    *                       right node.  Otherwise, it points start of inserted
    *                       right node content in the left node.
    * @param aRemovedNode   The removed node.
-   * @param aLeftNodeWasRemoved
-   *                       true if left node is removed and its contents were
-   *                       moved into start of the right node.
-   *                       false if right node is removed and its contents were
-   *                       moved into end of the left node.
    */
   [noscript]
   void DidJoinContents([const] in EditorRawDOMPointRef aJoinedPoint,
-                       [const] in Node aRemovedNode,
-                       in bool aLeftNodeWasRemoved);
+                       [const] in Node aRemovedNode);
 
   /**
    * Called after the editor inserts text.

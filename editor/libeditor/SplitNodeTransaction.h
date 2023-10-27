@@ -53,11 +53,6 @@ class SplitNodeTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
-  // Note that we don't support join/split node direction switching per
-  // transaction.
-  [[nodiscard]] SplitNodeDirection GetSplitNodeDirection() const;
-  [[nodiscard]] JoinNodesDirection GetJoinNodesDirection() const;
-
   nsIContent* GetSplitContent() const { return mSplitContent; }
   nsIContent* GetNewContent() const { return mNewContent; }
   nsINode* GetParentNode() const { return mParentNode; }
