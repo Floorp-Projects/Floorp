@@ -1,0 +1,21 @@
+<html>
+    <head>
+        <script>
+            async function ensureCache(name) {
+                if (!window.testCache) {
+                    window.testCache = await caches.open(name);
+                }
+                return window.testCache;
+            };
+
+            function releaseCache() {
+                window.testCache = null;
+            }
+
+            async function addDataIntoCache(name, request, response) {
+                let cache = await ensureCache(name);
+                await cache.put(request, response);
+            };
+        </script>
+    </head>
+</html>
