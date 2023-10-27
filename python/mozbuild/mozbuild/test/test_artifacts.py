@@ -87,7 +87,7 @@ class TestThunderbirdMixin(TestCase):
 
     def test_candidate_trees_with_esr_version(self):
         self._assert_candidate_trees(
-            version_display="91.3.0",
+            version_display="91.3.0esr",
             source_repo="https://hg.mozilla.org/releases/comm-esr91",
             expected_trees=ThunderbirdMixin.esr_candidate_trees,
         )
@@ -97,6 +97,13 @@ class TestThunderbirdMixin(TestCase):
             version_display="95.0a1",
             source_repo="https://hg.mozilla.org/comm-central",
             expected_trees=ThunderbirdMixin.nightly_candidate_trees,
+        )
+
+    def test_candidate_trees_with_release_version(self):
+        self._assert_candidate_trees(
+            version_display="93.0.1",
+            source_repo="https://hg.mozilla.org/releases/comm-release",
+            expected_trees=ThunderbirdMixin.default_candidate_trees,
         )
 
     def test_property_is_cached(self):
