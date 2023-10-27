@@ -694,8 +694,10 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" tools:ignore="UnusedResources">Ychwanegion newydd ar gael nawr</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Edrychwch ar 100+ o estyniadau newydd sy’n gwneud Firefox yn dda i chi.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
-    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Archwiliwch ychwanegion</string>
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Archwiliwch yr ychwanegion</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -2242,9 +2244,9 @@
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">Adrodd fod cynnyrch mewn stoc</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title">Gwirio ansawdd adolygiadau</string>
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">Yn gwirio ansawdd adolygiadau</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title">Gwirio ansawdd adolygiadau</string>
+    <string name="review_quality_check_analysis_in_progress_warning_title">Yn gwirio ansawdd adolygiadau</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Gall hyn gymryd tua 60 eiliad.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2254,7 +2256,7 @@
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">Methu gwirio’r adolygiadau hyn</string>
     <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
-    <string name="review_quality_check_not_analyzable_info_body">Yn anffodus, ni allwn wirio ansawdd adolygu ar gyfer rhai mathau o gynnyrch. Er enghraifft, cardiau rhodd a ffrydio fideo, cerddoriaeth a gemau.</string>
+    <string name="review_quality_check_not_analyzable_info_body">Yn anffodus, allwn ni ddim gwirio ansawdd adolygu rhai mathau o gynnyrch. Er enghraifft, cardiau rhodd a ffrydio fideo, cerddoriaeth a gemau.</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">Gwybodaeth yn dod cyn hir</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->

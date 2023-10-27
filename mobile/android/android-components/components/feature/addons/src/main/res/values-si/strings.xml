@@ -82,6 +82,8 @@
     <string name="mozac_feature_addons_learn_more">අවසර ගැන තව දැනගන්න</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">ඇගැයුම</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">මෙම එක්කහුව ගැන</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">සැකසුම්</string>
     <!-- Indicates the add-on is enabled. -->

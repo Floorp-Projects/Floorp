@@ -500,16 +500,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s se pokusí automaticky odmítnout všechny žádosti o povolení cookies na podporovaných serverech.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title">Povolit aplikaci %1$s odmítat cookie lišty?</string>
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="120" tools:ignore="UnusedResources">Povolit aplikaci %1$s odmítat cookie lišty?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body">%1$s dokáže automaticky odmítat mnoho lišt s žádostmi o povolení cookies.</string>
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="120" tools:ignore="UnusedResources">%1$s dokáže automaticky odmítat mnoho lišt s žádostmi o povolení cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button">Teď ne</string>
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="120" tools:ignore="UnusedResources">Teď ne</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text">Uvidíte méně požadavků na cookies</string>
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="120" tools:ignore="UnusedResources">Uvidíte méně požadavků na cookies</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button">Povolit</string>
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="120" tools:ignore="UnusedResources">Povolit</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Pro zvýšení zabezpečení se automaticky pokusí připojit k webům pomocí šifrovacího protokolu HTTPS.</string>
@@ -693,6 +693,14 @@
     <string name="wallpapers_onboarding_dialog_body_text">Vyberte si tapetu, která vás vyjadřuje.</string>
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Podívejte se na další tapety</string>
+
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Nové doplňky jsou nyní k dispozici</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Podívejte se na více než 100 nových rozšíření, která vám umožní přizpůsobit Firefox svým představám.</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Prozkoumejte doplňky</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
