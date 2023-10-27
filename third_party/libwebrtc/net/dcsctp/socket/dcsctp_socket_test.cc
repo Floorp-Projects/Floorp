@@ -22,6 +22,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "net/dcsctp/common/handover_testing.h"
+#include "net/dcsctp/common/math.h"
 #include "net/dcsctp/packet/chunk/chunk.h"
 #include "net/dcsctp/packet/chunk/cookie_echo_chunk.h"
 #include "net/dcsctp/packet/chunk/data_chunk.h"
@@ -2030,6 +2031,44 @@ TEST(DcSctpSocketTest, RxAndTxPacketMetricsIncrease) {
   EXPECT_EQ(a.socket.GetMetrics()->unack_data_count, 0u);
   EXPECT_EQ(a.socket.GetMetrics()->rx_packets_count, 5u);
   EXPECT_EQ(a.socket.GetMetrics()->peer_rwnd_bytes, initial_a_rwnd);
+}
+
+TEST(DcSctpSocketTest, RetransmissionMetricsAreSetForFastRetransmit) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+  ConnectSockets(a, z);
+
+  // Enough to trigger fast retransmit of the missing second packet.
+  std::vector<uint8_t> payload(DcSctpOptions::kMaxSafeMTUSize * 5);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), payload), kSendOptions);
+
+  // Receive first packet, drop second, receive and retransmit the remaining.
+  z.socket.ReceivePacket(a.cb.ConsumeSentPacket());
+  a.cb.ConsumeSentPacket();
+  ExchangeMessages(a, z);
+
+  EXPECT_EQ(a.socket.GetMetrics()->rtx_packets_count, 1u);
+  size_t expected_data_size =
+      RoundDownTo4(DcSctpOptions::kMaxSafeMTUSize - SctpPacket::kHeaderSize);
+  EXPECT_EQ(a.socket.GetMetrics()->rtx_bytes_count, expected_data_size);
+}
+
+TEST(DcSctpSocketTest, RetransmissionMetricsAreSetForNormalRetransmit) {
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+  ConnectSockets(a, z);
+
+  std::vector<uint8_t> payload(kSmallMessageSize);
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53), payload), kSendOptions);
+
+  a.cb.ConsumeSentPacket();
+  AdvanceTime(a, z, a.options.rto_initial);
+  ExchangeMessages(a, z);
+
+  EXPECT_EQ(a.socket.GetMetrics()->rtx_packets_count, 1u);
+  size_t expected_data_size =
+      RoundUpTo4(kSmallMessageSize + DataChunk::kHeaderSize);
+  EXPECT_EQ(a.socket.GetMetrics()->rtx_bytes_count, expected_data_size);
 }
 
 TEST_P(DcSctpSocketParametrizedTest, UnackDataAlsoIncludesSendQueue) {
