@@ -28,3 +28,4 @@ needs-focus != listbox-focus.html listbox-focus-notref.html
 == 1769580.html 1769580-ref.html
 
 == no-padding.html no-padding-ref.html
+!= arrow-color.html arrow-color-notref.html
