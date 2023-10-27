@@ -102,7 +102,7 @@ async def test_subscribe_to_one_context(
     # Track all received browsingContext.userPromptOpened events in the events array
     events = []
 
-    async def on_event(_, data):
+    async def on_event(method, data):
         events.append(data)
 
     remove_listener = bidi_session.add_event_listener(
@@ -118,7 +118,7 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the different context.
     await bidi_session.browsing_context.navigate(
         context=another_new_context["context"],
-        url=inline(f"<script>window.alert('second tab')</script>"),
+        url=inline("<script>window.alert('second tab')</script>"),
     )
 
     # Make sure we don't receive this event.
@@ -129,7 +129,7 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the subscribed context.
     await bidi_session.browsing_context.navigate(
         context=new_context["context"],
-        url=inline(f"<script>window.alert('first tab')</script>"),
+        url=inline("<script>window.alert('first tab')</script>"),
     )
 
     event = await on_entry
