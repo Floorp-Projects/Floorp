@@ -22,6 +22,7 @@
 #include "api/video/nv12_buffer.h"
 #include "api/video/video_frame.h"
 #include "rtc_base/event.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/rate_statistics.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/metrics.h"
@@ -858,6 +859,70 @@ TEST(FrameCadenceAdapterRealTimeTest, TimestampsDoNotDrift) {
                 event.Set();
               }
             }));
+    adapter->OnFrame(frame);
+  });
+  event.Wait(rtc::Event::kForever);
+  rtc::Event finalized;
+  queue->PostTask([&] {
+    adapter = nullptr;
+    finalized.Set();
+  });
+  finalized.Wait(rtc::Event::kForever);
+}
+
+// TODO(bugs.webrtc.org/15462) Disable ScheduledRepeatAllowsForSlowEncode for
+// TaskQueueLibevent.
+#if defined(WEBRTC_ENABLE_LIBEVENT)
+#define MAYBE_ScheduledRepeatAllowsForSlowEncode \
+  DISABLED_ScheduledRepeatAllowsForSlowEncode
+#else
+#define MAYBE_ScheduledRepeatAllowsForSlowEncode \
+  ScheduledRepeatAllowsForSlowEncode
+#endif
+
+TEST(FrameCadenceAdapterRealTimeTest,
+     MAYBE_ScheduledRepeatAllowsForSlowEncode) {
+  // This regression test must be performed in realtime because of limitations
+  // in GlobalSimulatedTimeController.
+  //
+  // We sleep for a long while (but less than max fps) in the first repeated
+  // OnFrame (frame 2). This should not lead to a belated second repeated
+  // OnFrame (frame 3).
+  auto factory = CreateDefaultTaskQueueFactory();
+  auto queue =
+      factory->CreateTaskQueue("test", TaskQueueFactory::Priority::NORMAL);
+  ZeroHertzFieldTrialEnabler enabler;
+  MockCallback callback;
+  Clock* clock = Clock::GetRealTimeClock();
+  std::unique_ptr<FrameCadenceAdapterInterface> adapter;
+  int frame_counter = 0;
+  rtc::Event event;
+  absl::optional<Timestamp> start_time;
+  queue->PostTask([&] {
+    adapter = CreateAdapter(enabler, clock);
+    adapter->Initialize(&callback);
+    adapter->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+    adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 2});
+    auto frame = CreateFrame();
+    constexpr int kSleepMs = 400;
+    constexpr TimeDelta kAllowedBelate = TimeDelta::Millis(150);
+    EXPECT_CALL(callback, OnFrame)
+        .WillRepeatedly(InvokeWithoutArgs([&, kAllowedBelate] {
+          ++frame_counter;
+          // Avoid the first OnFrame and sleep on the second.
+          if (frame_counter == 2) {
+            start_time = clock->CurrentTime();
+            SleepMs(kSleepMs);
+          } else if (frame_counter == 3) {
+            TimeDelta diff =
+                clock->CurrentTime() - (*start_time + TimeDelta::Millis(500));
+            RTC_LOG(LS_ERROR)
+                << "Difference in when frame should vs is appearing: " << diff;
+            EXPECT_LT(diff, kAllowedBelate);
+            event.Set();
+          }
+        }));
     adapter->OnFrame(frame);
   });
   event.Wait(rtc::Event::kForever);

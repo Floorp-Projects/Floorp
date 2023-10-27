@@ -106,7 +106,7 @@ index b9948d2fcd..77cfa94d8a 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 4558737a0a..ca1ec4dec3 100644
+index 6a3042678a..651f719ef3 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -32,7 +32,7 @@ if (is_android) {
@@ -129,7 +129,7 @@ index 4558737a0a..ca1ec4dec3 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -471,9 +475,11 @@ config("common_config") {
+@@ -475,9 +479,11 @@ config("common_config") {
    }
  }
  
@@ -141,7 +141,7 @@ index 4558737a0a..ca1ec4dec3 100644
  
  if (!build_with_chromium) {
    # Target to build all the WebRTC production code.
-@@ -523,6 +529,33 @@ if (!build_with_chromium) {
+@@ -527,6 +533,33 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -175,7 +175,7 @@ index 4558737a0a..ca1ec4dec3 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -535,6 +568,16 @@ if (!build_with_chromium) {
+@@ -539,6 +572,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -1284,7 +1284,7 @@ index e8d4fdbc04..0ec960e46b 100644
  rtc_library("call_config_utils") {
    # TODO(bugs.webrtc.org/10814): Remove rtc_json_suppressions as soon as it
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 0349f2d830..756524da47 100644
+index d696445db2..67b7fa9ef9 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
@@ -1296,7 +1296,7 @@ index 0349f2d830..756524da47 100644
      "../api:scoped_refptr",
      "../api/adaptation:resource_adaptation_api",
      "../api/units:data_rate",
-@@ -402,7 +402,7 @@ rtc_library("video_stream_encoder_impl") {
+@@ -403,7 +403,7 @@ rtc_library("video_stream_encoder_impl") {
      ":video_stream_encoder_interface",
      "../api:field_trials_view",
      "../api:rtp_parameters",
