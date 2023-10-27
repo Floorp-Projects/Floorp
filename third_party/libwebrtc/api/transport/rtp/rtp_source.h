@@ -16,6 +16,7 @@
 #include "absl/types/optional.h"
 #include "api/rtp_headers.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -44,12 +45,25 @@ class RtpSource {
 
   RtpSource() = delete;
 
+  RtpSource(Timestamp timestamp,
+            uint32_t source_id,
+            RtpSourceType source_type,
+            uint32_t rtp_timestamp,
+            const RtpSource::Extensions& extensions)
+      : timestamp_(timestamp),
+        source_id_(source_id),
+        source_type_(source_type),
+        extensions_(extensions),
+        rtp_timestamp_(rtp_timestamp) {}
+
+  // TODO(bugs.webrtc.org/13757): deprecate when chromium stop using this
+  // and remove after 2023-09-18
   RtpSource(int64_t timestamp_ms,
             uint32_t source_id,
             RtpSourceType source_type,
             uint32_t rtp_timestamp,
             const RtpSource::Extensions& extensions)
-      : timestamp_ms_(timestamp_ms),
+      : timestamp_(Timestamp::Millis(timestamp_ms)),
         source_id_(source_id),
         source_type_(source_type),
         extensions_(extensions),
@@ -59,10 +73,14 @@ class RtpSource {
   RtpSource& operator=(const RtpSource&) = default;
   ~RtpSource() = default;
 
-  int64_t timestamp_ms() const { return timestamp_ms_; }
-  void update_timestamp_ms(int64_t timestamp_ms) {
-    RTC_DCHECK_LE(timestamp_ms_, timestamp_ms);
-    timestamp_ms_ = timestamp_ms;
+  Timestamp timestamp() const { return timestamp_; }
+
+  // TODO(bugs.webrtc.org/13757): deprecate when chromium stop using this
+  // and remove after 2023-09-18
+  int64_t timestamp_ms() const { return timestamp_.ms(); }
+  [[deprecated]] void update_timestamp_ms(int64_t timestamp_ms) {
+    RTC_DCHECK_LE(timestamp_.ms(), timestamp_ms);
+    timestamp_ = Timestamp::Millis(timestamp_ms);
   }
 
   // The identifier of the source can be the CSRC or the SSRC.
@@ -90,7 +108,7 @@ class RtpSource {
   }
 
   bool operator==(const RtpSource& o) const {
-    return timestamp_ms_ == o.timestamp_ms() && source_id_ == o.source_id() &&
+    return timestamp_ == o.timestamp() && source_id_ == o.source_id() &&
            source_type_ == o.source_type() &&
            extensions_.audio_level == o.extensions_.audio_level &&
            extensions_.absolute_capture_time ==
@@ -99,7 +117,7 @@ class RtpSource {
   }
 
  private:
-  int64_t timestamp_ms_;
+  Timestamp timestamp_;
   uint32_t source_id_;
   RtpSourceType source_type_;
   RtpSource::Extensions extensions_;
