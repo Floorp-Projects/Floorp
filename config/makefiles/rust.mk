@@ -445,13 +445,18 @@ endef
 # The actual rule is a bit tricky. The `+' prefix allow for recursive parallel
 # make, and it's skipped (`:') if we already triggered a rebuild as part of the
 # dependency chain.
+#
+# Another tricky thing: some dependencies may contain escaped spaces, and they
+# need to be preserved, but $(foreach) splits on spaces, so we replace escaped
+# spaces with some unlikely string for the foreach, and replace them back in the
+# loop itself.
 define make_cargo_rule
 $(notdir $(1))_deps := $$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d)))
 $(1): $(CARGO_FILE) $(3) $$(if $$($(notdir $(1))_deps),$$($(notdir $(1))_deps),$(2))
 	$$(REPORT_BUILD)
 	$$(if $$($(notdir $(1))_deps),+$(MAKE) $(2),:)
 
-$$(foreach dep, $$(call normalize_sep,$$($(notdir $(1))_deps)),$$(eval $$(call make_default_rule,$$(dep))))
+$$(foreach dep, $$(call normalize_sep,$$(subst \ ,_^_^_^_,$$($(notdir $(1))_deps))),$$(eval $$(call make_default_rule,$$(subst _^_^_^_,\ ,$$(dep)))))
 endef
 
 ifdef RUST_LIBRARY_FILE
