@@ -16,9 +16,7 @@ GPU_IMPL_JS_WRAP(BindGroup)
 
 BindGroup::BindGroup(Device* const aParent, RawId aId)
     : ChildOf(aParent), mId(aId) {
-  if (!aId) {
-    mValid = false;
-  }
+  MOZ_RELEASE_ASSERT(aId);
 }
 
 BindGroup::~BindGroup() { Cleanup(); }

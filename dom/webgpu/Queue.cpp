@@ -29,7 +29,9 @@ GPU_IMPL_CYCLE_COLLECTION(Queue, mParent, mBridge)
 GPU_IMPL_JS_WRAP(Queue)
 
 Queue::Queue(Device* const aParent, WebGPUChild* aBridge, RawId aId)
-    : ChildOf(aParent), mBridge(aBridge), mId(aId) {}
+    : ChildOf(aParent), mBridge(aBridge), mId(aId) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
 Queue::~Queue() { Cleanup(); }
 

@@ -20,7 +20,9 @@ ComputePipeline::ComputePipeline(Device* const aParent, RawId aId,
     : ChildOf(aParent),
       mImplicitPipelineLayoutId(aImplicitPipelineLayoutId),
       mImplicitBindGroupLayoutIds(std::move(aImplicitBindGroupLayoutIds)),
-      mId(aId) {}
+      mId(aId) {
+  MOZ_RELEASE_ASSERT(aId);
+}
 
 ComputePipeline::~ComputePipeline() { Cleanup(); }
 
