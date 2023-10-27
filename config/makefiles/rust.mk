@@ -452,7 +452,7 @@ endef
 # loop itself.
 define make_cargo_rule
 $(notdir $(1))_deps := $$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d)))
-$(1): $(CARGO_FILE) $(3) $$(if $$($(notdir $(1))_deps),$$($(notdir $(1))_deps),$(2))
+$(1): $(CARGO_FILE) $(3) $(topsrcdir)/Cargo.lock $$(if $$($(notdir $(1))_deps),$$($(notdir $(1))_deps),$(2))
 	$$(REPORT_BUILD)
 	$$(if $$($(notdir $(1))_deps),+$(MAKE) $(2),:)
 
