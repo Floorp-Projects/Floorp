@@ -104,6 +104,8 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
       const dom::GPUShaderModuleDescriptor& aDesc,
       RefPtr<dom::Promise> aPromise);
 
+  ffi::WGPUClient* GetClient() const { return mClient.get(); }
+
   void DeviceCreateSwapChain(RawId aSelfId, const RGBDescriptor& aRgbDesc,
                              size_t maxBufferCount,
                              const layers::RemoteTextureOwnerId& aOwnerId,

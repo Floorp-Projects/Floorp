@@ -128,6 +128,16 @@ enum DeviceAction<'a> {
         id::BindGroupLayoutId,
         wgc::binding_model::BindGroupLayoutDescriptor<'a>,
     ),
+    RenderPipelineGetBindGroupLayout(
+        id::RenderPipelineId,
+        u32,
+        id::BindGroupLayoutId,
+    ),
+    ComputePipelineGetBindGroupLayout(
+        id::ComputePipelineId,
+        u32,
+        id::BindGroupLayoutId,
+    ),
     CreatePipelineLayout(
         id::PipelineLayoutId,
         wgc::binding_model::PipelineLayoutDescriptor<'a>,
