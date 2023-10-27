@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
@@ -300,11 +301,13 @@ bool RTPSenderAudio::SendAudio(AudioFrameType frame_type,
                          packet->SequenceNumber());
   packet->set_packet_type(RtpPacketMediaType::kAudio);
   packet->set_allow_retransmission(true);
-  bool send_result = rtp_sender_->SendToNetwork(std::move(packet));
+  std::vector<std::unique_ptr<RtpPacketToSend>> packets(1);
+  packets[0] = std::move(packet);
+  rtp_sender_->EnqueuePackets(std::move(packets));
   if (first_packet_sent_()) {
     RTC_LOG(LS_INFO) << "First audio RTP packet sent to pacer";
   }
-  return send_result;
+  return true;
 }
 
 // Audio level magnitude and voice activity flag are set for each RTP packet
@@ -340,19 +343,16 @@ bool RTPSenderAudio::SendTelephoneEventPacket(bool ended,
                                               uint32_t dtmf_timestamp,
                                               uint16_t duration,
                                               bool marker_bit) {
-  uint8_t send_count = 1;
-  bool result = true;
+  size_t send_count = ended ? 3 : 1;
 
-  if (ended) {
-    // resend last packet in an event 3 times
-    send_count = 3;
-  }
-  do {
+  std::vector<std::unique_ptr<RtpPacketToSend>> packets;
+  packets.reserve(send_count);
+  for (size_t i = 0; i < send_count; ++i) {
     // Send DTMF data.
     constexpr RtpPacketToSend::ExtensionManager* kNoExtensions = nullptr;
     constexpr size_t kDtmfSize = 4;
-    std::unique_ptr<RtpPacketToSend> packet(
-        new RtpPacketToSend(kNoExtensions, kRtpHeaderSize + kDtmfSize));
+    auto packet = std::make_unique<RtpPacketToSend>(kNoExtensions,
+                                                    kRtpHeaderSize + kDtmfSize);
     packet->SetPayloadType(dtmf_current_event_.payload_type);
     packet->SetMarker(marker_bit);
     packet->SetSsrc(rtp_sender_->SSRC());
@@ -383,10 +383,9 @@ bool RTPSenderAudio::SendTelephoneEventPacket(bool ended,
 
     packet->set_packet_type(RtpPacketMediaType::kAudio);
     packet->set_allow_retransmission(true);
-    result = rtp_sender_->SendToNetwork(std::move(packet));
-    send_count--;
-  } while (send_count > 0 && result);
-
-  return result;
+    packets.push_back(std::move(packet));
+  }
+  rtp_sender_->EnqueuePackets(std::move(packets));
+  return true;
 }
 }  // namespace webrtc

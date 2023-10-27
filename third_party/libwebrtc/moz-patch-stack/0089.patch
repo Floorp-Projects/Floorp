@@ -30,7 +30,7 @@ index bd9ea2d67a..62a955c508 100644
    virtual VideoFrameMetadata Metadata() const = 0;
  
 diff --git a/modules/rtp_rtcp/source/rtp_sender.h b/modules/rtp_rtcp/source/rtp_sender.h
-index b6a04a7406..d0dcf387e4 100644
+index a398f16d46..8136730e4c 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.h
 +++ b/modules/rtp_rtcp/source/rtp_sender.h
 @@ -140,6 +140,10 @@ class RTPSender {

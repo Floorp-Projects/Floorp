@@ -201,8 +201,9 @@ class RtpSenderTest : public ::testing::Test {
     packet->set_allow_retransmission(true);
 
     // Packet should be stored in a send bucket.
-    EXPECT_TRUE(
-        rtp_sender_->SendToNetwork(std::make_unique<RtpPacketToSend>(*packet)));
+    std::vector<std::unique_ptr<RtpPacketToSend>> packets(1);
+    packets[0] = std::make_unique<RtpPacketToSend>(*packet);
+    rtp_sender_->EnqueuePackets(std::move(packets));
     return packet;
   }
 
@@ -232,10 +233,12 @@ class RtpSenderTest : public ::testing::Test {
 
   size_t GenerateAndSendPadding(size_t target_size_bytes) {
     size_t generated_bytes = 0;
+    std::vector<std::unique_ptr<RtpPacketToSend>> packets;
     for (auto& packet : GeneratePadding(target_size_bytes)) {
       generated_bytes += packet->payload_size() + packet->padding_size();
-      rtp_sender_->SendToNetwork(std::move(packet));
+      packets.push_back(std::move(packet));
     }
+    rtp_sender_->EnqueuePackets(std::move(packets));
     return generated_bytes;
   }
 
@@ -339,7 +342,8 @@ TEST_F(RtpSenderTest, PaddingAlwaysAllowedOnAudio) {
 }
 
 TEST_F(RtpSenderTest, SendToNetworkForwardsPacketsToPacer) {
-  auto packet =
+  std::vector<std::unique_ptr<RtpPacketToSend>> packets(1);
+  packets[0] =
       BuildRtpPacket(kPayload, kMarkerBit, kTimestamp, Timestamp::Zero());
   Timestamp now = clock_->CurrentTime();
 
@@ -347,7 +351,8 @@ TEST_F(RtpSenderTest, SendToNetworkForwardsPacketsToPacer) {
               EnqueuePackets(ElementsAre(AllOf(
                   Pointee(Property(&RtpPacketToSend::Ssrc, kSsrc)),
                   Pointee(Property(&RtpPacketToSend::capture_time, now))))));
-  EXPECT_TRUE(rtp_sender_->SendToNetwork(std::move(packet)));
+
+  rtp_sender_->EnqueuePackets(std::move(packets));
 }
 
 TEST_F(RtpSenderTest, ReSendPacketForwardsPacketsToPacer) {
@@ -398,7 +403,7 @@ TEST_F(RtpSenderTest, SendPadding) {
     std::vector<std::unique_ptr<RtpPacketToSend>> padding_packets =
         Sequence(GeneratePadding(kPaddingTargetBytes));
     ASSERT_THAT(padding_packets, SizeIs(1));
-    rtp_sender_->SendToNetwork(std::move(padding_packets[0]));
+    rtp_sender_->EnqueuePackets(std::move(padding_packets));
   }
 
   // Send a regular video packet again.

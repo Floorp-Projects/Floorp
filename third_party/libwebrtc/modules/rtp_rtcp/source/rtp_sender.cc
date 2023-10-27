@@ -469,22 +469,6 @@ std::vector<std::unique_ptr<RtpPacketToSend>> RTPSender::GeneratePadding(
   return padding_packets;
 }
 
-bool RTPSender::SendToNetwork(std::unique_ptr<RtpPacketToSend> packet) {
-  RTC_DCHECK(packet);
-  auto packet_type = packet->packet_type();
-  RTC_CHECK(packet_type) << "Packet type must be set before sending.";
-
-  if (packet->capture_time() <= Timestamp::Zero()) {
-    packet->set_capture_time(clock_->CurrentTime());
-  }
-
-  std::vector<std::unique_ptr<RtpPacketToSend>> packets;
-  packets.emplace_back(std::move(packet));
-  paced_sender_->EnqueuePackets(std::move(packets));
-
-  return true;
-}
-
 void RTPSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
   RTC_DCHECK(!packets.empty());
