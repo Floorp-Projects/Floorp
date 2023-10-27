@@ -2649,7 +2649,7 @@ JSString* JS::GetPCCountScriptSummary(JSContext* cx, size_t index) {
   json.property("line", script->lineno());
 
   if (JSFunction* fun = script->function()) {
-    if (JSAtom* atom = fun->displayAtom()) {
+    if (JSAtom* atom = fun->fullDisplayAtom()) {
       if (!JSONStringProperty(sp, json, "name", atom)) {
         return nullptr;
       }

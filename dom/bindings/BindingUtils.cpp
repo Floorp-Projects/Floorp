@@ -185,7 +185,10 @@ static bool ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
   // non-null and that JS_GetStringCharsZ returns non-null.
   JS::Rooted<JSFunction*> func(aCx, JS_ValueToFunction(aCx, aArgs.calleev()));
   MOZ_ASSERT(func);
-  JS::Rooted<JSString*> funcName(aCx, JS_GetFunctionDisplayId(func));
+  JS::Rooted<JSString*> funcName(aCx);
+  if (!JS_GetFunctionDisplayId(aCx, func, &funcName)) {
+    return false;
+  }
   MOZ_ASSERT(funcName);
   nsAutoJSString funcNameStr;
   if (!funcNameStr.init(aCx, funcName)) {

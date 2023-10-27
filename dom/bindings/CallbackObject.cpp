@@ -157,7 +157,8 @@ void CallbackObject::GetDescription(nsACString& aOutString) {
     return;
   }
 
-  JS::Rooted<JSString*> displayId(cx, JS_GetFunctionDisplayId(rootedFunction));
+  JS::Rooted<JSString*> displayId(
+      cx, JS_GetMaybePartialFunctionDisplayId(rootedFunction));
   if (displayId) {
     nsAutoJSString funcNameStr;
     if (funcNameStr.init(cx, displayId)) {

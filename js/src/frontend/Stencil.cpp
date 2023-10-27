@@ -97,7 +97,7 @@ static ParserBindingIter InputBindingIter(const FakeStencilGlobalScope&) {
 InputName InputScript::displayAtom() const {
   return script_.match(
       [](BaseScript* ptr) {
-        return InputName(ptr, ptr->function()->displayAtom());
+        return InputName(ptr, ptr->function()->fullDisplayAtom());
       },
       [](const ScriptStencilRef& ref) {
         return InputName(ref, ref.scriptData().functionAtom);
@@ -1529,9 +1529,9 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
     new (mozilla::KnownNotNull, &scriptExtra[i]) ScriptStencilExtra();
     ScriptStencilExtra& extra = scriptExtra[i];
 
-    if (fun->displayAtom()) {
+    if (fun->fullDisplayAtom()) {
       TaggedParserAtomIndex displayAtom =
-          parseAtoms.internJSAtom(fc, atomCache, fun->displayAtom());
+          parseAtoms.internJSAtom(fc, atomCache, fun->fullDisplayAtom());
       if (!displayAtom) {
         return false;
       }
@@ -2402,7 +2402,7 @@ static void UpdateEmittedInnerFunctions(JSContext* cx,
 
       // Inferred and Guessed names are computed by BytecodeEmitter and so may
       // need to be applied to existing JSFunctions during delazification.
-      if (fun->displayAtom() == nullptr) {
+      if (fun->fullDisplayAtom() == nullptr) {
         JSAtom* funcAtom = nullptr;
         if (scriptStencil.functionFlags.hasInferredName() ||
             scriptStencil.functionFlags.hasGuessedAtom()) {
@@ -4273,6 +4273,9 @@ void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
           break;
         case FunctionFlags::Flags::CONSTRUCTOR:
           json.value("CONSTRUCTOR");
+          break;
+        case FunctionFlags::Flags::LAZY_ACCESSOR_NAME:
+          json.value("LAZY_ACCESSOR_NAME");
           break;
         case FunctionFlags::Flags::LAMBDA:
           json.value("LAMBDA");

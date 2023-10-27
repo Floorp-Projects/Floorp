@@ -3710,7 +3710,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
     }
 
     RootedFunction fun(cx, &thing.as<JSObject>().as<JSFunction>());
-    Rooted<PropertyName*> name(cx, fun->explicitName()->asPropertyName());
+    Rooted<PropertyName*> name(cx, fun->fullExplicitName()->asPropertyName());
 
     // Clone the function before exposing to script as a binding.
     JSObject* clone = Lambda(cx, fun, envChain);
@@ -4157,7 +4157,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
 
     buf.printf("Script ");
 
-    if (JSAtom* name = script->function()->displayAtom()) {
+    if (JSAtom* name = script->function()->fullDisplayAtom()) {
       buf.putString(cx, name);
       buf.printf(" ");
     }
@@ -4165,7 +4165,7 @@ static bool AnalyzeEntrainedVariablesInScript(JSContext* cx,
     buf.printf("(%s:%u) has variables entrained by ", script->filename(),
                script->lineno());
 
-    if (JSAtom* name = innerScript->function()->displayAtom()) {
+    if (JSAtom* name = innerScript->function()->fullDisplayAtom()) {
       buf.putString(cx, name);
       buf.printf(" ");
     }

@@ -494,9 +494,11 @@ bool ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope,
       // function being imported.  But be careful in case the callable we have
       // is not actually a JSFunction.
       RootedString funName(cx);
-      JSFunction* fun = JS_GetObjectFunction(funObj);
+      JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(funObj));
       if (fun) {
-        funName = JS_GetFunctionId(fun);
+        if (!JS_GetFunctionId(cx, fun, &funName)) {
+          return false;
+        }
       }
       if (!funName) {
         funName = JS_AtomizeAndPinString(cx, "");

@@ -236,7 +236,10 @@ static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
   JSString* name = nullptr;
   if (target->is<JSFunction>() && !target->as<JSFunction>().hasResolvedName()) {
     JSFunction* targetFn = &target->as<JSFunction>();
-    name = targetFn->infallibleGetUnresolvedName(cx);
+    name = targetFn->getUnresolvedName(cx);
+    if (!name) {
+      return nullptr;
+    }
   } else {
     // Use a fast path for getting the .name value if the target is a bound
     // function with its initial shape.

@@ -67,3 +67,8 @@ assertEq(displayName(f[1]()), "1/<");
 assertEq(displayName(f[5]()), "foo</</<");
 assertEq(displayName(f[7]()), "7/<");
 assertEq(displayName(f[11]), "foo</<");
+
+// Native built-in accessor name, which is lazily created.
+
+assertEq(displayName(Object.getOwnPropertyDescriptor(Map.prototype, "size").get), "get size");
+assertEq(displayName(Object.getOwnPropertyDescriptor(RegExp.prototype, "flags").get), "get flags");

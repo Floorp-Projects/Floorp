@@ -631,7 +631,7 @@ nsCString GetFunctionName(JSContext* cx, HandleObject obj) {
     return GetFunctionName(cx, vobj);
   }
 
-  RootedString funName(cx, JS_GetFunctionDisplayId(fun));
+  RootedString funName(cx, JS_GetMaybePartialFunctionDisplayId(fun));
   RootedScript script(cx, JS_GetFunctionScript(cx, fun));
   const char* filename = script ? JS_GetScriptFilename(script) : "anonymous";
   const char* filenameSuffix = strrchr(filename, '/');

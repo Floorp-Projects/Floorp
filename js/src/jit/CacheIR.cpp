@@ -10264,7 +10264,12 @@ AttachDecision InlinableNativeIRGenerator::tryAttachSpecializedFunctionBind(
       cx_->clearPendingException();
       return AttachDecision::NoAction;
     }
-    targetName = fun->infallibleGetUnresolvedName(cx_);
+    targetName = fun->getUnresolvedName(cx_);
+    if (!targetName) {
+      cx_->clearPendingException();
+      return AttachDecision::NoAction;
+    }
+
     targetLength = len;
   } else {
     BoundFunctionObject* bound = &target->as<BoundFunctionObject>();

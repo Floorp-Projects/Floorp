@@ -117,8 +117,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(CallbackTimeoutHandler)
     JSObject* obj = tmp->mFunction->CallablePreserveColor();
     JSFunction* fun =
         JS_GetObjectFunction(js::UncheckedUnwrapWithoutExpose(obj));
-    if (fun && JS_GetFunctionId(fun)) {
-      JSLinearString* funId = JS_ASSERT_STRING_IS_LINEAR(JS_GetFunctionId(fun));
+    if (fun && JS_GetMaybePartialFunctionId(fun)) {
+      JSLinearString* funId =
+          JS_ASSERT_STRING_IS_LINEAR(JS_GetMaybePartialFunctionId(fun));
       size_t size = 1 + JS_PutEscapedLinearString(nullptr, 0, funId, 0);
       char* funIdName = new char[size];
       if (funIdName) {

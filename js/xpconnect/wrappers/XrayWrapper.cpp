@@ -580,7 +580,11 @@ bool JSXrayTraits::resolveOwnProperty(
         return true;
       }
       if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
-        RootedString fname(cx, JS_GetFunctionId(JS_GetObjectFunction(target)));
+        JS::Rooted<JSFunction*> fun(cx, JS_GetObjectFunction(target));
+        JS::Rooted<JSString*> fname(cx);
+        if (!JS_GetFunctionId(cx, fun, &fname)) {
+          return false;
+        }
         if (fname) {
           JS_MarkCrossZoneIdValue(cx, StringValue(fname));
         }

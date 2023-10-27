@@ -334,7 +334,7 @@ void ThreadStackHelper::CollectProfilingStackFrame(
                      // names.
   size_t len = 0;
   if (JSFunction* func = aFrame.function()) {
-    if (JSString* str = JS_GetFunctionDisplayId(func)) {
+    if (JSString* str = JS_GetMaybePartialFunctionDisplayId(func)) {
       JSLinearString* linear = JS_ASSERT_STRING_IS_LINEAR(str);
       len = JS::GetLinearStringLength(linear);
       JS::LossyCopyLinearStringChars(buffer, linear,

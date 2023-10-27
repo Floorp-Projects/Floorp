@@ -488,8 +488,8 @@ void LCovRealm::writeRealmName(JS::Realm* realm) {
 
 const char* LCovRealm::getScriptName(JSScript* script) {
   JSFunction* fun = script->function();
-  if (fun && fun->displayAtom()) {
-    JSAtom* atom = fun->displayAtom();
+  if (fun && fun->fullDisplayAtom()) {
+    JSAtom* atom = fun->fullDisplayAtom();
     size_t lenWithNull = js::PutEscapedString(nullptr, 0, atom, 0) + 1;
     char* name = alloc_.newArray<char>(lenWithNull);
     if (name) {

@@ -393,12 +393,14 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
       if (val.toObject().is<JSFunction>()) {
         fun = &val.toObject().as<JSFunction>();
         // Method's case should be checked on caller.
-        if (((fun->isGetter() && kind == PropertyKind::Getter) ||
-             (fun->isSetter() && kind == PropertyKind::Setter) ||
+        if (((fun->isGetter() && kind == PropertyKind::Getter &&
+              !fun->isAccessorWithLazyName()) ||
+             (fun->isSetter() && kind == PropertyKind::Setter &&
+              !fun->isAccessorWithLazyName()) ||
              kind == PropertyKind::Method) &&
-            fun->explicitName()) {
+            fun->fullExplicitName()) {
           bool result;
-          if (!EqualStrings(cx, fun->explicitName(), idstr, &result)) {
+          if (!EqualStrings(cx, fun->fullExplicitName(), idstr, &result)) {
             return false;
           }
 
