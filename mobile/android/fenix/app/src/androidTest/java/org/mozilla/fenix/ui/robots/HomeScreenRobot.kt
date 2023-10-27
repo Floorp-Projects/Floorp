@@ -147,6 +147,58 @@ class HomeScreenRobot {
         }
     }
 
+    fun verifyFirstOnboardingCard(composeTestRule: ComposeTestRule) {
+        composeTestRule.also {
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_default_browser_title_nimbus_2),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_default_browser_description_nimbus_2),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_default_browser_positive_button),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_default_browser_negative_button),
+            ).assertExists()
+        }
+    }
+
+    fun verifySecondOnboardingCard(composeTestRule: ComposeTestRule) {
+        composeTestRule.also {
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_title_2),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_description_2),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_positive_button),
+            ).assertExists()
+
+            it.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_negative_button),
+            ).assertExists()
+        }
+    }
+
+    fun clickNotNowOnboardingButton(composeTestRule: ComposeTestRule) =
+        composeTestRule.onNodeWithText(
+            getStringResource(R.string.juno_onboarding_default_browser_negative_button),
+        ).performClick()
+
+    fun swipeSecondOnboardingCardToRight() =
+        mDevice.findObject(
+            UiSelector().textContains(
+                getStringResource(R.string.juno_onboarding_sign_in_title_2),
+            ),
+        ).swipeRight(3)
+
     fun clickGetStartedButton(testRule: ComposeTestRule) =
         testRule.onNodeWithText(getStringResource(R.string.onboarding_home_get_started_button)).performClick()
 
@@ -771,6 +823,30 @@ class HomeScreenRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickSetAsDefaultBrowserOnboardingButton(
+            composeTestRule: ComposeTestRule,
+            interact: SettingsRobot.() -> Unit,
+        ): SettingsRobot.Transition {
+            composeTestRule.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_default_browser_positive_button),
+            ).performClick()
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
+        }
+
+        fun clickSignInOnboardingButton(
+            composeTestRule: ComposeTestRule,
+            interact: SyncSignInRobot.() -> Unit,
+        ): SyncSignInRobot.Transition {
+            composeTestRule.onNodeWithText(
+                getStringResource(R.string.juno_onboarding_sign_in_positive_button),
+            ).performClick()
+
+            SyncSignInRobot().interact()
+            return SyncSignInRobot.Transition()
         }
     }
 }

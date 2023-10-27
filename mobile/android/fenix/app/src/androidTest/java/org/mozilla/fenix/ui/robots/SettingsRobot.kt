@@ -210,6 +210,14 @@ class SettingsRobot {
             return HomeScreenRobot.Transition()
         }
 
+        fun goBackToOnboardingScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.pressBack()
+            mDevice.waitForIdle(waitingTimeShort)
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
+
         fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             goBackButton().click()
 
