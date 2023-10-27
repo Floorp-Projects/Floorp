@@ -274,6 +274,9 @@ select > button {
   block-size: 100%;
   box-sizing: border-box;
 
+  /* Draw the arrow in the select's color */
+  color: inherit;
+
   /*
     Make sure to align properly with the display frame.  Note that we
     want the baseline of the combobox to match the baseline of the
