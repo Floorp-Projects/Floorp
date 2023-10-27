@@ -193,7 +193,6 @@ endif
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
 ifdef MOZ_USING_WASM_SANDBOXING
-security/rlbox/pre-compile media/libsoundtouch/src/pre-compile: config/external/wasm2c_sandbox_compiler/host
 dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/pre-compile
 dom/media/target-objects dom/media/mediasink/target-objects: media/libsoundtouch/src/pre-compile
 endif
