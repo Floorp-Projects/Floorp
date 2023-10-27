@@ -93,7 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var weakListener = {
     QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
-    receiveMessage: function(msg) {
+    receiveMessage(msg) {
       if (weakMessageReceived) {
         ok(false, 'Weak listener fired twice.');
         return;
@@ -109,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   var weakListener2 = {
     QueryInterface: ChromeUtils.generateQI(["nsISupportsWeakReference"]),
 
-    receiveMessage: function(msg) {
+    receiveMessage(msg) {
       ok(false, 'Should not have received a message.');
     }
   };

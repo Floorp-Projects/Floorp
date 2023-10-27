@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
                    .getService(Ci.nsIConsoleService);
     var listener = {
       QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
-      observe : function (msg) { errorLogged = true; }
+      observe(msg) { errorLogged = true; }
     };
 
     function step2() {

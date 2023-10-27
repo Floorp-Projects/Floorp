@@ -28,7 +28,7 @@ function promiseConsoleListenerCalled() {
     let consoleListener = {
       count: 0,
 
-      observe: function(aSubject) {
+      observe(aSubject) {
         var obj = aSubject.wrappedJSObject;
         ok(obj.chromeContext, "MJS is always a chrome context");
 

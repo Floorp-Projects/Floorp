@@ -88,7 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       finish();
     };
 
-    var params = {file: createFileWithData(fileData), encoding: encoding};
+    var params = {file: createFileWithData(fileData), encoding};
 
     worker.postMessage(params);
 

@@ -21,7 +21,7 @@
           return;
         }
         let listener = {
-          onChange: function() {
+          onChange() {
             if (registration.activeWorker) {
               registration.removeListener(listener);
               res(registration);

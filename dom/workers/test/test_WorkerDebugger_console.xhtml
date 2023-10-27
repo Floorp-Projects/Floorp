@@ -30,7 +30,7 @@
       }
 
       consoleListener.prototype  = {
-        observe: function(aSubject) {
+        observe(aSubject) {
           var obj = aSubject.wrappedJSObject;
           if (obj.arguments[0] == "Hello from the debugger script!" &&
               !consoleMessagesReceived) {
@@ -58,7 +58,7 @@
         info("Send a request to the worker debugger. This should cause the " +
              "the worker debugger to send a response.");
         dbg.addListener({
-          onMessage: function(msg) {
+          onMessage(msg) {
             try {
               msg = JSON.parse(msg);
             } catch(e) {

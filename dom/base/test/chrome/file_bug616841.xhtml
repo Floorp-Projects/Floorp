@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=616841
       for (var i = 0; i < toCompare.length; ++i) {
         var pair = toCompare[i];
         messageManager.broadcastAsyncMessage("cmp",
-                                             { i: i, a: pair[0], b: pair[1] });
+                                             { i, a: pair[0], b: pair[1] });
       }
     }
 

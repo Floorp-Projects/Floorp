@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=415498
                  getService(Ci.nsIConsoleService);
 
       gConsoleListener = {
-        observe: function(aObject) {
+        observe(aObject) {
           gMessages.push(aObject);
         }
       };
