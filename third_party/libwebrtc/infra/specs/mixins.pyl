@@ -309,6 +309,15 @@
       }]
     }
   },
+  'xcode_15_main': {
+    'args': ['--xcode-build-version', '15a5229h'],
+    'swarming': {
+      'named_caches': [{
+        'name': 'xcode_ios_15a5229h',
+        'path': 'Xcode.app'
+      }]
+    }
+  },
   'xcode_parallelization': {
     'args': ['--xcode-parallelization']
   }
