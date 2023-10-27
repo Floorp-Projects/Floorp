@@ -81,6 +81,8 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
 
   bool IsMediaKeySupported(dom::MediaControlKey aKey) const;
 
+  void OwnName(GDBusConnection* aConnection);
+
  private:
   ~MPRISServiceHandler();
 
@@ -179,6 +181,12 @@ class MPRISServiceHandler final : public dom::MediaControlKeySource {
   bool EmitPropertiesChangedSignal(GVariant* aParameters) const;
 
   void ClearMetadata();
+
+  RefPtr<GCancellable> mDBusGetCancellable;
+
+  nsCString mServiceName;
+  void SetServiceName(const char* aName);
+  const char* GetServiceName();
 };
 
 }  // namespace widget
