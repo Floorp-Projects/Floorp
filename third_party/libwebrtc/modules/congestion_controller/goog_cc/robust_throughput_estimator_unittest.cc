@@ -63,6 +63,19 @@ class FeedbackGenerator {
   uint16_t sequence_number_ = 100;
 };
 
+TEST(RobustThroughputEstimatorTest, DefaultEnabled) {
+  RobustThroughputEstimatorSettings settings =
+      CreateRobustThroughputEstimatorSettings("");
+  EXPECT_TRUE(settings.enabled);
+}
+
+TEST(RobustThroughputEstimatorTest, CanDisable) {
+  RobustThroughputEstimatorSettings settings =
+      CreateRobustThroughputEstimatorSettings(
+          "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:false/");
+  EXPECT_FALSE(settings.enabled);
+}
+
 TEST(RobustThroughputEstimatorTest, InitialEstimate) {
   FeedbackGenerator feedback_generator;
   RobustThroughputEstimator throughput_estimator(
