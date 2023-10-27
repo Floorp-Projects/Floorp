@@ -273,7 +273,7 @@ index 0e96d7f2cd..10329005ba 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 0f42fa50b7..808cb932fe 100644
+index acb19705af..db0689b574 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
 @@ -211,6 +211,7 @@ VideoReceiveStream2::VideoReceiveStream2(
