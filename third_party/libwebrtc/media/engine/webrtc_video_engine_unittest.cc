@@ -9767,7 +9767,7 @@ TEST_F(WebRtcVideoChannelBaseTest, GetSources) {
   EXPECT_EQ(source.source_id(), kSsrc);
   EXPECT_EQ(source.source_type(), webrtc::RtpSourceType::SSRC);
   int64_t rtp_timestamp_1 = source.rtp_timestamp();
-  int64_t timestamp_ms_1 = source.timestamp_ms();
+  Timestamp timestamp_1 = source.timestamp();
 
   // Send and receive another frame.
   SendFrame();
@@ -9781,10 +9781,10 @@ TEST_F(WebRtcVideoChannelBaseTest, GetSources) {
   EXPECT_EQ(source.source_id(), kSsrc);
   EXPECT_EQ(source.source_type(), webrtc::RtpSourceType::SSRC);
   int64_t rtp_timestamp_2 = source.rtp_timestamp();
-  int64_t timestamp_ms_2 = source.timestamp_ms();
+  Timestamp timestamp_2 = source.timestamp();
 
   EXPECT_GT(rtp_timestamp_2, rtp_timestamp_1);
-  EXPECT_GT(timestamp_ms_2, timestamp_ms_1);
+  EXPECT_GT(timestamp_2, timestamp_1);
 }
 
 TEST_F(WebRtcVideoChannelTest, SetsRidsOnSendStream) {

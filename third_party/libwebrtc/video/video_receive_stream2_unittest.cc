@@ -563,12 +563,12 @@ TEST_P(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
   EXPECT_THAT(video_receive_stream_->GetSources(), IsEmpty());
 
   // Render one video frame.
-  int64_t timestamp_ms_min = clock_->TimeInMilliseconds();
+  Timestamp timestamp_min = clock_->CurrentTime();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
   // Verify that the per-packet information is passed to the renderer.
   EXPECT_THAT(fake_renderer_.WaitForFrame(kDefaultTimeOut),
               RenderedFrameWith(PacketInfos(ElementsAreArray(packet_infos))));
-  int64_t timestamp_ms_max = clock_->TimeInMilliseconds();
+  Timestamp timestamp_max = clock_->CurrentTime();
 
   // Verify that the per-packet information also updates `GetSources()`.
   std::vector<RtpSource> sources = video_receive_stream_->GetSources();
@@ -583,8 +583,8 @@ TEST_P(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
     EXPECT_EQ(it->source_id(), kSsrc);
     EXPECT_EQ(it->source_type(), RtpSourceType::SSRC);
     EXPECT_EQ(it->rtp_timestamp(), kRtpTimestamp);
-    EXPECT_GE(it->timestamp_ms(), timestamp_ms_min);
-    EXPECT_LE(it->timestamp_ms(), timestamp_ms_max);
+    EXPECT_GE(it->timestamp(), timestamp_min);
+    EXPECT_LE(it->timestamp(), timestamp_max);
   }
   {
     auto it = std::find_if(sources.begin(), sources.end(),
@@ -596,8 +596,8 @@ TEST_P(VideoReceiveStream2Test, RenderedFrameUpdatesGetSources) {
     EXPECT_EQ(it->source_id(), kCsrc);
     EXPECT_EQ(it->source_type(), RtpSourceType::CSRC);
     EXPECT_EQ(it->rtp_timestamp(), kRtpTimestamp);
-    EXPECT_GE(it->timestamp_ms(), timestamp_ms_min);
-    EXPECT_LE(it->timestamp_ms(), timestamp_ms_max);
+    EXPECT_GE(it->timestamp(), timestamp_min);
+    EXPECT_LE(it->timestamp(), timestamp_max);
   }
 }
 
