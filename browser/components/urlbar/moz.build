@@ -73,6 +73,7 @@ EXTRA_JS_MODULES["urlbar/private"] += [
 TESTING_JS_MODULES += [
     "tests/quicksuggest/MerinoTestUtils.sys.mjs",
     "tests/quicksuggest/QuickSuggestTestUtils.sys.mjs",
+    "tests/quicksuggest/RemoteSettingsServer.sys.mjs",
     "tests/UrlbarTestUtils.sys.mjs",
 ]
 BROWSER_CHROME_MANIFESTS += [
