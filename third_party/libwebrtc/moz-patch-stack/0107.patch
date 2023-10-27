@@ -1,0 +1,20 @@
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 7 Dec 2022 17:09:00 +0000
+Subject: Bug 1744645 - pt1 - add a couple empty gni files to help with
+ BUILD.gn corrections. r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D163991
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/81d86382ee468f3b36deed00d0c9d59eb85524be
+---
+ tools/generate_stubs/rules.gni | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 tools/generate_stubs/rules.gni
+
+diff --git a/tools/generate_stubs/rules.gni b/tools/generate_stubs/rules.gni
+new file mode 100644
+index 0000000000..1d9f36eb72
+--- /dev/null
++++ b/tools/generate_stubs/rules.gni
+@@ -0,0 +1,2 @@
++# "empty" file in place of importing new tools/generate_stubs
++# to allow BUILD.gn imports to succeed.
