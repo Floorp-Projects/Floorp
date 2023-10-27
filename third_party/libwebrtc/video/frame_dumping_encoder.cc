@@ -36,8 +36,11 @@ class FrameDumpingEncoder : public VideoEncoder, public EncodedImageCallback {
                       std::string output_directory)
       : wrapped_(std::move(wrapped)),
         output_directory_(output_directory),
-        origin_time_micros_(origin_time_micros) {
-    sequence_checker_.Detach();
+        origin_time_micros_(origin_time_micros) {}
+
+  ~FrameDumpingEncoder() override {
+    MutexLock lock(&mu_);
+    writers_by_simulcast_index_.clear();
   }
 
   // VideoEncoder overloads.
@@ -77,18 +80,20 @@ class FrameDumpingEncoder : public VideoEncoder, public EncodedImageCallback {
   // EncodedImageCallback overrides.
   Result OnEncodedImage(const EncodedImage& encoded_image,
                         const CodecSpecificInfo* codec_specific_info) override {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
-    GetFileWriterForSimulcastIndex(encoded_image.SimulcastIndex().value_or(0))
-        .WriteFrame(encoded_image, codec_settings_.codecType);
+    {
+      MutexLock lock(&mu_);
+      GetFileWriterForSimulcastIndex(encoded_image.SimulcastIndex().value_or(0))
+          .WriteFrame(encoded_image, codec_settings_.codecType);
+    }
     return callback_->OnEncodedImage(encoded_image, codec_specific_info);
   }
   void OnDroppedFrame(DropReason reason) override {
-    RTC_DCHECK_RUN_ON(&sequence_checker_);
     callback_->OnDroppedFrame(reason);
   }
 
  private:
-  std::string FilenameFromSimulcastIndex(int index) {
+  std::string FilenameFromSimulcastIndex(int index)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
     char filename_buffer[1024];
     rtc::SimpleStringBuilder builder(filename_buffer);
     builder << output_directory_ << "/webrtc_encoded_frames"
@@ -96,7 +101,8 @@ class FrameDumpingEncoder : public VideoEncoder, public EncodedImageCallback {
     return builder.str();
   }
 
-  IvfFileWriter& GetFileWriterForSimulcastIndex(int index) {
+  IvfFileWriter& GetFileWriterForSimulcastIndex(int index)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mu_) {
     const auto& it = writers_by_simulcast_index_.find(index);
     if (it != writers_by_simulcast_index_.end()) {
       return *it->second;
@@ -110,10 +116,10 @@ class FrameDumpingEncoder : public VideoEncoder, public EncodedImageCallback {
     return *writer_ptr;
   }
 
-  SequenceChecker sequence_checker_;
   std::unique_ptr<VideoEncoder> wrapped_;
-  std::map<int, std::unique_ptr<IvfFileWriter>> writers_by_simulcast_index_;
-  std::unique_ptr<IvfFileWriter> writer_;
+  Mutex mu_;
+  std::map<int, std::unique_ptr<IvfFileWriter>> writers_by_simulcast_index_
+      RTC_GUARDED_BY(mu_);
   VideoCodec codec_settings_;
   EncodedImageCallback* callback_ = nullptr;
   std::string output_directory_;
