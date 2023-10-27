@@ -18,7 +18,6 @@
 #include "HTMLEditUtils.h"
 #include "InsertNodeTransaction.h"
 #include "JoinNodesTransaction.h"
-#include "JoinSplitNodeDirection.h"
 #include "MoveNodeTransaction.h"
 #include "PendingStyles.h"
 #include "ReplaceTextTransaction.h"
@@ -239,26 +238,9 @@ HTMLEditor::AttributeFilter HTMLEditor::CopyAllAttributesExceptIdAndDir =
                 aAttr.NodeInfo()->NameAtom() == nsGkAtoms::dir));
     };
 
-static bool ShouldUseTraditionalJoinSplitDirection(const Document& aDocument) {
-  if (nsIPrincipal* principal = aDocument.GetPrincipalForPrefBasedHacks()) {
-    if (principal->IsURIInPrefList("editor.join_split_direction."
-                                   "force_use_traditional_direction")) {
-      return true;
-    }
-    if (principal->IsURIInPrefList("editor.join_split_direction."
-                                   "force_use_compatible_direction")) {
-      return false;
-    }
-  }
-  return !StaticPrefs::
-      editor_join_split_direction_compatible_with_the_other_browsers();
-}
-
 HTMLEditor::HTMLEditor(const Document& aDocument)
     : EditorBase(EditorBase::EditorType::HTML),
       mCRInParagraphCreatesParagraph(false),
-      mUseGeckoTraditionalJoinSplitBehavior(
-          ShouldUseTraditionalJoinSplitDirection(aDocument)),
       mIsObjectResizingEnabled(
           StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),
@@ -5090,7 +5072,6 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
       !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
 
-  mMaybeHasJoinSplitTransactions = true;
   RefPtr<SplitNodeTransaction> transaction =
       SplitNodeTransaction::Create(*this, aStartOfRightNode);
   nsresult rv = DoTransactionInternal(transaction);
@@ -5494,7 +5475,6 @@ Result<JoinNodesResult, nsresult> HTMLEditor::JoinNodesWithTransaction(
     return Err(NS_ERROR_FAILURE);
   }
 
-  mMaybeHasJoinSplitTransactions = true;
   const nsresult rv = DoTransactionInternal(transaction);
   // FYI: Now, DidJoinNodesTransaction() must have been run if succeeded.
   if (NS_WARN_IF(Destroyed())) {

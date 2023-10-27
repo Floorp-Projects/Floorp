@@ -6,12 +6,12 @@
 #include "EditorCommands.h"
 
 #include "EditorBase.h"  // for EditorBase
+#include "ErrorList.h"
 #include "HTMLEditor.h"  // for HTMLEditor
 
 #include "mozilla/BasePrincipal.h"  // for nsIPrincipal::IsSystemPrincipal()
-#include "mozilla/StaticPrefs_editor.h"
-#include "mozilla/dom/Element.h"              // for Element
-#include "mozilla/dom/Document.h"             // for Document
+#include "mozilla/dom/Element.h"    // for Element
+#include "mozilla/dom/Document.h"   // for Document
 #include "mozilla/dom/HTMLInputElement.h"     // for HTMLInputElement
 #include "mozilla/dom/HTMLTextAreaElement.h"  // for HTMLTextAreaElement
 
@@ -50,9 +50,6 @@ bool SetDocumentStateCommand::IsCommandEnabled(Command aCommand,
   switch (aCommand) {
     case Command::SetDocumentReadOnly:
       return !!aEditorBase;
-    case Command::EnableCompatibleJoinSplitNodeDirection:
-      return aEditorBase && aEditorBase->IsHTMLEditor() &&
-             aEditorBase->AsHTMLEditor()->CanChangeJoinSplitNodeDirection();
     default:
       // The other commands are always enabled if given editor is an HTMLEditor.
       return aEditorBase && aEditorBase->IsHTMLEditor();
@@ -170,16 +167,12 @@ nsresult SetDocumentStateCommand::DoCommandParam(
       return NS_OK;
     }
     case Command::EnableCompatibleJoinSplitNodeDirection:
-      MOZ_ASSERT_IF(
-          StaticPrefs::
-                  editor_join_split_direction_compatible_with_the_other_browsers() &&
-              aPrincipal && !aPrincipal->IsSystemPrincipal(),
-          aBoolParam.value());
-      return MOZ_KnownLive(aEditorBase.AsHTMLEditor())
-                     ->EnableCompatibleJoinSplitNodeDirection(
-                         aBoolParam.value())
-                 ? NS_OK
-                 : NS_SUCCESS_DOM_NO_OPERATION;
+      // Now we don't support the legacy join/split node direction anymore, but
+      // this result may be used for the feature detection whether Gecko
+      // supports the new direction mode.  Therefore, even though we do nothing,
+      // but we should return NS_OK to return `true` from
+      // `Document.execCommand()`.
+      return NS_OK;
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -370,8 +363,11 @@ nsresult SetDocumentStateCommand::GetCommandStateParams(
       if (NS_WARN_IF(!htmlEditor)) {
         return NS_ERROR_INVALID_ARG;
       }
-      return aParams.SetBool(
-          STATE_ALL, htmlEditor->IsCompatibleJoinSplitNodeDirectionEnabled());
+      // Now we don't support the legacy join/split node direction anymore, but
+      // this result may be used for the feature detection whether Gecko
+      // supports the new direction mode.  Therefore, we should return `true`
+      // even though executing the command does nothing.
+      return aParams.SetBool(STATE_ALL, true);
     }
     default:
       return NS_ERROR_NOT_IMPLEMENTED;

@@ -6445,8 +6445,7 @@ HTMLEditor::RemoveBlockContainerElementWithTransactionBetween(
   if (NS_WARN_IF(!rightmostElement)) {
     return Err(NS_ERROR_FAILURE);
   }
-  MOZ_ASSERT_IF(GetSplitNodeDirection() == SplitNodeDirection::LeftNodeIsNewOne,
-                rightmostElement == &aBlockContainerElement);
+
   {
     // MOZ_KnownLive(rightmostElement) because it's grabbed by
     // unwrappedSplitResult.

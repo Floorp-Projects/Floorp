@@ -115,7 +115,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_docshell.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -5386,12 +5385,13 @@ bool Document::ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
       SetUseCounter(eUseCounter_custom_DocumentExecCommandContentReadOnly);
       break;
     case Command::EnableCompatibleJoinSplitNodeDirection:
-      // We don't allow to take the legacy behavior back if the new one is
-      // enabled by default.
-      if (StaticPrefs::
-              editor_join_split_direction_compatible_with_the_other_browsers() &&
-          !adjustedValue.EqualsLiteral("true") &&
-          !aSubjectPrincipal.IsSystemPrincipal()) {
+      // We didn't allow to enable the legacy behavior once we've enabled the
+      // new behavior by default.  For keeping the behavior at supporting both
+      // mode, we should keep returning `false` if the web app to enable the
+      // legacy mode.  Additionally, we don't support the legacy direction
+      // anymore.  Therefore, we can return `false` here even if the caller is
+      // an addon or chrome script.
+      if (!adjustedValue.EqualsLiteral("true")) {
         return false;
       }
       break;
