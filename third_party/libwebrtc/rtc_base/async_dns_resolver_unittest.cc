@@ -40,5 +40,19 @@ TEST(AsyncDnsResolver, ResolvingLocalhostWorks) {
   }
 }
 
+TEST(AsyncDnsResolver, ResolveAfterDeleteDoesNotReturn) {
+  test::RunLoop loop;
+  std::unique_ptr<AsyncDnsResolver> resolver =
+      std::make_unique<AsyncDnsResolver>();
+  rtc::SocketAddress address("localhost",
+                             kPortNumber);  // Port number does not matter
+  rtc::SocketAddress resolved_address;
+  bool done = false;
+  resolver->Start(address, [&done] { done = true; });
+  resolver.reset();                    // Deletes resolver.
+  rtc::Thread::Current()->SleepMs(1);  // Allows callback to execute
+  EXPECT_FALSE(done);                  // Expect no result.
+}
+
 }  // namespace
 }  // namespace webrtc
