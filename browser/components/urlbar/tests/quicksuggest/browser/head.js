@@ -84,15 +84,21 @@ async function updateTopSites(condition, searchShortcuts = false) {
  *
  * @param {object} options
  *   Options
- * @param {Array} options.remoteSettingsRecords
- *   See `QuickSuggestTestUtils.ensureQuickSuggestInit()`.
+ * @param {Array} options.remoteSettingsResults
+ *   Array of remote settings result objects. If not given, no suggestions
+ *   will be present in remote settings.
  * @param {Array} options.merinoSuggestions
- *   See `QuickSuggestTestUtils.ensureQuickSuggestInit()`.
+ *   Array of Merino suggestion objects. If given, this function will start
+ *   the mock Merino server and set `quicksuggest.dataCollection.enabled` to
+ *   true so that `UrlbarProviderQuickSuggest` will fetch suggestions from it.
+ *   Otherwise Merino will not serve suggestions, but you can still set up
+ *   Merino without using this function by using `MerinoTestUtils` directly.
  * @param {Array} options.config
- *   See `QuickSuggestTestUtils.ensureQuickSuggestInit()`.
+ *   Quick suggest will be initialized with this config. Leave undefined to use
+ *   the default config. See `QuickSuggestTestUtils` for details.
  */
 async function setUpTelemetryTest({
-  remoteSettingsRecords,
+  remoteSettingsResults,
   merinoSuggestions = null,
   config = QuickSuggestTestUtils.DEFAULT_CONFIG,
 }) {
@@ -115,7 +121,7 @@ async function setUpTelemetryTest({
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords,
+    remoteSettingsResults,
     merinoSuggestions,
     config,
   });
@@ -663,34 +669,19 @@ function add_tasks_with_rust(...args) {
 
   for (let rustEnabled of [false, true]) {
     let newTaskFn = async (...taskFnArgs) => {
-      info("add_tasks_with_rust: Setting rustEnabled: " + rustEnabled);
+      info("Setting rustEnabled: " + rustEnabled);
       UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
-      info("add_tasks_with_rust: Done setting rustEnabled: " + rustEnabled);
-
-      // The current backend may now start syncing, so wait for it to finish.
-      info("add_tasks_with_rust: Forcing sync");
-      await QuickSuggestTestUtils.forceSync();
-      info("add_tasks_with_rust: Done forcing sync");
+      info("Done setting rustEnabled: " + rustEnabled);
 
       let rv;
       try {
-        info(
-          "add_tasks_with_rust: Calling original task function: " + taskFn.name
-        );
+        info("Calling original task function: " + taskFn.name);
         rv = await taskFn(...taskFnArgs);
       } finally {
-        info(
-          "add_tasks_with_rust: Done calling original task function: " +
-            taskFn.name
-        );
-        info("add_tasks_with_rust: Clearing rustEnabled");
+        info("Done calling original task function: " + taskFn.name);
+        info("Clearing rustEnabled");
         UrlbarPrefs.clear("quicksuggest.rustEnabled");
-        info("add_tasks_with_rust: Done clearing rustEnabled");
-
-        // The current backend may now start syncing, so wait for it to finish.
-        info("add_tasks_with_rust: Forcing sync");
-        await QuickSuggestTestUtils.forceSync();
-        info("add_tasks_with_rust: Done forcing sync");
+        info("Done clearing rustEnabled");
       }
       return rv;
     };

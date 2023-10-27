@@ -36,18 +36,19 @@ const REMOTE_SETTINGS_DATA = [
 ];
 
 add_setup(async function init() {
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+  UrlbarPrefs.set("suggest.mdn", true);
+  UrlbarPrefs.set("mdn.featureGate", true);
+
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: REMOTE_SETTINGS_DATA,
-    prefs: [
-      ["suggest.quicksuggest.nonsponsored", true],
-      ["suggest.quicksuggest.sponsored", false],
-      ["suggest.mdn", true],
-      ["mdn.featureGate", true],
-    ],
+    remoteSettingsResults: REMOTE_SETTINGS_DATA,
   });
+  await waitForSuggestions();
 });
 
 add_task(async function basic() {
@@ -117,7 +118,7 @@ add_task(async function disableByLocalPref() {
 
     // Revert.
     UrlbarPrefs.set(pref, true);
-    await QuickSuggestTestUtils.forceSync();
+    await waitForSuggestions();
   }
 });
 
@@ -150,7 +151,7 @@ add_task(async function nimbus() {
     "urlbar",
     "config"
   );
-  await QuickSuggestTestUtils.forceSync();
+  await waitForSuggestions();
   await check_results({
     context: createContext(keyword, {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -162,7 +163,7 @@ add_task(async function nimbus() {
 
   // Enable locally.
   defaultPrefs.setBoolPref("mdn.featureGate", true);
-  await QuickSuggestTestUtils.forceSync();
+  await waitForSuggestions();
 
   // Disable by Nimbus.
   const cleanUpNimbusDisable = await UrlbarTestUtils.initNimbusFeature(
@@ -181,7 +182,7 @@ add_task(async function nimbus() {
 
   // Revert.
   defaultPrefs.setBoolPref("mdn.featureGate", true);
-  await QuickSuggestTestUtils.forceSync();
+  await waitForSuggestions();
 });
 
 function makeExpectedResult({
@@ -218,4 +219,13 @@ function makeExpectedResult({
       bottomTextL10n: { id: "firefox-suggest-mdn-bottom-text" },
     },
   };
+}
+
+async function waitForSuggestions() {
+  let keyword = REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0];
+  let feature = QuickSuggest.getFeature("MDNSuggestions");
+  await TestUtils.waitForCondition(async () => {
+    let suggestions = await feature.queryRemoteSettings(keyword);
+    return !!suggestions.length;
+  }, "Waiting for MDNSuggestions to serve remote settings suggestions");
 }

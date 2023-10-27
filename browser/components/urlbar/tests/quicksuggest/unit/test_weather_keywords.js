@@ -14,13 +14,14 @@ const { WEATHER_RS_DATA, WEATHER_SUGGESTION } = MerinoTestUtils;
 
 add_task(async function init() {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "weather",
         weather: WEATHER_RS_DATA,
       },
     ],
   });
+  UrlbarPrefs.set("quicksuggest.enabled", true);
   await MerinoTestUtils.initWeather();
 });
 
@@ -747,7 +748,7 @@ async function doKeywordsTest({
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
       type: "weather",
       weather: settingsData,
@@ -790,7 +791,7 @@ async function doKeywordsTest({
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
       type: "weather",
       weather: MerinoTestUtils.WEATHER_RS_DATA,
@@ -821,7 +822,7 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
 
   // Add a remote settings result to quick suggest.
   UrlbarPrefs.set(pref, true);
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
       type: "data",
       attachment: [
@@ -1258,7 +1259,7 @@ async function doIncrementTest({ desc, setup, tests }) {
     nimbusCleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
   }
 
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
       type: "weather",
       weather: settingsData,
@@ -1321,7 +1322,7 @@ async function doIncrementTest({ desc, setup, tests }) {
   if (!QuickSuggest.weather.suggestion) {
     fetchPromise = QuickSuggest.weather.waitForFetches();
   }
-  await QuickSuggestTestUtils.setRemoteSettingsRecords([
+  await QuickSuggestTestUtils.setRemoteSettingsResults([
     {
       type: "weather",
       weather: MerinoTestUtils.WEATHER_RS_DATA,
