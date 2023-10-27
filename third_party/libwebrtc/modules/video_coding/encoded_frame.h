@@ -63,29 +63,6 @@ class RTC_EXPORT VCMEncodedFrame : public EncodedImage {
    */
   int64_t RenderTimeMs() const { return _renderTimeMs; }
   /**
-   *   Get frame type
-   */
-  webrtc::VideoFrameType FrameType() const { return _frameType; }
-  /**
-   *   Set frame type
-   */
-  void SetFrameType(webrtc::VideoFrameType frame_type) {
-    _frameType = frame_type;
-  }
-  /**
-   *   Get frame rotation
-   */
-  VideoRotation rotation() const { return rotation_; }
-  /**
-   *  Get video content type
-   */
-  VideoContentType contentType() const { return content_type_; }
-  /**
-   * Get video timing
-   */
-  EncodedImage::Timing video_timing() const { return timing_; }
-  EncodedImage::Timing* video_timing_mutable() { return &timing_; }
-  /**
    *   True if there's a frame missing before this frame
    */
   bool MissingFrame() const { return _missingFrame; }
