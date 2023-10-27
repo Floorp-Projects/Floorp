@@ -8,6 +8,7 @@
 //! Relative colors, color-mix, system colors, and other such things require better calc() support
 //! and integration.
 
+use crate::values::normalize;
 use cssparser::color::{
     clamp_floor_256_f32, clamp_unit_f32, parse_hash_color, serialize_color_alpha,
     PredefinedColorSpace, OPAQUE,
@@ -52,9 +53,7 @@ where
     let token = input.next()?;
     match *token {
         Token::Hash(ref value) | Token::IDHash(ref value) => {
-            parse_hash_color(value.as_bytes()).map(|(r, g, b, a)| {
-                P::Output::from_rgba(r, g, b, a)
-            })
+            parse_hash_color(value.as_bytes()).map(|(r, g, b, a)| P::Output::from_rgba(r, g, b, a))
         },
         Token::Ident(ref value) => parse_color_keyword(value),
         Token::Function(ref name) => {
@@ -62,7 +61,7 @@ where
             return input.parse_nested_block(|arguments| {
                 parse_color_function(color_parser, name, arguments)
             });
-        }
+        },
         _ => Err(()),
     }
     .map_err(|()| location.new_unexpected_token_error(token.clone()))
@@ -121,10 +120,10 @@ fn parse_alpha_component<'i, 't, P>(
 where
     P: ColorParser<'i>,
 {
-    Ok(color_parser
+    let alpha = color_parser
         .parse_number_or_percentage(arguments)?
-        .unit_value()
-        .clamp(0.0, OPAQUE))
+        .unit_value();
+    Ok(normalize(alpha).clamp(0.0, OPAQUE))
 }
 
 fn parse_legacy_alpha<'i, 't, P>(
@@ -179,14 +178,14 @@ where
                 arguments.expect_comma()?;
                 let blue = clamp_floor_256_f32(color_parser.parse_number(arguments)?);
                 (red, green, blue)
-            }
+            },
             NumberOrPercentage::Percentage { unit_value } => {
                 let red = clamp_unit_f32(unit_value);
                 let green = clamp_unit_f32(color_parser.parse_percentage(arguments)?);
                 arguments.expect_comma()?;
                 let blue = clamp_unit_f32(color_parser.parse_percentage(arguments)?);
                 (red, green, blue)
-            }
+            },
         };
 
         let alpha = parse_legacy_alpha(color_parser, arguments)?;
@@ -1103,7 +1102,7 @@ pub trait ColorParser<'i> {
                 };
 
                 AngleOrNumber::Angle { degrees }
-            }
+            },
             ref t => return Err(location.new_unexpected_token_error(t.clone())),
         })
     }
